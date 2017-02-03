@@ -1,72 +1,116 @@
-Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
-Message-Id: <656ca6114612a11469d4f124425437f7ac6803c6.1486913733.git.lukas@wunner.de>
-In-Reply-To: <cover.1486913733.git.lukas@wunner.de>
-References: <cover.1486913733.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 12 Feb 2017 17:07:45 +0100
-Subject: [PATCH v6 2/8] PCI: Allow runtime PM on Thunderbolt ports
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org
+Subject: [PATCH V8 03/11] of: dma: Move range size workaround to
+ of_dma_get_range()
+Date: Fri,  3 Feb 2017 21:18:45 +0530
+Message-Id: <1486136933-20328-4-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: sricharan@codeaurora.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCIe ports are only allowed to go to D3 if the BIOS is dated 2015+ to
-avoid potential issues with old chipsets.  However for Thunderbolt we
-know that even the oldest controller, Light Ridge (2010), is able to
-suspend its ports to D3 just fine.
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
-We're about to add runtime PM for Thunderbolt on the Mac.  Apple has
-released multiple EFI updates since 2015 but not everyone has installed
-them (https://support.apple.com/en-us/HT201222).  Those users should
-still benefit from the achievable power saving.  Thus, special-case
-Thunderbolt in pci_bridge_d3_possible().
+Invalid dma-ranges values should be worked around when retrieving the
+DMA range in of_dma_get_range(), not by all callers of the function.
+This isn't much of a problem now that we have a single caller, but that
+situation will change when moving DMA configuration to device probe
+time.
 
-This allows the Thunderbolt controller to power down but the root port
-to which the Thunderbolt controller is attached remains in D0 unless
-an EFI update is installed.  Users can pass pcie_port_pm=force on the
-kernel command line if they cannot install an EFI update but still want
-to benefit from the additional power saving of putting the root port
-into D3.  In practice, root ports can be suspended to D3 without issues
-at least on 2012 Ivy Bridge machines.
-
-If the BIOS cut-off date is ever lowered to 2010 and runtime PM is
-allowed on all native hotplug ports, the Thunderbolt special case can be
-removed.
-
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Cc: Amir Levy <amir.jer.levy@intel.com>
-Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 ---
- drivers/pci/pci.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/of/address.c | 20 ++++++++++++++++++--
+ drivers/of/device.c  | 15 ---------------
+ 2 files changed, 18 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02ffdb9..441083a0d5b0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2224,7 +2224,7 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
-  * @bridge: Bridge to check
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 02b2903..6aeb816 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -819,8 +819,8 @@ void __iomem *of_io_request_and_map(struct device_node *np, int index,
+  *	CPU addr (phys_addr_t)	: pna cells
+  *	size			: nsize cells
   *
-  * This function checks if it is possible to move the bridge to D3.
-- * Currently we only allow D3 for recent enough PCIe ports.
-+ * Currently we only allow D3 for recent enough PCIe ports and Thunderbolt.
+- * It returns -ENODEV if "dma-ranges" property was not found
+- * for this device in DT.
++ * Return 0 on success, -ENODEV if the "dma-ranges" property was not found for
++ * this device in DT, or -EINVAL if the CPU address or size is invalid.
   */
- bool pci_bridge_d3_possible(struct pci_dev *bridge)
+ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *size)
  {
-@@ -2253,6 +2253,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 		if (pci_bridge_d3_force)
- 			return true;
+@@ -880,6 +880,22 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
+ 	*dma_addr = dmaaddr;
  
-+		/* Even the oldest 2010 Thunderbolt controller supports D3. */
-+		if (bridge->is_thunderbolt)
-+			return true;
+ 	*size = of_read_number(ranges + naddr + pna, nsize);
++	/*
++	 * DT nodes sometimes incorrectly set the size as a mask. Work around
++	 * those incorrect DT by computing the size as mask + 1.
++	 */
++	if (*size & 1) {
++		pr_warn("%s: size 0x%llx for dma-range in node(%s) set as mask\n",
++			__func__, *size, np->full_name);
++		*size = *size + 1;
++	}
 +
- 		/*
- 		 * It should be safe to put PCIe ports from 2015 or newer
- 		 * to D3.
++	if (!*size) {
++		pr_err("%s: invalid size zero for dma-range in node(%s)\n",
++		       __func__, np->full_name);
++		ret = -EINVAL;
++		goto out;
++	}
+ 
+ 	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
+ 		 *dma_addr, *paddr, *size);
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index b1e6beb..09dedd0 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -110,21 +110,6 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+ 		size = dev->coherent_dma_mask + 1;
+ 	} else {
+ 		offset = PFN_DOWN(paddr - dma_addr);
+-
+-		/*
+-		 * Add a work around to treat the size as mask + 1 in case
+-		 * it is defined in DT as a mask.
+-		 */
+-		if (size & 1) {
+-			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
+-				 size);
+-			size = size + 1;
+-		}
+-
+-		if (!size) {
+-			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
+-			return;
+-		}
+ 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+ 	}
+ 
 -- 
-2.11.0
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
