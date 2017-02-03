@@ -1,13 +1,25 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH 1/4] PCI: add DT bindings for Cortina Gemini PCI Host
- Bridge
-Date: Wed, 01 Feb 2017 12:19:53 +0100
-Message-ID: <17693846.Edk12xXofc@wuerfel>
-In-Reply-To: <20170128204839.18330-1-linus.walleij@linaro.org>
-References: <20170128204839.18330-1-linus.walleij@linaro.org>
+From: "Sricharan" <sricharan@codeaurora.org>
+To: "'Nate Watterson'" <nwatters@codeaurora.org>,
+ "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>
+References: <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
+ <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
+ <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
+ <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
+ <175a3798-b824-ef1a-e112-9f6f472973ae@codeaurora.org>
+ <20170130143851.GJ16461@arm.com>
+ <b2e50c17de156341deab9fb8e91a8dec@codeaurora.org>
+ <1e048aff-0d77-b9f2-ebf8-2ba315b90ca7@codeaurora.org>
+ <20170130165124.GA11712@red-moon>
+ <f401e27e-d619-0eec-2401-50d8e2fc2f0f@codeaurora.org>
+ <20170201185230.GA1922@red-moon>
+ <3f4aa4c1e660c7e62256de9ca64fc822@codeaurora.org>
+In-Reply-To: <3f4aa4c1e660c7e62256de9ca64fc822@codeaurora.org>
+Subject: RE: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+Date: Fri, 3 Feb 2017 09:07:07 +0530
+Message-ID: <013f01d27dce$cf8f5da0$6eae18e0$@codeaurora.org>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -16,50 +28,47 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: openwrt-devel@openwrt.org, devicetree@vger.kernel.org,
- Florian Fainelli <f.fainelli@gmail.com>,
- Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-pci@vger.kernel.org,
- Hans Ulli Kroll <ulli.kroll@googlemail.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Janos Laube <janos.dev@gmail.com>,
- linux-arm-kernel@lists.infradead.org
+Cc: linux-arm-msm@vger.kernel.org, 'Will Deacon' <will.deacon@arm.com>,
+ 'Sinan Kaya' <okaya@codeaurora.org>, linux-acpi@vger.kernel.org,
+ iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, 'Tomasz Nowicki' <tn@semihalf.com>,
+ 'Robin Murphy' <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, January 28, 2017 9:48:36 PM CET Linus Walleij wrote:
-> +       interrupt-map-mask = <0xff00 0 0 7>;
-> +       interrupt-map = <0x4800 0 0 1 &pci_intc 0>, /* Slot 9 */
-> +                       <0x4900 0 0 2 &pci_intc 1>,
-> +                       <0x4a00 0 0 3 &pci_intc 2>,
-> +                       <0x4b00 0 0 4 &pci_intc 3>,
-> +                       <0x5000 0 0 1 &pci_intc 0>, /* Slot 10 */
-> +                       <0x5100 0 0 2 &pci_intc 1>,
-> +                       <0x5200 0 0 3 &pci_intc 2>,
-> +                       <0x5300 0 0 4 &pci_intc 3>,
-> +                       <0x5800 0 0 1 &pci_intc 0>, /* Slot 11 */
-> +                       <0x5900 0 0 2 &pci_intc 1>,
-> +                       <0x5a00 0 0 3 &pci_intc 2>,
-> +                       <0x5b00 0 0 4 &pci_intc 3>,
-> +                       <0x6000 0 0 1 &pci_intc 0>, /* Slot 12 */
-> +                       <0x6100 0 0 2 &pci_intc 1>,
-> +                       <0x6200 0 0 3 &pci_intc 2>,
-> +                       <0x6300 0 0 4 &pci_intc 3>;
-> 
+Hi,
 
-The mapping looks wrong here, we normally don't list interrupts per function
-so the mask should be 0xf800.
+>On 2017-02-01 13:52, Lorenzo Pieralisi wrote:
+>>
+>> I debugged the issue and Nate's fix is correct, the fact that you
+>> can't it hit it with mainline is just a matter of timing because it has
+>> to do with the CTX pointer value (we OR it with the existing value), so
+>> it may work or not depending on how the cdptr memory allocation
+>> pattern turns out to be (which explains why Nate and I can hit it with
+>> simple PCI device remove/add execution too).
+>>
+>> So it is neither an ACPI nor an IOMMU probe deferral issue per-se,
+>> fix is already queued, so it is all good.
+>>
+>> What about USB stalls ?
+>Our fault. The USB controller was getting 48-bit IOVAs, but the
+>bus it sits on only supports 44-bits so the controller's DMA
+>transactions ended up targeting addresses that were never mapped.
+>
+>It started working once I applied the iort/dma-mapping patches I
+>sent out earlier this week that use the iort memory_address_limit
+>field to check if a dma_mask is sane.
+>
+>Sorry for the false alarm.
 
-Note that the interrupt map is board specific, so this should probably
-go in the board.dts file rather than platform.dtsi.
+Ok, thanks for closing on it. I will just post V8 with all acks picked up and
+Robin's fix , right away.
 
-For this particular board, the interrupt lines appear to have been badly
-configured so all slots use the same interrupt 0 for IntA. IIRC This also
-means you can probably use <0 0 0 7> as the mask and just specify each of
-the four interrupts once. A properly wired board would swizzle the
-interrupts so that each slot has a different IRQ for its IntA line.
+Regards,
+ Sricharan
 
-	Arnd
 
 _______________________________________________
 linux-arm-kernel mailing list
