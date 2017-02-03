@@ -1,106 +1,102 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47904 "EHLO mail.kernel.org"
+Received: from mga07.intel.com ([134.134.136.100]:19081 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752920AbdBJUpE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Feb 2017 15:45:04 -0500
-Date: Fri, 10 Feb 2017 14:45:00 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: host: dra7xx: use GPIO descriptor
-Message-ID: <20170210204500.GK29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170126132707.23249-1-linus.walleij@linaro.org>
- <20170210200711.GG29169@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170210200711.GG29169@bhelgaas-glaptop.roam.corp.google.com>
+        id S1752365AbdBCVlH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Feb 2017 16:41:07 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 2/2] pcie-dpc: Wait for root port busy to clear
+Date: Fri,  3 Feb 2017 16:46:13 -0500
+Message-Id: <1486158373-18655-2-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1486158373-18655-1-git-send-email-keith.busch@intel.com>
+References: <1486158373-18655-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 10, 2017 at 02:07:11PM -0600, Bjorn Helgaas wrote:
-> On Thu, Jan 26, 2017 at 02:27:07PM +0100, Linus Walleij wrote:
-> > Instead of parsing around in the device tree and determine
-> > polarity for the GPIO line and whatnot: utilize the GPIO
-> > library's intrinsic handling of OF GPIOs and polarity.
-> > 
-> > If the line is flagged active low, gpiolib will deal with
-> > this.
-> > 
-> > Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-> 
-> Kishon?  Looks like a nice simplification.
+Root Ports implementing DPC optionally advertise extensions that, when
+advertised, require the driver wait for the RP Busy status to clear prior
+to releasing from containment. Results are undefined if we release from
+containment while this bit is set.
 
-Never mind, I just noticed that we already merged a very similar patch:
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/pcie-dpc.c   | 26 +++++++++++++++++++++++++-
+ include/uapi/linux/pci_regs.h |  1 +
+ 2 files changed, 26 insertions(+), 1 deletion(-)
 
-https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-designware&id=d92b1ced97031ba0fe883911450b3072b069ce4f
-
-Kishon's is slightly different because it uses devm_gpiod_get_optional()
-instead of devm_gpiod_get().
-
-They both look slightly funny because we throw away the struct gpio_desc *
-that's returned, without ever using it anywhere (except to test for error).
-I *assume* that's what you want, since that's the way it was before the
-patch, too.
-
-> > ---
-> > Would be nice if someone with the hardware could test this
-> > and see if it works.
-> > ---
-> >  drivers/pci/host/pci-dra7xx.c | 22 +++++-----------------
-> >  1 file changed, 5 insertions(+), 17 deletions(-)
-> > 
-> > diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> > index 9595fad63f6f..85ac2856c80f 100644
-> > --- a/drivers/pci/host/pci-dra7xx.c
-> > +++ b/drivers/pci/host/pci-dra7xx.c
-> > @@ -16,7 +16,7 @@
-> >  #include <linux/irqdomain.h>
-> >  #include <linux/kernel.h>
-> >  #include <linux/init.h>
-> > -#include <linux/of_gpio.h>
-> > +#include <linux/gpio/consumer.h>
-> >  #include <linux/pci.h>
-> >  #include <linux/phy/phy.h>
-> >  #include <linux/platform_device.h>
-> > @@ -320,9 +320,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
-> >  	struct device *dev = &pdev->dev;
-> >  	struct device_node *np = dev->of_node;
-> >  	char name[10];
-> > -	int gpio_sel;
-> > -	enum of_gpio_flags flags;
-> > -	unsigned long gpio_flags;
-> > +	struct gpio_desc *gpiod;
-> >  
-> >  	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
-> >  	if (!dra7xx)
-> > @@ -388,19 +386,9 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
-> >  		goto err_get_sync;
-> >  	}
-> >  
-> > -	gpio_sel = of_get_gpio_flags(dev->of_node, 0, &flags);
-> > -	if (gpio_is_valid(gpio_sel)) {
-> > -		gpio_flags = (flags & OF_GPIO_ACTIVE_LOW) ?
-> > -				GPIOF_OUT_INIT_LOW : GPIOF_OUT_INIT_HIGH;
-> > -		ret = devm_gpio_request_one(dev, gpio_sel, gpio_flags,
-> > -					    "pcie_reset");
-> > -		if (ret) {
-> > -			dev_err(dev, "gpio%d request failed, ret %d\n",
-> > -				gpio_sel, ret);
-> > -			goto err_gpio;
-> > -		}
-> > -	} else if (gpio_sel == -EPROBE_DEFER) {
-> > -		ret = -EPROBE_DEFER;
-> > +	gpiod = devm_gpiod_get(dev, "pcie_reset", GPIOD_OUT_HIGH);
-> > +	if (IS_ERR(gpiod)) {
-> > +		ret = PTR_ERR(gpiod);
-> >  		goto err_gpio;
-> >  	}
-> >  
-> > -- 
-> > 2.9.3
-> > 
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 9ca74f4..2acd9de 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -20,8 +20,28 @@ struct dpc_dev {
+ 	struct pcie_device	*dev;
+ 	struct work_struct	work;
+ 	int			cap_pos;
++	bool			rp;
+ };
+ 
++static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
++{
++	unsigned long timeout = jiffies + HZ;
++	struct pci_dev *pdev = dpc->dev->port;
++	u16 status;
++
++	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++	while (status & PCI_EXP_DPC_RP_BUSY &&
++					!time_after(jiffies, timeout)) {
++		msleep(10);
++		pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
++	}
++	if (status & PCI_EXP_DPC_RP_BUSY) {
++		dev_warn(&pdev->dev, "DPC root port still busy\n");
++		return -EBUSY;
++	}
++	return 0;
++}
++
+ static void dpc_wait_link_inactive(struct pci_dev *pdev)
+ {
+ 	unsigned long timeout = jiffies + HZ;
+@@ -34,7 +54,7 @@ static void dpc_wait_link_inactive(struct pci_dev *pdev)
+ 		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
+ 	}
+ 	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
+-		dev_warn(&pdev->dev, "Link state not disabled for DPC event");
++		dev_warn(&pdev->dev, "Link state not disabled for DPC event\n");
+ }
+ 
+ static void interrupt_event_handler(struct work_struct *work)
+@@ -56,6 +76,8 @@ static void interrupt_event_handler(struct work_struct *work)
+ 	pci_unlock_rescan_remove();
+ 
+ 	dpc_wait_link_inactive(pdev);
++	if (dpc->rp && dpc_wait_rp_inactive(dpc))
++		return;
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
+ 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
+ }
+@@ -119,6 +141,8 @@ static int dpc_probe(struct pcie_device *dev)
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
+ 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
+ 
++	dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
++
+ 	ctl |= PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+ 
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 174d114..c1b94b0 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -973,6 +973,7 @@
+ #define PCI_EXP_DPC_STATUS		8	/* DPC Status */
+ #define  PCI_EXP_DPC_STATUS_TRIGGER	0x01	/* Trigger Status */
+ #define  PCI_EXP_DPC_STATUS_INTERRUPT	0x08	/* Interrupt Status */
++#define  PCI_EXP_DPC_RP_BUSY		0x10	/* Root Port Busy */
+ 
+ #define PCI_EXP_DPC_SOURCE_ID		10	/* DPC Source Identifier */
+ 
+-- 
+2.7.2
