@@ -1,292 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  2 Feb 2017 11:06:02 -0700
-Message-Id: <1486058763-7730-4-git-send-email-logang@deltatee.com>
-In-Reply-To: <1486058763-7730-1-git-send-email-logang@deltatee.com>
-References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v2 3/4] switchtec: Add sysfs attributes to the Switchtec driver
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:40019 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751637AbdBCRrP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Feb 2017 12:47:15 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
+        Austin Bolen <Austin.Bolen@dell.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv5 3/5] pci: No config access for disconnected devices
+Date: Fri,  3 Feb 2017 12:55:53 -0500
+Message-Id: <1486144555-5526-4-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1486144555-5526-1-git-send-email-keith.busch@intel.com>
+References: <1486144555-5526-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a few read-only sysfs attributes which provide
-some device information that is exposed from the devices. Primarily
-component and device names and versions. These are documented in
-Documentation/ABI/testing/sysfs-class-switchtec.
+If we've  detected the PCI device is disconnected, there is no need to
+attempt to access its config space since we know the operation will
+fail. This patch has all the config reads and writes return -ENODEV
+error immediately when in such a state.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
+If a config read is sent to a disconnected device, the value will be
+set to all 1's. This is the same as what hardware is expected to return
+when accessing a removed device, but software can do this faster without
+relying on hardware.
+
+Signed-off-by: Keith Busch <keith.busch@intel.com>
 ---
- Documentation/ABI/testing/sysfs-class-switchtec |  96 ++++++++++++++++++++
- MAINTAINERS                                     |   1 +
- drivers/pci/switch/switchtec.c                  | 113 ++++++++++++++++++++++++
- 3 files changed, 210 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
+ drivers/pci/access.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-diff --git a/Documentation/ABI/testing/sysfs-class-switchtec b/Documentation/ABI/testing/sysfs-class-switchtec
-new file mode 100644
-index 0000000..48cb4c1
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-class-switchtec
-@@ -0,0 +1,96 @@
-+switchtec - Microsemi Switchtec PCI Switch Management Endpoint
-+
-+For details on this subsystem look at Documentation/switchtec.txt.
-+
-+What: 		/sys/class/switchtec
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	The switchtec class subsystem folder.
-+		Each registered switchtec driver is represented by a switchtecX
-+		subfolder (X being an integer >= 0).
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/component_id
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Component identifier as stored in the hardware (eg. PM8543)
-+		(read only)
-+Values: 	arbitrary string.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/component_revision
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Component revision stored in the hardware (read only)
-+Values: 	integer.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/component_vendor
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Component vendor as stored in the hardware (eg. MICROSEM)
-+		(read only)
-+Values: 	arbitrary string.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/device_version
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Device version as stored in the hardware (read only)
-+Values: 	integer.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/fw_version
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Currently running firmware version (read only)
-+Values: 	integer (in hexadecimal).
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/partition
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Partition number for this device in the switch (read only)
-+Values: 	integer.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/partition_count
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Total number of partitions in the switch (read only)
-+Values: 	integer.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/product_id
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Product identifier as stored in the hardware (eg. PSX 48XG3)
-+		(read only)
-+Values: 	arbitrary string.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/product_revision
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Product revision stored in the hardware (eg. RevB)
-+		(read only)
-+Values: 	arbitrary string.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/product_vendor
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Product vendor as stored in the hardware (eg. MICROSEM)
-+		(read only)
-+Values: 	arbitrary string.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 0ab858d..d39b7fd 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9514,6 +9514,7 @@ M:	Logan Gunthorpe <logang@deltatee.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/switchtec.txt
-+F:	Documentation/ABI/testing/sysfs-class-switchtec
- F:	drivers/pci/switch/switchtec*
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index d37b2ed..d63e9dd 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -892,12 +892,20 @@ EXPORT_SYMBOL(pcie_capability_clear_and_set_dword);
  
- PCI DRIVER FOR NVIDIA TEGRA
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index e4a4294..354ddfd 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -485,6 +485,118 @@ static void mrpc_timeout_work(struct work_struct *work)
- 	mutex_unlock(&stdev->mrpc_mutex);
- }
- 
-+static ssize_t device_version_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	u32 ver;
-+
-+	ver = ioread32(&stdev->mmio_sys_info->device_version);
-+
-+	return sprintf(buf, "%x\n", ver);
-+}
-+static DEVICE_ATTR_RO(device_version);
-+
-+static ssize_t fw_version_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	u32 ver;
-+
-+	ver = ioread32(&stdev->mmio_sys_info->firmware_version);
-+
-+	return sprintf(buf, "%08x\n", ver);
-+}
-+static DEVICE_ATTR_RO(fw_version);
-+
-+static ssize_t io_string_show(char *buf, void __iomem *attr, size_t len)
-+{
-+	int i;
-+
-+	memcpy_fromio(buf, attr, len);
-+	buf[len] = '\n';
-+	buf[len + 1] = 0;
-+
-+	for (i = len - 1; i > 0; i--) {
-+		if (buf[i] != ' ')
-+			break;
-+		buf[i] = '\n';
-+		buf[i + 1] = 0;
-+	}
-+
-+	return strlen(buf);
-+}
-+
-+#define DEVICE_ATTR_SYS_INFO_STR(field) \
-+static ssize_t field ## _show(struct device *dev, \
-+	struct device_attribute *attr, char *buf) \
-+{ \
-+	struct switchtec_dev *stdev = to_stdev(dev); \
-+	return io_string_show(buf, &stdev->mmio_sys_info->field, \
-+			    sizeof(stdev->mmio_sys_info->field)); \
-+} \
-+\
-+static DEVICE_ATTR_RO(field)
-+
-+DEVICE_ATTR_SYS_INFO_STR(vendor_id);
-+DEVICE_ATTR_SYS_INFO_STR(product_id);
-+DEVICE_ATTR_SYS_INFO_STR(product_revision);
-+DEVICE_ATTR_SYS_INFO_STR(component_vendor);
-+
-+static ssize_t component_id_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	int id = ioread16(&stdev->mmio_sys_info->component_id);
-+
-+	return sprintf(buf, "PM%04X\n", id);
-+}
-+static DEVICE_ATTR_RO(component_id);
-+
-+static ssize_t component_revision_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	int rev = ioread8(&stdev->mmio_sys_info->component_revision);
-+
-+	return sprintf(buf, "%d\n", rev);
-+}
-+static DEVICE_ATTR_RO(component_revision);
-+
-+static ssize_t partition_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+
-+	return sprintf(buf, "%d\n", stdev->partition);
-+}
-+static DEVICE_ATTR_RO(partition);
-+
-+static ssize_t partition_count_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+
-+	return sprintf(buf, "%d\n", stdev->partition_count);
-+}
-+static DEVICE_ATTR_RO(partition_count);
-+
-+static struct attribute *switchtec_device_attrs[] = {
-+	&dev_attr_device_version.attr,
-+	&dev_attr_fw_version.attr,
-+	&dev_attr_vendor_id.attr,
-+	&dev_attr_product_id.attr,
-+	&dev_attr_product_revision.attr,
-+	&dev_attr_component_vendor.attr,
-+	&dev_attr_component_id.attr,
-+	&dev_attr_component_revision.attr,
-+	&dev_attr_partition.attr,
-+	&dev_attr_partition_count.attr,
-+	NULL,
-+};
-+
-+ATTRIBUTE_GROUPS(switchtec_device);
-+
- static int switchtec_dev_open(struct inode *inode, struct file *filp)
+ int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
  {
- 	struct switchtec_dev *stdev;
-@@ -699,6 +811,7 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
- 	dev->devt = MKDEV(MAJOR(switchtec_devt), minor);
- 	dev->class = switchtec_class;
- 	dev->parent = &pdev->dev;
-+	dev->groups = switchtec_device_groups;
- 	dev->release = stdev_release;
- 	dev_set_name(dev, "switchtec%d", minor);
++	if (pci_dev_is_disconnected(dev)) {
++		*val = ~0;
++		return -ENODEV;
++	}
+ 	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
+ }
+ EXPORT_SYMBOL(pci_read_config_byte);
  
+ int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
+ {
++	if (pci_dev_is_disconnected(dev)) {
++		*val = ~0;
++		return -ENODEV;
++	}
+ 	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
+ }
+ EXPORT_SYMBOL(pci_read_config_word);
+@@ -905,18 +913,26 @@ EXPORT_SYMBOL(pci_read_config_word);
+ int pci_read_config_dword(const struct pci_dev *dev, int where,
+ 					u32 *val)
+ {
++	if (pci_dev_is_disconnected(dev)) {
++		*val = ~0;
++		return -ENODEV;
++	}
+ 	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
+ }
+ EXPORT_SYMBOL(pci_read_config_dword);
+ 
+ int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
+ {
++	if (pci_dev_is_disconnected(dev))
++		return -ENODEV;
+ 	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
+ }
+ EXPORT_SYMBOL(pci_write_config_byte);
+ 
+ int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
+ {
++	if (pci_dev_is_disconnected(dev))
++		return -ENODEV;
+ 	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
+ }
+ EXPORT_SYMBOL(pci_write_config_word);
+@@ -924,6 +940,8 @@ EXPORT_SYMBOL(pci_write_config_word);
+ int pci_write_config_dword(const struct pci_dev *dev, int where,
+ 					 u32 val)
+ {
++	if (pci_dev_is_disconnected(dev))
++		return -ENODEV;
+ 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+ }
+ EXPORT_SYMBOL(pci_write_config_dword);
 -- 
-2.1.4
+2.7.2
