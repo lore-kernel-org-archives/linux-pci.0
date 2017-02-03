@@ -1,51 +1,46 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Thierry Reding <thierry.reding@gmail.com>
-Subject: [PATCH 18/20] PCI: tegra: update PCI config space remap function
-Date: Mon, 27 Feb 2017 15:14:29 +0000
-Message-Id: <20170227151436.18698-19-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
-References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56980 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751368AbdBCUGl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Feb 2017 15:06:41 -0500
+Date: Fri, 3 Feb 2017 14:06:38 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+        nsekhar@ti.com
+Subject: Re: [PATCH 0/5] PCI: dwc: miscellaneous cleanups and fixes
+Message-ID: <20170203200638.GE10291@bhelgaas-glaptop.roam.corp.google.com>
+References: <1484136415-20798-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1484136415-20798-1-git-send-email-kishon@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use correct memory mapping attributes to map config space
-regions to enforce configuration space non-posted writes behaviour.
+On Wed, Jan 11, 2017 at 05:36:50PM +0530, Kishon Vijay Abraham I wrote:
+> This series includes miscellaneous cleanups and fixes in dra7xx
+> pci driver and it also adds COMPILE_TEST to all designware
+> based drivers (except dra7xx driver and hisi driver), since
+> dra7xx driver doesn't depend on architecture specific config and
+> hisi driver is compiled based on only ARM64.
+> 
+> These patches have been created after applying [1].
+> 
+> [1] -> https://lkml.org/lkml/2017/1/6/246
+> 
+> Kishon Vijay Abraham I (5):
+>   PCI: dwc: Add COMPILE_TEST to all designware based drivers
+>   PCI: dwc: dra7xx: Simplify the probe code
+>   PCI: dwc: dra7xx: Add support to force RC to work in GEN1 mode
+>   PCI: dwc: dra7xx: Enable MSI and legacy interrupts simultaneously
+>   PCI: dwc: dra7xx: Group phy API invocations
+> 
+>  drivers/pci/dwc/Kconfig      |   16 ++--
+>  drivers/pci/dwc/pci-dra7xx.c |  174 ++++++++++++++++++++++++------------------
+>  2 files changed, 106 insertions(+), 84 deletions(-)
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
----
- drivers/pci/host/pci-tegra.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
-index ed8a93f..2618f87 100644
---- a/drivers/pci/host/pci-tegra.c
-+++ b/drivers/pci/host/pci-tegra.c
-@@ -380,7 +380,7 @@ static struct tegra_pcie_bus *tegra_pcie_bus_alloc(struct tegra_pcie *pcie,
- 						   unsigned int busnr)
- {
- 	struct device *dev = pcie->dev;
--	pgprot_t prot = pgprot_device(PAGE_KERNEL);
-+	pgprot_t prot = pgprot_noncached(PAGE_KERNEL);
- 	phys_addr_t cs = pcie->cs->start;
- 	struct tegra_pcie_bus *bus;
- 	unsigned int i;
-@@ -1962,7 +1962,7 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		rp->pcie = pcie;
- 		rp->np = port;
- 
--		rp->base = devm_ioremap_resource(dev, &rp->regs);
-+		rp->base = devm_pci_remap_cfg_resource(dev, &rp->regs);
- 		if (IS_ERR(rp->base))
- 			return PTR_ERR(rp->base);
- 
--- 
-2.10.0
+Applied to pci/host-designware for v4.11, thanks!  I added Pankaj's
+reviewed-by to the COMPILE_TEST patch.  His reviewed-by was
+technically for your standalone post of that patch, but I think both
+postings have the identical patch.
