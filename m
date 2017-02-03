@@ -1,59 +1,235 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:56676 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1755262AbdBOXXo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 18:23:44 -0500
-Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1FNIta2017874
-        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 18:23:38 -0500
-Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 28mswt8n3q-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 18:23:37 -0500
-Received: from localhost
-        by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Thu, 16 Feb 2017 09:23:35 +1000
-Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
-        by d23dlp01.au.ibm.com (Postfix) with ESMTP id A2EAF2CE805E
-        for <linux-pci@vger.kernel.org>; Thu, 16 Feb 2017 10:23:32 +1100 (EST)
-Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
-        by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v1FNNOEv19005576
-        for <linux-pci@vger.kernel.org>; Thu, 16 Feb 2017 10:23:32 +1100
-Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
-        by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v1FNN0ZJ027378
-        for <linux-pci@vger.kernel.org>; Thu, 16 Feb 2017 10:23:00 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, mpe@ellerman.id.au, bhelgaas@google.com,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>
-Subject: [PATCH 0/3] pci/hotplug/pnv-php: More bug fixes
-Date: Thu, 16 Feb 2017 10:22:31 +1100
-Message-Id: <1487200954-14681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=ktxA=ZQ=intel.com=ashok.raj@kernel.org>
+Return-Path: <SRS0=ktxA=ZQ=intel.com=ashok.raj@kernel.org>
+Date: Thu, 2 Feb 2017 22:00:53 -0800
+From: "Raj, Ashok" <ashok.raj@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>
+Subject: Re: [PATCH] pciehp: Fix race condition handling surprise link-down
+Message-ID: <20170203060053.GA240323@otc-nc-03>
+References: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
+ <20170203025901.GA15080@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170203025901.GA15080@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This series bases on the series: https://patchwork.ozlabs.org/patch/713513.
-This series fixes couple of issues:
+Hi Bjorn
 
-   * Remove WARN_ON() in pnv_php_put_slot(). The parent slot's refcount
-     is decreased when releasing PCI slot. The parent slot can be NULL
-     and no need to give a warning.
-   * The MSI (or MSIx) could be enabled prior to load pnv-php.ko. A
-     backtrace is thrown when phv-php.ko attempts to enable MSI again.
-     PATCH[2/3] skips enabling surprise hotplug if MSI has been enabled
-     by other driver.
-   * PATCH[3/3] doesn't disable MSI that was enabled by other dirver.
-     Also, the upstream port of the PCI slot is disabled when it's
-     destroyed.
+On Thu, Feb 02, 2017 at 08:59:01PM -0600, Bjorn Helgaas wrote:
+> Hi Ashok,
+> 
+> Sorry it took me so long to review this.  I never felt like I really
+> understood it, and it took me a long time to try to figure out a more
+> useful response.
 
-Gavin Shan (3):
-  pci/hotplug/pnv-php: Remove WARN_ON() in pnv_php_put_slot()
-  pci/hotplug/pnv-php: Disable surprise hotplug capability on conflicts
-  pci/hotplug/pnv-php: Disable MSI and PCI device properly
+No worries. Agree its a litte tricky, and took me several iterations before
+doing someting that was simple enough, without a complete overhaul of
+state management. 
 
- drivers/pci/hotplug/pnv_php.c | 32 +++++++++++++++++++++++---------
- 1 file changed, 23 insertions(+), 9 deletions(-)
+Thanks a ton for capturing the sequence, I did capture
+some debug output along at that time. My apologies for not adding it
+along. But this becomes excellant notes and perhaps would be good to 
+capture in commit or in the documentation. Going through this isn't fun :-)
 
--- 
-2.7.4
+
+Responses below:
+> > 
+> > This patch fixes that by setting the p_slot->state only when the work to
+> > handle the power event is executing, protected by the p_slot->hotplug_lock.
+> 
+> So let me first try to understand what's going on with the current
+> code.  In the normal case where a device is removed or turned off and
+> pciehp can complete everything before another device appears, I think
+> the flow is like this:
+
+You got this problem part right. Spot on!
+> 
+>       p_slot->state == STATIC_STATE (powered on, link up)
+> 
+>                         <-- surprise link down interrupt
+>       pciehp_isr()
+>         queue INT_LINK_DOWN work
+> 
+>       interrupt_event_handler(INT_LINK_DOWN)
+>         set p_slot->state = POWEROFF_STATE
+>         queue DISABLE_REQ work
+> 
+>       pciehp_power_thread(DISABLE_REQ)
+>         send PCI_EXP_SLTCTL_PWR_OFF command
+>         wait for power-off to complete
+>         set p_slot->state = STATIC_STATE
+> 
+>       p_slot->state == STATIC_STATE (powered off)
+> 
+> In the problem case, the link goes down, and while pciehp is still
+> dealing with that, the link comes back up.  So I think one possible
+> sequence is like this:
+> 
+>       p_slot->state == STATIC_STATE (powered on, link up)
+> 
+>                         <-- surprise link down interrupt
+>   1a  pciehp_isr()
+>         queue INT_LINK_DOWN work                     # queued: 1-LD
+> 
+>   1b  interrupt_event_handler(INT_LINK_DOWN)         # process 1-LD
+>         # handle_link_event() sees case STATIC_STATE
+>         set p_slot->state = POWEROFF_STATE
+>         queue DISABLE_REQ work                       # queued: 1-DR
+> 
+>                         <-- surprise link up interrupt
+>   2a  pciehp_isr()
+>         queue INT_LINK_UP work                       # queued: 1-DR 2-LU
+> 
+>   1c  pciehp_power_thread(DISABLE_REQ)               # process 1-DR
+>         send PCI_EXP_SLTCTL_PWR_OFF command
+>         wait for power-off to complete
+>         set p_slot->state = STATIC_STATE
+> 
+>                         <-- link down interrupt (result of PWR_OFF)
+>   3a  pciehp_isr()
+>         queue INT_LINK_DOWN work                     # queued: 2-LU 3-LD
+> 
+>   2b  interrupt_event_handler(INT_LINK_UP)           # process 2-LU
+>         # handle_link_event() sees case STATIC_STATE
+>         set p_slot->state = POWERON_STATE
+>         queue ENABLE_REQ work                        # queued: 3-LD 2-ER
+> 
+>   3b  interrupt_event_handler(INT_LINK_DOWN)         # process 3-LD
+>         # handle_link_event() sees case POWERON_STATE, so we emit
+>         # "Link Down event queued; currently getting powered on"
+>         set p_slot->state = POWEROFF_STATE
+>         queue DISABLE_REQ work                       # queued: 2-ER 3-DR
+> 
+>   2c  pciehp_power_thread(ENABLE_REQ)                # process 2-ER
+>         send PCI_EXP_SLTCTL_PWR_ON command
+>         wait for power-on to complete
+>         set p_slot->state = STATIC_STATE
+> 
+>                         <-- link up interrupt (result of PWR_ON)
+>   4a  pciehp_isr()
+>         queue INT_LINK_UP work                       # queued: 3-DR 4-LU
+> 
+>   3c  pciehp_power_thread(DISABLE_REQ)               # process 3-DR
+>         send PCI_EXP_SLTCTL_PWR_OFF command
+>         wait for power-off to complete
+>         set p_slot->state = STATIC_STATE
+> 
+>                         <-- link down interrupt (result of PWR_OFF)
+>   5a  pciehp_isr()
+>         queue INT_LINK_DOWN work                     # queued: 4-LU 5-LD
+> 
+> State 5a is the same as 3a (we're in STATIC_STATE with Link Up and
+> Link Down work items queued), so the whole cycle can repeat.
+> 
+> Now let's assume we apply this patch and see what changes.  The patch
+> changes where we set p_slot->state.  Currently we set POWEROFF_STATE
+> or POWERON_STATE in the interrupt_event_handler() work item.  The
+> patch moves that to the pciehp_power_thread() work item, where the
+> power commands are actually sent.
+
+Right. The difference with this patch is when we set the state to 
+POWERON_STATE or POWEROFF_STATE, we only do that when the previous
+POWER* operation has entirely completed. Since now its protected with the
+hotplug_lock mutex.
+
+In the problem case, since we set the state before the pciehp_power_thread,
+we end up changing the state to POWER*_STATE before the previous POWER*
+action has completed.
+> 
+>       p_slot->state == STATIC_STATE (powered on, link up)
+> 
+>                         <-- surprise link down interrupt
+>   1A  pciehp_isr()
+>         queue INT_LINK_DOWN work                     # queued: 1-LD
+> 
+>   1B  interrupt_event_handler(INT_LINK_DOWN)         # process 1-LD
+>         # handle_link_event() sees case STATIC_STATE
+>         # set p_slot->state = POWEROFF_STATE         # (removed by patch)
+>         queue DISABLE_REQ work                       # queued: 1-DR
+> 
+>                         <-- surprise link up interrupt
+>   2A  pciehp_isr()
+>         queue INT_LINK_UP work                       # queued: 1-DR 2-LU
+> 
+>   1C  pciehp_power_thread(DISABLE_REQ)               # process 1-DR
+
+	Also mutex hotplug_lock is held.
+
+>         set p_slot->state = POWEROFF_STATE           # (added by patch)
+>         send PCI_EXP_SLTCTL_PWR_OFF command
+>         wait for power-off to complete
+>         set p_slot->state = STATIC_STATE
+> 
+>                         <-- link down interrupt (result of PWR_OFF)
+>   3A  pciehp_isr()
+>         queue INT_LINK_DOWN work                     # queued: 2-LU 3-LD
+
+The above INT_LINK_DOWN will eventually be ignored in handle_link_event()
+because we are in POWEROFF_STATE, and a link down while in POWEROFF will
+be ignored.
+> 
+>   2B  interrupt_event_handler(INT_LINK_UP)           # process 2-LU
+>         # handle_link_event() sees case STATIC_STATE
+>         # set p_slot->state = POWERON_STATE          # (removed by patch)
+>         queue ENABLE_REQ work                        # queued: 3-LD 2-ER
+> 
+>   3B  interrupt_event_handler(INT_LINK_DOWN)         # process 3-LD
+>         # handle_link_event() sees case STATIC_STATE,
+>         # unlike 3b above, which saw POWERON_STATE;
+>         # doesn't emit a message, but still queues DISABLE_REQ
+>         # set p_slot->state = POWEROFF_STATE         # (removed by patch)
+>         queue DISABLE_REQ work                       # queued: 2-ER 3-DR
+
+3B will be ignored, since handle_link_event() knows we are in process
+of POWEROFF.
+
+> 
+>   2C  pciehp_power_thread(ENABLE_REQ)                # process 2-ER
+
+We are also protected by mutex hotplug_lock here. So  the following
+wont get executed until step 1C has run to completion and the 
+mutex is released.
+
+>         set p_slot->state = POWERON_STATE            # (added by patch)
+>         send PCI_EXP_SLTCTL_PWR_ON command
+>         wait for power-on to complete
+>         set p_slot->state = STATIC_STATE
+> 
+>                         <-- link up interrupt (result of PWR_ON)
+>   4A  pciehp_isr()
+>         queue INT_LINK_UP work                       # queued: 3-DR 4-LU
+
+handle_link_event() would eventually dismiss the INT_LINK_UP since
+it knows we are in process of POWERON.
+> 
+>   3C  pciehp_power_thread(DISABLE_REQ)               # process 3-DR
+>         set p_slot->state = POWEROFF_STATE           # (added by patch)
+>         send PCI_EXP_SLTCTL_PWR_OFF command
+>         wait for power-off to complete
+>         set p_slot->state = STATIC_STATE
+> 
+>                         <-- link down interrupt (result of PWR_OFF)
+>   5A  pciehp_isr()
+>         queue INT_LINK_DOWN work                     # queued: 4-LU 5-LD
+> 
+> With this particular ordering, I think we still have the same problem:
+> 5A is the same as 3A, so I think the cycle could repeat.
+
+I think the sequence is almost right, except the fact since we are protected
+by hotplug_lock, we don't allow another POWERON or POWEROFF to be processed
+until the previous POWER* operation is completed entirely.
+
+We have run through several experiments with managed power on, power off,
+using attention button sequence and surprise link down, surprise remove
+in the lab and we haven't run into any other issues.
+
+Just to summarize, we only queue the POWEROFF due to surprise link down
+and another POWERON due to link becoming back up. The transient link-down 
+events are coveniently ignored.
+
+Hope this helps, and sincere thanks for looking into this in great detail!
+
+Cheers,
+Ashok
