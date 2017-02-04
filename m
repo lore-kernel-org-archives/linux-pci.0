@@ -1,105 +1,138 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:44874 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932740AbdBPUG2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2017 15:06:28 -0500
-Date: Thu, 16 Feb 2017 21:06:24 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Frederic Weisbecker <fweisbec@gmail.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        wanpeng.li@hotmail.com, Peter Zijlstra <peterz@infradead.org>,
-        Rik van Riel <riel@redhat.com>,
-        "# .39.x" <stable@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        USB list <linux-usb@vger.kernel.org>
-Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
- after cold boots, boots after reboot
-Message-ID: <20170216200624.GA4274@amd>
-References: <CA+55aFxuXgsCyMgrRDHdM6BQaej68QoU8TwdM=3LYu9LMBf4fQ@mail.gmail.com>
- <20170215172303.GA15696@amd>
- <20170215232005.GA7877@amd>
- <CA+55aFyqsxjQPp=Y6MnvyMH_iA-TSiPrycnAHbBzw5bwQi7jjg@mail.gmail.com>
- <20170216111144.GA12377@amd>
- <20170216172535.GA7868@amd>
- <20170216181353.GB4357@lerouge>
- <CA+55aFwhzMWR8QPGEK+8O8r0sFpHjn4XXraQ9K0Hq4VQi8Ru-w@mail.gmail.com>
- <20170216183421.GC4357@lerouge>
- <alpine.DEB.2.20.1702162033200.4049@nanos>
+Received: from mail-ua0-f196.google.com ([209.85.217.196]:36454 "EHLO
+        mail-ua0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751498AbdBDVof (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 4 Feb 2017 16:44:35 -0500
+Received: by mail-ua0-f196.google.com with SMTP id f2so4293848uaf.3
+        for <linux-pci@vger.kernel.org>; Sat, 04 Feb 2017 13:44:35 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
-In-Reply-To: <alpine.DEB.2.20.1702162033200.4049@nanos>
+In-Reply-To: <20170204185607.GA29957@wunner.de>
+References: <CAE9FiQVCMCa7iVyuwp9z6VrY0cE7V_xghuXip28Ft52=8QmTWw@mail.gmail.com>
+ <20170203055200.GA29413@wunner.de> <CAE9FiQWs0H9vqEo2ZYnWWBW0Ao-hx4WYHQ69cyR32nFQ9yV9rw@mail.gmail.com>
+ <20170204081254.GA29595@wunner.de> <20170204185607.GA29957@wunner.de>
+From: Yinghai Lu <yinghai@kernel.org>
+Date: Sat, 4 Feb 2017 13:44:34 -0800
+Message-ID: <CAE9FiQUuFJHMScyFgnHbs5r-SzTiRiBZ2JcpUYJhg0ft75-OBQ@mail.gmail.com>
+Subject: Re: pciehp is broken from 4.10-rc1
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sat, Feb 4, 2017 at 10:56 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> On Sat, Feb 04, 2017 at 09:12:54AM +0100, Lukas Wunner wrote:
+>
+> Section 6.7.3.4 of the PCIe Base spec seems to support the theory above,
+> so here's a tentative patch.
+>
+>
+> -- >8 --
+> Subject: [PATCH] PCI: pciehp: Don't enable PME on runtime suspend
 
---82I3+IH0IqGh5yIs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+it works:
+sca05-0a81e0bc:~ # echo 0 > /sys/bus/pci/slots/8/power
+[  176.983229] pci_hotplug: power_write_file: power = 0
+[  176.988945] pciehp 0000:60:03.2:pcie004: pciehp_get_power_status:
+SLOTCTRL a8 value read 11f1
+[  176.998482] pciehp 0000:60:03.2:pcie004: pciehp_unconfigure_device:
+domain:bus:dev = 0000:65:00
+[  177.008215] mlx4_core 0000:65:00.0: PME# disabled
+[  178.817209] iommu: Removing device 0000:65:00.0 from group 172
+[  178.829869] pcieport 0000:60:03.2:   root_bridge ACPI_HANDLE
+ffff9059bb00ce88 : pci0000:60
+[  178.839114] pcieport 0000:60:03.2:  pciehp is native
+[  178.844717] pci 0000:65:00.0: freeing pci_dev info
+[  178.854842] pciehp 0000:60:03.2:pcie004: Timeout on hotplug command
+0x11f1 (issued 97032 msec ago)
+[  178.865199] pciehp 0000:60:03.2:pcie004: pending interrupts 0x0010
+from Slot Status
+[  178.873890] pciehp 0000:60:03.2:pcie004: pciehp_power_off_slot:
+SLOTCTRL a8 write cmd 400
+[  178.937499] pciehp 0000:60:03.2:pcie004: pending interrupts 0x0100
+from Slot Status
+[  178.946052] pciehp 0000:60:03.2:pcie004: Slot(8): Link Down
+[  178.952422] pciehp 0000:60:03.2:pcie004: Slot(8): Link Down event
+ignored; already powering off
+[  179.894895] pciehp 0000:60:03.2:pcie004: pciehp_green_led_off:
+SLOTCTRL a8 write cmd 300
+[  179.903941] pciehp 0000:60:03.2:pcie004: pending interrupts 0x0010
+from Slot Status
 
-On Thu 2017-02-16 20:34:45, Thomas Gleixner wrote:
-> On Thu, 16 Feb 2017, Frederic Weisbecker wrote:
-> > On Thu, Feb 16, 2017 at 10:20:14AM -0800, Linus Torvalds wrote:
-> > > On Thu, Feb 16, 2017 at 10:13 AM, Frederic Weisbecker
-> > > <fweisbec@gmail.com> wrote:
-> > > >
-> > > > I haven't followed the discussion but this patch has a known issue =
-which is fixed
-> > > > with:
-> > > >     7bdb59f1ad474bd7161adc8f923cdef10f2638d1
-> > > >     "tick/nohz: Fix possible missing clock reprog after tick soft r=
-estart"
-> > > >
-> > > > I hope this fixes your issue.
-> > >=20
-> > > No, Pavel saw the problem with rc8 too, which already has that fix.
-> > >=20
-> > > So I think we'll just need to revert that original patch (and that
-> > > means that we have to revert the commit you point to as well, since
-> > > that ->next_tick field was added by the original commit).
-
-(I already said that elsewhere, but yes, revert of 7bdb59f1ad474b and
-24b91e360ef5 fixes boot problems for me. Hmm, and 24b9 was marked for
-stable... I don't know how to contact all the stable maintainers, but
-probably it should not go to stable just yet...)=20
-
-> > Aw too bad, but indeed that late we don't have the choice.
->=20
-> Hint: Look for CPU hotplug interaction of these patches. I bet something
-> becomes stale when the CPU goes down and does not get reset when it comes
-> back online.
-
-Hmm, that would explain problems at boot _and_ problems during
-suspend/resume.
-
-Note that this can be used to test the hotplug...
-
- cd /sys/devices/system/cpu/cpu1
- while true; do echo 0 > online; echo 1 > online; done
-
-									Pavel
-
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---82I3+IH0IqGh5yIs
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlimBkAACgkQMOfwapXb+vK/3QCaApu8lknsLqlHtEImXiHHb3m4
-954AnRP3kQupO/U+6EEgHDProxGsV3iQ
-=9zlT
------END PGP SIGNATURE-----
-
---82I3+IH0IqGh5yIs--
+sca05-0a81e0bc:~ #
+sca05-0a81e0bc:~ #
+sca05-0a81e0bc:~ # echo 1 > /sys/bus/pci/slots/8/power
+[  222.136244] pci_hotplug: power_write_file: power = 1
+[  222.141818] pciehp 0000:60:03.2:pcie004: pciehp_get_power_status:
+SLOTCTRL a8 value read 17f1
+[  222.151710] pciehp 0000:60:03.2:pcie004: pending interrupts 0x0010
+from Slot Status
+[  222.160303] pciehp 0000:60:03.2:pcie004: pciehp_power_on_slot:
+SLOTCTRL a8 write cmd 0
+[  222.169156] pciehp 0000:60:03.2:pcie004: pciehp_green_led_blink:
+SLOTCTRL a8 write cmd 200
+[  222.178395] pciehp 0000:60:03.2:pcie004: pending interrupts 0x0010
+from Slot Status
+[  222.204325] pciehp 0000:60:03.2:pcie004: pending interrupts 0x0010
+from Slot Status
+[  222.784102] pciehp 0000:60:03.2:pcie004: pciehp_check_link_active:
+lnk_status = f083
+[  222.792750] pciehp 0000:60:03.2:pcie004: pending interrupts 0x0100
+from Slot Status
+[  222.801297] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up
+[  222.807358] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up event
+ignored; already powering on
+[  222.807409] pciehp 0000:60:03.2:pcie004: pciehp_check_link_active:
+lnk_status = f083
+[  222.968062] pciehp 0000:60:03.2:pcie004: pciehp_check_link_status:
+lnk_status = f083
+[  222.976922] pci 0000:65:00.0: [15b3:1003] type 00 class 0x0c0600
+[  222.983864] pci 0000:65:00.0: reg 0x10: [mem 0x00000000-0x000fffff 64bit]
+[  222.991598] pci 0000:65:00.0: reg 0x18: [mem 0x00000000-0x07ffffff
+64bit pref]
+[  222.999979] pci_bus 0000:65:   bridge ACPI_HANDLE ffff9019bb0d0438
+: 0000:60:03.2
+[  223.010044] pci 0000:65:00.0: reg 0x134: [mem 0x00000000-0x07ffffff
+64bit pref]
+[  223.018214] pci 0000:65:00.0: VF(n) BAR2 space: [mem
+0x00000000-0x1ffffffff 64bit pref] (contains BAR2 for 64 VFs)
+[  223.033412] pci 0000:65:00.0: on_all_pcie_path: 1
+[  223.040666] iommu: Adding device 0000:65:00.0 to group 172
+[  223.047042] pci 0000:65:00.0: BAR 2: assigned [mem
+0x387bf8000000-0x387bffffffff 64bit pref]
+[  223.056589] pci 0000:65:00.0: BAR 9: assigned [mem
+0x3879f8000000-0x387bf7ffffff 64bit pref]
+[  223.066068] pci 0000:65:00.0: BAR 0: [mem size 0x00100000 64bit] + pref
+[  223.073464] pci 0000:65:00.0: BAR 0: assigned [mem
+0x3879f7f00000-0x3879f7ffffff 64bit]
+[  223.082527] pcieport 0000:60:03.2: PCI bridge to [bus 65-67]
+[  223.088864] pcieport 0000:60:03.2:   bridge window [io  0xa000-0xafff]
+[  223.096161] pcieport 0000:60:03.2:   bridge window [mem
+0xc0000000-0xc3ffffff]
+[  223.104229] pcieport 0000:60:03.2:   bridge window [mem
+0x387800000000-0x387bffffffff 64bit pref]
+[  223.114152] pcieport 0000:60:03.2: Max Payload Size set to  256/
+256 (was  256), Max Read Rq  128
+[  223.124152] pci 0000:65:00.0: Max Payload Size set to  256/ 256
+(was  128), Max Read Rq  512
+[  223.133597] pci 0000:65:00.0: calling
+mellanox_check_broken_intx_masking+0x0/0x130
+[  223.142055] calling  mellanox_check_broken_intx_masking+0x0/0x130 @
+16969 for 0000:65:00.0
+[  223.151291] pci fixup mellanox_check_broken_intx_masking+0x0/0x130
+returned after 0 usecs for 0000:65:00.0
+[  223.162157] pcieport 0000:60:03.2:   root_bridge ACPI_HANDLE
+ffff9059bb00ce88 : pci0000:60
+[  223.171395] pcieport 0000:60:03.2:  pciehp is native
+[  223.177183] mlx4_core: Initializing 0000:65:00.0
+[  223.182374] mlx4_core 0000:65:00.0: enabling device (0140 -> 0142)
+...
+[  231.714671] pciehp 0000:60:03.2:pcie004: pciehp_green_led_on:
+SLOTCTRL a8 write cmd 100
+[  232.728377] pciehp 0000:60:03.2:pcie004: Timeout on hotplug command
+0x11f1 (issued 1016 msec ago)
+[  232.738298] pciehp 0000:60:03.2:pcie004:
+pciehp_set_attention_status: SLOTCTRL a8 write cmd c0
