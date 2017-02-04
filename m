@@ -1,130 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:34801 "EHLO
-        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752364AbdBIXSS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Feb 2017 18:18:18 -0500
-From: Wei Zhang <wzhang@fb.com>
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Krishna Dhulipala <krishnad@fb.com>
-CC: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
-Date: Thu, 9 Feb 2017 23:16:05 +0000
-Message-ID: <B0BD08E8-442E-4FBF-AF52-7AC0A7CA092C@fb.com>
-References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
-In-Reply-To: <1486058763-7730-1-git-send-email-logang@deltatee.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=mO1w=ZR=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=mO1w=ZR=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH 1/3] PCI:hisi: Add DT almost ECAM support for HiSilicon
+ Hip06/Hip07 host controllers
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1484202504-96686-1-git-send-email-liudongdong3@huawei.com>
+ <1484202504-96686-2-git-send-email-liudongdong3@huawei.com>
+ <20170203204042.GF10291@bhelgaas-glaptop.roam.corp.google.com>
+ <20170203210020.GA24162@bhelgaas-glaptop.roam.corp.google.com>
+CC: <linux-pci@vger.kernel.org>, <wangzhou1@hisilicon.com>,
+        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
+        <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <02893dda-36b3-8949-c5a0-aed964e62326@huawei.com>
+Date: Sat, 4 Feb 2017 11:30:32 +0800
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170203210020.GA24162@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-SGksDQoNClRoZSBzd2l0Y2h0ZWMgZHJpdmVyIHBhdGNoZXMgW1BBVENIIHYyICgwLTQpLzRdIGlu
-IGNvbmp1bmN0aW9uIHdpdGggdGhlIHN3aXRjaHRlYyB1c2VybGFuZCB0b29sIGlzIHVzZWQgdG8g
-Y29tbXVuaWNhdGUgd2l0aCB0aGUgTWljcm9zZW1pIDg1MzYgUENJZSBTd2l0Y2ggdXNlZCBvbiBG
-YWNlYm9va+KAmXMgTGlnaHRuaW5nIHBsYXRmb3JtLiBUaGUgZm9sbG93aW5nIGVzc2VudGlhbCBk
-cml2ZXIgYW5kIHRvb2wgZnVuY3Rpb25zIHdlcmUgc3VjY2Vzc2Z1bGx5IHRlc3RlZCB3aXRoIGl0
-Og0KwrcgICAgICAgICBSZXRyaWV2YWwgb2YgZmlybXdhcmUgYW5kIGNvbmZpZ3VyYXRpb24gaW5m
-b3JtYXRpb24gYWxvbmcgd2l0aCBDUkNzDQrCtyAgICAgICAgIFN3aXRjaCBmaXJtd2FyZSBhbmQg
-Y29uZmlndXJhdGlvbiB1cGdyYWRlcw0KwrcgICAgICAgICBTd2l0Y2ggUEhZL0xpbmsgZXJyb3Ig
-Y291bnRlciBjb2xsZWN0aW9uIGFuZCB0aGUgYWJpbGl0eSB0byByZXNldCB0aGVtDQrCtyAgICAg
-ICAgIFN3aXRjaCB1cHN0cmVhbSBhbmQgZG93bnN0cmVhbSBwb3J0c+KAmSBsaW5rIHN0YXR1cyBy
-ZXBvcnRpbmcNCsK3ICAgICAgICAgU3dpdGNoIGludGVyZmFjZSBmdW5jdGlvbmluZw0KwrcgICAg
-ICAgICBSZXRyaWV2YWwgb2Ygc3dpdGNoIEFTSUMgdGVtcGVyYXR1cmUNCsK3ICAgICAgICAgRXhw
-b3J0aW5nIHN3aXRjaCBmaXJtd2FyZSBsb2cgZHVtcA0KwrcgICAgICAgICBSZWFkIHRoZSBpbmZv
-cm1hdGlvbiBvZiBmaXJtd2FyZSBhbmQgY29uZmlndXJhdGlvbiBiaW5hcmllcw0KwrcgICAgICAg
-ICBFeHRyYWN0IHRoZSBmaXJtd2FyZSBhbmQgY29uZmlndXJhdGlvbiBpbWFnZXMgc3RvcmVkIGlu
-IHRoZSBzd2l0Y2ggRUVQUk9NDQoNClRlc3RlZC1ieTogS3Jpc2huYSBEaHVsaXBhbGEga3Jpc2hu
-YWRAZmIuY29tDQpUZXN0ZWQtYnk6IFdlaSBaaGFuZyB3emhhbmdAZmIuY29tICANCg0KVGhhbmtz
-LA0KLVdlaQ0KDQotLQ0Kd2VpIHpoYW5nIHwgc29mdHdhcmUgZW5naW5lZXIgfCBmYWNlYm9vaw0K
-d3poYW5nQGZiLmNvbSB8ICg0MDgpIDQ2MC00ODAzDQoNCk9uIDIvMi8xNywgMTA6MDUgQU0sICJM
-b2dhbiBHdW50aG9ycGUiIDxsb2dhbmdAZGVsdGF0ZWUuY29tPiB3cm90ZToNCg0KICAgIENoYW5n
-ZXMgc2luY2UgdjE6DQogICAgDQogICAgKiBSZWJhc2VkIG9udG8gNC4xMC1yYzYgKGNsZWFubHkp
-DQogICAgKiBTcGxpdCB0aGUgcGF0Y2ggaW50byBhIGZldyBtb3JlIGVhc2lseSBkaWdlc3RpYmxl
-IHBhdGNoZXMgKGFzDQogICAgICBzdWdnZXN0ZWQgYnkgR3JlZyBLcm9haC1IYXJ0bWFuKQ0KICAg
-ICogRm9sZGVkIHN3aXRjaHRlYy5jIGludG8gc3dpdGNodGVjLmggKHBlciBHcmVnKQ0KICAgICog
-Rml4ZWQgYSBidW5jaCBvZiAzMmJpdCBidWlsZCB3YXJuaW5ncyBjYXVnaHQgYnkgdGhlIGtidWls
-ZCB0ZXN0IHJvYm90DQogICAgKiBGaXhlZCBzb21lIGlzc3VlcyBpbiB0aGUgZG9jdW1lbnRhdGlv
-biBzbyBpdCBoYXMgYSBwcm9wZXINCiAgICAgIHJlU3RydWN0cmVkVGV4dCBmb3JtYXQgKGFzIG5v
-dGVkIGJ5IEpvbmF0aGFuIENvcmJldCkNCiAgICAqIEZpeGVkIHBhZGRpbmcgYW5kIHNpemVzIGlu
-IHRoZSBJT0NUTCBzdHJ1Y3R1cmVzIGFzIG5vdGljZWQgYnkgRW1pbA0KICAgICAgVmVsaWtvdiBh
-bmQgdXNlZCBwYWhvbGUgdG8gdmVyaWZ5IHRoZWlyIGNvbnNpc3RlbmN5IGFjcm9zcyAzMiBhbmQg
-NjQNCiAgICAgIGJpdCBidWlsZHMNCiAgICAqIFJld29ya2VkIG9uZSBvZiB0aGUgSU9DVEwgaW50
-ZXJmYWNlcyB0byBiZSBtb3JlIGZ1dHVyZSBwcm9vZiAocGVyDQogICAgICBFbWlsKS4NCiAgICAN
-CiAgICBDaGFuZ2VzIHNpbmNlIFJGQzoNCiAgICANCiAgICAqIEZpeGVkIGluY29ycmVjdCB1c2Ug
-b2YgdGhlIGRyaXZlIG1vZGVsIGFzIHBvaW50ZWQgb3V0IGJ5IEdyZWcNCiAgICAgIEtyb2FoLUhh
-cnRtYW4NCiAgICAqIFVzZWQgZGV2bSBmdW5jdGlvbnMgYXMgc3VnZ2VzdGVkIGJ5IEtlaXRoIEJ1
-c2NoDQogICAgKiBBZGRlZCBhIGhhbmRmdWwgb2Ygc3lzZnMgYXR0cmlidXRlcyB0byB0aGUgc3dp
-dGNodGVjIGNsYXNzDQogICAgKiBBZGRlZCBhIGhhbmRmdWwgb2YgSU9DVExzIHRvIHRoZSBzd2l0
-Y2h0ZWMgZGV2aWNlDQogICAgKiBBIG51bWJlciBvZiBtaXNjZWxsYW5lb3VzIGJ1ZyBmaXhlcw0K
-ICAgIA0KICAgIC0tDQogICAgDQogICAgSGksDQogICAgDQogICAgVGhpcyBpcyBhIGNvbnRpbnVh
-dGlvbiBvZiB0aGUgUkZDIHdlIHBvc3RlZCBsYXN0ZWQgbW9udGggWzFdIHdoaWNoDQogICAgcHJv
-cG9zZXMgYSBtYW5hZ2VtZW50IGRyaXZlciBmb3IgTWljcm9zZW1pJ3MgU3dpdGNodGVjIGxpbmUg
-b2YgUENJDQogICAgc3dpdGNoZXMuIFRoaXMgaGFyZHdhcmUgaXMgc3RpbGwgbG9va2luZyB0byBi
-ZSB1c2VkIGluIHRoZSBPcGVuDQogICAgQ29tcHV0ZSBQbGF0Zm9ybQ0KICAgIA0KICAgIFRvIG1h
-a2UgdGhpcyBlbnRpcmVseSBjbGVhcjogdGhlIFN3aXRjaHRlYyBwcm9kdWN0cyBhcmUgY29tcGxp
-YW50DQogICAgd2l0aCB0aGUgUENJIHNwZWNpZmljYXRpb25zIGFuZCBhcmUgc3VwcG9ydGVkIHRv
-ZGF5IHdpdGggdGhlIHN0YW5kYXJkDQogICAgaW4ta2VybmVsIGRyaXZlci4gSG93ZXZlciwgdGhl
-c2UgZGV2aWNlcyBhbHNvIGV4cG9zZSBhIG1hbmFnZW1lbnQgZW5kcG9pbnQNCiAgICBvbiBhIHNl
-cGFyYXRlIFBDSSBmdW5jdGlvbiBhZGRyZXNzIHdoaWNoIGNhbiBiZSB1c2VkIHRvIHBlcmZvcm0g
-c29tZQ0KICAgIGFkdmFuY2VkIG9wZXJhdGlvbnMuIFRoaXMgaXMgYSBkcml2ZXIgZm9yIHRoYXQg
-ZnVuY3Rpb24uIFNlZSB0aGUgcGF0Y2gNCiAgICBmb3IgbW9yZSBpbmZvcm1hdGlvbi4NCiAgICAN
-CiAgICBTaW5jZSB0aGUgUkZDLCB3ZSd2ZSBtYWRlIHRoZSBjaGFuZ2VzIHJlcXVlc3RlZCBieSBH
-cmVnIEtyb2FoLUhhcnRtYW4NCiAgICBhbmQgS2VpdGggQnVzY2gsIGFuZCB3ZSd2ZSBhbHNvIGZs
-ZXNoZWQgb3V0IGEgbnVtYmVyIG9mIGZlYXR1cmVzLiBXZSd2ZQ0KICAgIGFkZGVkIGEgY291cGxl
-IG9mIElPQ1RMcyBhbmQgc3lzZnMgYXR0cmlidXRlcyB3aGljaCBhcmUgZG9jdW1lbnRlZCBpbg0K
-ICAgIHRoZSBwYXRjaC4gU2lnbmlmaWNhbnQgd29yayBoYXMgYWxzbyBiZWVuIGRvbmUgb24gdGhl
-IHVzZXJzcGFjZSB0b29sDQogICAgd2hpY2ggaXMgYXZhaWxhYmxlIHVuZGVyIGEgR1BMIGxpY2Vu
-c2UgYXQgWzJdLiBXZSd2ZSBhbHNvIGhhZCB0ZXN0aW5nDQogICAgZG9uZSBieSBzb21lIG9mIHRo
-ZSBpbnRlcmVzdGVkIHBhcnRpZXMuDQogICAgDQogICAgV2UgaG9wZSB0byBzZWUgdGhpcyB3b3Jr
-IGluY2x1ZGVkIGluIGVpdGhlciA0LjExIG9yIDQuMTIgYXNzdW1pbmcgYQ0KICAgIHNtb290aCBy
-ZXZpZXcgcHJvY2Vzcy4NCiAgICANCiAgICBUaGUgcGF0Y2ggaXMgYmFzZWQgb2ZmIG9mIHRoZSB2
-NC4xMC1yYzYgcmVsZWFzZS4NCiAgICANCiAgICBUaGFua3MgZm9yIHlvdXIgcmV2aWV3LA0KICAg
-IA0KICAgIExvZ2FuDQogICAgDQogICAgWzFdIGh0dHBzOi8vdXJsZGVmZW5zZS5wcm9vZnBvaW50
-LmNvbS92Mi91cmw/dT1odHRwcy0zQV9fd3d3LnNwaW5pY3MubmV0X2xpc3RzX2xpbnV4LTJEcGNp
-X21zZzU2ODk3Lmh0bWwmZD1Ed0lCQWcmYz01VkQwUlR0TmxUaDN5Y2Q0MWIzTVV3JnI9TFJGb0xs
-OTJ6V2o1bWtna2NfaFJjZyZtPVZMREJKcXpvdHpHa1RqOC14amxmVC1KMGsydUZxNkZjV2cybkFf
-b0tZSm8mcz1Pa2lnSG9TcUgxWjNkbm1McU43NmxJUV9XeFJKRGoxdXFJRGwzNVNJNThBJmU9IA0K
-ICAgIFsyXSBodHRwczovL2dpdGh1Yi5jb20vc2JhdGVzMTMwMjcyL3N3aXRjaHRlYy11c2VyDQog
-ICAgDQogICAgLS0NCiAgICANCiAgICBMb2dhbiBHdW50aG9ycGUgKDQpOg0KICAgICAgTWljcm9T
-ZW1pIFN3aXRjaHRlYyBtYW5hZ2VtZW50IGludGVyZmFjZSBkcml2ZXINCiAgICAgIHN3aXRjaHRl
-YzogQWRkIHVzZXIgaW50ZXJmYWNlIGRvY3VtZW50YXRpb24NCiAgICAgIHN3aXRjaHRlYzogQWRk
-IHN5c2ZzIGF0dHJpYnV0ZXMgdG8gdGhlIFN3aXRjaHRlYyBkcml2ZXINCiAgICAgIHN3aXRjaHRl
-YzogQWRkIElPQ1RMcyB0byB0aGUgU3dpdGNodGVjIGRyaXZlcg0KICAgIA0KICAgICBEb2N1bWVu
-dGF0aW9uL0FCSS90ZXN0aW5nL3N5c2ZzLWNsYXNzLXN3aXRjaHRlYyB8ICAgOTYgKysNCiAgICAg
-RG9jdW1lbnRhdGlvbi9pb2N0bC9pb2N0bC1udW1iZXIudHh0ICAgICAgICAgICAgfCAgICAxICsN
-CiAgICAgRG9jdW1lbnRhdGlvbi9zd2l0Y2h0ZWMudHh0ICAgICAgICAgICAgICAgICAgICAgfCAg
-IDgwICsrDQogICAgIE1BSU5UQUlORVJTICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIHwgICAxMSArDQogICAgIGRyaXZlcnMvcGNpL0tjb25maWcgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIHwgICAgMSArDQogICAgIGRyaXZlcnMvcGNpL01ha2VmaWxlICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIHwgICAgMSArDQogICAgIGRyaXZlcnMvcGNpL3N3aXRjaC9LY29uZmln
-ICAgICAgICAgICAgICAgICAgICAgIHwgICAxMyArDQogICAgIGRyaXZlcnMvcGNpL3N3aXRjaC9N
-YWtlZmlsZSAgICAgICAgICAgICAgICAgICAgIHwgICAgMSArDQogICAgIGRyaXZlcnMvcGNpL3N3
-aXRjaC9zd2l0Y2h0ZWMuYyAgICAgICAgICAgICAgICAgIHwgMTYwOCArKysrKysrKysrKysrKysr
-KysrKysrKw0KICAgICBpbmNsdWRlL3VhcGkvbGludXgvc3dpdGNodGVjX2lvY3RsLmggICAgICAg
-ICAgICB8ICAxMzIgKysNCiAgICAgMTAgZmlsZXMgY2hhbmdlZCwgMTk0NCBpbnNlcnRpb25zKCsp
-DQogICAgIGNyZWF0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL0FCSS90ZXN0aW5nL3N5c2Zz
-LWNsYXNzLXN3aXRjaHRlYw0KICAgICBjcmVhdGUgbW9kZSAxMDA2NDQgRG9jdW1lbnRhdGlvbi9z
-d2l0Y2h0ZWMudHh0DQogICAgIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3BjaS9zd2l0Y2gv
-S2NvbmZpZw0KICAgICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9wY2kvc3dpdGNoL01ha2Vm
-aWxlDQogICAgIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3BjaS9zd2l0Y2gvc3dpdGNodGVj
-LmMNCiAgICAgY3JlYXRlIG1vZGUgMTAwNjQ0IGluY2x1ZGUvdWFwaS9saW51eC9zd2l0Y2h0ZWNf
-aW9jdGwuaA0KICAgIA0KICAgIC0tDQogICAgMi4xLjQNCiAgICANCg0K
+Hi Bjorn
+
+Many thanks for your review.
+
+e( 2017/2/4 5:00, Bjorn Helgaas ei:
+> On Fri, Feb 03, 2017 at 02:40:42PM -0600, Bjorn Helgaas wrote:
+>> On Thu, Jan 12, 2017 at 02:28:22PM +0800, Dongdong Liu wrote:
+>>> The PCIe controller in Hip06/Hip07 SoCs is not completely
+>>> ECAM-compliant. It is non-ECAM only for the RC bus config space; for
+>>> any other bus underneath the root bus it does support ECAM access.
+>>> This is to add the almost ECAM support in DT way.
+>>>
+>>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>>> Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>>> Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
+>>
+>> Applied to pci/host-hisi for v4.11, thanks!
+>
+> Oops, I take this back, see below.
+>
+>>> @@ -262,17 +264,23 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+>>>  	const struct of_device_id *match;
+>>>  	struct resource *reg;
+>>>  	struct device_driver *driver;
+>>> +	struct pci_ecam_ops *ops;
+>>>  	int ret;
+>>>
+>>> +	driver = dev->driver;
+>>> +	match = of_match_device(driver->of_match_table, dev);
+>>> +	if (!strcmp(match->compatible, "hisilicon,pcie-almost-ecam")) {
+>>> +		ops = (struct pci_ecam_ops *)match->data;
+>>> +		return pci_host_common_probe(pdev, ops);
+>>> +	}
+>
+> Please make this a separate probe function() with a separate struct
+> platform_driver.
+>
+> That way you won't have to strcmp() for "hisilicon,pcie-almost-ecam",
+> and you can use of_device_get_match_data() to get "ops", so you won't
+> need to use of_match_device() at all.
+
+Good catch, will fix.
+
+Thanks,
+Dongdong
