@@ -1,86 +1,92 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44858 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932284AbdBGUHK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Feb 2017 15:07:10 -0500
-Date: Tue, 7 Feb 2017 14:06:56 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:47983 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753745AbdBDILK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 4 Feb 2017 03:11:10 -0500
+Date: Sat, 4 Feb 2017 09:12:54 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Yinghai Lu <yinghai@kernel.org>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: Re: Pointers for writing a good PCIe driver
-Message-ID: <20170207200656.GA11659@bhelgaas-glaptop.roam.corp.google.com>
-References: <ff099b5f-efc8-bb5f-41e3-493398844cc0@free.fr>
- <05046a8a-ba9f-26f9-4c93-f657f9da6294@free.fr>
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: pciehp is broken from 4.10-rc1
+Message-ID: <20170204081254.GA29595@wunner.de>
+References: <CAE9FiQVCMCa7iVyuwp9z6VrY0cE7V_xghuXip28Ft52=8QmTWw@mail.gmail.com>
+ <20170203055200.GA29413@wunner.de>
+ <CAE9FiQWs0H9vqEo2ZYnWWBW0Ao-hx4WYHQ69cyR32nFQ9yV9rw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <05046a8a-ba9f-26f9-4c93-f657f9da6294@free.fr>
+In-Reply-To: <CAE9FiQWs0H9vqEo2ZYnWWBW0Ao-hx4WYHQ69cyR32nFQ9yV9rw@mail.gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 07, 2017 at 04:55:28PM +0100, Mason wrote:
-> On 06/02/2017 16:54, Mason wrote:
+On Fri, Feb 03, 2017 at 11:00:19PM -0800, Yinghai Lu wrote:
+> On Thu, Feb 2, 2017 at 9:52 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> > Could you check if the port above 0000:60:03.2 is runtime suspended
+> > when you're trying this, i.e. does its power/runtime_status entry in
+> > sysfs say "suspended"?
 > 
-> > My platform ( arch/arm/mach-tango ) provides a PCIe controller from PLDA.
-> > 
-> > I do have access to a driver that works for a few PCIe boards, but it's
-> > an ancient out-of-tree driver (targeting v3.4). Also, I'm not sure it
-> > follows the best-practice guidelines (e.g. it hard-codes a few
-> > work-arounds directly in drivers/pci/probe.c)
+> yes.
 
-Indeed, having to change drivers/pci/probe.c doesn't sound like a best
-practice :)  If you can share details of what changes you need, people
-could probably suggest other ways to do it within the generic PCI
-framework.
+Huh?  That shouldn't happen, the port 0000:60:03.2 should block its
+parents from runtime suspending (by way of checking is_hotplug_bridge
+in pci_dev_check_d3cold()).
 
-> > If I understand correctly, while PCIe is a standard, it is not codified
-> > as much as USB (XHCI) or SATA (AHCI), which means the register layout
-> > (and possibly other things) are left up to the integrator? Which means
-> > there cannot be some kind of "generic" driver that works for a random
-> > PCIe controller?
+Maybe there's a misunderstanding here.  I was referring to the port
+*above* 0000:60:03.2.  I don't know it's device name, it's not apparent
+from the logs you've posted so far.
 
-There is no standardization of registers in MMIO or I/O port space.
-The size, location, and type of those registers is configurable in a
-generic way via the BARs, of course.  But that tells you nothing about
-the *functionality* of those MMIO or I/O port registers.
+I've opened a bugzilla entry for this:
+https://bugzilla.kernel.org/show_bug.cgi?id=193951
 
-For config space, the first 64 bytes (the PCIe r3.0 spec calls it the
-"PCI 3.0 Compatible Configuration Space Header") are completely
-standardized.  This is where device IDs, BARs, and other generic
-registers are.
+Please attach the output of "lspci -vvvvxxxx" and full dmesg output.
 
-PCIe devices can implement up to 4096 bytes of config space.  The
-space after the 64-byte header can contain a list of standardized
-PCI/PCIe Capabilities, non-standardized device-specific registers, or
-both.  There is a way to include device-specific registers in a
-"Vendor Defined" Capability -- that way drivers can use generic
-mechanisms to find registers so they don't have to hard-code register
-layout assumptions.
 
-> > I guess my main question is: do you have pointers on getting started
-> > writing a PCIe driver good enough for upstream?
-> > 
-> > Is Documentation/PCI/PCIEBUS-HOWTO.txt still a relevant resource?
-
-PCIEBUS-HOWTO.txt is still relevant, but only to drivers for services
-of PCIe ports, e.g., hotplug, error reporting, etc.  It's not relevant
-to PCIe endpoint drivers.
-
-> > Are there good resources to get up to speed on the PCIe terminology?
+> > If you add pm_runtime_get_sync(&ctrl->pcie->port->dev) in
+> > drivers/pci/pciehp_ctrl.c:pciehp_enable_slot() before the call to
+> > pciehp_get_power_status(), and a corresponding pm_runtime_put()
+> > afterwards, does the issue go away?
 > 
-> I'm also wondering: in many Linux subsystems, there are often
-> several drivers of different quality; some are obsolescent and
-> have not been updated in a while, while some are recent and
-> follow all the latest best-practice guidelines (and the rest
-> is somewhere in the middle).
+> Still not working.
 > 
-> Are there 1 or 2 very good PCIe drivers to take as examples
-> as good starting points? (Perhaps a simple driver, and a
-> more complex driver.)
+> the problem is
+> sca05-0a81e0db:~ # echo 0 > /sys/bus/pci/slots/8/power
+> [  141.838027] mlx4_core 0000:65:00.0: PME# disabled
+> [  143.279434] iommu: Removing device 0000:65:00.0 from group 172
+> [  143.292329] pcieport 0000:60:03.2: PME# enabled
+> [  143.297431] pciehp 0000:60:03.2:pcie004: Timeout on hotplug command
+> 0x11f1 (issued 81476 msec ago)
+> [  143.337545] pcieport 0000:60:03.2: PME# disabled
+> [  143.380359] pciehp 0000:60:03.2:pcie004: Slot(8): Link Down
+> [  143.386735] pciehp 0000:60:03.2:pcie004: Slot(8): Link Down event
+> ignored; already powering off
+> [  143.445483] pcieport 0000:60:03.2: PME# enabled
+> [  143.992915] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up
+> [  143.999004] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up event
+> queued; currently getting powered off
+> [  144.025590] pcieport 0000:60:03.2: PME# disabled
+> [  144.133548] pcieport 0000:60:03.2: PME# enabled
+> [  144.333603] pciehp 0000:60:03.2:pcie004: Slot(8): Already enabled
+> sca05-0a81e0db:~ # [  144.357483] pcieport 0000:60:03.2: PME# disabled
+> [  144.465566] pcieport 0000:60:03.2: PME# enabled
+> 
+> we have extra Link Up event queued, while pm_runtime_get_sync/pm_runtime_put ?
+>   [  143.445483] pcieport 0000:60:03.2: PME# enabled
+>   [  143.992915] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up
 
-I'm not really the best person to ask about this because I deal more
-with the PCI core than with the drivers that use the core.  If I were
-looking, I might start with drivers/nvme/host/pci.c or
-drivers/usb/host/xhci-pci.c.
+I notice that with 68db9bc81436 applied, PME is repeatedly enabled and
+disabled on the port, presumably whenever it switches from D3 to D0
+and vice-versa.
 
-Bjorn
+Perhaps this port sends an interrupt while PME is enabled and the slot
+is actually occupied, despite it having been disabled via sysfs.
+That's a case I couldn't test when developing the patch for lack of
+PME capable hardware.
+
+If you comment out the calls to __pci_enable_wake() in
+drivers/pci/pci.c:pci_finish_runtime_suspend(), does the issue go away?
+
+Thanks,
+
+Lukas
