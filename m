@@ -1,114 +1,86 @@
-Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
-Date: Sun, 12 Feb 2017 17:31:30 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v5 7/8] thunderbolt: Power down controller when idle
-Message-ID: <20170212163130.GA2769@wunner.de>
-References: <cover.1484486499.git.lukas@wunner.de>
- <153c459627143d2a071344567367032afa4eadef.1484486499.git.lukas@wunner.de>
- <20170128233237.GQ20550@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f65.google.com ([209.85.213.65]:36847 "EHLO
+        mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753685AbdBDHAU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 4 Feb 2017 02:00:20 -0500
+Received: by mail-vk0-f65.google.com with SMTP id n19so3145904vkd.3
+        for <linux-pci@vger.kernel.org>; Fri, 03 Feb 2017 23:00:20 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170128233237.GQ20550@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170203055200.GA29413@wunner.de>
+References: <CAE9FiQVCMCa7iVyuwp9z6VrY0cE7V_xghuXip28Ft52=8QmTWw@mail.gmail.com>
+ <20170203055200.GA29413@wunner.de>
+From: Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 3 Feb 2017 23:00:19 -0800
+Message-ID: <CAE9FiQWs0H9vqEo2ZYnWWBW0Ao-hx4WYHQ69cyR32nFQ9yV9rw@mail.gmail.com>
+Subject: Re: pciehp is broken from 4.10-rc1
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Jan 28, 2017 at 05:32:37PM -0600, Bjorn Helgaas wrote:
-> On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
-> > A Thunderbolt controller appears to the OS as a set of virtual devices:
-> > One upstream bridge, multiple downstream bridges and one NHI (Native
-> > Host Interface).  The upstream and downstream bridges represent a PCIe
-> > switch (see definition of a switch in the PCIe spec).  The NHI device is
-> > used to manage the switch fabric.  Hotplugged devices appear behind the
-> > downstream bridges:
-> > 
-> >   (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
-> >                                      +-- Downstream Bridge 1 --
-> >                                      +-- Downstream Bridge 2 --
-> >                                      ...
-> > 
-> > Power is cut to the entire set of devices.  The Linux pm model is
-> > hierarchical and assumes that a child cannot resume before its parent.
-> > To conform to this model, power control must be governed by the
-> > Thunderbolt controller's topmost device, which is the upstream bridge.
-> > The NHI and downstream bridges go to D3hot independently and the
-> > upstream bridge goes to D3cold once all its children have suspended.
-> > This commit only adds runtime pm for the upstream bridge.  Runtime pm
-> > for the NHI is added in a separate commit to signify its independence.
-> > Runtime pm for the downstream bridges is handled by the pcieport driver.
-> > 
-> > Because Apple's ACPI methods are nonstandard, a struct dev_pm_domain is
-> > used to override the PCI bus pm_ops.  The thunderbolt driver binds to
-> 
-> What are the default PCI bus pm_ops?  I looked briefly for it to see
-> if there was some way to use hooks there instead of using
-> dev_pm_domain_set() with its weird out-of-orderness.
+On Thu, Feb 2, 2017 at 9:52 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> [cc += Mika]
+>
+> On Thu, Feb 02, 2017 at 08:11:48PM -0800, Yinghai Lu wrote:
+>> 4.9 is  working,
+> [...]
+>> sca05-0a81e0db:~ # echo 1 > /sys/bus/pci/slots/8/power
+>> [  175.771846] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up
+>> [  175.777898] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up event
+>> ignored; already powering on
+>> [  175.956632] pci 0000:65:00.0: [15b3:1003] type 00 class 0x0c0600
+> [...]
+>> sca05-0a81e0db:~ # echo 1 > /sys/bus/pci/slots/8/power
+>> [  221.041664] pciehp 0000:60:03.2:pcie004: Slot(8): Already enabled
+>
+> Could you check if the port above 0000:60:03.2 is runtime suspended
+> when you're trying this, i.e. does its power/runtime_status entry in
+> sysfs say "suspended"?
 
-The default PCI bus pm_ops are defined in drivers/pci/pci-driver.c as
-struct dev_pm_ops pci_dev_pm_ops.
+yes.
 
-I did hook into those callbacks in an earlier version of this series
-but it required more patches and more modifications to the PCI core
-and PCIe port services driver to get Thunderbolt runpm to work:
-https://www.spinics.net/lists/linux-pci/msg51158.html
+>
+> Normally the hotplug slot should keep its parents awake so that config
+> space accesses work.  And the hotplug port's config space should be
+> accessible in D3 per the spec.
+>
+> If you add pm_runtime_get_sync(&ctrl->pcie->port->dev) in
+> drivers/pci/pciehp_ctrl.c:pciehp_enable_slot() before the call to
+> pciehp_get_power_status(), and a corresponding pm_runtime_put()
+> afterwards, does the issue go away?
 
-Using dev_pm_domain_set() is the de facto standard to solve this,
-vga_switcheroo does the same, that's why I settled on this approach.
-(see drivers/gpu/vga/vga_switcheroo.c:vga_switcheroo_init_domain_pm_ops())
+Still not working.
 
+the problem is
+sca05-0a81e0db:~ # echo 0 > /sys/bus/pci/slots/8/power
+[  141.838027] mlx4_core 0000:65:00.0: PME# disabled
+[  143.279434] iommu: Removing device 0000:65:00.0 from group 172
+[  143.292329] pcieport 0000:60:03.2: PME# enabled
+[  143.297431] pciehp 0000:60:03.2:pcie004: Timeout on hotplug command
+0x11f1 (issued 81476 msec ago)
+[  143.337545] pcieport 0000:60:03.2: PME# disabled
+[  143.380359] pciehp 0000:60:03.2:pcie004: Slot(8): Link Down
+[  143.386735] pciehp 0000:60:03.2:pcie004: Slot(8): Link Down event
+ignored; already powering off
+[  143.445483] pcieport 0000:60:03.2: PME# enabled
+[  143.992915] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up
+[  143.999004] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up event
+queued; currently getting powered off
+[  144.025590] pcieport 0000:60:03.2: PME# disabled
+[  144.133548] pcieport 0000:60:03.2: PME# enabled
+[  144.333603] pciehp 0000:60:03.2:pcie004: Slot(8): Already enabled
+sca05-0a81e0db:~ # [  144.357483] pcieport 0000:60:03.2: PME# disabled
+[  144.465566] pcieport 0000:60:03.2: PME# enabled
 
-> I guess what you do in thunderbolt_power_init() is copy the upstream
-> device's bus's ops, then override a few of them?  Seems like we then
-> have the problem of keeping the Thunderbolt ones in sync with the
-> generic ones, e.g., if something got added to the generic one,
-> somebody should look at the Thunderbolt one to see if it's also need
-> there?
-
-Not a problem.  upstream_runtime_suspend() essentially does this:
-
-	// call pci_dev_pm_ops ->runtime_suspend hook:
-	ret = dev->bus->pm->runtime_suspend(dev);
-	// power down:
-	acpi_execute_simple_method(power->set, NULL, 0)
-	// enable wake interrupt:
-	acpi_enable_gpe(NULL, power->wake_gpe)
-
-So any changes to the pci_dev_pm_ops are inherited.  Again,
-vga_switcheroo does the same (see vga_switcheroo_runtime_suspend()).
+we have extra Link Up event queued, while pm_runtime_get_sync/pm_runtime_put ?
+  [  143.445483] pcieport 0000:60:03.2: PME# enabled
+  [  143.992915] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up
 
 
-> > +#define pr_fmt(fmt) KBUILD_MODNAME " %s: " fmt, dev_name(dev)
-[...]
-> > +	/* prevent interrupts during system sleep transition */
-> > +	if (ACPI_FAILURE(acpi_disable_gpe(NULL, power->wake_gpe))) {
-> > +		pr_err("cannot disable wake GPE, resuming\n");
-> 
-> Can you use dev_err() here and below?  This is related to a specific
-> device, and it'd be nice to know which one.
+Thanks
 
-See above, the device name is included in pr_fmt.  The reason to use
-pr_err() instead of dev_err() is to get the error message prefixed
-with "thunderbolt" instead of "pcieport".  Recall that this function
-is executed in the context of the upstream bridge, whose driver name
-is pcieport.  I would like to prevent people from grepping the portdrv
-code for the error message.  You're the second person to raise this
-question (Andy Shevchenko made the same comment on an earlier version
-of this patch), so I've now added a comment to explain it.
-
-
-> > +void thunderbolt_power_init(struct tb *tb)
-> > +{
-> > +	struct device *upstream_dev, *nhi_dev = &tb->nhi->pdev->dev;
-> > +	struct tb_power *power = NULL;
-> 
-> Unnecessary initialization.
-
-Good point.
-
-Thanks,
-
-Lukas
+Yinghai
