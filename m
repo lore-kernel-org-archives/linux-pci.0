@@ -1,97 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 15 Feb 2017 17:00:03 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:41140 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751239AbdBEAjB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 4 Feb 2017 19:39:01 -0500
+Date: Sat, 4 Feb 2017 18:38:55 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH 00/10] PCI: dwc: Rework and cleanup designware driver
-Message-ID: <20170215230003.GA26758@bhelgaas-glaptop.roam.corp.google.com>
-References: <1487164699-30708-1-git-send-email-kishon@ti.com>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: linux-pci@vger.kernel.org, wangzhou1@hisilicon.com,
+        gabriele.paoloni@huawei.com, charles.chenxin@huawei.com,
+        linuxarm@huawei.com
+Subject: Re: [PATCH 2/3] PCI: Set pdev->no_msi=1 for HiSilicon Hip06/Hip07
+ host controllers
+Message-ID: <20170205003855.GA5914@bhelgaas-glaptop.roam.corp.google.com>
+References: <1484202504-96686-1-git-send-email-liudongdong3@huawei.com>
+ <1484202504-96686-3-git-send-email-liudongdong3@huawei.com>
+ <20170203204202.GG10291@bhelgaas-glaptop.roam.corp.google.com>
+ <59ad79d6-2a51-bd7c-e062-f8c43b318c76@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <1487164699-30708-1-git-send-email-kishon@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-samsung-soc@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
- nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <59ad79d6-2a51-bd7c-e062-f8c43b318c76@huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 15, 2017 at 06:48:09PM +0530, Kishon Vijay Abraham I wrote:
-> This series reworks designware driver in preparation for adding endpoint
-> mode support to designware driver.
+On Sat, Feb 04, 2017 at 11:37:14AM +0800, Dongdong Liu wrote:
+> Hi Bjorn
 > 
-> This series was previously sent as part of endpoint support series
-> https://lkml.org/lkml/2017/1/13/562
+> 在 2017/2/4 4:42, Bjorn Helgaas 写道:
+> >On Thu, Jan 12, 2017 at 02:28:23PM +0800, Dongdong Liu wrote:
+> >>The PCIe root port in Hip06/Hip07 SoCs does not support MSI/MSI-X,
+> >>it can only transfer MSI/MSI-X from EP, so we add the quirk to
+> >>set root port pdev->no_msi = 1.
+> >>
+> >>Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> >>Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> >>Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
+> >
+> >Applied as follows to pci/host-hisi for v4.11.    I removed the device
+> >ID, since we don't add those to pci_ids.h unless they're used in more
+> >than one place.  I also reworded the changelog; let me know if I
+> >didn't understand it correctly.
+> >
+> >commit c2f8051a8a0c7ea9e93d80e484948cab583b7605
+> >Author: Dongdong Liu <liudongdong3@huawei.com>
+> >Date:   Thu Jan 12 14:28:23 2017 +0800
+> >
+> >    PCI: Disable MSI for HiSilicon Hip06/Hip07 Root Ports
+> >
+> >    The PCIe Root Port in Hip06/Hip07 SoCs can transfer MSI/MSI-X from
+> >    downstream devices, but does not support MSI/MSI-X itself.
+> >
+> >    Add a quirk to prevent use of MSI/MSI-X by the Root Port.
+> >
+> >    [bhelgaas: changelog, sort vendor ID #define, drop device ID #define]
+> >    Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> >    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> >    Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> >    Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
+> >
+> >diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> >index 1800befa8b8b..c49ac99bda4b 100644
+> >--- a/drivers/pci/quirks.c
+> >+++ b/drivers/pci/quirks.c
+> >@@ -1634,6 +1634,7 @@ static void quirk_pcie_mch(struct pci_dev *pdev)
+> > DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7520_MCH,	quirk_pcie_mch);
+> > DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7320_MCH,	quirk_pcie_mch);
+> > DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_E7525_MCH,	quirk_pcie_mch);
+> >+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_HUAWEI,	0x1610,	quirk_pcie_mch);
+> >
 > 
-> Validate pci host only in pci-dra7xx. Any help in validating other
-> platforms would be highly appreciated.
-> 
-> This series is created after cherrypicking the following patch and
-> then applying pci/host-designware.
-> 
-> commit a782b5f986c3fa1cfa7f2b57941200c6a5809242
-> Author: Murali Karicheri <m-karicheri2@ti.com>
-> Date:   Wed Jan 4 14:32:30 2017 -0500
-> 
->     PCI: designware: Check for iATU unroll only on platforms that use ATU
-> 
-> The patches has been pushed to
-> git://git.ti.com/linux-phy/linux-phy.git dwc-rework
-> 
-> Kishon Vijay Abraham I (10):
->   PCI: dwc: designware: Move the register defines to designware header
->     file
->   PCI: dwc: *all*: Add platform_set_drvdata
->   PCI: dwc: *all*: Rename cfg_read/cfg_write to read/write
->   PCI: dwc: designware: Get device pointer at the start of
->     dw_pcie_host_init
->   PCI: dwc: *all*: Split *struct pcie_port* into host only and core
->     structures
->   PCI: dwc: designware: Parse *num-lanes* property in dw_pcie_setup_rc
->   PCI: dwc: designware: Fix style errors in pcie-designware.c
->   PCI: dwc: Split pcie-designware.c into host and core files
->   PCI: dwc: Create a new config symbol to enable pci dwc host
->   PCI: dwc: Remove dependency of designware to CONFIG_PCI
-> 
->  drivers/Makefile                       |    3 +
->  drivers/pci/Makefile                   |    3 -
->  drivers/pci/dwc/Kconfig                |   39 +-
->  drivers/pci/dwc/Makefile               |    1 +
->  drivers/pci/dwc/pci-dra7xx.c           |   91 ++--
->  drivers/pci/dwc/pci-exynos.c           |   81 ++--
->  drivers/pci/dwc/pci-imx6.c             |  131 ++---
->  drivers/pci/dwc/pci-keystone-dw.c      |   87 ++--
->  drivers/pci/dwc/pci-keystone.c         |   56 ++-
->  drivers/pci/dwc/pci-keystone.h         |    4 +-
->  drivers/pci/dwc/pci-layerscape.c       |   93 ++--
->  drivers/pci/dwc/pcie-armada8k.c        |   87 ++--
->  drivers/pci/dwc/pcie-artpec6.c         |   50 +-
->  drivers/pci/dwc/pcie-designware-host.c |  635 ++++++++++++++++++++++++
->  drivers/pci/dwc/pcie-designware-plat.c |   29 +-
->  drivers/pci/dwc/pcie-designware.c      |  823 +++-----------------------------
->  drivers/pci/dwc/pcie-designware.h      |  170 +++++--
->  drivers/pci/dwc/pcie-hisi.c            |   57 ++-
->  drivers/pci/dwc/pcie-qcom.c            |   72 ++-
->  drivers/pci/dwc/pcie-spear13xx.c       |   85 ++--
->  20 files changed, 1434 insertions(+), 1163 deletions(-)
->  create mode 100644 drivers/pci/dwc/pcie-designware-host.c
+> This looks good to me, thanks for your work on this patch.
 
-I applied these to pci/host-designware with the intent of merging them
-for v4.11.  They're not in -next yet; I'll merge them into -next after
-the autobuilder completes.
+Just to confirm, is the problem that this device (PCI_VENDOR_ID_HUAWEI
+0x1610) advertises an MSI or MSI-X capability, but MSI/MSI-X doesn't
+work?  If it doesn't advertise a capability, I don't think we should
+try to use MSI, so we wouldn't need the quirk.
 
 Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
