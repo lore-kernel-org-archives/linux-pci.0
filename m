@@ -1,97 +1,266 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:43433 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932302AbdBPTGH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2017 14:06:07 -0500
-Date: Thu, 16 Feb 2017 20:06:04 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Linus Torvalds <torvalds@linux-foundation.org>, fweisbec@gmail.com,
-        wanpeng.li@hotmail.com, peterz@infradead.org, riel@redhat.com,
-        tglx@linutronix.de, stable@kernel.org
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        USB list <linux-usb@vger.kernel.org>
-Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
- after cold boots, boots after reboot
-Message-ID: <20170216190603.GA16029@amd>
-References: <CA+55aFyYAztA+Onquy9ODeC9_YBL_fXAd-RgeUVUhpsjK81ZVQ@mail.gmail.com>
- <CA+55aFxU1D0hAPJuhkKaFBByi=8vpw7dJUX=FfpoqnZLWsvxig@mail.gmail.com>
- <CA+55aFwt6pbt2STzRh1yCdoo7AnCLFqnPkkrYk4_BGFuvT2VCw@mail.gmail.com>
- <CA+55aFzMiXXw9gqNCMCSc+O5HfcqWHXfqbdtbvcOmAHM9_wNig@mail.gmail.com>
- <CA+55aFxuXgsCyMgrRDHdM6BQaej68QoU8TwdM=3LYu9LMBf4fQ@mail.gmail.com>
- <20170215172303.GA15696@amd>
- <20170215232005.GA7877@amd>
- <CA+55aFyqsxjQPp=Y6MnvyMH_iA-TSiPrycnAHbBzw5bwQi7jjg@mail.gmail.com>
- <20170216111144.GA12377@amd>
- <20170216172535.GA7868@amd>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Sricharan" <sricharan@codeaurora.org>
+To: "'Robin Murphy'" <robin.murphy@arm.com>, <will.deacon@arm.com>,
+ <joro@8bytes.org>, <lorenzo.pieralisi@arm.com>,
+ <iommu@lists.linux-foundation.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-arm-msm@vger.kernel.org>, <m.szyprowski@samsung.com>,
+ <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+ <linux-acpi@vger.kernel.org>, <tn@semihalf.com>, <hanjun.guo@linaro.org>,
+ <okaya@codeaurora.org>
+References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+ <1486136933-20328-9-git-send-email-sricharan@codeaurora.org>
+ <017301d27e38$cc361350$64a239f0$@codeaurora.org>
+ <3d32202c-4127-e808-414b-6067178f150d@arm.com>
+In-Reply-To: <3d32202c-4127-e808-414b-6067178f150d@arm.com>
+Subject: RE: [PATCH V8 08/11] drivers: acpi: Handle IOMMU lookup failure with
+ deferred probing or error
+Date: Sun, 5 Feb 2017 12:21:11 +0530
+Message-ID: <000c01d27f7c$43593e00$ca0bba00$@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="x+6KMIRAuhnl3hBn"
-In-Reply-To: <20170216172535.GA7868@amd>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Robin,
 
---x+6KMIRAuhnl3hBn
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+>>
+>>> -----Original Message-----
+>>> From: linux-arm-kernel [mailto:linux-arm-kernel-bounces@lists.infradead.org] On Behalf Of Sricharan R
+>>> Sent: Friday, February 03, 2017 9:19 PM
+>>> To: robin.murphy@arm.com; will.deacon@arm.com; joro@8bytes.org; lorenzo.pieralisi@arm.com; iommu@lists.linux-
+>foundation.org;
+>>> linux-arm-kernel@lists.infradead.org; linux-arm-msm@vger.kernel.org; m.szyprowski@samsung.com; bhelgaas@google.com;
+>linux-
+>>> pci@vger.kernel.org; linux-acpi@vger.kernel.org; tn@semihalf.com; hanjun.guo@linaro.org; okaya@codeaurora.org
+>>> Cc: sricharan@codeaurora.org
+>>> Subject: [PATCH V8 08/11] drivers: acpi: Handle IOMMU lookup failure with deferred probing or error
+>>>
+>>> This is an equivalent to the DT's handling of the iommu master's probe
+>>> with deferred probing when the corrsponding iommu is not probed yet.
+>>> The lack of a registered IOMMU can be caused by the lack of a driver for
+>>> the IOMMU, the IOMMU device probe not having been performed yet, having
+>>> been deferred, or having failed.
+>>>
+>>> The first case occurs when the firmware describes the bus master and
+>>> IOMMU topology correctly but no device driver exists for the IOMMU yet
+>>> or the device driver has not been compiled in. Return NULL, the caller
+>>> will configure the device without an IOMMU.
+>>>
+>>> The second and third cases are handled by deferring the probe of the bus
+>>> master device which will eventually get reprobed after the IOMMU.
+>>>
+>>> The last case is currently handled by deferring the probe of the bus
+>>> master device as well. A mechanism to either configure the bus master
+>>> device without an IOMMU or to fail the bus master device probe depending
+>>> on whether the IOMMU is optional or mandatory would be a good
+>>> enhancement.
+>>>
+>>> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+>>> Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>>> ---
+>>> drivers/acpi/arm64/iort.c  | 25 ++++++++++++++++++++++++-
+>>> drivers/acpi/scan.c        |  7 +++++--
+>>> drivers/base/dma-mapping.c |  2 +-
+>>> include/acpi/acpi_bus.h    |  2 +-
+>>> include/linux/acpi.h       |  7 +++++--
+>>> 5 files changed, 36 insertions(+), 7 deletions(-)
+>>>
+>>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+>>> index bf0ed09..d01bae8 100644
+>>> --- a/drivers/acpi/arm64/iort.c
+>>> +++ b/drivers/acpi/arm64/iort.c
+>>> @@ -550,8 +550,17 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+>>> 			return NULL;
+>>>
+>>> 		ops = iommu_get_instance(iort_fwnode);
+>>> +		/*
+>>> +		 * If the ops look-up fails, this means that either
+>>> +		 * the SMMU drivers have not been probed yet or that
+>>> +		 * the SMMU drivers are not built in the kernel;
+>>> +		 * Depending on whether the SMMU drivers are built-in
+>>> +		 * in the kernel or not, defer the IOMMU configuration
+>>> +		 * or just abort it.
+>>> +		 */
+>>> 		if (!ops)
+>>> -			return NULL;
+>>> +			return iort_iommu_driver_enabled(node->type) ?
+>>> +			       ERR_PTR(-EPROBE_DEFER) : NULL;
+>>>
+>>> 		ret = arm_smmu_iort_xlate(dev, streamid, iort_fwnode, ops);
+>>> 	}
+>>> @@ -625,12 +634,26 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+>>>
+>>> 		while (parent) {
+>>> 			ops = iort_iommu_xlate(dev, parent, streamid);
+>>> +			if (IS_ERR_OR_NULL(ops))
+>>> +				return ops;
+>>>
+>>> 			parent = iort_node_get_id(node, &streamid,
+>>> 						  IORT_IOMMU_TYPE, i++);
+>>> 		}
+>>> 	}
+>>>
+>>> +	/*
+>>> +	 * If we have reason to believe the IOMMU driver missed the initial
+>>> +	 * add_device callback for dev, replay it to get things in order.
+>>> +	 */
+>>> +	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
+>>> +	    dev->bus && !dev->iommu_group) {
+>>> +		int err = ops->add_device(dev);
+>>> +
+>>> +		if (err)
+>>> +			ops = ERR_PTR(err);
+>>> +	}
+>>> +
+>>
+>> On the last post we discussed that the above replay hunk can be made
+>> common. In trying to do that, i ended up with a patch like below. But not
+>> sure if that should be a part of this series though. I tested with OF devices
+>> and would have to be tested with ACPI devices once. Nothing changes
+>> functionally because of this ideally. Should be split in two patches though.
+>>
+>> Regards,
+>>  Sricharan
+>>
+>> From aafbf2c97375a086327504f2367eaf9197c719b1 Mon Sep 17 00:00:00 2001
+>> From: Sricharan R <sricharan@codeaurora.org>
+>> Date: Fri, 3 Feb 2017 15:24:47 +0530
+>> Subject: [PATCH] drivers: iommu: Add iommu_add_device api
+>>
+>> The code to call IOMMU driver's add_device is same
+>> for both OF and ACPI cases. So add an api which can
+>> be shared across both the places.
+>>
+>> Also, now with probe-deferral the iommu master devices gets
+>> added to the respective iommus during probe time instead
+>> of device creation time. The xlate callbacks of iommu
+>> drivers are also called only at probe time. As a result
+>> the add_iommu_group which gets called when the iommu is
+>> registered to add all devices created before the iommu
+>> becomes dummy. Similar the BUS_NOTIFY_ADD_DEVICE notification
+>> also is not needed. So just cleanup those code.
+>>
+>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>> ---
+>>  drivers/acpi/arm64/iort.c | 12 +-------
+>>  drivers/iommu/iommu.c     | 70 ++++++++++++-----------------------------------
+>>  drivers/iommu/of_iommu.c  | 11 +-------
+>>  include/linux/iommu.h     |  8 ++++++
+>>  4 files changed, 27 insertions(+), 74 deletions(-)
+>>
+>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+>> index ac45623..ab2a554 100644
+>> --- a/drivers/acpi/arm64/iort.c
+>> +++ b/drivers/acpi/arm64/iort.c
+>> @@ -642,17 +642,7 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+>>                 }
+>>         }
+>>
+>> -       /*
+>> -        * If we have reason to believe the IOMMU driver missed the initial
+>> -        * add_device callback for dev, replay it to get things in order.
+>> -        */
+>> -       if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
+>> -           dev->bus && !dev->iommu_group) {
+>> -               int err = ops->add_device(dev);
+>> -
+>> -               if (err)
+>> -                       ops = ERR_PTR(err);
+>> -       }
+>> +       ops = iommu_add_device(dev, ops);
+>>
+>>         return ops;
+>>  }
+>> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+>> index b752c3d..750552d 100644
+>> --- a/drivers/iommu/iommu.c
+>> +++ b/drivers/iommu/iommu.c
+>> @@ -1015,41 +1015,6 @@ struct iommu_domain *iommu_group_default_domain(struct iommu_group *group)
+>>         return group->default_domain;
+>>  }
+>>
+>> -static int add_iommu_group(struct device *dev, void *data)
+>> -{
+>> -       struct iommu_callback_data *cb = data;
+>> -       const struct iommu_ops *ops = cb->ops;
+>> -       int ret;
+>> -
+>> -       if (!ops->add_device)
+>> -               return 0;
+>> -
+>> -       WARN_ON(dev->iommu_group);
+>> -
+>> -       ret = ops->add_device(dev);
+>> -
+>> -       /*
+>> -        * We ignore -ENODEV errors for now, as they just mean that the
+>> -        * device is not translated by an IOMMU. We still care about
+>> -        * other errors and fail to initialize when they happen.
+>> -        */
+>> -       if (ret == -ENODEV)
+>> -               ret = 0;
+>> -
+>> -       return ret;
+>> -}
+>> -
+>> -static int remove_iommu_group(struct device *dev, void *data)
+>> -{
+>> -       struct iommu_callback_data *cb = data;
+>> -       const struct iommu_ops *ops = cb->ops;
+>> -
+>> -       if (ops->remove_device && dev->iommu_group)
+>> -               ops->remove_device(dev);
+>> -
+>> -       return 0;
+>> -}
+>> -
+>>  static int iommu_bus_notifier(struct notifier_block *nb,
+>>                               unsigned long action, void *data)
+>>  {
+>> @@ -1059,13 +1024,10 @@ static int iommu_bus_notifier(struct notifier_block *nb,
+>>         unsigned long group_action = 0;
+>>
+>>         /*
+>> -        * ADD/DEL call into iommu driver ops if provided, which may
+>> +        * DEL call into iommu driver ops if provided, which may
+>>          * result in ADD/DEL notifiers to group->notifier
+>>          */
+>> -       if (action == BUS_NOTIFY_ADD_DEVICE) {
+>> -               if (ops->add_device)
+>> -                       return ops->add_device(dev);
+>
+>I'm pretty sure this completely breaks x86 and anyone else...
+>
 
-On Thu 2017-02-16 18:25:35, Pavel Machek wrote:
-> Hi!
->=20
-> > > > 4.10-rc4 broken
-> > > > 4.10-rc3 ok
-> > >=20
-> > > Hmm. If those actually end up being reliable, then there's not a whole
-> > > lot in between them wrt PCI or USB.
-> > >=20
-> > > What looked like the most likely candidate seems to be xhci-specific,=
- though.
-> > >=20
-> > > But maybe it's something that isn't directly in drivers/{pci,usb}/ and
-> > > just interacts badly.
-> >=20
-> > Ok. I _hope_ my tests are ok. Bisect log so far is:
->=20
-> And the winner is:
->=20
-> pavel@half:/data/l/linux$ git bisect bad
-> 24b91e360ef521a2808771633d76ebc68bd5604b is the first bad commit
-> commit 24b91e360ef521a2808771633d76ebc68bd5604b
-> Author: Frederic Weisbecker <fweisbec@gmail.com>
-> Date:   Wed Jan 4 15:12:04 2017 +0100
->=20
->     nohz: Fix collision between tick and other hrtimers
->    =20
+ha, i just missed thinking about non-arm, for this super cleanup :)
 
-I had to revert 7bdb59f1ad474bd7161adc8f923cdef10f2638d1, too,
-otherwise -rc8 does not compile.
+>Anyway, I'd be inclined to leave this alone for now - it's essentially
+>just a workaround to mesh the per-instance probing behaviour with the
+>per-bus ops model, so it's bound to be a bit ugly. Moving the IOMMU core
+>code over to a per-instance model will inevitably subsume the underlying
+>problem, and I think a bit of duplication is probably the lesser of two
+>evils in the meantime. On which note, I need to have a good look at
+>Joerg's shiny new series :)
+>
 
-With 24b91e360ef521a28087716 and 7bdb59f1ad474 reverted, it seems to
-boot ok. (I did few tries.)
+Agree, better way for this cleanup is with the per-instance model and let
+the series go otherwise.
 
-Best regards,
-								Pavel
+Regards,
+ Sricharan
 
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
 
---x+6KMIRAuhnl3hBn
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlil+BsACgkQMOfwapXb+vLnCwCfahN4TpnogXJR3cvgVnYk0+ZP
-U6EAmwRhglB7Em8fZZq1xRg2PbtY9ZYc
-=lc/N
------END PGP SIGNATURE-----
-
---x+6KMIRAuhnl3hBn--
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
