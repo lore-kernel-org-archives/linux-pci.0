@@ -1,49 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51160 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750966AbdBJVN3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Feb 2017 16:13:29 -0500
-Date: Fri, 10 Feb 2017 15:13:25 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gabriel Krisman Bertazi <krisman@collabora.co.uk>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: Don't duplicate fix up for positive error code
-Message-ID: <20170210211325.GM29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170206153414.23854-1-krisman@collabora.co.uk>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170206153414.23854-1-krisman@collabora.co.uk>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <alpine.LNX.2.00.1702051054240.26313@T420s>
+References: <20170128204839.18330-1-linus.walleij@linaro.org>
+ <20170128204839.18330-2-linus.walleij@linaro.org>
+ <alpine.LNX.2.00.1702051054240.26313@T420s>
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Sun, 5 Feb 2017 15:36:41 +0100
+Message-ID: <CACRpkdY=gc4R5RwgPrFnjyfLVqgN0=ChVe6D7ibvAA+8Q1sqNA@mail.gmail.com>
+Subject: Re: [PATCH 2/4] PCI: add driver for Cortina Gemini Host Bridge
+To: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: openwrt-devel@openwrt.org, Florian Fainelli <f.fainelli@gmail.com>,
+ Paulius Zaleckas <paulius.zaleckas@gmail.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Janos Laube <janos.dev@gmail.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 06, 2017 at 01:34:14PM -0200, Gabriel Krisman Bertazi wrote:
-> Function __pci_device_probe tries to be careful about a PCI driver
-> probe() hook returning a positive value, but this is not really
-> necessary, since the same fix up is already done in
-> local_pci_probe (preceded by a noisy warning), which renders this
-> instance dead code.
-> 
-> Signed-off-by: Gabriel Krisman Bertazi <krisman@collabora.co.uk>
+On Sun, Feb 5, 2017 at 11:00 AM, Hans Ulli Kroll
+<ulli.kroll@googlemail.com> wrote:
 
-Applied to pci/enumeration for v4.11, thanks, Gabriel!
+> irq: type mismatch, failed to map hwirq-26 for /soc/interrupt-controller@48000000!
+>
+> We need to use the use the use the PCI IRQ from gemini as root for the irq
+> domain, not the next one in DT.
 
-> ---
->  drivers/pci/pci-driver.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 1ccce1cd6aca..3e0516ee9eab 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -381,8 +381,6 @@ static int __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
->  		id = pci_match_device(drv, pci_dev);
->  		if (id)
->  			error = pci_call_probe(drv, pci_dev, id);
-> -		if (error >= 0)
-> -			error = 0;
->  	}
->  	return error;
->  }
-> -- 
-> 2.11.0
-> 
+Hm I wonder if that is because I need to set the parent for the intcon
+in the device tree as Arnd pointed out in the bindings patch?
+
+Yours,
+Linus Walleij
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
