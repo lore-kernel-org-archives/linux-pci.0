@@ -1,40 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 8 Feb 2017 13:42:21 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, krzk@kernel.org,
-        linux-kernel@vger.kernel.org, jingoohan1@gmail.com,
-        javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com
-Subject: Re: [PATCH V3 0/5] PCI: exynos: cleans the minor things
-Message-ID: <20170208194221.GA600@bhelgaas-glaptop.roam.corp.google.com>
-References: <CGME20170116063140epcas5p38fffe5effdcfd2650cad98c25c31335e@epcas5p3.samsung.com>
- <20170116063138.25805-1-jh80.chung@samsung.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sun, 5 Feb 2017 11:00:41 +0100 (CET)
+From: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+To: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH 2/4] PCI: add driver for Cortina Gemini Host Bridge
+In-Reply-To: <20170128204839.18330-2-linus.walleij@linaro.org>
+Message-ID: <alpine.LNX.2.00.1702051054240.26313@T420s>
+References: <20170128204839.18330-1-linus.walleij@linaro.org>
+ <20170128204839.18330-2-linus.walleij@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170116063138.25805-1-jh80.chung@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: openwrt-devel@openwrt.org, Florian Fainelli <f.fainelli@gmail.com>,
+ Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-pci@vger.kernel.org,
+ Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Janos Laube <janos.dev@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 16, 2017 at 03:31:33PM +0900, Jaehoon Chung wrote:
-> Current pci-exynos.c is used for only EXYNOS5440.
-> It's too complex to support the other Exynos SoCs.
-> Before supporting the other Exynos SoCs, it needs to clean the codes.
-> 
-> Changelog on V3:
-> - Splits "PCI: exynos: replace to one register accessor from each accessors"
-> 
-> Changelog on V2:
-> - Changes the all pointer names as "ep" instead of "exynos_pcie"
-> 
-> Jaehoon Chung (5):
->   PCI: exynos: Rename all pointer names from "exynos_pcie" to "ep"
->   PCI: exynos: Replace the *_blk/*_phy/*_elb accessors
->   PCI: exynos: Remove the unnecessary variables
->   PCI: exynos: Use the bitops API to operate the bit shifting
->   PCI: exynos: remove the duplicated codes
-> 
->  drivers/pci/host/pci-exynos.c | 392 +++++++++++++++++++-----------------------
->  1 file changed, 181 insertions(+), 211 deletions(-)
+Hi Linus
 
-Applied with Jingoo's ack to pci/host-exynos for v4.11, thanks!
+while debugging my boot issues on my NAS 4220, I saw this warning
+
+irq: type mismatch, failed to map hwirq-26 for /soc/interrupt-controller@48000000!
+
+We need to use the use the use the PCI IRQ from gemini as root for the irq 
+domain, not the next one in DT.
+
+diff --git a/drivers/pci/host/pci-gemini.c b/drivers/pci/host/pci-gemini.c
+index 7051dd992114..bb564a8e6379 100644
+--- a/drivers/pci/host/pci-gemini.c
++++ b/drivers/pci/host/pci-gemini.c
+@@ -217,7 +217,6 @@ static const struct irq_domain_ops gemini_pci_irqdomain_ops = {
+ 
+ static int gemini_pci_setup_irq(struct gemini_pci *p, int irq)
+ {
+-	struct device_node *intc = of_get_next_child(p->dev->of_node, NULL);
+ 	int i;
+ 
+ 	if (!intc) {
+@@ -225,7 +224,7 @@ static int gemini_pci_setup_irq(struct gemini_pci *p, int irq)
+ 		return -EINVAL;
+ 	}
+ 
+-	p->irqdomain = irq_domain_add_linear(intc, 4,
++	p->irqdomain = irq_domain_add_linear(p->dev->of_node, 4,
+ 					     &gemini_pci_irqdomain_ops,
+ 					     p);
+ 	if (!p->irqdomain) {
+-- 
+2.11.0
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
