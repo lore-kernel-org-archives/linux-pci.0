@@ -1,78 +1,108 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
- <linux-arm-kernel@axis.com>
-Subject: [PATCH 1/4] PCI: dwc: designware: Add new *ops* for cpu addr fixup
-Date: Thu, 16 Feb 2017 18:59:09 +0530
-Message-ID: <1487251752-12478-2-git-send-email-kishon@ti.com>
-In-Reply-To: <1487251752-12478-1-git-send-email-kishon@ti.com>
-References: <1487251752-12478-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, nsekhar@ti.com,
- Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170204233443.GA234@wunner.de>
+References: <CAE9FiQVCMCa7iVyuwp9z6VrY0cE7V_xghuXip28Ft52=8QmTWw@mail.gmail.com>
+ <20170203055200.GA29413@wunner.de> <CAE9FiQWs0H9vqEo2ZYnWWBW0Ao-hx4WYHQ69cyR32nFQ9yV9rw@mail.gmail.com>
+ <20170204081254.GA29595@wunner.de> <20170204185607.GA29957@wunner.de>
+ <CAE9FiQUuFJHMScyFgnHbs5r-SzTiRiBZ2JcpUYJhg0ft75-OBQ@mail.gmail.com> <20170204233443.GA234@wunner.de>
+From: Yinghai Lu <yinghai@kernel.org>
+Date: Sat, 4 Feb 2017 20:22:59 -0800
+Message-ID: <CAE9FiQW5SQsQfRCz9sor4kufogTRVpHXekPHSi8MSi46mvXGLQ@mail.gmail.com>
+Subject: Re: pciehp is broken from 4.10-rc1
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some platforms (like dra7xx) require only the least 28 bits of the
-corresponding 32 bit CPU address to be programmed in the address
-translation unit. This modified address is stored in io_base/mem_base/
-cfg0_base/cfg1_base in dra7xx_pcie_host_init. While this is okay for
-host mode where the address range is fixed, device mode requires
-different addresses to be programmed based on the host buffer address.
-Add a new ops to get the least 28 bits of the corresponding 32 bit
-CPU address and invoke it before programming the address translation
-unit.
+On Sat, Feb 4, 2017 at 3:34 PM, Lukas Wunner <lukas@wunner.de> wrote:
+> On Sat, Feb 04, 2017 at 01:44:34PM -0800, Yinghai Lu wrote:
+>> On Sat, Feb 4, 2017 at 10:56 AM, Lukas Wunner <lukas@wunner.de> wrote:
+>> > On Sat, Feb 04, 2017 at 09:12:54AM +0100, Lukas Wunner wrote:
+>> > Section 6.7.3.4 of the PCIe Base spec seems to support the theory above,
+>> > so here's a tentative patch.
+>> >
+>> >
+>> > -- >8 --
+>> > Subject: [PATCH] PCI: pciehp: Don't enable PME on runtime suspend
+>>
+>> it works:
+>
+> Thanks a lot for the report and for testing the patch!
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pcie-designware.c |    3 +++
- drivers/pci/dwc/pcie-designware.h |    1 +
- 2 files changed, 4 insertions(+)
-
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index 7e1fb7d..14ee7a3 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -97,6 +97,9 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- {
- 	u32 retries, val;
- 
-+	if (pp->ops->cpu_addr_fixup)
-+		cpu_addr = pp->ops->cpu_addr_fixup(cpu_addr);
-+
- 	if (pci->iatu_unroll_enabled) {
- 		dw_pcie_writel_unroll(pci, index, PCIE_ATU_UNR_LOWER_BASE,
- 				      lower_32_bits(cpu_addr));
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index cd3b871..8f3dcb2 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -143,6 +143,7 @@ struct pcie_port {
- };
- 
- struct dw_pcie_ops {
-+	u64	(*cpu_addr_fixup)(u64 cpu_addr);
- 	u32	(*readl_dbi)(struct dw_pcie *pcie, u32 reg);
- 	void	(*writel_dbi)(struct dw_pcie *pcie, u32 reg, u32 val);
- 	int	(*link_up)(struct dw_pcie *pcie);
--- 
-1.7.9.5
+Wait, Commit 68db9bc still has problem with another server (skylake
+based), and this patch does not help.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+sca05-0a81fd8d:~ # echo 0 > /sys/bus/pci/slots/11/power
+[  362.721197] pci_hotplug: power_write_file: power = 0
+[  362.726887] pciehp 0000:b3:00.0:pcie004: pciehp_get_power_status:
+SLOTCTRL a8 value read 11f1
+[  362.736431] pciehp 0000:b3:00.0:pcie004: pciehp_unconfigure_device:
+domain:bus:dev = 0000:b4:00
+[  362.746160] mlx4_core 0000:b4:00.0: PME# disabled
+[  364.494033] pcieport 0000:b3:00.0:   root_bridge ACPI_HANDLE
+ffff9e56b8811550 : pci0000:b3
+[  364.503274] pcieport 0000:b3:00.0:  pciehp is native
+[  364.508863] pci 0000:b4:00.0: freeing pci_dev info
+[  364.514718] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010
+from Slot Status
+[  364.523443] pciehp 0000:b3:00.0:pcie004: pciehp_power_off_slot:
+SLOTCTRL a8 write cmd 400
+[  364.587047] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0108
+from Slot Status
+[  364.595592] pciehp 0000:b3:00.0:pcie004: Slot(11): Link Down
+[  364.602325] pciehp 0000:b3:00.0:pcie004: Slot(11): Link Down event
+ignored; already powering off
+[  365.568415] pciehp 0000:b3:00.0:pcie004: pciehp_green_led_off:
+SLOTCTRL a8 write cmd 300
+[  365.569338] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010
+from Slot Status
+
+sca05-0a81fd8d:~ # echo 1 > /sys/bus/pci/slots/11/power
+[  375.376609] pci_hotplug: power_write_file: power = 1
+[  375.382175] pciehp 0000:b3:00.0:pcie004: pciehp_get_power_status:
+SLOTCTRL a8 value read 17f1
+[  375.392695] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010
+from Slot Status
+[  375.401370] pciehp 0000:b3:00.0:pcie004: pciehp_power_on_slot:
+SLOTCTRL a8 write cmd 0
+[  375.410231] pciehp 0000:b3:00.0:pcie004: pciehp_green_led_blink:
+SLOTCTRL a8 write cmd 200
+[  375.411071] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010
+from Slot Status
+[  375.445222] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010
+from Slot Status
+[  377.444400] pciehp 0000:b3:00.0:pcie004: Data Link Layer Link
+Active not set in 1000 msec
+[  378.960364] pci 0000:b4:00.0 id reading try 50 times with interval
+20 ms to get ffffffff
+[  378.969406] pciehp 0000:b3:00.0:pcie004: pciehp_check_link_status:
+lnk_status = 5001
+[  378.978059] pciehp 0000:b3:00.0:pcie004: link training error: status 0x5001
+[  378.985834] pciehp 0000:b3:00.0:pcie004: Failed to check link status
+[  378.987185] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010
+from Slot Status
+[  378.987253] pciehp 0000:b3:00.0:pcie004: pciehp_power_off_slot:
+SLOTCTRL a8 write cmd 400
+[  380.000409] pciehp 0000:b3:00.0:pcie004: pciehp_green_led_off:
+SLOTCTRL a8 write cmd 300
+[  380.000674] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010
+from Slot Status
+[  380.018020] pciehp 0000:b3:00.0:pcie004:
+pciehp_set_attention_status: SLOTCTRL a8 write cmd 40
+[  380.019053] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010
+from Slot Status
+-bash: echo: write error: Operation not permitted
+
+revert commit 68db9bc, also make it working again.
+
+
+Thanks
+
+
+Yinghai
