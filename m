@@ -1,102 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f196.google.com ([209.85.128.196]:34239 "EHLO
+        mail-wr0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750980AbdBFJzJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Feb 2017 04:55:09 -0500
+Received: by mail-wr0-f196.google.com with SMTP id 89so2828198wrr.1
+        for <linux-pci@vger.kernel.org>; Mon, 06 Feb 2017 01:55:08 -0800 (PST)
+Date: Mon, 6 Feb 2017 10:55:03 +0100 (CET)
+From: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+To: Linus Walleij <linus.walleij@linaro.org>
+cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Janos Laube <janos.dev@gmail.com>,
+        Paulius Zaleckas <paulius.zaleckas@gmail.com>,
+        openwrt-devel@openwrt.org,
+        "linux-arm-kernel@lists.infradead.org"
         <linux-arm-kernel@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>
-CC: <nsekhar@ti.com>, Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH 06/10] PCI: dwc: designware: Parse *num-lanes* property in dw_pcie_setup_rc
-Date: Wed, 15 Feb 2017 18:48:15 +0530
-Message-ID: <1487164699-30708-7-git-send-email-kishon@ti.com>
-In-Reply-To: <1487164699-30708-1-git-send-email-kishon@ti.com>
-References: <1487164699-30708-1-git-send-email-kishon@ti.com>
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 4/4] ARM: dts: add PCI to the Gemini DTSI
+In-Reply-To: <CACRpkdbrys49Yv5fJ_te2H1mEUqquc1jn2dP-uvkdLixFbtYFA@mail.gmail.com>
+Message-ID: <alpine.LNX.2.00.1702061038590.7077@T420s>
+References: <20170128204839.18330-1-linus.walleij@linaro.org> <20170128204839.18330-4-linus.walleij@linaro.org> <alpine.LNX.2.00.1702051101110.26313@T420s> <CACRpkdbrys49Yv5fJ_te2H1mEUqquc1jn2dP-uvkdLixFbtYFA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-*num-lanes* dt property is parsed in dw_pcie_host_init. However
-*num-lanes* property is applicable to both root complex mode and
-endpoint mode. As a first step, move the parsing of this property
-outside dw_pcie_host_init. This is in preparation for splitting
-pcie-designware.c to pcie-designware.c and pcie-designware-host.c
+Hi Linus,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pcie-designware.c |   18 +++++++++++-------
- drivers/pci/dwc/pcie-designware.h |    1 -
- 2 files changed, 11 insertions(+), 8 deletions(-)
+On Sun, 5 Feb 2017, Linus Walleij wrote:
 
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index be61039..237da48 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -548,10 +548,6 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		}
- 	}
- 
--	ret = of_property_read_u32(np, "num-lanes", &pci->lanes);
--	if (ret)
--		pci->lanes = 0;
--
- 	ret = of_property_read_u32(np, "num-viewport", &pci->num_viewport);
- 	if (ret)
- 		pci->num_viewport = 2;
-@@ -748,13 +744,21 @@ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
- 
- void dw_pcie_setup_rc(struct pcie_port *pp)
- {
-+	int ret;
-+	u32 lanes;
- 	u32 val;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct device *dev = pci->dev;
-+	struct device_node *np = dev->of_node;
-+
-+	ret = of_property_read_u32(np, "num-lanes", &lanes);
-+	if (ret)
-+		lanes = 0;
- 
- 	/* set the number of lanes */
- 	val = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
- 	val &= ~PORT_LINK_MODE_MASK;
--	switch (pci->lanes) {
-+	switch (lanes) {
- 	case 1:
- 		val |= PORT_LINK_MODE_1_LANES;
- 		break;
-@@ -768,7 +772,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 		val |= PORT_LINK_MODE_8_LANES;
- 		break;
- 	default:
--		dev_err(pci->dev, "num-lanes %u: invalid value\n", pci->lanes);
-+		dev_err(pci->dev, "num-lanes %u: invalid value\n", lanes);
- 		return;
- 	}
- 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
-@@ -776,7 +780,7 @@ void dw_pcie_setup_rc(struct pcie_port *pp)
- 	/* set link width speed control register */
- 	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
- 	val &= ~PORT_LOGIC_LINK_WIDTH_MASK;
--	switch (pci->lanes) {
-+	switch (lanes) {
- 	case 1:
- 		val |= PORT_LOGIC_LINK_WIDTH_1_LANES;
- 		break;
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index b23a5b3..1fbe3b8 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -147,7 +147,6 @@ struct dw_pcie_ops {
- struct dw_pcie {
- 	struct device		*dev;
- 	void __iomem		*dbi_base;
--	u32			lanes;
- 	u32			num_viewport;
- 	u8			iatu_unroll_enabled;
- 	struct pcie_port	pp;
--- 
-1.7.9.5
+> On Sun, Feb 5, 2017 at 11:03 AM, Hans Ulli Kroll
+> <ulli.kroll@googlemail.com> wrote:
+> 
+> > We need to the remove hwirq 26-28 from DT.
+> > First one will print this warning while boot.
+> >
+> > irq: type mismatch, failed to map hwirq-26 for /soc/interrupt-controller@48000000!
+> (...)
+> > -                       interrupts = <8 IRQ_TYPE_LEVEL_HIGH>, /* PCI A */
+> > -                                       <26 IRQ_TYPE_LEVEL_HIGH>, /* PCI B */
+> > -                                       <27 IRQ_TYPE_LEVEL_HIGH>, /* PCI C */
+> > -                                       <28 IRQ_TYPE_LEVEL_HIGH>; /* PCI D */
+> > +                       interrupts = <8 IRQ_TYPE_LEVEL_HIGH>; /* chained irq PCI A-D */
+> 
+> Sure I can remove them ... just found them in the irqs.h file and thought it
+> made sense to add them. I'll just cut them.
+> 
+> Since there is actually an internal IRQ controller in the host controller
+> cascading the four PCI child IRQs that we model as an irqchip, I don't
+> really see why they have these "PCI B-D" IRQs... anyone has a guess?
+
+I think they used some other IP vendor.
+
+from my IB 4220 sources.
+
+#define IRQ_PCI_INTA				       PCI_IRQ_OFFSET + 0
+#ifndef CONFIG_DUAL_PCI
+#define IRQ_PCI_INTB				       PCI_IRQ_OFFSET + 1
+#define IRQ_PCI_INTC				       PCI_IRQ_OFFSET + 2
+#define IRQ_PCI_INTD				       PCI_IRQ_OFFSET + 3
+#else
+#define IRQ_PCI_INTB				       27
+#define IRQ_PCI_INTC				       28
+#define IRQ_PCI_INTD				       29
+#endif
+
+CONFIG_DUAL_PCI is never used
+IRQ_PCIB - IRQ_PCID or IRQ_PCI_INTB - IRQ_PCI_INTD are also never used.
+
+You can download my original NAS 4220 here
+http://ulli-kroll.de/gemini/kernel.tgz
+
+Greetings
+Hans Ulli Kroll
