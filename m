@@ -1,77 +1,89 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=9mgH=ZT=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=9mgH=ZT=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Mon, 6 Feb 2017 14:08:27 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Dongdong Liu <liudongdong3@huawei.com>, linux-pci@vger.kernel.org,
+	wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+	charles.chenxin@huawei.com, linuxarm@huawei.com,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: Re: [PATCH 3/3] PCI: generic: Fix the bug of pci_fixup_irqs() for
+ arm64 platform.
+Message-ID: <20170206140827.GB14139@red-moon>
+References: <1484202504-96686-1-git-send-email-liudongdong3@huawei.com>
+ <1484202504-96686-4-git-send-email-liudongdong3@huawei.com>
+ <20170203204530.GH10291@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170222002640.y2uhumje5csioure@rob-hp-laptop>
-References: <20170211125220.10273-1-linus.walleij@linaro.org>
- <20170222002640.y2uhumje5csioure@rob-hp-laptop>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Sun, 26 Feb 2017 21:17:46 +0100
-Message-ID: <CACRpkdZsFfnh8vA_-RQqXyrJOh-emZQytj2bxHXRDkTs9ga+eg@mail.gmail.com>
-Subject: Re: [PATCH 1/4] PCI: add DT bindings for Faraday Technology PCI Host
- Bridge
-To: Rob Herring <robh@kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: openwrt-devel@openwrt.org,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Florian Fainelli <f.fainelli@gmail.com>,
- Feng-Hsin Chiang <john453@faraday-tech.com>,
- Paulius Zaleckas <paulius.zaleckas@gmail.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Hans Ulli Kroll <ulli.kroll@googlemail.com>,
- Macpaul Lin <macpaul@andestech.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Gavin Guo <gavinguo@andestech.com>, Janos Laube <janos.dev@gmail.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170203204530.GH10291@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 22, 2017 at 1:26 AM, Rob Herring <robh@kernel.org> wrote:
-> On Sat, Feb 11, 2017 at 01:52:17PM +0100, Linus Walleij wrote:
+On Fri, Feb 03, 2017 at 02:45:30PM -0600, Bjorn Helgaas wrote:
+> [+cc Tomasz, Lorenzo]
+> 
+> On Thu, Jan 12, 2017 at 02:28:24PM +0800, Dongdong Liu wrote:
+> > arch/arm64/pci.c pcibios_alloc_irq() has the same function as
+> > pci_fixup_irqs(), so we add condition #ifndef CONFIG_ARM64 for
+> > pci_fixup_irqs().
+> > 
+> > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> > Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> > Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
+> > ---
+> >  drivers/pci/host/pci-host-common.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+> > index e3c48b5..f160afc 100644
+> > --- a/drivers/pci/host/pci-host-common.c
+> > +++ b/drivers/pci/host/pci-host-common.c
+> > @@ -145,7 +145,9 @@ int pci_host_common_probe(struct platform_device *pdev,
+> >  		return -ENODEV;
+> >  	}
+> >  
+> > +#ifndef CONFIG_ARM64
+> >  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> > +#endif
+> 
+> d8ed75d59332 ("ARM64: PCI: ACPI support for legacy IRQs parsing and
+> consolidation with DT code") added pcibios_alloc_irq() for arm64.
+> 
+> arm64 is the only arch that implements pcibios_alloc_irq().  And now
+> you want to add an ifdef here so arm64 is the only arch that doesn't
+> call pci_fixup_irqs().
+> 
+> I don't remember the details of why arm64 is so special here.
+> Obviously we'd prefer not to have the ifdef and not to have the
+> arm64-specific pcibios_alloc_irq().
 
->> +- compatible: should be one of
->> +  "faraday,pci"
->> +  "faraday,dual-pci"
->
-> Probably should still have a Cortina specific compatible.
+Well, I am not sure ARM64 is more special than other architectures
+in this respect, actually I think that what ARM64 does is what we
+will end up doing when Matthew Minter's patches are merged and
+that's my aim for v4.12, pci_fixup_irqs() should not be used
+any longer, at least on ARM/ARM64 and I know what to do to make
+it disappear.
 
-OK I rewrote it using the specific-to-generic compatible pattern.
+ARM64 relies on pcibios_alloc_irq() because of probe sequence. Before
+d8ed75d59332 ("ARM64: PCI: ACPI support for legacy IRQs parsing and
+consolidation with DT code") legacy IRQs were assigned at
+pcibios_add_device() time. This does not work at all on ACPI (ie scan
+handlers dependency), so to have a single callback DT/ACPI we
+moved the allocation at pcibios_alloc_irq() time and I suspect
+that's where (in pci_device_probe()) the host bridge hook to
+init legacy IRQs will be called when we manage to merge Matt's
+code. I will send you Matt's code rebased for v4.12, I take an
+action on that (except for x86 code that IIRC is unfathomable
+from this perspective and that's what blocked Matt's attempt).
 
->> +pci@50000000 {
->> +     compatible = "faraday,pci";
->> +     reg = <0x50000000 0x100>;
->> +     interrupts = <8 IRQ_TYPE_LEVEL_HIGH>, /* PCI A */
->> +                     <26 IRQ_TYPE_LEVEL_HIGH>, /* PCI B */
->> +                     <27 IRQ_TYPE_LEVEL_HIGH>, /* PCI C */
->> +                     <28 IRQ_TYPE_LEVEL_HIGH>; /* PCI D */
->> +     #address-cells = <3>;
->> +     #size-cells = <2>;
->> +     #interrupt-cells = <1>;
->
-> This doesn't belong here (I think).
+Now this patch. Yes, using pci_fixup_irqs() is wrong on ARM64
+(because we may reallocate an IRQ for a device that is already
+bound to a driver - but that's a problem on ARM too - ie multiple
+host controllers), the call has to be there for legacy IRQs to "work"
+on ARM though so the ifdef.
 
-This needs to be here because the interrupts for
-PCI are 1 cell. The PCI host acts as interrupt parent for all
-the cards you plug in, and they always have one cell, you
-can see this in the example for open-pic in Device Tree
-Specification release 0.1, page 19 for example.
+How are we fixing this ? We merge this patch and I will remove
+this stuff completely for v4.12 by using Matt's approach (ie moving
+the legacy IRQ allocation to a per-host bridge callback ?)
 
-It gets a bit confusing maybe in cases like this (as with
-open-pic) where there is a cascades interrupt controller
-that in this case also has 1 cell of interrupt specifier.
-
-Or did you mean something else?
-
-Yours,
-Linus Walleij
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Lorenzo
