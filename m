@@ -1,242 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:58534 "EHLO foss.arm.com"
+Received: from mga04.intel.com ([192.55.52.120]:32329 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751531AbdB0ULP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Feb 2017 15:11:15 -0500
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc: Harv Abdulhamid <harba@qti.qualcomm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Shanker Donthineni <shankerd@qti.qualcomm.com>,
+        id S1751038AbdBFKhK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Feb 2017 05:37:10 -0500
+Date: Mon, 6 Feb 2017 12:37:06 +0200
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Yinghai Lu <yinghai@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@qti.qualcomm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Nate Watterson <nwatters@qti.qualcomm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Subject: [RFC PATCH 15/30] iommu/arm-smmu-v3: Steal private ASID from a domain
-Date: Mon, 27 Feb 2017 19:54:26 +0000
-Message-Id: <20170227195441.5170-16-jean-philippe.brucker@arm.com>
-In-Reply-To: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-To: unlisted-recipients:; (no To-header on input)
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: pciehp is broken from 4.10-rc1
+Message-ID: <20170206103706.GE19313@lahna.fi.intel.com>
+References: <CAE9FiQVCMCa7iVyuwp9z6VrY0cE7V_xghuXip28Ft52=8QmTWw@mail.gmail.com>
+ <20170203055200.GA29413@wunner.de>
+ <CAE9FiQWs0H9vqEo2ZYnWWBW0Ao-hx4WYHQ69cyR32nFQ9yV9rw@mail.gmail.com>
+ <20170204081254.GA29595@wunner.de>
+ <20170204185607.GA29957@wunner.de>
+ <CAE9FiQUuFJHMScyFgnHbs5r-SzTiRiBZ2JcpUYJhg0ft75-OBQ@mail.gmail.com>
+ <20170204233443.GA234@wunner.de>
+ <CAE9FiQW5SQsQfRCz9sor4kufogTRVpHXekPHSi8MSi46mvXGLQ@mail.gmail.com>
+ <20170205073454.GA253@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170205073454.GA253@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The SMMU only has one ASID space, so the task allocator competes with the
-domain allocator for ASIDs. Task ASIDs are shared with CPUs, whereas
-domain ASIDs are private to the SMMU, and not affected by broadcast TLB
-invalidations. When the task allocator pins a mm_context and gets an ASID
-already used by the SMMU, it belongs to a domain. Attempt to assign a new
-ASID to the domain, and steal the old one for our shared context.
+On Sun, Feb 05, 2017 at 08:34:54AM +0100, Lukas Wunner wrote:
+> > sca05-0a81fd8d:~ # echo 1 > /sys/bus/pci/slots/11/power
+> > [  375.376609] pci_hotplug: power_write_file: power = 1
+> > [  375.382175] pciehp 0000:b3:00.0:pcie004: pciehp_get_power_status: SLOTCTRL a8 value read 17f1
+> > [  375.392695] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+> > [  375.401370] pciehp 0000:b3:00.0:pcie004: pciehp_power_on_slot: SLOTCTRL a8 write cmd 0
+> > [  375.410231] pciehp 0000:b3:00.0:pcie004: pciehp_green_led_blink: SLOTCTRL a8 write cmd 200
+> > [  375.411071] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+> > [  375.445222] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+> > [  377.444400] pciehp 0000:b3:00.0:pcie004: Data Link Layer Link Active not set in 1000 msec
+> > [  378.960364] pci 0000:b4:00.0 id reading try 50 times with interval 20 ms to get ffffffff
+> > [  378.969406] pciehp 0000:b3:00.0:pcie004: pciehp_check_link_status: lnk_status = 5001
+> > [  378.978059] pciehp 0000:b3:00.0:pcie004: link training error: status 0x5001
+> > [  378.985834] pciehp 0000:b3:00.0:pcie004: Failed to check link status
+> > [  378.987185] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+> > [  378.987253] pciehp 0000:b3:00.0:pcie004: pciehp_power_off_slot: SLOTCTRL a8 write cmd 400
+> > [  380.000409] pciehp 0000:b3:00.0:pcie004: pciehp_green_led_off: SLOTCTRL a8 write cmd 300
+> > [  380.000674] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+> > [  380.018020] pciehp 0000:b3:00.0:pcie004: pciehp_set_attention_status: SLOTCTRL a8 write cmd 40
+> > [  380.019053] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010 from Slot Status
 
-Replacing an ASID requires some pretty invasive introspection. We could
-try to do fine-grained locking on asid_map, domains list, context
-descriptors and domains themselves, but it gets terribly complicated and
-my brain melted twice before I could find solutions to all lock
-dependencies.
+It would be good to see the output when 68db9bc is reverted. Yinghai,
+can you attach that to the bugzilla but as well?
 
-Instead, introduce a big fat mutex around domains and (default) contexts
-modifications. It ensures that arm_smmu_context_share finds the domain
-that owns the ASID we want, and then changes all associated stream table
-entries without racing with attach/detach_dev. Note that domain_free is
-called after devices have been removed from the group, so
-arm_smmu_context_share might do the whole ASID replacement dance for
-nothing, but it is harmless.
+> So on this Skylake machine link training fails after resuming from D3hot
+> to D0.
+> 
+> One thing that's a bit fishy is that normally the Link Disable bit is
+> cleared when powering on the slot.  This results in a debug message
+> in dmesg containg the string "lnk_ctrl = ", and that line is missing
+> from the output you've pasted above, suggesting that the machine is
+> not running a stock v4.10 kernel after all but something else.  Could
+> you check why this message is not printed?  Could you check with lspci
+> if the Link Disable bit is set before you invoke "echo 1"?
+> 
+> This is the call stack:
+> pciehp_sysfs_enable_slot()
+>   pciehp_enable_slot()
+>     board_added()
+>       pciehp_power_on_slot()
+>         pciehp_link_enable()
+>           __pciehp_link_set()
+> 
+> Another theory is that the link is generally unreliable on this machine
+> since the Link Bandwidth Management Status bit is set in the Link Status
+> Register ("lnk_status = 5001"), which according to the spec means:
+> 
+> "Hardware has changed Link speed or width to attempt to correct unreliable
+> Link operation, either through an LTSSM timeout or a higher level process.
+> This bit must be set if the Physical Layer reports a speed or width change
+> was initiated by the Downstream component that was not indicated as an
+> autonomous change."
+> 
+> In this case it would be good to know which hardware exactly we're dealing
+> with so that we might quirk it to not runtime suspend the port.  To that
+> end, could you attach a full dmesg log to the bugzilla entry I've created?
+> https://bugzilla.kernel.org/show_bug.cgi?id=193951
+> 
+> @Mika, Rafael: Are you aware of Skylake machines with unreliable link
+> training, or perhaps errata of Skylake chips related to link training
+> on hotplug ports?
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 98 +++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 94 insertions(+), 4 deletions(-)
+According to the 100-series (the chipset used with Skylake) errata
+below, I don't see any mentions related to PCIe link training issues.
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index c3fa4616bd58..3af47b1427a6 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -708,6 +708,9 @@ struct arm_smmu_device {
- 	spinlock_t			contexts_lock;
- 	struct rb_root			streams;
- 	struct list_head		tasks;
-+
-+	struct list_head		domains;
-+	struct mutex			domains_mutex;
- };
- 
- struct arm_smmu_stream {
-@@ -752,6 +755,8 @@ struct arm_smmu_domain {
- 
- 	struct list_head		groups;
- 	spinlock_t			groups_lock;
-+
-+	struct list_head		list; /* For domain search by ASID */
- };
- 
- struct arm_smmu_task {
-@@ -2179,11 +2184,79 @@ static const struct mmu_notifier_ops arm_smmu_mmu_notifier_ops = {
- static int arm_smmu_context_share(struct arm_smmu_task *smmu_task, int asid)
- {
- 	int ret = 0;
-+	int new_asid;
-+	unsigned long flags;
-+	struct arm_smmu_group *smmu_group;
-+	struct arm_smmu_master_data *master;
- 	struct arm_smmu_device *smmu = smmu_task->smmu;
-+	struct arm_smmu_domain *tmp_domain, *smmu_domain = NULL;
-+	struct arm_smmu_cmdq_ent cmd = {
-+		.opcode = smmu->features & ARM_SMMU_FEAT_E2H ?
-+			  CMDQ_OP_TLBI_EL2_ASID : CMDQ_OP_TLBI_NH_ASID,
-+	};
-+
-+	mutex_lock(&smmu->domains_mutex);
-+
-+	if (!test_and_set_bit(asid, smmu->asid_map))
-+		goto out_unlock;
-+
-+	/* ASID is used by a domain. Try to replace it with a new one. */
-+	new_asid = arm_smmu_bitmap_alloc(smmu->asid_map, smmu->asid_bits);
-+	if (new_asid < 0) {
-+		ret = new_asid;
-+		goto out_unlock;
-+	}
-+
-+	list_for_each_entry(tmp_domain, &smmu->domains, list) {
-+		if (tmp_domain->stage != ARM_SMMU_DOMAIN_S1 ||
-+		    tmp_domain->s1_cfg.asid != asid)
-+			continue;
-+
-+		smmu_domain = tmp_domain;
-+		break;
-+	}
-+
-+	/*
-+	 * We didn't find the domain that owns this ASID. It is a bug, since we
-+	 * hold domains_mutex
-+	 */
-+	if (WARN_ON(!smmu_domain)) {
-+		ret = -ENOSPC;
-+		goto out_unlock;
-+	}
-+
-+	/*
-+	 * Race with smmu_unmap; TLB invalidations will start targeting the
-+	 * new ASID, which isn't assigned yet. We'll do an invalidate-all on
-+	 * the old ASID later, so it doesn't matter.
-+	 */
-+	smmu_domain->s1_cfg.asid = new_asid;
- 
--	if (test_and_set_bit(asid, smmu->asid_map))
--		/* ASID is already used for a domain */
--		return -EEXIST;
-+	/*
-+	 * Update ASID and invalidate CD in all associated masters. There will
-+	 * be some overlapping between use of both ASIDs, until we invalidate
-+	 * the TLB.
-+	 */
-+	spin_lock_irqsave(&smmu_domain->groups_lock, flags);
-+
-+	list_for_each_entry(smmu_group, &smmu_domain->groups, domain_head) {
-+		spin_lock(&smmu_group->devices_lock);
-+		list_for_each_entry(master, &smmu_group->devices, group_head) {
-+			arm_smmu_write_ctx_desc(master, 0, &smmu_domain->s1_cfg);
-+		}
-+		spin_unlock(&smmu_group->devices_lock);
-+	}
-+
-+	spin_unlock_irqrestore(&smmu_domain->groups_lock, flags);
-+
-+	/* Invalidate TLB entries previously associated with that domain */
-+	cmd.tlbi.asid = asid;
-+	arm_smmu_cmdq_issue_cmd(smmu, &cmd);
-+	cmd.opcode = CMDQ_OP_CMD_SYNC;
-+	arm_smmu_cmdq_issue_cmd(smmu, &cmd);
-+
-+out_unlock:
-+	mutex_unlock(&smmu->domains_mutex);
- 
- 	return ret;
- }
-@@ -2426,16 +2499,23 @@ static void arm_smmu_domain_free(struct iommu_domain *domain)
- 	iommu_put_dma_cookie(domain);
- 	free_io_pgtable_ops(smmu_domain->pgtbl_ops);
- 
-+	mutex_lock(&smmu->domains_mutex);
-+
- 	if (smmu_domain->stage == ARM_SMMU_DOMAIN_S1) {
- 		struct arm_smmu_s1_cfg *cfg = &smmu_domain->s1_cfg;
--		if (cfg->asid)
-+		if (cfg->asid) {
- 			arm_smmu_bitmap_free(smmu->asid_map, cfg->asid);
-+
-+			list_del(&smmu_domain->list);
-+		}
- 	} else {
- 		struct arm_smmu_s2_cfg *cfg = &smmu_domain->s2_cfg;
- 		if (cfg->vmid)
- 			arm_smmu_bitmap_free(smmu->vmid_map, cfg->vmid);
- 	}
- 
-+	mutex_unlock(&smmu->domains_mutex);
-+
- 	kfree(smmu_domain);
- }
- 
-@@ -2455,6 +2535,8 @@ static int arm_smmu_domain_finalise_s1(struct arm_smmu_domain *smmu_domain,
- 	cfg->tcr	= pgtbl_cfg->arm_lpae_s1_cfg.tcr;
- 	cfg->mair	= pgtbl_cfg->arm_lpae_s1_cfg.mair[0];
- 
-+	list_add(&smmu_domain->list, &smmu->domains);
-+
- 	return 0;
- }
- 
-@@ -2604,12 +2686,16 @@ static void arm_smmu_detach_dev(struct device *dev)
- 	struct arm_smmu_context *smmu_context;
- 	struct rb_node *node, *next;
- 
-+	mutex_lock(&smmu->domains_mutex);
-+
- 	master->ste.bypass = true;
- 	if (arm_smmu_install_ste_for_dev(dev->iommu_fwspec) < 0)
- 		dev_warn(dev, "failed to install bypass STE\n");
- 
- 	arm_smmu_write_ctx_desc(master, 0, NULL);
- 
-+	mutex_unlock(&smmu->domains_mutex);
-+
- 	if (!master->ste.valid)
- 		return;
- 
-@@ -2682,6 +2768,7 @@ static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
- 		arm_smmu_detach_dev(dev);
- 	}
- 
-+	mutex_lock(&smmu->domains_mutex);
- 	mutex_lock(&smmu_domain->init_mutex);
- 
- 	if (!smmu_domain->smmu) {
-@@ -2726,6 +2813,7 @@ static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
- 
- out_unlock:
- 	mutex_unlock(&smmu_domain->init_mutex);
-+	mutex_unlock(&smmu->domains_mutex);
- 
- 	iommu_group_put(group);
- 
-@@ -3330,9 +3418,11 @@ static int arm_smmu_init_structures(struct arm_smmu_device *smmu)
- {
- 	int ret;
- 
-+	mutex_init(&smmu->domains_mutex);
- 	spin_lock_init(&smmu->contexts_lock);
- 	smmu->streams = RB_ROOT;
- 	INIT_LIST_HEAD(&smmu->tasks);
-+	INIT_LIST_HEAD(&smmu->domains);
- 
- 	ret = arm_smmu_init_queues(smmu);
- 	if (ret)
--- 
-2.11.0
+http://www.intel.com/content/dam/www/public/us/en/documents/specification-updates/100-series-chipset-spec-update.pdf
