@@ -1,57 +1,56 @@
-Return-Path: <SRS0=KO2k=Z4=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=KO2k=Z4=ti.com=kishon@kernel.org>
-Subject: Re: [PATCH 00/37] PCI: Support for configurable PCI endpoint
+Return-Path: <SRS0=8/kT=ZT=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=8/kT=ZT=wunner.de=lukas@kernel.org>
+Date: Mon, 6 Feb 2017 07:09:53 +0100
+From: Lukas Wunner <lukas@wunner.de>
 To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <5891D53E.5050409@ti.com>
- <20170214235501.GD19040@bhelgaas-glaptop.roam.corp.google.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-doc@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <58A457F9.7050702@ti.com>
-Date: Wed, 15 Feb 2017 19:00:33 +0530
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 1/8] PCI: Recognize Thunderbolt devices
+Message-ID: <20170206060953.GB557@wunner.de>
+References: <cover.1484486499.git.lukas@wunner.de>
+ <bfabf33fc63abbeb84e11e544456098dff0e4604.1484486499.git.lukas@wunner.de>
+ <20170128215208.GM20550@bhelgaas-glaptop.roam.corp.google.com>
+ <20170129002616.GA28225@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <20170214235501.GD19040@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170129002616.GA28225@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Wednesday 15 February 2017 05:25 AM, Bjorn Helgaas wrote:
-> On Wed, Feb 01, 2017 at 06:01:58PM +0530, Kishon Vijay Abraham I wrote:
->> - list
->>
->> Hi Bjorn,
->>
->> How do you want to handle this series? I'll send one more version of the series
->> including the directory restructuring in the same series. Should it be based on
->> your -next?
+On Sun, Jan 29, 2017 at 01:26:16AM +0100, Lukas Wunner wrote:
+> On Sat, Jan 28, 2017 at 03:52:08PM -0600, Bjorn Helgaas wrote:
+> > On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
+> > > --- a/drivers/pci/probe.c
+> > > +++ b/drivers/pci/probe.c
+> > > @@ -1206,6 +1206,37 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
+> > >  		pdev->is_hotplug_bridge = 1;
+> > >  }
+> > >  
+> > > +static void set_pcie_vendor_specific(struct pci_dev *dev)
+> > 
+> > This is very specific to Thunderbolt, so let's name it something that
+> > conveys that information.  The fact that we use a vendor-specific
+> > capability to figure it out isn't really relevant in the caller.
 > 
-> I think if you base it on my pci/host-designware branch, it should
-> work pretty well.  I haven't merged that into -next yet, but I will
-> soon.
+> I thought that we may have the necessity in the future to parse other
+> VSECs on device probe, so I gave the function this generic name.
 > 
-> I'm not sure there was consensus on all the patches yet, but if you
-> can group the easy ones at the beginning, I should be able to at least
-> get quite a few out of the way.
-
-I've split this series and sent only the designware host driver rework part
-[1]. I created those patches after cherrypicking "PCI: designware: Check for
-iATU unroll only on platforms that use ATU" since it's not present in
-pci/host-designware branch.
-
-The endpoint support has some minor comments which I'll fix and send in the
-next couple of days.
-
-I'll send the endpoint series next (which will include endpoint framework,
-endpoint support in designware driver and endpoint support in dra7xx driver).
-Will that be fine? Also which branch should it be based on? pci -next?
-
-Thanks
-Kishon
-
-[1] -> https://lkml.org/lkml/2017/2/15/273
+> Think about it, every VSEC that needs to be parsed needs the while loop
+> below.  It's more efficient to have only a single while loop that handles
+> *all* VSECs at once.
 > 
-> Bjorn
+> If someone needs to parse another VSEC, they just add it to this function.
+> So IMO the way I've solved it is preferable to just adding a Thunderbolt-
+> specific function.
 > 
+> Are you sure you want this renamed? (y/n)
+
+Bjorn, I'm taking the liberty to send a gentle ping already after a week:
+Could you give me a quick yes or no for the above question so that I get
+a chance to submit a rectified version of this patch before the merge
+window opens?
+
+Thanks!
+
+Lukas
