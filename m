@@ -1,67 +1,46 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:38143 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752299AbdBMI0V (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Feb 2017 03:26:21 -0500
-From: Jaehoon Chung <jh80.chung@samsung.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
-        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
-        niyas.ahmed@samsung.com, alim.akhtar@samsung.com,
-        pankaj.dubey@samsung.com, kishon@ti.com,
-        devicetree@vger.kernel.org, mark.rutland@arm.com,
-        vivek.gautam@codeaurora.org, robh+dt@kernel.org,
-        Jaehoon Chung <jh80.chung@samsung.com>
-Subject: [PATCH V3 0/4] PCI: exynos: use the PHY generic framework
-Date: Mon, 13 Feb 2017 17:26:09 +0900
-Message-id: <20170213082613.19628-1-jh80.chung@samsung.com>
-References: <CGME20170213082615epcas5p2f5ecabbd5853a8e27da5f88fcae85158@epcas5p2.samsung.com>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:42871 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751001AbdBFLuj (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Feb 2017 06:50:39 -0500
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: pciehp is broken from 4.10-rc1
+Date: Mon, 06 Feb 2017 12:45:52 +0100
+Message-ID: <1560858.iXZjR0AeNd@aspire.rjw.lan>
+In-Reply-To: <20170204233443.GA234@wunner.de>
+References: <CAE9FiQVCMCa7iVyuwp9z6VrY0cE7V_xghuXip28Ft52=8QmTWw@mail.gmail.com> <CAE9FiQUuFJHMScyFgnHbs5r-SzTiRiBZ2JcpUYJhg0ft75-OBQ@mail.gmail.com> <20170204233443.GA234@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patcheset is for using PHY generic framework.
-Current pci-exyns doesn't use the phy framework since there haven't been on
-PHY subsystem when Exynos5440 had bean upstreamed.
-It's making a difficult to upstream the other Exynos variants because of different
-PHY registers.
+On Sunday, February 05, 2017 12:34:43 AM Lukas Wunner wrote:
+> On Sat, Feb 04, 2017 at 01:44:34PM -0800, Yinghai Lu wrote:
+> > On Sat, Feb 4, 2017 at 10:56 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > On Sat, Feb 04, 2017 at 09:12:54AM +0100, Lukas Wunner wrote:
+> > > Section 6.7.3.4 of the PCIe Base spec seems to support the theory above,
+> > > so here's a tentative patch.
+> > >
+> > >
+> > > -- >8 --
+> > > Subject: [PATCH] PCI: pciehp: Don't enable PME on runtime suspend
+> > 
+> > it works:
+> 
+> Thanks a lot for the report and for testing the patch!
+> 
+> 
+> @Rafael:
+> Bjorn usually wants you to ack PM-related patches.  Looking at the
+> patch again I'm now thinking it might be cleaner to move the check
+> for is_hotplug_bridge into pci_dev_run_wake().  Thoughts?
 
-This patcheset has the below modifications:
-1) Introduces the phy-exynos-pcie
-2) Handles PHY register from PHY framework for pci-exynos
-3) Modifies the dt-binding of pci-exynos
-4) Maintains the backward compatibility
+Yes, pci_dev_run_wake() would be a better place.
 
-Changelog on V3:
-- Drops "ARM: dts: exynos5440: support the phy-pcie node of pcie"
-  : Will send this patch after applying this patchset.
-- Fixes typo
-- Based on latest PCI git repository (host-exynos branch)
-- Changes commit message
-- Removes the dependency
-
-Changelog on V2:
-- Keep current codes for backward compatibility
-- Fixes some typos
-- Split the patches for removing the dependency
-- Removes the unnecessary codes
-- Change the patch's sequence
-- Based on latest PCI git repository.(next branch)
-
-Jaehoon Chung (4):
-  Documetation: samsung-phy: add the exynos-pcie-phy binding
-  phy: phy-exynos-pcie: Add support for Exynos PCIe phy
-  Documetation: binding: modify the exynos5440 pcie binding
-  PCI: exynos: support the using PHY generic framework
-
- .../bindings/pci/samsung,exynos5440-pcie.txt       |  29 +++
- .../devicetree/bindings/phy/samsung-phy.txt        |  17 ++
- drivers/pci/host/pci-exynos.c                      |  54 +++-
- drivers/phy/Kconfig                                |   8 +
- drivers/phy/Makefile                               |   1 +
- drivers/phy/phy-exynos-pcie.c                      | 285 +++++++++++++++++++++
- 6 files changed, 390 insertions(+), 4 deletions(-)
- create mode 100644 drivers/phy/phy-exynos-pcie.c
-
--- 
-2.10.2
+Thanks,
+Rafael
