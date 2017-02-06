@@ -1,189 +1,126 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
- lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org
-Subject: [PATCH V8 01/11] iommu/of: Refactor of_iommu_configure() for error
- handling
-Date: Fri,  3 Feb 2017 21:18:43 +0530
-Message-Id: <1486136933-20328-2-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sricharan@codeaurora.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:41050 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750997AbdBFRyK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Feb 2017 12:54:10 -0500
+Date: Mon, 6 Feb 2017 11:54:05 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Yinghai Lu <yinghai@kernel.org>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
+Message-ID: <20170206175405.GA15565@bhelgaas-glaptop.roam.corp.google.com>
+References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Robin Murphy <robin.murphy@arm.com>
+On Mon, Feb 06, 2017 at 06:54:37AM +0100, Lukas Wunner wrote:
+> Since commit 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
+> hotplug ports") we runtime suspend a hotplug port to D3hot when all its
+> children are runtime suspended or none are present.
+> 
+> When runtime suspending the port the PCI core automatically enables PME:
+>     pci_pm_runtime_suspend()
+>         pci_finish_runtime_suspend()
+>             __pci_enable_wake()
+> 
+> According to the PCI Express Base Specification, section 6.7.3.4:
+>    "Note that PME and Hot-Plug Event interrupts (when both are
+>     implemented) always share the same MSI or MSI-X vector [...]
+>     If wake generation is required by the associated form factor
+>     specification, a hot-plug capable Downstream Port must support
+>     generation of a wakeup event (using the PME mechanism) on hotplug
+>     events that occur when the system is in a sleep state or the Port
+>     is in device state D1, D2, or D3Hot."
+> 
+> Thus, if the port is runtime suspended even though it is still occupied,
+> it may immediately be woken by a PME interrupt.  
 
-In preparation for some upcoming cleverness, rework the control flow in
-of_iommu_configure() to minimise duplication and improve the propogation
-of errors. It's also as good a time as any to switch over from the
-now-just-a-compatibility-wrapper of_iommu_get_ops() to using the generic
-IOMMU instance interface directly.
+The spec goes on to say that a wakeup event should be generated when
+all three of these conditions occur:
 
-Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
----
- [*] Resolved a conflict while rebasing on top linux-next as the patch
-     is not there in mainline master.
+  - status register for an enabled [hotplug] event transitions from
+    not set to set
 
-        "iommu: Drop the of_iommu_{set/get}_ops() interface"
-        https://lkml.org/lkml/2017/1/3/489
+  - Port is in D1, D2, or D3hot,
 
- drivers/iommu/of_iommu.c | 83 +++++++++++++++++++++++++++++++-----------------
- 1 file changed, 53 insertions(+), 30 deletions(-)
+  - PME_En is set
 
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index d7f480a..ee49081 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -96,6 +96,28 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
- }
- EXPORT_SYMBOL_GPL(of_get_dma_window);
- 
-+static const struct iommu_ops
-+*of_iommu_xlate(struct device *dev, struct of_phandle_args *iommu_spec)
-+{
-+	const struct iommu_ops *ops;
-+	struct fwnode_handle *fwnode = &iommu_spec->np->fwnode;
-+	int err;
-+
-+	ops = iommu_get_instance(fwnode);
-+	if (!ops || !ops->of_xlate)
-+		return NULL;
-+
-+	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
-+	if (err)
-+		return ERR_PTR(err);
-+
-+	err = ops->of_xlate(dev, iommu_spec);
-+	if (err)
-+		return ERR_PTR(err);
-+
-+	return ops;
-+}
-+
- static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
- {
- 	struct of_phandle_args *iommu_spec = data;
-@@ -105,10 +127,11 @@ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
- }
- 
- static const struct iommu_ops
--*of_pci_iommu_configure(struct pci_dev *pdev, struct device_node *bridge_np)
-+*of_pci_iommu_init(struct pci_dev *pdev, struct device_node *bridge_np)
- {
- 	const struct iommu_ops *ops;
- 	struct of_phandle_args iommu_spec;
-+	int err;
- 
- 	/*
- 	 * Start by tracing the RID alias down the PCI topology as
-@@ -123,56 +146,56 @@ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
- 	 * bus into the system beyond, and which IOMMU it ends up at.
- 	 */
- 	iommu_spec.np = NULL;
--	if (of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
--			   "iommu-map-mask", &iommu_spec.np, iommu_spec.args))
--		return NULL;
-+	err = of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
-+			     "iommu-map-mask", &iommu_spec.np,
-+			     iommu_spec.args);
-+	if (err)
-+		return ERR_PTR(err);
- 
--	ops = iommu_get_instance(&iommu_spec.np->fwnode);
--	if (!ops || !ops->of_xlate ||
--	    iommu_fwspec_init(&pdev->dev, &iommu_spec.np->fwnode, ops) ||
--	    ops->of_xlate(&pdev->dev, &iommu_spec))
--		ops = NULL;
-+	ops = of_iommu_xlate(&pdev->dev, &iommu_spec);
- 
- 	of_node_put(iommu_spec.np);
- 	return ops;
- }
- 
--const struct iommu_ops *of_iommu_configure(struct device *dev,
--					   struct device_node *master_np)
-+static const struct iommu_ops
-+*of_platform_iommu_init(struct device *dev, struct device_node *np)
- {
- 	struct of_phandle_args iommu_spec;
--	struct device_node *np;
- 	const struct iommu_ops *ops = NULL;
- 	int idx = 0;
- 
--	if (dev_is_pci(dev))
--		return of_pci_iommu_configure(to_pci_dev(dev), master_np);
--
- 	/*
- 	 * We don't currently walk up the tree looking for a parent IOMMU.
- 	 * See the `Notes:' section of
- 	 * Documentation/devicetree/bindings/iommu/iommu.txt
- 	 */
--	while (!of_parse_phandle_with_args(master_np, "iommus",
--					   "#iommu-cells", idx,
--					   &iommu_spec)) {
--		np = iommu_spec.np;
--		ops = iommu_get_instance(&np->fwnode);
--
--		if (!ops || !ops->of_xlate ||
--		    iommu_fwspec_init(dev, &np->fwnode, ops) ||
--		    ops->of_xlate(dev, &iommu_spec))
--			goto err_put_node;
--
--		of_node_put(np);
-+	while (!of_parse_phandle_with_args(np, "iommus", "#iommu-cells",
-+					   idx, &iommu_spec)) {
-+		ops = of_iommu_xlate(dev, &iommu_spec);
-+		of_node_put(iommu_spec.np);
- 		idx++;
-+		if (IS_ERR_OR_NULL(ops))
-+			break;
- 	}
- 
- 	return ops;
-+}
-+
-+const struct iommu_ops *of_iommu_configure(struct device *dev,
-+					   struct device_node *master_np)
-+{
-+	const struct iommu_ops *ops;
-+
-+	if (!master_np)
-+		return NULL;
-+
-+	if (dev_is_pci(dev))
-+		ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
-+	else
-+		ops = of_platform_iommu_init(dev, master_np);
- 
--err_put_node:
--	of_node_put(np);
--	return NULL;
-+	return IS_ERR(ops) ? NULL : ops;
- }
- 
- static int __init of_iommu_init(void)
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+I think you're saying that if we put a hotplug-capable port that
+controls an occupied slot into D3hot, the port may immediately
+generate a wakeup PME.
 
+What is the hotplug event that causes generation of this wakeup event?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> One scenario where this
+> happens is if all children of the hotplug port have runtime suspended.
+> Another scenario is power control via sysfs:  If a user manually turns
+> the hotplug port off (e.g. to safely remove the card), PME will signal
+> an interrupt for the still-occupied slot, which is interpreted by pciehp
+> as re-insertion of a card.  As a result, power control via sysfs is no
+> longer possible.  This was observed and reported by Yinghai Lu.
+> 
+> PME is in fact unnecessary on hotplug ports:  Hotplug can be signaled
+> even in D3hot,
+
+How are hotplug events signaled in D3hot without using PME?  I'm
+looking at the PCI PM spec, r1.2, table 5-4 (p 49 in my copy), which
+says a function in D3hot can only generate PME.
+
+> and commit 68db9bc81436 ensures that all parents of the
+> hotplug port are kept awake so that interrupts can be delivered.
+> PME would allow us to runtime suspend the parent ports as well, but we
+> do not make use of it because we cannot be sure if PME actually works.
+> Thunderbolt controllers for instance advertise PME capability, but at
+> least on Macs the PME pin is not connected.
+> 
+> Since we do not rely on PME for hotplug ports, we may as well not enable
+> it, thereby avoiding its negative side effects.  However the present
+> commit deliberately only avoids enabling PME on runtime suspend, the
+> ability to enable it for system sleep is retained.
+> 
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=193951
+> Fixes: 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
+>     hotplug ports")
+> Reported-by: Yinghai Lu <yinghai@kernel.org>
+> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> ---
+> 
+> v1-> v2:
+>  Move check for is_hotplug_bridge from pci_finish_runtime_suspend()
+>  down into pci_dev_run_wake(), this seems cleaner, less clumsy.
+> 
+>  drivers/pci/pci.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index a881c0d..9c22e62 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2096,6 +2096,14 @@ bool pci_dev_run_wake(struct pci_dev *dev)
+>  {
+>  	struct pci_bus *bus = dev->bus;
+>  
+> +	/*
+> +	 * Don't enable PME at runtime on hotplug ports (even if supported)
+> +	 * since PME sends unwanted interrupts if the slot is occupied while
+> +	 * suspended to D3hot (PCIe Base Specification, section 6.7.3.4).
+> +	 */
+> +	if (dev->is_hotplug_bridge)
+> +		return false;
+> +
+>  	if (device_run_wake(&dev->dev))
+>  		return true;
+>  
+> -- 
+> 2.11.0
+> 
