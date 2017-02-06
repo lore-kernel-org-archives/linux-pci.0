@@ -1,71 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37670 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932673AbdBQURD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Feb 2017 15:17:03 -0500
-Date: Fri, 17 Feb 2017 14:16:58 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>
-Subject: Re: [PATCH] PCI: rockchip: fix wrong setting of vendor ID
-Message-ID: <20170217201658.GD17762@bhelgaas-glaptop.roam.corp.google.com>
-References: <1487230175-213629-1-git-send-email-shawn.lin@rock-chips.com>
+Return-Path: <SRS0=LczM=ZT=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=LczM=ZT=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH V2] PCI:hisi: Add DT almost ECAM support for HiSilicon
+ Hip06/Hip07 host controllers
+To: kbuild test robot <lkp@intel.com>
+References: <201702041833.s6N3aiNm%fengguang.wu@intel.com>
+CC: <kbuild-all@01.org>, <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
+        <wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
+        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <b1f87f45-c2c4-677d-65b3-e6bef4d19862@huawei.com>
+Date: Mon, 6 Feb 2017 08:51:41 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1487230175-213629-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <201702041833.s6N3aiNm%fengguang.wu@intel.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 16, 2017 at 03:29:35PM +0800, Shawn Lin wrote:
-> The TRM says that the vendor ID in RC's configure
-> space could be rewrote and the value must be the same
-> as the value read from the local core configure space.
-> But we misread that and didn't notice it before. Actually
-> we should only able to rewrite it from the local core
-> configure space. This patch fix that issue in order to make
-> lspci show the correct IP vendor infomation.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+在 2017/2/4 18:05, kbuild test robot 写道:
+> Hi Dongdong,
+>
+> [auto build test WARNING on robh/for-next]
+> [also build test WARNING on v4.10-rc6 next-20170203]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+>
+> url:    https://github.com/0day-ci/linux/commits/Dongdong-Liu/PCI-hisi-Add-DT-almost-ECAM-support-for-HiSilicon-Hip06-Hip07-host-controllers/20170204-155006
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
+> config: arm64-allmodconfig (attached as .config)
+> compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
+> reproduce:
+>         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=arm64
+>
+> All warnings (new ones prefixed by >>):
+>
+>    drivers/pci/host/pcie-hisi.c: In function 'hisi_pcie_almost_ecam_probe':
+>>> drivers/pci/host/pcie-hisi.c:331:29: warning: initialization discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+>      struct pci_ecam_ops *ops = of_device_get_match_data(dev);
 
-Applied to pci/host-rockchip for v4.11, thanks, Shawn!
+Sorry, I made a mistake, will send patch  V3 to fix the compile warning.
 
+Thanks,
+Dongdong
+>                                 ^~~~~~~~~~~~~~~~~~~~~~~~
+>
+> vim +/const +331 drivers/pci/host/pcie-hisi.c
+>
+>    315		},
+>    316		{},
+>    317	};
+>    318	
+>    319	static struct platform_driver hisi_pcie_driver = {
+>    320		.probe  = hisi_pcie_probe,
+>    321		.driver = {
+>    322			   .name = "hisi-pcie",
+>    323			   .of_match_table = hisi_pcie_of_match,
+>    324		},
+>    325	};
+>    326	builtin_platform_driver(hisi_pcie_driver);
+>    327	
+>    328	static int hisi_pcie_almost_ecam_probe(struct platform_device *pdev)
+>    329	{
+>    330		struct device *dev = &pdev->dev;
+>  > 331		struct pci_ecam_ops *ops = of_device_get_match_data(dev);
+>    332	
+>    333		return pci_host_common_probe(pdev, ops);
+>    334	}
+>    335	
+>    336	static int hisi_pcie_platform_init(struct pci_config_window *cfg)
+>    337	{
+>    338		struct device *dev = cfg->parent;
+>    339		struct platform_device *pdev = to_platform_device(dev);
+>
 > ---
-> 
->  drivers/pci/host/pcie-rockchip.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index c0b3b65..26ddd35 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -125,6 +125,7 @@
->  #define   PCIE_CORE_INT_CT			BIT(11)
->  #define   PCIE_CORE_INT_UTC			BIT(18)
->  #define   PCIE_CORE_INT_MMVC			BIT(19)
-> +#define PCIE_CORE_CONFIG_VENDOR		(PCIE_CORE_CTRL_MGMT_BASE + 0x44)
->  #define PCIE_CORE_INT_MASK		(PCIE_CORE_CTRL_MGMT_BASE + 0x210)
->  #define PCIE_RC_BAR_CONF		(PCIE_CORE_CTRL_MGMT_BASE + 0x300)
->  
-> @@ -138,7 +139,6 @@
->  		 PCIE_CORE_INT_MMVC)
->  
->  #define PCIE_RC_CONFIG_BASE		0xa00000
-> -#define PCIE_RC_CONFIG_VENDOR		(PCIE_RC_CONFIG_BASE + 0x00)
->  #define PCIE_RC_CONFIG_RID_CCR		(PCIE_RC_CONFIG_BASE + 0x08)
->  #define   PCIE_RC_CONFIG_SCC_SHIFT		16
->  #define PCIE_RC_CONFIG_DCR		(PCIE_RC_CONFIG_BASE + 0xc4)
-> @@ -637,7 +637,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  	dev_dbg(dev, "current link width is x%d\n", status);
->  
->  	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
-> -			    PCIE_RC_CONFIG_VENDOR);
-> +			    PCIE_CORE_CONFIG_VENDOR);
->  	rockchip_pcie_write(rockchip,
->  			    PCI_CLASS_BRIDGE_PCI << PCIE_RC_CONFIG_SCC_SHIFT,
->  			    PCIE_RC_CONFIG_RID_CCR);
-> -- 
-> 1.9.1
-> 
-> 
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+>
