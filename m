@@ -1,160 +1,171 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 00/20] PCI: fix config and I/O Address space memory mappings
-Date: Mon, 27 Feb 2017 15:14:11 +0000
-Message-Id: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- linux-arch@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Jonathan Corbet <corbet@lwn.net>, Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Return-Path: <SRS0=LczM=ZT=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=LczM=ZT=huawei.com=liudongdong3@kernel.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+To: <helgaas@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <wangzhou1@hisilicon.com>,
+        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
+        <linuxarm@huawei.com>, Dongdong Liu <liudongdong3@huawei.com>
+Subject: [PATCH V3] PCI:hisi: Add DT almost ECAM support for HiSilicon Hip06/Hip07 host controllers
+Date: Mon, 6 Feb 2017 14:25:04 +0800
+Message-ID: <1486362304-56261-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI local bus specifications (Rev3.0, 3.2.5 "Transaction Ordering
-and Posting") strictly require PCI configuration and I/O Address space
-write transactions to be non-posted.
+The PCIe controller in Hip06/Hip07 SoCs is not completely
+ECAM-compliant. It is non-ECAM only for the RC bus config space; for
+any other bus underneath the root bus it does support ECAM access.
+This is to add the almost ECAM support in DT way.
 
-Current crop of DT/ACPI PCI host controllers drivers relies on
-the ioremap interface to map ECAM and ECAM-derivative PCI config
-regions and pci_remap_iospace() to create a VMA for mapping
-PCI host bridge I/O Address space transactions to CPU virtual address
-space.
+Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
+---
+v2->v3: Fix the compile warning.
+	drivers/pci/host/pcie-hisi.c:331:29: warning: initialization discards
+	'const' qualifier from pointer target type [-Wdiscarded-qualifiers] 
+v1->v2: Use a separate probe function() with a separate struct
+	platform_driver. 
+	Drop PATCH 3/3, wait for Lorenzo review. Then will
+	send it as a separate patch if needed.
+	Rebased on pci/host-hisi.
+---
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     | 37 ++++++++++++
+ drivers/pci/host/pcie-hisi.c                       | 65 +++++++++++++++++++++-
+ 2 files changed, 101 insertions(+), 1 deletion(-)
 
-On some platforms (ie ARM/ARM64) ioremap fails to comply with the PCI
-configuration non-posted write transactions requirement, because it
-provides a memory mapping that issues "bufferable" or, in PCI terms
-"posted" write transactions. Likewise, the current pci_remap_iospace()
-implementation maps the physical address range that the PCI translates
-to I/O space cycles to virtual address space through pgprot_device()
-attributes that on eg ARM64 provides a memory mapping issuing
-posted writes transactions, which is not PCI specifications compliant.
-
-This patch series[1] addresses both issues in one go:
-
-- It updates the pci_remap_iospace() function to use a page mapping
-  that guarantees non-posted write transactions for I/O space addresses
-- It adds a kernel API to remap PCI config space resources, so that
-  architecture can override it with a mapping implementation that
-  guarantees PCI specifications compliancy wrt non-posted write
-  configuration transactions
-- It updates all PCI host controller implementations (and the generic
-  ECAM layer) to use the newly introduced mapping interface
-
-Tested on Juno ECAM based interface (DT/ACPI).
-
-Non-ECAM PCI host controller drivers patches need checking to make
-sure that:
-
-- I patched the correct resource region mapping for config space
-- There are not any other ways to ensure posted-write completion
-  in the respective pci_ops that make the relevant patch unnecessary
-
-[1] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git pci/config-io-mappings-fix
-
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mingkai Hu <mingkai.hu@freescale.com>
-Cc: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Ray Jui <rjui@broadcom.com>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Minghuan Lian <minghuan.Lian@freescale.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Jon Mason <jonmason@broadcom.com>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: Roy Zang <tie-fei.zang@freescale.com>
-
-Lorenzo Pieralisi (20):
-  PCI: remove __weak tag from pci_remap_iospace()
-  PCI: fix pci_remap_iospace() remap attribute
-  asm-generic/io.h: add PCI config space remap interface
-  ARM64: implement pci_remap_cfgspace() interface
-  ARM: implement pci_remap_cfgspace() interface
-  PCI: ECAM: use pci_remap_cfgspace() to map config region
-  PCI: implement Devres interface to map PCI config space
-  PCI: xilinx: update PCI config space remap function
-  PCI: xilinx-nwl: update PCI config space remap function
-  PCI: spear13xx: update PCI config space remap function
-  PCI: rockchip: update PCI config space remap function
-  PCI: qcom: update PCI config space remap function
-  PCI: iproc-platform: update PCI config space remap function
-  PCI: hisi: update PCI config space remap function
-  PCI: designware: update PCI config space remap function
-  PCI: armada8k: update PCI config space remap function
-  PCI: xgene: update PCI config space remap function
-  PCI: tegra: update PCI config space remap function
-  PCI: layerscape: update PCI config space remap function
-  PCI: keystone-dw: update PCI config space remap function
-
- Documentation/driver-model/devres.txt  |  6 ++-
- arch/arm/include/asm/io.h              | 10 ++++
- arch/arm/mm/ioremap.c                  |  7 +++
- arch/arm64/include/asm/io.h            | 10 ++++
- drivers/pci/dwc/pci-keystone-dw.c      |  2 +-
- drivers/pci/dwc/pci-layerscape.c       |  2 +-
- drivers/pci/dwc/pcie-armada8k.c        |  2 +-
- drivers/pci/dwc/pcie-designware-host.c | 12 +++--
- drivers/pci/dwc/pcie-hisi.c            |  3 +-
- drivers/pci/dwc/pcie-qcom.c            |  2 +-
- drivers/pci/dwc/pcie-spear13xx.c       |  2 +-
- drivers/pci/ecam.c                     |  5 +-
- drivers/pci/host/pci-tegra.c           |  4 +-
- drivers/pci/host/pci-xgene.c           |  4 +-
- drivers/pci/host/pcie-iproc-platform.c |  3 +-
- drivers/pci/host/pcie-rockchip.c       |  2 +-
- drivers/pci/host/pcie-xilinx-nwl.c     |  2 +-
- drivers/pci/host/pcie-xilinx.c         |  2 +-
- drivers/pci/pci.c                      | 86 +++++++++++++++++++++++++++++++++-
- include/asm-generic/io.h               |  9 ++++
- include/linux/pci.h                    |  5 ++
- 21 files changed, 154 insertions(+), 26 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+index 59c2f47..38e6dc3 100644
+--- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -42,3 +42,40 @@ Hip05 Example (note that Hip06 is the same except compatible):
+ 				 0x0 0 0 4 &mbigen_pcie 4 13>;
+ 		status = "ok";
+ 	};
++
++HiSilicon Hip06/Hip07 PCIe host bridge DT (almost ecam) description
++The properties and their meanings are identical to those described in
++host-generic-pci.txt except as listed below.
++
++Properties of the host controller node that differ from
++host-generic-pci.txt:
++
++- compatible     : Must be "hisilicon,pcie-almost-ecam"
++
++- reg            : Two entries: First the ECAM configuration space for any
++		   other bus underneath the root bus. Second, the base
++		   and size of the HiSilicon host bridge registers inculde
++		   the RC itself config space.
++
++Example:
++	pcie0: pcie@a0090000 {
++		compatible = "hisilicon,pcie-almost-ecam";
++		reg = <0 0xb0000000 0 0x2000000>,  /*  ECAM configuration space */
++		      <0 0xa0090000 0 0x10000>; /* host bridge registers */
++		bus-range = <0  31>;
++		msi-map = <0x0000 &its_dsa 0x0000 0x2000>;
++		msi-map-mask = <0xffff>;
++		#address-cells = <3>;
++		#size-cells = <2>;
++		device_type = "pci";
++		dma-coherent;
++		ranges = <0x02000000 0 0xb2000000 0x0 0xb2000000 0 0x5ff0000
++			  0x01000000 0 0 0 0xb7ff0000 0 0x10000>;
++		#interrupt-cells = <1>;
++		interrupt-map-mask = <0xf800 0 0 7>;
++		interrupt-map = <0x0 0 0 1 &mbigen_pcie0 650 4
++				 0x0 0 0 2 &mbigen_pcie0 650 4
++				 0x0 0 0 3 &mbigen_pcie0 650 4
++				 0x0 0 0 4 &mbigen_pcie0 650 4>;
++		status = "ok";
++	};
+diff --git a/drivers/pci/host/pcie-hisi.c b/drivers/pci/host/pcie-hisi.c
+index 33c201a..c51ecb1 100644
+--- a/drivers/pci/host/pcie-hisi.c
++++ b/drivers/pci/host/pcie-hisi.c
+@@ -24,7 +24,7 @@
+ #include <linux/regmap.h>
+ #include "../pci.h"
+ 
+-#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
++#if defined(CONFIG_PCI_HISI) || (defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS))
+ 
+ static int hisi_pcie_acpi_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ 				  int size, u32 *val)
+@@ -74,6 +74,8 @@ static void __iomem *hisi_pcie_map_bus(struct pci_bus *bus, unsigned int devfn,
+ 		return pci_ecam_map_bus(bus, devfn, where);
+ }
+ 
++#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
++
+ static int hisi_pcie_init(struct pci_config_window *cfg)
+ {
+ 	struct device *dev = cfg->parent;
+@@ -321,4 +323,65 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ };
+ builtin_platform_driver(hisi_pcie_driver);
+ 
++static int hisi_pcie_almost_ecam_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct pci_ecam_ops *ops;
++
++	ops = (struct pci_ecam_ops *)of_device_get_match_data(dev);
++	return pci_host_common_probe(pdev, ops);
++}
++
++static int hisi_pcie_platform_init(struct pci_config_window *cfg)
++{
++	struct device *dev = cfg->parent;
++	struct platform_device *pdev = to_platform_device(dev);
++	struct resource *res;
++	void __iomem *reg_base;
++
++	if (!dev->of_node)
++		return -EINVAL;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	if (!res) {
++		dev_err(dev, "missing \"reg[1]\"property\n");
++		return -EINVAL;
++	}
++
++	reg_base = devm_ioremap(dev, res->start, resource_size(res));
++	if (!reg_base)
++		return -ENOMEM;
++
++	cfg->priv = reg_base;
++	return 0;
++}
++
++struct pci_ecam_ops hisi_pcie_platform_ops = {
++	.bus_shift    = 20,
++	.init         =  hisi_pcie_platform_init,
++	.pci_ops      = {
++		.map_bus    = hisi_pcie_map_bus,
++		.read       = hisi_pcie_acpi_rd_conf,
++		.write      = hisi_pcie_acpi_wr_conf,
++	}
++};
++
++static const struct of_device_id hisi_pcie_almost_ecam_of_match[] = {
++	{
++		.compatible = "hisilicon,pcie-almost-ecam",
++		.data	    = (void *) &hisi_pcie_platform_ops,
++	},
++	{},
++};
++
++static struct platform_driver hisi_pcie_almost_ecam_driver = {
++	.probe  = hisi_pcie_almost_ecam_probe,
++	.driver = {
++		   .name = "hisi-pcie",
++		   .of_match_table = hisi_pcie_almost_ecam_of_match,
++	},
++};
++builtin_platform_driver(hisi_pcie_almost_ecam_driver);
++
++#endif
+ #endif
 -- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.9.1
