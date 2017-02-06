@@ -1,110 +1,109 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 17 Feb 2017 18:05:08 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Frederic Weisbecker <fweisbec@gmail.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        wanpeng.li@hotmail.com, Peter Zijlstra <peterz@infradead.org>,
-        Rik van Riel <riel@redhat.com>,
-        "# .39.x" <stable@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        USB list <linux-usb@vger.kernel.org>
-Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
- after cold boots, boots after reboot
-Message-ID: <20170217170508.GA20884@amd>
-References: <20170215232005.GA7877@amd>
- <CA+55aFyqsxjQPp=Y6MnvyMH_iA-TSiPrycnAHbBzw5bwQi7jjg@mail.gmail.com>
- <20170216111144.GA12377@amd>
- <20170216172535.GA7868@amd>
- <20170216181353.GB4357@lerouge>
- <CA+55aFwhzMWR8QPGEK+8O8r0sFpHjn4XXraQ9K0Hq4VQi8Ru-w@mail.gmail.com>
- <20170216183421.GC4357@lerouge>
- <alpine.DEB.2.20.1702162033200.4049@nanos>
- <20170217140449.GA4521@lerouge>
- <alpine.DEB.2.20.1702171737020.3536@nanos>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="LQksG6bCIzRHxTLp"
-In-Reply-To: <alpine.DEB.2.20.1702171737020.3536@nanos>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1486395217.2275.38.camel@pengutronix.de>
+References: <20170206151716.10381-1-andrew.smirnov@gmail.com>
+ <20170206151716.10381-4-andrew.smirnov@gmail.com>
+ <1486395217.2275.38.camel@pengutronix.de>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+Date: Mon, 6 Feb 2017 11:18:18 -0800
+Message-ID: <CAHQ1cqHD=h-aQbiOsPeS5BQdD_CHPBgA3VsBUPGtF7hWdObmxw@mail.gmail.com>
+Subject: Re: [PATCH v3 3/3] PCI: imx6: Add code to support i.MX7D
+To: Lucas Stach <l.stach@pengutronix.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>,
+ Fabio Estevam <fabio.estevam@nxp.com>, Rob Herring <robh+dt@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Lee Jones <lee.jones@linaro.org>,
+ linux-arm-kernel@lists.infradead.org, Andrey Yurovsky <yurovsky@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Feb 6, 2017 at 7:33 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Am Montag, den 06.02.2017, 07:17 -0800 schrieb Andrey Smirnov:
+>> Add various bits of code needed to support i.MX7D variant of the IP.
+>>
+>> Cc: yurovsky@gmail.com
+>> Cc: Lucas Stach <l.stach@pengutronix.de>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Fabio Estevam <fabio.estevam@nxp.com>
+>> Cc: Rob Herring <robh+dt@kernel.org>
+>> Cc: Mark Rutland <mark.rutland@arm.com>
+>> Cc: Lee Jones <lee.jones@linaro.org>
+>> Cc: linux-arm-kernel@lists.infradead.org
+>> Cc: devicetree@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org
+>> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+>
+> Two small comments inline, otherwise looks real good now.
+>
+>> ---
+>>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   6 +-
+>>  drivers/pci/host/pci-imx6.c                        | 121 ++++++++++++++++-----
+>>  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
+>>  3 files changed, 105 insertions(+), 26 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> index 83aeb1f..9f57759 100644
+>> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+>> @@ -4,7 +4,11 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
+>>  and thus inherits all the common properties defined in designware-pcie.txt.
+>>
+>>  Required properties:
+>> -- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
+>> +- compatible:
+>> +     - "fsl,imx6q-pcie"
+>> +     - "fsl,imx6sx-pcie",
+>> +     - "fsl,imx6qp-pcie"
+>> +     - "fsl,imx7d-pcie"
+>>  - reg: base address and length of the PCIe controller
+>>  - interrupts: A list of interrupt outputs of the controller. Must contain an
+>>    entry for each entry in the interrupt-names property.
+>
+> This misses an "Additional required properties for imx7d-pcie" section
+> listing the required reset handles.
 
---LQksG6bCIzRHxTLp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Darn! Forgot to update this part. Will fix in v4.
 
-On Fri 2017-02-17 17:37:47, Thomas Gleixner wrote:
-> On Fri, 17 Feb 2017, Frederic Weisbecker wrote:
-> > On Thu, Feb 16, 2017 at 08:34:45PM +0100, Thomas Gleixner wrote:
-> > > On Thu, 16 Feb 2017, Frederic Weisbecker wrote:
-> > > > On Thu, Feb 16, 2017 at 10:20:14AM -0800, Linus Torvalds wrote:
-> > > > > On Thu, Feb 16, 2017 at 10:13 AM, Frederic Weisbecker
-> > > > > <fweisbec@gmail.com> wrote:
-> > > > > >
-> > > > > > I haven't followed the discussion but this patch has a known is=
-sue which is fixed
-> > > > > > with:
-> > > > > >     7bdb59f1ad474bd7161adc8f923cdef10f2638d1
-> > > > > >     "tick/nohz: Fix possible missing clock reprog after tick so=
-ft restart"
-> > > > > >
-> > > > > > I hope this fixes your issue.
-> > > > >=20
-> > > > > No, Pavel saw the problem with rc8 too, which already has that fi=
-x.
-> > > > >=20
-> > > > > So I think we'll just need to revert that original patch (and that
-> > > > > means that we have to revert the commit you point to as well, sin=
-ce
-> > > > > that ->next_tick field was added by the original commit).
-> > > >=20
-> > > > Aw too bad, but indeed that late we don't have the choice.
-> > >=20
-> > > Hint: Look for CPU hotplug interaction of these patches. I bet someth=
-ing
-> > > becomes stale when the CPU goes down and does not get reset when it c=
-omes
-> > > back online.
-> >=20
-> > Indeed I should check that. But Pavel is seeing this on boot, where the
->=20
-> I don't think so. He observed it on suspend resume and by doing hotplug
-> operations in a loop. But I might be wrong as usual.
+>
+>> diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+>> index 3ef8093..34a21c9 100644
+>> --- a/drivers/pci/host/pci-imx6.c
+>> +++ b/drivers/pci/host/pci-imx6.c
+>
+> [...]
+>
+>>  static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+>>  {
+>>       struct pcie_port *pp = &imx6_pcie->pp;
+>> @@ -381,6 +416,11 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+>>       }
+>>
+>>       switch (imx6_pcie->variant) {
+>> +     case IMX7D:
+>> +             reset_control_assert(imx6_pcie->apps_reset);
+>
+> Can this reset assertion be moved into imx6_pcie_assert_core_reset()?
+> This may change the programming order slightly from the downstream
+> driver, but I guess that won't hurt if this is the equivalent of the
+> LTSSM enable signal.
 
-These are different bugs.
+I don't see why it wouldn't be possible to move it. I'll give it a try
+on a real HW and update v4 accordingly.
 
-On x60, I see failures doing hotplug/unplug in a loop, or lot of
-suspends. Someone seen it in v4.8-stable etc. Old bug. Rare to hit.
+Thanks,
+Andrey Smirnov
 
-Desktop machine was failing to boot, and had some fun with
-suspend/resume too. Boot hang was reproducible with right
-procedure. (Hard poweroff, cold boot.). That one was introduced in
-4.10-rc cycle.
-
-
-									Pavel
-
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---LQksG6bCIzRHxTLp
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlinLUQACgkQMOfwapXb+vLyZACfd/3P/zgPSQoo5wdRIJHbcUe2
-lPUAniMnY/fy7jjaHgxRBpIyuePdExQV
-=0T7k
------END PGP SIGNATURE-----
-
---LQksG6bCIzRHxTLp--
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
