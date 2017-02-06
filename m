@@ -1,57 +1,80 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46676 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752929AbdBHRgt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Feb 2017 12:36:49 -0500
-Date: Wed, 8 Feb 2017 11:25:45 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: pciehp is broken from 4.10-rc1
-Message-ID: <20170208172545.GA27298@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170203055200.GA29413@wunner.de>
- <CAE9FiQWs0H9vqEo2ZYnWWBW0Ao-hx4WYHQ69cyR32nFQ9yV9rw@mail.gmail.com>
- <20170204081254.GA29595@wunner.de>
- <20170204185607.GA29957@wunner.de>
- <CAE9FiQUuFJHMScyFgnHbs5r-SzTiRiBZ2JcpUYJhg0ft75-OBQ@mail.gmail.com>
- <20170204233443.GA234@wunner.de>
- <CAE9FiQW5SQsQfRCz9sor4kufogTRVpHXekPHSi8MSi46mvXGLQ@mail.gmail.com>
- <20170205073454.GA253@wunner.de>
- <20170206103706.GE19313@lahna.fi.intel.com>
- <20170206213528.GD679@wunner.de>
+Received: from mail-io0-f195.google.com ([209.85.223.195]:35851 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751715AbdBFQ0n (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Feb 2017 11:26:43 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170206213528.GD679@wunner.de>
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DB027C936@AcuExch.aculab.com>
+References: <063D6719AE5E284EB5DD2968C1650D6DB027C936@AcuExch.aculab.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Mon, 6 Feb 2017 08:26:42 -0800
+Message-ID: <CAKgT0UeXXkUpsrF9gpf_gba56V+B8a1G84k0WWt5q85Rx2PVsA@mail.gmail.com>
+Subject: Re: Disabling msix interrupts
+To: David Laight <David.Laight@aculab.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 06, 2017 at 10:35:28PM +0100, Lukas Wunner wrote:
-> On Mon, Feb 06, 2017 at 12:37:06PM +0200, Mika Westerberg wrote:
-> > On Sun, Feb 05, 2017 at 08:34:54AM +0100, Lukas Wunner wrote:
-> > > @Mika, Rafael: Are you aware of Skylake machines with unreliable link
-> > > training, or perhaps errata of Skylake chips related to link training
-> > > on hotplug ports?
-> > 
-> > According to the 100-series (the chipset used with Skylake) errata
-> > below, I don't see any mentions related to PCIe link training issues.
-> > 
-> > http://www.intel.com/content/dam/www/public/us/en/documents/specification-updates/100-series-chipset-spec-update.pdf
-> 
-> Yinghai Lu responded off-list that the hardware in question is an
-> unreleased / secret Intel product, so this particular issue cannot
-> be expected to be documented publicly at this point.
-> 
-> Of course this raises the question whether issues with unreleased
-> products can at all be considered valid regressions, given that the
-> final product may not regress.  It seems like a novelty to me that
-> patches would get reverted for something like this, but we'll see.
+On Mon, Feb 6, 2017 at 7:33 AM, David Laight <David.Laight@aculab.com> wrote:
+> netdev probably isn't the right list for this, but I suspect people
+> reading it understand what happens.
+>
+> I'm fairly sure that an msix interrupt can get raised after
+> the kernel thinks it has masked it.
+>
+> When an msix interrupt is disabled I think msi_set_mask_bit()
+> (in drivers/pci/msi.c) is called to write a '1' to the card's
+> hardware MSIX mask register (the last 32bit word of the entry).
+> This function carefully reads back the mask register to flush
+> the write through the pcie bus.
+> Except it doesn't, it reads the 'address_lo' register instead! [1]
 
-I assume the hardware will eventually be released, and I assume the
-hardware will not be changed because of this issue.  I would like to
-avoid the situation of having v4.9 but not v4.10 work on this
-hardware.
+Reading any register will force the write to be flushed as all PCI
+writes must be completed before a PCI read.  For example in the Intel
+drivers we read register 0 to flush a write of any of the other
+registers.
+
+> While this will stop the hardware raising any more interrupts,
+> it could easily be in the process of raising one.
+> ie have read the mask, found it zero, read the address and
+> data, and be in the process of issuing the pcie write.
+>
+> The pcie write (to disable the interrupt) and readback are seen
+> by the hardware as (more or less) back to back transfers, so can
+> both easily overtake the request to raise the interrupt.
+
+I don't believe this is correct.  On the PCI bus what you should see
+is the device aware that interrupts are disabled before the completion
+arrives and any MSI messages should arrive before the last read
+completion.
+
+> The pcie bus is also allowed to make a read completion tlp
+> overtake a write tlp.
+> Add in any host-side delays in raising the hardware interrupt
+> itself, and an interrupt could happen well after it was masked.
+
+That is only if relaxed ordering is enabled, which I am not sure is
+supported for MSI-X interrupts.  That being said though I believe
+there are some platforms that could end up seeing a delay in handling
+the interrupt if for example the CPU the interrupt was delivered to
+was in a sleep state.
+
+> More worrying would be any code that tries to change the address
+> and data associated with an interrupt.
+> You'd need moderate guard times after the disable and before the
+> enable to ensure the hardware didn't raise an interrupt with
+> a mismatch of the old and new values.
+>
+> [1] Maybe I'll look at the order those cycles actually arrive in.
+>
+>         David
+
+So I have thrown in my $.02 on this, and added the linux-pci mailing
+list.  That is a much better place to bring this up rather than
+netdev.
+
+Thanks.
+
+- Alex
