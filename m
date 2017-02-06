@@ -1,62 +1,74 @@
-Return-Path: <SRS0=W4pu=Z6=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=W4pu=Z6=free.fr=slash.tmp@kernel.org>
-Subject: Re: Pointers for writing a good PCIe driver
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Greg KH <gregkh@linuxfoundation.org>, Bjorn Helgaas
- <bhelgaas@google.com>, linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-References: <ff099b5f-efc8-bb5f-41e3-493398844cc0@free.fr>
- <05046a8a-ba9f-26f9-4c93-f657f9da6294@free.fr>
- <20170207200656.GA11659@bhelgaas-glaptop.roam.corp.google.com>
- <20170207214758.GC11659@bhelgaas-glaptop.roam.corp.google.com>
- <0f22720c-e47d-59f6-b5f7-5e40f4a1759d@free.fr>
- <20170212165033.GA31833@kroah.com>
- <0d785dab-c830-b887-d9f3-a2cd5338695c@free.fr>
- <20170217143803.GA10663@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <eff9861e-043a-7ecd-5d52-c8e18a52ece8@free.fr>
-Date: Fri, 17 Feb 2017 18:00:53 +0100
+Return-Path: <SRS0=3wyl=ZT=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=3wyl=ZT=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Yinghai Lu <yinghai@kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
+Date: Mon, 06 Feb 2017 22:52:12 +0100
+Message-ID: <1518967.ikNpzX2uft@aspire.rjw.lan>
+In-Reply-To: <20170206212041.GC679@wunner.de>
+References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de> <20170206175405.GA15565@bhelgaas-glaptop.roam.corp.google.com> <20170206212041.GC679@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <20170217143803.GA10663@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 17/02/2017 15:38, Bjorn Helgaas wrote:
-
-> On Fri, Feb 17, 2017 at 10:20:20AM +0100, Mason wrote:
->
->> There might be some kind of misunderstanding.
->>
->> I don't plan to write a driver for a device that plugs into a PCIe slot.
->>
->> I intend to write a driver for the PCIe controller itself, which is
->> embedded in the SoC. (In order to support different types of PCIe
->> devices, with their respective drivers already upstream.)
->>
->> I think the controller driver belongs in drivers/pci/host ?
+On Monday, February 06, 2017 10:20:41 PM Lukas Wunner wrote:
+> On Mon, Feb 06, 2017 at 11:54:05AM -0600, Bjorn Helgaas wrote:
+> > On Mon, Feb 06, 2017 at 06:54:37AM +0100, Lukas Wunner wrote:
+> > > Since commit 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
+> > > hotplug ports") we runtime suspend a hotplug port to D3hot when all its
+> > > children are runtime suspended or none are present.
+> > > 
+> > > When runtime suspending the port the PCI core automatically enables PME:
+> > >     pci_pm_runtime_suspend()
+> > >         pci_finish_runtime_suspend()
+> > >             __pci_enable_wake()
+> > > 
+> > > According to the PCI Express Base Specification, section 6.7.3.4:
+> > >    "Note that PME and Hot-Plug Event interrupts (when both are
+> > >     implemented) always share the same MSI or MSI-X vector [...]
+> > >     If wake generation is required by the associated form factor
+> > >     specification, a hot-plug capable Downstream Port must support
+> > >     generation of a wakeup event (using the PME mechanism) on hotplug
+> > >     events that occur when the system is in a sleep state or the Port
+> > >     is in device state D1, D2, or D3Hot."
+> > > 
+> > > Thus, if the port is runtime suspended even though it is still occupied,
+> > > it may immediately be woken by a PME interrupt.
+> > 
+> > The spec goes on to say that a wakeup event should be generated when
+> > all three of these conditions occur:
+> > 
+> >   - status register for an enabled [hotplug] event transitions from
+> >     not set to set
+> > 
+> >   - Port is in D1, D2, or D3hot,
+> > 
+> >   - PME_En is set
+> > 
+> > I think you're saying that if we put a hotplug-capable port that
+> > controls an occupied slot into D3hot, the port may immediately
+> > generate a wakeup PME.
+> > 
+> > What is the hotplug event that causes generation of this wakeup event?
 > 
-> Sorry, I indeed misunderstood you.
+> If you had read all e-mails in this thread or looked at the bugzilla
+> entry I've created, you wouldn't have to ask this question.
 > 
-> The native PCI host controller drivers indeed live in
-> drivers/pci/host/.
+> I think it's disappointing that you're asking me to jump through
+> various hoops like creating a bugzilla entry, as well as threatening
+> to revert my patch, but are unwilling to even look at the bugzilla
+> entry or read the entire thread.  It is equally disappointing that
+> the reporter of the regression was unwilling or unable to provide
+> dmesg output for both machines so that we've got no real idea what
+> we're dealing with.
 > 
-> I don't know anything about your hardware or environment, but I highly
-> encourage you to use ACPI (drivers/acpi/pci_root.c, with a little bit
-> of arch support) or generic DT (drivers/pci/host/pci-host-generic.c)
-> instead of writing a custom host controller driver.
+> It's a Link Up event.
 > 
-> The native drivers in drivers/pci/host are a huge maintenance hassle
-> for no real benefit.
+> Which doesn't make sense of course because per the spec PME is only
+> supposed to be signaled when the Link Status *changes* from 0 to 1,
 
-My SoC is built around an ARM Cortex A9.
-I don't think (?) this platform has any support for ACPI.
+BTW, where exactly did you find this bit in the spec?
 
-I'm currently using this DT description:
-http://lxr.free-electrons.com/source/arch/arm/boot/dts/tango4-common.dtsi
-
-The "legacy" driver sits at ~700 lines. It would be awesome to be able
-to discard all of it, and rely on generic upstream code. But I don't
-understand how it is possible for a generic driver to support whatever
-crazy solution some random vendor has come up with?
-
-Regards.
+Thanks,
+Rafael
