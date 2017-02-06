@@ -1,56 +1,89 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-To: bhelgaas@google.com
-Cc: Vivek Gautam <vivek.gautam@codeaurora.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] pci: dwc: Fix NULL pointer dereference due to missing assignment
-Date: Tue, 28 Feb 2017 13:38:18 +0530
-Message-Id: <1488269298-23056-1-git-send-email-vivek.gautam@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=8/kT=ZT=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=8/kT=ZT=wunner.de=lukas@kernel.org>
+Date: Mon, 6 Feb 2017 22:20:41 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
+Message-ID: <20170206212041.GC679@wunner.de>
+References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
+ <20170206175405.GA15565@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170206175405.GA15565@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add missing assignment of dw_pci core structure for
-designware-plat.
+On Mon, Feb 06, 2017 at 11:54:05AM -0600, Bjorn Helgaas wrote:
+> On Mon, Feb 06, 2017 at 06:54:37AM +0100, Lukas Wunner wrote:
+> > Since commit 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
+> > hotplug ports") we runtime suspend a hotplug port to D3hot when all its
+> > children are runtime suspended or none are present.
+> > 
+> > When runtime suspending the port the PCI core automatically enables PME:
+> >     pci_pm_runtime_suspend()
+> >         pci_finish_runtime_suspend()
+> >             __pci_enable_wake()
+> > 
+> > According to the PCI Express Base Specification, section 6.7.3.4:
+> >    "Note that PME and Hot-Plug Event interrupts (when both are
+> >     implemented) always share the same MSI or MSI-X vector [...]
+> >     If wake generation is required by the associated form factor
+> >     specification, a hot-plug capable Downstream Port must support
+> >     generation of a wakeup event (using the PME mechanism) on hotplug
+> >     events that occur when the system is in a sleep state or the Port
+> >     is in device state D1, D2, or D3Hot."
+> > 
+> > Thus, if the port is runtime suspended even though it is still occupied,
+> > it may immediately be woken by a PME interrupt.
+> 
+> The spec goes on to say that a wakeup event should be generated when
+> all three of these conditions occur:
+> 
+>   - status register for an enabled [hotplug] event transitions from
+>     not set to set
+> 
+>   - Port is in D1, D2, or D3hot,
+> 
+>   - PME_En is set
+> 
+> I think you're saying that if we put a hotplug-capable port that
+> controls an occupied slot into D3hot, the port may immediately
+> generate a wakeup PME.
+> 
+> What is the hotplug event that causes generation of this wakeup event?
 
-Commit 8b130f815a6b ("PCI: dwc: Fix crashes seen due to missing
-assignments") fixed all other platforms, but missed
-designware-plat file.
+If you had read all e-mails in this thread or looked at the bugzilla
+entry I've created, you wouldn't have to ask this question.
 
-Fixes: 442ec4c04d12 ("PCI: dwc: all: Split struct pcie_port into host-only and core structures")
+I think it's disappointing that you're asking me to jump through
+various hoops like creating a bugzilla entry, as well as threatening
+to revert my patch, but are unwilling to even look at the bugzilla
+entry or read the entire thread.  It is equally disappointing that
+the reporter of the regression was unwilling or unable to provide
+dmesg output for both machines so that we've got no real idea what
+we're dealing with.
 
-Cc: Guenter Roeck <linux@roeck-us.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
----
+It's a Link Up event.
 
-Based on torvald's master branch.
-Build tested.
+Which doesn't make sense of course because per the spec PME is only
+supposed to be signaled when the Link Status *changes* from 0 to 1,
+which is not supposed to happen for a slot that has been manually
+disabled.  It's a quirk of this (unknown) hardware.
 
- drivers/pci/dwc/pcie-designware-plat.c | 2 ++
- 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index 65250f63515c..b6c832ba39dd 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -104,6 +104,8 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
- 
- 	pci->dev = dev;
- 
-+	dw_plat_pcie->pci = pci;
-+
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
- 	pci->dbi_base = devm_ioremap_resource(dev, res);
- 	if (IS_ERR(pci->dbi_base))
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+> > PME is in fact unnecessary on hotplug ports:  Hotplug can be signaled
+> > even in D3hot,
+> 
+> How are hotplug events signaled in D3hot without using PME?  I'm
+> looking at the PCI PM spec, r1.2, table 5-4 (p 49 in my copy), which
+> says a function in D3hot can only generate PME.
+
+The table doesn't seem to be in congruence with reality.  The hotplug
+ports on Thunderbolt chips emit hotplug interrupts in D3hot regardless
+of PME.  The Broadcom wireless cards I submitted an early quirk for
+last year likewise emitted interrupts in D3hot.
+
+Lukas
