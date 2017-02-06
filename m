@@ -1,82 +1,95 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 15 Feb 2017 10:56:16 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        David Daney <david.daney@cavium.com>,
-        Rob Herring <robh@kernel.org>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Christopher Covington <cov@codeaurora.org>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:50419 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750937AbdBFFyi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Feb 2017 00:54:38 -0500
+Message-Id: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Mon, 6 Feb 2017 06:54:37 +0100
+Subject: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: always build pci-host-common on ARM64
-Message-ID: <20170215165616.GG19040@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170214214355.3101378-1-arnd@arndb.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170214214355.3101378-1-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 14, 2017 at 10:42:56PM +0100, Arnd Bergmann wrote:
-> The Thunder PCI host driver is always built, but it relies on pci_host_common_probe,
-> so we get a link error here:
-> 
-> drivers/pci/host/pci-thunder-pem.c: In function 'thunder_pem_probe':
-> drivers/pci/host/pci-thunder-pem.c:412:9: error: implicit declaration of function 'pci_host_common_probe';did you mean 'pci_host_bridge_priv'? [-Werror=implicit-function-declaration]
-> 
-> This adds the common file to the existing hack.
-> 
-> Fixes: ca5ab37b19df ("PCI: Explain ARM64 ACPI/MCFG quirk Kconfig and build strategy")
+Since commit 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
+hotplug ports") we runtime suspend a hotplug port to D3hot when all its
+children are runtime suspended or none are present.
 
-I'm puzzled.  ca5ab37b19df doesn't *look* like it changes anything.
+When runtime suspending the port the PCI core automatically enables PME:
+    pci_pm_runtime_suspend()
+        pci_finish_runtime_suspend()
+            __pci_enable_wake()
 
-thunder_pem_probe() is compiled when CONFIG_PCI_HOST_THUNDER_PEM=y,
-and it calls pci_host_common_probe().
+According to the PCI Express Base Specification, section 6.7.3.4:
+   "Note that PME and Hot-Plug Event interrupts (when both are
+    implemented) always share the same MSI or MSI-X vector [...]
+    If wake generation is required by the associated form factor
+    specification, a hot-plug capable Downstream Port must support
+    generation of a wakeup event (using the PME mechanism) on hotplug
+    events that occur when the system is in a sleep state or the Port
+    is in device state D1, D2, or D3Hot."
 
-pci_host_common_probe() is in pci-host-common.c, which is compiled
-when CONFIG_PCI_HOST_COMMON=y.  But the declaration below is under
-#ifdef CONFIG_PCI_HOST_GENERIC.  Shouldn't it be under #ifdef
-CONFIG_PCI_HOST_COMMON instead?
+Thus, if the port is runtime suspended even though it is still occupied,
+it may immediately be woken by a PME interrupt.  One scenario where this
+happens is if all children of the hotplug port have runtime suspended.
+Another scenario is power control via sysfs:  If a user manually turns
+the hotplug port off (e.g. to safely remove the card), PME will signal
+an interrupt for the still-occupied slot, which is interpreted by pciehp
+as re-insertion of a card.  As a result, power control via sysfs is no
+longer possible.  This was observed and reported by Yinghai Lu.
 
-It'd be nice to know what actually broke this (if it's not
-ca5ab37b19df) so we can figure out where the fix should be backported.
+PME is in fact unnecessary on hotplug ports:  Hotplug can be signaled
+even in D3hot, and commit 68db9bc81436 ensures that all parents of the
+hotplug port are kept awake so that interrupts can be delivered.
+PME would allow us to runtime suspend the parent ports as well, but we
+do not make use of it because we cannot be sure if PME actually works.
+Thunderbolt controllers for instance advertise PME capability, but at
+least on Macs the PME pin is not connected.
 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/pci/host/Makefile | 2 +-
->  include/linux/pci-ecam.h  | 3 +--
->  2 files changed, 2 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index bfe3179ae74c..e97d084f10ea 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -39,7 +39,7 @@ obj-$(CONFIG_VMD) += vmd.o
->  # config options to be enabled, so we always build these drivers on
->  # ARM64 and use internal ifdefs to only build the pieces we need
->  # depending on whether ACPI, the DT driver, or both are enabled.
-> -
-> +obj-$(CONFIG_ARM64) += pci-host-common.o
->  obj-$(CONFIG_ARM64) += pcie-hisi.o
->  obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
->  obj-$(CONFIG_ARM64) += pci-thunder-pem.o
-> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-> index f0d2b9451270..ab52692388d1 100644
-> --- a/include/linux/pci-ecam.h
-> +++ b/include/linux/pci-ecam.h
-> @@ -68,9 +68,8 @@ extern struct pci_ecam_ops xgene_v1_pcie_ecam_ops; /* APM X-Gene PCIe v1 */
->  extern struct pci_ecam_ops xgene_v2_pcie_ecam_ops; /* APM X-Gene PCIe v2.x */
->  #endif
->  
-> -#ifdef CONFIG_PCI_HOST_GENERIC
->  /* for DT-based PCI controllers that support ECAM */
->  int pci_host_common_probe(struct platform_device *pdev,
->  			  struct pci_ecam_ops *ops);
-> -#endif
-> +
->  #endif
-> -- 
-> 2.9.0
-> 
+Since we do not rely on PME for hotplug ports, we may as well not enable
+it, thereby avoiding its negative side effects.  However the present
+commit deliberately only avoids enabling PME on runtime suspend, the
+ability to enable it for system sleep is retained.
+
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=193951
+Fixes: 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
+    hotplug ports")
+Reported-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+
+v1-> v2:
+ Move check for is_hotplug_bridge from pci_finish_runtime_suspend()
+ down into pci_dev_run_wake(), this seems cleaner, less clumsy.
+
+ drivers/pci/pci.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a881c0d..9c22e62 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2096,6 +2096,14 @@ bool pci_dev_run_wake(struct pci_dev *dev)
+ {
+ 	struct pci_bus *bus = dev->bus;
+ 
++	/*
++	 * Don't enable PME at runtime on hotplug ports (even if supported)
++	 * since PME sends unwanted interrupts if the slot is occupied while
++	 * suspended to D3hot (PCIe Base Specification, section 6.7.3.4).
++	 */
++	if (dev->is_hotplug_bridge)
++		return false;
++
+ 	if (device_run_wake(&dev->dev))
+ 		return true;
+ 
+-- 
+2.11.0
