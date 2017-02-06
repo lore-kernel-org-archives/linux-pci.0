@@ -1,45 +1,51 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <SRS0=uRZx=ZT=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=uRZx=ZT=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH 0/5] PCI: dwc: miscellaneous cleanups and fixes
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1484136415-20798-1-git-send-email-kishon@ti.com>
+ <20170203200638.GE10291@bhelgaas-glaptop.roam.corp.google.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+        <nsekhar@ti.com>
 From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <nsekhar@ti.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2 14/22] dt-bindings: PCI: dra7xx: Add dt bindings to enable legacy mode
-Date: Fri, 17 Feb 2017 15:20:34 +0530
-Message-ID: <1487325042-28227-15-git-send-email-kishon@ti.com>
-In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+Message-ID: <58986BD1.2020803@ti.com>
+Date: Mon, 6 Feb 2017 17:58:01 +0530
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170203200638.GE10291@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-Update device tree binding documentation of TI's dra7xx PCI
-controller to include property for enabling legacy mode.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/devicetree/bindings/pci/ti-pci.txt |    4 ++++
- 1 file changed, 4 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-index 190828a..72ebe2b 100644
---- a/Documentation/devicetree/bindings/pci/ti-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-@@ -39,6 +39,10 @@ DEVICE MODE
-  - interrupts : one interrupt entries must be specified for main interrupt.
-  - num-ib-windows : number of inbound address translation windows
-  - num-ob-windows : number of outbound address translation windows
-+ - syscon-legacy-mode: phandle to the syscon dt node. The 1st argument should
-+		       contain the register offset within syscon and the 2nd
-+		       argument should contain the bit field for setting the
-+		       legacy mode
- 
- Optional Property:
-  - gpios : Should be added if a gpio line is required to drive PERST# line
--- 
-1.7.9.5
+On Saturday 04 February 2017 01:36 AM, Bjorn Helgaas wrote:
+> On Wed, Jan 11, 2017 at 05:36:50PM +0530, Kishon Vijay Abraham I wrote:
+>> This series includes miscellaneous cleanups and fixes in dra7xx
+>> pci driver and it also adds COMPILE_TEST to all designware
+>> based drivers (except dra7xx driver and hisi driver), since
+>> dra7xx driver doesn't depend on architecture specific config and
+>> hisi driver is compiled based on only ARM64.
+>>
+>> These patches have been created after applying [1].
+>>
+>> [1] -> https://lkml.org/lkml/2017/1/6/246
+>>
+>> Kishon Vijay Abraham I (5):
+>>   PCI: dwc: Add COMPILE_TEST to all designware based drivers
+>>   PCI: dwc: dra7xx: Simplify the probe code
+>>   PCI: dwc: dra7xx: Add support to force RC to work in GEN1 mode
+>>   PCI: dwc: dra7xx: Enable MSI and legacy interrupts simultaneously
+>>   PCI: dwc: dra7xx: Group phy API invocations
+>>
+>>  drivers/pci/dwc/Kconfig      |   16 ++--
+>>  drivers/pci/dwc/pci-dra7xx.c |  174 ++++++++++++++++++++++++------------------
+>>  2 files changed, 106 insertions(+), 84 deletions(-)
+> 
+> Applied to pci/host-designware for v4.11, thanks!  I added Pankaj's
+> reviewed-by to the COMPILE_TEST patch.  His reviewed-by was
+> technically for your standalone post of that patch, but I think both
+> postings have the identical patch.
+
+Thanks Bjorn! Right, that was the same patch.
+
+Regards
+Kishon
