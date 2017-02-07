@@ -1,67 +1,84 @@
-Return-Path: <SRS0=kA2g=ZW=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=kA2g=ZW=wunner.de=lukas@kernel.org>
-Date: Thu, 9 Feb 2017 05:32:54 +0100
-From: Lukas Wunner <lukas@wunner.de>
+Return-Path: <SRS0=LmQJ=ZU=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=LmQJ=ZU=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH V3] PCI:hisi: Add DT almost ECAM support for HiSilicon
+ Hip06/Hip07 host controllers
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
-Message-ID: <20170209043254.GB1304@wunner.de>
-References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
- <20170206175405.GA15565@bhelgaas-glaptop.roam.corp.google.com>
- <20170206212041.GC679@wunner.de>
- <20170206221502.GA27899@bhelgaas-glaptop.roam.corp.google.com>
- <20170207062101.GB791@wunner.de>
- <20170208175736.GB27298@bhelgaas-glaptop.roam.corp.google.com>
+References: <1486362304-56261-1-git-send-email-liudongdong3@huawei.com>
+ <20170206224041.GB27899@bhelgaas-glaptop.roam.corp.google.com>
+CC: <linux-pci@vger.kernel.org>, <wangzhou1@hisilicon.com>,
+        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
+        <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <89c7b769-f410-1526-b147-b3361b4fa9d7@huawei.com>
+Date: Tue, 7 Feb 2017 09:34:43 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20170208175736.GB27298@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170206224041.GB27899@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 08, 2017 at 11:57:36AM -0600, Bjorn Helgaas wrote:
-> On Tue, Feb 07, 2017 at 07:21:01AM +0100, Lukas Wunner wrote:
-> > On Mon, Feb 06, 2017 at 04:15:02PM -0600, Bjorn Helgaas wrote:
-> > > On Mon, Feb 06, 2017 at 10:20:41PM +0100, Lukas Wunner wrote:
-> > > > On Mon, Feb 06, 2017 at 11:54:05AM -0600, Bjorn Helgaas wrote:
-> > > > > What is the hotplug event that causes generation of this wakeup event?
-> > > > 
-> > > > If you had read all e-mails in this thread or looked at the bugzilla
-> > > > entry I've created, you wouldn't have to ask this question.
-> > > 
-> > > I'm sorry, I don't necessarily have time to sort through all the
-> > > emails.  My idea is that the changelog should be a self-contained
-> > > justification for the patch.  The bugzilla is for supporting details
-> > > and future archaeologists.
-> > > 
-[...]
-> > > If you think a bugzilla is onerous
-> > 
-> > Hold on.  I didn't say a bugzilla is onerous, I said I'm disappointed
-> > that you're asking me to create one and then don't look at it.
-> 
-> I looked at it, and it had a few details, but no analysis of the
-> situation.  Ideally, I'm looking for a pr�cis of the situation in
-> the changelog, with complete analysis and supporting details in the
-> bugzilla.
+Hi Bjorn
 
-It's irrelevant whether the bugzilla contains an analysis or not.
+在 2017/2/7 6:40, Bjorn Helgaas 写道:
+> On Mon, Feb 06, 2017 at 02:25:04PM +0800, Dongdong Liu wrote:
+>> The PCIe controller in Hip06/Hip07 SoCs is not completely
+>> ECAM-compliant. It is non-ECAM only for the RC bus config space; for
+>> any other bus underneath the root bus it does support ECAM access.
+>> This is to add the almost ECAM support in DT way.
+>>
+>> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+>> Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>> Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
+>
+> Applied to pci/host-hisi for v4.11, thanks!
 
-You were asking what type of event caused the wakeup.  The information
-was in the bugzilla.  So you either didn't look at the bugzilla or
-didn't look hard enough.
+Thanks for applying this patch.
 
-Please tell me why in the future I should comply with your requests to
-create a bugzilla if you don't look at it and the bug reporter doesn't
-bother attaching any further information.  It would also have been
-possible for you to glean the information you were asking for from the
-reporter's e-mails but you didn't read those either.  And you're paid
-to do this, I'm not.  If you look at the timestamps of my e-mails you
-may notice that they're either early in the morning, late at night or
-on weekends.  Guess what, I'm doing this in my spare time, in addition
-to my day job.  Try to put yourself in my shoes for a moment, this
-feels like a waste of my time and like subsystem maintainership is
-being turned into a Kafkaesque bureaucracy.
+>
+>> -#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
+>> +#if defined(CONFIG_PCI_HISI) || (defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS))
+>>
+>>  static int hisi_pcie_acpi_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+>>  				  int size, u32 *val)
+>
+> These "_acpi_" accessors are now used for both the ACPI and the DT
+> model, and the accessors aren't ACPI-specific anyway.  So these are
+> slight misnomers.
 
-Lukas
+Yes, It is better to change hisi_pcie_acpi_rd_conf()/ hisi_pcie_acpi_wr_conf() to hisi_pcie_rd_conf()/hisi_pcie_wr_conf().
+
+>
+>> +static int hisi_pcie_platform_init(struct pci_config_window *cfg)
+>> +{
+>> +	struct device *dev = cfg->parent;
+>> +	struct platform_device *pdev = to_platform_device(dev);
+>> +	struct resource *res;
+>> +	void __iomem *reg_base;
+>> +
+>> +	if (!dev->of_node)
+>> +		return -EINVAL;
+>
+> What's the point of testing dev->of_node here?  There's no obvious
+> dependency on of_node in this code.  Could we just drop this test?
+
+Yes, only DT driver will call this function, we should drop this test.
+Thanks for pointing this.
+
+Thanks,
+Dongdong
+>
+>> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+>> +	if (!res) {
+>> +		dev_err(dev, "missing \"reg[1]\"property\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	reg_base = devm_ioremap(dev, res->start, resource_size(res));
+>> +	if (!reg_base)
+>> +		return -ENOMEM;
+>> +
+>> +	cfg->priv = reg_base;
+>> +	return 0;
+>> +}
+>
+> .
+>
