@@ -1,36 +1,99 @@
-Return-Path: <SRS0=lb7T=ZP=lst.de=hch@kernel.org>
-Return-Path: <SRS0=lb7T=ZP=lst.de=hch@kernel.org>
-Date: Thu, 2 Feb 2017 19:32:16 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, bhelgaas@google.com,
-	bart.vanassche@sandisk.com, tglx@linutronix.de,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] PCI/MSI: don't apply affinity if there aren't enough
-	vectors left
-Message-ID: <20170202183216.GA8385@lst.de>
-References: <1485778541-28994-1-git-send-email-hch@lst.de> <20170202173659.GD21267@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170202173659.GD21267@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:4162 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754977AbdBGTX7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Feb 2017 14:23:59 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
+        Austin Bolen <Austin.Bolen@dell.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv6 3/5] pci: No config access for disconnected devices
+Date: Tue,  7 Feb 2017 14:32:35 -0500
+Message-Id: <1486495957-26177-4-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
+References: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 02, 2017 at 11:36:59AM -0600, Bjorn Helgaas wrote:
-> You didn't say exactly where the out of bounds access was, but I assume
-> it's probably in irq_create_affinity_masks() in this path:
+If we've  detected the PCI device is disconnected, there is no need to
+attempt to access its config space since we know the operation will
+fail. This patch has all the config reads and writes return -ENODEV
+error immediately when in such a state.
 
-Yes.  See the original report from Bart here:
+If a config read is sent to a disconnected device, the value will be
+set to all 1's. This is the same as what hardware is expected to return
+when accessing a removed device, but software can do this faster without
+relying on hardware.
 
-http://www.spinics.net/lists/linux-scsi/msg104082.html
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/access.c | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
 
-> The fix in pci_alloc_irq_vectors_affinity() looks fine, but I wish it
-> were closer to the actual problem.
-
-I plan to also fix the low-level issue, but:
-
- a) I have other patches pending in that are for 4.11 and I'd like
-    to batch them up with those to avoid conflicts
- b) we really need a high-level check like the one added in this
-    patch so that we do the right thing (drop affinity) in this
-    case instead of returning an error to the caller and failing
-    the probe.
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index d37b2ed..d63e9dd 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -892,12 +892,20 @@ EXPORT_SYMBOL(pcie_capability_clear_and_set_dword);
+ 
+ int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
+ {
++	if (pci_dev_is_disconnected(dev)) {
++		*val = ~0;
++		return -ENODEV;
++	}
+ 	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
+ }
+ EXPORT_SYMBOL(pci_read_config_byte);
+ 
+ int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
+ {
++	if (pci_dev_is_disconnected(dev)) {
++		*val = ~0;
++		return -ENODEV;
++	}
+ 	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
+ }
+ EXPORT_SYMBOL(pci_read_config_word);
+@@ -905,18 +913,26 @@ EXPORT_SYMBOL(pci_read_config_word);
+ int pci_read_config_dword(const struct pci_dev *dev, int where,
+ 					u32 *val)
+ {
++	if (pci_dev_is_disconnected(dev)) {
++		*val = ~0;
++		return -ENODEV;
++	}
+ 	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
+ }
+ EXPORT_SYMBOL(pci_read_config_dword);
+ 
+ int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
+ {
++	if (pci_dev_is_disconnected(dev))
++		return -ENODEV;
+ 	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
+ }
+ EXPORT_SYMBOL(pci_write_config_byte);
+ 
+ int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
+ {
++	if (pci_dev_is_disconnected(dev))
++		return -ENODEV;
+ 	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
+ }
+ EXPORT_SYMBOL(pci_write_config_word);
+@@ -924,6 +940,8 @@ EXPORT_SYMBOL(pci_write_config_word);
+ int pci_write_config_dword(const struct pci_dev *dev, int where,
+ 					 u32 val)
+ {
++	if (pci_dev_is_disconnected(dev))
++		return -ENODEV;
+ 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+ }
+ EXPORT_SYMBOL(pci_write_config_dword);
+-- 
+2.7.2
