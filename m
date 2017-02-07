@@ -1,185 +1,97 @@
-Return-Path: <SRS0=8UZ4=ZY=gmail.com=yhlu.kernel@kernel.org>
-Return-Path: <SRS0=8UZ4=ZY=gmail.com=yhlu.kernel@kernel.org>
+Return-Path: <SRS0=UJwY=ZU=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=UJwY=ZU=wunner.de=lukas@kernel.org>
+Date: Tue, 7 Feb 2017 07:26:59 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
+Message-ID: <20170207062659.GC791@wunner.de>
+References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
+ <20170206175405.GA15565@bhelgaas-glaptop.roam.corp.google.com>
+ <20170206212041.GC679@wunner.de>
+ <1518967.ikNpzX2uft@aspire.rjw.lan>
 MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <20170209201154.GA22458@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170208192054.GA31395@bhelgaas-glaptop.roam.corp.google.com>
- <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
- <20170209040648.GA1304@wunner.de> <20170209150950.GA11905@bhelgaas-glaptop.roam.corp.google.com>
- <20170209201154.GA22458@bhelgaas-glaptop.roam.corp.google.com>
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 10 Feb 2017 18:39:16 -0800
-Message-ID: <CAE9FiQUpzE-5XKS8hKy3e25CyhknDjwXkNk=ADxi-r_euJTd5A@mail.gmail.com>
-Subject: Re: [GIT PULL] PCI fixes for v4.10
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, Linus Torvalds <torvalds@linux-foundation.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Bart Van Assche <bart.vanassche@sandisk.com>,
-	Christoph Hellwig <hch@lst.de>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>, Ashok Raj <ashok.raj@intel.com>,
-	Keith Busch <keith.busch@intel.com>
-Content-Type: multipart/mixed; boundary=94eb2c03d95eddfa700548381e1b
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1518967.ikNpzX2uft@aspire.rjw.lan>
 List-ID: <linux-pci.vger.kernel.org>
 
---94eb2c03d95eddfa700548381e1b
-Content-Type: text/plain; charset=UTF-8
+On Mon, Feb 06, 2017 at 10:52:12PM +0100, Rafael J. Wysocki wrote:
+> On Monday, February 06, 2017 10:20:41 PM Lukas Wunner wrote:
+> > On Mon, Feb 06, 2017 at 11:54:05AM -0600, Bjorn Helgaas wrote:
+> > > On Mon, Feb 06, 2017 at 06:54:37AM +0100, Lukas Wunner wrote:
+> > > > Since commit 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
+> > > > hotplug ports") we runtime suspend a hotplug port to D3hot when all its
+> > > > children are runtime suspended or none are present.
+> > > > 
+> > > > When runtime suspending the port the PCI core automatically enables PME:
+> > > >     pci_pm_runtime_suspend()
+> > > >         pci_finish_runtime_suspend()
+> > > >             __pci_enable_wake()
+> > > > 
+> > > > According to the PCI Express Base Specification, section 6.7.3.4:
+> > > >    "Note that PME and Hot-Plug Event interrupts (when both are
+> > > >     implemented) always share the same MSI or MSI-X vector [...]
+> > > >     If wake generation is required by the associated form factor
+> > > >     specification, a hot-plug capable Downstream Port must support
+> > > >     generation of a wakeup event (using the PME mechanism) on hotplug
+> > > >     events that occur when the system is in a sleep state or the Port
+> > > >     is in device state D1, D2, or D3Hot."
+> > > > 
+> > > > Thus, if the port is runtime suspended even though it is still occupied,
+> > > > it may immediately be woken by a PME interrupt.
+> > > 
+> > > The spec goes on to say that a wakeup event should be generated when
+> > > all three of these conditions occur:
+> > > 
+> > >   - status register for an enabled [hotplug] event transitions from
+> > >     not set to set
+> > > 
+> > >   - Port is in D1, D2, or D3hot,
+> > > 
+> > >   - PME_En is set
+> > > 
+> > > I think you're saying that if we put a hotplug-capable port that
+> > > controls an occupied slot into D3hot, the port may immediately
+> > > generate a wakeup PME.
+> > > 
+> > > What is the hotplug event that causes generation of this wakeup event?
+> > 
+> > If you had read all e-mails in this thread or looked at the bugzilla
+> > entry I've created, you wouldn't have to ask this question.
+> > 
+> > I think it's disappointing that you're asking me to jump through
+> > various hoops like creating a bugzilla entry, as well as threatening
+> > to revert my patch, but are unwilling to even look at the bugzilla
+> > entry or read the entire thread.  It is equally disappointing that
+> > the reporter of the regression was unwilling or unable to provide
+> > dmesg output for both machines so that we've got no real idea what
+> > we're dealing with.
+> > 
+> > It's a Link Up event.
+> > 
+> > Which doesn't make sense of course because per the spec PME is only
+> > supposed to be signaled when the Link Status *changes* from 0 to 1,
+> 
+> BTW, where exactly did you find this bit in the spec?
 
-On Thu, Feb 9, 2017 at 12:11 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, Feb 09, 2017 at 09:09:50AM -0600, Bjorn Helgaas wrote:
->> [+cc Ashok, Keith]
->>
->> On Thu, Feb 09, 2017 at 05:06:48AM +0100, Lukas Wunner wrote:
->> > On Wed, Feb 08, 2017 at 01:22:56PM -0600, Bjorn Helgaas wrote:
->> > > Bjorn Helgaas (1):
->> > >       Revert "PCI: pciehp: Add runtime PM support for PCIe hotplug ports"
->> >
->> > What's the rationale for reverting this?
->> >
->> > You've received patches to fix the issue on both affected machines,
->> > so a revert seems unnecessary:
->> >
->> > https://patchwork.kernel.org/patch/9557113/
->> > https://patchwork.kernel.org/patch/9562007/
->>
->> I don't think we've gotten to the root cause of the problem yet,
->> and I don't want to throw in fixes at the last minute without a better
->> understanding of it.
->>
->> PCIe hotplug hardware is not very complicated, it hasn't changed in
->> many years, and at least for the Intel hardware in question, is
->> generally pretty well-tested with Windows.  So I want to be careful
->> about asserting that this new piece of hardware is broken.
->
-> I apologize: I had quirks on the brain, but neither of the patches
-> above is device-specific.  So neither is claiming broken hardware.
->
-> However, 9557113 claims we get unwanted PME interrupts if the slot is
-> occupied when we suspend to D3hot.  This is what I want to explore
-> further, because that hardware behavior doesn't really make sense to
-> me.
->
-> 9562007 apparently fixes something, but at this point it's a debugging
-> patch (no changelog or signed-off-by) so not a candidate for tossing
-> into v4.10 at this late date.
+PCIe Base Spec, section 6.7.3.4:
 
-Agreed. It should need more test coverage.
+"For form factors that support wake generation, a wakeup event must be
+ generated if all three of the following conditions occur:
 
-Found more problems.
+ * The status register for an enabled event transitions from not set to set
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ * The Port is in device state D1, D2, or D3Hot, and
+ * The PME_En bit in the Port's Power Management Control/Status register is
+   set"
 
-Actually we don't need 9557113.
-as even with that, we still saw link up when power off slots with some cards.
 
-please check updated version of 9562007, that fix power on/off link up problem.
+My point was that the Link Status shouldn't arbitrarily change from 0 to 1
+after powering off the slot.
 
-Ashok,
+Best regards,
 
-Can ask your QA guys check only attached patch and commit 68db9bc ?
-
-Thanks
-
-Yinghai
-
---94eb2c03d95eddfa700548381e1b
-Content-Type: text/x-patch; charset=US-ASCII; name="fix_extra_d0d3.patch"
-Content-Disposition: attachment; filename="fix_extra_d0d3.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_iz0mshmv0
-
-U3ViamVjdDpbUEFUQ0ggdjJdIFBDSSwgcGNpZWNocDogT25seSBwb3dlciBvbi9vZmYgc2xvdHMg
-d2hlbiBpdCBpcyBEMApGb3VuZCBwb3dlciBvbiB2aWEgL3N5cyBoYXMgcHJvYmxlbS4Kc2NhMDUt
-MGE4MWZkN2Y6fiAjIGVjaG8gMSA+IC9zeXMvYnVzL3BjaS9zbG90cy83L3Bvd2VyClsgIDMwMC45
-NDk5MzddIHBjaV9ob3RwbHVnOiBwb3dlcl93cml0ZV9maWxlOiBwb3dlciA9IDEKWyAgMzAwLjk1
-NTUwMl0gcGNpZWhwIDAwMDA6NzM6MDAuMDpwY2llMDA0OiBwY2llaHBfZ2V0X3Bvd2VyX3N0YXR1
-czogU0xPVENUUkwgYTggdmFsdWUgcmVhZCAxN2YxClsgIDMwMC45ODI1NTddIHBjaWVocCAwMDAw
-OjczOjAwLjA6cGNpZTAwNDogcGVuZGluZyBpbnRlcnJ1cHRzIDB4MDAxMCBmcm9tIFNsb3QgU3Rh
-dHVzClsgIDMwMC45OTExNzFdIHBjaWVocCAwMDAwOjczOjAwLjA6cGNpZTAwNDogcGNpZWhwX3Bv
-d2VyX29uX3Nsb3Q6IFNMT1RDVFJMIGE4IHdyaXRlIGNtZCAwClsgIDMwMS4wMDAwMzNdIHBjaWVo
-cCAwMDAwOjczOjAwLjA6cGNpZTAwNDogcGNpZWhwX2dyZWVuX2xlZF9ibGluazogU0xPVENUUkwg
-YTggd3JpdGUgY21kIDIwMApbICAzMDEuMDA5Mjc0XSBwY2llaHAgMDAwMDo3MzowMC4wOnBjaWUw
-MDQ6IHBlbmRpbmcgaW50ZXJydXB0cyAweDAwMTAgZnJvbSBTbG90IFN0YXR1cwpbICAzMDEuNjYy
-MTcyXSBwY2llaHAgMDAwMDo3MzowMC4wOnBjaWUwMDQ6IHBjaWVocF9jaGVja19saW5rX2FjdGl2
-ZTogbG5rX3N0YXR1cyA9IGYwODMKWyAgMzAxLjY3MDgyN10gcGNpZWhwIDAwMDA6NzM6MDAuMDpw
-Y2llMDA0OiBwZW5kaW5nIGludGVycnVwdHMgMHgwMTA4IGZyb20gU2xvdCBTdGF0dXMKWyAgMzAx
-LjY3OTM3Nl0gcGNpZWhwIDAwMDA6NzM6MDAuMDpwY2llMDA0OiBTbG90KDcpOiBMaW5rIFVwClsg
-IDMwMS42ODU0NjNdIHBjaWVocCAwMDAwOjczOjAwLjA6cGNpZTAwNDogU2xvdCg3KTogTGluayBV
-cCBldmVudCBpZ25vcmVkOyBhbHJlYWR5IHBvd2VyaW5nIG9uClsgIDMwMS42ODU1MDhdIHBjaWVo
-cCAwMDAwOjczOjAwLjA6cGNpZTAwNDogcGNpZWhwX2NoZWNrX2xpbmtfYWN0aXZlOiBsbmtfc3Rh
-dHVzID0gZjA4MwpbICAzMDIuMDA1OTY3XSBwY2llaHAgMDAwMDo3MzowMC4wOnBjaWUwMDQ6IHBj
-aWVocF9jaGVja19saW5rX3N0YXR1czogbG5rX3N0YXR1cyA9IGYwODMKWyAgMzAyLjAxNDg1OV0g
-cGNpIDAwMDA6NzQ6MDAuMDogWzE1YjM6MTAwM10gdHlwZSAwMCBjbGFzcyAweDBjMDYwMAoKYWxz
-byBmaW5kIG90aGVyIHNsb3Qgd2l0aCBvdGhlciBjYXJkIHN0aWxsIGhhdmUgZXh0cmEgbGluayB1
-cCBwcm9ibGVtIG9uIHBvd2VyIG9mZgpldmVuIGhhcyBjYW5fd2FrZSBwYXRjaC4KCnNjYTA1LTBh
-ODFmZDdmOn4gIyBlY2hvIDAgPiAvc3lzL2J1cy9wY2kvc2xvdHMvMS9wb3dlciAKWyA2MTE2Ljg3
-MzYzMl0gcGNpX2hvdHBsdWc6IHBvd2VyX3dyaXRlX2ZpbGU6IHBvd2VyID0gMApbIDYxMTYuODc5
-MTk4XSBwY2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IHBjaWVocF9nZXRfcG93ZXJfc3RhdHVz
-OiBTTE9UQ1RSTCBhOCB2YWx1ZSByZWFkIDExZjEKWyA2MTE2Ljg4ODczMF0gcGNpZWhwIDAwMDA6
-MTY6MDAuMDpwY2llMDA0OiBwY2llaHBfdW5jb25maWd1cmVfZGV2aWNlOiBkb21haW46YnVzOmRl
-diA9IDAwMDA6MTc6MDAKWyA2MTE2Ljg5ODQ2NF0gcGNpIDAwMDA6MTc6MDAuMDogUE1FIyBkaXNh
-YmxlZApbIDYxMTYuOTAzNTQxXSBwY2kgMDAwMDoxNzowMC4wOiBmcmVlaW5nIHBjaV9kZXYgaW5m
-bwpbIDYxMTYuOTA5NjYyXSBwY2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IHBlbmRpbmcgaW50
-ZXJydXB0cyAweDAwMTAgZnJvbSBTbG90IFN0YXR1cwpbIDYxMTYuOTE4Mjc3XSBwY2llaHAgMDAw
-MDoxNjowMC4wOnBjaWUwMDQ6IHBjaWVocF9wb3dlcl9vZmZfc2xvdDogU0xPVENUUkwgYTggd3Jp
-dGUgY21kIDQwMApbIDYxMTYuOTgyMDQ4XSBwY2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IHBl
-bmRpbmcgaW50ZXJydXB0cyAweDAxMDggZnJvbSBTbG90IFN0YXR1cwpbIDYxMTYuOTkwNjA4XSBw
-Y2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IFNsb3QoMSk6IExpbmsgRG93bgpbIDYxMTYuOTk2
-ODc2XSBwY2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IFNsb3QoMSk6IExpbmsgRG93biBldmVu
-dCBpZ25vcmVkOyBhbHJlYWR5IHBvd2VyaW5nIG9mZgpbIDYxMTcuOTYxNTIxXSBwY2llaHAgMDAw
-MDoxNjowMC4wOnBjaWUwMDQ6IHBjaWVocF9ncmVlbl9sZWRfb2ZmOiBTTE9UQ1RSTCBhOCB3cml0
-ZSBjbWQgMzAwClsgNjExNy45NzA1NzVdIHBjaWVocCAwMDAwOjE2OjAwLjA6cGNpZTAwNDogcGVu
-ZGluZyBpbnRlcnJ1cHRzIDB4MDAxOCBmcm9tIFNsb3QgU3RhdHVzClsgNjExNy45NzA1ODFdIHBj
-aWVocCAwMDAwOjE2OjAwLjA6cGNpZTAwNDogU2xvdCgxKTogQ2FyZCBwcmVzZW50ClsgNjExNy45
-ODU2NjBdIHBjaWVocCAwMDAwOjE2OjAwLjA6cGNpZTAwNDogcGNpZWhwX2dldF9wb3dlcl9zdGF0
-dXM6IFNMT1RDVFJMIGE4IHZhbHVlIHJlYWQgMTdmMQpbIDYxMTcuOTk1ODI1XSBwY2llaHAgMDAw
-MDoxNjowMC4wOnBjaWUwMDQ6IHBlbmRpbmcgaW50ZXJydXB0cyAweDAwMTAgZnJvbSBTbG90IFN0
-YXR1cwpbIDYxMTguMDA1NDg5XSBwY2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IHBjaWVocF9w
-b3dlcl9vbl9zbG90OiBTTE9UQ1RSTCBhOCB3cml0ZSBjbWQgMApbIDYxMTguMDE0NjI4XSBwY2ll
-aHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IHBjaWVocF9ncmVlbl9sZWRfYmxpbms6IFNMT1RDVFJM
-IGE4IHdyaXRlIGNtZCAyMDAKWyA2MTE4LjAyMzg4MF0gcGNpZWhwIDAwMDA6MTY6MDAuMDpwY2ll
-MDA0OiBwZW5kaW5nIGludGVycnVwdHMgMHgwMDEwIGZyb20gU2xvdCBTdGF0dXMKWyA2MTE4LjYw
-Mjg1NV0gcGNpZWhwIDAwMDA6MTY6MDAuMDpwY2llMDA0OiBwY2llaHBfY2hlY2tfbGlua19hY3Rp
-dmU6IGxua19zdGF0dXMgPSBmMTAzClsgNjExOC42MTE1MDddIHBjaWVocCAwMDAwOjE2OjAwLjA6
-cGNpZTAwNDogcGVuZGluZyBpbnRlcnJ1cHRzIDB4MDEwOCBmcm9tIFNsb3QgU3RhdHVzClsgNjEx
-OC42MjAwNTddIHBjaWVocCAwMDAwOjE2OjAwLjA6cGNpZTAwNDogU2xvdCgxKTogTGluayBVcApb
-IDYxMTguNjI2MTUxXSBwY2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IHBjaWVocF9jaGVja19s
-aW5rX2FjdGl2ZTogbG5rX3N0YXR1cyA9IGYxMDMKWyA2MTE4LjYzNDgyOF0gcGNpZWhwIDAwMDA6
-MTY6MDAuMDpwY2llMDA0OiBTbG90KDEpOiBMaW5rIFVwIGV2ZW50IGlnbm9yZWQ7IGFscmVhZHkg
-cG93ZXJpbmcgb24KWyA2MTE4Ljc0MTUyMF0gcGNpZWhwIDAwMDA6MTY6MDAuMDpwY2llMDA0OiBw
-Y2llaHBfY2hlY2tfbGlua19zdGF0dXM6IGxua19zdGF0dXMgPSBmMTAzClsgNjExOC43NTAyMDFd
-IHBjaSAwMDAwOjE3OjAwLjA6IFsxMDhlOjIwODhdIHR5cGUgMDAgY2xhc3MgMHgwMjA3MDAKLi4u
-CgpUaGF0IG1lYW4gY29tbWl0IDY4ZGI5YmMgYXNzdW1wYXRpb24gYWJvdXQgcG93ZXIgb24vb2Zm
-IG9uIEQzIGlzIG5vdCByaWdodC4KLSBUaGUgY29uZmlndXJhdGlvbiBzcGFjZSBvZiB0aGUgcG9y
-dCByZW1haW5zIGFjY2Vzc2libGUgaW4gRDNob3QsIHNvIGFsbAogIHRoZSBmdW5jdGlvbnMgdG8g
-cmVhZCBvciBtb2RpZnkgdGhlIFNsb3QgU3RhdHVzIGFuZCBTbG90IENvbnRyb2wKICByZWdpc3Rl
-cnMgbmVlZCBub3QgYmUgbW9kaWZpZWQuICBFdmVuIHR1cm5pbmcgb24gc2xvdCBwb3dlciBkb2Vz
-bid0IHNlZW0KICB0byByZXF1aXJlIHRoZSBwb3J0IHRvIGJlIGluIEQwLCBhdCBsZWFzdCB0aGUg
-UENJZSBzcGVjIGRvZXNuJ3Qgc2F5IHNvCiAgYW5kIEkgY29uZmlybWVkIHRoYXQgYnkgdGVzdGlu
-ZyB3aXRoIGEgVGh1bmRlcmJvbHQgY29udHJvbGxlci4KClRoaXMgcGF0Y2ggcHV0IGJhY2sgRDAg
-d2hlbiB0cnlpbmcgdG8gcG93ZXIgb24vb2ZmIHRoZSBzbG90cy4KClNpZ25lZC1vZmYtYnk6IFlp
-bmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvaG90cGx1Zy9w
-Y2llaHBfY3RybC5jIHwgICAxMCArKysrKystLS0tCiAxIGZpbGUgY2hhbmdlZCwgNiBpbnNlcnRp
-b25zKCspLCA0IGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9ob3Rw
-bHVnL3BjaWVocF9jdHJsLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9w
-Y2kvaG90cGx1Zy9wY2llaHBfY3RybC5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvaG90cGx1
-Zy9wY2llaHBfY3RybC5jCkBAIC04OSwxNyArODksMTcgQEAgc3RhdGljIGludCBib2FyZF9hZGRl
-ZChzdHJ1Y3Qgc2xvdCAqcF9zbAogCXN0cnVjdCBjb250cm9sbGVyICpjdHJsID0gcF9zbG90LT5j
-dHJsOwogCXN0cnVjdCBwY2lfYnVzICpwYXJlbnQgPSBjdHJsLT5wY2llLT5wb3J0LT5zdWJvcmRp
-bmF0ZTsKIAorCXBtX3J1bnRpbWVfZ2V0X3N5bmMoJmN0cmwtPnBjaWUtPnBvcnQtPmRldik7CiAJ
-aWYgKFBPV0VSX0NUUkwoY3RybCkpIHsKIAkJLyogUG93ZXIgb24gc2xvdCAqLwogCQlyZXR2YWwg
-PSBwY2llaHBfcG93ZXJfb25fc2xvdChwX3Nsb3QpOwogCQlpZiAocmV0dmFsKQotCQkJcmV0dXJu
-IHJldHZhbDsKKwkJCWdvdG8gZXJyX2V4aXQ7CiAJfQogCiAJcGNpZWhwX2dyZWVuX2xlZF9ibGlu
-ayhwX3Nsb3QpOwogCiAJLyogQ2hlY2sgbGluayB0cmFpbmluZyBzdGF0dXMgKi8KLQlwbV9ydW50
-aW1lX2dldF9zeW5jKCZjdHJsLT5wY2llLT5wb3J0LT5kZXYpOwogCXJldHZhbCA9IHBjaWVocF9j
-aGVja19saW5rX3N0YXR1cyhjdHJsKTsKIAlpZiAocmV0dmFsKSB7CiAJCWN0cmxfZXJyKGN0cmws
-ICJGYWlsZWQgdG8gY2hlY2sgbGluayBzdGF0dXNcbiIpOwpAQCAtMTQzLDkgKzE0MywxMCBAQCBz
-dGF0aWMgaW50IHJlbW92ZV9ib2FyZChzdHJ1Y3Qgc2xvdCAqcF9zCiAKIAlwbV9ydW50aW1lX2dl
-dF9zeW5jKCZjdHJsLT5wY2llLT5wb3J0LT5kZXYpOwogCXJldHZhbCA9IHBjaWVocF91bmNvbmZp
-Z3VyZV9kZXZpY2UocF9zbG90KTsKLQlwbV9ydW50aW1lX3B1dCgmY3RybC0+cGNpZS0+cG9ydC0+
-ZGV2KTsKLQlpZiAocmV0dmFsKQorCWlmIChyZXR2YWwpIHsKKwkJcG1fcnVudGltZV9wdXQoJmN0
-cmwtPnBjaWUtPnBvcnQtPmRldik7CiAJCXJldHVybiByZXR2YWw7CisJfQogCiAJaWYgKFBPV0VS
-X0NUUkwoY3RybCkpIHsKIAkJcGNpZWhwX3Bvd2VyX29mZl9zbG90KHBfc2xvdCk7CkBAIC0xNTcs
-NiArMTU4LDcgQEAgc3RhdGljIGludCByZW1vdmVfYm9hcmQoc3RydWN0IHNsb3QgKnBfcwogCQkg
-Ki8KIAkJbXNsZWVwKDEwMDApOwogCX0KKwlwbV9ydW50aW1lX3B1dCgmY3RybC0+cGNpZS0+cG9y
-dC0+ZGV2KTsKIAogCS8qIHR1cm4gb2ZmIEdyZWVuIExFRCAqLwogCXBjaWVocF9ncmVlbl9sZWRf
-b2ZmKHBfc2xvdCk7Cg==
---94eb2c03d95eddfa700548381e1b--
+Lukas
