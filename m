@@ -1,42 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:25013 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751990AbdBJUpd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Feb 2017 15:45:33 -0500
-Date: Fri, 10 Feb 2017 15:54:45 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>, Wei Zhang <wzhang@fb.com>,
-        Austin Bolen <Austin.Bolen@dell.com>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCHv6 3/5] pci: No config access for disconnected devices
-Message-ID: <20170210205445.GE12778@localhost.localdomain>
-References: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
- <1486495957-26177-4-git-send-email-keith.busch@intel.com>
- <20170208060410.GA1026@wunner.de>
- <20170210183852.GD12778@localhost.localdomain>
- <20170210195413.GB2243@kroah.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:36564 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752671AbdBGHMh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Feb 2017 02:12:37 -0500
+Date: Tue, 7 Feb 2017 10:12:19 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: jakeo@microsoft.com
+Cc: devel@linuxdriverproject.org, linux-pci@vger.kernel.org
+Subject: [bug report] PCI: hv: Add paravirtual PCI front-end for Microsoft
+ Hyper-V VMs
+Message-ID: <20170207071219.GA15335@mwanda>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170210195413.GB2243@kroah.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 10, 2017 at 08:54:13PM +0100, Greg Kroah-Hartman wrote:
-> On Fri, Feb 10, 2017 at 01:38:52PM -0500, Keith Busch wrote:
-> > Didn't mean to remove the unlikely. The micro-optimization isn't in a
-> > performance path, but I'll build it back in.
-> 
-> Only do so if you can measure the difference, otherwise it is useless,
-> and can actually hurt.
+[ No idea why I haven never sent this email before.  I was just going
+  through all the use after free warnings again today and noticed it. ]
 
-Okay, that sounds good to me then, and I can't measure a difference here
-in either case.
+Hello Jake Oshins,
 
-Bjorn,
-What do you think? Is this series okay or any other conerncs I may
-help address?
+The patch 4daace0d8ce8: "PCI: hv: Add paravirtual PCI front-end for
+Microsoft Hyper-V VMs" from Feb 16, 2016, leads to the following
+static checker warning:
 
-Thanks,
-Keith
+	drivers/pci/host/pci-hyperv.c:1441 pci_devices_present_work()
+	error: dereferencing freed memory 'dr'
+
+drivers/pci/host/pci-hyperv.c
+  1410          /* Pull this off the queue and process it if it was the last one. */
+  1411          spin_lock_irqsave(&hbus->device_list_lock, flags);
+  1412          while (!list_empty(&hbus->dr_list)) {
+  1413                  dr = list_first_entry(&hbus->dr_list, struct hv_dr_state,
+  1414                                        list_entry);
+  1415                  list_del(&dr->list_entry);
+  1416  
+  1417                  /* Throw this away if the list still has stuff in it. */
+  1418                  if (!list_empty(&hbus->dr_list)) {
+  1419                          kfree(dr);
+                                ^^^^^^^^^
+We free "dr".  Presumably we should set dr = NULL here?
+
+  1420                          continue;
+  1421                  }
+  1422          }
+  1423          spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+  1424  
+  1425          if (!dr) {
+  1426                  up(&hbus->enum_sem);
+  1427                  put_hvpcibus(hbus);
+  1428                  return;
+  1429          }
+  1430  
+  1431          /* First, mark all existing children as reported missing. */
+  1432          spin_lock_irqsave(&hbus->device_list_lock, flags);
+  1433          list_for_each(iter, &hbus->children) {
+  1434                          hpdev = container_of(iter, struct hv_pci_dev,
+  1435                                               list_entry);
+  1436                          hpdev->reported_missing = true;
+  1437          }
+  1438          spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+  1439  
+  1440          /* Next, add back any reported devices. */
+  1441          for (child_no = 0; child_no < dr->device_count; child_no++) {
+                                              ^^^^^^^^^^^^^^^^
+Use after free.
+
+  1442                  found = false;
+  1443                  new_desc = &dr->func[child_no];
+  1444  
+  1445                  spin_lock_irqsave(&hbus->device_list_lock, flags);
+
+
+regards,
+dan carpenter
