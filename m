@@ -1,44 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37731 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751801AbdBPGM7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2017 01:12:59 -0500
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1G68p1q119065
-        for <linux-pci@vger.kernel.org>; Thu, 16 Feb 2017 01:12:58 -0500
-Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 28n5qr1syj-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Thu, 16 Feb 2017 01:12:57 -0500
-Received: from localhost
-        by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <vaibhav@linux.vnet.ibm.com>;
-        Thu, 16 Feb 2017 16:12:55 +1000
-From: Vaibhav Jain <vaibhav@linux.vnet.ibm.com>
-To: Andrew Donnellan <andrew.donnellan@au1.ibm.com>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        "# v4 . 9+" <stable@vger.kernel.org>
-Subject: Re: [PATCH 2/3] pci/hotplug/pnv-php: Disable surprise hotplug capability on conflicts
-In-Reply-To: <48c227b2-756d-a5d3-227f-58ad51dd1565@au1.ibm.com>
-References: <1487200954-14681-1-git-send-email-gwshan@linux.vnet.ibm.com> <1487200954-14681-3-git-send-email-gwshan@linux.vnet.ibm.com> <48c227b2-756d-a5d3-227f-58ad51dd1565@au1.ibm.com>
-Date: Thu, 16 Feb 2017 11:41:48 +0530
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Haiyang Zhang <haiyangz@microsoft.com>
+To: Dexuan Cui <decui@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        Jake Oshins <jakeo@microsoft.com>
+CC: KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: RE: [PATCH] PCI: hv: fix wslot_to_devfn()
+Date: Tue, 7 Feb 2017 16:17:34 +0000
+Message-ID: <BLUPR03MB1412ACC83842880A6AEDB9D5CA430@BLUPR03MB1412.namprd03.prod.outlook.com>
+References: <MWHPR03MB26692E8BCBD2B7129EFE1445BF430@MWHPR03MB2669.namprd03.prod.outlook.com>
+In-Reply-To: <MWHPR03MB26692E8BCBD2B7129EFE1445BF430@MWHPR03MB2669.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
-Message-Id: <877f4qbr6j.fsf@vajain21.in.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Andrew Donnellan <andrew.donnellan@au1.ibm.com> writes:
 
->>
->> Cc: <stable@vger.kernel.org> # v4.9+
->> Fixes: 360aebd85a4c ("drivers/pci/hotplug: Support surprise hotplug in powernv driver")
->> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Tested-by: Vaibhav Jain <vaibhav@linux.vnet.ibm.com>
 
--- 
-Vaibhav Jain <vaibhav@linux.vnet.ibm.com>
-Linux Technology Center, IBM India Pvt. Ltd.
+> -----Original Message-----
+> From: Dexuan Cui
+> Sent: Tuesday, February 7, 2017 4:00 AM
+> To: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org;
+> devel@linuxdriverproject.org; Jake Oshins <jakeo@microsoft.com>
+> Cc: KY Srinivasan <kys@microsoft.com>; Stephen Hemminger
+> <sthemmin@microsoft.com>; Haiyang Zhang <haiyangz@microsoft.com>;
+> olaf@aepfle.de; gregkh@linuxfoundation.org; linux-kernel@vger.kernel.org;
+> apw@canonical.com; jasowang@redhat.com; Vitaly Kuznetsov
+> <vkuznets@redhat.com>
+> Subject: [PATCH] PCI: hv: fix wslot_to_devfn()
+>=20
+> The devfn of 00:02.0 is 0x10.
+> devfn_to_wslot(0x10) =3D=3D 0x2, and wslot_to_devfn(0x2) should be 0x10,
+> while it's 0x2 in the current code.
+>=20
+> Due to this, hv_eject_device_work() -> pci_get_domain_bus_and_slot()
+> returns NULL and pci_stop_and_remove_bus_device() is not called.
+>=20
+> Later when the real device driver's .remove() is invoked by
+> hv_pci_remove() -> pci_stop_root_bus(), some warnings can be noticed
+> because the VM has lost the access to the underlying device at that time.
+>=20
+> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Cc: stable@vger.kernel.org
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
+> CC: Haiyang Zhang <haiyangz@microsoft.com>
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
+> ---
+>  drivers/pci/host/pci-hyperv.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+>=20
+> The patch is co-made by Jake and me.
+
+I think this line should be put together with other comments.
+
+Thanks.
+Acked-by: Haiyang Zhang <haiyangz@microsoft.com>
