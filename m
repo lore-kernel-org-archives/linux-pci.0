@@ -1,52 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f66.google.com ([209.85.213.66]:34598 "EHLO
-        mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750737AbdBAQal (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Feb 2017 11:30:41 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v4 1/3] PCI: imx6: Fix a typo in error message
+Date: Tue,  7 Feb 2017 07:50:25 -0800
+Message-Id: <20170207155027.7734-2-andrew.smirnov@gmail.com>
+In-Reply-To: <20170207155027.7734-1-andrew.smirnov@gmail.com>
+References: <20170207155027.7734-1-andrew.smirnov@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, linux-kernel@vger.kernel.org,
+ Fabio Estevam <fabio.estevam@nxp.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ yurovsky@gmail.com, linux-arm-kernel@lists.infradead.org,
+ Lucas Stach <l.stach@pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <20170201162020.24314.27094.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170201162020.24314.27094.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Andreas Boll <andreas.boll.dev@gmail.com>
-Date: Wed, 1 Feb 2017 17:30:39 +0100
-Message-ID: <CACiKqBcZkX0V2EJPy+sPfDg0LWHSzBbkEVfL4h24iCKBFqqSpA@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] drm amdgpu/radeon: clean up d3_delay usage
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Deucher <alexander.deucher@amd.com>,
-        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
-        linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org,
-        Maarten Lankhorst <maarten.lankhorst@canonical.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For the series:
-Reviewed-by: Andreas Boll <andreas.boll.dev@gmail.com>
+Cc: yurovsky@gmail.com
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
 
-2017-02-01 17:22 GMT+01:00 Bjorn Helgaas <bhelgaas@google.com>:
-> amdgpu doesn't need to touch pdev->d3_delay at all.
->
-> radeon has a d3_delay quirk for MacBook Pro, but it only affects
-> radeon_switcheroo_set_state().  I think it should affect wakeups done by
-> the PCI core as well.
->
-> Changes from v1 to v2:
->   - Fix accidental removal of "{ 0, 0, 0, 0, 0 }" quirk list termination
->     (thanks, Andreas Boll!)
->   - Add ack from Alex Deucher
-> ---
->
-> Bjorn Helgaas (2):
->       drm/amdgpu: remove unnecessary save/restore of pdev->d3_delay
->       drm/radeon: make MacBook Pro d3_delay quirk more generic
->
->
->  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |    4 ----
->  drivers/gpu/drm/radeon/radeon_device.c     |   11 -----------
->  drivers/pci/quirks.c                       |   13 +++++++++++++
->  3 files changed, 13 insertions(+), 15 deletions(-)
-> _______________________________________________
-> amd-gfx mailing list
-> amd-gfx@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/amd-gfx
+Acked-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+---
+ drivers/pci/host/pci-imx6.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index c8cefb0..50a1291 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -678,8 +678,7 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		imx6_pcie->pcie_inbound_axi = devm_clk_get(dev,
+ 							   "pcie_inbound_axi");
+ 		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
+-			dev_err(dev,
+-				"pcie_incbound_axi clock missing or invalid\n");
++			dev_err(dev, "pcie_inbound_axi clock missing or invalid\n");
+ 			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
+ 		}
+ 	}
+-- 
+2.9.3
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
