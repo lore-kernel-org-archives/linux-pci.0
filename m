@@ -1,135 +1,142 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <2eb2b814-d621-5d8d-8366-4c4e9f789208@deltatee.com>
-Date: Fri, 17 Feb 2017 13:36:04 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:57720 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932416AbdBGVqz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Feb 2017 16:46:55 -0500
+Date: Tue, 7 Feb 2017 15:46:45 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Dongdong Liu <liudongdong3@huawei.com>, linux-pci@vger.kernel.org,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        charles.chenxin@huawei.com, linuxarm@huawei.com,
+        Tomasz Nowicki <tn@semihalf.com>
+Subject: Re: [PATCH 3/3] PCI: generic: Fix the bug of pci_fixup_irqs() for
+ arm64 platform.
+Message-ID: <20170207214645.GB11659@bhelgaas-glaptop.roam.corp.google.com>
+References: <1484202504-96686-1-git-send-email-liudongdong3@huawei.com>
+ <1484202504-96686-4-git-send-email-liudongdong3@huawei.com>
+ <20170203204530.GH10291@bhelgaas-glaptop.roam.corp.google.com>
+ <20170206140827.GB14139@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <1486058763-7730-1-git-send-email-logang@deltatee.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170206140827.GB14139@red-moon>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Mon, Feb 06, 2017 at 02:08:27PM +0000, Lorenzo Pieralisi wrote:
+> On Fri, Feb 03, 2017 at 02:45:30PM -0600, Bjorn Helgaas wrote:
+> > [+cc Tomasz, Lorenzo]
+> > 
+> > On Thu, Jan 12, 2017 at 02:28:24PM +0800, Dongdong Liu wrote:
+> > > arch/arm64/pci.c pcibios_alloc_irq() has the same function as
+> > > pci_fixup_irqs(), so we add condition #ifndef CONFIG_ARM64 for
+> > > pci_fixup_irqs().
+> > > 
+> > > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> > > Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> > > Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
+> > > ---
+> > >  drivers/pci/host/pci-host-common.c | 2 ++
+> > >  1 file changed, 2 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+> > > index e3c48b5..f160afc 100644
+> > > --- a/drivers/pci/host/pci-host-common.c
+> > > +++ b/drivers/pci/host/pci-host-common.c
+> > > @@ -145,7 +145,9 @@ int pci_host_common_probe(struct platform_device *pdev,
+> > >  		return -ENODEV;
+> > >  	}
+> > >  
+> > > +#ifndef CONFIG_ARM64
+> > >  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+> > > +#endif
+> > 
+> > d8ed75d59332 ("ARM64: PCI: ACPI support for legacy IRQs parsing and
+> > consolidation with DT code") added pcibios_alloc_irq() for arm64.
+> > 
+> > arm64 is the only arch that implements pcibios_alloc_irq().  And now
+> > you want to add an ifdef here so arm64 is the only arch that doesn't
+> > call pci_fixup_irqs().
+> > 
+> > I don't remember the details of why arm64 is so special here.
+> > Obviously we'd prefer not to have the ifdef and not to have the
+> > arm64-specific pcibios_alloc_irq().
+> 
+> Well, I am not sure ARM64 is more special than other architectures
+> in this respect, actually I think that what ARM64 does is what we
+> will end up doing when Matthew Minter's patches are merged and
+> that's my aim for v4.12, pci_fixup_irqs() should not be used
+> any longer, at least on ARM/ARM64 and I know what to do to make
+> it disappear.
 
-Can you give us an idea of when you might be able to comment on our
-patchset? We've addressed all the outstanding issues and have a couple
-of reviewed and tested tags. So we'd like to see this move forward as
-soon as possible.
+ARM64 is different from x86, even though both arches support both ACPI
+and DT: on ARM64 we currently call of_irq_parse_and_map_pci() when we
+call the driver's probe() method, whereas on x86 we don't call it
+until the driver calls pci_enable_device().
 
-I can do a respin with the tags collected or address any concerns you
-may have, just please let us know.
+Obviously it would be better if this were done at the same point on
+both arches.  I don't know what that point *is*.  I could imagine
+enumeration-time, probe-time, or enable-time.
 
-Thanks,
+OK, back to the patch at hand.  I think we're agreed that having
+pci_host_common_probe() call pci_fixup_irqs() is wrong on all
+architectures (it doesn't cover hot-added devices and it may clobber
+an IRQ after a driver has claimed the device (since it "fixes" all PCI
+devices).  And we hope to fix this in the next cycle using Matt's
+work.
 
-Logan
+So I think I'm OK with this transient ugliness.  Although
+pci-host-common.c is currently only available on ARM and ARM64, in
+theory, it should be usable on x86.  I would probably use "#ifdef ARM"
+instead of "#ifndef ARM64" so that when it is made available on x86,
+we won't call pci_fixup_irqs() there.
 
-On 02/02/17 11:05 AM, Logan Gunthorpe wrote:
-> Changes since v1:
-> 
-> * Rebased onto 4.10-rc6 (cleanly)
-> * Split the patch into a few more easily digestible patches (as
->   suggested by Greg Kroah-Hartman)
-> * Folded switchtec.c into switchtec.h (per Greg)
-> * Fixed a bunch of 32bit build warnings caught by the kbuild test robot
-> * Fixed some issues in the documentation so it has a proper
->   reStructredText format (as noted by Jonathan Corbet)
-> * Fixed padding and sizes in the IOCTL structures as noticed by Emil
->   Velikov and used pahole to verify their consistency across 32 and 64
->   bit builds
-> * Reworked one of the IOCTL interfaces to be more future proof (per
->   Emil).
-> 
-> Changes since RFC:
-> 
-> * Fixed incorrect use of the drive model as pointed out by Greg
->   Kroah-Hartman
-> * Used devm functions as suggested by Keith Busch
-> * Added a handful of sysfs attributes to the switchtec class
-> * Added a handful of IOCTLs to the switchtec device
-> * A number of miscellaneous bug fixes
-> 
-> --
-> 
-> Hi,
-> 
-> This is a continuation of the RFC we posted lasted month [1] which
-> proposes a management driver for Microsemi's Switchtec line of PCI
-> switches. This hardware is still looking to be used in the Open
-> Compute Platform
-> 
-> To make this entirely clear: the Switchtec products are compliant
-> with the PCI specifications and are supported today with the standard
-> in-kernel driver. However, these devices also expose a management endpoint
-> on a separate PCI function address which can be used to perform some
-> advanced operations. This is a driver for that function. See the patch
-> for more information.
-> 
-> Since the RFC, we've made the changes requested by Greg Kroah-Hartman
-> and Keith Busch, and we've also fleshed out a number of features. We've
-> added a couple of IOCTLs and sysfs attributes which are documented in
-> the patch. Significant work has also been done on the userspace tool
-> which is available under a GPL license at [2]. We've also had testing
-> done by some of the interested parties.
-> 
-> We hope to see this work included in either 4.11 or 4.12 assuming a
-> smooth review process.
-> 
-> The patch is based off of the v4.10-rc6 release.
-> 
-> Thanks for your review,
-> 
-> Logan
-> 
-> [1] https://www.spinics.net/lists/linux-pci/msg56897.html
-> [2] https://github.com/sbates130272/switchtec-user
-> 
-> --
-> 
-> Logan Gunthorpe (4):
->   MicroSemi Switchtec management interface driver
->   switchtec: Add user interface documentation
->   switchtec: Add sysfs attributes to the Switchtec driver
->   switchtec: Add IOCTLs to the Switchtec driver
-> 
->  Documentation/ABI/testing/sysfs-class-switchtec |   96 ++
->  Documentation/ioctl/ioctl-number.txt            |    1 +
->  Documentation/switchtec.txt                     |   80 ++
->  MAINTAINERS                                     |   11 +
->  drivers/pci/Kconfig                             |    1 +
->  drivers/pci/Makefile                            |    1 +
->  drivers/pci/switch/Kconfig                      |   13 +
->  drivers/pci/switch/Makefile                     |    1 +
->  drivers/pci/switch/switchtec.c                  | 1608 +++++++++++++++++++++++
->  include/uapi/linux/switchtec_ioctl.h            |  132 ++
->  10 files changed, 1944 insertions(+)
->  create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
->  create mode 100644 Documentation/switchtec.txt
->  create mode 100644 drivers/pci/switch/Kconfig
->  create mode 100644 drivers/pci/switch/Makefile
->  create mode 100644 drivers/pci/switch/switchtec.c
->  create mode 100644 include/uapi/linux/switchtec_ioctl.h
-> 
-> --
-> 2.1.4
-> 
+What do you think of the following?
+
+
+commit 4e3538fb84dcba2de5d5b0990ced7f3f881fda1e
+Author: Dongdong Liu <liudongdong3@huawei.com>
+Date:   Thu Jan 12 14:28:24 2017 +0800
+
+    PCI: generic: Call pci_fixup_irqs() only on ARM
+    
+    pci_fixup_irqs() is problematic because:
+    
+      - it's called when we enumerate a host bridge, so we don't fixup IRQs for
+        hot-added PCI devices, and
+    
+      - it fixes up IRQs for all PCI devices in the system, so if we call it
+        multiple times, e.g., if we have several host controllers, we may
+        reallocate an IRQ for a device after a driver has already claimed it.
+    
+    We plan to replace pci_fixup_irqs() soon, but we still need it on ARM
+    because we don't have any other generic method for doing this.
+    
+    On ARM64, we don't need pci_fixup_irqs() because we do IRQ setup when we
+    bind a driver to the device (in the pci_device_probe() ->
+    pcibios_alloc_irq() path).
+    
+    pci-host-common.c is currently only used on ARM and ARM64.  In principle,
+    it could be used on x86, and we wouldn't want pci_fixup_irqs() there
+    either, because x86 does IRQ setup in the pci_enable_device() path.
+    
+    [bhelgaas: changelog, use #ifdef ARM, not #ifndef ARM64]
+    Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+    Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
+
+diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
+index e3c48b5deb93..e9a53bae1c25 100644
+--- a/drivers/pci/host/pci-host-common.c
++++ b/drivers/pci/host/pci-host-common.c
+@@ -145,7 +145,9 @@ int pci_host_common_probe(struct platform_device *pdev,
+ 		return -ENODEV;
+ 	}
+ 
++#ifdef CONFIG_ARM
+ 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++#endif
+ 
+ 	/*
+ 	 * We insert PCI resources into the iomem_resource and
