@@ -1,229 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Kishon Vijay Abraham I'" <kishon@ti.com>,
- "'Bjorn Helgaas'" <bhelgaas@google.com>, <linux-kernel@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-omap@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
- <linux-arm-kernel@axis.com>
-References: <1487164699-30708-1-git-send-email-kishon@ti.com>
- <1487164699-30708-2-git-send-email-kishon@ti.com>
-In-Reply-To: <1487164699-30708-2-git-send-email-kishon@ti.com>
-Subject: Re: [PATCH 01/10] PCI: dwc: designware: Move the register defines to
- designware header file
-Date: Thu, 16 Feb 2017 09:49:55 -0500
-Message-ID: <000001d28863$f291ffc0$d7b5ff40$@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp5-g21.free.fr ([212.27.42.5]:18210 "EHLO smtp5-g21.free.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754079AbdBGPzf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Feb 2017 10:55:35 -0500
+Subject: Re: Pointers for writing a good PCIe driver
+From: Mason <slash.tmp@free.fr>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>
+References: <ff099b5f-efc8-bb5f-41e3-493398844cc0@free.fr>
+Message-ID: <05046a8a-ba9f-26f9-4c93-f657f9da6294@free.fr>
+Date: Tue, 7 Feb 2017 16:55:28 +0100
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: nsekhar@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <ff099b5f-efc8-bb5f-41e3-493398844cc0@free.fr>
+Content-Type: text/plain; charset=ISO-8859-15
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Wednesday, February 15, 2017 8:18 AM, Kishon Vijay Abraham I wrote:
-> 
-> No functional change. Move the register defines and other macros from
-> pcie-designware.c to pcie-designware.h. This is in preparation to
-> split the pcie-designware.c file into designware core file and host
-> specific file.
-> 
-> While at that also fix a checkpatch warning.
-> 
-> Reviewed-By: Joao Pinto <jpinto@synopsys.com>
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+On 06/02/2017 16:54, Mason wrote:
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-
-Best regards,
-Jingoo Han
-
-> ---
->  drivers/pci/dwc/pcie-designware.c |   70 --------------------------------
-> ----
->  drivers/pci/dwc/pcie-designware.h |   71
-> +++++++++++++++++++++++++++++++++++++
->  2 files changed, 71 insertions(+), 70 deletions(-)
+> My platform ( arch/arm/mach-tango ) provides a PCIe controller from PLDA.
 > 
-> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-
-> designware.c
-> index af8f6e9..d0e4904 100644
-> --- a/drivers/pci/dwc/pcie-designware.c
-> +++ b/drivers/pci/dwc/pcie-designware.c
-> @@ -25,76 +25,6 @@
+> I do have access to a driver that works for a few PCIe boards, but it's
+> an ancient out-of-tree driver (targeting v3.4). Also, I'm not sure it
+> follows the best-practice guidelines (e.g. it hard-codes a few
+> work-arounds directly in drivers/pci/probe.c)
 > 
->  #include "pcie-designware.h"
+> If I understand correctly, while PCIe is a standard, it is not codified
+> as much as USB (XHCI) or SATA (AHCI), which means the register layout
+> (and possibly other things) are left up to the integrator? Which means
+> there cannot be some kind of "generic" driver that works for a random
+> PCIe controller?
 > 
-> -/* Parameters for the waiting for link up routine */
-> -#define LINK_WAIT_MAX_RETRIES		10
-> -#define LINK_WAIT_USLEEP_MIN		90000
-> -#define LINK_WAIT_USLEEP_MAX		100000
-> -
-> -/* Parameters for the waiting for iATU enabled routine */
-> -#define LINK_WAIT_MAX_IATU_RETRIES	5
-> -#define LINK_WAIT_IATU_MIN		9000
-> -#define LINK_WAIT_IATU_MAX		10000
-> -
-> -/* Synopsys-specific PCIe configuration registers */
-> -#define PCIE_PORT_LINK_CONTROL		0x710
-> -#define PORT_LINK_MODE_MASK		(0x3f << 16)
-> -#define PORT_LINK_MODE_1_LANES		(0x1 << 16)
-> -#define PORT_LINK_MODE_2_LANES		(0x3 << 16)
-> -#define PORT_LINK_MODE_4_LANES		(0x7 << 16)
-> -#define PORT_LINK_MODE_8_LANES		(0xf << 16)
-> -
-> -#define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
-> -#define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
-> -#define PORT_LOGIC_LINK_WIDTH_MASK	(0x1f << 8)
-> -#define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
-> -#define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
-> -#define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
-> -#define PORT_LOGIC_LINK_WIDTH_8_LANES	(0x8 << 8)
-> -
-> -#define PCIE_MSI_ADDR_LO		0x820
-> -#define PCIE_MSI_ADDR_HI		0x824
-> -#define PCIE_MSI_INTR0_ENABLE		0x828
-> -#define PCIE_MSI_INTR0_MASK		0x82C
-> -#define PCIE_MSI_INTR0_STATUS		0x830
-> -
-> -#define PCIE_ATU_VIEWPORT		0x900
-> -#define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
-> -#define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
-> -#define PCIE_ATU_REGION_INDEX2		(0x2 << 0)
-> -#define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
-> -#define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
-> -#define PCIE_ATU_CR1			0x904
-> -#define PCIE_ATU_TYPE_MEM		(0x0 << 0)
-> -#define PCIE_ATU_TYPE_IO		(0x2 << 0)
-> -#define PCIE_ATU_TYPE_CFG0		(0x4 << 0)
-> -#define PCIE_ATU_TYPE_CFG1		(0x5 << 0)
-> -#define PCIE_ATU_CR2			0x908
-> -#define PCIE_ATU_ENABLE			(0x1 << 31)
-> -#define PCIE_ATU_BAR_MODE_ENABLE	(0x1 << 30)
-> -#define PCIE_ATU_LOWER_BASE		0x90C
-> -#define PCIE_ATU_UPPER_BASE		0x910
-> -#define PCIE_ATU_LIMIT			0x914
-> -#define PCIE_ATU_LOWER_TARGET		0x918
-> -#define PCIE_ATU_BUS(x)			(((x) & 0xff) << 24)
-> -#define PCIE_ATU_DEV(x)			(((x) & 0x1f) << 19)
-> -#define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
-> -#define PCIE_ATU_UPPER_TARGET		0x91C
-> -
-> -/*
-> - * iATU Unroll-specific register definitions
-> - * From 4.80 core version the address translation will be made by unroll
-> - */
-> -#define PCIE_ATU_UNR_REGION_CTRL1	0x00
-> -#define PCIE_ATU_UNR_REGION_CTRL2	0x04
-> -#define PCIE_ATU_UNR_LOWER_BASE		0x08
-> -#define PCIE_ATU_UNR_UPPER_BASE		0x0C
-> -#define PCIE_ATU_UNR_LIMIT		0x10
-> -#define PCIE_ATU_UNR_LOWER_TARGET	0x14
-> -#define PCIE_ATU_UNR_UPPER_TARGET	0x18
-> -
-> -/* Register address builder */
-> -#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)  ((0x3 << 20) | (region
-> << 9))
-> -
->  /* PCIe Port Logic registers */
->  #define PLR_OFFSET			0x700
->  #define PCIE_PHY_DEBUG_R1		(PLR_OFFSET + 0x2c)
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-
-> designware.h
-> index a567ea2..b5226d4 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -14,6 +14,77 @@
->  #ifndef _PCIE_DESIGNWARE_H
->  #define _PCIE_DESIGNWARE_H
+> I guess my main question is: do you have pointers on getting started
+> writing a PCIe driver good enough for upstream?
 > 
-> +/* Parameters for the waiting for link up routine */
-> +#define LINK_WAIT_MAX_RETRIES		10
-> +#define LINK_WAIT_USLEEP_MIN		90000
-> +#define LINK_WAIT_USLEEP_MAX		100000
-> +
-> +/* Parameters for the waiting for iATU enabled routine */
-> +#define LINK_WAIT_MAX_IATU_RETRIES	5
-> +#define LINK_WAIT_IATU_MIN		9000
-> +#define LINK_WAIT_IATU_MAX		10000
-> +
-> +/* Synopsys-specific PCIe configuration registers */
-> +#define PCIE_PORT_LINK_CONTROL		0x710
-> +#define PORT_LINK_MODE_MASK		(0x3f << 16)
-> +#define PORT_LINK_MODE_1_LANES		(0x1 << 16)
-> +#define PORT_LINK_MODE_2_LANES		(0x3 << 16)
-> +#define PORT_LINK_MODE_4_LANES		(0x7 << 16)
-> +#define PORT_LINK_MODE_8_LANES		(0xf << 16)
-> +
-> +#define PCIE_LINK_WIDTH_SPEED_CONTROL	0x80C
-> +#define PORT_LOGIC_SPEED_CHANGE		(0x1 << 17)
-> +#define PORT_LOGIC_LINK_WIDTH_MASK	(0x1f << 8)
-> +#define PORT_LOGIC_LINK_WIDTH_1_LANES	(0x1 << 8)
-> +#define PORT_LOGIC_LINK_WIDTH_2_LANES	(0x2 << 8)
-> +#define PORT_LOGIC_LINK_WIDTH_4_LANES	(0x4 << 8)
-> +#define PORT_LOGIC_LINK_WIDTH_8_LANES	(0x8 << 8)
-> +
-> +#define PCIE_MSI_ADDR_LO		0x820
-> +#define PCIE_MSI_ADDR_HI		0x824
-> +#define PCIE_MSI_INTR0_ENABLE		0x828
-> +#define PCIE_MSI_INTR0_MASK		0x82C
-> +#define PCIE_MSI_INTR0_STATUS		0x830
-> +
-> +#define PCIE_ATU_VIEWPORT		0x900
-> +#define PCIE_ATU_REGION_INBOUND		(0x1 << 31)
-> +#define PCIE_ATU_REGION_OUTBOUND	(0x0 << 31)
-> +#define PCIE_ATU_REGION_INDEX2		(0x2 << 0)
-> +#define PCIE_ATU_REGION_INDEX1		(0x1 << 0)
-> +#define PCIE_ATU_REGION_INDEX0		(0x0 << 0)
-> +#define PCIE_ATU_CR1			0x904
-> +#define PCIE_ATU_TYPE_MEM		(0x0 << 0)
-> +#define PCIE_ATU_TYPE_IO		(0x2 << 0)
-> +#define PCIE_ATU_TYPE_CFG0		(0x4 << 0)
-> +#define PCIE_ATU_TYPE_CFG1		(0x5 << 0)
-> +#define PCIE_ATU_CR2			0x908
-> +#define PCIE_ATU_ENABLE			(0x1 << 31)
-> +#define PCIE_ATU_BAR_MODE_ENABLE	(0x1 << 30)
-> +#define PCIE_ATU_LOWER_BASE		0x90C
-> +#define PCIE_ATU_UPPER_BASE		0x910
-> +#define PCIE_ATU_LIMIT			0x914
-> +#define PCIE_ATU_LOWER_TARGET		0x918
-> +#define PCIE_ATU_BUS(x)			(((x) & 0xff) << 24)
-> +#define PCIE_ATU_DEV(x)			(((x) & 0x1f) << 19)
-> +#define PCIE_ATU_FUNC(x)		(((x) & 0x7) << 16)
-> +#define PCIE_ATU_UPPER_TARGET		0x91C
-> +
-> +/*
-> + * iATU Unroll-specific register definitions
-> + * From 4.80 core version the address translation will be made by unroll
-> + */
-> +#define PCIE_ATU_UNR_REGION_CTRL1	0x00
-> +#define PCIE_ATU_UNR_REGION_CTRL2	0x04
-> +#define PCIE_ATU_UNR_LOWER_BASE		0x08
-> +#define PCIE_ATU_UNR_UPPER_BASE		0x0C
-> +#define PCIE_ATU_UNR_LIMIT		0x10
-> +#define PCIE_ATU_UNR_LOWER_TARGET	0x14
-> +#define PCIE_ATU_UNR_UPPER_TARGET	0x18
-> +
-> +/* Register address builder */
-> +#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)	\
-> +			((0x3 << 20) | ((region) << 9))
-> +
->  /*
->   * Maximum number of MSI IRQs can be 256 per controller. But keep
->   * it 32 as of now. Probably we will never need more than 32. If needed,
-> --
-> 1.7.9.5
+> Is Documentation/PCI/PCIEBUS-HOWTO.txt still a relevant resource?
+> 
+> Are there good resources to get up to speed on the PCIe terminology?
 
+I'm also wondering: in many Linux subsystems, there are often
+several drivers of different quality; some are obsolescent and
+have not been updated in a while, while some are recent and
+follow all the latest best-practice guidelines (and the rest
+is somewhere in the middle).
 
+Are there 1 or 2 very good PCIe drivers to take as examples
+as good starting points? (Perhaps a simple driver, and a
+more complex driver.)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Does anyone know if any SoC with a driver upstream is using
+a PLDA controller?
+
+Regards.
