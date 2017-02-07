@@ -1,85 +1,116 @@
-Return-Path: <SRS0=bTQV=ZX=gmail.com=jingoohan1@kernel.org>
-Return-Path: <SRS0=bTQV=ZX=gmail.com=jingoohan1@kernel.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Bjorn Helgaas'" <helgaas@kernel.org>,
-	"'Pankaj Dubey'" <pankaj.dubey@samsung.com>
-Cc: <linux-kernel@vger.kernel.org>,
-	<linux-samsung-soc@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-pci@vger.kernel.org>,
-	"'Niyas Ahmed S T'" <niyas.ahmed@samsung.com>,
-	<krzk@kernel.org>,
-	<jh80.chung@samsung.com>,
-	<kgene@kernel.org>,
-	<alim.akhtar@samsung.com>,
-	<bhelgaas@google.com>,
-	<sanath@samsung.com>
-References: <CGME20170201044024epcas5p372ee4f1632da87b351acfa0b57926a1c@epcas5p3.samsung.com> <1485924186-8695-1-git-send-email-pankaj.dubey@samsung.com> <20170210225558.GV29169@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170210225558.GV29169@bhelgaas-glaptop.roam.corp.google.com>
-Subject: Re: [PATCH v3] PCI: exynos: refactor exynos pcie driver
-Date: Fri, 10 Feb 2017 18:06:56 -0500
-Message-ID: <000001d283f2$62016ab0$26044010$@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:59345 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754141AbdBGTX7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Feb 2017 14:23:59 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
+        Austin Bolen <Austin.Bolen@dell.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv6 2/5] pci: Add device disconnected state
+Date: Tue,  7 Feb 2017 14:32:34 -0500
+Message-Id: <1486495957-26177-3-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
+References: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, February 10, 2017 5:56 PM, Bjorn Helgaas wrote:
-> 
-> On Wed, Feb 01, 2017 at 10:13:06AM +0530, Pankaj Dubey wrote:
-> > From: Niyas Ahmed S T <niyas.ahmed@samsung.com>
-> >
-> > Currently Exynos PCIe driver is only supported for Exynos5440 SoC.
-> > This patch does refactoring of Exynos PCIe driver to extend support
-> > for other Exynos SoC.
-> >
-> > Following are the main changes done via this patch:
-> >
-> > 1) It adds separate structs for memory, clock resources.
-> >
-> > Reason behind this change is, moving ahead various Exynos SoC will
-> > have different hardware resources such as iomem, clocks, regmap handles
-> > etc. for PCIe controller, so keeping these resources in separate struct
-> > will help us in intiailizing them via per SoC ops, and will avoid too
-> > many of_machine_is_compatible in code, and help us simplifying
-> > exynos_pcie struct.
-> >
-> > 2) It add exynos_pcie_ops struct which will allow us to support the
-> > differences in resources in different Exynos SoC.
-> >
-> > No functional change intended.
-> >
-> > Signed-off-by: Niyas Ahmed S T <niyas.ahmed@samsung.com>
-> > Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-> > Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
-> > Reviewed-by: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
-> > Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-> > Reviewed-by: Jaehoon Chung <jh80.chung@samsung.com>
-> 
-> Jingoo, any thoughts on this?
+This patch adds a new state to pci_dev to be set when it is unexpectedly
+disconnected. The pci driver tear down functions can observe this new
+device state so they may skip operations that will fail.
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
+The pciehp and pcie-dpc drivers are aware when the link is down, so
+these set the flag when their handlers detect the device is disconnected.
 
-Best regards,
-Jingoo Han
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/hotplug/pciehp_pci.c |  6 ++++++
+ drivers/pci/pci.h                | 14 ++++++++++++++
+ drivers/pci/pcie/pcie-dpc.c      |  5 +++++
+ include/linux/pci.h              |  2 ++
+ 4 files changed, 27 insertions(+)
 
-> 
-> > ---
-> > This patch set is prepared on top of Krzysztof's for-next and
-> > PCIe driver cleanup patch-v3 [1] by Jaehoon Chung.
-> >
-> > [1]: https://lkml.org/lkml/2017/1/16/19
-> >
-> > Changes from v2:
-> >  - Included Acked-by from Krzysztof
-> >  - Rebased on top of cleanup patch-v3 from Jaehoon Chung and latest
-> >    for-next of Krzysztof tree.
-> >
-> > Changes from v1:
-> >  - Addressed review comments from Krzysztof and Jingoo Han.
-> >
-> >  drivers/pci/host/pci-exynos.c | 346 ++++++++++++++++++++++++++---------
-> -------
-> >  1 file changed, 217 insertions(+), 129 deletions(-)
-> >
-[snip]
+diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
+index 9e69403..19f30a9 100644
+--- a/drivers/pci/hotplug/pciehp_pci.c
++++ b/drivers/pci/hotplug/pciehp_pci.c
+@@ -109,6 +109,12 @@ int pciehp_unconfigure_device(struct slot *p_slot)
+ 				break;
+ 			}
+ 		}
++		if (!presence) {
++			pci_dev_set_disconnected(dev, NULL);
++			if (pci_has_subordinate(dev))
++				pci_walk_bus(dev->subordinate,
++					     pci_dev_set_disconnected, NULL);
++		}
+ 		pci_stop_and_remove_bus_device(dev);
+ 		/*
+ 		 * Ensure that no new Requests will be generated from
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index cb17db2..81512bc 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -274,6 +274,20 @@ struct pci_sriov {
+ 	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+ };
+ 
++/* pci_dev priv_flags */
++#define PCI_DEV_DISCONNECTED 0
++
++static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
++{
++	set_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
++	return 0;
++}
++
++static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
++{
++	return test_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
++}
++
+ #ifdef CONFIG_PCI_ATS
+ void pci_restore_ats_state(struct pci_dev *dev);
+ #else
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 9811b14..1480458 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -14,6 +14,7 @@
+ #include <linux/init.h>
+ #include <linux/pci.h>
+ #include <linux/pcieport_if.h>
++#include "../pci.h"
+ 
+ struct dpc_dev {
+ 	struct pcie_device	*dev;
+@@ -46,6 +47,10 @@ static void interrupt_event_handler(struct work_struct *work)
+ 	list_for_each_entry_safe_reverse(dev, temp, &parent->devices,
+ 					 bus_list) {
+ 		pci_dev_get(dev);
++		pci_dev_set_disconnected(dev, NULL);
++		if (pci_has_subordinate(dev))
++			pci_walk_bus(dev->subordinate,
++				     pci_dev_set_disconnected, NULL);
+ 		pci_stop_and_remove_bus_device(dev);
+ 		pci_dev_put(dev);
+ 	}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index b00a2d3..5d17f1b 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -396,6 +396,8 @@ struct pci_dev {
+ 	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
+ 	size_t romlen; /* Length of ROM if it's not from the BAR */
+ 	char *driver_override; /* Driver name to force a match */
++
++	unsigned long priv_flags; /* Private flags for the pci driver */
+ };
+ 
+ static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
+-- 
+2.7.2
