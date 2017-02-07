@@ -1,107 +1,40 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp-out6.electric.net ([192.162.217.189]:64857 "EHLO
+        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752323AbdBGJz5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Feb 2017 04:55:57 -0500
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'David Miller' <davem@davemloft.net>
+CC: "alexander.duyck@gmail.com" <alexander.duyck@gmail.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: Disabling msix interrupts
+Date: Tue, 7 Feb 2017 09:55:47 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DB027DA37@AcuExch.aculab.com>
+References: <063D6719AE5E284EB5DD2968C1650D6DB027C936@AcuExch.aculab.com>
+        <CAKgT0UeXXkUpsrF9gpf_gba56V+B8a1G84k0WWt5q85Rx2PVsA@mail.gmail.com>
+        <063D6719AE5E284EB5DD2968C1650D6DB027CB6A@AcuExch.aculab.com>
+ <20170206.141449.371774071782410941.davem@davemloft.net>
+In-Reply-To: <20170206.141449.371774071782410941.davem@davemloft.net>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-In-Reply-To: <20170220153025.32096-1-andrew.smirnov@gmail.com>
-References: <20170220153025.32096-1-andrew.smirnov@gmail.com>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-Date: Mon, 20 Feb 2017 07:47:42 -0800
-Message-ID: <CAHQ1cqH3doxS_HHACXF3goJNQsm17cr5-7Xn1T18ZAY=nSTrmA@mail.gmail.com>
-Subject: Re: [PATCH v5 0/4] i.MX7 PCI support
-To: linux-pci@vger.kernel.org
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>,
- linux-kernel <linux-kernel@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
- Fabio Estevam <fabio.estevam@nxp.com>, Andrey Yurovsky <yurovsky@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Ugh. Forgot to add correct CC list to patches #2 and #3 and drop
-Lucas' Reviewed-by from patch #4 since code there changed. Please
-ignore this thread. I'll resend all of the patches with aforementioned
-corrections shortly.
+From: David Miller
+> Sent: 06 February 2017 19:15
+> From: David Laight <David.Laight@ACULAB.COM>
+> Date: Mon, 6 Feb 2017 17:23:54 +0000
+> 
+> > Although the 'store buffer' on the sparc cpus I used to use would
+> > let reads overtake writes. So you did have to read back the address
+> > of the last write - not sure about modern sparc cpus.
+> 
+> Never would any sparc cpu do so when any of the operations involved
+> were to "side effect" locations, as PCI config space is.
 
-Sorry for the noise.
-Andrey
+I guess they used non-zero ASI, and that forced the flush??
+Normal uncached memory reads would overtake writes.
+(These were SuperSparc (Viking)).
 
-On Mon, Feb 20, 2017 at 7:30 AM, Andrey Smirnov
-<andrew.smirnov@gmail.com> wrote:
-> Hello, everyone:
->
-> This is a fifth iteration of the code that adds PCI-subsystem bits
-> necessary for enabling PCI support on i.MX7.
->
-> Rob, Bjorn, power domain and reset bindings remained the same, please
-> let me know if you still think that PHY aspect of the driver needs to
-> be moved into a separate abstraction.
->
-> Changes since v4 (can be found at [version4]):
->
->         - Dropped typo-fix patch (originally patch #1 of the
->           series). Bjorn, I am assuming that patch from v4 survived
->           and stayed in your tree, let me know if that is not true.
->
->         - Added patch with workaround to address speed change false
->           failures (I kept it as a separate patch to better document
->           exchange with NXP/Freescale that lead to that patch)
->
->         - Added patch to avoid speed change on links configured Gen1
->           only (Let me know if that is a terrible idea)
->
->         - Addressed section mismatch problem by moving call to
->           hook_fault_code to happend before driver registration.
->
-> Changes since v3 (can be found at [version3]):
->         - Move all of the reset_control_assert's into imx6_pcie_assert_core_reset
->         - Documented required reset and power domain DT bindings
->
-> Changes since v2 (can be found at [version2]):
->
->         - Collected Reviewed-by for patch #2 from Lucas
->         - Reset logic implementation moved out into a reset controller
->           driver (see [reset1])
->         - Removed unused leftover code
->
-> Changes since v1 (can be found at [version1]):
->
->         - All GPC related code moved into a separate driver (see [gpc1])
->         - Removed GPIO probe deferral logging
->         - Fixed section mismatch warning
->         - Minor reformatting of fsl,imx6q-pcie.txt(as per Rob
->           Herring's request)
->
-> [version4] https://lkml.org/lkml/2017/2/7/478
-> [version3] https://lkml.org/lkml/2017/2/6/565
-> [version2] https://lkml.org/lkml/2017/2/1/510
-> [version1] https://lkml.org/lkml/2017/1/19/488
-> [gpc1] https://lkml.org/lkml/2017/2/6/551
-> [reset1] https://lkml.org/lkml/2017/2/6/554
->
-> Andrey Smirnov (4):
->   PCI: imx6: Add code to support i.MX7D
->   PCI: imx6: Do not wait for speed change on i.MX7
->   PCI: imx6: Do not switch speed if Gen2 is disabled
->   PCI: imx6: Allow probe deferal by reset GPIO
->
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 +-
->  drivers/pci/host/pci-imx6.c                        | 199 +++++++++++++++------
->  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
->  3 files changed, 161 insertions(+), 55 deletions(-)
->
-> --
-> 2.9.3
->
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+	David
