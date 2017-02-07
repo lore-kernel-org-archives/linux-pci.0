@@ -1,50 +1,57 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34911 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751382AbdBSVnZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 19 Feb 2017 16:43:25 -0500
-MIME-Version: 1.0
-In-Reply-To: <20e55da4-b3c1-7c57-15cf-b0aa52442e18@deltatee.com>
-References: <20170210145124.GA24594@kroah.com> <1486749440-24309-1-git-send-email-logang@deltatee.com>
- <20e55da4-b3c1-7c57-15cf-b0aa52442e18@deltatee.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sun, 19 Feb 2017 13:43:23 -0800
-Message-ID: <CAA9_cmfbJEPhCj_Ukav841zW5P=uYkTir4jFRTKyOvzHmJNmVg@mail.gmail.com>
-Subject: Re: [PATCH] switchtec: cleanup cdev init
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>, linux-doc@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:9915 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755063AbdBGTX7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Feb 2017 14:23:59 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
+        Austin Bolen <Austin.Bolen@dell.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCHv6 4/5] pci/msix: Skip disabling disconnected devices
+Date: Tue,  7 Feb 2017 14:32:36 -0500
+Message-Id: <1486495957-26177-5-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
+References: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 18, 2017 at 12:22 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
-> Hi,
->
-> Please don't apply this patch and instead apply the switchtec driver as
-> we submitted in v2. As per the discussion in [1], not using the cdev's
-> kobj parent results in incorrect reference counting and a possible use
-> of the cdev after its containing structure is freed.
+This patch checks the device connected state prior to executing device
+shutdown operations or writing msi messages so that tear down on
+disconnected devices completes quicker.
 
-Is this race present for all file operations? I've only seen it with
-mmap() and late faults. So if these other drivers do not support mmap
-it's not clear they can trigger the failure.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/msi.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 50c5003..17807eb3 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -317,7 +317,7 @@ void __pci_write_msi_msg(struct msi_desc *entry, struct msi_msg *msg)
+ {
+ 	struct pci_dev *dev = msi_desc_to_pci_dev(entry);
+ 
+-	if (dev->current_state != PCI_D0) {
++	if (dev->current_state != PCI_D0 || pci_dev_is_disconnected(dev)) {
+ 		/* Don't touch the hardware now */
+ 	} else if (entry->msi_attrib.is_msix) {
+ 		void __iomem *base = pci_msix_desc_addr(entry);
+@@ -1020,6 +1020,11 @@ void pci_msix_shutdown(struct pci_dev *dev)
+ 	if (!pci_msi_enable || !dev || !dev->msix_enabled)
+ 		return;
+ 
++	if (pci_dev_is_disconnected(dev)) {
++		dev->msix_enabled = 0;
++		return;
++	}
++
+ 	/* Return the device with MSI-X masked as initial states */
+ 	for_each_pci_msi_entry(entry, dev) {
+ 		/* Keep cached states to be restored */
+-- 
+2.7.2
