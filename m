@@ -1,43 +1,41 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <nsekhar@ti.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2 15/22] PCI: Add device IDs for DRA74x and DRA72x
-Date: Fri, 17 Feb 2017 15:20:35 +0530
-Message-ID: <1487325042-28227-16-git-send-email-kishon@ti.com>
-In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([184.105.139.130]:50920 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751540AbdBGQ0t (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Feb 2017 11:26:49 -0500
+Date: Tue, 07 Feb 2017 11:26:45 -0500 (EST)
+Message-Id: <20170207.112645.492478528794181275.davem@davemloft.net>
+To: David.Laight@ACULAB.COM
+Cc: alexander.duyck@gmail.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: Disabling msix interrupts
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DB027DA37@AcuExch.aculab.com>
+References: <063D6719AE5E284EB5DD2968C1650D6DB027CB6A@AcuExch.aculab.com>
+        <20170206.141449.371774071782410941.davem@davemloft.net>
+        <063D6719AE5E284EB5DD2968C1650D6DB027DA37@AcuExch.aculab.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device IDs for DRA74x and DRA72x devices. These devices have
-configurable PCI endpoint.
+From: David Laight <David.Laight@ACULAB.COM>
+Date: Tue, 7 Feb 2017 09:55:47 +0000
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- include/linux/pci_ids.h |    2 ++
- 1 file changed, 2 insertions(+)
+> From: David Miller
+>> Sent: 06 February 2017 19:15
+>> From: David Laight <David.Laight@ACULAB.COM>
+>> Date: Mon, 6 Feb 2017 17:23:54 +0000
+>> 
+>> > Although the 'store buffer' on the sparc cpus I used to use would
+>> > let reads overtake writes. So you did have to read back the address
+>> > of the last write - not sure about modern sparc cpus.
+>> 
+>> Never would any sparc cpu do so when any of the operations involved
+>> were to "side effect" locations, as PCI config space is.
+> 
+> I guess they used non-zero ASI, and that forced the flush??
+> Normal uncached memory reads would overtake writes.
+> (These were SuperSparc (Viking)).
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 73dda0e..e8bbc4b 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -862,6 +862,8 @@
- #define PCI_DEVICE_ID_TI_X620		0xac8d
- #define PCI_DEVICE_ID_TI_X420		0xac8e
- #define PCI_DEVICE_ID_TI_XX20_FM	0xac8f
-+#define PCI_DEVICE_ID_TI_DRA74x		0xb500
-+#define PCI_DEVICE_ID_TI_DRA72x		0xb501
- 
- #define PCI_VENDOR_ID_SONY		0x104d
- 
--- 
-1.7.9.5
+On sun4m it was controlled by bits in the physical address.
