@@ -1,84 +1,58 @@
-Return-Path: <SRS0=LmQJ=ZU=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=LmQJ=ZU=huawei.com=liudongdong3@kernel.org>
-Subject: Re: [PATCH V3] PCI:hisi: Add DT almost ECAM support for HiSilicon
- Hip06/Hip07 host controllers
+Return-Path: <SRS0=UJwY=ZU=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=UJwY=ZU=wunner.de=lukas@kernel.org>
+Date: Tue, 7 Feb 2017 07:21:01 +0100
+From: Lukas Wunner <lukas@wunner.de>
 To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1486362304-56261-1-git-send-email-liudongdong3@huawei.com>
- <20170206224041.GB27899@bhelgaas-glaptop.roam.corp.google.com>
-CC: <linux-pci@vger.kernel.org>, <wangzhou1@hisilicon.com>,
-        <gabriele.paoloni@huawei.com>, <charles.chenxin@huawei.com>,
-        <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <89c7b769-f410-1526-b147-b3361b4fa9d7@huawei.com>
-Date: Tue, 7 Feb 2017 09:34:43 +0800
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
+Message-ID: <20170207062101.GB791@wunner.de>
+References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
+ <20170206175405.GA15565@bhelgaas-glaptop.roam.corp.google.com>
+ <20170206212041.GC679@wunner.de>
+ <20170206221502.GA27899@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170206224041.GB27899@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170206221502.GA27899@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+On Mon, Feb 06, 2017 at 04:15:02PM -0600, Bjorn Helgaas wrote:
+> On Mon, Feb 06, 2017 at 10:20:41PM +0100, Lukas Wunner wrote:
+> > On Mon, Feb 06, 2017 at 11:54:05AM -0600, Bjorn Helgaas wrote:
+> > > What is the hotplug event that causes generation of this wakeup event?
+> > 
+> > If you had read all e-mails in this thread or looked at the bugzilla
+> > entry I've created, you wouldn't have to ask this question.
+> 
+> I'm sorry, I don't necessarily have time to sort through all the
+> emails.  My idea is that the changelog should be a self-contained
+> justification for the patch.  The bugzilla is for supporting details
+> and future archaeologists.
+> 
+> > I think it's disappointing that you're asking me to jump through
+> > various hoops like creating a bugzilla entry, as well as threatening
+> > to revert my patch, but are unwilling to even look at the bugzilla
+> > entry or read the entire thread.  It is equally disappointing that
+> > the reporter of the regression was unwilling or unable to provide
+> > dmesg output for both machines so that we've got no real idea what
+> > we're dealing with.
+> 
+> I beg your pardon?  I don't think it's fair to malign Yinghai.  He's
+> tested at least two machines and at least two patches, and it's only
+> been two working days since he reported the problem.
 
-在 2017/2/7 6:40, Bjorn Helgaas 写道:
-> On Mon, Feb 06, 2017 at 02:25:04PM +0800, Dongdong Liu wrote:
->> The PCIe controller in Hip06/Hip07 SoCs is not completely
->> ECAM-compliant. It is non-ECAM only for the RC bus config space; for
->> any other bus underneath the root bus it does support ECAM access.
->> This is to add the almost ECAM support in DT way.
->>
->> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
->> Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->> Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
->
-> Applied to pci/host-hisi for v4.11, thanks!
+I think the commercialization of Linux kernel development has put this
+open source project in a sorry state if an unpaid volunteer is told off
+because he expresses disappointment that a paid contributor is asking
+him to debug an issue on secret hardware using secret patches and not
+providing secret dmesg output.
 
-Thanks for applying this patch.
 
->
->> -#if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
->> +#if defined(CONFIG_PCI_HISI) || (defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS))
->>
->>  static int hisi_pcie_acpi_rd_conf(struct pci_bus *bus, u32 devfn, int where,
->>  				  int size, u32 *val)
->
-> These "_acpi_" accessors are now used for both the ACPI and the DT
-> model, and the accessors aren't ACPI-specific anyway.  So these are
-> slight misnomers.
+> If you think a bugzilla is onerous
 
-Yes, It is better to change hisi_pcie_acpi_rd_conf()/ hisi_pcie_acpi_wr_conf() to hisi_pcie_rd_conf()/hisi_pcie_wr_conf().
+Hold on.  I didn't say a bugzilla is onerous, I said I'm disappointed
+that you're asking me to create one and then don't look at it.
 
->
->> +static int hisi_pcie_platform_init(struct pci_config_window *cfg)
->> +{
->> +	struct device *dev = cfg->parent;
->> +	struct platform_device *pdev = to_platform_device(dev);
->> +	struct resource *res;
->> +	void __iomem *reg_base;
->> +
->> +	if (!dev->of_node)
->> +		return -EINVAL;
->
-> What's the point of testing dev->of_node here?  There's no obvious
-> dependency on of_node in this code.  Could we just drop this test?
-
-Yes, only DT driver will call this function, we should drop this test.
-Thanks for pointing this.
-
-Thanks,
-Dongdong
->
->> +	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
->> +	if (!res) {
->> +		dev_err(dev, "missing \"reg[1]\"property\n");
->> +		return -EINVAL;
->> +	}
->> +
->> +	reg_base = devm_ioremap(dev, res->start, resource_size(res));
->> +	if (!reg_base)
->> +		return -ENOMEM;
->> +
->> +	cfg->priv = reg_base;
->> +	return 0;
->> +}
->
-> .
->
+Lukas
