@@ -1,85 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60824 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752457AbdBOXFU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Feb 2017 18:05:20 -0500
-Date: Wed, 15 Feb 2017 17:05:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v1] PCI: Sort the list of devices with D3 delay quirk by
- ID
-Message-ID: <20170215230511.GB26758@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170214105937.89010-1-andriy.shevchenko@linux.intel.com>
+Received: from mail-dm3nam03on0095.outbound.protection.outlook.com ([104.47.41.95]:65056
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753322AbdBGQLh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Feb 2017 11:11:37 -0500
+From: Jake Oshins <jakeo@microsoft.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+        Dexuan Cui <decui@microsoft.com>
+CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [bug report] PCI: hv: Add paravirtual PCI front-end for Microsoft
+ Hyper-V VMs
+Date: Tue, 7 Feb 2017 16:11:33 +0000
+Message-ID: <SN1PR0301MB15983BEA28AFC3DE344E2A4AAB430@SN1PR0301MB1598.namprd03.prod.outlook.com>
+References: <20170207071219.GA15335@mwanda>
+In-Reply-To: <20170207071219.GA15335@mwanda>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170214105937.89010-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 14, 2017 at 12:59:37PM +0200, Andy Shevchenko wrote:
-> Sort the list of Intel devices that have no PCI D3 delay by ID.
-> Add a comment for group of devices that had not been marked yet.
-> 
-> There is no functional change.
-> 
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> -----Original Message-----
+> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+> Sent: Monday, February 6, 2017 11:12 PM
+> To: Jake Oshins <jakeo@microsoft.com>
+> Cc: devel@linuxdriverproject.org; linux-pci@vger.kernel.org
+> Subject: [bug report] PCI: hv: Add paravirtual PCI front-end for Microsof=
+t
+> Hyper-V VMs
+>=20
+> [ No idea why I haven never sent this email before.  I was just going
+>   through all the use after free warnings again today and noticed it. ]
+>=20
+> Hello Jake Oshins,
+>=20
+> The patch 4daace0d8ce8: "PCI: hv: Add paravirtual PCI front-end for
+> Microsoft Hyper-V VMs" from Feb 16, 2016, leads to the following
+> static checker warning:
+>=20
+> 	drivers/pci/host/pci-hyperv.c:1441 pci_devices_present_work()
+> 	error: dereferencing freed memory 'dr'
+>=20
+> drivers/pci/host/pci-hyperv.c
+>   1410          /* Pull this off the queue and process it if it was the l=
+ast one. */
+>   1411          spin_lock_irqsave(&hbus->device_list_lock, flags);
+>   1412          while (!list_empty(&hbus->dr_list)) {
+>   1413                  dr =3D list_first_entry(&hbus->dr_list, struct hv=
+_dr_state,
+>   1414                                        list_entry);
+>   1415                  list_del(&dr->list_entry);
+>   1416
+>   1417                  /* Throw this away if the list still has stuff in=
+ it. */
+>   1418                  if (!list_empty(&hbus->dr_list)) {
+>   1419                          kfree(dr);
+>                                 ^^^^^^^^^
+> We free "dr".  Presumably we should set dr =3D NULL here?
+>=20
+>   1420                          continue;
+>   1421                  }
+>   1422          }
+>   1423          spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+>   1424
+>   1425          if (!dr) {
+>   1426                  up(&hbus->enum_sem);
+>   1427                  put_hvpcibus(hbus);
+>   1428                  return;
+>   1429          }
+>   1430
+>   1431          /* First, mark all existing children as reported missing.=
+ */
+>   1432          spin_lock_irqsave(&hbus->device_list_lock, flags);
+>   1433          list_for_each(iter, &hbus->children) {
+>   1434                          hpdev =3D container_of(iter, struct hv_pc=
+i_dev,
+>   1435                                               list_entry);
+>   1436                          hpdev->reported_missing =3D true;
+>   1437          }
+>   1438          spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+>   1439
+>   1440          /* Next, add back any reported devices. */
+>   1441          for (child_no =3D 0; child_no < dr->device_count; child_n=
+o++) {
+>                                               ^^^^^^^^^^^^^^^^
+> Use after free.
+>=20
+>   1442                  found =3D false;
+>   1443                  new_desc =3D &dr->func[child_no];
+>   1444
+>   1445                  spin_lock_irqsave(&hbus->device_list_lock, flags)=
+;
+>=20
+>=20
+> regards,
+> dan carpenter
 
-Applied to pci/enumeration for v4.11, thanks, Andy.
+I'm pretty sure that this is a false positive.  It only frees the struct if=
+ there is another entry in the list, and then it immediately overwrites the=
+ pointer with the next entry in the list.
 
-> ---
->  drivers/pci/quirks.c | 26 ++++++++++++++------------
->  1 file changed, 14 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 88c64b2e8429..846a1d818fa2 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3113,30 +3113,32 @@ static void quirk_remove_d3_delay(struct pci_dev *dev)
->  {
->  	dev->d3_delay = 0;
->  }
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0c00, quirk_remove_d3_delay);
-> +/* C600 Series devices do not need 10ms d3_delay */
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0412, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0c00, quirk_remove_d3_delay);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0c0c, quirk_remove_d3_delay);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c31, quirk_remove_d3_delay);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3a, quirk_remove_d3_delay);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3d, quirk_remove_d3_delay);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c2d, quirk_remove_d3_delay);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c20, quirk_remove_d3_delay);
-> +/* Lynxpoint-H PCH devices do not need 10ms d3_delay */
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c02, quirk_remove_d3_delay);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c18, quirk_remove_d3_delay);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c1c, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c20, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c22, quirk_remove_d3_delay);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c26, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c2d, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c31, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3a, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3d, quirk_remove_d3_delay);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c4e, quirk_remove_d3_delay);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c02, quirk_remove_d3_delay);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c22, quirk_remove_d3_delay);
->  /* Intel Cherrytrail devices do not need 10ms d3_delay */
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2280, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2298, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x229c, quirk_remove_d3_delay);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b0, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b5, quirk_remove_d3_delay);
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b7, quirk_remove_d3_delay);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b8, quirk_remove_d3_delay);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22d8, quirk_remove_d3_delay);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22dc, quirk_remove_d3_delay);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b5, quirk_remove_d3_delay);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b7, quirk_remove_d3_delay);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2298, quirk_remove_d3_delay);
-> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x229c, quirk_remove_d3_delay);
->  
->  /*
->   * Some devices may pass our check in pci_intx_mask_supported() if
-> -- 
-> 2.11.0
-> 
+What's the right move here?  Should we send a patch that nulls the pointer =
+just to make a static analysis hit go away?  It's not a hot path.
+
+Thanks,
+Jake Oshins
