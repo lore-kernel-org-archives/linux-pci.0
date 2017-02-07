@@ -1,259 +1,89 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:48748 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752403AbdBBRlF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Feb 2017 12:41:05 -0500
-Subject: Re: [PATCH V6 2/5] PCI: Adapt pci_register_io_range() for indirect-IO
- and PCI I/O translation
-To: "zhichang.yuan" <yuanzhichang@hisilicon.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
-        <brian.starkey@arm.com>, <olof@lixom.net>, <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
- <1485241525-201782-3-git-send-email-yuanzhichang@hisilicon.com>
-CC: <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
-        <linux-kernel@vger.kernel.org>, <linuxarm@huawei.com>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-serial@vger.kernel.org>, <minyard@acm.org>,
-        <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
-        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
-        <kantyzc@163.com>, <xuwei5@hisilicon.com>
-From: John Garry <john.garry@huawei.com>
-Message-ID: <068bbe37-42f4-e245-f900-c639c68404b9@huawei.com>
-Date: Thu, 2 Feb 2017 17:36:16 +0000
+Received: from mail.kernel.org ([198.145.29.136]:58050 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932716AbdBGVsH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Feb 2017 16:48:07 -0500
+Date: Tue, 7 Feb 2017 15:47:58 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mason <slash.tmp@free.fr>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci <linux-pci@vger.kernel.org>
+Subject: Re: Pointers for writing a good PCIe driver
+Message-ID: <20170207214758.GC11659@bhelgaas-glaptop.roam.corp.google.com>
+References: <ff099b5f-efc8-bb5f-41e3-493398844cc0@free.fr>
+ <05046a8a-ba9f-26f9-4c93-f657f9da6294@free.fr>
+ <20170207200656.GA11659@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1485241525-201782-3-git-send-email-yuanzhichang@hisilicon.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170207200656.GA11659@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael,
+On Tue, Feb 07, 2017 at 02:06:56PM -0600, Bjorn Helgaas wrote:
+> On Tue, Feb 07, 2017 at 04:55:28PM +0100, Mason wrote:
+> > On 06/02/2017 16:54, Mason wrote:
+> > 
+> > > My platform ( arch/arm/mach-tango ) provides a PCIe controller from PLDA.
+> > > 
+> > > I do have access to a driver that works for a few PCIe boards, but it's
+> > > an ancient out-of-tree driver (targeting v3.4). Also, I'm not sure it
+> > > follows the best-practice guidelines (e.g. it hard-codes a few
+> > > work-arounds directly in drivers/pci/probe.c)
+> 
+> Indeed, having to change drivers/pci/probe.c doesn't sound like a best
+> practice :)  If you can share details of what changes you need, people
+> could probably suggest other ways to do it within the generic PCI
+> framework.
+> 
+> > > If I understand correctly, while PCIe is a standard, it is not codified
+> > > as much as USB (XHCI) or SATA (AHCI), which means the register layout
+> > > (and possibly other things) are left up to the integrator? Which means
+> > > there cannot be some kind of "generic" driver that works for a random
+> > > PCIe controller?
+> 
+> There is no standardization of registers in MMIO or I/O port space.
+> The size, location, and type of those registers is configurable in a
+> generic way via the BARs, of course.  But that tells you nothing about
+> the *functionality* of those MMIO or I/O port registers.
+> 
+> For config space, the first 64 bytes (the PCIe r3.0 spec calls it the
+> "PCI 3.0 Compatible Configuration Space Header") are completely
+> standardized.  This is where device IDs, BARs, and other generic
+> registers are.
+> 
+> PCIe devices can implement up to 4096 bytes of config space.  The
+> space after the 64-byte header can contain a list of standardized
+> PCI/PCIe Capabilities, non-standardized device-specific registers, or
+> both.  There is a way to include device-specific registers in a
+> "Vendor Defined" Capability -- that way drivers can use generic
+> mechanisms to find registers so they don't have to hard-code register
+> layout assumptions.
+> 
+> > > I guess my main question is: do you have pointers on getting started
+> > > writing a PCIe driver good enough for upstream?
+> > > 
+> > > Is Documentation/PCI/PCIEBUS-HOWTO.txt still a relevant resource?
+> 
+> PCIEBUS-HOWTO.txt is still relevant, but only to drivers for services
+> of PCIe ports, e.g., hotplug, error reporting, etc.  It's not relevant
+> to PCIe endpoint drivers.
+> 
+> > > Are there good resources to get up to speed on the PCIe terminology?
+> > 
+> > I'm also wondering: in many Linux subsystems, there are often
+> > several drivers of different quality; some are obsolescent and
+> > have not been updated in a while, while some are recent and
+> > follow all the latest best-practice guidelines (and the rest
+> > is somewhere in the middle).
+> > 
+> > Are there 1 or 2 very good PCIe drivers to take as examples
+> > as good starting points? (Perhaps a simple driver, and a
+> > more complex driver.)
+> 
+> I'm not really the best person to ask about this because I deal more
+> with the PCI core than with the drivers that use the core.  If I were
+> looking, I might start with drivers/nvme/host/pci.c or
+> drivers/usb/host/xhci-pci.c.
 
-Could you kindly check the minor changes to drivers/acpi/pci_root.c?  It 
-would also be appreciated if you could review the ACPI-relevant parts in 
-lib/extio.c, in [PATCH V5 5/5] LPC: Add the ACPI LPC support
-
-Thanks,
-John
-
-On 24/01/2017 07:05, zhichang.yuan wrote:
-> After indirect-IO is introduced, system must can assigned indirect-IO devices
-> with logical I/O ranges which are different from those for PCI I/O devices.
-> Otherwise, I/O accessors can't identify whether the I/O port is for memory
-> mapped I/O or indirect-IO.
-> As current helper, pci_register_io_range(), is used for PCI I/O ranges
-> registration and translation, indirect-IO devices should also apply these
-> helpers to manage the I/O ranges. It will be easy to ensure the assigned
-> logical I/O ranges unique.
-> But for indirect-IO devices, there is no cpu address. The current
-> pci_register_io_range() can not work for this case.
->
-> This patch makes some changes on the pci_register_io_range() to support the
-> I/O range registration with device's fwnode also. After this, the indirect-IO
-> devices can register the device-local I/O range to system logical I/O and
-> easily perform the translation between device-local I/O range and sytem
-> logical I/O range.
->
-> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/acpi/pci_root.c | 12 +++++-------
->  drivers/of/address.c    |  8 ++------
->  drivers/pci/pci.c       | 44 ++++++++++++++++++++++++++++++++++++++++----
->  include/linux/pci.h     |  7 +++++--
->  4 files changed, 52 insertions(+), 19 deletions(-)
->
-> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
-> index bf601d4..6cadf05 100644
-> --- a/drivers/acpi/pci_root.c
-> +++ b/drivers/acpi/pci_root.c
-> @@ -730,7 +730,8 @@ static void acpi_pci_root_validate_resources(struct device *dev,
->  	}
->  }
->
-> -static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
-> +static void acpi_pci_root_remap_iospace(struct fwnode_handle *node,
-> +					struct resource_entry *entry)
->  {
->  #ifdef PCI_IOBASE
->  	struct resource *res = entry->res;
-> @@ -739,11 +740,7 @@ static void acpi_pci_root_remap_iospace(struct resource_entry *entry)
->  	resource_size_t length = resource_size(res);
->  	unsigned long port;
->
-> -	if (pci_register_io_range(cpu_addr, length))
-> -		goto err;
-> -
-> -	port = pci_address_to_pio(cpu_addr);
-> -	if (port == (unsigned long)-1)
-> +	if (pci_register_io_range(node, cpu_addr, length, &port))
->  		goto err;
->
->  	res->start = port;
-> @@ -781,7 +778,8 @@ int acpi_pci_probe_root_resources(struct acpi_pci_root_info *info)
->  	else {
->  		resource_list_for_each_entry_safe(entry, tmp, list) {
->  			if (entry->res->flags & IORESOURCE_IO)
-> -				acpi_pci_root_remap_iospace(entry);
-> +				acpi_pci_root_remap_iospace(&device->fwnode,
-> +							    entry);
->
->  			if (entry->res->flags & IORESOURCE_DISABLED)
->  				resource_list_destroy_entry(entry);
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 02b2903..d85d228 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -2,6 +2,7 @@
->  #define pr_fmt(fmt)	"OF: " fmt
->
->  #include <linux/device.h>
-> +#include <linux/fwnode.h>
->  #include <linux/io.h>
->  #include <linux/ioport.h>
->  #include <linux/module.h>
-> @@ -323,14 +324,9 @@ int of_pci_range_to_resource(struct of_pci_range *range,
->
->  	if (res->flags & IORESOURCE_IO) {
->  		unsigned long port;
-> -		err = pci_register_io_range(range->cpu_addr, range->size);
-> +		err = pci_register_io_range(&np->fwnode, range->cpu_addr, range->size, &port);
->  		if (err)
->  			goto invalid_range;
-> -		port = pci_address_to_pio(range->cpu_addr);
-> -		if (port == (unsigned long)-1) {
-> -			err = -EINVAL;
-> -			goto invalid_range;
-> -		}
->  		res->start = port;
->  	} else {
->  		if ((sizeof(resource_size_t) < 8) &&
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a881c0d..5289221 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3241,6 +3241,7 @@ int pci_request_regions_exclusive(struct pci_dev *pdev, const char *res_name)
->  #ifdef PCI_IOBASE
->  struct io_range {
->  	struct list_head list;
-> +	struct fwnode_handle *node;
->  	phys_addr_t start;
->  	resource_size_t size;
->  };
-> @@ -3253,7 +3254,8 @@ struct io_range {
->   * Record the PCI IO range (expressed as CPU physical address + size).
->   * Return a negative value if an error has occured, zero otherwise
->   */
-> -int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
-> +int __weak pci_register_io_range(struct fwnode_handle *node, phys_addr_t addr,
-> +				 resource_size_t size, unsigned long *port)
->  {
->  	int err = 0;
->
-> @@ -3261,10 +3263,31 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
->  	struct io_range *range;
->  	resource_size_t allocated_size = 0;
->
-> +	/*
-> +	 * As indirect-IO which support multiple bus instances is introduced,
-> +	 * the input 'addr' is probably not page-aligned. If the PCI I/O
-> +	 * ranges are registered after indirect-IO, there is risk that the
-> +	 * start logical PIO assigned to PCI I/O is not page-aligned.
-> +	 * This will cause some I/O subranges are not remapped or overlapped
-> +	 * in pci_remap_iospace() handling.
-> +	 */
-> +	WARN_ON(addr != IO_RANGE_IOEXT && !(addr & PAGE_MASK));
-> +	/*
-> +	 * MMIO will call ioremap, it is better to align size with PAGE_SIZE,
-> +	 * then the return linux virtual PIO is page-aligned.
-> +	 */
-> +	if (size & PAGE_MASK)
-> +		size = PAGE_ALIGN(size);
-> +
->  	/* check if the range hasn't been previously recorded */
->  	spin_lock(&io_range_lock);
->  	list_for_each_entry(range, &io_range_list, list) {
-> -		if (addr >= range->start && addr + size <= range->start + size) {
-> +		if (node == range->node)
-> +			goto end_register;
-> +
-> +		if (addr != IO_RANGE_IOEXT &&
-> +		    addr >= range->start &&
-> +		    addr + size <= range->start + size) {
->  			/* range already registered, bail out */
->  			goto end_register;
->  		}
-> @@ -3290,6 +3313,7 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
->  		goto end_register;
->  	}
->
-> +	range->node = node;
->  	range->start = addr;
->  	range->size = size;
->
-> @@ -3297,6 +3321,14 @@ int __weak pci_register_io_range(phys_addr_t addr, resource_size_t size)
->
->  end_register:
->  	spin_unlock(&io_range_lock);
-> +
-> +	*port = allocated_size;
-> +#else
-> +	/*
-> +	 * powerpc and microblaze have their own registration,
-> +	 * just look up the value here
-> +	 */
-> +	*port = pci_address_to_pio(addr);
->  #endif
->
->  	return err;
-> @@ -3315,7 +3347,9 @@ phys_addr_t pci_pio_to_address(unsigned long pio)
->
->  	spin_lock(&io_range_lock);
->  	list_for_each_entry(range, &io_range_list, list) {
-> -		if (pio >= allocated_size && pio < allocated_size + range->size) {
-> +		if (range->start != IO_RANGE_IOEXT &&
-> +			pio >= allocated_size &&
-> +			pio < allocated_size + range->size) {
->  			address = range->start + pio - allocated_size;
->  			break;
->  		}
-> @@ -3336,7 +3370,9 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
->
->  	spin_lock(&io_range_lock);
->  	list_for_each_entry(res, &io_range_list, list) {
-> -		if (address >= res->start && address < res->start + res->size) {
-> +		if (res->start != IO_RANGE_IOEXT &&
-> +			address >= res->start &&
-> +			address < res->start + res->size) {
->  			addr = address - res->start + offset;
->  			break;
->  		}
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index e2d1a12..8d91af8 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -34,6 +34,9 @@
->
->  #include <linux/pci_ids.h>
->
-> +/* the macro below flags an invalid cpu address
-> + * and is used by IO special hosts              */
-> +#define IO_RANGE_IOEXT (resource_size_t)(-1ull)
->  /*
->   * The PCI interface treats multi-function devices as independent
->   * devices.  The slot/function address of each device is encoded
-> @@ -1197,8 +1200,8 @@ int __must_check pci_bus_alloc_resource(struct pci_bus *bus,
->  						  resource_size_t),
->  			void *alignf_data);
->
-> -
-> -int pci_register_io_range(phys_addr_t addr, resource_size_t size);
-> +int pci_register_io_range(struct fwnode_handle *node, phys_addr_t addr,
-> +			  resource_size_t size, unsigned long *port);
->  unsigned long pci_address_to_pio(phys_addr_t addr);
->  phys_addr_t pci_pio_to_address(unsigned long pio);
->  int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
->
+I should have also mentioned Documentation/PCI/pci.txt.  That's a
+pretty good place to start.
