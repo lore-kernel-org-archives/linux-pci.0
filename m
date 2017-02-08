@@ -1,100 +1,48 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53772 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:52672 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752287AbdBOQ5R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Feb 2017 11:57:17 -0500
-Date: Wed, 15 Feb 2017 09:57:11 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Manish Jaggi <mjaggi@caviumnetworks.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        Tirumalesh Chalamarla <tchalamarla@cavium.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] Revert: "PCI: Add ACS quirk for all Cavium devices"
-Message-ID: <20170215095711.206ea8d5@t450s.home>
-In-Reply-To: <4ce1e1e6-1f5f-67eb-6615-00a21acbe285@caviumnetworks.com>
-References: <20170214161711.21753.16746.stgit@gimli.home>
-        <20170215093449.5e6f4ab3@t450s.home>
-        <4ce1e1e6-1f5f-67eb-6615-00a21acbe285@caviumnetworks.com>
+        id S1750911AbdBHSOg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Feb 2017 13:14:36 -0500
+Date: Wed, 8 Feb 2017 12:04:58 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
+Message-ID: <20170208180458.GC27298@bhelgaas-glaptop.roam.corp.google.com>
+References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
+ <20170206221502.GA27899@bhelgaas-glaptop.roam.corp.google.com>
+ <20170207062101.GB791@wunner.de>
+ <26564356.WaYtlag6jj@aspire.rjw.lan>
+ <20170208042354.GA976@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170208042354.GA976@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 15 Feb 2017 22:12:54 +0530
-Manish Jaggi <mjaggi@caviumnetworks.com> wrote:
+On Wed, Feb 08, 2017 at 05:23:54AM +0100, Lukas Wunner wrote:
+> On Tue, Feb 07, 2017 at 05:04:45PM +0100, Rafael J. Wysocki wrote:
 
-> Hi Alex,
+> > The bottom line, in any case, is that the current code causes problems to
+> > happen somewhere and as a rule we don't release code that is known to
+> > cause problems to happen to anyone.  This means something needs to be done
+> > about that and the choice at this point is pretty much between reverting and
+> > quirking the affected system(s).
 > 
-> On 2/15/2017 10:04 PM, Alex Williamson wrote:
-> > On Tue, 14 Feb 2017 09:18:18 -0700
-> > Alex Williamson <alex.williamson@redhat.com> wrote:
-> >  
-> >> This reverts commit b404bcfbf035413dcce539c8ba2c9986d220d8ed.
-> >>
-> >> The reverted commit makes no attempt to selectively consider devices,
-> >> current or future.  Instead, it whitelists the entire PCI vendor ID.
-> >> This is a reckless approach as we clearly cannot know whether future
-> >> device IDs within this vendor ID are susceptible to peer-to-peer.
-> >> Additionally, the comment suggests this quirk is only relevant to
-> >> ThunderX, which raises further doubt whether it is appropriate to
-> >> apply to the entire vendor ID.
-> >>
-> >> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> >> Cc: Manish Jaggi <mjaggi@caviumnetworks.com>
-> >> Cc: Tirumalesh Chalamarla <tchalamarla@cavium.com>
-> >> ---
-> >>
-> >> Please submit a new quirk targeting specific devices  
-> > Sorry, I saw the date on the original commit as January 30, 2016 and
-> > forgot we're now in 2017, so I figured that this had only recently gone
-> > in.  Since it's actually been around since 4.6, I'll take a different
-> > approach.  Instead of reverting, I'm going to assume that this applies
-> > to ThunderX devices as per the comment.  I'll follow-up with a new
-> > patch that only applies this to device IDs matching ThunderX as found
-> > here http://pci-ids.ucw.cz/read/PC/177d  Perhaps in the meantime,
-> > someone from Cavium will comment on which subset of those devices this
-> > is actually relevant to.  
-> I will provide another patch with the specific device Ids.
+> Quirking is not an option in this case because the PCI device IDs of the
+> affected hotplug ports as well as DMI data are unknown.  Yinghai Lu is
+> refusing to publish that, for both affected systems.
 
-Perfect, thank you Manish.
+A quirk is appropriate if the hardware isn't working per spec.  I
+don't think we have convincing evidence of that yet, so I'm more
+interested in investigating that than I am in getting the device IDs
+to add a quirk.
 
-Alex
+I suspect there's useful information to be had by disabling CONFIG_PM
+and CONFIG_HOTPLUG_PCI_PCIE and poking things with setpci, which could
+be done regardless of any NDAs.
 
-> >>   drivers/pci/quirks.c |   15 ---------------
-> >>   1 file changed, 15 deletions(-)
-> >>
-> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> >> index 1800befa8b8b..449eabb438e2 100644
-> >> --- a/drivers/pci/quirks.c
-> >> +++ b/drivers/pci/quirks.c
-> >> @@ -4060,19 +4060,6 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
-> >>   #endif
-> >>   }
-> >>   
-> >> -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> >> -{
-> >> -	/*
-> >> -	 * Cavium devices matching this quirk do not perform peer-to-peer
-> >> -	 * with other functions, allowing masking out these bits as if they
-> >> -	 * were unimplemented in the ACS capability.
-> >> -	 */
-> >> -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-> >> -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-> >> -
-> >> -	return acs_flags ? 0 : 1;
-> >> -}
-> >> -
-> >>   /*
-> >>    * Many Intel PCH root ports do provide ACS-like features to disable peer
-> >>    * transactions and validate bus numbers in requests, but do not provide an
-> >> @@ -4276,8 +4263,6 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
-> >>   	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_spt_pch_acs },
-> >>   	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
-> >>   	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
-> >> -	/* Cavium ThunderX */
-> >> -	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
-> >>   	{ 0 }
-> >>   };
-> >>   
-> >>  
-> 
+Bjorn
