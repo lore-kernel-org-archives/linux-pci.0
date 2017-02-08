@@ -1,102 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:19081 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752365AbdBCVlH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 3 Feb 2017 16:41:07 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCH 2/2] pcie-dpc: Wait for root port busy to clear
-Date: Fri,  3 Feb 2017 16:46:13 -0500
-Message-Id: <1486158373-18655-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1486158373-18655-1-git-send-email-keith.busch@intel.com>
-References: <1486158373-18655-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 1/3] PCI: xilinx: Configure PCIe MPS settings
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Date: Wed, 08 Feb 2017 16:49:30 -0600
+Message-ID: <20170208224930.14351.91597.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170208224632.14351.89895.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170208224632.14351.89895.stgit@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>,
+ Michal Simek <michal.simek@xilinx.com>, Jon Mason <jon.mason@broadcom.com>,
+ Ray Jui <ray.jui@broadcom.com>, linux-arm-kernel@lists.infradead.org,
+ devel@linuxdriverproject.org, "K. Y. Srinivasan" <kys@microsoft.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ Tanmay Inamdar <tinamdar@apm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Root Ports implementing DPC optionally advertise extensions that, when
-advertised, require the driver wait for the RP Busy status to clear prior
-to releasing from containment. Results are undefined if we release from
-containment while this bit is set.
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
+Make sure PCIe MPS settings are valid when we enumerate a new hierarchy.
+
+Based-on-patch-by: Jon Mason <jon.mason@broadcom.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pcie/pcie-dpc.c   | 26 +++++++++++++++++++++++++-
- include/uapi/linux/pci_regs.h |  1 +
- 2 files changed, 26 insertions(+), 1 deletion(-)
+ drivers/pci/host/pcie-xilinx.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 9ca74f4..2acd9de 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -20,8 +20,28 @@ struct dpc_dev {
- 	struct pcie_device	*dev;
- 	struct work_struct	work;
- 	int			cap_pos;
-+	bool			rp;
- };
- 
-+static int dpc_wait_rp_inactive(struct dpc_dev *dpc)
-+{
-+	unsigned long timeout = jiffies + HZ;
-+	struct pci_dev *pdev = dpc->dev->port;
-+	u16 status;
-+
-+	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
-+	while (status & PCI_EXP_DPC_RP_BUSY &&
-+					!time_after(jiffies, timeout)) {
-+		msleep(10);
-+		pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS, &status);
-+	}
-+	if (status & PCI_EXP_DPC_RP_BUSY) {
-+		dev_warn(&pdev->dev, "DPC root port still busy\n");
-+		return -EBUSY;
-+	}
-+	return 0;
-+}
-+
- static void dpc_wait_link_inactive(struct pci_dev *pdev)
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index c8616fadccf1..7f030f5d750b 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -632,7 +632,7 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
  {
- 	unsigned long timeout = jiffies + HZ;
-@@ -34,7 +54,7 @@ static void dpc_wait_link_inactive(struct pci_dev *pdev)
- 		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
- 	}
- 	if (lnk_status & PCI_EXP_LNKSTA_DLLLA)
--		dev_warn(&pdev->dev, "Link state not disabled for DPC event");
-+		dev_warn(&pdev->dev, "Link state not disabled for DPC event\n");
- }
+ 	struct device *dev = &pdev->dev;
+ 	struct xilinx_pcie_port *port;
+-	struct pci_bus *bus;
++	struct pci_bus *bus, *child;
+ 	int err;
+ 	resource_size_t iobase = 0;
+ 	LIST_HEAD(res);
+@@ -686,6 +686,8 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ #ifndef CONFIG_MICROBLAZE
+ 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+ #endif
++	list_for_each_entry(child, &bus->children, node)
++		pcie_bus_configure_settings(child);
+ 	pci_bus_add_devices(bus);
+ 	return 0;
  
- static void interrupt_event_handler(struct work_struct *work)
-@@ -56,6 +76,8 @@ static void interrupt_event_handler(struct work_struct *work)
- 	pci_unlock_rescan_remove();
- 
- 	dpc_wait_link_inactive(pdev);
-+	if (dpc->rp && dpc_wait_rp_inactive(dpc))
-+		return;
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_STATUS,
- 		PCI_EXP_DPC_STATUS_TRIGGER | PCI_EXP_DPC_STATUS_INTERRUPT);
- }
-@@ -119,6 +141,8 @@ static int dpc_probe(struct pcie_device *dev)
- 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CAP, &cap);
- 	pci_read_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, &ctl);
- 
-+	dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
-+
- 	ctl |= PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
- 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
- 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 174d114..c1b94b0 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -973,6 +973,7 @@
- #define PCI_EXP_DPC_STATUS		8	/* DPC Status */
- #define  PCI_EXP_DPC_STATUS_TRIGGER	0x01	/* Trigger Status */
- #define  PCI_EXP_DPC_STATUS_INTERRUPT	0x08	/* Interrupt Status */
-+#define  PCI_EXP_DPC_RP_BUSY		0x10	/* Root Port Busy */
- 
- #define PCI_EXP_DPC_SOURCE_ID		10	/* DPC Source Identifier */
- 
--- 
-2.7.2
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
