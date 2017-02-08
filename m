@@ -1,56 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36057 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751506AbdBFPRc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Feb 2017 10:17:32 -0500
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, yurovsky@gmail.com,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 0/3] i.MX7 PCI support
-Date: Mon,  6 Feb 2017 07:17:13 -0800
-Message-Id: <20170206151716.10381-1-andrew.smirnov@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 8 Feb 2017 15:55:08 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Mason <jon.mason@broadcom.com>
+Subject: Re: [PATCH 0/2] PCI: iproc: MPS fix and quirks
+Message-ID: <20170208215508.GA4800@bhelgaas-glaptop.roam.corp.google.com>
+References: <1485553449-9345-1-git-send-email-jon.mason@broadcom.com>
+MIME-Version: 1.0
+In-Reply-To: <1485553449-9345-1-git-send-email-jon.mason@broadcom.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ bcm-kernel-feedback-list@broadcom.com, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Jan 27, 2017 at 04:44:07PM -0500, Jon Mason wrote:
+> A patch that corrects an issue where the MPS could not be set, and
+> another that fixes some quirks in the PAXC
+> 
+> Jon Mason (2):
+>   PCI: iproc: allow the MPS to be set
+>   PCI: Add quirk entry for NS2 PAXC PCI
+> 
+>  drivers/pci/host/pcie-iproc.c |  5 ++++-
+>  drivers/pci/quirks.c          | 21 +++++++++++++++++++++
+>  2 files changed, 25 insertions(+), 1 deletion(-)
 
-Hello, everyone:
+Applied with Ray's ack to pci/host-iproc for v4.11, thanks!
 
-This is a third iteration of the code that adds PCI-subsystem bits
-necessary for enabling PCI support on i.MX7.
+It looks to me like several other drivers need a similar MPS fix.
+I'll CC you on the patches.
 
-Changes since v2 (can be found at [version2]):
+Bjorn
 
-	- Collected Reviewed-by for patch #2 from Lucas
-	- Reset logic implementation moved out into a reset controller
-          driver (see [reset1])
-	- Removed unused leftover code
-
-Changes since v1 (can be found at [version1]):
-
-	- All GPC related code moved into a separate driver (see [gpc1])
-	- Removed GPIO probe deferral logging
-	- Fixed section mismatch warning
-	- Minor reformatting of fsl,imx6q-pcie.txt(as per Rob
-          Herring's request)
-
-[version2] https://lkml.org/lkml/2017/2/1/510
-[version1] https://lkml.org/lkml/2017/1/19/488
-[gpc1] https://lkml.org/lkml/2017/2/6/551
-[reset1] https://lkml.org/lkml/2017/2/6/554
-
-Andrey Smirnov (3):
-  PCI: imx6: Fix a typo in error message
-  PCI: imx6: Allow probe deferal by reset GPIO
-  PCI: imx6: Add code to support i.MX7D
-
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |   6 +-
- drivers/pci/host/pci-imx6.c                        | 131 ++++++++++++++++-----
- include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
- 3 files changed, 111 insertions(+), 30 deletions(-)
-
--- 
-2.9.3
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
