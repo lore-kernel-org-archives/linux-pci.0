@@ -1,71 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:22597 "EHLO mga06.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:50108 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934101AbdBQSGp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Feb 2017 13:06:45 -0500
-Date: Fri, 17 Feb 2017 09:40:09 -0800
-From: "Raj, Ashok" <ashok.raj@intel.com>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        id S1752786AbdBHR5m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Feb 2017 12:57:42 -0500
+Date: Wed, 8 Feb 2017 11:57:36 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
         Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Mayurkumar Patel <mayurkumar.patel@intel.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI,pciehp: Don't handle PDC for cards with attention
- button
-Message-ID: <20170217174009.GA21480@otc-nc-03>
-References: <20170217061247.5591-1-yinghai@kernel.org>
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
+Message-ID: <20170208175736.GB27298@bhelgaas-glaptop.roam.corp.google.com>
+References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
+ <20170206175405.GA15565@bhelgaas-glaptop.roam.corp.google.com>
+ <20170206212041.GC679@wunner.de>
+ <20170206221502.GA27899@bhelgaas-glaptop.roam.corp.google.com>
+ <20170207062101.GB791@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170217061247.5591-1-yinghai@kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20170207062101.GB791@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yinghai
-
-Which version of linux did you apply this? 
-
-I'm not sure if you can ignore PDC when ATTN isn't present. Surprise hot-add on
-systems with Power Control would depend on PDC.
-
-There is some new code to deal with both Presence detect and DLLSC events since
-4.10-rc1. 
-
-
-On Thu, Feb 16, 2017 at 10:12:47PM -0800, Yinghai Lu wrote:
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+On Tue, Feb 07, 2017 at 07:21:01AM +0100, Lukas Wunner wrote:
+> On Mon, Feb 06, 2017 at 04:15:02PM -0600, Bjorn Helgaas wrote:
+> > On Mon, Feb 06, 2017 at 10:20:41PM +0100, Lukas Wunner wrote:
+> > > On Mon, Feb 06, 2017 at 11:54:05AM -0600, Bjorn Helgaas wrote:
+> > > > What is the hotplug event that causes generation of this wakeup event?
+> > > 
+> > > If you had read all e-mails in this thread or looked at the bugzilla
+> > > entry I've created, you wouldn't have to ask this question.
+> > 
+> > I'm sorry, I don't necessarily have time to sort through all the
+> > emails.  My idea is that the changelog should be a self-contained
+> > justification for the patch.  The bugzilla is for supporting details
+> > and future archaeologists.
+> > 
+> > > I think it's disappointing that you're asking me to jump through
+> > > various hoops like creating a bugzilla entry, as well as threatening
+> > > to revert my patch, but are unwilling to even look at the bugzilla
+> > > entry or read the entire thread.  It is equally disappointing that
+> > > the reporter of the regression was unwilling or unable to provide
+> > > dmesg output for both machines so that we've got no real idea what
+> > > we're dealing with.
+> > 
+> > I beg your pardon?  I don't think it's fair to malign Yinghai.  He's
+> > tested at least two machines and at least two patches, and it's only
+> > been two working days since he reported the problem.
 > 
-> ---
->  drivers/pci/hotplug/pciehp_hpc.c |    5 +++--
+> I think the commercialization of Linux kernel development has put this
+> open source project in a sorry state if an unpaid volunteer is told off
+> because he expresses disappointment that a paid contributor is asking
+> him to debug an issue on secret hardware using secret patches and not
+> providing secret dmesg output.
 
-> +		if (!ATTN_BUTTN(ctrl))
-> +			pciehp_queue_interrupt_event(slot, present ?
-> +					INT_PRESENCE_ON : INT_PRESENCE_OFF);
->  	}
->  
->  	/* Check Power Fault Detected */
+Just let me be clear that I greatly appreciate all problem reports.
+There's very little that I can actually test myself, so problem
+reports from others are absolutely essential.
 
-This is what we have since v4.10-rc1
+Often we don't get all the information we'd like, but I treat all
+reports seriously.  For every report we get, there may be dozens or
+hundreds of people who hit the same problem but do not have the time
+or expertise to report it.
 
-    /*
-     * Check Link Status Changed at higher precedence than Presence
-     * Detect Changed.  The PDS value may be set to "card present" from
-     * out-of-band detection, which may be in conflict with a Link Down
-     * and cause the wrong event to queue.
-     */
-    if (events & PCI_EXP_SLTSTA_DLLSC) {
-        ctrl_info(ctrl, "Slot(%s): Link %s\n", slot_name(slot),
-              link ? "Up" : "Down");
-        pciehp_queue_interrupt_event(slot, link ? INT_LINK_UP :
-                         INT_LINK_DOWN);
-    } else if (events & PCI_EXP_SLTSTA_PDC) {
-        present = !!(status & PCI_EXP_SLTSTA_PDS);
-        ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
-              present ? "" : "not ");
-        pciehp_queue_interrupt_event(slot, present ? INT_PRESENCE_ON :
-                         INT_PRESENCE_OFF);
-    }
+> > If you think a bugzilla is onerous
+> 
+> Hold on.  I didn't say a bugzilla is onerous, I said I'm disappointed
+> that you're asking me to create one and then don't look at it.
 
+I looked at it, and it had a few details, but no analysis of the
+situation.  Ideally, I'm looking for a précis of the situation in
+the changelog, with complete analysis and supporting details in the
+bugzilla.
 
-Cheers
-Ashok
+Bjorn
