@@ -1,148 +1,114 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: 
-Subject: [RFC PATCH 18/30] PCI: Make "PRG Response PASID Required" handling
- common
-Date: Mon, 27 Feb 2017 19:54:29 +0000
-Message-Id: <20170227195441.5170-19-jean-philippe.brucker@arm.com>
-In-Reply-To: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
- David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
+Return-Path: <SRS0=UKrW=ZV=netup.ru=aospan@kernel.org>
+Return-Path: <SRS0=UKrW=ZV=netup.ru=aospan@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170208222736.GA9094@bhelgaas-glaptop.roam.corp.google.com>
+References: <1484265521-13497-1-git-send-email-aospan@netup.ru>
+ <20170128204407.GA20550@bhelgaas-glaptop.roam.corp.google.com>
+ <CAK3bHNV-O+k1rHSj-KTKOBNNDXpWxp7rXw8bi7ve7-T9qqs8dw@mail.gmail.com>
+ <20170208204831.GA2206@bhelgaas-glaptop.roam.corp.google.com>
+ <CAK3bHNVz1O7pWL8xV+gf4M-MMKBsq6Bwkt654FOAEOZn=AUH-w@mail.gmail.com> <20170208222736.GA9094@bhelgaas-glaptop.roam.corp.google.com>
+From: Abylay Ospan <aospan@netup.ru>
+Date: Wed, 8 Feb 2017 17:39:32 -0500
+Message-ID: <CAK3bHNX3=5gH0W2X6ghe3s3AZwctwakvzUkthuD3bACGV9x4Og@mail.gmail.com>
+Subject: Re: [PATCH] PCI: iproc: fix resource allocation for BCMA PCIe
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+	Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+	bcm-kernel-feedback-list@broadcom.com, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>, Wenrui Li <wenrui.li@rock-chips.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-The PASID ECN to the PCIe spec added a bit in the PRI status register that
-allows a Function to declare whether a PRG Response should contain the
-PASID prefix or not.
+Yes, you right. Now it's clear.
 
-Move the helper that accesses it from amd_iommu into the PCI subsystem,
-renaming it to something more consistent with the spec, and introducing
-another obscure acronym to make it all fit.
+Thanks !
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/amd_iommu.c     | 19 +------------------
- drivers/pci/ats.c             | 17 +++++++++++++++++
- include/linux/pci-ats.h       |  8 ++++++++
- include/uapi/linux/pci_regs.h |  1 +
- 4 files changed, 27 insertions(+), 18 deletions(-)
+2017-02-08 17:27 GMT-05:00 Bjorn Helgaas <helgaas@kernel.org>:
+> On Wed, Feb 08, 2017 at 05:07:27PM -0500, Abylay Ospan wrote:
+>> Hi Bjorn,
+>>
+>> I have checked first listed driver
+>> (drivers/pci/host/pcie-designware.c). Seems like into
+>> 'devm_request_pci_bus_resources' we supply same stack allocated 'res'
+>> (actual insert of this pointer to 'iomem_resource' was done inside
+>> '__request_resource'). This 'res' is not changed inside
+>> 'of_pci_get_host_bridge_resources'.
+>> I don't have this platforms on hand and cannot test it on real
+>> hadrware (to 100% verify). But investigating this code I see that the
+>> problem exist.
+>>
+>> Here is a summary of flow for 'res' to show the problem:
+>>
+>> pcie-designware.c:
+>>   LIST_HEAD(res);
+>>   ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res,
+>> &pp->io_base); <--- 'res' not changing here
+>>   ret = devm_request_pci_bus_resources(&pdev->dev, &res);
+>>
+>>   drivers/pci/bus.c:
+>>     err = devm_request_resource(dev, parent, res);
+>>
+>>     kernel/resource.c:
+>>       conflict = request_resource_conflict(root, new);
+>>         conflict = __request_resource(root, new);
+>>           *p = new;  <--- here we introduce stack allocated res into
+>> global 'iomem_resource'
+>>
+>>
+>> Please check and correct me if i'm wrong ?
+>
+> The "res" in dw_pcie_host_init() is a list_head (not a struct
+> resource) and is on the stack.
+>
+> When we call of_pci_get_host_bridge_resources(), we pass a pointer
+> ("&res") to the empty list.  It kzallocs a struct resource for the bus
+> range and more for any bridge windows, and adds them to the list.
+>
+> When we call devm_request_pci_bus_resources(), we pass a pointer
+> ("&res") to the list, which is no longer empty.  It iterates through
+> the list and calls devm_request_resource() for each resource.  Inside
+> devm_request_pci_bus_resources(), "res" is the pointer to the resource
+> (not the list_head), and this resource is the one we kzalloc'd above.
+>
+> When devm_request_resource() calls request_resource_conflict(), it
+> passes that pointer to the kzalloc'd resource (the pointer is called
+> "new" in devm_request_resource()).)
+>
+> So when __request_resource() assigns "*p = new", it is copying a
+> pointer to a kzalloc'd struct resource.
+>
+> This is certainly a twisty maze of similar names for different things,
+> but I think it is OK if the list_head is on the stack as long as the
+> struct resources are kzalloc'd.
+>
+>> >   dw_pcie_host_init
+>> >     LIST_HEAD(res)                            # on stack
+>> >     of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base)
+>> >       res = kzalloc()                         # different "res" from above!
+>> >       pci_add_resource_offset(resources, res, ...)
+>> >     devm_request_pci_bus_resources(&pdev->dev, &res)
+>> >     pci_scan_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops, pp, &res)
+>> >     error:
+>> >       pci_free_resource_list(&res)
+>>
+>> > This looks good to me, but I don't think it's necessary to keep the
+>> > list_head in the struct iproc_pcie.  It should be safe to use
+>> > "LIST_HEAD(res)" on the stack like the other drivers do.  Can you
+>> > verify that and get an ack from Ray, Scott, or Jon?
+>>
+>> if my investigation above is true then we need to keep 'res' all the
+>> time we working with the driver (or find another way to fix this
+>> issue).
+>>
+>> --
+>> Abylay Ospan,
+>> NetUP Inc.
+>> http://www.netup.tv
 
-diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-index 98940d1392cb..c5c598bf4ba3 100644
---- a/drivers/iommu/amd_iommu.c
-+++ b/drivers/iommu/amd_iommu.c
-@@ -2024,23 +2024,6 @@ static int pdev_iommuv2_enable(struct pci_dev *pdev)
- 	return ret;
- }
- 
--/* FIXME: Move this to PCI code */
--#define PCI_PRI_TLP_OFF		(1 << 15)
--
--static bool pci_pri_tlp_required(struct pci_dev *pdev)
--{
--	u16 status;
--	int pos;
--
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
--	if (!pos)
--		return false;
--
--	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
--
--	return (status & PCI_PRI_TLP_OFF) ? true : false;
--}
--
- /*
-  * If a device is not yet associated with a domain, this function
-  * assigns it visible for the hardware
-@@ -2069,7 +2052,7 @@ static int attach_device(struct device *dev,
- 
- 			dev_data->ats.enabled = true;
- 			dev_data->ats.qdep    = pci_ats_queue_depth(pdev);
--			dev_data->pri_tlp     = pci_pri_tlp_required(pdev);
-+			dev_data->pri_tlp     = pci_prg_resp_requires_prefix(pdev);
- 		}
- 	} else if (amd_iommu_iotlb_sup &&
- 		   pci_enable_ats(pdev, PAGE_SHIFT) == 0) {
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index eeb9fb2b47aa..331376e9bb8b 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -334,3 +334,20 @@ int pci_max_pasids(struct pci_dev *pdev)
- }
- EXPORT_SYMBOL_GPL(pci_max_pasids);
- #endif /* CONFIG_PCI_PASID */
-+
-+#if defined(CONFIG_PCI_PASID) && defined(CONFIG_PCI_PRI)
-+bool pci_prg_resp_requires_prefix(struct pci_dev *pdev)
-+{
-+	u16 status;
-+	int pos;
-+
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
-+	if (!pos)
-+		return false;
-+
-+	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
-+
-+	return !!(status & PCI_PRI_STATUS_PRPR);
-+}
-+EXPORT_SYMBOL_GPL(pci_prg_resp_requires_prefix);
-+#endif /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
-diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-index 57e0b8250947..e21bcacbe80c 100644
---- a/include/linux/pci-ats.h
-+++ b/include/linux/pci-ats.h
-@@ -57,5 +57,13 @@ static inline int pci_max_pasids(struct pci_dev *pdev)
- 
- #endif /* CONFIG_PCI_PASID */
- 
-+#if defined(CONFIG_PCI_PASID) && defined(CONFIG_PCI_PRI)
-+bool pci_prg_resp_requires_prefix(struct pci_dev *pdev);
-+#else
-+static inline bool pci_prg_resp_requires_prefix(struct pci_dev *pdev)
-+{
-+	return false;
-+}
-+#endif /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
- 
- #endif /* LINUX_PCI_ATS_H*/
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 634c9c44ed6c..bae815876be6 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -864,6 +864,7 @@
- #define  PCI_PRI_STATUS_RF	0x001	/* Response Failure */
- #define  PCI_PRI_STATUS_UPRGI	0x002	/* Unexpected PRG index */
- #define  PCI_PRI_STATUS_STOPPED	0x100	/* PRI Stopped */
-+#define  PCI_PRI_STATUS_PRPR	0x8000	/* PRG Response requires PASID prefix */
- #define PCI_PRI_MAX_REQ		0x08	/* PRI max reqs supported */
- #define PCI_PRI_ALLOC_REQ	0x0c	/* PRI max reqs allowed */
- #define PCI_EXT_CAP_PRI_SIZEOF	16
+
+
 -- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Abylay Ospan,
+NetUP Inc.
+http://www.netup.tv
