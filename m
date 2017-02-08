@@ -1,63 +1,59 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 10 Feb 2017 15:54:26 +0100
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
-Message-ID: <20170210145426.GB24594@kroah.com>
-References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39256 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751235AbdBHWve (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Feb 2017 17:51:34 -0500
+Subject: [PATCH v1 3/3] PCI: xgene: Configure PCIe MPS settings
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Rob Herring <robh@kernel.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Jon Mason <jon.mason@broadcom.com>,
+        Ray Jui <ray.jui@broadcom.com>,
+        =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+        devel@linuxdriverproject.org,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        linux-arm-kernel@lists.infradead.org,
+        Tanmay Inamdar <tinamdar@apm.com>
+Date: Wed, 08 Feb 2017 16:49:48 -0600
+Message-ID: <20170208224948.14351.64615.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170208224632.14351.89895.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170208224632.14351.89895.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1486058763-7730-1-git-send-email-logang@deltatee.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 02, 2017 at 11:05:59AM -0700, Logan Gunthorpe wrote:
-> Changes since v1:
-> 
-> * Rebased onto 4.10-rc6 (cleanly)
-> * Split the patch into a few more easily digestible patches (as
->   suggested by Greg Kroah-Hartman)
-> * Folded switchtec.c into switchtec.h (per Greg)
-> * Fixed a bunch of 32bit build warnings caught by the kbuild test robot
-> * Fixed some issues in the documentation so it has a proper
->   reStructredText format (as noted by Jonathan Corbet)
-> * Fixed padding and sizes in the IOCTL structures as noticed by Emil
->   Velikov and used pahole to verify their consistency across 32 and 64
->   bit builds
-> * Reworked one of the IOCTL interfaces to be more future proof (per
->   Emil).
-> 
-> Changes since RFC:
-> 
-> * Fixed incorrect use of the drive model as pointed out by Greg
->   Kroah-Hartman
-> * Used devm functions as suggested by Keith Busch
-> * Added a handful of sysfs attributes to the switchtec class
-> * Added a handful of IOCTLs to the switchtec device
-> * A number of miscellaneous bug fixes
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-I didn't audit the ioctl code, but the driver model and sysfs stuff
-looks sane to me, nice job cleaning it up.
+Make sure PCIe MPS settings are valid when we enumerate a new hierarchy.
 
-thanks,
+Based-on-patch-by: Jon Mason <jon.mason@broadcom.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pci-xgene.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-greg k-h
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 7c3b54b9eb17..8091a8778ae7 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -638,7 +638,7 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+ 	struct device_node *dn = dev->of_node;
+ 	struct xgene_pcie_port *port;
+ 	resource_size_t iobase = 0;
+-	struct pci_bus *bus;
++	struct pci_bus *bus, *child;
+ 	int ret;
+ 	LIST_HEAD(res);
+ 
+@@ -681,6 +681,8 @@ static int xgene_pcie_probe_bridge(struct platform_device *pdev)
+ 
+ 	pci_scan_child_bus(bus);
+ 	pci_assign_unassigned_bus_resources(bus);
++	list_for_each_entry(child, &bus->children, node)
++		pcie_bus_configure_settings(child);
+ 	pci_bus_add_devices(bus);
+ 	return 0;
+ 
