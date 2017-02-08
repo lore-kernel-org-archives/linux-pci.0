@@ -1,114 +1,64 @@
-Return-Path: <SRS0=W4pu=Z6=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=W4pu=Z6=free.fr=slash.tmp@kernel.org>
-Subject: Re: Pointers for writing a good PCIe driver
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci <linux-pci@vger.kernel.org>
-References: <ff099b5f-efc8-bb5f-41e3-493398844cc0@free.fr>
- <05046a8a-ba9f-26f9-4c93-f657f9da6294@free.fr>
- <20170207200656.GA11659@bhelgaas-glaptop.roam.corp.google.com>
- <20170207214758.GC11659@bhelgaas-glaptop.roam.corp.google.com>
- <0f22720c-e47d-59f6-b5f7-5e40f4a1759d@free.fr>
- <20170212165033.GA31833@kroah.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <0d785dab-c830-b887-d9f3-a2cd5338695c@free.fr>
-Date: Fri, 17 Feb 2017 10:20:20 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: [PATCH v1 1/3] PCI: xilinx: Configure PCIe MPS settings
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: linux-pci@vger.kernel.org
+Date: Wed, 08 Feb 2017 16:08:55 -0600
+Message-ID: <20170208220854.8352.28570.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170208215558.8352.90635.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170208215558.8352.90635.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170212165033.GA31833@kroah.com>
-Content-Type: text/plain; charset=ISO-8859-15
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>,
+ Michal Simek <michal.simek@xilinx.com>, Jon Mason <jon.mason@broadcom.com>,
+ Ray Jui <ray.jui@broadcom.com>, linux-arm-kernel@lists.infradead.org,
+ devel@linuxdriverproject.org, "K. Y. Srinivasan" <kys@microsoft.com>,
+ =?utf-8?b?U8O2cmVu?= Brinkmann <soren.brinkmann@xilinx.com>,
+ Tanmay Inamdar <tinamdar@apm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12/02/2017 17:50, Greg KH wrote:
-> On Tue, Feb 07, 2017 at 11:56:31PM +0100, Mason wrote:
->> On 07/02/2017 22:47, Bjorn Helgaas wrote:
->>> On Tue, Feb 07, 2017 at 02:06:56PM -0600, Bjorn Helgaas wrote:
->>>> On Tue, Feb 07, 2017 at 04:55:28PM +0100, Mason wrote:
->>>>> On 06/02/2017 16:54, Mason wrote:
->>>>>
->>>>>> My platform ( arch/arm/mach-tango ) provides a PCIe controller from PLDA.
->>>>>>
->>>>>> I do have access to a driver that works for a few PCIe boards, but it's
->>>>>> an ancient out-of-tree driver (targeting v3.4). Also, I'm not sure it
->>>>>> follows the best-practice guidelines (e.g. it hard-codes a few
->>>>>> work-arounds directly in drivers/pci/probe.c)
->>>>
->>>> Indeed, having to change drivers/pci/probe.c doesn't sound like a best
->>>> practice :)  If you can share details of what changes you need, people
->>>> could probably suggest other ways to do it within the generic PCI
->>>> framework.
->>>>
->>>>>> If I understand correctly, while PCIe is a standard, it is not codified
->>>>>> as much as USB (XHCI) or SATA (AHCI), which means the register layout
->>>>>> (and possibly other things) are left up to the integrator? Which means
->>>>>> there cannot be some kind of "generic" driver that works for a random
->>>>>> PCIe controller?
->>>>
->>>> There is no standardization of registers in MMIO or I/O port space.
->>>> The size, location, and type of those registers is configurable in a
->>>> generic way via the BARs, of course.  But that tells you nothing about
->>>> the *functionality* of those MMIO or I/O port registers.
->>>>
->>>> For config space, the first 64 bytes (the PCIe r3.0 spec calls it the
->>>> "PCI 3.0 Compatible Configuration Space Header") are completely
->>>> standardized.  This is where device IDs, BARs, and other generic
->>>> registers are.
->>>>
->>>> PCIe devices can implement up to 4096 bytes of config space.  The
->>>> space after the 64-byte header can contain a list of standardized
->>>> PCI/PCIe Capabilities, non-standardized device-specific registers, or
->>>> both.  There is a way to include device-specific registers in a
->>>> "Vendor Defined" Capability -- that way drivers can use generic
->>>> mechanisms to find registers so they don't have to hard-code register
->>>> layout assumptions.
->>>>
->>>>>> I guess my main question is: do you have pointers on getting started
->>>>>> writing a PCIe driver good enough for upstream?
->>>>>>
->>>>>> Is Documentation/PCI/PCIEBUS-HOWTO.txt still a relevant resource?
->>>>
->>>> PCIEBUS-HOWTO.txt is still relevant, but only to drivers for services
->>>> of PCIe ports, e.g., hotplug, error reporting, etc.  It's not relevant
->>>> to PCIe endpoint drivers.
->>>>
->>>>>> Are there good resources to get up to speed on the PCIe terminology?
->>>>>
->>>>> I'm also wondering: in many Linux subsystems, there are often
->>>>> several drivers of different quality; some are obsolescent and
->>>>> have not been updated in a while, while some are recent and
->>>>> follow all the latest best-practice guidelines (and the rest
->>>>> is somewhere in the middle).
->>>>>
->>>>> Are there 1 or 2 very good PCIe drivers to take as examples
->>>>> as good starting points? (Perhaps a simple driver, and a
->>>>> more complex driver.)
->>>>
->>>> I'm not really the best person to ask about this because I deal more
->>>> with the PCI core than with the drivers that use the core.  If I were
->>>> looking, I might start with drivers/nvme/host/pci.c or
->>>> drivers/usb/host/xhci-pci.c.
->>>
->>> I should have also mentioned Documentation/PCI/pci.txt.  That's a
->>> pretty good place to start.
->>
->> Hello Bjorn,
->>
->> Thanks for these pointers, I will study them with care.
->>
->> Who would review my PCIe driver if I ever submitted one? :-)
-> 
-> It all depends on what subsystem it would belong to, what type of device
-> are you writing a driver for?
+Make sure PCIe MPS settings are valid when we enumerate a new hierarchy.
 
-Hello Greg,
+Based-on-patch-by: Jon Mason <jon.mason@broadcom.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/host/pcie-xilinx.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-There might be some kind of misunderstanding.
+diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
+index c8616fadccf1..7f030f5d750b 100644
+--- a/drivers/pci/host/pcie-xilinx.c
++++ b/drivers/pci/host/pcie-xilinx.c
+@@ -632,7 +632,7 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+ 	struct xilinx_pcie_port *port;
+-	struct pci_bus *bus;
++	struct pci_bus *bus, *child;
+ 	int err;
+ 	resource_size_t iobase = 0;
+ 	LIST_HEAD(res);
+@@ -686,6 +686,8 @@ static int xilinx_pcie_probe(struct platform_device *pdev)
+ #ifndef CONFIG_MICROBLAZE
+ 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
+ #endif
++	list_for_each_entry(child, &bus->children, node)
++		pcie_bus_configure_settings(child);
+ 	pci_bus_add_devices(bus);
+ 	return 0;
+ 
 
-I don't plan to write a driver for a device that plugs into a PCIe slot.
 
-I intend to write a driver for the PCIe controller itself, which is
-embedded in the SoC. (In order to support different types of PCIe
-devices, with their respective drivers already upstream.)
-
-I think the controller driver belongs in drivers/pci/host ?
-
-Regards.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
