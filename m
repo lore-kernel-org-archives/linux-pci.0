@@ -1,91 +1,112 @@
-Return-Path: <SRS0=+Q74=Z4=samsung.com=jh80.chung@kernel.org>
-Return-Path: <SRS0=+Q74=Z4=samsung.com=jh80.chung@kernel.org>
-Subject: Re: [PATCH V3 0/4] PCI: exynos: use the PHY generic framework
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, krzk@kernel.org,
- linux-kernel@vger.kernel.org, jingoohan1@gmail.com, javier@osg.samsung.com,
- kgene@kernel.org, linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
- niyas.ahmed@samsung.com, alim.akhtar@samsung.com, pankaj.dubey@samsung.com,
- kishon@ti.com, devicetree@vger.kernel.org, mark.rutland@arm.com,
- vivek.gautam@codeaurora.org, robh+dt@kernel.org
-From: Jaehoon Chung <jh80.chung@samsung.com>
-Message-id: <04b568d2-d85e-9cbd-1379-d657f574f279@samsung.com>
-Date: Thu, 16 Feb 2017 07:33:15 +0900
-MIME-version: 1.0
-In-reply-to: <20170215211120.GC6981@bhelgaas-glaptop.roam.corp.google.com>
-Content-type: text/plain; charset=windows-1252
-References: 
- <CGME20170213082615epcas5p2f5ecabbd5853a8e27da5f88fcae85158@epcas5p2.samsung.com>
- <20170213082613.19628-1-jh80.chung@samsung.com>
- <20170215211120.GC6981@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:48365 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751037AbdBHGCS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Feb 2017 01:02:18 -0500
+Date: Wed, 8 Feb 2017 07:04:10 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Keith Busch <keith.busch@intel.com>
+Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Wei Zhang <wzhang@fb.com>,
+        Austin Bolen <Austin.Bolen@dell.com>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCHv6 3/5] pci: No config access for disconnected devices
+Message-ID: <20170208060410.GA1026@wunner.de>
+References: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
+ <1486495957-26177-4-git-send-email-keith.busch@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1486495957-26177-4-git-send-email-keith.busch@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Bjorn,
-
-On 02/16/2017 06:11 AM, Bjorn Helgaas wrote:
-> On Mon, Feb 13, 2017 at 05:26:09PM +0900, Jaehoon Chung wrote:
->> This patcheset is for using PHY generic framework.
->> Current pci-exyns doesn't use the phy framework since there haven't been on
->> PHY subsystem when Exynos5440 had bean upstreamed.
->> It's making a difficult to upstream the other Exynos variants because of different
->> PHY registers.
->>
->> This patcheset has the below modifications:
->> 1) Introduces the phy-exynos-pcie
->> 2) Handles PHY register from PHY framework for pci-exynos
->> 3) Modifies the dt-binding of pci-exynos
->> 4) Maintains the backward compatibility
->>
->> Changelog on V3:
->> - Drops "ARM: dts: exynos5440: support the phy-pcie node of pcie"
->>   : Will send this patch after applying this patchset.
->> - Fixes typo
->> - Based on latest PCI git repository (host-exynos branch)
->> - Changes commit message
->> - Removes the dependency
->>
->> Changelog on V2:
->> - Keep current codes for backward compatibility
->> - Fixes some typos
->> - Split the patches for removing the dependency
->> - Removes the unnecessary codes
->> - Change the patch's sequence
->> - Based on latest PCI git repository.(next branch)
->>
->> Jaehoon Chung (4):
->>   Documetation: samsung-phy: add the exynos-pcie-phy binding
->>   phy: phy-exynos-pcie: Add support for Exynos PCIe phy
->>   Documetation: binding: modify the exynos5440 pcie binding
->>   PCI: exynos: support the using PHY generic framework
->>
->>  .../bindings/pci/samsung,exynos5440-pcie.txt       |  29 +++
->>  .../devicetree/bindings/phy/samsung-phy.txt        |  17 ++
->>  drivers/pci/host/pci-exynos.c                      |  54 +++-
->>  drivers/phy/Kconfig                                |   8 +
->>  drivers/phy/Makefile                               |   1 +
->>  drivers/phy/phy-exynos-pcie.c                      | 285 +++++++++++++++++++++
->>  6 files changed, 390 insertions(+), 4 deletions(-)
->>  create mode 100644 drivers/phy/phy-exynos-pcie.c
+On Tue, Feb 07, 2017 at 02:32:35PM -0500, Keith Busch wrote:
+> If we've  detected the PCI device is disconnected, there is no need to
+> attempt to access its config space since we know the operation will
+> fail. This patch has all the config reads and writes return -ENODEV
+> error immediately when in such a state.
 > 
-> I made the updates Vivek suggested and provisionally added these to my
-> pci/host-exynos branch to get some build testing.
-
-Thanks!
-
+> If a config read is sent to a disconnected device, the value will be
+> set to all 1's. This is the same as what hardware is expected to return
+> when accessing a removed device, but software can do this faster without
+> relying on hardware.
 > 
-> Kishon, I guess it probably makes more sense for me to apply this
-> because even though the drivers/pci changes are small, I think they
-> depend on other pci-exynos.c changes that are on my branch but not in
-> Linus' tree yet.
-
-I will send the patches relevant to Exynos5433(TM2) soon..
-Thanks a lot.
-
-Best Regards,
-Jaehoon Chung
-
+> Signed-off-by: Keith Busch <keith.busch@intel.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/pci/access.c | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
 > 
-> Bjorn
-> 
-> 
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index d37b2ed..d63e9dd 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -892,12 +892,20 @@ EXPORT_SYMBOL(pcie_capability_clear_and_set_dword);
+>  
+>  int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
+>  {
+> +	if (pci_dev_is_disconnected(dev)) {
+
+You used to have unlikely() here up until v4 but dropped it in v5.
+Why?  Seemed sensible to me.
+
+Thanks,
+
+Lukas
+
+> +		*val = ~0;
+> +		return -ENODEV;
+> +	}
+>  	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
+>  }
+>  EXPORT_SYMBOL(pci_read_config_byte);
+>  
+>  int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
+>  {
+> +	if (pci_dev_is_disconnected(dev)) {
+> +		*val = ~0;
+> +		return -ENODEV;
+> +	}
+>  	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
+>  }
+>  EXPORT_SYMBOL(pci_read_config_word);
+> @@ -905,18 +913,26 @@ EXPORT_SYMBOL(pci_read_config_word);
+>  int pci_read_config_dword(const struct pci_dev *dev, int where,
+>  					u32 *val)
+>  {
+> +	if (pci_dev_is_disconnected(dev)) {
+> +		*val = ~0;
+> +		return -ENODEV;
+> +	}
+>  	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
+>  }
+>  EXPORT_SYMBOL(pci_read_config_dword);
+>  
+>  int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
+>  {
+> +	if (pci_dev_is_disconnected(dev))
+> +		return -ENODEV;
+>  	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
+>  }
+>  EXPORT_SYMBOL(pci_write_config_byte);
+>  
+>  int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
+>  {
+> +	if (pci_dev_is_disconnected(dev))
+> +		return -ENODEV;
+>  	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
+>  }
+>  EXPORT_SYMBOL(pci_write_config_word);
+> @@ -924,6 +940,8 @@ EXPORT_SYMBOL(pci_write_config_word);
+>  int pci_write_config_dword(const struct pci_dev *dev, int where,
+>  					 u32 val)
+>  {
+> +	if (pci_dev_is_disconnected(dev))
+> +		return -ENODEV;
+>  	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
+>  }
+>  EXPORT_SYMBOL(pci_write_config_dword);
+> -- 
+> 2.7.2
 > 
