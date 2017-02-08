@@ -1,142 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:57720 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932416AbdBGVqz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Feb 2017 16:46:55 -0500
-Date: Tue, 7 Feb 2017 15:46:45 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Dongdong Liu <liudongdong3@huawei.com>, linux-pci@vger.kernel.org,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        charles.chenxin@huawei.com, linuxarm@huawei.com,
-        Tomasz Nowicki <tn@semihalf.com>
-Subject: Re: [PATCH 3/3] PCI: generic: Fix the bug of pci_fixup_irqs() for
- arm64 platform.
-Message-ID: <20170207214645.GB11659@bhelgaas-glaptop.roam.corp.google.com>
-References: <1484202504-96686-1-git-send-email-liudongdong3@huawei.com>
- <1484202504-96686-4-git-send-email-liudongdong3@huawei.com>
- <20170203204530.GH10291@bhelgaas-glaptop.roam.corp.google.com>
- <20170206140827.GB14139@red-moon>
+Return-Path: <SRS0=oYQQ=ZV=rjwysocki.net=rjw@kernel.org>
+Return-Path: <SRS0=oYQQ=ZV=rjwysocki.net=rjw@kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Yinghai Lu <yinghai@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
+Date: Wed, 08 Feb 2017 13:03:31 +0100
+Message-ID: <17718285.C6vTVW8ojy@aspire.rjw.lan>
+In-Reply-To: <20170208042354.GA976@wunner.de>
+References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de> <26564356.WaYtlag6jj@aspire.rjw.lan> <20170208042354.GA976@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170206140827.GB14139@red-moon>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 06, 2017 at 02:08:27PM +0000, Lorenzo Pieralisi wrote:
-> On Fri, Feb 03, 2017 at 02:45:30PM -0600, Bjorn Helgaas wrote:
-> > [+cc Tomasz, Lorenzo]
-> > 
-> > On Thu, Jan 12, 2017 at 02:28:24PM +0800, Dongdong Liu wrote:
-> > > arch/arm64/pci.c pcibios_alloc_irq() has the same function as
-> > > pci_fixup_irqs(), so we add condition #ifndef CONFIG_ARM64 for
-> > > pci_fixup_irqs().
+On Wednesday, February 08, 2017 05:23:54 AM Lukas Wunner wrote:
+> On Tue, Feb 07, 2017 at 05:04:45PM +0100, Rafael J. Wysocki wrote:
+> > On Tuesday, February 07, 2017 07:21:01 AM Lukas Wunner wrote:
+> > > On Mon, Feb 06, 2017 at 04:15:02PM -0600, Bjorn Helgaas wrote:
+> > > > On Mon, Feb 06, 2017 at 10:20:41PM +0100, Lukas Wunner wrote:
+> > > > > On Mon, Feb 06, 2017 at 11:54:05AM -0600, Bjorn Helgaas wrote:
+> > > > > > What is the hotplug event that causes generation of this wakeup event?
+> > > > > 
+> > > > > If you had read all e-mails in this thread or looked at the bugzilla
+> > > > > entry I've created, you wouldn't have to ask this question.
+> > > > 
+> > > > I'm sorry, I don't necessarily have time to sort through all the
+> > > > emails.  My idea is that the changelog should be a self-contained
+> > > > justification for the patch.  The bugzilla is for supporting details
+> > > > and future archaeologists.
+> > > > 
+> > > > > I think it's disappointing that you're asking me to jump through
+> > > > > various hoops like creating a bugzilla entry, as well as threatening
+> > > > > to revert my patch, but are unwilling to even look at the bugzilla
+> > > > > entry or read the entire thread.  It is equally disappointing that
+> > > > > the reporter of the regression was unwilling or unable to provide
+> > > > > dmesg output for both machines so that we've got no real idea what
+> > > > > we're dealing with.
+> > > > 
+> > > > I beg your pardon?  I don't think it's fair to malign Yinghai.  He's
+> > > > tested at least two machines and at least two patches, and it's only
+> > > > been two working days since he reported the problem.
 > > > 
-> > > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> > > Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> > > Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
-> > > ---
-> > >  drivers/pci/host/pci-host-common.c | 2 ++
-> > >  1 file changed, 2 insertions(+)
-> > > 
-> > > diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-> > > index e3c48b5..f160afc 100644
-> > > --- a/drivers/pci/host/pci-host-common.c
-> > > +++ b/drivers/pci/host/pci-host-common.c
-> > > @@ -145,7 +145,9 @@ int pci_host_common_probe(struct platform_device *pdev,
-> > >  		return -ENODEV;
-> > >  	}
-> > >  
-> > > +#ifndef CONFIG_ARM64
-> > >  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> > > +#endif
+> > > I think the commercialization of Linux kernel development has put this
+> > > open source project in a sorry state if an unpaid volunteer is told off
+> > > because he expresses disappointment that a paid contributor is asking
+> > > him to debug an issue on secret hardware using secret patches and not
+> > > providing secret dmesg output.
 > > 
-> > d8ed75d59332 ("ARM64: PCI: ACPI support for legacy IRQs parsing and
-> > consolidation with DT code") added pcibios_alloc_irq() for arm64.
-> > 
-> > arm64 is the only arch that implements pcibios_alloc_irq().  And now
-> > you want to add an ifdef here so arm64 is the only arch that doesn't
-> > call pci_fixup_irqs().
-> > 
-> > I don't remember the details of why arm64 is so special here.
-> > Obviously we'd prefer not to have the ifdef and not to have the
-> > arm64-specific pcibios_alloc_irq().
+> > That's not like a lot has changed in that respect for the last 10 years and
+> > I was in your spot at that time.
 > 
-> Well, I am not sure ARM64 is more special than other architectures
-> in this respect, actually I think that what ARM64 does is what we
-> will end up doing when Matthew Minter's patches are merged and
-> that's my aim for v4.12, pci_fixup_irqs() should not be used
-> any longer, at least on ARM/ARM64 and I know what to do to make
-> it disappear.
+> Thank you Rafael, means a lot.
+> 
+> 
+> > The bottom line, in any case, is that the current code causes problems to
+> > happen somewhere and as a rule we don't release code that is known to
+> > cause problems to happen to anyone.  This means something needs to be done
+> > about that and the choice at this point is pretty much between reverting and
+> > quirking the affected system(s).
+> 
+> Quirking is not an option in this case because the PCI device IDs of the
+> affected hotplug ports as well as DMI data are unknown.  Yinghai Lu is
+> refusing to publish that, for both affected systems.
 
-ARM64 is different from x86, even though both arches support both ACPI
-and DT: on ARM64 we currently call of_irq_parse_and_map_pci() when we
-call the driver's probe() method, whereas on x86 we don't call it
-until the driver calls pci_enable_device().
+Well, he may be bound by an NDA.
 
-Obviously it would be better if this were done at the same point on
-both arches.  I don't know what that point *is*.  I could imagine
-enumeration-time, probe-time, or enable-time.
+But still you may ask him to send that information to me (that should work for
+Intel hardware at least) and we'll see what can be done about disclosing it.
 
-OK, back to the patch at hand.  I think we're agreed that having
-pci_host_common_probe() call pci_fixup_irqs() is wrong on all
-architectures (it doesn't cover hot-added devices and it may clobber
-an IRQ after a driver has claimed the device (since it "fixes" all PCI
-devices).  And we hope to fix this in the next cycle using Matt's
-work.
+> To be honest I only care about runtime suspending *Thunderbolt* hotplug
+> ports.  I enabled it for *all* hotplug ports in 68db9bc81436 because it
+> seemed like the right thing to do.  However given the murkiness of the
+> spec and the odd quirks Yinghai Lu reported it's probably not worth the
+> effort.  One must bear in mind that we've only heard of systems with
+> 2015+ BIOSes so far.  More problem reports may pile up once we push the
+> BIOS limit further back.
 
-So I think I'm OK with this transient ugliness.  Although
-pci-host-common.c is currently only available on ARM and ARM64, in
-theory, it should be usable on x86.  I would probably use "#ifdef ARM"
-instead of "#ifndef ARM64" so that when it is made available on x86,
-we won't call pci_fixup_irqs() there.
+Right.
 
-What do you think of the following?
+> I have submitted a patch to recognize Thunderbolt ports, so what I have
+> in mind is to resubmit 68db9bc81436 with an additional is_thunderbolt
+> condition in pci_bridge_d3_possible().  The number of Thunderbolt chips
+> is small and I know them fairly well, so it's easy for me to judge the
+> potential for regressions and deal with them.
 
+That sounds reasonable.
 
-commit 4e3538fb84dcba2de5d5b0990ced7f3f881fda1e
-Author: Dongdong Liu <liudongdong3@huawei.com>
-Date:   Thu Jan 12 14:28:24 2017 +0800
+> Alternatively Bjorn could apply the patch to recognize Thunderbolt
+> devices now and then I can submit a one-line fix which adds the
+> is_thunderbolt condition to pci_bridge_d3_possible().  This would
+> obviate the need to revert 68db9bc81436.
 
-    PCI: generic: Call pci_fixup_irqs() only on ARM
-    
-    pci_fixup_irqs() is problematic because:
-    
-      - it's called when we enumerate a host bridge, so we don't fixup IRQs for
-        hot-added PCI devices, and
-    
-      - it fixes up IRQs for all PCI devices in the system, so if we call it
-        multiple times, e.g., if we have several host controllers, we may
-        reallocate an IRQ for a device after a driver has already claimed it.
-    
-    We plan to replace pci_fixup_irqs() soon, but we still need it on ARM
-    because we don't have any other generic method for doing this.
-    
-    On ARM64, we don't need pci_fixup_irqs() because we do IRQ setup when we
-    bind a driver to the device (in the pci_device_probe() ->
-    pcibios_alloc_irq() path).
-    
-    pci-host-common.c is currently only used on ARM and ARM64.  In principle,
-    it could be used on x86, and we wouldn't want pci_fixup_irqs() there
-    either, because x86 does IRQ setup in the pci_enable_device() path.
-    
-    [bhelgaas: changelog, use #ifdef ARM, not #ifndef ARM64]
-    Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-    Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
+OK
 
-diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-index e3c48b5deb93..e9a53bae1c25 100644
---- a/drivers/pci/host/pci-host-common.c
-+++ b/drivers/pci/host/pci-host-common.c
-@@ -145,7 +145,9 @@ int pci_host_common_probe(struct platform_device *pdev,
- 		return -ENODEV;
- 	}
- 
-+#ifdef CONFIG_ARM
- 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-+#endif
- 
- 	/*
- 	 * We insert PCI resources into the iomem_resource and
+I guess the cleanest way would be to submit a patch (or series of patches)
+on top of the current mainline to make changes to fix the problem on the
+Yinghai's machines.
+
+> > You seem to be disappointed that Yinghai has reported the problem at all,
+> > given that the hardware is unreleased and so on, but problem reports,
+> > even for systems like that, are what allows us to create code that works
+> > for everybody, so we (the maintainers) appreciate them very much.
+> 
+> No problem with reporting regressions, but with denying information
+> required to provide a fix.  I had asked for full dmesg output for
+> both machines so that the PCI device IDs and DMI data are available,
+> but Yinghai Lu continues to withhold that.  I am thus denied the means
+> to provide a fix and am forced to watch reversion of 68db9bc81436
+> without being able to respond.
+
+As I said, there may be an NDA involved and there is a way around it
+as mentioned above.
+
+That said I think that limitting runtime PM to Thunderbolt ports for the time
+being is the way to go at this point in the cycle.
+
+Thanks,
+Rafael
