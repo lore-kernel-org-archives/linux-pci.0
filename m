@@ -1,79 +1,63 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v2 07/22] Documentation: PCI: Add binding documentation for
- pci-test endpoint function
-Date: Fri, 17 Feb 2017 15:20:27 +0530
-Message-ID: <1487325042-28227-8-git-send-email-kishon@ti.com>
-In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:48408 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751933AbdBIQGo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Feb 2017 11:06:44 -0500
+Date: Thu, 9 Feb 2017 09:09:50 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bart Van Assche <bart.vanassche@sandisk.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Yinghai Lu <yinghai@kernel.org>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [GIT PULL] PCI fixes for v4.10
+Message-ID: <20170209150950.GA11905@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170208192054.GA31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170209040648.GA1304@wunner.de>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
- Kishon Vijay Abraham I <kishon@ti.com>, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170209040648.GA1304@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add binding documentation for pci-test endpoint function that helps in
-adding and configuring pci-test endpoint function.
+[+cc Ashok, Keith]
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/PCI/00-INDEX                         |    2 ++
- .../PCI/endpoint/function/binding/pci-test.txt     |   17 +++++++++++++++++
- 2 files changed, 19 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.txt
+On Thu, Feb 09, 2017 at 05:06:48AM +0100, Lukas Wunner wrote:
+> On Wed, Feb 08, 2017 at 01:22:56PM -0600, Bjorn Helgaas wrote:
+> > Bjorn Helgaas (1):
+> >       Revert "PCI: pciehp: Add runtime PM support for PCIe hotplug ports"
+> 
+> What's the rationale for reverting this?
+> 
+> You've received patches to fix the issue on both affected machines,
+> so a revert seems unnecessary:
+> 
+> https://patchwork.kernel.org/patch/9557113/
+> https://patchwork.kernel.org/patch/9562007/
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index 4e5a283..53717b7 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -18,3 +18,5 @@ endpoint/pci-endpoint-cfs.txt
- 	- guide to use configfs to configure the pci endpoint function.
- endpoint/pci-test-function.txt
- 	- specification of *pci test* function device.
-+endpoint/function/binding/
-+	- binding documentation for pci endpoint function
-diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-new file mode 100644
-index 0000000..7358240
---- /dev/null
-+++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-@@ -0,0 +1,17 @@
-+PCI TEST ENDPOINT FUNCTION
-+
-+name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
-+
-+Configurable Fields:
-+vendorid	 : should be 0x104c
-+deviceid	 : should be 0xffff
-+revid		 : dont't care
-+progif_code	 : don't care
-+subclass_code	 : don't care
-+baseclass_code	 : should be 0xff
-+cache_line_size	 : don't care
-+subsys_vendor_id : don't care
-+subsys_id	 : don't care
-+interrupt_pin	 : Should be 1 - INTA, 2 - INTB, 3 - INTC, 4 -INTD
-+msi_interrupts	 : Should be 1 to 32 depending on the number of msi interrupts
-+		   to test
--- 
-1.7.9.5
+I don't think we've gotten to the root cause of the problem yet,
+and I don't want to throw in fixes at the last minute without a better
+understanding of it.
 
+PCIe hotplug hardware is not very complicated, it hasn't changed in
+many years, and at least for the Intel hardware in question, is
+generally pretty well-tested with Windows.  So I want to be careful
+about asserting that this new piece of hardware is broken.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I think pciehp is unnecessarily complicated, and we do have known
+synchronization issues with it, e.g., [1] [2].  It seems possible that
+if we poked a little deeper, we would find that the hardware is
+actually working correctly and the real problem is in pciehp.
+
+That's why I've been trying to have a conversation about how we
+interpret the spec and how we could remove PM and pciehp from the
+picture and experiment directly with setpci.
+
+[1] https://lkml.kernel.org/r/1481317564-18045-1-git-send-email-ashok.raj@intel.com
+[2] https://bugzilla.kernel.org/show_bug.cgi?id=117561
