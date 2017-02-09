@@ -1,98 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45836 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934311AbdBVXqN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 22 Feb 2017 18:46:13 -0500
-Date: Wed, 22 Feb 2017 17:39:44 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        Joerg Roedel <joro@8bytes.org>,
-        iommu@lists.linux-foundation.org
-Subject: Re: Partial BAR Address Allocation
-Message-ID: <20170222233944.GB4359@bhelgaas-glaptop.roam.corp.google.com>
-References: <35c6bec9-58e8-a1f7-5a85-d80c23480d32@codeaurora.org>
- <20170222184440.GA2132@bhelgaas-glaptop.roam.corp.google.com>
- <43c1ff36-fc50-8ea4-02fe-7b1d573a1efd@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>, "bhelgaas@google.com"
+ <bhelgaas@google.com>, "robh@kernel.org" <robh@kernel.org>,
+ "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
+ "colin.king@canonical.com" <colin.king@canonical.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v5] PCI: Xilinx NWL: Modifying irq chip for legacy
+ interrupts
+Date: Thu, 9 Feb 2017 15:16:26 +0000
+Message-ID: <8520D5D51A55D047800579B094147198263E6AF3@XAP-PVEXMBX02.xlnx.xilinx.com>
+References: <1486364596-19699-1-git-send-email-bharatku@xilinx.com>
+ <4b04e834-08b6-a728-8fe5-13106d50b3b2@arm.com>
+ <8520D5D51A55D047800579B094147198263E68AA@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <131228fb-d3f8-3836-3713-e948ed30d398@arm.com>
+In-Reply-To: <131228fb-d3f8-3836-3713-e948ed30d398@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <43c1ff36-fc50-8ea4-02fe-7b1d573a1efd@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ravikiran Gummaluri <rgummal@xilinx.com>, "arnd@arndb.de" <arnd@arndb.de>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "michal.simek@xilinx.com" <michal.simek@xilinx.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Joerg, iommu list]
-
-On Wed, Feb 22, 2017 at 03:44:53PM -0500, Sinan Kaya wrote:
-> On 2/22/2017 1:44 PM, Bjorn Helgaas wrote:
-> > There is no way for a driver to say "I only need this memory BAR and
-> > not the other ones."  The reason is because the PCI_COMMAND_MEMORY bit
-> > enables *all* the memory BARs; there's no way to enable memory BARs
-> > selectively.  If we enable memory BARs and one of them is unassigned,
-> > that unassigned BAR is enabled, and the device will respond at
-> > whatever address the register happens to contain, and that may cause
-> > conflicts.
-> > 
-> > I'm not sure this answers your question.  Do you want to get rid of
-> > 32-bit BAR addresses because your host bridge doesn't have a window to
-> > 32-bit PCI addresses?  It's typical for a bridge to support a window
-> > to the 32-bit PCI space as well as one to the 64-bit PCI space.  Often
-> > it performs address translation for the 32-bit window so it doesn't
-> > have to be in the 32-bit area on the CPU side, e.g., you could have
-> > something like this where we have three host bridges and the 2-4GB
-> > space on each PCI root bus is addressable:
-> > 
-> >   pci_bus 0000:00: root bus resource [mem 0x1080000000-0x10ffffffff] (bus address [0x80000000-0xffffffff])
-> >   pci_bus 0001:00: root bus resource [mem 0x1180000000-0x11ffffffff] (bus address [0x80000000-0xffffffff])
-> >   pci_bus 0002:00: root bus resource [mem 0x1280000000-0x12ffffffff] (bus address [0x80000000-0xffffffff])
 > 
-> The problem is that according to PCI specification BAR addresses and
-> DMA addresses cannot overlap.
+> On 09/02/17 12:01, Bharat Kumar Gogada wrote:
+> >> On 06/02/17 07:03, Bharat Kumar Gogada wrote:
+> >>> +static struct irq_chip nwl_leg_irq_chip = {
+> >>> +	.name = "nwl_pcie:legacy",
+> >>> +	.irq_enable = nwl_unmask_leg_irq,
+> >>> +	.irq_disable = nwl_mask_leg_irq,
+> >>
+> >> You don't need these two if they are implemented in terms of mask/unmask.
+> >
+> > These are being invoked by some drivers other than interrupt flow.
+> > Ex: drivers/net/wireless/ath/ath9k/main.c
+> > static int ath_reset_internal(struct ath_softc *sc, struct
+> > ath9k_channel *hchan) {
+> >          ....
+> >          disable_irq(sc->irq);
+> >          tasklet_disable(&sc->intr_tq);
+> >         ...
+> >         ...
+> >         enable_irq(sc->irq);
+> >         spin_unlock_bh(&sc->sc_pcu_lock); } For us masking/unmasking
+> > is the way to enable/disable interrupts.
 > 
-> From PCI-to-PCI Bridge Arch. spec.: "A bridge forwards PCI memory
-> transactions from its primary interface to its secondary interface
-> (downstream) if a memory address is in the range defined by the
-> Memory Base and Memory Limit registers (when the base is less than
-> or equal to the limit) as illustrated in Figure 4-3. Conversely, a
-> memory transaction on the secondary interface that is within this
-> address range will not be forwarded upstream to the primary
-> interface."
+> And if you looked at the way disable_irq is implemented, you would have found
+> out that it falls back to masking if there is no disable method, preserving the
+> semantic you expect.
 > 
-> To be specific, if your DMA address happens to be in
-> [0x80000000-0xffffffff] and root port's aperture includes this
-> range; the DMA will never make to the system memory.
-> 
-> Lorenzo and Robin took some steps to carve out PCI addresses out of
-> DMA addresses in IOMMU drivers by using iova_reserve_pci_windows()
-> function.
-> 
-> However, I see that we are still exposed when the operating system
-> doesn't have any IOMMU driver and is using the SWIOTLB for instance. 
+Yes I did see, but this fall back requires extra "IRQ_DISABLE_UNLAZY" flag to be set to each virq. 
+ 
+Bharat
 
-Hmmm.  I guess SWIOTLB assumes there's no address translation in the
-DMA direction, right?  If there's no address translation in the PIO
-direction, PCI bus BAR addresses are identical to the CPU-side
-addresses.  In that case, there's no conflict because we already have
-to assign BARs so they never look like a system memory address.
 
-But if there *is* address translation in the PIO direction, we can
-have conflicts because the bridge can translate CPU-side PIO accesses
-to arbitrary PCI bus addresses.
-
-> The FW solution I'm looking at requires carving out some part of the
-> DDR from before OS boot so that OS doesn't reclaim that area for
-> DMA.
-
-If you want to reach system RAM, I guess you need to make sure you
-only DMA to bus addresses outside the host bridge windows, as you said
-above.  DMA inside the windows would be handled as peer-to-peer DMA.
-
-> I'm not very happy with this solution. I'm also surprised that there
-> is no generic solution in the kernel takes care of this for all root
-> ports regardless of IOMMU driver presence.
-
-The PCI core isn't really involved in allocating DMA addresses,
-although there definitely is the connection with PCI-to-PCI bridge
-windows that you mentioned.  I added IOMMU guys, who would know a lot
-more than I do.
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
