@@ -1,70 +1,66 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>, "bhelgaas@google.com"
- <bhelgaas@google.com>, "robh@kernel.org" <robh@kernel.org>,
- "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
- "colin.king@canonical.com" <colin.king@canonical.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v5] PCI: Xilinx NWL: Modifying irq chip for legacy
- interrupts
-Date: Thu, 9 Feb 2017 15:16:26 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263E6AF3@XAP-PVEXMBX02.xlnx.xilinx.com>
-References: <1486364596-19699-1-git-send-email-bharatku@xilinx.com>
- <4b04e834-08b6-a728-8fe5-13106d50b3b2@arm.com>
- <8520D5D51A55D047800579B094147198263E68AA@XAP-PVEXMBX02.xlnx.xilinx.com>
- <131228fb-d3f8-3836-3713-e948ed30d398@arm.com>
-In-Reply-To: <131228fb-d3f8-3836-3713-e948ed30d398@arm.com>
+Return-Path: <SRS0=k3+F=ZW=intel.com=ashok.raj@kernel.org>
+Return-Path: <SRS0=k3+F=ZW=intel.com=ashok.raj@kernel.org>
+Date: Thu, 9 Feb 2017 10:23:28 -0800
+From: "Raj, Ashok" <ashok.raj@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bart Van Assche <bart.vanassche@sandisk.com>,
+	Christoph Hellwig <hch@lst.de>, Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Keith Busch <keith.busch@intel.com>, ashok.raj@intel.com
+Subject: Re: [GIT PULL] PCI fixes for v4.10
+Message-ID: <20170209182328.GB77900@otc-nc-03>
+References: <20170208192054.GA31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170209040648.GA1304@wunner.de>
+ <20170209150950.GA11905@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ravikiran Gummaluri <rgummal@xilinx.com>, "arnd@arndb.de" <arnd@arndb.de>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "michal.simek@xilinx.com" <michal.simek@xilinx.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170209150950.GA11905@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-> 
-> On 09/02/17 12:01, Bharat Kumar Gogada wrote:
-> >> On 06/02/17 07:03, Bharat Kumar Gogada wrote:
-> >>> +static struct irq_chip nwl_leg_irq_chip = {
-> >>> +	.name = "nwl_pcie:legacy",
-> >>> +	.irq_enable = nwl_unmask_leg_irq,
-> >>> +	.irq_disable = nwl_mask_leg_irq,
-> >>
-> >> You don't need these two if they are implemented in terms of mask/unmask.
-> >
-> > These are being invoked by some drivers other than interrupt flow.
-> > Ex: drivers/net/wireless/ath/ath9k/main.c
-> > static int ath_reset_internal(struct ath_softc *sc, struct
-> > ath9k_channel *hchan) {
-> >          ....
-> >          disable_irq(sc->irq);
-> >          tasklet_disable(&sc->intr_tq);
-> >         ...
-> >         ...
-> >         enable_irq(sc->irq);
-> >         spin_unlock_bh(&sc->sc_pcu_lock); } For us masking/unmasking
-> > is the way to enable/disable interrupts.
-> 
-> And if you looked at the way disable_irq is implemented, you would have found
-> out that it falls back to masking if there is no disable method, preserving the
-> semantic you expect.
-> 
-Yes I did see, but this fall back requires extra "IRQ_DISABLE_UNLAZY" flag to be set to each virq. 
- 
-Bharat
+Thanks Bjorn,
 
+With the fixes below, managed add remove via sysfs seems to work on my
+SKX system. 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I'm not familiar with runtime PM aspects, just started looking into it 
+after this one. There seems some interactions with ASPM and how we handle 
+devices that support ARI for e.g.
+
+For hotplug, we have a good set of tests to check coverage. That matrix
+might need to be expanded for runtime PM interactions.
+
+Cheers,
+Ashok
+
+On Thu, Feb 09, 2017 at 09:09:50AM -0600, Bjorn Helgaas wrote:
+> [+cc Ashok, Keith]
+> 
+> > 
+> > https://patchwork.kernel.org/patch/9557113/
+> > https://patchwork.kernel.org/patch/9562007/
+> 
+> I don't think we've gotten to the root cause of the problem yet,
+> and I don't want to throw in fixes at the last minute without a better
+> understanding of it.
+> 
+> PCIe hotplug hardware is not very complicated, it hasn't changed in
+> many years, and at least for the Intel hardware in question, is
+> generally pretty well-tested with Windows.  So I want to be careful
+> about asserting that this new piece of hardware is broken.
+> 
+> I think pciehp is unnecessarily complicated, and we do have known
+> synchronization issues with it, e.g., [1] [2].  It seems possible that
+> if we poked a little deeper, we would find that the hardware is
+> actually working correctly and the real problem is in pciehp.
+> 
+> That's why I've been trying to have a conversation about how we
+> interpret the spec and how we could remove PM and pciehp from the
+> picture and experiment directly with setpci.
+> 
+> [1] https://lkml.kernel.org/r/1481317564-18045-1-git-send-email-ashok.raj@intel.com
+> [2] https://bugzilla.kernel.org/show_bug.cgi?id=117561
