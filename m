@@ -1,13 +1,23 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH 02/20] PCI: fix pci_remap_iospace() remap attribute
-Date: Mon, 27 Feb 2017 15:14:13 +0000
-Message-Id: <20170227151436.18698-3-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
-References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v5] PCI: Xilinx NWL: Modifying irq chip for legacy
+ interrupts
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "robh@kernel.org" <robh@kernel.org>,
+ "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
+ "colin.king@canonical.com" <colin.king@canonical.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <1486364596-19699-1-git-send-email-bharatku@xilinx.com>
+ <4b04e834-08b6-a728-8fe5-13106d50b3b2@arm.com>
+ <8520D5D51A55D047800579B094147198263E68AA@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <131228fb-d3f8-3836-3713-e948ed30d398@arm.com>
+ <8520D5D51A55D047800579B094147198263E6AF3@XAP-PVEXMBX02.xlnx.xilinx.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <2196f028-b834-9d32-cc3a-e3eb5ed6c3b1@arm.com>
+Date: Thu, 9 Feb 2017 16:03:14 +0000
+MIME-Version: 1.0
+In-Reply-To: <8520D5D51A55D047800579B094147198263E6AF3@XAP-PVEXMBX02.xlnx.xilinx.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,77 +25,55 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- linux-arch@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-MIME-Version: 1.0
+Cc: Ravikiran Gummaluri <rgummal@xilinx.com>, "arnd@arndb.de" <arnd@arndb.de>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "michal.simek@xilinx.com" <michal.simek@xilinx.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to the PCI local bus specifications (Revision 3.0, 3.2.5),
-I/O Address space transactions are non-posted. On architectures where
-I/O space is implemented through a chunk of memory mapped space mapped
-to PCI address space (ie IA64/ARM/ARM64) the memory mapping for the
-region backing I/O Address Space transactions determines the I/O
-transactions attributes (before the transactions actually reaches the
-PCI bus where it is handled according to the PCI specifications).
+On 09/02/17 15:16, Bharat Kumar Gogada wrote:
+>>
+>> On 09/02/17 12:01, Bharat Kumar Gogada wrote:
+>>>> On 06/02/17 07:03, Bharat Kumar Gogada wrote:
+>>>>> +static struct irq_chip nwl_leg_irq_chip = {
+>>>>> +	.name = "nwl_pcie:legacy",
+>>>>> +	.irq_enable = nwl_unmask_leg_irq,
+>>>>> +	.irq_disable = nwl_mask_leg_irq,
+>>>>
+>>>> You don't need these two if they are implemented in terms of mask/unmask.
+>>>
+>>> These are being invoked by some drivers other than interrupt flow.
+>>> Ex: drivers/net/wireless/ath/ath9k/main.c
+>>> static int ath_reset_internal(struct ath_softc *sc, struct
+>>> ath9k_channel *hchan) {
+>>>          ....
+>>>          disable_irq(sc->irq);
+>>>          tasklet_disable(&sc->intr_tq);
+>>>         ...
+>>>         ...
+>>>         enable_irq(sc->irq);
+>>>         spin_unlock_bh(&sc->sc_pcu_lock); } For us masking/unmasking
+>>> is the way to enable/disable interrupts.
+>>
+>> And if you looked at the way disable_irq is implemented, you would have found
+>> out that it falls back to masking if there is no disable method, preserving the
+>> semantic you expect.
+>>
+> Yes I did see, but this fall back requires extra "IRQ_DISABLE_UNLAZY" flag to be set to each virq. 
 
-Current pci_remap_iospace() interface, that is used to map the PCI I/O
-Address Space into virtual address space, use pgprot_device() as memory
-attribute for the virtual address mapping, that in some architectures
-(ie ARM64) provides non-cacheable but write bufferable mappings (ie
-posted writes), which clash with the non-posted write behaviour for I/O
-Address Space mandated by the PCI specifications.
+No it doesn't. If you do a disable_irq(), the interrupt is flagged as
+disabled, but nothing gets done. If an interrupt actually fires, then
+the interrupts gets masked, and the handler is not called.
 
-Update the prot ioremap_page_range() parameter in pci_remap_iospace()
-to pgprot_noncached to ensure that the virtual mapping backing
-I/O Address Space guarantee non-posted write transactions issued
-when addressing I/O Address Space through the MMIO mapping.
+So just drop these two methods, because if this doesn't work, you have
+bigger issues.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index bd98674..bfb3c6e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3375,7 +3375,7 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
- 		return -EINVAL;
- 
- 	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
--				  pgprot_device(PAGE_KERNEL));
-+				  pgprot_noncached(PAGE_KERNEL));
- #else
- 	/* this architecture does not have memory mapped I/O space,
- 	   so this function should never be called */
+	M.
 -- 
-2.10.0
-
+Jazz is not dead. It just smells funny...
 
 _______________________________________________
 linux-arm-kernel mailing list
