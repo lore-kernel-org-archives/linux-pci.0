@@ -1,78 +1,38 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:49294 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933655AbdBQJv6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2017 04:51:58 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <nsekhar@ti.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2 10/22] PCI: dwc: dra7xx: Facilitate wrapper and msi interrupts to be enabled independently
-Date: Fri, 17 Feb 2017 15:20:30 +0530
-Message-ID: <1487325042-28227-11-git-send-email-kishon@ti.com>
-In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+Received: from mail-it0-f42.google.com ([209.85.214.42]:36415 "EHLO
+        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752159AbdBIPPp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Feb 2017 10:15:45 -0500
+Received: by mail-it0-f42.google.com with SMTP id c7so127182394itd.1
+        for <linux-pci@vger.kernel.org>; Thu, 09 Feb 2017 07:15:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: rupert THURNER <rupert.thurner@gmail.com>
+Date: Thu, 9 Feb 2017 15:45:01 +0100
+Message-ID: <CAJs9aZ9FqU-NCj2egBp6J06uD_Qp3Lje=mSSVbV4vNcYGKdumA@mail.gmail.com>
+Subject: linux <=4.9.5, 4.10-rc7 ok, 4.9.6 - 4.9.8 nok with realtek wlan, atom
+To: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change. Split dra7xx_pcie_enable_interrupts into
-dra7xx_pcie_enable_wrapper_interrupts and dra7xx_pcie_enable_msi_interrupts
-so that wrapper interrupts and msi interrupts can be enabled independently.
-This is in preparation for adding EP mode support to dra7xx driver since
-EP mode doesn't have to enable msi_interrupts.
+hi,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c |   24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+not technical expert enough, i just wanted to give a short user
+feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
+kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
+well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
+hotspot is possible then drops, or connecting to wlan fails
+alltogether.
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index c6fef0a..8d2d02f 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -140,18 +140,30 @@ static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
- 	return dw_pcie_wait_for_link(pci);
- }
- 
--static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
-+static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
- {
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
--			   ~INTERRUPTS);
--	dra7xx_pcie_writel(dra7xx,
--			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
- 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
- 			   ~LEG_EP_INTERRUPTS & ~MSI);
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
-+
-+	dra7xx_pcie_writel(dra7xx,
-+			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
- 			   MSI | LEG_EP_INTERRUPTS);
- }
- 
-+static void dra7xx_pcie_enable_wrapper_interrupts(struct dra7xx_pcie *dra7xx)
-+{
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
-+			   ~INTERRUPTS);
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN,
-+			   INTERRUPTS);
-+}
-+
-+static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
-+{
-+	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
-+	dra7xx_pcie_enable_msi_interrupts(dra7xx);
-+}
-+
- static void dra7xx_pcie_host_init(struct pcie_port *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--- 
-1.7.9.5
+24: PCI 300.0: 0282 WLAN controller
+  [Created at pci.366]
+  Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
+  Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
+  Revision: 0x01
+  Driver: "rtl8192ce"
+  Driver Modules: "rtl8192ce"
+  Device File: wlp3s0
+  Features: WLAN
+
+best
+rupert
