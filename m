@@ -1,45 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43412 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751567AbdBBO0w (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Feb 2017 09:26:52 -0500
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>, mstowe@redhat.com,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH] PCI/MSI: Fix msi_desc->affinity memory leak when freeing MSI IRQs.
-Date: Thu,  2 Feb 2017 09:26:44 -0500
-Message-Id: <1486045604-17735-1-git-send-email-prarit@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 9 Feb 2017 14:11:54 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bart Van Assche <bart.vanassche@sandisk.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Yinghai Lu <yinghai@kernel.org>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: Re: [GIT PULL] PCI fixes for v4.10
+Message-ID: <20170209201154.GA22458@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170208192054.GA31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170209040648.GA1304@wunner.de>
+ <20170209150950.GA11905@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170209150950.GA11905@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During device setup, msix_setup_entries() and msi_setup_entry() allocate
-msi_desc by calling alloc_msi_entry().  alloc_msi_entry() can also allocate a
-affinity cpumask.  During device teardown free_msi_irqs() is called and the
-msi_desc is freed, but the affinity cpumask is leaked.
+On Thu, Feb 09, 2017 at 09:09:50AM -0600, Bjorn Helgaas wrote:
+> [+cc Ashok, Keith]
+> 
+> On Thu, Feb 09, 2017 at 05:06:48AM +0100, Lukas Wunner wrote:
+> > On Wed, Feb 08, 2017 at 01:22:56PM -0600, Bjorn Helgaas wrote:
+> > > Bjorn Helgaas (1):
+> > >       Revert "PCI: pciehp: Add runtime PM support for PCIe hotplug ports"
+> > 
+> > What's the rationale for reverting this?
+> > 
+> > You've received patches to fix the issue on both affected machines,
+> > so a revert seems unnecessary:
+> > 
+> > https://patchwork.kernel.org/patch/9557113/
+> > https://patchwork.kernel.org/patch/9562007/
+> 
+> I don't think we've gotten to the root cause of the problem yet,
+> and I don't want to throw in fixes at the last minute without a better
+> understanding of it.
+> 
+> PCIe hotplug hardware is not very complicated, it hasn't changed in
+> many years, and at least for the Intel hardware in question, is
+> generally pretty well-tested with Windows.  So I want to be careful
+> about asserting that this new piece of hardware is broken.
 
-Fix it by calling free_msi_entry() which frees both the msi_desc and the
-affinity cpumask.
+I apologize: I had quirks on the brain, but neither of the patches
+above is device-specific.  So neither is claiming broken hardware.
 
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
-Cc: mstowe@redhat.com
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/msi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+However, 9557113 claims we get unwanted PME interrupts if the slot is
+occupied when we suspend to D3hot.  This is what I want to explore
+further, because that hardware behavior doesn't really make sense to
+me.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 50c5003295ca..3d709311052d 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -379,7 +379,7 @@ static void free_msi_irqs(struct pci_dev *dev)
- 		}
- 
- 		list_del(&entry->list);
--		kfree(entry);
-+		free_msi_entry(entry);
- 	}
- 
- 	if (dev->msi_irq_groups) {
--- 
-1.7.9.3
+9562007 apparently fixes something, but at this point it's a debugging
+patch (no changelog or signed-off-by) so not a candidate for tossing
+into v4.10 at this late date.
+
+Bjorn
