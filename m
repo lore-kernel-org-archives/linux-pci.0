@@ -1,80 +1,29 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55980 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751229AbdBJWDb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Feb 2017 17:03:31 -0500
-Date: Fri, 10 Feb 2017 16:03:27 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Jason Cooper <jason@lakedaemon.net>, linux-pci@vger.kernel.org,
-        kernel@pengutronix.de, patchwork-lst@pengutronix.de
-Subject: Re: [PATCH v2] PCI: mvebu: change delay after reset to the PCIe spec
- mandated 100ms
-Message-ID: <20170210220327.GS29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170202171531.11079-1-l.stach@pengutronix.de>
+Return-Path: <SRS0=kEDy=ZW=bombadil.srs.infradead.org=BATV+0bef769f1c4d4d9eae97+4918+infradead.org+hch@kernel.org>
+Return-Path: <SRS0=kEDy=ZW=bombadil.srs.infradead.org=BATV+0bef769f1c4d4d9eae97+4918+infradead.org+hch@kernel.org>
+Date: Wed, 8 Feb 2017 23:19:56 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Jon Mason <jon.mason@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
+	=?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
+	devel@linuxdriverproject.org,
+	"K. Y. Srinivasan" <kys@microsoft.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH v1 1/3] PCI: xilinx: Configure PCIe MPS settings
+Message-ID: <20170209071956.GA21656@infradead.org>
+References: <20170208224632.14351.89895.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170208224930.14351.91597.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170202171531.11079-1-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170208224930.14351.91597.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 02, 2017 at 06:15:31PM +0100, Lucas Stach wrote:
-> The current default of 20ms cause some devices, which are slow to initialize,
-> to not show up during the bus scanning. Change this to the PCIe spec mandated
-> 100ms and document this in the DT binding.
-> 
-> From PCIe base spec rev 3.0, chapter "6.6.1. Conventional Reset":
-> 
-> "To allow components to perform internal initialization, system software must
-> wait a specified minimum period following the end of a Conventional Reset of
-> one or more devices before it is permitted to issue Configuration Requests to
-> those devices.
-> 
-> With a Downstream Port that does not support Link speeds greater than
-> 5.0 GT/s, software must wait a minimum of 100 ms before sending a
-> Configuration Request to the device immediately below that Port."
-> 
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> Acked-by: Jason Cooper <jason@lakedaemon.net>
+On Wed, Feb 08, 2017 at 04:49:30PM -0600, Bjorn Helgaas wrote:
+> +	list_for_each_entry(child, &bus->children, node)
+> +		pcie_bus_configure_settings(child);
 
-Applied to pci/host-mvebu for v4.11, thanks, Lucas!
-
-> ---
-> v2: use PCI_PM_D3COLD_WAIT define
-> ---
->  Documentation/devicetree/bindings/pci/mvebu-pci.txt | 3 ++-
->  drivers/pci/host/pci-mvebu.c                        | 2 +-
->  2 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/mvebu-pci.txt b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> index 08c716b2c6b6..2de6f65ecfb1 100644
-> --- a/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> +++ b/Documentation/devicetree/bindings/pci/mvebu-pci.txt
-> @@ -78,7 +78,8 @@ and the following optional properties:
->    multiple lanes. If this property is not found, we assume that the
->    value is 0.
->  - reset-gpios: optional gpio to PERST#
-> -- reset-delay-us: delay in us to wait after reset de-assertion
-> +- reset-delay-us: delay in us to wait after reset de-assertion, if not
-> +  specified will default to 100ms, as required by the PCIe specification.
->  
->  Example:
->  
-> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
-> index 45a89d969700..3629ef7c714d 100644
-> --- a/drivers/pci/host/pci-mvebu.c
-> +++ b/drivers/pci/host/pci-mvebu.c
-> @@ -1162,7 +1162,7 @@ static int mvebu_pcie_powerup(struct mvebu_pcie_port *port)
->  		return ret;
->  
->  	if (port->reset_gpio) {
-> -		u32 reset_udelay = 20000;
-> +		u32 reset_udelay = PCI_PM_D3COLD_WAIT * 1000;
->  
->  		of_property_read_u32(port->dn, "reset-delay-us",
->  				     &reset_udelay);
-> -- 
-> 2.11.0
-> 
+This loop is duplicated in just about every driver, so it it
+might be a good idea to provide a littler helper for it.
