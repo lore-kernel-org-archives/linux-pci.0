@@ -1,48 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54510 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751510AbdB0PPd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Feb 2017 10:15:33 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Wei Zhang <wzhang@fb.com>
+To: Logan Gunthorpe <logang@deltatee.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH 09/20] PCI: xilinx-nwl: update PCI config space remap function
-Date: Mon, 27 Feb 2017 15:14:20 +0000
-Message-Id: <20170227151436.18698-10-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
-References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Krishna Dhulipala <krishnad@fb.com>
+CC: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
+Date: Thu, 9 Feb 2017 23:46:03 +0000
+Message-ID: <D01CA43B-A973-4407-AFE1-4729F8F8C13F@fb.com>
+References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
+ <B0BD08E8-442E-4FBF-AF52-7AC0A7CA092C@fb.com>
+In-Reply-To: <B0BD08E8-442E-4FBF-AF52-7AC0A7CA092C@fb.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_pci_remap_cfg* interface to make sure the correct
-memory mappings for PCI configuration space are used.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
----
- drivers/pci/host/pcie-xilinx-nwl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 4c3e0ab..4b16b26 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -761,7 +761,7 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
- 	pcie->phys_pcie_reg_base = res->start;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
--	pcie->ecam_base = devm_ioremap_resource(dev, res);
-+	pcie->ecam_base = devm_pci_remap_cfg_resource(dev, res);
- 	if (IS_ERR(pcie->ecam_base))
- 		return PTR_ERR(pcie->ecam_base);
- 	pcie->phys_ecam_base = res->start;
--- 
-2.10.0
+Q29ycmVjdGlvbnMgdG8gdGhlIGVtYWlsIGJlbG93LiAgSXQgc2hvdWxkIGJlDQoNCiAgICBUZXN0
+ZWQtYnk6IEtyaXNobmEgRGh1bGlwYWxhIGtyaXNobmFkQGZiLmNvbQ0KICAgIFJldmlld2VkLWJ5
+OiBXZWkgWmhhbmcgd3poYW5nQGZiLmNvbSAgDQoNClRoYW5rcywNCi1XZWkNCg0KLS0NCndlaSB6
+aGFuZyB8IHNvZnR3YXJlIGVuZ2luZWVyIHwgZmFjZWJvb2sNCnd6aGFuZ0BmYi5jb20gfCAoNDA4
+KSA0NjAtNDgwMw0KDQpPbiAyLzkvMTcsIDM6MTYgUE0sICJXZWkgWmhhbmciIDx3emhhbmdAZmIu
+Y29tPiB3cm90ZToNCg0KICAgIEhpLA0KICAgIA0KICAgIFRoZSBzd2l0Y2h0ZWMgZHJpdmVyIHBh
+dGNoZXMgW1BBVENIIHYyICgwLTQpLzRdIGluIGNvbmp1bmN0aW9uIHdpdGggdGhlIHN3aXRjaHRl
+YyB1c2VybGFuZCB0b29sIGlzIHVzZWQgdG8gY29tbXVuaWNhdGUgd2l0aCB0aGUgTWljcm9zZW1p
+IDg1MzYgUENJZSBTd2l0Y2ggdXNlZCBvbiBGYWNlYm9va+KAmXMgTGlnaHRuaW5nIHBsYXRmb3Jt
+LiBUaGUgZm9sbG93aW5nIGVzc2VudGlhbCBkcml2ZXIgYW5kIHRvb2wgZnVuY3Rpb25zIHdlcmUg
+c3VjY2Vzc2Z1bGx5IHRlc3RlZCB3aXRoIGl0Og0KICAgIMK3ICAgICAgICAgUmV0cmlldmFsIG9m
+IGZpcm13YXJlIGFuZCBjb25maWd1cmF0aW9uIGluZm9ybWF0aW9uIGFsb25nIHdpdGggQ1JDcw0K
+ICAgIMK3ICAgICAgICAgU3dpdGNoIGZpcm13YXJlIGFuZCBjb25maWd1cmF0aW9uIHVwZ3JhZGVz
+DQogICAgwrcgICAgICAgICBTd2l0Y2ggUEhZL0xpbmsgZXJyb3IgY291bnRlciBjb2xsZWN0aW9u
+IGFuZCB0aGUgYWJpbGl0eSB0byByZXNldCB0aGVtDQogICAgwrcgICAgICAgICBTd2l0Y2ggdXBz
+dHJlYW0gYW5kIGRvd25zdHJlYW0gcG9ydHPigJkgbGluayBzdGF0dXMgcmVwb3J0aW5nDQogICAg
+wrcgICAgICAgICBTd2l0Y2ggaW50ZXJmYWNlIGZ1bmN0aW9uaW5nDQogICAgwrcgICAgICAgICBS
+ZXRyaWV2YWwgb2Ygc3dpdGNoIEFTSUMgdGVtcGVyYXR1cmUNCiAgICDCtyAgICAgICAgIEV4cG9y
+dGluZyBzd2l0Y2ggZmlybXdhcmUgbG9nIGR1bXANCiAgICDCtyAgICAgICAgIFJlYWQgdGhlIGlu
+Zm9ybWF0aW9uIG9mIGZpcm13YXJlIGFuZCBjb25maWd1cmF0aW9uIGJpbmFyaWVzDQogICAgwrcg
+ICAgICAgICBFeHRyYWN0IHRoZSBmaXJtd2FyZSBhbmQgY29uZmlndXJhdGlvbiBpbWFnZXMgc3Rv
+cmVkIGluIHRoZSBzd2l0Y2ggRUVQUk9NDQogICAgDQogICAgVGVzdGVkLWJ5OiBLcmlzaG5hIERo
+dWxpcGFsYSBrcmlzaG5hZEBmYi5jb20NCiAgICBSZXZpZXdlZC1ieTogV2VpIFpoYW5nIHd6aGFu
+Z0BmYi5jb20gIA0KICAgIA0KICAgIFRoYW5rcywNCiAgICAtV2VpDQogICAgDQogICAgLS0NCiAg
+ICB3ZWkgemhhbmcgfCBzb2Z0d2FyZSBlbmdpbmVlciB8IGZhY2Vib29rDQogICAgd3poYW5nQGZi
+LmNvbSB8ICg0MDgpIDQ2MC00ODAzDQogICAgDQogICAgT24gMi8yLzE3LCAxMDowNSBBTSwgIkxv
+Z2FuIEd1bnRob3JwZSIgPGxvZ2FuZ0BkZWx0YXRlZS5jb20+IHdyb3RlOg0KICAgIA0KICAgICAg
+ICBDaGFuZ2VzIHNpbmNlIHYxOg0KICAgICAgICANCiAgICAgICAgKiBSZWJhc2VkIG9udG8gNC4x
+MC1yYzYgKGNsZWFubHkpDQogICAgICAgICogU3BsaXQgdGhlIHBhdGNoIGludG8gYSBmZXcgbW9y
+ZSBlYXNpbHkgZGlnZXN0aWJsZSBwYXRjaGVzIChhcw0KICAgICAgICAgIHN1Z2dlc3RlZCBieSBH
+cmVnIEtyb2FoLUhhcnRtYW4pDQogICAgICAgICogRm9sZGVkIHN3aXRjaHRlYy5jIGludG8gc3dp
+dGNodGVjLmggKHBlciBHcmVnKQ0KICAgICAgICAqIEZpeGVkIGEgYnVuY2ggb2YgMzJiaXQgYnVp
+bGQgd2FybmluZ3MgY2F1Z2h0IGJ5IHRoZSBrYnVpbGQgdGVzdCByb2JvdA0KICAgICAgICAqIEZp
+eGVkIHNvbWUgaXNzdWVzIGluIHRoZSBkb2N1bWVudGF0aW9uIHNvIGl0IGhhcyBhIHByb3Blcg0K
+ICAgICAgICAgIHJlU3RydWN0cmVkVGV4dCBmb3JtYXQgKGFzIG5vdGVkIGJ5IEpvbmF0aGFuIENv
+cmJldCkNCiAgICAgICAgKiBGaXhlZCBwYWRkaW5nIGFuZCBzaXplcyBpbiB0aGUgSU9DVEwgc3Ry
+dWN0dXJlcyBhcyBub3RpY2VkIGJ5IEVtaWwNCiAgICAgICAgICBWZWxpa292IGFuZCB1c2VkIHBh
+aG9sZSB0byB2ZXJpZnkgdGhlaXIgY29uc2lzdGVuY3kgYWNyb3NzIDMyIGFuZCA2NA0KICAgICAg
+ICAgIGJpdCBidWlsZHMNCiAgICAgICAgKiBSZXdvcmtlZCBvbmUgb2YgdGhlIElPQ1RMIGludGVy
+ZmFjZXMgdG8gYmUgbW9yZSBmdXR1cmUgcHJvb2YgKHBlcg0KICAgICAgICAgIEVtaWwpLg0KICAg
+ICAgICANCiAgICAgICAgQ2hhbmdlcyBzaW5jZSBSRkM6DQogICAgICAgIA0KICAgICAgICAqIEZp
+eGVkIGluY29ycmVjdCB1c2Ugb2YgdGhlIGRyaXZlIG1vZGVsIGFzIHBvaW50ZWQgb3V0IGJ5IEdy
+ZWcNCiAgICAgICAgICBLcm9haC1IYXJ0bWFuDQogICAgICAgICogVXNlZCBkZXZtIGZ1bmN0aW9u
+cyBhcyBzdWdnZXN0ZWQgYnkgS2VpdGggQnVzY2gNCiAgICAgICAgKiBBZGRlZCBhIGhhbmRmdWwg
+b2Ygc3lzZnMgYXR0cmlidXRlcyB0byB0aGUgc3dpdGNodGVjIGNsYXNzDQogICAgICAgICogQWRk
+ZWQgYSBoYW5kZnVsIG9mIElPQ1RMcyB0byB0aGUgc3dpdGNodGVjIGRldmljZQ0KICAgICAgICAq
+IEEgbnVtYmVyIG9mIG1pc2NlbGxhbmVvdXMgYnVnIGZpeGVzDQogICAgICAgIA0KICAgICAgICAt
+LQ0KICAgICAgICANCiAgICAgICAgSGksDQogICAgICAgIA0KICAgICAgICBUaGlzIGlzIGEgY29u
+dGludWF0aW9uIG9mIHRoZSBSRkMgd2UgcG9zdGVkIGxhc3RlZCBtb250aCBbMV0gd2hpY2gNCiAg
+ICAgICAgcHJvcG9zZXMgYSBtYW5hZ2VtZW50IGRyaXZlciBmb3IgTWljcm9zZW1pJ3MgU3dpdGNo
+dGVjIGxpbmUgb2YgUENJDQogICAgICAgIHN3aXRjaGVzLiBUaGlzIGhhcmR3YXJlIGlzIHN0aWxs
+IGxvb2tpbmcgdG8gYmUgdXNlZCBpbiB0aGUgT3Blbg0KICAgICAgICBDb21wdXRlIFBsYXRmb3Jt
+DQogICAgICAgIA0KICAgICAgICBUbyBtYWtlIHRoaXMgZW50aXJlbHkgY2xlYXI6IHRoZSBTd2l0
+Y2h0ZWMgcHJvZHVjdHMgYXJlIGNvbXBsaWFudA0KICAgICAgICB3aXRoIHRoZSBQQ0kgc3BlY2lm
+aWNhdGlvbnMgYW5kIGFyZSBzdXBwb3J0ZWQgdG9kYXkgd2l0aCB0aGUgc3RhbmRhcmQNCiAgICAg
+ICAgaW4ta2VybmVsIGRyaXZlci4gSG93ZXZlciwgdGhlc2UgZGV2aWNlcyBhbHNvIGV4cG9zZSBh
+IG1hbmFnZW1lbnQgZW5kcG9pbnQNCiAgICAgICAgb24gYSBzZXBhcmF0ZSBQQ0kgZnVuY3Rpb24g
+YWRkcmVzcyB3aGljaCBjYW4gYmUgdXNlZCB0byBwZXJmb3JtIHNvbWUNCiAgICAgICAgYWR2YW5j
+ZWQgb3BlcmF0aW9ucy4gVGhpcyBpcyBhIGRyaXZlciBmb3IgdGhhdCBmdW5jdGlvbi4gU2VlIHRo
+ZSBwYXRjaA0KICAgICAgICBmb3IgbW9yZSBpbmZvcm1hdGlvbi4NCiAgICAgICAgDQogICAgICAg
+IFNpbmNlIHRoZSBSRkMsIHdlJ3ZlIG1hZGUgdGhlIGNoYW5nZXMgcmVxdWVzdGVkIGJ5IEdyZWcg
+S3JvYWgtSGFydG1hbg0KICAgICAgICBhbmQgS2VpdGggQnVzY2gsIGFuZCB3ZSd2ZSBhbHNvIGZs
+ZXNoZWQgb3V0IGEgbnVtYmVyIG9mIGZlYXR1cmVzLiBXZSd2ZQ0KICAgICAgICBhZGRlZCBhIGNv
+dXBsZSBvZiBJT0NUTHMgYW5kIHN5c2ZzIGF0dHJpYnV0ZXMgd2hpY2ggYXJlIGRvY3VtZW50ZWQg
+aW4NCiAgICAgICAgdGhlIHBhdGNoLiBTaWduaWZpY2FudCB3b3JrIGhhcyBhbHNvIGJlZW4gZG9u
+ZSBvbiB0aGUgdXNlcnNwYWNlIHRvb2wNCiAgICAgICAgd2hpY2ggaXMgYXZhaWxhYmxlIHVuZGVy
+IGEgR1BMIGxpY2Vuc2UgYXQgWzJdLiBXZSd2ZSBhbHNvIGhhZCB0ZXN0aW5nDQogICAgICAgIGRv
+bmUgYnkgc29tZSBvZiB0aGUgaW50ZXJlc3RlZCBwYXJ0aWVzLg0KICAgICAgICANCiAgICAgICAg
+V2UgaG9wZSB0byBzZWUgdGhpcyB3b3JrIGluY2x1ZGVkIGluIGVpdGhlciA0LjExIG9yIDQuMTIg
+YXNzdW1pbmcgYQ0KICAgICAgICBzbW9vdGggcmV2aWV3IHByb2Nlc3MuDQogICAgICAgIA0KICAg
+ICAgICBUaGUgcGF0Y2ggaXMgYmFzZWQgb2ZmIG9mIHRoZSB2NC4xMC1yYzYgcmVsZWFzZS4NCiAg
+ICAgICAgDQogICAgICAgIFRoYW5rcyBmb3IgeW91ciByZXZpZXcsDQogICAgICAgIA0KICAgICAg
+ICBMb2dhbg0KICAgICAgICANCiAgICAgICAgWzFdIGh0dHBzOi8vdXJsZGVmZW5zZS5wcm9vZnBv
+aW50LmNvbS92Mi91cmw/dT1odHRwcy0zQV9fd3d3LnNwaW5pY3MubmV0X2xpc3RzX2xpbnV4LTJE
+cGNpX21zZzU2ODk3Lmh0bWwmZD1Ed0lCQWcmYz01VkQwUlR0TmxUaDN5Y2Q0MWIzTVV3JnI9TFJG
+b0xsOTJ6V2o1bWtna2NfaFJjZyZtPVZMREJKcXpvdHpHa1RqOC14amxmVC1KMGsydUZxNkZjV2cy
+bkFfb0tZSm8mcz1Pa2lnSG9TcUgxWjNkbm1McU43NmxJUV9XeFJKRGoxdXFJRGwzNVNJNThBJmU9
+IA0KICAgICAgICBbMl0gaHR0cHM6Ly9naXRodWIuY29tL3NiYXRlczEzMDI3Mi9zd2l0Y2h0ZWMt
+dXNlcg0KICAgICAgICANCiAgICAgICAgLS0NCiAgICAgICAgDQogICAgICAgIExvZ2FuIEd1bnRo
+b3JwZSAoNCk6DQogICAgICAgICAgTWljcm9TZW1pIFN3aXRjaHRlYyBtYW5hZ2VtZW50IGludGVy
+ZmFjZSBkcml2ZXINCiAgICAgICAgICBzd2l0Y2h0ZWM6IEFkZCB1c2VyIGludGVyZmFjZSBkb2N1
+bWVudGF0aW9uDQogICAgICAgICAgc3dpdGNodGVjOiBBZGQgc3lzZnMgYXR0cmlidXRlcyB0byB0
+aGUgU3dpdGNodGVjIGRyaXZlcg0KICAgICAgICAgIHN3aXRjaHRlYzogQWRkIElPQ1RMcyB0byB0
+aGUgU3dpdGNodGVjIGRyaXZlcg0KICAgICAgICANCiAgICAgICAgIERvY3VtZW50YXRpb24vQUJJ
+L3Rlc3Rpbmcvc3lzZnMtY2xhc3Mtc3dpdGNodGVjIHwgICA5NiArKw0KICAgICAgICAgRG9jdW1l
+bnRhdGlvbi9pb2N0bC9pb2N0bC1udW1iZXIudHh0ICAgICAgICAgICAgfCAgICAxICsNCiAgICAg
+ICAgIERvY3VtZW50YXRpb24vc3dpdGNodGVjLnR4dCAgICAgICAgICAgICAgICAgICAgIHwgICA4
+MCArKw0KICAgICAgICAgTUFJTlRBSU5FUlMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgfCAgIDExICsNCiAgICAgICAgIGRyaXZlcnMvcGNpL0tjb25maWcgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgIHwgICAgMSArDQogICAgICAgICBkcml2ZXJzL3BjaS9NYWtlZmlsZSAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgIDEgKw0KICAgICAgICAgZHJpdmVycy9wY2kv
+c3dpdGNoL0tjb25maWcgICAgICAgICAgICAgICAgICAgICAgfCAgIDEzICsNCiAgICAgICAgIGRy
+aXZlcnMvcGNpL3N3aXRjaC9NYWtlZmlsZSAgICAgICAgICAgICAgICAgICAgIHwgICAgMSArDQog
+ICAgICAgICBkcml2ZXJzL3BjaS9zd2l0Y2gvc3dpdGNodGVjLmMgICAgICAgICAgICAgICAgICB8
+IDE2MDggKysrKysrKysrKysrKysrKysrKysrKysNCiAgICAgICAgIGluY2x1ZGUvdWFwaS9saW51
+eC9zd2l0Y2h0ZWNfaW9jdGwuaCAgICAgICAgICAgIHwgIDEzMiArKw0KICAgICAgICAgMTAgZmls
+ZXMgY2hhbmdlZCwgMTk0NCBpbnNlcnRpb25zKCspDQogICAgICAgICBjcmVhdGUgbW9kZSAxMDA2
+NDQgRG9jdW1lbnRhdGlvbi9BQkkvdGVzdGluZy9zeXNmcy1jbGFzcy1zd2l0Y2h0ZWMNCiAgICAg
+ICAgIGNyZWF0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL3N3aXRjaHRlYy50eHQNCiAgICAg
+ICAgIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3BjaS9zd2l0Y2gvS2NvbmZpZw0KICAgICAg
+ICAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvcGNpL3N3aXRjaC9NYWtlZmlsZQ0KICAgICAg
+ICAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvcGNpL3N3aXRjaC9zd2l0Y2h0ZWMuYw0KICAg
+ICAgICAgY3JlYXRlIG1vZGUgMTAwNjQ0IGluY2x1ZGUvdWFwaS9saW51eC9zd2l0Y2h0ZWNfaW9j
+dGwuaA0KICAgICAgICANCiAgICAgICAgLS0NCiAgICAgICAgMi4xLjQNCiAgICAgICAgDQogICAg
+DQogICAgDQoNCg0KDQo=
