@@ -1,112 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 10 Feb 2017 14:25:36 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54182 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753702AbdBITvy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Feb 2017 14:51:54 -0500
+Date: Thu, 9 Feb 2017 13:43:21 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Subject: Re: [PATCH] PCI: Xilinx NWL: Remove mask for messages not supported
- by AXI
-Message-ID: <20170210202536.GI29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <1485853170-31940-1-git-send-email-bharatku@xilinx.com>
+To: rupert THURNER <rupert.thurner@gmail.com>
+Cc: linux-pci@vger.kernel.org,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Chaoming Li <chaoming_li@realsil.com.cn>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: linux <=4.9.5, 4.10-rc7 ok, 4.9.6 - 4.9.8 nok with realtek wlan,
+ atom
+Message-ID: <20170209194321.GC11905@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAJs9aZ9FqU-NCj2egBp6J06uD_Qp3Lje=mSSVbV4vNcYGKdumA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1485853170-31940-1-git-send-email-bharatku@xilinx.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: robh@kernel.org, arnd@arndb.de, marc.zyngier@arm.com,
- linux-pci@vger.kernel.org, michal.simek@xilinx.com,
- linux-kernel@vger.kernel.org, Bharat Kumar Gogada <bharatku@xilinx.com>,
- paul.gortmaker@windriver.com, rgummal@xilinx.com, bhelgaas@google.com,
- colin.king@canonical.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAJs9aZ9FqU-NCj2egBp6J06uD_Qp3Lje=mSSVbV4vNcYGKdumA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31, 2017 at 02:29:30PM +0530, Bharat Kumar Gogada wrote:
-> - Removing support for vendor defined messages which are not
-> suppoerted by AXI
-> =
+[+cc rtl8192ce folks in case they've seen this]
 
-> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+On Thu, Feb 09, 2017 at 03:45:01PM +0100, rupert THURNER wrote:
+> hi,
+> 
+> not technical expert enough, i just wanted to give a short user
+> feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
+> kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
+> well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
+> hotspot is possible then drops, or connecting to wlan fails
+> alltogether.
 
-Applied to pci/host-xilinx for v4.11, thanks.
+Thanks very much for your report, and sorry for the inconvenience.
 
-Bharat, get_maintainer.pl lists you as a contributor, but not as a
-maintainer of this file.  Should we update MAINTAINERS so it does?  =
+v4.10-rc7 works, so I guess we don't need to worry about fixing v4.10.
 
+But the stable kernels v4.9.6, v4.9.7, and v4.9.8 are broken, so we
+need to figure out why and make sure we fix the v4.9 stable series.
 
-  $ ./scripts/get_maintainer.pl drivers/pci/host/pcie-xilinx-nwl.c
-  Bjorn Helgaas <bhelgaas@google.com> (supporter:PCI SUBSYSTEM,commit_signe=
-r:11/11=3D100%,authored:5/11=3D45%,added_lines:71/999=3D7%,removed_lines:58=
-/132=3D44%)
-  Michal Simek <michal.simek@xilinx.com> (supporter:ARM/ZYNQ ARCHITECTURE)
-  "S=F6ren Brinkmann" <soren.brinkmann@xilinx.com> (reviewer:ARM/ZYNQ ARCHI=
-TECTURE)
-  Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com> (commit_signer:4/11=
-=3D36%,authored:4/11=3D36%,added_lines:924/999=3D92%,removed_lines:23/132=
-=3D17%)
-  Rob Herring <robh@kernel.org> (commit_signer:1/11=3D9%)
-  Colin Ian King <colin.king@canonical.com> (commit_signer:1/11=3D9%,author=
-ed:1/11=3D9%)
-  Paul Gortmaker <paul.gortmaker@windriver.com> (commit_signer:1/11=3D9%,au=
-thored:1/11=3D9%,removed_lines:50/132=3D38%)
-  linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM)
-  linux-arm-kernel@lists.infradead.org (moderated list:ARM/ZYNQ ARCHITECTUR=
-E)
-  linux-kernel@vger.kernel.org (open list)
+I can't tell yet whether this is PCI-related or not.  If it is,
+4922a6a5cfa7 ("PCI: Enumerate switches below PCI-to-PCIe bridges")
+appeared in v4.9.6, and there is a known issue with that.  The issue
+should be fixed by 610c2b7ff8f6 ("PCI/ASPM: Handle PCI-to-PCIe bridges
+as roots of PCIe hierarchies"), which appeared in v4.9.9, so I guess
+the first thing to do would be to test v4.9.9.
 
+If it's not fixed in v4.9.9, can you share the complete dmesg log
+(output of "dmesg" command) and "lspci -vv" output for v4.9.5 (last
+known working version) and v4.9.6 (first known broken version)?  On
+v4.9.6, collect the dmesg output after the failure occurs.
 
-> ---
->  drivers/pci/host/pcie-xilinx-nwl.c |   14 +-------------
->  1 files changed, 1 insertions(+), 13 deletions(-)
-> =
-
-> diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-x=
-ilinx-nwl.c
-> index 76dd094..651486a 100644
-> --- a/drivers/pci/host/pcie-xilinx-nwl.c
-> +++ b/drivers/pci/host/pcie-xilinx-nwl.c
-> @@ -62,21 +62,9 @@
->  #define CFG_ENABLE_PM_MSG_FWD		BIT(1)
->  #define CFG_ENABLE_INT_MSG_FWD		BIT(2)
->  #define CFG_ENABLE_ERR_MSG_FWD		BIT(3)
-> -#define CFG_ENABLE_SLT_MSG_FWD		BIT(5)
-> -#define CFG_ENABLE_VEN_MSG_FWD		BIT(7)
-> -#define CFG_ENABLE_OTH_MSG_FWD		BIT(13)
-> -#define CFG_ENABLE_VEN_MSG_EN		BIT(14)
-> -#define CFG_ENABLE_VEN_MSG_VEN_INV	BIT(15)
-> -#define CFG_ENABLE_VEN_MSG_VEN_ID	GENMASK(31, 16)
->  #define CFG_ENABLE_MSG_FILTER_MASK	(CFG_ENABLE_PM_MSG_FWD | \
->  					CFG_ENABLE_INT_MSG_FWD | \
-> -					CFG_ENABLE_ERR_MSG_FWD | \
-> -					CFG_ENABLE_SLT_MSG_FWD | \
-> -					CFG_ENABLE_VEN_MSG_FWD | \
-> -					CFG_ENABLE_OTH_MSG_FWD | \
-> -					CFG_ENABLE_VEN_MSG_EN | \
-> -					CFG_ENABLE_VEN_MSG_VEN_INV | \
-> -					CFG_ENABLE_VEN_MSG_VEN_ID)
-> +					CFG_ENABLE_ERR_MSG_FWD)
->  =
-
->  /* Misc interrupt status mask bits */
->  #define MSGF_MISC_SR_RXMSG_AVAIL	BIT(0)
-> -- =
-
-> 1.7.1
-> =
-
-> =
-
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 24: PCI 300.0: 0282 WLAN controller
+>   [Created at pci.366]
+>   Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
+>   Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
+>   Revision: 0x01
+>   Driver: "rtl8192ce"
+>   Driver Modules: "rtl8192ce"
+>   Device File: wlp3s0
+>   Features: WLAN
