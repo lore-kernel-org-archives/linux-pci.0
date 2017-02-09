@@ -1,53 +1,33 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39396 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932655AbdBQU0G (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Feb 2017 15:26:06 -0500
-Date: Fri, 17 Feb 2017 14:26:02 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yadi Hu <yadi.hu@windriver.com>
-Cc: lftan@altera.com, linux-pci@vger.kernel.org,
-        rfi@lists.rocketboards.org
-Subject: Re: [PATCH] PCI: altera: Fix TLP completion status
-Message-ID: <20170217202602.GE17762@bhelgaas-glaptop.roam.corp.google.com>
-References: <1487291230-21495-1-git-send-email-yadi.hu@windriver.com>
- <1487291230-21495-2-git-send-email-yadi.hu@windriver.com>
+Return-Path: <SRS0=kA2g=ZW=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=kA2g=ZW=wunner.de=lukas@kernel.org>
+Date: Thu, 9 Feb 2017 05:06:48 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bart Van Assche <bart.vanassche@sandisk.com>,
+	Christoph Hellwig <hch@lst.de>, Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [GIT PULL] PCI fixes for v4.10
+Message-ID: <20170209040648.GA1304@wunner.de>
+References: <20170208192054.GA31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1487291230-21495-2-git-send-email-yadi.hu@windriver.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 17, 2017 at 08:27:10AM +0800, Yadi Hu wrote:
-> From: "Hu Yadi" <yadi.hu@windriver.com>
-> 
-> the driver does not use exactly 'Completion Status' value in TLP,
-> these bits should be b15:13 not b14:12.
-> 
-> Signed-off-by: Hu Yadi<yadi.hu@windriver.com>
+On Wed, Feb 08, 2017 at 01:22:56PM -0600, Bjorn Helgaas wrote:
+> Bjorn Helgaas (1):
+>       Revert "PCI: pciehp: Add runtime PM support for PCIe hotplug ports"
 
-Applied with Ley Foon's ack to pci/host-altera for v4.11, thanks.
+What's the rationale for reverting this?
 
-BTW, the patch was apparently built against an old kernel (pre-v4.9), so it
-didn't apply directly.  But I applied it by hand.
+You've received patches to fix the issue on both affected machines,
+so a revert seems unnecessary:
 
-> ---
->  drivers/pci/host/pcie-altera.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-> index dbac6fb..650862e 100644
-> --- a/drivers/pci/host/pcie-altera.c
-> +++ b/drivers/pci/host/pcie-altera.c
-> @@ -56,7 +56,7 @@
->  #define TLP_CFG_DW2(bus, devfn, offset)	\
->  				(((bus) << 24) | ((devfn) << 16) | (offset))
->  #define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
-> -#define TLP_COMP_STATUS(s)		(((s) >> 12) & 7)
-> +#define TLP_COMP_STATUS(s)		(((s) >> 13) & 7)
->  #define TLP_HDR_SIZE			3
->  #define TLP_LOOP			500
->  #define RP_DEVFN			0
-> -- 
-> 2.9.3
-> 
+https://patchwork.kernel.org/patch/9557113/
+https://patchwork.kernel.org/patch/9562007/
+
+Lukas
