@@ -1,87 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 17 Feb 2017 13:51:46 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 10 Feb 2017 15:58:29 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, krzk@kernel.org,
-        linux-kernel@vger.kernel.org, jingoohan1@gmail.com,
-        javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
-        niyas.ahmed@samsung.com, alim.akhtar@samsung.com,
-        pankaj.dubey@samsung.com, kishon@ti.com,
-        devicetree@vger.kernel.org, mark.rutland@arm.com,
-        vivek.gautam@codeaurora.org, robh+dt@kernel.org
-Subject: Re: [PATCH V3 0/4] PCI: exynos: use the PHY generic framework
-Message-ID: <20170217195146.GA17762@bhelgaas-glaptop.roam.corp.google.com>
-References: <CGME20170213082615epcas5p2f5ecabbd5853a8e27da5f88fcae85158@epcas5p2.samsung.com>
- <20170213082613.19628-1-jh80.chung@samsung.com>
- <20170215211120.GC6981@bhelgaas-glaptop.roam.corp.google.com>
- <04b568d2-d85e-9cbd-1379-d657f574f279@samsung.com>
+To: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v1 1/3] PCI: xilinx: Configure PCIe MPS settings
+Message-ID: <20170210215829.GQ29169@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170208224632.14351.89895.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170208224930.14351.91597.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170209071956.GA21656@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <04b568d2-d85e-9cbd-1379-d657f574f279@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170209071956.GA21656@infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
+ Haiyang Zhang <haiyangz@microsoft.com>, Michal Simek <michal.simek@xilinx.com>,
+ Jon Mason <jon.mason@broadcom.com>, Ray Jui <ray.jui@broadcom.com>,
+ linux-arm-kernel@lists.infradead.org, devel@linuxdriverproject.org,
+ "K. Y. Srinivasan" <kys@microsoft.com>,
+ =?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
+ Tanmay Inamdar <tinamdar@apm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 16, 2017 at 07:33:15AM +0900, Jaehoon Chung wrote:
-> Dear Bjorn,
+On Wed, Feb 08, 2017 at 11:19:56PM -0800, Christoph Hellwig wrote:
+> On Wed, Feb 08, 2017 at 04:49:30PM -0600, Bjorn Helgaas wrote:
+> > +	list_for_each_entry(child, &bus->children, node)
+> > +		pcie_bus_configure_settings(child);
 > 
-> On 02/16/2017 06:11 AM, Bjorn Helgaas wrote:
-> > On Mon, Feb 13, 2017 at 05:26:09PM +0900, Jaehoon Chung wrote:
-> >> This patcheset is for using PHY generic framework.
-> >> Current pci-exyns doesn't use the phy framework since there haven't been on
-> >> PHY subsystem when Exynos5440 had bean upstreamed.
-> >> It's making a difficult to upstream the other Exynos variants because of different
-> >> PHY registers.
-> >>
-> >> This patcheset has the below modifications:
-> >> 1) Introduces the phy-exynos-pcie
-> >> 2) Handles PHY register from PHY framework for pci-exynos
-> >> 3) Modifies the dt-binding of pci-exynos
-> >> 4) Maintains the backward compatibility
-> >>
-> >> Changelog on V3:
-> >> - Drops "ARM: dts: exynos5440: support the phy-pcie node of pcie"
-> >>   : Will send this patch after applying this patchset.
-> >> - Fixes typo
-> >> - Based on latest PCI git repository (host-exynos branch)
-> >> - Changes commit message
-> >> - Removes the dependency
-> >>
-> >> Changelog on V2:
-> >> - Keep current codes for backward compatibility
-> >> - Fixes some typos
-> >> - Split the patches for removing the dependency
-> >> - Removes the unnecessary codes
-> >> - Change the patch's sequence
-> >> - Based on latest PCI git repository.(next branch)
-> >>
-> >> Jaehoon Chung (4):
-> >>   Documetation: samsung-phy: add the exynos-pcie-phy binding
-> >>   phy: phy-exynos-pcie: Add support for Exynos PCIe phy
-> >>   Documetation: binding: modify the exynos5440 pcie binding
-> >>   PCI: exynos: support the using PHY generic framework
-> >>
-> >>  .../bindings/pci/samsung,exynos5440-pcie.txt       |  29 +++
-> >>  .../devicetree/bindings/phy/samsung-phy.txt        |  17 ++
-> >>  drivers/pci/host/pci-exynos.c                      |  54 +++-
-> >>  drivers/phy/Kconfig                                |   8 +
-> >>  drivers/phy/Makefile                               |   1 +
-> >>  drivers/phy/phy-exynos-pcie.c                      | 285 +++++++++++++++++++++
-> >>  6 files changed, 390 insertions(+), 4 deletions(-)
-> >>  create mode 100644 drivers/phy/phy-exynos-pcie.c
-> > 
-> > I made the updates Vivek suggested and provisionally added these to my
-> > pci/host-exynos branch to get some build testing.
-> 
-> Thanks!
-> 
-> > 
-> > Kishon, I guess it probably makes more sense for me to apply this
-> > because even though the drivers/pci changes are small, I think they
-> > depend on other pci-exynos.c changes that are on my branch but not in
-> > Linus' tree yet.
+> This loop is duplicated in just about every driver, so it it
+> might be a good idea to provide a littler helper for it.
 
-I haven't heard from Kishon, but I merged these to my -next branch for
-v4.11.
+Yeah, you're right.  One reason I didn't is because I would like to
+remove these if we can move the MPS setup into the pci_device_add()
+path.
+
+We ought to be able to do at least the minimal "configure this new
+device to match the existing hierarchy; if that's impossible, disable
+the device" sort of thing there.
+
+We probably would still want some sort of bus- or root port- or host
+bridge-level configuration that can take a broader view, and that
+might be done where we currently have this loop.  But I don't know 
+exactly what that should look like.
 
 Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
