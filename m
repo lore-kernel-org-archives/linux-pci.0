@@ -1,69 +1,63 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v5] PCI: Xilinx NWL: Modifying irq chip for legacy
- interrupts
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "robh@kernel.org" <robh@kernel.org>,
- "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
- "colin.king@canonical.com" <colin.king@canonical.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1486364596-19699-1-git-send-email-bharatku@xilinx.com>
- <4b04e834-08b6-a728-8fe5-13106d50b3b2@arm.com>
- <8520D5D51A55D047800579B094147198263E68AA@XAP-PVEXMBX02.xlnx.xilinx.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <131228fb-d3f8-3836-3713-e948ed30d398@arm.com>
-Date: Thu, 9 Feb 2017 12:14:59 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 10 Feb 2017 15:54:38 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] MicroSemi Switchtec management interface driver
+Message-ID: <20170210145438.GC24594@kroah.com>
+References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
+ <1486058763-7730-2-git-send-email-logang@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198263E68AA@XAP-PVEXMBX02.xlnx.xilinx.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ravikiran Gummaluri <rgummal@xilinx.com>, "arnd@arndb.de" <arnd@arndb.de>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "michal.simek@xilinx.com" <michal.simek@xilinx.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1486058763-7730-2-git-send-email-logang@deltatee.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/02/17 12:01, Bharat Kumar Gogada wrote:
->> On 06/02/17 07:03, Bharat Kumar Gogada wrote:
->>> +static struct irq_chip nwl_leg_irq_chip = {
->>> +	.name = "nwl_pcie:legacy",
->>> +	.irq_enable = nwl_unmask_leg_irq,
->>> +	.irq_disable = nwl_mask_leg_irq,
->>
->> You don't need these two if they are implemented in terms of mask/unmask.
+On Thu, Feb 02, 2017 at 11:06:00AM -0700, Logan Gunthorpe wrote:
+> Microsemi's "Switchtec" line of PCI switch devices is already well
+> supported by the kernel with standard PCI switch drivers. However, the
+> Switchtec device advertises a special management endpoint with a separate
+> PCI function address and class code. This endpoint enables some additional
+> functionality which includes:
 > 
-> These are being invoked by some drivers other than interrupt flow.
-> Ex: drivers/net/wireless/ath/ath9k/main.c
-> static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan) 
-> {
->          ....
->          disable_irq(sc->irq);
->          tasklet_disable(&sc->intr_tq);
->         ...
->         ...
->         enable_irq(sc->irq);
->         spin_unlock_bh(&sc->sc_pcu_lock);
-> }
-> For us masking/unmasking is the way to enable/disable interrupts.
+>  * Packet and Byte Counters
+>  * Switch Firmware Upgrades
+>  * Event and Error logs
+>  * Querying port link status
+>  * Custom user firmware commands
+> 
+> This patch introduces the switchtec kernel module which provides
+> PCI driver that exposes a char device. The char device provides
+> userspace access to this interface through read, write and (optionally)
+> poll calls.
+> 
+> A userspace tool and library which utilizes this interface is available
+> at [1]. This tool takes inspiration (and borrows some code) from
+> nvme-cli [2]. The tool is largely complete at this time but additional
+> features may be added in the future.
+> 
+> [1] https://github.com/sbates130272/switchtec-user
+> [2] https://github.com/linux-nvme/nvme-cli
+> 
+> Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+> Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
 
-And if you looked at the way disable_irq is implemented, you would have
-found out that it falls back to masking if there is no disable method,
-preserving the semantic you expect.
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
