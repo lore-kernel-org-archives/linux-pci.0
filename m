@@ -1,99 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:4162 "EHLO mga01.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:51670 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754977AbdBGTX7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Feb 2017 14:23:59 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
-        Austin Bolen <Austin.Bolen@dell.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv6 3/5] pci: No config access for disconnected devices
-Date: Tue,  7 Feb 2017 14:32:35 -0500
-Message-Id: <1486495957-26177-4-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
-References: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
+        id S1752035AbdBJVTw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Feb 2017 16:19:52 -0500
+Date: Fri, 10 Feb 2017 15:19:48 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dexuan Cui <decui@microsoft.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        Jake Oshins <jakeo@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>
+Subject: Re: [PATCH] PCI: hv: fix wslot_to_devfn()
+Message-ID: <20170210211948.GN29169@bhelgaas-glaptop.roam.corp.google.com>
+References: <MWHPR03MB26692E8BCBD2B7129EFE1445BF430@MWHPR03MB2669.namprd03.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <MWHPR03MB26692E8BCBD2B7129EFE1445BF430@MWHPR03MB2669.namprd03.prod.outlook.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If we've  detected the PCI device is disconnected, there is no need to
-attempt to access its config space since we know the operation will
-fail. This patch has all the config reads and writes return -ENODEV
-error immediately when in such a state.
+On Tue, Feb 07, 2017 at 09:00:10AM +0000, Dexuan Cui wrote:
+> The devfn of 00:02.0 is 0x10.
+> devfn_to_wslot(0x10) == 0x2, and wslot_to_devfn(0x2) should be 0x10,
+> while it's 0x2 in the current code.
+> 
+> Due to this, hv_eject_device_work() -> pci_get_domain_bus_and_slot()
+> returns NULL and pci_stop_and_remove_bus_device() is not called.
+> 
+> Later when the real device driver's .remove() is invoked by
+> hv_pci_remove() -> pci_stop_root_bus(), some warnings can be noticed
+> because the VM has lost the access to the underlying device at that
+> time.
+> 
+> Signed-off-by: Jake Oshins <jakeo@microsoft.com>
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+> Cc: stable@vger.kernel.org
+> Cc: K. Y. Srinivasan <kys@microsoft.com>
+> CC: Haiyang Zhang <haiyangz@microsoft.com>
+> Cc: Stephen Hemminger <sthemmin@microsoft.com>
 
-If a config read is sent to a disconnected device, the value will be
-set to all 1's. This is the same as what hardware is expected to return
-when accessing a removed device, but software can do this faster without
-relying on hardware.
+Applied with Haiyang's ack to pci/host-hv for v4.11, thanks!
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/access.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
-
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index d37b2ed..d63e9dd 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -892,12 +892,20 @@ EXPORT_SYMBOL(pcie_capability_clear_and_set_dword);
- 
- int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
- {
-+	if (pci_dev_is_disconnected(dev)) {
-+		*val = ~0;
-+		return -ENODEV;
-+	}
- 	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
- }
- EXPORT_SYMBOL(pci_read_config_byte);
- 
- int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
- {
-+	if (pci_dev_is_disconnected(dev)) {
-+		*val = ~0;
-+		return -ENODEV;
-+	}
- 	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
- }
- EXPORT_SYMBOL(pci_read_config_word);
-@@ -905,18 +913,26 @@ EXPORT_SYMBOL(pci_read_config_word);
- int pci_read_config_dword(const struct pci_dev *dev, int where,
- 					u32 *val)
- {
-+	if (pci_dev_is_disconnected(dev)) {
-+		*val = ~0;
-+		return -ENODEV;
-+	}
- 	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
- }
- EXPORT_SYMBOL(pci_read_config_dword);
- 
- int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
- {
-+	if (pci_dev_is_disconnected(dev))
-+		return -ENODEV;
- 	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
- }
- EXPORT_SYMBOL(pci_write_config_byte);
- 
- int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
- {
-+	if (pci_dev_is_disconnected(dev))
-+		return -ENODEV;
- 	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
- }
- EXPORT_SYMBOL(pci_write_config_word);
-@@ -924,6 +940,8 @@ EXPORT_SYMBOL(pci_write_config_word);
- int pci_write_config_dword(const struct pci_dev *dev, int where,
- 					 u32 val)
- {
-+	if (pci_dev_is_disconnected(dev))
-+		return -ENODEV;
- 	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
- }
- EXPORT_SYMBOL(pci_write_config_dword);
--- 
-2.7.2
+> ---
+>  drivers/pci/host/pci-hyperv.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> The patch is co-made by Jake and me.
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index 3efcc7b..cd114c6 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -130,7 +130,8 @@ enum pci_message_type {
+>   */
+>  union win_slot_encoding {
+>  	struct {
+> -		u32	func:8;
+> +		u32	dev:5;
+> +		u32	func:3;
+>  		u32	reserved:24;
+>  	} bits;
+>  	u32 slot;
+> @@ -485,7 +486,8 @@ static u32 devfn_to_wslot(int devfn)
+>  	union win_slot_encoding wslot;
+>  
+>  	wslot.slot = 0;
+> -	wslot.bits.func = PCI_SLOT(devfn) | (PCI_FUNC(devfn) << 5);
+> +	wslot.bits.dev = PCI_SLOT(devfn);
+> +	wslot.bits.func = PCI_FUNC(devfn);
+>  
+>  	return wslot.slot;
+>  }
+> @@ -503,7 +505,7 @@ static int wslot_to_devfn(u32 wslot)
+>  	union win_slot_encoding slot_no;
+>  
+>  	slot_no.slot = wslot;
+> -	return PCI_DEVFN(0, slot_no.bits.func);
+> +	return PCI_DEVFN(slot_no.bits.dev, slot_no.bits.func);
+>  }
+>  
+>  /*
+> -- 
+> 1.8.3.1
+> 
