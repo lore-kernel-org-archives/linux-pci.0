@@ -1,82 +1,48 @@
-Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
-Date: Sun, 12 Feb 2017 18:13:01 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-kernel@vger.kernel.org,
-	Andreas Noever <andreas.noever@gmail.com>,
-	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v5 3/8] PCI: Don't block runtime PM for Thunderbolt host
- hotplug ports
-Message-ID: <20170212171301.GA2845@wunner.de>
-References: <cover.1484486499.git.lukas@wunner.de>
- <be633737115c0be241fccd75bc136dd1da72c1b5.1484486499.git.lukas@wunner.de>
- <20170210183912.GF29169@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 10 Feb 2017 14:16:39 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH] PCI/MSI: Return error code if memory allocation fails
+Message-ID: <20170210201639.GH29169@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170127151453.27571-1-christophe.jaillet@wanadoo.fr>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170210183912.GF29169@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170127151453.27571-1-christophe.jaillet@wanadoo.fr>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 10, 2017 at 12:39:12PM -0600, Bjorn Helgaas wrote:
-> On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
-> > Hotplug ports generally block their parents from suspending to D3hot as
-> > otherwise their interrupts couldn't be delivered.
+On Fri, Jan 27, 2017 at 04:14:53PM +0100, Christophe JAILLET wrote:
+> If 'alloc_msi_entry()' fails, a few lines above, we free resources and set
+> 'ret = -ENOMEM'.
 > 
-> This sounds related to PCIe r3.1, sec 5.3.1.4, which says functions
-> supporting PME generation from D3 must support it for both D3cold and
-> D3hot.  I think in PCIe, PMEs mean PME Messages, and the 5.3.1
-> implementation note says Messages are not affected by the PM state of
-> virtual bridges.
+> However, the function returns 0, inconditionaly.
+> Returns the error code instead.
 > 
-> So that seems to say that hotplug ports *should* be able to deliver
-> PMEs even while in D3hot.
+> Fixes: e75eafb9b039 ("genirq/msi: Switch to new irq spreading infrastructure")
 > 
-> Maybe you're referring to the hotplug interrupts themselves, not the
-> PME?  I assume a hotplug event (presence detect, attention button,
-> etc) would first cause a PME, then the OS would return the path to D0,
-> then the hotplug interrupt would be delivered.
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+
+Applied to pci/msi for v4.11, thanks!
+
+> ---
+>  drivers/pci/msi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> > An exception are Thunderbolt host controllers:  They have a separate
-> > GPIO pin to side-band signal plug events even if the controller is
-> > powered down or its parent ports are suspended to D3.  They can be told
-> > apart from Thunderbolt controllers in attached devices by checking if
-> > they're situated below a non-Thunderbolt device (typically a root port,
-> > or the downstream port of a PCIe switch in the case of the MacPro6,1).
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index b6785c8be44d..0f77b38f03dd 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -731,7 +731,7 @@ static int msix_setup_entries(struct pci_dev *dev, void __iomem *base,
+>  	ret = 0;
+>  out:
+>  	kfree(masks);
+> -	return 0;
+> +	return ret;
+>  }
+>  
+>  static void msix_program_entries(struct pci_dev *dev,
+> -- 
+> 2.9.3
 > 
-> In PCIe terms, does a "Thunderbolt host controller" look like a
-> downstream port that supports hotplug?
-> 
-> It seems like the PCIe PME mechanism *should* work pretty much like
-> this sideband GPIO.  But I might be reading the spec wrong.
-
-I am dropping this patch in v6 of my Thunderbolt runpm series.
-
-The "Light Ridge" Thunderbolt controller in my machine claims to support
-PME, but its WAKE# pin is not connected.  (It's pulled up to 3.3V.)
-I also have an external Thunderbolt chassis with the same controller,
-and the controller likewise claims to support PME, but its WAKE# pin is
-not connected to the PCIe root im my machine in any way.
-
-This led me to the conclusion that PME is not reliable and therefore
-in a Thunderbolt daisy chain, which is a cascade of PCIe switches,
-only the hotplug port at the farthest end of the chain may suspend to
-D3hot, whereas all the ports between it and the root bridge must stay
-awake for interrupts to come through.
-
-What I failed to see, due to poor understanding of the (undocumented)
-Thunderbolt technology, is that even though ports in the middle of the
-chain may be in D3hot and prevent PCIe interrupts from coming through,
-the network of Converged I/O switches underlying the PCI tunnels
-continues to function and deliver plug events.  It is thus the NHI
-driver's job to runtime resume the PCIe switch where a CIO plug event
-occurred, as well as its parents, to ensure delivery of PCIe interrupts.
-The CIO plug event essentially serves as a sideband signal.  So far the
-thunderbolt NHI driver does not support daisy chaining, so this is not
-yet an issue.  (Only for tunnels established by the EFI driver.)
-
-Thanks,
-
-Lukas
