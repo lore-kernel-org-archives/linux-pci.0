@@ -1,215 +1,63 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
- <linux-arm-kernel@axis.com>
-Subject: [PATCH 09/10] PCI: dwc: Create a new config symbol to enable pci dwc
- host
-Date: Wed, 15 Feb 2017 18:48:18 +0530
-Message-ID: <1487164699-30708-10-git-send-email-kishon@ti.com>
-In-Reply-To: <1487164699-30708-1-git-send-email-kishon@ti.com>
-References: <1487164699-30708-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 10 Feb 2017 15:54:26 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
+Message-ID: <20170210145426.GB24594@kroah.com>
+References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: nsekhar@ti.com, Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1486058763-7730-1-git-send-email-logang@deltatee.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that pci designware host has a separate file, create a new
-config symbol to select the host only driver. This will enable
-to independently select host support and endpoint suppor
-(when it's added).
+On Thu, Feb 02, 2017 at 11:05:59AM -0700, Logan Gunthorpe wrote:
+> Changes since v1:
+> 
+> * Rebased onto 4.10-rc6 (cleanly)
+> * Split the patch into a few more easily digestible patches (as
+>   suggested by Greg Kroah-Hartman)
+> * Folded switchtec.c into switchtec.h (per Greg)
+> * Fixed a bunch of 32bit build warnings caught by the kbuild test robot
+> * Fixed some issues in the documentation so it has a proper
+>   reStructredText format (as noted by Jonathan Corbet)
+> * Fixed padding and sizes in the IOCTL structures as noticed by Emil
+>   Velikov and used pahole to verify their consistency across 32 and 64
+>   bit builds
+> * Reworked one of the IOCTL interfaces to be more future proof (per
+>   Emil).
+> 
+> Changes since RFC:
+> 
+> * Fixed incorrect use of the drive model as pointed out by Greg
+>   Kroah-Hartman
+> * Used devm functions as suggested by Keith Busch
+> * Added a handful of sysfs attributes to the switchtec class
+> * Added a handful of IOCTLs to the switchtec device
+> * A number of miscellaneous bug fixes
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/Kconfig           |   26 +++++++++++++++-----------
- drivers/pci/dwc/Makefile          |    3 ++-
- drivers/pci/dwc/pcie-designware.h |   29 +++++++++++++++++++++++++----
- 3 files changed, 42 insertions(+), 16 deletions(-)
+I didn't audit the ioctl code, but the driver model and sysfs stuff
+looks sane to me, nice job cleaning it up.
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index deae261..ab92a0c 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -3,13 +3,17 @@ menu "DesignWare PCI Core Support"
- 
- config PCIE_DW
- 	bool
-+
-+config PCIE_DW_HOST
-+        bool
- 	depends on PCI_MSI_IRQ_DOMAIN
-+        select PCIE_DW
- 
- config PCI_DRA7XX
- 	bool "TI DRA7xx PCIe controller"
- 	depends on OF && HAS_IOMEM && TI_PIPE3
- 	depends on PCI_MSI_IRQ_DOMAIN
--	select PCIE_DW
-+	select PCIE_DW_HOST
- 	help
- 	 Enables support for the PCIe controller in the DRA7xx SoC.  There
- 	 are two instances of PCIe controller in DRA7xx.  This controller can
-@@ -18,7 +22,7 @@ config PCI_DRA7XX
- config PCIE_DW_PLAT
- 	bool "Platform bus based DesignWare PCIe Controller"
- 	depends on PCI_MSI_IRQ_DOMAIN
--	select PCIE_DW
-+	select PCIE_DW_HOST
- 	---help---
- 	 This selects the DesignWare PCIe controller support. Select this if
- 	 you have a PCIe controller on Platform bus.
-@@ -32,21 +36,21 @@ config PCI_EXYNOS
- 	depends on SOC_EXYNOS5440
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
--	select PCIE_DW
-+	select PCIE_DW_HOST
- 
- config PCI_IMX6
- 	bool "Freescale i.MX6 PCIe controller"
- 	depends on SOC_IMX6Q
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
--	select PCIE_DW
-+	select PCIE_DW_HOST
- 
- config PCIE_SPEAR13XX
- 	bool "STMicroelectronics SPEAr PCIe controller"
- 	depends on ARCH_SPEAR13XX
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
--	select PCIE_DW
-+	select PCIE_DW_HOST
- 	help
- 	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
- 
-@@ -55,7 +59,7 @@ config PCI_KEYSTONE
- 	depends on ARCH_KEYSTONE
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
--	select PCIE_DW
-+	select PCIE_DW_HOST
- 	help
- 	  Say Y here if you want to enable PCI controller support on Keystone
- 	  SoCs. The PCI controller on Keystone is based on Designware hardware
-@@ -67,7 +71,7 @@ config PCI_LAYERSCAPE
- 	depends on OF && (ARM || ARCH_LAYERSCAPE)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select MFD_SYSCON
--	select PCIE_DW
-+	select PCIE_DW_HOST
- 	help
- 	  Say Y here if you want PCIe controller support on Layerscape SoCs.
- 
-@@ -76,7 +80,7 @@ config PCI_HISI
- 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
--	select PCIE_DW
-+	select PCIE_DW_HOST
- 	help
- 	  Say Y here if you want PCIe controller support on HiSilicon
- 	  Hip05 and Hip06 SoCs
-@@ -86,7 +90,7 @@ config PCIE_QCOM
- 	depends on ARCH_QCOM && OF
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
--	select PCIE_DW
-+	select PCIE_DW_HOST
- 	help
- 	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
- 	  PCIe controller uses the Designware core plus Qualcomm-specific
-@@ -97,7 +101,7 @@ config PCIE_ARMADA_8K
- 	depends on ARCH_MVEBU
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
--	select PCIE_DW
-+	select PCIE_DW_HOST
- 	help
- 	  Say Y here if you want to enable PCIe controller support on
- 	  Armada-8K SoCs. The PCIe controller on Armada-8K is based on
-@@ -109,7 +113,7 @@ config PCIE_ARTPEC6
- 	depends on MACH_ARTPEC6
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
--	select PCIE_DW
-+	select PCIE_DW_HOST
- 	help
- 	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
- 	  SoCs.  This PCIe controller uses the DesignWare core.
-diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-index 3b57e55..a2df13c 100644
---- a/drivers/pci/dwc/Makefile
-+++ b/drivers/pci/dwc/Makefile
-@@ -1,4 +1,5 @@
--obj-$(CONFIG_PCIE_DW) += pcie-designware.o pcie-designware-host.o
-+obj-$(CONFIG_PCIE_DW) += pcie-designware.o
-+obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
- obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
- obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
- obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 3054770..cd3b871 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -161,10 +161,6 @@ struct dw_pcie {
- 
- int dw_pcie_read(void __iomem *addr, int size, u32 *val);
- int dw_pcie_write(void __iomem *addr, int size, u32 val);
--irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
--void dw_pcie_msi_init(struct pcie_port *pp);
--void dw_pcie_setup_rc(struct pcie_port *pp);
--int dw_pcie_host_init(struct pcie_port *pp);
- 
- u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg);
- void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val);
-@@ -174,4 +170,29 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
- 			       int type, u64 cpu_addr, u64 pci_addr,
- 			       u32 size);
- void dw_pcie_setup(struct dw_pcie *pci);
-+
-+#ifdef CONFIG_PCIE_DW_HOST
-+irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
-+void dw_pcie_msi_init(struct pcie_port *pp);
-+void dw_pcie_setup_rc(struct pcie_port *pp);
-+int dw_pcie_host_init(struct pcie_port *pp);
-+#else
-+static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
-+{
-+	return IRQ_NONE;
-+}
-+
-+static inline void dw_pcie_msi_init(struct pcie_port *pp)
-+{
-+}
-+
-+static inline void dw_pcie_setup_rc(struct pcie_port *pp)
-+{
-+}
-+
-+static inline int dw_pcie_host_init(struct pcie_port *pp)
-+{
-+	return 0;
-+}
-+#endif
- #endif /* _PCIE_DESIGNWARE_H */
--- 
-1.7.9.5
+thanks,
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+greg k-h
