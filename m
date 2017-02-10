@@ -1,77 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60572 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751289AbdBWKbI (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2017 05:31:08 -0500
-Date: Thu, 23 Feb 2017 02:30:51 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/MSI: Only disable affinity settings if pre and post
- vector count is equal to max_vecs and not min_vecs
-Message-ID: <20170223103051.GA23982@infradead.org>
-References: <1487830355-16963-1-git-send-email-himanshu.madhani@cavium.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 10 Feb 2017 17:55:50 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] MicroSemi Switchtec management interface driver
+Message-ID: <20170210165550.GA23959@kroah.com>
+References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
+ <1486058763-7730-2-git-send-email-logang@deltatee.com>
+ <20170210145124.GA24594@kroah.com>
+ <ca970e7a-b062-d351-9a04-49a9e05955b5@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1487830355-16963-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <ca970e7a-b062-d351-9a04-49a9e05955b5@deltatee.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 22, 2017 at 10:12:35PM -0800, Himanshu Madhani wrote:
-> From: Michael Hernandez <michael.hernandez@cavium.com>
+On Fri, Feb 10, 2017 at 09:48:37AM -0700, Logan Gunthorpe wrote:
+> Hey Greg,
 > 
-> min_vecs is the minimum amount of vectors needed to operate in MSI-X mode
-> which may just include the vectors that don't need affinity.
+> Thanks so much for the review.
 > 
-> Disabling affinity settings causes the qla2xxx driver scsi_add_host
-> to fail when blk_mq is enabled as the blk_mq_pci_map_queues expects
-> affinity masks on each vector.
+> On 10/02/17 07:51 AM, Greg Kroah-Hartman wrote:
+> > On Thu, Feb 02, 2017 at 11:06:00AM -0700, Logan Gunthorpe wrote:
+> >> +	cdev = &stdev->cdev;
+> >> +	cdev_init(cdev, &switchtec_fops);
+> >> +	cdev->owner = THIS_MODULE;
+> >> +	cdev->kobj.parent = &dev->kobj;
+> > 
+> > Minor nit, the kobject in a cdev is unlike any other kobject you have
+> > ever seen, don't mess with it, it's not doing anything like you think it
+> > is doing.  So no need to set the parent field.
+> 
+> Ok, that makes sense. I'll do a v3 shortly.
+> 
+> I copied this from drivers/dax/dax.c so when I have a spare moment I'll
+> submit a patch to remove it from there as well.
+> 
+> Just to make sure I get this right without extra churn: does this look
+> correct?
+> 
+> 
+>         cdev = &stdev->cdev;
+>         cdev_init(cdev, &switchtec_fops);
+>         cdev->owner = THIS_MODULE;
+> 
+>         rc = cdev_add(&stdev->cdev, dev->devt, 1);
+>         if (rc)
+>                 goto err_cdev;
+> 
+>         dev = &stdev->dev;
+>         dev->devt = MKDEV(MAJOR(switchtec_devt), minor);
+>         dev->class = switchtec_class;
+>         dev->parent = &pdev->dev;
+>         dev->groups = switchtec_device_groups;
+>         dev->release = stdev_release;
+>         dev_set_name(dev, "switchtec%d", minor);
+> 
+>         rc = device_register(dev);
+>         if (rc) {
+>                 cdev_del(&stdev->cdev);
+>                 put_device(dev);
+>                 return ERR_PTR(rc);
+>         }
+> 
 
-I don't think this is correct either.  We'll need to move these checks
-into __pci_enable_msix_range instead I think so that they operate
-on the actual number of vectors not the min/max ones.
+Yes, but try it yourself to verify it really is correct :)
 
-Something like the untested patch below, which will also need a MSI
-version of the check, and possibly a bit of cleanup:
+And it can just be an add-on patch, no need to respin a whole new
+version for just that simple change, it doesn't hurt anything as-is,
+it's just "not needed".
 
+thanks,
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 7f73bacf13ed..6d11c4f620f3 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1138,6 +1138,18 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
- 
- 	for (;;) {
- 		if (affd) {
-+			if (affd->pre_vectors + affd->post_vectors > nvec)
-+				return -EINVAL;
-+
-+			/*
-+			 * If there aren't any vectors left after applying the
-+			 * pre/post vectors don't bother with assigning
-+			 * affinity.
-+			 */
-+			if (affd->pre_vectors + affd->post_vectors == nvec)
-+				affd = NULL;
-+		}
-+		if (affd) {
- 			nvec = irq_calc_affinity_vectors(nvec, affd);
- 			if (nvec < minvec)
- 				return -ENOSPC;
-@@ -1206,16 +1218,6 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 	if (flags & PCI_IRQ_AFFINITY) {
- 		if (!affd)
- 			affd = &msi_default_affd;
--
--		if (affd->pre_vectors + affd->post_vectors > min_vecs)
--			return -EINVAL;
--
--		/*
--		 * If there aren't any vectors left after applying the pre/post
--		 * vectors don't bother with assigning affinity.
--		 */
--		if (affd->pre_vectors + affd->post_vectors == min_vecs)
--			affd = NULL;
- 	} else {
- 		if (WARN_ON(affd))
- 			affd = NULL;
+greg k-h
