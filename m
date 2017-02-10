@@ -1,97 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: 
-Subject: [RFC PATCH 03/30] PCI: Move ATS declarations outside of CONFIG_PCI
-Date: Mon, 27 Feb 2017 19:54:14 +0000
-Message-Id: <20170227195441.5170-4-jean-philippe.brucker@arm.com>
-In-Reply-To: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
- David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:35466 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752385AbdBJStq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Feb 2017 13:49:46 -0500
+Date: Fri, 10 Feb 2017 12:39:12 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org,
+        Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH v5 3/8] PCI: Don't block runtime PM for Thunderbolt host
+ hotplug ports
+Message-ID: <20170210183912.GF29169@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1484486499.git.lukas@wunner.de>
+ <be633737115c0be241fccd75bc136dd1da72c1b5.1484486499.git.lukas@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <be633737115c0be241fccd75bc136dd1da72c1b5.1484486499.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently ATS helpers like pci_enable_ats are only defined when CONFIG_PCI
-is enabled. The ARM SMMU driver might get built with CONFIG_PCI disabled.
-It would thus have to wrap any use of ATS helpers around #ifdef
-CONFIG_PCI, which isn't ideal.
+On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
+> Hotplug ports generally block their parents from suspending to D3hot as
+> otherwise their interrupts couldn't be delivered.
 
-A nicer solution is to always define these helpers. Since CONFIG_PCI_ATS
-is only enabled in association with CONFIG_PCI, move defines outside of
-CONFIG_PCI to prevent build failure when PCI is disabled.
+This sounds related to PCIe r3.1, sec 5.3.1.4, which says functions
+supporting PME generation from D3 must support it for both D3cold and
+D3hot.  I think in PCIe, PMEs mean PME Messages, and the 5.3.1
+implementation note says Messages are not affected by the PM state of
+virtual bridges.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- include/linux/pci.h | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+So that seems to say that hotplug ports *should* be able to deliver
+PMEs even while in D3hot.
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 282ed32244ce..e606f289bf5f 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1418,19 +1418,6 @@ int  ht_create_irq(struct pci_dev *dev, int idx);
- void ht_destroy_irq(unsigned int irq);
- #endif /* CONFIG_HT_IRQ */
- 
--#ifdef CONFIG_PCI_ATS
--/* Address Translation Service */
--void pci_ats_init(struct pci_dev *dev);
--int pci_enable_ats(struct pci_dev *dev, int ps);
--void pci_disable_ats(struct pci_dev *dev);
--int pci_ats_queue_depth(struct pci_dev *dev);
--#else
--static inline void pci_ats_init(struct pci_dev *d) { }
--static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
--static inline void pci_disable_ats(struct pci_dev *d) { }
--static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
--#endif
--
- #ifdef CONFIG_PCIE_PTM
- int pci_enable_ptm(struct pci_dev *dev, u8 *granularity);
- #else
-@@ -1616,6 +1603,19 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- #define dev_is_pf(d) (false)
- #endif /* CONFIG_PCI */
- 
-+#ifdef CONFIG_PCI_ATS
-+/* Address Translation Service */
-+void pci_ats_init(struct pci_dev *dev);
-+int pci_enable_ats(struct pci_dev *dev, int ps);
-+void pci_disable_ats(struct pci_dev *dev);
-+int pci_ats_queue_depth(struct pci_dev *dev);
-+#else
-+static inline void pci_ats_init(struct pci_dev *d) { }
-+static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
-+static inline void pci_disable_ats(struct pci_dev *d) { }
-+static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
-+#endif
-+
- /* Include architecture-dependent settings and functions */
- 
- #include <asm/pci.h>
--- 
-2.11.0
+Maybe you're referring to the hotplug interrupts themselves, not the
+PME?  I assume a hotplug event (presence detect, attention button,
+etc) would first cause a PME, then the OS would return the path to D0,
+then the hotplug interrupt would be delivered.
 
+> An exception are Thunderbolt host controllers:  They have a separate
+> GPIO pin to side-band signal plug events even if the controller is
+> powered down or its parent ports are suspended to D3.  They can be told
+> apart from Thunderbolt controllers in attached devices by checking if
+> they're situated below a non-Thunderbolt device (typically a root port,
+> or the downstream port of a PCIe switch in the case of the MacPro6,1).
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+In PCIe terms, does a "Thunderbolt host controller" look like a
+downstream port that supports hotplug?
+
+It seems like the PCIe PME mechanism *should* work pretty much like
+this sideband GPIO.  But I might be reading the spec wrong.
+
+Bjorn
