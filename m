@@ -1,156 +1,75 @@
-Return-Path: <SRS0=yUIs=ZV=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=yUIs=ZV=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Wed, 8 Feb 2017 09:58:48 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Dongdong Liu <liudongdong3@huawei.com>, linux-pci@vger.kernel.org,
-	wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-	charles.chenxin@huawei.com, linuxarm@huawei.com,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: Re: [PATCH 3/3] PCI: generic: Fix the bug of pci_fixup_irqs() for
- arm64 platform.
-Message-ID: <20170208095848.GA26411@red-moon>
-References: <1484202504-96686-1-git-send-email-liudongdong3@huawei.com>
- <1484202504-96686-4-git-send-email-liudongdong3@huawei.com>
- <20170203204530.GH10291@bhelgaas-glaptop.roam.corp.google.com>
- <20170206140827.GB14139@red-moon>
- <20170207214645.GB11659@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170207214645.GB11659@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.132]:59329 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750874AbdBJGyc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Feb 2017 01:54:32 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH] PCI: rockchip: fix error path to free resource
+Date: Fri, 10 Feb 2017 14:52:02 +0800
+Message-Id: <1486709522-160491-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 07, 2017 at 03:46:45PM -0600, Bjorn Helgaas wrote:
-> On Mon, Feb 06, 2017 at 02:08:27PM +0000, Lorenzo Pieralisi wrote:
-> > On Fri, Feb 03, 2017 at 02:45:30PM -0600, Bjorn Helgaas wrote:
-> > > [+cc Tomasz, Lorenzo]
-> > > 
-> > > On Thu, Jan 12, 2017 at 02:28:24PM +0800, Dongdong Liu wrote:
-> > > > arch/arm64/pci.c pcibios_alloc_irq() has the same function as
-> > > > pci_fixup_irqs(), so we add condition #ifndef CONFIG_ARM64 for
-> > > > pci_fixup_irqs().
-> > > > 
-> > > > Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
-> > > > Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> > > > Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
-> > > > ---
-> > > >  drivers/pci/host/pci-host-common.c | 2 ++
-> > > >  1 file changed, 2 insertions(+)
-> > > > 
-> > > > diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-> > > > index e3c48b5..f160afc 100644
-> > > > --- a/drivers/pci/host/pci-host-common.c
-> > > > +++ b/drivers/pci/host/pci-host-common.c
-> > > > @@ -145,7 +145,9 @@ int pci_host_common_probe(struct platform_device *pdev,
-> > > >  		return -ENODEV;
-> > > >  	}
-> > > >  
-> > > > +#ifndef CONFIG_ARM64
-> > > >  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> > > > +#endif
-> > > 
-> > > d8ed75d59332 ("ARM64: PCI: ACPI support for legacy IRQs parsing and
-> > > consolidation with DT code") added pcibios_alloc_irq() for arm64.
-> > > 
-> > > arm64 is the only arch that implements pcibios_alloc_irq().  And now
-> > > you want to add an ifdef here so arm64 is the only arch that doesn't
-> > > call pci_fixup_irqs().
-> > > 
-> > > I don't remember the details of why arm64 is so special here.
-> > > Obviously we'd prefer not to have the ifdef and not to have the
-> > > arm64-specific pcibios_alloc_irq().
-> > 
-> > Well, I am not sure ARM64 is more special than other architectures
-> > in this respect, actually I think that what ARM64 does is what we
-> > will end up doing when Matthew Minter's patches are merged and
-> > that's my aim for v4.12, pci_fixup_irqs() should not be used
-> > any longer, at least on ARM/ARM64 and I know what to do to make
-> > it disappear.
-> 
-> ARM64 is different from x86, even though both arches support both ACPI
-> and DT: on ARM64 we currently call of_irq_parse_and_map_pci() when we
-> call the driver's probe() method, whereas on x86 we don't call it
-> until the driver calls pci_enable_device().
+rockchip_pcie_probe calls of_pci_get_host_bridge_resources to
+parse resource from DT but it's caller's job to free it advised
+by this API. So let's fix the error patch to free it by calling
+pci_free_resource_list.
 
-I can move the of_irq_parse_and_map_pci() call (along with the
-acpi_pci_irq_enable() counterpart - that unfortunately has a
-different behaviour because it _modifies_ the struct pci_dev*
-pointer passed to it) at pci_enable_device() time, that's what
-Matt's patchset was doing, the risk is always triggering
-regressions by moving things around.
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-I suspect you want to get rid of pcibios_alloc_irq(), I will make
-that part of the series I will post on top of Matt's code.
+ drivers/pci/host/pcie-rockchip.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-On top of that, through copy'n'paste pci_fixup_irqs() is spreading
-like plague, it has to be removed, at least on all ARM host controllers.
-
-> Obviously it would be better if this were done at the same point on
-> both arches.  I don't know what that point *is*.  I could imagine
-> enumeration-time, probe-time, or enable-time.
-> 
-> OK, back to the patch at hand.  I think we're agreed that having
-> pci_host_common_probe() call pci_fixup_irqs() is wrong on all
-> architectures (it doesn't cover hot-added devices and it may clobber
-> an IRQ after a driver has claimed the device (since it "fixes" all PCI
-> devices).  And we hope to fix this in the next cycle using Matt's
-> work.
-> 
-> So I think I'm OK with this transient ugliness.  Although
-> pci-host-common.c is currently only available on ARM and ARM64, in
-> theory, it should be usable on x86.  I would probably use "#ifdef ARM"
-> instead of "#ifndef ARM64" so that when it is made available on x86,
-> we won't call pci_fixup_irqs() there.
-> 
-> What do you think of the following?
-> 
-> 
-> commit 4e3538fb84dcba2de5d5b0990ced7f3f881fda1e
-> Author: Dongdong Liu <liudongdong3@huawei.com>
-> Date:   Thu Jan 12 14:28:24 2017 +0800
-> 
->     PCI: generic: Call pci_fixup_irqs() only on ARM
->     
->     pci_fixup_irqs() is problematic because:
->     
->       - it's called when we enumerate a host bridge, so we don't fixup IRQs for
->         hot-added PCI devices, and
->     
->       - it fixes up IRQs for all PCI devices in the system, so if we call it
->         multiple times, e.g., if we have several host controllers, we may
->         reallocate an IRQ for a device after a driver has already claimed it.
->     
->     We plan to replace pci_fixup_irqs() soon, but we still need it on ARM
->     because we don't have any other generic method for doing this.
->     
->     On ARM64, we don't need pci_fixup_irqs() because we do IRQ setup when we
->     bind a driver to the device (in the pci_device_probe() ->
->     pcibios_alloc_irq() path).
->     
->     pci-host-common.c is currently only used on ARM and ARM64.  In principle,
->     it could be used on x86, and we wouldn't want pci_fixup_irqs() there
->     either, because x86 does IRQ setup in the pci_enable_device() path.
->     
->     [bhelgaas: changelog, use #ifdef ARM, not #ifndef ARM64]
->     Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Reviewed-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->     Reviewed-by: Zhou Wang <wangzhou1@hisilicon.com>
-> 
-> diff --git a/drivers/pci/host/pci-host-common.c b/drivers/pci/host/pci-host-common.c
-> index e3c48b5deb93..e9a53bae1c25 100644
-> --- a/drivers/pci/host/pci-host-common.c
-> +++ b/drivers/pci/host/pci-host-common.c
-
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-
-> @@ -145,7 +145,9 @@ int pci_host_common_probe(struct platform_device *pdev,
->  		return -ENODEV;
->  	}
->  
-> +#ifdef CONFIG_ARM
->  	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-> +#endif
->  
->  	/*
->  	 * We insert PCI resources into the iomem_resource and
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index ff43a7e..c0b3b65 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -1343,7 +1343,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 
+ 	err = devm_request_pci_bus_resources(dev, &res);
+ 	if (err)
+-		goto err_vpcie;
++		goto err_free_res;
+ 
+ 	/* Get the I/O and memory ranges from DT */
+ 	resource_list_for_each_entry(win, &res) {
+@@ -1376,19 +1376,19 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 
+ 	err = rockchip_cfg_atu(rockchip);
+ 	if (err)
+-		goto err_vpcie;
++		goto err_free_res;
+ 
+ 	rockchip->msg_region = devm_ioremap(rockchip->dev,
+ 					    rockchip->msg_bus_addr, SZ_1M);
+ 	if (!rockchip->msg_region) {
+ 		err = -ENOMEM;
+-		goto err_vpcie;
++		goto err_free_res;
+ 	}
+ 
+ 	bus = pci_scan_root_bus(&pdev->dev, 0, &rockchip_pcie_ops, rockchip, &res);
+ 	if (!bus) {
+ 		err = -ENOMEM;
+-		goto err_vpcie;
++		goto err_free_res;
+ 	}
+ 
+ 	pci_bus_size_bridges(bus);
+@@ -1399,6 +1399,8 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 	pci_bus_add_devices(bus);
+ 	return err;
+ 
++err_free_res:
++	pci_free_resource_list(&res);
+ err_vpcie:
+ 	if (!IS_ERR(rockchip->vpcie3v3))
+ 		regulator_disable(rockchip->vpcie3v3);
+-- 
+1.9.1
