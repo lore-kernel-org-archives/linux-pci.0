@@ -1,78 +1,54 @@
-Return-Path: <SRS0=e1OI=2D=oracle.com=boris.ostrovsky@kernel.org>
-Return-Path: <SRS0=e1OI=2D=oracle.com=boris.ostrovsky@kernel.org>
-Subject: Re: [PATCH] xen: do not re-use pirq number cached in pci device msi
- msg data
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <04f2a09f-59be-a720-bc98-4afb53171790@oracle.com>
- <20170113200751.20125-1-ddstreet@ieee.org>
- <20170113223035.GE23066@char.us.oracle.com>
- <CALZtONDL2Ph0MMMfSuqvofNZ-+6jPi9aKsE4mL30i15Up6Bvug@mail.gmail.com>
- <0c2b4d6a-93e7-90a2-ffaf-fa423fb022d5@suse.com>
- <72f8b025-e858-5e54-d900-50fbec46fea6@oracle.com>
- <20170222142810.GA28359@bhelgaas-glaptop.roam.corp.google.com>
-Cc: Juergen Gross <jgross@suse.com>, Dan Streetman <ddstreet@ieee.org>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Dan Streetman <dan.streetman@canonical.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, xen-devel@lists.xenproject.org,
-        linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <3379a82f-04b7-152a-1577-bf99b1c638cc@oracle.com>
-Date: Wed, 22 Feb 2017 10:14:53 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54684 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752320AbdBJRwL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Feb 2017 12:52:11 -0500
+Date: Fri, 10 Feb 2017 11:42:50 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-kernel@vger.kernel.org,
+        Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 1/8] PCI: Recognize Thunderbolt devices
+Message-ID: <20170210174250.GD29169@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1484486499.git.lukas@wunner.de>
+ <bfabf33fc63abbeb84e11e544456098dff0e4604.1484486499.git.lukas@wunner.de>
+ <20170128215208.GM20550@bhelgaas-glaptop.roam.corp.google.com>
+ <20170129002616.GA28225@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <20170222142810.GA28359@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170129002616.GA28225@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/22/2017 09:28 AM, Bjorn Helgaas wrote:
-> On Tue, Feb 21, 2017 at 10:58:39AM -0500, Boris Ostrovsky wrote:
->> On 02/21/2017 10:45 AM, Juergen Gross wrote:
->>> On 21/02/17 16:31, Dan Streetman wrote:
->>>> On Fri, Jan 13, 2017 at 5:30 PM, Konrad Rzeszutek Wilk
->>>> <konrad.wilk@oracle.com> wrote:
->>>>> On Fri, Jan 13, 2017 at 03:07:51PM -0500, Dan Streetman wrote:
->>>>>> Revert the main part of commit:
->>>>>> af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
->>>>>>
->>>>>> That commit introduced reading the pci device's msi message data to see
->>>>>> if a pirq was previously configured for the device's msi/msix, and re-use
->>>>>> that pirq.  At the time, that was the correct behavior.  However, a
->>>>>> later change to Qemu caused it to call into the Xen hypervisor to unmap
->>>>>> all pirqs for a pci device, when the pci device disables its MSI/MSIX
->>>>>> vectors; specifically the Qemu commit:
->>>>>> c976437c7dba9c7444fb41df45468968aaa326ad
->>>>>> ("qemu-xen: free all the pirqs for msi/msix when driver unload")
->>>>>>
->>>>>> Once Qemu added this pirq unmapping, it was no longer correct for the
->>>>>> kernel to re-use the pirq number cached in the pci device msi message
->>>>>> data.  All Qemu releases since 2.1.0 contain the patch that unmaps the
->>>>>> pirqs when the pci device disables its MSI/MSIX vectors.
->>>>>>
->>>>>> This bug is causing failures to initialize multiple NVMe controllers
->>>>>> under Xen, because the NVMe driver sets up a single MSIX vector for
->>>>>> each controller (concurrently), and then after using that to talk to
->>>>>> the controller for some configuration data, it disables the single MSIX
->>>>>> vector and re-configures all the MSIX vectors it needs.  So the MSIX
->>>>>> setup code tries to re-use the cached pirq from the first vector
->>>>>> for each controller, but the hypervisor has already given away that
->>>>>> pirq to another controller, and its initialization fails.
->>>>>>
->>>>>> This is discussed in more detail at:
->>>>>> https://lists.xen.org/archives/html/xen-devel/2017-01/msg00447.html
->>>>>>
->>>>>> Fixes: af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
->>>>>> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
->>>>> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
->>>> This doesn't seem to be applied yet, is it still waiting on another
->>>> ack?  Or maybe I'm looking at the wrong git tree...
->>> Am I wrong or shouldn't this go through the PCI tree? Konrad?
->> Konrad is away this week but since pull request for Xen tree just went
->> out we should probably wait until rc1 anyway (unless something big comes
->> up before that).
-> I assume this should go via the Xen or x86 tree, since that's how most
-> arch/x86/pci/xen.c patches have been handled, including af42b8d12f8a.
-> If you think otherwise, let me know.
+On Sun, Jan 29, 2017 at 01:26:16AM +0100, Lukas Wunner wrote:
+> On Sat, Jan 28, 2017 at 03:52:08PM -0600, Bjorn Helgaas wrote:
+> > On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
 
-OK, I applied it to Xen tree's for-linus-4.11.
+> > > +static void set_pcie_vendor_specific(struct pci_dev *dev)
+> > 
+> > This is very specific to Thunderbolt, so let's name it something that
+> > conveys that information.  The fact that we use a vendor-specific
+> > capability to figure it out isn't really relevant in the caller.
+> 
+> I thought that we may have the necessity in the future to parse other
+> VSECs on device probe, so I gave the function this generic name.
+> 
+> Think about it, every VSEC that needs to be parsed needs the while loop
+> below.  It's more efficient to have only a single while loop that handles
+> *all* VSECs at once.
+> 
+> If someone needs to parse another VSEC, they just add it to this function.
+> So IMO the way I've solved it is preferable to just adding a Thunderbolt-
+> specific function.
+> 
+> Are you sure you want this renamed? (y/n)
 
--boris
+Sorry for the delay; I missed this question.  If this has already been
+merged somewhere as-is, that's fine.  If you repost it for any reason,
+I would prefer to rename it so it reflects the functionality rather
+than the source of the information.  This isn't a performance path, so
+readability is more important than optimization.
+
+Bjorn
