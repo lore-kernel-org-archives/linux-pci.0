@@ -1,78 +1,89 @@
-Return-Path: <SRS0=LczM=ZT=huawei.com=liudongdong3@kernel.org>
-Return-Path: <SRS0=LczM=ZT=huawei.com=liudongdong3@kernel.org>
-Subject: Re: [PATCH V2] PCI:hisi: Add DT almost ECAM support for HiSilicon
- Hip06/Hip07 host controllers
-To: kbuild test robot <lkp@intel.com>
-References: <201702041833.s6N3aiNm%fengguang.wu@intel.com>
-CC: <kbuild-all@01.org>, <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
-        <wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
-        <charles.chenxin@huawei.com>, <linuxarm@huawei.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <b1f87f45-c2c4-677d-65b3-e6bef4d19862@huawei.com>
-Date: Mon, 6 Feb 2017 08:51:41 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 10 Feb 2017 16:16:17 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Dennis Chen <dennis.chen@arm.com>
+Subject: Re: [PATCH] PCI:MSI Return -ENOSPC when requested vectors is not
+ enough
+Message-ID: <20170210221617.GT29169@bhelgaas-glaptop.roam.corp.google.com>
+References: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <201702041833.s6N3aiNm%fengguang.wu@intel.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Steve Capper <steve.capper@arm.com>, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ linux-ide@vger.kernel.org, Tom Long Nguyen <tom.l.nguyen@intel.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>, nd@arm.com,
+ Christoph Hellwig <hch@lst.de>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-在 2017/2/4 18:05, kbuild test robot 写道:
-> Hi Dongdong,
->
-> [auto build test WARNING on robh/for-next]
-> [also build test WARNING on v4.10-rc6 next-20170203]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Dongdong-Liu/PCI-hisi-Add-DT-almost-ECAM-support-for-HiSilicon-Hip06-Hip07-host-controllers/20170204-155006
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git for-next
-> config: arm64-allmodconfig (attached as .config)
-> compiler: aarch64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=arm64
->
-> All warnings (new ones prefixed by >>):
->
->    drivers/pci/host/pcie-hisi.c: In function 'hisi_pcie_almost_ecam_probe':
->>> drivers/pci/host/pcie-hisi.c:331:29: warning: initialization discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
->      struct pci_ecam_ops *ops = of_device_get_match_data(dev);
+On Thu, Dec 01, 2016 at 10:15:04AM +0800, Dennis Chen wrote:
+> The __pci_enable_msi_range() should return -ENOSPC instead of -EINVAL
+> when the device doesn't have enough vectors as required, just as the 
+> MSI-X vector allocator does in __pci_enable_msix_range(). Otherwise, 
+> some drivers depending on that return value will probably fallback to
+> the legacy interrupt directly, for example, in commit 17a51f12cfbd2814
+> ("ahci: only try to use multi-MSI mode if there is more than 1 port"), the
+> ahci driver will fallback to single MSI mode only when the return value
+> is -ENOSPC in case of required vectors is not enough, else the driver will
+> use legacy interrupt which has been observed on a x86 box with 6-port SATA
+> controller.
+> 
+> With this patch, when a MSI-capable device doesn't have enough MSI
+> vectors as requested, it will fallback to single MSI mode while not
+> legacy interrupt.
+> 
+> Signed-off-by: Dennis Chen <dennis.chen@arm.com>
+> Cc: Tejun Heo <tj@kernel.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Cc: Marc Zyngier <marc.zyngier@arm.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Steve Capper <steve.capper@arm.com>
+> Cc: linux-ide@vger.kernel.org
+> Cc: linux-arm-kernel@lists.infradead.org
 
-Sorry, I made a mistake, will send patch  V3 to fix the compile warning.
+Applied to pci/msi for v4.11, thanks, Dennis!
 
-Thanks,
-Dongdong
->                                 ^~~~~~~~~~~~~~~~~~~~~~~~
->
-> vim +/const +331 drivers/pci/host/pcie-hisi.c
->
->    315		},
->    316		{},
->    317	};
->    318	
->    319	static struct platform_driver hisi_pcie_driver = {
->    320		.probe  = hisi_pcie_probe,
->    321		.driver = {
->    322			   .name = "hisi-pcie",
->    323			   .of_match_table = hisi_pcie_of_match,
->    324		},
->    325	};
->    326	builtin_platform_driver(hisi_pcie_driver);
->    327	
->    328	static int hisi_pcie_almost_ecam_probe(struct platform_device *pdev)
->    329	{
->    330		struct device *dev = &pdev->dev;
->  > 331		struct pci_ecam_ops *ops = of_device_get_match_data(dev);
->    332	
->    333		return pci_host_common_probe(pdev, ops);
->    334	}
->    335	
->    336	static int hisi_pcie_platform_init(struct pci_config_window *cfg)
->    337	{
->    338		struct device *dev = cfg->parent;
->    339		struct platform_device *pdev = to_platform_device(dev);
->
 > ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
->
+>  drivers/pci/msi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index ad70507..da37113 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1084,7 +1084,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+>  	if (nvec < 0)
+>  		return nvec;
+>  	if (nvec < minvec)
+> -		return -EINVAL;
+> +		return -ENOSPC;
+>  
+>  	if (nvec > maxvec)
+>  		nvec = maxvec;
+> -- 
+> 2.7.4
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
