@@ -1,81 +1,185 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v5] PCI: Xilinx NWL: Modifying irq chip for legacy
- interrupts
-To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "robh@kernel.org" <robh@kernel.org>,
- "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
- "colin.king@canonical.com" <colin.king@canonical.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1486364596-19699-1-git-send-email-bharatku@xilinx.com>
- <4b04e834-08b6-a728-8fe5-13106d50b3b2@arm.com>
- <8520D5D51A55D047800579B094147198263E68AA@XAP-PVEXMBX02.xlnx.xilinx.com>
- <131228fb-d3f8-3836-3713-e948ed30d398@arm.com>
- <8520D5D51A55D047800579B094147198263E6AF3@XAP-PVEXMBX02.xlnx.xilinx.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <2196f028-b834-9d32-cc3a-e3eb5ed6c3b1@arm.com>
-Date: Thu, 9 Feb 2017 16:03:14 +0000
+Return-Path: <SRS0=8UZ4=ZY=gmail.com=yhlu.kernel@kernel.org>
+Return-Path: <SRS0=8UZ4=ZY=gmail.com=yhlu.kernel@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B094147198263E6AF3@XAP-PVEXMBX02.xlnx.xilinx.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ravikiran Gummaluri <rgummal@xilinx.com>, "arnd@arndb.de" <arnd@arndb.de>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "michal.simek@xilinx.com" <michal.simek@xilinx.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <20170209201154.GA22458@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170208192054.GA31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170209040648.GA1304@wunner.de> <20170209150950.GA11905@bhelgaas-glaptop.roam.corp.google.com>
+ <20170209201154.GA22458@bhelgaas-glaptop.roam.corp.google.com>
+From: Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 10 Feb 2017 18:39:16 -0800
+Message-ID: <CAE9FiQUpzE-5XKS8hKy3e25CyhknDjwXkNk=ADxi-r_euJTd5A@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI fixes for v4.10
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, Linus Torvalds <torvalds@linux-foundation.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Bart Van Assche <bart.vanassche@sandisk.com>,
+	Christoph Hellwig <hch@lst.de>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>, Ashok Raj <ashok.raj@intel.com>,
+	Keith Busch <keith.busch@intel.com>
+Content-Type: multipart/mixed; boundary=94eb2c03d95eddfa700548381e1b
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/02/17 15:16, Bharat Kumar Gogada wrote:
+--94eb2c03d95eddfa700548381e1b
+Content-Type: text/plain; charset=UTF-8
+
+On Thu, Feb 9, 2017 at 12:11 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Feb 09, 2017 at 09:09:50AM -0600, Bjorn Helgaas wrote:
+>> [+cc Ashok, Keith]
 >>
->> On 09/02/17 12:01, Bharat Kumar Gogada wrote:
->>>> On 06/02/17 07:03, Bharat Kumar Gogada wrote:
->>>>> +static struct irq_chip nwl_leg_irq_chip = {
->>>>> +	.name = "nwl_pcie:legacy",
->>>>> +	.irq_enable = nwl_unmask_leg_irq,
->>>>> +	.irq_disable = nwl_mask_leg_irq,
->>>>
->>>> You don't need these two if they are implemented in terms of mask/unmask.
->>>
->>> These are being invoked by some drivers other than interrupt flow.
->>> Ex: drivers/net/wireless/ath/ath9k/main.c
->>> static int ath_reset_internal(struct ath_softc *sc, struct
->>> ath9k_channel *hchan) {
->>>          ....
->>>          disable_irq(sc->irq);
->>>          tasklet_disable(&sc->intr_tq);
->>>         ...
->>>         ...
->>>         enable_irq(sc->irq);
->>>         spin_unlock_bh(&sc->sc_pcu_lock); } For us masking/unmasking
->>> is the way to enable/disable interrupts.
+>> On Thu, Feb 09, 2017 at 05:06:48AM +0100, Lukas Wunner wrote:
+>> > On Wed, Feb 08, 2017 at 01:22:56PM -0600, Bjorn Helgaas wrote:
+>> > > Bjorn Helgaas (1):
+>> > >       Revert "PCI: pciehp: Add runtime PM support for PCIe hotplug ports"
+>> >
+>> > What's the rationale for reverting this?
+>> >
+>> > You've received patches to fix the issue on both affected machines,
+>> > so a revert seems unnecessary:
+>> >
+>> > https://patchwork.kernel.org/patch/9557113/
+>> > https://patchwork.kernel.org/patch/9562007/
 >>
->> And if you looked at the way disable_irq is implemented, you would have found
->> out that it falls back to masking if there is no disable method, preserving the
->> semantic you expect.
+>> I don't think we've gotten to the root cause of the problem yet,
+>> and I don't want to throw in fixes at the last minute without a better
+>> understanding of it.
 >>
-> Yes I did see, but this fall back requires extra "IRQ_DISABLE_UNLAZY" flag to be set to each virq. 
+>> PCIe hotplug hardware is not very complicated, it hasn't changed in
+>> many years, and at least for the Intel hardware in question, is
+>> generally pretty well-tested with Windows.  So I want to be careful
+>> about asserting that this new piece of hardware is broken.
+>
+> I apologize: I had quirks on the brain, but neither of the patches
+> above is device-specific.  So neither is claiming broken hardware.
+>
+> However, 9557113 claims we get unwanted PME interrupts if the slot is
+> occupied when we suspend to D3hot.  This is what I want to explore
+> further, because that hardware behavior doesn't really make sense to
+> me.
+>
+> 9562007 apparently fixes something, but at this point it's a debugging
+> patch (no changelog or signed-off-by) so not a candidate for tossing
+> into v4.10 at this late date.
 
-No it doesn't. If you do a disable_irq(), the interrupt is flagged as
-disabled, but nothing gets done. If an interrupt actually fires, then
-the interrupts gets masked, and the handler is not called.
+Agreed. It should need more test coverage.
 
-So just drop these two methods, because if this doesn't work, you have
-bigger issues.
+Found more problems.
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+Actually we don't need 9557113.
+as even with that, we still saw link up when power off slots with some cards.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+please check updated version of 9562007, that fix power on/off link up problem.
+
+Ashok,
+
+Can ask your QA guys check only attached patch and commit 68db9bc ?
+
+Thanks
+
+Yinghai
+
+--94eb2c03d95eddfa700548381e1b
+Content-Type: text/x-patch; charset=US-ASCII; name="fix_extra_d0d3.patch"
+Content-Disposition: attachment; filename="fix_extra_d0d3.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_iz0mshmv0
+
+U3ViamVjdDpbUEFUQ0ggdjJdIFBDSSwgcGNpZWNocDogT25seSBwb3dlciBvbi9vZmYgc2xvdHMg
+d2hlbiBpdCBpcyBEMApGb3VuZCBwb3dlciBvbiB2aWEgL3N5cyBoYXMgcHJvYmxlbS4Kc2NhMDUt
+MGE4MWZkN2Y6fiAjIGVjaG8gMSA+IC9zeXMvYnVzL3BjaS9zbG90cy83L3Bvd2VyClsgIDMwMC45
+NDk5MzddIHBjaV9ob3RwbHVnOiBwb3dlcl93cml0ZV9maWxlOiBwb3dlciA9IDEKWyAgMzAwLjk1
+NTUwMl0gcGNpZWhwIDAwMDA6NzM6MDAuMDpwY2llMDA0OiBwY2llaHBfZ2V0X3Bvd2VyX3N0YXR1
+czogU0xPVENUUkwgYTggdmFsdWUgcmVhZCAxN2YxClsgIDMwMC45ODI1NTddIHBjaWVocCAwMDAw
+OjczOjAwLjA6cGNpZTAwNDogcGVuZGluZyBpbnRlcnJ1cHRzIDB4MDAxMCBmcm9tIFNsb3QgU3Rh
+dHVzClsgIDMwMC45OTExNzFdIHBjaWVocCAwMDAwOjczOjAwLjA6cGNpZTAwNDogcGNpZWhwX3Bv
+d2VyX29uX3Nsb3Q6IFNMT1RDVFJMIGE4IHdyaXRlIGNtZCAwClsgIDMwMS4wMDAwMzNdIHBjaWVo
+cCAwMDAwOjczOjAwLjA6cGNpZTAwNDogcGNpZWhwX2dyZWVuX2xlZF9ibGluazogU0xPVENUUkwg
+YTggd3JpdGUgY21kIDIwMApbICAzMDEuMDA5Mjc0XSBwY2llaHAgMDAwMDo3MzowMC4wOnBjaWUw
+MDQ6IHBlbmRpbmcgaW50ZXJydXB0cyAweDAwMTAgZnJvbSBTbG90IFN0YXR1cwpbICAzMDEuNjYy
+MTcyXSBwY2llaHAgMDAwMDo3MzowMC4wOnBjaWUwMDQ6IHBjaWVocF9jaGVja19saW5rX2FjdGl2
+ZTogbG5rX3N0YXR1cyA9IGYwODMKWyAgMzAxLjY3MDgyN10gcGNpZWhwIDAwMDA6NzM6MDAuMDpw
+Y2llMDA0OiBwZW5kaW5nIGludGVycnVwdHMgMHgwMTA4IGZyb20gU2xvdCBTdGF0dXMKWyAgMzAx
+LjY3OTM3Nl0gcGNpZWhwIDAwMDA6NzM6MDAuMDpwY2llMDA0OiBTbG90KDcpOiBMaW5rIFVwClsg
+IDMwMS42ODU0NjNdIHBjaWVocCAwMDAwOjczOjAwLjA6cGNpZTAwNDogU2xvdCg3KTogTGluayBV
+cCBldmVudCBpZ25vcmVkOyBhbHJlYWR5IHBvd2VyaW5nIG9uClsgIDMwMS42ODU1MDhdIHBjaWVo
+cCAwMDAwOjczOjAwLjA6cGNpZTAwNDogcGNpZWhwX2NoZWNrX2xpbmtfYWN0aXZlOiBsbmtfc3Rh
+dHVzID0gZjA4MwpbICAzMDIuMDA1OTY3XSBwY2llaHAgMDAwMDo3MzowMC4wOnBjaWUwMDQ6IHBj
+aWVocF9jaGVja19saW5rX3N0YXR1czogbG5rX3N0YXR1cyA9IGYwODMKWyAgMzAyLjAxNDg1OV0g
+cGNpIDAwMDA6NzQ6MDAuMDogWzE1YjM6MTAwM10gdHlwZSAwMCBjbGFzcyAweDBjMDYwMAoKYWxz
+byBmaW5kIG90aGVyIHNsb3Qgd2l0aCBvdGhlciBjYXJkIHN0aWxsIGhhdmUgZXh0cmEgbGluayB1
+cCBwcm9ibGVtIG9uIHBvd2VyIG9mZgpldmVuIGhhcyBjYW5fd2FrZSBwYXRjaC4KCnNjYTA1LTBh
+ODFmZDdmOn4gIyBlY2hvIDAgPiAvc3lzL2J1cy9wY2kvc2xvdHMvMS9wb3dlciAKWyA2MTE2Ljg3
+MzYzMl0gcGNpX2hvdHBsdWc6IHBvd2VyX3dyaXRlX2ZpbGU6IHBvd2VyID0gMApbIDYxMTYuODc5
+MTk4XSBwY2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IHBjaWVocF9nZXRfcG93ZXJfc3RhdHVz
+OiBTTE9UQ1RSTCBhOCB2YWx1ZSByZWFkIDExZjEKWyA2MTE2Ljg4ODczMF0gcGNpZWhwIDAwMDA6
+MTY6MDAuMDpwY2llMDA0OiBwY2llaHBfdW5jb25maWd1cmVfZGV2aWNlOiBkb21haW46YnVzOmRl
+diA9IDAwMDA6MTc6MDAKWyA2MTE2Ljg5ODQ2NF0gcGNpIDAwMDA6MTc6MDAuMDogUE1FIyBkaXNh
+YmxlZApbIDYxMTYuOTAzNTQxXSBwY2kgMDAwMDoxNzowMC4wOiBmcmVlaW5nIHBjaV9kZXYgaW5m
+bwpbIDYxMTYuOTA5NjYyXSBwY2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IHBlbmRpbmcgaW50
+ZXJydXB0cyAweDAwMTAgZnJvbSBTbG90IFN0YXR1cwpbIDYxMTYuOTE4Mjc3XSBwY2llaHAgMDAw
+MDoxNjowMC4wOnBjaWUwMDQ6IHBjaWVocF9wb3dlcl9vZmZfc2xvdDogU0xPVENUUkwgYTggd3Jp
+dGUgY21kIDQwMApbIDYxMTYuOTgyMDQ4XSBwY2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IHBl
+bmRpbmcgaW50ZXJydXB0cyAweDAxMDggZnJvbSBTbG90IFN0YXR1cwpbIDYxMTYuOTkwNjA4XSBw
+Y2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IFNsb3QoMSk6IExpbmsgRG93bgpbIDYxMTYuOTk2
+ODc2XSBwY2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IFNsb3QoMSk6IExpbmsgRG93biBldmVu
+dCBpZ25vcmVkOyBhbHJlYWR5IHBvd2VyaW5nIG9mZgpbIDYxMTcuOTYxNTIxXSBwY2llaHAgMDAw
+MDoxNjowMC4wOnBjaWUwMDQ6IHBjaWVocF9ncmVlbl9sZWRfb2ZmOiBTTE9UQ1RSTCBhOCB3cml0
+ZSBjbWQgMzAwClsgNjExNy45NzA1NzVdIHBjaWVocCAwMDAwOjE2OjAwLjA6cGNpZTAwNDogcGVu
+ZGluZyBpbnRlcnJ1cHRzIDB4MDAxOCBmcm9tIFNsb3QgU3RhdHVzClsgNjExNy45NzA1ODFdIHBj
+aWVocCAwMDAwOjE2OjAwLjA6cGNpZTAwNDogU2xvdCgxKTogQ2FyZCBwcmVzZW50ClsgNjExNy45
+ODU2NjBdIHBjaWVocCAwMDAwOjE2OjAwLjA6cGNpZTAwNDogcGNpZWhwX2dldF9wb3dlcl9zdGF0
+dXM6IFNMT1RDVFJMIGE4IHZhbHVlIHJlYWQgMTdmMQpbIDYxMTcuOTk1ODI1XSBwY2llaHAgMDAw
+MDoxNjowMC4wOnBjaWUwMDQ6IHBlbmRpbmcgaW50ZXJydXB0cyAweDAwMTAgZnJvbSBTbG90IFN0
+YXR1cwpbIDYxMTguMDA1NDg5XSBwY2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IHBjaWVocF9w
+b3dlcl9vbl9zbG90OiBTTE9UQ1RSTCBhOCB3cml0ZSBjbWQgMApbIDYxMTguMDE0NjI4XSBwY2ll
+aHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IHBjaWVocF9ncmVlbl9sZWRfYmxpbms6IFNMT1RDVFJM
+IGE4IHdyaXRlIGNtZCAyMDAKWyA2MTE4LjAyMzg4MF0gcGNpZWhwIDAwMDA6MTY6MDAuMDpwY2ll
+MDA0OiBwZW5kaW5nIGludGVycnVwdHMgMHgwMDEwIGZyb20gU2xvdCBTdGF0dXMKWyA2MTE4LjYw
+Mjg1NV0gcGNpZWhwIDAwMDA6MTY6MDAuMDpwY2llMDA0OiBwY2llaHBfY2hlY2tfbGlua19hY3Rp
+dmU6IGxua19zdGF0dXMgPSBmMTAzClsgNjExOC42MTE1MDddIHBjaWVocCAwMDAwOjE2OjAwLjA6
+cGNpZTAwNDogcGVuZGluZyBpbnRlcnJ1cHRzIDB4MDEwOCBmcm9tIFNsb3QgU3RhdHVzClsgNjEx
+OC42MjAwNTddIHBjaWVocCAwMDAwOjE2OjAwLjA6cGNpZTAwNDogU2xvdCgxKTogTGluayBVcApb
+IDYxMTguNjI2MTUxXSBwY2llaHAgMDAwMDoxNjowMC4wOnBjaWUwMDQ6IHBjaWVocF9jaGVja19s
+aW5rX2FjdGl2ZTogbG5rX3N0YXR1cyA9IGYxMDMKWyA2MTE4LjYzNDgyOF0gcGNpZWhwIDAwMDA6
+MTY6MDAuMDpwY2llMDA0OiBTbG90KDEpOiBMaW5rIFVwIGV2ZW50IGlnbm9yZWQ7IGFscmVhZHkg
+cG93ZXJpbmcgb24KWyA2MTE4Ljc0MTUyMF0gcGNpZWhwIDAwMDA6MTY6MDAuMDpwY2llMDA0OiBw
+Y2llaHBfY2hlY2tfbGlua19zdGF0dXM6IGxua19zdGF0dXMgPSBmMTAzClsgNjExOC43NTAyMDFd
+IHBjaSAwMDAwOjE3OjAwLjA6IFsxMDhlOjIwODhdIHR5cGUgMDAgY2xhc3MgMHgwMjA3MDAKLi4u
+CgpUaGF0IG1lYW4gY29tbWl0IDY4ZGI5YmMgYXNzdW1wYXRpb24gYWJvdXQgcG93ZXIgb24vb2Zm
+IG9uIEQzIGlzIG5vdCByaWdodC4KLSBUaGUgY29uZmlndXJhdGlvbiBzcGFjZSBvZiB0aGUgcG9y
+dCByZW1haW5zIGFjY2Vzc2libGUgaW4gRDNob3QsIHNvIGFsbAogIHRoZSBmdW5jdGlvbnMgdG8g
+cmVhZCBvciBtb2RpZnkgdGhlIFNsb3QgU3RhdHVzIGFuZCBTbG90IENvbnRyb2wKICByZWdpc3Rl
+cnMgbmVlZCBub3QgYmUgbW9kaWZpZWQuICBFdmVuIHR1cm5pbmcgb24gc2xvdCBwb3dlciBkb2Vz
+bid0IHNlZW0KICB0byByZXF1aXJlIHRoZSBwb3J0IHRvIGJlIGluIEQwLCBhdCBsZWFzdCB0aGUg
+UENJZSBzcGVjIGRvZXNuJ3Qgc2F5IHNvCiAgYW5kIEkgY29uZmlybWVkIHRoYXQgYnkgdGVzdGlu
+ZyB3aXRoIGEgVGh1bmRlcmJvbHQgY29udHJvbGxlci4KClRoaXMgcGF0Y2ggcHV0IGJhY2sgRDAg
+d2hlbiB0cnlpbmcgdG8gcG93ZXIgb24vb2ZmIHRoZSBzbG90cy4KClNpZ25lZC1vZmYtYnk6IFlp
+bmdoYWkgTHUgPHlpbmdoYWlAa2VybmVsLm9yZz4KCi0tLQogZHJpdmVycy9wY2kvaG90cGx1Zy9w
+Y2llaHBfY3RybC5jIHwgICAxMCArKysrKystLS0tCiAxIGZpbGUgY2hhbmdlZCwgNiBpbnNlcnRp
+b25zKCspLCA0IGRlbGV0aW9ucygtKQoKSW5kZXg6IGxpbnV4LTIuNi9kcml2ZXJzL3BjaS9ob3Rw
+bHVnL3BjaWVocF9jdHJsLmMKPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PQotLS0gbGludXgtMi42Lm9yaWcvZHJpdmVycy9w
+Y2kvaG90cGx1Zy9wY2llaHBfY3RybC5jCisrKyBsaW51eC0yLjYvZHJpdmVycy9wY2kvaG90cGx1
+Zy9wY2llaHBfY3RybC5jCkBAIC04OSwxNyArODksMTcgQEAgc3RhdGljIGludCBib2FyZF9hZGRl
+ZChzdHJ1Y3Qgc2xvdCAqcF9zbAogCXN0cnVjdCBjb250cm9sbGVyICpjdHJsID0gcF9zbG90LT5j
+dHJsOwogCXN0cnVjdCBwY2lfYnVzICpwYXJlbnQgPSBjdHJsLT5wY2llLT5wb3J0LT5zdWJvcmRp
+bmF0ZTsKIAorCXBtX3J1bnRpbWVfZ2V0X3N5bmMoJmN0cmwtPnBjaWUtPnBvcnQtPmRldik7CiAJ
+aWYgKFBPV0VSX0NUUkwoY3RybCkpIHsKIAkJLyogUG93ZXIgb24gc2xvdCAqLwogCQlyZXR2YWwg
+PSBwY2llaHBfcG93ZXJfb25fc2xvdChwX3Nsb3QpOwogCQlpZiAocmV0dmFsKQotCQkJcmV0dXJu
+IHJldHZhbDsKKwkJCWdvdG8gZXJyX2V4aXQ7CiAJfQogCiAJcGNpZWhwX2dyZWVuX2xlZF9ibGlu
+ayhwX3Nsb3QpOwogCiAJLyogQ2hlY2sgbGluayB0cmFpbmluZyBzdGF0dXMgKi8KLQlwbV9ydW50
+aW1lX2dldF9zeW5jKCZjdHJsLT5wY2llLT5wb3J0LT5kZXYpOwogCXJldHZhbCA9IHBjaWVocF9j
+aGVja19saW5rX3N0YXR1cyhjdHJsKTsKIAlpZiAocmV0dmFsKSB7CiAJCWN0cmxfZXJyKGN0cmws
+ICJGYWlsZWQgdG8gY2hlY2sgbGluayBzdGF0dXNcbiIpOwpAQCAtMTQzLDkgKzE0MywxMCBAQCBz
+dGF0aWMgaW50IHJlbW92ZV9ib2FyZChzdHJ1Y3Qgc2xvdCAqcF9zCiAKIAlwbV9ydW50aW1lX2dl
+dF9zeW5jKCZjdHJsLT5wY2llLT5wb3J0LT5kZXYpOwogCXJldHZhbCA9IHBjaWVocF91bmNvbmZp
+Z3VyZV9kZXZpY2UocF9zbG90KTsKLQlwbV9ydW50aW1lX3B1dCgmY3RybC0+cGNpZS0+cG9ydC0+
+ZGV2KTsKLQlpZiAocmV0dmFsKQorCWlmIChyZXR2YWwpIHsKKwkJcG1fcnVudGltZV9wdXQoJmN0
+cmwtPnBjaWUtPnBvcnQtPmRldik7CiAJCXJldHVybiByZXR2YWw7CisJfQogCiAJaWYgKFBPV0VS
+X0NUUkwoY3RybCkpIHsKIAkJcGNpZWhwX3Bvd2VyX29mZl9zbG90KHBfc2xvdCk7CkBAIC0xNTcs
+NiArMTU4LDcgQEAgc3RhdGljIGludCByZW1vdmVfYm9hcmQoc3RydWN0IHNsb3QgKnBfcwogCQkg
+Ki8KIAkJbXNsZWVwKDEwMDApOwogCX0KKwlwbV9ydW50aW1lX3B1dCgmY3RybC0+cGNpZS0+cG9y
+dC0+ZGV2KTsKIAogCS8qIHR1cm4gb2ZmIEdyZWVuIExFRCAqLwogCXBjaWVocF9ncmVlbl9sZWRf
+b2ZmKHBfc2xvdCk7Cg==
+--94eb2c03d95eddfa700548381e1b--
