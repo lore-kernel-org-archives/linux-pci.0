@@ -1,15 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 2 Feb 2017 10:25:41 +0100
-From: Simon Horman <horms@verge.net.au>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 1 4/4] PCI: rcar: Use of_device_get_match_data() to
- simplify probe
-Message-ID: <20170202092541.GM21831@verge.net.au>
-References: <20170131201400.27605.56002.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20170131202020.27605.39560.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170131202020.27605.39560.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <3236035.PSA6VtheyS@wuerfel>
+References: <20170128204839.18330-1-linus.walleij@linaro.org>
+ <CACRpkdbrys49Yv5fJ_te2H1mEUqquc1jn2dP-uvkdLixFbtYFA@mail.gmail.com>
+ <alpine.LNX.2.00.1702061038590.7077@T420s> <3236035.PSA6VtheyS@wuerfel>
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Sat, 11 Feb 2017 12:17:17 +0100
+Message-ID: <CACRpkdah04ZaRU52Gr6L=qmW57N6XOgZeHYNDzB2GcSH+B3DXA@mail.gmail.com>
+Subject: Re: [PATCH 4/4] ARM: dts: add PCI to the Gemini DTSI
+To: Arnd Bergmann <arnd@arndb.de>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,74 +17,53 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Scott Branden <sbranden@broadcom.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jon Mason <jonmason@broadcom.com>, linux-pci@vger.kernel.org,
- Roy Zang <tie-fei.zang@freescale.com>, linux-renesas-soc@vger.kernel.org,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Geert Uytterhoeven <geert@linux-m68k.org>,
- Shailendra Verma <shailendra.v@samsung.com>, Ray Jui <rjui@broadcom.com>,
- bcm-kernel-feedback-list@broadcom.com, Mingkai Hu <mingkai.hu@freescale.com>,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Cc: openwrt-devel@openwrt.org, Florian Fainelli <f.fainelli@gmail.com>,
+ Paulius Zaleckas <paulius.zaleckas@gmail.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Janos Laube <janos.dev@gmail.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31, 2017 at 02:20:20PM -0600, Bjorn Helgaas wrote:
-> This is a DT-only driver, so the only way to call rcar_pcie_probe() is to
-> match an entry in rcar_pcie_of_match[], so of_id cannot be NULL.
-> 
-> Furthermore, of_id->data can only be NULL if an rcar_pcie_of_match[] entry
-> has a NULL .data member.  That's a driver defect, and we don't want to
-> return -EINVAL, which is easy to ignore.  We'd rather take the NULL pointer
-> dereference so we notice the problem and fix it.
-> 
-> Use of_device_get_match_data() to retrieve the hw_init_fn pointer.  No
-> functional change intended.
-> 
-> Suggested-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+On Fri, Feb 10, 2017 at 4:40 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Monday, February 6, 2017 10:55:03 AM CET Hans Ulli Kroll wrote:
+>>
+>> from my IB 4220 sources.
+>>
+>> #define IRQ_PCI_INTA                                   PCI_IRQ_OFFSET + 0
+>> #ifndef CONFIG_DUAL_PCI
+>> #define IRQ_PCI_INTB                                   PCI_IRQ_OFFSET + 1
+>> #define IRQ_PCI_INTC                                   PCI_IRQ_OFFSET + 2
+>> #define IRQ_PCI_INTD                                   PCI_IRQ_OFFSET + 3
+>> #else
+>> #define IRQ_PCI_INTB                                   27
+>> #define IRQ_PCI_INTC                                   28
+>> #define IRQ_PCI_INTD                                   29
+>> #endif
+>>
+>> CONFIG_DUAL_PCI is never used
+>> IRQ_PCIB - IRQ_PCID or IRQ_PCI_INTB - IRQ_PCI_INTD are also never used.
+>
+> The source code that Linus quoted earlier had references to
+> 'IRQ_PCI_INTA +n' though, which is basically the same thing.
 
-Acked-by: Simon Horman <horms+renesas@verge.net.au>
+There is essentially two versions of the IP block, one which has
+a cascaded interrupt controller in the PCI host bridge, and one
+named "dual PCI" that has dedicated IRQs for PCIA, B, C, D on
+the primary interrupt controller.
 
-> ---
->  drivers/pci/host/pcie-rcar.c |    7 +------
->  1 file changed, 1 insertion(+), 6 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-> index aca85be101f8..b3b6d5273347 100644
-> --- a/drivers/pci/host/pcie-rcar.c
-> +++ b/drivers/pci/host/pcie-rcar.c
-> @@ -1125,7 +1125,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	struct device *dev = &pdev->dev;
->  	struct rcar_pcie *pcie;
->  	unsigned int data;
-> -	const struct of_device_id *of_id;
->  	int err;
->  	int (*hw_init_fn)(struct rcar_pcie *);
->  
-> @@ -1149,11 +1148,6 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	if (err)
->  		return err;
->  
-> -	of_id = of_match_device(rcar_pcie_of_match, dev);
-> -	if (!of_id || !of_id->data)
-> -		return -EINVAL;
-> -	hw_init_fn = of_id->data;
-> -
->  	pm_runtime_enable(dev);
->  	err = pm_runtime_get_sync(dev);
->  	if (err < 0) {
-> @@ -1162,6 +1156,7 @@ static int rcar_pcie_probe(struct platform_device *pdev)
->  	}
->  
->  	/* Failure to get a link might just be that no cards are inserted */
-> +	hw_init_fn = of_device_get_match_data(dev);
->  	err = hw_init_fn(pcie);
->  	if (err) {
->  		dev_info(dev, "PCIe link down\n");
-> 
+I'll try to codify it into the driver so it's clear how this works on the
+two variants.
+
+I'm also pretty sure this is a faraday IP block and not something
+from Storlink/Storm/Cortina, so I will rename the compatible strings
+etc reflecting that.
+
+Yours,
+Linus Walleij
 
 _______________________________________________
 linux-arm-kernel mailing list
