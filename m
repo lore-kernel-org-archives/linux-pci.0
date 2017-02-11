@@ -1,121 +1,187 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+ Florian Fainelli <f.fainelli@gmail.com>, Rob Herring <robh@kernel.org>,
+ devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Gavin Guo <gavinguo@andestech.com>, Macpaul Lin <macpaul@andestech.com>
+Subject: [PATCH 1/4] PCI: add DT bindings for Faraday Technology PCI Host
+ Bridge
+Date: Sat, 11 Feb 2017 13:52:17 +0100
+Message-Id: <20170211125220.10273-1-linus.walleij@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: openwrt-devel@openwrt.org, Feng-Hsin Chiang <john453@faraday-tech.com>,
+ Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-pci@vger.kernel.org,
+ Linus Walleij <linus.walleij@linaro.org>, Janos Laube <janos.dev@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <20170130204106.31891.59164.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170130203822.31891.22461.stgit@bhelgaas-glaptop.roam.corp.google.com>
- <20170130204106.31891.59164.stgit@bhelgaas-glaptop.roam.corp.google.com>
-From: Andreas Boll <andreas.boll.dev@gmail.com>
-Date: Wed, 1 Feb 2017 16:45:42 +0100
-Message-ID: <CACiKqBfECOAsBHNqkkO84sZrjJ1itv5chOz4ZAu2jwQvBEyacg@mail.gmail.com>
-Subject: Re: [PATCH v1 2/2] drm/radeon: make MacBook Pro d3_delay quirk more generic
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Deucher <alexander.deucher@amd.com>,
-        =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
-        linux-pm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org,
-        Maarten Lankhorst <maarten.lankhorst@canonical.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-2017-01-30 21:41 GMT+01:00 Bjorn Helgaas <bhelgaas@google.com>:
-> The PCI Power Management Spec, r1.2, sec 5.6.1, requires a 10 millisecond
-> delay when powering on a device, i.e., transitioning from state D3hot to
-> D0.
->
-> Apparently some devices require more time, and d1f9809ed131 ("drm/radeon:
-> add quirk for d3 delay during switcheroo poweron for apple macbooks") added
-> an additional delay for the Radeon device in a MacBook Pro.  4807c5a8a0c8
-> ("drm/radeon: add a PX quirk list") made the affected device more explicit.
->
-> Add a generic PCI quirk to increase the d3_delay.  This means we will use
-> the additional delay for *all* wakeups from D3, not just those initiated by
-> radeon_switcheroo_set_state().
->
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> CC: Maarten Lankhorst <maarten.lankhorst@canonical.com>
-> ---
->  drivers/gpu/drm/radeon/radeon_device.c |   12 ------------
->  drivers/pci/quirks.c                   |   13 +++++++++++++
->  2 files changed, 13 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/gpu/drm/radeon/radeon_device.c b/drivers/gpu/drm/radeon/radeon_device.c
-> index 8a1df2a1afbd..8b8fd981cae5 100644
-> --- a/drivers/gpu/drm/radeon/radeon_device.c
-> +++ b/drivers/gpu/drm/radeon/radeon_device.c
-> @@ -113,7 +113,6 @@ static inline bool radeon_is_atpx_hybrid(void) { return false; }
->  #endif
->
->  #define RADEON_PX_QUIRK_DISABLE_PX  (1 << 0)
-> -#define RADEON_PX_QUIRK_LONG_WAKEUP (1 << 1)
->
->  struct radeon_px_quirk {
->         u32 chip_vendor;
-> @@ -136,9 +135,6 @@ static struct radeon_px_quirk radeon_px_quirk_list[] = {
->          * https://bugzilla.kernel.org/show_bug.cgi?id=51381
->          */
->         { PCI_VENDOR_ID_ATI, 0x6840, 0x1043, 0x2122, RADEON_PX_QUIRK_DISABLE_PX },
-> -       /* macbook pro 8.2 */
-> -       { PCI_VENDOR_ID_ATI, 0x6741, PCI_VENDOR_ID_APPLE, 0x00e2, RADEON_PX_QUIRK_LONG_WAKEUP },
+This adds device tree bindings for the Faraday technology PCI
+Host Bridge. This IP is found in the Storlink/Storm/Cortina
+Gemini SoC platform.
 
-Do you intentionally removed the following line?
-> -       { 0, 0, 0, 0, 0 },
+Cc: Janos Laube <janos.dev@gmail.com>
+Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
+Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>
+Cc: devicetree@vger.kernel.org
+Cc: Gavin Guo <gavinguo@andestech.com>
+Cc: Macpaul Lin <macpaul@andestech.com>
+Cc: Feng-Hsin Chiang <john453@faraday-tech.com>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+---
+ChangeLog v1->v2:
+- Rename from Cortina prefixes to Faraday. This is clearly
+  a Faraday IP block.
+- Support both the version with cascaded interrupts and the
+  "dual" version with 1-to-1 mapped interrupts.
+- Change bus-range to <0x00 0xff>
+- Fix spelling mistake
+- Write a bit about swizzling interrupts on the interrupt
+  controller side
+- Reasonable swizzling in the interrupt mapping example
 
->  };
->
->  bool radeon_is_px(struct drm_device *dev)
-> @@ -1241,25 +1237,17 @@ static void radeon_check_arguments(struct radeon_device *rdev)
->  static void radeon_switcheroo_set_state(struct pci_dev *pdev, enum vga_switcheroo_state state)
->  {
->         struct drm_device *dev = pci_get_drvdata(pdev);
-> -       struct radeon_device *rdev = dev->dev_private;
->
->         if (radeon_is_px(dev) && state == VGA_SWITCHEROO_OFF)
->                 return;
->
->         if (state == VGA_SWITCHEROO_ON) {
-> -               unsigned d3_delay = dev->pdev->d3_delay;
-> -
->                 printk(KERN_INFO "radeon: switched on\n");
->                 /* don't suspend or resume card normally */
->                 dev->switch_power_state = DRM_SWITCH_POWER_CHANGING;
->
-> -               if (d3_delay < 20 && (rdev->px_quirk_flags & RADEON_PX_QUIRK_LONG_WAKEUP))
-> -                       dev->pdev->d3_delay = 20;
-> -
->                 radeon_resume_kms(dev, true, true);
->
-> -               dev->pdev->d3_delay = d3_delay;
-> -
->                 dev->switch_power_state = DRM_SWITCH_POWER_ON;
->                 drm_kms_helper_poll_enable(dev);
->         } else {
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 1800befa8b8b..512d7a875d62 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -1683,6 +1683,19 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,     0x2609, quirk_intel_pcie_pm);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,   0x260a, quirk_intel_pcie_pm);
->  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL,   0x260b, quirk_intel_pcie_pm);
->
-> +static void quirk_radeon_pm(struct pci_dev *dev)
-> +{
-> +       if (dev->subsystem_vendor == PCI_VENDOR_ID_APPLE &&
-> +           dev->subsystem_device == 0x00e2) {
-> +               if (dev->d3_delay < 20) {
-> +                       dev->d3_delay = 20;
-> +                       dev_info(&dev->dev, "extending delay after power-on from D3 to %d msec\n",
-> +                                dev->d3_delay);
-> +               }
-> +       }
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x6741, quirk_radeon_pm);
-> +
->  #ifdef CONFIG_X86_IO_APIC
->  /*
->   * Boot interrupts on some chipsets cannot be turned off. For these chipsets,
->
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+This can be merged to the PCI tree whenever it is considered
+fine for inclusion.
+---
+ .../devicetree/bindings/pci/faraday-pci.txt        | 113 +++++++++++++++++++++
+ 1 file changed, 113 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/faraday-pci.txt
+
+diff --git a/Documentation/devicetree/bindings/pci/faraday-pci.txt b/Documentation/devicetree/bindings/pci/faraday-pci.txt
+new file mode 100644
+index 000000000000..5fbb0fc6b758
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/faraday-pci.txt
+@@ -0,0 +1,113 @@
++Faraday Technology PCI Host Bridge
++
++This PCI bridge is found inside that Cortina Systems Gemini SoC platform and
++is a generic IP block from Faraday Technology. It exists in two variants:
++plain and dual PCI. The plain version embeds a cascading interrupt controller
++into the host bridge. The dual version routes the interrupts to the host
++chips interrupt controller.
++
++The host controller appear on the PCI bus with vendor ID 0x159b (Faraday
++Technology) and product ID 0x4321.
++
++Mandatory properties:
++
++- compatible: should be one of
++  "faraday,pci"
++  "faraday,dual-pci"
++- reg: memory base and size for the host bridge
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- #interrupt-cells: set to <1>
++- bus-range: set to <0x00 0xff>
++- device_type, set to "pci"
++- ranges: see pci.txt
++- interrupt-map-mask: see pci.txt
++- interrupt-map: see pci.txt
++
++Mandatory subnodes:
++- For "faraday,pci" a node representing the interrupt-controller inside the
++  host bridge is mandatory. It has the following mandatory properties:
++  - interrupt: see interrupt-controller/interrupts.txt
++  - interrupt-parent: see interrupt-controller/interrupts.txt
++  - interrupt-controller: see interrupt-controller/interrupts.txt
++  - #address-cells: set to <0>
++  - #interrupt-cells: set to <1>
++
++I/O space considerations:
++
++The plain variant has 128MiB of non-prefetchable memory space, whereas the
++"dual" variant has 64MiB. Take this into account when describing the ranges.
++
++Interrupt map considerations:
++
++The "dual" variant will get INT A, B, C, D from the system interrupt controller
++and should point to respective interrupt in that controller in its
++interrupt-map.
++
++The code which is the only documentation of how the Faraday PCI (the non-dual
++variant) interrupts assigns the default interrupt mapping/swizzling has
++typically been like this, doing the swizzling on the interrupt controller side
++rather than in the interconnect:
++
++interrupt-map-mask = <0xf800 0 0 7>;
++interrupt-map =
++	<0x4800 0 0 1 &pci_intc 0>, /* Slot 9 */
++	<0x4800 0 0 2 &pci_intc 1>,
++	<0x4800 0 0 3 &pci_intc 2>,
++	<0x4800 0 0 4 &pci_intc 3>,
++	<0x5000 0 0 1 &pci_intc 1>, /* Slot 10 */
++	<0x5000 0 0 2 &pci_intc 2>,
++	<0x5000 0 0 3 &pci_intc 3>,
++	<0x5000 0 0 4 &pci_intc 0>,
++	<0x5800 0 0 1 &pci_intc 2>, /* Slot 11 */
++	<0x5800 0 0 2 &pci_intc 3>,
++	<0x5800 0 0 3 &pci_intc 0>,
++	<0x5800 0 0 4 &pci_intc 1>,
++	<0x6000 0 0 1 &pci_intc 3>, /* Slot 12 */
++	<0x6000 0 0 2 &pci_intc 0>,
++	<0x6000 0 0 3 &pci_intc 1>,
++	<0x6000 0 0 4 &pci_intc 2>;
++
++Example:
++
++pci@50000000 {
++	compatible = "faraday,pci";
++	reg = <0x50000000 0x100>;
++	interrupts = <8 IRQ_TYPE_LEVEL_HIGH>, /* PCI A */
++			<26 IRQ_TYPE_LEVEL_HIGH>, /* PCI B */
++			<27 IRQ_TYPE_LEVEL_HIGH>, /* PCI C */
++			<28 IRQ_TYPE_LEVEL_HIGH>; /* PCI D */
++	#address-cells = <3>;
++	#size-cells = <2>;
++	#interrupt-cells = <1>;
++
++	bus-range = <0x00 0xff>;
++	ranges = /* 1MiB I/O space 0x50000000-0x500fffff */
++		 <0x01000000 0 0          0x50000000 0 0x00100000>,
++		 /* 128MiB non-prefetchable memory 0x58000000-0x5fffffff */
++		 <0x02000000 0 0x58000000 0x58000000 0 0x08000000>;
++	interrupt-map-mask = <0xf800 0 0 7>;
++	interrupt-map =
++		<0x4800 0 0 1 &pci_intc 0>, /* Slot 9 */
++		<0x4800 0 0 2 &pci_intc 1>,
++		<0x4800 0 0 3 &pci_intc 2>,
++		<0x4800 0 0 4 &pci_intc 3>,
++		<0x5000 0 0 1 &pci_intc 1>, /* Slot 10 */
++		<0x5000 0 0 2 &pci_intc 2>,
++		<0x5000 0 0 3 &pci_intc 3>,
++		<0x5000 0 0 4 &pci_intc 0>,
++		<0x5800 0 0 1 &pci_intc 2>, /* Slot 11 */
++		<0x5800 0 0 2 &pci_intc 3>,
++		<0x5800 0 0 3 &pci_intc 0>,
++		<0x5800 0 0 4 &pci_intc 1>,
++		<0x6000 0 0 1 &pci_intc 3>, /* Slot 12 */
++		<0x6000 0 0 2 &pci_intc 0>,
++		<0x6000 0 0 3 &pci_intc 0>,
++		<0x6000 0 0 4 &pci_intc 0>;
++	pci_intc: interrupt-controller {
++		interrupt-parent = <&intcon>;
++		interrupt-controller;
++		#address-cells = <0>;
++		#interrupt-cells = <1>;
++	};
++};
+-- 
+2.9.3
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
