@@ -1,108 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46628 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751079AbdBMXGy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Feb 2017 18:06:54 -0500
-Date: Mon, 13 Feb 2017 16:06:52 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Will Deacon <will.deacon@arm.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org,
-        Vikram Sethi <vikrams@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: RFC on No ACS Support and SMMUv3 Support
-Message-ID: <20170213160652.7c141eb1@t450s.home>
-In-Reply-To: <2944ff12-d5c0-179a-7c07-fbbafcd022da@codeaurora.org>
-References: <2944ff12-d5c0-179a-7c07-fbbafcd022da@codeaurora.org>
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Date: Sun, 12 Feb 2017 18:13:01 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH v5 3/8] PCI: Don't block runtime PM for Thunderbolt host
+ hotplug ports
+Message-ID: <20170212171301.GA2845@wunner.de>
+References: <cover.1484486499.git.lukas@wunner.de>
+ <be633737115c0be241fccd75bc136dd1da72c1b5.1484486499.git.lukas@wunner.de>
+ <20170210183912.GF29169@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170210183912.GF29169@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 13 Feb 2017 17:24:40 -0500
-Sinan Kaya <okaya@codeaurora.org> wrote:
-
-> Hi,
-> I am getting ready to submit a quirk patch. Before I go ahead and submit
-> it for review, I wanted to get ARM IOMMU developers and PCI/VFIO maintainers
-> together to figure out what the best approach would be.
+On Fri, Feb 10, 2017 at 12:39:12PM -0600, Bjorn Helgaas wrote:
+> On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
+> > Hotplug ports generally block their parents from suspending to D3hot as
+> > otherwise their interrupts couldn't be delivered.
 > 
-> The Qualcomm QDF2400 server does not support the ACS functionality. 
-> The server chip implements the ARM SMMUv3 specification with Stream Id = BDF. 
+> This sounds related to PCIe r3.1, sec 5.3.1.4, which says functions
+> supporting PME generation from D3 must support it for both D3cold and
+> D3hot.  I think in PCIe, PMEs mean PME Messages, and the 5.3.1
+> implementation note says Messages are not affected by the PM state of
+> virtual bridges.
 > 
-> SMMUv3 allows each PCIe function to have unique SMMU mappings and provides
-> some level of isolation. 
-
-"some level"?  Regardless, this is irrelevant.  ACS is how PCIe
-describes the specific forwarding behavior of transactions within the
-PCIe hierarchy.  The granularity of the SMMU translation is different
-from ACS.
-
-> With the current upstream SMMUv3 driver, we are unable to do a passthrough
-> for a virtual function. This is caused by the pci_device_group() function's
-> failure to find the smallest isolation group in pci_acs_path_enabled()
-> function. 
+> So that seems to say that hotplug ports *should* be able to deliver
+> PMEs even while in D3hot.
 > 
-> Since no group is found, all the PCI functions are placed into the same
-> group at the end of the function. 
+> Maybe you're referring to the hotplug interrupts themselves, not the
+> PME?  I assume a hotplug event (presence detect, attention button,
+> etc) would first cause a PME, then the OS would return the path to D0,
+> then the hotplug interrupt would be delivered.
 > 
-> There are numerous quirk patches when it comes to ACS.
+> > An exception are Thunderbolt host controllers:  They have a separate
+> > GPIO pin to side-band signal plug events even if the controller is
+> > powered down or its parent ports are suspended to D3.  They can be told
+> > apart from Thunderbolt controllers in attached devices by checking if
+> > they're situated below a non-Thunderbolt device (typically a root port,
+> > or the downstream port of a PCIe switch in the case of the MacPro6,1).
 > 
-> pci_quirk_amd_sb_acs()
-> pci_quirk_cavium_acs()
-> pci_quirk_intel_pch_acs_match()
+> In PCIe terms, does a "Thunderbolt host controller" look like a
+> downstream port that supports hotplug?
 > 
-> These quirk patches allow a group to be generated per PCI function. Everything
-> works fine.
-> 
-> I can go ahead and add 
-> 
-> pci_quirk_qualcomm_acs() with the same contents as pci_quirk_cavium_acs()
+> It seems like the PCIe PME mechanism *should* work pretty much like
+> this sideband GPIO.  But I might be reading the spec wrong.
 
-Creating a quirk is not simply a matter of making the code do what you
-want, an ACS quirk is you, on behalf of Qualcomm, vouching for the
-hardware behaving in a certain way.  Specifically you're saying that
-the device does Source Validation (ie. a downstream device cannot spoof
-translations for devices on a different bus), the device does not do
-Request Redirection (ie. peer-to-peer shortcuts that may bypass the
-IOMMU), the device does not do Completion Redirection (same, but for
-completions), and the device does Upstream Forwarding (ie. no
-shortcuts).  If the hardware does not honor these behaviors then adding
-a quirk is only putting customers at risk.
+I am dropping this patch in v6 of my Thunderbolt runpm series.
 
-> Tomorrow, some other ARM64 vendors like up and start adding pci_quirk_vendor_acs()
-> functions. IMO, it leads to unnecessary code duplication. 
+The "Light Ridge" Thunderbolt controller in my machine claims to support
+PME, but its WAKE# pin is not connected.  (It's pulled up to 3.3V.)
+I also have an external Thunderbolt chassis with the same controller,
+and the controller likewise claims to support PME, but its WAKE# pin is
+not connected to the PCIe root im my machine in any way.
 
-Which is exactly why they should be implementing ACS in their hardware!
+This led me to the conclusion that PME is not reliable and therefore
+in a Thunderbolt daisy chain, which is a cascade of PCIe switches,
+only the hotplug port at the farthest end of the chain may suspend to
+D3hot, whereas all the ports between it and the root bridge must stay
+awake for interrupts to come through.
 
-> I can go ahead and try to make the patches similar with generic names like pci_quirk_no_acs()
-> so that every vendor can use to it. Still, it would require some quirk patch from a vendor.
-> 
-> Nate has been changing the arm_smmu_device_group() function internally to always
-> use generic_device_group(). This provides support for the Virtual Function passthrough
-> but it is not future proof. Tomorrow, some HW with ACS capability can show up and
-> the ARM SMMUv3 driver wouldn't bother to see if there is actual HW isolation path
-> available.
-> 
-> What I really would like to do is to find a balance between what Nate has been doing
-> internally and what pci_device_group() does by changing the SMMUv3 driver to query if
-> ACS path is supported or not similar to the loop in pci_device_group. If not supported,
-> fallback to generic_device_group() function in arm_smmu_device_group().
+What I failed to see, due to poor understanding of the (undocumented)
+Thunderbolt technology, is that even though ports in the middle of the
+chain may be in D3hot and prevent PCIe interrupts from coming through,
+the network of Converged I/O switches underlying the PCI tunnels
+continues to function and deliver plug events.  It is thus the NHI
+driver's job to runtime resume the PCIe switch where a CIO plug event
+occurred, as well as its parents, to ensure delivery of PCIe interrupts.
+The CIO plug event essentially serves as a sideband signal.  So far the
+thunderbolt NHI driver does not support daisy chaining, so this is not
+yet an issue.  (Only for tunnels established by the EFI driver.)
 
-Intel VT-d and AMD-Vi already manage to do this, what is it about an
-SMMU topology that makes it significantly different.  Note that like
-SMMU, both of these have BDF level granularity for identifying devices,
-but defer to the ACS based isolation for grouping based on downstream
-components.  The best IOMMU available cannot overcome transactions that
-it never sees because they're rerouted before reaching the IOMMU.
-
-> I'm just looking for a more permanent solution rather than relying on quirks for chips
-> A, B, C and D.
-
-Implement ACS in all downstream ports and multifunction endpoints!
 Thanks,
 
-Alex
+Lukas
