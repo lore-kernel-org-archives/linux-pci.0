@@ -1,165 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-it0-f49.google.com ([209.85.214.49]:35288 "EHLO
-        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751213AbdBEO4p (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Feb 2017 09:56:45 -0500
-Received: by mail-it0-f49.google.com with SMTP id 203so40622725ith.0
-        for <linux-pci@vger.kernel.org>; Sun, 05 Feb 2017 06:56:45 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <17693846.Edk12xXofc@wuerfel>
-References: <20170128204839.18330-1-linus.walleij@linaro.org> <17693846.Edk12xXofc@wuerfel>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Sun, 5 Feb 2017 15:56:43 +0100
-Message-ID: <CACRpkdYpBYaeTo2SJ55=cwKcZ5Y7A1k-wy1N3UuR6u3L3RdNoA@mail.gmail.com>
-Subject: Re: [PATCH 1/4] PCI: add DT bindings for Cortina Gemini PCI Host Bridge
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Janos Laube <janos.dev@gmail.com>,
-        Paulius Zaleckas <paulius.zaleckas@gmail.com>,
-        openwrt-devel@openwrt.org,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Message-Id: <cover.1486913733.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 12 Feb 2017 17:07:45 +0100
+Subject: [PATCH v6 0/8] Runtime PM for Thunderbolt on Macs
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, Mika Westerberg <mika.westerberg@linux.intel.com>, Erik Veijola <erik.veijola@linux.intel.com>, Ashok Raj <ashok.raj@intel.com>, Keith Busch <keith.busch@intel.com>, Yinghai Lu <yinghai@kernel.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 1, 2017 at 12:19 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> On Saturday, January 28, 2017 9:48:36 PM CET Linus Walleij wrote:
->> +       interrupt-map-mask =3D <0xff00 0 0 7>;
->> +       interrupt-map =3D <0x4800 0 0 1 &pci_intc 0>, /* Slot 9 */
->> +                       <0x4900 0 0 2 &pci_intc 1>,
->> +                       <0x4a00 0 0 3 &pci_intc 2>,
->> +                       <0x4b00 0 0 4 &pci_intc 3>,
->> +                       <0x5000 0 0 1 &pci_intc 0>, /* Slot 10 */
->> +                       <0x5100 0 0 2 &pci_intc 1>,
->> +                       <0x5200 0 0 3 &pci_intc 2>,
->> +                       <0x5300 0 0 4 &pci_intc 3>,
->> +                       <0x5800 0 0 1 &pci_intc 0>, /* Slot 11 */
->> +                       <0x5900 0 0 2 &pci_intc 1>,
->> +                       <0x5a00 0 0 3 &pci_intc 2>,
->> +                       <0x5b00 0 0 4 &pci_intc 3>,
->> +                       <0x6000 0 0 1 &pci_intc 0>, /* Slot 12 */
->> +                       <0x6100 0 0 2 &pci_intc 1>,
->> +                       <0x6200 0 0 3 &pci_intc 2>,
->> +                       <0x6300 0 0 4 &pci_intc 3>;
->>
->
-> The mapping looks wrong here, we normally don't list interrupts per funct=
-ion
-> so the mask should be 0xf800.
+Power down Thunderbolt controllers on Macs when nothing is plugged in
+to save around 2W per controller and fix a power regression introduced
+in v3.17 that affects millions of machines (all Macs with Thunderbolt)
 
-Yup it works that way too, and indeed the USB hub on function
-2 was requesting the right pin and everything.
 
-> Note that the interrupt map is board specific, so this should probably
-> go in the board.dts file rather than platform.dtsi.
+Changes since v5:
 
-OK moving it down there.
+- Patch [1/8] ("PCI: Recognize Thunderbolt devices"):
+  Rename set_pcie_vendor_specific() (Bjorn Helgaas)
 
-> For this particular board, the interrupt lines appear to have been badly
-> configured so all slots use the same interrupt 0 for IntA. IIRC This also
-> means you can probably use <0 0 0 7> as the mask and just specify each of
-> the four interrupts once. A properly wired board would swizzle the
-> interrupts so that each slot has a different IRQ for its IntA line.
+- Patch [3/8] ("PCI: pciehp: Reinstate runtime PM on Thunderbolt hotplug
+  ports"):  Modified version of reverted patch
 
-They are swizzled, I just have very bad hardware docs. (Only
-code.) It turns out when I'm browsing through old board support
-code that there is a comment followed by a piece of code like this:
+- Patch [7/8] ("thunderbolt: Power down controller when idle"):
+  Add comment explaining use of pr_*() instead of dev_*(), drop unnecessary
+  initialization (Bjorn Helgaas)
 
-/*
- *      No swizzle on SL2312
- */
-static u8 __init sl2312_pci_swizzle(struct pci_dev *dev, u8 *pinp)
-{
-        return PCI_SLOT(dev->devfn);
-}
+- Polish commit messages
 
-/*
- * map the specified device/slot/pin to an IRQ.  This works out such
- * that slot 9 pin 1 is INT0, pin 2 is INT1, and slot 10 pin 1 is INT1.
- */
-static int __init sl2312_pci_map_irq(struct pci_dev *dev, u8 slot, u8 pin)
-{
-        int intnr =3D ((slot  + (pin - 1)) & 3) + 4;  /* the IRQ number
-of PCI bridge */
 
-        printk("%s : slot =3D %d  pin =3D %d \n",__func__,slot,pin);
-    switch (slot)
-    {
-        case 12:
-                if (pin=3D=3D1)
-                {
-                        intnr =3D 3;
-                    }
-                    else
-                    {
-                        intnr =3D 0;
-                    }
-#ifdef CONFIG_DUAL_PCI
-                    return IRQ_PCI_INTD;
-#endif
-            break;
-        case 11:
-                    intnr =3D (2 + (pin - 1)) & 3;
-#ifdef CONFIG_DUAL_PCI
-                    return IRQ_PCI_INTC;
-#endif
-            break;
-        case 10:
-                    intnr =3D (1 + (pin - 1)) & 3;
-#ifdef CONFIG_DUAL_PCI
-                    return IRQ_PCI_INTB;
-#endif
-            break;
-        case  9:
-                    intnr =3D (pin - 1) & 3;
-            break;
-    }
-//      if (slot =3D=3D 10)
-//              intnr =3D (1 + (pin - 1)) & 3;
-//      else if (slot =3D=3D 9)
-//              intnr =3D (pin - 1) & 3;
-        return (IRQ_PCI_INTA + intnr);
-}
+Link to v5:
+https://lkml.org/lkml/2017/1/15/180
 
-If I understand correctly they say that the IRQs are not swizzled
-on the PCI bridge side but on the IRQ handler side.
+Browse the patches on GitHub:
+https://github.com/l1k/linux/commits/thunderbolt_runpm_v6
 
-So if I put it in the device tree like so:
 
-+                         interrupt-map =3D
-+                               <0x4800 0 0 1 &pci_intc 0>, /* Slot 9 */
-+                               <0x4800 0 0 2 &pci_intc 1>,
-+                               <0x4800 0 0 3 &pci_intc 2>,
-+                               <0x4800 0 0 4 &pci_intc 3>,
-+                               <0x5000 0 0 1 &pci_intc 1>, /* Slot 10 */
-+                               <0x5000 0 0 2 &pci_intc 2>,
-+                               <0x5000 0 0 3 &pci_intc 3>,
-+                               <0x5000 0 0 4 &pci_intc 0>,
-+                               <0x5800 0 0 1 &pci_intc 2>, /* Slot 11 */
-+                               <0x5800 0 0 2 &pci_intc 3>,
-+                               <0x5800 0 0 3 &pci_intc 0>,
-+                               <0x5800 0 0 4 &pci_intc 1>,
-+                               <0x6000 0 0 1 &pci_intc 3>, /* Slot 12 */
-+                               <0x6000 0 0 2 &pci_intc 0>,
-+                               <0x6000 0 0 3 &pci_intc 1>,
-+                               <0x6000 0 0 4 &pci_intc 2>;
+Thanks,
 
-So the IRQs on the right side are swizzled instead
-of the pins being swizzled.
+Lukas
 
-...but that looks a bit insane.
 
-Isn't that exactly the same thing just exposed in some
-inverse way?
+Chen Yu (1):
+  PM / sleep: Define constant for direct_complete
 
-I'll try to get the RALink MiniPCI I have =C3=ADn the slot going and
-see if it works the same with just good old vanilla
-swizzling.
+Lukas Wunner (7):
+  PCI: Recognize Thunderbolt devices
+  PCI: Allow runtime PM on Thunderbolt ports
+  PCI: pciehp: Reinstate runtime PM on Thunderbolt hotplug ports
+  Revert "PM / Runtime: Remove the exported function
+    pm_children_suspended()"
+  PM: Make requirements of dev_pm_domain_set() more precise
+  thunderbolt: Power down controller when idle
+  thunderbolt: Runtime suspend NHI when idle
 
-Yours,
-Linus Walleij
+ drivers/base/power/common.c       |  15 +-
+ drivers/base/power/runtime.c      |   3 +-
+ drivers/pci/hotplug/pciehp_ctrl.c |  13 +-
+ drivers/pci/pci.c                 |  20 ++-
+ drivers/pci/pci.h                 |   2 +
+ drivers/pci/probe.c               |  32 ++++
+ drivers/thunderbolt/Kconfig       |   3 +-
+ drivers/thunderbolt/Makefile      |   4 +-
+ drivers/thunderbolt/nhi.c         |   5 +
+ drivers/thunderbolt/power.c       | 359 ++++++++++++++++++++++++++++++++++++++
+ drivers/thunderbolt/power.h       |  37 ++++
+ drivers/thunderbolt/switch.c      |   9 +
+ drivers/thunderbolt/tb.c          |  13 ++
+ drivers/thunderbolt/tb.h          |   2 +
+ include/linux/pci.h               |   1 +
+ include/linux/pm.h                |   7 +
+ include/linux/pm_runtime.h        |   7 +
+ 17 files changed, 515 insertions(+), 17 deletions(-)
+ create mode 100644 drivers/thunderbolt/power.c
+ create mode 100644 drivers/thunderbolt/power.h
+
+-- 
+2.11.0
