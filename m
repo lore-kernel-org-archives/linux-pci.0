@@ -1,82 +1,180 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 14 Feb 2017 09:07:22 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Manish Jaggi <mjaggi@caviumnetworks.com>,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Tirumalesh Chalamarla <tchalamarla@cavium.com>,
-        "Richter, Robert" <Robert.Richter@caviumnetworks.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: Add cavium acs pci quirk
-Message-ID: <20170214150722.GC8080@bhelgaas-glaptop.roam.corp.google.com>
-References: <56ABC5AE.1050209@caviumnetworks.com>
- <20170213214457.248084de@t450s.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170213214457.248084de@t450s.home>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Message-Id: <920a91bf915983758d4b19b9dcf28f9fb10c70cb.1486913733.git.lukas@wunner.de>
+In-Reply-To: <cover.1486913733.git.lukas@wunner.de>
+References: <cover.1486913733.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 12 Feb 2017 17:07:45 +0100
+Subject: [PATCH v6 8/8] thunderbolt: Runtime suspend NHI when idle
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 13, 2017 at 09:44:57PM -0700, Alex Williamson wrote:
-> On Sat, 30 Jan 2016 01:33:58 +0530
-> Manish Jaggi <mjaggi@caviumnetworks.com> wrote:
-> 
-> > Cavium devices matching this quirk do not perform
-> > peer-to-peer with other functions, allowing masking out
-> > these bits as if they were unimplemented in the ACS capability.
-> > 
-> > Acked-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
-> > Signed-off-by: Manish Jaggi <mjaggi@caviumnetworks.com>
-> > ---
-> >  drivers/pci/quirks.c | 15 +++++++++++++++
-> >  1 file changed, 15 insertions(+)
-> > 
-> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > index 7e32730..a300fa6 100644
-> > --- a/drivers/pci/quirks.c
-> > +++ b/drivers/pci/quirks.c
-> > @@ -3814,6 +3814,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
-> >  #endif
-> >  }
-> > 
-> > +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> > +{
-> > +	/*
-> > +	 * Cavium devices matching this quirk do not perform
-> > +	 * peer-to-peer with other functions, allowing masking out
-> > +	 * these bits as if they were unimplemented in the ACS capability.
-> > +	 */
-> > +	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-> > +		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-> > +
-> > +	return acs_flags ? 0 : 1;
-> > +}
-> > +
-> >  /*
-> >   * Many Intel PCH root ports do provide ACS-like features to disable peer
-> >   * transactions and validate bus numbers in requests, but do not provide an
-> > @@ -3966,6 +3979,8 @@ static const struct pci_dev_acs_enabled {
-> >  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
-> >  	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
-> >  	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
-> > +	/* Cavium ThunderX */
-> > +	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
-> >  	{ 0 }
-> >  };
-> > 
-> 
-> Apologies for not catching this, but what sort of crystal ball do you
-> have that can predict not only current devices, but future devices will
-> not support peer-to-peer features?  Is there an internal design
-> guidelines reference specification for Cavium that we can realistically
-> expect this to remain consistent, or is this just an attempt to never
-> think about ACS again at the customer's peril?  What about the existing
-> non-ThunderX products with Cavium vendor ID, does this really apply to
-> those?  I would strongly suggest taking the device ID into account.
-> See examples like the pci_quirk_intel_pch_acs quirk where the initial
-> filter is PCI_ANY_ID, but specific device types and ranges of device
-> IDs are identified by the function for evaluation.  This seems reckless
-> to me and I'd advise that it be reverted.  Thanks,
+Runtime suspend the NHI when no Thunderbolt devices have been plugged in
+for 10 sec (user-configurable via autosuspend_delay_ms in sysfs).
 
-I'd be happy to revert this, but it would be easier if somebody sent a
-patch and a changelog.
+The NHI is not able to detect plug events while suspended, it relies on
+the GPE handler to resume it on hotplug.
+
+After the NHI resumes, it takes about 700 ms until a hotplug event
+appears on the RX ring.  In case autosuspend_delay_ms has been reduced
+to 0 by the user, we need to wait in tb_resume() to avoid going back to
+sleep before we had a chance to detect a hotplugged device.  A runtime
+pm ref is held for the duration of tb_handle_hotplug() to keep the NHI
+awake while the hotplug event is processed.
+
+Apart from that we acquire a runtime pm ref for each newly allocated
+switch (except for the root switch) and drop one when a switch is freed,
+thereby ensuring the NHI stays active as long as devices are plugged in.
+This behaviour is identical to the macOS driver.
+
+Just as the rest of the Thunderbolt driver, runtime PM is an ongoing
+work in progress.  In particular, two issues remain:
+
+* When a daisy-chained device is hotplugged and a PCIe port between the
+  end of the chain and the host controller is in D3hot, the pciehp
+  hotplug interrupt cannot be expected to be delivered.  The plug event
+  sent via the CIO switch to the NHI serves as a side-band signal and
+  the NHI should runtime resume the PCIe hotplug port on which the plug
+  event occurred.  We do not support daisy chaining yet so this is only
+  an issue for PCI tunnels established by the EFI driver.
+
+* On Cactus Ridge and newer, directly-attached DisplayPort devices are
+  not wired to the GPU, but rather the DP signal is routed through the
+  Thunderbolt controller.  It may thus be necessary to check presence of
+  attached DisplayPort devices when scanning the root switch and
+  acquire a runtime ref for each of them to prevent the controller
+  from powering off while displays are attached.  Unfortunately my own
+  machine predates Cactus Ridge and wires the DP signal directly to the
+  GPU, so I cannot test this.
+
+Cc: Andreas Noever <andreas.noever@gmail.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/thunderbolt/nhi.c    |  2 ++
+ drivers/thunderbolt/power.c  |  9 +++++++++
+ drivers/thunderbolt/switch.c |  9 +++++++++
+ drivers/thunderbolt/tb.c     | 13 +++++++++++++
+ 4 files changed, 33 insertions(+)
+
+diff --git a/drivers/thunderbolt/nhi.c b/drivers/thunderbolt/nhi.c
+index 88fb2fb8cf4e..319ed81422c5 100644
+--- a/drivers/thunderbolt/nhi.c
++++ b/drivers/thunderbolt/nhi.c
+@@ -632,6 +632,8 @@ static const struct dev_pm_ops nhi_pm_ops = {
+ 					    * pci-tunnels stay alive.
+ 					    */
+ 	.restore_noirq = nhi_resume_noirq,
++	.runtime_suspend = nhi_suspend_noirq,
++	.runtime_resume = nhi_resume_noirq,
+ };
+ 
+ static struct pci_device_id nhi_ids[] = {
+diff --git a/drivers/thunderbolt/power.c b/drivers/thunderbolt/power.c
+index e17edab13e4c..b9dd2a1ab96d 100644
+--- a/drivers/thunderbolt/power.c
++++ b/drivers/thunderbolt/power.c
+@@ -323,6 +323,12 @@ void thunderbolt_power_init(struct tb *tb)
+ 
+ 	tb->power = power;
+ 
++	pm_runtime_allow(nhi_dev);
++	pm_runtime_set_autosuspend_delay(nhi_dev, 10000);
++	pm_runtime_use_autosuspend(nhi_dev);
++	pm_runtime_mark_last_busy(nhi_dev);
++	pm_runtime_put_autosuspend(nhi_dev);
++
+ 	return;
+ 
+ err_free:
+@@ -339,6 +345,9 @@ void thunderbolt_power_fini(struct tb *tb)
+ 	if (!power)
+ 		return; /* thunderbolt_power_init() failed */
+ 
++	pm_runtime_get(nhi_dev);
++	pm_runtime_forbid(nhi_dev);
++
+ 	tb->power = NULL;
+ 	dev_pm_domain_set(upstream_dev, NULL);
+ 
+diff --git a/drivers/thunderbolt/switch.c b/drivers/thunderbolt/switch.c
+index c6f30b1695a9..422fe6e96f09 100644
+--- a/drivers/thunderbolt/switch.c
++++ b/drivers/thunderbolt/switch.c
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <linux/delay.h>
++#include <linux/pm_runtime.h>
+ #include <linux/slab.h>
+ 
+ #include "tb.h"
+@@ -326,6 +327,11 @@ void tb_switch_free(struct tb_switch *sw)
+ 	if (!sw->is_unplugged)
+ 		tb_plug_events_active(sw, false);
+ 
++	if (sw != sw->tb->root_switch) {
++		pm_runtime_mark_last_busy(&sw->tb->nhi->pdev->dev);
++		pm_runtime_put_autosuspend(&sw->tb->nhi->pdev->dev);
++	}
++
+ 	kfree(sw->ports);
+ 	kfree(sw->drom);
+ 	kfree(sw);
+@@ -420,6 +426,9 @@ struct tb_switch *tb_switch_alloc(struct tb *tb, u64 route)
+ 	if (tb_plug_events_active(sw, true))
+ 		goto err;
+ 
++	if (tb->root_switch)
++		pm_runtime_get(&tb->nhi->pdev->dev);
++
+ 	return sw;
+ err:
+ 	kfree(sw->ports);
+diff --git a/drivers/thunderbolt/tb.c b/drivers/thunderbolt/tb.c
+index 24b6d30c3c86..a3fedf90e545 100644
+--- a/drivers/thunderbolt/tb.c
++++ b/drivers/thunderbolt/tb.c
+@@ -7,6 +7,7 @@
+ #include <linux/slab.h>
+ #include <linux/errno.h>
+ #include <linux/delay.h>
++#include <linux/pm_runtime.h>
+ 
+ #include "tb.h"
+ #include "tb_regs.h"
+@@ -217,8 +218,11 @@ static void tb_handle_hotplug(struct work_struct *work)
+ {
+ 	struct tb_hotplug_event *ev = container_of(work, typeof(*ev), work);
+ 	struct tb *tb = ev->tb;
++	struct device *dev = &tb->nhi->pdev->dev;
+ 	struct tb_switch *sw;
+ 	struct tb_port *port;
++
++	pm_runtime_get(dev);
+ 	mutex_lock(&tb->lock);
+ 	if (!tb->hotplug_active)
+ 		goto out; /* during init, suspend or shutdown */
+@@ -274,6 +278,8 @@ static void tb_handle_hotplug(struct work_struct *work)
+ out:
+ 	mutex_unlock(&tb->lock);
+ 	kfree(ev);
++	pm_runtime_mark_last_busy(dev);
++	pm_runtime_put_autosuspend(dev);
+ }
+ 
+ /**
+@@ -433,4 +439,11 @@ void thunderbolt_resume(struct tb *tb)
+ 	tb->hotplug_active = true;
+ 	mutex_unlock(&tb->lock);
+ 	tb_info(tb, "resume finished\n");
++
++	/*
++	 * If runtime resuming due to a hotplug event (rather than resuming
++	 * from system sleep), wait for it to arrive. May take about 700 ms.
++	 */
++	if (tb->nhi->pdev->dev.power.runtime_status == RPM_RESUMING)
++		msleep(1000);
+ }
+-- 
+2.11.0
