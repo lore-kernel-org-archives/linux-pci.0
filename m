@@ -1,81 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41082 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754855AbdBPOfN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Feb 2017 09:35:13 -0500
-Date: Thu, 16 Feb 2017 08:35:10 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Jess Frazelle <me@jessfraz.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "open list:Hyper-V CORE AND DRIVERS" <devel@linuxdriverproject.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        kernel-hardening@lists.openwall.com,
-        Kees Cook <keescook@chromium.org>,
-        Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH v2 3/5] pci: set msi_domain_ops as __ro_after_init
-Message-ID: <20170216143509.GA22820@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170211013758.3288-1-me@jessfraz.com>
- <20170211013758.3288-3-me@jessfraz.com>
- <20170215203347.GA6981@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.DEB.2.20.1702152143520.3805@nanos>
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Date: Sun, 12 Feb 2017 15:57:27 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
+Message-ID: <20170212145727.GA2593@wunner.de>
+References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
+ <20170206175405.GA15565@bhelgaas-glaptop.roam.corp.google.com>
+ <20170206212041.GC679@wunner.de>
+ <20170206221502.GA27899@bhelgaas-glaptop.roam.corp.google.com>
+ <20170207062101.GB791@wunner.de>
+ <20170208175736.GB27298@bhelgaas-glaptop.roam.corp.google.com>
+ <20170209043254.GB1304@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.20.1702152143520.3805@nanos>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20170209043254.GB1304@wunner.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 15, 2017 at 10:16:32PM +0100, Thomas Gleixner wrote:
-
-> I think I suggested to Jiang to do that 'update with default functions' to
+On Thu, Feb 09, 2017 at 05:32:54AM +0100, Lukas Wunner wrote:
+> On Wed, Feb 08, 2017 at 11:57:36AM -0600, Bjorn Helgaas wrote:
+> > On Tue, Feb 07, 2017 at 07:21:01AM +0100, Lukas Wunner wrote:
+> > > On Mon, Feb 06, 2017 at 04:15:02PM -0600, Bjorn Helgaas wrote:
+> > > > On Mon, Feb 06, 2017 at 10:20:41PM +0100, Lukas Wunner wrote:
+> > > > > On Mon, Feb 06, 2017 at 11:54:05AM -0600, Bjorn Helgaas wrote:
+> > > > > > What is the hotplug event that causes generation of this wakeup event?
+> > > > > 
+> > > > > If you had read all e-mails in this thread or looked at the bugzilla
+> > > > > entry I've created, you wouldn't have to ask this question.
+> > > > 
+> > > > I'm sorry, I don't necessarily have time to sort through all the
+> > > > emails.  My idea is that the changelog should be a self-contained
+> > > > justification for the patch.  The bugzilla is for supporting details
+> > > > and future archaeologists.
+> > > > 
+> [...]
+> > > > If you think a bugzilla is onerous
+> > > 
+> > > Hold on.  I didn't say a bugzilla is onerous, I said I'm disappointed
+> > > that you're asking me to create one and then don't look at it.
+> > 
+> > I looked at it, and it had a few details, but no analysis of the
+> > situation.  Ideally, I'm looking for a précis of the situation in
+> > the changelog, with complete analysis and supporting details in the
+> > bugzilla.
 > 
-> - avoid exporting the world and some more
+> It's irrelevant whether the bugzilla contains an analysis or not.
 > 
-> - have the flexibility to add new functions to the ops w/o updating a
->   gazillion of existing usage sites, which has saved us lots of chaising in
->   the last years
+> You were asking what type of event caused the wakeup.  The information
+> was in the bugzilla.  So you either didn't look at the bugzilla or
+> didn't look hard enough.
 > 
-> - avoid the if (ops->ptr) ops->ptr(); else default_fn(); constructs all
->   over the place.
-> 
-> I admit I did not think about the fact that this makes the structs non
-> const.
-> 
-> Mopping that up by exporting the default functions and setting all the
-> function pointers is tedious and requires a full tree sweep when we add new
-> stuff. There's also code shared between PCI/platform/DT based stuff, so
-> that becomes interesting.
+> Please tell me why in the future I should comply with your requests to
+> create a bugzilla if you don't look at it and the bug reporter doesn't
+> bother attaching any further information.  It would also have been
+> possible for you to glean the information you were asking for from the
+> reporter's e-mails but you didn't read those either.  And you're paid
+> to do this, I'm not.  If you look at the timestamps of my e-mails you
+> may notice that they're either early in the morning, late at night or
+> on weekends.  Guess what, I'm doing this in my spare time, in addition
+> to my day job.
 
-It's legal to initialize a field multiple times, and the last one
-takes precedence, so doing this might at least avoid the full tree
-sweeps:
+My apologies Bjorn, it was clearly inappropriate for me to assume that
+maintenance of the PCI subsystem is at all part of your job contract,
+or talk about it on a public mailing list.
 
-  static struct msi_domain_ops vmd_msi_domain_ops = {
-    MSI_DOMAIN_DEFAULT_OPS,
-    .get_hwirq = vmd_get_hwirq,
-  };
+Kind regards,
 
-The functions referenced by MSI_DOMAIN_DEFAULT_OPS would still have to
-be exported, though.
-
-> Doing the if (ops->ptr) ops->ptr() else default_fn(); dance should be
-> simpler to pull off. There are not that many sites to look at, but then we
-> have some of the GICv3 code using the domain ops out of core.
-> 
-> For now doing the __ro_after_init is definitely the simplest and fastest
-> solution to tighten these statically allocated structures.
-
-I'm OK with __ro_after_init, at least as an interim solution.
-
-I do think it would be good to audit all the uses of
-MSI_FLAG_USE_DEF_DOM_OPS and MSI_FLAG_USE_DEF_CHIP_OPS, since they
-seem to be the primary indicator of when the struct might be modified.
-I suspect we could add __ro_after_init to more than just pci-hyperv.c,
-vmd.c, and msi.c
-
-Bjorn
+Lukas
