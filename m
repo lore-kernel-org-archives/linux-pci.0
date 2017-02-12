@@ -1,59 +1,114 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:44417 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753021AbdBPErY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 23:47:24 -0500
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1G4ivs2005872
-        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 23:47:23 -0500
-Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 28mq9uj2r8-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 23:47:23 -0500
-Received: from localhost
-        by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
-        Thu, 16 Feb 2017 14:47:20 +1000
-Subject: Re: [PATCH 1/3] pci/hotplug/pnv-php: Remove WARN_ON() in
- pnv_php_put_slot()
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org
-References: <1487200954-14681-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <1487200954-14681-2-git-send-email-gwshan@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        "# v4 . 8+" <stable@vger.kernel.org>
-From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
-Date: Thu, 16 Feb 2017 15:46:20 +1100
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Date: Sun, 12 Feb 2017 17:31:30 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 7/8] thunderbolt: Power down controller when idle
+Message-ID: <20170212163130.GA2769@wunner.de>
+References: <cover.1484486499.git.lukas@wunner.de>
+ <153c459627143d2a071344567367032afa4eadef.1484486499.git.lukas@wunner.de>
+ <20170128233237.GQ20550@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1487200954-14681-2-git-send-email-gwshan@linux.vnet.ibm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Message-Id: <6c4942ee-7704-5686-8bf3-3cff775eff89@au1.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170128233237.GQ20550@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16/02/17 10:22, Gavin Shan wrote:
-> The WARN_ON() causes unnecessary backtrace when putting the parent
-> slot, which is likely to be NULL.
->
->  WARNING: CPU: 2 PID: 1071 at drivers/pci/hotplug/pnv_php.c:85 \
->                               pnv_php_release+0xcc/0x150 [pnv_php]
->     :
->  Call Trace:
->  [c0000003bc007c10] [d00000000ad613c4] pnv_php_release+0x144/0x150 [pnv_php]
->  [c0000003bc007c40] [c0000000006641d8] pci_hp_deregister+0x238/0x330
->  [c0000003bc007cd0] [d00000000ad61440] pnv_php_unregister_one+0x70/0xa0 [pnv_php]
->  [c0000003bc007d10] [d00000000ad614c0] pnv_php_unregister+0x50/0x80 [pnv_php]
->  [c0000003bc007d40] [d00000000ad61e84] pnv_php_exit+0x50/0xcb4 [pnv_php]
->  [c0000003bc007d70] [c00000000019499c] SyS_delete_module+0x1fc/0x2a0
->  [c0000003bc007e30] [c00000000000b184] system_call+0x38/0xe0
->
-> Cc: <stable@vger.kernel.org> # v4.8+
-> Fixes: 66725152fb9f ("PCI/hotplug: PowerPC PowerNV PCI hotplug driver")
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+On Sat, Jan 28, 2017 at 05:32:37PM -0600, Bjorn Helgaas wrote:
+> On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
+> > A Thunderbolt controller appears to the OS as a set of virtual devices:
+> > One upstream bridge, multiple downstream bridges and one NHI (Native
+> > Host Interface).  The upstream and downstream bridges represent a PCIe
+> > switch (see definition of a switch in the PCIe spec).  The NHI device is
+> > used to manage the switch fabric.  Hotplugged devices appear behind the
+> > downstream bridges:
+> > 
+> >   (Root Port) ---- Upstream Bridge --+-- Downstream Bridge 0 ---- NHI
+> >                                      +-- Downstream Bridge 1 --
+> >                                      +-- Downstream Bridge 2 --
+> >                                      ...
+> > 
+> > Power is cut to the entire set of devices.  The Linux pm model is
+> > hierarchical and assumes that a child cannot resume before its parent.
+> > To conform to this model, power control must be governed by the
+> > Thunderbolt controller's topmost device, which is the upstream bridge.
+> > The NHI and downstream bridges go to D3hot independently and the
+> > upstream bridge goes to D3cold once all its children have suspended.
+> > This commit only adds runtime pm for the upstream bridge.  Runtime pm
+> > for the NHI is added in a separate commit to signify its independence.
+> > Runtime pm for the downstream bridges is handled by the pcieport driver.
+> > 
+> > Because Apple's ACPI methods are nonstandard, a struct dev_pm_domain is
+> > used to override the PCI bus pm_ops.  The thunderbolt driver binds to
+> 
+> What are the default PCI bus pm_ops?  I looked briefly for it to see
+> if there was some way to use hooks there instead of using
+> dev_pm_domain_set() with its weird out-of-orderness.
 
-Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+The default PCI bus pm_ops are defined in drivers/pci/pci-driver.c as
+struct dev_pm_ops pci_dev_pm_ops.
+
+I did hook into those callbacks in an earlier version of this series
+but it required more patches and more modifications to the PCI core
+and PCIe port services driver to get Thunderbolt runpm to work:
+https://www.spinics.net/lists/linux-pci/msg51158.html
+
+Using dev_pm_domain_set() is the de facto standard to solve this,
+vga_switcheroo does the same, that's why I settled on this approach.
+(see drivers/gpu/vga/vga_switcheroo.c:vga_switcheroo_init_domain_pm_ops())
 
 
--- 
-Andrew Donnellan              OzLabs, ADL Canberra
-andrew.donnellan@au1.ibm.com  IBM Australia Limited
+> I guess what you do in thunderbolt_power_init() is copy the upstream
+> device's bus's ops, then override a few of them?  Seems like we then
+> have the problem of keeping the Thunderbolt ones in sync with the
+> generic ones, e.g., if something got added to the generic one,
+> somebody should look at the Thunderbolt one to see if it's also need
+> there?
+
+Not a problem.  upstream_runtime_suspend() essentially does this:
+
+	// call pci_dev_pm_ops ->runtime_suspend hook:
+	ret = dev->bus->pm->runtime_suspend(dev);
+	// power down:
+	acpi_execute_simple_method(power->set, NULL, 0)
+	// enable wake interrupt:
+	acpi_enable_gpe(NULL, power->wake_gpe)
+
+So any changes to the pci_dev_pm_ops are inherited.  Again,
+vga_switcheroo does the same (see vga_switcheroo_runtime_suspend()).
+
+
+> > +#define pr_fmt(fmt) KBUILD_MODNAME " %s: " fmt, dev_name(dev)
+[...]
+> > +	/* prevent interrupts during system sleep transition */
+> > +	if (ACPI_FAILURE(acpi_disable_gpe(NULL, power->wake_gpe))) {
+> > +		pr_err("cannot disable wake GPE, resuming\n");
+> 
+> Can you use dev_err() here and below?  This is related to a specific
+> device, and it'd be nice to know which one.
+
+See above, the device name is included in pr_fmt.  The reason to use
+pr_err() instead of dev_err() is to get the error message prefixed
+with "thunderbolt" instead of "pcieport".  Recall that this function
+is executed in the context of the upstream bridge, whose driver name
+is pcieport.  I would like to prevent people from grepping the portdrv
+code for the error message.  You're the second person to raise this
+question (Andy Shevchenko made the same comment on an earlier version
+of this patch), so I've now added a comment to explain it.
+
+
+> > +void thunderbolt_power_init(struct tb *tb)
+> > +{
+> > +	struct device *upstream_dev, *nhi_dev = &tb->nhi->pdev->dev;
+> > +	struct tb_power *power = NULL;
+> 
+> Unnecessary initialization.
+
+Good point.
+
+Thanks,
+
+Lukas
