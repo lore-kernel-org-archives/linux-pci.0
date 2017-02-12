@@ -1,90 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:42999 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750995AbdBXTT2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2017 14:19:28 -0500
-Message-Id: <cover.1487938188.git.lukas@wunner.de>
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Date: Sun, 12 Feb 2017 17:50:30 +0100
 From: Lukas Wunner <lukas@wunner.de>
-Date: Fri, 24 Feb 2017 20:19:45 +0100
-Subject: [PATCH 0/5] Thunderbolt GPU fixes
-To: dri-devel@lists.freedesktop.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        platform-driver-x86@vger.kernel.org,
-        Ben Skeggs <bskeggs@redhat.com>, nouveau@lists.freedesktop.org,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Christian Koenig <christian.koenig@amd.com>,
-        amd-gfx@lists.freedesktop.org, Peter Wu <peter@lekensteyn.nl>
-Sender: linux-pci-owner@vger.kernel.org
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-kernel@vger.kernel.org,
+	Andreas Noever <andreas.noever@gmail.com>,
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
+Subject: Re: [PATCH v5 1/8] PCI: Recognize Thunderbolt devices
+Message-ID: <20170212165030.GA2801@wunner.de>
+References: <cover.1484486499.git.lukas@wunner.de>
+ <bfabf33fc63abbeb84e11e544456098dff0e4604.1484486499.git.lukas@wunner.de>
+ <20170128215208.GM20550@bhelgaas-glaptop.roam.corp.google.com>
+ <20170129002616.GA28225@wunner.de>
+ <20170210174250.GD29169@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170210174250.GD29169@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix Thunderbolt-related issues in apple-gmux and vga_switcheroo:
+On Fri, Feb 10, 2017 at 11:42:50AM -0600, Bjorn Helgaas wrote:
+> On Sun, Jan 29, 2017 at 01:26:16AM +0100, Lukas Wunner wrote:
+> > On Sat, Jan 28, 2017 at 03:52:08PM -0600, Bjorn Helgaas wrote:
+> > > On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
+> 
+> > > > +static void set_pcie_vendor_specific(struct pci_dev *dev)
+> > > 
+> > > This is very specific to Thunderbolt, so let's name it something that
+> > > conveys that information.  The fact that we use a vendor-specific
+> > > capability to figure it out isn't really relevant in the caller.
+> > 
+> > I thought that we may have the necessity in the future to parse other
+> > VSECs on device probe, so I gave the function this generic name.
+> > 
+> > Think about it, every VSEC that needs to be parsed needs the while loop
+> > below.  It's more efficient to have only a single while loop that handles
+> > *all* VSECs at once.
+> > 
+> > If someone needs to parse another VSEC, they just add it to this function.
+> > So IMO the way I've solved it is preferable to just adding a Thunderbolt-
+> > specific function.
+> > 
+> > Are you sure you want this renamed? (y/n)
+> 
+> Sorry for the delay; I missed this question.  If this has already been
+> merged somewhere as-is, that's fine.
 
-Patch [1/5] ("Recognize Thunderbolt devices") has already been subjected
-to a fair amount of scrutiny over at linux-pci@, I've submitted it 5 times
-total since May 2016.  With luck it may be in ack-able shape now.
+No, none of the patches in this series have been merged so far.  Greg's
+tree is closed for the duration of the merge window, which is expected
+to open today.  Therefore, please merge whatever patches in this series
+you feel comfortable with.  It would be good if you could merge at least
+patch [1/8] as it would allow me to fix the issues in apple-gmux and
+vga_switcheroo that I'm mentioning in the changelog in v4.12.  Also,
+patch [2/8] seems uncontroversial.
 
-Patch [2/5] amends apple-gmux to handle combined DP/Thunderbolt ports
-properly on newer MacBook Pros.
+Greg has acked v5 of this series and suggested that you take it due to
+all the PCI changes:
+https://lkml.org/lkml/2017/1/19/177
 
-Patches [3/5] to [5/5] avoid registering external Thunderbolt GPUs with
-vga_switcheroo:  Dave Airlie designed vga_switcheroo to register GPUs
-unconditionally.  So if a desktop box has multiple GPUs, vga_switcheroo
-will see more than one discrete GPU but that's not a problem because on
-desktop boxes no handler is registered and thus vga_switcheroo_enable()
-is never called.  Hybrid graphics laptops on the other hand do register
-a handler, but are assumed to never register more than one discrete GPU.
-However once a Thunderbolt eGPU is attached to a hybrid graphics laptop,
-that assumption is no longer true and things go south when vga_switcheroo
-runtime suspends the external discrete GPU and then calls the handler to
-cut power to the internal discrete GPU.  The driver for the internal GPU
-will sit there puzzled and typically cause a lockup.
+Andreas Noever acked and tested v2 of this series:
+https://www.spinics.net/lists/linux-pci/msg51274.html
 
-This series is just a first step towards proper handling of eGPUs, another
-will be support for surprise removal:  DRM drivers need to cease MMIO and
-PCI config space access once a device is gone to avoid delaying device
-teardown or accessing a newly attached replacement device.  Also, MMIO
-reads to removed devices return "all ones", which results in an infinite
-loop e.g. in nouveau's nvkm_nsec().
 
-The question is how to recognize device removal.  One common method is to
-read the vendor register with pci_device_is_present(), but this reports
-a false positive if the device is present but in D3cold.  A better method
-is to let the PCIe hotplug driver recognize and cache device removal.
-Keith Busch has developed patches which do exactly that, they're now at
-v6 and fully reviewed by Christoph Hellwig but alas were not included in
-the 4.11 PCI pull for some reason:
-http://www.spinics.net/lists/linux-pci/msg58123.html
+> If you repost it for any reason,
+> I would prefer to rename it so it reflects the functionality rather
+> than the source of the information.  This isn't a performance path, so
+> readability is more important than optimization.
 
-I've pushed the present series to GitHub in case anyone prefers reviewing
-it in a GUI:
-https://github.com/l1k/linux/commits/thunderbolt_gpu_v1
+Sure, I've renamed it.
 
 Thanks,
 
 Lukas
-
-
-Lukas Wunner (5):
-  PCI: Recognize Thunderbolt devices
-  apple-gmux: Don't switch external DP port on 2011+ MacBook Pros
-  drm/nouveau: Don't register Thunderbolt eGPU with vga_switcheroo
-  drm/radeon: Don't register Thunderbolt eGPU with vga_switcheroo
-  drm/amdgpu: Don't register Thunderbolt eGPU with vga_switcheroo
-
- drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  7 +++++--
- drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c    |  3 ++-
- drivers/gpu/drm/nouveau/nouveau_vga.c      | 10 +++++++++-
- drivers/gpu/drm/radeon/radeon_device.c     |  7 +++++--
- drivers/gpu/drm/radeon/radeon_kms.c        |  3 ++-
- drivers/pci/pci.h                          |  2 ++
- drivers/pci/probe.c                        | 21 ++++++++++++++++++++
- drivers/platform/x86/apple-gmux.c          | 31 +++++++++++++++++++++++++++++-
- include/linux/pci.h                        | 23 ++++++++++++++++++++++
- 9 files changed, 99 insertions(+), 8 deletions(-)
-
--- 
-2.11.0
