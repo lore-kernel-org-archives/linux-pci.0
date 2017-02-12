@@ -1,39 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp5-g21.free.fr ([212.27.42.5]:62100 "EHLO smtp5-g21.free.fr"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751456AbdBFPyR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Feb 2017 10:54:17 -0500
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>
-From: Mason <slash.tmp@free.fr>
-Subject: Pointers for writing a good PCIe driver
-Message-ID: <ff099b5f-efc8-bb5f-41e3-493398844cc0@free.fr>
-Date: Mon, 6 Feb 2017 16:54:08 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Message-Id: <996cae2518fb2bee8988481a18487b8aab4de2a0.1486913733.git.lukas@wunner.de>
+In-Reply-To: <cover.1486913733.git.lukas@wunner.de>
+References: <cover.1486913733.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 12 Feb 2017 17:07:45 +0100
+Subject: [PATCH v6 6/8] PM / sleep: Define constant for direct_complete
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+From: Chen Yu <yu.c.chen@intel.com>
 
-My platform ( arch/arm/mach-tango ) provides a PCIe controller from PLDA.
+The PM core introduced the ability to keep devices runtime suspended
+during the entire system sleep process with commit aae4518b3124
+("PM / sleep: Mechanism to avoid resuming runtime-suspended devices
+unnecessarily").
 
-I do have access to a driver that works for a few PCIe boards, but it's
-an ancient out-of-tree driver (targeting v3.4). Also, I'm not sure it
-follows the best-practice guidelines (e.g. it hard-codes a few
-work-arounds directly in drivers/pci/probe.c)
+Drivers opt in to this so-called "direct_complete" mechanism by
+returning a positive value from their ->prepare hook.  Usually this is
+achieved with a "return 1;" statement, which looks somewhat cryptic to
+readers not intimately familiar with the PM core.
 
-If I understand correctly, while PCIe is a standard, it is not codified
-as much as USB (XHCI) or SATA (AHCI), which means the register layout
-(and possibly other things) are left up to the integrator? Which means
-there cannot be some kind of "generic" driver that works for a random
-PCIe controller?
+Improve clarity by defining a DPM_DIRECT_COMPLETE constant which drivers
+may use instead.
 
-I guess my main question is: do you have pointers on getting started
-writing a PCIe driver good enough for upstream?
+Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Lee Jones <lee.jones@linaro.org>
+Signed-off-by: Chen Yu <yu.c.chen@intel.com>
+[LW: separate this hunk out of mfd patch, add commit message]
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ include/linux/pm.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Is Documentation/PCI/PCIEBUS-HOWTO.txt still a relevant resource?
-
-Are there good resources to get up to speed on the PCIe terminology?
-
-Regards.
+diff --git a/include/linux/pm.h b/include/linux/pm.h
+index f926af41e122..2d651a30b35c 100644
+--- a/include/linux/pm.h
++++ b/include/linux/pm.h
+@@ -788,4 +788,11 @@ enum dpm_order {
+ 	DPM_ORDER_DEV_LAST,
+ };
+ 
++/*
++ * Return this from system suspend/hibernation ->prepare() callback to
++ * request the core to leave the device runtime-suspended during system
++ * suspend if possible.
++ */
++#define DPM_DIRECT_COMPLETE 1
++
+ #endif /* _LINUX_PM_H */
+-- 
+2.11.0
