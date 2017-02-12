@@ -1,55 +1,66 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
- <1486058763-7730-2-git-send-email-logang@deltatee.com>
- <20170210145124.GA24594@kroah.com>
- <ca970e7a-b062-d351-9a04-49a9e05955b5@deltatee.com>
- <20170210165550.GA23959@kroah.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <9a1d4150-b329-1a69-9efd-f06da32afe02@deltatee.com>
-Date: Fri, 10 Feb 2017 10:03:10 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170210165550.GA23959@kroah.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH v2 1/4] MicroSemi Switchtec management interface driver
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
+Message-Id: <e85155b87c59543dd4a66fc2516876071567ff79.1486913733.git.lukas@wunner.de>
+In-Reply-To: <cover.1486913733.git.lukas@wunner.de>
+References: <cover.1486913733.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Sun, 12 Feb 2017 17:07:45 +0100
+Subject: [PATCH v6 4/8] Revert "PM / Runtime: Remove the exported function
+ pm_children_suspended()"
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+This reverts commit 62006c1702b3b1be0c0726949e0ee0ea2326be9c which
+removed pm_children_suspended() because it had only a single caller.
+We're about to add a second caller, so establish the status quo ante.
 
+Cc: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/base/power/runtime.c | 3 +--
+ include/linux/pm_runtime.h   | 7 +++++++
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-On 10/02/17 09:55 AM, Greg Kroah-Hartman wrote:
-> Yes, but try it yourself to verify it really is correct :)
-
-Yes, of course... turns out it wasn't. I accidentally refereed to dev
-before I assigned it. I had mainly just wanted your feedback to ensure
-that switching to device_register made sense.
-
-> And it can just be an add-on patch, no need to respin a whole new
-> version for just that simple change, it doesn't hurt anything as-is,
-> it's just "not needed".
-
-Ok... How should I do that exactly? Attempt to reply to the thread with
-another patch?
-
-Thanks,
-
-Logan
+diff --git a/drivers/base/power/runtime.c b/drivers/base/power/runtime.c
+index 872eac4cb1df..03293c32793c 100644
+--- a/drivers/base/power/runtime.c
++++ b/drivers/base/power/runtime.c
+@@ -243,8 +243,7 @@ static int rpm_check_suspend_allowed(struct device *dev)
+ 		retval = -EACCES;
+ 	else if (atomic_read(&dev->power.usage_count) > 0)
+ 		retval = -EAGAIN;
+-	else if (!dev->power.ignore_children &&
+-			atomic_read(&dev->power.child_count))
++	else if (!pm_children_suspended(dev))
+ 		retval = -EBUSY;
+ 
+ 	/* Pending resume requests take precedence over suspends. */
+diff --git a/include/linux/pm_runtime.h b/include/linux/pm_runtime.h
+index ca4823e675e2..7de2aa5c3692 100644
+--- a/include/linux/pm_runtime.h
++++ b/include/linux/pm_runtime.h
+@@ -66,6 +66,12 @@ static inline void pm_suspend_ignore_children(struct device *dev, bool enable)
+ 	dev->power.ignore_children = enable;
+ }
+ 
++static inline bool pm_children_suspended(struct device *dev)
++{
++	return dev->power.ignore_children
++		|| !atomic_read(&dev->power.child_count);
++}
++
+ static inline void pm_runtime_get_noresume(struct device *dev)
+ {
+ 	atomic_inc(&dev->power.usage_count);
+@@ -161,6 +167,7 @@ static inline void pm_runtime_allow(struct device *dev) {}
+ static inline void pm_runtime_forbid(struct device *dev) {}
+ 
+ static inline void pm_suspend_ignore_children(struct device *dev, bool enable) {}
++static inline bool pm_children_suspended(struct device *dev) { return false; }
+ static inline void pm_runtime_get_noresume(struct device *dev) {}
+ static inline void pm_runtime_put_noidle(struct device *dev) {}
+ static inline bool device_run_wake(struct device *dev) { return false; }
+-- 
+2.11.0
