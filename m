@@ -1,162 +1,159 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:51781 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750995AbdBXTTy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2017 14:19:54 -0500
-Message-Id: <c42a235e126f273e9b8712a7154f813f757db507.1487938188.git.lukas@wunner.de>
-In-Reply-To: <cover.1487938188.git.lukas@wunner.de>
-References: <cover.1487938188.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Fri, 24 Feb 2017 20:19:45 +0100
-Subject: [PATCH 1/5] PCI: Recognize Thunderbolt devices
-To: dri-devel@lists.freedesktop.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        platform-driver-x86@vger.kernel.org,
-        Ben Skeggs <bskeggs@redhat.com>, nouveau@lists.freedesktop.org,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Christian Koenig <christian.koenig@amd.com>,
-        amd-gfx@lists.freedesktop.org, Peter Wu <peter@lekensteyn.nl>
+Received: from mailout2.samsung.com ([203.254.224.25]:49374 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752296AbdBMI0U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Feb 2017 03:26:20 -0500
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
+        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
+        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
+        niyas.ahmed@samsung.com, alim.akhtar@samsung.com,
+        pankaj.dubey@samsung.com, kishon@ti.com,
+        devicetree@vger.kernel.org, mark.rutland@arm.com,
+        vivek.gautam@codeaurora.org, robh+dt@kernel.org,
+        Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH V3 4/4] PCI: exynos: support the using PHY generic framework
+Date: Mon, 13 Feb 2017 17:26:13 +0900
+Message-id: <20170213082613.19628-5-jh80.chung@samsung.com>
+In-reply-to: <20170213082613.19628-1-jh80.chung@samsung.com>
+References: <20170213082613.19628-1-jh80.chung@samsung.com>
+ <CGME20170213082616epcas5p2a20cca498e9ddde7c5d3f7664fb8606e@epcas5p2.samsung.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Detect on probe whether a PCI device is part of a Thunderbolt controller.
+Switch the pci-exynos driver to generic PHY framework. At the same time
+backward compatibility is preserved: Warning will be printed for old
+DTB.
 
-Intel uses a Vendor-Specific Extended Capability (VSEC) with ID 0x1234
-on such devices.  Detect presence of this VSEC and cache it in a newly
-added is_thunderbolt bit in struct pci_dev.  Add a helper to check
-whether a given PCI device is situated on a Thunderbolt daisy chain.
+Refer to the binding file:
+- Documentation/devictree/bindings/pci/samsung,exynos5440-pcie.txt
 
-The necessity arises from the following:
-
-* To power off Thunderbolt controllers on Macs even if their BIOS is
-  older than 2015, their PCIe ports need to be whitelisted for runtime
-  PM.  For this we need a way to recognize them.
-
-* Dual GPU MacBook Pros introduced 2011+ can no longer switch external
-  DisplayPort ports between GPUs.  (They're no longer just used for DP
-  but have become combined DP/Thunderbolt ports.)  The driver to switch
-  the ports, drivers/platform/x86/apple-gmux.c, needs to detect presence
-  of a Thunderbolt controller and, if found, keep external ports
-  permanently switched to the discrete GPU.
-
-* If an external Thunderbolt GPU is connected to a dual GPU laptop (Mac
-  or not), that GPU is currently registered with vga_switcheroo even
-  though it can neither drive the laptop's panel nor be powered off by
-  the platform.  To vga_switcheroo it will appear as if two discrete
-  GPUs are present.  As a result, when the external GPU is runtime
-  suspended, vga_switcheroo will cut power to the internal discrete GPU
-  which may not be runtime suspended at all at this moment.  The
-  solution is to not register external GPUs with vga_switcheroo, which
-  necessitates a way to recognize if they're on a Thunderbolt daisy
-  chain.
-
-Cc: Andreas Noever <andreas.noever@gmail.com>
-Cc: Michael Jamet <michael.jamet@intel.com>
-Cc: Tomas Winkler <tomas.winkler@intel.com>
-Cc: Amir Levy <amir.jer.levy@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
+Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
- drivers/pci/pci.h   |  2 ++
- drivers/pci/probe.c | 21 +++++++++++++++++++++
- include/linux/pci.h | 23 +++++++++++++++++++++++
- 3 files changed, 46 insertions(+)
+Changelog on V3:
+- Changes the commit-message
+- Fixes the merge conflict
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index cb17db242f30..45c2b8144911 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -3,6 +3,8 @@
- 
- #define PCI_FIND_CAP_TTL	48
- 
-+#define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
+Changelog on V2:
+- This patch is split from previous PATCH[1/4]
+- Maintain the backward compatibility
+- Adds 'using_phy' for cheching whether phy framework is used or not
+- Adds 'DEPRECATED' message for old dt-binding way
+
+ drivers/pci/host/pci-exynos.c | 54 +++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 50 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
+index 758906b..f6a8b6e 100644
+--- a/drivers/pci/host/pci-exynos.c
++++ b/drivers/pci/host/pci-exynos.c
+@@ -21,6 +21,7 @@
+ #include <linux/of_gpio.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
++#include <linux/phy/phy.h>
+ #include <linux/resource.h>
+ #include <linux/signal.h>
+ #include <linux/types.h>
+@@ -110,6 +111,10 @@ struct exynos_pcie {
+ 	struct exynos_pcie_clk_res	*clk_res;
+ 	const struct exynos_pcie_ops	*ops;
+ 	int				reset_gpio;
 +
- extern const unsigned char pcie_link_speed[];
++	/* For Generic PHY Framework */
++	bool				using_phy;
++	struct phy			*phy;
+ };
  
- bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 204960e70333..7963ecc6d85f 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1208,6 +1208,24 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
- 		pdev->is_hotplug_bridge = 1;
- }
+ struct exynos_pcie_ops {
+@@ -126,6 +131,10 @@ static int exynos5440_pcie_get_mem_resources(struct platform_device *pdev,
+ 	struct resource *res;
+ 	struct device *dev = ep->pp.dev;
  
-+static void set_pcie_thunderbolt(struct pci_dev *dev)
-+{
-+	int vsec = 0;
-+	u32 header;
++	/* If using the PHY framework, doesn't need to get other resource */
++	if (ep->using_phy)
++		return 0;
 +
-+	while ((vsec = pci_find_next_ext_capability(dev, vsec,
-+						    PCI_EXT_CAP_ID_VNDR))) {
-+		pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER, &header);
+ 	ep->mem_res = devm_kzalloc(dev, sizeof(*ep->mem_res), GFP_KERNEL);
+ 	if (!ep->mem_res)
+ 		return -ENOMEM;
+@@ -396,10 +405,28 @@ static int exynos_pcie_establish_link(struct exynos_pcie *ep)
+ 	}
+ 
+ 	exynos_pcie_assert_core_reset(ep);
+-	exynos_pcie_assert_phy_reset(ep);
+-	exynos_pcie_deassert_phy_reset(ep);
+-	exynos_pcie_power_on_phy(ep);
+-	exynos_pcie_init_phy(ep);
 +
-+		/* Is the device part of a Thunderbolt controller? */
-+		if (dev->vendor == PCI_VENDOR_ID_INTEL &&
-+		    PCI_VNDR_HEADER_ID(header) == PCI_VSEC_ID_INTEL_TBT) {
-+			dev->is_thunderbolt = 1;
-+			return;
-+		}
++	if (ep->using_phy) {
++		phy_reset(ep->phy);
++
++		exynos_pcie_writel(ep->mem_res->elbi_base, 1,
++				PCIE_PWR_RESET);
++
++		phy_power_on(ep->phy);
++		phy_init(ep->phy);
++	} else {
++		exynos_pcie_assert_phy_reset(ep);
++		exynos_pcie_deassert_phy_reset(ep);
++		exynos_pcie_power_on_phy(ep);
++		exynos_pcie_init_phy(ep);
++
++		/* pulse for common reset */
++		exynos_pcie_writel(ep->mem_res->block_base, 1,
++					PCIE_PHY_COMMON_RESET);
++		udelay(500);
++		exynos_pcie_writel(ep->mem_res->block_base, 0,
++					PCIE_PHY_COMMON_RESET);
 +	}
-+}
-+
- /**
-  * pci_ext_cfg_is_aliased - is ext config space just an alias of std config?
-  * @dev: PCI device
-@@ -1360,6 +1378,9 @@ int pci_setup_device(struct pci_dev *dev)
- 	/* need to have dev->class ready */
- 	dev->cfg_size = pci_cfg_space_size(dev);
  
-+	/* need to have dev->cfg_size ready */
-+	set_pcie_thunderbolt(dev);
-+
- 	/* "Unknown power state" */
- 	dev->current_state = PCI_UNKNOWN;
+ 	/* pulse for common reset */
+ 	exynos_pcie_writel(ep->mem_res->block_base, 1, PCIE_PHY_COMMON_RESET);
+@@ -418,6 +445,11 @@ static int exynos_pcie_establish_link(struct exynos_pcie *ep)
+ 	if (!dw_pcie_wait_for_link(pp))
+ 		return 0;
  
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a124216a..36dfcfd946f4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -358,6 +358,7 @@ struct pci_dev {
- 	unsigned int	is_virtfn:1;
- 	unsigned int	reset_fn:1;
- 	unsigned int    is_hotplug_bridge:1;
-+	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
- 	unsigned int    __aer_firmware_first_valid:1;
- 	unsigned int	__aer_firmware_first:1;
- 	unsigned int	broken_intx_masking:1;
-@@ -2171,6 +2172,28 @@ static inline bool pci_ari_enabled(struct pci_bus *bus)
- 	return bus->self && bus->self->ari_enabled;
- }
++	if (ep->using_phy) {
++		phy_power_off(ep->phy);
++		return -ETIMEDOUT;
++	}
++
+ 	while (exynos_pcie_readl(ep->mem_res->phy_base,
+ 				PCIE_PHY_PLL_LOCKED) == 0) {
+ 		val = exynos_pcie_readl(ep->mem_res->block_base,
+@@ -624,6 +656,17 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
  
-+/**
-+ * pci_is_thunderbolt_attached - whether device is on a Thunderbolt daisy chain
-+ * @pdev: PCI device to check
-+ *
-+ * Walk upwards from @pdev and check for each encountered bridge if it's
-+ * part of a Thunderbolt controller.  Reaching the host bridge means @pdev
-+ * is soldered to the mainboard.
-+ */
-+static inline bool pci_is_thunderbolt_attached(struct pci_dev *pdev)
-+{
-+	struct pci_dev *parent = pdev;
-+
-+	if (pdev->is_thunderbolt)
-+		return true;
-+
-+	while ((parent = pci_upstream_bridge(parent)))
-+		if (parent->is_thunderbolt)
-+			return true;
-+
-+	return false;
-+}
-+
- /* provide the legacy pci_dma_* API */
- #include <linux/pci-dma-compat.h>
+ 	ep->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
  
++	/* Assume that controller doesn't use the PHY framework */
++	ep->using_phy = false;
++
++	ep->phy = devm_of_phy_get(dev, np, NULL);
++	if (IS_ERR(ep->phy)) {
++		if (PTR_ERR(ep->phy) == -EPROBE_DEFER)
++			return PTR_ERR(ep->phy);
++		dev_warn(dev, "Use the 'phy' property. Current DT of pci-exynos was deprecated!!\n");
++	} else
++		ep->using_phy = true;
++
+ 	if (ep->ops && ep->ops->get_mem_resources) {
+ 		ret = ep->ops->get_mem_resources(pdev, ep);
+ 		if (ret)
+@@ -647,6 +690,9 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+ 	return 0;
+ 
+ fail_probe:
++	if (ep->using_phy)
++		phy_exit(ep->phy);
++
+ 	if (ep->ops && ep->ops->deinit_clk_resources)
+ 		ep->ops->deinit_clk_resources(ep);
+ 	return ret;
 -- 
-2.11.0
+2.10.2
