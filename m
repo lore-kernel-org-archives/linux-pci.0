@@ -1,52 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37306 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751066AbdBMW5h (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Feb 2017 17:57:37 -0500
-Date: Mon, 13 Feb 2017 16:57:32 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org,
-        Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org
-Subject: Re: [PATCH v5 7/8] thunderbolt: Power down controller when idle
-Message-ID: <20170213225732.GB8080@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1484486499.git.lukas@wunner.de>
- <153c459627143d2a071344567367032afa4eadef.1484486499.git.lukas@wunner.de>
- <20170128233237.GQ20550@bhelgaas-glaptop.roam.corp.google.com>
- <20170212163130.GA2769@wunner.de>
+Received: from smtp.codeaurora.org ([198.145.29.96]:47060 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750975AbdBMWYt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Feb 2017 17:24:49 -0500
+To: Alex Williamson <alex.williamson@redhat.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org,
+        Vikram Sethi <vikrams@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: RFC on No ACS Support and SMMUv3 Support
+Message-ID: <2944ff12-d5c0-179a-7c07-fbbafcd022da@codeaurora.org>
+Date: Mon, 13 Feb 2017 17:24:40 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170212163130.GA2769@wunner.de>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 12, 2017 at 05:31:30PM +0100, Lukas Wunner wrote:
-> On Sat, Jan 28, 2017 at 05:32:37PM -0600, Bjorn Helgaas wrote:
-> > On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
+Hi,
+I am getting ready to submit a quirk patch. Before I go ahead and submit
+it for review, I wanted to get ARM IOMMU developers and PCI/VFIO maintainers
+together to figure out what the best approach would be.
 
-> > > +#define pr_fmt(fmt) KBUILD_MODNAME " %s: " fmt, dev_name(dev)
-> [...]
-> > > +	/* prevent interrupts during system sleep transition */
-> > > +	if (ACPI_FAILURE(acpi_disable_gpe(NULL, power->wake_gpe))) {
-> > > +		pr_err("cannot disable wake GPE, resuming\n");
-> > 
-> > Can you use dev_err() here and below?  This is related to a specific
-> > device, and it'd be nice to know which one.
-> 
-> See above, the device name is included in pr_fmt.  The reason to use
-> pr_err() instead of dev_err() is to get the error message prefixed
-> with "thunderbolt" instead of "pcieport".  Recall that this function
-> is executed in the context of the upstream bridge, whose driver name
-> is pcieport.  I would like to prevent people from grepping the portdrv
-> code for the error message.  You're the second person to raise this
-> question (Andy Shevchenko made the same comment on an earlier version
-> of this patch), so I've now added a comment to explain it.
+The Qualcomm QDF2400 server does not support the ACS functionality. 
+The server chip implements the ARM SMMUv3 specification with Stream Id = BDF. 
 
-Oh, right, I missed the sneaky dev_name(dev) in pr_fmt().  I guess we
-may have a mix of "pcieport" and "thunderbolt" messages related to
-the same device, which is sort of sub-optimal, but maybe the best we
-can do for now.
+SMMUv3 allows each PCIe function to have unique SMMU mappings and provides
+some level of isolation. 
 
-Bjorn
+With the current upstream SMMUv3 driver, we are unable to do a passthrough
+for a virtual function. This is caused by the pci_device_group() function's
+failure to find the smallest isolation group in pci_acs_path_enabled()
+function. 
+
+Since no group is found, all the PCI functions are placed into the same
+group at the end of the function. 
+
+There are numerous quirk patches when it comes to ACS.
+
+pci_quirk_amd_sb_acs()
+pci_quirk_cavium_acs()
+pci_quirk_intel_pch_acs_match()
+
+These quirk patches allow a group to be generated per PCI function. Everything
+works fine.
+
+I can go ahead and add 
+
+pci_quirk_qualcomm_acs() with the same contents as pci_quirk_cavium_acs()
+
+Tomorrow, some other ARM64 vendors like up and start adding pci_quirk_vendor_acs()
+functions. IMO, it leads to unnecessary code duplication. 
+
+I can go ahead and try to make the patches similar with generic names like pci_quirk_no_acs()
+so that every vendor can use to it. Still, it would require some quirk patch from a vendor.
+
+Nate has been changing the arm_smmu_device_group() function internally to always
+use generic_device_group(). This provides support for the Virtual Function passthrough
+but it is not future proof. Tomorrow, some HW with ACS capability can show up and
+the ARM SMMUv3 driver wouldn't bother to see if there is actual HW isolation path
+available.
+
+What I really would like to do is to find a balance between what Nate has been doing
+internally and what pci_device_group() does by changing the SMMUv3 driver to query if
+ACS path is supported or not similar to the loop in pci_device_group. If not supported,
+fallback to generic_device_group() function in arm_smmu_device_group().
+
+I'm just looking for a more permanent solution rather than relying on quirks for chips
+A, B, C and D.
+
+Please let me know the preferred path.
+
+Sinan
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
