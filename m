@@ -1,105 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:38143 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752292AbdBMI0T (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Feb 2017 03:26:19 -0500
-From: Jaehoon Chung <jh80.chung@samsung.com>
-To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
-        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
-        niyas.ahmed@samsung.com, alim.akhtar@samsung.com,
-        pankaj.dubey@samsung.com, kishon@ti.com,
-        devicetree@vger.kernel.org, mark.rutland@arm.com,
-        vivek.gautam@codeaurora.org, robh+dt@kernel.org,
-        Jaehoon Chung <jh80.chung@samsung.com>
-Subject: [PATCH V3 3/4] Documetation: binding: modify the exynos5440 pcie
- binding
-Date: Mon, 13 Feb 2017 17:26:12 +0900
-Message-id: <20170213082613.19628-4-jh80.chung@samsung.com>
-In-reply-to: <20170213082613.19628-1-jh80.chung@samsung.com>
-References: <20170213082613.19628-1-jh80.chung@samsung.com>
- <CGME20170213082615epcas5p24028ab4bd4fabbbcdf37ff36f0ee27a2@epcas5p2.samsung.com>
+Received: from mail-cys01nam02on0117.outbound.protection.outlook.com ([104.47.37.117]:65018
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751617AbdBMSKP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Feb 2017 13:10:15 -0500
+From: Haiyang Zhang <haiyangz@microsoft.com>
+To: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Haiyang Zhang <haiyangz@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH] pci-hyperv: Use device serial number as PCI domain
+Date: Mon, 13 Feb 2017 18:10:11 +0000
+Message-ID: <BLUPR03MB1412C010C2F994101438FC5ACA590@BLUPR03MB1412.namprd03.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to using PHY framework, updates the exynos5440-pcie binding.
-For maintaining backward compatibility, leaves the current dt-binding.
-(It should be deprecated.)
 
-Recommends to use the Phy Framework and "config" property to follow
-the designware-pcie binding.
-If you use the old way, can see "mssing *config* reg space" message.
-Because the getting configuration space address from range is old way.
+This allows PCI domain numbers starts with 1, and also unique
+on the same VM. So names, such as VF NIC names, that include
+domain number as part of the name, can be shorter than that
+based on part of bus UUID previously. The new names will also
+stay same for VMs created with copied VHD and same number of
+devices.
 
-NOTE: When use the "config" property, first name of 'reg-names' must be
-set to "elbi". Otherwise driver can't maintain the backward capability.
+Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+Reviewed-by: K. Y. Srinivasan <kys@microsoft.com>
 
-Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
 ---
-Changelog on V3:
-- Fixes a typo
+ drivers/pci/host/pci-hyperv.c |   10 ++++++++++
+ 1 files changed, 10 insertions(+), 0 deletions(-)
 
-Changelog on V2:
-- Describes more commit message
-- Fixes the typos
-- Adds the new example for using PHY framework
-- Deprecated the old dt-binding description
-- Removes 'phy-names'
- .../bindings/pci/samsung,exynos5440-pcie.txt       | 29 ++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
-index 4f9d23d..7d3b094 100644
---- a/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/samsung,exynos5440-pcie.txt
-@@ -7,8 +7,19 @@ Required properties:
- - compatible: "samsung,exynos5440-pcie"
- - reg: base addresses and lengths of the pcie controller,
- 	the phy controller, additional register for the phy controller.
-+	(Registers for the phy controller are DEPRECATED.
-+	 Use the PHY framework.)
-+- reg-names : First name should be set to "elbi".
-+	And use the "config" instead of getting the confgiruation address space
-+	from "ranges".
-+	NOTE: When use the "config" property, reg-names must be set.
- - interrupts: A list of interrupt outputs for level interrupt,
- 	pulse interrupt, special interrupt.
-+- phys: From PHY binding. Phandle for the Generic PHY.
-+	Refer to Documentation/devicetree/bindings/phy/samsung-phy.txt
-+
-+Other common properties refer to
-+	Documentation/devicetree/binding/pci/designware-pcie.txt
- 
- Example:
- 
-@@ -54,6 +65,24 @@ SoC specific DT Entry:
- 		num-lanes = <4>;
- 	};
- 
-+With using PHY framework:
-+	pcie_phy0: pcie-phy@270000 {
-+		...
-+		reg = <0x270000 0x1000>, <0x271000 0x40>;
-+		reg-names = "phy", "block";
-+		...
-+	};
-+
-+	pcie@290000 {
-+		...
-+		reg = <0x290000 0x1000>, <0x40000000 0x1000>;
-+		reg-names = "elbi", "config";
-+		phys = <&pcie_phy0>;
-+		ranges = <0x81000000 0 0	  0x60001000 0 0x00010000
-+			  0x82000000 0 0x60011000 0x60011000 0 0x1ffef000>;
-+		...
-+	};
-+
- Board specific DT Entry:
- 
- 	pcie@290000 {
--- 
-2.10.2
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 3efcc7b..b92b565 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -1315,6 +1315,16 @@ static void put_pcichild(struct hv_pci_dev *hpdev,
+ 	get_pcichild(hpdev, hv_pcidev_ref_initial);
+ 	get_pcichild(hpdev, hv_pcidev_ref_childlist);
+ 	spin_lock_irqsave(&hbus->device_list_lock, flags);
++	/* When a device is being added into the bus, we set the PCI domain
++	 * number to be the device serial number, which is non zero and
++	 * unique on the same VM. The serial numbers start with 1, and
++	 * increase by 1 for each device. So device names including this
++	 * can have shorter names than based on the bus instance UUID.
++	 * Only the first device serial number is used for domain, so the
++	 * domain number will not change after the first device is added.
++	 */
++	if (list_empty(&hbus->children))
++		hbus->sysdata.domain =3D desc->ser;
+ 	list_add_tail(&hpdev->list_entry, &hbus->children);
+ 	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+ 	return hpdev;
+--=20
+1.7.1
