@@ -1,64 +1,68 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
-To: Sinan Kaya <okaya@codeaurora.org>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
- <2eb2b814-d621-5d8d-8366-4c4e9f789208@deltatee.com>
- <e27a2363-1b11-f74b-532d-7de089875c90@deltatee.com>
- <2bab7df0-9ae0-67e1-1f06-208d1359a4d5@codeaurora.org>
-CC: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-nvme@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-From: Jens Axboe <axboe@fb.com>
-Message-ID: <8b97cdc9-20ef-df2a-bb6c-86275866dcd8@fb.com>
-Date: Thu, 23 Feb 2017 13:54:26 -0700
-MIME-Version: 1.0
-In-Reply-To: <2bab7df0-9ae0-67e1-1f06-208d1359a4d5@codeaurora.org>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:36658 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752189AbdBMI0T (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Feb 2017 03:26:19 -0500
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: bhelgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
+        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
+        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
+        niyas.ahmed@samsung.com, alim.akhtar@samsung.com,
+        pankaj.dubey@samsung.com, kishon@ti.com,
+        devicetree@vger.kernel.org, mark.rutland@arm.com,
+        vivek.gautam@codeaurora.org, robh+dt@kernel.org,
+        Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH V3 1/4] Documetation: samsung-phy: add the exynos-pcie-phy
+ binding
+Date: Mon, 13 Feb 2017 17:26:10 +0900
+Message-id: <20170213082613.19628-2-jh80.chung@samsung.com>
+In-reply-to: <20170213082613.19628-1-jh80.chung@samsung.com>
+References: <20170213082613.19628-1-jh80.chung@samsung.com>
+ <CGME20170213082615epcas5p21fa62201d4d610608e286fcfce97118d@epcas5p2.samsung.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/23/2017 01:51 PM, Sinan Kaya wrote:
-> On 2/23/2017 3:36 PM, Logan Gunthorpe wrote:
->> We're still waiting on any kind of response from Bjorn. (If you're
->> listening please say something!)
->>
->> Does anyone have any suggestions for dealing with an unresponsive
->> maintainer? Or a way for us to move forward with this quickly and get it
->> merged?
-> 
-> You'll want to be careful during the merge window (these days) as the
-> maintainer is usually busy with code delivery. You can't rush your code in at
-> the last minute.
-> 
-> [GIT PULL] PCI changes for v4.11]
-> 
-> Here is a list of all the patches waiting to be reviewed. 
-> 
-> https://urldefense.proofpoint.com/v2/url?u=https-3A__patchwork.ozlabs.org_project_linux-2Dpci_list_&d=DwIC-g&c=5VD0RTtNlTh3ycd41b3MUw&r=cK1a7KivzZRh1fKQMjSm2A&m=1BfGDtZjAoX-qj9haoqNB7onGlV0IrYOSvLRdecBk88&s=LXm-NTK2rl_GWfVm9dlVB66fhl1ckx-Ar-2z80daybc&e= 
-> 
-> You'll just have to wait your turn.
+Adds the exynos-pcie-phy binding for Exynos PCIe PHY.
+This is for using generic PHY framework.
 
-The code was posted 2/2, and a ping was sent 2/17 and now today. I don't
-think it's unreasonable to expect a response within a month. It's not
-a major new feature in the core of PCI, it's a basic driver.
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+Changelog on V3:
+- None
 
+Changelog on V2:
+- Remove the child node.
+- Add 2nd address to the parent reg prop.
+
+ Documentation/devicetree/bindings/phy/samsung-phy.txt | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/Documentation/devicetree/bindings/phy/samsung-phy.txt b/Documentation/devicetree/bindings/phy/samsung-phy.txt
+index 9872ba8..ab80bfe 100644
+--- a/Documentation/devicetree/bindings/phy/samsung-phy.txt
++++ b/Documentation/devicetree/bindings/phy/samsung-phy.txt
+@@ -191,3 +191,20 @@ Example:
+ 		usbdrdphy0 = &usb3_phy0;
+ 		usbdrdphy1 = &usb3_phy1;
+ 	};
++
++Samsung Exynos SoC series PCIe PHY controller
++--------------------------------------------------
++Required properties:
++- compatible : Should be set to "samsung,exynos5440-pcie-phy"
++- #phy-cells : Must be zero
++- reg : a register used by phy driver.
++	- First is for phy register, second is for block register.
++- reg-names : Must be set to "phy" and "block".
++
++Example:
++	pcie_phy0: pcie-phy@270000 {
++		#phy-cells = <0>;
++		compatible = "samsung,exynos5440-pcie-phy";
++		reg = <0x270000 0x1000>, <0x271000 0x40>;
++		reg-names = "phy", "block";
++	};
 -- 
-Jens Axboe
+2.10.2
