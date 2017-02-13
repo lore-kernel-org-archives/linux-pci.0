@@ -1,98 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54690 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752214AbdBBRhJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Feb 2017 12:37:09 -0500
-Date: Thu, 2 Feb 2017 11:36:59 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: bhelgaas@google.com, bart.vanassche@sandisk.com,
-        tglx@linutronix.de, linux-pci@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] PCI/MSI: don't apply affinity if there aren't enough
- vectors left
-Message-ID: <20170202173659.GD21267@bhelgaas-glaptop.roam.corp.google.com>
-References: <1485778541-28994-1-git-send-email-hch@lst.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Mon, 13 Feb 2017 13:14:06 -0500
+From: Keith Busch <keith.busch@intel.com>
+To: Jess Frazelle <me@jessfraz.com>
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "open list:Hyper-V CORE AND DRIVERS" <devel@linuxdriverproject.org>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        kernel-hardening@lists.openwall.com
+Subject: Re: [PATCH v2 3/5] pci: set msi_domain_ops as __ro_after_init
+Message-ID: <20170213181406.GD24425@localhost.localdomain>
+References: <20170211013758.3288-1-me@jessfraz.com>
+ <20170211013758.3288-3-me@jessfraz.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1485778541-28994-1-git-send-email-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170211013758.3288-3-me@jessfraz.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 30, 2017 at 01:15:41PM +0100, Christoph Hellwig wrote:
-> Bart reported a problem wіth an out of bounds access in the low-level
-> IRQ affinity code, which we root caused to the qla2xxx driver assigning
-> all it's MSI-X vectors to the pre and post vectors, and not having any
-> left for the actually spread IRQs.
-
-s/it's/its/
-
-> This fixes this issue by not asking for affinity assignment when there
-> are not vectors to assign left.
-
-s/not/no/
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Fixes: 402723ad ("PCI/MSI: Provide pci_alloc_irq_vectors_affinity()")
-> Reported-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Tested-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> ---
->  drivers/pci/msi.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
+On Fri, Feb 10, 2017 at 05:37:56PM -0800, Jess Frazelle wrote:
+> Marked msi_domain_ops structs as __ro_after_init when called only during init.
+> This protects the data structure from accidental corruption.
 > 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 50c5003..7f73bac 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1206,6 +1206,16 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
->  	if (flags & PCI_IRQ_AFFINITY) {
->  		if (!affd)
->  			affd = &msi_default_affd;
-> +
-> +		if (affd->pre_vectors + affd->post_vectors > min_vecs)
-> +			return -EINVAL;
-> +
-> +		/*
-> +		 * If there aren't any vectors left after applying the pre/post
-> +		 * vectors don't bother with assigning affinity.
-> +		 */
-> +		if (affd->pre_vectors + affd->post_vectors == min_vecs)
-> +			affd = NULL;
->  	} else {
->  		if (WARN_ON(affd))
->  			affd = NULL;
+> Suggested-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: Jess Frazelle <me@jessfraz.com>
+>
+>  drivers/pci/host/pci-hyperv.c | 2 +-
+>  drivers/pci/host/vmd.c        | 2 +-
 
-You didn't say exactly where the out of bounds access was, but I assume
-it's probably in irq_create_affinity_masks() in this path:
+Ok for vmd driver.
 
-  pci_alloc_irq_vectors_affinity(..., affd)
-    __pci_enable_msix_range(..., minvec, maxvec, affd)
-      # decide on nvec
-      irq_calc_affinity_vectors(nvec, affd)
-      __pci_enable_msix(..., nvec, affd)
-        msix_capability_init(..., nvec, affd)
-          msix_setup_entries(..., nvec, affd)
-            irq_create_affinity_masks(nvec, affd)
-              affv = nvecs - affd->pre_vectors - affd->post_vectors
+Acked-by: Keith Busch <keith.busch@intel.com>
 
-              masks = kcalloc(nvecs, ...)
-              for (curvec = 0; curvec < affd->pre_vectors; ...)
-                cpumask_copy(masks + curvec, irq_default_affinity)
-
-The fix in pci_alloc_irq_vectors_affinity() looks fine, but I wish it
-were closer to the actual problem.
-
-I think irq_create_affinity_masks() should be a little more careful
-with the assumptions it makes about the relationships between nvecs,
-affd->pre_vectors, and affd->post_vectors.
-
-For example, it allocates with size "nvec" and iterates with a limit
-of "affd->pre_vectors", which assumes "affd->pre_vectors < nvec".  And
-of course, "affv" may end up being negative, which can't be good.
-
-If we made irq_create_affinity_masks() more robust, I don't think
-you'd need to set affd to NULL in pci_alloc_irq_vectors_affinity().
-But maybe you would still want at least the -EINVAL change so the
-caller gets an indication that it is doing something wrong?
-
-Bjorn
+>  drivers/pci/msi.c             | 2 +-
+>  3 files changed, 3 insertions(+), 3 deletions(-)
