@@ -1,65 +1,67 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 16 Feb 2017 17:11:12 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Frederic Weisbecker <fweisbec@gmail.com>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        wanpeng.li@hotmail.com, Peter Zijlstra <peterz@infradead.org>,
-        Rik van Riel <riel@redhat.com>,
-        "# .39.x" <stable@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        USB list <linux-usb@vger.kernel.org>
-Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
- after cold boots, boots after reboot
-Message-ID: <20170217011112.GA20574@kroah.com>
-References: <20170215172303.GA15696@amd>
- <20170215232005.GA7877@amd>
- <CA+55aFyqsxjQPp=Y6MnvyMH_iA-TSiPrycnAHbBzw5bwQi7jjg@mail.gmail.com>
- <20170216111144.GA12377@amd>
- <20170216172535.GA7868@amd>
- <20170216181353.GB4357@lerouge>
- <CA+55aFwhzMWR8QPGEK+8O8r0sFpHjn4XXraQ9K0Hq4VQi8Ru-w@mail.gmail.com>
- <20170216183421.GC4357@lerouge>
- <alpine.DEB.2.20.1702162033200.4049@nanos>
- <20170216200624.GA4274@amd>
+Subject: [PATCH] Revert: "PCI: Add ACS quirk for all Cavium devices"
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bhelgaas@google.com, linux-pci@vger.kernel.org
+Cc: Tirumalesh Chalamarla <tchalamarla@cavium.com>,
+        linux-kernel@vger.kernel.org,
+        Manish Jaggi <mjaggi@caviumnetworks.com>
+Date: Tue, 14 Feb 2017 09:18:18 -0700
+Message-ID: <20170214161711.21753.16746.stgit@gimli.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170216200624.GA4274@amd>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 16, 2017 at 09:06:24PM +0100, Pavel Machek wrote:
-> On Thu 2017-02-16 20:34:45, Thomas Gleixner wrote:
-> > On Thu, 16 Feb 2017, Frederic Weisbecker wrote:
-> > > On Thu, Feb 16, 2017 at 10:20:14AM -0800, Linus Torvalds wrote:
-> > > > On Thu, Feb 16, 2017 at 10:13 AM, Frederic Weisbecker
-> > > > <fweisbec@gmail.com> wrote:
-> > > > >
-> > > > > I haven't followed the discussion but this patch has a known issue which is fixed
-> > > > > with:
-> > > > >     7bdb59f1ad474bd7161adc8f923cdef10f2638d1
-> > > > >     "tick/nohz: Fix possible missing clock reprog after tick soft restart"
-> > > > >
-> > > > > I hope this fixes your issue.
-> > > > 
-> > > > No, Pavel saw the problem with rc8 too, which already has that fix.
-> > > > 
-> > > > So I think we'll just need to revert that original patch (and that
-> > > > means that we have to revert the commit you point to as well, since
-> > > > that ->next_tick field was added by the original commit).
-> 
-> (I already said that elsewhere, but yes, revert of 7bdb59f1ad474b and
-> 24b91e360ef5 fixes boot problems for me. Hmm, and 24b9 was marked for
-> stable... I don't know how to contact all the stable maintainers, but
-> probably it should not go to stable just yet...) 
+This reverts commit b404bcfbf035413dcce539c8ba2c9986d220d8ed.
 
-It tried to get into the stable trees, but it broke the build, so it was
-dropped.  So the stable trees are safe for now.
+The reverted commit makes no attempt to selectively consider devices,
+current or future.  Instead, it whitelists the entire PCI vendor ID.
+This is a reckless approach as we clearly cannot know whether future
+device IDs within this vendor ID are susceptible to peer-to-peer.
+Additionally, the comment suggests this quirk is only relevant to
+ThunderX, which raises further doubt whether it is appropriate to
+apply to the entire vendor ID.
 
-thanks,
+Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
+Cc: Manish Jaggi <mjaggi@caviumnetworks.com>
+Cc: Tirumalesh Chalamarla <tchalamarla@cavium.com>
+---
 
-greg k-h
+Please submit a new quirk targeting specific devices
+
+ drivers/pci/quirks.c |   15 ---------------
+ 1 file changed, 15 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 1800befa8b8b..449eabb438e2 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4060,19 +4060,6 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+ #endif
+ }
+ 
+-static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+-{
+-	/*
+-	 * Cavium devices matching this quirk do not perform peer-to-peer
+-	 * with other functions, allowing masking out these bits as if they
+-	 * were unimplemented in the ACS capability.
+-	 */
+-	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+-		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+-
+-	return acs_flags ? 0 : 1;
+-}
+-
+ /*
+  * Many Intel PCH root ports do provide ACS-like features to disable peer
+  * transactions and validate bus numbers in requests, but do not provide an
+@@ -4276,8 +4263,6 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
+ 	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_spt_pch_acs },
+ 	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
+ 	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
+-	/* Cavium ThunderX */
+-	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
+ 	{ 0 }
+ };
+ 
