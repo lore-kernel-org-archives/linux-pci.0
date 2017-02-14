@@ -1,108 +1,70 @@
-Return-Path: <SRS0=1TBM=ZV=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=1TBM=ZV=ti.com=kishon@kernel.org>
-Subject: Re: [pci:pci/host-designware 2/6] drivers/pci/dwc/pci-imx6.c:634:2:
- error: implicit declaration of function 'hook_fault_code'
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        kbuild test robot
-	<fengguang.wu@intel.com>
-References: <201702040736.vjbWSLqV%fengguang.wu@intel.com>
- <20170207230747.GE11659@bhelgaas-glaptop.roam.corp.google.com>
-CC: <kbuild-all@01.org>, <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas
-	<bhelgaas@google.com>,
-        Pankaj Dubey <pankaj.dubey@samsung.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <589AB212.90208@ti.com>
-Date: Wed, 8 Feb 2017 11:22:18 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45930 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751507AbdBNByI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Feb 2017 20:54:08 -0500
+Subject: Re: RFC on No ACS Support and SMMUv3 Support
+To: Alex Williamson <alex.williamson@redhat.com>
+References: <2944ff12-d5c0-179a-7c07-fbbafcd022da@codeaurora.org>
+ <20170213160652.7c141eb1@t450s.home>
+ <2d199a00-a66a-e96c-b0c4-9dd4459d2589@codeaurora.org>
+ <20170213184643.2d2bdce7@t450s.home>
+Cc: Will Deacon <will.deacon@arm.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org,
+        Vikram Sethi <vikrams@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <546869d0-d05c-9550-86d5-276bc7a3c284@codeaurora.org>
+Date: Mon, 13 Feb 2017 20:54:04 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170207230747.GE11659@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <20170213184643.2d2bdce7@t450s.home>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On 2/13/2017 8:46 PM, Alex Williamson wrote:
+>> My first goal is to support virtual function passthrough for device's that are directly
+>> connected. This will be possible with the quirk I proposed and it will be the most
+>> secure solution. It can certainly be generalized for other systems.
+> Why is this anything more than a quirk for the affected PCIe root port
+> vendor:device IDs and use of pci_device_group() to evaluate the rest of
+> the topology, as appears is already done?  Clearly a blanket exception
+> for the platform wouldn't necessarily be correct if a user could plugin
+> a device that adds a PCIe switch.
 
-On Wednesday 08 February 2017 04:37 AM, Bjorn Helgaas wrote:
-> Hi Kishon,
-> 
-> I dropped the "Add COMPILE_TEST to all DesignWare-based drivers" patch
-> for now because I don't want to add errors to these non-ARM builds.
-> 
-> At least one caller (brcmstb_gisb_arb_probe()) uses "#ifdef ARM"
-> around the call to hook_fault_code().  I guess we could do that, too.
+I was going to go this direction first. I wanted to check with everybody to see
+if there are other/better alternatives possible via either changing 
+pci_device_group or changing the smmuv3 driver.
 
-yeah, makes sense.
+>  
+>> My second goal is extend the code such that ACS validation is up to the customer via 
+>> pci=noacs kernel command line for instance. This will let the customer choose what he
+>> really wants rather than kernel trying to be smart and protective. By passing pci=noacs
+>> parameter, customer acknowledges the risks this command line carries.
+> Be prepared that this will need to taint the kernel since we make
+> assertions with drivers like vfio to provide secure, isolated user
+> access to devices and we can't make that statement if the user has
+> bypassed ACS enforcement.  There is absolutely no way that such an
+> option would not be severely abused.  In fact, I tried adding such an
+> option with the pcie_acs_override= patch[1], Bjorn rejected it and I'm
+> thankful that he did.  I don't think this is a good idea, sometimes the
+> kernel does need to be smarter than the user to protect them from
+> themselves.  Any easy bypass also lets hardware vendors ignore the
+> issue longer.  Thanks,
 
-Thanks
-Kishon
+Bjorn, any inputs?
+
 > 
-> On Sat, Feb 04, 2017 at 07:18:39AM +0800, kbuild test robot wrote:
->> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-designware
->> head:   ac4108c530acc8f1c964a8b1c04d4523d026fd29
->> commit: 2b5839db931bcc499fe85e843297f1518385780a [2/6] PCI: dwc: Add COMPILE_TEST to all DesignWare-based drivers
->> config: i386-allmodconfig (attached as .config)
->> compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
->> reproduce:
->>         git checkout 2b5839db931bcc499fe85e843297f1518385780a
->>         # save the attached .config to linux build tree
->>         make ARCH=i386 
->>
->> All errors (new ones prefixed by >>):
->>
->>    drivers/pci/dwc/pci-imx6.c: In function 'imx6_pcie_probe':
->>>> drivers/pci/dwc/pci-imx6.c:634:2: error: implicit declaration of function 'hook_fault_code' [-Werror=implicit-function-declaration]
->>      hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
->>      ^~~~~~~~~~~~~~~
->>    cc1: some warnings being treated as errors
->> --
->>    drivers/pci/dwc/pci-keystone.c: In function 'keystone_pcie_fault':
->>>> drivers/pci/dwc/pci-keystone.c:256:7: error: 'struct pt_regs' has no member named 'uregs'
->>       regs->uregs[reg] = -1;
->>           ^~
->>>> drivers/pci/dwc/pci-keystone.c:257:7: error: 'struct pt_regs' has no member named 'ARM_pc'
->>       regs->ARM_pc += 4;
->>           ^~
->>    drivers/pci/dwc/pci-keystone.c: In function 'ks_pcie_host_init':
->>>> drivers/pci/dwc/pci-keystone.c:288:2: error: implicit declaration of function 'hook_fault_code' [-Werror=implicit-function-declaration]
->>      hook_fault_code(17, keystone_pcie_fault, SIGBUS, 0,
->>      ^~~~~~~~~~~~~~~
->>    cc1: some warnings being treated as errors
->>
->> vim +/hook_fault_code +634 drivers/pci/dwc/pci-imx6.c
->>
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  618  	struct pcie_port *pp;
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  619  	struct resource *dbi_base;
->> 13957652 drivers/pci/host/pci-imx6.c Bjorn Helgaas   2016-10-06  620  	struct device_node *node = dev->of_node;
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  621  	int ret;
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  622  
->> 13957652 drivers/pci/host/pci-imx6.c Bjorn Helgaas   2016-10-06  623  	imx6_pcie = devm_kzalloc(dev, sizeof(*imx6_pcie), GFP_KERNEL);
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  624  	if (!imx6_pcie)
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  625  		return -ENOMEM;
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  626  
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  627  	pp = &imx6_pcie->pp;
->> 13957652 drivers/pci/host/pci-imx6.c Bjorn Helgaas   2016-10-06  628  	pp->dev = dev;
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  629  
->> e6f1fef0 drivers/pci/host/pci-imx6.c Andrey Smirnov  2016-05-02  630  	imx6_pcie->variant =
->> 13957652 drivers/pci/host/pci-imx6.c Bjorn Helgaas   2016-10-06  631  		(enum imx6_pcie_variants)of_device_get_match_data(dev);
->> e3c06cd0 drivers/pci/host/pci-imx6.c Christoph Fritz 2016-04-05  632  
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  633  	/* Added for PCI abort handling */
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26 @634  	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  635  		"imprecise external abort");
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  636  
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  637  	dbi_base = platform_get_resource(pdev, IORESOURCE_MEM, 0);
->> 13957652 drivers/pci/host/pci-imx6.c Bjorn Helgaas   2016-10-06  638  	pp->dbi_base = devm_ioremap_resource(dev, dbi_base);
->> b391bf31 drivers/pci/host/pci-imx6.c Fabio Estevam   2013-12-02  639  	if (IS_ERR(pp->dbi_base))
->> b391bf31 drivers/pci/host/pci-imx6.c Fabio Estevam   2013-12-02  640  		return PTR_ERR(pp->dbi_base);
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  641  
->> bb38919e drivers/pci/host/pci-imx6.c Sean Cross      2013-09-26  642  	/* Fetch GPIOs */
->>
->> :::::: The code at line 634 was first introduced by commit
->> :::::: bb38919ec56e0758c3ae56dfc091dcde1391353e PCI: imx6: Add support for i.MX6 PCIe controller
->>
->> :::::: TO: Sean Cross <xobs@kosagi.com>
->> :::::: CC: Bjorn Helgaas <bhelgaas@google.com>
->>
->> ---
->> 0-DAY kernel test infrastructure                Open Source Technology Center
->> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> Alex
 > 
+> [1] https://lkml.org/lkml/2013/5/30/513
 > 
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
