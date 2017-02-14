@@ -1,112 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:48365 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751037AbdBHGCS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Feb 2017 01:02:18 -0500
-Date: Wed, 8 Feb 2017 07:04:10 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Wei Zhang <wzhang@fb.com>,
-        Austin Bolen <Austin.Bolen@dell.com>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCHv6 3/5] pci: No config access for disconnected devices
-Message-ID: <20170208060410.GA1026@wunner.de>
-References: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
- <1486495957-26177-4-git-send-email-keith.busch@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 14 Feb 2017 18:59:56 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Alan Stern <stern@rowland.harvard.edu>,
+        torvalds@linux-foundation.org
+Cc: kernel list <linux-kernel@vger.kernel.org>,
+        linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
+ after cold boots, boots after reboot
+Message-ID: <20170214175956.GA3587@amd>
+References: <20170203190414.GA3701@amd>
+ <Pine.LNX.4.44L0.1702031415140.1794-100000@iolanthe.rowland.org>
+ <20170203205129.GA3791@amd>
+ <20170203211854.GA3697@amd>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1486495957-26177-4-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="PEIAKu/WMn1b1Hv9"
+In-Reply-To: <20170203211854.GA3697@amd>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 07, 2017 at 02:32:35PM -0500, Keith Busch wrote:
-> If we've  detected the PCI device is disconnected, there is no need to
-> attempt to access its config space since we know the operation will
-> fail. This patch has all the config reads and writes return -ENODEV
-> error immediately when in such a state.
-> 
-> If a config read is sent to a disconnected device, the value will be
-> set to all 1's. This is the same as what hardware is expected to return
-> when accessing a removed device, but software can do this faster without
-> relying on hardware.
-> 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/pci/access.c | 18 ++++++++++++++++++
->  1 file changed, 18 insertions(+)
-> 
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index d37b2ed..d63e9dd 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -892,12 +892,20 @@ EXPORT_SYMBOL(pcie_capability_clear_and_set_dword);
->  
->  int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
->  {
-> +	if (pci_dev_is_disconnected(dev)) {
 
-You used to have unlikely() here up until v4 but dropped it in v5.
-Why?  Seemed sensible to me.
+--PEIAKu/WMn1b1Hv9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Thanks,
+Hi!
 
-Lukas
+> > > > Hmm. I moved keyboard between USB ports, and now 4.10-rc6 no longer
+> > > > boots. v4.6 works ok. Let me try with keyboard unplugged... no, I
+> > > > could not get it to work. I believe v4.9 and some v4.10-rc's worked,
+> > > > but I'll have to double check.
+> > >=20
+> > > But all the kernel versions worked when the keyboard was plugged into
+> > > its original USB port?
+> >=20
+> > Aha. So it looks difference is probably in "where is keyboard plugged
+> > in" but in "reboot" vs. "cold boot". I did not do a cold boot in quite
+> > a while :-(.
+> >=20
+> > Booting to grub, then hitting ctrl-alt-del is enough to make it work. O=
+uch.
+> >=20
+> > It happens with current Linus' tree.
+>=20
+> v4.10-rc6-feb3 : broken
+> v4.9 : ok
+> (v4.6 : ok)
 
-> +		*val = ~0;
-> +		return -ENODEV;
-> +	}
->  	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
->  }
->  EXPORT_SYMBOL(pci_read_config_byte);
->  
->  int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
->  {
-> +	if (pci_dev_is_disconnected(dev)) {
-> +		*val = ~0;
-> +		return -ENODEV;
-> +	}
->  	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
->  }
->  EXPORT_SYMBOL(pci_read_config_word);
-> @@ -905,18 +913,26 @@ EXPORT_SYMBOL(pci_read_config_word);
->  int pci_read_config_dword(const struct pci_dev *dev, int where,
->  					u32 *val)
->  {
-> +	if (pci_dev_is_disconnected(dev)) {
-> +		*val = ~0;
-> +		return -ENODEV;
-> +	}
->  	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
->  }
->  EXPORT_SYMBOL(pci_read_config_dword);
->  
->  int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
->  {
-> +	if (pci_dev_is_disconnected(dev))
-> +		return -ENODEV;
->  	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
->  }
->  EXPORT_SYMBOL(pci_write_config_byte);
->  
->  int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
->  {
-> +	if (pci_dev_is_disconnected(dev))
-> +		return -ENODEV;
->  	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
->  }
->  EXPORT_SYMBOL(pci_write_config_word);
-> @@ -924,6 +940,8 @@ EXPORT_SYMBOL(pci_write_config_word);
->  int pci_write_config_dword(const struct pci_dev *dev, int where,
->  					 u32 val)
->  {
-> +	if (pci_dev_is_disconnected(dev))
-> +		return -ENODEV;
->  	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
->  }
->  EXPORT_SYMBOL(pci_write_config_dword);
-> -- 
-> 2.7.2
-> 
+Hmm. It hangs during PCI fixups, and it hangs in v4.10-rc8, too.  =20
+
+With debug patch below, I get
+
+=2E..1d.7: PCI fixup... pass 2
+=2E..1d.7: PCI fixup... pass 3
+=2E..1d.7: PCI fixup... pass 3 done
+
+=2E..followed by hang. So yes, it looks USB related.
+
+(Sometimes it hangs with some kind backtrace involving secondary CPU
+startup, unfortunately useful info is off screen at that point).
+
+Any ideas?
+								Pavel
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 1800bef..060ad79 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3510,6 +3510,8 @@ void pci_fixup_device(enum pci_fixup_pass pass, struc=
+t pci_dev *dev)
+ {
+ 	struct pci_fixup *start, *end;
+=20
++	dev_info(&dev->dev, "PCI fixup device %p, pass %d\n", dev, pass);
++
+ 	switch (pass) {
+ 	case pci_fixup_early:
+ 		start =3D __start_pci_fixups_early;
+@@ -3558,6 +3560,7 @@ void pci_fixup_device(enum pci_fixup_pass pass, struc=
+t pci_dev *dev)
+ 		return;
+ 	}
+ 	pci_do_fixups(dev, start, end);
++	dev_info(&dev->dev, "PCI fixup device %p, pass %d, done\n", dev, pass);
+ }
+ EXPORT_SYMBOL(pci_fixup_device);
+=20
+
+
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--PEIAKu/WMn1b1Hv9
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlijRZwACgkQMOfwapXb+vIY2wCgw2rAfUT02tdsxE6WYjvajJ/Z
+I3cAn1aVUXRAFQvCSbcb58BvEVB1hObZ
+=HBNY
+-----END PGP SIGNATURE-----
+
+--PEIAKu/WMn1b1Hv9--
