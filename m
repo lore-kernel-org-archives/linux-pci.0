@@ -1,76 +1,67 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 22 Feb 2017 08:28:10 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Cc: Juergen Gross <jgross@suse.com>, Dan Streetman <ddstreet@ieee.org>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Dan Streetman <dan.streetman@canonical.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        xen-devel@lists.xenproject.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] xen: do not re-use pirq number cached in pci device msi
- msg data
-Message-ID: <20170222142810.GA28359@bhelgaas-glaptop.roam.corp.google.com>
-References: <04f2a09f-59be-a720-bc98-4afb53171790@oracle.com>
- <20170113200751.20125-1-ddstreet@ieee.org>
- <20170113223035.GE23066@char.us.oracle.com>
- <CALZtONDL2Ph0MMMfSuqvofNZ-+6jPi9aKsE4mL30i15Up6Bvug@mail.gmail.com>
- <0c2b4d6a-93e7-90a2-ffaf-fa423fb022d5@suse.com>
- <72f8b025-e858-5e54-d900-50fbec46fea6@oracle.com>
+Date: Tue, 14 Feb 2017 14:54:53 -0500 (EST)
+From: Alan Stern <stern@rowland.harvard.edu>
+To: Pavel Machek <pavel@ucw.cz>
+cc: torvalds@linux-foundation.org,
+        kernel list <linux-kernel@vger.kernel.org>,
+        <linux-usb@vger.kernel.org>, <gregkh@linuxfoundation.org>,
+        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
+ after cold boots, boots after reboot
+In-Reply-To: <20170214192743.GA3869@amd>
+Message-ID: <Pine.LNX.4.44L0.1702141452590.1949-100000@iolanthe.rowland.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <72f8b025-e858-5e54-d900-50fbec46fea6@oracle.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 21, 2017 at 10:58:39AM -0500, Boris Ostrovsky wrote:
-> On 02/21/2017 10:45 AM, Juergen Gross wrote:
-> > On 21/02/17 16:31, Dan Streetman wrote:
-> >> On Fri, Jan 13, 2017 at 5:30 PM, Konrad Rzeszutek Wilk
-> >> <konrad.wilk@oracle.com> wrote:
-> >>> On Fri, Jan 13, 2017 at 03:07:51PM -0500, Dan Streetman wrote:
-> >>>> Revert the main part of commit:
-> >>>> af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
-> >>>>
-> >>>> That commit introduced reading the pci device's msi message data to see
-> >>>> if a pirq was previously configured for the device's msi/msix, and re-use
-> >>>> that pirq.  At the time, that was the correct behavior.  However, a
-> >>>> later change to Qemu caused it to call into the Xen hypervisor to unmap
-> >>>> all pirqs for a pci device, when the pci device disables its MSI/MSIX
-> >>>> vectors; specifically the Qemu commit:
-> >>>> c976437c7dba9c7444fb41df45468968aaa326ad
-> >>>> ("qemu-xen: free all the pirqs for msi/msix when driver unload")
-> >>>>
-> >>>> Once Qemu added this pirq unmapping, it was no longer correct for the
-> >>>> kernel to re-use the pirq number cached in the pci device msi message
-> >>>> data.  All Qemu releases since 2.1.0 contain the patch that unmaps the
-> >>>> pirqs when the pci device disables its MSI/MSIX vectors.
-> >>>>
-> >>>> This bug is causing failures to initialize multiple NVMe controllers
-> >>>> under Xen, because the NVMe driver sets up a single MSIX vector for
-> >>>> each controller (concurrently), and then after using that to talk to
-> >>>> the controller for some configuration data, it disables the single MSIX
-> >>>> vector and re-configures all the MSIX vectors it needs.  So the MSIX
-> >>>> setup code tries to re-use the cached pirq from the first vector
-> >>>> for each controller, but the hypervisor has already given away that
-> >>>> pirq to another controller, and its initialization fails.
-> >>>>
-> >>>> This is discussed in more detail at:
-> >>>> https://lists.xen.org/archives/html/xen-devel/2017-01/msg00447.html
-> >>>>
-> >>>> Fixes: af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
-> >>>> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
-> >>> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> >> This doesn't seem to be applied yet, is it still waiting on another
-> >> ack?  Or maybe I'm looking at the wrong git tree...
-> > Am I wrong or shouldn't this go through the PCI tree? Konrad?
-> 
-> Konrad is away this week but since pull request for Xen tree just went
-> out we should probably wait until rc1 anyway (unless something big comes
-> up before that).
+On Tue, 14 Feb 2017, Pavel Machek wrote:
 
-I assume this should go via the Xen or x86 tree, since that's how most
-arch/x86/pci/xen.c patches have been handled, including af42b8d12f8a.
-If you think otherwise, let me know.
+> On Tue 2017-02-14 18:59:56, Pavel Machek wrote:
+> > Hi!
+> > 
+> > > > > > Hmm. I moved keyboard between USB ports, and now 4.10-rc6 no longer
+> > > > > > boots. v4.6 works ok. Let me try with keyboard unplugged... no, I
+> > > > > > could not get it to work. I believe v4.9 and some v4.10-rc's worked,
+> > > > > > but I'll have to double check.
+> > > > > 
+> > > > > But all the kernel versions worked when the keyboard was plugged into
+> > > > > its original USB port?
+> > > > 
+> > > > Aha. So it looks difference is probably in "where is keyboard plugged
+> > > > in" but in "reboot" vs. "cold boot". I did not do a cold boot in quite
+> > > > a while :-(.
+> > > > 
+> > > > Booting to grub, then hitting ctrl-alt-del is enough to make it work. Ouch.
+> > > > 
+> > > > It happens with current Linus' tree.
+> > > 
+> > > v4.10-rc6-feb3 : broken
+> > > v4.9 : ok
+> > > (v4.6 : ok)
+> > 
+> > Hmm. It hangs during PCI fixups, and it hangs in v4.10-rc8, too.   
+> > 
+> > With debug patch below, I get
+> > 
+> > ...1d.7: PCI fixup... pass 2
+> > ...1d.7: PCI fixup... pass 3
+> > ...1d.7: PCI fixup... pass 3 done
+> > 
+> > ...followed by hang. So yes, it looks USB related.
+> > 
+> > (Sometimes it hangs with some kind backtrace involving secondary CPU
+> > startup, unfortunately useful info is off screen at that point).
+> 
+> Forgot to say, 1d.7 is EHCI controller.
+> 
+> 00:1d.7 USB controller: Intel Corporation NM10/ICH7 Family USB2 EHCI
+> Controller (rev 01)
+
+So this looks like a problem in the PCI subsystem affecting a USB
+controller.
+
+Linus is right; bisection is the best approach now that you know a
+reliable trigger.
+
+Alan Stern
