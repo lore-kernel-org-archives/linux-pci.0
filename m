@@ -1,106 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] PCI/msi: remove pci_msi_domain_{alloc,free}_irqs
-Date: Wed,  8 Feb 2017 18:17:44 +0100
-Message-Id: <20170208171744.17100-3-hch@lst.de>
-In-Reply-To: <20170208171744.17100-1-hch@lst.de>
-References: <20170208171744.17100-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI: Xilinx NWL: Remove mask for messages not supported
+ by AXI
+To: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>, Bjorn Helgaas
+ <helgaas@kernel.org>
+References: <1485853170-31940-1-git-send-email-bharatku@xilinx.com>
+ <20170210202536.GI29169@bhelgaas-glaptop.roam.corp.google.com>
+ <8520D5D51A55D047800579B094147198263E9378@XAP-PVEXMBX02.xlnx.xilinx.com>
+From: Michal Simek <michal.simek@xilinx.com>
+Message-ID: <1bbe7581-476b-b531-7173-cd56bc82bc66@xilinx.com>
+Date: Tue, 14 Feb 2017 15:42:52 +0100
+MIME-Version: 1.0
+In-Reply-To: <8520D5D51A55D047800579B094147198263E9378@XAP-PVEXMBX02.xlnx.xilinx.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "robh@kernel.org" <robh@kernel.org>, "arnd@arndb.de" <arnd@arndb.de>,
+ "marc.zyngier@arm.com" <marc.zyngier@arm.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
+ Ravikiran Gummaluri <rgummal@xilinx.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "colin.king@canonical.com" <colin.king@canonical.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Just call the msi_* version directly instead of having trivial wrappers
-for one or two callsites.
+On 14.2.2017 15:29, Bharat Kumar Gogada wrote:
+>> On Tue, Jan 31, 2017 at 02:29:30PM +0530, Bharat Kumar Gogada wrote:
+>>> - Removing support for vendor defined messages which are not
+>>> suppoerted by AXI
+>>>
+>>> Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
+>>
+>> Applied to pci/host-xilinx for v4.11, thanks.
+>>
+> Thanks Bjorn.
+>> Bharat, get_maintainer.pl lists you as a contributor, but not as a maintainer of
+>> this file.  Should we update MAINTAINERS so it does?
+> Yes, Please update MAINTAINERS list.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- arch/x86/kernel/apic/msi.c |  2 +-
- drivers/pci/msi.c          | 30 ++----------------------------
- include/linux/msi.h        |  3 ---
- 3 files changed, 3 insertions(+), 32 deletions(-)
+I expect it is more about you to create a patch and send it to Bjorn.
 
-diff --git a/arch/x86/kernel/apic/msi.c b/arch/x86/kernel/apic/msi.c
-index 015bbf30e3e3..c61aec7e65f4 100644
---- a/arch/x86/kernel/apic/msi.c
-+++ b/arch/x86/kernel/apic/msi.c
-@@ -82,7 +82,7 @@ int native_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 	if (domain == NULL)
- 		return -ENOSYS;
- 
--	return pci_msi_domain_alloc_irqs(domain, dev, nvec, type);
-+	return msi_domain_alloc_irqs(domain, &dev->dev, nvec);
- }
- 
- void native_teardown_msi_irq(unsigned int irq)
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 9de17f17a5d2..3f65efe02cc2 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -38,7 +38,7 @@ static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- 
- 	domain = dev_get_msi_domain(&dev->dev);
- 	if (domain && irq_domain_is_hierarchy(domain))
--		return pci_msi_domain_alloc_irqs(domain, dev, nvec, type);
-+		return msi_domain_alloc_irqs(domain, &dev->dev, nvec);
- 
- 	return arch_setup_msi_irqs(dev, nvec, type);
- }
-@@ -49,7 +49,7 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
- 
- 	domain = dev_get_msi_domain(&dev->dev);
- 	if (domain && irq_domain_is_hierarchy(domain))
--		pci_msi_domain_free_irqs(domain, dev);
-+		msi_domain_free_irqs(domain, &dev->dev);
- 	else
- 		arch_teardown_msi_irqs(dev);
- }
-@@ -1462,32 +1462,6 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
- }
- EXPORT_SYMBOL_GPL(pci_msi_create_irq_domain);
- 
--/**
-- * pci_msi_domain_alloc_irqs - Allocate interrupts for @dev in @domain
-- * @domain:	The interrupt domain to allocate from
-- * @dev:	The device for which to allocate
-- * @nvec:	The number of interrupts to allocate
-- * @type:	Unused to allow simpler migration from the arch_XXX interfaces
-- *
-- * Returns:
-- * A virtual interrupt number or an error code in case of failure
-- */
--int pci_msi_domain_alloc_irqs(struct irq_domain *domain, struct pci_dev *dev,
--			      int nvec, int type)
--{
--	return msi_domain_alloc_irqs(domain, &dev->dev, nvec);
--}
--
--/**
-- * pci_msi_domain_free_irqs - Free interrupts for @dev in @domain
-- * @domain:	The interrupt domain
-- * @dev:	The device for which to free interrupts
-- */
--void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev)
--{
--	msi_domain_free_irqs(domain, &dev->dev);
--}
--
- static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
- {
- 	u32 *pa = data;
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 18b8566b3ce3..1b6f3ebbe876 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -316,9 +316,6 @@ void pci_msi_domain_write_msg(struct irq_data *irq_data, struct msi_msg *msg);
- struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
- 					     struct msi_domain_info *info,
- 					     struct irq_domain *parent);
--int pci_msi_domain_alloc_irqs(struct irq_domain *domain, struct pci_dev *dev,
--			      int nvec, int type);
--void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev);
- irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
- 					  struct msi_desc *desc);
- int pci_msi_domain_check_cap(struct irq_domain *domain,
--- 
-2.11.0
+Thanks,
+Michal
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
