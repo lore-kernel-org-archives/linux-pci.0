@@ -1,115 +1,82 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <nsekhar@ti.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2 05/22] Documentation: PCI: Add specification for the *pci test* function device
-Date: Fri, 17 Feb 2017 15:20:25 +0530
-Message-ID: <1487325042-28227-6-git-send-email-kishon@ti.com>
-In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+Date: Tue, 14 Feb 2017 09:07:22 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Manish Jaggi <mjaggi@caviumnetworks.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Tirumalesh Chalamarla <tchalamarla@cavium.com>,
+        "Richter, Robert" <Robert.Richter@caviumnetworks.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: Add cavium acs pci quirk
+Message-ID: <20170214150722.GC8080@bhelgaas-glaptop.roam.corp.google.com>
+References: <56ABC5AE.1050209@caviumnetworks.com>
+ <20170213214457.248084de@t450s.home>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170213214457.248084de@t450s.home>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add specification for the *pci test* virtual function device. The endpoint
-function driver and the host pci driver should be created based on this
-specification.
+On Mon, Feb 13, 2017 at 09:44:57PM -0700, Alex Williamson wrote:
+> On Sat, 30 Jan 2016 01:33:58 +0530
+> Manish Jaggi <mjaggi@caviumnetworks.com> wrote:
+> 
+> > Cavium devices matching this quirk do not perform
+> > peer-to-peer with other functions, allowing masking out
+> > these bits as if they were unimplemented in the ACS capability.
+> > 
+> > Acked-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
+> > Signed-off-by: Manish Jaggi <mjaggi@caviumnetworks.com>
+> > ---
+> >  drivers/pci/quirks.c | 15 +++++++++++++++
+> >  1 file changed, 15 insertions(+)
+> > 
+> > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> > index 7e32730..a300fa6 100644
+> > --- a/drivers/pci/quirks.c
+> > +++ b/drivers/pci/quirks.c
+> > @@ -3814,6 +3814,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+> >  #endif
+> >  }
+> > 
+> > +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+> > +{
+> > +	/*
+> > +	 * Cavium devices matching this quirk do not perform
+> > +	 * peer-to-peer with other functions, allowing masking out
+> > +	 * these bits as if they were unimplemented in the ACS capability.
+> > +	 */
+> > +	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+> > +		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+> > +
+> > +	return acs_flags ? 0 : 1;
+> > +}
+> > +
+> >  /*
+> >   * Many Intel PCH root ports do provide ACS-like features to disable peer
+> >   * transactions and validate bus numbers in requests, but do not provide an
+> > @@ -3966,6 +3979,8 @@ static const struct pci_dev_acs_enabled {
+> >  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+> >  	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
+> >  	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
+> > +	/* Cavium ThunderX */
+> > +	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
+> >  	{ 0 }
+> >  };
+> > 
+> 
+> Apologies for not catching this, but what sort of crystal ball do you
+> have that can predict not only current devices, but future devices will
+> not support peer-to-peer features?  Is there an internal design
+> guidelines reference specification for Cavium that we can realistically
+> expect this to remain consistent, or is this just an attempt to never
+> think about ACS again at the customer's peril?  What about the existing
+> non-ThunderX products with Cavium vendor ID, does this really apply to
+> those?  I would strongly suggest taking the device ID into account.
+> See examples like the pci_quirk_intel_pch_acs quirk where the initial
+> filter is PCI_ANY_ID, but specific device types and ranges of device
+> IDs are identified by the function for evaluation.  This seems reckless
+> to me and I'd advise that it be reverted.  Thanks,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/PCI/00-INDEX                       |    2 +
- Documentation/PCI/endpoint/pci-test-function.txt |   66 ++++++++++++++++++++++
- 2 files changed, 68 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/pci-test-function.txt
-
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index f84a23c..4e5a283 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -16,3 +16,5 @@ endpoint/pci-endpoint.txt
- 	- guide to add endpoint controller driver and endpoint function driver.
- endpoint/pci-endpoint-cfs.txt
- 	- guide to use configfs to configure the pci endpoint function.
-+endpoint/pci-test-function.txt
-+	- specification of *pci test* function device.
-diff --git a/Documentation/PCI/endpoint/pci-test-function.txt b/Documentation/PCI/endpoint/pci-test-function.txt
-new file mode 100644
-index 0000000..1324376
---- /dev/null
-+++ b/Documentation/PCI/endpoint/pci-test-function.txt
-@@ -0,0 +1,66 @@
-+				PCI TEST
-+		    Kishon Vijay Abraham I <kishon@ti.com>
-+
-+Traditionally PCI RC has always been validated by using standard
-+PCI cards like ethernet PCI cards or USB PCI cards or SATA PCI cards.
-+However with the addition of EP-core in linux kernel, it is possible
-+to configure a PCI controller that can operate in EP mode to work as
-+a test device.
-+
-+The PCI endpoint test device is a virtual device (defined in software)
-+used to test the endpoint functionality and serve as a sample driver
-+for other PCI endpoint devices (to use the EP framework).
-+
-+The PCI endpoint test device has the following registers:
-+
-+	1) PCI_ENDPOINT_TEST_MAGIC
-+	2) PCI_ENDPOINT_TEST_COMMAND
-+	3) PCI_ENDPOINT_TEST_STATUS
-+	4) PCI_ENDPOINT_TEST_SRC_ADDR
-+	5) PCI_ENDPOINT_TEST_DST_ADDR
-+	6) PCI_ENDPOINT_TEST_SIZE
-+	7) PCI_ENDPOINT_TEST_CHECKSUM
-+
-+*) PCI_ENDPOINT_TEST_MAGIC
-+
-+This register will be used to test BAR0. A known pattern will be written
-+and read back from MAGIC register to verify BAR0.
-+
-+*) PCI_ENDPOINT_TEST_COMMAND:
-+
-+This register will be used by the host driver to indicate the function
-+that the endpoint device must perform.
-+
-+Bitfield Description:
-+  Bit 0		: raise legacy irq
-+  Bit 1		: raise MSI irq
-+  Bit 2 - 7	: MSI interrupt number
-+  Bit 8		: read command (read data from RC buffer)
-+  Bit 9		: write command (write data to RC buffer)
-+  Bit 10	: copy command (copy data from one RC buffer to another
-+		  RC buffer)
-+
-+*) PCI_ENDPOINT_TEST_STATUS
-+
-+This register reflects the status of the PCI endpoint device.
-+
-+Bitfield Description:
-+  Bit 0		: read success
-+  Bit 1		: read fail
-+  Bit 2		: write success
-+  Bit 3		: write fail
-+  Bit 4		: copy success
-+  Bit 5		: copy fail
-+  Bit 6		: irq raised
-+  Bit 7		: source address is invalid
-+  Bit 8		: destination address is invalid
-+
-+*) PCI_ENDPOINT_TEST_SRC_ADDR
-+
-+This register contains the source address (RC buffer address) for the
-+COPY/READ command.
-+
-+*) PCI_ENDPOINT_TEST_DST_ADDR
-+
-+This register contains the destination address (RC buffer address) for
-+the COPY/WRITE command.
--- 
-1.7.9.5
+I'd be happy to revert this, but it would be easier if somebody sent a
+patch and a changelog.
