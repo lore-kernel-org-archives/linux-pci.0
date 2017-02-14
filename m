@@ -1,88 +1,93 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 17 Feb 2017 11:50:54 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Subject: Re: Pointers for writing a good PCIe driver
-Message-ID: <20170217175054.GA16671@bhelgaas-glaptop.roam.corp.google.com>
-References: <ff099b5f-efc8-bb5f-41e3-493398844cc0@free.fr>
- <05046a8a-ba9f-26f9-4c93-f657f9da6294@free.fr>
- <20170207200656.GA11659@bhelgaas-glaptop.roam.corp.google.com>
- <20170207214758.GC11659@bhelgaas-glaptop.roam.corp.google.com>
- <0f22720c-e47d-59f6-b5f7-5e40f4a1759d@free.fr>
- <20170212165033.GA31833@kroah.com>
- <0d785dab-c830-b887-d9f3-a2cd5338695c@free.fr>
- <20170217143803.GA10663@bhelgaas-glaptop.roam.corp.google.com>
- <eff9861e-043a-7ecd-5d52-c8e18a52ece8@free.fr>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 14 Feb 2017 20:27:43 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Alan Stern <stern@rowland.harvard.edu>,
+        torvalds@linux-foundation.org
+Cc: kernel list <linux-kernel@vger.kernel.org>,
+        linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
+ after cold boots, boots after reboot
+Message-ID: <20170214192743.GA3869@amd>
+References: <20170203190414.GA3701@amd>
+ <Pine.LNX.4.44L0.1702031415140.1794-100000@iolanthe.rowland.org>
+ <20170203205129.GA3791@amd>
+ <20170203211854.GA3697@amd>
+ <20170214175956.GA3587@amd>
 MIME-Version: 1.0
-In-Reply-To: <eff9861e-043a-7ecd-5d52-c8e18a52ece8@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Greg KH <gregkh@linuxfoundation.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- linux-pci <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="82I3+IH0IqGh5yIs"
+In-Reply-To: <20170214175956.GA3587@amd>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 17, 2017 at 06:00:53PM +0100, Mason wrote:
-> On 17/02/2017 15:38, Bjorn Helgaas wrote:
-> 
-> > On Fri, Feb 17, 2017 at 10:20:20AM +0100, Mason wrote:
-> >
-> >> There might be some kind of misunderstanding.
-> >>
-> >> I don't plan to write a driver for a device that plugs into a PCIe slot.
-> >>
-> >> I intend to write a driver for the PCIe controller itself, which is
-> >> embedded in the SoC. (In order to support different types of PCIe
-> >> devices, with their respective drivers already upstream.)
-> >>
-> >> I think the controller driver belongs in drivers/pci/host ?
-> > 
-> > Sorry, I indeed misunderstood you.
-> > 
-> > The native PCI host controller drivers indeed live in
-> > drivers/pci/host/.
-> > 
-> > I don't know anything about your hardware or environment, but I highly
-> > encourage you to use ACPI (drivers/acpi/pci_root.c, with a little bit
-> > of arch support) or generic DT (drivers/pci/host/pci-host-generic.c)
-> > instead of writing a custom host controller driver.
-> > 
-> > The native drivers in drivers/pci/host are a huge maintenance hassle
-> > for no real benefit.
-> 
-> My SoC is built around an ARM Cortex A9.
-> I don't think (?) this platform has any support for ACPI.
 
-There's ACPI support on ARM64, but none that I know of for ARM32.
+--82I3+IH0IqGh5yIs
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> I'm currently using this DT description:
-> http://lxr.free-electrons.com/source/arch/arm/boot/dts/tango4-common.dtsi
-> 
-> The "legacy" driver sits at ~700 lines. It would be awesome to be able
-> to discard all of it, and rely on generic upstream code. But I don't
-> understand how it is possible for a generic driver to support whatever
-> crazy solution some random vendor has come up with?
+On Tue 2017-02-14 18:59:56, Pavel Machek wrote:
+> Hi!
+>=20
+> > > > > Hmm. I moved keyboard between USB ports, and now 4.10-rc6 no long=
+er
+> > > > > boots. v4.6 works ok. Let me try with keyboard unplugged... no, I
+> > > > > could not get it to work. I believe v4.9 and some v4.10-rc's work=
+ed,
+> > > > > but I'll have to double check.
+> > > >=20
+> > > > But all the kernel versions worked when the keyboard was plugged in=
+to
+> > > > its original USB port?
+> > >=20
+> > > Aha. So it looks difference is probably in "where is keyboard plugged
+> > > in" but in "reboot" vs. "cold boot". I did not do a cold boot in quite
+> > > a while :-(.
+> > >=20
+> > > Booting to grub, then hitting ctrl-alt-del is enough to make it work.=
+ Ouch.
+> > >=20
+> > > It happens with current Linus' tree.
+> >=20
+> > v4.10-rc6-feb3 : broken
+> > v4.9 : ok
+> > (v4.6 : ok)
+>=20
+> Hmm. It hangs during PCI fixups, and it hangs in v4.10-rc8, too.  =20
+>=20
+> With debug patch below, I get
+>=20
+> ...1d.7: PCI fixup... pass 2
+> ...1d.7: PCI fixup... pass 3
+> ...1d.7: PCI fixup... pass 3 done
+>=20
+> ...followed by hang. So yes, it looks USB related.
+>=20
+> (Sometimes it hangs with some kind backtrace involving secondary CPU
+> startup, unfortunately useful info is off screen at that point).
 
-You're right that the programming model of the host bridge itself is
-not specified by PCI specs, so it's impossible to have a generic
-driver that can manage it completely by itself.
+Forgot to say, 1d.7 is EHCI controller.
 
-If you have firmware that initializes the bridge and tells the OS what
-the windows are (bus numbers, memory space, I/O space) and where the
-PCIe-specified ECAM space is, a generic driver can take it from there.
+00:1d.7 USB controller: Intel Corporation NM10/ICH7 Family USB2 EHCI
+Controller (rev 01)
 
-Bjorn
+									Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+--82I3+IH0IqGh5yIs
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlijWi8ACgkQMOfwapXb+vI4JQCgl8uaLPSJK+LIH9DNpb6M7ssx
+Nm8AnA3r2tQKlwyH0en4XYokKoQSVEXg
+=RNt3
+-----END PGP SIGNATURE-----
+
+--82I3+IH0IqGh5yIs--
