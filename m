@@ -1,83 +1,68 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:38580 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750890AbdBDQwy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 4 Feb 2017 11:52:54 -0500
-Date: Sat, 4 Feb 2017 17:52:49 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: kernel list <linux-kernel@vger.kernel.org>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com,
-        hpa@zytor.com, x86@kernel.org
-Subject: Re: v4.10-rc6 boot regression on Intel desktop, does not boot after
- cold boots, boots after reboot
-Message-ID: <20170204165248.GA6951@amd>
-References: <20170203211854.GA3697@amd>
- <Pine.LNX.4.44L0.1702031658100.1794-100000@iolanthe.rowland.org>
- <20170203224309.GA22118@amd>
- <20170204084856.GA32381@amd>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53456 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753118AbdBNNyC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2017 08:54:02 -0500
+Subject: Re: RFC on No ACS Support and SMMUv3 Support
+To: Will Deacon <will.deacon@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>
+References: <2944ff12-d5c0-179a-7c07-fbbafcd022da@codeaurora.org>
+ <20170213160652.7c141eb1@t450s.home>
+ <2d199a00-a66a-e96c-b0c4-9dd4459d2589@codeaurora.org>
+ <20170213184643.2d2bdce7@t450s.home>
+ <546869d0-d05c-9550-86d5-276bc7a3c284@codeaurora.org>
+ <20170214123605.GA25144@arm.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        Nate Watterson <nwatters@codeaurora.org>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        iommu@lists.linux-foundation.org,
+        Vikram Sethi <vikrams@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <c7516332-259a-a807-91b1-7bcaebec1b43@codeaurora.org>
+Date: Tue, 14 Feb 2017 08:53:59 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="XsQoSWH+UP9D9v3l"
-In-Reply-To: <20170204084856.GA32381@amd>
+In-Reply-To: <20170214123605.GA25144@arm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 2/14/2017 7:36 AM, Will Deacon wrote:
+> On Mon, Feb 13, 2017 at 08:54:04PM -0500, Sinan Kaya wrote:
+>> On 2/13/2017 8:46 PM, Alex Williamson wrote:
+>>>> My first goal is to support virtual function passthrough for device's that are directly
+>>>> connected. This will be possible with the quirk I proposed and it will be the most
+>>>> secure solution. It can certainly be generalized for other systems.
+>>> Why is this anything more than a quirk for the affected PCIe root port
+>>> vendor:device IDs and use of pci_device_group() to evaluate the rest of
+>>> the topology, as appears is already done?  Clearly a blanket exception
+>>> for the platform wouldn't necessarily be correct if a user could plugin
+>>> a device that adds a PCIe switch.
+>>
+>> I was going to go this direction first. I wanted to check with everybody to see
+>> if there are other/better alternatives possible via either changing 
+>> pci_device_group or changing the smmuv3 driver.
+> 
+> Just to echo what Alex has been saying, I really don't think we should
+> support this type of system by quirking the topology code in the SMMU
+> driver. The SMMU isn't at fault here; the problems are all upstream of that.
+> Legitimising non-ACS machines in the SMMU driver gives little incentive for
+> people to build systems correctly and undermines the security guarantees
+> that the SMMU (and VFIO) are trying to provide.
+> 
+> I appreciate that I/O virtualisation on arm64 has been a learning curve for
+> everybody involved, but that's not an excuse for moving the goalposts when
+> it comes to device isolation.
+> 
+> Will
+> 
 
---XsQoSWH+UP9D9v3l
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Thanks to everyone for feedback. I'll follow the quirk path as requested. 
+I'll be posting the patch soon.
 
-Hi!
 
-> > > > > Aha. So it looks difference is probably in "where is keyboard plu=
-gged
-> > > > > in" but in "reboot" vs. "cold boot". I did not do a cold boot in =
-quite
-> > > > > a while :-(.
-> > > > >=20
-> > > > > Booting to grub, then hitting ctrl-alt-del is enough to make it w=
-ork. Ouch.
-> > > > >=20
-> > > > > It happens with current Linus' tree.
-> > > >=20
-> > > > v4.10-rc6-feb3 : broken
-> > > > v4.9 : ok
-> > > > (v4.6 : ok)
-> v4.10-rc1 seems to work.
-
-v4.10-rc3: ok
-v4.10-rc5: bad, I get some kind of backtrace? Next boot results in
-hang. It boots ok twice in between.
-v4.10-rc6: ok ?!
-34e00accf612bc5448ae709245c2b408edf39f46 : ok?
-v4.10-rc6-feb3: ok?! (with config.ok, and with original config. Hmm?)
-
-This machine was pretty reliable (except rowhammer), but I admit their
-EC code may leave something to be desired. Sometimes it runs without
-power LED lit (usually after strange crashes), sometimes _two_ long
-presses are neccessary to power it off.
-
-So... yesterday it hung on cold boot, but not on reboot. Verified 5
-times or more. Today, I can't reproduce the hang. Strange :-(.
-
-Best regards,
-								Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---XsQoSWH+UP9D9v3l
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAliWBuAACgkQMOfwapXb+vLtJgCfegaUKN5H+AM+gWMHDUQVuYzz
-RH8AnjZmkOb5LGSHGoDTGRFHptn/QLNC
-=sHUH
------END PGP SIGNATURE-----
-
---XsQoSWH+UP9D9v3l--
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
