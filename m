@@ -1,86 +1,51 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:56017 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751137AbdBLMAe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Feb 2017 07:00:34 -0500
-Date: Sun, 12 Feb 2017 13:00:31 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: kernel list <linux-kernel@vger.kernel.org>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org
-Subject: Re: v4.10-rc6 boot regression on Intel desktop, does not boot after
- cold boots, boots after reboot
-Message-ID: <20170212120031.GA3674@amd>
-References: <20170203211854.GA3697@amd>
- <Pine.LNX.4.44L0.1702031658100.1794-100000@iolanthe.rowland.org>
- <20170203224309.GA22118@amd>
- <20170204084856.GA32381@amd>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="d6Gm4EdcadzBjdND"
-In-Reply-To: <20170204084856.GA32381@amd>
+Received: from mx1.redhat.com ([209.132.183.28]:52912 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751218AbdBOQxM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Feb 2017 11:53:12 -0500
+From: Prarit Bhargava <prarit@redhat.com>
+To: linux-pci@vger.kernel.org
+Cc: Prarit Bhargava <prarit@redhat.com>, mstowe@redhat.com,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [RESENT PATCH] PCI/MSI: Fix msi_desc->affinity memory leak when freeing MSI IRQs.
+Date: Wed, 15 Feb 2017 11:53:08 -0500
+Message-Id: <1487177588-31369-1-git-send-email-prarit@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+No response ... trying again.
 
---d6Gm4EdcadzBjdND
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+P.
 
-Hi!
+---8<---
 
-> > > > > Aha. So it looks difference is probably in "where is keyboard plu=
-gged
-> > > > > in" but in "reboot" vs. "cold boot". I did not do a cold boot in =
-quite
-> > > > > a while :-(.
-> > > > >=20
-> > > > > Booting to grub, then hitting ctrl-alt-del is enough to make it w=
-ork. Ouch.
-> > > > >=20
-> > > > > It happens with current Linus' tree.
-> > > >=20
-> > > > v4.10-rc6-feb3 : broken
-> > > > v4.9 : ok
-> > > > (v4.6 : ok)
-> > >=20
-> > > All I can suggest is git bisect.  :-(  But I agree that the problem i=
-s=20
-> > > unlikely to be in the USB layer.
-> >=20
-> > Yep. I'm hoping PCI people speak up.... adding printks there should be
-> > possibility, too.
-> >=20
-> > (And I guess I should remove you and usb people from the cc-list... in
-> > the next mails).
-> >=20
-> > (I verified it happens with 32bit configuration, too, FWIW).
->=20
-> v4.10-rc1 seems to work.
+During device setup, msix_setup_entries() and msi_setup_entry() allocate
+msi_desc by calling alloc_msi_entry().  alloc_msi_entry() can also allocate a
+affinity cpumask.  During device teardown free_msi_irqs() is called and the
+msi_desc is freed, but the affinity cpumask is leaked.
 
-No, it is somehow harder to test. It is only problem after some cold
-boots.
+Fix it by calling free_msi_entry() which frees both the msi_desc and the
+affinity cpumask.
 
-Today machine was off for few hours, and then v4.10-rc7 failed to
-boot. On next reboot, I waited for grub, hit ctrl-alt-del, and it
-booted ok.
+Signed-off-by: Prarit Bhargava <prarit@redhat.com>
+Cc: mstowe@redhat.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/msi.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---d6Gm4EdcadzBjdND
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAligTl8ACgkQMOfwapXb+vLcKACfeO2AfQH7zbLB5cUrJYxkoHZ+
-XbIAn1ixJeHrf8yoMq1qrqLaRMM7jAgI
-=CoEs
------END PGP SIGNATURE-----
-
---d6Gm4EdcadzBjdND--
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 50c5003295ca..3d709311052d 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -379,7 +379,7 @@ static void free_msi_irqs(struct pci_dev *dev)
+ 		}
+ 
+ 		list_del(&entry->list);
+-		kfree(entry);
++		free_msi_entry(entry);
+ 	}
+ 
+ 	if (dev->msi_irq_groups) {
+-- 
+1.7.9.3
