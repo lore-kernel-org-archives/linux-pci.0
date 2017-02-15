@@ -1,15 +1,18 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 17 Feb 2017 09:04:59 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: Re: [PATCH v2 03/22] PCI: endpoint: Introduce configfs entry for
- configuring EP functions
-Message-ID: <20170217170459.GA15276@infradead.org>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
- <1487325042-28227-4-git-send-email-kishon@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-samsung-soc@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+ <linux-arm-kernel@axis.com>
+Subject: [PATCH 07/10] PCI: dwc: designware: Fix style errors in
+ pcie-designware.c
+Date: Wed, 15 Feb 2017 18:48:16 +0530
+Message-ID: <1487164699-30708-8-git-send-email-kishon@ti.com>
+In-Reply-To: <1487164699-30708-1-git-send-email-kishon@ti.com>
+References: <1487164699-30708-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1487325042-28227-4-git-send-email-kishon@ti.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,152 +20,163 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- linux-doc@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
+Cc: nsekhar@ti.com, Kishon Vijay Abraham I <kishon@ti.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 17, 2017 at 03:20:23PM +0530, Kishon Vijay Abraham I wrote:
-> Introduce a new configfs entry to configure the EP function (like
-> configuring the standard configuration header entries) and to
-> bind the EP function with EP controller.
-> 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/endpoint/Kconfig      |   14 +-
->  drivers/pci/endpoint/Makefile     |    1 +
->  drivers/pci/endpoint/pci-ep-cfs.c |  427 +++++++++++++++++++++++++++++++++++++
->  3 files changed, 440 insertions(+), 2 deletions(-)
->  create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
-> 
-> diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
-> index 7eb1c79..8470f0b 100644
-> --- a/drivers/pci/endpoint/Kconfig
-> +++ b/drivers/pci/endpoint/Kconfig
-> @@ -6,7 +6,6 @@ menu "PCI Endpoint"
->  
->  config PCI_ENDPOINT
->  	bool "PCI Endpoint Support"
-> -	select CONFIGFS_FS
->  	help
->  	   Enable this configuration option to support configurable PCI
->  	   endpoint. This should be enabled if the platform has a PCI
-> @@ -14,8 +13,19 @@ config PCI_ENDPOINT
->  
->  	   Enabling this option will build the endpoint library, which
->  	   includes endpoint controller library and endpoint function
-> -	   library.
-> +	   library. This will also enable the configfs entry required to
-> +	   configure the endpoint function and used to bind the
-> +	   function with a endpoint controller.
->  
->  	   If in doubt, say "N" to disable Endpoint support.
->  
-> +config PCI_ENDPOINT_CONFIGFS
-> +	bool "PCI Endpoint Configfs Support"
-> +	depends on PCI_ENDPOINT
-> +	select CONFIGFS_FS
-> +	help
-> +	   This will enable the configfs entry that can be used to
-> +	   configure the endpoint function and used to bind the
-> +	   function with a endpoint controller.
-> +
->  endmenu
-> diff --git a/drivers/pci/endpoint/Makefile b/drivers/pci/endpoint/Makefile
-> index dc1bc16..dd9163c 100644
-> --- a/drivers/pci/endpoint/Makefile
-> +++ b/drivers/pci/endpoint/Makefile
-> @@ -4,3 +4,4 @@
->  
->  obj-$(CONFIG_PCI_ENDPOINT)		+= pci-epc-core.o pci-epf-core.o\
->  					   pci-epc-mem.o
-> +obj-$(CONFIG_PCI_ENDPOINT_CONFIGFS)	+= pci-ep-cfs.o
-> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
-> new file mode 100644
-> index 0000000..ed0f8c2
-> --- /dev/null
-> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
-> @@ -0,0 +1,427 @@
-> +/**
-> + * configfs to configure the PCI endpoint
-> + *
-> + * Copyright (C) 2017 Texas Instruments
-> + * Author: Kishon Vijay Abraham I <kishon@ti.com>
-> + *
-> + * This program is free software: you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 of
-> + * the License as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-> + */
-> +
-> +#include <linux/configfs.h>
-> +#include <linux/module.h>
-> +#include <linux/slab.h>
-> +
-> +#include <linux/pci-epc.h>
-> +#include <linux/pci-epf.h>
-> +
-> +struct pci_epf_info {
-> +	struct config_group group;
-> +	struct list_head list;
-> +	struct pci_epf *epf;
-> +};
-> +
-> +struct pci_ep_info {
-> +	struct config_group group;
-> +	struct config_group pci_epf_group;
-> +	/* mutex to protect pci_epf list */
-> +	struct mutex lock;
-> +	struct list_head pci_epf;
-> +	const char *epc_name;
-> +	struct pci_epc *epc;
-> +};
-> +
-> +static inline struct pci_epf_info *to_pci_epf_info(struct config_item *item)
-> +{
-> +	return container_of(to_config_group(item), struct pci_epf_info, group);
-> +}
-> +
-> +static inline struct pci_ep_info *to_pci_ep_info(struct config_item *item)
-> +{
-> +	return container_of(to_config_group(item), struct pci_ep_info, group);
-> +}
-> +
-> +#define PCI_EPF_HEADER_R(_name)						       \
-> +static ssize_t pci_epf_##_name##_show(struct config_item *item,	char *page)    \
-> +{									       \
-> +	struct pci_epf *epf = to_pci_epf_info(item)->epf;		       \
-> +	if (!epf->header) {						       \
-> +		WARN_ON_ONCE("epf device not bound to function driver\n");     \
+No functional change. Fix all checkpatch warnings and check errors
+in pcie-designware.c
 
-WARN_ON_ONCE takes a string to evaluate as argument, not a message
+Acked-By: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pcie-designware.c |   42 ++++++++++++++++++-------------------
+ 1 file changed, 21 insertions(+), 21 deletions(-)
 
-> +		return 0;					
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index 237da48..622d416 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -40,13 +40,13 @@ int dw_pcie_read(void __iomem *addr, int size, u32 *val)
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 	}
+ 
+-	if (size == 4)
++	if (size == 4) {
+ 		*val = readl(addr);
+-	else if (size == 2)
++	} else if (size == 2) {
+ 		*val = readw(addr);
+-	else if (size == 1)
++	} else if (size == 1) {
+ 		*val = readb(addr);
+-	else {
++	} else {
+ 		*val = 0;
+ 		return PCIBIOS_BAD_REGISTER_NUMBER;
+ 	}
+@@ -200,16 +200,15 @@ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ 
+ 	for (i = 0; i < MAX_MSI_CTRLS; i++) {
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+-				(u32 *)&val);
++				    (u32 *)&val);
+ 		if (val) {
+ 			ret = IRQ_HANDLED;
+ 			pos = 0;
+ 			while ((pos = find_next_bit(&val, 32, pos)) != 32) {
+ 				irq = irq_find_mapping(pp->irq_domain,
+-						i * 32 + pos);
+-				dw_pcie_wr_own_conf(pp,
+-						PCIE_MSI_INTR0_STATUS + i * 12,
+-						4, 1 << pos);
++						       i * 32 + pos);
++				dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_STATUS +
++						    i * 12, 4, 1 << pos);
+ 				generic_handle_irq(irq);
+ 				pos++;
+ 			}
+@@ -275,8 +274,9 @@ static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
+ static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+ {
+ 	int irq, pos0, i;
+-	struct pcie_port *pp = (struct pcie_port *) msi_desc_to_pci_sysdata(desc);
++	struct pcie_port *pp;
+ 
++	pp  = (struct pcie_port *)msi_desc_to_pci_sysdata(desc);
+ 	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
+ 				       order_base_2(no_irqs));
+ 	if (pos0 < 0)
+@@ -338,7 +338,7 @@ static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+ }
+ 
+ static int dw_msi_setup_irq(struct msi_controller *chip, struct pci_dev *pdev,
+-			struct msi_desc *desc)
++			    struct msi_desc *desc)
+ {
+ 	int irq, pos;
+ 	struct pcie_port *pp = pdev->bus->sysdata;
+@@ -386,7 +386,7 @@ static void dw_msi_teardown_irq(struct msi_controller *chip, unsigned int irq)
+ {
+ 	struct irq_data *data = irq_get_irq_data(irq);
+ 	struct msi_desc *msi = irq_data_get_msi_desc(data);
+-	struct pcie_port *pp = (struct pcie_port *) msi_desc_to_pci_sysdata(msi);
++	struct pcie_port *pp = (struct pcie_port *)msi_desc_to_pci_sysdata(msi);
+ 
+ 	clear_irq_range(pp, irq, 1, data->hwirq);
+ }
+@@ -428,7 +428,7 @@ int dw_pcie_link_up(struct dw_pcie *pci)
+ }
+ 
+ static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+-			irq_hw_number_t hwirq)
++			   irq_hw_number_t hwirq)
+ {
+ 	irq_set_chip_and_handler(irq, &dw_msi_irq_chip, handle_simple_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
+@@ -465,8 +465,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	cfg_res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "config");
+ 	if (cfg_res) {
+-		pp->cfg0_size = resource_size(cfg_res)/2;
+-		pp->cfg1_size = resource_size(cfg_res)/2;
++		pp->cfg0_size = resource_size(cfg_res) / 2;
++		pp->cfg1_size = resource_size(cfg_res) / 2;
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+ 	} else if (!pp->va_cfg0_base) {
+@@ -505,8 +505,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 			break;
+ 		case 0:
+ 			pp->cfg = win->res;
+-			pp->cfg0_size = resource_size(pp->cfg)/2;
+-			pp->cfg1_size = resource_size(pp->cfg)/2;
++			pp->cfg0_size = resource_size(pp->cfg) / 2;
++			pp->cfg1_size = resource_size(pp->cfg) / 2;
+ 			pp->cfg0_base = pp->cfg->start;
+ 			pp->cfg1_base = pp->cfg->start + pp->cfg0_size;
+ 			break;
+@@ -612,7 +612,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ }
+ 
+ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+-		u32 devfn, int where, int size, u32 *val)
++				 u32 devfn, int where, int size, u32 *val)
+ {
+ 	int ret, type;
+ 	u32 busdev, cfg_size;
+@@ -651,7 +651,7 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+ }
+ 
+ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
+-		u32 devfn, int where, int size, u32 val)
++				 u32 devfn, int where, int size, u32 val)
+ {
+ 	int ret, type;
+ 	u32 busdev, cfg_size;
+@@ -708,7 +708,7 @@ static int dw_pcie_valid_device(struct pcie_port *pp, struct pci_bus *bus,
+ }
+ 
+ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+-			int size, u32 *val)
++			   int size, u32 *val)
+ {
+ 	struct pcie_port *pp = bus->sysdata;
+ 
+@@ -724,7 +724,7 @@ static int dw_pcie_rd_conf(struct pci_bus *bus, u32 devfn, int where,
+ }
+ 
+ static int dw_pcie_wr_conf(struct pci_bus *bus, u32 devfn,
+-			int where, int size, u32 val)
++			   int where, int size, u32 val)
+ {
+ 	struct pcie_port *pp = bus->sysdata;
+ 
+-- 
+1.7.9.5
 
-and if we return 0 here the callers will retry because that is
-interpreted as a short read.  The code should be something like:
-
-	if (WARN_ON_ONCE(!epf->header))
-		return -EINVAL;
-
-> +	if (!epf->header) {						       \
-> +		WARN_ON_ONCE("epf device not bound to function driver\n");     \
-> +		return 0;						       \
-> +	}								       \
-
-Same here, and a couple more instances down below.
 
 _______________________________________________
 linux-arm-kernel mailing list
