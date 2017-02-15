@@ -1,100 +1,111 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 01/22] PCI: endpoint: Add EP core layer to enable EP
- controller and EP functions
-To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Jingoo Han <jingoohan1@gmail.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
- <1487325042-28227-2-git-send-email-kishon@ti.com>
- <ece23395-7ebc-c9f3-bd9f-4f24e44d763a@synopsys.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <58A6E05D.5010803@ti.com>
-Date: Fri, 17 Feb 2017 17:07:01 +0530
-MIME-Version: 1.0
-In-Reply-To: <ece23395-7ebc-c9f3-bd9f-4f24e44d763a@synopsys.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
- linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="windows-1252"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51722 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753321AbdBOXXp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 18:23:45 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1FNInEB055461
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 18:23:39 -0500
+Received: from e23smtp02.au.ibm.com (e23smtp02.au.ibm.com [202.81.31.144])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 28mssdh1ha-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 18:23:39 -0500
+Received: from localhost
+        by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Thu, 16 Feb 2017 09:23:36 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, mpe@ellerman.id.au, bhelgaas@google.com,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        "# v4 . 9+" <stable@vger.kernel.org>
+Subject: [PATCH 3/3] pci/hotplug/pnv-php: Disable MSI and PCI device properly
+Date: Thu, 16 Feb 2017 10:22:34 +1100
+In-Reply-To: <1487200954-14681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+References: <1487200954-14681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Message-Id: <1487200954-14681-4-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joao,
+pnv_php_disable_irq() can be called in two paths: Bailing path in
+pnv_php_enable_irq() or releasing slot. The MSI (or MSIx) interrupts
+is disabled unconditionally in pnv_php_disable_irq(). It's wrong
+because that might be enabled by drivers other than pnv-php.
 
-On Friday 17 February 2017 04:56 PM, Joao Pinto wrote:
-> =
+This disables MSI (or MSIx) interrupts and the PCI device only if
+it was enabled by pnv-php. In the error path of pnv_php_enable_irq(),
+we rely on the newly added parameter @disable_device. In the path
+of releasing slot, @pnv_php->irq is checked.
 
-> Hi Kishon,
-> =
+Cc: <stable@vger.kernel.org> # v4.9+
+Fixes: 360aebd85a4c ("drivers/pci/hotplug: Support surprise hotplug in powernv driver")
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/pci/hotplug/pnv_php.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
 
-> =C0s 9:50 AM de 2/17/2017, Kishon Vijay Abraham I escreveu:
->> Introduce a new EP core layer in order to support endpoint functions
->> in linux kernel. This comprises of EPC library
->> (Endpoint Controller Library) and EPF library (Endpoint
->> Function Library). EPC library implements functions that is specific
->> to an endpoint controller and EPF library implements functions
->> that is specific to an endpoint function.
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  drivers/Makefile                    |    2 +
->>  drivers/pci/Kconfig                 |    1 +
->>  drivers/pci/endpoint/Kconfig        |   21 ++
->>  drivers/pci/endpoint/Makefile       |    6 +
->>  drivers/pci/endpoint/pci-epc-core.c |  548 ++++++++++++++++++++++++++++=
-+++++++
->>  drivers/pci/endpoint/pci-epc-mem.c  |  143 +++++++++
->>  drivers/pci/endpoint/pci-epf-core.c |  347 ++++++++++++++++++++++
->>  include/linux/mod_devicetable.h     |   10 +
->>  include/linux/pci-epc.h             |  141 +++++++++
->>  include/linux/pci-epf.h             |  160 ++++++++++
->>  10 files changed, 1379 insertions(+)
->>  create mode 100644 drivers/pci/endpoint/Kconfig
->>  create mode 100644 drivers/pci/endpoint/Makefile
->>  create mode 100644 drivers/pci/endpoint/pci-epc-core.c
->>  create mode 100644 drivers/pci/endpoint/pci-epc-mem.c
->>  create mode 100644 drivers/pci/endpoint/pci-epf-core.c
->>  create mode 100644 include/linux/pci-epc.h
->>  create mode 100644 include/linux/pci-epf.h
->>
->> diff --git a/drivers/Makefile b/drivers/Makefile
->> index f521cb0..a300bb1 100644
->> --- a/drivers/Makefile
->> +++ b/drivers/Makefile
->> @@ -14,7 +14,9 @@ obj-$(CONFIG_GENERIC_PHY)	+=3D phy/
->>  obj-$(CONFIG_PINCTRL)		+=3D pinctrl/
->>  obj-$(CONFIG_GPIOLIB)		+=3D gpio/
->>  obj-y				+=3D pwm/
->> +
->>  obj-$(CONFIG_PCI)		+=3D pci/
->> +obj-$(CONFIG_PCI_ENDPOINT)	+=3D pci/endpoint/
->>  # PCI dwc controller drivers
->>  obj-y				+=3D pci/dwc/
-> =
-
-> Any special reason to include pci/endpoint and pci/dwc in drivers/Makefile
-> instead of being inside pci/Makefile? pci/host is still inside pci/Makefi=
-le.
-
-CONFIG_PCI enables all the pcie host support. Endpoint support should be
-enabled independent of the host support. Moving pci/endpoint inside
-pci/Makefile will build endpoint support only if CONFIG_PCI is enabled. For=
- the
-same reason kept pci/dwc in drivers/Makefile since dwc drivers can be used
-either in host mode or device mode (or both).
-
-Thanks
-Kishon
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
+index 6d36b76..335a556 100644
+--- a/drivers/pci/hotplug/pnv_php.c
++++ b/drivers/pci/hotplug/pnv_php.c
+@@ -35,9 +35,11 @@ static void pnv_php_register(struct device_node *dn);
+ static void pnv_php_unregister_one(struct device_node *dn);
+ static void pnv_php_unregister(struct device_node *dn);
+ 
+-static void pnv_php_disable_irq(struct pnv_php_slot *php_slot)
++static void pnv_php_disable_irq(struct pnv_php_slot *php_slot,
++				bool disable_device)
+ {
+ 	struct pci_dev *pdev = php_slot->pdev;
++	int irq = php_slot->irq;
+ 	u16 ctrl;
+ 
+ 	if (php_slot->irq > 0) {
+@@ -56,10 +58,14 @@ static void pnv_php_disable_irq(struct pnv_php_slot *php_slot)
+ 		php_slot->wq = NULL;
+ 	}
+ 
+-	if (pdev->msix_enabled)
+-		pci_disable_msix(pdev);
+-	else if (pdev->msi_enabled)
+-		pci_disable_msi(pdev);
++	if (disable_device || irq > 0) {
++		if (pdev->msix_enabled)
++			pci_disable_msix(pdev);
++		else if (pdev->msi_enabled)
++			pci_disable_msi(pdev);
++
++		pci_disable_device(pdev);
++	}
+ }
+ 
+ static void pnv_php_free_slot(struct kref *kref)
+@@ -68,7 +74,7 @@ static void pnv_php_free_slot(struct kref *kref)
+ 					struct pnv_php_slot, kref);
+ 
+ 	WARN_ON(!list_empty(&php_slot->children));
+-	pnv_php_disable_irq(php_slot);
++	pnv_php_disable_irq(php_slot, false);
+ 	kfree(php_slot->name);
+ 	kfree(php_slot);
+ }
+@@ -777,7 +783,7 @@ static void pnv_php_init_irq(struct pnv_php_slot *php_slot, int irq)
+ 	php_slot->wq = alloc_workqueue("pciehp-%s", 0, 0, php_slot->name);
+ 	if (!php_slot->wq) {
+ 		dev_warn(&pdev->dev, "Cannot alloc workqueue\n");
+-		pnv_php_disable_irq(php_slot);
++		pnv_php_disable_irq(php_slot, true);
+ 		return;
+ 	}
+ 
+@@ -799,7 +805,7 @@ static void pnv_php_init_irq(struct pnv_php_slot *php_slot, int irq)
+ 	ret = request_irq(irq, pnv_php_interrupt, IRQF_SHARED,
+ 			  php_slot->name, php_slot);
+ 	if (ret) {
+-		pnv_php_disable_irq(php_slot);
++		pnv_php_disable_irq(php_slot, true);
+ 		dev_warn(&pdev->dev, "Error %d enabling IRQ %d\n", ret, irq);
+ 		return;
+ 	}
+-- 
+2.7.4
