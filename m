@@ -1,111 +1,162 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
- lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org
-Subject: [PATCH V8 04/11] of: dma: Make of_dma_deconfigure() public
-Date: Fri,  3 Feb 2017 21:18:46 +0530
-Message-Id: <1486136933-20328-5-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sricharan@codeaurora.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38018 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750719AbdBOUdx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Feb 2017 15:33:53 -0500
+Date: Wed, 15 Feb 2017 14:33:47 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jess Frazelle <me@jessfraz.com>
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "open list:Hyper-V CORE AND DRIVERS" <devel@linuxdriverproject.org>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        kernel-hardening@lists.openwall.com,
+        Kees Cook <keescook@chromium.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Marc Zyngier <marc.zyngier@arm.com>
+Subject: Re: [PATCH v2 3/5] pci: set msi_domain_ops as __ro_after_init
+Message-ID: <20170215203347.GA6981@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170211013758.3288-1-me@jessfraz.com>
+ <20170211013758.3288-3-me@jessfraz.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170211013758.3288-3-me@jessfraz.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+[+cc Kees, Thomas, Marc]
 
-As part of moving DMA initializing to probe time the
-of_dma_deconfigure() function will need to be called from different
-source files. Make it public and move it to drivers/of/device.c where
-the of_dma_configure() function is.
+Hi Jess,
 
-Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
----
- drivers/of/device.c       | 12 ++++++++++++
- drivers/of/platform.c     |  5 -----
- include/linux/of_device.h |  3 +++
- 3 files changed, 15 insertions(+), 5 deletions(-)
+Thanks for the patch!
 
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 09dedd0..c17c19d 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -136,6 +136,18 @@ void of_dma_configure(struct device *dev, struct device_node *np)
- }
- EXPORT_SYMBOL_GPL(of_dma_configure);
- 
-+/**
-+ * of_dma_deconfigure - Clean up DMA configuration
-+ * @dev:	Device for which to clean up DMA configuration
-+ *
-+ * Clean up all configuration performed by of_dma_configure_ops() and free all
-+ * resources that have been allocated.
-+ */
-+void of_dma_deconfigure(struct device *dev)
-+{
-+	arch_teardown_dma_ops(dev);
-+}
-+
- int of_device_register(struct platform_device *pdev)
- {
- 	device_initialize(&pdev->dev);
-diff --git a/drivers/of/platform.c b/drivers/of/platform.c
-index b8064bc..57418f7 100644
---- a/drivers/of/platform.c
-+++ b/drivers/of/platform.c
-@@ -158,11 +158,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
- }
- EXPORT_SYMBOL(of_device_alloc);
- 
--static void of_dma_deconfigure(struct device *dev)
--{
--	arch_teardown_dma_ops(dev);
--}
--
- /**
-  * of_platform_device_create_pdata - Alloc, initialize and register an of_device
-  * @np: pointer to node to create device for
-diff --git a/include/linux/of_device.h b/include/linux/of_device.h
-index e9afbcc..3cb2288 100644
---- a/include/linux/of_device.h
-+++ b/include/linux/of_device.h
-@@ -57,6 +57,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- }
- 
- void of_dma_configure(struct device *dev, struct device_node *np);
-+void of_dma_deconfigure(struct device *dev);
- #else /* CONFIG_OF */
- 
- static inline int of_driver_match_device(struct device *dev,
-@@ -106,6 +107,8 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- }
- static inline void of_dma_configure(struct device *dev, struct device_node *np)
- {}
-+static inline void of_dma_deconfigure(struct device *dev)
-+{}
- #endif /* CONFIG_OF */
- 
- #endif /* _LINUX_OF_DEVICE_H */
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+On Fri, Feb 10, 2017 at 05:37:56PM -0800, Jess Frazelle wrote:
+> Marked msi_domain_ops structs as __ro_after_init when called only during init.
+> This protects the data structure from accidental corruption.
+> 
+> Suggested-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: Jess Frazelle <me@jessfraz.com>
+> ---
+>  drivers/pci/host/pci-hyperv.c | 2 +-
+>  drivers/pci/host/vmd.c        | 2 +-
+>  drivers/pci/msi.c             | 2 +-
 
+I understand the value of __ro_after_init, but I'm not certain about
+sprinkling it around in seemingly random places because it's hard to
+know where to put it and whether we put it in all the right places.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+How did you choose these three files to change?  There are other
+instances of struct msi_domain_ops that use MSI_FLAG_USE_DEF_DOM_OPS.
+Should they be changed, too?  If not, is there a rule to figure out
+which ones should be made __ro_after_init?
+
+I wonder if adding __ro_after_init is really the best solution.  I
+looked at VMD to see how vmd_msi_domain_ops is updated.  Here are the
+definitions:
+
+  static struct msi_domain_ops vmd_msi_domain_ops = {
+    .get_hwirq = vmd_get_hwirq,
+    .msi_init  = vmd_msi_init,
+    ...
+  };
+
+  static struct msi_domain_info vmd_msi_domain_info = {
+    .flags = MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+             MSI_FLAG_PCI_MSIX,
+    .ops = &vmd_msi_domain_ops,
+    ...
+  };
+
+Both vmd_msi_domain_ops and vmd_msi_domain_info are statically
+initialized, but not completely.  Then we pass a pointer to
+pci_msi_create_irq_domain(), which fills in defaults for some of the
+function pointers that weren't statically initialized:
+
+  vmd_enable_domain()
+    pci_msi_create_irq_domain(NULL, &vmd_msi_domain_info, ...)
+      if (info->flags & MSI_FLAG_USE_DEF_DOM_OPS)
+        pci_msi_domain_update_dom_ops(info)
+	  if (ops->set_desc == NULL)
+	    ops->msi_check = pci_msi_domain_check_cap
+
+We know at build-time what all the function pointers will be, so in
+principle we should be able to make the struct const, which would be
+even better than __ro_after_init.
+
+For example, we could require that callers set every function pointer
+before calling pci_msi_create_irq_domain(), using the default ones
+(pci_msi_domain_set_desc, pci_msi_domain_check_cap,
+pci_msi_domain_handle_error) if it doesn't need to override them,
+e.g.,
+
+  static struct msi_domain_ops vmd_msi_domain_ops = {
+    .get_hwirq = vmd_get_hwirq,
+    .msi_check = pci_msi_domain_check_cap,
+  };
+
+Or we could leave NULL pointers in the structure and have the code
+that calls through the function pointers check for NULL and call the
+default itself, e.g.,
+
+  if (ops->msi_check)
+    ops->msi_check(...)
+  else
+    pci_msi_domain_check_cap(...)
+
+It looks like the "USE_DEF_OPS" framework was added by Jiang Liu with
+the commits below.  I would CC: him for his thoughts, but I don't
+have a current email address.
+
+  aeeb59657c35 ("genirq: Provide default callbacks for msi_domain_ops")
+  3878eaefb89a ("PCI/MSI: Enhance core to support hierarchy irqdomain")
+
+Bjorn
+
+>  3 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index 3efcc7bdc5fb..f05b93689d8f 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -958,7 +958,7 @@ static irq_hw_number_t hv_msi_domain_ops_get_hwirq(struct msi_domain_info *info,
+>  	return arg->msi_hwirq;
+>  }
+> 
+> -static struct msi_domain_ops hv_msi_ops = {
+> +static struct msi_domain_ops hv_msi_ops __ro_after_init = {
+>  	.get_hwirq	= hv_msi_domain_ops_get_hwirq,
+>  	.msi_prepare	= pci_msi_prepare,
+>  	.set_desc	= pci_msi_set_desc,
+> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+> index 18ef1a93c10a..152c461538e4 100644
+> --- a/drivers/pci/host/vmd.c
+> +++ b/drivers/pci/host/vmd.c
+> @@ -253,7 +253,7 @@ static void vmd_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
+>  	arg->desc = desc;
+>  }
+> 
+> -static struct msi_domain_ops vmd_msi_domain_ops = {
+> +static struct msi_domain_ops vmd_msi_domain_ops __ro_after_init = {
+>  	.get_hwirq	= vmd_get_hwirq,
+>  	.msi_init	= vmd_msi_init,
+>  	.msi_free	= vmd_msi_free,
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 50c5003295ca..93141d5e2d1c 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1413,7 +1413,7 @@ static void pci_msi_domain_set_desc(msi_alloc_info_t *arg,
+>  #define pci_msi_domain_set_desc		NULL
+>  #endif
+> 
+> -static struct msi_domain_ops pci_msi_domain_ops_default = {
+> +static struct msi_domain_ops pci_msi_domain_ops_default __ro_after_init = {
+>  	.set_desc	= pci_msi_domain_set_desc,
+>  	.msi_check	= pci_msi_domain_check_cap,
+>  	.handle_error	= pci_msi_domain_handle_error,
+> --
+> 2.11.0
+> 
