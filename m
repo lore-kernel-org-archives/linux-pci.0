@@ -1,235 +1,58 @@
-Return-Path: <SRS0=ktxA=ZQ=intel.com=ashok.raj@kernel.org>
-Return-Path: <SRS0=ktxA=ZQ=intel.com=ashok.raj@kernel.org>
-Date: Thu, 2 Feb 2017 22:00:53 -0800
-From: "Raj, Ashok" <ashok.raj@intel.com>
+Return-Path: <SRS0=iK9M=Z4=gmail.com=robherring2@kernel.org>
+Return-Path: <SRS0=iK9M=Z4=gmail.com=robherring2@kernel.org>
+Date: Wed, 15 Feb 2017 15:26:24 -0600
+From: Rob Herring <robh@kernel.org>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>,
-	Ashok Raj <ashok.raj@intel.com>
-Subject: Re: [PATCH] pciehp: Fix race condition handling surprise link-down
-Message-ID: <20170203060053.GA240323@otc-nc-03>
-References: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
- <20170203025901.GA15080@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, linux-pci@vger.kernel.org,
+	yurovsky@gmail.com, Lucas Stach <l.stach@pengutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Lee Jones <lee.jones@linaro.org>,
+	Fabio Estevam <fabio.estevam@nxp.com>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 3/3] PCI: imx6: Add code to support i.MX7D
+Message-ID: <20170215212624.btdhfn4xvuppv6hq@rob-hp-laptop>
+References: <20170207155027.7734-1-andrew.smirnov@gmail.com>
+ <20170207155027.7734-4-andrew.smirnov@gmail.com>
+ <20170215171700.5vz5seeihgtwn76p@rob-hp-laptop>
+ <20170215173850.GH19040@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170203025901.GA15080@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170215173850.GH19040@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+On Wed, Feb 15, 2017 at 11:38:50AM -0600, Bjorn Helgaas wrote:
+> On Wed, Feb 15, 2017 at 11:17:00AM -0600, Rob Herring wrote:
+> > On Tue, Feb 07, 2017 at 07:50:27AM -0800, Andrey Smirnov wrote:
+> > > Add various bits of code needed to support i.MX7D variant of the IP.
 
-On Thu, Feb 02, 2017 at 08:59:01PM -0600, Bjorn Helgaas wrote:
-> Hi Ashok,
-> 
-> Sorry it took me so long to review this.  I never felt like I really
-> understood it, and it took me a long time to try to figure out a more
-> useful response.
-
-No worries. Agree its a litte tricky, and took me several iterations before
-doing someting that was simple enough, without a complete overhaul of
-state management. 
-
-Thanks a ton for capturing the sequence, I did capture
-some debug output along at that time. My apologies for not adding it
-along. But this becomes excellant notes and perhaps would be good to 
-capture in commit or in the documentation. Going through this isn't fun :-)
-
-
-Responses below:
 > > 
-> > This patch fixes that by setting the p_slot->state only when the work to
-> > handle the power event is executing, protected by the p_slot->hotplug_lock.
+> > [...]
+> > 
+> > > @@ -251,6 +261,10 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+> > >  	u32 val, gpr1, gpr12;
+> > >  
+> > >  	switch (imx6_pcie->variant) {
+> > > +	case IMX7D:
+> > > +		reset_control_assert(imx6_pcie->pciephy_reset);
+> > > +		reset_control_assert(imx6_pcie->apps_reset);
+> > > +		break;
+> > >  	case IMX6SX:
+> > >  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> > >  				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
+> > 
+> > So the difference with i.MX7D is not really that it has a reset or not, 
+> > but some platforms use a reset driver and some do not. The latter should 
+> > be fixed.
 > 
-> So let me first try to understand what's going on with the current
-> code.  In the normal case where a device is removed or turned off and
-> pciehp can complete everything before another device appears, I think
-> the flow is like this:
+> I have this patch queued for v4.11.  Are these things that should be
+> fixed first?  If so, I can drop this.
 
-You got this problem part right. Spot on!
-> 
->       p_slot->state == STATIC_STATE (powered on, link up)
-> 
->                         <-- surprise link down interrupt
->       pciehp_isr()
->         queue INT_LINK_DOWN work
-> 
->       interrupt_event_handler(INT_LINK_DOWN)
->         set p_slot->state = POWEROFF_STATE
->         queue DISABLE_REQ work
-> 
->       pciehp_power_thread(DISABLE_REQ)
->         send PCI_EXP_SLTCTL_PWR_OFF command
->         wait for power-off to complete
->         set p_slot->state = STATIC_STATE
-> 
->       p_slot->state == STATIC_STATE (powered off)
-> 
-> In the problem case, the link goes down, and while pciehp is still
-> dealing with that, the link comes back up.  So I think one possible
-> sequence is like this:
-> 
->       p_slot->state == STATIC_STATE (powered on, link up)
-> 
->                         <-- surprise link down interrupt
->   1a  pciehp_isr()
->         queue INT_LINK_DOWN work                     # queued: 1-LD
-> 
->   1b  interrupt_event_handler(INT_LINK_DOWN)         # process 1-LD
->         # handle_link_event() sees case STATIC_STATE
->         set p_slot->state = POWEROFF_STATE
->         queue DISABLE_REQ work                       # queued: 1-DR
-> 
->                         <-- surprise link up interrupt
->   2a  pciehp_isr()
->         queue INT_LINK_UP work                       # queued: 1-DR 2-LU
-> 
->   1c  pciehp_power_thread(DISABLE_REQ)               # process 1-DR
->         send PCI_EXP_SLTCTL_PWR_OFF command
->         wait for power-off to complete
->         set p_slot->state = STATIC_STATE
-> 
->                         <-- link down interrupt (result of PWR_OFF)
->   3a  pciehp_isr()
->         queue INT_LINK_DOWN work                     # queued: 2-LU 3-LD
-> 
->   2b  interrupt_event_handler(INT_LINK_UP)           # process 2-LU
->         # handle_link_event() sees case STATIC_STATE
->         set p_slot->state = POWERON_STATE
->         queue ENABLE_REQ work                        # queued: 3-LD 2-ER
-> 
->   3b  interrupt_event_handler(INT_LINK_DOWN)         # process 3-LD
->         # handle_link_event() sees case POWERON_STATE, so we emit
->         # "Link Down event queued; currently getting powered on"
->         set p_slot->state = POWEROFF_STATE
->         queue DISABLE_REQ work                       # queued: 2-ER 3-DR
-> 
->   2c  pciehp_power_thread(ENABLE_REQ)                # process 2-ER
->         send PCI_EXP_SLTCTL_PWR_ON command
->         wait for power-on to complete
->         set p_slot->state = STATIC_STATE
-> 
->                         <-- link up interrupt (result of PWR_ON)
->   4a  pciehp_isr()
->         queue INT_LINK_UP work                       # queued: 3-DR 4-LU
-> 
->   3c  pciehp_power_thread(DISABLE_REQ)               # process 3-DR
->         send PCI_EXP_SLTCTL_PWR_OFF command
->         wait for power-off to complete
->         set p_slot->state = STATIC_STATE
-> 
->                         <-- link down interrupt (result of PWR_OFF)
->   5a  pciehp_isr()
->         queue INT_LINK_DOWN work                     # queued: 4-LU 5-LD
-> 
-> State 5a is the same as 3a (we're in STATIC_STATE with Link Up and
-> Link Down work items queued), so the whole cycle can repeat.
-> 
-> Now let's assume we apply this patch and see what changes.  The patch
-> changes where we set p_slot->state.  Currently we set POWEROFF_STATE
-> or POWERON_STATE in the interrupt_event_handler() work item.  The
-> patch moves that to the pciehp_power_thread() work item, where the
-> power commands are actually sent.
+Well, depends if you trust things will get fixed later and if the PHY 
+in fact should be separate as that affects the binding. It would affect 
+how the driver changes are done as instead of "if (IMX7D) ...", you'd 
+have "if (imx6_pcie->apps_reset) ..." for example. That part depends on
+how much churn you want there.
 
-Right. The difference with this patch is when we set the state to 
-POWERON_STATE or POWEROFF_STATE, we only do that when the previous
-POWER* operation has entirely completed. Since now its protected with the
-hotplug_lock mutex.
-
-In the problem case, since we set the state before the pciehp_power_thread,
-we end up changing the state to POWER*_STATE before the previous POWER*
-action has completed.
-> 
->       p_slot->state == STATIC_STATE (powered on, link up)
-> 
->                         <-- surprise link down interrupt
->   1A  pciehp_isr()
->         queue INT_LINK_DOWN work                     # queued: 1-LD
-> 
->   1B  interrupt_event_handler(INT_LINK_DOWN)         # process 1-LD
->         # handle_link_event() sees case STATIC_STATE
->         # set p_slot->state = POWEROFF_STATE         # (removed by patch)
->         queue DISABLE_REQ work                       # queued: 1-DR
-> 
->                         <-- surprise link up interrupt
->   2A  pciehp_isr()
->         queue INT_LINK_UP work                       # queued: 1-DR 2-LU
-> 
->   1C  pciehp_power_thread(DISABLE_REQ)               # process 1-DR
-
-	Also mutex hotplug_lock is held.
-
->         set p_slot->state = POWEROFF_STATE           # (added by patch)
->         send PCI_EXP_SLTCTL_PWR_OFF command
->         wait for power-off to complete
->         set p_slot->state = STATIC_STATE
-> 
->                         <-- link down interrupt (result of PWR_OFF)
->   3A  pciehp_isr()
->         queue INT_LINK_DOWN work                     # queued: 2-LU 3-LD
-
-The above INT_LINK_DOWN will eventually be ignored in handle_link_event()
-because we are in POWEROFF_STATE, and a link down while in POWEROFF will
-be ignored.
-> 
->   2B  interrupt_event_handler(INT_LINK_UP)           # process 2-LU
->         # handle_link_event() sees case STATIC_STATE
->         # set p_slot->state = POWERON_STATE          # (removed by patch)
->         queue ENABLE_REQ work                        # queued: 3-LD 2-ER
-> 
->   3B  interrupt_event_handler(INT_LINK_DOWN)         # process 3-LD
->         # handle_link_event() sees case STATIC_STATE,
->         # unlike 3b above, which saw POWERON_STATE;
->         # doesn't emit a message, but still queues DISABLE_REQ
->         # set p_slot->state = POWEROFF_STATE         # (removed by patch)
->         queue DISABLE_REQ work                       # queued: 2-ER 3-DR
-
-3B will be ignored, since handle_link_event() knows we are in process
-of POWEROFF.
-
-> 
->   2C  pciehp_power_thread(ENABLE_REQ)                # process 2-ER
-
-We are also protected by mutex hotplug_lock here. So  the following
-wont get executed until step 1C has run to completion and the 
-mutex is released.
-
->         set p_slot->state = POWERON_STATE            # (added by patch)
->         send PCI_EXP_SLTCTL_PWR_ON command
->         wait for power-on to complete
->         set p_slot->state = STATIC_STATE
-> 
->                         <-- link up interrupt (result of PWR_ON)
->   4A  pciehp_isr()
->         queue INT_LINK_UP work                       # queued: 3-DR 4-LU
-
-handle_link_event() would eventually dismiss the INT_LINK_UP since
-it knows we are in process of POWERON.
-> 
->   3C  pciehp_power_thread(DISABLE_REQ)               # process 3-DR
->         set p_slot->state = POWEROFF_STATE           # (added by patch)
->         send PCI_EXP_SLTCTL_PWR_OFF command
->         wait for power-off to complete
->         set p_slot->state = STATIC_STATE
-> 
->                         <-- link down interrupt (result of PWR_OFF)
->   5A  pciehp_isr()
->         queue INT_LINK_DOWN work                     # queued: 4-LU 5-LD
-> 
-> With this particular ordering, I think we still have the same problem:
-> 5A is the same as 3A, so I think the cycle could repeat.
-
-I think the sequence is almost right, except the fact since we are protected
-by hotplug_lock, we don't allow another POWERON or POWEROFF to be processed
-until the previous POWER* operation is completed entirely.
-
-We have run through several experiments with managed power on, power off,
-using attention button sequence and surprise link down, surprise remove
-in the lab and we haven't run into any other issues.
-
-Just to summarize, we only queue the POWEROFF due to surprise link down
-and another POWERON due to link becoming back up. The transient link-down 
-events are coveniently ignored.
-
-Hope this helps, and sincere thanks for looking into this in great detail!
-
-Cheers,
-Ashok
+Rob
