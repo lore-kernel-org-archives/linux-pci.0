@@ -1,227 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:62167 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933846AbdBQJwl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2017 04:52:41 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <nsekhar@ti.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2 18/22] tools: PCI: Add a userspace tool to test PCI endpoint
-Date: Fri, 17 Feb 2017 15:20:38 +0530
-Message-ID: <1487325042-28227-19-git-send-email-kishon@ti.com>
-In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+Received: from mail.kernel.org ([198.145.29.136]:60824 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752457AbdBOXFU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Feb 2017 18:05:20 -0500
+Date: Wed, 15 Feb 2017 17:05:11 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v1] PCI: Sort the list of devices with D3 delay quirk by
+ ID
+Message-ID: <20170215230511.GB26758@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170214105937.89010-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170214105937.89010-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a userspace tool to invoke the ioctls exposed by the
-PCI endpoint test driver to perform various PCI tests.
+On Tue, Feb 14, 2017 at 12:59:37PM +0200, Andy Shevchenko wrote:
+> Sort the list of Intel devices that have no PCI D3 delay by ID.
+> Add a comment for group of devices that had not been marked yet.
+> 
+> There is no functional change.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- tools/pci/pcitest.c |  186 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 186 insertions(+)
- create mode 100644 tools/pci/pcitest.c
+Applied to pci/enumeration for v4.11, thanks, Andy.
 
-diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
-new file mode 100644
-index 0000000..39b5b0b
---- /dev/null
-+++ b/tools/pci/pcitest.c
-@@ -0,0 +1,186 @@
-+/**
-+ * Userspace PCI Endpoint Test Module
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <stdbool.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <sys/ioctl.h>
-+#include <time.h>
-+#include <unistd.h>
-+
-+#include <linux/pcitest.h>
-+
-+#define BILLION 1E9
-+
-+static char *result[] = { "NOT OKAY", "OKAY" };
-+
-+struct pci_test {
-+	char		*device;
-+	char		barnum;
-+	bool		legacyirq;
-+	unsigned int	msinum;
-+	bool		read;
-+	bool		write;
-+	bool		copy;
-+	unsigned long	size;
-+};
-+
-+static int run_test(struct pci_test *test)
-+{
-+	long ret;
-+	int fd;
-+	struct timespec start, end;
-+	double time;
-+
-+	fd = open(test->device, O_RDWR);
-+	if (fd < 0) {
-+		perror("can't open PCI Endpoint Test device");
-+		return fd;
-+	}
-+
-+	if (test->barnum >= 0 && test->barnum <= 5) {
-+		ret = ioctl(fd, PCITEST_BAR, test->barnum);
-+		fprintf(stdout, "BAR%d:\t\t", test->barnum);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	if (test->legacyirq) {
-+		ret = ioctl(fd, PCITEST_LEGACY_IRQ, 0);
-+		fprintf(stdout, "LEGACY IRQ:\t");
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	if (test->msinum > 0 && test->msinum <= 32) {
-+		ret = ioctl(fd, PCITEST_MSI, test->msinum);
-+		fprintf(stdout, "MSI%d:\t\t", test->msinum);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	if (test->write) {
-+		ret = ioctl(fd, PCITEST_WRITE, test->size);
-+		fprintf(stdout, "WRITE (%7ld bytes):\t\t", test->size);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	if (test->read) {
-+		ret = ioctl(fd, PCITEST_READ, test->size);
-+		fprintf(stdout, "READ (%7ld bytes):\t\t", test->size);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	if (test->copy) {
-+		ret = ioctl(fd, PCITEST_COPY, test->size);
-+		fprintf(stdout, "COPY (%7ld bytes):\t\t", test->size);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	fflush(stdout);
-+}
-+
-+int main(int argc, char **argv)
-+{
-+	int c;
-+	struct pci_test *test;
-+
-+	test = calloc(1, sizeof(*test));
-+	if (!test) {
-+		perror("Fail to allocate memory for pci_test\n");
-+		return -ENOMEM;
-+	}
-+
-+	/* since '0' is a valid BAR number, initialize it to -1 */
-+	test->barnum = -1;
-+
-+	/* set default size as 100KB */
-+	test->size = 0x19000;
-+
-+	/* set default endpoint device */
-+	test->device = "/dev/pci-endpoint-test.0";
-+
-+	while ((c = getopt(argc, argv, "D:b:m:lrwcs:")) != EOF)
-+	switch (c) {
-+	case 'D':
-+		test->device = optarg;
-+		continue;
-+	case 'b':
-+		test->barnum = atoi(optarg);
-+		if (test->barnum < 0 || test->barnum > 5)
-+			goto usage;
-+		continue;
-+	case 'l':
-+		test->legacyirq = true;
-+		continue;
-+	case 'm':
-+		test->msinum = atoi(optarg);
-+		if (test->msinum < 1 || test->msinum > 32)
-+			goto usage;
-+		continue;
-+	case 'r':
-+		test->read = true;
-+		continue;
-+	case 'w':
-+		test->write = true;
-+		continue;
-+	case 'c':
-+		test->copy = true;
-+		continue;
-+	case 's':
-+		test->size = strtoul(optarg, NULL, 0);
-+		continue;
-+	case '?':
-+	case 'h':
-+	default:
-+usage:
-+		fprintf(stderr,
-+			"usage: %s [options]\n"
-+			"Options:\n"
-+			"\t-D <dev>		pci endpoint test device {default: /dev/pci-endpoint-test.0}\n"
-+			"\t-b <bar num>		BAR test (bar number between 0..5)\n"
-+			"\t-m <msi num>		MSI test (msi number between 1..32)\n"
-+			"\t-r			Read buffer test\n"
-+			"\t-w			Write buffer test\n"
-+			"\t-c			Copy buffer test\n"
-+			"\t-s <size>		Size of buffer {default: 100KB}\n",
-+			argv[0]);
-+		return -EINVAL;
-+	}
-+
-+	run_test(test);
-+	return 0;
-+}
--- 
-1.7.9.5
+> ---
+>  drivers/pci/quirks.c | 26 ++++++++++++++------------
+>  1 file changed, 14 insertions(+), 12 deletions(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 88c64b2e8429..846a1d818fa2 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3113,30 +3113,32 @@ static void quirk_remove_d3_delay(struct pci_dev *dev)
+>  {
+>  	dev->d3_delay = 0;
+>  }
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0c00, quirk_remove_d3_delay);
+> +/* C600 Series devices do not need 10ms d3_delay */
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0412, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0c00, quirk_remove_d3_delay);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x0c0c, quirk_remove_d3_delay);
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c31, quirk_remove_d3_delay);
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3a, quirk_remove_d3_delay);
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3d, quirk_remove_d3_delay);
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c2d, quirk_remove_d3_delay);
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c20, quirk_remove_d3_delay);
+> +/* Lynxpoint-H PCH devices do not need 10ms d3_delay */
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c02, quirk_remove_d3_delay);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c18, quirk_remove_d3_delay);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c1c, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c20, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c22, quirk_remove_d3_delay);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c26, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c2d, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c31, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3a, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c3d, quirk_remove_d3_delay);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c4e, quirk_remove_d3_delay);
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c02, quirk_remove_d3_delay);
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x8c22, quirk_remove_d3_delay);
+>  /* Intel Cherrytrail devices do not need 10ms d3_delay */
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2280, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2298, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x229c, quirk_remove_d3_delay);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b0, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b5, quirk_remove_d3_delay);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b7, quirk_remove_d3_delay);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b8, quirk_remove_d3_delay);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22d8, quirk_remove_d3_delay);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22dc, quirk_remove_d3_delay);
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b5, quirk_remove_d3_delay);
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x22b7, quirk_remove_d3_delay);
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x2298, quirk_remove_d3_delay);
+> -DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x229c, quirk_remove_d3_delay);
+>  
+>  /*
+>   * Some devices may pass our check in pci_intx_mask_supported() if
+> -- 
+> 2.11.0
+> 
