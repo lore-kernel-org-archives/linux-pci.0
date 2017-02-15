@@ -1,126 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41050 "EHLO mail.kernel.org"
+Received: from mga09.intel.com ([134.134.136.24]:59055 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750997AbdBFRyK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Feb 2017 12:54:10 -0500
-Date: Mon, 6 Feb 2017 11:54:05 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
-Message-ID: <20170206175405.GA15565@bhelgaas-glaptop.roam.corp.google.com>
-References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
+        id S1751071AbdBOLZQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 15 Feb 2017 06:25:16 -0500
+Subject: Re: [PATCH] PCI/PME: Restore pcie_pme_driver.remove
+To: Yinghai Lu <yinghai@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20170215051748.3346-1-yinghai@kernel.org>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+From: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Message-ID: <eca6b976-1577-8578-5b1d-9b22c78253c1@intel.com>
+Date: Wed, 15 Feb 2017 12:25:12 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
+In-Reply-To: <20170215051748.3346-1-yinghai@kernel.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 06, 2017 at 06:54:37AM +0100, Lukas Wunner wrote:
-> Since commit 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
-> hotplug ports") we runtime suspend a hotplug port to D3hot when all its
-> children are runtime suspended or none are present.
-> 
-> When runtime suspending the port the PCI core automatically enables PME:
->     pci_pm_runtime_suspend()
->         pci_finish_runtime_suspend()
->             __pci_enable_wake()
-> 
-> According to the PCI Express Base Specification, section 6.7.3.4:
->    "Note that PME and Hot-Plug Event interrupts (when both are
->     implemented) always share the same MSI or MSI-X vector [...]
->     If wake generation is required by the associated form factor
->     specification, a hot-plug capable Downstream Port must support
->     generation of a wakeup event (using the PME mechanism) on hotplug
->     events that occur when the system is in a sleep state or the Port
->     is in device state D1, D2, or D3Hot."
-> 
-> Thus, if the port is runtime suspended even though it is still occupied,
-> it may immediately be woken by a PME interrupt.  
+On 2/15/2017 6:17 AM, Yinghai Lu wrote:
+> Found 4.9 and later, removing pci device for pcie port via /sys failed:
+> ------------[ cut here ]------------
+> kernel BUG at drivers/pci/msi.c:370!
+> invalid opcode: 0000 [#1] SMP
+> Modules linked in:
+> CPU: 1 PID: 14509 Comm: sh Tainted: G    W  4.8.0-rc1-yh-00012-gd29438d
+> RIP: 0010:[<ffffffff9758bbf5>]  free_msi_irqs+0x65/0x190
+> ...
+> Call Trace:
+>   [<ffffffff9758cda4>] pci_disable_msi+0x34/0x40
+>   [<ffffffff97583817>] cleanup_service_irqs+0x27/0x30
+>   [<ffffffff97583e9a>] pcie_port_device_remove+0x2a/0x40
+>   [<ffffffff97584250>] pcie_portdrv_remove+0x40/0x50
+>   [<ffffffff97576d7b>] pci_device_remove+0x4b/0xc0
+>   [<ffffffff9785ebe6>] __device_release_driver+0xb6/0x150
+>   [<ffffffff9785eca5>] device_release_driver+0x25/0x40
+>   [<ffffffff975702e4>] pci_stop_bus_device+0x74/0xa0
+>   [<ffffffff975704ea>] pci_stop_and_remove_bus_device_locked+0x1a/0x30
+>   [<ffffffff97578810>] remove_store+0x50/0x70
+>   [<ffffffff9785a378>] dev_attr_store+0x18/0x30
+>   [<ffffffff97260b64>] sysfs_kf_write+0x44/0x60
+>   [<ffffffff9725feae>] kernfs_fop_write+0x10e/0x190
+>   [<ffffffff971e13f8>] __vfs_write+0x28/0x110
+>   [<ffffffff970b0fa4>] ? percpu_down_read+0x44/0x80
+>   [<ffffffff971e53a7>] ? __sb_start_write+0xa7/0xe0
+>   [<ffffffff971e53a7>] ? __sb_start_write+0xa7/0xe0
+>   [<ffffffff971e1f04>] vfs_write+0xc4/0x180
+>   [<ffffffff971e3089>] SyS_write+0x49/0xa0
+>   [<ffffffff97001a46>] do_syscall_64+0xa6/0x1b0
+>   [<ffffffff9819201e>] entry_SYSCALL64_slow_path+0x25/0x25
+> ...
+>   RIP  [<ffffffff9758bbf5>] free_msi_irqs+0x65/0x190
+>   RSP <ffff89ad3085bc48>
+> ---[ end trace f4505e1dac5b95d3 ]---
+> Segmentation fault
+>
+> Bisect to commit d7def2040077 ("PCI/PME: Make explicitly non-modular").
+> That commit did extra thing like remove the .remove for pcie_pme_driver.
+>
+> Put back pcie_pme_remove and restore to pcie_pme_driver fix the problem.
+>
+> Fixes: d7def2040077 ("PCI/PME: Make explicitly non-modular")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-The spec goes on to say that a wakeup event should be generated when
-all three of these conditions occur:
+ACK
 
-  - status register for an enabled [hotplug] event transitions from
-    not set to set
-
-  - Port is in D1, D2, or D3hot,
-
-  - PME_En is set
-
-I think you're saying that if we put a hotplug-capable port that
-controls an occupied slot into D3hot, the port may immediately
-generate a wakeup PME.
-
-What is the hotplug event that causes generation of this wakeup event?
-
-> One scenario where this
-> happens is if all children of the hotplug port have runtime suspended.
-> Another scenario is power control via sysfs:  If a user manually turns
-> the hotplug port off (e.g. to safely remove the card), PME will signal
-> an interrupt for the still-occupied slot, which is interpreted by pciehp
-> as re-insertion of a card.  As a result, power control via sysfs is no
-> longer possible.  This was observed and reported by Yinghai Lu.
-> 
-> PME is in fact unnecessary on hotplug ports:  Hotplug can be signaled
-> even in D3hot,
-
-How are hotplug events signaled in D3hot without using PME?  I'm
-looking at the PCI PM spec, r1.2, table 5-4 (p 49 in my copy), which
-says a function in D3hot can only generate PME.
-
-> and commit 68db9bc81436 ensures that all parents of the
-> hotplug port are kept awake so that interrupts can be delivered.
-> PME would allow us to runtime suspend the parent ports as well, but we
-> do not make use of it because we cannot be sure if PME actually works.
-> Thunderbolt controllers for instance advertise PME capability, but at
-> least on Macs the PME pin is not connected.
-> 
-> Since we do not rely on PME for hotplug ports, we may as well not enable
-> it, thereby avoiding its negative side effects.  However the present
-> commit deliberately only avoids enabling PME on runtime suspend, the
-> ability to enable it for system sleep is retained.
-> 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=193951
-> Fixes: 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
->     hotplug ports")
-> Reported-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
-> 
-> v1-> v2:
->  Move check for is_hotplug_bridge from pci_finish_runtime_suspend()
->  down into pci_dev_run_wake(), this seems cleaner, less clumsy.
-> 
->  drivers/pci/pci.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a881c0d..9c22e62 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2096,6 +2096,14 @@ bool pci_dev_run_wake(struct pci_dev *dev)
->  {
->  	struct pci_bus *bus = dev->bus;
->  
-> +	/*
-> +	 * Don't enable PME at runtime on hotplug ports (even if supported)
-> +	 * since PME sends unwanted interrupts if the slot is occupied while
-> +	 * suspended to D3hot (PCIe Base Specification, section 6.7.3.4).
-> +	 */
-> +	if (dev->is_hotplug_bridge)
-> +		return false;
+> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+> index 7175293..2dd1c68 100644
+> --- a/drivers/pci/pcie/pme.c
+> +++ b/drivers/pci/pcie/pme.c
+> @@ -433,6 +433,17 @@ static int pcie_pme_resume(struct pcie_device *srv)
+>   	return 0;
+>   }
+>   
+> +/**
+> + * pcie_pme_remove - Prepare PCIe PME service device for removal.
+> + * @srv - PCIe service device to remove.
+> + */
+> +static void pcie_pme_remove(struct pcie_device *srv)
+> +{
+> +	pcie_pme_suspend(srv);
+> +	free_irq(srv->irq, srv);
+> +	kfree(get_service_data(srv));
+> +}
 > +
->  	if (device_run_wake(&dev->dev))
->  		return true;
->  
-> -- 
-> 2.11.0
-> 
+>   static struct pcie_port_service_driver pcie_pme_driver = {
+>   	.name		= "pcie_pme",
+>   	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
+> @@ -441,6 +452,7 @@ static struct pcie_port_service_driver pcie_pme_driver = {
+>   	.probe		= pcie_pme_probe,
+>   	.suspend	= pcie_pme_suspend,
+>   	.resume		= pcie_pme_resume,
+> +	.remove		= pcie_pme_remove,
+>   };
+>   
+>   /**
+
+Thanks,
+
+Rafael
