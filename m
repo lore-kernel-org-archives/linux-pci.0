@@ -1,72 +1,156 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] PCI/msi: remove unused function pci_msi_create_default_irq_domain
-Date: Fri,  3 Feb 2017 17:27:04 +0100
-Message-Id: <20170203162705.5182-2-hch@lst.de>
-In-Reply-To: <20170203162705.5182-1-hch@lst.de>
-References: <20170203162705.5182-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-samsung-soc@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+ <linux-arm-kernel@axis.com>
+Subject: [PATCH 04/10] PCI: dwc: designware: Get device pointer at the start
+ of dw_pcie_host_init
+Date: Wed, 15 Feb 2017 18:48:13 +0530
+Message-ID: <1487164699-30708-5-git-send-email-kishon@ti.com>
+In-Reply-To: <1487164699-30708-1-git-send-email-kishon@ti.com>
+References: <1487164699-30708-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: nsekhar@ti.com, Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/pci/msi.c   | 27 ---------------------------
- include/linux/msi.h |  3 ---
- 2 files changed, 30 deletions(-)
+No functional change. Get device pointer at the beginning of
+dw_pcie_host_init instead of getting it all over dw_pcie_host_init.
+This is in preparation for splitting struct pcie_port into host and
+core structures (Once split pcie_port will not have device pointer).
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 50c5003295ca..4f2996bd5c6a 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1507,33 +1507,6 @@ void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev)
- 	msi_domain_free_irqs(domain, &dev->dev);
- }
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pcie-designware.c |   33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index de143ea..6e95291 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -446,8 +446,9 @@ static u8 dw_pcie_iatu_unroll_enabled(struct pcie_port *pp)
  
--/**
-- * pci_msi_create_default_irq_domain - Create a default MSI interrupt domain
-- * @fwnode:	Optional fwnode of the interrupt controller
-- * @info:	MSI domain info
-- * @parent:	Parent irq domain
-- *
-- * Returns: A domain pointer or NULL in case of failure. If successful
-- * the default PCI/MSI irqdomain pointer is updated.
-- */
--struct irq_domain *pci_msi_create_default_irq_domain(struct fwnode_handle *fwnode,
--		struct msi_domain_info *info, struct irq_domain *parent)
--{
--	struct irq_domain *domain;
--
--	mutex_lock(&pci_msi_domain_lock);
--	if (pci_msi_default_domain) {
--		pr_err("PCI: default irq domain for PCI MSI has already been created.\n");
--		domain = NULL;
--	} else {
--		domain = pci_msi_create_irq_domain(fwnode, info, parent);
--		pci_msi_default_domain = domain;
--	}
--	mutex_unlock(&pci_msi_domain_lock);
--
--	return domain;
--}
--
- static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
+ int dw_pcie_host_init(struct pcie_port *pp)
  {
- 	u32 *pa = data;
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 0db320b7bb15..18b8566b3ce3 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -319,9 +319,6 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
- int pci_msi_domain_alloc_irqs(struct irq_domain *domain, struct pci_dev *dev,
- 			      int nvec, int type);
- void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev);
--struct irq_domain *pci_msi_create_default_irq_domain(struct fwnode_handle *fwnode,
--		 struct msi_domain_info *info, struct irq_domain *parent);
--
- irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
- 					  struct msi_desc *desc);
- int pci_msi_domain_check_cap(struct irq_domain *domain,
+-	struct device_node *np = pp->dev->of_node;
+-	struct platform_device *pdev = to_platform_device(pp->dev);
++	struct device *dev = pp->dev;
++	struct device_node *np = dev->of_node;
++	struct platform_device *pdev = to_platform_device(dev);
+ 	struct pci_bus *bus, *child;
+ 	struct resource *cfg_res;
+ 	int i, ret;
+@@ -461,14 +462,14 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		pp->cfg0_base = cfg_res->start;
+ 		pp->cfg1_base = cfg_res->start + pp->cfg0_size;
+ 	} else if (!pp->va_cfg0_base) {
+-		dev_err(pp->dev, "missing *config* reg space\n");
++		dev_err(dev, "missing *config* reg space\n");
+ 	}
+ 
+ 	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
+ 	if (ret)
+ 		return ret;
+ 
+-	ret = devm_request_pci_bus_resources(&pdev->dev, &res);
++	ret = devm_request_pci_bus_resources(dev, &res);
+ 	if (ret)
+ 		goto error;
+ 
+@@ -478,7 +479,7 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 		case IORESOURCE_IO:
+ 			ret = pci_remap_iospace(win->res, pp->io_base);
+ 			if (ret) {
+-				dev_warn(pp->dev, "error %d: failed to map resource %pR\n",
++				dev_warn(dev, "error %d: failed to map resource %pR\n",
+ 					 ret, win->res);
+ 				resource_list_destroy_entry(win);
+ 			} else {
+@@ -508,10 +509,10 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	}
+ 
+ 	if (!pp->dbi_base) {
+-		pp->dbi_base = devm_ioremap(pp->dev, pp->cfg->start,
++		pp->dbi_base = devm_ioremap(dev, pp->cfg->start,
+ 					resource_size(pp->cfg));
+ 		if (!pp->dbi_base) {
+-			dev_err(pp->dev, "error with ioremap\n");
++			dev_err(dev, "error with ioremap\n");
+ 			ret = -ENOMEM;
+ 			goto error;
+ 		}
+@@ -520,20 +521,20 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	pp->mem_base = pp->mem->start;
+ 
+ 	if (!pp->va_cfg0_base) {
+-		pp->va_cfg0_base = devm_ioremap(pp->dev, pp->cfg0_base,
++		pp->va_cfg0_base = devm_ioremap(dev, pp->cfg0_base,
+ 						pp->cfg0_size);
+ 		if (!pp->va_cfg0_base) {
+-			dev_err(pp->dev, "error with ioremap in function\n");
++			dev_err(dev, "error with ioremap in function\n");
+ 			ret = -ENOMEM;
+ 			goto error;
+ 		}
+ 	}
+ 
+ 	if (!pp->va_cfg1_base) {
+-		pp->va_cfg1_base = devm_ioremap(pp->dev, pp->cfg1_base,
++		pp->va_cfg1_base = devm_ioremap(dev, pp->cfg1_base,
+ 						pp->cfg1_size);
+ 		if (!pp->va_cfg1_base) {
+-			dev_err(pp->dev, "error with ioremap\n");
++			dev_err(dev, "error with ioremap\n");
+ 			ret = -ENOMEM;
+ 			goto error;
+ 		}
+@@ -549,11 +550,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+ 		if (!pp->ops->msi_host_init) {
+-			pp->irq_domain = irq_domain_add_linear(pp->dev->of_node,
++			pp->irq_domain = irq_domain_add_linear(dev->of_node,
+ 						MAX_MSI_IRQS, &msi_domain_ops,
+ 						&dw_pcie_msi_chip);
+ 			if (!pp->irq_domain) {
+-				dev_err(pp->dev, "irq domain init failed\n");
++				dev_err(dev, "irq domain init failed\n");
+ 				ret = -ENXIO;
+ 				goto error;
+ 			}
+@@ -572,12 +573,12 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 
+ 	pp->root_bus_nr = pp->busn->start;
+ 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
+-		bus = pci_scan_root_bus_msi(pp->dev, pp->root_bus_nr,
++		bus = pci_scan_root_bus_msi(dev, pp->root_bus_nr,
+ 					    &dw_pcie_ops, pp, &res,
+ 					    &dw_pcie_msi_chip);
+-		dw_pcie_msi_chip.dev = pp->dev;
++		dw_pcie_msi_chip.dev = dev;
+ 	} else
+-		bus = pci_scan_root_bus(pp->dev, pp->root_bus_nr, &dw_pcie_ops,
++		bus = pci_scan_root_bus(dev, pp->root_bus_nr, &dw_pcie_ops,
+ 					pp, &res);
+ 	if (!bus) {
+ 		ret = -ENOMEM;
 -- 
-2.11.0
+1.7.9.5
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
