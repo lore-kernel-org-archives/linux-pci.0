@@ -1,110 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:58522 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751516AbdB0ULO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Feb 2017 15:11:14 -0500
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc: Harv Abdulhamid <harba@qti.qualcomm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Shanker Donthineni <shankerd@qti.qualcomm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@qti.qualcomm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 15 Feb 2017 10:56:16 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        David Daney <david.daney@cavium.com>,
+        Rob Herring <robh@kernel.org>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
         Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Nate Watterson <nwatters@qti.qualcomm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Subject: [RFC PATCH 09/30] iommu/arm-smmu-v3: Support broadcast TLB maintenance
-Date: Mon, 27 Feb 2017 19:54:20 +0000
-Message-Id: <20170227195441.5170-10-jean-philippe.brucker@arm.com>
-In-Reply-To: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-To: unlisted-recipients:; (no To-header on input)
-Sender: linux-pci-owner@vger.kernel.org
+        Christopher Covington <cov@codeaurora.org>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI: always build pci-host-common on ARM64
+Message-ID: <20170215165616.GG19040@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170214214355.3101378-1-arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170214214355.3101378-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The SMMUv3 can handle invalidation targeted at TLB entries with shared
-ASIDs. If the implementation supports broadcast TLB maintenance, enable
-it and keep track of it in a feature bit. The SMMU will then take into
-account the following CPU instruction for ASIDs in the shared set:
+On Tue, Feb 14, 2017 at 10:42:56PM +0100, Arnd Bergmann wrote:
+> The Thunder PCI host driver is always built, but it relies on pci_host_common_probe,
+> so we get a link error here:
+> 
+> drivers/pci/host/pci-thunder-pem.c: In function 'thunder_pem_probe':
+> drivers/pci/host/pci-thunder-pem.c:412:9: error: implicit declaration of function 'pci_host_common_probe';did you mean 'pci_host_bridge_priv'? [-Werror=implicit-function-declaration]
+> 
+> This adds the common file to the existing hack.
+> 
+> Fixes: ca5ab37b19df ("PCI: Explain ARM64 ACPI/MCFG quirk Kconfig and build strategy")
 
-* TLBI VAE1IS(ASID, VA)
-* TLBI ASIDE1IS(ASID)
+I'm puzzled.  ca5ab37b19df doesn't *look* like it changes anything.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+thunder_pem_probe() is compiled when CONFIG_PCI_HOST_THUNDER_PEM=y,
+and it calls pci_host_common_probe().
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 0981159ada04..2724788157a5 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -65,6 +65,7 @@
- #define IDR0_ASID16			(1 << 12)
- #define IDR0_ATS			(1 << 10)
- #define IDR0_HYP			(1 << 9)
-+#define IDR0_BTM			(1 << 5)
- #define IDR0_COHACC			(1 << 4)
- #define IDR0_TTF_SHIFT			2
- #define IDR0_TTF_MASK			0x3
-@@ -669,6 +670,7 @@ struct arm_smmu_device {
- #define ARM_SMMU_FEAT_STALLS		(1 << 11)
- #define ARM_SMMU_FEAT_HYP		(1 << 12)
- #define ARM_SMMU_FEAT_E2H		(1 << 13)
-+#define ARM_SMMU_FEAT_BTM		(1 << 14)
- 	u32				features;
- 
- #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
-@@ -3023,11 +3025,14 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
- 	writel_relaxed(reg, smmu->base + ARM_SMMU_CR1);
- 
- 	/* CR2 (random crap) */
--	reg = CR2_PTM | CR2_RECINVSID;
-+	reg = CR2_RECINVSID;
- 
- 	if (smmu->features & ARM_SMMU_FEAT_E2H)
- 		reg |= CR2_E2H;
- 
-+	if (!(smmu->features & ARM_SMMU_FEAT_BTM))
-+		reg |= CR2_PTM;
-+
- 	writel_relaxed(reg, smmu->base + ARM_SMMU_CR2);
- 
- 	/* Stream table */
-@@ -3138,6 +3143,7 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- {
- 	u32 reg;
- 	bool coherent = smmu->features & ARM_SMMU_FEAT_COHERENCY;
-+	bool vhe = cpus_have_cap(ARM64_HAS_VIRT_HOST_EXTN);
- 
- 	/* IDR0 */
- 	reg = readl_relaxed(smmu->base + ARM_SMMU_IDR0);
-@@ -3187,11 +3193,20 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
- 
- 	if (reg & IDR0_HYP) {
- 		smmu->features |= ARM_SMMU_FEAT_HYP;
--		if (cpus_have_cap(ARM64_HAS_VIRT_HOST_EXTN))
-+		if (vhe)
- 			smmu->features |= ARM_SMMU_FEAT_E2H;
- 	}
- 
- 	/*
-+	 * If the CPU is using VHE, but the SMMU doesn't support it, the SMMU
-+	 * will create TLB entries for NH-EL1 world and will miss the
-+	 * broadcasted TLB invalidations that target EL2-E2H world. Don't enable
-+	 * BTM in that case.
-+	 */
-+	if (reg & IDR0_BTM && (!vhe || reg & IDR0_HYP))
-+		smmu->features |= ARM_SMMU_FEAT_BTM;
-+
-+	/*
- 	 * The coherency feature as set by FW is used in preference to the ID
- 	 * register, but warn on mismatch.
- 	 */
--- 
-2.11.0
+pci_host_common_probe() is in pci-host-common.c, which is compiled
+when CONFIG_PCI_HOST_COMMON=y.  But the declaration below is under
+#ifdef CONFIG_PCI_HOST_GENERIC.  Shouldn't it be under #ifdef
+CONFIG_PCI_HOST_COMMON instead?
+
+It'd be nice to know what actually broke this (if it's not
+ca5ab37b19df) so we can figure out where the fix should be backported.
+
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/pci/host/Makefile | 2 +-
+>  include/linux/pci-ecam.h  | 3 +--
+>  2 files changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+> index bfe3179ae74c..e97d084f10ea 100644
+> --- a/drivers/pci/host/Makefile
+> +++ b/drivers/pci/host/Makefile
+> @@ -39,7 +39,7 @@ obj-$(CONFIG_VMD) += vmd.o
+>  # config options to be enabled, so we always build these drivers on
+>  # ARM64 and use internal ifdefs to only build the pieces we need
+>  # depending on whether ACPI, the DT driver, or both are enabled.
+> -
+> +obj-$(CONFIG_ARM64) += pci-host-common.o
+>  obj-$(CONFIG_ARM64) += pcie-hisi.o
+>  obj-$(CONFIG_ARM64) += pci-thunder-ecam.o
+>  obj-$(CONFIG_ARM64) += pci-thunder-pem.o
+> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+> index f0d2b9451270..ab52692388d1 100644
+> --- a/include/linux/pci-ecam.h
+> +++ b/include/linux/pci-ecam.h
+> @@ -68,9 +68,8 @@ extern struct pci_ecam_ops xgene_v1_pcie_ecam_ops; /* APM X-Gene PCIe v1 */
+>  extern struct pci_ecam_ops xgene_v2_pcie_ecam_ops; /* APM X-Gene PCIe v2.x */
+>  #endif
+>  
+> -#ifdef CONFIG_PCI_HOST_GENERIC
+>  /* for DT-based PCI controllers that support ECAM */
+>  int pci_host_common_probe(struct platform_device *pdev,
+>  			  struct pci_ecam_ops *ops);
+> -#endif
+> +
+>  #endif
+> -- 
+> 2.9.0
+> 
