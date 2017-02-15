@@ -1,61 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.130]:38984 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752186AbdBPHcO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 16 Feb 2017 02:32:14 -0500
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] PCI: rockchip: fix wrong setting of vendor ID
-Date: Thu, 16 Feb 2017 15:29:35 +0800
-Message-Id: <1487230175-213629-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:47552 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750829AbdBOGpQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 01:45:16 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1F6i4NV089013
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 01:45:15 -0500
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 28m2khahws-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 01:45:15 -0500
+Received: from localhost
+        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Tue, 14 Feb 2017 23:45:14 -0700
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
+        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
+        paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: [PATCH v9 1/3] PCI: A fix for caculating bridge window's size and alignment
+Date: Wed, 15 Feb 2017 14:45:04 +0800
+In-Reply-To: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1487141106-2503-2-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The TRM says that the vendor ID in RC's configure
-space could be rewrote and the value must be the same
-as the value read from the local core configure space.
-But we misread that and didn't notice it before. Actually
-we should only able to rewrite it from the local core
-configure space. This patch fix that issue in order to make
-lspci show the correct IP vendor infomation.
+In case that one device's alignment is greater than its size,
+we may get an incorrect size and alignment for its bus's memory
+window in pbus_size_mem(). This patch fixes this case.
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
 ---
+ drivers/pci/setup-bus.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
- drivers/pci/host/pcie-rockchip.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index c0b3b65..26ddd35 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -125,6 +125,7 @@
- #define   PCIE_CORE_INT_CT			BIT(11)
- #define   PCIE_CORE_INT_UTC			BIT(18)
- #define   PCIE_CORE_INT_MMVC			BIT(19)
-+#define PCIE_CORE_CONFIG_VENDOR		(PCIE_CORE_CTRL_MGMT_BASE + 0x44)
- #define PCIE_CORE_INT_MASK		(PCIE_CORE_CTRL_MGMT_BASE + 0x210)
- #define PCIE_RC_BAR_CONF		(PCIE_CORE_CTRL_MGMT_BASE + 0x300)
- 
-@@ -138,7 +139,6 @@
- 		 PCIE_CORE_INT_MMVC)
- 
- #define PCIE_RC_CONFIG_BASE		0xa00000
--#define PCIE_RC_CONFIG_VENDOR		(PCIE_RC_CONFIG_BASE + 0x00)
- #define PCIE_RC_CONFIG_RID_CCR		(PCIE_RC_CONFIG_BASE + 0x08)
- #define   PCIE_RC_CONFIG_SCC_SHIFT		16
- #define PCIE_RC_CONFIG_DCR		(PCIE_RC_CONFIG_BASE + 0xc4)
-@@ -637,7 +637,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	dev_dbg(dev, "current link width is x%d\n", status);
- 
- 	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
--			    PCIE_RC_CONFIG_VENDOR);
-+			    PCIE_CORE_CONFIG_VENDOR);
- 	rockchip_pcie_write(rockchip,
- 			    PCI_CLASS_BRIDGE_PCI << PCIE_RC_CONFIG_SCC_SHIFT,
- 			    PCIE_RC_CONFIG_RID_CCR);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f30ca75..b3cabc2 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1075,10 +1075,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				r->flags = 0;
+ 				continue;
+ 			}
+-			size += r_size;
++			size += max(r_size, align);
+ 			/* Exclude ranges with size > align from
+ 			   calculation of the alignment. */
+-			if (r_size == align)
++			if (r_size <= align)
+ 				aligns[order] += align;
+ 			if (order > max_order)
+ 				max_order = order;
 -- 
-1.9.1
+1.7.1
