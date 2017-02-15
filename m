@@ -1,66 +1,140 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 15 Feb 2017 12:36:13 -0700
+From: Alex Williamson <alex.williamson@redhat.com>
+To: okaya@codeaurora.org
+Subject: Re: [PATCH 2/2] iommu: add warning when sharing groups
+Message-ID: <20170215123613.1df4b33a@t450s.home>
+In-Reply-To: <e7535138133c514c77004d64e40b4180@codeaurora.org>
+References: <1487107522-8695-1-git-send-email-okaya@codeaurora.org>
+ <1487107522-8695-2-git-send-email-okaya@codeaurora.org>
+ <20170214165155.7c49485e@t450s.home>
+ <e7535138133c514c77004d64e40b4180@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Thu, 02 Feb 2017 14:01:52 -0500
-From: Nate Watterson <nwatters@codeaurora.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Sinan Kaya <okaya@codeaurora.org>,
-        Will Deacon <will.deacon@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Sricharan R <sricharan@codeaurora.org>,
-        linux-arm-msm@vger.kernel.org, linux-acpi@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, Tomasz Nowicki <tn@semihalf.com>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
- deferred probing or error
-In-Reply-To: <20170201185230.GA1922@red-moon>
-References: <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
- <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
- <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
- <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
- <175a3798-b824-ef1a-e112-9f6f472973ae@codeaurora.org>
- <20170130143851.GJ16461@arm.com>
- <b2e50c17de156341deab9fb8e91a8dec@codeaurora.org>
- <1e048aff-0d77-b9f2-ebf8-2ba315b90ca7@codeaurora.org>
- <20170130165124.GA11712@red-moon>
- <f401e27e-d619-0eec-2401-50d8e2fc2f0f@codeaurora.org>
- <20170201185230.GA1922@red-moon>
-Message-ID: <3f4aa4c1e660c7e62256de9ca64fc822@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+ linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-02-01 13:52, Lorenzo Pieralisi wrote:
-> 
-> I debugged the issue and Nate's fix is correct, the fact that you
-> can't it hit it with mainline is just a matter of timing because it has
-> to do with the CTX pointer value (we OR it with the existing value), so
-> it may work or not depending on how the cdptr memory allocation
-> pattern turns out to be (which explains why Nate and I can hit it with
-> simple PCI device remove/add execution too).
-> 
-> So it is neither an ACPI nor an IOMMU probe deferral issue per-se,
-> fix is already queued, so it is all good.
-> 
-> What about USB stalls ?
-Our fault. The USB controller was getting 48-bit IOVAs, but the
-bus it sits on only supports 44-bits so the controller's DMA
-transactions ended up targeting addresses that were never mapped.
+On Tue, 14 Feb 2017 22:53:35 -0500
+okaya@codeaurora.org wrote:
 
-It started working once I applied the iort/dma-mapping patches I
-sent out earlier this week that use the iort memory_address_limit
-field to check if a dma_mask is sane.
-
-Sorry for the false alarm.
-Nate
+> On 2017-02-14 18:51, Alex Williamson wrote:
+> > On Tue, 14 Feb 2017 16:25:22 -0500
+> > Sinan Kaya <okaya@codeaurora.org> wrote:
+> >   
+> >> The ACS requirement has been obscured in the current code and is only
+> >> known by certain individuals who happen to read the code. Print out a
+> >> warning with ACS path failure when ACS requirement is not met.
+> >> 
+> >> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> >> ---
+> >>  drivers/iommu/iommu.c | 3 +++
+> >>  1 file changed, 3 insertions(+)
+> >> 
+> >> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+> >> index dbe7f65..049ee0a 100644
+> >> --- a/drivers/iommu/iommu.c
+> >> +++ b/drivers/iommu/iommu.c
+> >> @@ -811,6 +811,9 @@ struct iommu_group *pci_device_group(struct device 
+> >> *dev)
+> >>  	if (IS_ERR(group))
+> >>  		return NULL;
+> >> 
+> >> +	if (pci_is_root_bus(bus))
+> >> +		dev_warn_once(&pdev->dev, "using shared group due to ACS path 
+> >> failure\n");
+> >> +
+> >>  	return group;
+> >>  }
+> >>   
+> > 
+> > The premise here is flawed.  An IOMMU group based at the root bus
+> > doesn't necessarily imply a lack of ACS.  There are devices on root
+> > buses, integrated endpoints and root ports.  Naturally an IOMMU group
+> > for these devices needs to be based at the root bus.  Additionally,
+> > there can be IOMMU groups developed around a lack of ACS that don't
+> > intersect with the root bus.  Since this is a warn_once, the false
+> > positives for root bus devices are going to be enumerated first.  On an
+> > Intel system there's typically a device as 00.0 that will always be
+> > pointlessly listed first.  Also, it's not clear that grouping devices
+> > together is always wrong, as Robin pointed out in the EHCI/OHCI
+> > example.  Lack of ACS on downtream ports is likely to cause problems,
+> > especially if that downstream port exposes a slot.  Maybe that would be
+> > a good place to start.  Also, what is someone supposed to do when they
+> > see this error?  If we can hope they'll look for the error in the code
+> > (unlikely) a big comment with useful external links might be
+> > necessary.  Based on how easily vendors ignore kernel warnings, I'm
+> > dubious there's any value to this path though.  Thanks,  
 > 
-> Thanks !
-> Lorenzo
+> Maybe, a better solution would be to add some sentences into vfio.txt 
+> documentation.
+> 
+> I'm ready to drop this patch. I just don't want ACS requirement to be 
+> hidden between the source code.
+> 
+> Would you be willing to do that?
+> 
+> I know I read all pci and vfio documents in the past. I could have 
+> captured this requirement if it was there.
 
--- 
-Qualcomm Datacenter Technologies, Inc. on behalf of Qualcomm 
-Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a 
-Linux
-Foundation Collaborative Project.
+We already have this:
+
+Documentation/vfio.txt:
+...
+This isolation is not always at the granularity of a single device
+though.  Even when an IOMMU is capable of this, properties of devices,
+interconnects, and IOMMU topologies can each reduce this isolation.
+For instance, an individual device may be part of a larger multi-
+function enclosure.  While the IOMMU may be able to distinguish
+between devices within the enclosure, the enclosure may not require
+transactions between devices to reach the IOMMU.  Examples of this
+could be anything from a multi-function PCI device with backdoors
+between functions to a non-PCI-ACS (Access Control Services) capable
+bridge allowing redirection without reaching the IOMMU.  Topology
+can also play a factor in terms of hiding devices.  A PCIe-to-PCI
+bridge masks the devices behind it, making transaction appear as if
+from the bridge itself.  Obviously IOMMU design plays a major factor
+as well.
+...
+
+Additionally if you google for "iommu group", this is the first hit:
+
+http://vfio.blogspot.com/2014/08/iommu-groups-inside-and-out.html
+
+This talks extensively about ACS.  A few hits below that you can find a
+presentation I've given with ACS examples.  What additional
+documentation do you think would have helped you discover or understand
+this problem earlier?
+
+I agree that device isolation is not a spec requirement.  The specs
+give us the tools that we need, but valid uses cases exist where a lack
+of isolation may be preferred.  If we logically deduce how we can give
+a device or set of devices to a user for an untrusted environment,
+isolated from other devices, I think it's pretty logical to come to the
+conclusion that ACS is the only way that PCIe hardware can allow that
+sort of control in a standard way.  Clearly we also recognize that this
+is a commonly overlooked area where hardware vendors may fail to
+incorporate this subtly into their platform design guidelines and thus
+we have numerous quirks for exposing virtual ACS-like isolation.  The
+hope is that adding a quirk for this devices means that feedback was
+provided to the hardware teams and system architects within the
+companies developing these devices to consider this use case and
+implement native ACS in the next generation.  Thanks,
+
+Alex
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
