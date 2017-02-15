@@ -1,71 +1,101 @@
-Return-Path: <SRS0=Gu6D=Z6=intel.com=ley.foon.tan@kernel.org>
-Return-Path: <SRS0=Gu6D=Z6=intel.com=ley.foon.tan@kernel.org>
-Message-ID: <1487295140.2424.4.camel@intel.com>
-Subject: Re: [PATCH] PCI: altera: Fix TLP completion status
-From: Ley Foon Tan <ley.foon.tan@intel.com>
-To: Yadi Hu <yadi.hu@windriver.com>, lftan@altera.com
-Cc: linux-pci@vger.kernel.org, rfi@lists.rocketboards.org, Bjorn Helgaas
-	 <helgaas@kernel.org>
-Date: Fri, 17 Feb 2017 09:32:20 +0800
-In-Reply-To: <1487291230-21495-2-git-send-email-yadi.hu@windriver.com>
-References: <1487291230-21495-1-git-send-email-yadi.hu@windriver.com>
-	 <1487291230-21495-2-git-send-email-yadi.hu@windriver.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 15 Feb 2017 10:06:36 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] PCI/PME: Restore pcie_pme_driver.remove
+Message-ID: <20170215160636.GE19040@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170215051748.3346-1-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170215051748.3346-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Jum, 2017-02-17 at 08:27 +0800, Yadi Hu wrote:
-> From: "Hu Yadi" <yadi.hu@windriver.com>
->=20
-> the driver does not use exactly 'Completion Status' value in TLP,
-> these bits should be b15:13 not b14:12.
->=20
-> Signed-off-by: Hu Yadi<yadi.hu@windriver.com>
-Thanks for the fix.
-Acked-by: Ley Foon Tan <ley.foon.tan@intel.com>
+On Tue, Feb 14, 2017 at 09:17:48PM -0800, Yinghai Lu wrote:
+> Found 4.9 and later, removing pci device for pcie port via /sys failed:
+> ------------[ cut here ]------------
+> kernel BUG at drivers/pci/msi.c:370!
+> invalid opcode: 0000 [#1] SMP
+> Modules linked in:
+> CPU: 1 PID: 14509 Comm: sh Tainted: G    W  4.8.0-rc1-yh-00012-gd29438d
+> RIP: 0010:[<ffffffff9758bbf5>]  free_msi_irqs+0x65/0x190
+> ...
+> Call Trace:
+>  [<ffffffff9758cda4>] pci_disable_msi+0x34/0x40
+>  [<ffffffff97583817>] cleanup_service_irqs+0x27/0x30
+>  [<ffffffff97583e9a>] pcie_port_device_remove+0x2a/0x40
+>  [<ffffffff97584250>] pcie_portdrv_remove+0x40/0x50
+>  [<ffffffff97576d7b>] pci_device_remove+0x4b/0xc0
+>  [<ffffffff9785ebe6>] __device_release_driver+0xb6/0x150
+>  [<ffffffff9785eca5>] device_release_driver+0x25/0x40
+>  [<ffffffff975702e4>] pci_stop_bus_device+0x74/0xa0
+>  [<ffffffff975704ea>] pci_stop_and_remove_bus_device_locked+0x1a/0x30
+>  [<ffffffff97578810>] remove_store+0x50/0x70
+>  [<ffffffff9785a378>] dev_attr_store+0x18/0x30
+>  [<ffffffff97260b64>] sysfs_kf_write+0x44/0x60
+>  [<ffffffff9725feae>] kernfs_fop_write+0x10e/0x190
+>  [<ffffffff971e13f8>] __vfs_write+0x28/0x110
+>  [<ffffffff970b0fa4>] ? percpu_down_read+0x44/0x80
+>  [<ffffffff971e53a7>] ? __sb_start_write+0xa7/0xe0
+>  [<ffffffff971e53a7>] ? __sb_start_write+0xa7/0xe0
+>  [<ffffffff971e1f04>] vfs_write+0xc4/0x180
+>  [<ffffffff971e3089>] SyS_write+0x49/0xa0
+>  [<ffffffff97001a46>] do_syscall_64+0xa6/0x1b0
+>  [<ffffffff9819201e>] entry_SYSCALL64_slow_path+0x25/0x25
+> ...
+>  RIP  [<ffffffff9758bbf5>] free_msi_irqs+0x65/0x190
+>  RSP <ffff89ad3085bc48>
+> ---[ end trace f4505e1dac5b95d3 ]---
+> Segmentation fault
+> 
+> Bisect to commit d7def2040077 ("PCI/PME: Make explicitly non-modular").
+> That commit did extra thing like remove the .remove for pcie_pme_driver.
+> 
+> Put back pcie_pme_remove and restore to pcie_pme_driver fix the problem.
+> 
+> Fixes: d7def2040077 ("PCI/PME: Make explicitly non-modular")
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-> ---
-> =C2=A0drivers/pci/host/pcie-altera.c | 2 +-
-> =C2=A01 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-
-> altera.c
-> index dbac6fb..650862e 100644
-> --- a/drivers/pci/host/pcie-altera.c
-> +++ b/drivers/pci/host/pcie-altera.c
-> @@ -56,7 +56,7 @@
-> =C2=A0#define TLP_CFG_DW2(bus, devfn, offset)=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0\
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0(((bus) << 24) | ((devfn) << 1=
-6) |
-> (offset))
-> =C2=A0#define TLP_REQ_ID(bus, devfn)=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0(((bus) << 8) | (devfn))
-> -#define TLP_COMP_STATUS(s)=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0(((s) >> 12) & 7)
-> +#define TLP_COMP_STATUS(s)=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0(((s) >> 13) & 7)
-> =C2=A0#define TLP_HDR_SIZE=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A03
-> =C2=A0#define TLP_LOOP=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0500
-> =C2=A0#define RP_DEVFN=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A00
-> --
-> 2.9.3
->=20
->=20
-> ________________________________
->=20
-> Confidentiality Notice.
-> This message may contain information that is confidential or
-> otherwise protected from disclosure. If you are not the intended
-> recipient, you are hereby notified that any use, disclosure,
-> dissemination, distribution, or copying of this message, or any
-> attachments, is strictly prohibited. If you have received this
-> message in error, please advise the sender by reply e-mail, and
-> delete the message and any attachments. Thank you.
+Thanks, I translated Rafael's "ACK" into an Acked-by and applied this to
+for-linus for v4.10.
+
+I think the BUG_ON() in free_msi_irqs() is the same one we trip over in
+https://bugzilla.kernel.org/show_bug.cgi?id=121711 .  That seems like an
+excessive response to a driver that forgets to free an IRQ.
+
+> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
+> index 7175293..2dd1c68 100644
+> --- a/drivers/pci/pcie/pme.c
+> +++ b/drivers/pci/pcie/pme.c
+> @@ -433,6 +433,17 @@ static int pcie_pme_resume(struct pcie_device *srv)
+>  	return 0;
+>  }
+>  
+> +/**
+> + * pcie_pme_remove - Prepare PCIe PME service device for removal.
+> + * @srv - PCIe service device to remove.
+> + */
+> +static void pcie_pme_remove(struct pcie_device *srv)
+> +{
+> +	pcie_pme_suspend(srv);
+> +	free_irq(srv->irq, srv);
+> +	kfree(get_service_data(srv));
+> +}
+> +
+>  static struct pcie_port_service_driver pcie_pme_driver = {
+>  	.name		= "pcie_pme",
+>  	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
+> @@ -441,6 +452,7 @@ static struct pcie_port_service_driver pcie_pme_driver = {
+>  	.probe		= pcie_pme_probe,
+>  	.suspend	= pcie_pme_suspend,
+>  	.resume		= pcie_pme_resume,
+> +	.remove		= pcie_pme_remove,
+>  };
+>  
+>  /**
