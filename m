@@ -1,73 +1,215 @@
-Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
-Date: Sun, 12 Feb 2017 15:57:27 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
-Message-ID: <20170212145727.GA2593@wunner.de>
-References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
- <20170206175405.GA15565@bhelgaas-glaptop.roam.corp.google.com>
- <20170206212041.GC679@wunner.de>
- <20170206221502.GA27899@bhelgaas-glaptop.roam.corp.google.com>
- <20170207062101.GB791@wunner.de>
- <20170208175736.GB27298@bhelgaas-glaptop.roam.corp.google.com>
- <20170209043254.GB1304@wunner.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-samsung-soc@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+ <linux-arm-kernel@axis.com>
+Subject: [PATCH 09/10] PCI: dwc: Create a new config symbol to enable pci dwc
+ host
+Date: Wed, 15 Feb 2017 18:48:18 +0530
+Message-ID: <1487164699-30708-10-git-send-email-kishon@ti.com>
+In-Reply-To: <1487164699-30708-1-git-send-email-kishon@ti.com>
+References: <1487164699-30708-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20170209043254.GB1304@wunner.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: nsekhar@ti.com, Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 09, 2017 at 05:32:54AM +0100, Lukas Wunner wrote:
-> On Wed, Feb 08, 2017 at 11:57:36AM -0600, Bjorn Helgaas wrote:
-> > On Tue, Feb 07, 2017 at 07:21:01AM +0100, Lukas Wunner wrote:
-> > > On Mon, Feb 06, 2017 at 04:15:02PM -0600, Bjorn Helgaas wrote:
-> > > > On Mon, Feb 06, 2017 at 10:20:41PM +0100, Lukas Wunner wrote:
-> > > > > On Mon, Feb 06, 2017 at 11:54:05AM -0600, Bjorn Helgaas wrote:
-> > > > > > What is the hotplug event that causes generation of this wakeup event?
-> > > > > 
-> > > > > If you had read all e-mails in this thread or looked at the bugzilla
-> > > > > entry I've created, you wouldn't have to ask this question.
-> > > > 
-> > > > I'm sorry, I don't necessarily have time to sort through all the
-> > > > emails.  My idea is that the changelog should be a self-contained
-> > > > justification for the patch.  The bugzilla is for supporting details
-> > > > and future archaeologists.
-> > > > 
-> [...]
-> > > > If you think a bugzilla is onerous
-> > > 
-> > > Hold on.  I didn't say a bugzilla is onerous, I said I'm disappointed
-> > > that you're asking me to create one and then don't look at it.
-> > 
-> > I looked at it, and it had a few details, but no analysis of the
-> > situation.  Ideally, I'm looking for a précis of the situation in
-> > the changelog, with complete analysis and supporting details in the
-> > bugzilla.
-> 
-> It's irrelevant whether the bugzilla contains an analysis or not.
-> 
-> You were asking what type of event caused the wakeup.  The information
-> was in the bugzilla.  So you either didn't look at the bugzilla or
-> didn't look hard enough.
-> 
-> Please tell me why in the future I should comply with your requests to
-> create a bugzilla if you don't look at it and the bug reporter doesn't
-> bother attaching any further information.  It would also have been
-> possible for you to glean the information you were asking for from the
-> reporter's e-mails but you didn't read those either.  And you're paid
-> to do this, I'm not.  If you look at the timestamps of my e-mails you
-> may notice that they're either early in the morning, late at night or
-> on weekends.  Guess what, I'm doing this in my spare time, in addition
-> to my day job.
+Now that pci designware host has a separate file, create a new
+config symbol to select the host only driver. This will enable
+to independently select host support and endpoint suppor
+(when it's added).
 
-My apologies Bjorn, it was clearly inappropriate for me to assume that
-maintenance of the PCI subsystem is at all part of your job contract,
-or talk about it on a public mailing list.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/Kconfig           |   26 +++++++++++++++-----------
+ drivers/pci/dwc/Makefile          |    3 ++-
+ drivers/pci/dwc/pcie-designware.h |   29 +++++++++++++++++++++++++----
+ 3 files changed, 42 insertions(+), 16 deletions(-)
 
-Kind regards,
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index deae261..ab92a0c 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -3,13 +3,17 @@ menu "DesignWare PCI Core Support"
+ 
+ config PCIE_DW
+ 	bool
++
++config PCIE_DW_HOST
++        bool
+ 	depends on PCI_MSI_IRQ_DOMAIN
++        select PCIE_DW
+ 
+ config PCI_DRA7XX
+ 	bool "TI DRA7xx PCIe controller"
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
+ 	depends on PCI_MSI_IRQ_DOMAIN
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	 Enables support for the PCIe controller in the DRA7xx SoC.  There
+ 	 are two instances of PCIe controller in DRA7xx.  This controller can
+@@ -18,7 +22,7 @@ config PCI_DRA7XX
+ config PCIE_DW_PLAT
+ 	bool "Platform bus based DesignWare PCIe Controller"
+ 	depends on PCI_MSI_IRQ_DOMAIN
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	---help---
+ 	 This selects the DesignWare PCIe controller support. Select this if
+ 	 you have a PCIe controller on Platform bus.
+@@ -32,21 +36,21 @@ config PCI_EXYNOS
+ 	depends on SOC_EXYNOS5440
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 
+ config PCI_IMX6
+ 	bool "Freescale i.MX6 PCIe controller"
+ 	depends on SOC_IMX6Q
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 
+ config PCIE_SPEAR13XX
+ 	bool "STMicroelectronics SPEAr PCIe controller"
+ 	depends on ARCH_SPEAR13XX
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
+ 
+@@ -55,7 +59,7 @@ config PCI_KEYSTONE
+ 	depends on ARCH_KEYSTONE
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want to enable PCI controller support on Keystone
+ 	  SoCs. The PCI controller on Keystone is based on Designware hardware
+@@ -67,7 +71,7 @@ config PCI_LAYERSCAPE
+ 	depends on OF && (ARM || ARCH_LAYERSCAPE)
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select MFD_SYSCON
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want PCIe controller support on Layerscape SoCs.
+ 
+@@ -76,7 +80,7 @@ config PCI_HISI
+ 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want PCIe controller support on HiSilicon
+ 	  Hip05 and Hip06 SoCs
+@@ -86,7 +90,7 @@ config PCIE_QCOM
+ 	depends on ARCH_QCOM && OF
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
+ 	  PCIe controller uses the Designware core plus Qualcomm-specific
+@@ -97,7 +101,7 @@ config PCIE_ARMADA_8K
+ 	depends on ARCH_MVEBU
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here if you want to enable PCIe controller support on
+ 	  Armada-8K SoCs. The PCIe controller on Armada-8K is based on
+@@ -109,7 +113,7 @@ config PCIE_ARTPEC6
+ 	depends on MACH_ARTPEC6
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIEPORTBUS
+-	select PCIE_DW
++	select PCIE_DW_HOST
+ 	help
+ 	  Say Y here to enable PCIe controller support on Axis ARTPEC-6
+ 	  SoCs.  This PCIe controller uses the DesignWare core.
+diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+index 3b57e55..a2df13c 100644
+--- a/drivers/pci/dwc/Makefile
++++ b/drivers/pci/dwc/Makefile
+@@ -1,4 +1,5 @@
+-obj-$(CONFIG_PCIE_DW) += pcie-designware.o pcie-designware-host.o
++obj-$(CONFIG_PCIE_DW) += pcie-designware.o
++obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+ obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+ obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 3054770..cd3b871 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -161,10 +161,6 @@ struct dw_pcie {
+ 
+ int dw_pcie_read(void __iomem *addr, int size, u32 *val);
+ int dw_pcie_write(void __iomem *addr, int size, u32 val);
+-irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+-void dw_pcie_msi_init(struct pcie_port *pp);
+-void dw_pcie_setup_rc(struct pcie_port *pp);
+-int dw_pcie_host_init(struct pcie_port *pp);
+ 
+ u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg);
+ void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val);
+@@ -174,4 +170,29 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+ 			       int type, u64 cpu_addr, u64 pci_addr,
+ 			       u32 size);
+ void dw_pcie_setup(struct dw_pcie *pci);
++
++#ifdef CONFIG_PCIE_DW_HOST
++irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
++void dw_pcie_msi_init(struct pcie_port *pp);
++void dw_pcie_setup_rc(struct pcie_port *pp);
++int dw_pcie_host_init(struct pcie_port *pp);
++#else
++static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
++{
++	return IRQ_NONE;
++}
++
++static inline void dw_pcie_msi_init(struct pcie_port *pp)
++{
++}
++
++static inline void dw_pcie_setup_rc(struct pcie_port *pp)
++{
++}
++
++static inline int dw_pcie_host_init(struct pcie_port *pp)
++{
++	return 0;
++}
++#endif
+ #endif /* _PCIE_DESIGNWARE_H */
+-- 
+1.7.9.5
 
-Lukas
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
