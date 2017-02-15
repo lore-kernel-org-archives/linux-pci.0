@@ -1,15 +1,23 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V6 4/5] LPC: Support the device-tree LPC host on
+ Hip06/Hip07
+To: "zhichang.yuan" <yuanzhichang@hisilicon.com>, catalin.marinas@arm.com,
+ will.deacon@arm.com, robh+dt@kernel.org, frowand.list@gmail.com,
+ bhelgaas@google.com, rafael@kernel.org, mark.rutland@arm.com,
+ brian.starkey@arm.com, olof@lixom.net, arnd@arndb.de,
+ linux-arm-kernel@lists.infradead.org
+References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1485241525-201782-5-git-send-email-yuanzhichang@hisilicon.com>
+ <a5a24e73-013d-87b5-f65f-324417f4cc60@suse.de>
+ <58A1C50F.7090108@hisilicon.com>
+ <43b981bc-72c0-c6e7-d6f6-9ba9c63d9bdb@suse.de>
+ <58A43D02.9040502@hisilicon.com>
+From: Alexander Graf <agraf@suse.de>
+Message-ID: <acc432d9-f021-4eba-b48b-a8d0b4de1f78@suse.de>
+Date: Wed, 15 Feb 2017 12:53:30 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170215171700.5vz5seeihgtwn76p@rob-hp-laptop>
-References: <20170207155027.7734-1-andrew.smirnov@gmail.com>
- <20170207155027.7734-4-andrew.smirnov@gmail.com>
- <20170215171700.5vz5seeihgtwn76p@rob-hp-laptop>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-Date: Wed, 15 Feb 2017 22:07:06 -0800
-Message-ID: <CAHQ1cqH_y3104hD8k2qWDCH1PM0KpkFGwK=Q2WBT5g7asu8X4g@mail.gmail.com>
-Subject: Re: [PATCH v4 3/3] PCI: imx6: Add code to support i.MX7D
-To: Rob Herring <robh@kernel.org>
+In-Reply-To: <58A43D02.9040502@hisilicon.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,126 +25,186 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>,
- Fabio Estevam <fabio.estevam@nxp.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Andrey Yurovsky <yurovsky@gmail.com>, Lee Jones <lee.jones@linaro.org>,
- linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
+Cc: devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
+ gabriele.paoloni@huawei.com, minyard@acm.org, benh@kernel.crashing.org,
+ john.garry@huawei.com, liviu.dudau@arm.com, linux-kernel@vger.kernel.org,
+ xuwei5@hisilicon.com, linuxarm@huawei.com,
+ "Daode Huang\(allen\)" <huangdaode@hisilicon.com>,
+ linux-serial@vger.kernel.org, linux-pci@vger.kernel.org, zourongrong@gmail.com,
+ kantyzc@163.com, zhichang.yuan02@gmail.com
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 15, 2017 at 9:17 AM, Rob Herring <robh@kernel.org> wrote:
-> On Tue, Feb 07, 2017 at 07:50:27AM -0800, Andrey Smirnov wrote:
->> Add various bits of code needed to support i.MX7D variant of the IP.
+
+
+On 15/02/2017 12:35, zhichang.yuan wrote:
+> Hi, Alex,
+>
+>
+> On 2017/2/14 21:29, Alexander Graf wrote:
 >>
->> Cc: yurovsky@gmail.com
->> Cc: Lucas Stach <l.stach@pengutronix.de>
->> Cc: Bjorn Helgaas <bhelgaas@google.com>
->> Cc: Rob Herring <robh+dt@kernel.org>
->> Cc: Mark Rutland <mark.rutland@arm.com>
->> Cc: Lee Jones <lee.jones@linaro.org>
->> Cc: Fabio Estevam <fabio.estevam@nxp.com>
->> Cc: linux-arm-kernel@lists.infradead.org
->> Cc: devicetree@vger.kernel.org
->> Cc: linux-kernel@vger.kernel.org
->> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
->> ---
->>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 ++-
->>  drivers/pci/host/pci-imx6.c                        | 121 ++++++++++++++++-----
->>  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
->>  3 files changed, 112 insertions(+), 26 deletions(-)
 >>
->> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> index 83aeb1f..11db2ab 100644
->> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> @@ -4,7 +4,11 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
->>  and thus inherits all the common properties defined in designware-pcie.txt.
+>> On 13/02/2017 15:39, zhichang.yuan wrote:
+>>> Hi, Alex,
+>>>
+>>> Thanks for your review!
+>>>
+>>> John had replied most of your comments, I only mentioned those which haven't made clear.
+>>>
+>>>
+>>> On 2017/1/31 4:08, Alexander Graf wrote:
+>>>>
+>>>>
+>>>> On 24/01/2017 08:05, zhichang.yuan wrote:
+>>>>> The low-pin-count(LPC) interface of Hip06/Hip07 accesses the peripherals in
+>>>>> I/O port addresses. This patch implements the LPC host controller driver which
+>>>>> perform the I/O operations on the underlying hardware.
+>>>>> We don't want to touch those existing peripherals' driver, such as ipmi-bt. So
+>>>>> this driver applies the indirect-IO introduced in the previous patch after
+>>>>> registering an indirect-IO node to the indirect-IO devices list which will be
+>>>>> searched in the I/O accessors.
+>>>>> As the I/O translations for LPC children depend on the host I/O registration,
+>>>>> we should ensure the host I/O registration is finished before all the LPC
+>>>>> children scanning. That is why an arch_init() hook was added in this patch.
+>>>>>
+>>>>> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+>>>>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>>>>> ---
+> snip
+>>>>> +
+>>>>> +struct lpc_cycle_para {
+>>>>> +    unsigned int opflags;
+>>>>> +    unsigned int csize; /* the data length of each operation */
+>>>>> +};
+>>>>> +
+>>>>> +struct hisilpc_dev {
+>>>>> +    spinlock_t cycle_lock;
+>>>>> +    void __iomem  *membase;
+>>>>> +    struct extio_node *extio;
+>>>>> +};
+>>>>> +
+>>>>> +/* bounds of the LPC bus address range */
+>>>>> +#define LPC_MIN_BUS_RANGE    0x0
+>>>>> +
+>>>>> +/*
+>>>>> + * The maximal IO size for each leagcy bus.
+>>>>
+>>>> legacy?
+>>>>
+>>>> I don't really understand why this bus is legacy though. It looks like a simple MMIO-to-LPC bridge to me.
+>>>
+>>> yes. The LPC bus is MMIO-to-LPC bridge.
+>>> My comment is not clear.
+>>>
+>>> How about "The maximal IO size of LPC bus"?
 >>
->>  Required properties:
->> -- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
->> +- compatible:
->> +     - "fsl,imx6q-pcie"
->> +     - "fsl,imx6sx-pcie",
->> +     - "fsl,imx6qp-pcie"
->> +     - "fsl,imx7d-pcie"
->>  - reg: base address and length of the PCIe controller
->>  - interrupts: A list of interrupt outputs of the controller. Must contain an
->>    entry for each entry in the interrupt-names property.
->> @@ -34,6 +38,13 @@ Additional required properties for imx6sx-pcie:
->>  - clock names: Must include the following additional entries:
->>       - "pcie_inbound_axi"
+>> That sounds better, but doesn't really tell me what it's about yet ;).
 >>
->> +Additional required properties for imx7d-pcie:
->> +- power-domains: Must be set to a phandle pointing to PCIE_PHY power domain
->
-> This domain is just the PHY? Seems like this needs a separate PHY
-> driver.
-
-PCIE_PHY is the name of the power domain corresponding to PGC_PCIE
-(which is what that property is expected to point to) as per
-Frescale/NXP datasheet (p. 822 in v0.1 of i.MX7 Application Processors
-Manual). I was never able to find any clear language indicating what
-parts of DesignWare's IP core and Freescale's/NXP's PCIE PHY it powers
-in the manual. However, experiments with hardware show that when that
-domain remains non-powered any attempt to access registers of DW's IP
-block result in system hanging, so it seemed to me that the two are
-not independent of each other enough to be represented as individual
-DT nodes.
-
->
->> +- resets: Must contain phandles to PCIE related reset lines exposed by SRC IP block
->> +- reset-names: Must contain the following entires:
->> +            - "pciephy"
->
-> And for this too.
->
->> +            - "apps"
->> +
->>  Example:
+>>>
+>>>>
+>>>>> + * The port size of legacy I/O devices is normally less than 0x400.
+>>>>> + * Defining the I/O range size as 0x400 here should be sufficient for
+>>>>> + * all peripherals under one bus.
+>>>>> + */
+>>>>
+>>>> This comment doesn't make a lot of sense. What is the limit? Is there a hardware limit?
+>>>>
+>>>> We don't dynamically allocate devices on the lpc bus, so why imply a limit at all?
+>>>
+>>> The limit here is to define an IO window for LPC.
+>>> It is not acceptable to describe the IO window with 'ranges' property in LPC host node, so we choose a fixable upper IO limit
+>>> for the static LPC IO space. Without this, LPC can't register its IO space through extio helpers.
+>>>
+>>> Why 0x400 is chosen? For our LPC, 0x400 cover all the peripherals under the LPC.
 >>
->>       pcie@0x01000000 {
+>> This is information that should come from firmware then. Whether by coincidence addresses 0x0 - 0x400 include all devices is an implementation detail that the driver shouldn't have to know about.
 >
-> [...]
 >
->> @@ -251,6 +261,10 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
->>       u32 val, gpr1, gpr12;
 >>
->>       switch (imx6_pcie->variant) {
->> +     case IMX7D:
->> +             reset_control_assert(imx6_pcie->pciephy_reset);
->> +             reset_control_assert(imx6_pcie->apps_reset);
->> +             break;
->>       case IMX6SX:
->>               regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
->>                                  IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
+>> That said, as mentioned elsewhere, we don't need to define single windows at all. Instead, can't we just do it like PCI BARs and declare all PIO regions we get from firmware as readily allocated? Then we only need to explicitly assign ports 0x80, 0x81, 0x99, etc to the LPC bridge and leave the rest for grabs (by PCI hotplug for example)
+>>
 >
-> So the difference with i.MX7D is not really that it has a reset or not,
-> but some platforms use a reset driver and some do not. The latter should
-> be fixed.
+> I worry I don't completely catch your idea.
+> From my understanding, each PCI host can parse its resource windows from firmware(such as ACPI, dts). But for our LPC, firmware configurations only tell kernel what is the IO resource of the peripherals under LPC. But to register the io range in the similar way of pci_register_io_range(), at least, we need to know the IO range size.
+> So, how to know this?
+> There is no similar BAR design in LPC, do we traverse all the peripherals to calculate that?
 
-That depends on what variant of the SoC you are comparing it to. 6QP,
-6SX do have reset and helper signals wire to bits in registers in
-IOMUX, 6Q howerver doesn't have a reset line wire and have to do some
-trickery as per comment in the driver several lines below:
+Yes, that's probably the most flexible approach. In fact, I would just 
+traverse all peripherals (or have peripherals call register functions 
+for PIO regions) and then dynamically allocate the PIO space for only 
+those regions. I don't see why you should only have 1 window for your 
+LPC bridge.
 
-"... As there is no dedicated reset signal wired up for MX6QDL, we
-need to manually force LTSSM into "detect" state before completely
-disabling LTSSM, which is a prerequisite for core configuration..."
+Alternatively you could just have firmware indicate the region size, 
+similar to how it's done for PCI. Whatever you do, don't hard code it in 
+the driver :).
 
-If memory serves me well part of that 6Q trickery code is the reason
-for driver using hook_fault_code().
+>
+>
+>>>
+>>>
+>>>
+>>>
+>>>>
+>>>>> +#define LPC_BUS_IO_SIZE        0x400
+>>>>> +
+>>>>> +/* The maximum continuous operations */
+>>>>> +#define LPC_MAX_OPCNT    16
+>>>>> +/* only support IO data unit length is four at maximum */
+>>>>> +#define LPC_MAX_DULEN    4
+> snip
+>>>>> + */
+>>>>> +static int
+>>>>> +hisilpc_target_in(struct hisilpc_dev *lpcdev, struct lpc_cycle_para *para,
+>>>>> +          unsigned long ptaddr, unsigned char *buf,
+>>>>> +          unsigned long opcnt)
+>>>>> +{
+>>>>> +    unsigned long cnt_per_trans;
+>>>>> +    unsigned int cmd_word;
+>>>>> +    unsigned int waitcnt;
+>>>>> +    int ret;
+>>>>> +
+>>>>> +    if (!buf || !opcnt || !para || !para->csize || !lpcdev)
+>>>>> +        return -EINVAL;
+>>>>> +
+>>>>> +    if (opcnt  > LPC_MAX_OPCNT)
+>>>>> +        return -EINVAL;
+>>>>> +
+>>>>> +    cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_READ;
+>>>>> +    waitcnt = LPC_PEROP_WAITCNT;
+>>>>> +    if (!(para->opflags & FG_INCRADDR_LPC)) {
+>>>>> +        cmd_word |= LPC_CMD_SAMEADDR;
+>>>>> +        waitcnt = LPC_MAX_WAITCNT;
+>>>>> +    }
+>>>>> +
+>>>>> +    ret = 0;
+>>>>> +    cnt_per_trans = (para->csize == 1) ? opcnt : para->csize;
+>>>>> +    for (; opcnt && !ret; cnt_per_trans = para->csize) {
+>>>>> +        unsigned long flags;
+>>>>> +
+>>>>> +        /* whole operation must be atomic */
+>>>>> +        spin_lock_irqsave(&lpcdev->cycle_lock, flags);
+>>>>
+>>>> Ouch. This is going to kill your RT jitter. Is there no better way?
+>>>
+>>> I think there is no other choices. We have to ensure the I/O cycles triggered in serial mode....
+>>
+>> As nobody else accesses the LPC device in the meantime thanks to the lock, you don't need to disable interrupts, right?
+>
+> O. Do you mean that we can replace spin_lock_irqsave with spin_lock?
 
-That is not to say that all of this code could not be encapsulated as
-a reset controller, and I agree, doing so might make the driver
-better. At the same time I don't have the hardware to test all of
-those platforms and I am hoping we can agree this kind of change to be
-out of scope of this series.
+That would be a good step into the right direction I think, yes.
 
-Thanks,
-Andrey Smironv
+> As we can connect UART to LPC, I worry the LPC can be accessed in the interrupt context.
+
+In that case IRQs are already disabled for the non-preempt-rt case and 
+in preempt-rt, interrupt context should mostly live in threads which are 
+preemptible again.
+
+
+Alex
 
 _______________________________________________
 linux-arm-kernel mailing list
