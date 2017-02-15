@@ -1,14 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 10 Feb 2017 16:16:17 -0600
+Date: Wed, 15 Feb 2017 17:00:03 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Dennis Chen <dennis.chen@arm.com>
-Subject: Re: [PATCH] PCI:MSI Return -ENOSPC when requested vectors is not
- enough
-Message-ID: <20170210221617.GT29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH 00/10] PCI: dwc: Rework and cleanup designware driver
+Message-ID: <20170215230003.GA26758@bhelgaas-glaptop.roam.corp.google.com>
+References: <1487164699-30708-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1480558504-18691-1-git-send-email-dennis.chen@arm.com>
+In-Reply-To: <1487164699-30708-1-git-send-email-kishon@ti.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,72 +15,81 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Steve Capper <steve.capper@arm.com>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci@vger.kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- linux-ide@vger.kernel.org, Tom Long Nguyen <tom.l.nguyen@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>, nd@arm.com,
- Christoph Hellwig <hch@lst.de>, linux-arm-kernel@lists.infradead.org
+Cc: linux-samsung-soc@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>,
+ nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-omap@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Dec 01, 2016 at 10:15:04AM +0800, Dennis Chen wrote:
-> The __pci_enable_msi_range() should return -ENOSPC instead of -EINVAL
-> when the device doesn't have enough vectors as required, just as the 
-> MSI-X vector allocator does in __pci_enable_msix_range(). Otherwise, 
-> some drivers depending on that return value will probably fallback to
-> the legacy interrupt directly, for example, in commit 17a51f12cfbd2814
-> ("ahci: only try to use multi-MSI mode if there is more than 1 port"), the
-> ahci driver will fallback to single MSI mode only when the return value
-> is -ENOSPC in case of required vectors is not enough, else the driver will
-> use legacy interrupt which has been observed on a x86 box with 6-port SATA
-> controller.
+On Wed, Feb 15, 2017 at 06:48:09PM +0530, Kishon Vijay Abraham I wrote:
+> This series reworks designware driver in preparation for adding endpoint
+> mode support to designware driver.
 > 
-> With this patch, when a MSI-capable device doesn't have enough MSI
-> vectors as requested, it will fallback to single MSI mode while not
-> legacy interrupt.
+> This series was previously sent as part of endpoint support series
+> https://lkml.org/lkml/2017/1/13/562
 > 
-> Signed-off-by: Dennis Chen <dennis.chen@arm.com>
-> Cc: Tejun Heo <tj@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Tom Long Nguyen <tom.l.nguyen@intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Cc: Marc Zyngier <marc.zyngier@arm.com>
-> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Steve Capper <steve.capper@arm.com>
-> Cc: linux-ide@vger.kernel.org
-> Cc: linux-arm-kernel@lists.infradead.org
+> Validate pci host only in pci-dra7xx. Any help in validating other
+> platforms would be highly appreciated.
+> 
+> This series is created after cherrypicking the following patch and
+> then applying pci/host-designware.
+> 
+> commit a782b5f986c3fa1cfa7f2b57941200c6a5809242
+> Author: Murali Karicheri <m-karicheri2@ti.com>
+> Date:   Wed Jan 4 14:32:30 2017 -0500
+> 
+>     PCI: designware: Check for iATU unroll only on platforms that use ATU
+> 
+> The patches has been pushed to
+> git://git.ti.com/linux-phy/linux-phy.git dwc-rework
+> 
+> Kishon Vijay Abraham I (10):
+>   PCI: dwc: designware: Move the register defines to designware header
+>     file
+>   PCI: dwc: *all*: Add platform_set_drvdata
+>   PCI: dwc: *all*: Rename cfg_read/cfg_write to read/write
+>   PCI: dwc: designware: Get device pointer at the start of
+>     dw_pcie_host_init
+>   PCI: dwc: *all*: Split *struct pcie_port* into host only and core
+>     structures
+>   PCI: dwc: designware: Parse *num-lanes* property in dw_pcie_setup_rc
+>   PCI: dwc: designware: Fix style errors in pcie-designware.c
+>   PCI: dwc: Split pcie-designware.c into host and core files
+>   PCI: dwc: Create a new config symbol to enable pci dwc host
+>   PCI: dwc: Remove dependency of designware to CONFIG_PCI
+> 
+>  drivers/Makefile                       |    3 +
+>  drivers/pci/Makefile                   |    3 -
+>  drivers/pci/dwc/Kconfig                |   39 +-
+>  drivers/pci/dwc/Makefile               |    1 +
+>  drivers/pci/dwc/pci-dra7xx.c           |   91 ++--
+>  drivers/pci/dwc/pci-exynos.c           |   81 ++--
+>  drivers/pci/dwc/pci-imx6.c             |  131 ++---
+>  drivers/pci/dwc/pci-keystone-dw.c      |   87 ++--
+>  drivers/pci/dwc/pci-keystone.c         |   56 ++-
+>  drivers/pci/dwc/pci-keystone.h         |    4 +-
+>  drivers/pci/dwc/pci-layerscape.c       |   93 ++--
+>  drivers/pci/dwc/pcie-armada8k.c        |   87 ++--
+>  drivers/pci/dwc/pcie-artpec6.c         |   50 +-
+>  drivers/pci/dwc/pcie-designware-host.c |  635 ++++++++++++++++++++++++
+>  drivers/pci/dwc/pcie-designware-plat.c |   29 +-
+>  drivers/pci/dwc/pcie-designware.c      |  823 +++-----------------------------
+>  drivers/pci/dwc/pcie-designware.h      |  170 +++++--
+>  drivers/pci/dwc/pcie-hisi.c            |   57 ++-
+>  drivers/pci/dwc/pcie-qcom.c            |   72 ++-
+>  drivers/pci/dwc/pcie-spear13xx.c       |   85 ++--
+>  20 files changed, 1434 insertions(+), 1163 deletions(-)
+>  create mode 100644 drivers/pci/dwc/pcie-designware-host.c
 
-Applied to pci/msi for v4.11, thanks, Dennis!
+I applied these to pci/host-designware with the intent of merging them
+for v4.11.  They're not in -next yet; I'll merge them into -next after
+the autobuilder completes.
 
-> ---
->  drivers/pci/msi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index ad70507..da37113 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1084,7 +1084,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
->  	if (nvec < 0)
->  		return nvec;
->  	if (nvec < minvec)
-> -		return -EINVAL;
-> +		return -ENOSPC;
->  
->  	if (nvec > maxvec)
->  		nvec = maxvec;
-> -- 
-> 2.7.4
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
