@@ -1,57 +1,142 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:37031 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752581AbdBJSBD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Feb 2017 13:01:03 -0500
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
- <1486058763-7730-2-git-send-email-logang@deltatee.com>
- <20170210145124.GA24594@kroah.com>
- <ca970e7a-b062-d351-9a04-49a9e05955b5@deltatee.com>
- <20170210165550.GA23959@kroah.com>
- <9a1d4150-b329-1a69-9efd-f06da32afe02@deltatee.com>
- <20170210170910.GA25450@kroah.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <becec124-373d-5cec-55c1-87c17f87ca9c@deltatee.com>
-Date: Fri, 10 Feb 2017 11:00:01 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170210170910.GA25450@kroah.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH v2 1/4] MicroSemi Switchtec management interface driver
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:58773 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750922AbdBOGpU (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 01:45:20 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1F6hS7r170899
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 01:45:20 -0500
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 28mf8pcwxk-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 01:45:19 -0500
+Received: from localhost
+        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Tue, 14 Feb 2017 23:45:19 -0700
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
+        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
+        paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: [PATCH v9 3/3] PCI: Don't extend device's size when using default alignment for all devices
+Date: Wed, 15 Feb 2017 14:45:06 +0800
+In-Reply-To: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1487141106-2503-4-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Currently we reassign the alignment by extending resources' size in
+pci_reassigndev_resource_alignment(). This could potentially break
+some drivers when the driver uses the size to locate register
+whose length is related to the size. Some examples as below:
 
+- misc\Hpilo.c:
+off = pci_resource_len(pdev, bar) - 0x2000;
 
-On 10/02/17 10:09 AM, Greg Kroah-Hartman wrote:
-> Sure, or just wait for these to be applied to the PCI tree and then send
-> a follow-on patch.  It's up to Bjorn really, as to what he wants.
+- net\ethernet\chelsio\cxgb4\cxgb4_uld.h:
+(pci_resource_len((pdev), 2) - roundup_pow_of_two((vres)->ocq.size))
 
-Ok, I sent a working follow-on patch to this thread.
+- infiniband\hw\nes\Nes_hw.c:
+num_pds = pci_resource_len(nesdev->pcidev, BAR_1) >> PAGE_SHIFT;
 
-@Bjorn: I'm happy to send the patches however you like. Just let me
-know. If at all possible, we'd really like to see this in for the 4.11
-merge window.
+This risk could be easily prevented before because we only had one way
+(kernel parameter resource_alignment) to touch those codes. And even
+some users may be happy to see the extended size.
 
-Thanks,
+But now we define a default alignment for all devices which would also
+touch those codes. It would be hard to prevent the risk in this case. So
+this patch tries to use START_ALIGNMENT to identify the resource's
+alignment without extending the size when the alignment reassigning is
+caused by the default alignment.
 
-Logan
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ drivers/pci/pci.c |   34 ++++++++++++++++++++++++----------
+ 1 files changed, 24 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 2622e9b..0017e5e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4958,7 +4958,8 @@ void pci_ignore_hotplug(struct pci_dev *dev)
+  * RETURNS: Resource alignment if it is specified.
+  *          Zero if it is not specified.
+  */
+-static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
++static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
++							bool *resize)
+ {
+ 	int seg, bus, slot, func, align_order, count;
+ 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+@@ -5002,6 +5003,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 				(!device || (device == dev->device)) &&
+ 				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
+ 				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
++				*resize = true;
+ 				if (align_order == -1)
+ 					align = PAGE_SIZE;
+ 				else
+@@ -5027,6 +5029,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 				bus == dev->bus->number &&
+ 				slot == PCI_SLOT(dev->devfn) &&
+ 				func == PCI_FUNC(dev->devfn)) {
++				*resize = true;
+ 				if (align_order == -1)
+ 					align = PAGE_SIZE;
+ 				else
+@@ -5059,6 +5062,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	struct resource *r;
+ 	resource_size_t align, size;
+ 	u16 command;
++	bool resize = false;
+ 
+ 	/*
+ 	 * VF BARs are read-only zero according to SR-IOV spec r1.1, sec
+@@ -5070,7 +5074,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		return;
+ 
+ 	/* check if specified PCI is target device to reassign */
+-	align = pci_specified_resource_alignment(dev);
++	align = pci_specified_resource_alignment(dev, &resize);
+ 	if (!align)
+ 		return;
+ 
+@@ -5098,15 +5102,25 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		}
+ 
+ 		size = resource_size(r);
+-		if (size < align) {
+-			size = align;
+-			dev_info(&dev->dev,
+-				"Rounding up size of resource #%d to %#llx.\n",
+-				i, (unsigned long long)size);
++		if (resize) {
++			if (size < align) {
++				size = align;
++				dev_info(&dev->dev,
++					"Rounding up size of resource #%d to %#llx.\n",
++					i, (unsigned long long)size);
++			}
++			r->flags |= IORESOURCE_UNSET;
++			r->end = size - 1;
++			r->start = 0;
++		} else {
++			if (size < align) {
++				r->flags &= ~IORESOURCE_SIZEALIGN;
++				r->flags |= IORESOURCE_STARTALIGN |
++							IORESOURCE_UNSET;
++				r->start = align;
++				r->end = r->start + size - 1;
++			}
+ 		}
+-		r->flags |= IORESOURCE_UNSET;
+-		r->end = size - 1;
+-		r->start = 0;
+ 	}
+ 	/* Need to disable bridge's resource window,
+ 	 * to enable the kernel to reassign new resource
+-- 
+1.7.1
