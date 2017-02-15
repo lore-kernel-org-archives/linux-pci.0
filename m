@@ -1,100 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 15 Feb 2017 11:17:00 -0600
-From: Rob Herring <robh@kernel.org>
-To: Andrey Smirnov <andrew.smirnov@gmail.com>
-Cc: linux-pci@vger.kernel.org, yurovsky@gmail.com,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 3/3] PCI: imx6: Add code to support i.MX7D
-Message-ID: <20170215171700.5vz5seeihgtwn76p@rob-hp-laptop>
-References: <20170207155027.7734-1-andrew.smirnov@gmail.com>
- <20170207155027.7734-4-andrew.smirnov@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170207155027.7734-4-andrew.smirnov@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:48872 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750760AbdBOH6a (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 02:58:30 -0500
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: [PATCH 1/2] PCI: update pci.txt to talk about pci_alloc_irq_vectors
+Date: Wed, 15 Feb 2017 08:58:22 +0100
+Message-Id: <20170215075823.3024-2-hch@lst.de>
+In-Reply-To: <20170215075823.3024-1-hch@lst.de>
+References: <20170215075823.3024-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 07, 2017 at 07:50:27AM -0800, Andrey Smirnov wrote:
-> Add various bits of code needed to support i.MX7D variant of the IP.
-> 
-> Cc: yurovsky@gmail.com
-> Cc: Lucas Stach <l.stach@pengutronix.de>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: Mark Rutland <mark.rutland@arm.com>
-> Cc: Lee Jones <lee.jones@linaro.org>
-> Cc: Fabio Estevam <fabio.estevam@nxp.com>
-> Cc: linux-arm-kernel@lists.infradead.org
-> Cc: devicetree@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
-> ---
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 ++-
->  drivers/pci/host/pci-imx6.c                        | 121 ++++++++++++++++-----
->  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
->  3 files changed, 112 insertions(+), 26 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> index 83aeb1f..11db2ab 100644
-> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-> @@ -4,7 +4,11 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
->  and thus inherits all the common properties defined in designware-pcie.txt.
->  
->  Required properties:
-> -- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
-> +- compatible:
-> +	- "fsl,imx6q-pcie"
-> +	- "fsl,imx6sx-pcie",
-> +	- "fsl,imx6qp-pcie"
-> +	- "fsl,imx7d-pcie"
->  - reg: base address and length of the PCIe controller
->  - interrupts: A list of interrupt outputs of the controller. Must contain an
->    entry for each entry in the interrupt-names property.
-> @@ -34,6 +38,13 @@ Additional required properties for imx6sx-pcie:
->  - clock names: Must include the following additional entries:
->  	- "pcie_inbound_axi"
->  
-> +Additional required properties for imx7d-pcie:
-> +- power-domains: Must be set to a phandle pointing to PCIE_PHY power domain
+instead of the deprecated pci_enable_msi* APIs.
 
-This domain is just the PHY? Seems like this needs a separate PHY 
-driver.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ Documentation/PCI/pci.txt | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-> +- resets: Must contain phandles to PCIE related reset lines exposed by SRC IP block
-> +- reset-names: Must contain the following entires:
-> +  	       - "pciephy"
-
-And for this too.
-
-> +	       - "apps"
-> +
->  Example:
->  
->  	pcie@0x01000000 {
-
-[...]
-
-> @@ -251,6 +261,10 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
->  	u32 val, gpr1, gpr12;
->  
->  	switch (imx6_pcie->variant) {
-> +	case IMX7D:
-> +		reset_control_assert(imx6_pcie->pciephy_reset);
-> +		reset_control_assert(imx6_pcie->apps_reset);
-> +		break;
->  	case IMX6SX:
->  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
->  				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
-
-So the difference with i.MX7D is not really that it has a reset or not, 
-but some platforms use a reset driver and some do not. The latter should 
-be fixed.
-
-Rob
+diff --git a/Documentation/PCI/pci.txt b/Documentation/PCI/pci.txt
+index 77f49dc5be23..98875f8cb7ba 100644
+--- a/Documentation/PCI/pci.txt
++++ b/Documentation/PCI/pci.txt
+@@ -382,18 +382,18 @@ The fundamental difference between MSI and MSI-X is how multiple
+ "vectors" get allocated. MSI requires contiguous blocks of vectors
+ while MSI-X can allocate several individual ones.
+ 
+-MSI capability can be enabled by calling pci_enable_msi() or
+-pci_enable_msix() before calling request_irq(). This causes
+-the PCI support to program CPU vector data into the PCI device
+-capability registers.
+-
+-If your PCI device supports both, try to enable MSI-X first.
+-Only one can be enabled at a time.  Many architectures, chip-sets,
+-or BIOSes do NOT support MSI or MSI-X and the call to pci_enable_msi/msix
+-will fail. This is important to note since many drivers have
+-two (or more) interrupt handlers: one for MSI/MSI-X and another for IRQs.
+-They choose which handler to register with request_irq() based on the
+-return value from pci_enable_msi/msix().
++MSI capability can be enabled by calling pci_alloc_irq_vectors with the
++PCI_IRQ_MSI and/or PCI_IRQ_MSIX flags before calling request_irq(). This
++causes the PCI support to program CPU vector data into the PCI device
++capability registers.  Many architectures, chip-sets, or BIOSes do NOT
++support MSI or MSI-X and a call to pci_alloc_irq_vectors with just
++the PCI_IRQ_MSI and PCI_IRQ_MSIX flags will fail, so try to always
++specify PCI_IRQ_LEGACY as well.
++
++Drivers that have different interrupt handlers for MSI/MSI-X and
++legacy INTx should chose the right one based on the msi_enabled
++and msix_enabled flags in the pci_dev structure after calling
++pci_alloc_irq_vectors.
+ 
+ There are (at least) two really good reasons for using MSI:
+ 1) MSI is an exclusive interrupt vector by definition.
+-- 
+2.11.0
