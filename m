@@ -1,148 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34070 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751264AbdBSE2N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 18 Feb 2017 23:28:13 -0500
-Date: Sat, 18 Feb 2017 22:27:45 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Erik Veijola <erik.veijola@linux.intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v6 1/8] PCI: Recognize Thunderbolt devices
-Message-ID: <20170219042745.GB7668@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1486913733.git.lukas@wunner.de>
- <fee5154ef747e34684f316a9edf1ec7f635fd0f8.1486913733.git.lukas@wunner.de>
- <20170217152903.GB10663@bhelgaas-glaptop.roam.corp.google.com>
- <20170218091224.GA1335@wunner.de>
+Return-Path: <SRS0=yGYe=Z4=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=yGYe=Z4=linutronix.de=tglx@kernel.org>
+Date: Wed, 15 Feb 2017 22:16:32 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Jess Frazelle <me@jessfraz.com>, "K. Y. Srinivasan" <kys@microsoft.com>,
+    Haiyang Zhang <haiyangz@microsoft.com>,
+    Stephen Hemminger <sthemmin@microsoft.com>,
+    Bjorn Helgaas <bhelgaas@google.com>, Keith Busch <keith.busch@intel.com>,
+    "open list:Hyper-V CORE AND DRIVERS" <devel@linuxdriverproject.org>,
+    "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+    open list <linux-kernel@vger.kernel.org>,
+    kernel-hardening@lists.openwall.com, Kees Cook <keescook@chromium.org>,
+    Marc Zyngier <marc.zyngier@arm.com>
+Subject: Re: [PATCH v2 3/5] pci: set msi_domain_ops as __ro_after_init
+In-Reply-To: <20170215203347.GA6981@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.DEB.2.20.1702152143520.3805@nanos>
+References: <20170211013758.3288-1-me@jessfraz.com> <20170211013758.3288-3-me@jessfraz.com> <20170215203347.GA6981@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170218091224.GA1335@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 18, 2017 at 10:12:24AM +0100, Lukas Wunner wrote:
-> On Fri, Feb 17, 2017 at 09:29:03AM -0600, Bjorn Helgaas wrote:
-> > On Sun, Feb 12, 2017 at 05:07:45PM +0100, Lukas Wunner wrote:
-> > > Detect on device probe whether a PCI device is part of a Thunderbolt
-> > > daisy chain (i.e. it is either part of a Thunderbolt controller or part
-> > > of the hierarchy below a Thunderbolt controller).
-> > 
-> > My problem with this is that "is_thunderbolt" is not well-defined.
-> > The PCI specs lay out the common vocabulary and framework for this
-> > area.  To keep the code maintainable, we need to connect things back
-> > to the specs somehow.
-> > 
-> > For example, it might make sense to have a bit that means "this device
-> > can generate PME from D3hot", because PME and D3hot are part of that
-> > common understanding of how PCI works, and we can use that information
-> > to design the software.
-> > 
-> > An "is_thunderbolt" bit doesn't have any of that context.  It doesn't
-> > say anything about how the device behaves, so I can't evaluate the
-> > code that uses it.
+On Wed, 15 Feb 2017, Bjorn Helgaas wrote:
+> We know at build-time what all the function pointers will be, so in
+> principle we should be able to make the struct const, which would be
+> even better than __ro_after_init.
+
+Not everywhere unfortunately. In some instances it's a runtime decision, but
+yes, they could be fixed. But there is a downside in doing this. See below.
+
+> For example, we could require that callers set every function pointer
+> before calling pci_msi_create_irq_domain(), using the default ones
+> (pci_msi_domain_set_desc, pci_msi_domain_check_cap,
+> pci_msi_domain_handle_error) if it doesn't need to override them,
+> e.g.,
 > 
-> No, this *does* connect back to the spec, the Thunderbolt spec to be
-> specific, except that spec is not available publicly.  (I assume it's
-> available under NDA.)  FWIW the PCI SIG doesn't make its specs freely
-> available either, only to members or for $$$.  As Andreas Noever has
-> pointed out before, there is plenty of precedent for including
-> (reverse-engineered) code in the kernel for stuff that isn't public.
-
-I'm not objecting to the fact that the Thunderbolt spec is not public.
-What I want to know is specifically how the Thunderbolt bridge behaves
-differently than a plain old PCIe bridge.  I don't even want to know
-*all* the differences.  You're proposing to make the PCI core work a
-slightly differently based on this bit, and in order to maintain that
-in the future, we need to know the details of *why* we need to do
-things differently.
-
-Maybe D3hot means something different, maybe PME works differently,
-maybe hotplug interrupts are signaled differently, I dunno.  If you
-want us to treat these devices differently, we have to know *why* so
-we can tell whether future changes in other areas also need to handle
-them differently.
-
-This might mean several bits instead of one single "is_thunderbolt"
-bit, because there may be several differences that affect different
-parts of the PCI core.
-
-> The rationale for this bit is that devices on a Thunderbolt daisy chain
-> differ from plain PCIe devices and as such require special treatment.
+>   static struct msi_domain_ops vmd_msi_domain_ops = {
+>     .get_hwirq = vmd_get_hwirq,
+>     .msi_check = pci_msi_domain_check_cap,
+>   };
 > 
-> Thunderbolt encapsulates PCIe and other protocols such as DisplayPort
-> into Thunderbolt packets and tunnels them over a network of Converged I/O
-> switches, so what's transmitted on the wire differs significantly from
-> plain PCIe.  That should already make the necessity for special treatment
-> obvious.  I've named three use cases for the is_thunderbolt bit in the
-> commit message of this patch but expect there will be more in the future.
-> E.g. Apple has a traffic prioritization mechanism on the Converged I/O
-> layer which is afforded to specific devices on the PCIe layer above,
-> see US 9,015,384:
-> http://pimg-fpiw.uspto.gov/fdd/84/153/090/0.pdf
+> Or we could leave NULL pointers in the structure and have the code
+> that calls through the function pointers check for NULL and call the
+> default itself, e.g.,
 > 
+>   if (ops->msi_check)
+>     ops->msi_check(...)
+>   else
+>     pci_msi_domain_check_cap(...)
 > 
-> > A secondary issue is that I think whatever bit you define here should
-> > only be set for the actual Thunderbolt device itself.  The bit will
-> > presumably tell us something about how that particular device works.
-> 
-> I don't quite follow, the bit *does* tell us something about how the
-> device works, doesn't it?  That it's situated on a Thunderbolt daisy
-> chain, I've clearly spelled that out in the commit message as well as
-> in a code comment of this patch.
+> It looks like the "USE_DEF_OPS" framework was added by Jiang Liu with
+> the commits below.  I would CC: him for his thoughts, but I don't
+> have a current email address.
 
-No, it doesn't actually tell us anything about how it works.  The
-commit message tells us some *consequences*, but it doesn't say
-anything about the PCIe-level features that *lead* to those
-consequences.
+Me neither :(
 
-That means we can't reason about how Thunderbolt devices will work in
-different scenarios or future platforms.
+I think I suggested to Jiang to do that 'update with default functions' to
 
-> > This is an enumeration-time thing and could be done either as in this
-> > path or as a quirk, since it only affects one device.
-> 
-> You're contradicting yourself by suggesting to use a quirk here:
-> 
-> Back in 2014 an Intel engineer tried to add a PCI quirk with a long
-> list of Thunderbolt devices and none other than you objected that
-> you're "really not happy about checking a list of device IDs to identify
-> Thunderbolt devices.  Surely there's a better way, because a list
-> like this has to be updated regularly."
-> https://patchwork.ozlabs.org/patch/409994/
-> 
-> The better way you were asking for back then is to probe for presence
-> of the Thunderbolt VSEC, which is what this patch does.  Yet you're
-> still not happy.  I don't get it.
+- avoid exporting the world and some more
 
-I was wrong to suggest the possibility of a quirk, sorry.  You're
-right: looking for the VSEC is a much better route, and that doesn't
-fit well in a quirk because the quirk would have to run for all
-devices.
+- have the flexibility to add new functions to the ops w/o updating a
+  gazillion of existing usage sites, which has saved us lots of chaising in
+  the last years
 
-> > If runtime code needs to know whether any upstream bridge is
-> > Thunderbolt, it can always search up the hierarchy.  I think that
-> > would improve readability because the software model would map more
-> > closely to the hardware situation.
-> 
-> That would be more expensive than just checking a bit that is searched
-> only once and then cached.  We have is_hotplug_bridge for just eight
-> places where we check presence of hotplug capability, why can't we have
-> is_thunderbolt?  Beats me.
+- avoid the if (ops->ptr) ops->ptr(); else default_fn(); constructs all
+  over the place.
 
-Searching up the tree is more expensive, but it looks like we only
-check it in enumeration-type situations, so I doubt this is a
-performance issue.
+I admit I did not think about the fact that this makes the structs non
+const.
 
-is_hotplug_bridge is not quite comparable.  For one thing, it can be
-set three ways: when PCI_EXP_SLTCAP contains PCI_EXP_SLTCAP_HPC, by a
-quirk, and by acpiphp.  It maybe *should* also be set by other hotplug
-drivers.  I don't think it would be practical to make an
-is_hotplug_bridge() function to look up all those cases.
+Mopping that up by exporting the default functions and setting all the
+function pointers is tedious and requires a full tree sweep when we add new
+stuff. There's also code shared between PCI/platform/DT based stuff, so
+that becomes interesting.
 
-Bjorn
+Doing the if (ops->ptr) ops->ptr() else default_fn(); dance should be
+simpler to pull off. There are not that many sites to look at, but then we
+have some of the GICv3 code using the domain ops out of core.
+
+For now doing the __ro_after_init is definitely the simplest and fastest
+solution to tighten these statically allocated structures.
+
+I have a look with Marc, what can be done in the long run.
+
+Thanks,
+
+	tglx
