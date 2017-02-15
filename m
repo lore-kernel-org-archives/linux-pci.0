@@ -1,84 +1,249 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:58247 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754855AbdBOXXj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 18:23:39 -0500
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1FNInix118505
-        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 18:23:38 -0500
-Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 28mq9gryvf-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 18:23:37 -0500
-Received: from localhost
-        by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Thu, 16 Feb 2017 09:23:35 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: linuxppc-dev@lists.ozlabs.org
-Cc: linux-pci@vger.kernel.org, mpe@ellerman.id.au, bhelgaas@google.com,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        "# v4 . 9+" <stable@vger.kernel.org>
-Subject: [PATCH 2/3] pci/hotplug/pnv-php: Disable surprise hotplug capability on conflicts
-Date: Thu, 16 Feb 2017 10:22:33 +1100
-In-Reply-To: <1487200954-14681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-References: <1487200954-14681-1-git-send-email-gwshan@linux.vnet.ibm.com>
-Message-Id: <1487200954-14681-3-git-send-email-gwshan@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-samsung-soc@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
+ <linux-arm-kernel@axis.com>
+Subject: [PATCH 02/10] PCI: dwc: *all*: Add platform_set_drvdata
+Date: Wed, 15 Feb 2017 18:48:11 +0530
+Message-ID: <1487164699-30708-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1487164699-30708-1-git-send-email-kishon@ti.com>
+References: <1487164699-30708-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jesper Nilsson <jesper.nilsson@axis.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>, nsekhar@ti.com,
+ Kishon Vijay Abraham I <kishon@ti.com>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Niklas Cassel <niklas.cassel@axis.com>, Mingkai Hu <mingkai.hu@freescale.com>,
+ Roy Zang <tie-fei.zang@freescale.com>, Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The root port or PCIe switch downstream port might have been associated
-with driver other than pnv-php. The MSI or MSIx might also have been
-enabled by that driver (e.g. pcieport_drv). Attempt to enable MSI incurs
-below backtrace:
+Add platform_set_drvdata in all designware based drivers to store the
+private data structure of the driver so that dev_set_drvdata can be
+used to get back private data structure in add_pcie_port/host_init.
+This is in preparation for splitting struct pcie_port into core and
+host only structures. After the split pcie_port will not be part of
+the driver's private data structure and *container_of* used now
+to get the private data pointer cannot be used.
 
- PowerPC PowerNV PCI Hotplug Driver version: 0.1
- ------------[ cut here ]------------
- WARNING: CPU: 19 PID: 1004 at drivers/pci/msi.c:1071 \
-                              __pci_enable_msi_range+0x84/0x4e0
- NIP [c000000000665c34] __pci_enable_msi_range+0x84/0x4e0
- LR [c000000000665c24] __pci_enable_msi_range+0x74/0x4e0
- Call Trace:
- [c000000384d67600] [c000000000665c24] __pci_enable_msi_range+0x74/0x4e0
- [c000000384d676e0] [d00000000aa31b04] pnv_php_register+0x564/0x5a0 [pnv_php]
- [c000000384d677c0] [d00000000aa31658] pnv_php_register+0xb8/0x5a0 [pnv_php]
- [c000000384d678a0] [d00000000aa31658] pnv_php_register+0xb8/0x5a0 [pnv_php]
- [c000000384d67980] [d00000000aa31dfc] pnv_php_init+0x60/0x98 [pnv_php]
- [c000000384d679f0] [c00000000000cfdc] do_one_initcall+0x6c/0x1d0
- [c000000384d67ab0] [c000000000b92354] do_init_module+0x94/0x254
- [c000000384d67b40] [c00000000019719c] load_module+0x258c/0x2c60
- [c000000384d67d30] [c000000000197bb0] SyS_finit_module+0xf0/0x170
- [c000000384d67e30] [c00000000000b184] system_call+0x38/0xe0
-
-This fixes the issue by skipping enabling the surprise hotplug
-capability if the MSI or MSIx on the PCI slot's upstream port has
-been enabled by other driver.
-
-Cc: <stable@vger.kernel.org> # v4.9+
-Fixes: 360aebd85a4c ("drivers/pci/hotplug: Support surprise hotplug in powernv driver")
-Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Minghuan Lian <minghuan.Lian@freescale.com>
+Cc: Mingkai Hu <mingkai.hu@freescale.com>
+Cc: Roy Zang <tie-fei.zang@freescale.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Niklas Cassel <niklas.cassel@axis.com>
+Cc: Jesper Nilsson <jesper.nilsson@axis.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/hotplug/pnv_php.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/pci/dwc/pci-dra7xx.c           |    3 ++-
+ drivers/pci/dwc/pci-exynos.c           |    3 ++-
+ drivers/pci/dwc/pci-imx6.c             |    3 ++-
+ drivers/pci/dwc/pci-keystone.c         |    2 ++
+ drivers/pci/dwc/pci-layerscape.c       |    2 ++
+ drivers/pci/dwc/pcie-armada8k.c        |    2 ++
+ drivers/pci/dwc/pcie-artpec6.c         |    2 ++
+ drivers/pci/dwc/pcie-designware-plat.c |    2 ++
+ drivers/pci/dwc/pcie-hisi.c            |    2 ++
+ drivers/pci/dwc/pcie-qcom.c            |    2 ++
+ drivers/pci/dwc/pcie-spear13xx.c       |    3 ++-
+ 11 files changed, 22 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
-index da1bbf3..6d36b76 100644
---- a/drivers/pci/hotplug/pnv_php.c
-+++ b/drivers/pci/hotplug/pnv_php.c
-@@ -826,6 +826,14 @@ static void pnv_php_enable_irq(struct pnv_php_slot *php_slot)
- 	struct pci_dev *pdev = php_slot->pdev;
- 	int irq, ret;
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index ec5617a..d1cd476 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -433,6 +433,8 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		return ret;
+ 	}
  
-+	/*
-+	 * The MSI/MSIx interrupt might have been occupied by other
-+	 * drivers. Don't populate the surprise hotplug capability
-+	 * in that case.
-+	 */
-+	if (pci_dev_msi_enabled(pdev))
-+		return;
++	platform_set_drvdata(pdev, dra7xx);
 +
- 	ret = pci_enable_device(pdev);
+ 	pm_runtime_enable(dev);
+ 	ret = pm_runtime_get_sync(dev);
+ 	if (ret < 0) {
+@@ -459,7 +461,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		goto err_gpio;
+ 
+-	platform_set_drvdata(pdev, dra7xx);
+ 	return 0;
+ 
+ err_gpio:
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index f1c544b..c179e7a 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -583,11 +583,12 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+ 		goto fail_bus_clk;
+ 	}
+ 
++	platform_set_drvdata(pdev, exynos_pcie);
++
+ 	ret = exynos_add_pcie_port(exynos_pcie, pdev);
+ 	if (ret < 0)
+ 		goto fail_bus_clk;
+ 
+-	platform_set_drvdata(pdev, exynos_pcie);
+ 	return 0;
+ 
+ fail_bus_clk:
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+index c8cefb0..6e5d06f 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -719,11 +719,12 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		imx6_pcie->link_gen = 1;
+ 
++	platform_set_drvdata(pdev, imx6_pcie);
++
+ 	ret = imx6_add_pcie_port(imx6_pcie, pdev);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	platform_set_drvdata(pdev, imx6_pcie);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/pci/dwc/pci-keystone.c b/drivers/pci/dwc/pci-keystone.c
+index 043c19a..4c7ba35 100644
+--- a/drivers/pci/dwc/pci-keystone.c
++++ b/drivers/pci/dwc/pci-keystone.c
+@@ -422,6 +422,8 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
++	platform_set_drvdata(pdev, ks_pcie);
++
+ 	ret = ks_add_pcie_port(ks_pcie, pdev);
+ 	if (ret < 0)
+ 		goto fail_clk;
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index ea78913..89e8817 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -268,6 +268,8 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
+ 	if (!ls_pcie_is_bridge(pcie))
+ 		return -ENODEV;
+ 
++	platform_set_drvdata(pdev, pcie);
++
+ 	ret = ls_add_pcie_port(pcie);
+ 	if (ret < 0)
+ 		return ret;
+diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
+index 0ac0f18..5a28dcb 100644
+--- a/drivers/pci/dwc/pcie-armada8k.c
++++ b/drivers/pci/dwc/pcie-armada8k.c
+@@ -226,6 +226,8 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+ 		goto fail;
+ 	}
+ 
++	platform_set_drvdata(pdev, pcie);
++
+ 	ret = armada8k_add_pcie_port(pcie, pdev);
+ 	if (ret)
+ 		goto fail;
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 212786b..187a98d 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -261,6 +261,8 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 	if (IS_ERR(artpec6_pcie->regmap))
+ 		return PTR_ERR(artpec6_pcie->regmap);
+ 
++	platform_set_drvdata(pdev, artpec6_pcie);
++
+ 	ret = artpec6_add_pcie_port(artpec6_pcie, pdev);
+ 	if (ret < 0)
+ 		return ret;
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index 1a02038..bb58540 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -104,6 +104,8 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+ 	if (IS_ERR(pp->dbi_base))
+ 		return PTR_ERR(pp->dbi_base);
+ 
++	platform_set_drvdata(pdev, dw_plat_pcie);
++
+ 	ret = dw_plat_add_pcie_port(pp, pdev);
+ 	if (ret < 0)
+ 		return ret;
+diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+index a301a71..ecc1b08 100644
+--- a/drivers/pci/dwc/pcie-hisi.c
++++ b/drivers/pci/dwc/pcie-hisi.c
+@@ -287,6 +287,8 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 	if (IS_ERR(pp->dbi_base))
+ 		return PTR_ERR(pp->dbi_base);
+ 
++	platform_set_drvdata(pdev, hisi_pcie);
++
+ 	ret = hisi_add_pcie_port(hisi_pcie, pdev);
+ 	if (ret)
+ 		return ret;
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index 1ecff2e..3f525cb 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -716,6 +716,8 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
++	platform_set_drvdata(pdev, pcie);
++
+ 	ret = dw_pcie_host_init(pp);
  	if (ret) {
- 		dev_warn(&pdev->dev, "Error %d enabling device\n", ret);
+ 		dev_err(dev, "cannot initialize host\n");
+diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
+index dafe8b8..5970566 100644
+--- a/drivers/pci/dwc/pcie-spear13xx.c
++++ b/drivers/pci/dwc/pcie-spear13xx.c
+@@ -270,11 +270,12 @@ static int spear13xx_pcie_probe(struct platform_device *pdev)
+ 	if (of_property_read_bool(np, "st,pcie-is-gen1"))
+ 		spear13xx_pcie->is_gen1 = true;
+ 
++	platform_set_drvdata(pdev, spear13xx_pcie);
++
+ 	ret = spear13xx_add_pcie_port(spear13xx_pcie, pdev);
+ 	if (ret < 0)
+ 		goto fail_clk;
+ 
+-	platform_set_drvdata(pdev, spear13xx_pcie);
+ 	return 0;
+ 
+ fail_clk:
 -- 
-2.7.4
+1.7.9.5
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
