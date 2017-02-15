@@ -1,81 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:33804 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751785AbdBBXN7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Feb 2017 18:13:59 -0500
-Date: Thu, 2 Feb 2017 18:22:54 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        zhangjukuo <zhangjukuo@huawei.com>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>
-Subject: Re: Question: PCIe DPC not allowing for link retraining and bus
- re-scan
-Message-ID: <20170202232253.GC24601@localhost.localdomain>
-References: <EE11001F9E5DDD47B7634E2F8A612F2E1F9F74AA@lhreml507-mbx>
- <20170130161453.GC11699@localhost.localdomain>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F9F9345@lhreml507-mbx>
- <20170131155336.GA24601@localhost.localdomain>
- <EE11001F9E5DDD47B7634E2F8A612F2E1F9FA346@lhreml507-mbx>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1F9FA346@lhreml507-mbx>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:58747 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750922AbdBOGpT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 01:45:19 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1F6hS7q170899
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 01:45:18 -0500
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 28mf8pcwwy-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 01:45:18 -0500
+Received: from localhost
+        by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
+        Tue, 14 Feb 2017 23:45:17 -0700
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
+        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
+        paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: [PATCH v9 2/3] PCI: Add a macro to set default alignment for all PCI devices
+Date: Wed, 15 Feb 2017 14:45:05 +0800
+In-Reply-To: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+Message-Id: <1487141106-2503-3-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31, 2017 at 04:59:31PM +0000, Gabriele Paoloni wrote:
-> Many thanks for this, I'll try to get such switch too so maybe
-> I can help with development and/or validation. 
-> If you know of specific switches that support for sure such SW
-> trigger feature please let me know and I'll try to buy them.
+When vfio passthroughs a PCI device of which MMIO BARs are
+smaller than PAGE_SIZE, guest will not handle the mmio
+accesses to the BARs which leads to mmio emulations in host.
 
-I'm not trying to advertise for any particular product, but this is what
-I'm currently using for testing my NVMe drives:
+This is because vfio will not allow to passthrough one BAR's
+mmio page which may be shared with other BARs. Otherwise,
+there will be a backdoor that guest can use to access BARs
+of other guest.
 
-  http://www.serialcables.com/products.asp?cat=350&tier=264
+This patch adds a macro to set default alignment for all
+PCI devices. Then we could solve this issue on some platforms
+which would easily hit this issue because of their 64K page
+such as PowerNV platform by defining this macro as PAGE_SIZE.
 
-It uses these PCIe switches:
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+---
+ arch/powerpc/include/asm/pci.h |    4 ++++
+ drivers/pci/pci.c              |    3 +++
+ 2 files changed, 7 insertions(+), 0 deletions(-)
 
-  https://www.broadcom.com/products/pcie-switches-bridges/expressfabric/pex9781
-
-I just use this for PCIe SSDs, but there are other vendors that have
-capable switches too.
-
-These do support DPC sofware triggering, and the method I mentioned
-before is correct:
-
-  # setpci -s <B:D.f> ECAP_DPC+6.w=40:40
-
-On all my testing, the DPC event necesssarily triggers a PCIe HP event
-that automatically does the rescan when the containment is released.
-Here is a sequence from a single software trigger and nothing else,
-using 4.10-rc6:
-
-  root@localhost: ~# setpci -s 89:03.0 ECAP_DPC+6.w=40:40
-
-  dpc 0000:89:03.0:pcie210: DPC containment event, status:0x002f source:0x0000
-  dpc 0000:89:03.0:pcie210: DPC extended error triggered, remove downstream devices
-  pciehp 0000:89:03.0:pcie204: Slot(3): Link Down
-  dpc 0000:89:03.0:pcie210: DPC containment event, status:0x0006 source:0x0000
-  pciehp 0000:89:03.0:pcie204: Slot(3): Card not present
-  dpc 0000:89:03.0:pcie210: DPC containment event, status:0x0006 source:0x0000
-  pciehp 0000:89:03.0:pcie204: Slot(3): Card present
-  dpc 0000:89:03.0:pcie210: DPC containment event, status:0x0006 source:0x0000
-  pciehp 0000:89:03.0:pcie204: Slot(3): Link Up
-  pciehp 0000:89:03.0:pcie204: Slot(3): Link Up event ignored; already powering on
-  pci 0000:8d:00.0: [8086:0953] type 00 class 0x010802
-  pci 0000:8d:00.0: reg 0x10: [mem 0x00000000-0x00003fff 64bit]
-  pci 0000:8d:00.0: reg 0x30: [mem 0x00000000-0x0000ffff pref]
-  pci 0000:8d:00.0: Max Payload Size set to 256 (was 128, max 256)
-  pci 0000:8d:00.0: BAR 6: assigned [mem 0xec000000-0xec00ffff pref]
-  pci 0000:8d:00.0: BAR 0: assigned [mem 0xec010000-0xec013fff 64bit]
-  pcieport 0000:89:03.0: PCI bridge to [bus 8d]
-  pcieport 0000:89:03.0:   bridge window [mem 0xec000000-0xec0fffff]
-  pcieport 0000:89:03.0:   bridge window [mem 0x840c00000-0x840dfffff 64bit pre
-
-So I think we're okay to not have DPC initiate the rescan since it would
-just compete with pciehp. The only thing we need to do differently is
-wait for RP busy if it implements that capability, and no such device
-for general availabilty currently exists, as far as I know.
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index e9bd6cf..5e31bc2 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -28,6 +28,10 @@
+ #define PCIBIOS_MIN_IO		0x1000
+ #define PCIBIOS_MIN_MEM		0x10000000
+ 
++#ifdef CONFIG_PPC_POWERNV
++#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
++#endif
++
+ struct pci_dev;
+ 
+ /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index a881c0d..2622e9b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4965,6 +4965,9 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 	resource_size_t align = 0;
+ 	char *p;
+ 
++#ifdef PCIBIOS_DEFAULT_ALIGNMENT
++	align = PCIBIOS_DEFAULT_ALIGNMENT;
++#endif
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+ 	if (!*p)
+-- 
+1.7.1
