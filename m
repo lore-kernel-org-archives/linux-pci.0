@@ -1,18 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V2] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>,
- "cov@codeaurora.org" <cov@codeaurora.org>
-References: <1485891928-14573-1-git-send-email-okaya@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B2846666830C@IRSMSX101.ger.corp.intel.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <b78207b6-2c22-3e6d-4837-8b4b396c4f5d@codeaurora.org>
-Date: Tue, 28 Feb 2017 10:04:06 -0500
+Date: Wed, 15 Feb 2017 11:38:50 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v4 3/3] PCI: imx6: Add code to support i.MX7D
+Message-ID: <20170215173850.GH19040@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170207155027.7734-1-andrew.smirnov@gmail.com>
+ <20170207155027.7734-4-andrew.smirnov@gmail.com>
+ <20170215171700.5vz5seeihgtwn76p@rob-hp-laptop>
 MIME-Version: 1.0
-In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B2846666830C@IRSMSX101.ger.corp.intel.com>
+In-Reply-To: <20170215171700.5vz5seeihgtwn76p@rob-hp-laptop>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,58 +17,99 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Andrey Smirnov <andrew.smirnov@gmail.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, yurovsky@gmail.com,
+ Lee Jones <lee.jones@linaro.org>, linux-arm-kernel@lists.infradead.org,
+ Lucas Stach <l.stach@pengutronix.de>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/28/2017 6:03 AM, Patel, Mayurkumar wrote:
->> -	/* Save default state */
->> -	link->aspm_default = link->aspm_enabled;
-> But, I am finding a problem with this change, if Policy is set to default,
-> BIOS enables ASPM L1, but pcie_config_aspm_link() disables ASPM L1
-> due to link->aspm_enabled is different than link->aspm_default while
-> called from pcie_aspm_init_link_state() during hotplug insertion.
+On Wed, Feb 15, 2017 at 11:17:00AM -0600, Rob Herring wrote:
+> On Tue, Feb 07, 2017 at 07:50:27AM -0800, Andrey Smirnov wrote:
+> > Add various bits of code needed to support i.MX7D variant of the IP.
+> > 
+> > Cc: yurovsky@gmail.com
+> > Cc: Lucas Stach <l.stach@pengutronix.de>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Rob Herring <robh+dt@kernel.org>
+> > Cc: Mark Rutland <mark.rutland@arm.com>
+> > Cc: Lee Jones <lee.jones@linaro.org>
+> > Cc: Fabio Estevam <fabio.estevam@nxp.com>
+> > Cc: linux-arm-kernel@lists.infradead.org
+> > Cc: devicetree@vger.kernel.org
+> > Cc: linux-kernel@vger.kernel.org
+> > Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+> > ---
+> >  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 ++-
+> >  drivers/pci/host/pci-imx6.c                        | 121 ++++++++++++++++-----
+> >  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
+> >  3 files changed, 112 insertions(+), 26 deletions(-)
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > index 83aeb1f..11db2ab 100644
+> > --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> > @@ -4,7 +4,11 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
+> >  and thus inherits all the common properties defined in designware-pcie.txt.
+> >  
+> >  Required properties:
+> > -- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
+> > +- compatible:
+> > +	- "fsl,imx6q-pcie"
+> > +	- "fsl,imx6sx-pcie",
+> > +	- "fsl,imx6qp-pcie"
+> > +	- "fsl,imx7d-pcie"
+> >  - reg: base address and length of the PCIe controller
+> >  - interrupts: A list of interrupt outputs of the controller. Must contain an
+> >    entry for each entry in the interrupt-names property.
+> > @@ -34,6 +38,13 @@ Additional required properties for imx6sx-pcie:
+> >  - clock names: Must include the following additional entries:
+> >  	- "pcie_inbound_axi"
+> >  
+> > +Additional required properties for imx7d-pcie:
+> > +- power-domains: Must be set to a phandle pointing to PCIE_PHY power domain
 > 
-
-Thanks for testing. I think it means the enable count logic I put below
-is not working.
-
-I was trying to figure out when to use saved values vs. the values in
-registers by looking at the enable_cnt.
-
-enable_cnt is 0 during boot on my system.
-
-The enable_cnt should have been non-zero following an insertion following
-remove and default and enabled values should have been identical. 
-
-Can you print out the values of pdev->aspm_default, link->aspm_default, 
-and link->aspm_enabled in this function along with atomic_read(&pdev->enable_cnt)?
-
+> This domain is just the PHY? Seems like this needs a separate PHY 
+> driver.
 > 
->> +	/*
->> +	 * Save default state from FW when enabling ASPM for the first time
->> +	 * during boot by looking at the calculated link->aspm_enabled bits
->> +	 * above and enable_cnt will be zero.
->> +	 *
->> +	 * If this path is getting called for the second/third time
->> +	 * (enable_cnt will be non-zero). Assume that the current state of the
->> +	 * ASPM registers may not necessarily match what FW asked us to do as
->> +	 * in the case of hotplug insertion/removal.
->> +	 */
->> +	if (!atomic_read(&pdev->enable_cnt))
->> +		pdev->aspm_default = link->aspm_default = link->aspm_enabled;
->> +	else
->> +		link->aspm_default = pdev->aspm_default;
+> > +- resets: Must contain phandles to PCIE related reset lines exposed by SRC IP block
+> > +- reset-names: Must contain the following entires:
+> > +  	       - "pciephy"
+> 
+> And for this too.
+> 
+> > +	       - "apps"
+> > +
+> >  Example:
+> >  
+> >  	pcie@0x01000000 {
+> 
+> [...]
+> 
+> > @@ -251,6 +261,10 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+> >  	u32 val, gpr1, gpr12;
+> >  
+> >  	switch (imx6_pcie->variant) {
+> > +	case IMX7D:
+> > +		reset_control_assert(imx6_pcie->pciephy_reset);
+> > +		reset_control_assert(imx6_pcie->apps_reset);
+> > +		break;
+> >  	case IMX6SX:
+> >  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> >  				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
+> 
+> So the difference with i.MX7D is not really that it has a reset or not, 
+> but some platforms use a reset driver and some do not. The latter should 
+> be fixed.
 
+I have this patch queued for v4.11.  Are these things that should be
+fixed first?  If so, I can drop this.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
