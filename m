@@ -1,86 +1,50 @@
-Return-Path: <SRS0=VRWy=2B=h08.hostsharing.net=foo00@kernel.org>
-Return-Path: <SRS0=VRWy=2B=h08.hostsharing.net=foo00@kernel.org>
-Date: Mon, 20 Feb 2017 13:04:57 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	Erik Veijola <erik.veijola@linux.intel.com>,
-	Ashok Raj <ashok.raj@intel.com>,
-	Keith Busch <keith.busch@intel.com>,
-	Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v6 3/8] PCI: pciehp: Reinstate runtime PM on Thunderbolt
- hotplug ports
-Message-ID: <20170220120457.GB19834@h08.hostsharing.net>
-References: <cover.1486913733.git.lukas@wunner.de>
- <14ffd1ceeb76200b34e0abfebab134545e504bdc.1486913733.git.lukas@wunner.de>
- <20170214225926.GB19040@bhelgaas-glaptop.roam.corp.google.com>
- <20170218092516.GB1335@wunner.de>
- <20170219001606.GA7668@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=V53H=Z4=gmail.com=arndbergmann@kernel.org>
+Return-Path: <SRS0=V53H=Z4=gmail.com=arndbergmann@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170219001606.GA7668@bhelgaas-glaptop.roam.corp.google.com>
+Sender: arndbergmann@gmail.com
+In-Reply-To: <20170215165616.GG19040@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170214214355.3101378-1-arnd@arndb.de> <20170215165616.GG19040@bhelgaas-glaptop.roam.corp.google.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 15 Feb 2017 23:01:19 +0100
+Message-ID: <CAK8P3a2D8VGuXLxzuJ1D72y0VZRSUeRYRJVCkzBovK686w_rPw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: always build pci-host-common on ARM64
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, David Daney <david.daney@cavium.com>,
+	Rob Herring <robh@kernel.org>, Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Tomasz Nowicki <tn@semihalf.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Christopher Covington <cov@codeaurora.org>, linux-pci <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 18, 2017 at 06:16:06PM -0600, Bjorn Helgaas wrote:
-> On Sat, Feb 18, 2017 at 10:25:16AM +0100, Lukas Wunner wrote:
-> > On Tue, Feb 14, 2017 at 04:59:26PM -0600, Bjorn Helgaas wrote:
-> > > On Sun, Feb 12, 2017 at 05:07:45PM +0100, Lukas Wunner wrote:
-> > > > Commit 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
-> > > > hotplug ports") extended runtime PM for PCIe ports to hotplug ports.
-> > > > However Yinghai Lu reported the following breakage caused by the commit:
-> > > > 
-> > > > * After disabling a slot on one of his servers, the slot signals PME
-> > > >   which causes pciehp to immediately re-enable the card, thus defeating
-> > > >   manual slot control via sysfs.
-> > > 
-> > > I don't think we've clearly established this.  It surprises me that a
-> > > Downstream Port would signal PME after turning off power to the slot.
-> > > Wouldn't that make PME useless?
-> > > 
-> > > I'd like to look at this in a little more detail, either by turning
-> > > off PM and pciehp and poking things manually with setpci, or possibly
-> > > by adding some debug output in the PME ISR and the pciehp ISR and
-> > > "write command" paths.
-> > 
-> > I'm in the To: header of your e-mail but I am not in a position to
-> > debug this as I don't have the hardware available.  It would have
-> > to be done by Yinghai Lu or Intel.  This may already be clear to
-> > everyone involved, so apologies for stating the obvious.
-> 
-> It is clear; I was just hoping you would make it as easy as possible
-> for the folks with the hardware by proposing a debugging patch or a
-> series of specific setpci commands to run.
-> 
-> > Also, I hope it's clear that these Intel servers are not affected
-> > by v6 of this patch as it only enables runtime PM on *Thunderbolt*
-> > hotplug ports.
-> 
-> Right.  I just don't understand what's happening, and I don't want
-> this to become folk wisdom before we have more details.
+On Wed, Feb 15, 2017 at 5:56 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Tue, Feb 14, 2017 at 10:42:56PM +0100, Arnd Bergmann wrote:
+>> The Thunder PCI host driver is always built, but it relies on pci_host_common_probe,
+>> so we get a link error here:
+>>
+>> drivers/pci/host/pci-thunder-pem.c: In function 'thunder_pem_probe':
+>> drivers/pci/host/pci-thunder-pem.c:412:9: error: implicit declaration of function 'pci_host_common_probe';did you mean 'pci_host_bridge_priv'? [-Werror=implicit-function-declaration]
+>>
+>> This adds the common file to the existing hack.
+>>
+>> Fixes: ca5ab37b19df ("PCI: Explain ARM64 ACPI/MCFG quirk Kconfig and build strategy")
+>
+> I'm puzzled.  ca5ab37b19df doesn't *look* like it changes anything.
+>
+> thunder_pem_probe() is compiled when CONFIG_PCI_HOST_THUNDER_PEM=y,
+> and it calls pci_host_common_probe().
+>
+> pci_host_common_probe() is in pci-host-common.c, which is compiled
+> when CONFIG_PCI_HOST_COMMON=y.  But the declaration below is under
+> #ifdef CONFIG_PCI_HOST_GENERIC.  Shouldn't it be under #ifdef
+> CONFIG_PCI_HOST_COMMON instead?
+>
+> It'd be nice to know what actually broke this (if it's not
+> ca5ab37b19df) so we can figure out where the fix should be backported.
 
-If I understand Yinghai Lu's analysis correctly, the port is in D3hot,
-we write to config space to enable power on the slot and request a
-Command Complete interrupt, the port signals PME to request being
-transferred to D0 so that it can deliver the Command Complete interrupt.
+Right, I misread the commit and got the wrong one. I also ran into a related
+problem and will follow up with a new patch that addresses both at once.
 
-So this patch just papers over the issue by disabling PME. :-)
+Please ignore this version for now.
 
-The issue doesn't manifest itself on Thunderbolt controllers because
-(a) they don't support power control and (b) they never send Command
-Complete interrupts (even though they claim to support it).
-
-Since patch [3/8] of v6 of my series enables runtime PM only on
-*Thunderbolt* hotplug ports, the series should be fine as is, however
-this isn't really beautiful so if you decide to apply patch [3/8] I'll
-come up with a fix, or if you'd rather postpone it I'll rework the patch
-to keep the port runtime resumed whenever and for as long as we're waiting
-for command completion.  I'll not be able to start working on this until
-next week though.  If you do decide to postpone patch [3/8], maybe we
-can at least come up with an agreeable version of patch [1/8] to go
-into your 4.11 pull.
-
-Thanks,
-
-Lukas
+    Arnd
