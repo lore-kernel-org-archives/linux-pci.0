@@ -1,69 +1,59 @@
-Return-Path: <SRS0=EnzY=Z5=pengutronix.de=l.stach@kernel.org>
-Return-Path: <SRS0=EnzY=Z5=pengutronix.de=l.stach@kernel.org>
-Message-ID: <1487236714.13536.9.camel@pengutronix.de>
-Subject: Re: [PATCH v4 3/3] PCI: imx6: Add code to support i.MX7D
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Rob Herring <robh@kernel.org>, Andrey Smirnov
- <andrew.smirnov@gmail.com>,  linux-pci@vger.kernel.org, yurovsky@gmail.com,
- Bjorn Helgaas <bhelgaas@google.com>,  Mark Rutland <mark.rutland@arm.com>,
- Lee Jones <lee.jones@linaro.org>, Fabio Estevam <fabio.estevam@nxp.com>,
- linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Date: Thu, 16 Feb 2017 10:18:34 +0100
-In-Reply-To: <20170215215751.GD6981@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170207155027.7734-1-andrew.smirnov@gmail.com>
-	 <20170207155027.7734-4-andrew.smirnov@gmail.com>
-	 <20170215171700.5vz5seeihgtwn76p@rob-hp-laptop>
-	 <20170215173850.GH19040@bhelgaas-glaptop.roam.corp.google.com>
-	 <20170215212624.btdhfn4xvuppv6hq@rob-hp-laptop>
-	 <20170215215751.GD6981@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:56676 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755262AbdBOXXo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 18:23:44 -0500
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1FNIta2017874
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 18:23:38 -0500
+Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 28mswt8n3q-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 18:23:37 -0500
+Received: from localhost
+        by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Thu, 16 Feb 2017 09:23:35 +1000
+Received: from d23relay08.au.ibm.com (d23relay08.au.ibm.com [9.185.71.33])
+        by d23dlp01.au.ibm.com (Postfix) with ESMTP id A2EAF2CE805E
+        for <linux-pci@vger.kernel.org>; Thu, 16 Feb 2017 10:23:32 +1100 (EST)
+Received: from d23av01.au.ibm.com (d23av01.au.ibm.com [9.190.234.96])
+        by d23relay08.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v1FNNOEv19005576
+        for <linux-pci@vger.kernel.org>; Thu, 16 Feb 2017 10:23:32 +1100
+Received: from d23av01.au.ibm.com (localhost [127.0.0.1])
+        by d23av01.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v1FNN0ZJ027378
+        for <linux-pci@vger.kernel.org>; Thu, 16 Feb 2017 10:23:00 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: linuxppc-dev@lists.ozlabs.org
+Cc: linux-pci@vger.kernel.org, mpe@ellerman.id.au, bhelgaas@google.com,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH 0/3] pci/hotplug/pnv-php: More bug fixes
+Date: Thu, 16 Feb 2017 10:22:31 +1100
+Message-Id: <1487200954-14681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, den 15.02.2017, 15:57 -0600 schrieb Bjorn Helgaas:
-> On Wed, Feb 15, 2017 at 03:26:24PM -0600, Rob Herring wrote:
-> > On Wed, Feb 15, 2017 at 11:38:50AM -0600, Bjorn Helgaas wrote:
-> > > On Wed, Feb 15, 2017 at 11:17:00AM -0600, Rob Herring wrote:
-> > > > On Tue, Feb 07, 2017 at 07:50:27AM -0800, Andrey Smirnov wrote:
-> > > > > Add various bits of code needed to support i.MX7D variant of the IP.
-> > 
-> > > > 
-> > > > [...]
-> > > > 
-> > > > > @@ -251,6 +261,10 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
-> > > > >  	u32 val, gpr1, gpr12;
-> > > > >  
-> > > > >  	switch (imx6_pcie->variant) {
-> > > > > +	case IMX7D:
-> > > > > +		reset_control_assert(imx6_pcie->pciephy_reset);
-> > > > > +		reset_control_assert(imx6_pcie->apps_reset);
-> > > > > +		break;
-> > > > >  	case IMX6SX:
-> > > > >  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-> > > > >  				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
-> > > > 
-> > > > So the difference with i.MX7D is not really that it has a reset or not, 
-> > > > but some platforms use a reset driver and some do not. The latter should 
-> > > > be fixed.
-> > > 
-> > > I have this patch queued for v4.11.  Are these things that should be
-> > > fixed first?  If so, I can drop this.
-> > 
-> > Well, depends if you trust things will get fixed later and if the PHY 
-> > in fact should be separate as that affects the binding. It would affect 
-> > how the driver changes are done as instead of "if (IMX7D) ...", you'd 
-> > have "if (imx6_pcie->apps_reset) ..." for example. That part depends on
-> > how much churn you want there.
-> 
-> I dropped it for now, not that I don't trust it will get fixed, but it
-> sounds like not completely trivial changes and will affect the binding
-> as well, so the intermediate state sounds a little messy.
+This series bases on the series: https://patchwork.ozlabs.org/patch/713513.
+This series fixes couple of issues:
 
-As I pointed out in direct reply to Rob, I honestly think the binding is
-fine as is and properly reflects the hardware. But I guess he'll comment
-on that, so JFYI.
+   * Remove WARN_ON() in pnv_php_put_slot(). The parent slot's refcount
+     is decreased when releasing PCI slot. The parent slot can be NULL
+     and no need to give a warning.
+   * The MSI (or MSIx) could be enabled prior to load pnv-php.ko. A
+     backtrace is thrown when phv-php.ko attempts to enable MSI again.
+     PATCH[2/3] skips enabling surprise hotplug if MSI has been enabled
+     by other driver.
+   * PATCH[3/3] doesn't disable MSI that was enabled by other dirver.
+     Also, the upstream port of the PCI slot is disabled when it's
+     destroyed.
 
-Regards,
-Lucas
+Gavin Shan (3):
+  pci/hotplug/pnv-php: Remove WARN_ON() in pnv_php_put_slot()
+  pci/hotplug/pnv-php: Disable surprise hotplug capability on conflicts
+  pci/hotplug/pnv-php: Disable MSI and PCI device properly
+
+ drivers/pci/hotplug/pnv_php.c | 32 +++++++++++++++++++++++---------
+ 1 file changed, 23 insertions(+), 9 deletions(-)
+
+-- 
+2.7.4
