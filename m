@@ -1,75 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34310 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934160AbdBQOkg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2017 09:40:36 -0500
-Date: Fri, 17 Feb 2017 15:40:33 +0100
-From: Frederic Weisbecker <fweisbec@gmail.com>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        wanpeng.li@hotmail.com, peterz@infradead.org, riel@redhat.com,
-        tglx@linutronix.de, stable@kernel.org,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 15 Feb 2017 11:17:00 -0600
+From: Rob Herring <robh@kernel.org>
+To: Andrey Smirnov <andrew.smirnov@gmail.com>
+Cc: linux-pci@vger.kernel.org, yurovsky@gmail.com,
+        Lucas Stach <l.stach@pengutronix.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        USB list <linux-usb@vger.kernel.org>
-Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
- after cold boots, boots after reboot
-Message-ID: <20170217144032.GC4521@lerouge>
-References: <CA+55aFxU1D0hAPJuhkKaFBByi=8vpw7dJUX=FfpoqnZLWsvxig@mail.gmail.com>
- <CA+55aFwt6pbt2STzRh1yCdoo7AnCLFqnPkkrYk4_BGFuvT2VCw@mail.gmail.com>
- <CA+55aFzMiXXw9gqNCMCSc+O5HfcqWHXfqbdtbvcOmAHM9_wNig@mail.gmail.com>
- <CA+55aFxuXgsCyMgrRDHdM6BQaej68QoU8TwdM=3LYu9LMBf4fQ@mail.gmail.com>
- <20170215172303.GA15696@amd>
- <20170215232005.GA7877@amd>
- <CA+55aFyqsxjQPp=Y6MnvyMH_iA-TSiPrycnAHbBzw5bwQi7jjg@mail.gmail.com>
- <20170216111144.GA12377@amd>
- <20170216172535.GA7868@amd>
- <20170216190603.GA16029@amd>
+        Mark Rutland <mark.rutland@arm.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 3/3] PCI: imx6: Add code to support i.MX7D
+Message-ID: <20170215171700.5vz5seeihgtwn76p@rob-hp-laptop>
+References: <20170207155027.7734-1-andrew.smirnov@gmail.com>
+ <20170207155027.7734-4-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170216190603.GA16029@amd>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170207155027.7734-4-andrew.smirnov@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 16, 2017 at 08:06:04PM +0100, Pavel Machek wrote:
-> On Thu 2017-02-16 18:25:35, Pavel Machek wrote:
-> > Hi!
-> > 
-> > > > > 4.10-rc4 broken
-> > > > > 4.10-rc3 ok
-> > > > 
-> > > > Hmm. If those actually end up being reliable, then there's not a whole
-> > > > lot in between them wrt PCI or USB.
-> > > > 
-> > > > What looked like the most likely candidate seems to be xhci-specific, though.
-> > > > 
-> > > > But maybe it's something that isn't directly in drivers/{pci,usb}/ and
-> > > > just interacts badly.
-> > > 
-> > > Ok. I _hope_ my tests are ok. Bisect log so far is:
-> > 
-> > And the winner is:
-> > 
-> > pavel@half:/data/l/linux$ git bisect bad
-> > 24b91e360ef521a2808771633d76ebc68bd5604b is the first bad commit
-> > commit 24b91e360ef521a2808771633d76ebc68bd5604b
-> > Author: Frederic Weisbecker <fweisbec@gmail.com>
-> > Date:   Wed Jan 4 15:12:04 2017 +0100
-> > 
-> >     nohz: Fix collision between tick and other hrtimers
-> >     
+On Tue, Feb 07, 2017 at 07:50:27AM -0800, Andrey Smirnov wrote:
+> Add various bits of code needed to support i.MX7D variant of the IP.
 > 
-> I had to revert 7bdb59f1ad474bd7161adc8f923cdef10f2638d1, too,
-> otherwise -rc8 does not compile.
+> Cc: yurovsky@gmail.com
+> Cc: Lucas Stach <l.stach@pengutronix.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Rob Herring <robh+dt@kernel.org>
+> Cc: Mark Rutland <mark.rutland@arm.com>
+> Cc: Lee Jones <lee.jones@linaro.org>
+> Cc: Fabio Estevam <fabio.estevam@nxp.com>
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: devicetree@vger.kernel.org
+> Cc: linux-kernel@vger.kernel.org
+> Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+> ---
+>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 ++-
+>  drivers/pci/host/pci-imx6.c                        | 121 ++++++++++++++++-----
+>  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
+>  3 files changed, 112 insertions(+), 26 deletions(-)
 > 
-> With 24b91e360ef521a28087716 and 7bdb59f1ad474 reverted, it seems to
-> boot ok. (I did few tries.)
+> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> index 83aeb1f..11db2ab 100644
+> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+> @@ -4,7 +4,11 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
+>  and thus inherits all the common properties defined in designware-pcie.txt.
+>  
+>  Required properties:
+> -- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
+> +- compatible:
+> +	- "fsl,imx6q-pcie"
+> +	- "fsl,imx6sx-pcie",
+> +	- "fsl,imx6qp-pcie"
+> +	- "fsl,imx7d-pcie"
+>  - reg: base address and length of the PCIe controller
+>  - interrupts: A list of interrupt outputs of the controller. Must contain an
+>    entry for each entry in the interrupt-names property.
+> @@ -34,6 +38,13 @@ Additional required properties for imx6sx-pcie:
+>  - clock names: Must include the following additional entries:
+>  	- "pcie_inbound_axi"
+>  
+> +Additional required properties for imx7d-pcie:
+> +- power-domains: Must be set to a phandle pointing to PCIE_PHY power domain
 
-Do you still have the config that triggered this? I don't have much expectations
-about reproducing, this has almost never worked for me, but at least I could narrow
-down the context.
+This domain is just the PHY? Seems like this needs a separate PHY 
+driver.
 
-Thanks.
+> +- resets: Must contain phandles to PCIE related reset lines exposed by SRC IP block
+> +- reset-names: Must contain the following entires:
+> +  	       - "pciephy"
+
+And for this too.
+
+> +	       - "apps"
+> +
+>  Example:
+>  
+>  	pcie@0x01000000 {
+
+[...]
+
+> @@ -251,6 +261,10 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+>  	u32 val, gpr1, gpr12;
+>  
+>  	switch (imx6_pcie->variant) {
+> +	case IMX7D:
+> +		reset_control_assert(imx6_pcie->pciephy_reset);
+> +		reset_control_assert(imx6_pcie->apps_reset);
+> +		break;
+>  	case IMX6SX:
+>  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+>  				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
+
+So the difference with i.MX7D is not really that it has a reset or not, 
+but some platforms use a reset driver and some do not. The latter should 
+be fixed.
+
+Rob
