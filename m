@@ -1,86 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 10 Feb 2017 15:40:17 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andrey Smirnov <andrew.smirnov@gmail.com>
-Subject: Re: [PATCH v4 0/3] i.MX7 PCI support
-Message-ID: <20170210214017.GO29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170207155027.7734-1-andrew.smirnov@gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <20170207155027.7734-1-andrew.smirnov@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Fabio Estevam <fabio.estevam@nxp.com>,
- yurovsky@gmail.com, linux-arm-kernel@lists.infradead.org,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:38529 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750760AbdBOH6d (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 02:58:33 -0500
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Corbet <corbet@lwn.net>
+Cc: linux-pci@vger.kernel.org, linux-doc@vger.kernel.org
+Subject: [PATCH 2/2] PCI: update MSI/MSI-X bits in PCIEBUS-HOWTO
+Date: Wed, 15 Feb 2017 08:58:23 +0100
+Message-Id: <20170215075823.3024-3-hch@lst.de>
+In-Reply-To: <20170215075823.3024-1-hch@lst.de>
+References: <20170215075823.3024-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 07, 2017 at 07:50:24AM -0800, Andrey Smirnov wrote:
-> Hello, everyone:
-> 
-> This is a fourth iteration of the code that adds PCI-subsystem bits
-> necessary for enabling PCI support on i.MX7.
-> 
-> Changes since v3 (can be found at [version3]):
-> 	- Move all of the reset_control_assert's into imx6_pcie_assert_core_reset
-> 	- Documented required reset and power domain DT bindings
-> 
-> Changes since v2 (can be found at [version2]):
-> 
-> 	- Collected Reviewed-by for patch #2 from Lucas
-> 	- Reset logic implementation moved out into a reset controller
->           driver (see [reset1])
-> 	- Removed unused leftover code
-> 
-> Changes since v1 (can be found at [version1]):
-> 
-> 	- All GPC related code moved into a separate driver (see [gpc1])
-> 	- Removed GPIO probe deferral logging
-> 	- Fixed section mismatch warning
-> 	- Minor reformatting of fsl,imx6q-pcie.txt(as per Rob
->           Herring's request)
-> 
-> [version3] https://lkml.org/lkml/2017/2/6/565
-> [version2] https://lkml.org/lkml/2017/2/1/510
-> [version1] https://lkml.org/lkml/2017/1/19/488
-> [gpc1] https://lkml.org/lkml/2017/2/6/551
-> [reset1] https://lkml.org/lkml/2017/2/6/554
-> 
-> Andrey Smirnov (3):
->   PCI: imx6: Fix a typo in error message
->   PCI: imx6: Allow probe deferal by reset GPIO
->   PCI: imx6: Add code to support i.MX7D
-> 
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 +-
->  drivers/pci/host/pci-imx6.c                        | 131 ++++++++++++++++-----
->  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
->  3 files changed, 118 insertions(+), 30 deletions(-)
+Stop talking about low-level details that mention deprecated APIs and
+concentrate on what service drivers should do and why.
 
-I applied patches 1 & 3 (with reviewed-by and ack from Lucas and Lee)
-to pci/host-imx6 for v4.11, thanks!
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ Documentation/PCI/PCIEBUS-HOWTO.txt | 33 +++++++--------------------------
+ 1 file changed, 7 insertions(+), 26 deletions(-)
 
-I didn't apply 2 because of the section mismatch found by the autobuilder:
-
-  >> WARNING: drivers/built-in.o(.data+0x6948c): Section mismatch in reference from the variable imx6_pcie_driver to the function .init.text:imx6_pcie_probe()
-     The variable imx6_pcie_driver references
-     the function __init imx6_pcie_probe()
-     If the reference is valid then annotate the
-     variable with or __refdata (see linux/init.h) or name the variable:
-
-Please repost it after you figure out how to deal with that.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/PCI/PCIEBUS-HOWTO.txt b/Documentation/PCI/PCIEBUS-HOWTO.txt
+index 6bd5f372adec..15f0bb3b5045 100644
+--- a/Documentation/PCI/PCIEBUS-HOWTO.txt
++++ b/Documentation/PCI/PCIEBUS-HOWTO.txt
+@@ -161,21 +161,13 @@ Since all service drivers of a PCI-PCI Bridge Port device are
+ allowed to run simultaneously, below lists a few of possible resource
+ conflicts with proposed solutions.
+ 
+-6.1 MSI Vector Resource
+-
+-The MSI capability structure enables a device software driver to call
+-pci_enable_msi to request MSI based interrupts. Once MSI interrupts
+-are enabled on a device, it stays in this mode until a device driver
+-calls pci_disable_msi to disable MSI interrupts and revert back to
+-INTx emulation mode. Since service drivers of the same PCI-PCI Bridge
+-port share the same physical device, if an individual service driver
+-calls pci_enable_msi/pci_disable_msi it may result unpredictable
+-behavior. For example, two service drivers run simultaneously on the
+-same physical Root Port. Both service drivers call pci_enable_msi to
+-request MSI based interrupts. A service driver may not know whether
+-any other service drivers have run on this Root Port. If either one
+-of them calls pci_disable_msi, it puts the other service driver
+-in a wrong interrupt mode.
++6.1 MSI and MSI-X Vector Resource
++
++Once MSI or MSI-X interrupts are enabled on a device, it stays in this
++mode until they are disabled again.  Since service drivers of the same
++PCI-PCI Bridge port share the same physical device, if an individual
++service driver enables or disables MSI/MSI-X mode it may result
++unpredictable behavior.
+ 
+ To avoid this situation all service drivers are not permitted to
+ switch interrupt mode on its device. The PCI Express Port Bus driver
+@@ -187,17 +179,6 @@ driver. Service drivers should use (struct pcie_device*)dev->irq to
+ call request_irq/free_irq. In addition, the interrupt mode is stored
+ in the field interrupt_mode of struct pcie_device.
+ 
+-6.2 MSI-X Vector Resources
+-
+-Similar to the MSI a device driver for an MSI-X capable device can
+-call pci_enable_msix to request MSI-X interrupts. All service drivers
+-are not permitted to switch interrupt mode on its device. The PCI
+-Express Port Bus driver is responsible for determining the interrupt
+-mode and this should be transparent to service drivers. Any attempt
+-by service driver to call pci_enable_msix/pci_disable_msix may
+-result unpredictable behavior. Service drivers should use
+-(struct pcie_device*)dev->irq and call request_irq/free_irq.
+-
+ 6.3 PCI Memory/IO Mapped Regions
+ 
+ Service drivers for PCI Express Power Management (PME), Advanced
+-- 
+2.11.0
