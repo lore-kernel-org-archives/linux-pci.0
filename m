@@ -1,121 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:32919 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751446AbdBCRrQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 3 Feb 2017 12:47:16 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
-        Austin Bolen <Austin.Bolen@dell.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv5 1/5] pci: Export pci device config accessors
-Date: Fri,  3 Feb 2017 12:55:51 -0500
-Message-Id: <1486144555-5526-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1486144555-5526-1-git-send-email-keith.busch@intel.com>
-References: <1486144555-5526-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 30/37] dt-bindings: PCI: dra7xx: Add dt bindings to enable
+ legacy mode
+To: Rob Herring <robh@kernel.org>
+References: <1484216786-17292-1-git-send-email-kishon@ti.com>
+ <1484216786-17292-31-git-send-email-kishon@ti.com>
+ <20170118214603.qnewy3sm6sgw7lbg@rob-hp-laptop>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <58A563F5.5040504@ti.com>
+Date: Thu, 16 Feb 2017 14:03:57 +0530
+MIME-Version: 1.0
+In-Reply-To: <20170118214603.qnewy3sm6sgw7lbg@rob-hp-laptop>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
+ Jingoo Han <jingoohan1@gmail.com>, linux-arm-msm@vger.kernel.org,
+ nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
+ linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
+ linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch removes the inline pci device config read and write accessors
-with exported functions. This is preparing for these functions to make
-use of private data.
+Hi,
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
----
- drivers/pci/access.c | 38 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  | 32 ++++++--------------------------
- 2 files changed, 44 insertions(+), 26 deletions(-)
+On Thursday 19 January 2017 03:16 AM, Rob Herring wrote:
+> On Thu, Jan 12, 2017 at 03:56:19PM +0530, Kishon Vijay Abraham I wrote:
+>> Update device tree binding documentation of TI's dra7xx PCI
+>> controller to include property for enabling legacy mode.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  Documentation/devicetree/bindings/pci/ti-pci.txt |    4 ++++
+>>  1 file changed, 4 insertions(+)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+>> index 62f5f59..ed85e8e 100644
+>> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
+>> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+>> @@ -39,6 +39,10 @@ DEVICE MODE
+>>   - interrupts : one interrupt entries must be specified for main interrupt.
+>>   - num-ib-windows : number of inbound address translation windows
+>>   - num-ob-windows : number of outbound address translation windows
+>> + - syscon-legacy-mode: phandle to the syscon dt node. The 1st argument should
+>> +		       contain the register offset within syscon and the 2nd
+>> +		       argument should contain the bit field for setting the
+>> +		       legacy mode
+> 
+> What's legacy mode?
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index db23954..d37b2ed 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -889,3 +889,41 @@ int pcie_capability_clear_and_set_dword(struct pci_dev *dev, int pos,
- 	return ret;
- }
- EXPORT_SYMBOL(pcie_capability_clear_and_set_dword);
-+
-+int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
-+{
-+	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
-+}
-+EXPORT_SYMBOL(pci_read_config_byte);
-+
-+int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
-+{
-+	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
-+}
-+EXPORT_SYMBOL(pci_read_config_word);
-+
-+int pci_read_config_dword(const struct pci_dev *dev, int where,
-+					u32 *val)
-+{
-+	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
-+}
-+EXPORT_SYMBOL(pci_read_config_dword);
-+
-+int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
-+{
-+	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
-+}
-+EXPORT_SYMBOL(pci_write_config_byte);
-+
-+int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
-+{
-+	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
-+}
-+EXPORT_SYMBOL(pci_write_config_word);
-+
-+int pci_write_config_dword(const struct pci_dev *dev, int where,
-+					 u32 val)
-+{
-+	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
-+}
-+EXPORT_SYMBOL(pci_write_config_dword);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a12..b00a2d3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -944,32 +944,12 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
- 
- struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops);
- 
--static inline int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
--{
--	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
--}
--static inline int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
--{
--	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
--}
--static inline int pci_read_config_dword(const struct pci_dev *dev, int where,
--					u32 *val)
--{
--	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
--}
--static inline int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
--{
--	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
--}
--static inline int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
--{
--	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
--}
--static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
--					 u32 val)
--{
--	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
--}
-+int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val);
-+int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val);
-+int pci_read_config_dword(const struct pci_dev *dev, int where, u32 *val);
-+int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val);
-+int pci_write_config_word(const struct pci_dev *dev, int where, u16 val);
-+int pci_write_config_dword(const struct pci_dev *dev, int where, u32 val);
- 
- int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val);
- int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val);
--- 
-2.7.2
+It's the name of the bit-field defined in TRM used to add workaround for errata
+id i870 (See [PATCH 29/37] PCI: dwc: dra7xx: Workaround for errata id i870 of
+this series). I'm not sure what it does internally.
+
+Thanks
+Kishon
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
