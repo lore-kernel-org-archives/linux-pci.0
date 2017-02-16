@@ -1,70 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56112 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753260AbdBJR70 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Feb 2017 12:59:26 -0500
-Date: Fri, 10 Feb 2017 11:57:16 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v5 2/8] PCI: Allow runtime PM on Thunderbolt ports
-Message-ID: <20170210175716.GE29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1484486499.git.lukas@wunner.de>
- <14d64f19bc1b1ea67371b8336dca618edddc0b52.1484486499.git.lukas@wunner.de>
- <20170128220914.GN20550@bhelgaas-glaptop.roam.corp.google.com>
- <CAJZ5v0gZgp0RVo_2toASw+-GF=FV8=TdEmauP+7+-czU5kshjg@mail.gmail.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:44417 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753021AbdBPErY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 23:47:24 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1G4ivs2005872
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 23:47:23 -0500
+Received: from e23smtp07.au.ibm.com (e23smtp07.au.ibm.com [202.81.31.140])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 28mq9uj2r8-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 23:47:23 -0500
+Received: from localhost
+        by e23smtp07.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
+        Thu, 16 Feb 2017 14:47:20 +1000
+Subject: Re: [PATCH 1/3] pci/hotplug/pnv-php: Remove WARN_ON() in
+ pnv_php_put_slot()
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org
+References: <1487200954-14681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1487200954-14681-2-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        "# v4 . 8+" <stable@vger.kernel.org>
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Date: Thu, 16 Feb 2017 15:46:20 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAJZ5v0gZgp0RVo_2toASw+-GF=FV8=TdEmauP+7+-czU5kshjg@mail.gmail.com>
+In-Reply-To: <1487200954-14681-2-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Message-Id: <6c4942ee-7704-5686-8bf3-3cff775eff89@au1.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 30, 2017 at 08:15:40AM +0100, Rafael J. Wysocki wrote:
-> On Sat, Jan 28, 2017 at 11:09 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> > On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
-> >> Currently PCIe ports are only allowed to go to D3 if the BIOS is dated
-> >> 2015 or newer to avoid potential issues with old chipsets.  However for
-> >> Thunderbolt we know that even the oldest controller, Light Ridge (2010),
-> >> is able to suspend its ports to D3 just fine.
-> >>
-> >> We're about to add runtime PM for Thunderbolt on the Mac.  Apple has
-> >> released two EFI security updates in 2015 which encompass all machines
-> >> with Thunderbolt, but the achieved power saving should be made available
-> >> to users even if they haven't updated their BIOS.  To this end,
-> >> special-case Thunderbolt in pci_bridge_d3_possible().
-> >
-> > I think this whole paragraph is unnecessary detail.  I first thought
-> > you had some connection with a firmware security issue, but now I see
-> > the only point is that if you have pre-2015 firmware, you could update
-> > it since newer firmware is available.
-> >
-> >> This allows the Thunderbolt controller to power down but the root port
-> >> to which the Thunderbolt controller is attached remains in D0 unless
-> >> the EFI update is installed.  Users can pass pcie_port_pm=force on the
-> >> kernel command line if they cannot install the EFI update but still want
-> >> to benefit from the additional power saving of putting the root port
-> >> into D3.  In practice, root ports can be suspended to D3 without issues
-> >> at least on 2012 Ivy Bridge machines.
-> >
-> > I'm not sure I like advertising pcie_port_pm=force.  That just means a
-> > few leet folks will use this parameter and run in a subtly different
-> > configuration than everybody else, and possibly trip over subtly
-> > different issues.  The audience (users who read kernel change logs and
-> > are willing to use special boot parameters, but who can't install an
-> > EFI update) seems small.
-> 
-> That basically is for somebody who has a product and knows that the
-> feature works there, but doesn't want or simply can't patch the kernel
-> (which is shipped by a distro or similar).
+On 16/02/17 10:22, Gavin Shan wrote:
+> The WARN_ON() causes unnecessary backtrace when putting the parent
+> slot, which is likely to be NULL.
+>
+>  WARNING: CPU: 2 PID: 1071 at drivers/pci/hotplug/pnv_php.c:85 \
+>                               pnv_php_release+0xcc/0x150 [pnv_php]
+>     :
+>  Call Trace:
+>  [c0000003bc007c10] [d00000000ad613c4] pnv_php_release+0x144/0x150 [pnv_php]
+>  [c0000003bc007c40] [c0000000006641d8] pci_hp_deregister+0x238/0x330
+>  [c0000003bc007cd0] [d00000000ad61440] pnv_php_unregister_one+0x70/0xa0 [pnv_php]
+>  [c0000003bc007d10] [d00000000ad614c0] pnv_php_unregister+0x50/0x80 [pnv_php]
+>  [c0000003bc007d40] [d00000000ad61e84] pnv_php_exit+0x50/0xcb4 [pnv_php]
+>  [c0000003bc007d70] [c00000000019499c] SyS_delete_module+0x1fc/0x2a0
+>  [c0000003bc007e30] [c00000000000b184] system_call+0x38/0xe0
+>
+> Cc: <stable@vger.kernel.org> # v4.8+
+> Fixes: 66725152fb9f ("PCI/hotplug: PowerPC PowerNV PCI hotplug driver")
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-Yes, OK.  This isn't adding a new parameter, and I'm OK with the actual
-change here, so
+Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+-- 
+Andrew Donnellan              OzLabs, ADL Canberra
+andrew.donnellan@au1.ibm.com  IBM Australia Limited
