@@ -1,68 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52376 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750785AbdBRXsJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 18 Feb 2017 18:48:09 -0500
-Date: Sat, 18 Feb 2017 17:46:25 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: pciehp is broken from 4.10-rc1
-Message-ID: <20170218234624.GA13573@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170204185607.GA29957@wunner.de>
- <CAE9FiQUuFJHMScyFgnHbs5r-SzTiRiBZ2JcpUYJhg0ft75-OBQ@mail.gmail.com>
- <20170204233443.GA234@wunner.de>
- <CAE9FiQW5SQsQfRCz9sor4kufogTRVpHXekPHSi8MSi46mvXGLQ@mail.gmail.com>
- <20170205073454.GA253@wunner.de>
- <20170206204249.GA679@wunner.de>
- <CAE9FiQXSmB6Cs55nFtdw3rRrVrivwpDGNTwLwYtvWCEe4nsuHg@mail.gmail.com>
- <20170207060811.GA791@wunner.de>
- <CAE9FiQUxAfzLvd1icaJr=i8n_cQs5PL2q3y3PW9HYpaaPq8zZw@mail.gmail.com>
- <20170208084624.GA13086@linux-siqj.site>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54795 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753221AbdBPEcw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 23:32:52 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1G4ONbq161042
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 23:32:51 -0500
+Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 28mq9uhn27-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 23:32:50 -0500
+Received: from localhost
+        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
+        Thu, 16 Feb 2017 14:32:47 +1000
+Subject: Re: [PATCH 2/3] pci/hotplug/pnv-php: Disable surprise hotplug
+ capability on conflicts
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org
+References: <1487200954-14681-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <1487200954-14681-3-git-send-email-gwshan@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        "# v4 . 9+" <stable@vger.kernel.org>
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Date: Thu, 16 Feb 2017 15:31:48 +1100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170208084624.GA13086@linux-siqj.site>
+In-Reply-To: <1487200954-14681-3-git-send-email-gwshan@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Message-Id: <48c227b2-756d-a5d3-227f-58ad51dd1565@au1.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 08, 2017 at 12:46:26AM -0800, Yinghai Lu wrote:
-> after that change will get:
-> 
-> sca05-0a81fd7f:~ # echo 1 > /sys/bus/pci/slots/7/power 
-> [  300.949937] pci_hotplug: power_write_file: power = 1
-> [  300.955502] pciehp 0000:73:00.0:pcie004: pciehp_get_power_status: SLOTCTRL a8 value read 17f1
-> [  300.982557] pciehp 0000:73:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+On 16/02/17 10:22, Gavin Shan wrote:
+> The root port or PCIe switch downstream port might have been associated
+> with driver other than pnv-php. The MSI or MSIx might also have been
+> enabled by that driver (e.g. pcieport_drv). Attempt to enable MSI incurs
+> below backtrace:
+>
+>  PowerPC PowerNV PCI Hotplug Driver version: 0.1
+>  ------------[ cut here ]------------
+>  WARNING: CPU: 19 PID: 1004 at drivers/pci/msi.c:1071 \
+>                               __pci_enable_msi_range+0x84/0x4e0
+>  NIP [c000000000665c34] __pci_enable_msi_range+0x84/0x4e0
+>  LR [c000000000665c24] __pci_enable_msi_range+0x74/0x4e0
+>  Call Trace:
+>  [c000000384d67600] [c000000000665c24] __pci_enable_msi_range+0x74/0x4e0
+>  [c000000384d676e0] [d00000000aa31b04] pnv_php_register+0x564/0x5a0 [pnv_php]
+>  [c000000384d677c0] [d00000000aa31658] pnv_php_register+0xb8/0x5a0 [pnv_php]
+>  [c000000384d678a0] [d00000000aa31658] pnv_php_register+0xb8/0x5a0 [pnv_php]
+>  [c000000384d67980] [d00000000aa31dfc] pnv_php_init+0x60/0x98 [pnv_php]
+>  [c000000384d679f0] [c00000000000cfdc] do_one_initcall+0x6c/0x1d0
+>  [c000000384d67ab0] [c000000000b92354] do_init_module+0x94/0x254
+>  [c000000384d67b40] [c00000000019719c] load_module+0x258c/0x2c60
+>  [c000000384d67d30] [c000000000197bb0] SyS_finit_module+0xf0/0x170
+>  [c000000384d67e30] [c00000000000b184] system_call+0x38/0xe0
+> 360aebd85a4c
+> This fixes the issue by skipping enabling the surprise hotplug
+> capability if the MSI or MSIx on the PCI slot's upstream port has
+> been enabled by other driver.
+>
+> Cc: <stable@vger.kernel.org> # v4.9+
+> Fixes: 360aebd85a4c ("drivers/pci/hotplug: Support surprise hotplug in powernv driver")
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
 
-Can anybody explain this Command Completed interrupt?  I think we should be
-in this path:
+Should this print something to the kernel log to indicate that surprise 
+hotplug is unavailable?
 
-  pciehp_sysfs_enable_slot
-    pciehp_enable_slot
-      pciehp_get_adapter_status
-      pciehp_get_power_status
-        "SLOTCTRL a8 value read 17f1" (DLLSCE PWR_OFF PWR_IND_OFF CCIE HPIE ATTN_IND_OFF ABPE)
-      board_added
-	pciehp_power_on_slot
-	  pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_ON, PCI_EXP_SLTCTL_PCC)
-          "SLOTCTRL a8 write cmd 0" (PWR_ON)
-	  pciehp_link_enable
-	    __pciehp_link_set
+Otherwise:
 
-I don't see a write to SLTCTL between pciehp_get_power_status() and
-pciehp_power_on_slot(), so I don't know why we see a Command Completed
-interrupt.
+Reviewed-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 
-> [  300.991171] pciehp 0000:73:00.0:pcie004: pciehp_power_on_slot: SLOTCTRL a8 write cmd 0
-> [  301.000033] pciehp 0000:73:00.0:pcie004: pciehp_green_led_blink: SLOTCTRL a8 write cmd 200
-> [  301.009274] pciehp 0000:73:00.0:pcie004: pending interrupts 0x0010 from Slot Status
-> [  301.662172] pciehp 0000:73:00.0:pcie004: pciehp_check_link_active: lnk_status = f083
-> [  301.670827] pciehp 0000:73:00.0:pcie004: pending interrupts 0x0108 from Slot Status
-> [  301.679376] pciehp 0000:73:00.0:pcie004: Slot(7): Link Up
-> [  301.685463] pciehp 0000:73:00.0:pcie004: Slot(7): Link Up event ignored; already powering on
-> [  301.685508] pciehp 0000:73:00.0:pcie004: pciehp_check_link_active: lnk_status = f083
-> [  302.005967] pciehp 0000:73:00.0:pcie004: pciehp_check_link_status: lnk_status = f083
-> [  302.014859] pci 0000:74:00.0: [15b3:1003] type 00 class 0x0c0600
+-- 
+Andrew Donnellan              OzLabs, ADL Canberra
+andrew.donnellan@au1.ibm.com  IBM Australia Limited
