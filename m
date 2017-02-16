@@ -1,65 +1,219 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:23240 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751857AbdB1Kbb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Feb 2017 05:31:31 -0500
-From: Ley Foon Tan <ley.foon.tan@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        lftan.linux@gmail.com, stable@vger.kernel.org,
-        Ley Foon Tan <ley.foon.tan@intel.com>
-Subject: [PATCH] PCI: altera: Fix TLP_CFG_DW0 for TLP write
-Date: Tue, 28 Feb 2017 18:31:16 +0800
-Message-Id: <1488277876-29859-1-git-send-email-ley.foon.tan@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V6 4/5] LPC: Support the device-tree LPC host on
+ Hip06/Hip07
+To: Alexander Graf <agraf@suse.de>, <catalin.marinas@arm.com>,
+ <will.deacon@arm.com>, <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+ <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
+ <brian.starkey@arm.com>, <olof@lixom.net>, <arnd@arndb.de>,
+ <linux-arm-kernel@lists.infradead.org>
+References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1485241525-201782-5-git-send-email-yuanzhichang@hisilicon.com>
+ <a5a24e73-013d-87b5-f65f-324417f4cc60@suse.de>
+ <58A1C50F.7090108@hisilicon.com>
+ <43b981bc-72c0-c6e7-d6f6-9ba9c63d9bdb@suse.de>
+ <58A43D02.9040502@hisilicon.com>
+ <acc432d9-f021-4eba-b48b-a8d0b4de1f78@suse.de>
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Message-ID: <58A569D9.1090701@hisilicon.com>
+Date: Thu, 16 Feb 2017 16:59:05 +0800
+MIME-Version: 1.0
+In-Reply-To: <acc432d9-f021-4eba-b48b-a8d0b4de1f78@suse.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
+ gabriele.paoloni@huawei.com, minyard@acm.org, benh@kernel.crashing.org,
+ john.garry@huawei.com, liviu.dudau@arm.com, linux-kernel@vger.kernel.org,
+ xuwei5@hisilicon.com, linuxarm@huawei.com,
+ "Daode Huang\(allen\)" <huangdaode@hisilicon.com>,
+ linux-serial@vger.kernel.org, linux-pci@vger.kernel.org, zourongrong@gmail.com,
+ kantyzc@163.com, zhichang.yuan02@gmail.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit eb5767122feba1 used the TLP_FMTTYPE_CFGRD* for TLP write operation
-and this cause writing to configuration space will fail. This patch
-fix it by using correct FMTTYPE for write operation.
+Hi, Alex,
 
-Signed-off-by: Ley Foon Tan <ley.foon.tan@intel.com>
----
- drivers/pci/host/pcie-altera.c | 10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+On 2017/2/15 19:53, Alexander Graf wrote:
+> 
+> 
+> On 15/02/2017 12:35, zhichang.yuan wrote:
+>> Hi, Alex,
+>>
+>>
+>> On 2017/2/14 21:29, Alexander Graf wrote:
+>>>
+>>>
+>>> On 13/02/2017 15:39, zhichang.yuan wrote:
+>>>> Hi, Alex,
+>>>>
+>>>> Thanks for your review!
+>>>>
+>>>> John had replied most of your comments, I only mentioned those which haven't made clear.
+>>>>
+>>>>
+>>>> On 2017/1/31 4:08, Alexander Graf wrote:
+>>>>>
+>>>>>
+>>>>> On 24/01/2017 08:05, zhichang.yuan wrote:
+>>>>>> The low-pin-count(LPC) interface of Hip06/Hip07 accesses the peripherals in
+>>>>>> I/O port addresses. This patch implements the LPC host controller driver which
+>>>>>> perform the I/O operations on the underlying hardware.
+>>>>>> We don't want to touch those existing peripherals' driver, such as ipmi-bt. So
+>>>>>> this driver applies the indirect-IO introduced in the previous patch after
+>>>>>> registering an indirect-IO node to the indirect-IO devices list which will be
+>>>>>> searched in the I/O accessors.
+>>>>>> As the I/O translations for LPC children depend on the host I/O registration,
+>>>>>> we should ensure the host I/O registration is finished before all the LPC
+>>>>>> children scanning. That is why an arch_init() hook was added in this patch.
+>>>>>>
+>>>>>> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+>>>>>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+>>>>>> ---
+>> snip
+>>>>>> +
+>>>>>> +struct lpc_cycle_para {
+>>>>>> +    unsigned int opflags;
+>>>>>> +    unsigned int csize; /* the data length of each operation */
+>>>>>> +};
+>>>>>> +
+>>>>>> +struct hisilpc_dev {
+>>>>>> +    spinlock_t cycle_lock;
+>>>>>> +    void __iomem  *membase;
+>>>>>> +    struct extio_node *extio;
+>>>>>> +};
+>>>>>> +
+>>>>>> +/* bounds of the LPC bus address range */
+>>>>>> +#define LPC_MIN_BUS_RANGE    0x0
+>>>>>> +
+>>>>>> +/*
+>>>>>> + * The maximal IO size for each leagcy bus.
+>>>>>
+>>>>> legacy?
+>>>>>
+>>>>> I don't really understand why this bus is legacy though. It looks like a simple MMIO-to-LPC bridge to me.
+>>>>
+>>>> yes. The LPC bus is MMIO-to-LPC bridge.
+>>>> My comment is not clear.
+>>>>
+>>>> How about "The maximal IO size of LPC bus"?
+>>>
+>>> That sounds better, but doesn't really tell me what it's about yet ;).
+>>>
+>>>>
+>>>>>
+>>>>>> + * The port size of legacy I/O devices is normally less than 0x400.
+>>>>>> + * Defining the I/O range size as 0x400 here should be sufficient for
+>>>>>> + * all peripherals under one bus.
+>>>>>> + */
+>>>>>
+>>>>> This comment doesn't make a lot of sense. What is the limit? Is there a hardware limit?
+>>>>>
+>>>>> We don't dynamically allocate devices on the lpc bus, so why imply a limit at all?
+>>>>
+>>>> The limit here is to define an IO window for LPC.
+>>>> It is not acceptable to describe the IO window with 'ranges' property in LPC host node, so we choose a fixable upper IO limit
+>>>> for the static LPC IO space. Without this, LPC can't register its IO space through extio helpers.
+>>>>
+>>>> Why 0x400 is chosen? For our LPC, 0x400 cover all the peripherals under the LPC.
+>>>
+>>> This is information that should come from firmware then. Whether by coincidence addresses 0x0 - 0x400 include all devices is an implementation detail that the driver shouldn't have to know about.
+>>
+>>
+>>>
+>>> That said, as mentioned elsewhere, we don't need to define single windows at all. Instead, can't we just do it like PCI BARs and declare all PIO regions we get from firmware as readily allocated? Then we only need to explicitly assign ports 0x80, 0x81, 0x99, etc to the LPC bridge and leave the rest for grabs (by PCI hotplug for example)
+>>>
+>>
+>> I worry I don't completely catch your idea.
+>> From my understanding, each PCI host can parse its resource windows from firmware(such as ACPI, dts). But for our LPC, firmware configurations only tell kernel what is the IO resource of the peripherals under LPC. But to register the io range in the similar way of pci_register_io_range(), at least, we need to know the IO range size.
+>> So, how to know this?
+>> There is no similar BAR design in LPC, do we traverse all the peripherals to calculate that?
+> 
+> Yes, that's probably the most flexible approach. In fact, I would just traverse all peripherals (or have peripherals call register functions for PIO regions) and then dynamically allocate the PIO space for only those regions. I don't see why you should only have 1 window for your LPC bridge.
+> 
+> Alternatively you could just have firmware indicate the region size, similar to how it's done for PCI. Whatever you do, don't hard code it in the driver :).
+> 
+>>
+>>
+>>>>
+>>>>
+>>>>
+>>>>
+>>>>>
+>>>>>> +#define LPC_BUS_IO_SIZE        0x400
+>>>>>> +
+>>>>>> +/* The maximum continuous operations */
+>>>>>> +#define LPC_MAX_OPCNT    16
+>>>>>> +/* only support IO data unit length is four at maximum */
+>>>>>> +#define LPC_MAX_DULEN    4
+>> snip
+>>>>>> + */
+>>>>>> +static int
+>>>>>> +hisilpc_target_in(struct hisilpc_dev *lpcdev, struct lpc_cycle_para *para,
+>>>>>> +          unsigned long ptaddr, unsigned char *buf,
+>>>>>> +          unsigned long opcnt)
+>>>>>> +{
+>>>>>> +    unsigned long cnt_per_trans;
+>>>>>> +    unsigned int cmd_word;
+>>>>>> +    unsigned int waitcnt;
+>>>>>> +    int ret;
+>>>>>> +
+>>>>>> +    if (!buf || !opcnt || !para || !para->csize || !lpcdev)
+>>>>>> +        return -EINVAL;
+>>>>>> +
+>>>>>> +    if (opcnt  > LPC_MAX_OPCNT)
+>>>>>> +        return -EINVAL;
+>>>>>> +
+>>>>>> +    cmd_word = LPC_CMD_TYPE_IO | LPC_CMD_READ;
+>>>>>> +    waitcnt = LPC_PEROP_WAITCNT;
+>>>>>> +    if (!(para->opflags & FG_INCRADDR_LPC)) {
+>>>>>> +        cmd_word |= LPC_CMD_SAMEADDR;
+>>>>>> +        waitcnt = LPC_MAX_WAITCNT;
+>>>>>> +    }
+>>>>>> +
+>>>>>> +    ret = 0;
+>>>>>> +    cnt_per_trans = (para->csize == 1) ? opcnt : para->csize;
+>>>>>> +    for (; opcnt && !ret; cnt_per_trans = para->csize) {
+>>>>>> +        unsigned long flags;
+>>>>>> +
+>>>>>> +        /* whole operation must be atomic */
+>>>>>> +        spin_lock_irqsave(&lpcdev->cycle_lock, flags);
+>>>>>
+>>>>> Ouch. This is going to kill your RT jitter. Is there no better way?
+>>>>
+>>>> I think there is no other choices. We have to ensure the I/O cycles triggered in serial mode....
+>>>
+>>> As nobody else accesses the LPC device in the meantime thanks to the lock, you don't need to disable interrupts, right?
+>>
+>> O. Do you mean that we can replace spin_lock_irqsave with spin_lock?
+> 
+> That would be a good step into the right direction I think, yes.
+> 
+>> As we can connect UART to LPC, I worry the LPC can be accessed in the interrupt context.
+> 
+> In that case IRQs are already disabled for the non-preempt-rt case and in preempt-rt, interrupt context should mostly live in threads which are preemptible again.
+> 
 
-diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
-index 0c15402..68c839f 100644
---- a/drivers/pci/host/pcie-altera.c
-+++ b/drivers/pci/host/pcie-altera.c
-@@ -57,10 +57,14 @@
- #define TLP_WRITE_TAG			0x10
- #define RP_DEVFN			0
- #define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
--#define TLP_CFG_DW0(pcie, bus)						\
-+#define TLP_CFGRD_DW0(pcie, bus)					\
-     ((((bus == pcie->root_bus_nr) ? TLP_FMTTYPE_CFGRD0			\
- 				    : TLP_FMTTYPE_CFGRD1) << 24) |	\
-      TLP_PAYLOAD_SIZE)
-+#define TLP_CFGWR_DW0(pcie, bus)					\
-+    ((((bus == pcie->root_bus_nr) ? TLP_FMTTYPE_CFGWR0			\
-+				    : TLP_FMTTYPE_CFGWR1) << 24) |	\
-+     TLP_PAYLOAD_SIZE)
- #define TLP_CFG_DW1(pcie, tag, be)	\
-     (((TLP_REQ_ID(pcie->root_bus_nr,  RP_DEVFN)) << 16) | (tag << 8) | (be))
- #define TLP_CFG_DW2(bus, devfn, offset)	\
-@@ -222,7 +226,7 @@ static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
- {
- 	u32 headers[TLP_HDR_SIZE];
- 
--	headers[0] = TLP_CFG_DW0(pcie, bus);
-+	headers[0] = TLP_CFGRD_DW0(pcie, bus);
- 	headers[1] = TLP_CFG_DW1(pcie, TLP_READ_TAG, byte_en);
- 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
- 
-@@ -237,7 +241,7 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
- 	u32 headers[TLP_HDR_SIZE];
- 	int ret;
- 
--	headers[0] = TLP_CFG_DW0(pcie, bus);
-+	headers[0] = TLP_CFGWR_DW0(pcie, bus);
- 	headers[1] = TLP_CFG_DW1(pcie, TLP_WRITE_TAG, byte_en);
- 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
- 
--- 
-1.8.2.3
+When the IRQs are disabled? Do you mean the interrupt disable just before kernel enters the interrupt routine?
+It seems this processing can not protect a thread which had owned the LPC spin lock from being preempted.
+
+
+Zhichang
+
+> 
+> Alex
+> 
+> .
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
