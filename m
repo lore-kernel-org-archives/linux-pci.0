@@ -1,69 +1,76 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, yurovsky@gmail.com,
-        Lucas Stach <l.stach@pengutronix.de>,
+Date: Thu, 16 Feb 2017 21:48:30 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Frederic Weisbecker <fweisbec@gmail.com>,
+        wanpeng.li@hotmail.com, Peter Zijlstra <peterz@infradead.org>,
+        Rik van Riel <riel@redhat.com>,
+        "# .39.x" <stable@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/3] PCI: imx6: Allow probe deferal by reset GPIO
-Date: Wed,  1 Feb 2017 08:55:58 -0800
-Message-Id: <20170201165559.22436-3-andrew.smirnov@gmail.com>
-In-Reply-To: <20170201165559.22436-1-andrew.smirnov@gmail.com>
-References: <20170201165559.22436-1-andrew.smirnov@gmail.com>
+        USB list <linux-usb@vger.kernel.org>
+Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
+ after cold boots, boots after reboot
+Message-ID: <20170216204829.GA32371@amd>
+References: <20170215232005.GA7877@amd>
+ <CA+55aFyqsxjQPp=Y6MnvyMH_iA-TSiPrycnAHbBzw5bwQi7jjg@mail.gmail.com>
+ <20170216111144.GA12377@amd>
+ <20170216172535.GA7868@amd>
+ <20170216181353.GB4357@lerouge>
+ <CA+55aFwhzMWR8QPGEK+8O8r0sFpHjn4XXraQ9K0Hq4VQi8Ru-w@mail.gmail.com>
+ <20170216183421.GC4357@lerouge>
+ <alpine.DEB.2.20.1702162033200.4049@nanos>
+ <20170216200624.GA4274@amd>
+ <CA+55aFz9bEfwMFUgj2zX+X9Cy_Rv0994AWX4DW+YmqdK8wCa1Q@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha1;
+        protocol="application/pgp-signature"; boundary="HlL+5n6rz5pIUxbD"
+In-Reply-To: <CA+55aFz9bEfwMFUgj2zX+X9Cy_Rv0994AWX4DW+YmqdK8wCa1Q@mail.gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some designs implement reset GPIO via a GPIO expander connected to a
-peripheral bus. One such example would be i.MX7 Sabre board where said
-GPIO is provided by SPI shift register connected to a bitbanged SPI
-bus. In order to support such designs allow reset GPIO request to defer
-probing of the driver.
 
-Cc: yurovsky@gmail.com
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
----
- drivers/pci/host/pci-imx6.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+--HlL+5n6rz5pIUxbD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 50a1291..3ef8093 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -611,7 +611,7 @@ static int __init imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
- 	return 0;
- }
- 
--static int __init imx6_pcie_probe(struct platform_device *pdev)
-+static int imx6_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct imx6_pcie *imx6_pcie;
-@@ -653,6 +653,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 			dev_err(dev, "unable to get reset gpio\n");
- 			return ret;
- 		}
-+	} else if (imx6_pcie->reset_gpio == -EPROBE_DEFER) {
-+		return imx6_pcie->reset_gpio;
- 	}
- 
- 	/* Fetch clocks */
-@@ -746,11 +748,12 @@ static struct platform_driver imx6_pcie_driver = {
- 		.name	= "imx6q-pcie",
- 		.of_match_table = imx6_pcie_of_match,
- 	},
-+	.probe    = imx6_pcie_probe,
- 	.shutdown = imx6_pcie_shutdown,
- };
- 
- static int __init imx6_pcie_init(void)
- {
--	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
-+	return platform_driver_register(&imx6_pcie_driver);
- }
- device_initcall(imx6_pcie_init);
--- 
-2.9.3
+On Thu 2017-02-16 12:21:13, Linus Torvalds wrote:
+> On Thu, Feb 16, 2017 at 12:06 PM, Pavel Machek <pavel@ucw.cz> wrote:
+> >
+> > Hmm, that would explain problems at boot _and_ problems during
+> > suspend/resume.
+>=20
+> I've committed the revert, and I'm just assuming that the revert also
+> fixed your suspend/resume issues, but I wanted to just double-check
+> that since it's only implied, no staed explicitly..
+
+Thanks!
+
+I don't yet know if suspend/resume issues are fixed. Those are somehow
+tricky to reproduce -- fun stuff does not happen on every suspend. I
+should know within a week or so...
+
+									Pavel
+--=20
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
+g.html
+
+--HlL+5n6rz5pIUxbD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iEYEARECAAYFAlimEB0ACgkQMOfwapXb+vIKxACdGxA2jdW4hWw5LmqoGz0ZQeZ4
+w1gAoJ2oE3TBmYUpxmErG//iAL9ENFc4
+=/IZD
+-----END PGP SIGNATURE-----
+
+--HlL+5n6rz5pIUxbD--
