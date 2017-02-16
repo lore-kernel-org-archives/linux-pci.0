@@ -1,49 +1,81 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Stefan Assmann <sassmann@kpanic.de>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-acpi@vger.kernel.org, lenb@kernel.org,
-        Linux PCI <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH] ACPI: skip boot interrupt rerouting when index is zero
-Date: Thu, 16 Feb 2017 00:41:12 +0100
-Message-ID: <2535666.fX06JoOfin@aspire.rjw.lan>
-In-Reply-To: <20170210114517.14812-1-sassmann@kpanic.de>
-References: <20170210114517.14812-1-sassmann@kpanic.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:41082 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754855AbdBPOfN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Feb 2017 09:35:13 -0500
+Date: Thu, 16 Feb 2017 08:35:10 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jess Frazelle <me@jessfraz.com>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "open list:Hyper-V CORE AND DRIVERS" <devel@linuxdriverproject.org>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        kernel-hardening@lists.openwall.com,
+        Kees Cook <keescook@chromium.org>,
+        Marc Zyngier <marc.zyngier@arm.com>
+Subject: Re: [PATCH v2 3/5] pci: set msi_domain_ops as __ro_after_init
+Message-ID: <20170216143509.GA22820@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170211013758.3288-1-me@jessfraz.com>
+ <20170211013758.3288-3-me@jessfraz.com>
+ <20170215203347.GA6981@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.20.1702152143520.3805@nanos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.20.1702152143520.3805@nanos>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+Bjorn, linux-pci]
+On Wed, Feb 15, 2017 at 10:16:32PM +0100, Thomas Gleixner wrote:
 
-On Friday, February 10, 2017 12:45:17 PM Stefan Assmann wrote:
-> When checking for boot interrupts and PRT index is zero avoid doing
-> any interrupt rerouting since the code currently does not handle
-> determining the IRQ via _CRS method.
+> I think I suggested to Jiang to do that 'update with default functions' to
 > 
-> Fixes:
-> https://bugzilla.kernel.org/show_bug.cgi?id=43074
+> - avoid exporting the world and some more
 > 
-> Signed-off-by: Stefan Assmann <sassmann@kpanic.de>
+> - have the flexibility to add new functions to the ops w/o updating a
+>   gazillion of existing usage sites, which has saved us lots of chaising in
+>   the last years
+> 
+> - avoid the if (ops->ptr) ops->ptr(); else default_fn(); constructs all
+>   over the place.
+> 
+> I admit I did not think about the fact that this makes the structs non
+> const.
+> 
+> Mopping that up by exporting the default functions and setting all the
+> function pointers is tedious and requires a full tree sweep when we add new
+> stuff. There's also code shared between PCI/platform/DT based stuff, so
+> that becomes interesting.
 
-Bjorn, what do you think?
+It's legal to initialize a field multiple times, and the last one
+takes precedence, so doing this might at least avoid the full tree
+sweeps:
 
-> ---
->  drivers/acpi/pci_irq.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-> index c576a6f..6ecbde0 100644
-> --- a/drivers/acpi/pci_irq.c
-> +++ b/drivers/acpi/pci_irq.c
-> @@ -280,7 +280,7 @@ static int bridge_has_boot_interrupt_variant(struct pci_bus *bus)
->  static int acpi_reroute_boot_interrupt(struct pci_dev *dev,
->  				       struct acpi_prt_entry *entry)
->  {
-> -	if (noioapicquirk || noioapicreroute) {
-> +	if (noioapicquirk || noioapicreroute || entry->index == 0) {
->  		return 0;
->  	} else {
->  		switch (bridge_has_boot_interrupt_variant(dev->bus)) {
-> 
+  static struct msi_domain_ops vmd_msi_domain_ops = {
+    MSI_DOMAIN_DEFAULT_OPS,
+    .get_hwirq = vmd_get_hwirq,
+  };
 
+The functions referenced by MSI_DOMAIN_DEFAULT_OPS would still have to
+be exported, though.
+
+> Doing the if (ops->ptr) ops->ptr() else default_fn(); dance should be
+> simpler to pull off. There are not that many sites to look at, but then we
+> have some of the GICv3 code using the domain ops out of core.
+> 
+> For now doing the __ro_after_init is definitely the simplest and fastest
+> solution to tighten these statically allocated structures.
+
+I'm OK with __ro_after_init, at least as an interim solution.
+
+I do think it would be good to audit all the uses of
+MSI_FLAG_USE_DEF_DOM_OPS and MSI_FLAG_USE_DEF_CHIP_OPS, since they
+seem to be the primary indicator of when the struct might be modified.
+I suspect we could add __ro_after_init to more than just pci-hyperv.c,
+vmd.c, and msi.c
+
+Bjorn
