@@ -1,116 +1,67 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: tglx@linutronix.de, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] PCI/msi: remove unused default PCI IRQ domain code
-Date: Wed,  8 Feb 2017 18:17:43 +0100
-Message-Id: <20170208171744.17100-2-hch@lst.de>
-In-Reply-To: <20170208171744.17100-1-hch@lst.de>
-References: <20170208171744.17100-1-hch@lst.de>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-samsung-soc@vger.kernel.org>,
+        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>
+CC: Joao Pinto <Joao.Pinto@synopsys.com>, <nsekhar@ti.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH 2/4] PCI: dwc: dra7xx: Populate cpu_addr_fixup ops
+Date: Thu, 16 Feb 2017 18:59:10 +0530
+Message-ID: <1487251752-12478-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1487251752-12478-1-git-send-email-kishon@ti.com>
+References: <1487251752-12478-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_msi_create_default_irq_domain is never called in the whole tree, so
-remove it as well as all the supporting code for a default PCI MSI domain.
+Populate cpu_addr_fixup ops to extract the least 28 bits of the
+corresponding cpu address.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/msi.c   | 50 ++------------------------------------------------
- include/linux/msi.h |  3 ---
- 2 files changed, 2 insertions(+), 51 deletions(-)
+ drivers/pci/dwc/pci-dra7xx.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 50c5003295ca..9de17f17a5d2 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -32,30 +32,11 @@ int pci_msi_ignore_mask;
- #define msix_table_size(flags)	((flags & PCI_MSIX_FLAGS_QSIZE) + 1)
- 
- #ifdef CONFIG_PCI_MSI_IRQ_DOMAIN
--static struct irq_domain *pci_msi_default_domain;
--static DEFINE_MUTEX(pci_msi_domain_lock);
--
--struct irq_domain * __weak arch_get_pci_msi_domain(struct pci_dev *dev)
--{
--	return pci_msi_default_domain;
--}
--
--static struct irq_domain *pci_msi_get_domain(struct pci_dev *dev)
--{
--	struct irq_domain *domain;
--
--	domain = dev_get_msi_domain(&dev->dev);
--	if (domain)
--		return domain;
--
--	return arch_get_pci_msi_domain(dev);
--}
--
- static int pci_msi_setup_msi_irqs(struct pci_dev *dev, int nvec, int type)
- {
- 	struct irq_domain *domain;
- 
--	domain = pci_msi_get_domain(dev);
-+	domain = dev_get_msi_domain(&dev->dev);
- 	if (domain && irq_domain_is_hierarchy(domain))
- 		return pci_msi_domain_alloc_irqs(domain, dev, nvec, type);
- 
-@@ -66,7 +47,7 @@ static void pci_msi_teardown_msi_irqs(struct pci_dev *dev)
- {
- 	struct irq_domain *domain;
- 
--	domain = pci_msi_get_domain(dev);
-+	domain = dev_get_msi_domain(&dev->dev);
- 	if (domain && irq_domain_is_hierarchy(domain))
- 		pci_msi_domain_free_irqs(domain, dev);
- 	else
-@@ -1507,33 +1488,6 @@ void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev)
- 	msi_domain_free_irqs(domain, &dev->dev);
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 0984baf..07c45ec 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -88,6 +88,11 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
+ 	writel(value, pcie->base + offset);
  }
  
--/**
-- * pci_msi_create_default_irq_domain - Create a default MSI interrupt domain
-- * @fwnode:	Optional fwnode of the interrupt controller
-- * @info:	MSI domain info
-- * @parent:	Parent irq domain
-- *
-- * Returns: A domain pointer or NULL in case of failure. If successful
-- * the default PCI/MSI irqdomain pointer is updated.
-- */
--struct irq_domain *pci_msi_create_default_irq_domain(struct fwnode_handle *fwnode,
--		struct msi_domain_info *info, struct irq_domain *parent)
--{
--	struct irq_domain *domain;
--
--	mutex_lock(&pci_msi_domain_lock);
--	if (pci_msi_default_domain) {
--		pr_err("PCI: default irq domain for PCI MSI has already been created.\n");
--		domain = NULL;
--	} else {
--		domain = pci_msi_create_irq_domain(fwnode, info, parent);
--		pci_msi_default_domain = domain;
--	}
--	mutex_unlock(&pci_msi_domain_lock);
--
--	return domain;
--}
--
- static int get_msi_id_cb(struct pci_dev *pdev, u16 alias, void *data)
++static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
++{
++	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
++}
++
+ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
  {
- 	u32 *pa = data;
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 0db320b7bb15..18b8566b3ce3 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -319,9 +319,6 @@ struct irq_domain *pci_msi_create_irq_domain(struct fwnode_handle *fwnode,
- int pci_msi_domain_alloc_irqs(struct irq_domain *domain, struct pci_dev *dev,
- 			      int nvec, int type);
- void pci_msi_domain_free_irqs(struct irq_domain *domain, struct pci_dev *dev);
--struct irq_domain *pci_msi_create_default_irq_domain(struct fwnode_handle *fwnode,
--		 struct msi_domain_info *info, struct irq_domain *parent);
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+@@ -152,11 +157,6 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+ 
+-	pp->io_base &= DRA7XX_CPU_TO_BUS_ADDR;
+-	pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR;
+-	pp->cfg0_base &= DRA7XX_CPU_TO_BUS_ADDR;
+-	pp->cfg1_base &= DRA7XX_CPU_TO_BUS_ADDR;
 -
- irq_hw_number_t pci_msi_domain_calc_hwirq(struct pci_dev *dev,
- 					  struct msi_desc *desc);
- int pci_msi_domain_check_cap(struct irq_domain *domain,
+ 	dw_pcie_setup_rc(pp);
+ 
+ 	dra7xx_pcie_establish_link(dra7xx);
+@@ -329,6 +329,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ }
+ 
+ static const struct dw_pcie_ops dw_pcie_ops = {
++	.cpu_addr_fixup = dra7xx_pcie_cpu_addr_fixup,
+ 	.link_up = dra7xx_pcie_link_up,
+ };
+ 
 -- 
-2.11.0
+1.7.9.5
