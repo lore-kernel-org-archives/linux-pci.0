@@ -1,85 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 2/4] PCI: dwc: dra7xx: Populate cpu_addr_fixup ops
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-samsung-soc@vger.kernel.org>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-arm-kernel@axis.com>
-References: <1487251752-12478-1-git-send-email-kishon@ti.com>
- <1487251752-12478-3-git-send-email-kishon@ti.com>
-CC: Joao Pinto <Joao.Pinto@synopsys.com>, <nsekhar@ti.com>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <2636ef0f-78e1-b38a-5864-c53a645e7073@axis.com>
-Date: Mon, 20 Feb 2017 09:32:35 +0100
-MIME-Version: 1.0
-In-Reply-To: <1487251752-12478-3-git-send-email-kishon@ti.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=EnzY=Z5=pengutronix.de=l.stach@kernel.org>
+Return-Path: <SRS0=EnzY=Z5=pengutronix.de=l.stach@kernel.org>
+Message-ID: <1487236714.13536.9.camel@pengutronix.de>
+Subject: Re: [PATCH v4 3/3] PCI: imx6: Add code to support i.MX7D
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Rob Herring <robh@kernel.org>, Andrey Smirnov
+ <andrew.smirnov@gmail.com>,  linux-pci@vger.kernel.org, yurovsky@gmail.com,
+ Bjorn Helgaas <bhelgaas@google.com>,  Mark Rutland <mark.rutland@arm.com>,
+ Lee Jones <lee.jones@linaro.org>, Fabio Estevam <fabio.estevam@nxp.com>,
+ linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+Date: Thu, 16 Feb 2017 10:18:34 +0100
+In-Reply-To: <20170215215751.GD6981@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170207155027.7734-1-andrew.smirnov@gmail.com>
+	 <20170207155027.7734-4-andrew.smirnov@gmail.com>
+	 <20170215171700.5vz5seeihgtwn76p@rob-hp-laptop>
+	 <20170215173850.GH19040@bhelgaas-glaptop.roam.corp.google.com>
+	 <20170215212624.btdhfn4xvuppv6hq@rob-hp-laptop>
+	 <20170215215751.GD6981@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Kishon!
+Am Mittwoch, den 15.02.2017, 15:57 -0600 schrieb Bjorn Helgaas:
+> On Wed, Feb 15, 2017 at 03:26:24PM -0600, Rob Herring wrote:
+> > On Wed, Feb 15, 2017 at 11:38:50AM -0600, Bjorn Helgaas wrote:
+> > > On Wed, Feb 15, 2017 at 11:17:00AM -0600, Rob Herring wrote:
+> > > > On Tue, Feb 07, 2017 at 07:50:27AM -0800, Andrey Smirnov wrote:
+> > > > > Add various bits of code needed to support i.MX7D variant of the IP.
+> > 
+> > > > 
+> > > > [...]
+> > > > 
+> > > > > @@ -251,6 +261,10 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+> > > > >  	u32 val, gpr1, gpr12;
+> > > > >  
+> > > > >  	switch (imx6_pcie->variant) {
+> > > > > +	case IMX7D:
+> > > > > +		reset_control_assert(imx6_pcie->pciephy_reset);
+> > > > > +		reset_control_assert(imx6_pcie->apps_reset);
+> > > > > +		break;
+> > > > >  	case IMX6SX:
+> > > > >  		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+> > > > >  				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
+> > > > 
+> > > > So the difference with i.MX7D is not really that it has a reset or not, 
+> > > > but some platforms use a reset driver and some do not. The latter should 
+> > > > be fixed.
+> > > 
+> > > I have this patch queued for v4.11.  Are these things that should be
+> > > fixed first?  If so, I can drop this.
+> > 
+> > Well, depends if you trust things will get fixed later and if the PHY 
+> > in fact should be separate as that affects the binding. It would affect 
+> > how the driver changes are done as instead of "if (IMX7D) ...", you'd 
+> > have "if (imx6_pcie->apps_reset) ..." for example. That part depends on
+> > how much churn you want there.
+> 
+> I dropped it for now, not that I don't trust it will get fixed, but it
+> sounds like not completely trivial changes and will affect the binding
+> as well, so the intermediate state sounds a little messy.
 
-
-It's nice to see that you are improving the dwc framework+drivers.
-
-pcie-artpec6.c has the same quirk as dra7xx,
-see define ARTPEC6_CPU_TO_BUS_ADDR.
-
-I could create a patch, but I guess it would make more sense
-if it's part of this series.
-
-Keep up the good work!
-
+As I pointed out in direct reply to Rob, I honestly think the binding is
+fine as is and properly reflects the hardware. But I guess he'll comment
+on that, so JFYI.
 
 Regards,
-Niklas
-
-
-On 02/16/2017 02:29 PM, Kishon Vijay Abraham I wrote:
-> Populate cpu_addr_fixup ops to extract the least 28 bits of the
-> corresponding cpu address.
->
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/dwc/pci-dra7xx.c |   11 ++++++-----
->  1 file changed, 6 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-> index 0984baf..07c45ec 100644
-> --- a/drivers/pci/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/dwc/pci-dra7xx.c
-> @@ -88,6 +88,11 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
->  	writel(value, pcie->base + offset);
->  }
->  
-> +static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
-> +{
-> +	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
-> +}
-> +
->  static int dra7xx_pcie_link_up(struct dw_pcie *pci)
->  {
->  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-> @@ -152,11 +157,6 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->  	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
->  
-> -	pp->io_base &= DRA7XX_CPU_TO_BUS_ADDR;
-> -	pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR;
-> -	pp->cfg0_base &= DRA7XX_CPU_TO_BUS_ADDR;
-> -	pp->cfg1_base &= DRA7XX_CPU_TO_BUS_ADDR;
-> -
->  	dw_pcie_setup_rc(pp);
->  
->  	dra7xx_pcie_establish_link(dra7xx);
-> @@ -329,6 +329,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
->  }
->  
->  static const struct dw_pcie_ops dw_pcie_ops = {
-> +	.cpu_addr_fixup = dra7xx_pcie_cpu_addr_fixup,
->  	.link_up = dra7xx_pcie_link_up,
->  };
->  
+Lucas
