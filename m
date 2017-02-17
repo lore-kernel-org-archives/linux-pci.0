@@ -1,100 +1,97 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: pciehp: Don't enable PME on runtime suspend
-Date: Mon, 06 Feb 2017 12:56:36 +0100
-Message-ID: <1585539.p8kZNrfTxC@aspire.rjw.lan>
-In-Reply-To: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
-References: <d1ae979d256631e7c189694a6d3e1a518abf3fc8.1486359844.git.lukas@wunner.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v2 09/22] dt-bindings: PCI: Add dt bindings for pci designware
+ EP mode
+Date: Fri, 17 Feb 2017 15:20:29 +0530
+Message-ID: <1487325042-28227-10-git-send-email-kishon@ti.com>
+In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+ Kishon Vijay Abraham I <kishon@ti.com>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, February 06, 2017 06:54:37 AM Lukas Wunner wrote:
-> Since commit 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
-> hotplug ports") we runtime suspend a hotplug port to D3hot when all its
-> children are runtime suspended or none are present.
-> 
-> When runtime suspending the port the PCI core automatically enables PME:
->     pci_pm_runtime_suspend()
->         pci_finish_runtime_suspend()
->             __pci_enable_wake()
-> 
-> According to the PCI Express Base Specification, section 6.7.3.4:
->    "Note that PME and Hot-Plug Event interrupts (when both are
->     implemented) always share the same MSI or MSI-X vector [...]
->     If wake generation is required by the associated form factor
->     specification, a hot-plug capable Downstream Port must support
->     generation of a wakeup event (using the PME mechanism) on hotplug
->     events that occur when the system is in a sleep state or the Port
->     is in device state D1, D2, or D3Hot."
-> 
-> Thus, if the port is runtime suspended even though it is still occupied,
-> it may immediately be woken by a PME interrupt.  One scenario where this
-> happens is if all children of the hotplug port have runtime suspended.
-> Another scenario is power control via sysfs:  If a user manually turns
-> the hotplug port off (e.g. to safely remove the card), PME will signal
-> an interrupt for the still-occupied slot, which is interpreted by pciehp
-> as re-insertion of a card.  As a result, power control via sysfs is no
-> longer possible.  This was observed and reported by Yinghai Lu.
-> 
-> PME is in fact unnecessary on hotplug ports:  Hotplug can be signaled
-> even in D3hot, and commit 68db9bc81436 ensures that all parents of the
-> hotplug port are kept awake so that interrupts can be delivered.
-> PME would allow us to runtime suspend the parent ports as well, but we
-> do not make use of it because we cannot be sure if PME actually works.
-> Thunderbolt controllers for instance advertise PME capability, but at
-> least on Macs the PME pin is not connected.
-> 
-> Since we do not rely on PME for hotplug ports, we may as well not enable
-> it, thereby avoiding its negative side effects.  However the present
-> commit deliberately only avoids enabling PME on runtime suspend, the
-> ability to enable it for system sleep is retained.
-> 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=193951
-> Fixes: 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
->     hotplug ports")
-> Reported-by: Yinghai Lu <yinghai@kernel.org>
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
-> 
-> v1-> v2:
->  Move check for is_hotplug_bridge from pci_finish_runtime_suspend()
->  down into pci_dev_run_wake(), this seems cleaner, less clumsy.
+Add device tree binding documentation for pci designware EP mode.
 
-ACK
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ .../devicetree/bindings/pci/designware-pcie.txt    |   26 ++++++++++++++------
+ 1 file changed, 18 insertions(+), 8 deletions(-)
 
-> 
->  drivers/pci/pci.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a881c0d..9c22e62 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2096,6 +2096,14 @@ bool pci_dev_run_wake(struct pci_dev *dev)
->  {
->  	struct pci_bus *bus = dev->bus;
->  
-> +	/*
-> +	 * Don't enable PME at runtime on hotplug ports (even if supported)
-> +	 * since PME sends unwanted interrupts if the slot is occupied while
-> +	 * suspended to D3hot (PCIe Base Specification, section 6.7.3.4).
-> +	 */
-> +	if (dev->is_hotplug_bridge)
-> +		return false;
-> +
->  	if (device_run_wake(&dev->dev))
->  		return true;
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index 1392c70..b2480dd 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -6,30 +6,40 @@ Required properties:
+ - reg-names: Must be "config" for the PCIe configuration space.
+     (The old way of getting the configuration address space from "ranges"
+     is deprecated and should be avoided.)
++- num-lanes: number of lanes to use
++RC mode:
+ - #address-cells: set to <3>
+ - #size-cells: set to <2>
+ - device_type: set to "pci"
+ - ranges: ranges for the PCI memory and I/O regions
+ - #interrupt-cells: set to <1>
+-- interrupt-map-mask and interrupt-map: standard PCI properties
+-	to define the mapping of the PCIe interface to interrupt
++- interrupt-map-mask and interrupt-map: standard PCI
++	properties to define the mapping of the PCIe interface to interrupt
+ 	numbers.
+-- num-lanes: number of lanes to use
++EP mode:
++- num-ib-windows: number of inbound address translation
++        windows
++- num-ob-windows: number of outbound address translation
++        windows
+ 
+ Optional properties:
+-- num-viewport: number of view ports configured in hardware.  If a platform
+-  does not specify it, the driver assumes 2.
+ - num-lanes: number of lanes to use (this property should be specified unless
+   the link is brought already up in BIOS)
+ - reset-gpio: gpio pin number of power good signal
+-- bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
+-  specify this property, to keep backwards compatibility a range of 0x00-0xff
+-  is assumed if not present)
+ - clocks: Must contain an entry for each entry in clock-names.
+ 	See ../clocks/clock-bindings.txt for details.
+ - clock-names: Must include the following entries:
+ 	- "pcie"
+ 	- "pcie_bus"
++RC mode:
++- num-viewport: number of view ports configured in
++  hardware. If a platform does not specify it, the driver assumes 2.
++- bus-range: PCI bus numbers covered (it is recommended
++  for new devicetrees to specify this property, to keep backwards
++  compatibility a range of 0x00-0xff is assumed if not present)
++EP mode:
++- max-functions: maximum number of functions that can be
++  configured
+ 
+ Example configuration:
+ 
+-- 
+1.7.9.5
 
-Thanks,
-Rafael
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
