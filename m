@@ -1,142 +1,170 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:58773 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750922AbdBOGpU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 01:45:20 -0500
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1F6hS7r170899
-        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 01:45:20 -0500
-Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 28mf8pcwxk-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Wed, 15 Feb 2017 01:45:19 -0500
-Received: from localhost
-        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <xyjxie@linux.vnet.ibm.com>;
-        Tue, 14 Feb 2017 23:45:19 -0700
-From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
-        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
-        paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: [PATCH v9 3/3] PCI: Don't extend device's size when using default alignment for all devices
-Date: Wed, 15 Feb 2017 14:45:06 +0800
-In-Reply-To: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
-Message-Id: <1487141106-2503-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 17 Feb 2017 09:04:59 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v2 03/22] PCI: endpoint: Introduce configfs entry for
+ configuring EP functions
+Message-ID: <20170217170459.GA15276@infradead.org>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+ <1487325042-28227-4-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+In-Reply-To: <1487325042-28227-4-git-send-email-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ linux-doc@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we reassign the alignment by extending resources' size in
-pci_reassigndev_resource_alignment(). This could potentially break
-some drivers when the driver uses the size to locate register
-whose length is related to the size. Some examples as below:
+On Fri, Feb 17, 2017 at 03:20:23PM +0530, Kishon Vijay Abraham I wrote:
+> Introduce a new configfs entry to configure the EP function (like
+> configuring the standard configuration header entries) and to
+> bind the EP function with EP controller.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/endpoint/Kconfig      |   14 +-
+>  drivers/pci/endpoint/Makefile     |    1 +
+>  drivers/pci/endpoint/pci-ep-cfs.c |  427 +++++++++++++++++++++++++++++++++++++
+>  3 files changed, 440 insertions(+), 2 deletions(-)
+>  create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
+> 
+> diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
+> index 7eb1c79..8470f0b 100644
+> --- a/drivers/pci/endpoint/Kconfig
+> +++ b/drivers/pci/endpoint/Kconfig
+> @@ -6,7 +6,6 @@ menu "PCI Endpoint"
+>  
+>  config PCI_ENDPOINT
+>  	bool "PCI Endpoint Support"
+> -	select CONFIGFS_FS
+>  	help
+>  	   Enable this configuration option to support configurable PCI
+>  	   endpoint. This should be enabled if the platform has a PCI
+> @@ -14,8 +13,19 @@ config PCI_ENDPOINT
+>  
+>  	   Enabling this option will build the endpoint library, which
+>  	   includes endpoint controller library and endpoint function
+> -	   library.
+> +	   library. This will also enable the configfs entry required to
+> +	   configure the endpoint function and used to bind the
+> +	   function with a endpoint controller.
+>  
+>  	   If in doubt, say "N" to disable Endpoint support.
+>  
+> +config PCI_ENDPOINT_CONFIGFS
+> +	bool "PCI Endpoint Configfs Support"
+> +	depends on PCI_ENDPOINT
+> +	select CONFIGFS_FS
+> +	help
+> +	   This will enable the configfs entry that can be used to
+> +	   configure the endpoint function and used to bind the
+> +	   function with a endpoint controller.
+> +
+>  endmenu
+> diff --git a/drivers/pci/endpoint/Makefile b/drivers/pci/endpoint/Makefile
+> index dc1bc16..dd9163c 100644
+> --- a/drivers/pci/endpoint/Makefile
+> +++ b/drivers/pci/endpoint/Makefile
+> @@ -4,3 +4,4 @@
+>  
+>  obj-$(CONFIG_PCI_ENDPOINT)		+= pci-epc-core.o pci-epf-core.o\
+>  					   pci-epc-mem.o
+> +obj-$(CONFIG_PCI_ENDPOINT_CONFIGFS)	+= pci-ep-cfs.o
+> diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+> new file mode 100644
+> index 0000000..ed0f8c2
+> --- /dev/null
+> +++ b/drivers/pci/endpoint/pci-ep-cfs.c
+> @@ -0,0 +1,427 @@
+> +/**
+> + * configfs to configure the PCI endpoint
+> + *
+> + * Copyright (C) 2017 Texas Instruments
+> + * Author: Kishon Vijay Abraham I <kishon@ti.com>
+> + *
+> + * This program is free software: you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 of
+> + * the License as published by the Free Software Foundation.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+> + */
+> +
+> +#include <linux/configfs.h>
+> +#include <linux/module.h>
+> +#include <linux/slab.h>
+> +
+> +#include <linux/pci-epc.h>
+> +#include <linux/pci-epf.h>
+> +
+> +struct pci_epf_info {
+> +	struct config_group group;
+> +	struct list_head list;
+> +	struct pci_epf *epf;
+> +};
+> +
+> +struct pci_ep_info {
+> +	struct config_group group;
+> +	struct config_group pci_epf_group;
+> +	/* mutex to protect pci_epf list */
+> +	struct mutex lock;
+> +	struct list_head pci_epf;
+> +	const char *epc_name;
+> +	struct pci_epc *epc;
+> +};
+> +
+> +static inline struct pci_epf_info *to_pci_epf_info(struct config_item *item)
+> +{
+> +	return container_of(to_config_group(item), struct pci_epf_info, group);
+> +}
+> +
+> +static inline struct pci_ep_info *to_pci_ep_info(struct config_item *item)
+> +{
+> +	return container_of(to_config_group(item), struct pci_ep_info, group);
+> +}
+> +
+> +#define PCI_EPF_HEADER_R(_name)						       \
+> +static ssize_t pci_epf_##_name##_show(struct config_item *item,	char *page)    \
+> +{									       \
+> +	struct pci_epf *epf = to_pci_epf_info(item)->epf;		       \
+> +	if (!epf->header) {						       \
+> +		WARN_ON_ONCE("epf device not bound to function driver\n");     \
 
-- misc\Hpilo.c:
-off = pci_resource_len(pdev, bar) - 0x2000;
+WARN_ON_ONCE takes a string to evaluate as argument, not a message
 
-- net\ethernet\chelsio\cxgb4\cxgb4_uld.h:
-(pci_resource_len((pdev), 2) - roundup_pow_of_two((vres)->ocq.size))
+> +		return 0;					
 
-- infiniband\hw\nes\Nes_hw.c:
-num_pds = pci_resource_len(nesdev->pcidev, BAR_1) >> PAGE_SHIFT;
+and if we return 0 here the callers will retry because that is
+interpreted as a short read.  The code should be something like:
 
-This risk could be easily prevented before because we only had one way
-(kernel parameter resource_alignment) to touch those codes. And even
-some users may be happy to see the extended size.
+	if (WARN_ON_ONCE(!epf->header))
+		return -EINVAL;
 
-But now we define a default alignment for all devices which would also
-touch those codes. It would be hard to prevent the risk in this case. So
-this patch tries to use START_ALIGNMENT to identify the resource's
-alignment without extending the size when the alignment reassigning is
-caused by the default alignment.
+> +	if (!epf->header) {						       \
+> +		WARN_ON_ONCE("epf device not bound to function driver\n");     \
+> +		return 0;						       \
+> +	}								       \
 
-Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
----
- drivers/pci/pci.c |   34 ++++++++++++++++++++++++----------
- 1 files changed, 24 insertions(+), 10 deletions(-)
+Same here, and a couple more instances down below.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 2622e9b..0017e5e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4958,7 +4958,8 @@ void pci_ignore_hotplug(struct pci_dev *dev)
-  * RETURNS: Resource alignment if it is specified.
-  *          Zero if it is not specified.
-  */
--static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-+static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
-+							bool *resize)
- {
- 	int seg, bus, slot, func, align_order, count;
- 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
-@@ -5002,6 +5003,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 				(!device || (device == dev->device)) &&
- 				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
- 				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
-+				*resize = true;
- 				if (align_order == -1)
- 					align = PAGE_SIZE;
- 				else
-@@ -5027,6 +5029,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 				bus == dev->bus->number &&
- 				slot == PCI_SLOT(dev->devfn) &&
- 				func == PCI_FUNC(dev->devfn)) {
-+				*resize = true;
- 				if (align_order == -1)
- 					align = PAGE_SIZE;
- 				else
-@@ -5059,6 +5062,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	struct resource *r;
- 	resource_size_t align, size;
- 	u16 command;
-+	bool resize = false;
- 
- 	/*
- 	 * VF BARs are read-only zero according to SR-IOV spec r1.1, sec
-@@ -5070,7 +5074,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 		return;
- 
- 	/* check if specified PCI is target device to reassign */
--	align = pci_specified_resource_alignment(dev);
-+	align = pci_specified_resource_alignment(dev, &resize);
- 	if (!align)
- 		return;
- 
-@@ -5098,15 +5102,25 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 		}
- 
- 		size = resource_size(r);
--		if (size < align) {
--			size = align;
--			dev_info(&dev->dev,
--				"Rounding up size of resource #%d to %#llx.\n",
--				i, (unsigned long long)size);
-+		if (resize) {
-+			if (size < align) {
-+				size = align;
-+				dev_info(&dev->dev,
-+					"Rounding up size of resource #%d to %#llx.\n",
-+					i, (unsigned long long)size);
-+			}
-+			r->flags |= IORESOURCE_UNSET;
-+			r->end = size - 1;
-+			r->start = 0;
-+		} else {
-+			if (size < align) {
-+				r->flags &= ~IORESOURCE_SIZEALIGN;
-+				r->flags |= IORESOURCE_STARTALIGN |
-+							IORESOURCE_UNSET;
-+				r->start = align;
-+				r->end = r->start + size - 1;
-+			}
- 		}
--		r->flags |= IORESOURCE_UNSET;
--		r->end = size - 1;
--		r->start = 0;
- 	}
- 	/* Need to disable bridge's resource window,
- 	 * to enable the kernel to reassign new resource
--- 
-1.7.1
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
