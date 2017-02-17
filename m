@@ -1,101 +1,72 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 15 Feb 2017 10:06:36 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Paul Gortmaker <paul.gortmaker@windriver.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: Re: [PATCH] PCI/PME: Restore pcie_pme_driver.remove
-Message-ID: <20170215160636.GE19040@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170215051748.3346-1-yinghai@kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170215051748.3346-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:19700 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755570AbdBQGNQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2017 01:13:16 -0500
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Mayurkumar Patel <mayurkumar.patel@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI,pciehp: Don't handle PDC for cards with attention button
+Date: Thu, 16 Feb 2017 22:12:47 -0800
+Message-Id: <20170217061247.5591-1-yinghai@kernel.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 14, 2017 at 09:17:48PM -0800, Yinghai Lu wrote:
-> Found 4.9 and later, removing pci device for pcie port via /sys failed:
-> ------------[ cut here ]------------
-> kernel BUG at drivers/pci/msi.c:370!
-> invalid opcode: 0000 [#1] SMP
-> Modules linked in:
-> CPU: 1 PID: 14509 Comm: sh Tainted: G    W  4.8.0-rc1-yh-00012-gd29438d
-> RIP: 0010:[<ffffffff9758bbf5>]  free_msi_irqs+0x65/0x190
-> ...
-> Call Trace:
->  [<ffffffff9758cda4>] pci_disable_msi+0x34/0x40
->  [<ffffffff97583817>] cleanup_service_irqs+0x27/0x30
->  [<ffffffff97583e9a>] pcie_port_device_remove+0x2a/0x40
->  [<ffffffff97584250>] pcie_portdrv_remove+0x40/0x50
->  [<ffffffff97576d7b>] pci_device_remove+0x4b/0xc0
->  [<ffffffff9785ebe6>] __device_release_driver+0xb6/0x150
->  [<ffffffff9785eca5>] device_release_driver+0x25/0x40
->  [<ffffffff975702e4>] pci_stop_bus_device+0x74/0xa0
->  [<ffffffff975704ea>] pci_stop_and_remove_bus_device_locked+0x1a/0x30
->  [<ffffffff97578810>] remove_store+0x50/0x70
->  [<ffffffff9785a378>] dev_attr_store+0x18/0x30
->  [<ffffffff97260b64>] sysfs_kf_write+0x44/0x60
->  [<ffffffff9725feae>] kernfs_fop_write+0x10e/0x190
->  [<ffffffff971e13f8>] __vfs_write+0x28/0x110
->  [<ffffffff970b0fa4>] ? percpu_down_read+0x44/0x80
->  [<ffffffff971e53a7>] ? __sb_start_write+0xa7/0xe0
->  [<ffffffff971e53a7>] ? __sb_start_write+0xa7/0xe0
->  [<ffffffff971e1f04>] vfs_write+0xc4/0x180
->  [<ffffffff971e3089>] SyS_write+0x49/0xa0
->  [<ffffffff97001a46>] do_syscall_64+0xa6/0x1b0
->  [<ffffffff9819201e>] entry_SYSCALL64_slow_path+0x25/0x25
-> ...
->  RIP  [<ffffffff9758bbf5>] free_msi_irqs+0x65/0x190
->  RSP <ffff89ad3085bc48>
-> ---[ end trace f4505e1dac5b95d3 ]---
-> Segmentation fault
-> 
-> Bisect to commit d7def2040077 ("PCI/PME: Make explicitly non-modular").
-> That commit did extra thing like remove the .remove for pcie_pme_driver.
-> 
-> Put back pcie_pme_remove and restore to pcie_pme_driver fix the problem.
-> 
-> Fixes: d7def2040077 ("PCI/PME: Make explicitly non-modular")
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+On one system during power off slot, find card get power on right away.
+ # echo 0 > /sys/bus/pci/slots/1/power
+ pci_hotplug: power_write_file: power = 0
+ pciehp 0000:16:00.0:pcie004: pciehp_get_power_status: SLOTCTRL a8 value read 11f1
+ pciehp 0000:16:00.0:pcie004: pciehp_unconfigure_device: domain:bus:dev = 0000:17:00
+ pci 0000:17:00.0: PME# disabled
+ pci 0000:17:00.0: freeing pci_dev info
+ pciehp 0000:16:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+ pciehp 0000:16:00.0:pcie004: pciehp_power_off_slot: SLOTCTRL a8 write cmd 400
+ pciehp 0000:16:00.0:pcie004: pending interrupts 0x0108 from Slot Status
+ pciehp 0000:16:00.0:pcie004: Slot(1): Link Down
+ pciehp 0000:16:00.0:pcie004: Slot(1): Link Down event ignored; already powering off
+ pciehp 0000:16:00.0:pcie004: pciehp_green_led_off: SLOTCTRL a8 write cmd 300
+ pciehp 0000:16:00.0:pcie004: pending interrupts 0x0018 from Slot Status  <======
+ pciehp 0000:16:00.0:pcie004: Slot(1): Card present
+ pciehp 0000:16:00.0:pcie004: pciehp_get_power_status: SLOTCTRL a8 value read 17f1
+ pciehp 0000:16:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+ pciehp 0000:16:00.0:pcie004: pciehp_power_on_slot: SLOTCTRL a8 write cmd 0
+ pciehp 0000:16:00.0:pcie004: pciehp_green_led_blink: SLOTCTRL a8 write cmd 200
+ pciehp 0000:16:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+ pciehp 0000:16:00.0:pcie004: pciehp_check_link_active: lnk_status = f103
+ pciehp 0000:16:00.0:pcie004: pending interrupts 0x0108 from Slot Status
+ pciehp 0000:16:00.0:pcie004: Slot(1): Link Up
+...
 
-Thanks, I translated Rafael's "ACK" into an Acked-by and applied this to
-for-linus for v4.10.
+Somehow PDC bit get set, and during handling interrupt that is caused by
+CC, that PDC also get handled, and the card get powered on again.
 
-I think the BUG_ON() in free_msi_irqs() is the same one we trip over in
-https://bugzilla.kernel.org/show_bug.cgi?id=121711 .  That seems like an
-excessive response to a driver that forgets to free an IRQ.
+In pcie_enable_notification(), we already only enable notification
+for PDC when attention button is not there.
+So we can safely add checking in pciehp_isr() to skip that PDC handling.
 
-> diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-> index 7175293..2dd1c68 100644
-> --- a/drivers/pci/pcie/pme.c
-> +++ b/drivers/pci/pcie/pme.c
-> @@ -433,6 +433,17 @@ static int pcie_pme_resume(struct pcie_device *srv)
->  	return 0;
->  }
->  
-> +/**
-> + * pcie_pme_remove - Prepare PCIe PME service device for removal.
-> + * @srv - PCIe service device to remove.
-> + */
-> +static void pcie_pme_remove(struct pcie_device *srv)
-> +{
-> +	pcie_pme_suspend(srv);
-> +	free_irq(srv->irq, srv);
-> +	kfree(get_service_data(srv));
-> +}
-> +
->  static struct pcie_port_service_driver pcie_pme_driver = {
->  	.name		= "pcie_pme",
->  	.port_type	= PCI_EXP_TYPE_ROOT_PORT,
-> @@ -441,6 +452,7 @@ static struct pcie_port_service_driver pcie_pme_driver = {
->  	.probe		= pcie_pme_probe,
->  	.suspend	= pcie_pme_suspend,
->  	.resume		= pcie_pme_resume,
-> +	.remove		= pcie_pme_remove,
->  };
->  
->  /**
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+
+---
+ drivers/pci/hotplug/pciehp_hpc.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
++++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+@@ -618,8 +618,9 @@ static irqreturn_t pciehp_isr(int irq, v
+ 		present = !!(status & PCI_EXP_SLTSTA_PDS);
+ 		ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
+ 			  present ? "" : "not ");
+-		pciehp_queue_interrupt_event(slot, present ? INT_PRESENCE_ON :
+-					     INT_PRESENCE_OFF);
++		if (!ATTN_BUTTN(ctrl))
++			pciehp_queue_interrupt_event(slot, present ?
++					INT_PRESENCE_ON : INT_PRESENCE_OFF);
+ 	}
+ 
+ 	/* Check Power Fault Detected */
