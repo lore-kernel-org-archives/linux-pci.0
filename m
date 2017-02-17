@@ -1,78 +1,86 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Fri, 10 Feb 2017 10:57:20 -0700
-Message-Id: <1486749440-24309-1-git-send-email-logang@deltatee.com>
-In-Reply-To: <20170210145124.GA24594@kroah.com>
-References: <20170210145124.GA24594@kroah.com>
-Subject: [PATCH] switchtec: cleanup cdev init
+Date: Fri, 17 Feb 2017 16:39:16 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Mayurkumar Patel <mayurkumar.patel@intel.com>,
+        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI,pciehp: Don't handle PDC for cards with attention
+ button
+Message-ID: <20170217223916.GG17762@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170217061247.5591-1-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170217061247.5591-1-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Per a suggestion from Greg Kroah-Hartman [1], don't set the cdev's
-kobject parent. This allows us to use device_register instead of init
-and add.
+On Thu, Feb 16, 2017 at 10:12:47PM -0800, Yinghai Lu wrote:
+> On one system during power off slot, find card get power on right away.
+>  # echo 0 > /sys/bus/pci/slots/1/power
+>  pci_hotplug: power_write_file: power = 0
+>  pciehp 0000:16:00.0:pcie004: pciehp_get_power_status: SLOTCTRL a8 value read 11f1
+>  pciehp 0000:16:00.0:pcie004: pciehp_unconfigure_device: domain:bus:dev = 0000:17:00
+>  pci 0000:17:00.0: PME# disabled
+>  pci 0000:17:00.0: freeing pci_dev info
+>  pciehp 0000:16:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+>  pciehp 0000:16:00.0:pcie004: pciehp_power_off_slot: SLOTCTRL a8 write cmd 400
+>  pciehp 0000:16:00.0:pcie004: pending interrupts 0x0108 from Slot Status
+>  pciehp 0000:16:00.0:pcie004: Slot(1): Link Down
+>  pciehp 0000:16:00.0:pcie004: Slot(1): Link Down event ignored; already powering off
+>  pciehp 0000:16:00.0:pcie004: pciehp_green_led_off: SLOTCTRL a8 write cmd 300
+>  pciehp 0000:16:00.0:pcie004: pending interrupts 0x0018 from Slot Status  <======
+>  pciehp 0000:16:00.0:pcie004: Slot(1): Card present
+>  pciehp 0000:16:00.0:pcie004: pciehp_get_power_status: SLOTCTRL a8 value read 17f1
+>  pciehp 0000:16:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+>  pciehp 0000:16:00.0:pcie004: pciehp_power_on_slot: SLOTCTRL a8 write cmd 0
+>  pciehp 0000:16:00.0:pcie004: pciehp_green_led_blink: SLOTCTRL a8 write cmd 200
+>  pciehp 0000:16:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+>  pciehp 0000:16:00.0:pcie004: pciehp_check_link_active: lnk_status = f103
+>  pciehp 0000:16:00.0:pcie004: pending interrupts 0x0108 from Slot Status
+>  pciehp 0000:16:00.0:pcie004: Slot(1): Link Up
+> ...
+> 
+> Somehow PDC bit get set, and during handling interrupt that is caused by
+> CC, that PDC also get handled, and the card get powered on again.
+> 
+> In pcie_enable_notification(), we already only enable notification
+> for PDC when attention button is not there.
+> So we can safely add checking in pciehp_isr() to skip that PDC handling.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> 
+> ---
+>  drivers/pci/hotplug/pciehp_hpc.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
+> +++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -618,8 +618,9 @@ static irqreturn_t pciehp_isr(int irq, v
+>  		present = !!(status & PCI_EXP_SLTSTA_PDS);
+>  		ctrl_info(ctrl, "Slot(%s): Card %spresent\n", slot_name(slot),
+>  			  present ? "" : "not ");
+> -		pciehp_queue_interrupt_event(slot, present ? INT_PRESENCE_ON :
+> -					     INT_PRESENCE_OFF);
+> +		if (!ATTN_BUTTN(ctrl))
+> +			pciehp_queue_interrupt_event(slot, present ?
+> +					INT_PRESENCE_ON : INT_PRESENCE_OFF);
 
-[1] https://lkml.org/lkml/2017/2/10/370
----
- drivers/pci/switch/switchtec.c | 15 +++++++--------
- 1 file changed, 7 insertions(+), 8 deletions(-)
+I don't think it really makes sense to tie PDC handling with the
+attention button.  It might happen to avoid the problem on your
+system, but I don't see the logical connection between them.
 
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 82bfd18..014eaec 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -1222,24 +1222,23 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
- 		return ERR_PTR(minor);
- 
- 	dev = &stdev->dev;
--	device_initialize(dev);
- 	dev->devt = MKDEV(MAJOR(switchtec_devt), minor);
--	dev->class = switchtec_class;
--	dev->parent = &pdev->dev;
--	dev->groups = switchtec_device_groups;
--	dev->release = stdev_release;
--	dev_set_name(dev, "switchtec%d", minor);
- 
- 	cdev = &stdev->cdev;
- 	cdev_init(cdev, &switchtec_fops);
- 	cdev->owner = THIS_MODULE;
--	cdev->kobj.parent = &dev->kobj;
- 
- 	rc = cdev_add(&stdev->cdev, dev->devt, 1);
- 	if (rc)
- 		goto err_cdev;
- 
--	rc = device_add(dev);
-+	dev->class = switchtec_class;
-+	dev->parent = &pdev->dev;
-+	dev->groups = switchtec_device_groups;
-+	dev->release = stdev_release;
-+	dev_set_name(dev, "switchtec%d", minor);
-+
-+	rc = device_register(dev);
- 	if (rc) {
- 		cdev_del(&stdev->cdev);
- 		put_device(dev);
--- 
-2.1.4
+Can you reproduce this by disabling pciehp and driving this sequence
+manually with setpci?  I suspect that we are tripping over our own
+feet because we read PCI_EXP_SLTSTA once, clear it (probably too
+early), then queue multiple events, then process those events possibly
+simultaneously.
+
+>  	}
+>  
+>  	/* Check Power Fault Detected */
