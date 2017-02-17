@@ -1,66 +1,84 @@
-Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=PF/i=ZZ=wunner.de=lukas@kernel.org>
-Message-Id: <e85155b87c59543dd4a66fc2516876071567ff79.1486913733.git.lukas@wunner.de>
-In-Reply-To: <cover.1486913733.git.lukas@wunner.de>
-References: <cover.1486913733.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Sun, 12 Feb 2017 17:07:45 +0100
-Subject: [PATCH v6 4/8] Revert "PM / Runtime: Remove the exported function
- pm_children_suspended()"
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Andreas Noever <andreas.noever@gmail.com>, linux-pci@vger.kernel.org, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail5.windriver.com ([192.103.53.11]:37204 "EHLO mail5.wrs.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753497AbdBQAUP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Feb 2017 19:20:15 -0500
+From: Yadi Hu <yadi.hu@windriver.com>
+To: <yadi.hu@windriver.com>, <lftan@altera.com>
+CC: <linux-pci@vger.kernel.org>, <rfi@lists.rocketboards.org>
+Subject: [PATCH] PCI: altera: Check TLP completion status
+Date: Fri, 17 Feb 2017 08:19:56 +0800
+Message-ID: <1487290796-21192-2-git-send-email-yadi.hu@windriver.com>
+In-Reply-To: <1487290796-21192-1-git-send-email-yadi.hu@windriver.com>
+References: <1487290796-21192-1-git-send-email-yadi.hu@windriver.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This reverts commit 62006c1702b3b1be0c0726949e0ee0ea2326be9c which
-removed pm_children_suspended() because it had only a single caller.
-We're about to add a second caller, so establish the status quo ante.
+From: Ley Foon Tan <lftan@altera.com>
 
-Cc: Ulf Hansson <ulf.hansson@linaro.org>
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Check TLP packet successful completion status.  This fix the issue when
+accessing multi-function devices in enumeration process, TLP will return
+error when accessing non-exist function number.  Returns PCI error code
+instead of generic errno.
+
+Tested on Ethernet adapter card with multi-functions.
+
+[bhelgaas: simplify completion status checking code]
+Signed-off-by: Ley Foon Tan <lftan@altera.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/base/power/runtime.c | 3 +--
- include/linux/pm_runtime.h   | 7 +++++++
- 2 files changed, 8 insertions(+), 2 deletions(-)
+ drivers/pci/host/pcie-altera.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/base/power/runtime.c b/drivers/base/power/runtime.c
-index 872eac4cb1df..03293c32793c 100644
---- a/drivers/base/power/runtime.c
-+++ b/drivers/base/power/runtime.c
-@@ -243,8 +243,7 @@ static int rpm_check_suspend_allowed(struct device *dev)
- 		retval = -EACCES;
- 	else if (atomic_read(&dev->power.usage_count) > 0)
- 		retval = -EAGAIN;
--	else if (!dev->power.ignore_children &&
--			atomic_read(&dev->power.child_count))
-+	else if (!pm_children_suspended(dev))
- 		retval = -EBUSY;
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index ed736a9..072255d 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -55,6 +55,7 @@
+ #define TLP_CFG_DW2(bus, devfn, offset)	\
+ 				(((bus) << 24) | ((devfn) << 16) | (offset))
+ #define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
++#define TLP_COMP_STATUS(s)		(((s) >> 12) & 7)
+ #define TLP_HDR_SIZE			3
+ #define TLP_LOOP			500
+ #define RP_DEVFN			0
+@@ -171,6 +172,7 @@ static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
+ 	bool sop = 0;
+ 	u32 ctrl;
+ 	u32 reg0, reg1;
++	u32 comp_status = 1;
  
- 	/* Pending resume requests take precedence over suspends. */
-diff --git a/include/linux/pm_runtime.h b/include/linux/pm_runtime.h
-index ca4823e675e2..7de2aa5c3692 100644
---- a/include/linux/pm_runtime.h
-+++ b/include/linux/pm_runtime.h
-@@ -66,6 +66,12 @@ static inline void pm_suspend_ignore_children(struct device *dev, bool enable)
- 	dev->power.ignore_children = enable;
+ 	/*
+ 	 * Minimum 2 loops to read TLP headers and 1 loop to read data
+@@ -182,19 +184,25 @@ static int tlp_read_packet(struct altera_pcie *pcie, u32 *value)
+ 			reg0 = cra_readl(pcie, RP_RXCPL_REG0);
+ 			reg1 = cra_readl(pcie, RP_RXCPL_REG1);
+ 
+-			if (ctrl & RP_RXCPL_SOP)
++			if (ctrl & RP_RXCPL_SOP) {
+ 				sop = true;
++				comp_status = TLP_COMP_STATUS(reg1);
++			}
+ 
+ 			if (ctrl & RP_RXCPL_EOP) {
++				if (comp_status)
++					return PCIBIOS_DEVICE_NOT_FOUND;
++
+ 				if (value)
+ 					*value = reg0;
++
+ 				return PCIBIOS_SUCCESSFUL;
+ 			}
+ 		}
+ 		udelay(5);
+ 	}
+ 
+-	return -ENOENT;
++	return PCIBIOS_DEVICE_NOT_FOUND;
  }
  
-+static inline bool pm_children_suspended(struct device *dev)
-+{
-+	return dev->power.ignore_children
-+		|| !atomic_read(&dev->power.child_count);
-+}
-+
- static inline void pm_runtime_get_noresume(struct device *dev)
- {
- 	atomic_inc(&dev->power.usage_count);
-@@ -161,6 +167,7 @@ static inline void pm_runtime_allow(struct device *dev) {}
- static inline void pm_runtime_forbid(struct device *dev) {}
- 
- static inline void pm_suspend_ignore_children(struct device *dev, bool enable) {}
-+static inline bool pm_children_suspended(struct device *dev) { return false; }
- static inline void pm_runtime_get_noresume(struct device *dev) {}
- static inline void pm_runtime_put_noidle(struct device *dev) {}
- static inline bool device_run_wake(struct device *dev) { return false; }
+ static void tlp_write_packet(struct altera_pcie *pcie, u32 *headers,
 -- 
-2.11.0
+2.9.3
