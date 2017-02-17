@@ -1,74 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50023 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751023AbdBUPpY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Feb 2017 10:45:24 -0500
-Subject: Re: [PATCH] xen: do not re-use pirq number cached in pci device msi
- msg data
-To: Dan Streetman <ddstreet@ieee.org>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-References: <04f2a09f-59be-a720-bc98-4afb53171790@oracle.com>
- <20170113200751.20125-1-ddstreet@ieee.org>
- <20170113223035.GE23066@char.us.oracle.com>
- <CALZtONDL2Ph0MMMfSuqvofNZ-+6jPi9aKsE4mL30i15Up6Bvug@mail.gmail.com>
-Cc: Stefano Stabellini <sstabellini@kernel.org>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Dan Streetman <dan.streetman@canonical.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        xen-devel@lists.xenproject.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        linux-pci@vger.kernel.org
-From: Juergen Gross <jgross@suse.com>
-Message-ID: <0c2b4d6a-93e7-90a2-ffaf-fa423fb022d5@suse.com>
-Date: Tue, 21 Feb 2017 16:45:20 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 17 Feb 2017 09:15:06 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v2 04/22] Documentation: PCI: Guide to use pci endpoint
+ configfs
+Message-ID: <20170217171506.GB15276@infradead.org>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+ <1487325042-28227-5-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <CALZtONDL2Ph0MMMfSuqvofNZ-+6jPi9aKsE4mL30i15Up6Bvug@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1487325042-28227-5-git-send-email-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ linux-doc@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21/02/17 16:31, Dan Streetman wrote:
-> On Fri, Jan 13, 2017 at 5:30 PM, Konrad Rzeszutek Wilk
-> <konrad.wilk@oracle.com> wrote:
->> On Fri, Jan 13, 2017 at 03:07:51PM -0500, Dan Streetman wrote:
->>> Revert the main part of commit:
->>> af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
->>>
->>> That commit introduced reading the pci device's msi message data to see
->>> if a pirq was previously configured for the device's msi/msix, and re-use
->>> that pirq.  At the time, that was the correct behavior.  However, a
->>> later change to Qemu caused it to call into the Xen hypervisor to unmap
->>> all pirqs for a pci device, when the pci device disables its MSI/MSIX
->>> vectors; specifically the Qemu commit:
->>> c976437c7dba9c7444fb41df45468968aaa326ad
->>> ("qemu-xen: free all the pirqs for msi/msix when driver unload")
->>>
->>> Once Qemu added this pirq unmapping, it was no longer correct for the
->>> kernel to re-use the pirq number cached in the pci device msi message
->>> data.  All Qemu releases since 2.1.0 contain the patch that unmaps the
->>> pirqs when the pci device disables its MSI/MSIX vectors.
->>>
->>> This bug is causing failures to initialize multiple NVMe controllers
->>> under Xen, because the NVMe driver sets up a single MSIX vector for
->>> each controller (concurrently), and then after using that to talk to
->>> the controller for some configuration data, it disables the single MSIX
->>> vector and re-configures all the MSIX vectors it needs.  So the MSIX
->>> setup code tries to re-use the cached pirq from the first vector
->>> for each controller, but the hypervisor has already given away that
->>> pirq to another controller, and its initialization fails.
->>>
->>> This is discussed in more detail at:
->>> https://lists.xen.org/archives/html/xen-devel/2017-01/msg00447.html
->>>
->>> Fixes: af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
->>> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
->>
->> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> 
-> This doesn't seem to be applied yet, is it still waiting on another
-> ack?  Or maybe I'm looking at the wrong git tree...
+I'm commenting on the configfs layout here instead of the patch with the
+code as the issues are easier to explain that way.  I think the layout
+is a bit confusing and could be cleaner by making use of pre-created
+entries and symlinks.  Here is my suggestion:
 
-Am I wrong or shouldn't this go through the PCI tree? Konrad?
+/sys/kernel/config/pci_ep/functions/		
+    .. test/					# a directory for each function driver
+       ... user-specified-name1/
+       ... user-specified-name2
+    .. nvme/
+       ... user-specified-name42/		
+
+Each directory under /sys/kernel/config/pci_ep/functions/ is owned
+by a function drivers.  Under that function driver's directory you
+can create a directory for each instance of a function driver.  The
+configfs layout is controlled by the function driver.  E.g. your current
+EPF fields would move into the test function driver, while the nvme
+function would expose totally different fields.
 
 
-Juergen
+/sys/kernel/config/pci_ep/controllers/
+	... dwc-0/
+	    ... function
+	... dwc-1/
+	    ... function
+	... vhost-0/
+	    ... function
+
+	Here you have a directory for each controller that can be bound
+	to a function.  The directories are pre-created for each
+	controller port that is EP capable.
+	Function is a symlink to the function instance above.
+	Additional parameters might also be present depending on the
+	EPC driver.
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
