@@ -1,12 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: 
-Subject: [RFC PATCH 20/30] iommu/arm-smmu-v3: Enable PCI PASID in masters
-Date: Mon, 27 Feb 2017 19:54:31 +0000
-Message-Id: <20170227195441.5170-21-jean-philippe.brucker@arm.com>
-In-Reply-To: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v2 13/22] PCI: dwc: dra7xx: Workaround for errata id i870
+Date: Fri, 17 Feb 2017 15:20:33 +0530
+Message-ID: <1487325042-28227-14-git-send-email-kishon@ti.com>
+In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -14,143 +16,112 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
- David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
-MIME-Version: 1.0
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+ Kishon Vijay Abraham I <kishon@ti.com>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Enable PASID for PCI devices that support it.
+According to errata i870, access to the PCIe slave port
+that are not 32-bit aligned will result in incorrect mapping
+to TLP Address and Byte enable fields.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Accessing non 32-bit aligned data causes incorrect data in the target
+buffer if memcpy is used. Implement the workaround for this
+errata here.
+
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/iommu/arm-smmu-v3.c | 66 ++++++++++++++++++++++++++++++++++++++++++---
- 1 file changed, 63 insertions(+), 3 deletions(-)
+ drivers/pci/dwc/pci-dra7xx.c |   50 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 50 insertions(+)
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 499dc1cd07eb..37fd061405e9 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -730,6 +730,8 @@ struct arm_smmu_master_data {
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 47bb563..df11a49 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -26,6 +26,8 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/resource.h>
+ #include <linux/types.h>
++#include <linux/mfd/syscon.h>
++#include <linux/regmap.h>
  
- 	struct arm_smmu_stream		*streams;
- 	struct rb_root			contexts;
-+
-+	u32				avail_contexts;
+ #include "pcie-designware.h"
+ 
+@@ -528,6 +530,48 @@ static int dra7xx_pcie_enable_phy(struct dra7xx_pcie *dra7xx)
+ 	{},
  };
  
- /* SMMU private data for an IOMMU domain */
-@@ -2954,6 +2956,47 @@ static void arm_smmu_disable_ats(struct arm_smmu_master_data *master)
- 	pci_disable_ats(pdev);
- }
- 
-+static int arm_smmu_enable_ssid(struct arm_smmu_master_data *master)
++/*
++ * dra7xx_pcie_ep_legacy_mode: workaround for AM572x/AM571x Errata i870
++ * @dra7xx: the dra7xx device where the workaround should be applied
++ *
++ * Access to the PCIe slave port that are not 32-bit aligned will result
++ * in incorrect mapping to TLP Address and Byte enable fields. Therefore,
++ * byte and half-word accesses are not possible to byte offset 0x1, 0x2, or
++ * 0x3.
++ *
++ * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
++ */
++static int dra7xx_pcie_ep_legacy_mode(struct device *dev)
 +{
 +	int ret;
-+	int features;
-+	int nr_ssids;
-+	struct pci_dev *pdev;
++	struct device_node *np = dev->of_node;
++	struct regmap *regmap;
++	unsigned int reg;
++	unsigned int field;
 +
-+	if (!dev_is_pci(master->dev))
-+		return -ENOSYS;
-+
-+	pdev = to_pci_dev(master->dev);
-+
-+	features = pci_pasid_features(pdev);
-+	if (features < 0)
-+		return -ENOSYS;
-+
-+	nr_ssids = pci_max_pasids(pdev);
-+
-+	dev_dbg(&pdev->dev, "device supports %#x SSIDs [%s%s]\n", nr_ssids,
-+		(features & PCI_PASID_CAP_EXEC) ? "x" : "",
-+		(features & PCI_PASID_CAP_PRIV) ? "p" : "");
-+
-+	ret = pci_enable_pasid(pdev, features);
-+	return ret ? ret : nr_ssids;
-+}
-+
-+static void arm_smmu_disable_ssid(struct arm_smmu_master_data *master)
-+{
-+	struct pci_dev *pdev;
-+
-+	if (!dev_is_pci(master->dev))
-+		return;
-+
-+	pdev = to_pci_dev(master->dev);
-+
-+	if (!pdev->pasid_enabled)
-+		return;
-+
-+	pci_disable_pasid(pdev);
-+}
-+
- static int arm_smmu_insert_master(struct arm_smmu_device *smmu,
- 				  struct arm_smmu_master_data *master)
- {
-@@ -3007,6 +3050,7 @@ static struct iommu_ops arm_smmu_ops;
- static int arm_smmu_add_device(struct device *dev)
- {
- 	int i, ret;
-+	int nr_ssids;
- 	bool ats_enabled;
- 	unsigned long flags;
- 	struct arm_smmu_device *smmu;
-@@ -3055,9 +3099,19 @@ static int arm_smmu_add_device(struct device *dev)
- 		}
- 	}
- 
--	ret = arm_smmu_alloc_cd_tables(master, 1);
--	if (ret < 0)
--		return ret;
-+	/* PCIe PASID must be enabled before ATS */
-+	nr_ssids = arm_smmu_enable_ssid(master);
-+	if (nr_ssids <= 0)
-+		nr_ssids = 1;
-+
-+	nr_ssids = arm_smmu_alloc_cd_tables(master, nr_ssids);
-+	if (nr_ssids < 0) {
-+		ret = nr_ssids;
-+		goto err_disable_ssid;
++	regmap = syscon_regmap_lookup_by_phandle(np, "syscon-legacy-mode");
++	if (IS_ERR(regmap)) {
++		dev_dbg(dev, "can't get syscon-legacy-mode\n");
++		return -EINVAL;
 +	}
 +
-+	/* SSID0 is reserved */
-+	master->avail_contexts = nr_ssids - 1;
- 
- 	ats_enabled = !arm_smmu_enable_ats(master);
- 
-@@ -3088,6 +3142,9 @@ static int arm_smmu_add_device(struct device *dev)
- 
- 	arm_smmu_free_cd_tables(master);
- 
-+err_disable_ssid:
-+	arm_smmu_disable_ssid(master);
++	if (of_property_read_u32_index(np, "syscon-legacy-mode", 1, &reg)) {
++		dev_err(dev, "couldn't get legacy mode register offset\n");
++		return -EINVAL;
++	}
 +
- 	return ret;
- }
- 
-@@ -3129,7 +3186,10 @@ static void arm_smmu_remove_device(struct device *dev)
- 
- 		iommu_group_put(group);
- 
-+		/* PCIe PASID must be disabled after ATS */
- 		arm_smmu_disable_ats(master);
-+		arm_smmu_disable_ssid(master);
++	if (of_property_read_u32_index(np, "syscon-legacy-mode", 2, &field)) {
++		dev_err(dev, "can't get bit field for setting legacy mode\n");
++		return -EINVAL;
++	}
 +
- 		arm_smmu_free_cd_tables(master);
- 	}
- 
++	ret = regmap_update_bits(regmap, reg, field, field);
++	if (ret)
++		dev_err(dev, "failed to set legacy mode\n");
++
++	return ret;
++}
++
+ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ {
+ 	u32 reg;
+@@ -644,6 +688,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	case DW_PCIE_RC_TYPE:
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_RC);
++
+ 		ret = dra7xx_add_pcie_port(dra7xx, pdev);
+ 		if (ret < 0)
+ 			goto err_gpio;
+@@ -651,6 +696,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	case DW_PCIE_EP_TYPE:
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_EP);
++
++		ret = dra7xx_pcie_ep_legacy_mode(dev);
++		if (ret)
++			goto err_gpio;
++
+ 		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
+ 		if (ret < 0)
+ 			goto err_gpio;
 -- 
-2.11.0
+1.7.9.5
 
 
 _______________________________________________
