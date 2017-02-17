@@ -1,85 +1,114 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
- <1486058763-7730-2-git-send-email-logang@deltatee.com>
- <20170210145124.GA24594@kroah.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <ca970e7a-b062-d351-9a04-49a9e05955b5@deltatee.com>
-Date: Fri, 10 Feb 2017 09:48:37 -0700
+Return-Path: <SRS0=W4pu=Z6=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=W4pu=Z6=free.fr=slash.tmp@kernel.org>
+Subject: Re: Pointers for writing a good PCIe driver
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-pci <linux-pci@vger.kernel.org>
+References: <ff099b5f-efc8-bb5f-41e3-493398844cc0@free.fr>
+ <05046a8a-ba9f-26f9-4c93-f657f9da6294@free.fr>
+ <20170207200656.GA11659@bhelgaas-glaptop.roam.corp.google.com>
+ <20170207214758.GC11659@bhelgaas-glaptop.roam.corp.google.com>
+ <0f22720c-e47d-59f6-b5f7-5e40f4a1759d@free.fr>
+ <20170212165033.GA31833@kroah.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <0d785dab-c830-b887-d9f3-a2cd5338695c@free.fr>
+Date: Fri, 17 Feb 2017 10:20:20 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170210145124.GA24594@kroah.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH v2 1/4] MicroSemi Switchtec management interface driver
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170212165033.GA31833@kroah.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey Greg,
-
-Thanks so much for the review.
-
-On 10/02/17 07:51 AM, Greg Kroah-Hartman wrote:
-> On Thu, Feb 02, 2017 at 11:06:00AM -0700, Logan Gunthorpe wrote:
->> +	cdev = &stdev->cdev;
->> +	cdev_init(cdev, &switchtec_fops);
->> +	cdev->owner = THIS_MODULE;
->> +	cdev->kobj.parent = &dev->kobj;
+On 12/02/2017 17:50, Greg KH wrote:
+> On Tue, Feb 07, 2017 at 11:56:31PM +0100, Mason wrote:
+>> On 07/02/2017 22:47, Bjorn Helgaas wrote:
+>>> On Tue, Feb 07, 2017 at 02:06:56PM -0600, Bjorn Helgaas wrote:
+>>>> On Tue, Feb 07, 2017 at 04:55:28PM +0100, Mason wrote:
+>>>>> On 06/02/2017 16:54, Mason wrote:
+>>>>>
+>>>>>> My platform ( arch/arm/mach-tango ) provides a PCIe controller from PLDA.
+>>>>>>
+>>>>>> I do have access to a driver that works for a few PCIe boards, but it's
+>>>>>> an ancient out-of-tree driver (targeting v3.4). Also, I'm not sure it
+>>>>>> follows the best-practice guidelines (e.g. it hard-codes a few
+>>>>>> work-arounds directly in drivers/pci/probe.c)
+>>>>
+>>>> Indeed, having to change drivers/pci/probe.c doesn't sound like a best
+>>>> practice :)  If you can share details of what changes you need, people
+>>>> could probably suggest other ways to do it within the generic PCI
+>>>> framework.
+>>>>
+>>>>>> If I understand correctly, while PCIe is a standard, it is not codified
+>>>>>> as much as USB (XHCI) or SATA (AHCI), which means the register layout
+>>>>>> (and possibly other things) are left up to the integrator? Which means
+>>>>>> there cannot be some kind of "generic" driver that works for a random
+>>>>>> PCIe controller?
+>>>>
+>>>> There is no standardization of registers in MMIO or I/O port space.
+>>>> The size, location, and type of those registers is configurable in a
+>>>> generic way via the BARs, of course.  But that tells you nothing about
+>>>> the *functionality* of those MMIO or I/O port registers.
+>>>>
+>>>> For config space, the first 64 bytes (the PCIe r3.0 spec calls it the
+>>>> "PCI 3.0 Compatible Configuration Space Header") are completely
+>>>> standardized.  This is where device IDs, BARs, and other generic
+>>>> registers are.
+>>>>
+>>>> PCIe devices can implement up to 4096 bytes of config space.  The
+>>>> space after the 64-byte header can contain a list of standardized
+>>>> PCI/PCIe Capabilities, non-standardized device-specific registers, or
+>>>> both.  There is a way to include device-specific registers in a
+>>>> "Vendor Defined" Capability -- that way drivers can use generic
+>>>> mechanisms to find registers so they don't have to hard-code register
+>>>> layout assumptions.
+>>>>
+>>>>>> I guess my main question is: do you have pointers on getting started
+>>>>>> writing a PCIe driver good enough for upstream?
+>>>>>>
+>>>>>> Is Documentation/PCI/PCIEBUS-HOWTO.txt still a relevant resource?
+>>>>
+>>>> PCIEBUS-HOWTO.txt is still relevant, but only to drivers for services
+>>>> of PCIe ports, e.g., hotplug, error reporting, etc.  It's not relevant
+>>>> to PCIe endpoint drivers.
+>>>>
+>>>>>> Are there good resources to get up to speed on the PCIe terminology?
+>>>>>
+>>>>> I'm also wondering: in many Linux subsystems, there are often
+>>>>> several drivers of different quality; some are obsolescent and
+>>>>> have not been updated in a while, while some are recent and
+>>>>> follow all the latest best-practice guidelines (and the rest
+>>>>> is somewhere in the middle).
+>>>>>
+>>>>> Are there 1 or 2 very good PCIe drivers to take as examples
+>>>>> as good starting points? (Perhaps a simple driver, and a
+>>>>> more complex driver.)
+>>>>
+>>>> I'm not really the best person to ask about this because I deal more
+>>>> with the PCI core than with the drivers that use the core.  If I were
+>>>> looking, I might start with drivers/nvme/host/pci.c or
+>>>> drivers/usb/host/xhci-pci.c.
+>>>
+>>> I should have also mentioned Documentation/PCI/pci.txt.  That's a
+>>> pretty good place to start.
+>>
+>> Hello Bjorn,
+>>
+>> Thanks for these pointers, I will study them with care.
+>>
+>> Who would review my PCIe driver if I ever submitted one? :-)
 > 
-> Minor nit, the kobject in a cdev is unlike any other kobject you have
-> ever seen, don't mess with it, it's not doing anything like you think it
-> is doing.  So no need to set the parent field.
+> It all depends on what subsystem it would belong to, what type of device
+> are you writing a driver for?
 
-Ok, that makes sense. I'll do a v3 shortly.
+Hello Greg,
 
-I copied this from drivers/dax/dax.c so when I have a spare moment I'll
-submit a patch to remove it from there as well.
+There might be some kind of misunderstanding.
 
-Just to make sure I get this right without extra churn: does this look
-correct?
+I don't plan to write a driver for a device that plugs into a PCIe slot.
 
+I intend to write a driver for the PCIe controller itself, which is
+embedded in the SoC. (In order to support different types of PCIe
+devices, with their respective drivers already upstream.)
 
-        cdev = &stdev->cdev;
-        cdev_init(cdev, &switchtec_fops);
-        cdev->owner = THIS_MODULE;
+I think the controller driver belongs in drivers/pci/host ?
 
-        rc = cdev_add(&stdev->cdev, dev->devt, 1);
-        if (rc)
-                goto err_cdev;
-
-        dev = &stdev->dev;
-        dev->devt = MKDEV(MAJOR(switchtec_devt), minor);
-        dev->class = switchtec_class;
-        dev->parent = &pdev->dev;
-        dev->groups = switchtec_device_groups;
-        dev->release = stdev_release;
-        dev_set_name(dev, "switchtec%d", minor);
-
-        rc = device_register(dev);
-        if (rc) {
-                cdev_del(&stdev->cdev);
-                put_device(dev);
-                return ERR_PTR(rc);
-        }
-
-
-Thanks,
-
-Logan
+Regards.
