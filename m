@@ -1,80 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Dan Williams <dan.j.williams@intel.com>
-References: <20170210145124.GA24594@kroah.com>
- <1486749440-24309-1-git-send-email-logang@deltatee.com>
- <20e55da4-b3c1-7c57-15cf-b0aa52442e18@deltatee.com>
- <CAA9_cmfbJEPhCj_Ukav841zW5P=uYkTir4jFRTKyOvzHmJNmVg@mail.gmail.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>, linux-doc@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <2cd5df88-c018-3e76-fd08-483fec374932@deltatee.com>
-Date: Sun, 19 Feb 2017 21:22:35 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60776 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934283AbdBQQGd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Feb 2017 11:06:33 -0500
+Date: Fri, 17 Feb 2017 10:06:22 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v6 2/8] PCI: Allow runtime PM on Thunderbolt ports
+Message-ID: <20170217160622.GC10663@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1486913733.git.lukas@wunner.de>
+ <656ca6114612a11469d4f124425437f7ac6803c6.1486913733.git.lukas@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <CAA9_cmfbJEPhCj_Ukav841zW5P=uYkTir4jFRTKyOvzHmJNmVg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [PATCH] switchtec: cleanup cdev init
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <656ca6114612a11469d4f124425437f7ac6803c6.1486913733.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Sun, Feb 12, 2017 at 05:07:45PM +0100, Lukas Wunner wrote:
+> PCIe ports are only allowed to go to D3 if the BIOS is dated 2015+ to
+> avoid potential issues with old chipsets.  However for Thunderbolt we
+> know that even the oldest controller, Light Ridge (2010), is able to
+> suspend its ports to D3 just fine.
+> 
+> We're about to add runtime PM for Thunderbolt on the Mac.  Apple has
+> released multiple EFI updates since 2015 but not everyone has installed
+> them (https://support.apple.com/en-us/HT201222).  Those users should
+> still benefit from the achievable power saving.  Thus, special-case
+> Thunderbolt in pci_bridge_d3_possible().
+> 
+> This allows the Thunderbolt controller to power down but the root port
+> to which the Thunderbolt controller is attached remains in D0 unless
+> an EFI update is installed.  Users can pass pcie_port_pm=force on the
+> kernel command line if they cannot install an EFI update but still want
+> to benefit from the additional power saving of putting the root port
+> into D3.  In practice, root ports can be suspended to D3 without issues
+> at least on 2012 Ivy Bridge machines.
+> 
+> If the BIOS cut-off date is ever lowered to 2010 and runtime PM is
+> allowed on all native hotplug ports, the Thunderbolt special case can be
+> removed.
+> 
+> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Cc: Andreas Noever <andreas.noever@gmail.com>
+> Cc: Tomas Winkler <tomas.winkler@intel.com>
+> Cc: Amir Levy <amir.jer.levy@intel.com>
+> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
+Given that I'm hoping we can rework or rename is_thunderbolt to
+something better-defined, which would affect this patch as well, it
+doesn't really make sense for me to ack this one yet.
 
-On 19/02/17 02:43 PM, Dan Williams wrote:
-> Is this race present for all file operations? I've only seen it with
-> mmap() and late faults. So if these other drivers do not support mmap
-> it's not clear they can trigger the failure.
-
-I don't see how it's related to mmap only. I think there's a number of
-variations on this but the race I see happens if you try to take a
-reference to the device in the open/close handlers of a char device file.
-
-If a driver puts the last remaining reference in the release handler,
-then the device structure will be freed, and on returning from the
-release handler, the char_dev code will try to put the last reference to
-the cdev structure which may have already been free'd. There needs to be
-a way for the cdev structure to take a reference on the device structure
-so it doesn't get freed and the kobj.parent trick seems to accomplish
-this fairly well.
-
-Really, in any situation where there's a cdev and a device in the same
-structure, the life cycles of the two become linked but their reference
-counts are not and that is the problem here.
-
-I feel like a number of developers have made the same realization
-independently so this would probably be a good thing to clean up.
-
-See these commits for examples spanning around 5 years:
-
-4a215aa Input: fix use-after-free introduced with dynamic minor changes
-0d5b7da iio: Prevent race between IIO chardev opening and IIO device
-ba0ef85 tpm: Fix initialization of the cdev
-
-Also, seems both my brother and I have independently looked into this
-exact issue:
-
-https://www.mail-archive.com/linux-rdma@vger.kernel.org/msg25692.html
-
-So, I think it would be a good idea to clean it up with Dan's proposed
-API cleanup. If I have some time tomorrow, I may throw together a patch
-set with that patch and the changes to the instances around the kernel.
-
-Logan
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> ---
+>  drivers/pci/pci.c | 6 +++++-
+>  1 file changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 7904d02ffdb9..441083a0d5b0 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2224,7 +2224,7 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
+>   * @bridge: Bridge to check
+>   *
+>   * This function checks if it is possible to move the bridge to D3.
+> - * Currently we only allow D3 for recent enough PCIe ports.
+> + * Currently we only allow D3 for recent enough PCIe ports and Thunderbolt.
+>   */
+>  bool pci_bridge_d3_possible(struct pci_dev *bridge)
+>  {
+> @@ -2253,6 +2253,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
+>  		if (pci_bridge_d3_force)
+>  			return true;
+>  
+> +		/* Even the oldest 2010 Thunderbolt controller supports D3. */
+> +		if (bridge->is_thunderbolt)
+> +			return true;
+> +
+>  		/*
+>  		 * It should be safe to put PCIe ports from 2015 or newer
+>  		 * to D3.
+> -- 
+> 2.11.0
+> 
