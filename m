@@ -1,85 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 10 Feb 2017 15:59:59 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Subject: Re: [PATCH v1 0/3] PCI: Configure PCIe MPS settings
-Message-ID: <20170210215959.GR29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170208224632.14351.89895.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=W4pu=Z6=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=W4pu=Z6=free.fr=slash.tmp@kernel.org>
+Subject: Re: Pointers for writing a good PCIe driver
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Greg KH <gregkh@linuxfoundation.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+References: <ff099b5f-efc8-bb5f-41e3-493398844cc0@free.fr>
+ <05046a8a-ba9f-26f9-4c93-f657f9da6294@free.fr>
+ <20170207200656.GA11659@bhelgaas-glaptop.roam.corp.google.com>
+ <20170207214758.GC11659@bhelgaas-glaptop.roam.corp.google.com>
+ <0f22720c-e47d-59f6-b5f7-5e40f4a1759d@free.fr>
+ <20170212165033.GA31833@kroah.com>
+ <0d785dab-c830-b887-d9f3-a2cd5338695c@free.fr>
+ <20170217143803.GA10663@bhelgaas-glaptop.roam.corp.google.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <eff9861e-043a-7ecd-5d52-c8e18a52ece8@free.fr>
+Date: Fri, 17 Feb 2017 18:00:53 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170208224632.14351.89895.stgit@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>, Haiyang Zhang <haiyangz@microsoft.com>,
- Michal Simek <michal.simek@xilinx.com>, Jon Mason <jon.mason@broadcom.com>,
- Ray Jui <ray.jui@broadcom.com>,
- =?iso-8859-1?Q?S=F6ren?= Brinkmann <soren.brinkmann@xilinx.com>,
- devel@linuxdriverproject.org, "K. Y. Srinivasan" <kys@microsoft.com>,
- linux-arm-kernel@lists.infradead.org, Tanmay Inamdar <tinamdar@apm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170217143803.GA10663@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 08, 2017 at 04:49:22PM -0600, Bjorn Helgaas wrote:
-> [Some of you will get this twice because Gmail and I aren't getting along
-> today; sorry]
-> 
-> The PCI core doesn't configure the PCIe MPS settings by itself.  Each
-> host bridge driver has to call pcie_bus_configure_settings() to make
-> this happen.
-> 
-> Jon fixed this already for pcie-iproc.c.  I propose these similar
-> patches for other drivers.
-> 
-> HV guys, I included you because create_root_hv_pci_bus() is one place
-> that calls pci_scan_child_bus() but does not call
-> pcie_bus_configure_settings().  I know you probably don't strictly
-> *need* to configure MPS settings in a paravirtual front-end, but the
-> PCI core does other device configuration in this path:
-> 
->   pci_scan_child_bus
->     pci_scan_slot
->       pci_scan_single_device
->         pci_device_add
->           pci_configure_device
->           pci_init_capabilities
-> 
-> and I would like to eventually migrate the MPS configuration into that
-> same path.  Since we do this other configuration for HV devices
-> already, I think pcie_bus_configure_settings() should also work (even
-> if it ends up not doing anything to real devices).
-> 
-> It would make that eventual migration easier if all the
-> pci_scan_child_bus() callers had the same pattern of calling
-> pcie_bus_configure_settings().
-> 
-> So would it make sense to make a similar patch for HV?  It looks easy
-> to add it to create_root_hv_pci_bus(), but I don't know exactly what
-> to do about pci_devices_present_work().
-> 
-> ---
-> 
-> Bjorn Helgaas (3):
->       PCI: xilinx: Configure PCIe MPS settings
->       PCI: versatile: Configure PCIe MPS settings
->       PCI: xgene: Configure PCIe MPS settings
-> 
-> 
->  drivers/pci/host/pci-versatile.c |    4 +++-
->  drivers/pci/host/pci-xgene.c     |    4 +++-
->  drivers/pci/host/pcie-xilinx.c   |    4 +++-
->  3 files changed, 9 insertions(+), 3 deletions(-)
+On 17/02/2017 15:38, Bjorn Helgaas wrote:
 
-I applied these to pci/host-xilinx, pci/host-versatile, and
-pci/host-xgene, respectively, for v4.11.
+> On Fri, Feb 17, 2017 at 10:20:20AM +0100, Mason wrote:
+>
+>> There might be some kind of misunderstanding.
+>>
+>> I don't plan to write a driver for a device that plugs into a PCIe slot.
+>>
+>> I intend to write a driver for the PCIe controller itself, which is
+>> embedded in the SoC. (In order to support different types of PCIe
+>> devices, with their respective drivers already upstream.)
+>>
+>> I think the controller driver belongs in drivers/pci/host ?
+> 
+> Sorry, I indeed misunderstood you.
+> 
+> The native PCI host controller drivers indeed live in
+> drivers/pci/host/.
+> 
+> I don't know anything about your hardware or environment, but I highly
+> encourage you to use ACPI (drivers/acpi/pci_root.c, with a little bit
+> of arch support) or generic DT (drivers/pci/host/pci-host-generic.c)
+> instead of writing a custom host controller driver.
+> 
+> The native drivers in drivers/pci/host are a huge maintenance hassle
+> for no real benefit.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+My SoC is built around an ARM Cortex A9.
+I don't think (?) this platform has any support for ACPI.
+
+I'm currently using this DT description:
+http://lxr.free-electrons.com/source/arch/arm/boot/dts/tango4-common.dtsi
+
+The "legacy" driver sits at ~700 lines. It would be awesome to be able
+to discard all of it, and rely on generic upstream code. But I don't
+understand how it is possible for a generic driver to support whatever
+crazy solution some random vendor has come up with?
+
+Regards.
