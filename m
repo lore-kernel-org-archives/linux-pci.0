@@ -1,54 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:52685 "EHLO mga14.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751447AbdBFRpW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Feb 2017 12:45:22 -0500
-Date: Mon, 6 Feb 2017 12:54:25 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
-        Austin Bolen <Austin.Bolen@dell.com>
-Subject: Re: [PATCHv5 2/5] pci: Add device disconnected state
-Message-ID: <20170206175425.GA10133@localhost.localdomain>
-References: <1486144555-5526-1-git-send-email-keith.busch@intel.com>
- <1486144555-5526-3-git-send-email-keith.busch@intel.com>
- <20170203205330.GA16487@kroah.com>
- <20170206173202.GB25762@infradead.org>
- <20170206174046.GA10441@kroah.com>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:49294 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933655AbdBQJv6 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2017 04:51:58 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <nsekhar@ti.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH v2 10/22] PCI: dwc: dra7xx: Facilitate wrapper and msi interrupts to be enabled independently
+Date: Fri, 17 Feb 2017 15:20:30 +0530
+Message-ID: <1487325042-28227-11-git-send-email-kishon@ti.com>
+In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170206174046.GA10441@kroah.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 06, 2017 at 06:40:46PM +0100, Greg Kroah-Hartman wrote:
-> On Mon, Feb 06, 2017 at 09:32:02AM -0800, Christoph Hellwig wrote:
-> > On Fri, Feb 03, 2017 at 09:53:30PM +0100, Greg Kroah-Hartman wrote:
-> > > > +/* pci_dev priv_flags */
-> > > > +#define PCI_DEV_DISCONNECTED 0
-> > > > +
-> > > > +static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
-> > > > +{
-> > > > +	set_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
-> > > 
-> > > Why a single bit?  Are you trying to do this without locking or
-> > > something?  And if you want a bit, what's wrong with a C bit type?  Or
-> > > just a boolean?
-> > 
-> > What's a C bit type?
-> 
-> Sorry, was thinking of:
-> 	unsigned foo:2;
-> don't know what the "real" name for that is...
+No functional change. Split dra7xx_pcie_enable_interrupts into
+dra7xx_pcie_enable_wrapper_interrupts and dra7xx_pcie_enable_msi_interrupts
+so that wrapper interrupts and msi interrupts can be enabled independently.
+This is in preparation for adding EP mode support to dra7xx driver since
+EP mode doesn't have to enable msi_interrupts.
 
-The C standard calls that a 'bit field'. I originally used that for this
-flag, but Bjorn was concerned about the atomicity of getting this bit set,
-conflicting with setting adjacent bits. It's unlikely that would happen
-considering the pci driver's current usage, but he's correct that it's
-possible without additional locking.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c |   24 ++++++++++++++++++------
+ 1 file changed, 18 insertions(+), 6 deletions(-)
 
-A bool would work just as well for the intended usage, though we may
-eventually want all the currently defined bit fields to use the set/test
-bit APIs, so this gets us started in that direction.
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index c6fef0a..8d2d02f 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -140,18 +140,30 @@ static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
+ 	return dw_pcie_wait_for_link(pci);
+ }
+ 
+-static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
++static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+ {
+-	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
+-			   ~INTERRUPTS);
+-	dra7xx_pcie_writel(dra7xx,
+-			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
+ 			   ~LEG_EP_INTERRUPTS & ~MSI);
+-	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
++
++	dra7xx_pcie_writel(dra7xx,
++			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
+ 			   MSI | LEG_EP_INTERRUPTS);
+ }
+ 
++static void dra7xx_pcie_enable_wrapper_interrupts(struct dra7xx_pcie *dra7xx)
++{
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
++			   ~INTERRUPTS);
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN,
++			   INTERRUPTS);
++}
++
++static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
++{
++	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
++	dra7xx_pcie_enable_msi_interrupts(dra7xx);
++}
++
+ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-- 
+1.7.9.5
