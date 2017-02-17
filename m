@@ -1,121 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:36473 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752142AbdBBSHo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Feb 2017 13:07:44 -0500
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  2 Feb 2017 11:06:01 -0700
-Message-Id: <1486058763-7730-3-git-send-email-logang@deltatee.com>
-In-Reply-To: <1486058763-7730-1-git-send-email-logang@deltatee.com>
-References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v2 2/4] switchtec: Add user interface documentation
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 01/22] PCI: endpoint: Add EP core layer to enable EP
+ controller and EP functions
+To: Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jingoo Han <jingoohan1@gmail.com>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+ <1487325042-28227-2-git-send-email-kishon@ti.com>
+ <ece23395-7ebc-c9f3-bd9f-4f24e44d763a@synopsys.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <58A6E05D.5010803@ti.com>
+Date: Fri, 17 Feb 2017 17:07:01 +0530
+MIME-Version: 1.0
+In-Reply-To: <ece23395-7ebc-c9f3-bd9f-4f24e44d763a@synopsys.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+ linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds standard documentation for the sysfs switchtec attributes and
-a RST formatted text file which documents the char device interface.
-Jonathan Corbet has indicated he will move this to a new user-space
-developer documentation book once it's created.
+Hi Joao,
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
----
- Documentation/switchtec.txt | 53 +++++++++++++++++++++++++++++++++++++++++++++
- MAINTAINERS                 |  1 +
- 2 files changed, 54 insertions(+)
- create mode 100644 Documentation/switchtec.txt
+On Friday 17 February 2017 04:56 PM, Joao Pinto wrote:
+> =
 
-diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt
-new file mode 100644
-index 0000000..4bced4c
---- /dev/null
-+++ b/Documentation/switchtec.txt
-@@ -0,0 +1,53 @@
-+========================
-+Linux Switchtec Support
-+========================
-+
-+Microsemi's "Switchtec" line of PCI switch devices is already
-+supported by the kernel with standard PCI switch drivers. However, the
-+Switchtec device advertises a special management endpoint which
-+enables some additional functionality. This includes:
-+
-+* Packet and Byte Counters
-+* Firmware Upgrades
-+* Event and Error logs
-+* Querying port link status
-+* Custom user firmware commands
-+
-+The switchtec kernel module implements this functionality.
-+
-+
-+Interface
-+=========
-+
-+The primary means of communicating with the Switchtec management firmware is
-+through the Memory-mapped Remote Procedure Call (MRPC) interface.
-+Commands are submitted to the interface with a 4-byte command
-+identifier and up to 1KB of command specific data. The firmware will
-+respond with a 4 bytes return code and up to 1KB of command specific
-+data. The interface only processes a single command at a time.
-+
-+
-+Userspace Interface
-+===================
-+
-+The MRPC interface will be exposed to userspace through a simple char
-+device: /dev/switchtec#, one for each management endpoint in the system.
-+
-+The char device has the following semantics:
-+
-+* A write must consist of at least 4 bytes and no more than 1028 bytes.
-+  The first four bytes will be interpreted as the command to run and
-+  the remainder will be used as the input data. A write will send the
-+  command to the firmware to begin processing.
-+
-+* Each write must be followed by exactly one read. Any double write will
-+  produce an error and any read that doesn't follow a write will
-+  produce an error.
-+
-+* A read will block until the firmware completes the command and return
-+  the four bytes of status plus up to 1024 bytes of output data. (The
-+  length will be specified by the size parameter of the read call --
-+  reading less than 4 bytes will produce an error.
-+
-+* The poll call will also be supported for userspace applications that
-+  need to do other things while waiting for the command to complete.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 9c35198..0ab858d 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9513,6 +9513,7 @@ M:	Stephen Bates <stephen.bates@microsemi.com>
- M:	Logan Gunthorpe <logang@deltatee.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
-+F:	Documentation/switchtec.txt
- F:	drivers/pci/switch/switchtec*
- 
- PCI DRIVER FOR NVIDIA TEGRA
--- 
-2.1.4
+> Hi Kishon,
+> =
+
+> =C0s 9:50 AM de 2/17/2017, Kishon Vijay Abraham I escreveu:
+>> Introduce a new EP core layer in order to support endpoint functions
+>> in linux kernel. This comprises of EPC library
+>> (Endpoint Controller Library) and EPF library (Endpoint
+>> Function Library). EPC library implements functions that is specific
+>> to an endpoint controller and EPF library implements functions
+>> that is specific to an endpoint function.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  drivers/Makefile                    |    2 +
+>>  drivers/pci/Kconfig                 |    1 +
+>>  drivers/pci/endpoint/Kconfig        |   21 ++
+>>  drivers/pci/endpoint/Makefile       |    6 +
+>>  drivers/pci/endpoint/pci-epc-core.c |  548 ++++++++++++++++++++++++++++=
++++++++
+>>  drivers/pci/endpoint/pci-epc-mem.c  |  143 +++++++++
+>>  drivers/pci/endpoint/pci-epf-core.c |  347 ++++++++++++++++++++++
+>>  include/linux/mod_devicetable.h     |   10 +
+>>  include/linux/pci-epc.h             |  141 +++++++++
+>>  include/linux/pci-epf.h             |  160 ++++++++++
+>>  10 files changed, 1379 insertions(+)
+>>  create mode 100644 drivers/pci/endpoint/Kconfig
+>>  create mode 100644 drivers/pci/endpoint/Makefile
+>>  create mode 100644 drivers/pci/endpoint/pci-epc-core.c
+>>  create mode 100644 drivers/pci/endpoint/pci-epc-mem.c
+>>  create mode 100644 drivers/pci/endpoint/pci-epf-core.c
+>>  create mode 100644 include/linux/pci-epc.h
+>>  create mode 100644 include/linux/pci-epf.h
+>>
+>> diff --git a/drivers/Makefile b/drivers/Makefile
+>> index f521cb0..a300bb1 100644
+>> --- a/drivers/Makefile
+>> +++ b/drivers/Makefile
+>> @@ -14,7 +14,9 @@ obj-$(CONFIG_GENERIC_PHY)	+=3D phy/
+>>  obj-$(CONFIG_PINCTRL)		+=3D pinctrl/
+>>  obj-$(CONFIG_GPIOLIB)		+=3D gpio/
+>>  obj-y				+=3D pwm/
+>> +
+>>  obj-$(CONFIG_PCI)		+=3D pci/
+>> +obj-$(CONFIG_PCI_ENDPOINT)	+=3D pci/endpoint/
+>>  # PCI dwc controller drivers
+>>  obj-y				+=3D pci/dwc/
+> =
+
+> Any special reason to include pci/endpoint and pci/dwc in drivers/Makefile
+> instead of being inside pci/Makefile? pci/host is still inside pci/Makefi=
+le.
+
+CONFIG_PCI enables all the pcie host support. Endpoint support should be
+enabled independent of the host support. Moving pci/endpoint inside
+pci/Makefile will build endpoint support only if CONFIG_PCI is enabled. For=
+ the
+same reason kept pci/dwc in drivers/Makefile since dwc drivers can be used
+either in host mode or device mode (or both).
+
+Thanks
+Kishon
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
