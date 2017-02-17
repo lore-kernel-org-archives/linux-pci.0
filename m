@@ -1,51 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 37/37] ARM: dts: DRA7: Add pcie1 dt node for EP mode
-To: Tony Lindgren <tony@atomide.com>
-References: <1484216786-17292-1-git-send-email-kishon@ti.com>
- <1484216786-17292-38-git-send-email-kishon@ti.com>
- <20170120183000.GF7403@atomide.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <58A57859.5090308@ti.com>
-Date: Thu, 16 Feb 2017 15:30:57 +0530
+Return-Path: <SRS0=+orK=Z6=gmail.com=yhlu.kernel@kernel.org>
+Return-Path: <SRS0=+orK=Z6=gmail.com=yhlu.kernel@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170120183000.GF7403@atomide.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- Arnd Bergmann <arnd@arndb.de>, linux-doc@vger.kernel.org,
- Jingoo Han <jingoohan1@gmail.com>, linux-arm-msm@vger.kernel.org,
- nsekhar@ti.com, linux-kernel@vger.kernel.org, linux-arm-kernel@axis.com,
- linux-samsung-soc@vger.kernel.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: yhlu.kernel@gmail.com
+In-Reply-To: <20170217223916.GG17762@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170217061247.5591-1-yinghai@kernel.org> <20170217223916.GG17762@bhelgaas-glaptop.roam.corp.google.com>
+From: Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 17 Feb 2017 15:36:48 -0800
+Message-ID: <CAE9FiQXpghwUsHZL4QHV-LaVxq-ekhcRHkxNYWsAHRbPQ9NWCQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI,pciehp: Don't handle PDC for cards with attention button
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Keith Busch <keith.busch@intel.com>, Mayurkumar Patel <mayurkumar.patel@intel.com>,
+	Ashok Raj <ashok.raj@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tony,
+On Fri, Feb 17, 2017 at 2:39 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Feb 16, 2017 at 10:12:47PM -0800, Yinghai Lu wrote:
+>
+> I don't think it really makes sense to tie PDC handling with the
+> attention button.  It might happen to avoid the problem on your
+> system, but I don't see the logical connection between them.
 
-On Saturday 21 January 2017 12:00 AM, Tony Lindgren wrote:
-> * Kishon Vijay Abraham I <kishon@ti.com> [170112 02:34]:
->> Add pcie1 dt node in order for the controller to operate in
->> endpoint mode. However since none of the dra7 based boards have
->> slots configured to operate in endpoint mode, keep EP mode
->> disabled.
-> 
-> Can this be merged separately later on without breaking anything?
+but in pcie_enable_notification() we don't enable PDCE when ATTN is not there.
 
-yes, I'll resend this once rest of the EP support gets in.
+        cmd = PCI_EXP_SLTCTL_DLLSCE;
+        if (ATTN_BUTTN(ctrl))
+                cmd |= PCI_EXP_SLTCTL_ABPE;
+        else
+                cmd |= PCI_EXP_SLTCTL_PDCE;
+        if (!pciehp_poll_mode)
+                cmd |= PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE;
 
-Thanks
-Kishon
+        mask = (PCI_EXP_SLTCTL_PDCE | PCI_EXP_SLTCTL_ABPE |
+                PCI_EXP_SLTCTL_PFDE |
+                PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE |
+                PCI_EXP_SLTCTL_DLLSCE);
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+        pcie_write_cmd_nowait(ctrl, cmd, mask);
+
+should we remove that check there ?
+
+>
+> Can you reproduce this by disabling pciehp and driving this sequence
+> manually with setpci?  I suspect that we are tripping over our own
+> feet because we read PCI_EXP_SLTSTA once, clear it (probably too
+> early), then queue multiple events, then process those events possibly
+> simultaneously.
+
+sca15-2243-0a818158:~ # echo 1 > /sys/bus/pci/devices/0000\:3b\:00.0/remove
+[  171.769322] pci 0000:3b:00.0: PME# disabled
+[  171.774459] iommu: Removing device 0000:3b:00.0 from group 36
+[  171.780984] pci 0000:3b:00.0: freeing pci_dev info
+sca15-2243-0a818158:~ # setpci -s 0000:3a:00.0 0xa8.w
+01cb
+sca15-2243-0a818158:~ # setpci -s 0000:3a:00.0 0xaa.w
+0050
+sca15-2243-0a818158:~ # setpci -s 0000:3a:00.0 0xa8.w=0x05cb
+sca15-2243-0a818158:~ # setpci -s 0000:3a:00.0 0xaa.w
+0158
+
+so after power off, status bit 3 the PDC get set.
