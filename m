@@ -1,87 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60776 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934283AbdBQQGd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Feb 2017 11:06:33 -0500
-Date: Fri, 17 Feb 2017 10:06:22 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v6 2/8] PCI: Allow runtime PM on Thunderbolt ports
-Message-ID: <20170217160622.GC10663@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1486913733.git.lukas@wunner.de>
- <656ca6114612a11469d4f124425437f7ac6803c6.1486913733.git.lukas@wunner.de>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <nsekhar@ti.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH v2 15/22] PCI: Add device IDs for DRA74x and DRA72x
+Date: Fri, 17 Feb 2017 15:20:35 +0530
+Message-ID: <1487325042-28227-16-git-send-email-kishon@ti.com>
+In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <656ca6114612a11469d4f124425437f7ac6803c6.1486913733.git.lukas@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 12, 2017 at 05:07:45PM +0100, Lukas Wunner wrote:
-> PCIe ports are only allowed to go to D3 if the BIOS is dated 2015+ to
-> avoid potential issues with old chipsets.  However for Thunderbolt we
-> know that even the oldest controller, Light Ridge (2010), is able to
-> suspend its ports to D3 just fine.
-> 
-> We're about to add runtime PM for Thunderbolt on the Mac.  Apple has
-> released multiple EFI updates since 2015 but not everyone has installed
-> them (https://support.apple.com/en-us/HT201222).  Those users should
-> still benefit from the achievable power saving.  Thus, special-case
-> Thunderbolt in pci_bridge_d3_possible().
-> 
-> This allows the Thunderbolt controller to power down but the root port
-> to which the Thunderbolt controller is attached remains in D0 unless
-> an EFI update is installed.  Users can pass pcie_port_pm=force on the
-> kernel command line if they cannot install an EFI update but still want
-> to benefit from the additional power saving of putting the root port
-> into D3.  In practice, root ports can be suspended to D3 without issues
-> at least on 2012 Ivy Bridge machines.
-> 
-> If the BIOS cut-off date is ever lowered to 2010 and runtime PM is
-> allowed on all native hotplug ports, the Thunderbolt special case can be
-> removed.
-> 
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Andreas Noever <andreas.noever@gmail.com>
-> Cc: Tomas Winkler <tomas.winkler@intel.com>
-> Cc: Amir Levy <amir.jer.levy@intel.com>
-> Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Add device IDs for DRA74x and DRA72x devices. These devices have
+configurable PCI endpoint.
 
-Given that I'm hoping we can rework or rename is_thunderbolt to
-something better-defined, which would affect this patch as well, it
-doesn't really make sense for me to ack this one yet.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ include/linux/pci_ids.h |    2 ++
+ 1 file changed, 2 insertions(+)
 
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
->  drivers/pci/pci.c | 6 +++++-
->  1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 7904d02ffdb9..441083a0d5b0 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2224,7 +2224,7 @@ void pci_config_pm_runtime_put(struct pci_dev *pdev)
->   * @bridge: Bridge to check
->   *
->   * This function checks if it is possible to move the bridge to D3.
-> - * Currently we only allow D3 for recent enough PCIe ports.
-> + * Currently we only allow D3 for recent enough PCIe ports and Thunderbolt.
->   */
->  bool pci_bridge_d3_possible(struct pci_dev *bridge)
->  {
-> @@ -2253,6 +2253,10 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
->  		if (pci_bridge_d3_force)
->  			return true;
->  
-> +		/* Even the oldest 2010 Thunderbolt controller supports D3. */
-> +		if (bridge->is_thunderbolt)
-> +			return true;
-> +
->  		/*
->  		 * It should be safe to put PCIe ports from 2015 or newer
->  		 * to D3.
-> -- 
-> 2.11.0
-> 
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 73dda0e..e8bbc4b 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -862,6 +862,8 @@
+ #define PCI_DEVICE_ID_TI_X620		0xac8d
+ #define PCI_DEVICE_ID_TI_X420		0xac8e
+ #define PCI_DEVICE_ID_TI_XX20_FM	0xac8f
++#define PCI_DEVICE_ID_TI_DRA74x		0xb500
++#define PCI_DEVICE_ID_TI_DRA72x		0xb501
+ 
+ #define PCI_VENDOR_ID_SONY		0x104d
+ 
+-- 
+1.7.9.5
