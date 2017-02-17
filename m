@@ -1,32 +1,65 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 2 Feb 2017 10:46:17 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lists@ssl-mail.com, "Jayachandran C." <jnair@caviumnetworks.com>,
-        "H.J. Lu" <hjl.tools@gmail.com>, Takashi Iwai <tiwai@suse.com>
-Subject: Re: [GIT PULL] PCI fixes for v4.10
-Message-ID: <20170202164617.GC21267@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170202161812.GB21267@bhelgaas-glaptop.roam.corp.google.com>
- <20170202163024.GA30074@infradead.org>
+Date: Thu, 16 Feb 2017 17:11:12 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Frederic Weisbecker <fweisbec@gmail.com>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        wanpeng.li@hotmail.com, Peter Zijlstra <peterz@infradead.org>,
+        Rik van Riel <riel@redhat.com>,
+        "# .39.x" <stable@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        USB list <linux-usb@vger.kernel.org>
+Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
+ after cold boots, boots after reboot
+Message-ID: <20170217011112.GA20574@kroah.com>
+References: <20170215172303.GA15696@amd>
+ <20170215232005.GA7877@amd>
+ <CA+55aFyqsxjQPp=Y6MnvyMH_iA-TSiPrycnAHbBzw5bwQi7jjg@mail.gmail.com>
+ <20170216111144.GA12377@amd>
+ <20170216172535.GA7868@amd>
+ <20170216181353.GB4357@lerouge>
+ <CA+55aFwhzMWR8QPGEK+8O8r0sFpHjn4XXraQ9K0Hq4VQi8Ru-w@mail.gmail.com>
+ <20170216183421.GC4357@lerouge>
+ <alpine.DEB.2.20.1702162033200.4049@nanos>
+ <20170216200624.GA4274@amd>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170202163024.GA30074@infradead.org>
+In-Reply-To: <20170216200624.GA4274@amd>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 02, 2017 at 08:30:24AM -0800, Christoph Hellwig wrote:
-> On Thu, Feb 02, 2017 at 10:18:12AM -0600, Bjorn Helgaas wrote:
-> > PCI fixes:
-> > 
-> >   - configure ASPM on the link from a PCI-to-PCIe bridge (avoids a NULL
-> >     pointer dereference on topologies including these bridges)
+On Thu, Feb 16, 2017 at 09:06:24PM +0100, Pavel Machek wrote:
+> On Thu 2017-02-16 20:34:45, Thomas Gleixner wrote:
+> > On Thu, 16 Feb 2017, Frederic Weisbecker wrote:
+> > > On Thu, Feb 16, 2017 at 10:20:14AM -0800, Linus Torvalds wrote:
+> > > > On Thu, Feb 16, 2017 at 10:13 AM, Frederic Weisbecker
+> > > > <fweisbec@gmail.com> wrote:
+> > > > >
+> > > > > I haven't followed the discussion but this patch has a known issue which is fixed
+> > > > > with:
+> > > > >     7bdb59f1ad474bd7161adc8f923cdef10f2638d1
+> > > > >     "tick/nohz: Fix possible missing clock reprog after tick soft restart"
+> > > > >
+> > > > > I hope this fixes your issue.
+> > > > 
+> > > > No, Pavel saw the problem with rc8 too, which already has that fix.
+> > > > 
+> > > > So I think we'll just need to revert that original patch (and that
+> > > > means that we have to revert the commit you point to as well, since
+> > > > that ->next_tick field was added by the original commit).
 > 
-> Any reason you didn't include the affinity use outside the allocate
-> range fix sent on Tuesday?
+> (I already said that elsewhere, but yes, revert of 7bdb59f1ad474b and
+> 24b91e360ef5 fixes boot problems for me. Hmm, and 24b9 was marked for
+> stable... I don't know how to contact all the stable maintainers, but
+> probably it should not go to stable just yet...) 
 
-I assume you mean https://patchwork.ozlabs.org/patch/721415/
+It tried to get into the stable trees, but it broke the build, so it was
+dropped.  So the stable trees are safe for now.
 
-I just hadn't gotten to that one.  I hadn't read the description carefully
-enough to see that it needed to go in v4.10.
+thanks,
+
+greg k-h
