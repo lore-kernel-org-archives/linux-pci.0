@@ -1,79 +1,67 @@
-Return-Path: <SRS0=KDlv=2I=intel.com=rui.y.wang@kernel.org>
-Return-Path: <SRS0=KDlv=2I=intel.com=rui.y.wang@kernel.org>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net
-Cc: tony.luck@intel.com,
-	bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com,
-	x86@kernel.org
-Subject: [PATCH 1/2] x86/PCI: Implement pci_release_device to release IRQ from IOAPIC
-Date: Mon, 27 Feb 2017 22:15:43 +0800
-Message-Id: <1488204944-27189-2-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1488204944-27189-1-git-send-email-rui.y.wang@intel.com>
-References: <1488204944-27189-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 17 Feb 2017 13:58:55 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Haiyang Zhang <haiyangz@microsoft.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pci-hyperv: Use device serial number as PCI domain
+Message-ID: <20170217195855.GB17762@bhelgaas-glaptop.roam.corp.google.com>
+References: <BLUPR03MB1412C010C2F994101438FC5ACA590@BLUPR03MB1412.namprd03.prod.outlook.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BLUPR03MB1412C010C2F994101438FC5ACA590@BLUPR03MB1412.namprd03.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The revert of 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq()
-and pcibios_free_irq()") causes a problem for IOAPIC hotplug. The
-problem is that IRQs are allocated and freed in pci_enable_device()
-and pci_disable_device(). But there are some drivers which don't call
-pci_disable_device(), and they have good reasons not calling it, so
-if they're using IOAPIC their IRQs won't have a chance to be released
-from the IOAPIC. When this happens IOAPIC hot-removal fails with a
-kernel stack dump and an error message like this:
+On Mon, Feb 13, 2017 at 06:10:11PM +0000, Haiyang Zhang wrote:
+> 
+> This allows PCI domain numbers starts with 1, and also unique
+> on the same VM. So names, such as VF NIC names, that include
+> domain number as part of the name, can be shorter than that
+> based on part of bus UUID previously. The new names will also
+> stay same for VMs created with copied VHD and same number of
+> devices.
+> 
+> Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+> Reviewed-by: K. Y. Srinivasan <kys@microsoft.com>
 
-[149335.697989] pin16 on IOAPIC2 is still in use.
+Applied to pci/host-hv for v4.11, thanks!
 
-It turns out that we can fix it in a different way without moving IRQ
-allocation into pcibios_alloc_irq(), thus avoiding the regression of
-991de2e59090. We can keep the allocation and freeing of IRQs as is
-within pci_enable_device()/pci_disable_device(), without breaking any
-previous assumption of the rest of the system, keeping compatibility
-with both the legacy and the modern drivers. We can accomplish this by
-implementing the existing __weak hook of pcibios_release_device() thus
-when a pci device is about to be deleted we get notified in the hook
-and take the chance to release its IRQ, if any, from the IOAPIC.
+I assume Stephen meant a "Reviewed-by", not a "Signed-off-by", so that's
+what I added.
 
-Besides implementing pcibios_release_device(), the hot-removal of
-IOAPIC needs to be broken into two parts: the PCI part and the ACPI
-part. The PCI part releases PCI resources before the PCI bus is gone,
-and the ACPI part is moved to a stage later than the hot-removal of
-the PCI root bus, so we have the chance to hook every PCI device's
-pcibios_release_device(), before we remove the IOAPIC.
-
-This patch implements pcibios_release_device() on x86 to release any
-IRQ not released by the driver, so that the IOAPIC can then be safely
-hot-removed.
-
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
----
- arch/x86/pci/common.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 0cb52ae..4eba071 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -735,6 +735,15 @@ void pcibios_disable_device (struct pci_dev *dev)
- 		pcibios_disable_irq(dev);
- }
- 
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+void pcibios_release_device(struct pci_dev *dev)
-+{
-+	if (atomic_dec_return(&dev->enable_cnt) >=0)
-+		pcibios_disable_device(dev);
-+
-+}
-+#endif
-+
- int pci_ext_cfg_avail(void)
- {
- 	if (raw_pci_ext_ops)
--- 
-1.8.3.1
+> ---
+>  drivers/pci/host/pci-hyperv.c |   10 ++++++++++
+>  1 files changed, 10 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index 3efcc7b..b92b565 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -1315,6 +1315,16 @@ static void put_pcichild(struct hv_pci_dev *hpdev,
+>  	get_pcichild(hpdev, hv_pcidev_ref_initial);
+>  	get_pcichild(hpdev, hv_pcidev_ref_childlist);
+>  	spin_lock_irqsave(&hbus->device_list_lock, flags);
+> +	/* When a device is being added into the bus, we set the PCI domain
+> +	 * number to be the device serial number, which is non zero and
+> +	 * unique on the same VM. The serial numbers start with 1, and
+> +	 * increase by 1 for each device. So device names including this
+> +	 * can have shorter names than based on the bus instance UUID.
+> +	 * Only the first device serial number is used for domain, so the
+> +	 * domain number will not change after the first device is added.
+> +	 */
+> +	if (list_empty(&hbus->children))
+> +		hbus->sysdata.domain = desc->ser;
+>  	list_add_tail(&hpdev->list_entry, &hbus->children);
+>  	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+>  	return hpdev;
+> -- 
+> 1.7.1
+> 
