@@ -1,30 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:45884 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751372AbdBFTOz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Feb 2017 14:14:55 -0500
-Date: Mon, 06 Feb 2017 14:14:49 -0500 (EST)
-Message-Id: <20170206.141449.371774071782410941.davem@davemloft.net>
-To: David.Laight@ACULAB.COM
-Cc: alexander.duyck@gmail.com, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: Disabling msix interrupts
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DB027CB6A@AcuExch.aculab.com>
-References: <063D6719AE5E284EB5DD2968C1650D6DB027C936@AcuExch.aculab.com>
-        <CAKgT0UeXXkUpsrF9gpf_gba56V+B8a1G84k0WWt5q85Rx2PVsA@mail.gmail.com>
-        <063D6719AE5E284EB5DD2968C1650D6DB027CB6A@AcuExch.aculab.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 03/22] PCI: endpoint: Introduce configfs entry for
+ configuring EP functions
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+ <1487325042-28227-4-git-send-email-kishon@ti.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <nsekhar@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <58A6E609.9070709@ti.com>
+Date: Fri, 17 Feb 2017 17:31:13 +0530
+MIME-Version: 1.0
+In-Reply-To: <1487325042-28227-4-git-send-email-kishon@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Laight <David.Laight@ACULAB.COM>
-Date: Mon, 6 Feb 2017 17:23:54 +0000
+Hi,
 
-> Although the 'store buffer' on the sparc cpus I used to use would
-> let reads overtake writes. So you did have to read back the address
-> of the last write - not sure about modern sparc cpus.
+On Friday 17 February 2017 03:20 PM, Kishon Vijay Abraham I wrote:
+> Introduce a new configfs entry to configure the EP function (like
+> configuring the standard configuration header entries) and to
+> bind the EP function with EP controller.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/endpoint/Kconfig      |   14 +-
+>  drivers/pci/endpoint/Makefile     |    1 +
+>  drivers/pci/endpoint/pci-ep-cfs.c |  427 +++++++++++++++++++++++++++++++++++++
+>  3 files changed, 440 insertions(+), 2 deletions(-)
+>  create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
+> 
+> diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
+> index 7eb1c79..8470f0b 100644
+> --- a/drivers/pci/endpoint/Kconfig
+> +++ b/drivers/pci/endpoint/Kconfig
+> @@ -6,7 +6,6 @@ menu "PCI Endpoint"
+>  
+>  config PCI_ENDPOINT
+>  	bool "PCI Endpoint Support"
+> -	select CONFIGFS_FS
+>  	help
+>  	   Enable this configuration option to support configurable PCI
+>  	   endpoint. This should be enabled if the platform has a PCI
+> @@ -14,8 +13,19 @@ config PCI_ENDPOINT
+>  
+>  	   Enabling this option will build the endpoint library, which
+>  	   includes endpoint controller library and endpoint function
+> -	   library.
+> +	   library. This will also enable the configfs entry required to
+> +	   configure the endpoint function and used to bind the
+> +	   function with a endpoint controller.
 
-Never would any sparc cpu do so when any of the operations involved
-were to "side effect" locations, as PCI config space is.
+This chunk shouldn't be added. I've missed removing this (it's added below).
+I'll wait to get other review comments before sending a new revision.
+
+Thanks
+Kishon
