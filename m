@@ -1,159 +1,218 @@
-Return-Path: <SRS0=WS8a=2E=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=WS8a=2E=codeaurora.org=okaya@kernel.org>
-Subject: Re: Partial BAR Address Allocation
-To: Robin Murphy <robin.murphy@foss.arm.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <35c6bec9-58e8-a1f7-5a85-d80c23480d32@codeaurora.org>
- <20170222184440.GA2132@bhelgaas-glaptop.roam.corp.google.com>
- <43c1ff36-fc50-8ea4-02fe-7b1d573a1efd@codeaurora.org>
- <20170222233944.GB4359@bhelgaas-glaptop.roam.corp.google.com>
- <4f5d4e62-41d1-dc99-71ae-b7875541117a@foss.arm.com>
-Cc: Linux PCI <linux-pci@vger.kernel.org>, iommu@lists.linux-foundation.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <c1f4c1ab-2a2a-82dd-a793-525e80487f5c@codeaurora.org>
-Date: Thu, 23 Feb 2017 08:54:23 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v2 20/22] Documentation: PCI: Add userguide for PCI endpoint
+ test function
+Date: Fri, 17 Feb 2017 15:20:40 +0530
+Message-ID: <1487325042-28227-21-git-send-email-kishon@ti.com>
+In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <4f5d4e62-41d1-dc99-71ae-b7875541117a@foss.arm.com>
-Content-Type: text/plain; charset=windows-1252
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+ Kishon Vijay Abraham I <kishon@ti.com>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Robin,
+Add documentation to help users use pci-epf-test function driver
+and pci_endpoint_test host driver for testing PCI.
 
-On 2/23/2017 6:40 AM, Robin Murphy wrote:
-> On 22/02/17 23:39, Bjorn Helgaas wrote:
->> [+cc Joerg, iommu list]
->>
->> On Wed, Feb 22, 2017 at 03:44:53PM -0500, Sinan Kaya wrote:
->>> On 2/22/2017 1:44 PM, Bjorn Helgaas wrote:
->>>> There is no way for a driver to say "I only need this memory BAR and
->>>> not the other ones."  The reason is because the PCI_COMMAND_MEMORY bit
->>>> enables *all* the memory BARs; there's no way to enable memory BARs
->>>> selectively.  If we enable memory BARs and one of them is unassigned,
->>>> that unassigned BAR is enabled, and the device will respond at
->>>> whatever address the register happens to contain, and that may cause
->>>> conflicts.
->>>>
->>>> I'm not sure this answers your question.  Do you want to get rid of
->>>> 32-bit BAR addresses because your host bridge doesn't have a window to
->>>> 32-bit PCI addresses?  It's typical for a bridge to support a window
->>>> to the 32-bit PCI space as well as one to the 64-bit PCI space.  Often
->>>> it performs address translation for the 32-bit window so it doesn't
->>>> have to be in the 32-bit area on the CPU side, e.g., you could have
->>>> something like this where we have three host bridges and the 2-4GB
->>>> space on each PCI root bus is addressable:
->>>>
->>>>   pci_bus 0000:00: root bus resource [mem 0x1080000000-0x10ffffffff] (bus address [0x80000000-0xffffffff])
->>>>   pci_bus 0001:00: root bus resource [mem 0x1180000000-0x11ffffffff] (bus address [0x80000000-0xffffffff])
->>>>   pci_bus 0002:00: root bus resource [mem 0x1280000000-0x12ffffffff] (bus address [0x80000000-0xffffffff])
->>>
->>> The problem is that according to PCI specification BAR addresses and
->>> DMA addresses cannot overlap.
->>>
->>> From PCI-to-PCI Bridge Arch. spec.: "A bridge forwards PCI memory
->>> transactions from its primary interface to its secondary interface
->>> (downstream) if a memory address is in the range defined by the
->>> Memory Base and Memory Limit registers (when the base is less than
->>> or equal to the limit) as illustrated in Figure 4-3. Conversely, a
->>> memory transaction on the secondary interface that is within this
->>> address range will not be forwarded upstream to the primary
->>> interface."
->>>
->>> To be specific, if your DMA address happens to be in
->>> [0x80000000-0xffffffff] and root port's aperture includes this
->>> range; the DMA will never make to the system memory.
->>>
->>> Lorenzo and Robin took some steps to carve out PCI addresses out of
->>> DMA addresses in IOMMU drivers by using iova_reserve_pci_windows()
->>> function.
->>>
->>> However, I see that we are still exposed when the operating system
->>> doesn't have any IOMMU driver and is using the SWIOTLB for instance. 
->>
->> Hmmm.  I guess SWIOTLB assumes there's no address translation in the
->> DMA direction, right?
-> 
-> Not entirely - it does rely on arch-provided dma_to_phys() and
-> phys_to_dma() helpers which are free to accommodate such translations in
-> a device-specific manner. On arm64 we use these to account for
-> dev->dma_pfn_offset describing a straightforward linear offset, but
-> unless one constant offset would apply to all possible outbound windows
-> I'm not sure that's much help here.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/PCI/endpoint/pci-test-howto.txt |  167 +++++++++++++++++++++++++
+ 1 file changed, 167 insertions(+)
+ create mode 100644 Documentation/PCI/endpoint/pci-test-howto.txt
 
-yeah, that won't help. This is a PCI only problem. Arch layer solution
-will move the entire DMA ranges for all peripherals in the SOC to a specific offset.
-This would be most useful if the entire DDR would start at some non-zero offset.
-
-Even then, PCI usually has several ranges. One range like this to have some
-space below 4GB and another untranslated range for true 64bit cards. 
-
->>>>   pci_bus 0002:00: root bus resource [mem 0x1280000000-0x12ffffffff] (bus address [0x80000000-0xffffffff])
-
-We have to emulate some range in the first 4GB to make PCI cards happy.
-
-> 
->>  If there's no address translation in the PIO
->> direction, PCI bus BAR addresses are identical to the CPU-side
->> addresses.  In that case, there's no conflict because we already have
->> to assign BARs so they never look like a system memory address.
->>
->> But if there *is* address translation in the PIO direction, we can
->> have conflicts because the bridge can translate CPU-side PIO accesses
->> to arbitrary PCI bus addresses.
->>
->>> The FW solution I'm looking at requires carving out some part of the
->>> DDR from before OS boot so that OS doesn't reclaim that area for
->>> DMA.
->>
->> If you want to reach system RAM, I guess you need to make sure you
->> only DMA to bus addresses outside the host bridge windows, as you said
->> above.  DMA inside the windows would be handled as peer-to-peer DMA.
->>
->>> I'm not very happy with this solution. I'm also surprised that there
->>> is no generic solution in the kernel takes care of this for all root
->>> ports regardless of IOMMU driver presence.
->>
->> The PCI core isn't really involved in allocating DMA addresses,
->> although there definitely is the connection with PCI-to-PCI bridge
->> windows that you mentioned.  I added IOMMU guys, who would know a lot
->> more than I do.
-> 
-> To me, having the bus addresses of windows shadow assigned physical
-> addresses sounds mostly like a broken system configuration. Can the
-> firmware not reprogram them elsewhere, or is the entire bottom 4GB of
-> the physical memory map occupied by system RAM?
-
-I think your suggestion is also going in the same direction where FW 
-moves the things around so that there is some hole in the first 4GB 
-that OS doesn't see it and PCI has exclusive access to it.
-
-I was looking to see if there is a better solution via some ACPI
-table entry like PNP0C02 to tell the OS what range PCI drivers are not
-allowed to touch but could be used for something else.
-
-Problem with UEFI reserved region is that we are prohibiting the 
-region from being used for anything else besides PCI. That region
-is gone forever.
-
-Another solution like you suggested is to move the DDR around so that
-I don't need reserved regions.
-
-Thanks for the suggestions,
-Sinan
-
-> 
-> Robin.
-> 
->>
->> Bjorn
->> _______________________________________________
->> iommu mailing list
->> iommu@lists.linux-foundation.org
->> https://lists.linuxfoundation.org/mailman/listinfo/iommu
->>
-> 
-
-
+diff --git a/Documentation/PCI/endpoint/pci-test-howto.txt b/Documentation/PCI/endpoint/pci-test-howto.txt
+new file mode 100644
+index 0000000..4141b2b
+--- /dev/null
++++ b/Documentation/PCI/endpoint/pci-test-howto.txt
+@@ -0,0 +1,167 @@
++			    PCI TEST USERGUIDE
++		    Kishon Vijay Abraham I <kishon@ti.com>
++
++This document is a guide to help users use pci-epf-test function driver
++and pci_endpoint_test host driver for testing PCI. The list of steps to
++be followed in the host side and EP side is given below.
++
++1. Endpoint Device
++
++1.1 Endpoint Controller Devices
++
++To find the list of endpoint controller devices in the system:
++
++	# ls /sys/class/pci_epc/
++	  51000000.pcie_ep
++
++1.2 Endpoint Function Drivers
++
++To find the list of endpoint function drivers in the system:
++
++	# ls /sys/bus/pci-epf/drivers
++	  pci_epf_test
++
++1.3 Creating pci-epf-test Device
++
++PCI endpoint function device can be created using the configfs. To create
++pci-epf-test device, the following commands can be used
++
++	# mount -t configfs none /sys/kernel/config
++	# cd /sys/kernel/config/pci_ep/
++	# mkdir dev
++	# mkdir dev/epf/pci_epf_test.0
++
++The "mkdir dev/epf/pci_epf_test.0" above creates the pci-epf-test function
++device. The name given to the directory preceding '.' should match with the
++name of the driver listed in '/sys/bus/pci-epf/drivers' in order for the
++device to be bound to the driver.
++
++The PCI endpoint framework populates the directory with configurable fields.
++
++	# ls dev/epf/pci_epf_test.0/
++	  baseclass_code	function	revid		vendorid
++	  cache_line_size	interrupt_pin	subclass_code
++	  deviceid		peripheral	subsys_id
++	  epc			progif_code	subsys_vendor_id
++
++The pci endpoint function driver populates these entries with default values
++when the device is bound to the driver. The pci-epf-test driver populates
++vendorid with 0xffff and interrupt_pin with 0x0001
++
++	# cat dev/epf/pci_epf_test.0/vendorid
++	  0xffff
++	# cat dev/epf/pci_epf_test.0/interrupt_pin
++	  0x0001
++
++1.4 Configuring pci-epf-test Device
++
++The user can configure the pci-epf-test device using configfs entry. In order
++to change the vendorid and the number of MSI interrupts used by the function
++device, the following commands can be used.
++
++	# echo 0x104c > dev/epf/pci_epf_test.0/vendorid
++	# echo 0xb500 > dev/epf/pci_epf_test.0/deviceid
++	# echo 16 >  dev/epf/pci_epf_test.0/msi_interrupts
++
++1.5 Binding pci-epf-test Device to EP Controller
++
++In order for the endpoint function device to be useful, it has to be bound to
++a PCI endpoint controller driver. Use the configfs to bind the function
++device to one of the controller driver present in the system.
++
++	# echo "51000000.pcie_ep" > dev/epc
++
++Once the above step is completed, the PCI endpoint is ready to establish a link
++with the host.
++
++2. Endpoint Device
++
++2.1 lspci Output
++
++Note that the devices listed here correspond to the value populated in 1.4 above
++
++	00:00.0 PCI bridge: Texas Instruments Device 8888 (rev 01)
++	01:00.0 Unassigned class [ff00]: Texas Instruments Device b500
++
++2.2 Using Endpoint Test function Device
++
++pcitest.sh added in tools/pci/ can be used to run all the default PCI endpoint
++tests. Before pcitest.sh can be used pcitest.c should be compiled using the
++following commands.
++
++	cd <kernel-dir>
++	make headers_install ARCH=arm
++	arm-linux-gnueabihf-gcc -Iusr/include tools/pci/pcitest.c -o pcitest
++	cp pcitest  <rootfs>/usr/sbin/
++	cp tools/pci/pcitest.sh <rootfs>
++
++2.2.1 pcitest.sh Output
++	# ./pcitest.sh
++	BAR tests
++
++	BAR0:           OKAY
++	BAR1:           OKAY
++	BAR2:           OKAY
++	BAR3:           OKAY
++	BAR4:           NOT OKAY
++	BAR5:           NOT OKAY
++
++	Interrupt tests
++
++	LEGACY IRQ:     NOT OKAY
++	MSI1:           OKAY
++	MSI2:           OKAY
++	MSI3:           OKAY
++	MSI4:           OKAY
++	MSI5:           OKAY
++	MSI6:           OKAY
++	MSI7:           OKAY
++	MSI8:           OKAY
++	MSI9:           OKAY
++	MSI10:          OKAY
++	MSI11:          OKAY
++	MSI12:          OKAY
++	MSI13:          OKAY
++	MSI14:          OKAY
++	MSI15:          OKAY
++	MSI16:          OKAY
++	MSI17:          NOT OKAY
++	MSI18:          NOT OKAY
++	MSI19:          NOT OKAY
++	MSI20:          NOT OKAY
++	MSI21:          NOT OKAY
++	MSI22:          NOT OKAY
++	MSI23:          NOT OKAY
++	MSI24:          NOT OKAY
++	MSI25:          NOT OKAY
++	MSI26:          NOT OKAY
++	MSI27:          NOT OKAY
++	MSI28:          NOT OKAY
++	MSI29:          NOT OKAY
++	MSI30:          NOT OKAY
++	MSI31:          NOT OKAY
++	MSI32:          NOT OKAY
++
++	Read Tests
++
++	READ (      1 bytes):           OKAY
++	READ (   1024 bytes):           OKAY
++	READ (   1025 bytes):           OKAY
++	READ (1024000 bytes):           OKAY
++	READ (1024001 bytes):           OKAY
++
++	Write Tests
++
++	WRITE (      1 bytes):          OKAY
++	WRITE (   1024 bytes):          OKAY
++	WRITE (   1025 bytes):          OKAY
++	WRITE (1024000 bytes):          OKAY
++	WRITE (1024001 bytes):          OKAY
++
++	Copy Tests
++
++	COPY (      1 bytes):           OKAY
++	COPY (   1024 bytes):           OKAY
++	COPY (   1025 bytes):           OKAY
++	COPY (1024000 bytes):           OKAY
++	COPY (1024001 bytes):           OKAY
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+1.7.9.5
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
