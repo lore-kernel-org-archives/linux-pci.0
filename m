@@ -1,58 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53712 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750908AbdBNW7a (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Feb 2017 17:59:30 -0500
-Date: Tue, 14 Feb 2017 16:59:26 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Erik Veijola <erik.veijola@linux.intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v6 3/8] PCI: pciehp: Reinstate runtime PM on Thunderbolt
- hotplug ports
-Message-ID: <20170214225926.GB19040@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1486913733.git.lukas@wunner.de>
- <14ffd1ceeb76200b34e0abfebab134545e504bdc.1486913733.git.lukas@wunner.de>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34310 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934160AbdBQOkg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2017 09:40:36 -0500
+Date: Fri, 17 Feb 2017 15:40:33 +0100
+From: Frederic Weisbecker <fweisbec@gmail.com>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        wanpeng.li@hotmail.com, peterz@infradead.org, riel@redhat.com,
+        tglx@linutronix.de, stable@kernel.org,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        USB list <linux-usb@vger.kernel.org>
+Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
+ after cold boots, boots after reboot
+Message-ID: <20170217144032.GC4521@lerouge>
+References: <CA+55aFxU1D0hAPJuhkKaFBByi=8vpw7dJUX=FfpoqnZLWsvxig@mail.gmail.com>
+ <CA+55aFwt6pbt2STzRh1yCdoo7AnCLFqnPkkrYk4_BGFuvT2VCw@mail.gmail.com>
+ <CA+55aFzMiXXw9gqNCMCSc+O5HfcqWHXfqbdtbvcOmAHM9_wNig@mail.gmail.com>
+ <CA+55aFxuXgsCyMgrRDHdM6BQaej68QoU8TwdM=3LYu9LMBf4fQ@mail.gmail.com>
+ <20170215172303.GA15696@amd>
+ <20170215232005.GA7877@amd>
+ <CA+55aFyqsxjQPp=Y6MnvyMH_iA-TSiPrycnAHbBzw5bwQi7jjg@mail.gmail.com>
+ <20170216111144.GA12377@amd>
+ <20170216172535.GA7868@amd>
+ <20170216190603.GA16029@amd>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <14ffd1ceeb76200b34e0abfebab134545e504bdc.1486913733.git.lukas@wunner.de>
+In-Reply-To: <20170216190603.GA16029@amd>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 12, 2017 at 05:07:45PM +0100, Lukas Wunner wrote:
-> Commit 68db9bc81436 ("PCI: pciehp: Add runtime PM support for PCIe
-> hotplug ports") extended runtime PM for PCIe ports to hotplug ports.
-> However Yinghai Lu reported the following breakage caused by the commit:
+On Thu, Feb 16, 2017 at 08:06:04PM +0100, Pavel Machek wrote:
+> On Thu 2017-02-16 18:25:35, Pavel Machek wrote:
+> > Hi!
+> > 
+> > > > > 4.10-rc4 broken
+> > > > > 4.10-rc3 ok
+> > > > 
+> > > > Hmm. If those actually end up being reliable, then there's not a whole
+> > > > lot in between them wrt PCI or USB.
+> > > > 
+> > > > What looked like the most likely candidate seems to be xhci-specific, though.
+> > > > 
+> > > > But maybe it's something that isn't directly in drivers/{pci,usb}/ and
+> > > > just interacts badly.
+> > > 
+> > > Ok. I _hope_ my tests are ok. Bisect log so far is:
+> > 
+> > And the winner is:
+> > 
+> > pavel@half:/data/l/linux$ git bisect bad
+> > 24b91e360ef521a2808771633d76ebc68bd5604b is the first bad commit
+> > commit 24b91e360ef521a2808771633d76ebc68bd5604b
+> > Author: Frederic Weisbecker <fweisbec@gmail.com>
+> > Date:   Wed Jan 4 15:12:04 2017 +0100
+> > 
+> >     nohz: Fix collision between tick and other hrtimers
+> >     
 > 
-> * After disabling a slot on one of his servers, the slot signals PME
->   which causes pciehp to immediately re-enable the card, thus defeating
->   manual slot control via sysfs.
+> I had to revert 7bdb59f1ad474bd7161adc8f923cdef10f2638d1, too,
+> otherwise -rc8 does not compile.
+> 
+> With 24b91e360ef521a28087716 and 7bdb59f1ad474 reverted, it seems to
+> boot ok. (I did few tries.)
 
-I don't think we've clearly established this.  It surprises me that a
-Downstream Port would signal PME after turning off power to the slot.
-Wouldn't that make PME useless?
+Do you still have the config that triggered this? I don't have much expectations
+about reproducing, this has almost never worked for me, but at least I could narrow
+down the context.
 
-I'd like to look at this in a little more detail, either by turning
-off PM and pciehp and poking things manually with setpci, or possibly
-by adding some debug output in the PME ISR and the pciehp ISR and
-"write command" paths.
-
-> * On another server which has a Power Controller for PCIe hotplug ports
->   (PCIe r3.1, sec 6.7.1.8), the slot cannot be re-enabled after manually
->   disabling it via sysfs since commit 68db9bc81436 acquired a runtime
->   ref only *after* enabling power on the slot, yet this particular
->   SkyLake server requires that the port is in D0 when enabling power.
-
-So this server requires that the Downstream Port must be in D0 before
-we turn on power to the slot below the Downstream Port?  That seems
-like it would be a requirement for *all* systems.  If the bridge is
-not in D0, we can't generate any PCI transactions on the secondary bus
-(PCI PM r1.1., Table 19), so we can't enumerate anything in the slot.
-
-Bjorn
+Thanks.
