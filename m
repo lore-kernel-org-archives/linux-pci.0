@@ -1,99 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:36478 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753286AbdBTPji (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Feb 2017 10:39:38 -0500
-Received: by mail-pg0-f68.google.com with SMTP id a123so10607714pgc.3
-        for <linux-pci@vger.kernel.org>; Mon, 20 Feb 2017 07:39:38 -0800 (PST)
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>
-Subject: [PATCH v5 3/4] PCI: imx6: Do not switch speed if Gen2 is disabled
-Date: Mon, 20 Feb 2017 07:30:24 -0800
-Message-Id: <20170220153025.32096-4-andrew.smirnov@gmail.com>
-In-Reply-To: <20170220153025.32096-1-andrew.smirnov@gmail.com>
-References: <20170220153025.32096-1-andrew.smirnov@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <2eb2b814-d621-5d8d-8366-4c4e9f789208@deltatee.com>
+Date: Fri, 17 Feb 2017 13:36:04 -0700
+MIME-Version: 1.0
+In-Reply-To: <1486058763-7730-1-git-send-email-logang@deltatee.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save a bit of time and avoid going through link speed change procedure
-in configuration where link max speed is limited to Gen1 in DT.
+Hi Bjorn,
 
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
----
- drivers/pci/host/pci-imx6.c | 52 ++++++++++++++++++++++-----------------------
- 1 file changed, 26 insertions(+), 26 deletions(-)
+Can you give us an idea of when you might be able to comment on our
+patchset? We've addressed all the outstanding issues and have a couple
+of reviewed and tested tags. So we'd like to see this move forward as
+soon as possible.
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 473bbdc..071251f3 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -565,40 +565,40 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
- 		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
- 		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
- 		dw_pcie_writel_rc(pp, PCIE_RC_LCR, tmp);
--	} else {
--		dev_info(dev, "Link: Gen2 disabled\n");
--	}
--
--	/*
--	 * Start Directed Speed Change so the best possible speed both link
--	 * partners support can be negotiated.
--	 */
--	tmp = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
--	tmp |= PORT_LOGIC_SPEED_CHANGE;
--	dw_pcie_writel_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
- 
--	if (imx6_pcie->variant != IMX7D) {
- 		/*
--		 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
--		 * from i.MX6 family when no link speed transition
--		 * occurs and we go Gen1 -> yep, Gen1. The difference
--		 * is that, in such case, it will not be cleared by HW
--		 * which will cause the following code to report false
--		 * failure.
-+		 * Start Directed Speed Change so the best possible
-+		 * speed both link partners support can be negotiated.
- 		 */
-+		tmp = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+		tmp |= PORT_LOGIC_SPEED_CHANGE;
-+		dw_pcie_writel_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
-+
-+		if (imx6_pcie->variant != IMX7D) {
-+			/*
-+			 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
-+			 * from i.MX6 family when no link speed transition
-+			 * occurs and we go Gen1 -> yep, Gen1. The difference
-+			 * is that, in such case, it will not be cleared by HW
-+			 * which will cause the following code to report false
-+			 * failure.
-+			 */
-+
-+			ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
-+			if (ret) {
-+				dev_err(dev, "Failed to bring link up!\n");
-+				goto err_reset_phy;
-+			}
-+		}
- 
--		ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
-+		/* Make sure link training is finished as well! */
-+		ret = imx6_pcie_wait_for_link(imx6_pcie);
- 		if (ret) {
- 			dev_err(dev, "Failed to bring link up!\n");
- 			goto err_reset_phy;
- 		}
--	}
--
--	/* Make sure link training is finished as well! */
--	ret = imx6_pcie_wait_for_link(imx6_pcie);
--	if (ret) {
--		dev_err(dev, "Failed to bring link up!\n");
--		goto err_reset_phy;
-+	} else {
-+		dev_info(dev, "Link: Gen2 disabled\n");
- 	}
- 
- 	tmp = dw_pcie_readl_rc(pp, PCIE_RC_LCSR);
--- 
-2.9.3
+I can do a respin with the tags collected or address any concerns you
+may have, just please let us know.
+
+Thanks,
+
+Logan
+
+On 02/02/17 11:05 AM, Logan Gunthorpe wrote:
+> Changes since v1:
+> 
+> * Rebased onto 4.10-rc6 (cleanly)
+> * Split the patch into a few more easily digestible patches (as
+>   suggested by Greg Kroah-Hartman)
+> * Folded switchtec.c into switchtec.h (per Greg)
+> * Fixed a bunch of 32bit build warnings caught by the kbuild test robot
+> * Fixed some issues in the documentation so it has a proper
+>   reStructredText format (as noted by Jonathan Corbet)
+> * Fixed padding and sizes in the IOCTL structures as noticed by Emil
+>   Velikov and used pahole to verify their consistency across 32 and 64
+>   bit builds
+> * Reworked one of the IOCTL interfaces to be more future proof (per
+>   Emil).
+> 
+> Changes since RFC:
+> 
+> * Fixed incorrect use of the drive model as pointed out by Greg
+>   Kroah-Hartman
+> * Used devm functions as suggested by Keith Busch
+> * Added a handful of sysfs attributes to the switchtec class
+> * Added a handful of IOCTLs to the switchtec device
+> * A number of miscellaneous bug fixes
+> 
+> --
+> 
+> Hi,
+> 
+> This is a continuation of the RFC we posted lasted month [1] which
+> proposes a management driver for Microsemi's Switchtec line of PCI
+> switches. This hardware is still looking to be used in the Open
+> Compute Platform
+> 
+> To make this entirely clear: the Switchtec products are compliant
+> with the PCI specifications and are supported today with the standard
+> in-kernel driver. However, these devices also expose a management endpoint
+> on a separate PCI function address which can be used to perform some
+> advanced operations. This is a driver for that function. See the patch
+> for more information.
+> 
+> Since the RFC, we've made the changes requested by Greg Kroah-Hartman
+> and Keith Busch, and we've also fleshed out a number of features. We've
+> added a couple of IOCTLs and sysfs attributes which are documented in
+> the patch. Significant work has also been done on the userspace tool
+> which is available under a GPL license at [2]. We've also had testing
+> done by some of the interested parties.
+> 
+> We hope to see this work included in either 4.11 or 4.12 assuming a
+> smooth review process.
+> 
+> The patch is based off of the v4.10-rc6 release.
+> 
+> Thanks for your review,
+> 
+> Logan
+> 
+> [1] https://www.spinics.net/lists/linux-pci/msg56897.html
+> [2] https://github.com/sbates130272/switchtec-user
+> 
+> --
+> 
+> Logan Gunthorpe (4):
+>   MicroSemi Switchtec management interface driver
+>   switchtec: Add user interface documentation
+>   switchtec: Add sysfs attributes to the Switchtec driver
+>   switchtec: Add IOCTLs to the Switchtec driver
+> 
+>  Documentation/ABI/testing/sysfs-class-switchtec |   96 ++
+>  Documentation/ioctl/ioctl-number.txt            |    1 +
+>  Documentation/switchtec.txt                     |   80 ++
+>  MAINTAINERS                                     |   11 +
+>  drivers/pci/Kconfig                             |    1 +
+>  drivers/pci/Makefile                            |    1 +
+>  drivers/pci/switch/Kconfig                      |   13 +
+>  drivers/pci/switch/Makefile                     |    1 +
+>  drivers/pci/switch/switchtec.c                  | 1608 +++++++++++++++++++++++
+>  include/uapi/linux/switchtec_ioctl.h            |  132 ++
+>  10 files changed, 1944 insertions(+)
+>  create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
+>  create mode 100644 Documentation/switchtec.txt
+>  create mode 100644 drivers/pci/switch/Kconfig
+>  create mode 100644 drivers/pci/switch/Makefile
+>  create mode 100644 drivers/pci/switch/switchtec.c
+>  create mode 100644 include/uapi/linux/switchtec_ioctl.h
+> 
+> --
+> 2.1.4
+> 
