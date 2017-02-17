@@ -1,140 +1,68 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: 
-Subject: [RFC PATCH 02/30] iommu/arm-smmu-v3: Link groups and domains
-Date: Mon, 27 Feb 2017 19:54:13 +0000
-Message-Id: <20170227195441.5170-3-jean-philippe.brucker@arm.com>
-In-Reply-To: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
- David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34970 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933832AbdBQOE4 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2017 09:04:56 -0500
+Date: Fri, 17 Feb 2017 15:04:51 +0100
+From: Frederic Weisbecker <fweisbec@gmail.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+        Pavel Machek <pavel@ucw.cz>, wanpeng.li@hotmail.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        Rik van Riel <riel@redhat.com>,
+        "# .39.x" <stable@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        USB list <linux-usb@vger.kernel.org>
+Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
+ after cold boots, boots after reboot
+Message-ID: <20170217140449.GA4521@lerouge>
+References: <CA+55aFxuXgsCyMgrRDHdM6BQaej68QoU8TwdM=3LYu9LMBf4fQ@mail.gmail.com>
+ <20170215172303.GA15696@amd>
+ <20170215232005.GA7877@amd>
+ <CA+55aFyqsxjQPp=Y6MnvyMH_iA-TSiPrycnAHbBzw5bwQi7jjg@mail.gmail.com>
+ <20170216111144.GA12377@amd>
+ <20170216172535.GA7868@amd>
+ <20170216181353.GB4357@lerouge>
+ <CA+55aFwhzMWR8QPGEK+8O8r0sFpHjn4XXraQ9K0Hq4VQi8Ru-w@mail.gmail.com>
+ <20170216183421.GC4357@lerouge>
+ <alpine.DEB.2.20.1702162033200.4049@nanos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.20.1702162033200.4049@nanos>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When removing a mapping from a domain, we need to send an invalidation to
-all of devices that might have stored it in their Address Translation
-Cache (ATC). This requires a lookup from smmu_domain to smmu_group. Add a
-list of groups in each domain.
+On Thu, Feb 16, 2017 at 08:34:45PM +0100, Thomas Gleixner wrote:
+> On Thu, 16 Feb 2017, Frederic Weisbecker wrote:
+> > On Thu, Feb 16, 2017 at 10:20:14AM -0800, Linus Torvalds wrote:
+> > > On Thu, Feb 16, 2017 at 10:13 AM, Frederic Weisbecker
+> > > <fweisbec@gmail.com> wrote:
+> > > >
+> > > > I haven't followed the discussion but this patch has a known issue which is fixed
+> > > > with:
+> > > >     7bdb59f1ad474bd7161adc8f923cdef10f2638d1
+> > > >     "tick/nohz: Fix possible missing clock reprog after tick soft restart"
+> > > >
+> > > > I hope this fixes your issue.
+> > > 
+> > > No, Pavel saw the problem with rc8 too, which already has that fix.
+> > > 
+> > > So I think we'll just need to revert that original patch (and that
+> > > means that we have to revert the commit you point to as well, since
+> > > that ->next_tick field was added by the original commit).
+> > 
+> > Aw too bad, but indeed that late we don't have the choice.
+> 
+> Hint: Look for CPU hotplug interaction of these patches. I bet something
+> becomes stale when the CPU goes down and does not get reset when it comes
+> back online.
 
-Although this domain-group link is already protected by
-iommu_group->mutex, the domain-to-group lookup will be done outside of the
-sections protected by that mutex. Add a spinlock for this case.
-
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
----
- drivers/iommu/arm-smmu-v3.c | 44 ++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 42 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index ce8b68fe254b..69d00416990d 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -651,9 +651,15 @@ struct arm_smmu_domain {
- 	};
- 
- 	struct iommu_domain		domain;
-+
-+	struct list_head		groups;
-+	spinlock_t			groups_lock;
- };
- 
- struct arm_smmu_group {
-+	struct arm_smmu_domain		*domain;
-+	struct list_head		domain_head;
-+
- 	struct list_head		devices;
- 	spinlock_t			devices_lock;
- };
-@@ -1408,6 +1414,9 @@ static struct iommu_domain *arm_smmu_domain_alloc(unsigned type)
- 
- 	mutex_init(&smmu_domain->init_mutex);
- 	spin_lock_init(&smmu_domain->pgtbl_lock);
-+	INIT_LIST_HEAD(&smmu_domain->groups);
-+	spin_lock_init(&smmu_domain->groups_lock);
-+
- 	return &smmu_domain->domain;
- }
- 
-@@ -1641,6 +1650,7 @@ static void arm_smmu_detach_dev(struct device *dev)
- static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
- {
- 	int ret = 0;
-+	unsigned long flags;
- 	struct iommu_group *group;
- 	struct arm_smmu_device *smmu;
- 	struct arm_smmu_group *smmu_group;
-@@ -1666,9 +1676,31 @@ static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
- 		return -ENOMEM;
- 	}
- 
--	/* Already attached to a different domain? */
--	if (!ste->bypass)
-+	/*
-+	 * Already attached to a different domain? This happens when we're
-+	 * switching from default domain to unmanaged domain, and back. We
-+	 * assume here that, when switching from old domain to new domain, old
-+	 * domain doesn't have any live mapping anymore. This is an important
-+	 * requirement because here we remove the group-domain link when we
-+	 * re-attach the first device in a group. Other devices in that group
-+	 * might still be attached to the old domain, and will be reattached in
-+	 * a moment.
-+	 *
-+	 * We also take this path when attaching for the very first time, just
-+	 * after the STE is initialized.
-+	 */
-+	if (!ste->bypass) {
-+		struct arm_smmu_domain *other_domain = smmu_group->domain;
-+
-+		if (other_domain) {
-+			spin_lock_irqsave(&other_domain->groups_lock, flags);
-+			list_del(&smmu_group->domain_head);
-+			spin_unlock_irqrestore(&other_domain->groups_lock, flags);
-+
-+			smmu_group->domain = NULL;
-+		}
- 		arm_smmu_detach_dev(dev);
-+	}
- 
- 	mutex_lock(&smmu_domain->init_mutex);
- 
-@@ -1688,6 +1720,14 @@ static int arm_smmu_attach_dev(struct iommu_domain *domain, struct device *dev)
- 		goto out_unlock;
- 	}
- 
-+	if (!smmu_group->domain) {
-+		smmu_group->domain = smmu_domain;
-+
-+		spin_lock_irqsave(&smmu_domain->groups_lock, flags);
-+		list_add(&smmu_group->domain_head, &smmu_domain->groups);
-+		spin_unlock_irqrestore(&smmu_domain->groups_lock, flags);
-+	}
-+
- 	ste->bypass = false;
- 	ste->valid = true;
- 
--- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Indeed I should check that. But Pavel is seeing this on boot, where the
+only hotplug operations that happen are CPU UP without preceding CPU DOWN
+that may have retained stale values. I think the value of ts->next_tick should
+be initially 0 for all CPUs. So perhaps that 0 value confuses stuff. But
+looking at the code I don't see how. It maybe something more subtle.
