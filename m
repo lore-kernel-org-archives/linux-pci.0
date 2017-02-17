@@ -1,103 +1,175 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54340 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751390AbdB0PPc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Feb 2017 10:15:32 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Will Deacon <will.deacon@arm.com>,
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:35867 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934507AbdBQSnh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2017 13:43:37 -0500
+Date: Fri, 17 Feb 2017 19:43:28 +0100
+From: Frederic Weisbecker <fweisbec@gmail.com>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        wanpeng.li@hotmail.com, Peter Zijlstra <peterz@infradead.org>,
+        Rik van Riel <riel@redhat.com>,
+        "# .39.x" <stable@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        John Garry <john.garry@huawei.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Roy Zang <tie-fei.zang@freescale.com>
-Subject: [PATCH 03/20] asm-generic/io.h: add PCI config space remap interface
-Date: Mon, 27 Feb 2017 15:14:14 +0000
-Message-Id: <20170227151436.18698-4-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
-References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+        USB list <linux-usb@vger.kernel.org>
+Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
+ after cold boots, boots after reboot
+Message-ID: <20170217184327.GD4521@lerouge>
+References: <CA+55aFyqsxjQPp=Y6MnvyMH_iA-TSiPrycnAHbBzw5bwQi7jjg@mail.gmail.com>
+ <20170216111144.GA12377@amd>
+ <20170216172535.GA7868@amd>
+ <20170216181353.GB4357@lerouge>
+ <CA+55aFwhzMWR8QPGEK+8O8r0sFpHjn4XXraQ9K0Hq4VQi8Ru-w@mail.gmail.com>
+ <20170216183421.GC4357@lerouge>
+ <alpine.DEB.2.20.1702162033200.4049@nanos>
+ <20170217140449.GA4521@lerouge>
+ <alpine.DEB.2.20.1702171737020.3536@nanos>
+ <20170217170508.GA20884@amd>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170217170508.GA20884@amd>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
-Posting") mandate non-posted configuration transactions. As further
-highlighted in the PCIe specifications (4.0 - Rev0.3, "Ordering
-Considerations for the Enhanced Configuration Access Mechanism"),
-through ECAM and ECAM-derivative configuration mechanism, the memory
-mapped transactions from the host CPU into Configuration Requests on the
-PCI express fabric may create ordering problems for software because
-writes to memory address are typically posted transactions (unless the
-architecture can enforce through virtual address mapping non-posted
-write transactions behaviour) but writes to Configuration Space are not
-posted on the PCI express fabric.
+On Fri, Feb 17, 2017 at 06:05:08PM +0100, Pavel Machek wrote:
+> On Fri 2017-02-17 17:37:47, Thomas Gleixner wrote:
+> > On Fri, 17 Feb 2017, Frederic Weisbecker wrote:
+> > > On Thu, Feb 16, 2017 at 08:34:45PM +0100, Thomas Gleixner wrote:
+> > > > On Thu, 16 Feb 2017, Frederic Weisbecker wrote:
+> > > > > On Thu, Feb 16, 2017 at 10:20:14AM -0800, Linus Torvalds wrote:
+> > > > > > On Thu, Feb 16, 2017 at 10:13 AM, Frederic Weisbecker
+> > > > > > <fweisbec@gmail.com> wrote:
+> > > > > > >
+> > > > > > > I haven't followed the discussion but this patch has a known issue which is fixed
+> > > > > > > with:
+> > > > > > >     7bdb59f1ad474bd7161adc8f923cdef10f2638d1
+> > > > > > >     "tick/nohz: Fix possible missing clock reprog after tick soft restart"
+> > > > > > >
+> > > > > > > I hope this fixes your issue.
+> > > > > > 
+> > > > > > No, Pavel saw the problem with rc8 too, which already has that fix.
+> > > > > > 
+> > > > > > So I think we'll just need to revert that original patch (and that
+> > > > > > means that we have to revert the commit you point to as well, since
+> > > > > > that ->next_tick field was added by the original commit).
+> > > > > 
+> > > > > Aw too bad, but indeed that late we don't have the choice.
+> > > > 
+> > > > Hint: Look for CPU hotplug interaction of these patches. I bet something
+> > > > becomes stale when the CPU goes down and does not get reset when it comes
+> > > > back online.
+> > > 
+> > > Indeed I should check that. But Pavel is seeing this on boot, where the
+> > 
+> > I don't think so. He observed it on suspend resume and by doing hotplug
+> > operations in a loop. But I might be wrong as usual.
+> 
+> These are different bugs.
+> 
+> On x60, I see failures doing hotplug/unplug in a loop, or lot of
+> suspends. Someone seen it in v4.8-stable etc. Old bug. Rare to hit.
+> 
+> Desktop machine was failing to boot, and had some fun with
+> suspend/resume too. Boot hang was reproducible with right
+> procedure. (Hard poweroff, cold boot.). That one was introduced in
+> 4.10-rc cycle.
 
-Current DT and ACPI host bridge controllers map PCI configuration space
-(ECAM and ECAM-derivative) into the virtual address space through
-ioremap() calls, that are non-cacheable device accesses on most
-architectures, but may provide "bufferable" or "posted" write semantics
-in architecture like eg ARM/ARM64 that allow ioremap'ed regions writes
-to be buffered in the bus connecting the host CPU to the PCI fabric;
-this behaviour, as underlined in the PCIe specifications, may trigger
-transactions ordering rules and must be prevented.
+Pavel, is there any chance you could apply this patch on top of latest linus tree
+and send me your resulting dmesg log? This has the two reverted patches plus some
+debugging code. The amount of printk shouldn't be too big, I tested it home without
+issue.
 
-Introduce a new generic and explicit API to create a memory
-mapping for ECAM and ECAM-derivative config space area that
-defaults to ioremap_nocache() (which should provide a sane default
-behaviour) but still allowing architectures on which ioremap_nocache()
-results in posted write transactions to override the function
-call with an arch specific implementation that complies with
-the PCI specifications for configuration transactions.
+If you can't manage to dump the dmesg, please try to take a picture of your screen
+so that I can see the last messages starting with "NEXT_TICK_READ".
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
----
- include/asm-generic/io.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Thanks!
 
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index 7ef015e..52dda81 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -915,6 +915,15 @@ extern void ioport_unmap(void __iomem *p);
- #endif /* CONFIG_GENERIC_IOMAP */
- #endif /* CONFIG_HAS_IOPORT_MAP */
+diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
+index 2c115fd..504cb41 100644
+--- a/kernel/time/tick-sched.c
++++ b/kernel/time/tick-sched.c
+@@ -658,6 +658,8 @@ static void tick_nohz_restart(struct tick_sched *ts, ktime_t now)
+ 		tick_program_event(hrtimer_get_expires(&ts->sched_timer), 1);
+ }
  
-+#ifndef pci_remap_cfgspace
-+#define pci_remap_cfgspace pci_remap_cfgspace
-+static inline void __iomem *pci_remap_cfgspace(phys_addr_t offset,
-+					       size_t size)
-+{
-+	return ioremap_nocache(offset, size);
-+}
-+#endif
++static DEFINE_PER_CPU(u64, prev_next_tick);
 +
- #ifndef xlate_dev_kmem_ptr
- #define xlate_dev_kmem_ptr xlate_dev_kmem_ptr
- static inline void *xlate_dev_kmem_ptr(void *addr)
--- 
-2.10.0
+ static ktime_t tick_nohz_stop_sched_tick(struct tick_sched *ts,
+ 					 ktime_t now, int cpu)
+ {
+@@ -725,6 +727,11 @@ static ktime_t tick_nohz_stop_sched_tick(struct tick_sched *ts,
+ 		 */
+ 		if (delta == 0) {
+ 			tick_nohz_restart(ts, now);
++			/*
++			 * Make sure next tick stop doesn't get fooled by past
++			 * clock deadline
++			 */
++			ts->next_tick = 0;
+ 			goto out;
+ 		}
+ 	}
+@@ -767,8 +774,15 @@ static ktime_t tick_nohz_stop_sched_tick(struct tick_sched *ts,
+ 	tick = expires;
+ 
+ 	/* Skip reprogram of event if its not changed */
+-	if (ts->tick_stopped && (expires == dev->next_event))
+-		goto out;
++	if (ts->tick_stopped) {
++		if (system_state == SYSTEM_BOOTING) {
++			if (ts->next_tick != this_cpu_read(prev_next_tick))
++				printk("NEXT_TICK_READ: CPU: %d Expires: %llu ts->next_tick:%llu\n", smp_processor_id(), expires, ts->next_tick);
++			this_cpu_write(prev_next_tick, ts->next_tick);
++		}
++		if (expires == ts->next_tick)
++			goto out;
++	}
+ 
+ 	/*
+ 	 * nohz_stop_sched_tick can be called several times before
+@@ -787,6 +801,8 @@ static ktime_t tick_nohz_stop_sched_tick(struct tick_sched *ts,
+ 		trace_tick_stop(1, TICK_DEP_MASK_NONE);
+ 	}
+ 
++	ts->next_tick = tick;
++
+ 	/*
+ 	 * If the expiration time == KTIME_MAX, then we simply stop
+ 	 * the tick timer.
+@@ -802,7 +818,10 @@ static ktime_t tick_nohz_stop_sched_tick(struct tick_sched *ts,
+ 	else
+ 		tick_program_event(tick, 1);
+ out:
+-	/* Update the estimated sleep length */
++	/*
++	 * Update the estimated sleep length until the next timer
++	 * (not only the tick).
++	 */
+ 	ts->sleep_length = ktime_sub(dev->next_event, now);
+ 	return tick;
+ }
+diff --git a/kernel/time/tick-sched.h b/kernel/time/tick-sched.h
+index bf38226..075444e 100644
+--- a/kernel/time/tick-sched.h
++++ b/kernel/time/tick-sched.h
+@@ -27,6 +27,7 @@ enum tick_nohz_mode {
+  *			timer is modified for nohz sleeps. This is necessary
+  *			to resume the tick timer operation in the timeline
+  *			when the CPU returns from nohz sleep.
++ * @next_tick:		Next tick to be fired when in dynticks mode.
+  * @tick_stopped:	Indicator that the idle tick has been stopped
+  * @idle_jiffies:	jiffies at the entry to idle for idle time accounting
+  * @idle_calls:		Total number of idle calls
+@@ -44,6 +45,7 @@ struct tick_sched {
+ 	unsigned long			check_clocks;
+ 	enum tick_nohz_mode		nohz_mode;
+ 	ktime_t				last_tick;
++	ktime_t				next_tick;
+ 	int				inidle;
+ 	int				tick_stopped;
+ 	unsigned long			idle_jiffies;
