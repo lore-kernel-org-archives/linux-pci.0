@@ -1,94 +1,115 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 16 Feb 2017 00:20:05 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        USB list <linux-usb@vger.kernel.org>
-Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
- after cold boots, boots after reboot
-Message-ID: <20170215232005.GA7877@amd>
-References: <Pine.LNX.4.44L0.1702031415140.1794-100000@iolanthe.rowland.org>
- <20170203205129.GA3791@amd>
- <20170203211854.GA3697@amd>
- <20170214175956.GA3587@amd>
- <CA+55aFyYAztA+Onquy9ODeC9_YBL_fXAd-RgeUVUhpsjK81ZVQ@mail.gmail.com>
- <CA+55aFxU1D0hAPJuhkKaFBByi=8vpw7dJUX=FfpoqnZLWsvxig@mail.gmail.com>
- <CA+55aFwt6pbt2STzRh1yCdoo7AnCLFqnPkkrYk4_BGFuvT2VCw@mail.gmail.com>
- <CA+55aFzMiXXw9gqNCMCSc+O5HfcqWHXfqbdtbvcOmAHM9_wNig@mail.gmail.com>
- <CA+55aFxuXgsCyMgrRDHdM6BQaej68QoU8TwdM=3LYu9LMBf4fQ@mail.gmail.com>
- <20170215172303.GA15696@amd>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <nsekhar@ti.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [PATCH v2 05/22] Documentation: PCI: Add specification for the *pci test* function device
+Date: Fri, 17 Feb 2017 15:20:25 +0530
+Message-ID: <1487325042-28227-6-git-send-email-kishon@ti.com>
+In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="BXVAT5kNtrzKuDFl"
-In-Reply-To: <20170215172303.GA15696@amd>
+Content-Type: text/plain
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Add specification for the *pci test* virtual function device. The endpoint
+function driver and the host pci driver should be created based on this
+specification.
 
---BXVAT5kNtrzKuDFl
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/PCI/00-INDEX                       |    2 +
+ Documentation/PCI/endpoint/pci-test-function.txt |   66 ++++++++++++++++++++++
+ 2 files changed, 68 insertions(+)
+ create mode 100644 Documentation/PCI/endpoint/pci-test-function.txt
 
-On Wed 2017-02-15 18:23:03, Pavel Machek wrote:
-> On Tue 2017-02-14 11:12:26, Linus Torvalds wrote:
-> > On Feb 14, 2017 9:59 AM, "Pavel Machek" <pavel@ucw.cz> wrote:
-> >=20
-> > Hi!
-> >=20
-> > > >
-> > > > Booting to grub, then hitting ctrl-alt-del is enough to make it wor=
-k.
-> > Ouch.
-> > > >
-> > > > It happens with current Linus' tree.
-> > >
-> > > v4.10-rc6-feb3 : broken
-> > > v4.9 : ok
-> >=20
-> > I wonder if you could bisect it now that you've figured out the rules f=
-or
-> > when it breaks...
->=20
-> I guess that's what I'll need to do. It is my main machine, so it is a
-> bit painful.
->=20
-> Anyway, it seems that "nosmp" makes it hang at similar place, but
-> makes it hang reliably, reboot or cold poweroff. So I guess that's
-> what I'll use for bisection -- should be possible to do automatically
-> that way.
-
-I was mistaken. "nosmp" does not seem to make the hang reliable.
-
-my-4.10-r8+ broken
-4.10-rc8 broken
-4.10-rc4 broken
-4.10-rc3 ok
-4.10-rc2 ok?
-
-I started bisect, 168 revisions to go.
-
-								Pavel
-							=09
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---BXVAT5kNtrzKuDFl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAlik4iUACgkQMOfwapXb+vKRaQCglxdv0MpfyrLHi+X6sEXcXSXM
-VfcAoJc2s04Nun/BwP+zXu4x7cHlN0yL
-=XOBG
------END PGP SIGNATURE-----
-
---BXVAT5kNtrzKuDFl--
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index f84a23c..4e5a283 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -16,3 +16,5 @@ endpoint/pci-endpoint.txt
+ 	- guide to add endpoint controller driver and endpoint function driver.
+ endpoint/pci-endpoint-cfs.txt
+ 	- guide to use configfs to configure the pci endpoint function.
++endpoint/pci-test-function.txt
++	- specification of *pci test* function device.
+diff --git a/Documentation/PCI/endpoint/pci-test-function.txt b/Documentation/PCI/endpoint/pci-test-function.txt
+new file mode 100644
+index 0000000..1324376
+--- /dev/null
++++ b/Documentation/PCI/endpoint/pci-test-function.txt
+@@ -0,0 +1,66 @@
++				PCI TEST
++		    Kishon Vijay Abraham I <kishon@ti.com>
++
++Traditionally PCI RC has always been validated by using standard
++PCI cards like ethernet PCI cards or USB PCI cards or SATA PCI cards.
++However with the addition of EP-core in linux kernel, it is possible
++to configure a PCI controller that can operate in EP mode to work as
++a test device.
++
++The PCI endpoint test device is a virtual device (defined in software)
++used to test the endpoint functionality and serve as a sample driver
++for other PCI endpoint devices (to use the EP framework).
++
++The PCI endpoint test device has the following registers:
++
++	1) PCI_ENDPOINT_TEST_MAGIC
++	2) PCI_ENDPOINT_TEST_COMMAND
++	3) PCI_ENDPOINT_TEST_STATUS
++	4) PCI_ENDPOINT_TEST_SRC_ADDR
++	5) PCI_ENDPOINT_TEST_DST_ADDR
++	6) PCI_ENDPOINT_TEST_SIZE
++	7) PCI_ENDPOINT_TEST_CHECKSUM
++
++*) PCI_ENDPOINT_TEST_MAGIC
++
++This register will be used to test BAR0. A known pattern will be written
++and read back from MAGIC register to verify BAR0.
++
++*) PCI_ENDPOINT_TEST_COMMAND:
++
++This register will be used by the host driver to indicate the function
++that the endpoint device must perform.
++
++Bitfield Description:
++  Bit 0		: raise legacy irq
++  Bit 1		: raise MSI irq
++  Bit 2 - 7	: MSI interrupt number
++  Bit 8		: read command (read data from RC buffer)
++  Bit 9		: write command (write data to RC buffer)
++  Bit 10	: copy command (copy data from one RC buffer to another
++		  RC buffer)
++
++*) PCI_ENDPOINT_TEST_STATUS
++
++This register reflects the status of the PCI endpoint device.
++
++Bitfield Description:
++  Bit 0		: read success
++  Bit 1		: read fail
++  Bit 2		: write success
++  Bit 3		: write fail
++  Bit 4		: copy success
++  Bit 5		: copy fail
++  Bit 6		: irq raised
++  Bit 7		: source address is invalid
++  Bit 8		: destination address is invalid
++
++*) PCI_ENDPOINT_TEST_SRC_ADDR
++
++This register contains the source address (RC buffer address) for the
++COPY/READ command.
++
++*) PCI_ENDPOINT_TEST_DST_ADDR
++
++This register contains the destination address (RC buffer address) for
++the COPY/WRITE command.
+-- 
+1.7.9.5
