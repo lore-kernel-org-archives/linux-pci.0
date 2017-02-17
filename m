@@ -1,128 +1,164 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Fri, 24 Feb 2017 12:27:45 -0700
-Message-Id: <1487964469-2944-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v4 0/4]  New Microsemi PCI Switch Management Driver
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 04/22] Documentation: PCI: Guide to use pci endpoint
+ configfs
+To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, Joao Pinto
+ <Joao.Pinto@synopsys.com>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+ <1487325042-28227-5-git-send-email-kishon@ti.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <ac16c03a-e415-327c-27b3-bcc700a6f953@synopsys.com>
+Date: Fri, 17 Feb 2017 13:05:32 +0000
+MIME-Version: 1.0
+In-Reply-To: <1487325042-28227-5-git-send-email-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+ linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Changes since v3:
+=C0s 9:50 AM de 2/17/2017, Kishon Vijay Abraham I escreveu:
+> Add Documentation to help users use pci endpoint to configure
+> pci endpoint function and to bind the endpoint function
+> with endpoint controller.
+> =
 
-* Removed stdev_is_alive and moved pci deinit functions
-  into the device release function which only occurs after all
-  cdev instances are closed. (per Bjorn)
-* Reduced locking in read/write functions (per Bjorn)
-* Use pci_alloc_irq_vectors to vastly improve ISR initialization (Bjorn)
-* A few other minor nits and cleanup as noticed by Bjorn
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  Documentation/PCI/00-INDEX                      |    2 +
+>  Documentation/PCI/endpoint/pci-endpoint-cfs.txt |   84 +++++++++++++++++=
+++++++
+>  2 files changed, 86 insertions(+)
+>  create mode 100644 Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+> =
 
-Changes since v2:
+> diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+> index ba950b2..f84a23c 100644
+> --- a/Documentation/PCI/00-INDEX
+> +++ b/Documentation/PCI/00-INDEX
+> @@ -14,3 +14,5 @@ pcieaer-howto.txt
+>  	- the PCI Express Advanced Error Reporting Driver Guide HOWTO
+>  endpoint/pci-endpoint.txt
+>  	- guide to add endpoint controller driver and endpoint function driver.
+> +endpoint/pci-endpoint-cfs.txt
+> +	- guide to use configfs to configure the pci endpoint function.
+> diff --git a/Documentation/PCI/endpoint/pci-endpoint-cfs.txt b/Documentat=
+ion/PCI/endpoint/pci-endpoint-cfs.txt
+> new file mode 100644
+> index 0000000..d9f8734
+> --- /dev/null
+> +++ b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+> @@ -0,0 +1,84 @@
+> +                   CONFIGURING PCI ENDPOINT USING CONFIGFS
+> +                    Kishon Vijay Abraham I <kishon@ti.com>
+> +
+> +The PCI Endpoint Core exposes configfs entry (pci_ep) in order to config=
+ure the
+> +PCI endpoint function and in order to bind the endpoint function
+> +with the endpoint controller. (For introducing other mechanisms to
+> +configure the PCI Endpoint Function refer [1]).
+> +
+> +*) Mounting configfs
+> +
+> +The PCI Endpoint Core layer creates pci_ep directory in the mounted conf=
+igfs
+> +directory. configfs can be mounted using the following command.
+> +
+> +	mount -t configfs none /sys/kernel/config
+> +
+> +*) Directory Structure
+> +
+> +The pci_ep configfs directory structure has been created to reflect the
+> +natural tree like structure of PCI devices. So every directory created
+> +inside pci_ep represents a EPC device and every directory created inside
+> +epf directory represents EPF device.
+> +
+> +/sys/kernel/config/pci_ep/
+> +			 | <dir>/ --------------------------------------> [2]
+> +				| epc
+> +				| epf/
+> +				     | <dir>/ --------------------------> [3]
+> +					    | vendorid
+> +					    | deviceid
+> +					    | revid
+> +					    | progif_code
+> +					    | subclass_code
+> +					    | baseclass_code
+> +					    | cache_line_size
+> +					    | subsys_vendor_id
+> +					    | subsys_id
+> +					    | interrupt_pin
+> +					    | function
+> +
+> +*) Creating configfs entry for EPC
+> +
+> +Any directory created inside *pci_ep* represents an EPC device. In the a=
+bove
+> +directory structure [2] represents an EPC device. It consists of
+> +
+> +	*) epc: Use it to associate the configfs entry to an actual EPC device.
+> +		The list of valid entries for this field can be obtained from
+> +			ls /sys/class/pci_epc/
+> +
+> +	*) epf: Directory that contains all the endpoint functions. The name
+> +		of the created directory determines the driver this particular
+> +		epf device will be bound to. The name can be obtained either
+> +		from the function binding documentation [4] or
+> +			ls /sys/bus/pci-epf/drivers
+> +
+> +		If more than one endpoint function device has to be bound to
+> +		the same driver, then the directory should be created using
+> +		the following notation
+> +			mkdir <name>.<num>
+> +
+> +*) Creating configfs entry for EPF
+> +
+> +Any directory created inside *epf* directory represents an EPF device. I=
+n the
+> +above directory structure, [3] represents an EPF device. It consists of =
+the
+> +following entries that can be used to configure the standard configurati=
+on
+> +header of the endpoint function. (These entries are created by the
+> +framework when any new directory is created inside epf directory.)
+> +
+> +        | vendorid
+> +        | deviceid
+> +        | revid
+> +        | progif_code
+> +        | subclass_code
+> +        | baseclass_code
+> +        | cache_line_size
+> +        | subsys_vendor_id
+> +        | subsys_id
+> +        | interrupt_pin
+> +
+> +The following entry identifies the function driver that is bound to the
+> +function device
+> +	| function
+> +
+> +[1] -> Documentation/PCI/endpoint/pci-endpoint.txt
+> +[4] -> Documentation/PCI/endpoint/function/binding/
+> =
 
-* Collected reviewed and tested tags
-* Very minor fix to the error path in the create function
 
-Changes since v1:
+Good content.
 
-* Rebased onto 4.10-rc6 (cleanly)
-* Split the patch into a few more easily digestible patches (as
-  suggested by Greg Kroah-Hartman)
-* Folded switchtec.c into switchtec.h (per Greg)
-* Fixed a bunch of 32bit build warnings caught by the kbuild test robot
-* Fixed some issues in the documentation so it has a proper
-  reStructredText format (as noted by Jonathan Corbet)
-* Fixed padding and sizes in the IOCTL structures as noticed by Emil
-  Velikov and used pahole to verify their consistency across 32 and 64
-  bit builds
-* Reworked one of the IOCTL interfaces to be more future proof (per
-  Emil).
+Acked-By: Joao Pinto <jpinto@synopsys.com>
 
-Changes since RFC:
 
-* Fixed incorrect use of the drive model as pointed out by Greg
-  Kroah-Hartman
-* Used devm functions as suggested by Keith Busch
-* Added a handful of sysfs attributes to the switchtec class
-* Added a handful of IOCTLs to the switchtec device
-* A number of miscellaneous bug fixes
 
---
-
-Hi,
-
-This is a continuation of the RFC we posted lasted month [1] which
-proposes a management driver for Microsemi's Switchtec line of PCI
-switches. This hardware is still looking to be used in the Open
-Compute Platform
-
-To make this entirely clear: the Switchtec products are compliant
-with the PCI specifications and are supported today with the standard
-in-kernel driver. However, these devices also expose a management endpoint
-on a separate PCI function address which can be used to perform some
-advanced operations. This is a driver for that function. See the patch
-for more information.
-
-Since the RFC, we've made the changes requested by Greg Kroah-Hartman
-and Keith Busch, and we've also fleshed out a number of features. We've
-added a couple of IOCTLs and sysfs attributes which are documented in
-the patch. Significant work has also been done on the userspace tool
-which is available under a GPL license at [2]. We've also had testing
-done by some of the interested parties.
-
-We hope to see this work included in either 4.11 or 4.12 assuming a
-smooth review process.
-
-The patch is based off of the v4.10-rc6 release.
-
-Thanks for your review,
-
-Logan
-
-[1] https://www.spinics.net/lists/linux-pci/msg56897.html
-[2] https://github.com/sbates130272/switchtec-user
-
-Logan Gunthorpe (4):
-  MicroSemi Switchtec management interface driver
-  switchtec: Add user interface documentation
-  switchtec: Add sysfs attributes to the Switchtec driver
-  switchtec: Add IOCTLs to the Switchtec driver
-
- Documentation/ABI/testing/sysfs-class-switchtec |   96 ++
- Documentation/ioctl/ioctl-number.txt            |    1 +
- Documentation/switchtec.txt                     |   80 ++
- MAINTAINERS                                     |   11 +
- drivers/pci/Kconfig                             |    1 +
- drivers/pci/Makefile                            |    1 +
- drivers/pci/switch/Kconfig                      |   13 +
- drivers/pci/switch/Makefile                     |    1 +
- drivers/pci/switch/switchtec.c                  | 1503 +++++++++++++++++++++++
- include/uapi/linux/switchtec_ioctl.h            |  132 ++
- 10 files changed, 1839 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
- create mode 100644 Documentation/switchtec.txt
- create mode 100644 drivers/pci/switch/Kconfig
- create mode 100644 drivers/pci/switch/Makefile
- create mode 100644 drivers/pci/switch/switchtec.c
- create mode 100644 include/uapi/linux/switchtec_ioctl.h
-
---
-2.1.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
