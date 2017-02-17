@@ -1,57 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:32919 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751064AbdBCRrL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 3 Feb 2017 12:47:11 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
-        Austin Bolen <Austin.Bolen@dell.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv5 0/5] Limiting PCI access
-Date: Fri,  3 Feb 2017 12:55:50 -0500
-Message-Id: <1486144555-5526-1-git-send-email-keith.busch@intel.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:19565 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964921AbdBQX0c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Feb 2017 18:26:32 -0500
+Date: Sat, 18 Feb 2017 02:26:18 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Jingoo Han <jingoohan1@gmail.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: [patch] PCI: dwc: uninitialized variable in dw_handle_msi_irq()
+Message-ID: <20170217232618.GC26717@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Version 5 of attempting to limit accessing PCI devices we know to be
-disconnected. The motivation for this is that we do not need or want to
-start an operation that we know will fail, and this has demonstrated an
-improvement in time to complete device removal.
+The bug is that "val" is unsigned long but we only initialize 32 bits
+of it.  Then we test "if (val)" and that might be true not because we
+set the bits but because some were never initialized.
 
-v4 -> v5:
+Fixes: f342d940ee0e ("PCI: exynos: Add support for MSI")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+---
+Static analysis.  Not tested.
 
-Greg was concerned about the method for observing the disconnected state
-being visible to device drivers. We do not want device drivers relying
-on this to handle their device specific operations when a device is
-suddenly disconnected. Since the intended usage is internal to the PCI
-driver itself, this series privatizes the state. As a consequence, I had
-to move the inline pci device config accessors to exported functions so
-they could access the private API for the disconnected state.
-
-I've also split the short-cut for pci_device_is_present from the
-pci_dev_config_<read|write>_<byte|word|dword> access short cut into two
-different patches since they're not really the same thing.
-
-This is otherwise the same as before.
-
-Keith Busch (5):
-  pci: Export pci device config accessors
-  pci: Add device disconnected state
-  pci: No config access for disconnected devices
-  pci/msix: Skip disabling disconnected devices
-  pci: Quick return for pci_device_is_present
-
- drivers/pci/access.c             | 56 ++++++++++++++++++++++++++++++++++++++++
- drivers/pci/hotplug/pciehp_pci.c |  5 ++++
- drivers/pci/msi.c                |  7 ++++-
- drivers/pci/pci.c                |  2 ++
- drivers/pci/pci.h                | 14 ++++++++++
- drivers/pci/pcie/pcie-dpc.c      |  4 +++
- include/linux/pci.h              | 34 ++++++------------------
- 7 files changed, 95 insertions(+), 27 deletions(-)
-
--- 
-2.7.2
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index af8f6e92e885..5bfc377b83e4 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -257,17 +257,18 @@ static struct irq_chip dw_msi_irq_chip = {
+ /* MSI int handler */
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+ {
+-	unsigned long val;
++	u32 val;
+ 	int i, pos, irq;
+ 	irqreturn_t ret = IRQ_NONE;
+ 
+ 	for (i = 0; i < MAX_MSI_CTRLS; i++) {
+ 		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+-				(u32 *)&val);
++				    &val);
+ 		if (val) {
+ 			ret = IRQ_HANDLED;
+ 			pos = 0;
+-			while ((pos = find_next_bit(&val, 32, pos)) != 32) {
++			while ((pos = find_next_bit((unsigned long *)&val, 32,
++						    pos)) != 32) {
+ 				irq = irq_find_mapping(pp->irq_domain,
+ 						i * 32 + pos);
+ 				dw_pcie_wr_own_conf(pp,
