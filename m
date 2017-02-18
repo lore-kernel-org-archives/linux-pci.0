@@ -1,111 +1,86 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 01/22] PCI: endpoint: Add EP core layer to enable EP
- controller and EP functions
-To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
- <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han
- <jingoohan1@gmail.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
- <1487325042-28227-2-git-send-email-kishon@ti.com>
- <ece23395-7ebc-c9f3-bd9f-4f24e44d763a@synopsys.com> <58A6E05D.5010803@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <03f543b5-ae86-47cc-e3cf-e3b5cfff5ee4@synopsys.com>
-Date: Fri, 17 Feb 2017 11:39:39 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx02-sz.bfs.de ([194.94.69.103]:36386 "EHLO mx02-sz.bfs.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753181AbdBRMIJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 18 Feb 2017 07:08:09 -0500
+Message-ID: <58A83923.3040903@bfs.de>
+Date: Sat, 18 Feb 2017 13:08:03 +0100
+From: walter harms <wharms@bfs.de>
+Reply-To: wharms@bfs.de
 MIME-Version: 1.0
-In-Reply-To: <58A6E05D.5010803@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
- linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="windows-1252"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+CC: Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [patch] PCI: dwc: uninitialized variable in dw_handle_msi_irq()
+References: <20170217232618.GC26717@mwanda>
+In-Reply-To: <20170217232618.GC26717@mwanda>
+Content-Type: text/plain; charset=ISO-8859-1
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-=C0s 11:37 AM de 2/17/2017, Kishon Vijay Abraham I escreveu:
-> Hi Joao,
-> =
-
-> On Friday 17 February 2017 04:56 PM, Joao Pinto wrote:
->>
->> Hi Kishon,
->>
->> =C0s 9:50 AM de 2/17/2017, Kishon Vijay Abraham I escreveu:
->>> Introduce a new EP core layer in order to support endpoint functions
->>> in linux kernel. This comprises of EPC library
->>> (Endpoint Controller Library) and EPF library (Endpoint
->>> Function Library). EPC library implements functions that is specific
->>> to an endpoint controller and EPF library implements functions
->>> that is specific to an endpoint function.
->>>
->>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->>> ---
->>>  drivers/Makefile                    |    2 +
->>>  drivers/pci/Kconfig                 |    1 +
->>>  drivers/pci/endpoint/Kconfig        |   21 ++
->>>  drivers/pci/endpoint/Makefile       |    6 +
->>>  drivers/pci/endpoint/pci-epc-core.c |  548 +++++++++++++++++++++++++++=
-++++++++
->>>  drivers/pci/endpoint/pci-epc-mem.c  |  143 +++++++++
->>>  drivers/pci/endpoint/pci-epf-core.c |  347 ++++++++++++++++++++++
->>>  include/linux/mod_devicetable.h     |   10 +
->>>  include/linux/pci-epc.h             |  141 +++++++++
->>>  include/linux/pci-epf.h             |  160 ++++++++++
->>>  10 files changed, 1379 insertions(+)
->>>  create mode 100644 drivers/pci/endpoint/Kconfig
->>>  create mode 100644 drivers/pci/endpoint/Makefile
->>>  create mode 100644 drivers/pci/endpoint/pci-epc-core.c
->>>  create mode 100644 drivers/pci/endpoint/pci-epc-mem.c
->>>  create mode 100644 drivers/pci/endpoint/pci-epf-core.c
->>>  create mode 100644 include/linux/pci-epc.h
->>>  create mode 100644 include/linux/pci-epf.h
->>>
->>> diff --git a/drivers/Makefile b/drivers/Makefile
->>> index f521cb0..a300bb1 100644
->>> --- a/drivers/Makefile
->>> +++ b/drivers/Makefile
->>> @@ -14,7 +14,9 @@ obj-$(CONFIG_GENERIC_PHY)	+=3D phy/
->>>  obj-$(CONFIG_PINCTRL)		+=3D pinctrl/
->>>  obj-$(CONFIG_GPIOLIB)		+=3D gpio/
->>>  obj-y				+=3D pwm/
->>> +
->>>  obj-$(CONFIG_PCI)		+=3D pci/
->>> +obj-$(CONFIG_PCI_ENDPOINT)	+=3D pci/endpoint/
->>>  # PCI dwc controller drivers
->>>  obj-y				+=3D pci/dwc/
->>
->> Any special reason to include pci/endpoint and pci/dwc in drivers/Makefi=
-le
->> instead of being inside pci/Makefile? pci/host is still inside pci/Makef=
-ile.
-> =
-
-> CONFIG_PCI enables all the pcie host support. Endpoint support should be
-> enabled independent of the host support. Moving pci/endpoint inside
-> pci/Makefile will build endpoint support only if CONFIG_PCI is enabled. F=
-or the
-> same reason kept pci/dwc in drivers/Makefile since dwc drivers can be used
-> either in host mode or device mode (or both).
-
-Good point! Very well.
-
-Acked-By: Joao Pinto <jpinto@synopsys.com>
-
-> =
-
-> Thanks
-> Kishon
-> =
 
 
+Am 18.02.2017 00:26, schrieb Dan Carpenter:
+> The bug is that "val" is unsigned long but we only initialize 32 bits
+> of it.  Then we test "if (val)" and that might be true not because we
+> set the bits but because some were never initialized.
+> 
+> Fixes: f342d940ee0e ("PCI: exynos: Add support for MSI")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> ---
+> Static analysis.  Not tested.
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+> index af8f6e92e885..5bfc377b83e4 100644
+> --- a/drivers/pci/dwc/pcie-designware.c
+> +++ b/drivers/pci/dwc/pcie-designware.c
+> @@ -257,17 +257,18 @@ static struct irq_chip dw_msi_irq_chip = {
+>  /* MSI int handler */
+>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+>  {
+> -	unsigned long val;
+> +	u32 val;
+>  	int i, pos, irq;
+>  	irqreturn_t ret = IRQ_NONE;
+>  
+>  	for (i = 0; i < MAX_MSI_CTRLS; i++) {
+>  		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+> -				(u32 *)&val);
+> +				    &val);
+>  		if (val) {
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+why not
+	if (!val) continue;
+
+it would save an entire indent level and make things a bit more easy to read.
+
+
+>  			ret = IRQ_HANDLED;
+>  			pos = 0;
+> -			while ((pos = find_next_bit(&val, 32, pos)) != 32) {
+> +			while ((pos = find_next_bit((unsigned long *)&val, 32,
+> +						    pos)) != 32) {
+>  				irq = irq_find_mapping(pp->irq_domain,
+>  						i * 32 + pos);
+
+irq seems to be 0 when nothing is found. This can never happen ?
+
+find_next_bit() feels a bit overpowered perhaps a simple loop
+would be more effective and more easy to understand ?
+something like:
+	while ( val) {
+	 if (val & 1 )
+		found ...
+	val>>=1;
+	pos++;
+	}
+
+just my 2 cents,
+
+re,
+ wh
+
+
+>  				dw_pcie_wr_own_conf(pp,
