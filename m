@@ -1,9 +1,11 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Wei Zhang <wzhang@fb.com>
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Keith Busch <keith.busch@intel.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:44497 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753461AbdBRUlD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 18 Feb 2017 15:41:03 -0500
+To: Keith Busch <keith.busch@intel.com>,
         Myron Stowe <myron.stowe@gmail.com>,
-        "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
         Geert Uytterhoeven <geert+renesas@glider.be>,
         Jonathan Corbet <corbet@lwn.net>,
@@ -16,126 +18,109 @@ To: Logan Gunthorpe <logang@deltatee.com>,
         Linus Walleij <linus.walleij@linaro.org>,
         Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
         Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Krishna Dhulipala <krishnad@fb.com>
-CC: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Dan Williams <dan.j.williams@intel.com>
+References: <20170210145124.GA24594@kroah.com>
+ <1486749440-24309-1-git-send-email-logang@deltatee.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
         Stephen Bates <stephen.bates@microsemi.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
-Date: Thu, 9 Feb 2017 23:46:03 +0000
-Message-ID: <D01CA43B-A973-4407-AFE1-4729F8F8C13F@fb.com>
-References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
- <B0BD08E8-442E-4FBF-AF52-7AC0A7CA092C@fb.com>
-In-Reply-To: <B0BD08E8-442E-4FBF-AF52-7AC0A7CA092C@fb.com>
-Content-Type: text/plain; charset="utf-8"
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <20e55da4-b3c1-7c57-15cf-b0aa52442e18@deltatee.com>
+Date: Sat, 18 Feb 2017 13:22:20 -0700
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1486749440-24309-1-git-send-email-logang@deltatee.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH] switchtec: cleanup cdev init
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Q29ycmVjdGlvbnMgdG8gdGhlIGVtYWlsIGJlbG93LiAgSXQgc2hvdWxkIGJlDQoNCiAgICBUZXN0
-ZWQtYnk6IEtyaXNobmEgRGh1bGlwYWxhIGtyaXNobmFkQGZiLmNvbQ0KICAgIFJldmlld2VkLWJ5
-OiBXZWkgWmhhbmcgd3poYW5nQGZiLmNvbSAgDQoNClRoYW5rcywNCi1XZWkNCg0KLS0NCndlaSB6
-aGFuZyB8IHNvZnR3YXJlIGVuZ2luZWVyIHwgZmFjZWJvb2sNCnd6aGFuZ0BmYi5jb20gfCAoNDA4
-KSA0NjAtNDgwMw0KDQpPbiAyLzkvMTcsIDM6MTYgUE0sICJXZWkgWmhhbmciIDx3emhhbmdAZmIu
-Y29tPiB3cm90ZToNCg0KICAgIEhpLA0KICAgIA0KICAgIFRoZSBzd2l0Y2h0ZWMgZHJpdmVyIHBh
-dGNoZXMgW1BBVENIIHYyICgwLTQpLzRdIGluIGNvbmp1bmN0aW9uIHdpdGggdGhlIHN3aXRjaHRl
-YyB1c2VybGFuZCB0b29sIGlzIHVzZWQgdG8gY29tbXVuaWNhdGUgd2l0aCB0aGUgTWljcm9zZW1p
-IDg1MzYgUENJZSBTd2l0Y2ggdXNlZCBvbiBGYWNlYm9va+KAmXMgTGlnaHRuaW5nIHBsYXRmb3Jt
-LiBUaGUgZm9sbG93aW5nIGVzc2VudGlhbCBkcml2ZXIgYW5kIHRvb2wgZnVuY3Rpb25zIHdlcmUg
-c3VjY2Vzc2Z1bGx5IHRlc3RlZCB3aXRoIGl0Og0KICAgIMK3ICAgICAgICAgUmV0cmlldmFsIG9m
-IGZpcm13YXJlIGFuZCBjb25maWd1cmF0aW9uIGluZm9ybWF0aW9uIGFsb25nIHdpdGggQ1JDcw0K
-ICAgIMK3ICAgICAgICAgU3dpdGNoIGZpcm13YXJlIGFuZCBjb25maWd1cmF0aW9uIHVwZ3JhZGVz
-DQogICAgwrcgICAgICAgICBTd2l0Y2ggUEhZL0xpbmsgZXJyb3IgY291bnRlciBjb2xsZWN0aW9u
-IGFuZCB0aGUgYWJpbGl0eSB0byByZXNldCB0aGVtDQogICAgwrcgICAgICAgICBTd2l0Y2ggdXBz
-dHJlYW0gYW5kIGRvd25zdHJlYW0gcG9ydHPigJkgbGluayBzdGF0dXMgcmVwb3J0aW5nDQogICAg
-wrcgICAgICAgICBTd2l0Y2ggaW50ZXJmYWNlIGZ1bmN0aW9uaW5nDQogICAgwrcgICAgICAgICBS
-ZXRyaWV2YWwgb2Ygc3dpdGNoIEFTSUMgdGVtcGVyYXR1cmUNCiAgICDCtyAgICAgICAgIEV4cG9y
-dGluZyBzd2l0Y2ggZmlybXdhcmUgbG9nIGR1bXANCiAgICDCtyAgICAgICAgIFJlYWQgdGhlIGlu
-Zm9ybWF0aW9uIG9mIGZpcm13YXJlIGFuZCBjb25maWd1cmF0aW9uIGJpbmFyaWVzDQogICAgwrcg
-ICAgICAgICBFeHRyYWN0IHRoZSBmaXJtd2FyZSBhbmQgY29uZmlndXJhdGlvbiBpbWFnZXMgc3Rv
-cmVkIGluIHRoZSBzd2l0Y2ggRUVQUk9NDQogICAgDQogICAgVGVzdGVkLWJ5OiBLcmlzaG5hIERo
-dWxpcGFsYSBrcmlzaG5hZEBmYi5jb20NCiAgICBSZXZpZXdlZC1ieTogV2VpIFpoYW5nIHd6aGFu
-Z0BmYi5jb20gIA0KICAgIA0KICAgIFRoYW5rcywNCiAgICAtV2VpDQogICAgDQogICAgLS0NCiAg
-ICB3ZWkgemhhbmcgfCBzb2Z0d2FyZSBlbmdpbmVlciB8IGZhY2Vib29rDQogICAgd3poYW5nQGZi
-LmNvbSB8ICg0MDgpIDQ2MC00ODAzDQogICAgDQogICAgT24gMi8yLzE3LCAxMDowNSBBTSwgIkxv
-Z2FuIEd1bnRob3JwZSIgPGxvZ2FuZ0BkZWx0YXRlZS5jb20+IHdyb3RlOg0KICAgIA0KICAgICAg
-ICBDaGFuZ2VzIHNpbmNlIHYxOg0KICAgICAgICANCiAgICAgICAgKiBSZWJhc2VkIG9udG8gNC4x
-MC1yYzYgKGNsZWFubHkpDQogICAgICAgICogU3BsaXQgdGhlIHBhdGNoIGludG8gYSBmZXcgbW9y
-ZSBlYXNpbHkgZGlnZXN0aWJsZSBwYXRjaGVzIChhcw0KICAgICAgICAgIHN1Z2dlc3RlZCBieSBH
-cmVnIEtyb2FoLUhhcnRtYW4pDQogICAgICAgICogRm9sZGVkIHN3aXRjaHRlYy5jIGludG8gc3dp
-dGNodGVjLmggKHBlciBHcmVnKQ0KICAgICAgICAqIEZpeGVkIGEgYnVuY2ggb2YgMzJiaXQgYnVp
-bGQgd2FybmluZ3MgY2F1Z2h0IGJ5IHRoZSBrYnVpbGQgdGVzdCByb2JvdA0KICAgICAgICAqIEZp
-eGVkIHNvbWUgaXNzdWVzIGluIHRoZSBkb2N1bWVudGF0aW9uIHNvIGl0IGhhcyBhIHByb3Blcg0K
-ICAgICAgICAgIHJlU3RydWN0cmVkVGV4dCBmb3JtYXQgKGFzIG5vdGVkIGJ5IEpvbmF0aGFuIENv
-cmJldCkNCiAgICAgICAgKiBGaXhlZCBwYWRkaW5nIGFuZCBzaXplcyBpbiB0aGUgSU9DVEwgc3Ry
-dWN0dXJlcyBhcyBub3RpY2VkIGJ5IEVtaWwNCiAgICAgICAgICBWZWxpa292IGFuZCB1c2VkIHBh
-aG9sZSB0byB2ZXJpZnkgdGhlaXIgY29uc2lzdGVuY3kgYWNyb3NzIDMyIGFuZCA2NA0KICAgICAg
-ICAgIGJpdCBidWlsZHMNCiAgICAgICAgKiBSZXdvcmtlZCBvbmUgb2YgdGhlIElPQ1RMIGludGVy
-ZmFjZXMgdG8gYmUgbW9yZSBmdXR1cmUgcHJvb2YgKHBlcg0KICAgICAgICAgIEVtaWwpLg0KICAg
-ICAgICANCiAgICAgICAgQ2hhbmdlcyBzaW5jZSBSRkM6DQogICAgICAgIA0KICAgICAgICAqIEZp
-eGVkIGluY29ycmVjdCB1c2Ugb2YgdGhlIGRyaXZlIG1vZGVsIGFzIHBvaW50ZWQgb3V0IGJ5IEdy
-ZWcNCiAgICAgICAgICBLcm9haC1IYXJ0bWFuDQogICAgICAgICogVXNlZCBkZXZtIGZ1bmN0aW9u
-cyBhcyBzdWdnZXN0ZWQgYnkgS2VpdGggQnVzY2gNCiAgICAgICAgKiBBZGRlZCBhIGhhbmRmdWwg
-b2Ygc3lzZnMgYXR0cmlidXRlcyB0byB0aGUgc3dpdGNodGVjIGNsYXNzDQogICAgICAgICogQWRk
-ZWQgYSBoYW5kZnVsIG9mIElPQ1RMcyB0byB0aGUgc3dpdGNodGVjIGRldmljZQ0KICAgICAgICAq
-IEEgbnVtYmVyIG9mIG1pc2NlbGxhbmVvdXMgYnVnIGZpeGVzDQogICAgICAgIA0KICAgICAgICAt
-LQ0KICAgICAgICANCiAgICAgICAgSGksDQogICAgICAgIA0KICAgICAgICBUaGlzIGlzIGEgY29u
-dGludWF0aW9uIG9mIHRoZSBSRkMgd2UgcG9zdGVkIGxhc3RlZCBtb250aCBbMV0gd2hpY2gNCiAg
-ICAgICAgcHJvcG9zZXMgYSBtYW5hZ2VtZW50IGRyaXZlciBmb3IgTWljcm9zZW1pJ3MgU3dpdGNo
-dGVjIGxpbmUgb2YgUENJDQogICAgICAgIHN3aXRjaGVzLiBUaGlzIGhhcmR3YXJlIGlzIHN0aWxs
-IGxvb2tpbmcgdG8gYmUgdXNlZCBpbiB0aGUgT3Blbg0KICAgICAgICBDb21wdXRlIFBsYXRmb3Jt
-DQogICAgICAgIA0KICAgICAgICBUbyBtYWtlIHRoaXMgZW50aXJlbHkgY2xlYXI6IHRoZSBTd2l0
-Y2h0ZWMgcHJvZHVjdHMgYXJlIGNvbXBsaWFudA0KICAgICAgICB3aXRoIHRoZSBQQ0kgc3BlY2lm
-aWNhdGlvbnMgYW5kIGFyZSBzdXBwb3J0ZWQgdG9kYXkgd2l0aCB0aGUgc3RhbmRhcmQNCiAgICAg
-ICAgaW4ta2VybmVsIGRyaXZlci4gSG93ZXZlciwgdGhlc2UgZGV2aWNlcyBhbHNvIGV4cG9zZSBh
-IG1hbmFnZW1lbnQgZW5kcG9pbnQNCiAgICAgICAgb24gYSBzZXBhcmF0ZSBQQ0kgZnVuY3Rpb24g
-YWRkcmVzcyB3aGljaCBjYW4gYmUgdXNlZCB0byBwZXJmb3JtIHNvbWUNCiAgICAgICAgYWR2YW5j
-ZWQgb3BlcmF0aW9ucy4gVGhpcyBpcyBhIGRyaXZlciBmb3IgdGhhdCBmdW5jdGlvbi4gU2VlIHRo
-ZSBwYXRjaA0KICAgICAgICBmb3IgbW9yZSBpbmZvcm1hdGlvbi4NCiAgICAgICAgDQogICAgICAg
-IFNpbmNlIHRoZSBSRkMsIHdlJ3ZlIG1hZGUgdGhlIGNoYW5nZXMgcmVxdWVzdGVkIGJ5IEdyZWcg
-S3JvYWgtSGFydG1hbg0KICAgICAgICBhbmQgS2VpdGggQnVzY2gsIGFuZCB3ZSd2ZSBhbHNvIGZs
-ZXNoZWQgb3V0IGEgbnVtYmVyIG9mIGZlYXR1cmVzLiBXZSd2ZQ0KICAgICAgICBhZGRlZCBhIGNv
-dXBsZSBvZiBJT0NUTHMgYW5kIHN5c2ZzIGF0dHJpYnV0ZXMgd2hpY2ggYXJlIGRvY3VtZW50ZWQg
-aW4NCiAgICAgICAgdGhlIHBhdGNoLiBTaWduaWZpY2FudCB3b3JrIGhhcyBhbHNvIGJlZW4gZG9u
-ZSBvbiB0aGUgdXNlcnNwYWNlIHRvb2wNCiAgICAgICAgd2hpY2ggaXMgYXZhaWxhYmxlIHVuZGVy
-IGEgR1BMIGxpY2Vuc2UgYXQgWzJdLiBXZSd2ZSBhbHNvIGhhZCB0ZXN0aW5nDQogICAgICAgIGRv
-bmUgYnkgc29tZSBvZiB0aGUgaW50ZXJlc3RlZCBwYXJ0aWVzLg0KICAgICAgICANCiAgICAgICAg
-V2UgaG9wZSB0byBzZWUgdGhpcyB3b3JrIGluY2x1ZGVkIGluIGVpdGhlciA0LjExIG9yIDQuMTIg
-YXNzdW1pbmcgYQ0KICAgICAgICBzbW9vdGggcmV2aWV3IHByb2Nlc3MuDQogICAgICAgIA0KICAg
-ICAgICBUaGUgcGF0Y2ggaXMgYmFzZWQgb2ZmIG9mIHRoZSB2NC4xMC1yYzYgcmVsZWFzZS4NCiAg
-ICAgICAgDQogICAgICAgIFRoYW5rcyBmb3IgeW91ciByZXZpZXcsDQogICAgICAgIA0KICAgICAg
-ICBMb2dhbg0KICAgICAgICANCiAgICAgICAgWzFdIGh0dHBzOi8vdXJsZGVmZW5zZS5wcm9vZnBv
-aW50LmNvbS92Mi91cmw/dT1odHRwcy0zQV9fd3d3LnNwaW5pY3MubmV0X2xpc3RzX2xpbnV4LTJE
-cGNpX21zZzU2ODk3Lmh0bWwmZD1Ed0lCQWcmYz01VkQwUlR0TmxUaDN5Y2Q0MWIzTVV3JnI9TFJG
-b0xsOTJ6V2o1bWtna2NfaFJjZyZtPVZMREJKcXpvdHpHa1RqOC14amxmVC1KMGsydUZxNkZjV2cy
-bkFfb0tZSm8mcz1Pa2lnSG9TcUgxWjNkbm1McU43NmxJUV9XeFJKRGoxdXFJRGwzNVNJNThBJmU9
-IA0KICAgICAgICBbMl0gaHR0cHM6Ly9naXRodWIuY29tL3NiYXRlczEzMDI3Mi9zd2l0Y2h0ZWMt
-dXNlcg0KICAgICAgICANCiAgICAgICAgLS0NCiAgICAgICAgDQogICAgICAgIExvZ2FuIEd1bnRo
-b3JwZSAoNCk6DQogICAgICAgICAgTWljcm9TZW1pIFN3aXRjaHRlYyBtYW5hZ2VtZW50IGludGVy
-ZmFjZSBkcml2ZXINCiAgICAgICAgICBzd2l0Y2h0ZWM6IEFkZCB1c2VyIGludGVyZmFjZSBkb2N1
-bWVudGF0aW9uDQogICAgICAgICAgc3dpdGNodGVjOiBBZGQgc3lzZnMgYXR0cmlidXRlcyB0byB0
-aGUgU3dpdGNodGVjIGRyaXZlcg0KICAgICAgICAgIHN3aXRjaHRlYzogQWRkIElPQ1RMcyB0byB0
-aGUgU3dpdGNodGVjIGRyaXZlcg0KICAgICAgICANCiAgICAgICAgIERvY3VtZW50YXRpb24vQUJJ
-L3Rlc3Rpbmcvc3lzZnMtY2xhc3Mtc3dpdGNodGVjIHwgICA5NiArKw0KICAgICAgICAgRG9jdW1l
-bnRhdGlvbi9pb2N0bC9pb2N0bC1udW1iZXIudHh0ICAgICAgICAgICAgfCAgICAxICsNCiAgICAg
-ICAgIERvY3VtZW50YXRpb24vc3dpdGNodGVjLnR4dCAgICAgICAgICAgICAgICAgICAgIHwgICA4
-MCArKw0KICAgICAgICAgTUFJTlRBSU5FUlMgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgfCAgIDExICsNCiAgICAgICAgIGRyaXZlcnMvcGNpL0tjb25maWcgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgIHwgICAgMSArDQogICAgICAgICBkcml2ZXJzL3BjaS9NYWtlZmlsZSAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgIDEgKw0KICAgICAgICAgZHJpdmVycy9wY2kv
-c3dpdGNoL0tjb25maWcgICAgICAgICAgICAgICAgICAgICAgfCAgIDEzICsNCiAgICAgICAgIGRy
-aXZlcnMvcGNpL3N3aXRjaC9NYWtlZmlsZSAgICAgICAgICAgICAgICAgICAgIHwgICAgMSArDQog
-ICAgICAgICBkcml2ZXJzL3BjaS9zd2l0Y2gvc3dpdGNodGVjLmMgICAgICAgICAgICAgICAgICB8
-IDE2MDggKysrKysrKysrKysrKysrKysrKysrKysNCiAgICAgICAgIGluY2x1ZGUvdWFwaS9saW51
-eC9zd2l0Y2h0ZWNfaW9jdGwuaCAgICAgICAgICAgIHwgIDEzMiArKw0KICAgICAgICAgMTAgZmls
-ZXMgY2hhbmdlZCwgMTk0NCBpbnNlcnRpb25zKCspDQogICAgICAgICBjcmVhdGUgbW9kZSAxMDA2
-NDQgRG9jdW1lbnRhdGlvbi9BQkkvdGVzdGluZy9zeXNmcy1jbGFzcy1zd2l0Y2h0ZWMNCiAgICAg
-ICAgIGNyZWF0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL3N3aXRjaHRlYy50eHQNCiAgICAg
-ICAgIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3BjaS9zd2l0Y2gvS2NvbmZpZw0KICAgICAg
-ICAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvcGNpL3N3aXRjaC9NYWtlZmlsZQ0KICAgICAg
-ICAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvcGNpL3N3aXRjaC9zd2l0Y2h0ZWMuYw0KICAg
-ICAgICAgY3JlYXRlIG1vZGUgMTAwNjQ0IGluY2x1ZGUvdWFwaS9saW51eC9zd2l0Y2h0ZWNfaW9j
-dGwuaA0KICAgICAgICANCiAgICAgICAgLS0NCiAgICAgICAgMi4xLjQNCiAgICAgICAgDQogICAg
-DQogICAgDQoNCg0KDQo=
+Hi,
+
+Please don't apply this patch and instead apply the switchtec driver as
+we submitted in v2. As per the discussion in [1], not using the cdev's
+kobj parent results in incorrect reference counting and a possible use
+of the cdev after its containing structure is freed.
+
+I've also done a quick review around the kernel and found the pattern in
+question to be quite prevalent. It's used in, at least, these drivers:
+
+drivers/dax/dax.c:708
+drivers/input/evdev.c:1419
+drivers/input/joydev.c:908
+drivers/input/mousedev.c:904
+drivers/gpio/gpiolib.c:1039
+drivers/char/tpm/tpm-chip.c:190
+drivers/platform/chrome/cros_ec_dev.c:411
+drivers/infiniband/hw/hfi1/device.c:72
+drivers/infiniband/core/uverbs_main.c:1168
+drivers/infiniband/core/user_mad.c:1186
+drivers/infiniband/core/user_mad.c:1205
+drivers/iio/industrialio-core.c:1721
+drivers/media/cec/cec-core.c:140
+drivers/media/media-devnode.c:258
+
+Dan Williams has proposed a helper API in [2] that could make this code
+appear significantly less suspect which I think would be a good idea.
+However, for now, I feel the switchtec code should also follow this
+pattern (ie. the way it was submitted in v2) and can be changed or
+cleaned up when/if the above numerous examples are fixed up.
+
+Thanks,
+
+Logan
+
+[1] https://lkml.org/lkml/2017/2/10/589
+[2] https://lkml.org/lkml/2017/2/13/700
+
+
+
+
+On 10/02/17 10:57 AM, Logan Gunthorpe wrote:
+> Per a suggestion from Greg Kroah-Hartman [1], don't set the cdev's
+> kobject parent. This allows us to use device_register instead of init
+> and add.
+> 
+> [1] https://lkml.org/lkml/2017/2/10/370
+> ---
+>  drivers/pci/switch/switchtec.c | 15 +++++++--------
+>  1 file changed, 7 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+> index 82bfd18..014eaec 100644
+> --- a/drivers/pci/switch/switchtec.c
+> +++ b/drivers/pci/switch/switchtec.c
+> @@ -1222,24 +1222,23 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
+>  		return ERR_PTR(minor);
+>  
+>  	dev = &stdev->dev;
+> -	device_initialize(dev);
+>  	dev->devt = MKDEV(MAJOR(switchtec_devt), minor);
+> -	dev->class = switchtec_class;
+> -	dev->parent = &pdev->dev;
+> -	dev->groups = switchtec_device_groups;
+> -	dev->release = stdev_release;
+> -	dev_set_name(dev, "switchtec%d", minor);
+>  
+>  	cdev = &stdev->cdev;
+>  	cdev_init(cdev, &switchtec_fops);
+>  	cdev->owner = THIS_MODULE;
+> -	cdev->kobj.parent = &dev->kobj;
+>  
+>  	rc = cdev_add(&stdev->cdev, dev->devt, 1);
+>  	if (rc)
+>  		goto err_cdev;
+>  
+> -	rc = device_add(dev);
+> +	dev->class = switchtec_class;
+> +	dev->parent = &pdev->dev;
+> +	dev->groups = switchtec_device_groups;
+> +	dev->release = stdev_release;
+> +	dev_set_name(dev, "switchtec%d", minor);
+> +
+> +	rc = device_register(dev);
+>  	if (rc) {
+>  		cdev_del(&stdev->cdev);
+>  		put_device(dev);
+> 
