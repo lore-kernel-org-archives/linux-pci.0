@@ -1,69 +1,52 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0112.outbound.protection.outlook.com ([104.47.38.112]:21468
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750971AbdB1DC2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Feb 2017 22:02:28 -0500
-From: Long Li <longli@microsoft.com>
-To: KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [PATCH 2/2 v4] pci-hyperv: lock pci bus on device eject
-Date: Tue, 28 Feb 2017 02:22:04 +0000
-Message-ID: <BN3PR03MB2227E6DE747C7C07C2B762ECCE560@BN3PR03MB2227.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3658176.ffWihUmtIa@wuerfel>
+References: <20170128204839.18330-1-linus.walleij@linaro.org>
+ <2695922.yyinjvNuJK@wuerfel>
+ <CACRpkdb=BqihykWo3egtNW1VKE2-FV+nJQQVYOc2GdCvh1fMng@mail.gmail.com>
+ <3658176.ffWihUmtIa@wuerfel>
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Sat, 18 Feb 2017 15:05:18 +0100
+Message-ID: <CACRpkdZ4OKCifVogYN3MCnyZ6y9U_Pg2tNsjy5f02wxGOykAhg@mail.gmail.com>
+Subject: Re: [PATCH 2/4] PCI: add driver for Cortina Gemini Host Bridge
+To: Arnd Bergmann <arnd@arndb.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: openwrt-devel@openwrt.org, Florian Fainelli <f.fainelli@gmail.com>,
+ Paulius Zaleckas <paulius.zaleckas@gmail.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Janos Laube <janos.dev@gmail.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A PCI_EJECT message can arrive at the same time we are calling=20
-pci_scan_child_bus in the workqueue for the previous PCI_BUS_RELATIONS=20
-message or in create_root_hv_pci_bus(), in this case we could=20
-potentially modify the bus from multiple places.=20
+On Thu, Feb 16, 2017 at 3:08 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Saturday, February 4, 2017 7:43:15 PM CET Linus Walleij wrote:
 
-Properly lock the bus access.
+> Did you notice my other comment below (quoting from my own
+> message)?
+>
+>> > +
+>> > +     bus = pci_scan_root_bus(&pdev->dev, 0, &gemini_pci_ops, p, &res);
+>>
+>> Can you try using the new pci_register_host_bridge() API?
 
-Thanks Dexuan Cui <decui@microsoft.com> for pointing out the race condition=
- in create_root_hv_pci_bus().
+Yes. It crashes badly when I try it so I'm still trying to figure this out...
+If I do I will send an iteration.
 
-Signed-off-by: Long Li <longli@microsoft.com>
-Reported-by: Xiaofeng Wang <xiaofwan@redhat.com>
-Acked-by: K. Y. Srinivasan <kys@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Yours,
+Linus Walleij
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 4a37598..33c75c9 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1198,9 +1198,11 @@ static int create_root_hv_pci_bus(struct hv_pcibus_d=
-evice *hbus)
- 	hbus->pci_bus->msi =3D &hbus->msi_chip;
- 	hbus->pci_bus->msi->dev =3D &hbus->hdev->device;
-=20
-+	pci_lock_rescan_remove();
- 	pci_scan_child_bus(hbus->pci_bus);
- 	pci_bus_assign_resources(hbus->pci_bus);
- 	pci_bus_add_devices(hbus->pci_bus);
-+	pci_unlock_rescan_remove();
- 	hbus->state =3D hv_pcibus_installed;
- 	return 0;
- }
-@@ -1590,8 +1592,10 @@ static void hv_eject_device_work(struct work_struct =
-*work)
- 	pdev =3D pci_get_domain_bus_and_slot(hpdev->hbus->sysdata.domain, 0,
- 					   wslot);
- 	if (pdev) {
-+		pci_lock_rescan_remove();
- 		pci_stop_and_remove_bus_device(pdev);
- 		pci_dev_put(pdev);
-+		pci_unlock_rescan_remove();
- 	}
-=20
- 	memset(&ctxt, 0, sizeof(ctxt));
---=20
-1.8.5.6
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
