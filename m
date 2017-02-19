@@ -1,147 +1,148 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:34070 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751264AbdBSE2N (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 18 Feb 2017 23:28:13 -0500
+Date: Sat, 18 Feb 2017 22:27:45 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Andreas Noever <andreas.noever@gmail.com>,
+        linux-pci@vger.kernel.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Erik Veijola <erik.veijola@linux.intel.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>
+Subject: Re: [PATCH v6 1/8] PCI: Recognize Thunderbolt devices
+Message-ID: <20170219042745.GB7668@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1486913733.git.lukas@wunner.de>
+ <fee5154ef747e34684f316a9edf1ec7f635fd0f8.1486913733.git.lukas@wunner.de>
+ <20170217152903.GB10663@bhelgaas-glaptop.roam.corp.google.com>
+ <20170218091224.GA1335@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <1487236340.13536.5.camel@pengutronix.de>
-References: <20170207155027.7734-1-andrew.smirnov@gmail.com>
- <20170207155027.7734-4-andrew.smirnov@gmail.com>
- <20170215171700.5vz5seeihgtwn76p@rob-hp-laptop>
- <1487236340.13536.5.camel@pengutronix.de>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 21 Feb 2017 10:38:31 -0600
-Message-ID: <CAL_Jsq+zo9cVEiT3p4oEL8UWqHNEVqszkC3htO-p+C2oFXPuSw@mail.gmail.com>
-Subject: Re: [PATCH v4 3/3] PCI: imx6: Add code to support i.MX7D
-To: Lucas Stach <l.stach@pengutronix.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Andrey Smirnov <andrew.smirnov@gmail.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Fabio Estevam <fabio.estevam@nxp.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Lee Jones <lee.jones@linaro.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- yurovsky@gmail.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170218091224.GA1335@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 16, 2017 at 3:12 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Am Mittwoch, den 15.02.2017, 11:17 -0600 schrieb Rob Herring:
->> On Tue, Feb 07, 2017 at 07:50:27AM -0800, Andrey Smirnov wrote:
->> > Add various bits of code needed to support i.MX7D variant of the IP.
->> >
->> > Cc: yurovsky@gmail.com
->> > Cc: Lucas Stach <l.stach@pengutronix.de>
->> > Cc: Bjorn Helgaas <bhelgaas@google.com>
->> > Cc: Rob Herring <robh+dt@kernel.org>
->> > Cc: Mark Rutland <mark.rutland@arm.com>
->> > Cc: Lee Jones <lee.jones@linaro.org>
->> > Cc: Fabio Estevam <fabio.estevam@nxp.com>
->> > Cc: linux-arm-kernel@lists.infradead.org
->> > Cc: devicetree@vger.kernel.org
->> > Cc: linux-kernel@vger.kernel.org
->> > Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
->> > ---
->> >  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 ++-
->> >  drivers/pci/host/pci-imx6.c                        | 121 ++++++++++++++++-----
->> >  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
->> >  3 files changed, 112 insertions(+), 26 deletions(-)
->> >
->> > diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> > index 83aeb1f..11db2ab 100644
->> > --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> > +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
->> > @@ -4,7 +4,11 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
->> >  and thus inherits all the common properties defined in designware-pcie.txt.
->> >
->> >  Required properties:
->> > -- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
->> > +- compatible:
->> > +   - "fsl,imx6q-pcie"
->> > +   - "fsl,imx6sx-pcie",
->> > +   - "fsl,imx6qp-pcie"
->> > +   - "fsl,imx7d-pcie"
->> >  - reg: base address and length of the PCIe controller
->> >  - interrupts: A list of interrupt outputs of the controller. Must contain an
->> >    entry for each entry in the interrupt-names property.
->> > @@ -34,6 +38,13 @@ Additional required properties for imx6sx-pcie:
->> >  - clock names: Must include the following additional entries:
->> >     - "pcie_inbound_axi"
->> >
->> > +Additional required properties for imx7d-pcie:
->> > +- power-domains: Must be set to a phandle pointing to PCIE_PHY power domain
->>
->> This domain is just the PHY? Seems like this needs a separate PHY
->> driver.
->>
-> No, it's called the PHY power domain, as that is probably the part that
-> draws the most power, but the PCIe core also looses it's state when this
-> domain is powered down. So it's probably the complete core that is
-> inside this domain.
+On Sat, Feb 18, 2017 at 10:12:24AM +0100, Lukas Wunner wrote:
+> On Fri, Feb 17, 2017 at 09:29:03AM -0600, Bjorn Helgaas wrote:
+> > On Sun, Feb 12, 2017 at 05:07:45PM +0100, Lukas Wunner wrote:
+> > > Detect on device probe whether a PCI device is part of a Thunderbolt
+> > > daisy chain (i.e. it is either part of a Thunderbolt controller or part
+> > > of the hierarchy below a Thunderbolt controller).
+> > 
+> > My problem with this is that "is_thunderbolt" is not well-defined.
+> > The PCI specs lay out the common vocabulary and framework for this
+> > area.  To keep the code maintainable, we need to connect things back
+> > to the specs somehow.
+> > 
+> > For example, it might make sense to have a bit that means "this device
+> > can generate PME from D3hot", because PME and D3hot are part of that
+> > common understanding of how PCI works, and we can use that information
+> > to design the software.
+> > 
+> > An "is_thunderbolt" bit doesn't have any of that context.  It doesn't
+> > say anything about how the device behaves, so I can't evaluate the
+> > code that uses it.
+> 
+> No, this *does* connect back to the spec, the Thunderbolt spec to be
+> specific, except that spec is not available publicly.  (I assume it's
+> available under NDA.)  FWIW the PCI SIG doesn't make its specs freely
+> available either, only to members or for $$$.  As Andreas Noever has
+> pointed out before, there is plenty of precedent for including
+> (reverse-engineered) code in the kernel for stuff that isn't public.
 
-A shared domain doesn't mean the phy and core should be 1 node. It is
-the separate reset and clock for the PHY that tell me they should be
-separate. And I'm pretty sure the DW block and PHY are separate. If
-the PHY registers were part of the same register range, then I'd say
-they should be one.
+I'm not objecting to the fact that the Thunderbolt spec is not public.
+What I want to know is specifically how the Thunderbolt bridge behaves
+differently than a plain old PCIe bridge.  I don't even want to know
+*all* the differences.  You're proposing to make the PCI core work a
+slightly differently based on this bit, and in order to maintain that
+in the future, we need to know the details of *why* we need to do
+things differently.
 
->> > +- resets: Must contain phandles to PCIE related reset lines exposed by SRC IP block
->> > +- reset-names: Must contain the following entires:
->> > +          - "pciephy"
->>
->> And for this too.
->>
->> > +          - "apps"
->> > +
->> >  Example:
->> >
->> >     pcie@0x01000000 {
->>
->> [...]
->>
->> > @@ -251,6 +261,10 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
->> >     u32 val, gpr1, gpr12;
->> >
->> >     switch (imx6_pcie->variant) {
->> > +   case IMX7D:
->> > +           reset_control_assert(imx6_pcie->pciephy_reset);
->> > +           reset_control_assert(imx6_pcie->apps_reset);
->> > +           break;
->> >     case IMX6SX:
->> >             regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
->> >                                IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
->>
->> So the difference with i.MX7D is not really that it has a reset or not,
->> but some platforms use a reset driver and some do not. The latter should
->> be fixed.
->
-> The resets on anything before i.MX7 are not in a separate reset driver,
-> but are just some signals from the PCIe core wired into a syscon (IOMUX
-> GPR) area. While we could invent a reset controller for those, I don't
-> see how this would improve things. Especially as the reset on i.MX6
-> seems to be some side-effect of the "power-down" signal of the core, so
-> not strictly a reset.
->
-> Also I don't see why we should change the binding for the driver with a
-> long history of deployed DTs. That seems like a total waste of manpower.
+Maybe D3hot means something different, maybe PME works differently,
+maybe hotplug interrupts are signaled differently, I dunno.  If you
+want us to treat these devices differently, we have to know *why* so
+we can tell whether future changes in other areas also need to handle
+them differently.
 
-We can debate whether or not we change existing platforms. Maybe that
-doesn't make sense now. But best practices should be considered when
-adding new bindings rather than just extending existing bindings. We
-didn't split out PHYs at one time and now we generally do. I'm not so
-concerned with just adding i.MX7D, but really the next chip (and the
-next).
+This might mean several bits instead of one single "is_thunderbolt"
+bit, because there may be several differences that affect different
+parts of the PCI core.
 
-Rob
+> The rationale for this bit is that devices on a Thunderbolt daisy chain
+> differ from plain PCIe devices and as such require special treatment.
+> 
+> Thunderbolt encapsulates PCIe and other protocols such as DisplayPort
+> into Thunderbolt packets and tunnels them over a network of Converged I/O
+> switches, so what's transmitted on the wire differs significantly from
+> plain PCIe.  That should already make the necessity for special treatment
+> obvious.  I've named three use cases for the is_thunderbolt bit in the
+> commit message of this patch but expect there will be more in the future.
+> E.g. Apple has a traffic prioritization mechanism on the Converged I/O
+> layer which is afforded to specific devices on the PCIe layer above,
+> see US 9,015,384:
+> http://pimg-fpiw.uspto.gov/fdd/84/153/090/0.pdf
+> 
+> 
+> > A secondary issue is that I think whatever bit you define here should
+> > only be set for the actual Thunderbolt device itself.  The bit will
+> > presumably tell us something about how that particular device works.
+> 
+> I don't quite follow, the bit *does* tell us something about how the
+> device works, doesn't it?  That it's situated on a Thunderbolt daisy
+> chain, I've clearly spelled that out in the commit message as well as
+> in a code comment of this patch.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+No, it doesn't actually tell us anything about how it works.  The
+commit message tells us some *consequences*, but it doesn't say
+anything about the PCIe-level features that *lead* to those
+consequences.
+
+That means we can't reason about how Thunderbolt devices will work in
+different scenarios or future platforms.
+
+> > This is an enumeration-time thing and could be done either as in this
+> > path or as a quirk, since it only affects one device.
+> 
+> You're contradicting yourself by suggesting to use a quirk here:
+> 
+> Back in 2014 an Intel engineer tried to add a PCI quirk with a long
+> list of Thunderbolt devices and none other than you objected that
+> you're "really not happy about checking a list of device IDs to identify
+> Thunderbolt devices.  Surely there's a better way, because a list
+> like this has to be updated regularly."
+> https://patchwork.ozlabs.org/patch/409994/
+> 
+> The better way you were asking for back then is to probe for presence
+> of the Thunderbolt VSEC, which is what this patch does.  Yet you're
+> still not happy.  I don't get it.
+
+I was wrong to suggest the possibility of a quirk, sorry.  You're
+right: looking for the VSEC is a much better route, and that doesn't
+fit well in a quirk because the quirk would have to run for all
+devices.
+
+> > If runtime code needs to know whether any upstream bridge is
+> > Thunderbolt, it can always search up the hierarchy.  I think that
+> > would improve readability because the software model would map more
+> > closely to the hardware situation.
+> 
+> That would be more expensive than just checking a bit that is searched
+> only once and then cached.  We have is_hotplug_bridge for just eight
+> places where we check presence of hotplug capability, why can't we have
+> is_thunderbolt?  Beats me.
+
+Searching up the tree is more expensive, but it looks like we only
+check it in enumeration-type situations, so I doubt this is a
+performance issue.
+
+is_hotplug_bridge is not quite comparable.  For one thing, it can be
+set three ways: when PCI_EXP_SLTCAP contains PCI_EXP_SLTCAP_HPC, by a
+quirk, and by acpiphp.  It maybe *should* also be set by other hotplug
+drivers.  I don't think it would be practical to make an
+is_hotplug_bridge() function to look up all those cases.
+
+Bjorn
