@@ -1,105 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0114.outbound.protection.outlook.com ([104.47.41.114]:2978
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751102AbdBLEIm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 11 Feb 2017 23:08:42 -0500
-From: KY Srinivasan <kys@microsoft.com>
-To: Jess Frazelle <me@jessfraz.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, yurovsky@gmail.com,
+        Lucas Stach <l.stach@pengutronix.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "open list:Hyper-V CORE AND DRIVERS" <devel@linuxdriverproject.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-CC: "kernel-hardening@lists.openwall.com"
-        <kernel-hardening@lists.openwall.com>
-Subject: RE: [PATCH v2 3/5] pci: set msi_domain_ops as __ro_after_init
-Date: Sun, 12 Feb 2017 04:08:24 +0000
-Message-ID: <DM5PR03MB2490F0970E353CACB9D201F5A0460@DM5PR03MB2490.namprd03.prod.outlook.com>
-References: <20170211013758.3288-1-me@jessfraz.com>
- <20170211013758.3288-3-me@jessfraz.com>
-In-Reply-To: <20170211013758.3288-3-me@jessfraz.com>
-Content-Type: text/plain; charset="us-ascii"
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [RESEND PATCH v5 2/4] PCI: imx6: Do not wait for speed change on i.MX7
+Date: Mon, 20 Feb 2017 08:08:58 -0800
+Message-Id: <20170220160900.7014-3-andrew.smirnov@gmail.com>
+In-Reply-To: <20170220160900.7014-1-andrew.smirnov@gmail.com>
+References: <20170220160900.7014-1-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+As can be seen from [1]:
 
+"...the different behavior between iMX6Q PCIe and iMX7D PCIe maybe
+caused by the different controller version.
 
-> -----Original Message-----
-> From: Jess Frazelle [mailto:me@jessfraz.com]
-> Sent: Friday, February 10, 2017 5:38 PM
-> To: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
-> <haiyangz@microsoft.com>; Stephen Hemminger
-> <sthemmin@microsoft.com>; Bjorn Helgaas <bhelgaas@google.com>; Keith
-> Busch <keith.busch@intel.com>; open list:Hyper-V CORE AND DRIVERS
-> <devel@linuxdriverproject.org>; open list:PCI SUBSYSTEM <linux-
-> pci@vger.kernel.org>; open list <linux-kernel@vger.kernel.org>
-> Cc: kernel-hardening@lists.openwall.com; Jess Frazelle <me@jessfraz.com>
-> Subject: [PATCH v2 3/5] pci: set msi_domain_ops as __ro_after_init
->=20
-> Marked msi_domain_ops structs as __ro_after_init when called only during
-> init.
-> This protects the data structure from accidental corruption.
->=20
-> Suggested-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: Jess Frazelle <me@jessfraz.com>
+Regarding to the DOC description, the DIRECT_SPEED_CHANGE should be
+cleared after the speed change from GEN1 to GEN2. Unfortunately, when
+GEN1 device is used, the behavior is not documented.
 
-Acked-by: K. Y. Srinivasan <kys@microsoft.com>
+So, IC design guys run the simulation and
+find out the following behaviors:
 
-K. Y
+     1. DIRECT_SPEED_CHANGE will be cleared in 7D after speed change
+     	from GEN1 to GEN2. This matches doc’s description
 
-> ---
->  drivers/pci/host/pci-hyperv.c | 2 +-
->  drivers/pci/host/vmd.c        | 2 +-
->  drivers/pci/msi.c             | 2 +-
->  3 files changed, 3 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
-c
-> index 3efcc7bdc5fb..f05b93689d8f 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -958,7 +958,7 @@ static irq_hw_number_t
-> hv_msi_domain_ops_get_hwirq(struct msi_domain_info *info,
->  	return arg->msi_hwirq;
->  }
->=20
-> -static struct msi_domain_ops hv_msi_ops =3D {
-> +static struct msi_domain_ops hv_msi_ops __ro_after_init =3D {
->  	.get_hwirq	=3D hv_msi_domain_ops_get_hwirq,
->  	.msi_prepare	=3D pci_msi_prepare,
->  	.set_desc	=3D pci_msi_set_desc,
-> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-> index 18ef1a93c10a..152c461538e4 100644
-> --- a/drivers/pci/host/vmd.c
-> +++ b/drivers/pci/host/vmd.c
-> @@ -253,7 +253,7 @@ static void vmd_set_desc(msi_alloc_info_t *arg,
-> struct msi_desc *desc)
->  	arg->desc =3D desc;
->  }
->=20
-> -static struct msi_domain_ops vmd_msi_domain_ops =3D {
-> +static struct msi_domain_ops vmd_msi_domain_ops __ro_after_init =3D {
->  	.get_hwirq	=3D vmd_get_hwirq,
->  	.msi_init	=3D vmd_msi_init,
->  	.msi_free	=3D vmd_msi_free,
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index 50c5003295ca..93141d5e2d1c 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -1413,7 +1413,7 @@ static void
-> pci_msi_domain_set_desc(msi_alloc_info_t *arg,
->  #define pci_msi_domain_set_desc		NULL
->  #endif
->=20
-> -static struct msi_domain_ops pci_msi_domain_ops_default =3D {
-> +static struct msi_domain_ops pci_msi_domain_ops_default __ro_after_init
-> =3D {
->  	.set_desc	=3D pci_msi_domain_set_desc,
->  	.msi_check	=3D pci_msi_domain_check_cap,
->  	.handle_error	=3D pci_msi_domain_handle_error,
-> --
-> 2.11.0
+     2. set MAX link speed(PCIE_CAP_TARGET_LINK_SPEED=0x01) as GEN1 and
+     	re-run the simulation, DIRECT_SPEED_CHANGE will not be cleared;
+     	remain as 1, this matches your result, but function test is
+     	passed, so this bit should not affect the normal PCIe function.
+..."
+
+imx6_pcie_wait_for_speed_change will report false failures for Gen1 ->
+Gen1 speed transition, so avoid doing that check and just rely on
+imx6_pcie_wait_for_link only.
+
+[1] https://community.nxp.com/message/867943
+
+Cc: yurovsky@gmail.com
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+---
+ drivers/pci/host/pci-imx6.c | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 2f3f375..473bbdc 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -577,10 +577,21 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 	tmp |= PORT_LOGIC_SPEED_CHANGE;
+ 	dw_pcie_writel_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
+ 
+-	ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
+-	if (ret) {
+-		dev_err(dev, "Failed to bring link up!\n");
+-		goto err_reset_phy;
++	if (imx6_pcie->variant != IMX7D) {
++		/*
++		 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
++		 * from i.MX6 family when no link speed transition
++		 * occurs and we go Gen1 -> yep, Gen1. The difference
++		 * is that, in such case, it will not be cleared by HW
++		 * which will cause the following code to report false
++		 * failure.
++		 */
++
++		ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
++		if (ret) {
++			dev_err(dev, "Failed to bring link up!\n");
++			goto err_reset_phy;
++		}
+ 	}
+ 
+ 	/* Make sure link training is finished as well! */
+-- 
+2.9.3
