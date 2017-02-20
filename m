@@ -1,44 +1,84 @@
-Return-Path: <SRS0=20La=ZV=broadcom.com=jon.mason@kernel.org>
-Return-Path: <SRS0=20La=ZV=broadcom.com=jon.mason@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:34429 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753333AbdBTPjd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Feb 2017 10:39:33 -0500
+Received: by mail-pg0-f67.google.com with SMTP id s67so2819811pgb.1
+        for <linux-pci@vger.kernel.org>; Mon, 20 Feb 2017 07:39:33 -0800 (PST)
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>
+Subject: [PATCH v5 2/4] PCI: imx6: Do not wait for speed change on i.MX7
+Date: Mon, 20 Feb 2017 07:30:23 -0800
+Message-Id: <20170220153025.32096-3-andrew.smirnov@gmail.com>
+In-Reply-To: <20170220153025.32096-1-andrew.smirnov@gmail.com>
+References: <20170220153025.32096-1-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170208215508.GA4800@bhelgaas-glaptop.roam.corp.google.com>
-References: <1485553449-9345-1-git-send-email-jon.mason@broadcom.com> <20170208215508.GA4800@bhelgaas-glaptop.roam.corp.google.com>
-From: Jon Mason <jon.mason@broadcom.com>
-Date: Wed, 8 Feb 2017 17:33:46 -0500
-Message-ID: <CAC3K-4o2czeCdtATwZCLzN9H-PaPUgm5GaUXqBsAFD2ueuUDCw@mail.gmail.com>
-Subject: Re: [PATCH 0/2] PCI: iproc: MPS fix and quirks
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	BCM Kernel Feedback <bcm-kernel-feedback-list@broadcom.com>,
-	open list <linux-kernel@vger.kernel.org>,
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 8, 2017 at 4:55 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Fri, Jan 27, 2017 at 04:44:07PM -0500, Jon Mason wrote:
->> A patch that corrects an issue where the MPS could not be set, and
->> another that fixes some quirks in the PAXC
->>
->> Jon Mason (2):
->>   PCI: iproc: allow the MPS to be set
->>   PCI: Add quirk entry for NS2 PAXC PCI
->>
->>  drivers/pci/host/pcie-iproc.c |  5 ++++-
->>  drivers/pci/quirks.c          | 21 +++++++++++++++++++++
->>  2 files changed, 25 insertions(+), 1 deletion(-)
->
-> Applied with Ray's ack to pci/host-iproc for v4.11, thanks!
->
-> It looks to me like several other drivers need a similar MPS fix.
-> I'll CC you on the patches.
+As can be seen from [1]:
 
-I'm happy to look at whatever you want to CC me on, but this is an SoC
-thing that I do not believe is applicable to the standard PCI device
-(if that is what you are referring to).
+"...the different behavior between iMX6Q PCIe and iMX7D PCIe maybe
+caused by the different controller version.
 
-Thanks,
-Jon
+Regarding to the DOC description, the DIRECT_SPEED_CHANGE should be
+cleared after the speed change from GEN1 to GEN2. Unfortunately, when
+GEN1 device is used, the behavior is not documented.
 
->
-> Bjorn
+So, IC design guys run the simulation and
+find out the following behaviors:
+
+     1. DIRECT_SPEED_CHANGE will be cleared in 7D after speed change
+     	from GEN1 to GEN2. This matches doc’s description
+
+     2. set MAX link speed(PCIE_CAP_TARGET_LINK_SPEED=0x01) as GEN1 and
+     	re-run the simulation, DIRECT_SPEED_CHANGE will not be cleared;
+     	remain as 1, this matches your result, but function test is
+     	passed, so this bit should not affect the normal PCIe function.
+..."
+
+imx6_pcie_wait_for_speed_change will report false failures for Gen1 ->
+Gen1 speed transition, so avoid doing that check and just rely on
+imx6_pcie_wait_for_link only.
+
+[1] https://community.nxp.com/message/867943
+
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+---
+ drivers/pci/host/pci-imx6.c | 19 +++++++++++++++----
+ 1 file changed, 15 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 2f3f375..473bbdc 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -577,10 +577,21 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 	tmp |= PORT_LOGIC_SPEED_CHANGE;
+ 	dw_pcie_writel_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
+ 
+-	ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
+-	if (ret) {
+-		dev_err(dev, "Failed to bring link up!\n");
+-		goto err_reset_phy;
++	if (imx6_pcie->variant != IMX7D) {
++		/*
++		 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
++		 * from i.MX6 family when no link speed transition
++		 * occurs and we go Gen1 -> yep, Gen1. The difference
++		 * is that, in such case, it will not be cleared by HW
++		 * which will cause the following code to report false
++		 * failure.
++		 */
++
++		ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
++		if (ret) {
++			dev_err(dev, "Failed to bring link up!\n");
++			goto err_reset_phy;
++		}
+ 	}
+ 
+ 	/* Make sure link training is finished as well! */
+-- 
+2.9.3
