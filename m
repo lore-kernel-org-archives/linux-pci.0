@@ -1,51 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36342 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750873AbdBCPJj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 3 Feb 2017 10:09:39 -0500
-Date: Fri, 3 Feb 2017 09:09:34 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Lukas Wunner <lukas@wunner.de>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: pciehp is broken from 4.10-rc1
-Message-ID: <20170203150934.GB15080@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAE9FiQVCMCa7iVyuwp9z6VrY0cE7V_xghuXip28Ft52=8QmTWw@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v5 0/4] i.MX7 PCI support
+Date: Mon, 20 Feb 2017 07:30:21 -0800
+Message-Id: <20170220153025.32096-1-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAE9FiQVCMCa7iVyuwp9z6VrY0cE7V_xghuXip28Ft52=8QmTWw@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, linux-kernel@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+ Fabio Estevam <fabio.estevam@nxp.com>, yurovsky@gmail.com,
+ linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Mika, linux-kernel]
+Hello, everyone:
 
-On Thu, Feb 02, 2017 at 08:11:48PM -0800, Yinghai Lu wrote:
-> 4.9 is  working,
-> ...
+This is a fifth iteration of the code that adds PCI-subsystem bits
+necessary for enabling PCI support on i.MX7.
 
-> After reverting
-> 
-> From 68db9bc814362e7f24371c27d12a4f34477d9356 Mon Sep 17 00:00:00 2001
-> From: Lukas Wunner <lukas@wunner.de>
-> Date: Fri, 28 Oct 2016 10:52:06 +0200
-> Subject: PCI: pciehp: Add runtime PM support for PCIe hotplug ports
-> 
-> the hotplug work again.
+Rob, Bjorn, power domain and reset bindings remained the same, please
+let me know if you still think that PHY aspect of the driver needs to
+be moved into a separate abstraction.
 
-I provisionally reverted 68db9bc81436 ("PCI: pciehp: Add runtime PM
-support for PCIe hotplug ports") on my for-linus branch while this is
-being debugged.
+Changes since v4 (can be found at [version4]):
 
-To be clear, this revert is only a last resort to avoid releasing
-v4.10 with a regression.  I hope and assume we'll have a real fix
-before v4.10 and we'll be able to drop the revert in favor of the fix.
+	- Dropped typo-fix patch (originally patch #1 of the
+          series). Bjorn, I am assuming that patch from v4 survived
+          and stayed in your tree, let me know if that is not true.
 
-Can someone please open a kernel.org bugzilla, mark it as a
-regression, and attach the complete dmesg log and "lspci -vv" output?
-Please mention that bugzilla in the changelog of the fix.
+	- Added patch with workaround to address speed change false
+          failures (I kept it as a separate patch to better document
+          exchange with NXP/Freescale that lead to that patch)
 
-Bjorn
+	- Added patch to avoid speed change on links configured Gen1
+          only (Let me know if that is a terrible idea)
+
+	- Addressed section mismatch problem by moving call to
+          hook_fault_code to happend before driver registration.
+
+Changes since v3 (can be found at [version3]):
+	- Move all of the reset_control_assert's into imx6_pcie_assert_core_reset
+	- Documented required reset and power domain DT bindings
+
+Changes since v2 (can be found at [version2]):
+
+	- Collected Reviewed-by for patch #2 from Lucas
+	- Reset logic implementation moved out into a reset controller
+          driver (see [reset1])
+	- Removed unused leftover code
+
+Changes since v1 (can be found at [version1]):
+
+	- All GPC related code moved into a separate driver (see [gpc1])
+	- Removed GPIO probe deferral logging
+	- Fixed section mismatch warning
+	- Minor reformatting of fsl,imx6q-pcie.txt(as per Rob
+          Herring's request)
+
+[version4] https://lkml.org/lkml/2017/2/7/478
+[version3] https://lkml.org/lkml/2017/2/6/565
+[version2] https://lkml.org/lkml/2017/2/1/510
+[version1] https://lkml.org/lkml/2017/1/19/488
+[gpc1] https://lkml.org/lkml/2017/2/6/551
+[reset1] https://lkml.org/lkml/2017/2/6/554
+
+Andrey Smirnov (4):
+  PCI: imx6: Add code to support i.MX7D
+  PCI: imx6: Do not wait for speed change on i.MX7
+  PCI: imx6: Do not switch speed if Gen2 is disabled
+  PCI: imx6: Allow probe deferal by reset GPIO
+
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 +-
+ drivers/pci/host/pci-imx6.c                        | 199 +++++++++++++++------
+ include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
+ 3 files changed, 161 insertions(+), 55 deletions(-)
+
+-- 
+2.9.3
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
