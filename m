@@ -1,91 +1,313 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Chalamarla, Tirumalesh" <Tirumalesh.Chalamarla@cavium.com>
-To: David Daney <ddaney.cavm@gmail.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        "Jaggi, Manish" <Manish.Jaggi@cavium.com>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Richter, Robert" <Robert.Richter@cavium.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: Add cavium acs pci quirk
-Date: Mon, 27 Feb 2017 19:13:07 +0000
-Message-ID: <2BC59900-08B3-4D8A-B55F-09E1C0A6BC27@caviumnetworks.com>
-References: <56ABC5AE.1050209@caviumnetworks.com>
- <20170213214457.248084de@t450s.home>
- <20170214150722.GC8080@bhelgaas-glaptop.roam.corp.google.com>
- <b9192b8b-5105-f78a-70dc-607778b78b95@gmail.com>
-In-Reply-To: <b9192b8b-5105-f78a-70dc-607778b78b95@gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, yurovsky@gmail.com,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [RESEND PATCH v5 1/4] PCI: imx6: Add code to support i.MX7D
+Date: Mon, 20 Feb 2017 08:08:57 -0800
+Message-Id: <20170220160900.7014-2-andrew.smirnov@gmail.com>
+In-Reply-To: <20170220160900.7014-1-andrew.smirnov@gmail.com>
+References: <20170220160900.7014-1-andrew.smirnov@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCk9uIDIvMjcvMTcsIDExOjAyIEFNLCAiRGF2aWQgRGFuZXkiIDxkZGFuZXkuY2F2bUBnbWFp
-bC5jb20+IHdyb3RlOg0KDQogICAgT24gMDIvMTQvMjAxNyAwNzowNyBBTSwgQmpvcm4gSGVsZ2Fh
-cyB3cm90ZToNCiAgICA+IE9uIE1vbiwgRmViIDEzLCAyMDE3IGF0IDA5OjQ0OjU3UE0gLTA3MDAs
-IEFsZXggV2lsbGlhbXNvbiB3cm90ZToNCiAgICA+PiBPbiBTYXQsIDMwIEphbiAyMDE2IDAxOjMz
-OjU4ICswNTMwDQogICAgPj4gTWFuaXNoIEphZ2dpIDxtamFnZ2lAY2F2aXVtbmV0d29ya3MuY29t
-PiB3cm90ZToNCiAgICA+Pg0KICAgID4+PiBDYXZpdW0gZGV2aWNlcyBtYXRjaGluZyB0aGlzIHF1
-aXJrIGRvIG5vdCBwZXJmb3JtDQogICAgPj4+IHBlZXItdG8tcGVlciB3aXRoIG90aGVyIGZ1bmN0
-aW9ucywgYWxsb3dpbmcgbWFza2luZyBvdXQNCiAgICA+Pj4gdGhlc2UgYml0cyBhcyBpZiB0aGV5
-IHdlcmUgdW5pbXBsZW1lbnRlZCBpbiB0aGUgQUNTIGNhcGFiaWxpdHkuDQogICAgPj4+DQogICAg
-Pj4+IEFja2VkLWJ5OiBUaXJ1bWFsZXNoIENoYWxhbWFybGEgPHRjaGFsYW1hcmxhQGNhdml1bS5j
-b20+DQogICAgPj4+IFNpZ25lZC1vZmYtYnk6IE1hbmlzaCBKYWdnaSA8bWphZ2dpQGNhdml1bW5l
-dHdvcmtzLmNvbT4NCiAgICA+Pj4gLS0tDQogICAgPj4+ICBkcml2ZXJzL3BjaS9xdWlya3MuYyB8
-IDE1ICsrKysrKysrKysrKysrKw0KICAgID4+PiAgMSBmaWxlIGNoYW5nZWQsIDE1IGluc2VydGlv
-bnMoKykNCiAgICA+Pj4NCiAgICA+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3F1aXJrcy5j
-IGIvZHJpdmVycy9wY2kvcXVpcmtzLmMNCiAgICA+Pj4gaW5kZXggN2UzMjczMC4uYTMwMGZhNiAx
-MDA2NDQNCiAgICA+Pj4gLS0tIGEvZHJpdmVycy9wY2kvcXVpcmtzLmMNCiAgICA+Pj4gKysrIGIv
-ZHJpdmVycy9wY2kvcXVpcmtzLmMNCiAgICA+Pj4gQEAgLTM4MTQsNiArMzgxNCwxOSBAQCBzdGF0
-aWMgaW50IHBjaV9xdWlya19hbWRfc2JfYWNzKHN0cnVjdCBwY2lfZGV2ICpkZXYsIHUxNiBhY3Nf
-ZmxhZ3MpDQogICAgPj4+ICAjZW5kaWYNCiAgICA+Pj4gIH0NCiAgICA+Pj4NCiAgICA+Pj4gK3N0
-YXRpYyBpbnQgcGNpX3F1aXJrX2Nhdml1bV9hY3Moc3RydWN0IHBjaV9kZXYgKmRldiwgdTE2IGFj
-c19mbGFncykNCiAgICA+Pj4gK3sNCiAgICA+Pj4gKwkvKg0KICAgID4+PiArCSAqIENhdml1bSBk
-ZXZpY2VzIG1hdGNoaW5nIHRoaXMgcXVpcmsgZG8gbm90IHBlcmZvcm0NCiAgICA+Pj4gKwkgKiBw
-ZWVyLXRvLXBlZXIgd2l0aCBvdGhlciBmdW5jdGlvbnMsIGFsbG93aW5nIG1hc2tpbmcgb3V0DQog
-ICAgPj4+ICsJICogdGhlc2UgYml0cyBhcyBpZiB0aGV5IHdlcmUgdW5pbXBsZW1lbnRlZCBpbiB0
-aGUgQUNTIGNhcGFiaWxpdHkuDQogICAgPj4+ICsJICovDQogICAgPj4+ICsJYWNzX2ZsYWdzICY9
-IH4oUENJX0FDU19TViB8IFBDSV9BQ1NfVEIgfCBQQ0lfQUNTX1JSIHwNCiAgICA+Pj4gKwkJICAg
-ICAgIFBDSV9BQ1NfQ1IgfCBQQ0lfQUNTX1VGIHwgUENJX0FDU19EVCk7DQogICAgPj4+ICsNCiAg
-ICA+Pj4gKwlyZXR1cm4gYWNzX2ZsYWdzID8gMCA6IDE7DQogICAgPj4+ICt9DQogICAgPj4+ICsN
-CiAgICA+Pj4gIC8qDQogICAgPj4+ICAgKiBNYW55IEludGVsIFBDSCByb290IHBvcnRzIGRvIHBy
-b3ZpZGUgQUNTLWxpa2UgZmVhdHVyZXMgdG8gZGlzYWJsZSBwZWVyDQogICAgPj4+ICAgKiB0cmFu
-c2FjdGlvbnMgYW5kIHZhbGlkYXRlIGJ1cyBudW1iZXJzIGluIHJlcXVlc3RzLCBidXQgZG8gbm90
-IHByb3ZpZGUgYW4NCiAgICA+Pj4gQEAgLTM5NjYsNiArMzk3OSw4IEBAIHN0YXRpYyBjb25zdCBz
-dHJ1Y3QgcGNpX2Rldl9hY3NfZW5hYmxlZCB7DQogICAgPj4+ICAJeyBQQ0lfVkVORE9SX0lEX0lO
-VEVMLCBQQ0lfQU5ZX0lELCBwY2lfcXVpcmtfaW50ZWxfcGNoX2FjcyB9LA0KICAgID4+PiAgCXsg
-MHgxOWEyLCAweDcxMCwgcGNpX3F1aXJrX21mX2VuZHBvaW50X2FjcyB9LCAvKiBFbXVsZXggQkUz
-LVIgKi8NCiAgICA+Pj4gIAl7IDB4MTBkZiwgMHg3MjAsIHBjaV9xdWlya19tZl9lbmRwb2ludF9h
-Y3MgfSwgLyogRW11bGV4IFNreWhhd2stUiAqLw0KICAgID4+PiArCS8qIENhdml1bSBUaHVuZGVy
-WCAqLw0KICAgID4+PiArCXsgUENJX1ZFTkRPUl9JRF9DQVZJVU0sIFBDSV9BTllfSUQsIHBjaV9x
-dWlya19jYXZpdW1fYWNzIH0sDQogICAgPj4+ICAJeyAwIH0NCiAgICA+Pj4gIH07DQogICAgPj4+
-DQogICAgPj4NCiAgICA+PiBBcG9sb2dpZXMgZm9yIG5vdCBjYXRjaGluZyB0aGlzLCBidXQgd2hh
-dCBzb3J0IG9mIGNyeXN0YWwgYmFsbCBkbyB5b3UNCiAgICA+PiBoYXZlIHRoYXQgY2FuIHByZWRp
-Y3Qgbm90IG9ubHkgY3VycmVudCBkZXZpY2VzLCBidXQgZnV0dXJlIGRldmljZXMgd2lsbA0KICAg
-ID4+IG5vdCBzdXBwb3J0IHBlZXItdG8tcGVlciBmZWF0dXJlcz8gIElzIHRoZXJlIGFuIGludGVy
-bmFsIGRlc2lnbg0KICAgID4+IGd1aWRlbGluZXMgcmVmZXJlbmNlIHNwZWNpZmljYXRpb24gZm9y
-IENhdml1bSB0aGF0IHdlIGNhbiByZWFsaXN0aWNhbGx5DQogICAgPj4gZXhwZWN0IHRoaXMgdG8g
-cmVtYWluIGNvbnNpc3RlbnQsIG9yIGlzIHRoaXMganVzdCBhbiBhdHRlbXB0IHRvIG5ldmVyDQog
-ICAgPj4gdGhpbmsgYWJvdXQgQUNTIGFnYWluIGF0IHRoZSBjdXN0b21lcidzIHBlcmlsPyAgV2hh
-dCBhYm91dCB0aGUgZXhpc3RpbmcNCiAgICA+PiBub24tVGh1bmRlclggcHJvZHVjdHMgd2l0aCBD
-YXZpdW0gdmVuZG9yIElELCBkb2VzIHRoaXMgcmVhbGx5IGFwcGx5IHRvDQogICAgPj4gdGhvc2U/
-ICBJIHdvdWxkIHN0cm9uZ2x5IHN1Z2dlc3QgdGFraW5nIHRoZSBkZXZpY2UgSUQgaW50byBhY2Nv
-dW50Lg0KICAgID4+IFNlZSBleGFtcGxlcyBsaWtlIHRoZSBwY2lfcXVpcmtfaW50ZWxfcGNoX2Fj
-cyBxdWlyayB3aGVyZSB0aGUgaW5pdGlhbA0KICAgID4+IGZpbHRlciBpcyBQQ0lfQU5ZX0lELCBi
-dXQgc3BlY2lmaWMgZGV2aWNlIHR5cGVzIGFuZCByYW5nZXMgb2YgZGV2aWNlDQogICAgPj4gSURz
-IGFyZSBpZGVudGlmaWVkIGJ5IHRoZSBmdW5jdGlvbiBmb3IgZXZhbHVhdGlvbi4gIFRoaXMgc2Vl
-bXMgcmVja2xlc3MNCiAgICA+PiB0byBtZSBhbmQgSSdkIGFkdmlzZSB0aGF0IGl0IGJlIHJldmVy
-dGVkLiAgVGhhbmtzLA0KICAgID4NCiAgICA+IEknZCBiZSBoYXBweSB0byByZXZlcnQgdGhpcywg
-YnV0IGl0IHdvdWxkIGJlIGVhc2llciBpZiBzb21lYm9keSBzZW50IGENCiAgICA+IHBhdGNoIGFu
-ZCBhIGNoYW5nZWxvZy4NCiAgICA+DQogICAgDQogICAgSSBhZ3JlZSB0aGF0IGl0IHNob3VsZCBi
-ZSByZXZlcnRlZC4NCiAgICANCiAgICBJIHdhcyBob3BpbmcgdGhhdCBNYW5pc2ggb3IgVGlydW1h
-bGVzaCB3b3VsZCBmaXggdGhpcyBwcm9wZXJseSBieSBvbmx5IA0KICAgIGFjdGl2YXRpbmcgdGhl
-IHF1aXJrIG9uIHRoZSBmYXVsdHkgaGFyZHdhcmUsIGJ1dCBzdWNoIGEgZml4IGhhcyBuZXZlciAN
-CiAgICBhcHBlYXJlZC4NCg0KVGhpcyB3YXMgc3VwcG9zZWQgdG8gYmUgdHJ1ZSBmb3IgYWxsIENh
-dml1bSBjaGlwcy4gV2UgZ290IHN1Y2ggYW5zd2VyIGZyb20gSGFyZHdhcmUgYXJjaGl0ZWN0cywg
-YnV0IGl0IG1pZ2h0IGNoYW5nZSBpbiB0aGUgZnV0dXJlLiANCkkgd2lsbCBiZSBoYXBweSB0byBy
-ZXBsYWNlIHRoaXMgd2l0aCBERVZJQ0VfSUQuDQpNYW5pc2gsDQpDb3VsZCB5b3UgcGxlYXNlIHRh
-a2UgdGhpcyB1LCBpZiBub3QgSSB3aWxsIHNlbmQgYSBwYXRjaCB0byBkbyB0aGlzLg0KDQpUaXJ1
-bWFsZXNoLiANCiAgICANCiAgICBEYXZpZCBEYW5leQ0KICAgIA0KICAgIA0KICAgIA0KICAgIA0K
-DQo=
+Add various bits of code needed to support i.MX7D variant of the IP.
+
+Cc: yurovsky@gmail.com
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Rob Herring <robh+dt@kernel.org>
+Cc: Mark Rutland <mark.rutland@arm.com>
+Cc: Lee Jones <lee.jones@linaro.org>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+---
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 ++-
+ drivers/pci/host/pci-imx6.c                        | 121 ++++++++++++++++-----
+ include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
+ 3 files changed, 112 insertions(+), 26 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+index 83aeb1f..11db2ab 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
+@@ -4,7 +4,11 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
+ and thus inherits all the common properties defined in designware-pcie.txt.
+ 
+ Required properties:
+-- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
++- compatible:
++	- "fsl,imx6q-pcie"
++	- "fsl,imx6sx-pcie",
++	- "fsl,imx6qp-pcie"
++	- "fsl,imx7d-pcie"
+ - reg: base address and length of the PCIe controller
+ - interrupts: A list of interrupt outputs of the controller. Must contain an
+   entry for each entry in the interrupt-names property.
+@@ -34,6 +38,13 @@ Additional required properties for imx6sx-pcie:
+ - clock names: Must include the following additional entries:
+ 	- "pcie_inbound_axi"
+ 
++Additional required properties for imx7d-pcie:
++- power-domains: Must be set to a phandle pointing to PCIE_PHY power domain
++- resets: Must contain phandles to PCIE related reset lines exposed by SRC IP block
++- reset-names: Must contain the following entires:
++  	       - "pciephy"
++	       - "apps"
++
+ Example:
+ 
+ 	pcie@0x01000000 {
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 50a1291..2f3f375 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -17,6 +17,7 @@
+ #include <linux/kernel.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
++#include <linux/mfd/syscon/imx7-iomuxc-gpr.h>
+ #include <linux/module.h>
+ #include <linux/of_gpio.h>
+ #include <linux/of_device.h>
+@@ -27,6 +28,7 @@
+ #include <linux/signal.h>
+ #include <linux/types.h>
+ #include <linux/interrupt.h>
++#include <linux/reset.h>
+ 
+ #include "pcie-designware.h"
+ 
+@@ -36,6 +38,7 @@ enum imx6_pcie_variants {
+ 	IMX6Q,
+ 	IMX6SX,
+ 	IMX6QP,
++	IMX7D,
+ };
+ 
+ struct imx6_pcie {
+@@ -47,6 +50,8 @@ struct imx6_pcie {
+ 	struct clk		*pcie_inbound_axi;
+ 	struct clk		*pcie;
+ 	struct regmap		*iomuxc_gpr;
++	struct reset_control	*pciephy_reset;
++	struct reset_control	*apps_reset;
+ 	enum imx6_pcie_variants variant;
+ 	u32			tx_deemph_gen1;
+ 	u32			tx_deemph_gen2_3p5db;
+@@ -56,6 +61,11 @@ struct imx6_pcie {
+ 	int			link_gen;
+ };
+ 
++/* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */
++#define PHY_PLL_LOCK_WAIT_MAX_RETRIES	2000
++#define PHY_PLL_LOCK_WAIT_USLEEP_MIN	50
++#define PHY_PLL_LOCK_WAIT_USLEEP_MAX	200
++
+ /* PCIe Root Complex registers (memory-mapped) */
+ #define PCIE_RC_LCR				0x7c
+ #define PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1	0x1
+@@ -251,6 +261,10 @@ static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+ 	u32 val, gpr1, gpr12;
+ 
+ 	switch (imx6_pcie->variant) {
++	case IMX7D:
++		reset_control_assert(imx6_pcie->pciephy_reset);
++		reset_control_assert(imx6_pcie->apps_reset);
++		break;
+ 	case IMX6SX:
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
+@@ -333,11 +347,33 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
+ 				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
+ 		break;
++	case IMX7D:
++		break;
+ 	}
+ 
+ 	return ret;
+ }
+ 
++static void imx7d_pcie_wait_for_phy_pll_lock(struct imx6_pcie *imx6_pcie)
++{
++	u32 val;
++	unsigned int retries;
++	struct pcie_port *pp = &imx6_pcie->pp;
++	struct device *dev = pp->dev;
++
++	for (retries = 0; retries < PHY_PLL_LOCK_WAIT_MAX_RETRIES; retries++) {
++		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR22, &val);
++
++		if (val & IMX7D_GPR22_PCIE_PHY_PLL_LOCKED)
++			return;
++
++		usleep_range(PHY_PLL_LOCK_WAIT_USLEEP_MIN,
++			     PHY_PLL_LOCK_WAIT_USLEEP_MAX);
++	}
++
++	dev_err(dev, "PCIe PLL lock timeout\n");
++}
++
+ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ {
+ 	struct pcie_port *pp = &imx6_pcie->pp;
+@@ -381,6 +417,10 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 	}
+ 
+ 	switch (imx6_pcie->variant) {
++	case IMX7D:
++		reset_control_deassert(imx6_pcie->pciephy_reset);
++		imx7d_pcie_wait_for_phy_pll_lock(imx6_pcie);
++		break;
+ 	case IMX6SX:
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
+ 				   IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
+@@ -407,35 +447,44 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
+ 
+ static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
+ {
+-	if (imx6_pcie->variant == IMX6SX)
++	switch (imx6_pcie->variant) {
++	case IMX7D:
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL, 0);
++		break;
++	case IMX6SX:
+ 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 				   IMX6SX_GPR12_PCIE_RX_EQ_MASK,
+ 				   IMX6SX_GPR12_PCIE_RX_EQ_2);
++		/* FALLTHROUGH */
++	default:
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
+ 
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
++		/* configure constant input signal to the pcie ctrl and phy */
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
++
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
++				   IMX6Q_GPR8_TX_DEEMPH_GEN1,
++				   imx6_pcie->tx_deemph_gen1 << 0);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
++				   IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
++				   imx6_pcie->tx_deemph_gen2_3p5db << 6);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
++				   IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
++				   imx6_pcie->tx_deemph_gen2_6db << 12);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
++				   IMX6Q_GPR8_TX_SWING_FULL,
++				   imx6_pcie->tx_swing_full << 18);
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
++				   IMX6Q_GPR8_TX_SWING_LOW,
++				   imx6_pcie->tx_swing_low << 25);
++		break;
++	}
+ 
+-	/* configure constant input signal to the pcie ctrl and phy */
+ 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+ 			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
+-
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+-			   IMX6Q_GPR8_TX_DEEMPH_GEN1,
+-			   imx6_pcie->tx_deemph_gen1 << 0);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+-			   IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
+-			   imx6_pcie->tx_deemph_gen2_3p5db << 6);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+-			   IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
+-			   imx6_pcie->tx_deemph_gen2_6db << 12);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+-			   IMX6Q_GPR8_TX_SWING_FULL,
+-			   imx6_pcie->tx_swing_full << 18);
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
+-			   IMX6Q_GPR8_TX_SWING_LOW,
+-			   imx6_pcie->tx_swing_low << 25);
+ }
+ 
+ static int imx6_pcie_wait_for_link(struct imx6_pcie *imx6_pcie)
+@@ -498,8 +547,11 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 	dw_pcie_writel_rc(pp, PCIE_RC_LCR, tmp);
+ 
+ 	/* Start LTSSM. */
+-	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
++	if (imx6_pcie->variant == IMX7D)
++		reset_control_deassert(imx6_pcie->apps_reset);
++	else
++		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
++				   IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
+ 
+ 	ret = imx6_pcie_wait_for_link(imx6_pcie);
+ 	if (ret) {
+@@ -674,13 +726,31 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
+ 		return PTR_ERR(imx6_pcie->pcie);
+ 	}
+ 
+-	if (imx6_pcie->variant == IMX6SX) {
++	switch (imx6_pcie->variant) {
++	case IMX6SX:
+ 		imx6_pcie->pcie_inbound_axi = devm_clk_get(dev,
+ 							   "pcie_inbound_axi");
+ 		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
+ 			dev_err(dev, "pcie_inbound_axi clock missing or invalid\n");
+ 			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
+ 		}
++		break;
++	case IMX7D:
++		imx6_pcie->pciephy_reset = devm_reset_control_get(dev,
++								  "pciephy");
++		if (IS_ERR(imx6_pcie->pciephy_reset)) {
++			dev_err(dev, "Failed to get PCIEPHY reset contol\n");
++			return PTR_ERR(imx6_pcie->pciephy_reset);
++		}
++
++		imx6_pcie->apps_reset = devm_reset_control_get(dev, "apps");
++		if (IS_ERR(imx6_pcie->apps_reset)) {
++			dev_err(dev, "Failed to get PCIE APPS reset contol\n");
++			return PTR_ERR(imx6_pcie->apps_reset);
++		}
++		break;
++	default:
++		break;
+ 	}
+ 
+ 	/* Grab GPR config register range */
+@@ -738,6 +808,7 @@ static const struct of_device_id imx6_pcie_of_match[] = {
+ 	{ .compatible = "fsl,imx6q-pcie",  .data = (void *)IMX6Q,  },
+ 	{ .compatible = "fsl,imx6sx-pcie", .data = (void *)IMX6SX, },
+ 	{ .compatible = "fsl,imx6qp-pcie", .data = (void *)IMX6QP, },
++	{ .compatible = "fsl,imx7d-pcie",  .data = (void *)IMX7D,  },
+ 	{},
+ };
+ 
+diff --git a/include/linux/mfd/syscon/imx7-iomuxc-gpr.h b/include/linux/mfd/syscon/imx7-iomuxc-gpr.h
+index 4585d61..abbd524 100644
+--- a/include/linux/mfd/syscon/imx7-iomuxc-gpr.h
++++ b/include/linux/mfd/syscon/imx7-iomuxc-gpr.h
+@@ -44,4 +44,8 @@
+ 
+ #define IMX7D_GPR5_CSI_MUX_CONTROL_MIPI		(0x1 << 4)
+ 
++#define IMX7D_GPR12_PCIE_PHY_REFCLK_SEL		BIT(5)
++
++#define IMX7D_GPR22_PCIE_PHY_PLL_LOCKED		BIT(31)
++
+ #endif /* __LINUX_IMX7_IOMUXC_GPR_H */
+-- 
+2.9.3
