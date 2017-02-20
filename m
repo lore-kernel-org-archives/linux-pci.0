@@ -1,281 +1,107 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 02/22] Documentation: PCI: Guide to use PCI Endpoint
- Core Layer
-To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>, Joao Pinto
- <Joao.Pinto@synopsys.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
- <1487325042-28227-3-git-send-email-kishon@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <c7b32fa3-0b69-8ffe-ab0a-581e4e784c12@synopsys.com>
-Date: Fri, 17 Feb 2017 11:43:17 +0000
-MIME-Version: 1.0
-In-Reply-To: <1487325042-28227-3-git-send-email-kishon@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
- linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="windows-1252"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34195 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753669AbdBTQJw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Feb 2017 11:09:52 -0500
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, yurovsky@gmail.com,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Fabio Estevam <fabio.estevam@nxp.com>,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [RESEND PATCH v5 3/4] PCI: imx6: Do not switch speed if Gen2 is disabled
+Date: Mon, 20 Feb 2017 08:08:59 -0800
+Message-Id: <20170220160900.7014-4-andrew.smirnov@gmail.com>
+In-Reply-To: <20170220160900.7014-1-andrew.smirnov@gmail.com>
+References: <20170220160900.7014-1-andrew.smirnov@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-=C0s 9:50 AM de 2/17/2017, Kishon Vijay Abraham I escreveu:
-> Add Documentation to help users use endpoint library to enable endpoint
-> mode in the PCI controller and add new PCI endpoint functions.
-> =
+Save a bit of time and avoid going through link speed change procedure
+in configuration where link max speed is limited to Gen1 in DT.
 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  Documentation/PCI/00-INDEX                  |    2 +
->  Documentation/PCI/endpoint/pci-endpoint.txt |  190 +++++++++++++++++++++=
-++++++
->  2 files changed, 192 insertions(+)
->  create mode 100644 Documentation/PCI/endpoint/pci-endpoint.txt
-> =
+Cc: yurovsky@gmail.com
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+---
+ drivers/pci/host/pci-imx6.c | 52 ++++++++++++++++++++++-----------------------
+ 1 file changed, 26 insertions(+), 26 deletions(-)
 
-> diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-> index 147231f..ba950b2 100644
-> --- a/Documentation/PCI/00-INDEX
-> +++ b/Documentation/PCI/00-INDEX
-> @@ -12,3 +12,5 @@ pci.txt
->  	- info on the PCI subsystem for device driver authors
->  pcieaer-howto.txt
->  	- the PCI Express Advanced Error Reporting Driver Guide HOWTO
-> +endpoint/pci-endpoint.txt
-> +	- guide to add endpoint controller driver and endpoint function driver.
-> diff --git a/Documentation/PCI/endpoint/pci-endpoint.txt b/Documentation/=
-PCI/endpoint/pci-endpoint.txt
-> new file mode 100644
-> index 0000000..68a7839
-> --- /dev/null
-> +++ b/Documentation/PCI/endpoint/pci-endpoint.txt
-> @@ -0,0 +1,190 @@
-> +			    PCI ENDPOINT FRAMEWORK
-> +		    Kishon Vijay Abraham I <kishon@ti.com>
-> +
-> +This document is a guide to use the PCI Endpoint Framework in order to c=
-reate
-> +endpoint controller driver, endpoint function driver and using configfs
-> +interface to bind the function driver to the controller driver.
-> +
-> +1. Introduction
-> +
-> +*Linux* has a comprehensive PCI subsystem to support PCI controllers that
-> +operates in Root Complex mode. The subsystem has capability to scan PCI =
-bus,
-> +assign memory resources and irq resources, load PCI driver (based on
-> +vendorid, deviceid), support other services like hot-plug, power managem=
-ent,
-> +advanced error reporting and virtual channels.
-> +
-> +However PCI controller IPs integrated in certain SoC is capable of opera=
-ting
-> +either in Root Complex mode or Endpoint mode. PCI Endpoint Framework will
-> +add endpoint mode support in *Linux*. This will help to run Linux in an
-> +EP system which can have a wide variety of use cases from testing or
-> +validation, co-processor accelerator etc..
-> +
-> +2. PCI Endpoint Core
-> +
-> +The PCI Endpoint Core layer comprises of 3 components: the Endpoint Cont=
-roller
-> +library, the Endpoint Function library and the configfs layer to bind the
-> +endpoint function with the endpoint controller.
-> +
-> +2.1 PCI Endpoint Controller(EPC) Library
-> +
-> +The EPC library provides APIs to be used by the controller that can oper=
-ate
-> +in endpoint mode. It also provides APIs to be used by function driver/li=
-brary
-> +in order to implement a particular endpoint function.
-> +
-> +2.1.1 APIs for the PCI controller Driver
-> +
-> +This section lists the APIs that the PCI Endpoint core provides to be us=
-ed
-> +by the PCI controller driver.
-> +
-> +*) devm_pci_epc_create()/pci_epc_create()
-> +
-> +   The PCI controller driver should implement the following ops:
-> +	 * write_header: ops to populate configuration space header
-> +	 * set_bar: ops to configure the BAR
-> +	 * clear_bar: ops to reset the BAR
-> +	 * alloc_addr_space: ops to allocate *in* PCI controller address space
-> +	 * free_addr_space: ops to free the allocated address space
-> +	 * raise_irq: ops to raise a legacy or MSI interrupt
-> +	 * start: ops to start the PCI link
-> +	 * stop: ops to stop the PCI link
-> +
-> +   The PCI controller driver can then create a new EPC device by invoking
-> +   devm_pci_epc_create/pci_epc_create.
-> +
-> +*) devm_pci_epc_destroy()/pci_epc_destroy()
-> +
-> +   The PCI controller driver can destroy the EPC device created by either
-> +   devm_pci_epc_create or pci_epc_create using devm_pci_epc_destroy() or
-> +   /pci_epc_destroy()
-> +
-> +2.1.2 APIs for the PCI Endpoint Function Driver
-> +
-> +This section lists the APIs that the PCI Endpoint core provides to be us=
-ed
-> +by the PCI endpoint function driver.
-> +
-> +*) pci_epc_write_header()
-> +
-> +   The PCI endpoint function driver should use pci_epc_write_header() to
-> +   write the standard configuration header to the endpoint controller.
-> +
-> +*) pci_epc_set_bar()
-> +
-> +   The PCI endpoint function driver should use pci_epc_set_bar() to conf=
-igure
-> +   the Base Address Register in order for the host to assign PCI addr sp=
-ace.
-> +   Register space of the function driver is usually configured
-> +   using this API.
-> +
-> +*) pci_epc_clear_bar()
-> +
-> +   The PCI endpoint function driver should use pci_epc_clear_bar() to re=
-set
-> +   the BAR.
-> +
-> +*) pci_epc_raise_irq()
-> +
-> +   The PCI endpoint function driver should use pci_epc_raise_irq() to ra=
-ise
-> +   Legacy Interrupt or MSI Interrupt.
-> +
-> +*) pci_epc_start()
-> +
-> +   The PCI endpoint function driver should invoke pci_epc_start() once it
-> +   has configured the endpoint function and wants to start the PCI link.
-> +
-> +*) pci_epc_stop()
-> +
-> +   The PCI endpoint function driver should invoke pci_epc_stop() to stop
-> +   the PCI LINK.
-> +
-> +2.1.3 Other APIs
-> +
-> +There are other APIs provided by the EPC library. These are used for bin=
-ding
-> +the epf device with epc device. pci-ep-cfs.c can be used as reference for
-> +using these APIs.
-> +
-> +*) pci_epc_get()
-> +
-> +   Get a reference to the pci endpoint controller based on the device na=
-me of
-> +   the controller.
-> +
-> +*) pci_epc_put()
-> +
-> +   Release the reference to the pci endpoint controller obtained using
-> +   pci_epc_get()
-> +
-> +*) pci_epc_add_epf()
-> +
-> +   Add a pci endpoint function to a pci endpoint controller. A pcie devi=
-ce
-> +   can have upto 8 functions according to the specification.
-> +
-> +*) pci_epc_remove_epf()
-> +
-> +   Remove the pci endpoint function from pci endpoint controller.
-> +
-> +2.2 PCI Endpoint Function(EPF) Library
-> +
-> +The EPF library provides APIs to be used by the function driver and the =
-EPC
-> +library in order to provide endpoint mode functionality.
-> +
-> +2.2.1 APIs for the PCI Endpoint Function Driver
-> +
-> +This section lists the APIs that the PCI Endpoint core provides to be us=
-ed
-> +by the PCI endpoint function driver.
-> +
-> +*) pci_epf_register_driver()
-> +
-> +   The PCI Endpoint Function driver should implement the following ops:
-> +	 * bind: ops to perform when a EPC device has been bound to EPF device
-> +	 * unbind: ops to perform when a binding has been lost between a EPC
-> +	   device and EPF device
-> +	 * linkup: ops to perform when the EPC device has established a
-> +	   connection with a host system
-> +
-> +  The PCI Function driver can then register the PCI EPF driver by using
-> +  pci_epf_register_driver().
-> +
-> +*) pci_epf_unregister_driver()
-> +
-> +  The PCI Function driver can unregister the PCI EPF driver by using
-> +  pci_epf_unregister_driver().
-> +
-> +*) pci_epf_alloc_space()
-> +
-> +  The PCI Function driver can allocate space for a particular BAR using
-> +  pci_epf_alloc_space().
-> +
-> +*) pci_epf_free_space()
-> +
-> +  The PCI Function driver can free the allocated space
-> +  (using pci_epf_alloc_space) by invoking pci_epf_free_space().
-> +
-> +2.2.2 APIs for the PCI Endpoint Controller Library
-> +This section lists the APIs that the PCI Endpoint core provides to be us=
-ed
-> +by the PCI endpoint controller library.
-> +
-> +*) pci_epf_linkup()
-> +
-> +   The PCI endpoint controller library invokes pci_epf_linkup() when the
-> +   EPC device has established the connection to the host.
-> +
-> +2.2.2 Other APIs
-> +There are other APIs provided by the EPF library. These are used to noti=
-fy
-> +the function driver when the EPF device is bound to the EPC device.
-> +pci-ep-cfs.c can be used as reference for using these APIs.
-> +
-> +*) pci_epf_create()
-> +
-> +   Create a new PCI EPF device by passing the name of the PCI EPF device.
-> +   This name will be used to bind the the EPF device to a EPF driver.
-> +
-> +*) pci_epf_destroy()
-> +
-> +   Destroy the created PCI EPF device.
-> +
-> +*) pci_epf_bind()
-> +
-> +   pci_epf_bind() should be invoked when the EPF device has been bound to
-> +   a EPC device.
-> +
-> +*) pci_epf_unbind()
-> +
-> +   pci_epf_unbind() should be invoked when the binding between EPC device
-> +   and EPF device is lost.
-> =
-
-
-Good initial reference guide.
-
-Acked-By: Joao Pinto <jpinto@synopsys.com>
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 473bbdc..071251f3 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -565,40 +565,40 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+ 		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+ 		dw_pcie_writel_rc(pp, PCIE_RC_LCR, tmp);
+-	} else {
+-		dev_info(dev, "Link: Gen2 disabled\n");
+-	}
+-
+-	/*
+-	 * Start Directed Speed Change so the best possible speed both link
+-	 * partners support can be negotiated.
+-	 */
+-	tmp = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
+-	tmp |= PORT_LOGIC_SPEED_CHANGE;
+-	dw_pcie_writel_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
+ 
+-	if (imx6_pcie->variant != IMX7D) {
+ 		/*
+-		 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
+-		 * from i.MX6 family when no link speed transition
+-		 * occurs and we go Gen1 -> yep, Gen1. The difference
+-		 * is that, in such case, it will not be cleared by HW
+-		 * which will cause the following code to report false
+-		 * failure.
++		 * Start Directed Speed Change so the best possible
++		 * speed both link partners support can be negotiated.
+ 		 */
++		tmp = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
++		tmp |= PORT_LOGIC_SPEED_CHANGE;
++		dw_pcie_writel_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
++
++		if (imx6_pcie->variant != IMX7D) {
++			/*
++			 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
++			 * from i.MX6 family when no link speed transition
++			 * occurs and we go Gen1 -> yep, Gen1. The difference
++			 * is that, in such case, it will not be cleared by HW
++			 * which will cause the following code to report false
++			 * failure.
++			 */
++
++			ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
++			if (ret) {
++				dev_err(dev, "Failed to bring link up!\n");
++				goto err_reset_phy;
++			}
++		}
+ 
+-		ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
++		/* Make sure link training is finished as well! */
++		ret = imx6_pcie_wait_for_link(imx6_pcie);
+ 		if (ret) {
+ 			dev_err(dev, "Failed to bring link up!\n");
+ 			goto err_reset_phy;
+ 		}
+-	}
+-
+-	/* Make sure link training is finished as well! */
+-	ret = imx6_pcie_wait_for_link(imx6_pcie);
+-	if (ret) {
+-		dev_err(dev, "Failed to bring link up!\n");
+-		goto err_reset_phy;
++	} else {
++		dev_info(dev, "Link: Gen2 disabled\n");
+ 	}
+ 
+ 	tmp = dw_pcie_readl_rc(pp, PCIE_RC_LCSR);
+-- 
+2.9.3
