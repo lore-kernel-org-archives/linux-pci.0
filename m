@@ -1,55 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fw-tnat.cambridge.arm.com ([217.140.96.140]:57999 "EHLO
-        cam-smtp0.cambridge.arm.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753159AbdBNNjf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Feb 2017 08:39:35 -0500
-Date: Tue, 14 Feb 2017 12:36:05 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Nate Watterson <nwatters@codeaurora.org>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org,
-        Vikram Sethi <vikrams@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: RFC on No ACS Support and SMMUv3 Support
-Message-ID: <20170214123605.GA25144@arm.com>
-References: <2944ff12-d5c0-179a-7c07-fbbafcd022da@codeaurora.org>
- <20170213160652.7c141eb1@t450s.home>
- <2d199a00-a66a-e96c-b0c4-9dd4459d2589@codeaurora.org>
- <20170213184643.2d2bdce7@t450s.home>
- <546869d0-d05c-9550-86d5-276bc7a3c284@codeaurora.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <546869d0-d05c-9550-86d5-276bc7a3c284@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170113223035.GE23066@char.us.oracle.com>
+References: <04f2a09f-59be-a720-bc98-4afb53171790@oracle.com>
+ <20170113200751.20125-1-ddstreet@ieee.org> <20170113223035.GE23066@char.us.oracle.com>
+From: Dan Streetman <ddstreet@ieee.org>
+Date: Tue, 21 Feb 2017 10:31:50 -0500
+Message-ID: <CALZtONDL2Ph0MMMfSuqvofNZ-+6jPi9aKsE4mL30i15Up6Bvug@mail.gmail.com>
+Subject: Re: [PATCH] xen: do not re-use pirq number cached in pci device msi
+ msg data
+To: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Stefano Stabellini <sstabellini@kernel.org>, jgross@suse.com,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Dan Streetman <dan.streetman@canonical.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        xen-devel@lists.xenproject.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 13, 2017 at 08:54:04PM -0500, Sinan Kaya wrote:
-> On 2/13/2017 8:46 PM, Alex Williamson wrote:
-> >> My first goal is to support virtual function passthrough for device's that are directly
-> >> connected. This will be possible with the quirk I proposed and it will be the most
-> >> secure solution. It can certainly be generalized for other systems.
-> > Why is this anything more than a quirk for the affected PCIe root port
-> > vendor:device IDs and use of pci_device_group() to evaluate the rest of
-> > the topology, as appears is already done?  Clearly a blanket exception
-> > for the platform wouldn't necessarily be correct if a user could plugin
-> > a device that adds a PCIe switch.
-> 
-> I was going to go this direction first. I wanted to check with everybody to see
-> if there are other/better alternatives possible via either changing 
-> pci_device_group or changing the smmuv3 driver.
+On Fri, Jan 13, 2017 at 5:30 PM, Konrad Rzeszutek Wilk
+<konrad.wilk@oracle.com> wrote:
+> On Fri, Jan 13, 2017 at 03:07:51PM -0500, Dan Streetman wrote:
+>> Revert the main part of commit:
+>> af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+>>
+>> That commit introduced reading the pci device's msi message data to see
+>> if a pirq was previously configured for the device's msi/msix, and re-use
+>> that pirq.  At the time, that was the correct behavior.  However, a
+>> later change to Qemu caused it to call into the Xen hypervisor to unmap
+>> all pirqs for a pci device, when the pci device disables its MSI/MSIX
+>> vectors; specifically the Qemu commit:
+>> c976437c7dba9c7444fb41df45468968aaa326ad
+>> ("qemu-xen: free all the pirqs for msi/msix when driver unload")
+>>
+>> Once Qemu added this pirq unmapping, it was no longer correct for the
+>> kernel to re-use the pirq number cached in the pci device msi message
+>> data.  All Qemu releases since 2.1.0 contain the patch that unmaps the
+>> pirqs when the pci device disables its MSI/MSIX vectors.
+>>
+>> This bug is causing failures to initialize multiple NVMe controllers
+>> under Xen, because the NVMe driver sets up a single MSIX vector for
+>> each controller (concurrently), and then after using that to talk to
+>> the controller for some configuration data, it disables the single MSIX
+>> vector and re-configures all the MSIX vectors it needs.  So the MSIX
+>> setup code tries to re-use the cached pirq from the first vector
+>> for each controller, but the hypervisor has already given away that
+>> pirq to another controller, and its initialization fails.
+>>
+>> This is discussed in more detail at:
+>> https://lists.xen.org/archives/html/xen-devel/2017-01/msg00447.html
+>>
+>> Fixes: af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+>> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
+>
+> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
 
-Just to echo what Alex has been saying, I really don't think we should
-support this type of system by quirking the topology code in the SMMU
-driver. The SMMU isn't at fault here; the problems are all upstream of that.
-Legitimising non-ACS machines in the SMMU driver gives little incentive for
-people to build systems correctly and undermines the security guarantees
-that the SMMU (and VFIO) are trying to provide.
-
-I appreciate that I/O virtualisation on arm64 has been a learning curve for
-everybody involved, but that's not an excuse for moving the goalposts when
-it comes to device isolation.
-
-Will
+This doesn't seem to be applied yet, is it still waiting on another
+ack?  Or maybe I'm looking at the wrong git tree...
