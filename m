@@ -1,177 +1,92 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
- <linux-arm-kernel@axis.com>
-Subject: [PATCH 10/10] PCI: dwc: Remove dependency of designware to CONFIG_PCI
-Date: Wed, 15 Feb 2017 18:48:19 +0530
-Message-ID: <1487164699-30708-11-git-send-email-kishon@ti.com>
-In-Reply-To: <1487164699-30708-1-git-send-email-kishon@ti.com>
-References: <1487164699-30708-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from out-2.mail.amis.net ([212.18.32.14]:58055 "EHLO
+        out-2.mail.amis.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752634AbdBUN0c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Feb 2017 08:26:32 -0500
+To: linux-pci@vger.kernel.org
+Cc: Richard.Zhu@freescale.com, l.stach@pengutronix.de
+From: Primoz Fiser <primoz.fiser@norik.com>
+Subject: PCI: imx6: writing to PCI BAR memory while LTSSM != 0x11 hangs CPU
+Message-ID: <eb16bfdd-13ef-6d77-fafa-431e4ecafdef@norik.com>
+Date: Tue, 21 Feb 2017 14:20:10 +0100
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: nsekhar@ti.com, Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CONFIG_PCI is used to enable the host mode PCI. In preparation for adding
-endpoint mode support to designware driver, remove the dependency of
-designware to CONFIG_PCI and make only the host specific part depend on
-CONFIG_PCI.
+Hello all,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/Makefile        |    3 +++
- drivers/pci/Makefile    |    3 ---
- drivers/pci/dwc/Kconfig |   13 ++++++++++++-
- 3 files changed, 15 insertions(+), 4 deletions(-)
+I am in a process of developing custom EP device driver on i.MX6Q.
 
-diff --git a/drivers/Makefile b/drivers/Makefile
-index 060026a..f521cb0 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -15,6 +15,9 @@ obj-$(CONFIG_PINCTRL)		+= pinctrl/
- obj-$(CONFIG_GPIOLIB)		+= gpio/
- obj-y				+= pwm/
- obj-$(CONFIG_PCI)		+= pci/
-+# PCI dwc controller drivers
-+obj-y				+= pci/dwc/
-+
- obj-$(CONFIG_PARISC)		+= parisc/
- obj-$(CONFIG_RAPIDIO)		+= rapidio/
- obj-y				+= video/
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index b7e9751..8db5079 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -66,8 +66,5 @@ obj-$(CONFIG_OF) += of.o
- 
- ccflags-$(CONFIG_PCI_DEBUG) := -DDEBUG
- 
--# PCI dwc controller drivers
--obj-y += dwc/
--
- # PCI host controller drivers
- obj-y += host/
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index ab92a0c..dfb8a69 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -1,16 +1,17 @@
- menu "DesignWare PCI Core Support"
--	depends on PCI
- 
- config PCIE_DW
- 	bool
- 
- config PCIE_DW_HOST
-         bool
-+	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
-         select PCIE_DW
- 
- config PCI_DRA7XX
- 	bool "TI DRA7xx PCIe controller"
-+	depends on PCI
- 	depends on OF && HAS_IOMEM && TI_PIPE3
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
-@@ -21,6 +22,7 @@ config PCI_DRA7XX
- 
- config PCIE_DW_PLAT
- 	bool "Platform bus based DesignWare PCIe Controller"
-+	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
- 	---help---
-@@ -33,6 +35,7 @@ config PCIE_DW_PLAT
- 
- config PCI_EXYNOS
- 	bool "Samsung Exynos PCIe controller"
-+	depends on PCI
- 	depends on SOC_EXYNOS5440
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -40,6 +43,7 @@ config PCI_EXYNOS
- 
- config PCI_IMX6
- 	bool "Freescale i.MX6 PCIe controller"
-+	depends on PCI
- 	depends on SOC_IMX6Q
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -47,6 +51,7 @@ config PCI_IMX6
- 
- config PCIE_SPEAR13XX
- 	bool "STMicroelectronics SPEAr PCIe controller"
-+	depends on PCI
- 	depends on ARCH_SPEAR13XX
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -56,6 +61,7 @@ config PCIE_SPEAR13XX
- 
- config PCI_KEYSTONE
- 	bool "TI Keystone PCIe controller"
-+	depends on PCI
- 	depends on ARCH_KEYSTONE
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -68,6 +74,7 @@ config PCI_KEYSTONE
- 
- config PCI_LAYERSCAPE
- 	bool "Freescale Layerscape PCIe controller"
-+	depends on PCI
- 	depends on OF && (ARM || ARCH_LAYERSCAPE)
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select MFD_SYSCON
-@@ -78,6 +85,7 @@ config PCI_LAYERSCAPE
- config PCI_HISI
- 	depends on OF && ARM64
- 	bool "HiSilicon Hip05 and Hip06 SoCs PCIe controllers"
-+	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
- 	select PCIE_DW_HOST
-@@ -87,6 +95,7 @@ config PCI_HISI
- 
- config PCIE_QCOM
- 	bool "Qualcomm PCIe controller"
-+	depends on PCI
- 	depends on ARCH_QCOM && OF
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -98,6 +107,7 @@ config PCIE_QCOM
- 
- config PCIE_ARMADA_8K
- 	bool "Marvell Armada-8K PCIe controller"
-+	depends on PCI
- 	depends on ARCH_MVEBU
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
-@@ -110,6 +120,7 @@ config PCIE_ARMADA_8K
- 
- config PCIE_ARTPEC6
- 	bool "Axis ARTPEC-6 PCIe controller"
-+	depends on PCI
- 	depends on MACH_ARTPEC6
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIEPORTBUS
--- 
-1.7.9.5
+Basically we have two i.MX6Q devices connected over PCIe. One implements 
+RC (Linux 4.1 fslc) and the other implements EP (bare-metal, based on 
+freescale SDK).
+The communication is working as expected (BAR memory accessible by both 
+parties, MSIs working, etc).
+
+But we have constrain where we want to take down (power-cycle) EP 
+asynchronously (without notifying RC - Linux side) and recover afterwards.
+Basically EP side can reset itself at any time and RC doesn't know about 
+it!
+After resetting, EP is in its initial state & unconfigured. 
+Communication is not working and we have to restore PCI configuration 
+space again afterwards...
+
+The problem arises when our custom driver accesses BAR memory while EP 
+is resetting / power-cycling.
+
+* On read access to BAR memory (eg. ioread32() in driver), an ARM 
+exception (data abort) is triggered and we can attach handler to it with 
+hook_fault_code().
+This is already done in "drivers/pci/host/pci-imx6.c" with:
+
+/* Added for PCI abort handling */
+
+    hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
+                 "imprecise external abort");
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+and default handler (imx6q_pcie_abort_handler) is called on data abort.
+We modified default abort handler which simply returns 0 (SUCCESS) and 
+doesn't handle errors at all, to return all 0xFFFFFFFF in such cases.
+
+* However on write access to BAR memory (eg. iowrite32() in driver) 
+there is no such exception.
+In most cases the hardware can handle write to broken PCI memory just 
+fine (no error, no hang, no exception, etc) except if we do PCI write 
+right when LTSSM state changes.
+In such case we observe instant SoC hang!
+This is how we can replicate bug:
+- we add below dummy loop to write() in our custom driver (just for 
+testing!!!!):
+
+    pr_warn("entering endless loop - replicating SoC hang\n");
+    while(1) {
+         iowrite32(1, &private->status_flag);
+    }
+
+- in the loop we repeatedly write to &private->status_flag (MMIO, EP's 
+BAR memory),
+- we then reset/power-cycle our EP (using custom serial protocol)
+- we observe instant SoC hang without PCIe abort handler being called!!!
+
+[root@host ~]# echo 1 > /dev/imx6ep
+[   48.440212] imx6ep: entering endless loop - replicating SoC hang
+using serial port
+send: CPUCTRL_RESET_ID seq=41 [03]
+
+(STUCK SoC HERE)
+
+On the other hand if we test above dummy loop with ioread32() instead of 
+iowrite32() we get abort handler called and we can fix a problem.
+
+Does anyone have an idea how to prevent i.MX6Q SoC from hanging itself 
+on PCI write while ltssm state != 0x11?
+Must we avoid touching BARs when LTSSM in incorrect state?
+Can this be considered as an errata?
+
+I also tried asking in chip vendor designated forums but no answer was 
+given, so this mailing list is my last resort.
+
+Regards,
+Primoz
