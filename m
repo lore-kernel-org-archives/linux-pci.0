@@ -1,98 +1,74 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
-        "robh@kernel.org" <robh@kernel.org>,
-        "colin.king@canonical.com" <colin.king@canonical.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "michal.simek@xilinx.com" <michal.simek@xilinx.com>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Ravikiran Gummaluri <rgummal@xilinx.com>,
-        "arnd@arndb.de" <arnd@arndb.de>
-Subject: RE: [PATCH v4] PCI: Xilinx NWL: Modifying irq chip for legacy
- interrupts
-Date: Fri, 3 Feb 2017 12:16:55 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263E03C4@XAP-PVEXMBX02.xlnx.xilinx.com>
-References: <1486120110-15205-1-git-send-email-bharatku@xilinx.com>
- <3c78506f-9bcb-0b43-4625-27229ee1f642@arm.com>
-In-Reply-To: <3c78506f-9bcb-0b43-4625-27229ee1f642@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:50023 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751023AbdBUPpY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Feb 2017 10:45:24 -0500
+Subject: Re: [PATCH] xen: do not re-use pirq number cached in pci device msi
+ msg data
+To: Dan Streetman <ddstreet@ieee.org>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+References: <04f2a09f-59be-a720-bc98-4afb53171790@oracle.com>
+ <20170113200751.20125-1-ddstreet@ieee.org>
+ <20170113223035.GE23066@char.us.oracle.com>
+ <CALZtONDL2Ph0MMMfSuqvofNZ-+6jPi9aKsE4mL30i15Up6Bvug@mail.gmail.com>
+Cc: Stefano Stabellini <sstabellini@kernel.org>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Dan Streetman <dan.streetman@canonical.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        xen-devel@lists.xenproject.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org
+From: Juergen Gross <jgross@suse.com>
+Message-ID: <0c2b4d6a-93e7-90a2-ffaf-fa423fb022d5@suse.com>
+Date: Tue, 21 Feb 2017 16:45:20 +0100
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CALZtONDL2Ph0MMMfSuqvofNZ-+6jPi9aKsE4mL30i15Up6Bvug@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 03/02/17 11:08, Bharat Kumar Gogada wrote:
-> > - Adding mutex lock for protecting legacy mask register
-> > - Few wifi end points which only support legacy interrupts, performs
-> > hardware reset functionalities after disabling interrupts by invoking
-> > disable_irq and then re-enable using enable_irq, they enable hardware
-> > interrupts first and then virtual irq line later.
-> > - The legacy irq line goes low only after DEASSERT_INTx is received.As
-> > the legacy irq line is high immediately after hardware interrupts are
-> > enabled but virq of EP is still in disabled state and EP handler is
-> > never executed resulting no DEASSERT_INTx.If dummy irq chip is used,
-> > interrutps are not masked and system is hanging with CPU stall.
-> > - Adding irq chip functions instead of dummy irq chip for legacy
-> > interrupts.
-> > - Legacy interrupts are level sensitive, so using handle_level_irq is
-> > more appropriate as it is masks interrupts until End point handles
-> > interrupts and unmasks interrutps after End point handler is executed.
-> > - Legacy interrupts are level triggered, virtual irq line of End Point
-> > shows as edge in /proc/interrupts.
-> > - Setting irq flags of virtual irq line of EP to level triggered at
-> > the time of mapping.
-> >
-> > Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
-> > ---
-> >  drivers/pci/host/pcie-xilinx-nwl.c |   45
-> +++++++++++++++++++++++++++++++++++-
-> >  1 files changed, 44 insertions(+), 1 deletions(-)
-> >
-> > diff --git a/drivers/pci/host/pcie-xilinx-nwl.c
-> > b/drivers/pci/host/pcie-xilinx-nwl.c
-> > index 43eaa4a..e4605f9 100644
-> > --- a/drivers/pci/host/pcie-xilinx-nwl.c
-> > +++ b/drivers/pci/host/pcie-xilinx-nwl.c
-> > @@ -184,6 +184,7 @@ struct nwl_pcie {
-> >  	u8 root_busno;
-> >  	struct nwl_msi msi;
-> >  	struct irq_domain *legacy_irq_domain;
-> > +	spinlock_t leg_mask_lock;
-> >  };
-> >
-> >  static inline u32 nwl_bridge_readl(struct nwl_pcie *pcie, u32 off) @@
-> > -395,11 +396,52 @@ static void nwl_pcie_msi_handler_low(struct irq_desc
-> *desc)
-> >  	chained_irq_exit(chip, desc);
-> >  }
-> >
-> > +static void nwl_mask_leg_irq(struct irq_data *data) {
-> > +	struct irq_desc *desc =3D irq_to_desc(data->irq);
-> > +	struct nwl_pcie *pcie;
-> > +	unsigned long flags;
-> > +	u32 mask;
-> > +	u32 val;
-> > +
-> > +	pcie =3D irq_desc_get_chip_data(desc);
-> > +	mask =3D 1 << (data->hwirq - 1);
-> > +	spin_lock_irqsave(&pcie->leg_mask_lock, flags);
->=20
-> I've asked you to use a raw spinlock for a reason. If using RT, this gets=
- turned
-> into a sleeping lock...
->=20
- In include/linux/spinlock.h=20
-#define spin_lock_irqsave(lock, flags)                          \
-do {                                                            \
-        raw_spin_lock_irqsave(spinlock_check(lock), flags);     \
-} while (0)
+On 21/02/17 16:31, Dan Streetman wrote:
+> On Fri, Jan 13, 2017 at 5:30 PM, Konrad Rzeszutek Wilk
+> <konrad.wilk@oracle.com> wrote:
+>> On Fri, Jan 13, 2017 at 03:07:51PM -0500, Dan Streetman wrote:
+>>> Revert the main part of commit:
+>>> af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+>>>
+>>> That commit introduced reading the pci device's msi message data to see
+>>> if a pirq was previously configured for the device's msi/msix, and re-use
+>>> that pirq.  At the time, that was the correct behavior.  However, a
+>>> later change to Qemu caused it to call into the Xen hypervisor to unmap
+>>> all pirqs for a pci device, when the pci device disables its MSI/MSIX
+>>> vectors; specifically the Qemu commit:
+>>> c976437c7dba9c7444fb41df45468968aaa326ad
+>>> ("qemu-xen: free all the pirqs for msi/msix when driver unload")
+>>>
+>>> Once Qemu added this pirq unmapping, it was no longer correct for the
+>>> kernel to re-use the pirq number cached in the pci device msi message
+>>> data.  All Qemu releases since 2.1.0 contain the patch that unmaps the
+>>> pirqs when the pci device disables its MSI/MSIX vectors.
+>>>
+>>> This bug is causing failures to initialize multiple NVMe controllers
+>>> under Xen, because the NVMe driver sets up a single MSIX vector for
+>>> each controller (concurrently), and then after using that to talk to
+>>> the controller for some configuration data, it disables the single MSIX
+>>> vector and re-configures all the MSIX vectors it needs.  So the MSIX
+>>> setup code tries to re-use the cached pirq from the first vector
+>>> for each controller, but the hypervisor has already given away that
+>>> pirq to another controller, and its initialization fails.
+>>>
+>>> This is discussed in more detail at:
+>>> https://lists.xen.org/archives/html/xen-devel/2017-01/msg00447.html
+>>>
+>>> Fixes: af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+>>> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
+>>
+>> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> 
+> This doesn't seem to be applied yet, is it still waiting on another
+> ack?  Or maybe I'm looking at the wrong git tree...
 
-The above API invokes raw_spin_lock_irqsave know.
-So is there any difference between raw_spin_lock_irqsave and spin_lock_irqs=
-ave ?
+Am I wrong or shouldn't this go through the PCI tree? Konrad?
 
-Thanks & Regards,
-Bharat
+
+Juergen
