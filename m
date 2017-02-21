@@ -1,96 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:32329 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751038AbdBFKhK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Feb 2017 05:37:10 -0500
-Date: Mon, 6 Feb 2017 12:37:06 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: pciehp is broken from 4.10-rc1
-Message-ID: <20170206103706.GE19313@lahna.fi.intel.com>
-References: <CAE9FiQVCMCa7iVyuwp9z6VrY0cE7V_xghuXip28Ft52=8QmTWw@mail.gmail.com>
- <20170203055200.GA29413@wunner.de>
- <CAE9FiQWs0H9vqEo2ZYnWWBW0Ao-hx4WYHQ69cyR32nFQ9yV9rw@mail.gmail.com>
- <20170204081254.GA29595@wunner.de>
- <20170204185607.GA29957@wunner.de>
- <CAE9FiQUuFJHMScyFgnHbs5r-SzTiRiBZ2JcpUYJhg0ft75-OBQ@mail.gmail.com>
- <20170204233443.GA234@wunner.de>
- <CAE9FiQW5SQsQfRCz9sor4kufogTRVpHXekPHSi8MSi46mvXGLQ@mail.gmail.com>
- <20170205073454.GA253@wunner.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V3 2/2] PCI: handle CRS returned by device after FLR
+To: linux-pci@vger.kernel.org, alex.williamson@redhat.com
+References: <1475473021-14251-1-git-send-email-okaya@codeaurora.org>
+ <1475473021-14251-3-git-send-email-okaya@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <ac667a77-028d-d5da-f574-61f787fec72c@codeaurora.org>
+Date: Tue, 21 Feb 2017 12:04:24 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170205073454.GA253@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1475473021-14251-3-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo.Pieralisi@arm.com, vikrams@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, timur@codeaurora.org,
+ linux-kernel@vger.kernel.org, cov@codeaurora.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Feb 05, 2017 at 08:34:54AM +0100, Lukas Wunner wrote:
-> > sca05-0a81fd8d:~ # echo 1 > /sys/bus/pci/slots/11/power
-> > [  375.376609] pci_hotplug: power_write_file: power = 1
-> > [  375.382175] pciehp 0000:b3:00.0:pcie004: pciehp_get_power_status: SLOTCTRL a8 value read 17f1
-> > [  375.392695] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010 from Slot Status
-> > [  375.401370] pciehp 0000:b3:00.0:pcie004: pciehp_power_on_slot: SLOTCTRL a8 write cmd 0
-> > [  375.410231] pciehp 0000:b3:00.0:pcie004: pciehp_green_led_blink: SLOTCTRL a8 write cmd 200
-> > [  375.411071] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010 from Slot Status
-> > [  375.445222] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010 from Slot Status
-> > [  377.444400] pciehp 0000:b3:00.0:pcie004: Data Link Layer Link Active not set in 1000 msec
-> > [  378.960364] pci 0000:b4:00.0 id reading try 50 times with interval 20 ms to get ffffffff
-> > [  378.969406] pciehp 0000:b3:00.0:pcie004: pciehp_check_link_status: lnk_status = 5001
-> > [  378.978059] pciehp 0000:b3:00.0:pcie004: link training error: status 0x5001
-> > [  378.985834] pciehp 0000:b3:00.0:pcie004: Failed to check link status
-> > [  378.987185] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010 from Slot Status
-> > [  378.987253] pciehp 0000:b3:00.0:pcie004: pciehp_power_off_slot: SLOTCTRL a8 write cmd 400
-> > [  380.000409] pciehp 0000:b3:00.0:pcie004: pciehp_green_led_off: SLOTCTRL a8 write cmd 300
-> > [  380.000674] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010 from Slot Status
-> > [  380.018020] pciehp 0000:b3:00.0:pcie004: pciehp_set_attention_status: SLOTCTRL a8 write cmd 40
-> > [  380.019053] pciehp 0000:b3:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+Hi Alex,
 
-It would be good to see the output when 68db9bc is reverted. Yinghai,
-can you attach that to the bugzilla but as well?
+I'm coming back to work on this. 
 
-> So on this Skylake machine link training fails after resuming from D3hot
-> to D0.
+On 10/3/2016 1:37 AM, Sinan Kaya wrote:
+> An endpoint is allowed to issue CRS following an FLR request to indicate
+> that it is not ready to accept new requests. Changing the polling mechanism
+> in FLR wait function to go read the vendor ID instead of the command/status
+> register. A CRS indication will only be given if the address to be read is
+> vendor ID.
 > 
-> One thing that's a bit fishy is that normally the Link Disable bit is
-> cleared when powering on the slot.  This results in a debug message
-> in dmesg containg the string "lnk_ctrl = ", and that line is missing
-> from the output you've pasted above, suggesting that the machine is
-> not running a stock v4.10 kernel after all but something else.  Could
-> you check why this message is not printed?  Could you check with lspci
-> if the Link Disable bit is set before you invoke "echo 1"?
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/pci/pci.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 > 
-> This is the call stack:
-> pciehp_sysfs_enable_slot()
->   pciehp_enable_slot()
->     board_added()
->       pciehp_power_on_slot()
->         pciehp_link_enable()
->           __pciehp_link_set()
-> 
-> Another theory is that the link is generally unreliable on this machine
-> since the Link Bandwidth Management Status bit is set in the Link Status
-> Register ("lnk_status = 5001"), which according to the spec means:
-> 
-> "Hardware has changed Link speed or width to attempt to correct unreliable
-> Link operation, either through an LTSSM timeout or a higher level process.
-> This bit must be set if the Physical Layer reports a speed or width change
-> was initiated by the Downstream component that was not indicated as an
-> autonomous change."
-> 
-> In this case it would be good to know which hardware exactly we're dealing
-> with so that we might quirk it to not runtime suspend the port.  To that
-> end, could you attach a full dmesg log to the bugzilla entry I've created?
-> https://bugzilla.kernel.org/show_bug.cgi?id=193951
-> 
-> @Mika, Rafael: Are you aware of Skylake machines with unreliable link
-> training, or perhaps errata of Skylake chips related to link training
-> on hotplug ports?
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index c8749b9..7580b00 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3725,7 +3725,8 @@ static void pci_flr_wait(struct pci_dev *dev)
+>  
+>  	do {
+>  		msleep(100);
+> -		pci_read_config_dword(dev, PCI_COMMAND, &id);
 
-According to the 100-series (the chipset used with Skylake) errata
-below, I don't see any mentions related to PCIe link training issues.
+Your comment here puzzled me. 
 
-http://www.intel.com/content/dam/www/public/us/en/documents/specification-updates/100-series-chipset-spec-update.pdf
+https://patchwork.kernel.org/patch/8331851/
+
+"Self nak on this one, didn't account for VFs not implementing the first
+dword.  Thanks,"
+
+I'm trying to add Configuration Request Retry Status (CRS) support to FLR
+with this patch. 
+
+Basically, the root port will return 0xFFFF0001 only when a config read
+request is sent to the vendor ID register and CRS visibility is set.
+The SW needs to poll until this special read ID disappears. See the
+implementation note on Configuration Request Retry Status in PCIE
+specification for details.
+
+pci_bus_read_dev_vendor_id implements this loop for us.
+
+You are saying that there are VFs that do not implement vendor ID register.
+Can you give some history on this?
+
+
+> +		pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
+> +					   60 * 1000);
+>  	} while (i++ < 10 && id == ~0);
+>  
+>  	if (id == ~0)
+> 
+
+Sinan
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
