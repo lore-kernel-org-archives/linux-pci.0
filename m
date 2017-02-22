@@ -1,36 +1,41 @@
-Return-Path: <SRS0=0Srs=ZO=linaro.org=linus.walleij@kernel.org>
-Return-Path: <SRS0=0Srs=ZO=linaro.org=linus.walleij@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:46286 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932566AbdBVSDf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Feb 2017 13:03:35 -0500
+Received: from [10.38.67.103] (global_nat1_iad_fw.qualcomm.com [129.46.232.65])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: okaya@smtp.codeaurora.org)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 82CC5607BD
+        for <linux-pci@vger.kernel.org>; Wed, 22 Feb 2017 18:03:33 +0000 (UTC)
+To: Linux PCI <linux-pci@vger.kernel.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Subject: Partial BAR Address Allocation
+Message-ID: <35c6bec9-58e8-a1f7-5a85-d80c23480d32@codeaurora.org>
+Date: Wed, 22 Feb 2017 13:03:32 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170131003137.GE20550@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170128204839.18330-1-linus.walleij@linaro.org> <20170131003137.GE20550@bhelgaas-glaptop.roam.corp.google.com>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Wed, 1 Feb 2017 21:00:14 +0100
-Message-ID: <CACRpkdZFHBufh1ZunKnY018_TN-s80drQ_f-KTtPoR6O5OGHrg@mail.gmail.com>
-Subject: Re: [PATCH 1/4] PCI: add DT bindings for Cortina Gemini PCI Host Bridge
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>, Florian Fainelli <f.fainelli@gmail.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Janos Laube <janos.dev@gmail.com>,
-	Paulius Zaleckas <paulius.zaleckas@gmail.com>, openwrt-devel@openwrt.org,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31, 2017 at 1:31 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+We are carrying a big burden on our firmware to accommodate 32 bit non-prefetchable memory
+for supporting all BAR types. 
 
->> +- bus-range: set to <0x00 0x00> (only root bus)
->
-> Why is this limited to bus 0?  Is everything completely soldered down
-> with no possibility of adding or replacing PCI devices? The interrupt-map
-> below suggests slots, though.  If there's a slot, we could plug in a card
-> with a bridge, which would mean more than just bus 0.
+Endpoint drivers usually try to allocate both a 64 bit and a 32 bit BAR address
+for different platforms but they don't usually need both of them. 
 
-I thought so because it's a NAS box (the typical usecase) but when I
-dismantled it and turned it over, wow, there is indeed a MiniPCI
-slot!
+I think the behavior changes from card to card. 
 
-OK I will augment this to 0x00 0xff.
+I'm looking for a way to get rid of 32 bit BAR addresses and support 64 bit BAR addresses
+only. 
 
-Yours,
-Linus Walleij
+I want to see the current state of the kernel. Do we know if all resources need to be assigned
+before a driver can become functional. I have seen some patches to relax this but I don't
+know the current status.
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
