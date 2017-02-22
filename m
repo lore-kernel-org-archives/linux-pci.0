@@ -1,64 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:52462 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750716AbdBOHwZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Feb 2017 02:52:25 -0500
-From: songxiaowei <songxiaowei@huawei.com>
-To: <jingoohan1@gmail.com>, <Joao.Pinto@synopsys.com>,
-        <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC: <songxiaowei@hisilicon.com>, <wangbinghui@hisilicon.com>
-Subject: [PATCH] PCI-DW: ARM64: check the result of hos_init
-Date: Wed, 15 Feb 2017 15:52:04 +0800
-Message-ID: <20170215075204.114925-1-songxiaowei@huawei.com>
+Return-Path: <SRS0=e1OI=2D=oracle.com=boris.ostrovsky@kernel.org>
+Return-Path: <SRS0=e1OI=2D=oracle.com=boris.ostrovsky@kernel.org>
+Subject: Re: [PATCH] xen: do not re-use pirq number cached in pci device msi
+ msg data
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <04f2a09f-59be-a720-bc98-4afb53171790@oracle.com>
+ <20170113200751.20125-1-ddstreet@ieee.org>
+ <20170113223035.GE23066@char.us.oracle.com>
+ <CALZtONDL2Ph0MMMfSuqvofNZ-+6jPi9aKsE4mL30i15Up6Bvug@mail.gmail.com>
+ <0c2b4d6a-93e7-90a2-ffaf-fa423fb022d5@suse.com>
+ <72f8b025-e858-5e54-d900-50fbec46fea6@oracle.com>
+ <20170222142810.GA28359@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Juergen Gross <jgross@suse.com>, Dan Streetman <ddstreet@ieee.org>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Dan Streetman <dan.streetman@canonical.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, xen-devel@lists.xenproject.org,
+        linux-kernel <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Message-ID: <3379a82f-04b7-152a-1577-bf99b1c638cc@oracle.com>
+Date: Wed, 22 Feb 2017 10:14:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170222142810.GA28359@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-Enumeration should be prevented 
-when Host initialization fails.
-Only one device link with Host escpecially, 
-if host initialization fails or
-establishling link-up is not successful,
-there may no need for the Enumeration.
+On 02/22/2017 09:28 AM, Bjorn Helgaas wrote:
+> On Tue, Feb 21, 2017 at 10:58:39AM -0500, Boris Ostrovsky wrote:
+>> On 02/21/2017 10:45 AM, Juergen Gross wrote:
+>>> On 21/02/17 16:31, Dan Streetman wrote:
+>>>> On Fri, Jan 13, 2017 at 5:30 PM, Konrad Rzeszutek Wilk
+>>>> <konrad.wilk@oracle.com> wrote:
+>>>>> On Fri, Jan 13, 2017 at 03:07:51PM -0500, Dan Streetman wrote:
+>>>>>> Revert the main part of commit:
+>>>>>> af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+>>>>>>
+>>>>>> That commit introduced reading the pci device's msi message data to see
+>>>>>> if a pirq was previously configured for the device's msi/msix, and re-use
+>>>>>> that pirq.  At the time, that was the correct behavior.  However, a
+>>>>>> later change to Qemu caused it to call into the Xen hypervisor to unmap
+>>>>>> all pirqs for a pci device, when the pci device disables its MSI/MSIX
+>>>>>> vectors; specifically the Qemu commit:
+>>>>>> c976437c7dba9c7444fb41df45468968aaa326ad
+>>>>>> ("qemu-xen: free all the pirqs for msi/msix when driver unload")
+>>>>>>
+>>>>>> Once Qemu added this pirq unmapping, it was no longer correct for the
+>>>>>> kernel to re-use the pirq number cached in the pci device msi message
+>>>>>> data.  All Qemu releases since 2.1.0 contain the patch that unmaps the
+>>>>>> pirqs when the pci device disables its MSI/MSIX vectors.
+>>>>>>
+>>>>>> This bug is causing failures to initialize multiple NVMe controllers
+>>>>>> under Xen, because the NVMe driver sets up a single MSIX vector for
+>>>>>> each controller (concurrently), and then after using that to talk to
+>>>>>> the controller for some configuration data, it disables the single MSIX
+>>>>>> vector and re-configures all the MSIX vectors it needs.  So the MSIX
+>>>>>> setup code tries to re-use the cached pirq from the first vector
+>>>>>> for each controller, but the hypervisor has already given away that
+>>>>>> pirq to another controller, and its initialization fails.
+>>>>>>
+>>>>>> This is discussed in more detail at:
+>>>>>> https://lists.xen.org/archives/html/xen-devel/2017-01/msg00447.html
+>>>>>>
+>>>>>> Fixes: af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+>>>>>> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
+>>>>> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>>>> This doesn't seem to be applied yet, is it still waiting on another
+>>>> ack?  Or maybe I'm looking at the wrong git tree...
+>>> Am I wrong or shouldn't this go through the PCI tree? Konrad?
+>> Konrad is away this week but since pull request for Xen tree just went
+>> out we should probably wait until rc1 anyway (unless something big comes
+>> up before that).
+> I assume this should go via the Xen or x86 tree, since that's how most
+> arch/x86/pci/xen.c patches have been handled, including af42b8d12f8a.
+> If you think otherwise, let me know.
 
-Signed-off-by: songxiaowei <songxiaowei@huawei.com>
----
- drivers/pci/host/pcie-designware.c | 7 +++++--
- drivers/pci/host/pcie-designware.h | 2 +-
- 2 files changed, 6 insertions(+), 3 deletions(-)
+OK, I applied it to Xen tree's for-linus-4.11.
 
-diff --git a/drivers/pci/host/pcie-designware.c b/drivers/pci/host/pcie-designware.c
-index bed19994c1e9..561a2edaf06f 100644
---- a/drivers/pci/host/pcie-designware.c
-+++ b/drivers/pci/host/pcie-designware.c
-@@ -637,8 +637,11 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		}
- 	}
- 
--	if (pp->ops->host_init)
--		pp->ops->host_init(pp);
-+	if (pp->ops->host_init) {
-+		ret = pp->ops->host_init(pp);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	pp->root_bus_nr = pp->busn->start;
- 	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-diff --git a/drivers/pci/host/pcie-designware.h b/drivers/pci/host/pcie-designware.h
-index a567ea288ee2..eacf18f9fc79 100644
---- a/drivers/pci/host/pcie-designware.h
-+++ b/drivers/pci/host/pcie-designware.h
-@@ -63,7 +63,7 @@ struct pcie_host_ops {
- 	int (*wr_other_conf)(struct pcie_port *pp, struct pci_bus *bus,
- 			unsigned int devfn, int where, int size, u32 val);
- 	int (*link_up)(struct pcie_port *pp);
--	void (*host_init)(struct pcie_port *pp);
-+	int (*host_init)(struct pcie_port *pp);
- 	void (*msi_set_irq)(struct pcie_port *pp, int irq);
- 	void (*msi_clear_irq)(struct pcie_port *pp, int irq);
- 	phys_addr_t (*get_msi_addr)(struct pcie_port *pp);
--- 
-2.11.GIT
+-boris
