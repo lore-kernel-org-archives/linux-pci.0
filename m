@@ -1,69 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45233 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751172AbdBFRdB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Feb 2017 12:33:01 -0500
-Date: Mon, 6 Feb 2017 09:33:00 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Keith Busch <keith.busch@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
+To: Logan Gunthorpe <logang@deltatee.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
+ <2eb2b814-d621-5d8d-8366-4c4e9f789208@deltatee.com>
+ <e27a2363-1b11-f74b-532d-7de089875c90@deltatee.com>
+CC: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
         Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
-        Austin Bolen <Austin.Bolen@dell.com>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCHv5 2/5] pci: Add device disconnected state
-Message-ID: <20170206173300.GC25762@infradead.org>
-References: <1486144555-5526-1-git-send-email-keith.busch@intel.com>
- <1486144555-5526-3-git-send-email-keith.busch@intel.com>
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-nvme@lists.infradead.org>, <linux-kernel@vger.kernel.org>
+From: Jens Axboe <axboe@fb.com>
+Message-ID: <ff4346ab-5a56-c9e1-efb7-7a289e663bbb@fb.com>
+Date: Thu, 23 Feb 2017 13:52:15 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1486144555-5526-3-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <e27a2363-1b11-f74b-532d-7de089875c90@deltatee.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 03, 2017 at 12:55:52PM -0500, Keith Busch wrote:
-> This patch adds a new state to pci_dev to be set when it is unexpectedly
-> disconnected. The pci driver tear down functions can observe this new
-> device state so they may skip operations that will fail.
+On 02/23/2017 01:36 PM, Logan Gunthorpe wrote:
+> Hello,
 > 
-> The pciehp and pcie-dpc drivers are aware when the link is down, so
-> these set the flag when their handlers detect the device is disconnected.
+> We're still waiting on any kind of response from Bjorn. (If you're
+> listening please say something!)
 > 
-> Signed-off-by: Keith Busch <keith.busch@intel.com>
-> ---
->  drivers/pci/hotplug/pciehp_pci.c |  5 +++++
->  drivers/pci/pci.h                | 14 ++++++++++++++
->  drivers/pci/pcie/pcie-dpc.c      |  4 ++++
->  include/linux/pci.h              |  2 ++
->  4 files changed, 25 insertions(+)
+> Does anyone have any suggestions for dealing with an unresponsive
+> maintainer? Or a way for us to move forward with this quickly and get it
+> merged?
 > 
-> diff --git a/drivers/pci/hotplug/pciehp_pci.c b/drivers/pci/hotplug/pciehp_pci.c
-> index 9e69403..9b2f41d 100644
-> --- a/drivers/pci/hotplug/pciehp_pci.c
-> +++ b/drivers/pci/hotplug/pciehp_pci.c
-> @@ -109,6 +109,11 @@ int pciehp_unconfigure_device(struct slot *p_slot)
->  				break;
->  			}
->  		}
-> +		if (!presence) {
-> +			pci_dev_set_disconnected(dev, NULL);
-> +			if (pci_has_subordinate(dev))
-> +				pci_walk_bus(dev->subordinate, pci_dev_set_disconnected, NULL);
+> ie. Can anyone else pick this up through another route? In the end, it's
+> just a fairly basic driver and doesn't touch any core PCI functionality
+> and we've had a fair amount of review from other kernel contributors,
+> all of which we've addressed.
 
-overlong line here.
+I'll add that we're already using this driver internally, would be
+great to get it into mainline.
 
-> +static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
-> +{
-> +	set_bit(PCI_DEV_DISCONNECTED, &dev->priv_flags);
-> +	return 0;
-> +}
+What is holding this up?
 
-Return void here?
-
-> +			pci_walk_bus(dev->subordinate, pci_dev_set_disconnected, NULL);
-
-Antother too long line.
-
-Except for these nitpicks this patch looks fine to me:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+-- 
+Jens Axboe
