@@ -1,72 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jess Frazelle <me@jessfraz.com>
-To: "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <keith.busch@intel.com>,
-        devel@linuxdriverproject.org (open list:Hyper-V CORE AND DRIVERS),
-        linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
-        linux-kernel@vger.kernel.org (open list)
-Cc: kernel-hardening@lists.openwall.com,
-        Jess Frazelle <me@jessfraz.com>
-Subject: [PATCH v2 3/5] pci: set msi_domain_ops as __ro_after_init
-Date: Fri, 10 Feb 2017 17:37:56 -0800
-Message-Id: <20170211013758.3288-3-me@jessfraz.com>
-In-Reply-To: <20170211013758.3288-1-me@jessfraz.com>
-References: <20170211013758.3288-1-me@jessfraz.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0084.outbound.protection.outlook.com ([104.47.41.84]:12905
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751165AbdBWGN2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 Feb 2017 01:13:28 -0500
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+CC: <himanshu.madhani@cavium.com>
+Subject: [PATCH] PCI/MSI: Only disable affinity settings if pre and post vector count is equal to max_vecs and not min_vecs
+Date: Wed, 22 Feb 2017 22:12:35 -0800
+Message-ID: <1487830355-16963-1-git-send-email-himanshu.madhani@cavium.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Marked msi_domain_ops structs as __ro_after_init when called only during init.
-This protects the data structure from accidental corruption.
+From: Michael Hernandez <michael.hernandez@cavium.com>
 
-Suggested-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: Jess Frazelle <me@jessfraz.com>
+min_vecs is the minimum amount of vectors needed to operate in MSI-X mode
+which may just include the vectors that don't need affinity.
+
+Disabling affinity settings causes the qla2xxx driver scsi_add_host
+to fail when blk_mq is enabled as the blk_mq_pci_map_queues expects
+affinity masks on each vector.
+
+Fixes: dfef358 ("PCI/MSI: Don't apply affinity if there aren't enough vectors left")
+Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: stable@vger.kernel.org
 ---
- drivers/pci/host/pci-hyperv.c | 2 +-
- drivers/pci/host/vmd.c        | 2 +-
- drivers/pci/msi.c             | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/pci/msi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 3efcc7bdc5fb..f05b93689d8f 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -958,7 +958,7 @@ static irq_hw_number_t hv_msi_domain_ops_get_hwirq(struct msi_domain_info *info,
- 	return arg->msi_hwirq;
- }
-
--static struct msi_domain_ops hv_msi_ops = {
-+static struct msi_domain_ops hv_msi_ops __ro_after_init = {
- 	.get_hwirq	= hv_msi_domain_ops_get_hwirq,
- 	.msi_prepare	= pci_msi_prepare,
- 	.set_desc	= pci_msi_set_desc,
-diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-index 18ef1a93c10a..152c461538e4 100644
---- a/drivers/pci/host/vmd.c
-+++ b/drivers/pci/host/vmd.c
-@@ -253,7 +253,7 @@ static void vmd_set_desc(msi_alloc_info_t *arg, struct msi_desc *desc)
- 	arg->desc = desc;
- }
-
--static struct msi_domain_ops vmd_msi_domain_ops = {
-+static struct msi_domain_ops vmd_msi_domain_ops __ro_after_init = {
- 	.get_hwirq	= vmd_get_hwirq,
- 	.msi_init	= vmd_msi_init,
- 	.msi_free	= vmd_msi_free,
 diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 50c5003295ca..93141d5e2d1c 100644
+index 7f73bac..5823348 100644
 --- a/drivers/pci/msi.c
 +++ b/drivers/pci/msi.c
-@@ -1413,7 +1413,7 @@ static void pci_msi_domain_set_desc(msi_alloc_info_t *arg,
- #define pci_msi_domain_set_desc		NULL
- #endif
-
--static struct msi_domain_ops pci_msi_domain_ops_default = {
-+static struct msi_domain_ops pci_msi_domain_ops_default __ro_after_init = {
- 	.set_desc	= pci_msi_domain_set_desc,
- 	.msi_check	= pci_msi_domain_check_cap,
- 	.handle_error	= pci_msi_domain_handle_error,
---
-2.11.0
+@@ -1214,7 +1214,7 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+ 		 * If there aren't any vectors left after applying the pre/post
+ 		 * vectors don't bother with assigning affinity.
+ 		 */
+-		if (affd->pre_vectors + affd->post_vectors == min_vecs)
++		if (affd->pre_vectors + affd->post_vectors == max_vecs)
+ 			affd = NULL;
+ 	} else {
+ 		if (WARN_ON(affd))
+-- 
+1.8.3.1
