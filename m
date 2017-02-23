@@ -1,83 +1,56 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH 2/4] PCI: add driver for Cortina Gemini Host Bridge
-Date: Thu, 16 Feb 2017 15:08:48 +0100
-Message-ID: <3658176.ffWihUmtIa@wuerfel>
-In-Reply-To: <CACRpkdb=BqihykWo3egtNW1VKE2-FV+nJQQVYOc2GdCvh1fMng@mail.gmail.com>
-References: <20170128204839.18330-1-linus.walleij@linaro.org>
- <2695922.yyinjvNuJK@wuerfel>
- <CACRpkdb=BqihykWo3egtNW1VKE2-FV+nJQQVYOc2GdCvh1fMng@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:33576 "EHLO
+        mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751259AbdBWUzN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2017 15:55:13 -0500
+Date: Thu, 23 Feb 2017 21:55:05 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
+Message-ID: <20170223205505.GA10576@kroah.com>
+References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
+ <2eb2b814-d621-5d8d-8366-4c4e9f789208@deltatee.com>
+ <e27a2363-1b11-f74b-532d-7de089875c90@deltatee.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: openwrt-devel@openwrt.org, Florian Fainelli <f.fainelli@gmail.com>,
- Paulius Zaleckas <paulius.zaleckas@gmail.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linus Walleij <linus.walleij@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Janos Laube <janos.dev@gmail.com>, Hans Ulli Kroll <ulli.kroll@googlemail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <e27a2363-1b11-f74b-532d-7de089875c90@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Saturday, February 4, 2017 7:43:15 PM CET Linus Walleij wrote:
-> On Wed, Feb 1, 2017 at 12:11 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Saturday, January 28, 2017 9:48:37 PM CET Linus Walleij wrote:
+On Thu, Feb 23, 2017 at 01:36:51PM -0700, Logan Gunthorpe wrote:
+> Hello,
 > 
-> >> +     /* No clue what these do */
-> >> +     pcibios_min_io = 0x100;
-> >> +     pcibios_min_mem = 0;
-> >
-> > Don't touch these
+> We're still waiting on any kind of response from Bjorn. (If you're
+> listening please say something!)
 > 
-> OK I have a clue why this is there now, atleast the first one.
-> 
-> The first 0x100 in the IOspace is actually configuration registers
-> for the bridge. That is why we have this:
+> Does anyone have any suggestions for dealing with an unresponsive
+> maintainer? Or a way for us to move forward with this quickly and get it
+> merged?
 
-I see. It's normal to have the PCI config space done through
-ports 0cf8-0cff, but apparently this one uses other ports in
-the same range.
+It's the middle of the merge window, nothing new can go in right now.
+Wait until after 4.11-rc1 comes out before expecting for maintainers to
+be able to start reviewing and discussing new things like this.
 
-> reg = <0x50000000 0x100>;
-> (...)
-> /* PCI ranges mappings */
->                         ranges = /* 1MiB I/O space 0x50000000-0x500fffff */
->                          <0x01000000 0 0          0x50000000 0 0x00100000>,
-> 
-> This is in all the vendor code I have located too.
-> 
-> So the pcibios_min_io is manipulated to avoid touching that
-> sensitive area. But I also see that arch/arm/mm/iomap.c
-> sets it to 0x1000, according to the commit because you said
-> it's the only valid value :D
-> 
-> I tried setting the IO range to <0x50000100 0x000FFF00>
-> instead of <0x50000000 0x00100000>
-> but predictably that doesn't work. Maybe it should, I don't
-> know really.
+patience please,
 
-It should work in theory, but then you'd have to update
-io_offset accordingly, and it would be a bit confusing.
-
-Did you notice my other comment below (quoting from my own
-message)?
-
-> > +
-> > +     bus = pci_scan_root_bus(&pdev->dev, 0, &gemini_pci_ops, p, &res);
-> 
-> Can you try using the new pci_register_host_bridge() API?
-
-	Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+greg k-h
