@@ -1,154 +1,402 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] PCI,pciehp: Move printout before write_cmd
-To: James Puthukattukaran <james.puthukattukaran@oracle.com>,
-        Yinghai Lu <yinghai@kernel.org>
-References: <20170223202851.1912-1-yinghai@kernel.org>
- <58AF5A5A.5060100@oracle.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Ashok Raj <ashok.raj@intel.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-From: yinghai.lu@oracle.com
-Message-ID: <e4c8c705-80a3-e345-7020-85fca0aba6d8@oracle.com>
-Date: Thu, 23 Feb 2017 13:53:01 -0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40706 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751210AbdBWTvR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 Feb 2017 14:51:17 -0500
+Date: Thu, 23 Feb 2017 13:51:12 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [GIT PULL] PCI changes for v4.11
+Message-ID: <20170223195112.GA15768@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170223181549.GA10177@bhelgaas-glaptop.roam.corp.google.com>
+ <CA+55aFx1L0rhBHRRsgDch31aU+Y-8C=tiFZHUnL2wnrifi+yVw@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <58AF5A5A.5060100@oracle.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CA+55aFx1L0rhBHRRsgDch31aU+Y-8C=tiFZHUnL2wnrifi+yVw@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-yes.
+On Thu, Feb 23, 2017 at 11:35:46AM -0800, Linus Torvalds wrote:
+> On Thu, Feb 23, 2017 at 10:15 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> >   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git c4d052ce970e
+> 
+> Ok, so this is just strange.
+> 
+> I do not generally pull the random SHA1's directly, I want a branch
+> name or a tag-name.
+> 
+> (Honesty in advertising: I *have* pulled the direct SHA name in the
+> past, simply because I didn't want to pull a whole branch. But then I
+> edit up the end result to have a sensible name, because I want one).
+> 
+> So I don't take pull requests that don't have sane branch or tag
+> names. Because that's just odd.
+> 
+> Please fix up you repository. Or ratrher, please fix your pull
+> request. Because what I think I actually want to pull is
+> 
+>     tags/pci-v4.11-changes
+> 
+> which is the signed tag that you have that actually points to that
+> commit.
+
+Yep, sorry, I forgot to run "git request-pull" again after tagging it.
+Mea culpa.  Here it is with the tag.
 
 
-On 02/23/2017 01:55 PM, James Puthukattukaran wrote:
-> So, the issue is that you could get the following sequence -
->
-> write command
-> print out in ISR for pending interrupt
-> ctrl_dbg message for write command
->
-> and this makes it look like the write command occurred after the 
-> pending interrupt message?
->
->
->
-> On 02/23/2017 03:28 PM, Yinghai Lu wrote:
->> Bjorn complained some strange print out for pending interrupts.
->>
->> Actually that is caused that have cmd print out after write_cmd.
->>
->> Adjust the sequence to get right order for debug print out.
->>
->> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
->>
->> diff --git a/drivers/pci/hotplug/pciehp_hpc.c 
->> b/drivers/pci/hotplug/pciehp_hpc.c
->> index 026830a..94df18f99 100644
->> --- a/drivers/pci/hotplug/pciehp_hpc.c
->> +++ b/drivers/pci/hotplug/pciehp_hpc.c
->> @@ -475,9 +475,9 @@ void pciehp_set_attention_status(struct slot 
->> *slot, u8 value)
->>       default:
->>           return;
->>       }
->> -    pcie_write_cmd_nowait(ctrl, slot_cmd, PCI_EXP_SLTCTL_AIC);
->>       ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
->>            pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
->> +    pcie_write_cmd_nowait(ctrl, slot_cmd, PCI_EXP_SLTCTL_AIC);
->>   }
->>     void pciehp_green_led_on(struct slot *slot)
->> @@ -487,11 +487,11 @@ void pciehp_green_led_on(struct slot *slot)
->>       if (!PWR_LED(ctrl))
->>           return;
->>   -    pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_ON,
->> -                  PCI_EXP_SLTCTL_PIC);
->>       ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
->>            pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
->>            PCI_EXP_SLTCTL_PWR_IND_ON);
->> +    pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_ON,
->> +                  PCI_EXP_SLTCTL_PIC);
->>   }
->>     void pciehp_green_led_off(struct slot *slot)
->> @@ -501,11 +501,11 @@ void pciehp_green_led_off(struct slot *slot)
->>       if (!PWR_LED(ctrl))
->>           return;
->>   -    pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_OFF,
->> -                  PCI_EXP_SLTCTL_PIC);
->>       ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
->>            pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
->>            PCI_EXP_SLTCTL_PWR_IND_OFF);
->> +    pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_OFF,
->> +                  PCI_EXP_SLTCTL_PIC);
->>   }
->>     void pciehp_green_led_blink(struct slot *slot)
->> @@ -515,11 +515,11 @@ void pciehp_green_led_blink(struct slot *slot)
->>       if (!PWR_LED(ctrl))
->>           return;
->>   -    pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_BLINK,
->> -                  PCI_EXP_SLTCTL_PIC);
->>       ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
->>            pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
->>            PCI_EXP_SLTCTL_PWR_IND_BLINK);
->> +    pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_BLINK,
->> +                  PCI_EXP_SLTCTL_PIC);
->>   }
->>     int pciehp_power_on_slot(struct slot *slot)
->> @@ -536,10 +536,10 @@ int pciehp_power_on_slot(struct slot *slot)
->>                          PCI_EXP_SLTSTA_PFD);
->>       ctrl->power_fault_detected = 0;
->>   -    pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_ON, PCI_EXP_SLTCTL_PCC);
->>       ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
->>            pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
->>            PCI_EXP_SLTCTL_PWR_ON);
->> +    pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_ON, PCI_EXP_SLTCTL_PCC);
->>         retval = pciehp_link_enable(ctrl);
->>       if (retval)
->> @@ -552,10 +552,10 @@ void pciehp_power_off_slot(struct slot *slot)
->>   {
->>       struct controller *ctrl = slot->ctrl;
->>   -    pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
->>       ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
->>            pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
->>            PCI_EXP_SLTCTL_PWR_OFF);
->> +    pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
->>   }
->>     static irqreturn_t pciehp_isr(int irq, void *dev_id)
->> @@ -701,9 +701,9 @@ void pcie_enable_notification(struct controller 
->> *ctrl)
->>           PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE |
->>           PCI_EXP_SLTCTL_DLLSCE);
->>   -    pcie_write_cmd_nowait(ctrl, cmd, mask);
->>       ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
->>            pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
->> +    pcie_write_cmd_nowait(ctrl, cmd, mask);
->>   }
->>     static void pcie_disable_notification(struct controller *ctrl)
->> @@ -714,9 +714,9 @@ static void pcie_disable_notification(struct 
->> controller *ctrl)
->>           PCI_EXP_SLTCTL_MRLSCE | PCI_EXP_SLTCTL_PFDE |
->>           PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE |
->>           PCI_EXP_SLTCTL_DLLSCE);
->> -    pcie_write_cmd(ctrl, 0, mask);
->>       ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
->>            pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, 0);
->> +    pcie_write_cmd(ctrl, 0, mask);
->>   }
->>     /*
->> @@ -743,18 +743,18 @@ int pciehp_reset_slot(struct slot *slot, int 
->> probe)
->>       ctrl_mask |= PCI_EXP_SLTCTL_DLLSCE;
->>       stat_mask |= PCI_EXP_SLTSTA_DLLSC;
->>   -    pcie_write_cmd(ctrl, 0, ctrl_mask);
->>       ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
->>            pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, 0);
->> +    pcie_write_cmd(ctrl, 0, ctrl_mask);
->>       if (pciehp_poll_mode)
->>           del_timer_sync(&ctrl->poll_timer);
->>         pci_reset_bridge_secondary_bus(ctrl->pcie->port);
->>         pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
->> -    pcie_write_cmd_nowait(ctrl, ctrl_mask, ctrl_mask);
->>       ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
->>            pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
->> +    pcie_write_cmd_nowait(ctrl, ctrl_mask, ctrl_mask);
->>       if (pciehp_poll_mode)
->>           int_poll_timeout(ctrl->poll_timer.data);
->
+PCI changes:
+
+  - add ASPM L1 substate support
+
+  - enable PCIe Extended Tags when supported
+
+  - configure PCIe MPS settings on iProc, Versatile, X-Gene, and Xilinx
+
+  - increase VPD access timeout
+
+  - add ACS quirks for Intel Union Point, Qualcomm QDF2400 and QDF2432
+
+  - use new pci_irq_alloc_vectors() in more drivers
+
+  - fix MSI affinity memory leak
+
+  - remove unused MSI interfaces and update documentation
+
+  - remove unused AER .link_reset() callback
+
+  - avoid pci_lock / p->pi_lock deadlock seen with perf
+
+  - serialize sysfs enable/disable num_vfs operations
+
+  - move DesignWare IP from drivers/pci/host/ to drivers/pci/dwc/ and
+    refactor so we can support both hosts and endpoints
+
+  - add DT ECAM-like support for HiSilicon Hip06/Hip07 controllers
+
+  - add Rockchip system power management support
+
+  - add Thunder-X cn81xx and cn83xx support
+
+  - add Exynos 5440 PCIe PHY support
+
+
+The following changes since commit a782b5f986c3fa1cfa7f2b57941200c6a5809242:
+
+  PCI: designware: Check for iATU unroll only on platforms that use ATU (2017-01-10 08:43:24 -0600)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.11-changes
+
+for you to fetch changes up to c4d052ce970ea98e9e1cc72461ba3b7a25397657:
+
+  Merge branch 'pci/virtualization' into next (2017-02-21 15:16:28 -0600)
+
+----------------------------------------------------------------
+pci-v4.11-changes
+
+----------------------------------------------------------------
+Alex Williamson (1):
+      PCI: Add ACS quirk for Intel Union Point
+
+Andrey Smirnov (1):
+      PCI: imx6: Fix a typo in error message
+
+Andy Shevchenko (1):
+      PCI: Sort the list of devices with D3 delay quirk by ID
+
+Arnd Bergmann (1):
+      PCI: rockchip: Mark PM functions as __maybe_unused
+
+Bharat Kumar Gogada (1):
+      PCI: xilinx-nwl: Remove mask for messages not supported by AXI
+
+Bhumika Goyal (1):
+      PCI: acpiphp_ibm: Make ibm_apci_table_attr __ro_after_init
+
+Bjorn Helgaas (38):
+      PCI: Remove res_to_dev_res() debug message
+      PCI: Apply _HPX settings only to relevant devices
+      PCI: Avoid possible deadlock on pci_lock and p->pi_lock
+      PCI: rcar: Use of_device_get_match_data() to simplify probe
+      PCI: layerscape: Use of_device_get_match_data() to simplify probe
+      PCI: iproc: Use of_device_get_match_data() to simplify probe
+      PCI: xilinx: Configure PCIe MPS settings
+      PCI: versatile: Configure PCIe MPS settings
+      PCI: hisi: Rename config space accessors to remove "acpi"
+      PCI: xgene: Configure PCIe MPS settings
+      Merge branch 'pci/aer' into next
+      Merge branch 'pci/aspm' into next
+      Merge branch 'pci/dpc' into next
+      Merge branch 'pci/enumeration' into next
+      Merge branch 'pci/hotplug' into next
+      Merge branch 'pci/msi' into next
+      Merge branch 'pci/resource' into next
+      Merge branch 'pci/virtualization' into next
+      Merge branch 'pci/vpd' into next
+      Merge branch 'for-linus' into pci/host-designware
+      Merge branch 'pci/host-designware' into next
+      Merge branch 'pci/host-altera' into next
+      Merge branch 'pci/host-exynos' into next
+      Merge branch 'pci/host-hisi' into next
+      Merge branch 'pci/host-hv' into next
+      Merge branch 'pci/host-imx6' into next
+      Merge branch 'pci/host-iproc' into next
+      Merge branch 'pci/host-layerscape' into next
+      Merge branch 'pci/host-mvebu' into next
+      Merge branch 'pci/host-rcar' into next
+      Merge branch 'pci/host-rockchip' into next
+      Merge branch 'pci/host-thunder' into next
+      Merge branch 'pci/host-versatile' into next
+      Merge branch 'pci/host-xgene' into next
+      Merge branch 'pci/host-xilinx' into next
+      Merge branch 'pci/enumeration' into next
+      Merge branch 'pci/msi' into next
+      Merge branch 'pci/virtualization' into next
+
+Christoph Hellwig (8):
+      [media] cobalt: use pci_irq_allocate_vectors()
+      PCI/MSI: Remove pci_enable_msi_{exact,range}()
+      PCI/MSI: Remove unused pci_msi_create_default_irq_domain()
+      PCI/MSI: Remove pci_msi_domain_{alloc,free}_irqs()
+      PCI/MSI: Check that we have a legacy interrupt line before using it
+      PCI/portdrv: Use pci_irq_alloc_vectors()
+      PCI/MSI: Document pci_alloc_irq_vectors(), deprecate pci_enable_msi()
+      PCI/MSI: Update MSI/MSI-X bits in PCIEBUS-HOWTO
+
+Christophe JAILLET (1):
+      PCI/MSI: Return failure when msix_setup_entries() fails
+
+Dan Carpenter (1):
+      PCI: xgene: Fix double free on init error
+
+David Daney (1):
+      PCI: thunder-pem: Add support for cn81xx and cn83xx SoCs
+
+Dennis Chen (1):
+      PCI/MSI: Return -ENOSPC if pci_enable_msi_range() can't get enough vectors
+
+Dexuan Cui (1):
+      PCI: hv: Fix wslot_to_devfn() to fix warnings on device removal
+
+Dongdong Liu (3):
+      PCI: hisi: Add DT almost-ECAM support for Hip06/Hip07 host controllers
+      PCI: Disable MSI for HiSilicon Hip06/Hip07 Root Ports
+      PCI: generic: Call pci_fixup_irqs() only on ARM
+
+Emil Tantilov (1):
+      PCI: Lock each enable/disable num_vfs operation in sysfs
+
+Fabio Estevam (1):
+      PCI: imx6: Remove redundant "Link never came up" message
+
+Fengguang Wu (1):
+      PCI: dwc: Use PTR_ERR_OR_ZERO to simplify code
+
+Gabriel Krisman Bertazi (1):
+      PCI: Remove duplicate check for positive return value from probe() functions
+
+Haiyang Zhang (1):
+      PCI: hv: Use device serial number as PCI domain
+
+Harunobu Kurokawa (2):
+      PCI: rcar: Return -ENODEV from host bridge probe when no card present
+      PCI: rcar: Add compatible string for r8a7796
+
+Jaehoon Chung (9):
+      PCI: exynos: Rename all pointer names from "exynos_pcie" to "ep"
+      PCI: exynos: Replace the *_blk/*_phy/*_elb accessors
+      PCI: exynos: Remove unnecessary local variables
+      PCI: exynos: Use the bitops BIT() macro to build bitmasks
+      PCI: exynos: Remove duplicated code
+      Documentation: samsung-phy: Add exynos-pcie-phy binding
+      phy: phy-exynos-pcie: Add support for Exynos PCIe PHY
+      Documentation: binding: Modify the exynos5440 PCIe binding
+      PCI: exynos: Support the PHY generic framework
+
+Jason Gunthorpe (1):
+      PCI: mvebu: Handle changes to the bridge windows while enabled
+
+Jon Mason (2):
+      PCI: iproc: Configure PCIe MPS settings
+      PCI: Add Broadcom Northstar2 PAXC quirk for device class and MPSS
+
+Keith Busch (2):
+      PCI/DPC: Decode extended reasons
+      PCI/DPC: Wait for Root Port busy to clear
+
+Kishon Vijay Abraham I (15):
+      PCI: Move DesignWare IP support to new drivers/pci/dwc/ directory
+      PCI: dra7xx: Simplify probe code with devm_gpiod_get_optional()
+      PCI: dra7xx: Add support to force RC to work in GEN1 mode
+      PCI: dra7xx: Enable MSI and legacy interrupts simultaneously
+      PCI: dra7xx: Group PHY API invocations
+      PCI: dwc: designware: Move register defines to designware header file
+      PCI: dwc: all: Use platform_set_drvdata() to save private data
+      PCI: dwc: all: Rename cfg_read/cfg_write to read/write
+      PCI: dwc: designware: Get device pointer at the start of dw_pcie_host_init()
+      PCI: dwc: all: Split struct pcie_port into host-only and core structures
+      PCI: dwc: designware: Parse "num-lanes" property in dw_pcie_setup_rc()
+      PCI: dwc: designware: Fix style errors in pcie-designware.c
+      PCI: dwc: Split pcie-designware.c into host and core files
+      PCI: dwc: Add CONFIG_PCIE_DW_HOST to enable PCI dwc host
+      PCI: dwc: Remove dependency of designware on CONFIG_PCI
+
+Lucas Stach (2):
+      PCI: imx6: Remove LTSSM disable workaround
+      PCI: mvebu: Change delay after reset to the PCIe spec mandated 100ms
+
+Matthew R. Ochs (1):
+      PCI: Increase VPD access timeout to 125ms
+
+Michael S. Tsirkin (1):
+      PCI/AER: Remove unused .link_reset() callback
+
+Niyas Ahmed S T (1):
+      PCI: exynos: Refactor to make it easier to support other SoCs
+
+Prarit Bhargava (1):
+      PCI/MSI: Fix msi_desc->affinity memory leak when freeing MSI IRQs
+
+Rahul Krishnan (1):
+      PCI: rpadlpar: Remove unnecessary return statement
+
+Rajat Jain (6):
+      PCI/ASPM: Add L1 substate capability structure register definitions
+      PCI/ASPM: Add support for L1 substates
+      PCI/ASPM: Read and set up L1 substate capabilities
+      PCI/ASPM: Calculate and save the L1.2 timing parameters
+      PCI/ASPM: Configure L1 substate settings
+      PCI/ASPM: Add comment about L1 substate latency
+
+Randy Dunlap (1):
+      PCI/MSI: Fix msi_capability_init() kernel-doc warnings
+
+Shailendra Verma (1):
+      PCI: hisi: Use of_device_get_match_data() to simplify probe
+
+Shawn Lin (5):
+      PCI: rockchip: Add system PM support
+      PCI: rockchip: Disable RC's ASPM L0s based on DT "aspm-no-l0s"
+      PCI: rockchip: Use readl_poll_timeout() instead of open-coding it
+      PCI: rockchip: Fix rockchip_pcie_probe() error path to free resource list
+      PCI: rockchip: Set vendor ID from local core config space
+
+Sinan Kaya (2):
+      PCI: Enable PCIe Extended Tags if supported
+      PCI: Add ACS quirk for Qualcomm QDF2400 and QDF2432
+
+Tom Lendacky (1):
+      amd-xgbe: Update PCI support to use new IRQ functions
+
+Yadi Hu (1):
+      PCI: altera: Extract TLP completion status correctly
+
+Zhou Wang (1):
+      PCI/ACPI: Fix bus range comparison in pci_mcfg_lookup()
+
+ Documentation/PCI/MSI-HOWTO.txt                    |   6 +-
+ Documentation/PCI/PCIEBUS-HOWTO.txt                |  33 +-
+ Documentation/PCI/pci-error-recovery.txt           |  24 +-
+ Documentation/PCI/pci.txt                          |  24 +-
+ .../devicetree/bindings/pci/hisilicon-pcie.txt     |  37 +
+ .../devicetree/bindings/pci/mvebu-pci.txt          |   3 +-
+ Documentation/devicetree/bindings/pci/rcar-pci.txt |   1 +
+ .../devicetree/bindings/pci/rockchip-pcie.txt      |   2 +
+ .../bindings/pci/samsung,exynos5440-pcie.txt       |  29 +
+ .../devicetree/bindings/phy/samsung-phy.txt        |  17 +
+ MAINTAINERS                                        |  22 +-
+ arch/x86/kernel/apic/msi.c                         |   2 +-
+ drivers/Makefile                                   |   3 +
+ drivers/acpi/pci_mcfg.c                            |   5 +-
+ drivers/infiniband/hw/hfi1/pcie.c                  |  10 -
+ drivers/infiniband/hw/qib/qib_pcie.c               |   8 -
+ drivers/media/pci/cobalt/cobalt-driver.c           |   8 +-
+ drivers/media/pci/cobalt/cobalt-driver.h           |   2 -
+ drivers/media/pci/ngene/ngene-cards.c              |   7 -
+ drivers/misc/genwqe/card_base.c                    |   1 -
+ drivers/net/ethernet/amd/xgbe/xgbe-pci.c           | 128 ++--
+ drivers/net/ethernet/amd/xgbe/xgbe.h               |   8 +-
+ drivers/pci/Kconfig                                |   1 +
+ drivers/pci/access.c                               |   5 +-
+ drivers/pci/dwc/Kconfig                            | 132 ++++
+ drivers/pci/dwc/Makefile                           |  24 +
+ drivers/pci/{host => dwc}/pci-dra7xx.c             | 247 ++++---
+ drivers/pci/dwc/pci-exynos.c                       | 751 +++++++++++++++++++++
+ drivers/pci/{host => dwc}/pci-imx6.c               | 162 ++---
+ drivers/pci/{host => dwc}/pci-keystone-dw.c        |  87 ++-
+ drivers/pci/{host => dwc}/pci-keystone.c           |  56 +-
+ drivers/pci/{host => dwc}/pci-keystone.h           |   4 +-
+ drivers/pci/{host => dwc}/pci-layerscape.c         | 100 +--
+ drivers/pci/{host => dwc}/pcie-armada8k.c          |  87 +--
+ drivers/pci/{host => dwc}/pcie-artpec6.c           |  50 +-
+ .../pcie-designware-host.c}                        | 441 +++---------
+ drivers/pci/{host => dwc}/pcie-designware-plat.c   |  29 +-
+ drivers/pci/dwc/pcie-designware.c                  | 233 +++++++
+ drivers/pci/dwc/pcie-designware.h                  | 198 ++++++
+ drivers/pci/{host => dwc}/pcie-hisi.c              | 139 +++-
+ drivers/pci/{host => dwc}/pcie-qcom.c              |  87 ++-
+ drivers/pci/{host => dwc}/pcie-spear13xx.c         |  85 ++-
+ drivers/pci/host/Kconfig                           | 113 ----
+ drivers/pci/host/Makefile                          |  12 -
+ drivers/pci/host/pci-exynos.c                      | 629 -----------------
+ drivers/pci/host/pci-host-common.c                 |   2 +
+ drivers/pci/host/pci-hyperv.c                      |  20 +-
+ drivers/pci/host/pci-mvebu.c                       | 103 +--
+ drivers/pci/host/pci-thunder-pem.c                 |  25 +-
+ drivers/pci/host/pci-versatile.c                   |   4 +-
+ drivers/pci/host/pci-xgene.c                       |  11 +-
+ drivers/pci/host/pcie-altera.c                     |   2 +-
+ drivers/pci/host/pcie-designware.h                 |  86 ---
+ drivers/pci/host/pcie-iproc-platform.c             |   7 +-
+ drivers/pci/host/pcie-iproc.c                      |   5 +-
+ drivers/pci/host/pcie-rcar.c                       |   9 +-
+ drivers/pci/host/pcie-rockchip.c                   | 175 +++--
+ drivers/pci/host/pcie-xilinx-nwl.c                 |  14 +-
+ drivers/pci/host/pcie-xilinx.c                     |   4 +-
+ drivers/pci/hotplug/acpiphp_ibm.c                  |   2 +-
+ drivers/pci/hotplug/rpadlpar_core.c                |   4 +-
+ drivers/pci/iov.c                                  |   7 -
+ drivers/pci/msi.c                                  | 122 +---
+ drivers/pci/pci-driver.c                           |   2 -
+ drivers/pci/pci-sysfs.c                            |  23 +-
+ drivers/pci/pci.h                                  |   2 +-
+ drivers/pci/pcie/Kconfig                           |   8 +
+ drivers/pci/pcie/aspm.c                            | 291 +++++++-
+ drivers/pci/pcie/pcie-dpc.c                        |  34 +-
+ drivers/pci/pcie/portdrv_core.c                    | 161 ++---
+ drivers/pci/probe.c                                |  33 +-
+ drivers/pci/quirks.c                               |  99 ++-
+ drivers/pci/setup-bus.c                            |  11 +-
+ drivers/phy/Kconfig                                |   8 +
+ drivers/phy/Makefile                               |   1 +
+ drivers/phy/phy-exynos-pcie.c                      | 285 ++++++++
+ include/linux/msi.h                                |   6 -
+ include/linux/pci.h                                |  19 +-
+ include/linux/pci_ids.h                            |   2 +
+ include/uapi/linux/pci_regs.h                      |  17 +
+ 80 files changed, 3357 insertions(+), 2299 deletions(-)
+ create mode 100644 drivers/pci/dwc/Kconfig
+ create mode 100644 drivers/pci/dwc/Makefile
+ rename drivers/pci/{host => dwc}/pci-dra7xx.c (74%)
+ create mode 100644 drivers/pci/dwc/pci-exynos.c
+ rename drivers/pci/{host => dwc}/pci-imx6.c (82%)
+ rename drivers/pci/{host => dwc}/pci-keystone-dw.c (86%)
+ rename drivers/pci/{host => dwc}/pci-keystone.c (90%)
+ rename drivers/pci/{host => dwc}/pci-keystone.h (95%)
+ rename drivers/pci/{host => dwc}/pci-layerscape.c (72%)
+ rename drivers/pci/{host => dwc}/pcie-armada8k.c (73%)
+ rename drivers/pci/{host => dwc}/pcie-artpec6.c (86%)
+ rename drivers/pci/{host/pcie-designware.c => dwc/pcie-designware-host.c} (54%)
+ rename drivers/pci/{host => dwc}/pcie-designware-plat.c (82%)
+ create mode 100644 drivers/pci/dwc/pcie-designware.c
+ create mode 100644 drivers/pci/dwc/pcie-designware.h
+ rename drivers/pci/{host => dwc}/pcie-hisi.c (67%)
+ rename drivers/pci/{host => dwc}/pcie-qcom.c (91%)
+ rename drivers/pci/{host => dwc}/pcie-spear13xx.c (77%)
+ delete mode 100644 drivers/pci/host/pci-exynos.c
+ delete mode 100644 drivers/pci/host/pcie-designware.h
+ create mode 100644 drivers/phy/phy-exynos-pcie.c
