@@ -1,92 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43302 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752557AbdBJUHQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Feb 2017 15:07:16 -0500
-Date: Fri, 10 Feb 2017 14:07:11 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci: host: dra7xx: use GPIO descriptor
-Message-ID: <20170210200711.GG29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170126132707.23249-1-linus.walleij@linaro.org>
+Return-Path: <SRS0=8WXH=2E=gmail.com=linus971@kernel.org>
+Return-Path: <SRS0=8WXH=2E=gmail.com=linus971@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170126132707.23249-1-linus.walleij@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linus971@gmail.com
+In-Reply-To: <20170223181549.GA10177@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170223181549.GA10177@bhelgaas-glaptop.roam.corp.google.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 23 Feb 2017 11:35:46 -0800
+Message-ID: <CA+55aFx1L0rhBHRRsgDch31aU+Y-8C=tiFZHUnL2wnrifi+yVw@mail.gmail.com>
+Subject: Re: [GIT PULL] PCI changes for v4.11
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Jan 26, 2017 at 02:27:07PM +0100, Linus Walleij wrote:
-> Instead of parsing around in the device tree and determine
-> polarity for the GPIO line and whatnot: utilize the GPIO
-> library's intrinsic handling of OF GPIOs and polarity.
-> 
-> If the line is flagged active low, gpiolib will deal with
-> this.
-> 
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+On Thu, Feb 23, 2017 at 10:15 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+>   git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git c4d052ce970e
 
-Kishon?  Looks like a nice simplification.
+Ok, so this is just strange.
 
-> ---
-> Would be nice if someone with the hardware could test this
-> and see if it works.
-> ---
->  drivers/pci/host/pci-dra7xx.c | 22 +++++-----------------
->  1 file changed, 5 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-dra7xx.c b/drivers/pci/host/pci-dra7xx.c
-> index 9595fad63f6f..85ac2856c80f 100644
-> --- a/drivers/pci/host/pci-dra7xx.c
-> +++ b/drivers/pci/host/pci-dra7xx.c
-> @@ -16,7 +16,7 @@
->  #include <linux/irqdomain.h>
->  #include <linux/kernel.h>
->  #include <linux/init.h>
-> -#include <linux/of_gpio.h>
-> +#include <linux/gpio/consumer.h>
->  #include <linux/pci.h>
->  #include <linux/phy/phy.h>
->  #include <linux/platform_device.h>
-> @@ -320,9 +320,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  	struct device *dev = &pdev->dev;
->  	struct device_node *np = dev->of_node;
->  	char name[10];
-> -	int gpio_sel;
-> -	enum of_gpio_flags flags;
-> -	unsigned long gpio_flags;
-> +	struct gpio_desc *gpiod;
->  
->  	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
->  	if (!dra7xx)
-> @@ -388,19 +386,9 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
->  		goto err_get_sync;
->  	}
->  
-> -	gpio_sel = of_get_gpio_flags(dev->of_node, 0, &flags);
-> -	if (gpio_is_valid(gpio_sel)) {
-> -		gpio_flags = (flags & OF_GPIO_ACTIVE_LOW) ?
-> -				GPIOF_OUT_INIT_LOW : GPIOF_OUT_INIT_HIGH;
-> -		ret = devm_gpio_request_one(dev, gpio_sel, gpio_flags,
-> -					    "pcie_reset");
-> -		if (ret) {
-> -			dev_err(dev, "gpio%d request failed, ret %d\n",
-> -				gpio_sel, ret);
-> -			goto err_gpio;
-> -		}
-> -	} else if (gpio_sel == -EPROBE_DEFER) {
-> -		ret = -EPROBE_DEFER;
-> +	gpiod = devm_gpiod_get(dev, "pcie_reset", GPIOD_OUT_HIGH);
-> +	if (IS_ERR(gpiod)) {
-> +		ret = PTR_ERR(gpiod);
->  		goto err_gpio;
->  	}
->  
-> -- 
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I do not generally pull the random SHA1's directly, I want a branch
+name or a tag-name.
+
+(Honesty in advertising: I *have* pulled the direct SHA name in the
+past, simply because I didn't want to pull a whole branch. But then I
+edit up the end result to have a sensible name, because I want one).
+
+So I don't take pull requests that don't have sane branch or tag
+names. Because that's just odd.
+
+Please fix up you repository. Or ratrher, please fix your pull
+request. Because what I think I actually want to pull is
+
+    tags/pci-v4.11-changes
+
+which is the signed tag that you have that actually points to that
+commit. But you use some completely broken request-pull script that
+screwed everything up.
+
+Please just burn that piece of crap code on the altar to the goddess
+of good taste.
+
+           Linus
