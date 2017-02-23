@@ -1,57 +1,64 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35466 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752385AbdBJStq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Feb 2017 13:49:46 -0500
-Date: Fri, 10 Feb 2017 12:39:12 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 23 Feb 2017 16:14:53 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org,
-        Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH v5 3/8] PCI: Don't block runtime PM for Thunderbolt host
- hotplug ports
-Message-ID: <20170210183912.GF29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1484486499.git.lukas@wunner.de>
- <be633737115c0be241fccd75bc136dd1da72c1b5.1484486499.git.lukas@wunner.de>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
+Message-ID: <20170223221452.GA18601@bhelgaas-glaptop.roam.corp.google.com>
+References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
+ <2eb2b814-d621-5d8d-8366-4c4e9f789208@deltatee.com>
+ <e27a2363-1b11-f74b-532d-7de089875c90@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <be633737115c0be241fccd75bc136dd1da72c1b5.1484486499.git.lukas@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <e27a2363-1b11-f74b-532d-7de089875c90@deltatee.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Jan 15, 2017 at 09:03:45PM +0100, Lukas Wunner wrote:
-> Hotplug ports generally block their parents from suspending to D3hot as
-> otherwise their interrupts couldn't be delivered.
+On Thu, Feb 23, 2017 at 01:36:51PM -0700, Logan Gunthorpe wrote:
+> Hello,
+> 
+> We're still waiting on any kind of response from Bjorn. (If you're
+> listening please say something!)
+> 
+> Does anyone have any suggestions for dealing with an unresponsive
+> maintainer? Or a way for us to move forward with this quickly and get it
+> merged?
 
-This sounds related to PCIe r3.1, sec 5.3.1.4, which says functions
-supporting PME generation from D3 must support it for both D3cold and
-D3hot.  I think in PCIe, PMEs mean PME Messages, and the 5.3.1
-implementation note says Messages are not affected by the PM state of
-virtual bridges.
+I try to deal with regressions first and other bug fixes second.
+After that, I look at things that add new functionality.  I try to
+look at the new stuff in roughly chronological order, as you would see
+here:
 
-So that seems to say that hotplug ports *should* be able to deliver
-PMEs even while in D3hot.
+https://patchwork.ozlabs.org/project/linux-pci/list/?order=date&page=1
 
-Maybe you're referring to the hotplug interrupts themselves, not the
-PME?  I assume a hotplug event (presence detect, attention button,
-etc) would first cause a PME, then the OS would return the path to D0,
-then the hotplug interrupt would be delivered.
+If other folks have feedback, as they did on your 12/17, 1/31, and
+even the 2/2 posting, I generally let that get sorted out before I
+look at it.  I apologize that I haven't responded to your queries
+about posting a v3 vs updating v2.
 
-> An exception are Thunderbolt host controllers:  They have a separate
-> GPIO pin to side-band signal plug events even if the controller is
-> powered down or its parent ports are suspended to D3.  They can be told
-> apart from Thunderbolt controllers in attached devices by checking if
-> they're situated below a non-Thunderbolt device (typically a root port,
-> or the downstream port of a PCIe switch in the case of the MacPro6,1).
-
-In PCIe terms, does a "Thunderbolt host controller" look like a
-downstream port that supports hotplug?
-
-It seems like the PCIe PME mechanism *should* work pretty much like
-this sideband GPIO.  But I might be reading the spec wrong.
+To answer that question, it's much simpler for me to deal with a
+fresh, clean new series than it is to tweak things in an
+already-posted series, partly because a series with discussion other
+than simple acks and reviewed-bys looks more like work-in-progress.
 
 Bjorn
