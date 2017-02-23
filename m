@@ -1,54 +1,165 @@
-Return-Path: <SRS0=aB6p=2G=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=aB6p=2G=wunner.de=lukas@kernel.org>
-Date: Sat, 25 Feb 2017 08:40:03 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: dri-devel@lists.freedesktop.org,
-	Michael Jamet <michael.jamet@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, Darren Hart <dvhart@infradead.org>,
-	Andy Shevchenko <andy@infradead.org>,
-	platform-driver-x86@vger.kernel.org,
-	Ben Skeggs <bskeggs@redhat.com>, nouveau@lists.freedesktop.org,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Christian Koenig <christian.koenig@amd.com>,
-	amd-gfx@lists.freedesktop.org, Peter Wu <peter@lekensteyn.nl>
-Subject: Re: [PATCH 1/5] PCI: Recognize Thunderbolt devices
-Message-ID: <20170225074003.GA905@wunner.de>
-References: <cover.1487938188.git.lukas@wunner.de>
- <c42a235e126f273e9b8712a7154f813f757db507.1487938188.git.lukas@wunner.de>
- <20170224221724.GA26430@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:42646 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751228AbdBWVwR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Feb 2017 16:52:17 -0500
+Message-ID: <58AF5A5A.5060100@oracle.com>
+Date: Thu, 23 Feb 2017 16:55:38 -0500
+From: James Puthukattukaran <james.puthukattukaran@oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170224221724.GA26430@bhelgaas-glaptop.roam.corp.google.com>
+To: Yinghai Lu <yinghai@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        Ashok Raj <ashok.raj@intel.com>,
+        Yinghai Lu <yinghai.lu@oracle.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI,pciehp: Move printout before write_cmd
+References: <20170223202851.1912-1-yinghai@kernel.org>
+In-Reply-To: <20170223202851.1912-1-yinghai@kernel.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 24, 2017 at 04:17:24PM -0600, Bjorn Helgaas wrote:
-> On Fri, Feb 24, 2017 at 08:19:45PM +0100, Lukas Wunner wrote:
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -358,6 +358,7 @@ struct pci_dev {
-> >  	unsigned int	is_virtfn:1;
-> >  	unsigned int	reset_fn:1;
-> >  	unsigned int    is_hotplug_bridge:1;
-> > +	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
-> 
-> I'm not really keen on having this in the PCI core because the core
-> doesn't need this or even know what it means.
-> 
-> pci_find_next_ext_capability() is available to drivers, and if
-> Thunderbolt-connectedness is useful information to apple-gmux or GPU
-> drivers, it's fine with me if you want to use it there.  I just don't
-> see the benefit to having it in the core.
+So, the issue is that you could get the following sequence -
 
-The above contradicts your statement 3 days earlier:
+write command
+print out in ISR for pending interrupt
+ctrl_dbg message for write command
 
-	"Assuming we need it, having it in struct pci_dev is fine.
-	 There's no point in looking up the VSEC capability more than once."
-	(http://www.spinics.net/lists/linux-pci/msg58532.html)
+and this makes it look like the write command occurred after the pending 
+interrupt message?
 
-Please explain.
 
-Thanks,
 
-Lukas
+On 02/23/2017 03:28 PM, Yinghai Lu wrote:
+> Bjorn complained some strange print out for pending interrupts.
+>
+> Actually that is caused that have cmd print out after write_cmd.
+>
+> Adjust the sequence to get right order for debug print out.
+>
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+>
+> diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+> index 026830a..94df18f99 100644
+> --- a/drivers/pci/hotplug/pciehp_hpc.c
+> +++ b/drivers/pci/hotplug/pciehp_hpc.c
+> @@ -475,9 +475,9 @@ void pciehp_set_attention_status(struct slot *slot, u8 value)
+>   	default:
+>   		return;
+>   	}
+> -	pcie_write_cmd_nowait(ctrl, slot_cmd, PCI_EXP_SLTCTL_AIC);
+>   	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>   		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, slot_cmd);
+> +	pcie_write_cmd_nowait(ctrl, slot_cmd, PCI_EXP_SLTCTL_AIC);
+>   }
+>   
+>   void pciehp_green_led_on(struct slot *slot)
+> @@ -487,11 +487,11 @@ void pciehp_green_led_on(struct slot *slot)
+>   	if (!PWR_LED(ctrl))
+>   		return;
+>   
+> -	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_ON,
+> -			      PCI_EXP_SLTCTL_PIC);
+>   	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>   		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+>   		 PCI_EXP_SLTCTL_PWR_IND_ON);
+> +	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_ON,
+> +			      PCI_EXP_SLTCTL_PIC);
+>   }
+>   
+>   void pciehp_green_led_off(struct slot *slot)
+> @@ -501,11 +501,11 @@ void pciehp_green_led_off(struct slot *slot)
+>   	if (!PWR_LED(ctrl))
+>   		return;
+>   
+> -	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_OFF,
+> -			      PCI_EXP_SLTCTL_PIC);
+>   	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>   		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+>   		 PCI_EXP_SLTCTL_PWR_IND_OFF);
+> +	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_OFF,
+> +			      PCI_EXP_SLTCTL_PIC);
+>   }
+>   
+>   void pciehp_green_led_blink(struct slot *slot)
+> @@ -515,11 +515,11 @@ void pciehp_green_led_blink(struct slot *slot)
+>   	if (!PWR_LED(ctrl))
+>   		return;
+>   
+> -	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_BLINK,
+> -			      PCI_EXP_SLTCTL_PIC);
+>   	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>   		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+>   		 PCI_EXP_SLTCTL_PWR_IND_BLINK);
+> +	pcie_write_cmd_nowait(ctrl, PCI_EXP_SLTCTL_PWR_IND_BLINK,
+> +			      PCI_EXP_SLTCTL_PIC);
+>   }
+>   
+>   int pciehp_power_on_slot(struct slot *slot)
+> @@ -536,10 +536,10 @@ int pciehp_power_on_slot(struct slot *slot)
+>   					   PCI_EXP_SLTSTA_PFD);
+>   	ctrl->power_fault_detected = 0;
+>   
+> -	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_ON, PCI_EXP_SLTCTL_PCC);
+>   	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>   		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+>   		 PCI_EXP_SLTCTL_PWR_ON);
+> +	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_ON, PCI_EXP_SLTCTL_PCC);
+>   
+>   	retval = pciehp_link_enable(ctrl);
+>   	if (retval)
+> @@ -552,10 +552,10 @@ void pciehp_power_off_slot(struct slot *slot)
+>   {
+>   	struct controller *ctrl = slot->ctrl;
+>   
+> -	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
+>   	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>   		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
+>   		 PCI_EXP_SLTCTL_PWR_OFF);
+> +	pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_OFF, PCI_EXP_SLTCTL_PCC);
+>   }
+>   
+>   static irqreturn_t pciehp_isr(int irq, void *dev_id)
+> @@ -701,9 +701,9 @@ void pcie_enable_notification(struct controller *ctrl)
+>   		PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE |
+>   		PCI_EXP_SLTCTL_DLLSCE);
+>   
+> -	pcie_write_cmd_nowait(ctrl, cmd, mask);
+>   	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>   		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, cmd);
+> +	pcie_write_cmd_nowait(ctrl, cmd, mask);
+>   }
+>   
+>   static void pcie_disable_notification(struct controller *ctrl)
+> @@ -714,9 +714,9 @@ static void pcie_disable_notification(struct controller *ctrl)
+>   		PCI_EXP_SLTCTL_MRLSCE | PCI_EXP_SLTCTL_PFDE |
+>   		PCI_EXP_SLTCTL_HPIE | PCI_EXP_SLTCTL_CCIE |
+>   		PCI_EXP_SLTCTL_DLLSCE);
+> -	pcie_write_cmd(ctrl, 0, mask);
+>   	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>   		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, 0);
+> +	pcie_write_cmd(ctrl, 0, mask);
+>   }
+>   
+>   /*
+> @@ -743,18 +743,18 @@ int pciehp_reset_slot(struct slot *slot, int probe)
+>   	ctrl_mask |= PCI_EXP_SLTCTL_DLLSCE;
+>   	stat_mask |= PCI_EXP_SLTSTA_DLLSC;
+>   
+> -	pcie_write_cmd(ctrl, 0, ctrl_mask);
+>   	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>   		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, 0);
+> +	pcie_write_cmd(ctrl, 0, ctrl_mask);
+>   	if (pciehp_poll_mode)
+>   		del_timer_sync(&ctrl->poll_timer);
+>   
+>   	pci_reset_bridge_secondary_bus(ctrl->pcie->port);
+>   
+>   	pcie_capability_write_word(pdev, PCI_EXP_SLTSTA, stat_mask);
+> -	pcie_write_cmd_nowait(ctrl, ctrl_mask, ctrl_mask);
+>   	ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
+>   		 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL, ctrl_mask);
+> +	pcie_write_cmd_nowait(ctrl, ctrl_mask, ctrl_mask);
+>   	if (pciehp_poll_mode)
+>   		int_poll_timeout(ctrl->poll_timer.data);
+>   
