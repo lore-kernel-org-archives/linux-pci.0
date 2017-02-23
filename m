@@ -1,300 +1,159 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:44651 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750962AbdBZGzy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 26 Feb 2017 01:55:54 -0500
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Sat, 25 Feb 2017 23:53:16 -0700
-Message-Id: <1488091997-12843-4-git-send-email-logang@deltatee.com>
-In-Reply-To: <1488091997-12843-1-git-send-email-logang@deltatee.com>
-References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v5 3/4] switchtec: Add sysfs attributes to the Switchtec driver
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=WS8a=2E=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=WS8a=2E=codeaurora.org=okaya@kernel.org>
+Subject: Re: Partial BAR Address Allocation
+To: Robin Murphy <robin.murphy@foss.arm.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <35c6bec9-58e8-a1f7-5a85-d80c23480d32@codeaurora.org>
+ <20170222184440.GA2132@bhelgaas-glaptop.roam.corp.google.com>
+ <43c1ff36-fc50-8ea4-02fe-7b1d573a1efd@codeaurora.org>
+ <20170222233944.GB4359@bhelgaas-glaptop.roam.corp.google.com>
+ <4f5d4e62-41d1-dc99-71ae-b7875541117a@foss.arm.com>
+Cc: Linux PCI <linux-pci@vger.kernel.org>, iommu@lists.linux-foundation.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <c1f4c1ab-2a2a-82dd-a793-525e80487f5c@codeaurora.org>
+Date: Thu, 23 Feb 2017 08:54:23 -0500
+MIME-Version: 1.0
+In-Reply-To: <4f5d4e62-41d1-dc99-71ae-b7875541117a@foss.arm.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a few read-only sysfs attributes which provide
-some device information that is exposed from the devices. Primarily
-component and device names and versions. These are documented in
-Documentation/ABI/testing/sysfs-class-switchtec.
+Hi Robin,
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
-Tested-by: Krishna Dhulipala <krishnad@fb.com>
-Reviewed-by: Wei Zhang <wzhang@fb.com>
-Reviewed-by: Jens Axboe <axboe@fb.com>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- Documentation/ABI/testing/sysfs-class-switchtec |  96 ++++++++++++++++++++
- MAINTAINERS                                     |   1 +
- drivers/pci/switch/switchtec.c                  | 113 ++++++++++++++++++++++++
- 3 files changed, 210 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
+On 2/23/2017 6:40 AM, Robin Murphy wrote:
+> On 22/02/17 23:39, Bjorn Helgaas wrote:
+>> [+cc Joerg, iommu list]
+>>
+>> On Wed, Feb 22, 2017 at 03:44:53PM -0500, Sinan Kaya wrote:
+>>> On 2/22/2017 1:44 PM, Bjorn Helgaas wrote:
+>>>> There is no way for a driver to say "I only need this memory BAR and
+>>>> not the other ones."  The reason is because the PCI_COMMAND_MEMORY bit
+>>>> enables *all* the memory BARs; there's no way to enable memory BARs
+>>>> selectively.  If we enable memory BARs and one of them is unassigned,
+>>>> that unassigned BAR is enabled, and the device will respond at
+>>>> whatever address the register happens to contain, and that may cause
+>>>> conflicts.
+>>>>
+>>>> I'm not sure this answers your question.  Do you want to get rid of
+>>>> 32-bit BAR addresses because your host bridge doesn't have a window to
+>>>> 32-bit PCI addresses?  It's typical for a bridge to support a window
+>>>> to the 32-bit PCI space as well as one to the 64-bit PCI space.  Often
+>>>> it performs address translation for the 32-bit window so it doesn't
+>>>> have to be in the 32-bit area on the CPU side, e.g., you could have
+>>>> something like this where we have three host bridges and the 2-4GB
+>>>> space on each PCI root bus is addressable:
+>>>>
+>>>>   pci_bus 0000:00: root bus resource [mem 0x1080000000-0x10ffffffff] (bus address [0x80000000-0xffffffff])
+>>>>   pci_bus 0001:00: root bus resource [mem 0x1180000000-0x11ffffffff] (bus address [0x80000000-0xffffffff])
+>>>>   pci_bus 0002:00: root bus resource [mem 0x1280000000-0x12ffffffff] (bus address [0x80000000-0xffffffff])
+>>>
+>>> The problem is that according to PCI specification BAR addresses and
+>>> DMA addresses cannot overlap.
+>>>
+>>> From PCI-to-PCI Bridge Arch. spec.: "A bridge forwards PCI memory
+>>> transactions from its primary interface to its secondary interface
+>>> (downstream) if a memory address is in the range defined by the
+>>> Memory Base and Memory Limit registers (when the base is less than
+>>> or equal to the limit) as illustrated in Figure 4-3. Conversely, a
+>>> memory transaction on the secondary interface that is within this
+>>> address range will not be forwarded upstream to the primary
+>>> interface."
+>>>
+>>> To be specific, if your DMA address happens to be in
+>>> [0x80000000-0xffffffff] and root port's aperture includes this
+>>> range; the DMA will never make to the system memory.
+>>>
+>>> Lorenzo and Robin took some steps to carve out PCI addresses out of
+>>> DMA addresses in IOMMU drivers by using iova_reserve_pci_windows()
+>>> function.
+>>>
+>>> However, I see that we are still exposed when the operating system
+>>> doesn't have any IOMMU driver and is using the SWIOTLB for instance. 
+>>
+>> Hmmm.  I guess SWIOTLB assumes there's no address translation in the
+>> DMA direction, right?
+> 
+> Not entirely - it does rely on arch-provided dma_to_phys() and
+> phys_to_dma() helpers which are free to accommodate such translations in
+> a device-specific manner. On arm64 we use these to account for
+> dev->dma_pfn_offset describing a straightforward linear offset, but
+> unless one constant offset would apply to all possible outbound windows
+> I'm not sure that's much help here.
 
-diff --git a/Documentation/ABI/testing/sysfs-class-switchtec b/Documentation/ABI/testing/sysfs-class-switchtec
-new file mode 100644
-index 0000000..48cb4c1
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-class-switchtec
-@@ -0,0 +1,96 @@
-+switchtec - Microsemi Switchtec PCI Switch Management Endpoint
-+
-+For details on this subsystem look at Documentation/switchtec.txt.
-+
-+What: 		/sys/class/switchtec
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	The switchtec class subsystem folder.
-+		Each registered switchtec driver is represented by a switchtecX
-+		subfolder (X being an integer >= 0).
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/component_id
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Component identifier as stored in the hardware (eg. PM8543)
-+		(read only)
-+Values: 	arbitrary string.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/component_revision
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Component revision stored in the hardware (read only)
-+Values: 	integer.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/component_vendor
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Component vendor as stored in the hardware (eg. MICROSEM)
-+		(read only)
-+Values: 	arbitrary string.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/device_version
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Device version as stored in the hardware (read only)
-+Values: 	integer.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/fw_version
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Currently running firmware version (read only)
-+Values: 	integer (in hexadecimal).
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/partition
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Partition number for this device in the switch (read only)
-+Values: 	integer.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/partition_count
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Total number of partitions in the switch (read only)
-+Values: 	integer.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/product_id
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Product identifier as stored in the hardware (eg. PSX 48XG3)
-+		(read only)
-+Values: 	arbitrary string.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/product_revision
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Product revision stored in the hardware (eg. RevB)
-+		(read only)
-+Values: 	arbitrary string.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/product_vendor
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Product vendor as stored in the hardware (eg. MICROSEM)
-+		(read only)
-+Values: 	arbitrary string.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index aa702b0..6fed938 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9513,6 +9513,7 @@ M:	Logan Gunthorpe <logang@deltatee.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/switchtec.txt
-+F:	Documentation/ABI/testing/sysfs-class-switchtec
- F:	drivers/pci/switch/switchtec*
- 
- PCI DRIVER FOR NVIDIA TEGRA
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 4aaf89b..2e47d79 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -495,6 +495,118 @@ static void mrpc_timeout_work(struct work_struct *work)
- 	mutex_unlock(&stdev->mrpc_mutex);
- }
- 
-+static ssize_t device_version_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	u32 ver;
-+
-+	ver = ioread32(&stdev->mmio_sys_info->device_version);
-+
-+	return sprintf(buf, "%x\n", ver);
-+}
-+static DEVICE_ATTR_RO(device_version);
-+
-+static ssize_t fw_version_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	u32 ver;
-+
-+	ver = ioread32(&stdev->mmio_sys_info->firmware_version);
-+
-+	return sprintf(buf, "%08x\n", ver);
-+}
-+static DEVICE_ATTR_RO(fw_version);
-+
-+static ssize_t io_string_show(char *buf, void __iomem *attr, size_t len)
-+{
-+	int i;
-+
-+	memcpy_fromio(buf, attr, len);
-+	buf[len] = '\n';
-+	buf[len + 1] = 0;
-+
-+	for (i = len - 1; i > 0; i--) {
-+		if (buf[i] != ' ')
-+			break;
-+		buf[i] = '\n';
-+		buf[i + 1] = 0;
-+	}
-+
-+	return strlen(buf);
-+}
-+
-+#define DEVICE_ATTR_SYS_INFO_STR(field) \
-+static ssize_t field ## _show(struct device *dev, \
-+	struct device_attribute *attr, char *buf) \
-+{ \
-+	struct switchtec_dev *stdev = to_stdev(dev); \
-+	return io_string_show(buf, &stdev->mmio_sys_info->field, \
-+			    sizeof(stdev->mmio_sys_info->field)); \
-+} \
-+\
-+static DEVICE_ATTR_RO(field)
-+
-+DEVICE_ATTR_SYS_INFO_STR(vendor_id);
-+DEVICE_ATTR_SYS_INFO_STR(product_id);
-+DEVICE_ATTR_SYS_INFO_STR(product_revision);
-+DEVICE_ATTR_SYS_INFO_STR(component_vendor);
-+
-+static ssize_t component_id_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	int id = ioread16(&stdev->mmio_sys_info->component_id);
-+
-+	return sprintf(buf, "PM%04X\n", id);
-+}
-+static DEVICE_ATTR_RO(component_id);
-+
-+static ssize_t component_revision_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	int rev = ioread8(&stdev->mmio_sys_info->component_revision);
-+
-+	return sprintf(buf, "%d\n", rev);
-+}
-+static DEVICE_ATTR_RO(component_revision);
-+
-+static ssize_t partition_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+
-+	return sprintf(buf, "%d\n", stdev->partition);
-+}
-+static DEVICE_ATTR_RO(partition);
-+
-+static ssize_t partition_count_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+
-+	return sprintf(buf, "%d\n", stdev->partition_count);
-+}
-+static DEVICE_ATTR_RO(partition_count);
-+
-+static struct attribute *switchtec_device_attrs[] = {
-+	&dev_attr_device_version.attr,
-+	&dev_attr_fw_version.attr,
-+	&dev_attr_vendor_id.attr,
-+	&dev_attr_product_id.attr,
-+	&dev_attr_product_revision.attr,
-+	&dev_attr_component_vendor.attr,
-+	&dev_attr_component_id.attr,
-+	&dev_attr_component_revision.attr,
-+	&dev_attr_partition.attr,
-+	&dev_attr_partition_count.attr,
-+	NULL,
-+};
-+
-+ATTRIBUTE_GROUPS(switchtec_device);
-+
- static int switchtec_dev_open(struct inode *inode, struct file *filp)
- {
- 	struct switchtec_dev *stdev;
-@@ -688,6 +800,7 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
- 	device_initialize(dev);
- 	dev->class = switchtec_class;
- 	dev->parent = &pdev->dev;
-+	dev->groups = switchtec_device_groups;
- 	dev->release = stdev_release;
- 
- 	minor = ida_simple_get(&switchtec_minor_ida, 0, 0,
+yeah, that won't help. This is a PCI only problem. Arch layer solution
+will move the entire DMA ranges for all peripherals in the SOC to a specific offset.
+This would be most useful if the entire DDR would start at some non-zero offset.
+
+Even then, PCI usually has several ranges. One range like this to have some
+space below 4GB and another untranslated range for true 64bit cards. 
+
+>>>>   pci_bus 0002:00: root bus resource [mem 0x1280000000-0x12ffffffff] (bus address [0x80000000-0xffffffff])
+
+We have to emulate some range in the first 4GB to make PCI cards happy.
+
+> 
+>>  If there's no address translation in the PIO
+>> direction, PCI bus BAR addresses are identical to the CPU-side
+>> addresses.  In that case, there's no conflict because we already have
+>> to assign BARs so they never look like a system memory address.
+>>
+>> But if there *is* address translation in the PIO direction, we can
+>> have conflicts because the bridge can translate CPU-side PIO accesses
+>> to arbitrary PCI bus addresses.
+>>
+>>> The FW solution I'm looking at requires carving out some part of the
+>>> DDR from before OS boot so that OS doesn't reclaim that area for
+>>> DMA.
+>>
+>> If you want to reach system RAM, I guess you need to make sure you
+>> only DMA to bus addresses outside the host bridge windows, as you said
+>> above.  DMA inside the windows would be handled as peer-to-peer DMA.
+>>
+>>> I'm not very happy with this solution. I'm also surprised that there
+>>> is no generic solution in the kernel takes care of this for all root
+>>> ports regardless of IOMMU driver presence.
+>>
+>> The PCI core isn't really involved in allocating DMA addresses,
+>> although there definitely is the connection with PCI-to-PCI bridge
+>> windows that you mentioned.  I added IOMMU guys, who would know a lot
+>> more than I do.
+> 
+> To me, having the bus addresses of windows shadow assigned physical
+> addresses sounds mostly like a broken system configuration. Can the
+> firmware not reprogram them elsewhere, or is the entire bottom 4GB of
+> the physical memory map occupied by system RAM?
+
+I think your suggestion is also going in the same direction where FW 
+moves the things around so that there is some hole in the first 4GB 
+that OS doesn't see it and PCI has exclusive access to it.
+
+I was looking to see if there is a better solution via some ACPI
+table entry like PNP0C02 to tell the OS what range PCI drivers are not
+allowed to touch but could be used for something else.
+
+Problem with UEFI reserved region is that we are prohibiting the 
+region from being used for anything else besides PCI. That region
+is gone forever.
+
+Another solution like you suggested is to move the DDR around so that
+I don't need reserved regions.
+
+Thanks for the suggestions,
+Sinan
+
+> 
+> Robin.
+> 
+>>
+>> Bjorn
+>> _______________________________________________
+>> iommu mailing list
+>> iommu@lists.linux-foundation.org
+>> https://lists.linuxfoundation.org/mailman/listinfo/iommu
+>>
+> 
+
+
 -- 
-2.1.4
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
