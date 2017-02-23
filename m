@@ -1,96 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 27 Feb 2017 12:35:34 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Subject: Re: Using the generic host PCIe driver
-Message-ID: <20170227183534.GA12481@bhelgaas-glaptop.roam.corp.google.com>
-References: <8d4e5d8a-7683-0180-324c-0ffd1a9a641a@free.fr>
- <20170227164430.GB11162@bhelgaas-glaptop.roam.corp.google.com>
- <8643c952-e915-bcd1-390e-9d4001789872@free.fr>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
+ <2eb2b814-d621-5d8d-8366-4c4e9f789208@deltatee.com>
+ <e27a2363-1b11-f74b-532d-7de089875c90@deltatee.com>
+ <2bab7df0-9ae0-67e1-1f06-208d1359a4d5@codeaurora.org>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Jens Axboe <axboe@fb.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <86cdf195-f2af-0696-0288-3ad560bceb48@deltatee.com>
+Date: Thu, 23 Feb 2017 13:56:49 -0700
 MIME-Version: 1.0
-In-Reply-To: <8643c952-e915-bcd1-390e-9d4001789872@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- David Daney <david.daney@cavium.com>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Will Deacon <will.deacon@arm.com>, Thierry Reding <treding@nvidia.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <2bab7df0-9ae0-67e1-1f06-208d1359a4d5@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 27, 2017 at 06:02:36PM +0100, Mason wrote:
-> On 27/02/2017 17:44, Bjorn Helgaas wrote:
-> 
-> > On Mon, Feb 27, 2017 at 05:14:15PM +0100, Mason wrote:
-> >
-> >> Bug #2
-> >>
-> >> Bus 0 cannot be enumerated, because it reports garbage data for
-> >> devices and functions other than 0, i.e. only 0/0/0 works.
-> >>
-> >> How do I work around that issue?
-> > 
-> > There are several drivers that provide their own "ECAM-like" config
-> > accessors.  Look at "struct pci_ecam_ops" structures, e.g.,
-> > hisi_pcie_ops, pci_thunder_ecam_ops, xgene_v1_pcie_ecam_ops, etc.
-> 
-> If I understand correctly, I do need to write my own driver then,
-> if I need specific quirks to work around some issues?
-> 
-> I'm slightly confused because you originally said "The native drivers
-> in drivers/pci/host are a huge maintenance hassle for no real benefit."
-> 
-> But I do need to write one, correct?
 
-When I said the native drivers provide no real benefit, I meant that
-they do not provide any value-add functionality beyond what a generic
-driver like drivers/acpi/pci_root.c already does.
 
-Obviously there are many different host bridges and they have
-different programming models, so there has to be bridge-specific
-support *somewhere*.  The question is whether that's in firmware, in
-Linux, or both.  For ACPI systems, it's all in firmware.
+On 23/02/17 01:51 PM, Sinan Kaya wrote:
+> You'll want to be careful during the merge window (these days) as the
+> maintainer is usually busy with code delivery. You can't rush your code in at
+> the last minute.
 
-Systems with well-behaved hardware, i.e., it supports PCIe and ECAM
-without warts, firmware can initialize the bridge and tell the OS
-about it via DT, and the drivers/pci/pci-host-generic.c driver can do
-everything else.
+Thanks for the advice, we will continue to wait.
 
-For systems that aren't so well-behaved, we'll need either a full
-native driver that knows how to program bridge window CSRs, set up
-interrupts, etc., or a simpler native driver that papers over warts
-like ECAM that doesn't work quite according to spec.
+However, I would say we've been very patient. It's been three weeks
+since we posted the latest revision, a month since the first version and
+almost 3 months since our RFC. I don't think it's too much to expect at
+least a response saying that it's in the works or something. That long
+with dead silence from the maintainer is a bit much.
 
-It sounds like your system falls into the latter category.
-
-> > You can also work around Bug #1 in a custom accessor instead of a
-> > quirk.
-> 
-> By checking for the device ID and vendor ID, and returning the
-> expected class code, instead of the contents of the reg?
-> 
-> Do you consider this a better solution?
-
-It's not a big deal either way.  Doing it in the accessor has the
-advantage that you have to have the accessor anyway.  Doing it in a
-quirk means you need to figure out where to put the quirk.  It isn't
-really generic (so drivers/pci/quirks.c seems overly generic), it
-isn't really arch-specific (so arch/* seems maybe *too* specific),
-it's really just bridge-specific.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Logan
