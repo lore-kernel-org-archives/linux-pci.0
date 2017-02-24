@@ -1,72 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:54582 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751452AbdB0PPq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Feb 2017 10:15:46 -0500
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 24 Feb 2017 16:45:27 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH 15/20] PCI: designware: update PCI config space remap function
-Date: Mon, 27 Feb 2017 15:14:26 +0000
-Message-Id: <20170227151436.18698-16-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
-References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 3/4] switchtec: Add sysfs attributes to the Switchtec
+ driver
+Message-ID: <20170224224527.GC26430@bhelgaas-glaptop.roam.corp.google.com>
+References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
+ <1486058763-7730-4-git-send-email-logang@deltatee.com>
+ <20170223224317.GA21548@bhelgaas-glaptop.roam.corp.google.com>
+ <7c981c0d-e7ff-bf28-ec55-cf5c39290437@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7c981c0d-e7ff-bf28-ec55-cf5c39290437@deltatee.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_pci_remap_cfg* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+On Thu, Feb 23, 2017 at 03:56:21PM -0700, Logan Gunthorpe wrote:
+> 
+> 
+> On 23/02/17 03:43 PM, Bjorn Helgaas wrote:
+> > This path seems a little generic.  I don't see other cases where a
+> > product brand name ("Switchtec") appears at the top level of
+> > /sys/class/...
+> 
+> Ok, well we are certainly open to suggestions, but there isn't really a
+> generic version of this device available so I'm not sure how we would
+> change that. Per device-type classes aren't that uncommon though, a
+> quick grep shows things like:
+> 
+> platform/chrome/cros_ec_dev.c:40:static struct class cros_class
+> s390/char/raw3270.h:94:extern struct class *class3270;
+> net/ethernet/hisilicon/hns/hnae.c:19:static struct class *hnae_class;
+> mfd/ucb1x00-core.c:490:static struct class ucb1x00_class
+> 
+> > My question is based on "ls Documentation/ABI/testing/sysfs-class*",
+> > not on any great knowledge of sysfs, and I see Greg has already given
+> > a Reviewed-by for this, so maybe this is the right approach.
+> > 
+> > It does seem like the path could include a clue that this is related
+> > to PCI.
+> 
+> I mean, we could change it to pci-switchtec or something if you think
+> that would be better..?? But I'm not sure how else to accommodate this.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
----
- drivers/pci/dwc/pcie-designware-host.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+I'm OK with it as-is.
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 5ba3349..2b789af 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -338,8 +338,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	}
- 
- 	if (!pci->dbi_base) {
--		pci->dbi_base = devm_ioremap(dev, pp->cfg->start,
--					resource_size(pp->cfg));
-+		pci->dbi_base = devm_pci_remap_cfgspace(dev,
-+						pp->cfg->start,
-+						resource_size(pp->cfg));
- 		if (!pci->dbi_base) {
- 			dev_err(dev, "error with ioremap\n");
- 			ret = -ENOMEM;
-@@ -350,8 +351,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	pp->mem_base = pp->mem->start;
- 
- 	if (!pp->va_cfg0_base) {
--		pp->va_cfg0_base = devm_ioremap(dev, pp->cfg0_base,
--						pp->cfg0_size);
-+		pp->va_cfg0_base = devm_pci_remap_cfgspace(dev,
-+					pp->cfg0_base, pp->cfg0_size);
- 		if (!pp->va_cfg0_base) {
- 			dev_err(dev, "error with ioremap in function\n");
- 			ret = -ENOMEM;
-@@ -360,7 +361,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	}
- 
- 	if (!pp->va_cfg1_base) {
--		pp->va_cfg1_base = devm_ioremap(dev, pp->cfg1_base,
-+		pp->va_cfg1_base = devm_pci_remap_cfgspace(dev,
-+						pp->cfg1_base,
- 						pp->cfg1_size);
- 		if (!pp->va_cfg1_base) {
- 			dev_err(dev, "error with ioremap\n");
--- 
-2.10.0
+> > Is there a link to the switch PCI device itself, e.g., to
+> > /sys/devices/pci*?  Should these attributes simply be put in a
+> > subdirectory there, e.g., in
+> > 
+> >   /sys/devices/pci0000:00/0000:00:00.0/stats/...
+> 
+> Well our device shows up here in the tree:
+> 
+> /sys/devices/pci0000:00/0000:00:03.0/0000:03:00.1/switchtec/switchtec0
+> 
+> (Which userspace can get to by following the link at
+> /sys/class/switchtec/switchtec0) The switch is then always:
+> 
+> /sys/devices/pci0000:00/0000:00:03.0
+
+That's exactly what I was looking for; I just didn't realize it was
+connected like this.
+
+Bjorn
