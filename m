@@ -1,86 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:36847 "EHLO
-        mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753685AbdBDHAU (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 4 Feb 2017 02:00:20 -0500
-Received: by mail-vk0-f65.google.com with SMTP id n19so3145904vkd.3
-        for <linux-pci@vger.kernel.org>; Fri, 03 Feb 2017 23:00:20 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20170203055200.GA29413@wunner.de>
-References: <CAE9FiQVCMCa7iVyuwp9z6VrY0cE7V_xghuXip28Ft52=8QmTWw@mail.gmail.com>
- <20170203055200.GA29413@wunner.de>
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 3 Feb 2017 23:00:19 -0800
-Message-ID: <CAE9FiQWs0H9vqEo2ZYnWWBW0Ao-hx4WYHQ69cyR32nFQ9yV9rw@mail.gmail.com>
-Subject: Re: pciehp is broken from 4.10-rc1
-To: Lukas Wunner <lukas@wunner.de>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:42999 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750995AbdBXTT2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2017 14:19:28 -0500
+Message-Id: <cover.1487938188.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 24 Feb 2017 20:19:45 +0100
+Subject: [PATCH 0/5] Thunderbolt GPU fixes
+To: dri-devel@lists.freedesktop.org
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+        Michael Jamet <michael.jamet@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        platform-driver-x86@vger.kernel.org,
+        Ben Skeggs <bskeggs@redhat.com>, nouveau@lists.freedesktop.org,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Christian Koenig <christian.koenig@amd.com>,
+        amd-gfx@lists.freedesktop.org, Peter Wu <peter@lekensteyn.nl>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 2, 2017 at 9:52 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> [cc += Mika]
->
-> On Thu, Feb 02, 2017 at 08:11:48PM -0800, Yinghai Lu wrote:
->> 4.9 is  working,
-> [...]
->> sca05-0a81e0db:~ # echo 1 > /sys/bus/pci/slots/8/power
->> [  175.771846] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up
->> [  175.777898] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up event
->> ignored; already powering on
->> [  175.956632] pci 0000:65:00.0: [15b3:1003] type 00 class 0x0c0600
-> [...]
->> sca05-0a81e0db:~ # echo 1 > /sys/bus/pci/slots/8/power
->> [  221.041664] pciehp 0000:60:03.2:pcie004: Slot(8): Already enabled
->
-> Could you check if the port above 0000:60:03.2 is runtime suspended
-> when you're trying this, i.e. does its power/runtime_status entry in
-> sysfs say "suspended"?
+Fix Thunderbolt-related issues in apple-gmux and vga_switcheroo:
 
-yes.
+Patch [1/5] ("Recognize Thunderbolt devices") has already been subjected
+to a fair amount of scrutiny over at linux-pci@, I've submitted it 5 times
+total since May 2016.  With luck it may be in ack-able shape now.
 
->
-> Normally the hotplug slot should keep its parents awake so that config
-> space accesses work.  And the hotplug port's config space should be
-> accessible in D3 per the spec.
->
-> If you add pm_runtime_get_sync(&ctrl->pcie->port->dev) in
-> drivers/pci/pciehp_ctrl.c:pciehp_enable_slot() before the call to
-> pciehp_get_power_status(), and a corresponding pm_runtime_put()
-> afterwards, does the issue go away?
+Patch [2/5] amends apple-gmux to handle combined DP/Thunderbolt ports
+properly on newer MacBook Pros.
 
-Still not working.
+Patches [3/5] to [5/5] avoid registering external Thunderbolt GPUs with
+vga_switcheroo:  Dave Airlie designed vga_switcheroo to register GPUs
+unconditionally.  So if a desktop box has multiple GPUs, vga_switcheroo
+will see more than one discrete GPU but that's not a problem because on
+desktop boxes no handler is registered and thus vga_switcheroo_enable()
+is never called.  Hybrid graphics laptops on the other hand do register
+a handler, but are assumed to never register more than one discrete GPU.
+However once a Thunderbolt eGPU is attached to a hybrid graphics laptop,
+that assumption is no longer true and things go south when vga_switcheroo
+runtime suspends the external discrete GPU and then calls the handler to
+cut power to the internal discrete GPU.  The driver for the internal GPU
+will sit there puzzled and typically cause a lockup.
 
-the problem is
-sca05-0a81e0db:~ # echo 0 > /sys/bus/pci/slots/8/power
-[  141.838027] mlx4_core 0000:65:00.0: PME# disabled
-[  143.279434] iommu: Removing device 0000:65:00.0 from group 172
-[  143.292329] pcieport 0000:60:03.2: PME# enabled
-[  143.297431] pciehp 0000:60:03.2:pcie004: Timeout on hotplug command
-0x11f1 (issued 81476 msec ago)
-[  143.337545] pcieport 0000:60:03.2: PME# disabled
-[  143.380359] pciehp 0000:60:03.2:pcie004: Slot(8): Link Down
-[  143.386735] pciehp 0000:60:03.2:pcie004: Slot(8): Link Down event
-ignored; already powering off
-[  143.445483] pcieport 0000:60:03.2: PME# enabled
-[  143.992915] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up
-[  143.999004] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up event
-queued; currently getting powered off
-[  144.025590] pcieport 0000:60:03.2: PME# disabled
-[  144.133548] pcieport 0000:60:03.2: PME# enabled
-[  144.333603] pciehp 0000:60:03.2:pcie004: Slot(8): Already enabled
-sca05-0a81e0db:~ # [  144.357483] pcieport 0000:60:03.2: PME# disabled
-[  144.465566] pcieport 0000:60:03.2: PME# enabled
+This series is just a first step towards proper handling of eGPUs, another
+will be support for surprise removal:  DRM drivers need to cease MMIO and
+PCI config space access once a device is gone to avoid delaying device
+teardown or accessing a newly attached replacement device.  Also, MMIO
+reads to removed devices return "all ones", which results in an infinite
+loop e.g. in nouveau's nvkm_nsec().
 
-we have extra Link Up event queued, while pm_runtime_get_sync/pm_runtime_put ?
-  [  143.445483] pcieport 0000:60:03.2: PME# enabled
-  [  143.992915] pciehp 0000:60:03.2:pcie004: Slot(8): Link Up
+The question is how to recognize device removal.  One common method is to
+read the vendor register with pci_device_is_present(), but this reports
+a false positive if the device is present but in D3cold.  A better method
+is to let the PCIe hotplug driver recognize and cache device removal.
+Keith Busch has developed patches which do exactly that, they're now at
+v6 and fully reviewed by Christoph Hellwig but alas were not included in
+the 4.11 PCI pull for some reason:
+http://www.spinics.net/lists/linux-pci/msg58123.html
+
+I've pushed the present series to GitHub in case anyone prefers reviewing
+it in a GUI:
+https://github.com/l1k/linux/commits/thunderbolt_gpu_v1
+
+Thanks,
+
+Lukas
 
 
-Thanks
+Lukas Wunner (5):
+  PCI: Recognize Thunderbolt devices
+  apple-gmux: Don't switch external DP port on 2011+ MacBook Pros
+  drm/nouveau: Don't register Thunderbolt eGPU with vga_switcheroo
+  drm/radeon: Don't register Thunderbolt eGPU with vga_switcheroo
+  drm/amdgpu: Don't register Thunderbolt eGPU with vga_switcheroo
 
-Yinghai
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  7 +++++--
+ drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c    |  3 ++-
+ drivers/gpu/drm/nouveau/nouveau_vga.c      | 10 +++++++++-
+ drivers/gpu/drm/radeon/radeon_device.c     |  7 +++++--
+ drivers/gpu/drm/radeon/radeon_kms.c        |  3 ++-
+ drivers/pci/pci.h                          |  2 ++
+ drivers/pci/probe.c                        | 21 ++++++++++++++++++++
+ drivers/platform/x86/apple-gmux.c          | 31 +++++++++++++++++++++++++++++-
+ include/linux/pci.h                        | 23 ++++++++++++++++++++++
+ 9 files changed, 99 insertions(+), 8 deletions(-)
+
+-- 
+2.11.0
