@@ -1,94 +1,67 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <nsekhar@ti.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [PATCH v2 19/22] tools: PCI: Add sample test script to invoke pcitest
-Date: Fri, 17 Feb 2017 15:20:39 +0530
-Message-ID: <1487325042-28227-20-git-send-email-kishon@ti.com>
-In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Ashok Raj <ashok.raj@intel.com>,
+        james puthukattukaran <james.puthukattukaran@oracle.com>,
+        Yinghai Lu <yinghai.lu@oracle.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+Subject: [PATCH] PCI,pciehp: Skip not changed command write
+Date: Thu, 23 Feb 2017 22:54:49 -0800
+Message-Id: <20170224065449.14997-1-yinghai@kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a simple test script that invokes the pcitest userspace tool
-to perform all the PCI endpoint tests (BAR tests, interrupt tests,
-read tests, write tests and copy tests).
+Notice two systems with different cpu hve different print out when power on
+slots:
+First one:
+ pciehp 0000:60:03.2:pcie004: pciehp_green_led_on: SLOTCTRL a8 write cmd 100
+ pciehp 0000:60:03.2:pcie004: pciehp_set_attention_status: SLOTCTRL a8 write cmd c0
+ pciehp 0000:60:03.2:pcie004: pending interrupts 0x0010 from Slot Status
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Second one:
+ pciehp 0000:73:00.0:pcie004: pciehp_green_led_on: SLOTCTRL a8 write cmd 100
+ pciehp 0000:73:00.0:pcie004: pciehp_set_attention_status: SLOTCTRL a8 write cmd c0
+ pciehp 0000:73:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+ pciehp 0000:73:00.0:pcie004: pending interrupts 0x0010 from Slot Status
+
+Actually attention is not changed on both.
+
+First one will not generate CC if write not change cmd.
+Second one will generate CC even if write not change cmd.
+
+To avoid those difference interrupts, check if we are trying to
+write same cmd, if so skip writing.
+
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 ---
- tools/pci/pcitest.sh |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
- create mode 100644 tools/pci/pcitest.sh
+ drivers/pci/hotplug/pciehp_hpc.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/tools/pci/pcitest.sh b/tools/pci/pcitest.sh
-new file mode 100644
-index 0000000..5442bbe
---- /dev/null
-+++ b/tools/pci/pcitest.sh
-@@ -0,0 +1,56 @@
-+#!/bin/sh
-+
-+echo "BAR tests"
-+echo
-+
-+bar=0
-+
-+while [ $bar -lt 6 ]
-+do
-+	pcitest -b $bar
-+	bar=`expr $bar + 1`
-+done
-+echo
-+
-+echo "Interrupt tests"
-+echo
-+
-+pcitest -l
-+msi=1
-+
-+while [ $msi -lt 33 ]
-+do
-+        pcitest -m $msi
-+        msi=`expr $msi + 1`
-+done
-+echo
-+
-+echo "Read Tests"
-+echo
-+
-+pcitest -r -s 1
-+pcitest -r -s 1024
-+pcitest -r -s 1025
-+pcitest -r -s 1024000
-+pcitest -r -s 1024001
-+echo
-+
-+echo "Write Tests"
-+echo
-+
-+pcitest -w -s 1
-+pcitest -w -s 1024
-+pcitest -w -s 1025
-+pcitest -w -s 1024000
-+pcitest -w -s 1024001
-+echo
-+
-+echo "Copy Tests"
-+echo
-+
-+pcitest -c -s 1
-+pcitest -c -s 1024
-+pcitest -c -s 1025
-+pcitest -c -s 1024000
-+pcitest -c -s 1024001
-+echo
--- 
-1.7.9.5
+Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+===================================================================
+--- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
++++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
+@@ -186,7 +186,7 @@ static void pcie_do_write_cmd(struct con
+ 			      u16 mask, bool wait)
+ {
+ 	struct pci_dev *pdev = ctrl_dev(ctrl);
+-	u16 slot_ctrl;
++	u16 slot_ctrl, old_slot_ctrl;
+ 
+ 	mutex_lock(&ctrl->ctrl_lock);
+ 
+@@ -201,8 +201,14 @@ static void pcie_do_write_cmd(struct con
+ 		goto out;
+ 	}
+ 
++	old_slot_ctrl = slot_ctrl;
+ 	slot_ctrl &= ~mask;
+ 	slot_ctrl |= (cmd & mask);
++	if (slot_ctrl == old_slot_ctrl) {
++		ctrl_dbg(ctrl, "%s: mask/cmd %x/%x no change\n", __func__,
++			 mask, cmd & mask);
++		goto out;
++	}
+ 	ctrl->cmd_busy = 1;
+ 	smp_mb();
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
