@@ -1,659 +1,766 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v2 16/22] misc: Add host side pci driver for pci test function
- device
-Date: Fri, 17 Feb 2017 15:20:36 +0530
-Message-ID: <1487325042-28227-17-git-send-email-kishon@ti.com>
-In-Reply-To: <1487325042-28227-1-git-send-email-kishon@ti.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
- Kishon Vijay Abraham I <kishon@ti.com>, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:38960 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751296AbdBXT37 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 24 Feb 2017 14:29:59 -0500
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 24 Feb 2017 12:27:49 -0700
+Message-Id: <1487964469-2944-5-git-send-email-logang@deltatee.com>
+In-Reply-To: <1487964469-2944-1-git-send-email-logang@deltatee.com>
+References: <1487964469-2944-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v4 4/4] switchtec: Add IOCTLs to the Switchtec driver
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PCI endpoint test driver that can verify base address
-register, legacy interrupt/MSI interrupt and read/write/copy
-buffers between host and device. The corresponding pci-epf-test
-function driver should be used on the EP side.
+This patch introduces a couple of special IOCTLs which are provided to:
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+* Inform userspace of firmware partition locations
+* Pass event counts and allow userspace to wait on events
+* Translate between PFF numbers used by the switch to
+  port numbers.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
+Tested-by: Krishna Dhulipala <krishnad@fb.com>
+Reviewed-by: Wei Zhang <wzhang@fb.com>
+Reviewed-by: Jens Axboe <axboe@fb.com>
 ---
- drivers/misc/Kconfig             |    7 +
- drivers/misc/Makefile            |    1 +
- drivers/misc/pci_endpoint_test.c |  534 ++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/Kbuild        |    1 +
- include/uapi/linux/pcitest.h     |   19 ++
- 5 files changed, 562 insertions(+)
- create mode 100644 drivers/misc/pci_endpoint_test.c
- create mode 100644 include/uapi/linux/pcitest.h
+ Documentation/ioctl/ioctl-number.txt |   1 +
+ Documentation/switchtec.txt          |  27 ++
+ MAINTAINERS                          |   1 +
+ drivers/pci/switch/switchtec.c       | 467 +++++++++++++++++++++++++++++++++++
+ include/uapi/linux/switchtec_ioctl.h | 132 ++++++++++
+ 5 files changed, 628 insertions(+)
+ create mode 100644 include/uapi/linux/switchtec_ioctl.h
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index 64971ba..14a95a6 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -766,6 +766,13 @@ config PANEL_BOOT_MESSAGE
- 	  An empty message will only clear the display at driver init time. Any other
- 	  printf()-formatted message is valid with newline and escape codes.
+diff --git a/Documentation/ioctl/ioctl-number.txt b/Documentation/ioctl/ioctl-number.txt
+index 81c7f2b..032b33c 100644
+--- a/Documentation/ioctl/ioctl-number.txt
++++ b/Documentation/ioctl/ioctl-number.txt
+@@ -191,6 +191,7 @@ Code  Seq#(hex)	Include File		Comments
+ 'W'	00-1F	linux/watchdog.h	conflict!
+ 'W'	00-1F	linux/wanrouter.h	conflict!		(pre 3.9)
+ 'W'	00-3F	sound/asound.h		conflict!
++'W'	40-5F   drivers/pci/switch/switchtec.c
+ 'X'	all	fs/xfs/xfs_fs.h		conflict!
+ 		and fs/xfs/linux-2.6/xfs_ioctl32.h
+ 		and include/linux/falloc.h
+diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt
+index 4bced4c..a0a9c7b 100644
+--- a/Documentation/switchtec.txt
++++ b/Documentation/switchtec.txt
+@@ -51,3 +51,30 @@ The char device has the following semantics:
  
-+config PCI_ENDPOINT_TEST
-+	depends on PCI || COMPILE_TEST
-+	tristate "PCI Endpoint Test driver"
-+	---help---
-+           Enable this configuration option to enable the host side test driver
-+           for PCI Endpoint.
+ * The poll call will also be supported for userspace applications that
+   need to do other things while waiting for the command to complete.
 +
- source "drivers/misc/c2port/Kconfig"
- source "drivers/misc/eeprom/Kconfig"
- source "drivers/misc/cb710/Kconfig"
-diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index 3198336..64a532ac2 100644
---- a/drivers/misc/Makefile
-+++ b/drivers/misc/Makefile
-@@ -53,6 +53,7 @@ obj-$(CONFIG_ECHO)		+= echo/
- obj-$(CONFIG_VEXPRESS_SYSCFG)	+= vexpress-syscfg.o
- obj-$(CONFIG_CXL_BASE)		+= cxl/
- obj-$(CONFIG_PANEL)             += panel.o
-+obj-$(CONFIG_PCI_ENDPOINT_TEST)	+= pci_endpoint_test.o
++The following IOCTLs are also supported by the device:
++
++* SWITCHTEC_IOCTL_FLASH_INFO - Retrieve firmware length and number
++  of partitions in the device.
++
++* SWITCHTEC_IOCTL_FLASH_PART_INFO - Retrieve address and lengeth for
++  any specified partition in flash.
++
++* SWITCHTEC_IOCTL_EVENT_SUMMARY - Read a structure of bitmaps
++  indicating all uncleared events.
++
++* SWITCHTEC_IOCTL_EVENT_CTL - Get the current count, clear and set flags
++  for any event. This ioctl takes in a switchtec_ioctl_event_ctl struct
++  with the event_id, index and flags set (index being the partition or PFF
++  number for non-global events). It returns whether the event has
++  occurred, the number of times and any event specific data. The flags
++  can be used to clear the count or enable and disable actions to
++  happen when the event occurs.
++  By using the SWITCHTEC_IOCTL_EVENT_FLAG_EN_POLL flag,
++  you can set an event to trigger a poll command to return with
++  POLLPRI. In this way, userspace can wait for events to occur.
++
++* SWITCHTEC_IOCTL_PFF_TO_PORT and SWITCHTEC_IOCTL_PORT_TO_PFF convert
++  between PCI Function Framework number (used by the event system)
++  and Switchtec Logic Port ID and Partition number (which is more
++  user friendly).
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 6fed938..c1a9a30 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9515,6 +9515,7 @@ S:	Maintained
+ F:	Documentation/switchtec.txt
+ F:	Documentation/ABI/testing/sysfs-class-switchtec
+ F:	drivers/pci/switch/switchtec*
++F:	include/uapi/linux/switchtec_ioctl.h
  
- lkdtm-$(CONFIG_LKDTM)		+= lkdtm_core.o
- lkdtm-$(CONFIG_LKDTM)		+= lkdtm_bugs.o
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-new file mode 100644
-index 0000000..8239ace
---- /dev/null
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -0,0 +1,534 @@
-+/**
-+ * Host side test driver to test endpoint functionality
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
+ PCI DRIVER FOR NVIDIA TEGRA
+ M:	Thierry Reding <thierry.reding@gmail.com>
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 2e3a45b..18286d3 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -13,6 +13,8 @@
+  *
+  */
+ 
++#include <linux/switchtec_ioctl.h>
 +
-+#include <linux/crc32.h>
-+#include <linux/delay.h>
-+#include <linux/fs.h>
-+#include <linux/io.h>
-+#include <linux/interrupt.h>
-+#include <linux/irq.h>
-+#include <linux/miscdevice.h>
-+#include <linux/module.h>
-+#include <linux/mutex.h>
-+#include <linux/random.h>
-+#include <linux/slab.h>
-+#include <linux/pci.h>
-+#include <linux/pci_ids.h>
-+
-+#include <linux/pci_regs.h>
-+
-+#include <uapi/linux/pcitest.h>
-+
-+#define DRV_MODULE_NAME			"pci-endpoint-test"
-+
-+#define PCI_ENDPOINT_TEST_MAGIC		0x0
-+
-+#define PCI_ENDPOINT_TEST_COMMAND	0x4
-+#define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
-+#define COMMAND_RAISE_MSI_IRQ		BIT(1)
-+#define MSI_NUMBER_SHIFT		2
-+/* 6 bits for MSI number */
-+#define COMMAND_READ                    BIT(8)
-+#define COMMAND_WRITE                   BIT(9)
-+#define COMMAND_COPY                    BIT(10)
-+
-+#define PCI_ENDPOINT_TEST_STATUS	0x8
-+#define STATUS_READ_SUCCESS             BIT(0)
-+#define STATUS_READ_FAIL                BIT(1)
-+#define STATUS_WRITE_SUCCESS            BIT(2)
-+#define STATUS_WRITE_FAIL               BIT(3)
-+#define STATUS_COPY_SUCCESS             BIT(4)
-+#define STATUS_COPY_FAIL                BIT(5)
-+#define STATUS_IRQ_RAISED               BIT(6)
-+#define STATUS_SRC_ADDR_INVALID         BIT(7)
-+#define STATUS_DST_ADDR_INVALID         BIT(8)
-+
-+#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0xc
-+#define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
-+
-+#define PCI_ENDPOINT_TEST_LOWER_DST_ADDR	0x14
-+#define PCI_ENDPOINT_TEST_UPPER_DST_ADDR	0x18
-+
-+#define PCI_ENDPOINT_TEST_SIZE		0x1c
-+#define PCI_ENDPOINT_TEST_CHECKSUM	0x20
-+
-+static DEFINE_IDA(pci_endpoint_test_ida);
-+
-+#define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
-+					    miscdev)
-+enum pci_barno {
-+	BAR_0,
-+	BAR_1,
-+	BAR_2,
-+	BAR_3,
-+	BAR_4,
-+	BAR_5,
-+};
-+
-+struct pci_endpoint_test {
-+	struct pci_dev	*pdev;
-+	void __iomem	*base;
-+	void __iomem	*bar[6];
-+	struct completion irq_raised;
-+	int		last_irq;
-+	/* mutex to protect the ioctls */
-+	struct mutex	mutex;
-+	struct miscdevice miscdev;
-+};
-+
-+static int bar_size[] = { 4, 512, 1024, 16384, 131072, 1048576 };
-+
-+static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
-+					  u32 offset)
+ #include <linux/interrupt.h>
+ #include <linux/module.h>
+ #include <linux/fs.h>
+@@ -717,6 +719,417 @@ static unsigned int switchtec_dev_poll(struct file *filp, poll_table *wait)
+ 	return ret;
+ }
+ 
++static int ioctl_flash_info(struct switchtec_dev *stdev,
++			    struct switchtec_ioctl_flash_info __user *uinfo)
 +{
-+	return readl(test->base + offset);
-+}
++	struct switchtec_ioctl_flash_info info = {0};
++	struct flash_info_regs __iomem *fi = stdev->mmio_flash_info;
 +
-+static inline void pci_endpoint_test_writel(struct pci_endpoint_test *test,
-+					    u32 offset, u32 value)
-+{
-+	writel(value, test->base + offset);
-+}
++	info.flash_length = ioread32(&fi->flash_length);
++	info.num_partitions = SWITCHTEC_IOCTL_NUM_PARTITIONS;
 +
-+static inline u32 pci_endpoint_test_bar_readl(struct pci_endpoint_test *test,
-+					      int bar, int offset)
-+{
-+	return readl(test->bar[bar] + offset);
-+}
-+
-+static inline void pci_endpoint_test_bar_writel(struct pci_endpoint_test *test,
-+						int bar, u32 offset, u32 value)
-+{
-+	writel(value, test->bar[bar] + offset);
-+}
-+
-+static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
-+{
-+	struct pci_endpoint_test *test = dev_id;
-+	u32 reg;
-+
-+	reg = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
-+	if (reg & STATUS_IRQ_RAISED) {
-+		test->last_irq = irq;
-+		complete(&test->irq_raised);
-+		reg &= ~STATUS_IRQ_RAISED;
-+	}
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_STATUS,
-+				 reg);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
-+				  enum pci_barno barno)
-+{
-+	int j;
-+	u32 val;
-+	int size;
-+
-+	if (!test->bar[barno])
-+		return false;
-+
-+	size = bar_size[barno];
-+
-+	for (j = 0; j < size; j += 4)
-+		pci_endpoint_test_bar_writel(test, barno, j, 0xA0A0A0A0);
-+
-+	for (j = 0; j < size; j += 4) {
-+		val = pci_endpoint_test_bar_readl(test, barno, j);
-+		if (val != 0xA0A0A0A0)
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
-+static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
-+{
-+	u32 val;
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-+				 COMMAND_RAISE_LEGACY_IRQ);
-+	val = wait_for_completion_timeout(&test->irq_raised,
-+					  msecs_to_jiffies(1000));
-+	if (!val)
-+		return false;
-+
-+	return true;
-+}
-+
-+static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
-+				      u8 msi_num)
-+{
-+	u32 val;
-+	struct pci_dev *pdev = test->pdev;
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-+				 msi_num << MSI_NUMBER_SHIFT |
-+				 COMMAND_RAISE_MSI_IRQ);
-+	val = wait_for_completion_timeout(&test->irq_raised,
-+					  msecs_to_jiffies(1000));
-+	if (!val)
-+		return false;
-+
-+	if (test->last_irq - pdev->irq == msi_num - 1)
-+		return true;
-+
-+	return false;
-+}
-+
-+static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
-+{
-+	bool ret = false;
-+	void *src_addr;
-+	void *dst_addr;
-+	dma_addr_t src_phys_addr;
-+	dma_addr_t dst_phys_addr;
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+	u32 src_crc32;
-+	u32 dst_crc32;
-+
-+	src_addr = dma_alloc_coherent(dev, size, &src_phys_addr, GFP_KERNEL);
-+	if (!src_addr) {
-+		dev_err(dev, "failed to allocate source buffer\n");
-+		ret = false;
-+		goto err;
-+	}
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_SRC_ADDR,
-+				 lower_32_bits(src_phys_addr));
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_SRC_ADDR,
-+				 upper_32_bits(src_phys_addr));
-+
-+	get_random_bytes(src_addr, size);
-+	src_crc32 = crc32_le(~0, src_addr, size);
-+
-+	dst_addr = dma_alloc_coherent(dev, size, &dst_phys_addr, GFP_KERNEL);
-+	if (!dst_addr) {
-+		dev_err(dev, "failed to allocate destination address\n");
-+		ret = false;
-+		goto err_src_addr;
-+	}
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_DST_ADDR,
-+				 lower_32_bits(dst_phys_addr));
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_DST_ADDR,
-+				 upper_32_bits(dst_phys_addr));
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
-+				 size);
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-+				 1 << MSI_NUMBER_SHIFT | COMMAND_COPY);
-+
-+	wait_for_completion(&test->irq_raised);
-+
-+	dst_crc32 = crc32_le(~0, dst_addr, size);
-+	if (dst_crc32 == src_crc32)
-+		ret = true;
-+
-+	dma_free_coherent(dev, size, dst_addr, dst_phys_addr);
-+
-+err_src_addr:
-+	dma_free_coherent(dev, size, src_addr, src_phys_addr);
-+
-+err:
-+	return ret;
-+}
-+
-+static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
-+{
-+	bool ret = false;
-+	u32 reg;
-+	void *addr;
-+	dma_addr_t phys_addr;
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+	u32 crc32;
-+
-+	addr = dma_alloc_coherent(dev, size, &phys_addr, GFP_KERNEL);
-+	if (!addr) {
-+		dev_err(dev, "failed to allocate address\n");
-+		ret = false;
-+		goto err;
-+	}
-+
-+	get_random_bytes(addr, size);
-+
-+	crc32 = crc32_le(~0, addr, size);
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_CHECKSUM,
-+				 crc32);
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_SRC_ADDR,
-+				 lower_32_bits(phys_addr));
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_SRC_ADDR,
-+				 upper_32_bits(phys_addr));
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-+				 1 << MSI_NUMBER_SHIFT | COMMAND_READ);
-+
-+	wait_for_completion(&test->irq_raised);
-+
-+	reg = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
-+	if (reg & STATUS_READ_SUCCESS)
-+		ret = true;
-+
-+	dma_free_coherent(dev, size, addr, phys_addr);
-+
-+err:
-+	return ret;
-+}
-+
-+static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
-+{
-+	bool ret = false;
-+	void *addr;
-+	dma_addr_t phys_addr;
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+	u32 crc32;
-+
-+	addr = dma_alloc_coherent(dev, size, &phys_addr, GFP_KERNEL);
-+	if (!addr) {
-+		dev_err(dev, "failed to allocate destination address\n");
-+		ret = false;
-+		goto err;
-+	}
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_DST_ADDR,
-+				 lower_32_bits(phys_addr));
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_DST_ADDR,
-+				 upper_32_bits(phys_addr));
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-+				 1 << MSI_NUMBER_SHIFT | COMMAND_WRITE);
-+
-+	wait_for_completion(&test->irq_raised);
-+
-+	crc32 = crc32_le(~0, addr, size);
-+	if (crc32 == pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_CHECKSUM))
-+		ret = true;
-+
-+	dma_free_coherent(dev, size, addr, phys_addr);
-+err:
-+	return ret;
-+}
-+
-+static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
-+				    unsigned long arg)
-+{
-+	int ret = -EINVAL;
-+	enum pci_barno bar;
-+	struct pci_endpoint_test *test = to_endpoint_test(file->private_data);
-+
-+	mutex_lock(&test->mutex);
-+	switch (cmd) {
-+	case PCITEST_BAR:
-+		bar = arg;
-+		if (bar < 0 || bar > 5)
-+			goto ret;
-+		ret = pci_endpoint_test_bar(test, bar);
-+		break;
-+	case PCITEST_LEGACY_IRQ:
-+		ret = pci_endpoint_test_legacy_irq(test);
-+		break;
-+	case PCITEST_MSI:
-+		ret = pci_endpoint_test_msi_irq(test, arg);
-+		break;
-+	case PCITEST_WRITE:
-+		ret = pci_endpoint_test_write(test, arg);
-+		break;
-+	case PCITEST_READ:
-+		ret = pci_endpoint_test_read(test, arg);
-+		break;
-+	case PCITEST_COPY:
-+		ret = pci_endpoint_test_copy(test, arg);
-+		break;
-+	}
-+
-+ret:
-+	mutex_unlock(&test->mutex);
-+	return ret;
-+}
-+
-+static const struct file_operations pci_endpoint_test_fops = {
-+	.owner = THIS_MODULE,
-+	.unlocked_ioctl = pci_endpoint_test_ioctl,
-+};
-+
-+static int pci_endpoint_test_probe(struct pci_dev *pdev,
-+				   const struct pci_device_id *ent)
-+{
-+	int i;
-+	int err;
-+	int irq;
-+	int id;
-+	char name[20];
-+	enum pci_barno bar;
-+	void __iomem *base;
-+	struct device *dev = &pdev->dev;
-+	struct pci_endpoint_test *test;
-+	struct miscdevice *misc_device;
-+
-+	if (pci_is_bridge(pdev))
-+		return -ENODEV;
-+
-+	test = devm_kzalloc(dev, sizeof(*test), GFP_KERNEL);
-+	if (!test)
-+		return -ENOMEM;
-+
-+	test->pdev = pdev;
-+	init_completion(&test->irq_raised);
-+	mutex_init(&test->mutex);
-+
-+	err = pci_enable_device(pdev);
-+	if (err) {
-+		dev_err(dev, "Cannot enable PCI device\n");
-+		return err;
-+	}
-+
-+	err = pci_request_regions(pdev, DRV_MODULE_NAME);
-+	if (err) {
-+		dev_err(dev, "Cannot obtain PCI resources\n");
-+		goto err_disable_pdev;
-+	}
-+
-+	pci_set_master(pdev);
-+
-+	irq = pci_enable_msi_range(pdev, 1, 32);
-+	if (irq < 0)
-+		dev_err(dev, "failed to get MSI interrupts\n");
-+
-+	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
-+			       IRQF_SHARED, DRV_MODULE_NAME, test);
-+	if (err) {
-+		dev_err(dev, "failed to request irq\n");
-+		goto err_disable_msi;
-+	}
-+
-+	for (i = 1; i < irq; i++) {
-+		err = devm_request_irq(dev, pdev->irq + i,
-+				       pci_endpoint_test_irqhandler,
-+				       IRQF_SHARED, DRV_MODULE_NAME, test);
-+		if (err)
-+			dev_err(dev, "failed to request irq for MSI %d\n",
-+				i + 1);
-+	}
-+
-+	for (bar = BAR_0; bar <= BAR_5; bar++) {
-+		base = pci_ioremap_bar(pdev, bar);
-+		if (!base) {
-+			dev_err(dev, "failed to read BAR%d\n", bar);
-+			WARN_ON(bar == BAR_0);
-+		}
-+		test->bar[bar] = base;
-+	}
-+
-+	test->base = test->bar[0];
-+	if (!test->base) {
-+		dev_err(dev, "Cannot perform PCI test without BAR0\n");
-+		goto err_iounmap;
-+	}
-+
-+	pci_set_drvdata(pdev, test);
-+
-+	id = ida_simple_get(&pci_endpoint_test_ida, 0, 0, GFP_KERNEL);
-+	if (id < 0) {
-+		dev_err(dev, "unable to get id\n");
-+		goto err_iounmap;
-+	}
-+
-+	snprintf(name, sizeof(name), DRV_MODULE_NAME ".%d", id);
-+	misc_device = &test->miscdev;
-+	misc_device->minor = MISC_DYNAMIC_MINOR;
-+	misc_device->name = name;
-+	misc_device->fops = &pci_endpoint_test_fops,
-+
-+	err = misc_register(misc_device);
-+	if (err) {
-+		dev_err(dev, "failed to register device\n");
-+		goto err_ida_remove;
-+	}
++	if (copy_to_user(uinfo, &info, sizeof(info)))
++		return -EFAULT;
 +
 +	return 0;
-+
-+err_ida_remove:
-+	ida_simple_remove(&pci_endpoint_test_ida, id);
-+
-+err_iounmap:
-+	for (bar = BAR_0; bar <= BAR_5; bar++) {
-+		if (test->bar[bar])
-+			pci_iounmap(pdev, test->bar[bar]);
-+	}
-+
-+err_disable_msi:
-+	pci_disable_msi(pdev);
-+	pci_release_regions(pdev);
-+
-+err_disable_pdev:
-+	pci_disable_device(pdev);
-+
-+	return err;
 +}
 +
-+static void pci_endpoint_test_remove(struct pci_dev *pdev)
++static void set_fw_info_part(struct switchtec_ioctl_flash_part_info *info,
++			     struct partition_info __iomem *pi)
 +{
-+	int id;
-+	enum pci_barno bar;
-+	struct pci_endpoint_test *test = pci_get_drvdata(pdev);
-+	struct miscdevice *misc_device = &test->miscdev;
-+
-+	if (sscanf(misc_device->name, DRV_MODULE_NAME ".%d", &id) != 1)
-+		return;
-+
-+	misc_deregister(&test->miscdev);
-+	ida_simple_remove(&pci_endpoint_test_ida, id);
-+	for (bar = BAR_0; bar <= BAR_5; bar++) {
-+		if (test->bar[bar])
-+			pci_iounmap(pdev, test->bar[bar]);
-+	}
-+	pci_disable_msi(pdev);
-+	pci_release_regions(pdev);
-+	pci_disable_device(pdev);
++	info->address = ioread32(&pi->address);
++	info->length = ioread32(&pi->length);
 +}
 +
-+static const struct pci_device_id pci_endpoint_test_tbl[] = {
-+	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
++static int ioctl_flash_part_info(struct switchtec_dev *stdev,
++	struct switchtec_ioctl_flash_part_info __user *uinfo)
++{
++	struct switchtec_ioctl_flash_part_info info = {0};
++	struct flash_info_regs __iomem *fi = stdev->mmio_flash_info;
++	u32 active_addr = -1;
 +
-+static struct pci_driver pci_endpoint_test_driver = {
-+	.name		= DRV_MODULE_NAME,
-+	.id_table	= pci_endpoint_test_tbl,
-+	.probe		= pci_endpoint_test_probe,
-+	.remove		= pci_endpoint_test_remove,
-+};
-+module_pci_driver(pci_endpoint_test_driver);
++	if (copy_from_user(&info, uinfo, sizeof(info)))
++		return -EFAULT;
 +
-+MODULE_DESCRIPTION("PCI ENDPOINT TEST HOST DRIVER");
-+MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
-+MODULE_LICENSE("GPL v2");
-diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
-index a8b93e6..f3c2769 100644
---- a/include/uapi/linux/Kbuild
-+++ b/include/uapi/linux/Kbuild
-@@ -329,6 +329,7 @@ header-y += parport.h
- header-y += patchkey.h
- header-y += pci.h
- header-y += pci_regs.h
-+header-y += pcitest.h
- header-y += perf_event.h
- header-y += personality.h
- header-y += pfkeyv2.h
-diff --git a/include/uapi/linux/pcitest.h b/include/uapi/linux/pcitest.h
++	switch (info.flash_partition) {
++	case SWITCHTEC_IOCTL_PART_CFG0:
++		active_addr = ioread32(&fi->active_cfg);
++		set_fw_info_part(&info, &fi->cfg0);
++		break;
++	case SWITCHTEC_IOCTL_PART_CFG1:
++		active_addr = ioread32(&fi->active_cfg);
++		set_fw_info_part(&info, &fi->cfg1);
++		break;
++	case SWITCHTEC_IOCTL_PART_IMG0:
++		active_addr = ioread32(&fi->active_img);
++		set_fw_info_part(&info, &fi->img0);
++		break;
++	case SWITCHTEC_IOCTL_PART_IMG1:
++		active_addr = ioread32(&fi->active_img);
++		set_fw_info_part(&info, &fi->img1);
++		break;
++	case SWITCHTEC_IOCTL_PART_NVLOG:
++		set_fw_info_part(&info, &fi->nvlog);
++		break;
++	case SWITCHTEC_IOCTL_PART_VENDOR0:
++		set_fw_info_part(&info, &fi->vendor[0]);
++		break;
++	case SWITCHTEC_IOCTL_PART_VENDOR1:
++		set_fw_info_part(&info, &fi->vendor[1]);
++		break;
++	case SWITCHTEC_IOCTL_PART_VENDOR2:
++		set_fw_info_part(&info, &fi->vendor[2]);
++		break;
++	case SWITCHTEC_IOCTL_PART_VENDOR3:
++		set_fw_info_part(&info, &fi->vendor[3]);
++		break;
++	case SWITCHTEC_IOCTL_PART_VENDOR4:
++		set_fw_info_part(&info, &fi->vendor[4]);
++		break;
++	case SWITCHTEC_IOCTL_PART_VENDOR5:
++		set_fw_info_part(&info, &fi->vendor[5]);
++		break;
++	case SWITCHTEC_IOCTL_PART_VENDOR6:
++		set_fw_info_part(&info, &fi->vendor[6]);
++		break;
++	case SWITCHTEC_IOCTL_PART_VENDOR7:
++		set_fw_info_part(&info, &fi->vendor[7]);
++		break;
++	default:
++		return -EINVAL;
++	}
++
++	if (info.address == active_addr)
++		info.active = 1;
++
++	if (copy_to_user(uinfo, &info, sizeof(info)))
++		return -EFAULT;
++
++	return 0;
++}
++
++static int ioctl_event_summary(struct switchtec_dev *stdev,
++	struct switchtec_user *stuser,
++	struct switchtec_ioctl_event_summary __user *usum)
++{
++	struct switchtec_ioctl_event_summary s = {0};
++	int i;
++	u32 reg;
++
++	s.global = ioread32(&stdev->mmio_sw_event->global_summary);
++	s.part_bitmap = ioread32(&stdev->mmio_sw_event->part_event_bitmap);
++	s.local_part = ioread32(&stdev->mmio_part_cfg->part_event_summary);
++
++	for (i = 0; i < stdev->partition_count; i++) {
++		reg = ioread32(&stdev->mmio_part_cfg_all[i].part_event_summary);
++		s.part[i] = reg;
++	}
++
++	for (i = 0; i < SWITCHTEC_MAX_PFF_CSR; i++) {
++		reg = ioread16(&stdev->mmio_pff_csr[i].vendor_id);
++		if (reg != MICROSEMI_VENDOR_ID)
++			break;
++
++		reg = ioread32(&stdev->mmio_pff_csr[i].pff_event_summary);
++		s.pff[i] = reg;
++	}
++
++	if (copy_to_user(usum, &s, sizeof(s)))
++		return -EFAULT;
++
++	stuser->event_cnt = atomic_read(&stdev->event_cnt);
++
++	return 0;
++}
++
++static u32 __iomem *global_ev_reg(struct switchtec_dev *stdev,
++				  size_t offset, int index)
++{
++	return (void __iomem *)stdev->mmio_sw_event + offset;
++}
++
++static u32 __iomem *part_ev_reg(struct switchtec_dev *stdev,
++				size_t offset, int index)
++{
++	return (void __iomem *)&stdev->mmio_part_cfg_all[index] + offset;
++}
++
++static u32 __iomem *pff_ev_reg(struct switchtec_dev *stdev,
++			       size_t offset, int index)
++{
++	return (void __iomem *)&stdev->mmio_pff_csr[index] + offset;
++}
++
++#define EV_GLB(i, r)[i] = {offsetof(struct sw_event_regs, r), global_ev_reg}
++#define EV_PAR(i, r)[i] = {offsetof(struct part_cfg_regs, r), part_ev_reg}
++#define EV_PFF(i, r)[i] = {offsetof(struct pff_csr_regs, r), pff_ev_reg}
++
++const struct event_reg {
++	size_t offset;
++	u32 __iomem *(*map_reg)(struct switchtec_dev *stdev,
++				size_t offset, int index);
++} event_regs[] = {
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_STACK_ERROR, stack_error_event_hdr),
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_PPU_ERROR, ppu_error_event_hdr),
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_ISP_ERROR, isp_error_event_hdr),
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_SYS_RESET, sys_reset_event_hdr),
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_FW_EXC, fw_exception_hdr),
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_FW_NMI, fw_nmi_hdr),
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_FW_NON_FATAL, fw_non_fatal_hdr),
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_FW_FATAL, fw_fatal_hdr),
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_TWI_MRPC_COMP, twi_mrpc_comp_hdr),
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_TWI_MRPC_COMP_ASYNC,
++	       twi_mrpc_comp_async_hdr),
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_CLI_MRPC_COMP, cli_mrpc_comp_hdr),
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_CLI_MRPC_COMP_ASYNC,
++	       cli_mrpc_comp_async_hdr),
++	EV_GLB(SWITCHTEC_IOCTL_EVENT_GPIO_INT, gpio_interrupt_hdr),
++	EV_PAR(SWITCHTEC_IOCTL_EVENT_PART_RESET, part_reset_hdr),
++	EV_PAR(SWITCHTEC_IOCTL_EVENT_MRPC_COMP, mrpc_comp_hdr),
++	EV_PAR(SWITCHTEC_IOCTL_EVENT_MRPC_COMP_ASYNC, mrpc_comp_async_hdr),
++	EV_PAR(SWITCHTEC_IOCTL_EVENT_DYN_PART_BIND_COMP, dyn_binding_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_AER_IN_P2P, aer_in_p2p_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_AER_IN_VEP, aer_in_vep_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_DPC, dpc_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_CTS, cts_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_HOTPLUG, hotplug_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_IER, ier_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_THRESH, threshold_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_POWER_MGMT, power_mgmt_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_TLP_THROTTLING, tlp_throttling_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_FORCE_SPEED, force_speed_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_CREDIT_TIMEOUT, credit_timeout_hdr),
++	EV_PFF(SWITCHTEC_IOCTL_EVENT_LINK_STATE, link_state_hdr),
++};
++
++static u32 __iomem *event_hdr_addr(struct switchtec_dev *stdev,
++				   int event_id, int index)
++{
++	size_t off;
++
++	if (event_id < 0 || event_id >= SWITCHTEC_IOCTL_MAX_EVENTS)
++		return ERR_PTR(-EINVAL);
++
++	off = event_regs[event_id].offset;
++
++	if (event_regs[event_id].map_reg == part_ev_reg) {
++		if (index == SWITCHTEC_IOCTL_EVENT_LOCAL_PART_IDX)
++			index = stdev->partition;
++		else if (index < 0 || index >= stdev->partition_count)
++			return ERR_PTR(-EINVAL);
++	} else if (event_regs[event_id].map_reg == pff_ev_reg) {
++		if (index < 0 || index >= stdev->pff_csr_count)
++			return ERR_PTR(-EINVAL);
++	}
++
++	return event_regs[event_id].map_reg(stdev, off, index);
++}
++
++static int event_ctl(struct switchtec_dev *stdev,
++		     struct switchtec_ioctl_event_ctl *ctl)
++{
++	int i;
++	u32 __iomem *reg;
++	u32 hdr;
++
++	reg = event_hdr_addr(stdev, ctl->event_id, ctl->index);
++	if (IS_ERR(reg))
++		return PTR_ERR(reg);
++
++	hdr = ioread32(reg);
++	for (i = 0; i < ARRAY_SIZE(ctl->data); i++)
++		ctl->data[i] = ioread32(&reg[i + 1]);
++
++	ctl->occurred = hdr & SWITCHTEC_EVENT_OCCURRED;
++	ctl->count = (hdr >> 5) & 0xFF;
++
++	if (!(ctl->flags & SWITCHTEC_IOCTL_EVENT_FLAG_CLEAR))
++		hdr &= ~SWITCHTEC_EVENT_CLEAR;
++	if (ctl->flags & SWITCHTEC_IOCTL_EVENT_FLAG_EN_POLL)
++		hdr |= SWITCHTEC_EVENT_EN_IRQ;
++	if (ctl->flags & SWITCHTEC_IOCTL_EVENT_FLAG_DIS_POLL)
++		hdr &= ~SWITCHTEC_EVENT_EN_IRQ;
++	if (ctl->flags & SWITCHTEC_IOCTL_EVENT_FLAG_EN_LOG)
++		hdr |= SWITCHTEC_EVENT_EN_LOG;
++	if (ctl->flags & SWITCHTEC_IOCTL_EVENT_FLAG_DIS_LOG)
++		hdr &= ~SWITCHTEC_EVENT_EN_LOG;
++	if (ctl->flags & SWITCHTEC_IOCTL_EVENT_FLAG_EN_CLI)
++		hdr |= SWITCHTEC_EVENT_EN_CLI;
++	if (ctl->flags & SWITCHTEC_IOCTL_EVENT_FLAG_DIS_CLI)
++		hdr &= ~SWITCHTEC_EVENT_EN_CLI;
++	if (ctl->flags & SWITCHTEC_IOCTL_EVENT_FLAG_EN_FATAL)
++		hdr |= SWITCHTEC_EVENT_FATAL;
++	if (ctl->flags & SWITCHTEC_IOCTL_EVENT_FLAG_DIS_FATAL)
++		hdr &= ~SWITCHTEC_EVENT_FATAL;
++
++	if (ctl->flags)
++		iowrite32(hdr, reg);
++
++	ctl->flags = 0;
++	if (hdr & SWITCHTEC_EVENT_EN_IRQ)
++		ctl->flags |= SWITCHTEC_IOCTL_EVENT_FLAG_EN_POLL;
++	if (hdr & SWITCHTEC_EVENT_EN_LOG)
++		ctl->flags |= SWITCHTEC_IOCTL_EVENT_FLAG_EN_LOG;
++	if (hdr & SWITCHTEC_EVENT_EN_CLI)
++		ctl->flags |= SWITCHTEC_IOCTL_EVENT_FLAG_EN_CLI;
++	if (hdr & SWITCHTEC_EVENT_FATAL)
++		ctl->flags |= SWITCHTEC_IOCTL_EVENT_FLAG_EN_FATAL;
++
++	return 0;
++}
++
++static int ioctl_event_ctl(struct switchtec_dev *stdev,
++	struct switchtec_ioctl_event_ctl __user *uctl)
++{
++	int ret;
++	int nr_idxs;
++	struct switchtec_ioctl_event_ctl ctl;
++
++	if (copy_from_user(&ctl, uctl, sizeof(ctl)))
++		return -EFAULT;
++
++	if (ctl.event_id > SWITCHTEC_IOCTL_MAX_EVENTS)
++		return -EINVAL;
++
++	if (ctl.flags & SWITCHTEC_IOCTL_EVENT_FLAG_UNUSED)
++		return -EINVAL;
++
++	if (ctl.index == SWITCHTEC_IOCTL_EVENT_IDX_ALL) {
++		if (event_regs[ctl.event_id].map_reg == global_ev_reg)
++			nr_idxs = 1;
++		else if (event_regs[ctl.event_id].map_reg == part_ev_reg)
++			nr_idxs = stdev->partition_count;
++		else if (event_regs[ctl.event_id].map_reg == pff_ev_reg)
++			nr_idxs = stdev->pff_csr_count;
++		else
++			return -EINVAL;
++
++		for (ctl.index = 0; ctl.index < nr_idxs; ctl.index++) {
++			ret = event_ctl(stdev, &ctl);
++			if (ret < 0)
++				return ret;
++		}
++	} else {
++		ret = event_ctl(stdev, &ctl);
++		if (ret < 0)
++			return ret;
++	}
++
++	if (copy_to_user(uctl, &ctl, sizeof(ctl)))
++		return -EFAULT;
++
++	return 0;
++}
++
++static int ioctl_pff_to_port(struct switchtec_dev *stdev,
++			     struct switchtec_ioctl_pff_port *up)
++{
++	int i, part;
++	u32 reg;
++	struct part_cfg_regs *pcfg;
++	struct switchtec_ioctl_pff_port p;
++
++	if (copy_from_user(&p, up, sizeof(p)))
++		return -EFAULT;
++
++	p.port = -1;
++	for (part = 0; part < stdev->partition_count; part++) {
++		pcfg = &stdev->mmio_part_cfg_all[part];
++		p.partition = part;
++
++		reg = ioread32(&pcfg->usp_pff_inst_id);
++		if (reg == p.pff) {
++			p.port = 0;
++			break;
++		}
++
++		reg = ioread32(&pcfg->vep_pff_inst_id);
++		if (reg == p.pff) {
++			p.port = SWITCHTEC_IOCTL_PFF_VEP;
++			break;
++		}
++
++		for (i = 0; i < ARRAY_SIZE(pcfg->dsp_pff_inst_id); i++) {
++			reg = ioread32(&pcfg->dsp_pff_inst_id[i]);
++			if (reg != p.pff)
++				continue;
++
++			p.port = i + 1;
++			break;
++		}
++
++		if (p.port != -1)
++			break;
++	}
++
++	if (copy_to_user(up, &p, sizeof(p)))
++		return -EFAULT;
++
++	return 0;
++}
++
++static int ioctl_port_to_pff(struct switchtec_dev *stdev,
++			     struct switchtec_ioctl_pff_port *up)
++{
++	struct switchtec_ioctl_pff_port p;
++	struct part_cfg_regs *pcfg;
++
++	if (copy_from_user(&p, up, sizeof(p)))
++		return -EFAULT;
++
++	if (p.partition == SWITCHTEC_IOCTL_EVENT_LOCAL_PART_IDX)
++		pcfg = stdev->mmio_part_cfg;
++	else if (p.partition < stdev->partition_count)
++		pcfg = &stdev->mmio_part_cfg_all[p.partition];
++	else
++		return -EINVAL;
++
++	switch (p.port) {
++	case 0:
++		p.pff = ioread32(&pcfg->usp_pff_inst_id);
++		break;
++	case SWITCHTEC_IOCTL_PFF_VEP:
++		p.pff = ioread32(&pcfg->vep_pff_inst_id);
++		break;
++	default:
++		if (p.port > ARRAY_SIZE(pcfg->dsp_pff_inst_id))
++			return -EINVAL;
++		p.pff = ioread32(&pcfg->dsp_pff_inst_id[p.port - 1]);
++		break;
++	}
++
++	if (copy_to_user(up, &p, sizeof(p)))
++		return -EFAULT;
++
++	return 0;
++}
++
++static long switchtec_dev_ioctl(struct file *filp, unsigned int cmd,
++				unsigned long arg)
++{
++	struct switchtec_user *stuser = filp->private_data;
++	struct switchtec_dev *stdev = stuser->stdev;
++
++	void __user *argp = (void __user *)arg;
++
++	switch (cmd) {
++	case SWITCHTEC_IOCTL_FLASH_INFO:
++		return ioctl_flash_info(stdev, argp);
++	case SWITCHTEC_IOCTL_FLASH_PART_INFO:
++		return ioctl_flash_part_info(stdev, argp);
++	case SWITCHTEC_IOCTL_EVENT_SUMMARY:
++		return ioctl_event_summary(stdev, stuser, argp);
++	case SWITCHTEC_IOCTL_EVENT_CTL:
++		return ioctl_event_ctl(stdev, argp);
++	case SWITCHTEC_IOCTL_PFF_TO_PORT:
++		return ioctl_pff_to_port(stdev, argp);
++	case SWITCHTEC_IOCTL_PORT_TO_PFF:
++		return ioctl_port_to_pff(stdev, argp);
++	default:
++		return -ENOTTY;
++	}
++}
++
+ static const struct file_operations switchtec_fops = {
+ 	.owner = THIS_MODULE,
+ 	.open = switchtec_dev_open,
+@@ -724,6 +1137,8 @@ static const struct file_operations switchtec_fops = {
+ 	.write = switchtec_dev_write,
+ 	.read = switchtec_dev_read,
+ 	.poll = switchtec_dev_poll,
++	.unlocked_ioctl = switchtec_dev_ioctl,
++	.compat_ioctl = switchtec_dev_ioctl,
+ };
+ 
+ static void stdev_release(struct device *dev)
+@@ -808,11 +1223,52 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
+ 	return ERR_PTR(rc);
+ }
+ 
++static int mask_event(struct switchtec_dev *stdev, int eid, int idx)
++{
++	size_t off = event_regs[eid].offset;
++	u32 __iomem *hdr_reg;
++	u32 hdr;
++
++	hdr_reg = event_regs[eid].map_reg(stdev, off, idx);
++	hdr = ioread32(hdr_reg);
++
++	if (!(hdr & SWITCHTEC_EVENT_OCCURRED && hdr & SWITCHTEC_EVENT_EN_IRQ))
++		return 0;
++
++	dev_dbg(&stdev->dev, "%s: %d %d %x\n", __func__, eid, idx, hdr);
++	hdr &= ~(SWITCHTEC_EVENT_EN_IRQ | SWITCHTEC_EVENT_OCCURRED);
++	iowrite32(hdr, hdr_reg);
++
++	return 1;
++}
++
++static int mask_all_events(struct switchtec_dev *stdev, int eid)
++{
++	int idx;
++	int count = 0;
++
++	if (event_regs[eid].map_reg == part_ev_reg) {
++		for (idx = 0; idx < stdev->partition_count; idx++)
++			count += mask_event(stdev, eid, idx);
++	} else if (event_regs[eid].map_reg == pff_ev_reg) {
++		for (idx = 0; idx < stdev->pff_csr_count; idx++) {
++			if (!stdev->pff_local[idx])
++				continue;
++			count += mask_event(stdev, eid, idx);
++		}
++	} else {
++		count += mask_event(stdev, eid, 0);
++	}
++
++	return count;
++}
++
+ static irqreturn_t switchtec_event_isr(int irq, void *dev)
+ {
+ 	struct switchtec_dev *stdev = dev;
+ 	u32 reg;
+ 	irqreturn_t ret = IRQ_NONE;
++	int eid, event_count = 0;
+ 
+ 	reg = ioread32(&stdev->mmio_part_cfg->mrpc_comp_hdr);
+ 	if (reg & SWITCHTEC_EVENT_OCCURRED) {
+@@ -822,6 +1278,17 @@ static irqreturn_t switchtec_event_isr(int irq, void *dev)
+ 		iowrite32(reg, &stdev->mmio_part_cfg->mrpc_comp_hdr);
+ 	}
+ 
++	for (eid = 0; eid < SWITCHTEC_IOCTL_MAX_EVENTS; eid++)
++		event_count += mask_all_events(stdev, eid);
++
++	if (event_count) {
++		atomic_inc(&stdev->event_cnt);
++		wake_up_interruptible(&stdev->event_wq);
++		dev_dbg(&stdev->dev, "%s: %d events\n", __func__,
++			event_count);
++		return IRQ_HANDLED;
++	}
++
+ 	return ret;
+ }
+ 
+diff --git a/include/uapi/linux/switchtec_ioctl.h b/include/uapi/linux/switchtec_ioctl.h
 new file mode 100644
-index 0000000..a6aa10c
+index 0000000..3e824e1
 --- /dev/null
-+++ b/include/uapi/linux/pcitest.h
-@@ -0,0 +1,19 @@
-+/**
-+ * pcitest.h - PCI test uapi defines
++++ b/include/uapi/linux/switchtec_ioctl.h
+@@ -0,0 +1,132 @@
++/*
++ * Microsemi Switchtec PCIe Driver
++ * Copyright (c) 2017, Microsemi Corporation
 + *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
 + *
 + */
 +
-+#ifndef __UAPI_LINUX_PCITEST_H
-+#define __UAPI_LINUX_PCITEST_H
++#ifndef _UAPI_LINUX_SWITCHTEC_IOCTL_H
++#define _UAPI_LINUX_SWITCHTEC_IOCTL_H
 +
-+#define PCITEST_BAR		_IO('P', 0x1)
-+#define PCITEST_LEGACY_IRQ	_IO('P', 0x2)
-+#define PCITEST_MSI		_IOW('P', 0x3, int)
-+#define PCITEST_WRITE		_IOW('P', 0x4, unsigned long)
-+#define PCITEST_READ		_IOW('P', 0x5, unsigned long)
-+#define PCITEST_COPY		_IOW('P', 0x6, unsigned long)
++#include <linux/types.h>
 +
-+#endif /* __UAPI_LINUX_PCITEST_H */
++#define SWITCHTEC_IOCTL_PART_CFG0	0
++#define SWITCHTEC_IOCTL_PART_CFG1	1
++#define SWITCHTEC_IOCTL_PART_IMG0	2
++#define SWITCHTEC_IOCTL_PART_IMG1	3
++#define SWITCHTEC_IOCTL_PART_NVLOG	4
++#define SWITCHTEC_IOCTL_PART_VENDOR0	5
++#define SWITCHTEC_IOCTL_PART_VENDOR1	6
++#define SWITCHTEC_IOCTL_PART_VENDOR2	7
++#define SWITCHTEC_IOCTL_PART_VENDOR3	8
++#define SWITCHTEC_IOCTL_PART_VENDOR4	9
++#define SWITCHTEC_IOCTL_PART_VENDOR5	10
++#define SWITCHTEC_IOCTL_PART_VENDOR6	11
++#define SWITCHTEC_IOCTL_PART_VENDOR7	12
++#define SWITCHTEC_IOCTL_NUM_PARTITIONS	13
++
++struct switchtec_ioctl_flash_info {
++	__u64 flash_length;
++	__u32 num_partitions;
++	__u32 padding;
++};
++
++struct switchtec_ioctl_flash_part_info {
++	__u32 flash_partition;
++	__u32 address;
++	__u32 length;
++	__u32 active;
++};
++
++struct switchtec_ioctl_event_summary {
++	__u64 global;
++	__u64 part_bitmap;
++	__u32 local_part;
++	__u32 padding;
++	__u32 part[48];
++	__u32 pff[48];
++};
++
++#define SWITCHTEC_IOCTL_EVENT_STACK_ERROR		0
++#define SWITCHTEC_IOCTL_EVENT_PPU_ERROR			1
++#define SWITCHTEC_IOCTL_EVENT_ISP_ERROR			2
++#define SWITCHTEC_IOCTL_EVENT_SYS_RESET			3
++#define SWITCHTEC_IOCTL_EVENT_FW_EXC			4
++#define SWITCHTEC_IOCTL_EVENT_FW_NMI			5
++#define SWITCHTEC_IOCTL_EVENT_FW_NON_FATAL		6
++#define SWITCHTEC_IOCTL_EVENT_FW_FATAL			7
++#define SWITCHTEC_IOCTL_EVENT_TWI_MRPC_COMP		8
++#define SWITCHTEC_IOCTL_EVENT_TWI_MRPC_COMP_ASYNC	9
++#define SWITCHTEC_IOCTL_EVENT_CLI_MRPC_COMP		10
++#define SWITCHTEC_IOCTL_EVENT_CLI_MRPC_COMP_ASYNC	11
++#define SWITCHTEC_IOCTL_EVENT_GPIO_INT			12
++#define SWITCHTEC_IOCTL_EVENT_PART_RESET		13
++#define SWITCHTEC_IOCTL_EVENT_MRPC_COMP			14
++#define SWITCHTEC_IOCTL_EVENT_MRPC_COMP_ASYNC		15
++#define SWITCHTEC_IOCTL_EVENT_DYN_PART_BIND_COMP	16
++#define SWITCHTEC_IOCTL_EVENT_AER_IN_P2P		17
++#define SWITCHTEC_IOCTL_EVENT_AER_IN_VEP		18
++#define SWITCHTEC_IOCTL_EVENT_DPC			19
++#define SWITCHTEC_IOCTL_EVENT_CTS			20
++#define SWITCHTEC_IOCTL_EVENT_HOTPLUG			21
++#define SWITCHTEC_IOCTL_EVENT_IER			22
++#define SWITCHTEC_IOCTL_EVENT_THRESH			23
++#define SWITCHTEC_IOCTL_EVENT_POWER_MGMT		24
++#define SWITCHTEC_IOCTL_EVENT_TLP_THROTTLING		25
++#define SWITCHTEC_IOCTL_EVENT_FORCE_SPEED		26
++#define SWITCHTEC_IOCTL_EVENT_CREDIT_TIMEOUT		27
++#define SWITCHTEC_IOCTL_EVENT_LINK_STATE		28
++#define SWITCHTEC_IOCTL_MAX_EVENTS			29
++
++#define SWITCHTEC_IOCTL_EVENT_LOCAL_PART_IDX -1
++#define SWITCHTEC_IOCTL_EVENT_IDX_ALL -2
++
++#define SWITCHTEC_IOCTL_EVENT_FLAG_CLEAR     (1 << 0)
++#define SWITCHTEC_IOCTL_EVENT_FLAG_EN_POLL   (1 << 1)
++#define SWITCHTEC_IOCTL_EVENT_FLAG_EN_LOG    (1 << 2)
++#define SWITCHTEC_IOCTL_EVENT_FLAG_EN_CLI    (1 << 3)
++#define SWITCHTEC_IOCTL_EVENT_FLAG_EN_FATAL  (1 << 4)
++#define SWITCHTEC_IOCTL_EVENT_FLAG_DIS_POLL  (1 << 5)
++#define SWITCHTEC_IOCTL_EVENT_FLAG_DIS_LOG   (1 << 6)
++#define SWITCHTEC_IOCTL_EVENT_FLAG_DIS_CLI   (1 << 7)
++#define SWITCHTEC_IOCTL_EVENT_FLAG_DIS_FATAL (1 << 8)
++#define SWITCHTEC_IOCTL_EVENT_FLAG_UNUSED    (~0x1ff)
++
++struct switchtec_ioctl_event_ctl {
++	__u32 event_id;
++	__s32 index;
++	__u32 flags;
++	__u32 occurred;
++	__u32 count;
++	__u32 data[5];
++};
++
++#define SWITCHTEC_IOCTL_PFF_VEP 100
++struct switchtec_ioctl_pff_port {
++	__u32 pff;
++	__u32 partition;
++	__u32 port;
++};
++
++#define SWITCHTEC_IOCTL_FLASH_INFO \
++	_IOR('W', 0x40, struct switchtec_ioctl_flash_info)
++#define SWITCHTEC_IOCTL_FLASH_PART_INFO \
++	_IOWR('W', 0x41, struct switchtec_ioctl_flash_part_info)
++#define SWITCHTEC_IOCTL_EVENT_SUMMARY \
++	_IOR('W', 0x42, struct switchtec_ioctl_event_summary)
++#define SWITCHTEC_IOCTL_EVENT_CTL \
++	_IOWR('W', 0x43, struct switchtec_ioctl_event_ctl)
++#define SWITCHTEC_IOCTL_PFF_TO_PORT \
++	_IOWR('W', 0x44, struct switchtec_ioctl_pff_port)
++#define SWITCHTEC_IOCTL_PORT_TO_PFF \
++	_IOWR('W', 0x45, struct switchtec_ioctl_pff_port)
++
++#endif
 -- 
-1.7.9.5
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.1.4
