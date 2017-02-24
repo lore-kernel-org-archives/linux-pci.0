@@ -1,128 +1,128 @@
-Return-Path: <SRS0=kwRk=2I=gmail.com=ddaney.cavm@kernel.org>
-Return-Path: <SRS0=kwRk=2I=gmail.com=ddaney.cavm@kernel.org>
-Subject: Re: [PATCH] PCI: Add cavium acs pci quirk
-To: "Chalamarla, Tirumalesh" <Tirumalesh.Chalamarla@cavium.com>,
- Bjorn Helgaas <helgaas@kernel.org>,
- Alex Williamson <alex.williamson@redhat.com>,
- "Jaggi, Manish" <Manish.Jaggi@cavium.com>
-References: <56ABC5AE.1050209@caviumnetworks.com>
- <20170213214457.248084de@t450s.home>
- <20170214150722.GC8080@bhelgaas-glaptop.roam.corp.google.com>
- <b9192b8b-5105-f78a-70dc-607778b78b95@gmail.com>
- <2BC59900-08B3-4D8A-B55F-09E1C0A6BC27@caviumnetworks.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "Richter, Robert" <Robert.Richter@cavium.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-From: David Daney <ddaney.cavm@gmail.com>
-Message-ID: <cdfacacf-b39e-a565-f5ae-f59d1c2ff168@gmail.com>
-Date: Mon, 27 Feb 2017 11:25:09 -0800
-MIME-Version: 1.0
-In-Reply-To: <2BC59900-08B3-4D8A-B55F-09E1C0A6BC27@caviumnetworks.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 24 Feb 2017 12:27:45 -0700
+Message-Id: <1487964469-2944-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v4 0/4]  New Microsemi PCI Switch Management Driver
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 02/27/2017 11:13 AM, Chalamarla, Tirumalesh wrote:
->
->
-> On 2/27/17, 11:02 AM, "David Daney" <ddaney.cavm@gmail.com> wrote:
->
->     On 02/14/2017 07:07 AM, Bjorn Helgaas wrote:
->     > On Mon, Feb 13, 2017 at 09:44:57PM -0700, Alex Williamson wrote:
->     >> On Sat, 30 Jan 2016 01:33:58 +0530
->     >> Manish Jaggi <mjaggi@caviumnetworks.com> wrote:
->     >>
->     >>> Cavium devices matching this quirk do not perform
->     >>> peer-to-peer with other functions, allowing masking out
->     >>> these bits as if they were unimplemented in the ACS capability.
->     >>>
->     >>> Acked-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
->     >>> Signed-off-by: Manish Jaggi <mjaggi@caviumnetworks.com>
->     >>> ---
->     >>>  drivers/pci/quirks.c | 15 +++++++++++++++
->     >>>  1 file changed, 15 insertions(+)
->     >>>
->     >>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->     >>> index 7e32730..a300fa6 100644
->     >>> --- a/drivers/pci/quirks.c
->     >>> +++ b/drivers/pci/quirks.c
->     >>> @@ -3814,6 +3814,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
->     >>>  #endif
->     >>>  }
->     >>>
->     >>> +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
->     >>> +{
+Changes since v3:
 
-Perhaps add a check here for dev->device and/or dev->subsystem_device to 
-see if we need the workaround.  There may be many that match, so ...
+* Removed stdev_is_alive and moved pci deinit functions
+  into the device release function which only occurs after all
+  cdev instances are closed. (per Bjorn)
+* Reduced locking in read/write functions (per Bjorn)
+* Use pci_alloc_irq_vectors to vastly improve ISR initialization (Bjorn)
+* A few other minor nits and cleanup as noticed by Bjorn
 
+Changes since v2:
 
->     >>> +	/*
->     >>> +	 * Cavium devices matching this quirk do not perform
->     >>> +	 * peer-to-peer with other functions, allowing masking out
->     >>> +	 * these bits as if they were unimplemented in the ACS capability.
->     >>> +	 */
->     >>> +	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
->     >>> +		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
->     >>> +
->     >>> +	return acs_flags ? 0 : 1;
->     >>> +}
->     >>> +
->     >>>  /*
->     >>>   * Many Intel PCH root ports do provide ACS-like features to disable peer
->     >>>   * transactions and validate bus numbers in requests, but do not provide an
->     >>> @@ -3966,6 +3979,8 @@ static const struct pci_dev_acs_enabled {
->     >>>  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
->     >>>  	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
->     >>>  	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
->     >>> +	/* Cavium ThunderX */
->     >>> +	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
+* Collected reviewed and tested tags
+* Very minor fix to the error path in the create function
 
-.. Leaving PCI_ANY_ID here may keep the table more manageable.
+Changes since v1:
 
->     >>>  	{ 0 }
->     >>>  };
->     >>>
->     >>
->     >> Apologies for not catching this, but what sort of crystal ball do you
->     >> have that can predict not only current devices, but future devices will
->     >> not support peer-to-peer features?  Is there an internal design
->     >> guidelines reference specification for Cavium that we can realistically
->     >> expect this to remain consistent, or is this just an attempt to never
->     >> think about ACS again at the customer's peril?  What about the existing
->     >> non-ThunderX products with Cavium vendor ID, does this really apply to
->     >> those?  I would strongly suggest taking the device ID into account.
->     >> See examples like the pci_quirk_intel_pch_acs quirk where the initial
->     >> filter is PCI_ANY_ID, but specific device types and ranges of device
->     >> IDs are identified by the function for evaluation.  This seems reckless
->     >> to me and I'd advise that it be reverted.  Thanks,
->     >
->     > I'd be happy to revert this, but it would be easier if somebody sent a
->     > patch and a changelog.
->     >
->
->     I agree that it should be reverted.
->
->     I was hoping that Manish or Tirumalesh would fix this properly by only
->     activating the quirk on the faulty hardware, but such a fix has never
->     appeared.
->
-> This was supposed to be true for all Cavium chips. We got such answer from Hardware architects, but it might change in the future.
-> I will be happy to replace this with DEVICE_ID.
-> Manish,
-> Could you please take this u, if not I will send a patch to do this.
+* Rebased onto 4.10-rc6 (cleanly)
+* Split the patch into a few more easily digestible patches (as
+  suggested by Greg Kroah-Hartman)
+* Folded switchtec.c into switchtec.h (per Greg)
+* Fixed a bunch of 32bit build warnings caught by the kbuild test robot
+* Fixed some issues in the documentation so it has a proper
+  reStructredText format (as noted by Jonathan Corbet)
+* Fixed padding and sizes in the IOCTL structures as noticed by Emil
+  Velikov and used pahole to verify their consistency across 32 and 64
+  bit builds
+* Reworked one of the IOCTL interfaces to be more future proof (per
+  Emil).
 
-I think several device ids or subsystem_device may be involved.
+Changes since RFC:
 
-See above.
+* Fixed incorrect use of the drive model as pointed out by Greg
+  Kroah-Hartman
+* Used devm functions as suggested by Keith Busch
+* Added a handful of sysfs attributes to the switchtec class
+* Added a handful of IOCTLs to the switchtec device
+* A number of miscellaneous bug fixes
 
+--
 
->
-> Tirumalesh.
->
->     David Daney
->
->
->
->
->
+Hi,
+
+This is a continuation of the RFC we posted lasted month [1] which
+proposes a management driver for Microsemi's Switchtec line of PCI
+switches. This hardware is still looking to be used in the Open
+Compute Platform
+
+To make this entirely clear: the Switchtec products are compliant
+with the PCI specifications and are supported today with the standard
+in-kernel driver. However, these devices also expose a management endpoint
+on a separate PCI function address which can be used to perform some
+advanced operations. This is a driver for that function. See the patch
+for more information.
+
+Since the RFC, we've made the changes requested by Greg Kroah-Hartman
+and Keith Busch, and we've also fleshed out a number of features. We've
+added a couple of IOCTLs and sysfs attributes which are documented in
+the patch. Significant work has also been done on the userspace tool
+which is available under a GPL license at [2]. We've also had testing
+done by some of the interested parties.
+
+We hope to see this work included in either 4.11 or 4.12 assuming a
+smooth review process.
+
+The patch is based off of the v4.10-rc6 release.
+
+Thanks for your review,
+
+Logan
+
+[1] https://www.spinics.net/lists/linux-pci/msg56897.html
+[2] https://github.com/sbates130272/switchtec-user
+
+Logan Gunthorpe (4):
+  MicroSemi Switchtec management interface driver
+  switchtec: Add user interface documentation
+  switchtec: Add sysfs attributes to the Switchtec driver
+  switchtec: Add IOCTLs to the Switchtec driver
+
+ Documentation/ABI/testing/sysfs-class-switchtec |   96 ++
+ Documentation/ioctl/ioctl-number.txt            |    1 +
+ Documentation/switchtec.txt                     |   80 ++
+ MAINTAINERS                                     |   11 +
+ drivers/pci/Kconfig                             |    1 +
+ drivers/pci/Makefile                            |    1 +
+ drivers/pci/switch/Kconfig                      |   13 +
+ drivers/pci/switch/Makefile                     |    1 +
+ drivers/pci/switch/switchtec.c                  | 1503 +++++++++++++++++++++++
+ include/uapi/linux/switchtec_ioctl.h            |  132 ++
+ 10 files changed, 1839 insertions(+)
+ create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
+ create mode 100644 Documentation/switchtec.txt
+ create mode 100644 drivers/pci/switch/Kconfig
+ create mode 100644 drivers/pci/switch/Makefile
+ create mode 100644 drivers/pci/switch/switchtec.c
+ create mode 100644 include/uapi/linux/switchtec_ioctl.h
+
+--
+2.1.4
