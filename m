@@ -1,87 +1,80 @@
-Return-Path: <SRS0=yGYe=Z4=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=yGYe=Z4=linutronix.de=tglx@kernel.org>
-Date: Wed, 15 Feb 2017 22:16:32 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Jess Frazelle <me@jessfraz.com>, "K. Y. Srinivasan" <kys@microsoft.com>,
-    Haiyang Zhang <haiyangz@microsoft.com>,
-    Stephen Hemminger <sthemmin@microsoft.com>,
-    Bjorn Helgaas <bhelgaas@google.com>, Keith Busch <keith.busch@intel.com>,
-    "open list:Hyper-V CORE AND DRIVERS" <devel@linuxdriverproject.org>,
-    "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-    open list <linux-kernel@vger.kernel.org>,
-    kernel-hardening@lists.openwall.com, Kees Cook <keescook@chromium.org>,
-    Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH v2 3/5] pci: set msi_domain_ops as __ro_after_init
-In-Reply-To: <20170215203347.GA6981@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.DEB.2.20.1702152143520.3805@nanos>
-References: <20170211013758.3288-1-me@jessfraz.com> <20170211013758.3288-3-me@jessfraz.com> <20170215203347.GA6981@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-vk0-f67.google.com ([209.85.213.67]:33027 "EHLO
+        mail-vk0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751219AbdBXSja (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 24 Feb 2017 13:39:30 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20170224171743.GA4964@otc-nc-03>
+References: <20170224065435.14954-1-yinghai@kernel.org> <20170224171743.GA4964@otc-nc-03>
+From: Yinghai Lu <yinghai@kernel.org>
+Date: Fri, 24 Feb 2017 10:39:28 -0800
+Message-ID: <CAE9FiQVE=OmKMJR0getueC7QYWP2=JAUQo4MfdCUB=zmFLdFTA@mail.gmail.com>
+Subject: Re: [PATCH] PCI, pciehp: Reuse set_slot_off()
+To: "Raj, Ashok" <ashok.raj@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        james puthukattukaran <james.puthukattukaran@oracle.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 15 Feb 2017, Bjorn Helgaas wrote:
-> We know at build-time what all the function pointers will be, so in
-> principle we should be able to make the struct const, which would be
-> even better than __ro_after_init.
+On Fri, Feb 24, 2017 at 9:17 AM, Raj, Ashok <ashok.raj@intel.com> wrote:
+> On Thu, Feb 23, 2017 at 10:54:35PM -0800, Yinghai Lu wrote:
+>> +++ linux-2.6/drivers/pci/hotplug/pciehp_ctrl.c
+>> @@ -71,9 +71,6 @@ static void set_slot_off(struct controll
+>>                */
+>>               msleep(1000);
+>>       }
+>> -
+>> -     pciehp_green_led_off(pslot);
+>> -     pciehp_set_attention_status(pslot, 1);
+>
+> Re using set_slot_off() in remove_board() make sense.. but i'm not sure
+> why these are pulled out? It seems to be functionally complete
+> when these are done in set_slot_off().
 
-Not everywhere unfortunately. In some instances it's a runtime decision, but
-yes, they could be fixed. But there is a downside in doing this. See below.
+Just don't want to the led operation is wrapped too deep inside.
 
-> For example, we could require that callers set every function pointer
-> before calling pci_msi_create_irq_domain(), using the default ones
-> (pci_msi_domain_set_desc, pci_msi_domain_check_cap,
-> pci_msi_domain_handle_error) if it doesn't need to override them,
-> e.g.,
-> 
->   static struct msi_domain_ops vmd_msi_domain_ops = {
->     .get_hwirq = vmd_get_hwirq,
->     .msi_check = pci_msi_domain_check_cap,
->   };
-> 
-> Or we could leave NULL pointers in the structure and have the code
-> that calls through the function pointers check for NULL and call the
-> default itself, e.g.,
-> 
->   if (ops->msi_check)
->     ops->msi_check(...)
->   else
->     pci_msi_domain_check_cap(...)
-> 
-> It looks like the "USE_DEF_OPS" framework was added by Jiang Liu with
-> the commits below.  I would CC: him for his thoughts, but I don't
-> have a current email address.
+In board_added(), has led operation code directly for success path.
 
-Me neither :(
+so put led operation code directly for error path make them more symmetrically.
 
-I think I suggested to Jiang to do that 'update with default functions' to
+>
+>>  }
+>>
+>>  /**
+>> @@ -126,6 +123,8 @@ static int board_added(struct slot *p_sl
+>>
+>>  err_exit:
+>>       set_slot_off(ctrl, p_slot);
+>> +     pciehp_green_led_off(p_slot);
+>> +     pciehp_set_attention_status(p_slot, 1);
+>>       return retval;
+>>  }
+>>
+>> @@ -142,16 +141,7 @@ static int remove_board(struct slot *p_s
+>>       if (retval)
+>>               return retval;
+>>
+>> -     if (POWER_CTRL(ctrl)) {
+>> -             pciehp_power_off_slot(p_slot);
+>> -
+>> -             /*
+>> -              * After turning power off, we must wait for at least 1 second
+>> -              * before taking any action that relies on power having been
+>> -              * removed from the slot/adapter.
+>> -              */
+>> -             msleep(1000);
+>> -     }
+>> +     set_slot_off(ctrl, p_slot);
+>>
+>>       /* turn off Green LED */
+>>       pciehp_green_led_off(p_slot);
+> Don't we need the pciehp_set_attention_status() here?
 
-- avoid exporting the world and some more
+that attention led could be on if previous power on is not done successfully
 
-- have the flexibility to add new functions to the ops w/o updating a
-  gazillion of existing usage sites, which has saved us lots of chaising in
-  the last years
+Thanks
 
-- avoid the if (ops->ptr) ops->ptr(); else default_fn(); constructs all
-  over the place.
-
-I admit I did not think about the fact that this makes the structs non
-const.
-
-Mopping that up by exporting the default functions and setting all the
-function pointers is tedious and requires a full tree sweep when we add new
-stuff. There's also code shared between PCI/platform/DT based stuff, so
-that becomes interesting.
-
-Doing the if (ops->ptr) ops->ptr() else default_fn(); dance should be
-simpler to pull off. There are not that many sites to look at, but then we
-have some of the GICv3 code using the domain ops out of core.
-
-For now doing the __ro_after_init is definitely the simplest and fastest
-solution to tighten these statically allocated structures.
-
-I have a look with Marc, what can be done in the long run.
-
-Thanks,
-
-	tglx
+Yinghai.
