@@ -1,90 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51710 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751272AbdBOQev (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Feb 2017 11:34:51 -0500
-Date: Wed, 15 Feb 2017 09:34:49 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: bhelgaas@google.com, linux-pci@vger.kernel.org
-Cc: Tirumalesh Chalamarla <tchalamarla@cavium.com>,
-        linux-kernel@vger.kernel.org,
-        Manish Jaggi <mjaggi@caviumnetworks.com>
-Subject: Re: [PATCH] Revert: "PCI: Add ACS quirk for all Cavium devices"
-Message-ID: <20170215093449.5e6f4ab3@t450s.home>
-In-Reply-To: <20170214161711.21753.16746.stgit@gimli.home>
-References: <20170214161711.21753.16746.stgit@gimli.home>
+Received: from mail-sn1nam01on0126.outbound.protection.outlook.com ([104.47.32.126]:30784
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751190AbdBXLQ1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 24 Feb 2017 06:16:27 -0500
+From: Dexuan Cui <decui@microsoft.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Rob Herring <robh@kernel.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Jon Mason <jon.mason@broadcom.com>,
+        Ray Jui <ray.jui@broadcom.com>,
+        =?iso-8859-1?Q?S=F6ren_Brinkmann?= <soren.brinkmann@xilinx.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        "KY Srinivasan" <kys@microsoft.com>, Long Li <longli@microsoft.com>
+Subject: RE: [PATCH v1 0/3] PCI: Configure PCIe MPS settings
+Date: Fri, 24 Feb 2017 11:16:03 +0000
+Message-ID: <MWHPR03MB26690F3B4C7E83596C35D377BF520@MWHPR03MB2669.namprd03.prod.outlook.com>
+References: <20170208224632.14351.89895.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170210215959.GR29169@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170210215959.GR29169@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 14 Feb 2017 09:18:18 -0700
-Alex Williamson <alex.williamson@redhat.com> wrote:
+> From: devel [mailto:driverdev-devel..@...] On Behalf Of Bjorn Helgaas
+> Sent: Saturday, February 11, 2017 06:00
+> ...
+> On Wed, Feb 08, 2017 at 04:49:22PM -0600, Bjorn Helgaas wrote:
+> > The PCI core doesn't configure the PCIe MPS settings by itself.  Each
+> > host bridge driver has to call pcie_bus_configure_settings() to make
+> > this happen.
+> >
+> > Jon fixed this already for pcie-iproc.c.  I propose these similar
+> > patches for other drivers.
+> >
+> > HV guys, I included you because create_root_hv_pci_bus() is one place
+> > that calls pci_scan_child_bus() but does not call
+> > pcie_bus_configure_settings().  I know you probably don't strictly
+> > *need* to configure MPS settings in a paravirtual front-end, but the
+> > PCI core does other device configuration in this path:
+> >
+> >   pci_scan_child_bus
+> >     pci_scan_slot
+> >       pci_scan_single_device
+> >         pci_device_add
+> >           pci_configure_device
+> >           pci_init_capabilities
+> >
+> > and I would like to eventually migrate the MPS configuration into that
+> > same path.  Since we do this other configuration for HV devices
+> > already, I think pcie_bus_configure_settings() should also work (even
+> > if it ends up not doing anything to real devices).
+> >
+> > It would make that eventual migration easier if all the
+> > pci_scan_child_bus() callers had the same pattern of calling
+> > pcie_bus_configure_settings().
+> >
+> > So would it make sense to make a similar patch for HV?  It looks easy
+> > to add it to create_root_hv_pci_bus(), but I don't know exactly what
+> > to do about pci_devices_present_work().
 
-> This reverts commit b404bcfbf035413dcce539c8ba2c9986d220d8ed.
-> 
-> The reverted commit makes no attempt to selectively consider devices,
-> current or future.  Instead, it whitelists the entire PCI vendor ID.
-> This is a reckless approach as we clearly cannot know whether future
-> device IDs within this vendor ID are susceptible to peer-to-peer.
-> Additionally, the comment suggests this quirk is only relevant to
-> ThunderX, which raises further doubt whether it is appropriate to
-> apply to the entire vendor ID.
-> 
-> Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-> Cc: Manish Jaggi <mjaggi@caviumnetworks.com>
-> Cc: Tirumalesh Chalamarla <tchalamarla@cavium.com>
-> ---
-> 
-> Please submit a new quirk targeting specific devices
+(I'm sorry for the really late response. I neglected the thread somehow...)
 
-Sorry, I saw the date on the original commit as January 30, 2016 and
-forgot we're now in 2017, so I figured that this had only recently gone
-in.  Since it's actually been around since 4.6, I'll take a different
-approach.  Instead of reverting, I'm going to assume that this applies
-to ThunderX devices as per the comment.  I'll follow-up with a new
-patch that only applies this to device IDs matching ThunderX as found
-here http://pci-ids.ucw.cz/read/PC/177d  Perhaps in the meantime,
-someone from Cavium will comment on which subset of those devices this
-is actually relevant to.  Thanks,
+Hi Bjorn,
+IMO we don't need to make any change to pci-hyperv.c: when a
+PCIe device is passed through to a guest on Hyper-V, in the guest the
+device only directly appears on a new root bus, and the new root bus
+doesn't have any child bus, and the new root bus itself is actually only
+a logical concept instead of a concrete device (i.e. it doesn't have its
+own BDF at all).
 
-Alex
+So, in the path pci_scan_child_bus -> ... -> pci_device_add ->
+pci_configure_device -> pci_configure_mps, we're sure
+pci_upstream_bridge() is NULL, so pci_configure_mps does nothing.
 
-> 
->  drivers/pci/quirks.c |   15 ---------------
->  1 file changed, 15 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 1800befa8b8b..449eabb438e2 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4060,19 +4060,6 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
->  #endif
->  }
->  
-> -static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> -{
-> -	/*
-> -	 * Cavium devices matching this quirk do not perform peer-to-peer
-> -	 * with other functions, allowing masking out these bits as if they
-> -	 * were unimplemented in the ACS capability.
-> -	 */
-> -	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-> -		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-> -
-> -	return acs_flags ? 0 : 1;
-> -}
-> -
->  /*
->   * Many Intel PCH root ports do provide ACS-like features to disable peer
->   * transactions and validate bus numbers in requests, but do not provide an
-> @@ -4276,8 +4263,6 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
->  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_spt_pch_acs },
->  	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
->  	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
-> -	/* Cavium ThunderX */
-> -	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
->  	{ 0 }
->  };
->  
-> 
+And since the root bus has no child bus, we don't need to call
+pcie_bus_configure_settings(child).
+
+Then you may ask how the MPS is set.
+I suppose the para-virtual PCI back-end driver on the host
+should take care of this properly.
+
+FWIW, after passing through a Mellanox VF to Linux guest, in the
+guest I get this for the device by lspci:
+        DevCap: MaxPayload 512 bytes
+        DevCtl: MaxPayload 128 bytes, MaxReadReq 128 bytes
+
+Thanks
+-- Dexuan
