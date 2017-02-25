@@ -1,88 +1,62 @@
-Return-Path: <SRS0=6HLn=ZV=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=6HLn=ZV=codeaurora.org=okaya@kernel.org>
-Subject: Re: [V2] PCI: enable extended tags support for PCIe devices
-To: linux-pci@vger.kernel.org, timur@codeaurora.org, cov@codeaurora.org,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <1484922050-9139-1-git-send-email-okaya@codeaurora.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- open list <linux-kernel@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <4a7f4c62-dd93-a834-c689-436a80889d15@codeaurora.org>
-Date: Wed, 8 Feb 2017 13:25:55 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49176 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751308AbdBYOpD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 25 Feb 2017 09:45:03 -0500
+Date: Sat, 25 Feb 2017 08:44:46 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: dri-devel@lists.freedesktop.org,
+        Michael Jamet <michael.jamet@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        linux-pci@vger.kernel.org, Darren Hart <dvhart@infradead.org>,
+        Andy Shevchenko <andy@infradead.org>,
+        platform-driver-x86@vger.kernel.org,
+        Ben Skeggs <bskeggs@redhat.com>, nouveau@lists.freedesktop.org,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Christian Koenig <christian.koenig@amd.com>,
+        amd-gfx@lists.freedesktop.org, Peter Wu <peter@lekensteyn.nl>
+Subject: Re: [PATCH 1/5] PCI: Recognize Thunderbolt devices
+Message-ID: <20170225144446.GA27943@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1487938188.git.lukas@wunner.de>
+ <c42a235e126f273e9b8712a7154f813f757db507.1487938188.git.lukas@wunner.de>
+ <20170224221724.GA26430@bhelgaas-glaptop.roam.corp.google.com>
+ <20170225074003.GA905@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <1484922050-9139-1-git-send-email-okaya@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170225074003.GA905@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Sat, Feb 25, 2017 at 08:40:03AM +0100, Lukas Wunner wrote:
+> On Fri, Feb 24, 2017 at 04:17:24PM -0600, Bjorn Helgaas wrote:
+> > On Fri, Feb 24, 2017 at 08:19:45PM +0100, Lukas Wunner wrote:
+> > > --- a/include/linux/pci.h
+> > > +++ b/include/linux/pci.h
+> > > @@ -358,6 +358,7 @@ struct pci_dev {
+> > >  	unsigned int	is_virtfn:1;
+> > >  	unsigned int	reset_fn:1;
+> > >  	unsigned int    is_hotplug_bridge:1;
+> > > +	unsigned int	is_thunderbolt:1; /* Thunderbolt controller */
+> > 
+> > I'm not really keen on having this in the PCI core because the core
+> > doesn't need this or even know what it means.
+> > 
+> > pci_find_next_ext_capability() is available to drivers, and if
+> > Thunderbolt-connectedness is useful information to apple-gmux or GPU
+> > drivers, it's fine with me if you want to use it there.  I just don't
+> > see the benefit to having it in the core.
+> 
+> The above contradicts your statement 3 days earlier:
+> 
+> 	"Assuming we need it, having it in struct pci_dev is fine.
+> 	 There's no point in looking up the VSEC capability more than once."
+> 	(http://www.spinics.net/lists/linux-pci/msg58532.html)
 
-On 1/20/2017 9:20 AM, Sinan Kaya wrote:
-> Each PCIe device can issue up to 32 transactions at a time by default.
-> Each transaction is tracked by a tag number on the bus. 2.2.6.2.
-> Transaction Descriptor – Transaction ID Field section of the PCIe 3.1
-> specification describes extended tags.
-> 
-> 32 transaction limit has been extended to 256 on PCI Express. According
-> to the specification, all PCIe devices are required to support receiving
-> 8-bit Tags (Tag completer). The PCIe-PCI bridges handle the translation
-> of 8-bit tags to 5-bit tags.
-> 
-> However, the generation of 8-bit tags is left optional to a particular HW
-> implementation. The code needs to check HW support before attempting
-> to enable extended tags producer capability.
-> 
-> 32 outstanding transactions is not enough for some performance critical
-> applications especially when a lot of small sized frames are transmitted.
-> 
-> Extended tags support increases this number to 256. Devices not
-> supporting extended tags tie-off this field to 0. According to ECN, it
-> is safe to enable this feature for all PCIe devices.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/probe.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index e164b5c..1192475 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1650,12 +1650,28 @@ static void program_hpp_type2(struct pci_dev *dev, struct hpp_type2 *hpp)
->  	 */
->  }
->  
-> +static void pci_configure_extended_tags(struct pci_dev *pdev)
-> +{
-> +	u32 dev_cap;
-> +	int ret;
-> +
-> +	ret = pcie_capability_read_dword(pdev, PCI_EXP_DEVCAP, &dev_cap);
-> +
-> +	if (ret)
-> +		return;
-> +
-> +	if (dev_cap & PCI_EXP_DEVCAP_EXT_TAG)
-> +		pcie_capability_set_word(pdev, PCI_EXP_DEVCTL,
-> +					 PCI_EXP_DEVCTL_EXT_TAG);
-> +}
-> +
->  static void pci_configure_device(struct pci_dev *dev)
->  {
->  	struct hotplug_params hpp;
->  	int ret;
->  
->  	pci_configure_mps(dev);
-> +	pci_configure_extended_tags(dev);
->  
->  	memset(&hpp, 0, sizeof(hpp));
->  	ret = pci_get_hp_params(dev, &hpp);
-> 
+It's clear that none of the proposed uses is related to Thunderbolt as
+a technology, which is why I would suggest we don't need the flag.
+But in the interest of moving on, if you remove the changelog part
+about whitelisting Thunderbolt for runtime PM (since that's not part
+of this series), you can add my:
 
-Any feedback?
-
-Sinan
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
