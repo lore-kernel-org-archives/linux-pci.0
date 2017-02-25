@@ -1,78 +1,95 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 3 Feb 2017 15:07:40 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 1 0/4] PCI: Use of_device_get_match_data() to simplify
- probe
-Message-ID: <20170203210740.GC24162@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170131201400.27605.56002.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Sat, 25 Feb 2017 04:28:53 +0100
+From: Frederic Weisbecker <fweisbec@gmail.com>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+        torvalds@linux-foundation.org,
+        kernel list <linux-kernel@vger.kernel.org>,
+        linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
+ after cold boots, boots after reboot
+Message-ID: <20170225032850.GA2481@lerouge>
+References: <20170203190414.GA3701@amd>
+ <Pine.LNX.4.44L0.1702031415140.1794-100000@iolanthe.rowland.org>
+ <20170203205129.GA3791@amd>
+ <20170203211854.GA3697@amd>
+ <20170214175956.GA3587@amd>
+ <20170214192743.GA3869@amd>
+ <20170223162825.GA16646@lerouge>
+ <20170223184013.GA5177@amd>
 MIME-Version: 1.0
-In-Reply-To: <20170131201400.27605.56002.stgit@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Scott Branden <sbranden@broadcom.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jon Mason <jonmason@broadcom.com>, linux-pci@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, linux-renesas-soc@vger.kernel.org,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
- Geert Uytterhoeven <geert@linux-m68k.org>,
- linux-arm-kernel@lists.infradead.org, Ray Jui <rjui@broadcom.com>,
- bcm-kernel-feedback-list@broadcom.com, Mingkai Hu <mingkai.hu@freescale.com>,
- Roy Zang <tie-fei.zang@freescale.com>,
- Shailendra Verma <shailendra.v@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170223184013.GA5177@amd>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Jan 31, 2017 at 02:19:51PM -0600, Bjorn Helgaas wrote:
-> This turned into much ado about nothing, but Shailendra's hisi patch
-> prompted similar cleanups in other drivers.  It's a minor simplification,
-> but I think worth doing consistently across drivers.
+On Thu, Feb 23, 2017 at 07:40:13PM +0100, Pavel Machek wrote:
+> On Thu 2017-02-23 17:28:26, Frederic Weisbecker wrote:
+> > On Tue, Feb 14, 2017 at 08:27:43PM +0100, Pavel Machek wrote:
+> > > On Tue 2017-02-14 18:59:56, Pavel Machek wrote:
+> > > > Hi!
+> > > > 
+> > > > > > > > Hmm. I moved keyboard between USB ports, and now 4.10-rc6 no longer
+> > > > > > > > boots. v4.6 works ok. Let me try with keyboard unplugged... no, I
+> > > > > > > > could not get it to work. I believe v4.9 and some v4.10-rc's worked,
+> > > > > > > > but I'll have to double check.
+> > > > > > > 
+> > > > > > > But all the kernel versions worked when the keyboard was plugged into
+> > > > > > > its original USB port?
+> > > > > > 
+> > > > > > Aha. So it looks difference is probably in "where is keyboard plugged
+> > > > > > in" but in "reboot" vs. "cold boot". I did not do a cold boot in quite
+> > > > > > a while :-(.
+> > > > > > 
+> > > > > > Booting to grub, then hitting ctrl-alt-del is enough to make it work. Ouch.
+> > > > > > 
+> > > > > > It happens with current Linus' tree.
+> > > > > 
+> > > > > v4.10-rc6-feb3 : broken
+> > > > > v4.9 : ok
+> > > > > (v4.6 : ok)
+> > > > 
+> > > > Hmm. It hangs during PCI fixups, and it hangs in v4.10-rc8, too.   
+> > > > 
+> > > > With debug patch below, I get
+> > > > 
+> > > > ...1d.7: PCI fixup... pass 2
+> > > > ...1d.7: PCI fixup... pass 3
+> > > > ...1d.7: PCI fixup... pass 3 done
+> > > > 
+> > > > ...followed by hang. So yes, it looks USB related.
+> > > > 
+> > > > (Sometimes it hangs with some kind backtrace involving secondary CPU
+> > > > startup, unfortunately useful info is off screen at that point).
+> > > 
+> > > Forgot to say, 1d.7 is EHCI controller.
+> > > 
+> > > 00:1d.7 USB controller: Intel Corporation NM10/ICH7 Family USB2 EHCI
+> > > Controller (rev 01)
+> > 
+> > Ok, I should have access soon to a EeePc 1015CX (which seem to have this controller).
+> > I hope I'll be able to reproduce the issue there. If not, I'm sorry but I'll have to
+> > burden you again :-)
 > 
-> Basically this is Geert's observation that when the driver probe function
-> is called only as a result of matching something in <match_table>, a
-> subsequent of_match_device(<match_table>, dev) call should never fail.
-> 
-> Therefore, instead of this:
-> 
->   struct of_device_id *match;
-> 
->   match = of_match_device(<match_table>, dev);
->   ... = match->data;
-> 
-> we can do this:
-> 
->   ... = of_device_get_match_data(dev);
-> 
-> ---
-> 
-> Bjorn Helgaas (3):
->       PCI: iproc: Use of_device_get_match_data() to simplify probe
->       PCI: layerscape: Use of_device_get_match_data() to simplify probe
->       PCI: rcar: Use of_device_get_match_data() to simplify probe
-> 
-> Shailendra Verma (1):
->       PCI: hisi: Use of_device_get_match_data() to simplify probe
-> 
-> 
->  drivers/pci/host/pci-layerscape.c      |    7 +------
->  drivers/pci/host/pcie-hisi.c           |    8 +++-----
->  drivers/pci/host/pcie-iproc-platform.c |    7 +------
->  drivers/pci/host/pcie-rcar.c           |    7 +------
->  4 files changed, 6 insertions(+), 23 deletions(-)
+> Go through more mails.
 
-I applied these to pci/host-layerscape, pci/host-hisi, pci/host-iproc,
-pci/host-rcar for v4.11.
+I've read the whole thread several times, I couldn't get much more clues.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> It is only reproducible after cold boot. .. so I doubt it will be easy to reproduce on another machine.
+
+I have no idea. That's just my only hope for now.
+
+> 
+> Now... I do have serial port, and I even might have serial cable
+> somewhere, but.... Giving how sensitive it is, it is probably going to
+> go away with console on ttyS...
+
+We'll see how it goes. I'll be off next week and then I should get the eeepc.
+I'll get back to it there.
+
+What gets me surprised is that the tick doesn't even fire yet on pci quirks time,
+at least not on my machine where the clocksource is setup afterward. That said if
+some of the pci quirks are async works, it might explain some later relation with the tick.
+
+Thanks.
