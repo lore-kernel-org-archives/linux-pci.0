@@ -1,83 +1,124 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:41467 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934011AbdBVXIO (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Feb 2017 18:08:14 -0500
-Subject: Re: [patch] PCI: dwc: uninitialized variable in dw_handle_msi_irq()
-To: Dan Carpenter <dan.carpenter@oracle.com>
-References: <20170217232618.GC26717@mwanda>
-CC: Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
+Received: from ale.deltatee.com ([207.54.116.67]:44753 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750987AbdBZHla (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sun, 26 Feb 2017 02:41:30 -0500
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <kernel-janitors@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <933041dd-288f-4cde-c10f-5b0b3ab49f15@synopsys.com>
-Date: Wed, 22 Feb 2017 15:08:07 -0800
-MIME-Version: 1.0
-In-Reply-To: <20170217232618.GC26717@mwanda>
-Content-Type: text/plain; charset="windows-1252"
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Sat, 25 Feb 2017 23:53:15 -0700
+Message-Id: <1488091997-12843-3-git-send-email-logang@deltatee.com>
+In-Reply-To: <1488091997-12843-1-git-send-email-logang@deltatee.com>
+References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 2/4] switchtec: Add user interface documentation
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Dan,
+This adds standard documentation for the sysfs switchtec attributes and
+a RST formatted text file which documents the char device interface.
+Jonathan Corbet has indicated he will move this to a new user-space
+developer documentation book once it's created.
 
-Às 3:26 PM de 2/17/2017, Dan Carpenter escreveu:
-> The bug is that "val" is unsigned long but we only initialize 32 bits
-> of it.  Then we test "if (val)" and that might be true not because we
-> set the bits but because some were never initialized.
-> 
-> Fixes: f342d940ee0e ("PCI: exynos: Add support for MSI")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> Static analysis.  Not tested.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
+Tested-by: Krishna Dhulipala <krishnad@fb.com>
+Reviewed-by: Wei Zhang <wzhang@fb.com>
+Reviewed-by: Jens Axboe <axboe@fb.com>
+---
+ Documentation/switchtec.txt | 53 +++++++++++++++++++++++++++++++++++++++++++++
+ MAINTAINERS                 |  1 +
+ 2 files changed, 54 insertions(+)
+ create mode 100644 Documentation/switchtec.txt
 
-What you are statiting makes perfect sense, since the register is indeed 32 bits
-and can have undesirable behavior in 64-bit systems for example.
-We have more examples like this for MSI related operations in pcie-designware.
-Could you please change them as well just?
-
-For example, the irq variable declaration is also not consistent as you can see
-in these examples:
-
- static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
-
- static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
-                           irq_hw_number_t hwirq)
-
- static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-
- static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
-
- etc.
-
-Thanks
-Joao
-
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-> index af8f6e92e885..5bfc377b83e4 100644
-> --- a/drivers/pci/dwc/pcie-designware.c
-> +++ b/drivers/pci/dwc/pcie-designware.c
-> @@ -257,17 +257,18 @@ static struct irq_chip dw_msi_irq_chip = {
->  /* MSI int handler */
->  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
->  {
-> -	unsigned long val;
-> +	u32 val;
->  	int i, pos, irq;
->  	irqreturn_t ret = IRQ_NONE;
->  
->  	for (i = 0; i < MAX_MSI_CTRLS; i++) {
->  		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
-> -				(u32 *)&val);
-> +				    &val);
->  		if (val) {
->  			ret = IRQ_HANDLED;
->  			pos = 0;
-> -			while ((pos = find_next_bit(&val, 32, pos)) != 32) {
-> +			while ((pos = find_next_bit((unsigned long *)&val, 32,
-> +						    pos)) != 32) {
->  				irq = irq_find_mapping(pp->irq_domain,
->  						i * 32 + pos);
->  				dw_pcie_wr_own_conf(pp,
-> 
+diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt
+new file mode 100644
+index 0000000..4bced4c
+--- /dev/null
++++ b/Documentation/switchtec.txt
+@@ -0,0 +1,53 @@
++========================
++Linux Switchtec Support
++========================
++
++Microsemi's "Switchtec" line of PCI switch devices is already
++supported by the kernel with standard PCI switch drivers. However, the
++Switchtec device advertises a special management endpoint which
++enables some additional functionality. This includes:
++
++* Packet and Byte Counters
++* Firmware Upgrades
++* Event and Error logs
++* Querying port link status
++* Custom user firmware commands
++
++The switchtec kernel module implements this functionality.
++
++
++Interface
++=========
++
++The primary means of communicating with the Switchtec management firmware is
++through the Memory-mapped Remote Procedure Call (MRPC) interface.
++Commands are submitted to the interface with a 4-byte command
++identifier and up to 1KB of command specific data. The firmware will
++respond with a 4 bytes return code and up to 1KB of command specific
++data. The interface only processes a single command at a time.
++
++
++Userspace Interface
++===================
++
++The MRPC interface will be exposed to userspace through a simple char
++device: /dev/switchtec#, one for each management endpoint in the system.
++
++The char device has the following semantics:
++
++* A write must consist of at least 4 bytes and no more than 1028 bytes.
++  The first four bytes will be interpreted as the command to run and
++  the remainder will be used as the input data. A write will send the
++  command to the firmware to begin processing.
++
++* Each write must be followed by exactly one read. Any double write will
++  produce an error and any read that doesn't follow a write will
++  produce an error.
++
++* A read will block until the firmware completes the command and return
++  the four bytes of status plus up to 1024 bytes of output data. (The
++  length will be specified by the size parameter of the read call --
++  reading less than 4 bytes will produce an error.
++
++* The poll call will also be supported for userspace applications that
++  need to do other things while waiting for the command to complete.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a57686f..aa702b0 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9512,6 +9512,7 @@ M:	Stephen Bates <stephen.bates@microsemi.com>
+ M:	Logan Gunthorpe <logang@deltatee.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
++F:	Documentation/switchtec.txt
+ F:	drivers/pci/switch/switchtec*
+ 
+ PCI DRIVER FOR NVIDIA TEGRA
+-- 
+2.1.4
