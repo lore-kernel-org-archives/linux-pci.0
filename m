@@ -1,13 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 17 Feb 2017 14:10:47 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V2] PCI: add QCOM root port quirks for ACS
-Message-ID: <20170217201047.GC17762@bhelgaas-glaptop.roam.corp.google.com>
-References: <1487282505-26634-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <1487282505-26634-1-git-send-email-okaya@codeaurora.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: 
+Subject: [RFC PATCH 05/30] iommu/arm-smmu-v3: Disable tagged pointers when ATS
+ is in use
+Date: Mon, 27 Feb 2017 19:54:16 +0000
+Message-Id: <20170227195441.5170-6-jean-philippe.brucker@arm.com>
+In-Reply-To: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,98 +15,88 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
+ David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 16, 2017 at 05:01:45PM -0500, Sinan Kaya wrote:
-> PCI Express defines an optional featured called Access Control Services
-> described in 6.12. Access Control Services (ACS) section of the PCIe 3.1
-> Specification.
-> 
-> Linux kernel uses ACS to validate/prohibit data transfers among PCIe
-> functions. This becomes especially useful when running guest machines
-> with PCI device passthrough. It provides security guarantee that only
-> OS allowed PCIe devices can talk to each other.
-> 
-> QCOM root ports do provide ACS-like features to disable peer
-> transactions and validate bus numbers in requests, but do not provide an
-> actual PCIe ACS capability.
-> 
-> To be specific:
-> * Hardware supports source validation but it will report the issue as
-> Completer Abort instead of ACS Violation.
-> 
-> * Hardware doesn't support peer-to-peer and each root port is a root
-> complex with unique segment numbers.
-> 
-> * It is not possible for one root port to pass traffic to the other root
-> port. All PCIe transactions are terminated inside the root port.
-> 
-> Adding an ACS quirk for the QDF2400 and QDF2432 products.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+The ARM architecture has a "Top Byte Ignore" (TBI) option that makes the
+MMU mask out bits [63:56] of an address, allowing a userspace application
+to store data in its pointers.
 
-Applied to pci/virtualization with Alex's reviewed-by for v4.11, thanks!
+The ATS doesn't have an architected mechanism to enable TBI, and might
+create ATC entries for addresses that include a tag. Software would then
+have to send ATC invalidation packets for each 255 possible alias of an
+address, or just wipe the whole address space. This is not a viable
+option, so disable TBI when ATS is in use.
 
-> ---
->  drivers/pci/quirks.c | 24 ++++++++++++++++++++++++
->  1 file changed, 24 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 1800bef..2df06cb 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4136,6 +4136,27 @@ static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u16 acs_flags)
->  }
->  
->  /*
-> + * These QCOM root ports do provide ACS-like features to disable peer
-> + * transactions and validate bus numbers in requests, but do not provide an
-> + * actual PCIe ACS capability.
-> + * Hardware supports source validation but it will report the issue as
-> + * Completer Abort instead of ACS Violation.
-> + * Hardware doesn't support peer-to-peer and each root port is a root complex
-> + * with unique segment numbers.
-> + * It is not possible for one root port to pass traffic to the other root
-> + * port. All PCIe transactions are terminated inside the root port.
-> + */
-> +static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
-> +{
-> +	u16 flags = (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_SV);
-> +	int ret = acs_flags & ~flags ? 0 : 1;
-> +
-> +	dev_info(&dev->dev, "Using QCOM ACS Quirk (%d)\n", ret);
-> +
-> +	return ret;
-> +}
-> +
-> +/*
->   * Sunrise Point PCH root ports implement ACS, but unfortunately as shown in
->   * the datasheet (Intel 100 Series Chipset Family PCH Datasheet, Vol. 2,
->   * 12.1.46, 12.1.47)[1] this chipset uses dwords for the ACS capability and
-> @@ -4271,6 +4292,9 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
->  	/* I219 */
->  	{ PCI_VENDOR_ID_INTEL, 0x15b7, pci_quirk_mf_endpoint_acs },
->  	{ PCI_VENDOR_ID_INTEL, 0x15b8, pci_quirk_mf_endpoint_acs },
-> +	/* QCOM QDF2xxx root ports */
-> +	{ 0x17CB, 0x400, pci_quirk_qcom_rp_acs },
-> +	{ 0x17CB, 0x401, pci_quirk_qcom_rp_acs },
->  	/* Intel PCH root ports */
->  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
->  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_spt_pch_acs },
-> -- 
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+It is unclear for the moment how this restriction will affect user
+applications. One example I can imagine (with my complete lack of
+knowledge about JIT engines and their use of tagged pointers) is a JIT
+translating a WebCL applications that uses SVM. Since this kind of
+interpreted language doesn't expose addresses, the interpreter and SVM
+implementations will be given the opportunity to do the right thing and
+remove tags before handing pointers to devices.
+
+Ideally we should remove TBI only for domains that are susceptible to use
+ATS. But at the point we're writing the context descriptor of a domain, we
+are still probing the first device in the group. If that device doesn't
+have an ATC but the next one does, we would then have to clear the TBI
+bit, invalidate the ATCs of previous devices, and notify the drivers that
+their devices cannot use tagged pointers anymore. Such a level of
+complexity doesn't make any sense here since it is unlikely devices will
+use tagged pointers at all.
+
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/arm-smmu-v3.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index e7b940146ae3..06b29d4fcf65 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -987,7 +987,7 @@ static void arm_smmu_cmdq_issue_cmd(struct arm_smmu_device *smmu,
+ }
+ 
+ /* Context descriptor manipulation functions */
+-static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
++static u64 arm_smmu_cpu_tcr_to_cd(struct arm_smmu_device *smmu, u64 tcr)
+ {
+ 	u64 val = 0;
+ 
+@@ -1000,7 +1000,8 @@ static u64 arm_smmu_cpu_tcr_to_cd(u64 tcr)
+ 	val |= ARM_SMMU_TCR2CD(tcr, EPD0);
+ 	val |= ARM_SMMU_TCR2CD(tcr, EPD1);
+ 	val |= ARM_SMMU_TCR2CD(tcr, IPS);
+-	val |= ARM_SMMU_TCR2CD(tcr, TBI0);
++	if (!(smmu->features & ARM_SMMU_FEAT_ATS))
++		val |= ARM_SMMU_TCR2CD(tcr, TBI0);
+ 
+ 	return val;
+ }
+@@ -1014,7 +1015,7 @@ static void arm_smmu_write_ctx_desc(struct arm_smmu_device *smmu,
+ 	 * We don't need to issue any invalidation here, as we'll invalidate
+ 	 * the STE when installing the new entry anyway.
+ 	 */
+-	val = arm_smmu_cpu_tcr_to_cd(cfg->cd.tcr) |
++	val = arm_smmu_cpu_tcr_to_cd(smmu, cfg->cd.tcr) |
+ #ifdef __BIG_ENDIAN
+ 	      CTXDESC_CD_0_ENDI |
+ #endif
+-- 
+2.11.0
+
 
 _______________________________________________
 linux-arm-kernel mailing list
