@@ -1,133 +1,91 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 1 Feb 2017 18:52:30 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V7 08/11] drivers: acpi: Handle IOMMU lookup failure with
- deferred probing or error
-Message-ID: <20170201185230.GA1922@red-moon>
-References: <f2370671-ece8-fbee-de19-350dd625088f@codeaurora.org>
- <93e79759-d614-9b36-d5ab-63e8eb725009@arm.com>
- <14751205-f034-7f0d-442a-854c3909425c@codeaurora.org>
- <5ba9f366d6e25397cdef8ad95b49e199@codeaurora.org>
- <175a3798-b824-ef1a-e112-9f6f472973ae@codeaurora.org>
- <20170130143851.GJ16461@arm.com>
- <b2e50c17de156341deab9fb8e91a8dec@codeaurora.org>
- <1e048aff-0d77-b9f2-ebf8-2ba315b90ca7@codeaurora.org>
- <20170130165124.GA11712@red-moon>
- <f401e27e-d619-0eec-2401-50d8e2fc2f0f@codeaurora.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Chalamarla, Tirumalesh" <Tirumalesh.Chalamarla@cavium.com>
+To: David Daney <ddaney.cavm@gmail.com>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        "Jaggi, Manish" <Manish.Jaggi@cavium.com>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Richter, Robert" <Robert.Richter@cavium.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] PCI: Add cavium acs pci quirk
+Date: Mon, 27 Feb 2017 19:13:07 +0000
+Message-ID: <2BC59900-08B3-4D8A-B55F-09E1C0A6BC27@caviumnetworks.com>
+References: <56ABC5AE.1050209@caviumnetworks.com>
+ <20170213214457.248084de@t450s.home>
+ <20170214150722.GC8080@bhelgaas-glaptop.roam.corp.google.com>
+ <b9192b8b-5105-f78a-70dc-607778b78b95@gmail.com>
+In-Reply-To: <b9192b8b-5105-f78a-70dc-607778b78b95@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <f401e27e-d619-0eec-2401-50d8e2fc2f0f@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
- linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- bhelgaas@google.com, Sricharan R <sricharan@codeaurora.org>,
- Robin Murphy <robin.murphy@arm.com>, Nate Watterson <nwatters@codeaurora.org>,
- Tomasz Nowicki <tn@semihalf.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Jan 30, 2017 at 03:03:06PM -0500, Sinan Kaya wrote:
-> On 1/30/2017 11:51 AM, Lorenzo Pieralisi wrote:
-> > On Mon, Jan 30, 2017 at 10:46:39AM -0500, Sinan Kaya wrote:
-> >> On 1/30/2017 9:54 AM, Nate Watterson wrote:
-> >>> On 2017-01-30 09:38, Will Deacon wrote:
-> >>>> On Mon, Jan 30, 2017 at 09:33:50AM -0500, Sinan Kaya wrote:
-> >>>>> On 1/30/2017 9:23 AM, Nate Watterson wrote:
-> >>>>>> On 2017-01-30 08:59, Sinan Kaya wrote:
-> >>>>>>> On 1/30/2017 7:22 AM, Robin Murphy wrote:
-> >>>>>>>> On 29/01/17 17:53, Sinan Kaya wrote:
-> >>>>>>>>> On 1/24/2017 7:37 AM, Lorenzo Pieralisi wrote:
-> >>>>>>>>>> [+hanjun, tomasz, sinan]
-> >>>>>>>>>>
-> >>>>>>>>>> It is quite a key patchset, I would be glad if they can test on their
-> >>>>>>>>>> respective platforms with IORT.
-> >>>>>>>>>>
-> >>>>>>>>>
-> >>>>>>>>> Tested on top of 4.10-rc5.
-> >>>>>>>>>
-> >>>>>>>>> 1.    Platform Hidma device passed dmatest
-> >>>>>>>>> 2.    Seeing some USB stalls on a platform USB device.
-> >>>>>>>>> 3.    PCIe NVME drive probed and worked fine with MSI interrupts after boot.
-> >>>>>>>>> 4.     NVMe driver didn't probe following a hotplug insertion and received an
-> >>>>>>>>> SMMU error event during the insertion.
-> >>>>>>>>
-> >>>>>>>> What was the SMMU error - a translation/permission fault (implying the
-> >>>>>>>> wrong DMA ops) or a bad STE fault (implying we totally failed to tell
-> >>>>>>>> the SMMU about the device at all)?
-> >>>>>>>>
-> >>>>>>>
-> >>>>>>> root@ubuntu:/sys/bus/pci/slots/4# echo 0 > power
-> >>>>>>>
-> >>>>>>> [__204.698522]_iommu:_Removing_device_0003:01:00.0_from_group_0
-> >>>>>>> [  204.708704] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down
-> >>>>>>> [  204.708723] pciehp 0003:00:00.0:pcie004: Slot(4): Link Down event
-> >>>>>>> ignored; already powering off
-> >>>>>>>
-> >>>>>>> root@ubuntu:/sys/bus/pci/slots/4#
-> >>>>>>>
-> >>>>>>> [__254.820440]_iommu:_Adding_device_0003:01:00.0_to_group_8
-> >>>>>>> [  254.820599] nvme nvme0: pci function 0003:01:00.0
-> >>>>>>> [  254.820621] nvme 0003:01:00.0: enabling device (0000 -> 0002)
-> >>>>>>> [  261.948558] arm-smmu-v3 arm-smmu-v3.0.auto: event 0x0a received:
-> >>>>>>> [  261.948561] arm-smmu-v3 arm-smmu-v3.0.auto:  0x000001000000000a
-> >>>>>>> [  261.948563] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
-> >>>>>>> [  261.948564] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
-> >>>>>>> [  261.948566] arm-smmu-v3 arm-smmu-v3.0.auto:  0x0000000000000000
-> >>>>>
-> >>>>>> Looks like C_BAD_CD. Can you please try with:
-> >>>>>> iommu/arm-smmu-v3: Clear prior settings when updating STEs
-> >>>>>
-> >>>>> This resolved the issue. Can we pull Nate's patch to 4.10 so that I don't see
-> >>>>> this issue again.
-> >>>>
-> >>>> I already sent the pull request to Joerg for 4.11. Do you see this problem
-> >>>> without Sricharan's patches (i.e. vanilla mainline)? If so, we'll need to
-> >>>> send the patch to stable after -rc1.
-> >>> Using vanilla mainline, I see it most commonly when directly assigning
-> >>> a device to a guest machine. I think I've also seen it after removing then
-> >>> re-adding a PCI device. Basically anytime an STE's CTX pointer is changed
-> >>> from a non-NULL value and STE[CFG] indicates translation will be performed.
-> >>>
-> >>
-> >> I was not able to reproduce the issue with Vanilla kernel. I only
-> >> tested hotplug.
-> > 
-> > I would like to get the complete code path leading to this issue, it is
-> > not clear to me why the probe deferral code triggers it and why we are
-> > not able to trigger it with vanilla mainline, we must understand that first
-> > before applying any fix to this series.
-> > 
-> > I do not have a platform to reproduce this issue I will send you a patch
-> > to trace what's going on here please help us debug it.
-> 
-> Sure, send it to both Nate and me.
-
-I debugged the issue and Nate's fix is correct, the fact that you
-can't it hit it with mainline is just a matter of timing because it has
-to do with the CTX pointer value (we OR it with the existing value), so
-it may work or not depending on how the cdptr memory allocation
-pattern turns out to be (which explains why Nate and I can hit it with
-simple PCI device remove/add execution too).
-
-So it is neither an ACPI nor an IOMMU probe deferral issue per-se,
-fix is already queued, so it is all good.
-
-What about USB stalls ?
-
-Thanks !
-Lorenzo
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+DQoNCk9uIDIvMjcvMTcsIDExOjAyIEFNLCAiRGF2aWQgRGFuZXkiIDxkZGFuZXkuY2F2bUBnbWFp
+bC5jb20+IHdyb3RlOg0KDQogICAgT24gMDIvMTQvMjAxNyAwNzowNyBBTSwgQmpvcm4gSGVsZ2Fh
+cyB3cm90ZToNCiAgICA+IE9uIE1vbiwgRmViIDEzLCAyMDE3IGF0IDA5OjQ0OjU3UE0gLTA3MDAs
+IEFsZXggV2lsbGlhbXNvbiB3cm90ZToNCiAgICA+PiBPbiBTYXQsIDMwIEphbiAyMDE2IDAxOjMz
+OjU4ICswNTMwDQogICAgPj4gTWFuaXNoIEphZ2dpIDxtamFnZ2lAY2F2aXVtbmV0d29ya3MuY29t
+PiB3cm90ZToNCiAgICA+Pg0KICAgID4+PiBDYXZpdW0gZGV2aWNlcyBtYXRjaGluZyB0aGlzIHF1
+aXJrIGRvIG5vdCBwZXJmb3JtDQogICAgPj4+IHBlZXItdG8tcGVlciB3aXRoIG90aGVyIGZ1bmN0
+aW9ucywgYWxsb3dpbmcgbWFza2luZyBvdXQNCiAgICA+Pj4gdGhlc2UgYml0cyBhcyBpZiB0aGV5
+IHdlcmUgdW5pbXBsZW1lbnRlZCBpbiB0aGUgQUNTIGNhcGFiaWxpdHkuDQogICAgPj4+DQogICAg
+Pj4+IEFja2VkLWJ5OiBUaXJ1bWFsZXNoIENoYWxhbWFybGEgPHRjaGFsYW1hcmxhQGNhdml1bS5j
+b20+DQogICAgPj4+IFNpZ25lZC1vZmYtYnk6IE1hbmlzaCBKYWdnaSA8bWphZ2dpQGNhdml1bW5l
+dHdvcmtzLmNvbT4NCiAgICA+Pj4gLS0tDQogICAgPj4+ICBkcml2ZXJzL3BjaS9xdWlya3MuYyB8
+IDE1ICsrKysrKysrKysrKysrKw0KICAgID4+PiAgMSBmaWxlIGNoYW5nZWQsIDE1IGluc2VydGlv
+bnMoKykNCiAgICA+Pj4NCiAgICA+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3F1aXJrcy5j
+IGIvZHJpdmVycy9wY2kvcXVpcmtzLmMNCiAgICA+Pj4gaW5kZXggN2UzMjczMC4uYTMwMGZhNiAx
+MDA2NDQNCiAgICA+Pj4gLS0tIGEvZHJpdmVycy9wY2kvcXVpcmtzLmMNCiAgICA+Pj4gKysrIGIv
+ZHJpdmVycy9wY2kvcXVpcmtzLmMNCiAgICA+Pj4gQEAgLTM4MTQsNiArMzgxNCwxOSBAQCBzdGF0
+aWMgaW50IHBjaV9xdWlya19hbWRfc2JfYWNzKHN0cnVjdCBwY2lfZGV2ICpkZXYsIHUxNiBhY3Nf
+ZmxhZ3MpDQogICAgPj4+ICAjZW5kaWYNCiAgICA+Pj4gIH0NCiAgICA+Pj4NCiAgICA+Pj4gK3N0
+YXRpYyBpbnQgcGNpX3F1aXJrX2Nhdml1bV9hY3Moc3RydWN0IHBjaV9kZXYgKmRldiwgdTE2IGFj
+c19mbGFncykNCiAgICA+Pj4gK3sNCiAgICA+Pj4gKwkvKg0KICAgID4+PiArCSAqIENhdml1bSBk
+ZXZpY2VzIG1hdGNoaW5nIHRoaXMgcXVpcmsgZG8gbm90IHBlcmZvcm0NCiAgICA+Pj4gKwkgKiBw
+ZWVyLXRvLXBlZXIgd2l0aCBvdGhlciBmdW5jdGlvbnMsIGFsbG93aW5nIG1hc2tpbmcgb3V0DQog
+ICAgPj4+ICsJICogdGhlc2UgYml0cyBhcyBpZiB0aGV5IHdlcmUgdW5pbXBsZW1lbnRlZCBpbiB0
+aGUgQUNTIGNhcGFiaWxpdHkuDQogICAgPj4+ICsJICovDQogICAgPj4+ICsJYWNzX2ZsYWdzICY9
+IH4oUENJX0FDU19TViB8IFBDSV9BQ1NfVEIgfCBQQ0lfQUNTX1JSIHwNCiAgICA+Pj4gKwkJICAg
+ICAgIFBDSV9BQ1NfQ1IgfCBQQ0lfQUNTX1VGIHwgUENJX0FDU19EVCk7DQogICAgPj4+ICsNCiAg
+ICA+Pj4gKwlyZXR1cm4gYWNzX2ZsYWdzID8gMCA6IDE7DQogICAgPj4+ICt9DQogICAgPj4+ICsN
+CiAgICA+Pj4gIC8qDQogICAgPj4+ICAgKiBNYW55IEludGVsIFBDSCByb290IHBvcnRzIGRvIHBy
+b3ZpZGUgQUNTLWxpa2UgZmVhdHVyZXMgdG8gZGlzYWJsZSBwZWVyDQogICAgPj4+ICAgKiB0cmFu
+c2FjdGlvbnMgYW5kIHZhbGlkYXRlIGJ1cyBudW1iZXJzIGluIHJlcXVlc3RzLCBidXQgZG8gbm90
+IHByb3ZpZGUgYW4NCiAgICA+Pj4gQEAgLTM5NjYsNiArMzk3OSw4IEBAIHN0YXRpYyBjb25zdCBz
+dHJ1Y3QgcGNpX2Rldl9hY3NfZW5hYmxlZCB7DQogICAgPj4+ICAJeyBQQ0lfVkVORE9SX0lEX0lO
+VEVMLCBQQ0lfQU5ZX0lELCBwY2lfcXVpcmtfaW50ZWxfcGNoX2FjcyB9LA0KICAgID4+PiAgCXsg
+MHgxOWEyLCAweDcxMCwgcGNpX3F1aXJrX21mX2VuZHBvaW50X2FjcyB9LCAvKiBFbXVsZXggQkUz
+LVIgKi8NCiAgICA+Pj4gIAl7IDB4MTBkZiwgMHg3MjAsIHBjaV9xdWlya19tZl9lbmRwb2ludF9h
+Y3MgfSwgLyogRW11bGV4IFNreWhhd2stUiAqLw0KICAgID4+PiArCS8qIENhdml1bSBUaHVuZGVy
+WCAqLw0KICAgID4+PiArCXsgUENJX1ZFTkRPUl9JRF9DQVZJVU0sIFBDSV9BTllfSUQsIHBjaV9x
+dWlya19jYXZpdW1fYWNzIH0sDQogICAgPj4+ICAJeyAwIH0NCiAgICA+Pj4gIH07DQogICAgPj4+
+DQogICAgPj4NCiAgICA+PiBBcG9sb2dpZXMgZm9yIG5vdCBjYXRjaGluZyB0aGlzLCBidXQgd2hh
+dCBzb3J0IG9mIGNyeXN0YWwgYmFsbCBkbyB5b3UNCiAgICA+PiBoYXZlIHRoYXQgY2FuIHByZWRp
+Y3Qgbm90IG9ubHkgY3VycmVudCBkZXZpY2VzLCBidXQgZnV0dXJlIGRldmljZXMgd2lsbA0KICAg
+ID4+IG5vdCBzdXBwb3J0IHBlZXItdG8tcGVlciBmZWF0dXJlcz8gIElzIHRoZXJlIGFuIGludGVy
+bmFsIGRlc2lnbg0KICAgID4+IGd1aWRlbGluZXMgcmVmZXJlbmNlIHNwZWNpZmljYXRpb24gZm9y
+IENhdml1bSB0aGF0IHdlIGNhbiByZWFsaXN0aWNhbGx5DQogICAgPj4gZXhwZWN0IHRoaXMgdG8g
+cmVtYWluIGNvbnNpc3RlbnQsIG9yIGlzIHRoaXMganVzdCBhbiBhdHRlbXB0IHRvIG5ldmVyDQog
+ICAgPj4gdGhpbmsgYWJvdXQgQUNTIGFnYWluIGF0IHRoZSBjdXN0b21lcidzIHBlcmlsPyAgV2hh
+dCBhYm91dCB0aGUgZXhpc3RpbmcNCiAgICA+PiBub24tVGh1bmRlclggcHJvZHVjdHMgd2l0aCBD
+YXZpdW0gdmVuZG9yIElELCBkb2VzIHRoaXMgcmVhbGx5IGFwcGx5IHRvDQogICAgPj4gdGhvc2U/
+ICBJIHdvdWxkIHN0cm9uZ2x5IHN1Z2dlc3QgdGFraW5nIHRoZSBkZXZpY2UgSUQgaW50byBhY2Nv
+dW50Lg0KICAgID4+IFNlZSBleGFtcGxlcyBsaWtlIHRoZSBwY2lfcXVpcmtfaW50ZWxfcGNoX2Fj
+cyBxdWlyayB3aGVyZSB0aGUgaW5pdGlhbA0KICAgID4+IGZpbHRlciBpcyBQQ0lfQU5ZX0lELCBi
+dXQgc3BlY2lmaWMgZGV2aWNlIHR5cGVzIGFuZCByYW5nZXMgb2YgZGV2aWNlDQogICAgPj4gSURz
+IGFyZSBpZGVudGlmaWVkIGJ5IHRoZSBmdW5jdGlvbiBmb3IgZXZhbHVhdGlvbi4gIFRoaXMgc2Vl
+bXMgcmVja2xlc3MNCiAgICA+PiB0byBtZSBhbmQgSSdkIGFkdmlzZSB0aGF0IGl0IGJlIHJldmVy
+dGVkLiAgVGhhbmtzLA0KICAgID4NCiAgICA+IEknZCBiZSBoYXBweSB0byByZXZlcnQgdGhpcywg
+YnV0IGl0IHdvdWxkIGJlIGVhc2llciBpZiBzb21lYm9keSBzZW50IGENCiAgICA+IHBhdGNoIGFu
+ZCBhIGNoYW5nZWxvZy4NCiAgICA+DQogICAgDQogICAgSSBhZ3JlZSB0aGF0IGl0IHNob3VsZCBi
+ZSByZXZlcnRlZC4NCiAgICANCiAgICBJIHdhcyBob3BpbmcgdGhhdCBNYW5pc2ggb3IgVGlydW1h
+bGVzaCB3b3VsZCBmaXggdGhpcyBwcm9wZXJseSBieSBvbmx5IA0KICAgIGFjdGl2YXRpbmcgdGhl
+IHF1aXJrIG9uIHRoZSBmYXVsdHkgaGFyZHdhcmUsIGJ1dCBzdWNoIGEgZml4IGhhcyBuZXZlciAN
+CiAgICBhcHBlYXJlZC4NCg0KVGhpcyB3YXMgc3VwcG9zZWQgdG8gYmUgdHJ1ZSBmb3IgYWxsIENh
+dml1bSBjaGlwcy4gV2UgZ290IHN1Y2ggYW5zd2VyIGZyb20gSGFyZHdhcmUgYXJjaGl0ZWN0cywg
+YnV0IGl0IG1pZ2h0IGNoYW5nZSBpbiB0aGUgZnV0dXJlLiANCkkgd2lsbCBiZSBoYXBweSB0byBy
+ZXBsYWNlIHRoaXMgd2l0aCBERVZJQ0VfSUQuDQpNYW5pc2gsDQpDb3VsZCB5b3UgcGxlYXNlIHRh
+a2UgdGhpcyB1LCBpZiBub3QgSSB3aWxsIHNlbmQgYSBwYXRjaCB0byBkbyB0aGlzLg0KDQpUaXJ1
+bWFsZXNoLiANCiAgICANCiAgICBEYXZpZCBEYW5leQ0KICAgIA0KICAgIA0KICAgIA0KICAgIA0K
+DQo=
