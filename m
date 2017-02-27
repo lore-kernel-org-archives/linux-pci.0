@@ -1,67 +1,186 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 17 Feb 2017 13:58:55 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Haiyang Zhang <haiyangz@microsoft.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci-hyperv: Use device serial number as PCI domain
-Message-ID: <20170217195855.GB17762@bhelgaas-glaptop.roam.corp.google.com>
-References: <BLUPR03MB1412C010C2F994101438FC5ACA590@BLUPR03MB1412.namprd03.prod.outlook.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: 
+Subject: [RFC PATCH 00/30] Add PCIe SVM support to ARM SMMUv3
+Date: Mon, 27 Feb 2017 19:54:11 +0000
+Message-Id: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
+ David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BLUPR03MB1412C010C2F994101438FC5ACA590@BLUPR03MB1412.namprd03.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 13, 2017 at 06:10:11PM +0000, Haiyang Zhang wrote:
-> 
-> This allows PCI domain numbers starts with 1, and also unique
-> on the same VM. So names, such as VF NIC names, that include
-> domain number as part of the name, can be shorter than that
-> based on part of bus UUID previously. The new names will also
-> stay same for VMs created with copied VHD and same number of
-> devices.
-> 
-> Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
-> Reviewed-by: K. Y. Srinivasan <kys@microsoft.com>
+Hi,
 
-Applied to pci/host-hv for v4.11, thanks!
+This series adds support for PCI ATS, PRI and PASID extensions to the
+SMMUv3 driver. In systems that support it, it is now possible for some
+high-end devices to perform DMA into process address spaces. Page tables
+are shared between MMU and SMMU; page faults from devices are recoverable
+and handled by the mm subsystem.
 
-I assume Stephen meant a "Reviewed-by", not a "Signed-off-by", so that's
-what I added.
+We propose an extension to the IOMMU API that unifies existing SVM
+implementations (AMD, Intel and ARM) in patches 22 and 24. Nothing is set
+in stone, the goal is to start discussions and find an intersection
+between implementations.
 
-> ---
->  drivers/pci/host/pci-hyperv.c |   10 ++++++++++
->  1 files changed, 10 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index 3efcc7b..b92b565 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -1315,6 +1315,16 @@ static void put_pcichild(struct hv_pci_dev *hpdev,
->  	get_pcichild(hpdev, hv_pcidev_ref_initial);
->  	get_pcichild(hpdev, hv_pcidev_ref_childlist);
->  	spin_lock_irqsave(&hbus->device_list_lock, flags);
-> +	/* When a device is being added into the bus, we set the PCI domain
-> +	 * number to be the device serial number, which is non zero and
-> +	 * unique on the same VM. The serial numbers start with 1, and
-> +	 * increase by 1 for each device. So device names including this
-> +	 * can have shorter names than based on the bus instance UUID.
-> +	 * Only the first device serial number is used for domain, so the
-> +	 * domain number will not change after the first device is added.
-> +	 */
-> +	if (list_empty(&hbus->children))
-> +		hbus->sysdata.domain = desc->ser;
->  	list_add_tail(&hpdev->list_entry, &hbus->children);
->  	spin_unlock_irqrestore(&hbus->device_list_lock, flags);
->  	return hpdev;
-> -- 
-> 1.7.1
-> 
+We also propose a VFIO interface in patches 29 and 30, that allows
+userspace device drivers to make use of SVM. It would also serve as
+example implementation for other device drivers.
+
+Overview of the patches:
+
+* 1 and 2 prepare the SMMUv3 structures for ATS,
+* 3 to 5 enable ATS for devices that support it.
+* 6 to 10 prepare the SMMUv3 structures for PASID and PRI. Patch 9,
+  in particular, provides details on the structure requirements.
+* 11 introduces an interface for sharing ASIDs on ARM64,
+* 12 to 17 add more infrastructure for sharing page tables,
+* 18 and 19 add minor helpers to PCI,
+* 20 enables PASID in devices that support it,
+* 21 enables PRI and adds device fault handler,
+* 22 and 24 draft a possible interface for SVM in the IOMMU API
+* 23 and 25-28 finalize support for SVM in SMMUv3
+* 29 and 30 draft a possible interface for SVM in VFIO. 
+
+The series is available on git://linux-arm.org/linux-jpb.git svm/rfc1
+Enable CONFIG_PCI_PASID, CONFIG_PCI_PRI and you should be good to go.
+
+So far, this has only been tested with a software model of an SMMUv3 and a
+PCIe DMA engine. We don't intend to get this merged until it has been
+tested on silicon, but at least the driver implementation should be mature
+enough. I might split next versions depending on what is ready and what
+needs more work so we can merge it progressively.
+
+A lot of open questions remain:
+
+1. Can we declare that PASID 0 is always invalid?
+
+2. For this prototype, I kept the interface simple from an implementation
+   perspective. At the moment is is "bind this device to that address
+   space". For consistency with the rest of VFIO and IOMMU, I think "bind
+   this container to that address space" would be more in line with VFIO,
+   and "bind that group to that address space" more in line with IOMMU.
+   VFIO would tell the IOMMU "for all groups in this container, bind to
+   that address space".
+   This raises the question of inconsistency between device capabilities.
+   When adding a device that supports less PASID bits to a group, what do
+   we do? What if we already allocated a PASID that is out of range for
+   the new device?
+
+3. How do we reconcile the IOMMU fault reporting infrastructure with the
+   SVM interface?
+
+4. SVM is the product of two features: handling device faults, and devices
+   having multiple address spaces. What about one feature without the
+   other?
+   a. If we cannot afford to have a device fault, can we at least share a
+      pinned address space? Pinning all current memory would be done by
+      vfio, but there also need to be pinning of all future mappings.
+      (mlock isn't sufficient, still allows for minor faults.)
+   b. If the device has a single address space, can we still bind it to a
+      process? The main issue with unifying DMA and process page tables is
+      reserved regions on the device side. What do we do if, for instance,
+      and MSI frame address clashes with a process mapping? Or if a
+      process mapping exists outside of the device's DMA window?
+
+Please find more details in the IOMMU API and VFIO patches.
+
+Thanks,
+Jean-Philippe
+
+Cc: Harv Abdulhamid <harba@qti.qualcomm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Shanker Donthineni <shankerd@qti.qualcomm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Sinan Kaya <okaya@qti.qualcomm.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Nate Watterson <nwatters@qti.qualcomm.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>
+Cc: David Woodhouse <dwmw2@infradead.org>
+
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org
+Cc: iommu@lists.linux-foundation.org
+Cc: kvm@vger.kernel.org
+
+Jean-Philippe Brucker (30):
+  iommu/arm-smmu-v3: Link groups and devices
+  iommu/arm-smmu-v3: Link groups and domains
+  PCI: Move ATS declarations outside of CONFIG_PCI
+  iommu/arm-smmu-v3: Add support for PCI ATS
+  iommu/arm-smmu-v3: Disable tagged pointers when ATS is in use
+  iommu/arm-smmu-v3: Add support for Substream IDs
+  iommu/arm-smmu-v3: Add second level of context descriptor table
+  iommu/arm-smmu-v3: Add support for VHE
+  iommu/arm-smmu-v3: Support broadcast TLB maintenance
+  iommu/arm-smmu-v3: Add task contexts
+  arm64: mm: Pin down ASIDs for sharing contexts with devices
+  iommu/arm-smmu-v3: Keep track of process address spaces
+  iommu/io-pgtable-arm: Factor out ARM LPAE register defines
+  iommu/arm-smmu-v3: Share process page tables
+  iommu/arm-smmu-v3: Steal private ASID from a domain
+  iommu/arm-smmu-v3: Use shared ASID set
+  iommu/arm-smmu-v3: Add SVM feature checking
+  PCI: Make "PRG Response PASID Required" handling common
+  PCI: Cache PRI and PASID bits in pci_dev
+  iommu/arm-smmu-v3: Enable PCI PASID in masters
+  iommu/arm-smmu-v3: Handle device faults from PRI
+  iommu: Bind/unbind tasks to/from devices
+  iommu/arm-smmu-v3: Bind/unbind device and task
+  iommu: Specify PASID state when unbinding a task
+  iommu/arm-smmu-v3: Safe invalidation and recycling of PASIDs
+  iommu/arm-smmu-v3: Fix PRI queue overflow acknowledgement
+  iommu/arm-smmu-v3: Handle PRI queue overflow
+  iommu/arm-smmu-v3: Add support for Hardware Translation Table Update
+    at stage 1
+  vfio: Add support for Shared Virtual Memory
+  vfio: Allow to bind foreign task
+
+ MAINTAINERS                          |    1 +
+ arch/arm64/include/asm/mmu.h         |    1 +
+ arch/arm64/include/asm/mmu_context.h |   11 +-
+ arch/arm64/mm/context.c              |   80 +-
+ drivers/iommu/amd_iommu.c            |   19 +-
+ drivers/iommu/arm-smmu-v3.c          | 2593 ++++++++++++++++++++++++++++++++--
+ drivers/iommu/io-pgtable-arm.c       |   48 +-
+ drivers/iommu/io-pgtable-arm.h       |   67 +
+ drivers/iommu/iommu.c                |  116 ++
+ drivers/pci/ats.c                    |   40 +
+ drivers/vfio/pci/vfio_pci.c          |   24 +
+ drivers/vfio/vfio.c                  |  135 ++
+ include/linux/iommu.h                |   57 +
+ include/linux/pci-ats.h              |    8 +
+ include/linux/pci.h                  |   28 +-
+ include/uapi/linux/pci_regs.h        |    1 +
+ include/uapi/linux/vfio.h            |   70 +
+ 17 files changed, 3084 insertions(+), 215 deletions(-)
+ create mode 100644 drivers/iommu/io-pgtable-arm.h
+
+-- 
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
