@@ -1,71 +1,60 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, yurovsky@gmail.com,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 2/3] PCI: imx6: Allow probe deferal by reset GPIO
-Date: Mon,  6 Feb 2017 07:17:15 -0800
-Message-Id: <20170206151716.10381-3-andrew.smirnov@gmail.com>
-In-Reply-To: <20170206151716.10381-1-andrew.smirnov@gmail.com>
-References: <20170206151716.10381-1-andrew.smirnov@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 27 Feb 2017 10:40:54 -0600
+From: Rob Herring <robh@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v2 14/22] dt-bindings: PCI: dra7xx: Add dt bindings to
+ enable legacy mode
+Message-ID: <20170227164054.xcubjpaf2qx3pxol@rob-hp-laptop>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+ <1487325042-28227-15-git-send-email-kishon@ti.com>
+MIME-Version: 1.0
+In-Reply-To: <1487325042-28227-15-git-send-email-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ linux-doc@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some designs implement reset GPIO via a GPIO expander connected to a
-peripheral bus. One such example would be i.MX7 Sabre board where said
-GPIO is provided by SPI shift register connected to a bitbanged SPI
-bus. In order to support such designs allow reset GPIO request to defer
-probing of the driver.
+On Fri, Feb 17, 2017 at 03:20:34PM +0530, Kishon Vijay Abraham I wrote:
+> Update device tree binding documentation of TI's dra7xx PCI
+> controller to include property for enabling legacy mode.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  Documentation/devicetree/bindings/pci/ti-pci.txt |    4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> index 190828a..72ebe2b 100644
+> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> @@ -39,6 +39,10 @@ DEVICE MODE
+>   - interrupts : one interrupt entries must be specified for main interrupt.
+>   - num-ib-windows : number of inbound address translation windows
+>   - num-ob-windows : number of outbound address translation windows
+> + - syscon-legacy-mode: phandle to the syscon dt node. The 1st argument should
+> +		       contain the register offset within syscon and the 2nd
+> +		       argument should contain the bit field for setting the
+> +		       legacy mode
 
-Cc: yurovsky@gmail.com
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
----
- drivers/pci/host/pci-imx6.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+Vendor prefix needed and what does "legacy mode" mean? Perhaps name this 
+around what the mode is/does, not that it is legacy.
 
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 50a1291..3ef8093 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -611,7 +611,7 @@ static int __init imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
- 	return 0;
- }
- 
--static int __init imx6_pcie_probe(struct platform_device *pdev)
-+static int imx6_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
- 	struct imx6_pcie *imx6_pcie;
-@@ -653,6 +653,8 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 			dev_err(dev, "unable to get reset gpio\n");
- 			return ret;
- 		}
-+	} else if (imx6_pcie->reset_gpio == -EPROBE_DEFER) {
-+		return imx6_pcie->reset_gpio;
- 	}
- 
- 	/* Fetch clocks */
-@@ -746,11 +748,12 @@ static struct platform_driver imx6_pcie_driver = {
- 		.name	= "imx6q-pcie",
- 		.of_match_table = imx6_pcie_of_match,
- 	},
-+	.probe    = imx6_pcie_probe,
- 	.shutdown = imx6_pcie_shutdown,
- };
- 
- static int __init imx6_pcie_init(void)
- {
--	return platform_driver_probe(&imx6_pcie_driver, imx6_pcie_probe);
-+	return platform_driver_register(&imx6_pcie_driver);
- }
- device_initcall(imx6_pcie_init);
--- 
-2.9.3
+Rob
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
