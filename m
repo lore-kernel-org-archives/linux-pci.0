@@ -1,159 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:49374 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752296AbdBMI0U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Feb 2017 03:26:20 -0500
-From: Jaehoon Chung <jh80.chung@samsung.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:53558 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751110AbdB0ATp (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 26 Feb 2017 19:19:45 -0500
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1R0HEgd128368
+        for <linux-pci@vger.kernel.org>; Sun, 26 Feb 2017 19:19:44 -0500
+Received: from e23smtp08.au.ibm.com (e23smtp08.au.ibm.com [202.81.31.141])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 28u6wa67yg-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Sun, 26 Feb 2017 19:19:44 -0500
+Received: from localhost
+        by e23smtp08.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Mon, 27 Feb 2017 10:19:42 +1000
+Received: from d23relay10.au.ibm.com (d23relay10.au.ibm.com [9.190.26.77])
+        by d23dlp01.au.ibm.com (Postfix) with ESMTP id 26C502CE8054
+        for <linux-pci@vger.kernel.org>; Mon, 27 Feb 2017 11:19:39 +1100 (EST)
+Received: from d23av04.au.ibm.com (d23av04.au.ibm.com [9.190.235.139])
+        by d23relay10.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v1R0JV2l35782824
+        for <linux-pci@vger.kernel.org>; Mon, 27 Feb 2017 11:19:39 +1100
+Received: from d23av04.au.ibm.com (localhost [127.0.0.1])
+        by d23av04.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v1R0Iw6R022434
+        for <linux-pci@vger.kernel.org>; Mon, 27 Feb 2017 11:18:58 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
 To: linux-pci@vger.kernel.org
-Cc: bhelgaas@google.com, krzk@kernel.org, linux-kernel@vger.kernel.org,
-        jingoohan1@gmail.com, javier@osg.samsung.com, kgene@kernel.org,
-        linux-samsung-soc@vger.kernel.org, cpgs@samsung.com,
-        niyas.ahmed@samsung.com, alim.akhtar@samsung.com,
-        pankaj.dubey@samsung.com, kishon@ti.com,
-        devicetree@vger.kernel.org, mark.rutland@arm.com,
-        vivek.gautam@codeaurora.org, robh+dt@kernel.org,
-        Jaehoon Chung <jh80.chung@samsung.com>
-Subject: [PATCH V3 4/4] PCI: exynos: support the using PHY generic framework
-Date: Mon, 13 Feb 2017 17:26:13 +0900
-Message-id: <20170213082613.19628-5-jh80.chung@samsung.com>
-In-reply-to: <20170213082613.19628-1-jh80.chung@samsung.com>
-References: <20170213082613.19628-1-jh80.chung@samsung.com>
- <CGME20170213082616epcas5p2a20cca498e9ddde7c5d3f7664fb8606e@epcas5p2.samsung.com>
+Cc: bhelgaas@google.com, clsoto@us.ibm.com,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>
+Subject: [PATCH] PCI: Disable IOV before pcibios_sriov_disable()
+Date: Mon, 27 Feb 2017 11:18:32 +1100
+Message-Id: <1488154712-8354-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Switch the pci-exynos driver to generic PHY framework. At the same time
-backward compatibility is preserved: Warning will be printed for old
-DTB.
+The PowerNV platform is the only user of pcibios_sriov_disable().
+The IOV BAR could be shifted by pci_iov_update_resource(). The
+warning message in the function is printed if the IOV capability
+is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
 
-Refer to the binding file:
-- Documentation/devictree/bindings/pci/samsung,exynos5440-pcie.txt
+   pci_disable_sriov
+   sriov_disable
+   pnv_pci_sriov_disable
+   pnv_pci_vf_resource_shift
+   pci_update_resource
+   pci_iov_update_resource
 
-Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
-Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-Reviewed-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+This fixes the issue by disabling IOV capability before calling
+pcibios_sriov_disable(). With it, the disabling path matches with
+the enabling path: pcibios_sriov_enable() is called before the
+IOV capability is enabled.
+
+Reported-by: Carol L Soto <clsoto@us.ibm.com>
+Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Tested-by: Carol L Soto <clsoto@us.ibm.com>
 ---
-Changelog on V3:
-- Changes the commit-message
-- Fixes the merge conflict
+ drivers/pci/iov.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-Changelog on V2:
-- This patch is split from previous PATCH[1/4]
-- Maintain the backward compatibility
-- Adds 'using_phy' for cheching whether phy framework is used or not
-- Adds 'DEPRECATED' message for old dt-binding way
-
- drivers/pci/host/pci-exynos.c | 54 +++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 50 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/host/pci-exynos.c b/drivers/pci/host/pci-exynos.c
-index 758906b..f6a8b6e 100644
---- a/drivers/pci/host/pci-exynos.c
-+++ b/drivers/pci/host/pci-exynos.c
-@@ -21,6 +21,7 @@
- #include <linux/of_gpio.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
-+#include <linux/phy/phy.h>
- #include <linux/resource.h>
- #include <linux/signal.h>
- #include <linux/types.h>
-@@ -110,6 +111,10 @@ struct exynos_pcie {
- 	struct exynos_pcie_clk_res	*clk_res;
- 	const struct exynos_pcie_ops	*ops;
- 	int				reset_gpio;
-+
-+	/* For Generic PHY Framework */
-+	bool				using_phy;
-+	struct phy			*phy;
- };
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 2479ae8..138830f 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -331,7 +331,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	while (i--)
+ 		pci_iov_remove_virtfn(dev, i, 0);
  
- struct exynos_pcie_ops {
-@@ -126,6 +131,10 @@ static int exynos5440_pcie_get_mem_resources(struct platform_device *pdev,
- 	struct resource *res;
- 	struct device *dev = ep->pp.dev;
+-	pcibios_sriov_disable(dev);
+ err_pcibios:
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+@@ -339,6 +338,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+ 	ssleep(1);
+ 	pci_cfg_access_unlock(dev);
  
-+	/* If using the PHY framework, doesn't need to get other resource */
-+	if (ep->using_phy)
-+		return 0;
++	pcibios_sriov_disable(dev);
 +
- 	ep->mem_res = devm_kzalloc(dev, sizeof(*ep->mem_res), GFP_KERNEL);
- 	if (!ep->mem_res)
- 		return -ENOMEM;
-@@ -396,10 +405,28 @@ static int exynos_pcie_establish_link(struct exynos_pcie *ep)
- 	}
+ 	if (iov->link != dev->devfn)
+ 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
  
- 	exynos_pcie_assert_core_reset(ep);
--	exynos_pcie_assert_phy_reset(ep);
--	exynos_pcie_deassert_phy_reset(ep);
--	exynos_pcie_power_on_phy(ep);
--	exynos_pcie_init_phy(ep);
-+
-+	if (ep->using_phy) {
-+		phy_reset(ep->phy);
-+
-+		exynos_pcie_writel(ep->mem_res->elbi_base, 1,
-+				PCIE_PWR_RESET);
-+
-+		phy_power_on(ep->phy);
-+		phy_init(ep->phy);
-+	} else {
-+		exynos_pcie_assert_phy_reset(ep);
-+		exynos_pcie_deassert_phy_reset(ep);
-+		exynos_pcie_power_on_phy(ep);
-+		exynos_pcie_init_phy(ep);
-+
-+		/* pulse for common reset */
-+		exynos_pcie_writel(ep->mem_res->block_base, 1,
-+					PCIE_PHY_COMMON_RESET);
-+		udelay(500);
-+		exynos_pcie_writel(ep->mem_res->block_base, 0,
-+					PCIE_PHY_COMMON_RESET);
-+	}
+@@ -357,14 +358,14 @@ static void sriov_disable(struct pci_dev *dev)
+ 	for (i = 0; i < iov->num_VFs; i++)
+ 		pci_iov_remove_virtfn(dev, i, 0);
  
- 	/* pulse for common reset */
- 	exynos_pcie_writel(ep->mem_res->block_base, 1, PCIE_PHY_COMMON_RESET);
-@@ -418,6 +445,11 @@ static int exynos_pcie_establish_link(struct exynos_pcie *ep)
- 	if (!dw_pcie_wait_for_link(pp))
- 		return 0;
+-	pcibios_sriov_disable(dev);
+-
+ 	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+ 	pci_cfg_access_lock(dev);
+ 	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+ 	ssleep(1);
+ 	pci_cfg_access_unlock(dev);
  
-+	if (ep->using_phy) {
-+		phy_power_off(ep->phy);
-+		return -ETIMEDOUT;
-+	}
++	pcibios_sriov_disable(dev);
 +
- 	while (exynos_pcie_readl(ep->mem_res->phy_base,
- 				PCIE_PHY_PLL_LOCKED) == 0) {
- 		val = exynos_pcie_readl(ep->mem_res->block_base,
-@@ -624,6 +656,17 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
+ 	if (iov->link != dev->devfn)
+ 		sysfs_remove_link(&dev->dev.kobj, "dep_link");
  
- 	ep->reset_gpio = of_get_named_gpio(np, "reset-gpio", 0);
- 
-+	/* Assume that controller doesn't use the PHY framework */
-+	ep->using_phy = false;
-+
-+	ep->phy = devm_of_phy_get(dev, np, NULL);
-+	if (IS_ERR(ep->phy)) {
-+		if (PTR_ERR(ep->phy) == -EPROBE_DEFER)
-+			return PTR_ERR(ep->phy);
-+		dev_warn(dev, "Use the 'phy' property. Current DT of pci-exynos was deprecated!!\n");
-+	} else
-+		ep->using_phy = true;
-+
- 	if (ep->ops && ep->ops->get_mem_resources) {
- 		ret = ep->ops->get_mem_resources(pdev, ep);
- 		if (ret)
-@@ -647,6 +690,9 @@ static int __init exynos_pcie_probe(struct platform_device *pdev)
- 	return 0;
- 
- fail_probe:
-+	if (ep->using_phy)
-+		phy_exit(ep->phy);
-+
- 	if (ep->ops && ep->ops->deinit_clk_resources)
- 		ep->ops->deinit_clk_resources(ep);
- 	return ret;
 -- 
-2.10.2
+2.7.4
