@@ -1,80 +1,96 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:35851 "EHLO
-        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751715AbdBFQ0n (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Feb 2017 11:26:43 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 27 Feb 2017 12:35:34 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mason <slash.tmp@free.fr>
+Subject: Re: Using the generic host PCIe driver
+Message-ID: <20170227183534.GA12481@bhelgaas-glaptop.roam.corp.google.com>
+References: <8d4e5d8a-7683-0180-324c-0ffd1a9a641a@free.fr>
+ <20170227164430.GB11162@bhelgaas-glaptop.roam.corp.google.com>
+ <8643c952-e915-bcd1-390e-9d4001789872@free.fr>
 MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DB027C936@AcuExch.aculab.com>
-References: <063D6719AE5E284EB5DD2968C1650D6DB027C936@AcuExch.aculab.com>
-From: Alexander Duyck <alexander.duyck@gmail.com>
-Date: Mon, 6 Feb 2017 08:26:42 -0800
-Message-ID: <CAKgT0UeXXkUpsrF9gpf_gba56V+B8a1G84k0WWt5q85Rx2PVsA@mail.gmail.com>
-Subject: Re: Disabling msix interrupts
-To: David Laight <David.Laight@aculab.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <8643c952-e915-bcd1-390e-9d4001789872@free.fr>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ David Daney <david.daney@cavium.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Will Deacon <will.deacon@arm.com>, Thierry Reding <treding@nvidia.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 6, 2017 at 7:33 AM, David Laight <David.Laight@aculab.com> wrote:
-> netdev probably isn't the right list for this, but I suspect people
-> reading it understand what happens.
->
-> I'm fairly sure that an msix interrupt can get raised after
-> the kernel thinks it has masked it.
->
-> When an msix interrupt is disabled I think msi_set_mask_bit()
-> (in drivers/pci/msi.c) is called to write a '1' to the card's
-> hardware MSIX mask register (the last 32bit word of the entry).
-> This function carefully reads back the mask register to flush
-> the write through the pcie bus.
-> Except it doesn't, it reads the 'address_lo' register instead! [1]
+On Mon, Feb 27, 2017 at 06:02:36PM +0100, Mason wrote:
+> On 27/02/2017 17:44, Bjorn Helgaas wrote:
+> 
+> > On Mon, Feb 27, 2017 at 05:14:15PM +0100, Mason wrote:
+> >
+> >> Bug #2
+> >>
+> >> Bus 0 cannot be enumerated, because it reports garbage data for
+> >> devices and functions other than 0, i.e. only 0/0/0 works.
+> >>
+> >> How do I work around that issue?
+> > 
+> > There are several drivers that provide their own "ECAM-like" config
+> > accessors.  Look at "struct pci_ecam_ops" structures, e.g.,
+> > hisi_pcie_ops, pci_thunder_ecam_ops, xgene_v1_pcie_ecam_ops, etc.
+> 
+> If I understand correctly, I do need to write my own driver then,
+> if I need specific quirks to work around some issues?
+> 
+> I'm slightly confused because you originally said "The native drivers
+> in drivers/pci/host are a huge maintenance hassle for no real benefit."
+> 
+> But I do need to write one, correct?
 
-Reading any register will force the write to be flushed as all PCI
-writes must be completed before a PCI read.  For example in the Intel
-drivers we read register 0 to flush a write of any of the other
-registers.
+When I said the native drivers provide no real benefit, I meant that
+they do not provide any value-add functionality beyond what a generic
+driver like drivers/acpi/pci_root.c already does.
 
-> While this will stop the hardware raising any more interrupts,
-> it could easily be in the process of raising one.
-> ie have read the mask, found it zero, read the address and
-> data, and be in the process of issuing the pcie write.
->
-> The pcie write (to disable the interrupt) and readback are seen
-> by the hardware as (more or less) back to back transfers, so can
-> both easily overtake the request to raise the interrupt.
+Obviously there are many different host bridges and they have
+different programming models, so there has to be bridge-specific
+support *somewhere*.  The question is whether that's in firmware, in
+Linux, or both.  For ACPI systems, it's all in firmware.
 
-I don't believe this is correct.  On the PCI bus what you should see
-is the device aware that interrupts are disabled before the completion
-arrives and any MSI messages should arrive before the last read
-completion.
+Systems with well-behaved hardware, i.e., it supports PCIe and ECAM
+without warts, firmware can initialize the bridge and tell the OS
+about it via DT, and the drivers/pci/pci-host-generic.c driver can do
+everything else.
 
-> The pcie bus is also allowed to make a read completion tlp
-> overtake a write tlp.
-> Add in any host-side delays in raising the hardware interrupt
-> itself, and an interrupt could happen well after it was masked.
+For systems that aren't so well-behaved, we'll need either a full
+native driver that knows how to program bridge window CSRs, set up
+interrupts, etc., or a simpler native driver that papers over warts
+like ECAM that doesn't work quite according to spec.
 
-That is only if relaxed ordering is enabled, which I am not sure is
-supported for MSI-X interrupts.  That being said though I believe
-there are some platforms that could end up seeing a delay in handling
-the interrupt if for example the CPU the interrupt was delivered to
-was in a sleep state.
+It sounds like your system falls into the latter category.
 
-> More worrying would be any code that tries to change the address
-> and data associated with an interrupt.
-> You'd need moderate guard times after the disable and before the
-> enable to ensure the hardware didn't raise an interrupt with
-> a mismatch of the old and new values.
->
-> [1] Maybe I'll look at the order those cycles actually arrive in.
->
->         David
+> > You can also work around Bug #1 in a custom accessor instead of a
+> > quirk.
+> 
+> By checking for the device ID and vendor ID, and returning the
+> expected class code, instead of the contents of the reg?
+> 
+> Do you consider this a better solution?
 
-So I have thrown in my $.02 on this, and added the linux-pci mailing
-list.  That is a much better place to bring this up rather than
-netdev.
+It's not a big deal either way.  Doing it in the accessor has the
+advantage that you have to have the accessor anyway.  Doing it in a
+quirk means you need to figure out where to put the quirk.  It isn't
+really generic (so drivers/pci/quirks.c seems overly generic), it
+isn't really arch-specific (so arch/* seems maybe *too* specific),
+it's really just bridge-specific.
 
-Thanks.
+Bjorn
 
-- Alex
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
