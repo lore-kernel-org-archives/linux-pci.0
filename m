@@ -1,84 +1,110 @@
-Return-Path: <SRS0=fuAy=2J=intel.com=rui.y.wang@kernel.org>
-Return-Path: <SRS0=fuAy=2J=intel.com=rui.y.wang@kernel.org>
-From: Rui Wang <rui.y.wang@intel.com>
-To: helgaas@kernel.org,
-	tglx@linutronix.de,
-	rjw@rjwysocki.net
-Cc: tony.luck@intel.com,
-	bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	rui.y.wang@intel.com,
-	x86@kernel.org,
-	fengguang.wu@intel.com,
-	kbuild-all@01.org
-Subject: [PATCH v2 1/2] x86/PCI: Implement pcibios_release_device to release IRQ from IOAPIC
-Date: Tue, 28 Feb 2017 21:34:28 +0800
-Message-Id: <1488288869-31290-2-git-send-email-rui.y.wang@intel.com>
-In-Reply-To: <1488288869-31290-1-git-send-email-rui.y.wang@intel.com>
-References: <201702280904.A2EXAFMQ%fengguang.wu@intel.com>
- <1488288869-31290-1-git-send-email-rui.y.wang@intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:58522 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751516AbdB0ULO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Feb 2017 15:11:14 -0500
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Cc: Harv Abdulhamid <harba@qti.qualcomm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Shanker Donthineni <shankerd@qti.qualcomm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sinan Kaya <okaya@qti.qualcomm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Nate Watterson <nwatters@qti.qualcomm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+Subject: [RFC PATCH 09/30] iommu/arm-smmu-v3: Support broadcast TLB maintenance
+Date: Mon, 27 Feb 2017 19:54:20 +0000
+Message-Id: <20170227195441.5170-10-jean-philippe.brucker@arm.com>
+In-Reply-To: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+To: unlisted-recipients:; (no To-header on input)
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The revert of 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq()
-and pcibios_free_irq()") causes a problem for IOAPIC hotplug. The
-problem is that IRQs are allocated and freed in pci_enable_device()
-and pci_disable_device(). But there are some drivers which don't call
-pci_disable_device(), and they have good reasons not calling it, so
-if they're using IOAPIC their IRQs won't have a chance to be released
-from the IOAPIC. When this happens IOAPIC hot-removal fails with a
-kernel stack dump and an error message like this:
+The SMMUv3 can handle invalidation targeted at TLB entries with shared
+ASIDs. If the implementation supports broadcast TLB maintenance, enable
+it and keep track of it in a feature bit. The SMMU will then take into
+account the following CPU instruction for ASIDs in the shared set:
 
-[149335.697989] pin16 on IOAPIC2 is still in use.
+* TLBI VAE1IS(ASID, VA)
+* TLBI ASIDE1IS(ASID)
 
-It turns out that we can fix it in a different way without moving IRQ
-allocation into pcibios_alloc_irq(), thus avoiding the regression of
-991de2e59090. We can keep the allocation and freeing of IRQs as is
-within pci_enable_device()/pci_disable_device(), without breaking any
-previous assumption of the rest of the system, keeping compatibility
-with both the legacy and the modern drivers. We can accomplish this by
-implementing the existing __weak hook of pcibios_release_device() thus
-when a pci device is about to be deleted we get notified in the hook
-and take the chance to release its IRQ, if any, from the IOAPIC.
-
-Besides implementing pcibios_release_device(), the hot-removal of
-IOAPIC needs to be broken into two parts: the PCI part and the ACPI
-part. The PCI part releases PCI resources before the PCI bus is gone,
-and the ACPI part is moved to a stage later than the hot-removal of
-the PCI root bus, so we have the chance to hook every PCI device's
-pcibios_release_device(), before we remove the IOAPIC.
-
-This patch implements pcibios_release_device() on x86 to release any
-IRQ not released by the driver, so that the IOAPIC can then be safely
-hot-removed.
-
-v2: Fixed a typo (pcibios_release_device)
-
-Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 ---
- arch/x86/pci/common.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/iommu/arm-smmu-v3.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 0cb52ae..190e718 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -735,6 +735,15 @@ void pcibios_disable_device (struct pci_dev *dev)
- 		pcibios_disable_irq(dev);
- }
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 0981159ada04..2724788157a5 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -65,6 +65,7 @@
+ #define IDR0_ASID16			(1 << 12)
+ #define IDR0_ATS			(1 << 10)
+ #define IDR0_HYP			(1 << 9)
++#define IDR0_BTM			(1 << 5)
+ #define IDR0_COHACC			(1 << 4)
+ #define IDR0_TTF_SHIFT			2
+ #define IDR0_TTF_MASK			0x3
+@@ -669,6 +670,7 @@ struct arm_smmu_device {
+ #define ARM_SMMU_FEAT_STALLS		(1 << 11)
+ #define ARM_SMMU_FEAT_HYP		(1 << 12)
+ #define ARM_SMMU_FEAT_E2H		(1 << 13)
++#define ARM_SMMU_FEAT_BTM		(1 << 14)
+ 	u32				features;
  
-+#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-+void pcibios_release_device(struct pci_dev *dev)
-+{
-+	if (atomic_dec_return(&dev->enable_cnt) >= 0)
-+		pcibios_disable_device(dev);
+ #define ARM_SMMU_OPT_SKIP_PREFETCH	(1 << 0)
+@@ -3023,11 +3025,14 @@ static int arm_smmu_device_reset(struct arm_smmu_device *smmu, bool bypass)
+ 	writel_relaxed(reg, smmu->base + ARM_SMMU_CR1);
+ 
+ 	/* CR2 (random crap) */
+-	reg = CR2_PTM | CR2_RECINVSID;
++	reg = CR2_RECINVSID;
+ 
+ 	if (smmu->features & ARM_SMMU_FEAT_E2H)
+ 		reg |= CR2_E2H;
+ 
++	if (!(smmu->features & ARM_SMMU_FEAT_BTM))
++		reg |= CR2_PTM;
 +
-+}
-+#endif
-+
- int pci_ext_cfg_avail(void)
+ 	writel_relaxed(reg, smmu->base + ARM_SMMU_CR2);
+ 
+ 	/* Stream table */
+@@ -3138,6 +3143,7 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
  {
- 	if (raw_pci_ext_ops)
+ 	u32 reg;
+ 	bool coherent = smmu->features & ARM_SMMU_FEAT_COHERENCY;
++	bool vhe = cpus_have_cap(ARM64_HAS_VIRT_HOST_EXTN);
+ 
+ 	/* IDR0 */
+ 	reg = readl_relaxed(smmu->base + ARM_SMMU_IDR0);
+@@ -3187,11 +3193,20 @@ static int arm_smmu_device_hw_probe(struct arm_smmu_device *smmu)
+ 
+ 	if (reg & IDR0_HYP) {
+ 		smmu->features |= ARM_SMMU_FEAT_HYP;
+-		if (cpus_have_cap(ARM64_HAS_VIRT_HOST_EXTN))
++		if (vhe)
+ 			smmu->features |= ARM_SMMU_FEAT_E2H;
+ 	}
+ 
+ 	/*
++	 * If the CPU is using VHE, but the SMMU doesn't support it, the SMMU
++	 * will create TLB entries for NH-EL1 world and will miss the
++	 * broadcasted TLB invalidations that target EL2-E2H world. Don't enable
++	 * BTM in that case.
++	 */
++	if (reg & IDR0_BTM && (!vhe || reg & IDR0_HYP))
++		smmu->features |= ARM_SMMU_FEAT_BTM;
++
++	/*
+ 	 * The coherency feature as set by FW is used in preference to the ID
+ 	 * register, but warn on mismatch.
+ 	 */
 -- 
-1.8.3.1
+2.11.0
