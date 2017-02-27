@@ -1,14 +1,16 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-To: Nikita Yushchenko <nikita.yoush@cogentembedded.com>
-Subject: Re: [PATCH 1/2] arm64: dma_mapping: allow PCI host driver to limit
- DMA mask
-Date: Thu, 29 Dec 2016 22:18:41 +0100
-Message-ID: <2103911.qf9H68dkRp@wuerfel>
-In-Reply-To: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
-References: <1483044304-2085-1-git-send-email-nikita.yoush@cogentembedded.com>
+Date: Mon, 27 Feb 2017 10:49:04 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH 2/4] PCI: add driver for Cortina Gemini Host Bridge
+Message-ID: <20170227164903.GC11162@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170128204839.18330-1-linus.walleij@linaro.org>
+ <20170128204839.18330-2-linus.walleij@linaro.org>
+ <20170131003751.GF20550@bhelgaas-glaptop.roam.corp.google.com>
+ <CACRpkdZ1ONM-sODoYi4isk65Eq5GUqPtfqnL9=is5s0=zObm_w@mail.gmail.com>
 MIME-Version: 1.0
+In-Reply-To: <CACRpkdZ1ONM-sODoYi4isk65Eq5GUqPtfqnL9=is5s0=zObm_w@mail.gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,42 +18,39 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, linux-kernel@vger.kernel.org,
- linux-renesas-soc@vger.kernel.org, Simon Horman <horms@verge.net.au>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- artemi.ivanov@cogentembedded.com, linux-arm-kernel@lists.infradead.org
+Cc: openwrt-devel@openwrt.org, Florian Fainelli <f.fainelli@gmail.com>,
+ Paulius Zaleckas <paulius.zaleckas@gmail.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Janos Laube <janos.dev@gmail.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, December 29, 2016 11:45:03 PM CET Nikita Yushchenko wrote:
+On Sun, Feb 26, 2017 at 08:42:51PM +0100, Linus Walleij wrote:
+> On Tue, Jan 31, 2017 at 1:37 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
 > 
->  static int __swiotlb_dma_supported(struct device *hwdev, u64 mask)
->  {
-> +#ifdef CONFIG_PCI
-> +       if (dev_is_pci(hwdev)) {
-> +               struct pci_dev *pdev = to_pci_dev(hwdev);
-> +               struct pci_host_bridge *br = pci_find_host_bridge(pdev->bus);
-> +
-> +               if (br->dev.dma_mask && (*br->dev.dma_mask) &&
-> +                               (mask & (*br->dev.dma_mask)) != mask)
-> +                       return 0;
-> +       }
-> +#endif
->         if (swiotlb)
->                 return swiotlb_dma_supported(hwdev, mask);
->         return 1;
+> > Looks nice; a couple unused definitions below.
 > 
+> Just so I do things right:  what is your policy on unused defines?
+> I'm asking because the defines in this case is pretty much the
+> documentation... there is no datasheet for this IP core. I usually
+> like to keep the defines around so people can have them as a
+> hint if they want to tinker and hack the driver.
+> 
+> Would you be OK with keeping them if I comment them out?
 
-I think it's wrong to make this a special case for PCI.
+It's fine if you keep them; don't even bother commenting them out.
 
-Instead, we should follow the dma-ranges properties during dma_set_mask()
-to ensure we don't set a mask that any of the parents up to the root
-cannot support.
+If there's a datasheet, especially a public one like the PCI specs (I
+know even those aren't completely free), I have been removing unused
+defines simply because they can't be tested and there may be
+transcription errors.  But I'm starting to think that might be too
+aggressive.
 
-	Arnd
+Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
