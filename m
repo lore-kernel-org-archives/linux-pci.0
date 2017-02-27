@@ -1,88 +1,48 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Long Li <longli@microsoft.com>
-To: KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [Resend PATCH 1/2 v3] pci-hyperv: properly handle pci bus remove
-Date: Fri, 24 Feb 2017 21:41:57 +0000
-Message-ID: <BN3PR03MB2227125BDF836ABB767D0166CE520@BN3PR03MB2227.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:54510 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751510AbdB0PPd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Feb 2017 10:15:33 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Michal Simek <michal.simek@xilinx.com>
+Subject: [PATCH 09/20] PCI: xilinx-nwl: update PCI config space remap function
+Date: Mon, 27 Feb 2017 15:14:20 +0000
+Message-Id: <20170227151436.18698-10-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-hv_pci_devices_present is called in hv_pci_remove when we remove a PCI devi=
-ce from host (e.g. by disabling SRIOV on a device). In hv_pci_remove, the b=
-us is already removed before the call, so we don't need to rescan the bus i=
-n the workqueue scheduled from hv_pci_devices_present. By introducing statu=
-s hv_pcibus_removed, we can avoid this situation.
+PCI configuration space should be mapped with a memory region type that
+generates on the CPU host bus non-posted write transations. Update the
+driver to use the devm_pci_remap_cfg* interface to make sure the correct
+memory mappings for PCI configuration space are used.
 
-Signed-off-by: Long Li <longli@microsoft.com>
-Reported-by: Xiaofeng Wang <xiaofwan@redhat.com>
-Acked-by: K. Y. Srinivasan <kys@microsoft.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: Michal Simek <michal.simek@xilinx.com>
 ---
- drivers/pci/host/pci-hyperv.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+ drivers/pci/host/pcie-xilinx-nwl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index a8deeca..4a37598 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -348,6 +348,7 @@ enum hv_pcibus_state {
- 	hv_pcibus_init =3D 0,
- 	hv_pcibus_probed,
- 	hv_pcibus_installed,
-+	hv_pcibus_removed,
- 	hv_pcibus_maximum
- };
-=20
-@@ -1481,13 +1482,24 @@ static void pci_devices_present_work(struct work_st=
-ruct *work)
- 		put_pcichild(hpdev, hv_pcidev_ref_initial);
- 	}
-=20
--	/* Tell the core to rescan bus because there may have been changes. */
--	if (hbus->state =3D=3D hv_pcibus_installed) {
-+	switch (hbus->state) {
-+	case hv_pcibus_installed:
-+		/*
-+		 * Tell the core to rescan bus
-+		 * because there may have been changes.
-+		 */
- 		pci_lock_rescan_remove();
- 		pci_scan_child_bus(hbus->pci_bus);
- 		pci_unlock_rescan_remove();
--	} else {
-+		break;
-+
-+	case hv_pcibus_init:
-+	case hv_pcibus_probed:
- 		survey_child_resources(hbus);
-+		break;
-+
-+	default:
-+		break;
- 	}
-=20
- 	up(&hbus->enum_sem);
-@@ -2163,6 +2175,7 @@ static int hv_pci_probe(struct hv_device *hdev,
- 	hbus =3D kzalloc(sizeof(*hbus), GFP_KERNEL);
- 	if (!hbus)
- 		return -ENOMEM;
-+	hbus->state =3D hv_pcibus_init;
-=20
- 	/*
- 	 * The PCI bus "domain" is what is called "segment" in ACPI and
-@@ -2305,6 +2318,7 @@ static int hv_pci_remove(struct hv_device *hdev)
- 		pci_stop_root_bus(hbus->pci_bus);
- 		pci_remove_root_bus(hbus->pci_bus);
- 		pci_unlock_rescan_remove();
-+		hbus->state =3D hv_pcibus_removed;
- 	}
-=20
- 	ret =3D hv_send_resources_released(hdev);
---=20
-1.8.5.6
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 4c3e0ab..4b16b26 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -761,7 +761,7 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
+ 	pcie->phys_pcie_reg_base = res->start;
+ 
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
+-	pcie->ecam_base = devm_ioremap_resource(dev, res);
++	pcie->ecam_base = devm_pci_remap_cfg_resource(dev, res);
+ 	if (IS_ERR(pcie->ecam_base))
+ 		return PTR_ERR(pcie->ecam_base);
+ 	pcie->phys_ecam_base = res->start;
+-- 
+2.10.0
