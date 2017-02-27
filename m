@@ -1,33 +1,41 @@
-Return-Path: <SRS0=kA2g=ZW=wunner.de=lukas@kernel.org>
-Return-Path: <SRS0=kA2g=ZW=wunner.de=lukas@kernel.org>
-Date: Thu, 9 Feb 2017 05:06:48 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Bart Van Assche <bart.vanassche@sandisk.com>,
-	Christoph Hellwig <hch@lst.de>, Yinghai Lu <yinghai@kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [GIT PULL] PCI fixes for v4.10
-Message-ID: <20170209040648.GA1304@wunner.de>
-References: <20170208192054.GA31395@bhelgaas-glaptop.roam.corp.google.com>
- <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Long Li <longli@microsoft.com>
+To: Greg KH <greg@kroah.com>
+CC: KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [Resend PATCH 2/2 v3] pci-hyperv: lock pci bus on device eject
+Date: Mon, 27 Feb 2017 21:51:46 +0000
+Message-ID: <BN3PR03MB22271398236EE893B6AB53BACE570@BN3PR03MB2227.namprd03.prod.outlook.com>
+References: <BN3PR03MB22273E86EDBC8875C55E2FB7CE520@BN3PR03MB2227.namprd03.prod.outlook.com>
+ <20170225080218.GA2291@kroah.com>
+In-Reply-To: <20170225080218.GA2291@kroah.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 08, 2017 at 01:22:56PM -0600, Bjorn Helgaas wrote:
-> Bjorn Helgaas (1):
->       Revert "PCI: pciehp: Add runtime PM support for PCIe hotplug ports"
+Ok, I will resend.
 
-What's the rationale for reverting this?
-
-You've received patches to fix the issue on both affected machines,
-so a revert seems unnecessary:
-
-https://patchwork.kernel.org/patch/9557113/
-https://patchwork.kernel.org/patch/9562007/
-
-Lukas
+> -----Original Message-----
+> From: Greg KH [mailto:greg@kroah.com]
+> Sent: Saturday, February 25, 2017 12:02 AM
+> To: Long Li <longli@microsoft.com>
+> Cc: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
+> <haiyangz@microsoft.com>; Bjorn Helgaas <bhelgaas@google.com>;
+> devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; linux-
+> pci@vger.kernel.org
+> Subject: Re: [Resend PATCH 2/2 v3] pci-hyperv: lock pci bus on device eje=
+ct
+>=20
+> On Fri, Feb 24, 2017 at 09:49:17PM +0000, Long Li wrote:
+> > A PCI_EJECT message can arrive at the same time we are calling
+> pci_scan_child_bus in the workqueue for the previous PCI_BUS_RELATIONS
+> message or in create_root_hv_pci_bus(), in this case we could potentailly
+> modify the bus from multiple places. Properly lock the bus access.
+>=20
+> Properly wrap your changelog comments at 72 columns like your editor is
+> telling you to do...
