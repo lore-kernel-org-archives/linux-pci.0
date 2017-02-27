@@ -1,122 +1,113 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:9915 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754509AbdBGTX6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Feb 2017 14:23:58 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
-        Austin Bolen <Austin.Bolen@dell.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv6 1/5] pci: Export pci device config accessors
-Date: Tue,  7 Feb 2017 14:32:33 -0500
-Message-Id: <1486495957-26177-2-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
-References: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=KDlv=2I=intel.com=rui.y.wang@kernel.org>
+Return-Path: <SRS0=KDlv=2I=intel.com=rui.y.wang@kernel.org>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net
+Cc: tony.luck@intel.com,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com,
+	x86@kernel.org
+Subject: [PATCH 2/2] x86/ioapic: Split IOAPIC hot-removal into two steps
+Date: Mon, 27 Feb 2017 22:15:44 +0800
+Message-Id: <1488204944-27189-3-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1488204944-27189-1-git-send-email-rui.y.wang@intel.com>
+References: <1488204944-27189-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch replaces the inline pci device config read and write accessors
-with exported functions. This is preparing for these functions to make
-use of private data.
+The hot-removal of IOAPIC is broken into two parts: the PCI part and
+the ACPI part. The PCI part releases PCI resources before the PCI bus
+is gone, and the ACPI part is moved to a stage later than the hot-removal
+of the PCI root bus, so that the IOAPIC driver is able to hook the
+pcibios_release_device() of every PCI device under the same parent root
+bus, before the IOAPIC is hot-removed. This makes it possible for the
+IOAPIC to free any IRQ resource previously unable to get freed.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
 ---
- drivers/pci/access.c | 38 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  | 32 ++++++--------------------------
- 2 files changed, 44 insertions(+), 26 deletions(-)
+ drivers/acpi/internal.h |  1 +
+ drivers/acpi/ioapic.c   | 22 ++++++++++++++++------
+ drivers/acpi/pci_root.c |  4 ++--
+ 3 files changed, 19 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index db23954..d37b2ed 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -889,3 +889,41 @@ int pcie_capability_clear_and_set_dword(struct pci_dev *dev, int pos,
- 	return ret;
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 219b90b..b2e3416 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -41,6 +41,7 @@ static inline void acpi_amba_init(void) {}
+ void acpi_container_init(void);
+ void acpi_memory_hotplug_init(void);
+ #ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
++void pci_ioapic_remove(struct acpi_pci_root *root);
+ int acpi_ioapic_remove(struct acpi_pci_root *root);
+ #else
+ static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+index 6d7ce6e..1120dfd6 100644
+--- a/drivers/acpi/ioapic.c
++++ b/drivers/acpi/ioapic.c
+@@ -206,24 +206,34 @@ int acpi_ioapic_add(acpi_handle root_handle)
+ 	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
  }
- EXPORT_SYMBOL(pcie_capability_clear_and_set_dword);
-+
-+int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
-+{
-+	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
-+}
-+EXPORT_SYMBOL(pci_read_config_byte);
-+
-+int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
-+{
-+	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
-+}
-+EXPORT_SYMBOL(pci_read_config_word);
-+
-+int pci_read_config_dword(const struct pci_dev *dev, int where,
-+					u32 *val)
-+{
-+	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
-+}
-+EXPORT_SYMBOL(pci_read_config_dword);
-+
-+int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
-+{
-+	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
-+}
-+EXPORT_SYMBOL(pci_write_config_byte);
-+
-+int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
-+{
-+	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
-+}
-+EXPORT_SYMBOL(pci_write_config_word);
-+
-+int pci_write_config_dword(const struct pci_dev *dev, int where,
-+					 u32 val)
-+{
-+	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
-+}
-+EXPORT_SYMBOL(pci_write_config_dword);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a12..b00a2d3 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -944,32 +944,12 @@ int pci_generic_config_write32(struct pci_bus *bus, unsigned int devfn,
  
- struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops);
+-int acpi_ioapic_remove(struct acpi_pci_root *root)
++void pci_ioapic_remove(struct acpi_pci_root *root)
+ {
+-	int retval = 0;
+ 	struct acpi_pci_ioapic *ioapic, *tmp;
  
--static inline int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val)
--{
--	return pci_bus_read_config_byte(dev->bus, dev->devfn, where, val);
--}
--static inline int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val)
--{
--	return pci_bus_read_config_word(dev->bus, dev->devfn, where, val);
--}
--static inline int pci_read_config_dword(const struct pci_dev *dev, int where,
--					u32 *val)
--{
--	return pci_bus_read_config_dword(dev->bus, dev->devfn, where, val);
--}
--static inline int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val)
--{
--	return pci_bus_write_config_byte(dev->bus, dev->devfn, where, val);
--}
--static inline int pci_write_config_word(const struct pci_dev *dev, int where, u16 val)
--{
--	return pci_bus_write_config_word(dev->bus, dev->devfn, where, val);
--}
--static inline int pci_write_config_dword(const struct pci_dev *dev, int where,
--					 u32 val)
--{
--	return pci_bus_write_config_dword(dev->bus, dev->devfn, where, val);
--}
-+int pci_read_config_byte(const struct pci_dev *dev, int where, u8 *val);
-+int pci_read_config_word(const struct pci_dev *dev, int where, u16 *val);
-+int pci_read_config_dword(const struct pci_dev *dev, int where, u32 *val);
-+int pci_write_config_byte(const struct pci_dev *dev, int where, u8 val);
-+int pci_write_config_word(const struct pci_dev *dev, int where, u16 val);
-+int pci_write_config_dword(const struct pci_dev *dev, int where, u32 val);
+ 	mutex_lock(&ioapic_list_lock);
+ 	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
+ 		if (root->device->handle != ioapic->root_handle)
+ 			continue;
+-
+-		if (acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base))
+-			retval = -EBUSY;
+-
+ 		if (ioapic->pdev) {
+ 			pci_release_region(ioapic->pdev, 0);
+ 			pci_disable_device(ioapic->pdev);
+ 			pci_dev_put(ioapic->pdev);
+ 		}
++	}
++	mutex_unlock(&ioapic_list_lock);
++}
++
++int acpi_ioapic_remove(struct acpi_pci_root *root)
++{
++	int retval = 0;
++	struct acpi_pci_ioapic *ioapic, *tmp;
++
++	mutex_lock(&ioapic_list_lock);
++	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
++		if (root->device->handle != ioapic->root_handle)
++			continue;
++		if (acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base))
++			retval = -EBUSY;
+ 		if (ioapic->res.flags && ioapic->res.parent)
+ 			release_resource(&ioapic->res);
+ 		list_del(&ioapic->list);
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index bf601d4..919be0a 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -648,12 +648,12 @@ static void acpi_pci_root_remove(struct acpi_device *device)
  
- int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val);
- int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val);
+ 	pci_stop_root_bus(root->bus);
+ 
+-	WARN_ON(acpi_ioapic_remove(root));
+-
++	pci_ioapic_remove(root);
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
+ 	pci_remove_root_bus(root->bus);
++	WARN_ON(acpi_ioapic_remove(root));
+ 
+ 	dmar_device_remove(device->handle);
+ 
 -- 
-2.7.2
+1.8.3.1
