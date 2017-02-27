@@ -1,63 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53386 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:54582 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751504AbdBJRiv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Feb 2017 12:38:51 -0500
-Date: Fri, 10 Feb 2017 11:38:37 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: xgene: clean up the unnecessary memory free
-Message-ID: <20170210173837.GC29169@bhelgaas-glaptop.roam.corp.google.com>
-References: <1484104755-242853-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1484104755-242853-1-git-send-email-shawn.lin@rock-chips.com>
+        id S1751452AbdB0PPq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Feb 2017 10:15:46 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH 15/20] PCI: designware: update PCI config space remap function
+Date: Mon, 27 Feb 2017 15:14:26 +0000
+Message-Id: <20170227151436.18698-16-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Jan 11, 2017 at 11:19:15AM +0800, Shawn Lin wrote:
-> No need to free port as it is allocated by devm method.
-> 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+PCI configuration space should be mapped with a memory region type that
+generates on the CPU host bus non-posted write transations. Update the
+driver to use the devm_pci_remap_cfg* interface to make sure the correct
+memory mappings for PCI configuration space are used.
 
-Sorry, I didn't notice that this is almost identical to Dan
-Carpenter's patch [1], which I had already applied.  You posted it
-first, but Tanmay acked Dan's, so that's what I applied.  I added a
-line to the changelog to at least give you some credit for it.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+---
+ drivers/pci/dwc/pcie-designware-host.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-[1] https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=pci/host-xgene&id=1ded56df3247d358390ae6dc09ccee620262ac5f
-
-> ---
-> 
->  drivers/pci/host/pci-xgene.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-> index 7c3b54b..790b6cb 100644
-> --- a/drivers/pci/host/pci-xgene.c
-> +++ b/drivers/pci/host/pci-xgene.c
-> @@ -246,14 +246,11 @@ static int xgene_pcie_ecam_init(struct pci_config_window *cfg, u32 ipversion)
->  	ret = xgene_get_csr_resource(adev, &csr);
->  	if (ret) {
->  		dev_err(dev, "can't get CSR resource\n");
-> -		kfree(port);
->  		return ret;
->  	}
->  	port->csr_base = devm_ioremap_resource(dev, &csr);
-> -	if (IS_ERR(port->csr_base)) {
-> -		kfree(port);
-> +	if (IS_ERR(port->csr_base))
->  		return -ENOMEM;
-> -	}
->  
->  	port->cfg_base = cfg->win;
->  	port->version = ipversion;
-> -- 
-> 1.9.1
-> 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 5ba3349..2b789af 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -338,8 +338,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	}
+ 
+ 	if (!pci->dbi_base) {
+-		pci->dbi_base = devm_ioremap(dev, pp->cfg->start,
+-					resource_size(pp->cfg));
++		pci->dbi_base = devm_pci_remap_cfgspace(dev,
++						pp->cfg->start,
++						resource_size(pp->cfg));
+ 		if (!pci->dbi_base) {
+ 			dev_err(dev, "error with ioremap\n");
+ 			ret = -ENOMEM;
+@@ -350,8 +351,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	pp->mem_base = pp->mem->start;
+ 
+ 	if (!pp->va_cfg0_base) {
+-		pp->va_cfg0_base = devm_ioremap(dev, pp->cfg0_base,
+-						pp->cfg0_size);
++		pp->va_cfg0_base = devm_pci_remap_cfgspace(dev,
++					pp->cfg0_base, pp->cfg0_size);
+ 		if (!pp->va_cfg0_base) {
+ 			dev_err(dev, "error with ioremap in function\n");
+ 			ret = -ENOMEM;
+@@ -360,7 +361,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	}
+ 
+ 	if (!pp->va_cfg1_base) {
+-		pp->va_cfg1_base = devm_ioremap(dev, pp->cfg1_base,
++		pp->va_cfg1_base = devm_pci_remap_cfgspace(dev,
++						pp->cfg1_base,
+ 						pp->cfg1_size);
+ 		if (!pp->va_cfg1_base) {
+ 			dev_err(dev, "error with ioremap\n");
+-- 
+2.10.0
