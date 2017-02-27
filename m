@@ -1,67 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0107.outbound.protection.outlook.com ([104.47.32.107]:19635
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751291AbdBXVtV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 24 Feb 2017 16:49:21 -0500
-From: Long Li <longli@microsoft.com>
-To: KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: [Resend PATCH 2/2 v3] pci-hyperv: lock pci bus on device eject
-Date: Fri, 24 Feb 2017 21:49:17 +0000
-Message-ID: <BN3PR03MB22273E86EDBC8875C55E2FB7CE520@BN3PR03MB2227.namprd03.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=KDlv=2I=intel.com=rui.y.wang@kernel.org>
+Return-Path: <SRS0=KDlv=2I=intel.com=rui.y.wang@kernel.org>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net
+Cc: tony.luck@intel.com,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com,
+	x86@kernel.org
+Subject: [PATCH 1/2] x86/PCI: Implement pci_release_device to release IRQ from IOAPIC
+Date: Mon, 27 Feb 2017 22:15:43 +0800
+Message-Id: <1488204944-27189-2-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1488204944-27189-1-git-send-email-rui.y.wang@intel.com>
+References: <1488204944-27189-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-A PCI_EJECT message can arrive at the same time we are calling pci_scan_chi=
-ld_bus in the workqueue for the previous PCI_BUS_RELATIONS message or in cr=
-eate_root_hv_pci_bus(), in this case we could potentailly modify the bus fr=
-om multiple places. Properly lock the bus access.
+The revert of 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq()
+and pcibios_free_irq()") causes a problem for IOAPIC hotplug. The
+problem is that IRQs are allocated and freed in pci_enable_device()
+and pci_disable_device(). But there are some drivers which don't call
+pci_disable_device(), and they have good reasons not calling it, so
+if they're using IOAPIC their IRQs won't have a chance to be released
+from the IOAPIC. When this happens IOAPIC hot-removal fails with a
+kernel stack dump and an error message like this:
 
-Thanks Dexuan Cui <decui@microsoft.com> for pointing out the race condition=
- in create_root_hv_pci_bus().
+[149335.697989] pin16 on IOAPIC2 is still in use.
 
-Signed-off-by: Long Li <longli@microsoft.com>
-Reported-by: Xiaofeng Wang <xiaofwan@redhat.com>
-Acked-by: K. Y. Srinivasan <kys@microsoft.com>
+It turns out that we can fix it in a different way without moving IRQ
+allocation into pcibios_alloc_irq(), thus avoiding the regression of
+991de2e59090. We can keep the allocation and freeing of IRQs as is
+within pci_enable_device()/pci_disable_device(), without breaking any
+previous assumption of the rest of the system, keeping compatibility
+with both the legacy and the modern drivers. We can accomplish this by
+implementing the existing __weak hook of pcibios_release_device() thus
+when a pci device is about to be deleted we get notified in the hook
+and take the chance to release its IRQ, if any, from the IOAPIC.
+
+Besides implementing pcibios_release_device(), the hot-removal of
+IOAPIC needs to be broken into two parts: the PCI part and the ACPI
+part. The PCI part releases PCI resources before the PCI bus is gone,
+and the ACPI part is moved to a stage later than the hot-removal of
+the PCI root bus, so we have the chance to hook every PCI device's
+pcibios_release_device(), before we remove the IOAPIC.
+
+This patch implements pcibios_release_device() on x86 to release any
+IRQ not released by the driver, so that the IOAPIC can then be safely
+hot-removed.
+
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
 ---
- drivers/pci/host/pci-hyperv.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ arch/x86/pci/common.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 4a37598..33c75c9 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1198,9 +1198,11 @@ static int create_root_hv_pci_bus(struct hv_pcibus_d=
-evice *hbus)
- 	hbus->pci_bus->msi =3D &hbus->msi_chip;
- 	hbus->pci_bus->msi->dev =3D &hbus->hdev->device;
-=20
-+	pci_lock_rescan_remove();
- 	pci_scan_child_bus(hbus->pci_bus);
- 	pci_bus_assign_resources(hbus->pci_bus);
- 	pci_bus_add_devices(hbus->pci_bus);
-+	pci_unlock_rescan_remove();
- 	hbus->state =3D hv_pcibus_installed;
- 	return 0;
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index 0cb52ae..4eba071 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -735,6 +735,15 @@ void pcibios_disable_device (struct pci_dev *dev)
+ 		pcibios_disable_irq(dev);
  }
-@@ -1590,8 +1592,10 @@ static void hv_eject_device_work(struct work_struct =
-*work)
- 	pdev =3D pci_get_domain_bus_and_slot(hpdev->hbus->sysdata.domain, 0,
- 					   wslot);
- 	if (pdev) {
-+		pci_lock_rescan_remove();
- 		pci_stop_and_remove_bus_device(pdev);
- 		pci_dev_put(pdev);
-+		pci_unlock_rescan_remove();
- 	}
-=20
- 	memset(&ctxt, 0, sizeof(ctxt));
---=20
-1.8.5.6
+ 
++#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
++void pcibios_release_device(struct pci_dev *dev)
++{
++	if (atomic_dec_return(&dev->enable_cnt) >=0)
++		pcibios_disable_device(dev);
++
++}
++#endif
++
+ int pci_ext_cfg_avail(void)
+ {
+ 	if (raw_pci_ext_ops)
+-- 
+1.8.3.1
