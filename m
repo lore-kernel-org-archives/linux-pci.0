@@ -1,276 +1,46 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
- <linux-arm-kernel@axis.com>
-Subject: [PATCH 03/10] PCI: dwc: *all*: Rename cfg_read/cfg_write to read/write
-Date: Wed, 15 Feb 2017 18:48:12 +0530
-Message-ID: <1487164699-30708-4-git-send-email-kishon@ti.com>
-In-Reply-To: <1487164699-30708-1-git-send-email-kishon@ti.com>
-References: <1487164699-30708-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>,
- Pratyush Anand <pratyush.anand@gmail.com>, nsekhar@ti.com,
- Kishon Vijay Abraham I <kishon@ti.com>,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Murali Karicheri <m-karicheri2@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:54496 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751610AbdB0PPf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Feb 2017 10:15:35 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 10/20] PCI: spear13xx: update PCI config space remap function
+Date: Mon, 27 Feb 2017 15:14:21 +0000
+Message-Id: <20170227151436.18698-11-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change. dw_pcie_cfg_read/dw_pcie_cfg_write doesn't do
-anything specific to access configuration space. It can be just renamed
-to dw_pcie_read/dw_pcie_write and used to read/write data to dbi space.
+PCI configuration space should be mapped with a memory region type that
+generate on the CPU host bus non-posted write transations. Update the
+driver to use the devm_pci_remap_cfg* interface to make sure the correct
+memory mappings for PCI configuration space are used.
 
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Reviewed-By: Joao Pinto <jpinto@synopsys.com>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/dwc/pci-dra7xx.c      |   16 ++++++++--------
- drivers/pci/dwc/pci-exynos.c      |    4 ++--
- drivers/pci/dwc/pci-keystone-dw.c |    4 ++--
- drivers/pci/dwc/pcie-designware.c |   12 ++++++------
- drivers/pci/dwc/pcie-designware.h |    4 ++--
- drivers/pci/dwc/pcie-qcom.c       |    2 +-
- drivers/pci/dwc/pcie-spear13xx.c  |   24 ++++++++++++------------
- 7 files changed, 33 insertions(+), 33 deletions(-)
+ drivers/pci/dwc/pcie-spear13xx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index d1cd476..4b9b1e1 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -109,22 +109,22 @@ static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
- 	}
- 
- 	if (dra7xx->link_gen == 1) {
--		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
--				 4, &reg);
-+		dw_pcie_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
-+			     4, &reg);
- 		if ((reg & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			reg &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			reg |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
--					  PCI_EXP_LNKCAP, 4, reg);
-+			dw_pcie_write(pp->dbi_base + exp_cap_off +
-+				      PCI_EXP_LNKCAP, 4, reg);
- 		}
- 
--		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
--				 2, &reg);
-+		dw_pcie_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
-+			     2, &reg);
- 		if ((reg & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			reg &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			reg |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
--					  PCI_EXP_LNKCTL2, 2, reg);
-+			dw_pcie_write(pp->dbi_base + exp_cap_off +
-+				      PCI_EXP_LNKCTL2, 2, reg);
- 		}
- 	}
- 
-diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-index c179e7a..e3fbff4 100644
---- a/drivers/pci/dwc/pci-exynos.c
-+++ b/drivers/pci/dwc/pci-exynos.c
-@@ -429,7 +429,7 @@ static int exynos_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	int ret;
- 
- 	exynos_pcie_sideband_dbi_r_mode(exynos_pcie, true);
--	ret = dw_pcie_cfg_read(pp->dbi_base + where, size, val);
-+	ret = dw_pcie_read(pp->dbi_base + where, size, val);
- 	exynos_pcie_sideband_dbi_r_mode(exynos_pcie, false);
- 	return ret;
- }
-@@ -441,7 +441,7 @@ static int exynos_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	int ret;
- 
- 	exynos_pcie_sideband_dbi_w_mode(exynos_pcie, true);
--	ret = dw_pcie_cfg_write(pp->dbi_base + where, size, val);
-+	ret = dw_pcie_write(pp->dbi_base + where, size, val);
- 	exynos_pcie_sideband_dbi_w_mode(exynos_pcie, false);
- 	return ret;
- }
-diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
-index 9397c46..4875334 100644
---- a/drivers/pci/dwc/pci-keystone-dw.c
-+++ b/drivers/pci/dwc/pci-keystone-dw.c
-@@ -444,7 +444,7 @@ int ks_dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 
- 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
- 
--	return dw_pcie_cfg_read(addr + where, size, val);
-+	return dw_pcie_read(addr + where, size, val);
- }
- 
- int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
-@@ -456,7 +456,7 @@ int ks_dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 
- 	addr = ks_pcie_cfg_setup(ks_pcie, bus_num, devfn);
- 
--	return dw_pcie_cfg_write(addr + where, size, val);
-+	return dw_pcie_write(addr + where, size, val);
- }
- 
- /**
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index d0e4904..de143ea 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -33,7 +33,7 @@
- 
- static struct pci_ops dw_pcie_ops;
- 
--int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
-+int dw_pcie_read(void __iomem *addr, int size, u32 *val)
- {
- 	if ((uintptr_t)addr & (size - 1)) {
- 		*val = 0;
-@@ -54,7 +54,7 @@ int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val)
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val)
-+int dw_pcie_write(void __iomem *addr, int size, u32 val)
- {
- 	if ((uintptr_t)addr & (size - 1))
- 		return PCIBIOS_BAD_REGISTER_NUMBER;
-@@ -108,7 +108,7 @@ static int dw_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 	if (pp->ops->rd_own_conf)
- 		return pp->ops->rd_own_conf(pp, where, size, val);
- 
--	return dw_pcie_cfg_read(pp->dbi_base + where, size, val);
-+	return dw_pcie_read(pp->dbi_base + where, size, val);
- }
- 
- static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
-@@ -117,7 +117,7 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
- 	if (pp->ops->wr_own_conf)
- 		return pp->ops->wr_own_conf(pp, where, size, val);
- 
--	return dw_pcie_cfg_write(pp->dbi_base + where, size, val);
-+	return dw_pcie_write(pp->dbi_base + where, size, val);
- }
- 
- static void dw_pcie_prog_outbound_atu(struct pcie_port *pp, int index,
-@@ -635,7 +635,7 @@ static int dw_pcie_rd_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
--	ret = dw_pcie_cfg_read(va_cfg_base + where, size, val);
-+	ret = dw_pcie_read(va_cfg_base + where, size, val);
- 	if (pp->num_viewport <= 2)
- 		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
- 					  PCIE_ATU_TYPE_IO, pp->io_base,
-@@ -673,7 +673,7 @@ static int dw_pcie_wr_other_conf(struct pcie_port *pp, struct pci_bus *bus,
- 	dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
- 				  type, cpu_addr,
- 				  busdev, cfg_size);
--	ret = dw_pcie_cfg_write(va_cfg_base + where, size, val);
-+	ret = dw_pcie_write(va_cfg_base + where, size, val);
- 	if (pp->num_viewport <= 2)
- 		dw_pcie_prog_outbound_atu(pp, PCIE_ATU_REGION_INDEX1,
- 					  PCIE_ATU_TYPE_IO, pp->io_base,
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index b5226d4..5b71b57 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -145,8 +145,8 @@ struct pcie_host_ops {
- 
- u32 dw_pcie_readl_rc(struct pcie_port *pp, u32 reg);
- void dw_pcie_writel_rc(struct pcie_port *pp, u32 reg, u32 val);
--int dw_pcie_cfg_read(void __iomem *addr, int size, u32 *val);
--int dw_pcie_cfg_write(void __iomem *addr, int size, u32 val);
-+int dw_pcie_read(void __iomem *addr, int size, u32 *val);
-+int dw_pcie_write(void __iomem *addr, int size, u32 val);
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
- int dw_pcie_wait_for_link(struct pcie_port *pp);
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 3f525cb..ac27b67 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -621,7 +621,7 @@ static int qcom_pcie_rd_own_conf(struct pcie_port *pp, int where, int size,
- 		return PCIBIOS_SUCCESSFUL;
- 	}
- 
--	return dw_pcie_cfg_read(pp->dbi_base + where, size, val);
-+	return dw_pcie_read(pp->dbi_base + where, size, val);
- }
- 
- static struct pcie_host_ops qcom_pcie_dw_ops = {
 diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
-index 5970566..7acf91e 100644
+index 348f9c5..ea676a1 100644
 --- a/drivers/pci/dwc/pcie-spear13xx.c
 +++ b/drivers/pci/dwc/pcie-spear13xx.c
-@@ -91,34 +91,34 @@ static int spear13xx_pcie_establish_link(struct spear13xx_pcie *spear13xx_pcie)
- 	 * default value in capability register is 512 bytes. So force
- 	 * it to 128 here.
- 	 */
--	dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, &val);
-+	dw_pcie_read(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, &val);
- 	val &= ~PCI_EXP_DEVCTL_READRQ;
--	dw_pcie_cfg_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, val);
-+	dw_pcie_write(pp->dbi_base + exp_cap_off + PCI_EXP_DEVCTL, 2, val);
- 
--	dw_pcie_cfg_write(pp->dbi_base + PCI_VENDOR_ID, 2, 0x104A);
--	dw_pcie_cfg_write(pp->dbi_base + PCI_DEVICE_ID, 2, 0xCD80);
-+	dw_pcie_write(pp->dbi_base + PCI_VENDOR_ID, 2, 0x104A);
-+	dw_pcie_write(pp->dbi_base + PCI_DEVICE_ID, 2, 0xCD80);
- 
- 	/*
- 	 * if is_gen1 is set then handle it, so that some buggy card
- 	 * also works
- 	 */
- 	if (spear13xx_pcie->is_gen1) {
--		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
--					4, &val);
-+		dw_pcie_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCAP,
-+			     4, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
--				PCI_EXP_LNKCAP, 4, val);
-+			dw_pcie_write(pp->dbi_base + exp_cap_off +
-+				      PCI_EXP_LNKCAP, 4, val);
- 		}
- 
--		dw_pcie_cfg_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
--					2, &val);
-+		dw_pcie_read(pp->dbi_base + exp_cap_off + PCI_EXP_LNKCTL2,
-+			     2, &val);
- 		if ((val & PCI_EXP_LNKCAP_SLS) != PCI_EXP_LNKCAP_SLS_2_5GB) {
- 			val &= ~((u32)PCI_EXP_LNKCAP_SLS);
- 			val |= PCI_EXP_LNKCAP_SLS_2_5GB;
--			dw_pcie_cfg_write(pp->dbi_base + exp_cap_off +
--					PCI_EXP_LNKCTL2, 2, val);
-+			dw_pcie_write(pp->dbi_base + exp_cap_off +
-+				      PCI_EXP_LNKCTL2, 2, val);
- 		}
+@@ -271,7 +271,7 @@ static int spear13xx_pcie_probe(struct platform_device *pdev)
  	}
  
+ 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
+-	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
++	pci->dbi_base = devm_pci_remap_cfg_resource(dev, dbi_base);
+ 	if (IS_ERR(pci->dbi_base)) {
+ 		dev_err(dev, "couldn't remap dbi base %p\n", dbi_base);
+ 		ret = PTR_ERR(pci->dbi_base);
 -- 
-1.7.9.5
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.10.0
