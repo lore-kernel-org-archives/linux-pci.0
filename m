@@ -1,140 +1,103 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V6 1/5] LIB: Indirect ISA/LPC port IO introduced
-To: "zhichang.yuan" <yuanzhichang@hisilicon.com>, catalin.marinas@arm.com,
- will.deacon@arm.com, robh+dt@kernel.org, frowand.list@gmail.com,
- bhelgaas@google.com, rafael@kernel.org, mark.rutland@arm.com,
- brian.starkey@arm.com, olof@lixom.net, arnd@arndb.de,
- linux-arm-kernel@lists.infradead.org
-References: <1485241525-201782-1-git-send-email-yuanzhichang@hisilicon.com>
- <1485241525-201782-2-git-send-email-yuanzhichang@hisilicon.com>
- <5dc0dc9c-124e-398f-a3b2-40059268e859@suse.de>
- <58A1BD32.5030106@hisilicon.com>
-From: Alexander Graf <agraf@suse.de>
-Message-ID: <ed9ca184-f9d9-7347-7000-ba4b0eea05bf@suse.de>
-Date: Tue, 14 Feb 2017 14:15:38 +0100
-MIME-Version: 1.0
-In-Reply-To: <58A1BD32.5030106@hisilicon.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
- gabriele.paoloni@huawei.com, minyard@acm.org, benh@kernel.crashing.org,
- john.garry@huawei.com, liviu.dudau@arm.com, linux-kernel@vger.kernel.org,
- xuwei5@hisilicon.com, linuxarm@huawei.com, linux-serial@vger.kernel.org,
- linux-pci@vger.kernel.org, zourongrong@gmail.com, kantyzc@163.com,
- zhichang.yuan02@gmail.com
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:54340 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751390AbdB0PPc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Feb 2017 10:15:32 -0500
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Will Deacon <will.deacon@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        John Garry <john.garry@huawei.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>
+Subject: [PATCH 03/20] asm-generic/io.h: add PCI config space remap interface
+Date: Mon, 27 Feb 2017 15:14:14 +0000
+Message-Id: <20170227151436.18698-4-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
+Posting") mandate non-posted configuration transactions. As further
+highlighted in the PCIe specifications (4.0 - Rev0.3, "Ordering
+Considerations for the Enhanced Configuration Access Mechanism"),
+through ECAM and ECAM-derivative configuration mechanism, the memory
+mapped transactions from the host CPU into Configuration Requests on the
+PCI express fabric may create ordering problems for software because
+writes to memory address are typically posted transactions (unless the
+architecture can enforce through virtual address mapping non-posted
+write transactions behaviour) but writes to Configuration Space are not
+posted on the PCI express fabric.
 
+Current DT and ACPI host bridge controllers map PCI configuration space
+(ECAM and ECAM-derivative) into the virtual address space through
+ioremap() calls, that are non-cacheable device accesses on most
+architectures, but may provide "bufferable" or "posted" write semantics
+in architecture like eg ARM/ARM64 that allow ioremap'ed regions writes
+to be buffered in the bus connecting the host CPU to the PCI fabric;
+this behaviour, as underlined in the PCIe specifications, may trigger
+transactions ordering rules and must be prevented.
 
-On 13/02/2017 15:05, zhichang.yuan wrote:
-> Hi, Alex,
->
-> Thanks for your review!
-> Sorry for the late response!
-> As this patch-set was two weeks ago, it must be painful to check this thread again.
->
-> I thought John had discussed with you about most of the comments when I was back from ten days' leave, and I have no more to supplement,
-> so...
-> But when I started the work on V7, met somethings need to clarify with you.
-> Please kindly check the below.
->
->
-> On 2017/1/31 1:12, Alexander Graf wrote:
->> On 01/24/2017 08:05 AM, zhichang.yuan wrote:
->>> Low-pin-count interface is integrated into some SoCs. The accesses to those
->>> peripherals under LPC make use of I/O ports rather than the memory mapped I/O.
->>>
->>> To drive these devices, this patch introduces a method named indirect-IO.
->>> In this method the in/out() accessor in include/asm-generic/io.h will be
->>> redefined. When upper layer drivers call in/out() with those known legacy port
->>> addresses to access the peripherals, the I/O operations will be routed to the
->>> right hooks which are registered specific to the host device, such as LPC.
->>> Then the hardware relevant manupulations are finished by the corresponding
->>> host.
->>>
->>> According to the comments on V5, this patch adds a common indirect-IO driver
->>> which support this I/O indirection to the generic directory.
->>>
->>> In the later pathches, some host-relevant drivers are implemented to support
->>> the specific I/O hooks and register them.
->>> Based on these, the upper layer drivers which depend on in/out() can work well
->>> without any extra work or any changes.
->>>
->>> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
->>> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
->>> Signed-off-by: John Garry <john.garry@huawei.com>
->>
->> I like the extio idea. That allows us to handle all PIO requests on platforms that don't have native PIO support via different routes depending on the region they're in. Unfortunately we now we have 2 frameworks for handling sparse PIO regions: One in extio, one in PCI.
->>
->> Why don't we just merge the two? Most of the code that has #ifdef PCI_IOBASE throughout the code base sounds like an ideal candidate to get migrated to extio instead. Then we only have a single framework to worry about ...
->>
->>> ---
->>>   include/asm-generic/io.h |  50 ++++++++++++++++
->>>   include/linux/extio.h    |  85 +++++++++++++++++++++++++++
->>>   include/linux/io.h       |   1 +
->>>   lib/Kconfig              |   8 +++
->>>   lib/Makefile             |   2 +
->>>   lib/extio.c              | 147 +++++++++++++++++++++++++++++++++++++++++++++++
->>>   6 files changed, 293 insertions(+)
->>>   create mode 100644 include/linux/extio.h
->>>   create mode 100644 lib/extio.c
->>>
->>> diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
->>> index 7ef015e..c0d6db1 100644
->>> --- a/include/asm-generic/io.h
->>> +++ b/include/asm-generic/io.h
->>> @@ -21,6 +21,8 @@
->>>     #include <asm-generic/pci_iomap.h>
->>>   +#include <linux/extio.h>
->>> +
->>>   #ifndef mmiowb
->>>   #define mmiowb() do {} while (0)
->>>   #endif
->>> @@ -358,51 +360,75 @@ static inline void writesq(volatile void __iomem *addr, const void *buffer,
->>>    */
->>>     #ifndef inb
->>> +#ifdef CONFIG_INDIRECT_PIO
->>> +#define inb extio_inb
->>> +#else
->>>   #define inb inb
->>>   static inline u8 inb(unsigned long addr)
->>>   {
->>>       return readb(PCI_IOBASE + addr);
->>>   }
->>> +#endif /* CONFIG_INDIRECT_PIO */
->>
->> ... we would also get rid of all of these constructs. Instead, every architecture that doesn't implement native PIO defines would end up in extio and we would enable it unconditionally for them.
->
-> Do you want to implement like these?
->
-> #ifndef inb
-> #define inb extio_inb
-> #endif
->
-> In this way, we don't need the CONFIG_INDIRECT_PIO and make extio as kernel built-in.
-> I thought these are your ideas, right?
+Introduce a new generic and explicit API to create a memory
+mapping for ECAM and ECAM-derivative config space area that
+defaults to ioremap_nocache() (which should provide a sane default
+behaviour) but still allowing architectures on which ioremap_nocache()
+results in posted write transactions to override the function
+call with an arch specific implementation that complies with
+the PCI specifications for configuration transactions.
 
-That's definitely one way of doing it, yes :).
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+---
+ include/asm-generic/io.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-You still don't need extio on architectures that have native PIO or no 
-PIO devices at all. So I wouldn't mind if you keep it as a config 
-option. That way archs that don't care can reduce their code size.
-
-But I don't feel strongly about it either way.
-
-
-Alex
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index 7ef015e..52dda81 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -915,6 +915,15 @@ extern void ioport_unmap(void __iomem *p);
+ #endif /* CONFIG_GENERIC_IOMAP */
+ #endif /* CONFIG_HAS_IOPORT_MAP */
+ 
++#ifndef pci_remap_cfgspace
++#define pci_remap_cfgspace pci_remap_cfgspace
++static inline void __iomem *pci_remap_cfgspace(phys_addr_t offset,
++					       size_t size)
++{
++	return ioremap_nocache(offset, size);
++}
++#endif
++
+ #ifndef xlate_dev_kmem_ptr
+ #define xlate_dev_kmem_ptr xlate_dev_kmem_ptr
+ static inline void *xlate_dev_kmem_ptr(void *addr)
+-- 
+2.10.0
