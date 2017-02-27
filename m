@@ -1,72 +1,148 @@
-Return-Path: <SRS0=OJPb=2A=gmail.com=yhlu.kernel@kernel.org>
-Return-Path: <SRS0=OJPb=2A=gmail.com=yhlu.kernel@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: 
+Subject: [RFC PATCH 18/30] PCI: Make "PRG Response PASID Required" handling
+ common
+Date: Mon, 27 Feb 2017 19:54:29 +0000
+Message-Id: <20170227195441.5170-19-jean-philippe.brucker@arm.com>
+In-Reply-To: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
+ David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
 MIME-Version: 1.0
-Sender: yhlu.kernel@gmail.com
-In-Reply-To: <20170218234624.GA13573@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170204185607.GA29957@wunner.de> <CAE9FiQUuFJHMScyFgnHbs5r-SzTiRiBZ2JcpUYJhg0ft75-OBQ@mail.gmail.com>
- <20170204233443.GA234@wunner.de> <CAE9FiQW5SQsQfRCz9sor4kufogTRVpHXekPHSi8MSi46mvXGLQ@mail.gmail.com>
- <20170205073454.GA253@wunner.de> <20170206204249.GA679@wunner.de>
- <CAE9FiQXSmB6Cs55nFtdw3rRrVrivwpDGNTwLwYtvWCEe4nsuHg@mail.gmail.com>
- <20170207060811.GA791@wunner.de> <CAE9FiQUxAfzLvd1icaJr=i8n_cQs5PL2q3y3PW9HYpaaPq8zZw@mail.gmail.com>
- <20170208084624.GA13086@linux-siqj.site> <20170218234624.GA13573@bhelgaas-glaptop.roam.corp.google.com>
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Sat, 18 Feb 2017 17:54:17 -0800
-Message-ID: <CAE9FiQXDfLxx=NsZYR6RmABMhd_RXoMF26WoCe-FZzmeec3YKA@mail.gmail.com>
-Subject: Re: pciehp is broken from 4.10-rc1
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Feb 18, 2017 at 3:46 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Wed, Feb 08, 2017 at 12:46:26AM -0800, Yinghai Lu wrote:
->> after that change will get:
->>
->> sca05-0a81fd7f:~ # echo 1 > /sys/bus/pci/slots/7/power
->> [  300.949937] pci_hotplug: power_write_file: power = 1
->> [  300.955502] pciehp 0000:73:00.0:pcie004: pciehp_get_power_status: SLOTCTRL a8 value read 17f1
->> [  300.982557] pciehp 0000:73:00.0:pcie004: pending interrupts 0x0010 from Slot Status
->
-> Can anybody explain this Command Completed interrupt?  I think we should be
-> in this path:
->
->   pciehp_sysfs_enable_slot
->     pciehp_enable_slot
->       pciehp_get_adapter_status
->       pciehp_get_power_status
->         "SLOTCTRL a8 value read 17f1" (DLLSCE PWR_OFF PWR_IND_OFF CCIE HPIE ATTN_IND_OFF ABPE)
->       board_added
->         pciehp_power_on_slot
->           pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_ON, PCI_EXP_SLTCTL_PCC)
->           "SLOTCTRL a8 write cmd 0" (PWR_ON)
->           pciehp_link_enable
->             __pciehp_link_set
->
-> I don't see a write to SLTCTL between pciehp_get_power_status() and
-> pciehp_power_on_slot(), so I don't know why we see a Command Completed
-> interrupt.
->
->> [  300.991171] pciehp 0000:73:00.0:pcie004: pciehp_power_on_slot: SLOTCTRL a8 write cmd 0
->> [  301.000033] pciehp 0000:73:00.0:pcie004: pciehp_green_led_blink: SLOTCTRL a8 write cmd 200
->> [  301.009274] pciehp 0000:73:00.0:pcie004: pending interrupts 0x0010 from Slot Status
->> [  301.662172] pciehp 0000:73:00.0:pcie004: pciehp_check_link_active: lnk_status = f083
->> [  301.670827] pciehp 0000:73:00.0:pcie004: pending interrupts 0x0108 from Slot Status
->> [  301.679376] pciehp 0000:73:00.0:pcie004: Slot(7): Link Up
->> [  301.685463] pciehp 0000:73:00.0:pcie004: Slot(7): Link Up event ignored; already powering on
->> [  301.685508] pciehp 0000:73:00.0:pcie004: pciehp_check_link_active: lnk_status = f083
->> [  302.005967] pciehp 0000:73:00.0:pcie004: pciehp_check_link_status: lnk_status = f083
->> [  302.014859] pci 0000:74:00.0: [15b3:1003] type 00 class 0x0c0600
+The PASID ECN to the PCIe spec added a bit in the PRI status register that
+allows a Function to declare whether a PRG Response should contain the
+PASID prefix or not.
 
-That should belong to
-  pciehp_power_on_slot: SLOTCTRL a8 write cmd 0
+Move the helper that accesses it from amd_iommu into the PCI subsystem,
+renaming it to something more consistent with the spec, and introducing
+another obscure acronym to make it all fit.
 
-We print out debug info after cmd write.
-        pcie_write_cmd(ctrl, PCI_EXP_SLTCTL_PWR_ON, PCI_EXP_SLTCTL_PCC);
-        ctrl_dbg(ctrl, "%s: SLOTCTRL %x write cmd %x\n", __func__,
-                 pci_pcie_cap(ctrl->pcie->port) + PCI_EXP_SLTCTL,
-                 PCI_EXP_SLTCTL_PWR_ON);
+Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+---
+ drivers/iommu/amd_iommu.c     | 19 +------------------
+ drivers/pci/ats.c             | 17 +++++++++++++++++
+ include/linux/pci-ats.h       |  8 ++++++++
+ include/uapi/linux/pci_regs.h |  1 +
+ 4 files changed, 27 insertions(+), 18 deletions(-)
 
-should we adjust that print out sequence ?
+diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+index 98940d1392cb..c5c598bf4ba3 100644
+--- a/drivers/iommu/amd_iommu.c
++++ b/drivers/iommu/amd_iommu.c
+@@ -2024,23 +2024,6 @@ static int pdev_iommuv2_enable(struct pci_dev *pdev)
+ 	return ret;
+ }
+ 
+-/* FIXME: Move this to PCI code */
+-#define PCI_PRI_TLP_OFF		(1 << 15)
+-
+-static bool pci_pri_tlp_required(struct pci_dev *pdev)
+-{
+-	u16 status;
+-	int pos;
+-
+-	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
+-	if (!pos)
+-		return false;
+-
+-	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
+-
+-	return (status & PCI_PRI_TLP_OFF) ? true : false;
+-}
+-
+ /*
+  * If a device is not yet associated with a domain, this function
+  * assigns it visible for the hardware
+@@ -2069,7 +2052,7 @@ static int attach_device(struct device *dev,
+ 
+ 			dev_data->ats.enabled = true;
+ 			dev_data->ats.qdep    = pci_ats_queue_depth(pdev);
+-			dev_data->pri_tlp     = pci_pri_tlp_required(pdev);
++			dev_data->pri_tlp     = pci_prg_resp_requires_prefix(pdev);
+ 		}
+ 	} else if (amd_iommu_iotlb_sup &&
+ 		   pci_enable_ats(pdev, PAGE_SHIFT) == 0) {
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index eeb9fb2b47aa..331376e9bb8b 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -334,3 +334,20 @@ int pci_max_pasids(struct pci_dev *pdev)
+ }
+ EXPORT_SYMBOL_GPL(pci_max_pasids);
+ #endif /* CONFIG_PCI_PASID */
++
++#if defined(CONFIG_PCI_PASID) && defined(CONFIG_PCI_PRI)
++bool pci_prg_resp_requires_prefix(struct pci_dev *pdev)
++{
++	u16 status;
++	int pos;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
++	if (!pos)
++		return false;
++
++	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
++
++	return !!(status & PCI_PRI_STATUS_PRPR);
++}
++EXPORT_SYMBOL_GPL(pci_prg_resp_requires_prefix);
++#endif /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
+diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+index 57e0b8250947..e21bcacbe80c 100644
+--- a/include/linux/pci-ats.h
++++ b/include/linux/pci-ats.h
+@@ -57,5 +57,13 @@ static inline int pci_max_pasids(struct pci_dev *pdev)
+ 
+ #endif /* CONFIG_PCI_PASID */
+ 
++#if defined(CONFIG_PCI_PASID) && defined(CONFIG_PCI_PRI)
++bool pci_prg_resp_requires_prefix(struct pci_dev *pdev);
++#else
++static inline bool pci_prg_resp_requires_prefix(struct pci_dev *pdev)
++{
++	return false;
++}
++#endif /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
+ 
+ #endif /* LINUX_PCI_ATS_H*/
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 634c9c44ed6c..bae815876be6 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -864,6 +864,7 @@
+ #define  PCI_PRI_STATUS_RF	0x001	/* Response Failure */
+ #define  PCI_PRI_STATUS_UPRGI	0x002	/* Unexpected PRG index */
+ #define  PCI_PRI_STATUS_STOPPED	0x100	/* PRI Stopped */
++#define  PCI_PRI_STATUS_PRPR	0x8000	/* PRG Response requires PASID prefix */
+ #define PCI_PRI_MAX_REQ		0x08	/* PRI max reqs supported */
+ #define PCI_PRI_ALLOC_REQ	0x0c	/* PRI max reqs allowed */
+ #define PCI_EXT_CAP_PRI_SIZEOF	16
+-- 
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
