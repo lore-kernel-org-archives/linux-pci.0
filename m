@@ -1,68 +1,128 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 3 Feb 2017 22:18:54 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: kernel list <linux-kernel@vger.kernel.org>,
-        linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: v4.10-rc6 boot regression on Intel desktop, does not boot after
- cold boots, boots after reboot
-Message-ID: <20170203211854.GA3697@amd>
-References: <20170203190414.GA3701@amd>
- <Pine.LNX.4.44L0.1702031415140.1794-100000@iolanthe.rowland.org>
- <20170203205129.GA3791@amd>
+Return-Path: <SRS0=kwRk=2I=gmail.com=ddaney.cavm@kernel.org>
+Return-Path: <SRS0=kwRk=2I=gmail.com=ddaney.cavm@kernel.org>
+Subject: Re: [PATCH] PCI: Add cavium acs pci quirk
+To: "Chalamarla, Tirumalesh" <Tirumalesh.Chalamarla@cavium.com>,
+ Bjorn Helgaas <helgaas@kernel.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ "Jaggi, Manish" <Manish.Jaggi@cavium.com>
+References: <56ABC5AE.1050209@caviumnetworks.com>
+ <20170213214457.248084de@t450s.home>
+ <20170214150722.GC8080@bhelgaas-glaptop.roam.corp.google.com>
+ <b9192b8b-5105-f78a-70dc-607778b78b95@gmail.com>
+ <2BC59900-08B3-4D8A-B55F-09E1C0A6BC27@caviumnetworks.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "Richter, Robert" <Robert.Richter@cavium.com>,
+ Bjorn Helgaas <bhelgaas@google.com>
+From: David Daney <ddaney.cavm@gmail.com>
+Message-ID: <cdfacacf-b39e-a565-f5ae-f59d1c2ff168@gmail.com>
+Date: Mon, 27 Feb 2017 11:25:09 -0800
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="UugvWAfsgieZRqgk"
-In-Reply-To: <20170203205129.GA3791@amd>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <2BC59900-08B3-4D8A-B55F-09E1C0A6BC27@caviumnetworks.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
+On 02/27/2017 11:13 AM, Chalamarla, Tirumalesh wrote:
+>
+>
+> On 2/27/17, 11:02 AM, "David Daney" <ddaney.cavm@gmail.com> wrote:
+>
+>     On 02/14/2017 07:07 AM, Bjorn Helgaas wrote:
+>     > On Mon, Feb 13, 2017 at 09:44:57PM -0700, Alex Williamson wrote:
+>     >> On Sat, 30 Jan 2016 01:33:58 +0530
+>     >> Manish Jaggi <mjaggi@caviumnetworks.com> wrote:
+>     >>
+>     >>> Cavium devices matching this quirk do not perform
+>     >>> peer-to-peer with other functions, allowing masking out
+>     >>> these bits as if they were unimplemented in the ACS capability.
+>     >>>
+>     >>> Acked-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
+>     >>> Signed-off-by: Manish Jaggi <mjaggi@caviumnetworks.com>
+>     >>> ---
+>     >>>  drivers/pci/quirks.c | 15 +++++++++++++++
+>     >>>  1 file changed, 15 insertions(+)
+>     >>>
+>     >>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>     >>> index 7e32730..a300fa6 100644
+>     >>> --- a/drivers/pci/quirks.c
+>     >>> +++ b/drivers/pci/quirks.c
+>     >>> @@ -3814,6 +3814,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+>     >>>  #endif
+>     >>>  }
+>     >>>
+>     >>> +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+>     >>> +{
 
---UugvWAfsgieZRqgk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Perhaps add a check here for dev->device and/or dev->subsystem_device to 
+see if we need the workaround.  There may be many that match, so ...
 
-Hi!
 
-> > > Hmm. I moved keyboard between USB ports, and now 4.10-rc6 no longer
-> > > boots. v4.6 works ok. Let me try with keyboard unplugged... no, I
-> > > could not get it to work. I believe v4.9 and some v4.10-rc's worked,
-> > > but I'll have to double check.
-> >=20
-> > But all the kernel versions worked when the keyboard was plugged into
-> > its original USB port?
->=20
-> Aha. So it looks difference is probably in "where is keyboard plugged
-> in" but in "reboot" vs. "cold boot". I did not do a cold boot in quite
-> a while :-(.
->=20
-> Booting to grub, then hitting ctrl-alt-del is enough to make it work. Ouc=
-h.
->=20
-> It happens with current Linus' tree.
+>     >>> +	/*
+>     >>> +	 * Cavium devices matching this quirk do not perform
+>     >>> +	 * peer-to-peer with other functions, allowing masking out
+>     >>> +	 * these bits as if they were unimplemented in the ACS capability.
+>     >>> +	 */
+>     >>> +	acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+>     >>> +		       PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+>     >>> +
+>     >>> +	return acs_flags ? 0 : 1;
+>     >>> +}
+>     >>> +
+>     >>>  /*
+>     >>>   * Many Intel PCH root ports do provide ACS-like features to disable peer
+>     >>>   * transactions and validate bus numbers in requests, but do not provide an
+>     >>> @@ -3966,6 +3979,8 @@ static const struct pci_dev_acs_enabled {
+>     >>>  	{ PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+>     >>>  	{ 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
+>     >>>  	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
+>     >>> +	/* Cavium ThunderX */
+>     >>> +	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
 
-v4.10-rc6-feb3 : broken
-v4.9 : ok
-(v4.6 : ok)
+.. Leaving PCI_ANY_ID here may keep the table more manageable.
 
-									Pavel
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
+>     >>>  	{ 0 }
+>     >>>  };
+>     >>>
+>     >>
+>     >> Apologies for not catching this, but what sort of crystal ball do you
+>     >> have that can predict not only current devices, but future devices will
+>     >> not support peer-to-peer features?  Is there an internal design
+>     >> guidelines reference specification for Cavium that we can realistically
+>     >> expect this to remain consistent, or is this just an attempt to never
+>     >> think about ACS again at the customer's peril?  What about the existing
+>     >> non-ThunderX products with Cavium vendor ID, does this really apply to
+>     >> those?  I would strongly suggest taking the device ID into account.
+>     >> See examples like the pci_quirk_intel_pch_acs quirk where the initial
+>     >> filter is PCI_ANY_ID, but specific device types and ranges of device
+>     >> IDs are identified by the function for evaluation.  This seems reckless
+>     >> to me and I'd advise that it be reverted.  Thanks,
+>     >
+>     > I'd be happy to revert this, but it would be easier if somebody sent a
+>     > patch and a changelog.
+>     >
+>
+>     I agree that it should be reverted.
+>
+>     I was hoping that Manish or Tirumalesh would fix this properly by only
+>     activating the quirk on the faulty hardware, but such a fix has never
+>     appeared.
+>
+> This was supposed to be true for all Cavium chips. We got such answer from Hardware architects, but it might change in the future.
+> I will be happy to replace this with DEVICE_ID.
+> Manish,
+> Could you please take this u, if not I will send a patch to do this.
 
---UugvWAfsgieZRqgk
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
+I think several device ids or subsystem_device may be involved.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
+See above.
 
-iEYEARECAAYFAliU874ACgkQMOfwapXb+vLWnACffepZZwJuwrFOhn+DM4DMyinb
-6b4AnR4Gy9BNFwbpUxZaVZ+OWwKW9C/z
-=QZht
------END PGP SIGNATURE-----
 
---UugvWAfsgieZRqgk--
+>
+> Tirumalesh.
+>
+>     David Daney
+>
+>
+>
+>
+>
