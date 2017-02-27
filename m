@@ -1,67 +1,61 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        james puthukattukaran <james.puthukattukaran@oracle.com>,
-        Yinghai Lu <yinghai.lu@oracle.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] PCI,pciehp: Skip not changed command write
-Date: Thu, 23 Feb 2017 22:54:49 -0800
-Message-Id: <20170224065449.14997-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:34353 "EHLO
+        mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751555AbdB0TJx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Feb 2017 14:09:53 -0500
+Received: by mail-lf0-f50.google.com with SMTP id k202so23734481lfe.1
+        for <linux-pci@vger.kernel.org>; Mon, 27 Feb 2017 11:07:57 -0800 (PST)
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Janos Laube <janos.dev@gmail.com>,
+        Paulius Zaleckas <paulius.zaleckas@gmail.com>,
+        openwrt-devel@openwrt.org, linux-pci@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Feng-Hsin Chiang <john453@faraday-tech.com>,
+        Greentime Hu <green.hu@gmail.com>
+Subject: [PATCH 3/4 v3] ARM: gemini: select MIGHT_HAVE_PCI
+Date: Mon, 27 Feb 2017 20:07:19 +0100
+Message-Id: <20170227190720.31409-3-linus.walleij@linaro.org>
+In-Reply-To: <20170227190720.31409-1-linus.walleij@linaro.org>
+References: <20170227190720.31409-1-linus.walleij@linaro.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Notice two systems with different cpu hve different print out when power on
-slots:
-First one:
- pciehp 0000:60:03.2:pcie004: pciehp_green_led_on: SLOTCTRL a8 write cmd 100
- pciehp 0000:60:03.2:pcie004: pciehp_set_attention_status: SLOTCTRL a8 write cmd c0
- pciehp 0000:60:03.2:pcie004: pending interrupts 0x0010 from Slot Status
+As we have a PCI driver for the Gemini, we should select
+MIGHT_HAVE_PCI.
 
-Second one:
- pciehp 0000:73:00.0:pcie004: pciehp_green_led_on: SLOTCTRL a8 write cmd 100
- pciehp 0000:73:00.0:pcie004: pciehp_set_attention_status: SLOTCTRL a8 write cmd c0
- pciehp 0000:73:00.0:pcie004: pending interrupts 0x0010 from Slot Status
- pciehp 0000:73:00.0:pcie004: pending interrupts 0x0010 from Slot Status
-
-Actually attention is not changed on both.
-
-First one will not generate CC if write not change cmd.
-Second one will generate CC even if write not change cmd.
-
-To avoid those difference interrupts, check if we are trying to
-write same cmd, if so skip writing.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: Janos Laube <janos.dev@gmail.com>
+Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
+Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>
+Cc: Feng-Hsin Chiang <john453@faraday-tech.com>
+Cc: Greentime Hu <green.hu@gmail.com>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 ---
- drivers/pci/hotplug/pciehp_hpc.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ChangeLog v1->v2->v3:
+- No changes
 
-Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-+++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-@@ -186,7 +186,7 @@ static void pcie_do_write_cmd(struct con
- 			      u16 mask, bool wait)
- {
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
--	u16 slot_ctrl;
-+	u16 slot_ctrl, old_slot_ctrl;
- 
- 	mutex_lock(&ctrl->ctrl_lock);
- 
-@@ -201,8 +201,14 @@ static void pcie_do_write_cmd(struct con
- 		goto out;
- 	}
- 
-+	old_slot_ctrl = slot_ctrl;
- 	slot_ctrl &= ~mask;
- 	slot_ctrl |= (cmd & mask);
-+	if (slot_ctrl == old_slot_ctrl) {
-+		ctrl_dbg(ctrl, "%s: mask/cmd %x/%x no change\n", __func__,
-+			 mask, cmd & mask);
-+		goto out;
-+	}
- 	ctrl->cmd_busy = 1;
- 	smp_mb();
- 	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
+PCI maintainers: this is FYI only, I will funnel this to the ARM
+SoC tree once we are done with the PCI driver.
+---
+ arch/arm/mach-gemini/Kconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm/mach-gemini/Kconfig b/arch/arm/mach-gemini/Kconfig
+index a5ee5fbab796..21f89a4c16fe 100644
+--- a/arch/arm/mach-gemini/Kconfig
++++ b/arch/arm/mach-gemini/Kconfig
+@@ -6,6 +6,7 @@ menuconfig ARCH_GEMINI
+ 	select FTTMR010_TIMER
+ 	select GPIO_GEMINI
+ 	select GPIOLIB
++	select MIGHT_HAVE_PCI
+ 	select POWER_RESET
+ 	select POWER_RESET_SYSCON
+ 	select SERIAL_OF_PLATFORM
+-- 
+2.9.3
