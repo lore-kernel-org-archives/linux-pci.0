@@ -1,131 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:58538 "EHLO foss.arm.com"
+Received: from mga07.intel.com ([134.134.136.100]:27780 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751555AbdB0ULP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Feb 2017 15:11:15 -0500
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc: Harv Abdulhamid <harba@qti.qualcomm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Shanker Donthineni <shankerd@qti.qualcomm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@qti.qualcomm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Nate Watterson <nwatters@qti.qualcomm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Subject: [RFC PATCH 24/30] iommu: Specify PASID state when unbinding a task
-Date: Mon, 27 Feb 2017 19:54:35 +0000
-Message-Id: <20170227195441.5170-25-jean-philippe.brucker@arm.com>
-In-Reply-To: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
-To: unlisted-recipients:; (no To-header on input)
+        id S1751769AbdB1Kk3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Feb 2017 05:40:29 -0500
+From: Ley Foon Tan <ley.foon.tan@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        lftan.linux@gmail.com, Ley Foon Tan <ley.foon.tan@intel.com>,
+        stable@vger.kernel.org
+Subject: [PATCH] PCI: altera: Fix TLP_CFG_DW0 for TLP write
+Date: Tue, 28 Feb 2017 18:37:16 +0800
+Message-Id: <1488278236-29924-1-git-send-email-ley.foon.tan@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Provide a way for device drivers to tell the IOMMU driver about the state
-of the PASID they are trying to decommission. When unbinding a task from a
-device, the IOMMU driver needs to know whether it can immediately reuse
-the PASID for another task, or if there is additional work to be done
-before the PASID is safe to re-use.
+Commit eb5767122feba1 used the TLP_FMTTYPE_CFGRD* for TLP write operation
+and this cause writing to configuration space will fail. This patch
+fix it by using correct FMTTYPE for write operation.
 
-One hard requirement when calling unbind is that the associated PASID is
-not present in any transaction downstream of the IOMMU anymore. In other
-words, any read, write, page requests referring to this PASID has
-finished.
-
-For PCIe, this means that the driver has successfully executed the
-device-specific stop request mechanism described in 6.20.1 (Managing PASID
-TLP Prefix Usage). In particular:
-
-* device doesn't issue any new request for this PASID,
-* all non-posted requests for this PASID have been completed,
-* all posted requests for this PASID (addressing host memory) have been
-  flushed to the host.
-
-Address Translation Requests are non-posted, and PRI Page Requests (PPR)
-are posted. In addition with PRI, device must implement one of the
-following mechanism (ATS spec 4.1.2. - Managing PASID TLP Prefix Usage):
-
-A. Finish transmitting any PPR affecting this PASID and wait for their
-   response. In this case, the IOMMU driver can safely reuse the PASID and
-   must not wait for a Stop Marker.
-
-B. Finish transmitting any PPR affecting this PASID and send a Stop
-   Marker. The driver must wait to receive a Stop Marker for this PASID
-   before reusing it.
-
-This patch lets the driver communicate the current state of the PASID with
-either IOMMU_PASID_FLUSHED for case A, or IOMMU_PASID_CLEAN for case B.
-
-It is an important distinction because, if the IOMMU driver reassigns a
-PASID while the IOMMU still holds pending PPR targeting that PASID
-internally, the PPR will trigger a fault in the wrong address space.
-
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Signed-off-by: Ley Foon Tan <ley.foon.tan@intel.com>
+Cc: stable@vger.kernel.org
 ---
- drivers/iommu/iommu.c |  8 ++++++++
- include/linux/iommu.h | 18 +++++++++++++++++-
- 2 files changed, 25 insertions(+), 1 deletion(-)
+ drivers/pci/host/pcie-altera.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-index 26c5f6528c69..eed52500d469 100644
---- a/drivers/iommu/iommu.c
-+++ b/drivers/iommu/iommu.c
-@@ -1517,6 +1517,14 @@ EXPORT_SYMBOL_GPL(iommu_bind_task);
-  * @dev: device bound to the task
-  * @pasid: identifier of the bond
-  * @flags: state of the PASID and driver-specific flags
-+ *
-+ * The caller must informs the IOMMU driver whether the PASID is safe to reuse
-+ * immediately or if it needs more invalidation steps, by setting flags to
-+ * either IOMMU_PASID_FLUSHED, or IOMMU_PASID_CLEAN.
-+ *
-+ * Without one of these flags, the device driver must have provided an
-+ * invalidate_pasid callback in iommu_svm_ops. Otherwise, iommu_unbind_task
-+ * returns an error.
-  */
- int iommu_unbind_task(struct device *dev, int pasid, int flags)
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index 0c15402..68c839f 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -57,10 +57,14 @@
+ #define TLP_WRITE_TAG			0x10
+ #define RP_DEVFN			0
+ #define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
+-#define TLP_CFG_DW0(pcie, bus)						\
++#define TLP_CFGRD_DW0(pcie, bus)					\
+     ((((bus == pcie->root_bus_nr) ? TLP_FMTTYPE_CFGRD0			\
+ 				    : TLP_FMTTYPE_CFGRD1) << 24) |	\
+      TLP_PAYLOAD_SIZE)
++#define TLP_CFGWR_DW0(pcie, bus)					\
++    ((((bus == pcie->root_bus_nr) ? TLP_FMTTYPE_CFGWR0			\
++				    : TLP_FMTTYPE_CFGWR1) << 24) |	\
++     TLP_PAYLOAD_SIZE)
+ #define TLP_CFG_DW1(pcie, tag, be)	\
+     (((TLP_REQ_ID(pcie->root_bus_nr,  RP_DEVFN)) << 16) | (tag << 8) | (be))
+ #define TLP_CFG_DW2(bus, devfn, offset)	\
+@@ -222,7 +226,7 @@ static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
  {
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 9554f45d4305..204943ef38b2 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -50,6 +50,21 @@ struct notifier_block;
- #define IOMMU_FAULT_READ	0x0
- #define IOMMU_FAULT_WRITE	0x1
+ 	u32 headers[TLP_HDR_SIZE];
  
-+/*
-+ * State of a PASID in the system
-+ *
-+ * IOMMU_PASID_FLUSHED: the device does not generate any traffic for this PASID
-+ *   anymore, and all references to the PASID have been flushed; in other words,
-+ *   the IOMMU will not receive any transaction referring to this instance of
-+ *   the PASID anymore.
-+ *
-+ * IOMMU_PASID_CLEAN: in addition to IOMMU_PASID_FLUSHED, the PASID isn't
-+ *   present in the IOMMU either. For instance when using PRI, the device waited
-+ *   for all of its page requests to come back with a response.
-+ */
-+#define IOMMU_PASID_FLUSHED	0x1
-+#define IOMMU_PASID_CLEAN	0x2
-+
- typedef int (*iommu_fault_handler_t)(struct iommu_domain *,
- 			struct device *, unsigned long, int, void *);
+-	headers[0] = TLP_CFG_DW0(pcie, bus);
++	headers[0] = TLP_CFGRD_DW0(pcie, bus);
+ 	headers[1] = TLP_CFG_DW1(pcie, TLP_READ_TAG, byte_en);
+ 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
  
-@@ -147,7 +162,8 @@ struct iommu_resv_region {
+@@ -237,7 +241,7 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ 	u32 headers[TLP_HDR_SIZE];
+ 	int ret;
  
- /*
-  * @handle_fault: report or handle a fault from the device (FIXME: imprecise)
-- * @invalidate_pasid: stop using a PASID.
-+ * @invalidate_pasid: stop using a PASID. Returns one of IOMMU_PASID_FLUSHED or
-+ *                    IOMMU_PASID_CLEAN when stopped successfully. 0 otherwise.
-  */
- struct iommu_svm_ops {
- 	int (*handle_fault)(struct device *dev, int pasid, u64 address,
+-	headers[0] = TLP_CFG_DW0(pcie, bus);
++	headers[0] = TLP_CFGWR_DW0(pcie, bus);
+ 	headers[1] = TLP_CFG_DW1(pcie, TLP_WRITE_TAG, byte_en);
+ 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
+ 
 -- 
-2.11.0
+1.8.2.3
