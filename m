@@ -1,46 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:42871 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751001AbdBFLuj (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Feb 2017 06:50:39 -0500
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Long Li <longli@microsoft.com>
+To: KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: pciehp is broken from 4.10-rc1
-Date: Mon, 06 Feb 2017 12:45:52 +0100
-Message-ID: <1560858.iXZjR0AeNd@aspire.rjw.lan>
-In-Reply-To: <20170204233443.GA234@wunner.de>
-References: <CAE9FiQVCMCa7iVyuwp9z6VrY0cE7V_xghuXip28Ft52=8QmTWw@mail.gmail.com> <CAE9FiQUuFJHMScyFgnHbs5r-SzTiRiBZ2JcpUYJhg0ft75-OBQ@mail.gmail.com> <20170204233443.GA234@wunner.de>
-MIME-Version: 1.0
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH 1/2 v4] pci-hyperv: properly handle pci bus remove
+Date: Tue, 28 Feb 2017 02:19:45 +0000
+Message-ID: <BN3PR03MB22270F97B502941940E0E91ECE560@BN3PR03MB2227.namprd03.prod.outlook.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sunday, February 05, 2017 12:34:43 AM Lukas Wunner wrote:
-> On Sat, Feb 04, 2017 at 01:44:34PM -0800, Yinghai Lu wrote:
-> > On Sat, Feb 4, 2017 at 10:56 AM, Lukas Wunner <lukas@wunner.de> wrote:
-> > > On Sat, Feb 04, 2017 at 09:12:54AM +0100, Lukas Wunner wrote:
-> > > Section 6.7.3.4 of the PCIe Base spec seems to support the theory above,
-> > > so here's a tentative patch.
-> > >
-> > >
-> > > -- >8 --
-> > > Subject: [PATCH] PCI: pciehp: Don't enable PME on runtime suspend
-> > 
-> > it works:
-> 
-> Thanks a lot for the report and for testing the patch!
-> 
-> 
-> @Rafael:
-> Bjorn usually wants you to ack PM-related patches.  Looking at the
-> patch again I'm now thinking it might be cleaner to move the check
-> for is_hotplug_bridge into pci_dev_run_wake().  Thoughts?
+hv_pci_devices_present is called in hv_pci_remove when we remove a PCI
+device from host (e.g. by disabling SRIOV on a device). In hv_pci_remove,
+the bus is already removed before the call, so we don't need to rescan=20
+the bus in the workqueue scheduled from hv_pci_devices_present. By=20
+introducing status hv_pcibus_removed, we can avoid this situation.
 
-Yes, pci_dev_run_wake() would be a better place.
+Signed-off-by: Long Li <longli@microsoft.com>
+Reported-by: Xiaofeng Wang <xiaofwan@redhat.com>
+Acked-by: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
 
-Thanks,
-Rafael
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index a8deeca..4a37598 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -348,6 +348,7 @@ enum hv_pcibus_state {
+ 	hv_pcibus_init =3D 0,
+ 	hv_pcibus_probed,
+ 	hv_pcibus_installed,
++	hv_pcibus_removed,
+ 	hv_pcibus_maximum
+ };
+=20
+@@ -1481,13 +1482,24 @@ static void pci_devices_present_work(struct work_st=
+ruct *work)
+ 		put_pcichild(hpdev, hv_pcidev_ref_initial);
+ 	}
+=20
+-	/* Tell the core to rescan bus because there may have been changes. */
+-	if (hbus->state =3D=3D hv_pcibus_installed) {
++	switch (hbus->state) {
++	case hv_pcibus_installed:
++		/*
++		 * Tell the core to rescan bus
++		 * because there may have been changes.
++		 */
+ 		pci_lock_rescan_remove();
+ 		pci_scan_child_bus(hbus->pci_bus);
+ 		pci_unlock_rescan_remove();
+-	} else {
++		break;
++
++	case hv_pcibus_init:
++	case hv_pcibus_probed:
+ 		survey_child_resources(hbus);
++		break;
++
++	default:
++		break;
+ 	}
+=20
+ 	up(&hbus->enum_sem);
+@@ -2163,6 +2175,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 	hbus =3D kzalloc(sizeof(*hbus), GFP_KERNEL);
+ 	if (!hbus)
+ 		return -ENOMEM;
++	hbus->state =3D hv_pcibus_init;
+=20
+ 	/*
+ 	 * The PCI bus "domain" is what is called "segment" in ACPI and
+@@ -2305,6 +2318,7 @@ static int hv_pci_remove(struct hv_device *hdev)
+ 		pci_stop_root_bus(hbus->pci_bus);
+ 		pci_remove_root_bus(hbus->pci_bus);
+ 		pci_unlock_rescan_remove();
++		hbus->state =3D hv_pcibus_removed;
+ 	}
+=20
+ 	ret =3D hv_send_resources_released(hdev);
+--=20
+1.8.5.6
