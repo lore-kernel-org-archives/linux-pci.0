@@ -1,66 +1,65 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Yinghai Lu <yinghai@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:23240 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751857AbdB1Kbb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Feb 2017 05:31:31 -0500
+From: Ley Foon Tan <ley.foon.tan@intel.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ashok Raj <ashok.raj@intel.com>,
-        james puthukattukaran <james.puthukattukaran@oracle.com>,
-        Yinghai Lu <yinghai.lu@oracle.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH -v2] PCI,pciehp: Not write linkctrl register if val is not changed
-Date: Thu, 23 Feb 2017 13:37:47 -0800
-Message-Id: <20170223213747.12154-1-yinghai@kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        lftan.linux@gmail.com, stable@vger.kernel.org,
+        Ley Foon Tan <ley.foon.tan@intel.com>
+Subject: [PATCH] PCI: altera: Fix TLP_CFG_DW0 for TLP write
+Date: Tue, 28 Feb 2017 18:31:16 +0800
+Message-Id: <1488277876-29859-1-git-send-email-ley.foon.tan@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Most system have port link enabled by default, and should not
-have confusing printout.
+Commit eb5767122feba1 used the TLP_FMTTYPE_CFGRD* for TLP write operation
+and this cause writing to configuration space will fail. This patch
+fix it by using correct FMTTYPE for write operation.
 
-Also move printout before actully write, so could make debug print in order.
-
--v2: inline __pciehp_link_set into pciehp_link_enable
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
+Signed-off-by: Ley Foon Tan <ley.foon.tan@intel.com>
 ---
- drivers/pci/hotplug/pciehp_hpc.c |   19 +++++++------------
- 1 file changed, 7 insertions(+), 12 deletions(-)
+ drivers/pci/host/pcie-altera.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-Index: linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-===================================================================
---- linux-2.6.orig/drivers/pci/hotplug/pciehp_hpc.c
-+++ linux-2.6/drivers/pci/hotplug/pciehp_hpc.c
-@@ -333,28 +333,23 @@ int pciehp_check_link_status(struct cont
- 	return 0;
- }
- 
--static int __pciehp_link_set(struct controller *ctrl, bool enable)
-+static int pciehp_link_enable(struct controller *ctrl)
+diff --git a/drivers/pci/host/pcie-altera.c b/drivers/pci/host/pcie-altera.c
+index 0c15402..68c839f 100644
+--- a/drivers/pci/host/pcie-altera.c
++++ b/drivers/pci/host/pcie-altera.c
+@@ -57,10 +57,14 @@
+ #define TLP_WRITE_TAG			0x10
+ #define RP_DEVFN			0
+ #define TLP_REQ_ID(bus, devfn)		(((bus) << 8) | (devfn))
+-#define TLP_CFG_DW0(pcie, bus)						\
++#define TLP_CFGRD_DW0(pcie, bus)					\
+     ((((bus == pcie->root_bus_nr) ? TLP_FMTTYPE_CFGRD0			\
+ 				    : TLP_FMTTYPE_CFGRD1) << 24) |	\
+      TLP_PAYLOAD_SIZE)
++#define TLP_CFGWR_DW0(pcie, bus)					\
++    ((((bus == pcie->root_bus_nr) ? TLP_FMTTYPE_CFGWR0			\
++				    : TLP_FMTTYPE_CFGWR1) << 24) |	\
++     TLP_PAYLOAD_SIZE)
+ #define TLP_CFG_DW1(pcie, tag, be)	\
+     (((TLP_REQ_ID(pcie->root_bus_nr,  RP_DEVFN)) << 16) | (tag << 8) | (be))
+ #define TLP_CFG_DW2(bus, devfn, offset)	\
+@@ -222,7 +226,7 @@ static int tlp_cfg_dword_read(struct altera_pcie *pcie, u8 bus, u32 devfn,
  {
- 	struct pci_dev *pdev = ctrl_dev(ctrl);
--	u16 lnk_ctrl;
-+	u16 lnk_ctrl, old_lnk_ctrl;
+ 	u32 headers[TLP_HDR_SIZE];
  
- 	pcie_capability_read_word(pdev, PCI_EXP_LNKCTL, &lnk_ctrl);
-+	old_lnk_ctrl = lnk_ctrl;
+-	headers[0] = TLP_CFG_DW0(pcie, bus);
++	headers[0] = TLP_CFGRD_DW0(pcie, bus);
+ 	headers[1] = TLP_CFG_DW1(pcie, TLP_READ_TAG, byte_en);
+ 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
  
--	if (enable)
--		lnk_ctrl &= ~PCI_EXP_LNKCTL_LD;
--	else
--		lnk_ctrl |= PCI_EXP_LNKCTL_LD;
-+	lnk_ctrl &= ~PCI_EXP_LNKCTL_LD;
-+	if (old_lnk_ctrl == lnk_ctrl)
-+		return 0;
+@@ -237,7 +241,7 @@ static int tlp_cfg_dword_write(struct altera_pcie *pcie, u8 bus, u32 devfn,
+ 	u32 headers[TLP_HDR_SIZE];
+ 	int ret;
  
--	pcie_capability_write_word(pdev, PCI_EXP_LNKCTL, lnk_ctrl);
- 	ctrl_dbg(ctrl, "%s: lnk_ctrl = %x\n", __func__, lnk_ctrl);
-+	pcie_capability_write_word(pdev, PCI_EXP_LNKCTL, lnk_ctrl);
- 	return 0;
- }
+-	headers[0] = TLP_CFG_DW0(pcie, bus);
++	headers[0] = TLP_CFGWR_DW0(pcie, bus);
+ 	headers[1] = TLP_CFG_DW1(pcie, TLP_WRITE_TAG, byte_en);
+ 	headers[2] = TLP_CFG_DW2(bus, devfn, where);
  
--static int pciehp_link_enable(struct controller *ctrl)
--{
--	return __pciehp_link_set(ctrl, true);
--}
--
- int pciehp_get_raw_indicator_status(struct hotplug_slot *hotplug_slot,
- 				    u8 *status)
- {
+-- 
+1.8.2.3
