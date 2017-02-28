@@ -1,60 +1,121 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH v2 0/4] New Microsemi PCI Switch Management Driver
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-References: <1486058763-7730-1-git-send-email-logang@deltatee.com>
- <2eb2b814-d621-5d8d-8366-4c4e9f789208@deltatee.com>
- <e27a2363-1b11-f74b-532d-7de089875c90@deltatee.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Jens Axboe <axboe@fb.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <2bab7df0-9ae0-67e1-1f06-208d1359a4d5@codeaurora.org>
-Date: Thu, 23 Feb 2017 15:51:29 -0500
-MIME-Version: 1.0
-In-Reply-To: <e27a2363-1b11-f74b-532d-7de089875c90@deltatee.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=fuAy=2J=intel.com=rui.y.wang@kernel.org>
+Return-Path: <SRS0=fuAy=2J=intel.com=rui.y.wang@kernel.org>
+From: Rui Wang <rui.y.wang@intel.com>
+To: helgaas@kernel.org,
+	tglx@linutronix.de,
+	rjw@rjwysocki.net
+Cc: tony.luck@intel.com,
+	bhelgaas@google.com,
+	linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rui.y.wang@intel.com,
+	x86@kernel.org,
+	fengguang.wu@intel.com,
+	kbuild-all@01.org
+Subject: [PATCH v2 2/2] x86/ioapic: Split IOAPIC hot-removal into two steps
+Date: Tue, 28 Feb 2017 21:34:29 +0800
+Message-Id: <1488288869-31290-3-git-send-email-rui.y.wang@intel.com>
+In-Reply-To: <1488288869-31290-1-git-send-email-rui.y.wang@intel.com>
+References: <201702280904.A2EXAFMQ%fengguang.wu@intel.com>
+ <1488288869-31290-1-git-send-email-rui.y.wang@intel.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2/23/2017 3:36 PM, Logan Gunthorpe wrote:
-> We're still waiting on any kind of response from Bjorn. (If you're
-> listening please say something!)
-> 
-> Does anyone have any suggestions for dealing with an unresponsive
-> maintainer? Or a way for us to move forward with this quickly and get it
-> merged?
+The hot-removal of IOAPIC is broken into two parts: the PCI part and
+the ACPI part. The PCI part releases PCI resources before the PCI bus
+is gone, and the ACPI part is moved to a stage later than the hot-removal
+of the PCI root bus, so that the IOAPIC driver is able to hook the
+pcibios_release_device() of every PCI device under the same parent root
+bus, before the IOAPIC is hot-removed. This makes it possible for the
+IOAPIC to free any IRQ resource previously unable to get freed.
 
-You'll want to be careful during the merge window (these days) as the
-maintainer is usually busy with code delivery. You can't rush your code in at
-the last minute.
+v2: Fixed compiling error on i386 (missing stub of pci_ioapic_remove())
 
-[GIT PULL] PCI changes for v4.11]
+Signed-off-by: Rui Wang <rui.y.wang@intel.com>
+---
+ drivers/acpi/internal.h |  2 ++
+ drivers/acpi/ioapic.c   | 22 ++++++++++++++++------
+ drivers/acpi/pci_root.c |  4 ++--
+ 3 files changed, 20 insertions(+), 8 deletions(-)
 
-Here is a list of all the patches waiting to be reviewed. 
-
-https://patchwork.ozlabs.org/project/linux-pci/list/
-
-You'll just have to wait your turn.
-
+diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+index 219b90b..f159001 100644
+--- a/drivers/acpi/internal.h
++++ b/drivers/acpi/internal.h
+@@ -41,8 +41,10 @@ static inline void acpi_amba_init(void) {}
+ void acpi_container_init(void);
+ void acpi_memory_hotplug_init(void);
+ #ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
++void pci_ioapic_remove(struct acpi_pci_root *root);
+ int acpi_ioapic_remove(struct acpi_pci_root *root);
+ #else
++static inline void pci_ioapic_remove(struct acpi_pci_root *root) { return; }
+ static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
+ #endif
+ #ifdef CONFIG_ACPI_DOCK
+diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+index 6d7ce6e..1120dfd6 100644
+--- a/drivers/acpi/ioapic.c
++++ b/drivers/acpi/ioapic.c
+@@ -206,24 +206,34 @@ int acpi_ioapic_add(acpi_handle root_handle)
+ 	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
+ }
+ 
+-int acpi_ioapic_remove(struct acpi_pci_root *root)
++void pci_ioapic_remove(struct acpi_pci_root *root)
+ {
+-	int retval = 0;
+ 	struct acpi_pci_ioapic *ioapic, *tmp;
+ 
+ 	mutex_lock(&ioapic_list_lock);
+ 	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
+ 		if (root->device->handle != ioapic->root_handle)
+ 			continue;
+-
+-		if (acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base))
+-			retval = -EBUSY;
+-
+ 		if (ioapic->pdev) {
+ 			pci_release_region(ioapic->pdev, 0);
+ 			pci_disable_device(ioapic->pdev);
+ 			pci_dev_put(ioapic->pdev);
+ 		}
++	}
++	mutex_unlock(&ioapic_list_lock);
++}
++
++int acpi_ioapic_remove(struct acpi_pci_root *root)
++{
++	int retval = 0;
++	struct acpi_pci_ioapic *ioapic, *tmp;
++
++	mutex_lock(&ioapic_list_lock);
++	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
++		if (root->device->handle != ioapic->root_handle)
++			continue;
++		if (acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base))
++			retval = -EBUSY;
+ 		if (ioapic->res.flags && ioapic->res.parent)
+ 			release_resource(&ioapic->res);
+ 		list_del(&ioapic->list);
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index bf601d4..919be0a 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -648,12 +648,12 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+ 
+ 	pci_stop_root_bus(root->bus);
+ 
+-	WARN_ON(acpi_ioapic_remove(root));
+-
++	pci_ioapic_remove(root);
+ 	device_set_run_wake(root->bus->bridge, false);
+ 	pci_acpi_remove_bus_pm_notifier(device);
+ 
+ 	pci_remove_root_bus(root->bus);
++	WARN_ON(acpi_ioapic_remove(root));
+ 
+ 	dmar_device_remove(device->handle);
+ 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+1.8.3.1
