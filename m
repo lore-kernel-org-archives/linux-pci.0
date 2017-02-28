@@ -1,45 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:59345 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754286AbdBGTYV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Feb 2017 14:24:21 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Lukas Wunner <lukas@wunner.de>, Wei Zhang <wzhang@fb.com>,
-        Austin Bolen <Austin.Bolen@dell.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Keith Busch <keith.busch@intel.com>
-Subject: [PATCHv6 5/5] pci: Quick return for pci_device_is_present
-Date: Tue,  7 Feb 2017 14:32:37 -0500
-Message-Id: <1486495957-26177-6-git-send-email-keith.busch@intel.com>
-In-Reply-To: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
-References: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+To: bhelgaas@google.com
+Cc: Vivek Gautam <vivek.gautam@codeaurora.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] pci: dwc: Fix NULL pointer dereference due to missing assignment
+Date: Tue, 28 Feb 2017 13:38:18 +0530
+Message-Id: <1488269298-23056-1-git-send-email-vivek.gautam@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If the pci device is disconnected, return false immediately for checking
-presence. We can't use the early return in pci device config accessors
-since this function uses the bus accessors.
+Add missing assignment of dw_pci core structure for
+designware-plat.
 
-Signed-off-by: Keith Busch <keith.busch@intel.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Commit 8b130f815a6b ("PCI: dwc: Fix crashes seen due to missing
+assignments") fixed all other platforms, but missed
+designware-plat file.
+
+Fixes: 442ec4c04d12 ("PCI: dwc: all: Split struct pcie_port into host-only and core structures")
+
+Cc: Guenter Roeck <linux@roeck-us.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 ---
- drivers/pci/pci.c | 2 ++
+
+Based on torvald's master branch.
+Build tested.
+
+ drivers/pci/dwc/pcie-designware-plat.c | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a881c0d..b8d37e7 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4932,6 +4932,8 @@ bool pci_device_is_present(struct pci_dev *pdev)
- {
- 	u32 v;
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index 65250f63515c..b6c832ba39dd 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -104,6 +104,8 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
  
-+	if (pci_dev_is_disconnected(pdev))
-+		return false;
- 	return pci_bus_read_dev_vendor_id(pdev->bus, pdev->devfn, &v, 0);
- }
- EXPORT_SYMBOL_GPL(pci_device_is_present);
+ 	pci->dev = dev;
+ 
++	dw_plat_pcie->pci = pci;
++
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	pci->dbi_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(pci->dbi_base))
 -- 
-2.7.2
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
