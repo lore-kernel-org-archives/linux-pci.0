@@ -1,93 +1,69 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V3 2/2] PCI: handle CRS returned by device after FLR
-To: linux-pci@vger.kernel.org, alex.williamson@redhat.com
-References: <1475473021-14251-1-git-send-email-okaya@codeaurora.org>
- <1475473021-14251-3-git-send-email-okaya@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <ac667a77-028d-d5da-f574-61f787fec72c@codeaurora.org>
-Date: Tue, 21 Feb 2017 12:04:24 -0500
-MIME-Version: 1.0
-In-Reply-To: <1475473021-14251-3-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo.Pieralisi@arm.com, vikrams@codeaurora.org,
- linux-arm-msm@vger.kernel.org, timur@codeaurora.org,
- linux-kernel@vger.kernel.org, cov@codeaurora.org,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0112.outbound.protection.outlook.com ([104.47.38.112]:21468
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750971AbdB1DC2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Feb 2017 22:02:28 -0500
+From: Long Li <longli@microsoft.com>
+To: KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: [PATCH 2/2 v4] pci-hyperv: lock pci bus on device eject
+Date: Tue, 28 Feb 2017 02:22:04 +0000
+Message-ID: <BN3PR03MB2227E6DE747C7C07C2B762ECCE560@BN3PR03MB2227.namprd03.prod.outlook.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
+A PCI_EJECT message can arrive at the same time we are calling=20
+pci_scan_child_bus in the workqueue for the previous PCI_BUS_RELATIONS=20
+message or in create_root_hv_pci_bus(), in this case we could=20
+potentially modify the bus from multiple places.=20
 
-I'm coming back to work on this. 
+Properly lock the bus access.
 
-On 10/3/2016 1:37 AM, Sinan Kaya wrote:
-> An endpoint is allowed to issue CRS following an FLR request to indicate
-> that it is not ready to accept new requests. Changing the polling mechanism
-> in FLR wait function to go read the vendor ID instead of the command/status
-> register. A CRS indication will only be given if the address to be read is
-> vendor ID.
-> 
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/pci.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index c8749b9..7580b00 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3725,7 +3725,8 @@ static void pci_flr_wait(struct pci_dev *dev)
->  
->  	do {
->  		msleep(100);
-> -		pci_read_config_dword(dev, PCI_COMMAND, &id);
+Thanks Dexuan Cui <decui@microsoft.com> for pointing out the race condition=
+ in create_root_hv_pci_bus().
 
-Your comment here puzzled me. 
+Signed-off-by: Long Li <longli@microsoft.com>
+Reported-by: Xiaofeng Wang <xiaofwan@redhat.com>
+Acked-by: K. Y. Srinivasan <kys@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-https://patchwork.kernel.org/patch/8331851/
-
-"Self nak on this one, didn't account for VFs not implementing the first
-dword.  Thanks,"
-
-I'm trying to add Configuration Request Retry Status (CRS) support to FLR
-with this patch. 
-
-Basically, the root port will return 0xFFFF0001 only when a config read
-request is sent to the vendor ID register and CRS visibility is set.
-The SW needs to poll until this special read ID disappears. See the
-implementation note on Configuration Request Retry Status in PCIE
-specification for details.
-
-pci_bus_read_dev_vendor_id implements this loop for us.
-
-You are saying that there are VFs that do not implement vendor ID register.
-Can you give some history on this?
-
-
-> +		pci_bus_read_dev_vendor_id(dev->bus, dev->devfn, &id,
-> +					   60 * 1000);
->  	} while (i++ < 10 && id == ~0);
->  
->  	if (id == ~0)
-> 
-
-Sinan
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index 4a37598..33c75c9 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -1198,9 +1198,11 @@ static int create_root_hv_pci_bus(struct hv_pcibus_d=
+evice *hbus)
+ 	hbus->pci_bus->msi =3D &hbus->msi_chip;
+ 	hbus->pci_bus->msi->dev =3D &hbus->hdev->device;
+=20
++	pci_lock_rescan_remove();
+ 	pci_scan_child_bus(hbus->pci_bus);
+ 	pci_bus_assign_resources(hbus->pci_bus);
+ 	pci_bus_add_devices(hbus->pci_bus);
++	pci_unlock_rescan_remove();
+ 	hbus->state =3D hv_pcibus_installed;
+ 	return 0;
+ }
+@@ -1590,8 +1592,10 @@ static void hv_eject_device_work(struct work_struct =
+*work)
+ 	pdev =3D pci_get_domain_bus_and_slot(hpdev->hbus->sysdata.domain, 0,
+ 					   wslot);
+ 	if (pdev) {
++		pci_lock_rescan_remove();
+ 		pci_stop_and_remove_bus_device(pdev);
+ 		pci_dev_put(pdev);
++		pci_unlock_rescan_remove();
+ 	}
+=20
+ 	memset(&ctxt, 0, sizeof(ctxt));
+--=20
+1.8.5.6
