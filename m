@@ -1,100 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:36564 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751025AbdCROp6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 18 Mar 2017 10:45:58 -0400
-Date: Sat, 18 Mar 2017 15:42:15 +0100
-From: Frederic Weisbecker <fweisbec@gmail.com>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-        torvalds@linux-foundation.org,
-        kernel list <linux-kernel@vger.kernel.org>,
-        linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
- after cold boots, boots after reboot
-Message-ID: <20170318144211.GA1014@lerouge>
-References: <20170203190414.GA3701@amd>
- <Pine.LNX.4.44L0.1702031415140.1794-100000@iolanthe.rowland.org>
- <20170203205129.GA3791@amd>
- <20170203211854.GA3697@amd>
- <20170214175956.GA3587@amd>
- <20170214192743.GA3869@amd>
- <20170223162825.GA16646@lerouge>
- <20170223184013.GA5177@amd>
+Return-Path: <SRS0=Pck9=2K=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Pck9=2K=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
+ <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Keith Busch <keith.busch@intel.com>, Myron Stowe <myron.stowe@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Jonathan Corbet <corbet@lwn.net>, "David S. Miller" <davem@davemloft.net>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Emil Velikov <emil.l.velikov@gmail.com>,
+ Mauro Carvalho Chehab <mchehab@kernel.org>,
+ Guenter Roeck <linux@roeck-us.net>,
+ Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+ Linus Walleij <linus.walleij@linaro.org>,
+ Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+ Stefan Berger <stefanb@linux.vnet.ibm.com>, Wei Zhang <wzhang@fb.com>,
+ Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+ Stephen Bates <stephen.bates@microsemi.com>, linux-pci@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <4a867c32-ed29-bc98-c7cb-6315243e664a@deltatee.com>
+Date: Wed, 1 Mar 2017 15:24:27 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170223184013.GA5177@amd>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 23, 2017 at 07:40:13PM +0100, Pavel Machek wrote:
-> On Thu 2017-02-23 17:28:26, Frederic Weisbecker wrote:
-> > On Tue, Feb 14, 2017 at 08:27:43PM +0100, Pavel Machek wrote:
-> > > On Tue 2017-02-14 18:59:56, Pavel Machek wrote:
-> > > > Hi!
-> > > > 
-> > > > > > > > Hmm. I moved keyboard between USB ports, and now 4.10-rc6 no longer
-> > > > > > > > boots. v4.6 works ok. Let me try with keyboard unplugged... no, I
-> > > > > > > > could not get it to work. I believe v4.9 and some v4.10-rc's worked,
-> > > > > > > > but I'll have to double check.
-> > > > > > > 
-> > > > > > > But all the kernel versions worked when the keyboard was plugged into
-> > > > > > > its original USB port?
-> > > > > > 
-> > > > > > Aha. So it looks difference is probably in "where is keyboard plugged
-> > > > > > in" but in "reboot" vs. "cold boot". I did not do a cold boot in quite
-> > > > > > a while :-(.
-> > > > > > 
-> > > > > > Booting to grub, then hitting ctrl-alt-del is enough to make it work. Ouch.
-> > > > > > 
-> > > > > > It happens with current Linus' tree.
-> > > > > 
-> > > > > v4.10-rc6-feb3 : broken
-> > > > > v4.9 : ok
-> > > > > (v4.6 : ok)
-> > > > 
-> > > > Hmm. It hangs during PCI fixups, and it hangs in v4.10-rc8, too.   
-> > > > 
-> > > > With debug patch below, I get
-> > > > 
-> > > > ...1d.7: PCI fixup... pass 2
-> > > > ...1d.7: PCI fixup... pass 3
-> > > > ...1d.7: PCI fixup... pass 3 done
-> > > > 
-> > > > ...followed by hang. So yes, it looks USB related.
-> > > > 
-> > > > (Sometimes it hangs with some kind backtrace involving secondary CPU
-> > > > startup, unfortunately useful info is off screen at that point).
-> > > 
-> > > Forgot to say, 1d.7 is EHCI controller.
-> > > 
-> > > 00:1d.7 USB controller: Intel Corporation NM10/ICH7 Family USB2 EHCI
-> > > Controller (rev 01)
-> > 
-> > Ok, I should have access soon to a EeePc 1015CX (which seem to have this controller).
-> > I hope I'll be able to reproduce the issue there. If not, I'm sorry but I'll have to
-> > burden you again :-)
-> 
-> Go through more mails. It is only reproducible after cold boot. .. so
-> I doubt it will be easy to reproduce on another machine.
-> 
-> Now... I do have serial port, and I even might have serial cable
-> somewhere, but.... Giving how sensitive it is, it is probably going to
-> go away with console on ttyS...
 
-So I had access to a machine with NM10/ICH7 chipset and I failed to reproduce.
-What machine is it you're using?
 
-I fear you're my last resort. I suspect something is programming the clockevent
-behind the tick. I thought it could be the clockevents switch code but I can't find
-any issue there.
+On 01/03/17 02:41 PM, Bjorn Helgaas wrote:
+> I don't think this is indicating a bug in the PCI core (although I do
+> think a BUG_ON() here is an excessive response).  I think it's an
+> indication that the driver didn't disconnect its ISR.  Without more
+> details of the failure it's hard to tell if the BUG_ON is a symptom of
+> a problem in the driver or what.
 
-I see you have CONFIG_HIGH_RES_TIMERS=n. Could you try with it enabled?
+Yes, my assumption was that when you force an unbind on the PCI core,
+it's designed to stop using the PCI device right away even if there are
+users using it. Thus it becomes the drivers responsibility to handle
+this situation.
 
-For a quick rewind:
+> An "alive" flag feels racy, and I can't tell if it's really the best
+> way to deal with this, or if it's just avoiding the issue.  There must
+> be other drivers with the same cleanup issue -- do they handle it the
+> same way?
 
-    git reset --hard v4.10
-    git revert 558e8e27e73f53f8a512485be538b07115fe5f3c
+I haven't done a comprehensive search, but it's very common for people
+to use (and this is what I've adopted again in v5):
 
-Thanks!
+devm_request_irq(&pdev->dev, ...)
+
+In this way, the IRQs are released with the pci_dev (or often platform)
+and thus the BUG_ON never hits. However, it means any user space program
+waiting on an IRQ (like via a cdev call) will hang unless handled with
+other means. Exactly what those means are seems driver specific and not
+always obvious. I wouldn't be surprised if a lot of drivers get this
+aspect wrong.
+
+A couple examples I've looked at:
+
+1) drivers/dax/dax.c uses an alive flag without any mutexes, atomics or
+anything. So I don't know if it's racy or perhaps correct for other reasons.
+
+2) drivers/char/hw_random has a drop_current_rng that looks like it
+could easily be racy with the get_current_rng in the userspace flow.
+
+3) A couple of drivers drivers/char/tpm doesn't seem to have any
+protection at all and appears like they would continue to use io
+operations even after the they may get unmapped because the char device
+persists.
+
+So I'm not sure where you'd find a driver that does it correctly and in
+a simpler way..
+
+Another thing: based on comments in [1], a lot of people don't seem to
+realize that cdev instances can persist long after cdev_del so it's
+probably very common for drivers to get this wrong.
+
+Logan
+
+[1] https://lists.01.org/pipermail/linux-nvdimm/2017-February/009001.html
+
+
+
+>>   To solve this, we've moved the pci release code back into the
+>>   unregister function and reintroduced an alive flag. This time,
+>>   however, the alive flag is protected by mrpc_mutex and we're very
+>>   careful about what happens to devices still in use (they should
+>>   all be released through the timeout path and an ENODEV error
+>>   returned to userspace; while new commands are blocked with the
+>>   same error).
