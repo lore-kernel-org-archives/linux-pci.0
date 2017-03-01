@@ -1,131 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Elena Reshetova <elena.reshetova@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
-        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, peterz@infradead.org,
-        Elena Reshetova <elena.reshetova@intel.com>
-Subject: [PATCH 00/29] drivers, mics refcount conversions
-Date: Mon,  6 Mar 2017 16:20:47 +0200
-Message-Id: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <20170227151436.18698-8-lorenzo.pieralisi@arm.com>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-8-lorenzo.pieralisi@arm.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Thu, 2 Mar 2017 01:54:42 +0200
+Message-ID: <CAHp75VfdE6_W+DxhejorLxra2JQDGF3cG0uBedyOohhmcLiKLg@mail.gmail.com>
+Subject: Re: [PATCH 07/20] PCI: implement Devres interface to map PCI config
+ space
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Linux-Arch <linux-arch@vger.kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Jonathan Corbet <corbet@lwn.net>, Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
+ Murali Karicheri <m-karicheri2@ti.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This series, for various different drivers, replaces atomic_t reference
-counters with the new refcount_t type and API (see include/linux/refcount.h).
-By doing this we prevent intentional or accidental
-underflows or overflows that can led to use-after-free vulnerabilities.
+On Mon, Feb 27, 2017 at 5:14 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> The introduction of the pci_remap_cfgspace() interface allows
+> PCI host controller drivers to map PCI config space through a
+> dedicated kernel interface. Current PCI host controller drivers
+> use the devm_ioremap_* Devres interfaces to map PCI configuration
+> space regions so in order to update them to the new
+> pci_remap_cfgspace() mapping interface a new set of Devres interfaces
+> should be implemented so that PCI host controller drivers can make
+> use of them.
+>
+> Introduce two new functions in the PCI kernel layer and Devres
+> documentation:
+>
+> - devm_pci_remap_cfgspace()
+> - devm_pci_remap_cfg_resource()
+>
+> so that PCI host controller drivers can make use of them to map
+> PCI configuration space regions.
 
-The below patches are fully independent and can be cherry-picked separately*.
-Since we convert all kernel subsystems in the same fashion, resulting
-in about 300 patches, we have to group them for sending at least in some
-fashion to be manageable. Please excuse the long cc list.
+Wouldn't you like to be consistent with current PCI API, i.e.:
+1. devm_*() functions called pcim_*() in PCI.
+2. If you may notice there is no separate pcim_*map*() stuff, they are
+dynamically adapting to the case.
 
-*with the exception of the media/vb2-related patches that depend on
-vb2_vmarea_handler.refcount conversions.
-
-Not run-time tested beyond booting and using kernel with refcount conversions
-for my daily work.
-
-If there are no objections to these patches,
-I think they can go via Greg's drivers tree, as he suggested before.
-
-Elena Reshetova (29):
-  drivers, block: convert xen_blkif.refcnt from atomic_t to refcount_t
-  drivers, firewire: convert fw_node.ref_count from atomic_t to
-    refcount_t
-  drivers, char: convert vma_data.refcnt from atomic_t to refcount_t
-  drivers, connector: convert cn_callback_entry.refcnt from atomic_t to
-    refcount_t
-  drivers, md, bcache: convert cached_dev.count from atomic_t to
-    refcount_t
-  drivers, md: convert dm_cache_metadata.ref_count from atomic_t to
-    refcount_t
-  drivers, md: convert dm_dev_internal.count from atomic_t to refcount_t
-  drivers, md: convert mddev.active from atomic_t to refcount_t
-  drivers, md: convert table_device.count from atomic_t to refcount_t
-  drivers, md: convert stripe_head.count from atomic_t to refcount_t
-  drivers, media: convert cx88_core.refcount from atomic_t to refcount_t
-  drivers, media: convert s2255_dev.num_channels from atomic_t to
-    refcount_t
-  drivers, media: convert vb2_vmarea_handler.refcount from atomic_t to
-    refcount_t
-  drivers, media: convert vb2_dc_buf.refcount from atomic_t to
-    refcount_t
-  drivers, media: convert vb2_dma_sg_buf.refcount from atomic_t to
-    refcount_t
-  drivers, media: convert vb2_vmalloc_buf.refcount from atomic_t to
-    refcount_t
-  drivers, pci: convert hv_pci_dev.refs from atomic_t to refcount_t
-  drivers, s390: convert urdev.ref_count from atomic_t to refcount_t
-  drivers, s390: convert lcs_reply.refcnt from atomic_t to refcount_t
-  drivers, s390: convert qeth_reply.refcnt from atomic_t to refcount_t
-  drivers, s390: convert fc_fcp_pkt.ref_cnt from atomic_t to refcount_t
-  drivers, scsi: convert iscsi_task.refcount from atomic_t to refcount_t
-  drivers: convert vme_user_vma_priv.refcnt from atomic_t to refcount_t
-  drivers: convert iblock_req.pending from atomic_t to refcount_t
-  drivers, usb: convert ffs_data.ref from atomic_t to refcount_t
-  drivers, usb: convert dev_data.count from atomic_t to refcount_t
-  drivers, usb: convert ep_data.count from atomic_t to refcount_t
-  drivers: convert sbd_duart.map_guard from atomic_t to refcount_t
-  drivers, xen: convert grant_map.users from atomic_t to refcount_t
-
- drivers/block/xen-blkback/common.h             |  7 +--
- drivers/block/xen-blkback/xenbus.c             |  2 +-
- drivers/char/mspec.c                           |  9 ++--
- drivers/connector/cn_queue.c                   |  4 +-
- drivers/connector/connector.c                  |  2 +-
- drivers/firewire/core-topology.c               |  2 +-
- drivers/firewire/core.h                        |  8 ++--
- drivers/md/bcache/bcache.h                     |  7 +--
- drivers/md/bcache/super.c                      |  6 +--
- drivers/md/bcache/writeback.h                  |  2 +-
- drivers/md/dm-cache-metadata.c                 |  9 ++--
- drivers/md/dm-table.c                          |  6 +--
- drivers/md/dm.c                                | 12 +++--
- drivers/md/dm.h                                |  3 +-
- drivers/md/md.c                                |  6 +--
- drivers/md/md.h                                |  3 +-
- drivers/md/raid5-cache.c                       |  8 ++--
- drivers/md/raid5.c                             | 66 +++++++++++++-------------
- drivers/md/raid5.h                             |  3 +-
- drivers/media/pci/cx88/cx88-cards.c            |  2 +-
- drivers/media/pci/cx88/cx88-core.c             |  4 +-
- drivers/media/pci/cx88/cx88.h                  |  3 +-
- drivers/media/usb/s2255/s2255drv.c             | 21 ++++----
- drivers/media/v4l2-core/videobuf2-dma-contig.c | 11 +++--
- drivers/media/v4l2-core/videobuf2-dma-sg.c     | 11 +++--
- drivers/media/v4l2-core/videobuf2-memops.c     |  6 +--
- drivers/media/v4l2-core/videobuf2-vmalloc.c    | 11 +++--
- drivers/pci/host/pci-hyperv.c                  |  9 ++--
- drivers/s390/char/vmur.c                       |  8 ++--
- drivers/s390/char/vmur.h                       |  4 +-
- drivers/s390/net/lcs.c                         |  8 ++--
- drivers/s390/net/lcs.h                         |  3 +-
- drivers/s390/net/qeth_core.h                   |  3 +-
- drivers/s390/net/qeth_core_main.c              |  8 ++--
- drivers/scsi/libfc/fc_fcp.c                    |  6 +--
- drivers/scsi/libiscsi.c                        |  8 ++--
- drivers/scsi/qedi/qedi_iscsi.c                 |  2 +-
- drivers/staging/vme/devices/vme_user.c         | 10 ++--
- drivers/target/target_core_iblock.c            | 12 ++---
- drivers/target/target_core_iblock.h            |  3 +-
- drivers/tty/serial/sb1250-duart.c              | 18 +++----
- drivers/usb/gadget/function/f_fs.c             |  8 ++--
- drivers/usb/gadget/function/u_fs.h             |  3 +-
- drivers/usb/gadget/legacy/inode.c              | 17 +++----
- drivers/xen/gntdev.c                           | 11 +++--
- include/linux/connector.h                      |  4 +-
- include/media/videobuf2-memops.h               |  3 +-
- include/scsi/libfc.h                           |  3 +-
- include/scsi/libiscsi.h                        |  3 +-
- 49 files changed, 203 insertions(+), 185 deletions(-)
+?
 
 -- 
-2.7.4
+With Best Regards,
+Andy Shevchenko
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
