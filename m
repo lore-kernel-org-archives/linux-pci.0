@@ -1,46 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:12244 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752099AbdCMOZX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2017 10:25:23 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v4 16/23] PCI: Add device IDs for DRA74x and DRA72x
-Date: Mon, 13 Mar 2017 19:52:52 +0530
-Message-ID: <20170313142259.25397-17-kishon@ti.com>
-In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
-References: <20170313142259.25397-1-kishon@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 04/30] iommu/arm-smmu-v3: Add support for PCI ATS
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-5-jean-philippe.brucker@arm.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5a7822f2-3991-aa51-169f-78ef49567feb@codeaurora.org>
+Date: Wed, 1 Mar 2017 14:24:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170227195441.5170-5-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Harb Abdulhamid <harba@codeaurora.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Will Deacon <will.deacon@arm.com>, iommu@lists.linux-foundation.org,
+ Sinan Kaya <okaya@codeaurora.org>,
+ Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
+ David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device IDs for DRA74x and DRA72x devices. These devices have
-configurable PCI endpoint.
+On 2/27/2017 2:54 PM, Jean-Philippe Brucker wrote:
+> /* Initialise command lazily */
+> +		if (!cmd.opcode)
+> +			arm_smmu_atc_invalidate_to_cmd(smmu, iova, size, &cmd);
+> +
+> +		spin_lock(&smmu_group->devices_lock);
+> +
+> +		list_for_each_entry(master, &smmu_group->devices, group_head)
+> +			arm_smmu_atc_invalidate_master(master, &cmd);
+> +
+> +		/*
+> +		 * TODO: ensure we do a sync whenever we have sent ats_queue_depth
+> +		 * invalidations to the same device.
+> +		 */
+> +		arm_smmu_cmdq_issue_cmd(smmu, &sync_cmd);
+> +
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- include/linux/pci_ids.h | 2 ++
- 1 file changed, 2 insertions(+)
+It is possible to observe ATS invalidation timeout up to 90 seconds according to PCIe
+spec. How does the current code deal with this?
 
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index a4f77feecbb0..5f6b71d15393 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -862,6 +862,8 @@
- #define PCI_DEVICE_ID_TI_X620		0xac8d
- #define PCI_DEVICE_ID_TI_X420		0xac8e
- #define PCI_DEVICE_ID_TI_XX20_FM	0xac8f
-+#define PCI_DEVICE_ID_TI_DRA74x		0xb500
-+#define PCI_DEVICE_ID_TI_DRA72x		0xb501
- 
- #define PCI_VENDOR_ID_SONY		0x104d
- 
 -- 
-2.11.0
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
