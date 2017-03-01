@@ -1,82 +1,106 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-To: 'Sinan Kaya' <okaya@codeaurora.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "timur@codeaurora.org" <timur@codeaurora.org>,
- "cov@codeaurora.org" <cov@codeaurora.org>, Bjorn Helgaas
- <bhelgaas@google.com>
-Subject: RE: [PATCH V2] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-Date: Thu, 2 Mar 2017 16:05:17 +0000
-Message-ID: <92EBB4272BF81E4089A7126EC1E7B28466669BFF@IRSMSX101.ger.corp.intel.com>
-References: <1485891928-14573-1-git-send-email-okaya@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B2846666830C@IRSMSX101.ger.corp.intel.com>
- <b78207b6-2c22-3e6d-4837-8b4b396c4f5d@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B28466668774@IRSMSX101.ger.corp.intel.com>
- <f8f67b32-21eb-232b-2b7c-28b603865b9d@codeaurora.org>
-In-Reply-To: <f8f67b32-21eb-232b-2b7c-28b603865b9d@codeaurora.org>
+Return-Path: <SRS0=Pck9=2K=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Pck9=2K=deltatee.com=logang@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
+ <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
+ <4a867c32-ed29-bc98-c7cb-6315243e664a@deltatee.com>
+Cc: Keith Busch <keith.busch@intel.com>, Myron Stowe <myron.stowe@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Jonathan Corbet <corbet@lwn.net>, "David S. Miller" <davem@davemloft.net>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Emil Velikov <emil.l.velikov@gmail.com>,
+ Mauro Carvalho Chehab <mchehab@kernel.org>,
+ Guenter Roeck <linux@roeck-us.net>,
+ Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+ Linus Walleij <linus.walleij@linaro.org>,
+ Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+ Stefan Berger <stefanb@linux.vnet.ibm.com>, Wei Zhang <wzhang@fb.com>,
+ Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+ Stephen Bates <stephen.bates@microsemi.com>, linux-pci@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-kernel@vger.kernel.org,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <b34d6872-35de-da6d-2d7f-8842642d3f21@deltatee.com>
+Date: Wed, 1 Mar 2017 15:49:04 -0700
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <4a867c32-ed29-bc98-c7cb-6315243e664a@deltatee.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
 List-ID: <linux-pci.vger.kernel.org>
 
->
->Hi Bjorn,
->
->On 2/28/2017 1:57 PM, Patel, Mayurkumar wrote:
->>> I was trying to figure out when to use saved values vs. the values in
->>> registers by looking at the enable_cnt.
->>> enable_cnt is 0 during boot on my system.
->> enable_cnt for the root port on my system is set to 1 for "root port" already without saving
->> any ASPM related settings.
->>
->>
->
->What would be the best way to figure out when to save power-on values from
->the registers?
->
+Hey,
 
-So in my case, pci_enable_device() for root port is called from pcie_port_device_register() at the boot time which
-Is called from pcie_portdrv_probe() function which does not call pcie_aspm_init_link_state() but
-Increment's enable_cnt field. When the Endpoint get plugged in, pcie_aspm_init_link_state() is called
-from hotplug routine on "Root port" but due to enable_cnt is already incremented we do not set
-right policy and aspm gets disabled by aspm driver.
+Seems to me like an elegant solution would be to implement a 'cdev_kill'
+function which could kill all the processes using a cdev. Thus, during
+an unbind, a driver could call it and be sure that there are no users
+left and it can safely allow the devres unwind to continue. Then no
+difficult and racy 'alive' flags would be necessary and it would be much
+easier on drivers.
 
-Shall we introduce new atomic variable along with aspm_default in struct pci_dev and increment it in when called
-first time pcie_aspm_init_link_state()  to save power-on values ( I have tested it locally, if you think could be good approach
-I can upload the diffs) because enable_cnt in pci_enable_device() can be triggered
-from multiple places at boot time so it might not be safe to use it? 
-or adding pcie_aspm_init_link_state() in pcie_port_device_register() for ports before calling pci_enable_device()
-although I am not sure whether it's the right approach and that would work for all the devices!
+However, I don't think any such thing exists at the moment and it's not
+likely to be done in the near term. I'm reasonably confident in the
+correctness of v5 of my driver (especially when compared to other
+drivers) and unless someone can describe how it's wrong or a better
+solution I'd rather see it merged as is. If and when a better approach
+arrives I'd happily patch it to improve the situation.
 
-@Kaya/Bjorn: Do you have any other suggestions or Could you also please help by comment what would make sense?
+Logan
 
-
->--
->Sinan Kaya
->Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
->Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-Intel Deutschland GmbH
-Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-Tel: +49 89 99 8853-0, www.intel.de
-Managing Directors: Christin Eisenschmid, Christian Lamprechter
-Chairperson of the Supervisory Board: Nicole Lau
-Registered Office: Munich
-Commercial Register: Amtsgericht Muenchen HRB 186928
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 01/03/17 03:24 PM, Logan Gunthorpe wrote:
+> 
+> 
+> On 01/03/17 02:41 PM, Bjorn Helgaas wrote:
+>> I don't think this is indicating a bug in the PCI core (although I do
+>> think a BUG_ON() here is an excessive response).  I think it's an
+>> indication that the driver didn't disconnect its ISR.  Without more
+>> details of the failure it's hard to tell if the BUG_ON is a symptom of
+>> a problem in the driver or what.
+> 
+> Yes, my assumption was that when you force an unbind on the PCI core,
+> it's designed to stop using the PCI device right away even if there are
+> users using it. Thus it becomes the drivers responsibility to handle
+> this situation.
+> 
+>> An "alive" flag feels racy, and I can't tell if it's really the best
+>> way to deal with this, or if it's just avoiding the issue.  There must
+>> be other drivers with the same cleanup issue -- do they handle it the
+>> same way?
+> 
+> I haven't done a comprehensive search, but it's very common for people
+> to use (and this is what I've adopted again in v5):
+> 
+> devm_request_irq(&pdev->dev, ...)
+> 
+> In this way, the IRQs are released with the pci_dev (or often platform)
+> and thus the BUG_ON never hits. However, it means any user space program
+> waiting on an IRQ (like via a cdev call) will hang unless handled with
+> other means. Exactly what those means are seems driver specific and not
+> always obvious. I wouldn't be surprised if a lot of drivers get this
+> aspect wrong.
+> 
+> A couple examples I've looked at:
+> 
+> 1) drivers/dax/dax.c uses an alive flag without any mutexes, atomics or
+> anything. So I don't know if it's racy or perhaps correct for other reasons.
+> 
+> 2) drivers/char/hw_random has a drop_current_rng that looks like it
+> could easily be racy with the get_current_rng in the userspace flow.
+> 
+> 3) A couple of drivers drivers/char/tpm doesn't seem to have any
+> protection at all and appears like they would continue to use io
+> operations even after the they may get unmapped because the char device
+> persists.
+> 
+> So I'm not sure where you'd find a driver that does it correctly and in
+> a simpler way..
+> 
+> Another thing: based on comments in [1], a lot of people don't seem to
+> realize that cdev instances can persist long after cdev_del so it's
+> probably very common for drivers to get this wrong.
+> 
+> Logan
+> 
+> [1] https://lists.01.org/pipermail/linux-nvdimm/2017-February/009001.html
