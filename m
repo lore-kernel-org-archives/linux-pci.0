@@ -1,99 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Hans Verkuil <hans.verkuil@cisco.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Boris Brezillon <boris.brezillon@free-electrons.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Cyrille Pitchen <cyrille.pitchen@atmel.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        rtc-linux@googlegroups.com, linux-mtd@lists.infradead.org,
-        linux-media@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-gpio@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        <stable@vger.kernel.org>, Logan Gunthorpe <logang@deltatee.com>
-Date: Fri, 17 Mar 2017 12:48:09 -0600
-Message-Id: <1489776503-3151-3-git-send-email-logang@deltatee.com>
-In-Reply-To: <1489776503-3151-1-git-send-email-logang@deltatee.com>
-References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v5 02/16] device-dax: fix cdev leak
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V2] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "timur@codeaurora.org" <timur@codeaurora.org>,
+ "cov@codeaurora.org" <cov@codeaurora.org>,
+ Bjorn Helgaas <bhelgaas@google.com>
+References: <1485891928-14573-1-git-send-email-okaya@codeaurora.org>
+ <92EBB4272BF81E4089A7126EC1E7B2846666830C@IRSMSX101.ger.corp.intel.com>
+ <b78207b6-2c22-3e6d-4837-8b4b396c4f5d@codeaurora.org>
+ <92EBB4272BF81E4089A7126EC1E7B28466668774@IRSMSX101.ger.corp.intel.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <f8f67b32-21eb-232b-2b7c-28b603865b9d@codeaurora.org>
+Date: Wed, 1 Mar 2017 12:58:08 -0500
+MIME-Version: 1.0
+In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B28466668774@IRSMSX101.ger.corp.intel.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Dan Williams <dan.j.williams@intel.com>
+Hi Bjorn,
 
-If device_add() fails, cleanup the cdev. Otherwise, we leak a kobj_map()
-with a stale device number.
+On 2/28/2017 1:57 PM, Patel, Mayurkumar wrote:
+>> I was trying to figure out when to use saved values vs. the values in
+>> registers by looking at the enable_cnt.
+>> enable_cnt is 0 during boot on my system.
+> enable_cnt for the root port on my system is set to 1 for "root port" already without saving
+> any ASPM related settings. 
+> 
+> 
 
-As Jason points out, there is a small possibility that userspace has
-opened and mapped the device in the time between cdev_add() and the
-device_add() failure. We need a new kill_dax_dev() helper to invalidate
-any established mappings.
+What would be the best way to figure out when to save power-on values from
+the registers?
 
-Fixes: ba09c01d2fa8 ("dax: convert to the cdev api")
-Cc: <stable@vger.kernel.org>
-Reported-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/dax/dax.c | 15 +++++++++++----
- 1 file changed, 11 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/dax/dax.c b/drivers/dax/dax.c
-index 8d9829f..a5ed59a 100644
---- a/drivers/dax/dax.c
-+++ b/drivers/dax/dax.c
-@@ -675,13 +675,10 @@ static void dax_dev_release(struct device *dev)
- 	kfree(dax_dev);
- }
- 
--static void unregister_dax_dev(void *dev)
-+static void kill_dax_dev(struct dax_dev *dax_dev)
- {
--	struct dax_dev *dax_dev = to_dax_dev(dev);
- 	struct cdev *cdev = &dax_dev->cdev;
- 
--	dev_dbg(dev, "%s\n", __func__);
--
- 	/*
- 	 * Note, rcu is not protecting the liveness of dax_dev, rcu is
- 	 * ensuring that any fault handlers that might have seen
-@@ -693,6 +690,15 @@ static void unregister_dax_dev(void *dev)
- 	synchronize_rcu();
- 	unmap_mapping_range(dax_dev->inode->i_mapping, 0, 0, 1);
- 	cdev_del(cdev);
-+}
-+
-+static void unregister_dax_dev(void *dev)
-+{
-+	struct dax_dev *dax_dev = to_dax_dev(dev);
-+
-+	dev_dbg(dev, "%s\n", __func__);
-+
-+	kill_dax_dev(dax_dev);
- 	device_unregister(dev);
- }
- 
-@@ -769,6 +775,7 @@ struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
- 	dev_set_name(dev, "dax%d.%d", dax_region->id, dax_dev->id);
- 	rc = device_add(dev);
- 	if (rc) {
-+		kill_dax_dev(dax_dev);
- 		put_device(dev);
- 		return ERR_PTR(rc);
- 	}
 -- 
-2.1.4
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
