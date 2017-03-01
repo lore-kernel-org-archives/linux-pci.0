@@ -1,176 +1,63 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V9 08/11] drivers: acpi: Handle IOMMU lookup failure with deferred probing or error
-Date: Fri, 10 Mar 2017 00:30:58 +0530
-Message-Id: <1489086061-9356-9-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <20170227151436.18698-2-lorenzo.pieralisi@arm.com>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-2-lorenzo.pieralisi@arm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 1 Mar 2017 17:15:14 +0100
+Message-ID: <CAK8P3a36fX2gdgdYcVT1Zg=5dsN1o-Z=Xy4471zxRWwnr1aZvw@mail.gmail.com>
+Subject: Re: [PATCH 01/20] PCI: remove __weak tag from pci_remap_iospace()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ linux-arch <linux-arch@vger.kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
+ Murali Karicheri <m-karicheri2@ti.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an equivalent to the DT's handling of the iommu master's probe
-with deferred probing when the corrsponding iommu is not probed yet.
-The lack of a registered IOMMU can be caused by the lack of a driver for
-the IOMMU, the IOMMU device probe not having been performed yet, having
-been deferred, or having failed.
+On Mon, Feb 27, 2017 at 4:14 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> pci_remap_iospace() is marked as a weak symbol even though
+> no architecture is currently overriding it; given that its
+> implementation internals have already code paths that are
+> arch specific (ie PCI_IOBASE and ioremap_page_range() attributes)
+> there is no need to leave the weak symbol in the kernel since the
+> same functionality can be achieved by customizing per-arch the
+> corresponding functionality.
+>
+> Remove the __weak symbol from pci_remap_iospace().
 
-The first case occurs when the firmware describes the bus master and
-IOMMU topology correctly but no device driver exists for the IOMMU yet
-or the device driver has not been compiled in. Return NULL, the caller
-will configure the device without an IOMMU.
+Good idea,
 
-The second and third cases are handled by deferring the probe of the bus
-master device which will eventually get reprobed after the IOMMU.
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-The last case is currently handled by deferring the probe of the bus
-master device as well. A mechanism to either configure the bus master
-device without an IOMMU or to fail the bus master device probe depending
-on whether the IOMMU is optional or mandatory would be a good
-enhancement.
-
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Acked-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
----
- drivers/acpi/arm64/iort.c  | 25 ++++++++++++++++++++++++-
- drivers/acpi/scan.c        |  7 +++++--
- drivers/base/dma-mapping.c |  2 +-
- include/acpi/acpi_bus.h    |  2 +-
- include/linux/acpi.h       |  7 +++++--
- 5 files changed, 36 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 3dd9ec3..a1000fb 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -550,8 +550,17 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
- 			return NULL;
- 
- 		ops = iommu_ops_from_fwnode(iort_fwnode);
-+		/*
-+		 * If the ops look-up fails, this means that either
-+		 * the SMMU drivers have not been probed yet or that
-+		 * the SMMU drivers are not built in the kernel;
-+		 * Depending on whether the SMMU drivers are built-in
-+		 * in the kernel or not, defer the IOMMU configuration
-+		 * or just abort it.
-+		 */
- 		if (!ops)
--			return NULL;
-+			return iort_iommu_driver_enabled(node->type) ?
-+			       ERR_PTR(-EPROBE_DEFER) : NULL;
- 
- 		ret = arm_smmu_iort_xlate(dev, streamid, iort_fwnode, ops);
- 	}
-@@ -625,12 +634,26 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
- 
- 		while (parent) {
- 			ops = iort_iommu_xlate(dev, parent, streamid);
-+			if (IS_ERR_OR_NULL(ops))
-+				return ops;
- 
- 			parent = iort_node_get_id(node, &streamid,
- 						  IORT_IOMMU_TYPE, i++);
- 		}
- 	}
- 
-+	/*
-+	 * If we have reason to believe the IOMMU driver missed the initial
-+	 * add_device callback for dev, replay it to get things in order.
-+	 */
-+	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
-+	    dev->bus && !dev->iommu_group) {
-+		int err = ops->add_device(dev);
-+
-+		if (err)
-+			ops = ERR_PTR(err);
-+	}
-+
- 	return ops;
- }
- 
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 1926918..823b005 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1373,20 +1373,23 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
-  * @dev: The pointer to the device
-  * @attr: device dma attributes
-  */
--void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
-+int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
- {
- 	const struct iommu_ops *iommu;
- 
- 	iort_set_dma_mask(dev);
- 
- 	iommu = iort_iommu_configure(dev);
--
-+	if (IS_ERR(iommu))
-+		return PTR_ERR(iommu);
- 	/*
- 	 * Assume dma valid range starts at 0 and covers the whole
- 	 * coherent_dma_mask.
- 	 */
- 	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
- 			   attr == DEV_DMA_COHERENT);
-+
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(acpi_dma_configure);
- 
-diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-index 82bd45c..755a2b5 100644
---- a/drivers/base/dma-mapping.c
-+++ b/drivers/base/dma-mapping.c
-@@ -368,7 +368,7 @@ int dma_configure(struct device *dev)
- 	} else if (has_acpi_companion(dma_dev)) {
- 		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
- 		if (attr != DEV_DMA_NOT_SUPPORTED)
--			acpi_dma_configure(dev, attr);
-+			ret = acpi_dma_configure(dev, attr);
- 	}
- 
- 	if (bridge)
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index ef0ae8a..2a9a5de 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -575,7 +575,7 @@ struct acpi_pci_root {
- 
- bool acpi_dma_supported(struct acpi_device *adev);
- enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
--void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
-+int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
- void acpi_dma_deconfigure(struct device *dev);
- 
- struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 673acda..60f0aad 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -765,8 +765,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
- 	return DEV_DMA_NOT_SUPPORTED;
- }
- 
--static inline void acpi_dma_configure(struct device *dev,
--				      enum dev_dma_attr attr) { }
-+static inline int acpi_dma_configure(struct device *dev,
-+				     enum dev_dma_attr attr)
-+{
-+	return 0;
-+}
- 
- static inline void acpi_dma_deconfigure(struct device *dev) { }
- 
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
