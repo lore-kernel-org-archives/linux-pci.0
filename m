@@ -1,61 +1,99 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-To: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: "peterz@infradead.org" <peterz@infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux1394-devel@lists.sourceforge.net"
-        <linux1394-devel@lists.sourceforge.net>,
-        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-        "Hans Liljestrand" <ishkamiel@gmail.com>,
-        David Windsor <dwindsor@gmail.com>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        Juergen Gross <jgross@suse.com>
-Subject: RE: [Xen-devel] [PATCH 29/29] drivers, xen: convert grant_map.users
- from atomic_t to refcount_t
-Date: Thu, 9 Mar 2017 07:19:12 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C569F1@IRSMSX102.ger.corp.intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-30-git-send-email-elena.reshetova@intel.com>
- <99270126-7751-eed0-5efa-fc695ff3be25@oracle.com>
- <2236FBA76BA1254E88B949DDB74E612B41C56177@IRSMSX102.ger.corp.intel.com>
- <c4ea3925-f505-3c5b-a9fc-c74ea5a7cbe9@oracle.com>
-In-Reply-To: <c4ea3925-f505-3c5b-a9fc-c74ea5a7cbe9@oracle.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=8lPv=2K=obsidianresearch.com=jgunthorpe@kernel.org>
+Return-Path: <SRS0=8lPv=2K=obsidianresearch.com=jgunthorpe@kernel.org>
+Date: Wed, 1 Mar 2017 16:58:54 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Emil Velikov <emil.l.velikov@gmail.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+	Stefan Berger <stefanb@linux.vnet.ibm.com>,
+	Wei Zhang <wzhang@fb.com>,
+	Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+	Stephen Bates <stephen.bates@microsemi.com>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
+Message-ID: <20170301235854.GF2820@obsidianresearch.com>
+References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
+ <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
+ <4a867c32-ed29-bc98-c7cb-6315243e664a@deltatee.com>
+ <b34d6872-35de-da6d-2d7f-8842642d3f21@deltatee.com>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b34d6872-35de-da6d-2d7f-8842642d3f21@deltatee.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IE9uIDAzLzA4LzIwMTcgMDg6NDkgQU0sIFJlc2hldG92YSwgRWxlbmEgd3JvdGU6DQo+ID4+
-IE9uIDAzLzA2LzIwMTcgMDk6MjEgQU0sIEVsZW5hIFJlc2hldG92YSB3cm90ZToNCj4gPj4+IHJl
-ZmNvdW50X3QgdHlwZSBhbmQgY29ycmVzcG9uZGluZyBBUEkgc2hvdWxkIGJlDQo+ID4+PiB1c2Vk
-IGluc3RlYWQgb2YgYXRvbWljX3Qgd2hlbiB0aGUgdmFyaWFibGUgaXMgdXNlZCBhcw0KPiA+Pj4g
-YSByZWZlcmVuY2UgY291bnRlci4gVGhpcyBhbGxvd3MgdG8gYXZvaWQgYWNjaWRlbnRhbA0KPiA+
-Pj4gcmVmY291bnRlciBvdmVyZmxvd3MgdGhhdCBtaWdodCBsZWFkIHRvIHVzZS1hZnRlci1mcmVl
-DQo+ID4+PiBzaXR1YXRpb25zLg0KPiA+Pj4NCj4gPj4+IFNpZ25lZC1vZmYtYnk6IEVsZW5hIFJl
-c2hldG92YSA8ZWxlbmEucmVzaGV0b3ZhQGludGVsLmNvbT4NCj4gPj4+IFNpZ25lZC1vZmYtYnk6
-IEhhbnMgTGlsamVzdHJhbmQgPGlzaGthbWllbEBnbWFpbC5jb20+DQo+ID4+PiBTaWduZWQtb2Zm
-LWJ5OiBLZWVzIENvb2sgPGtlZXNjb29rQGNocm9taXVtLm9yZz4NCj4gPj4+IFNpZ25lZC1vZmYt
-Ynk6IERhdmlkIFdpbmRzb3IgPGR3aW5kc29yQGdtYWlsLmNvbT4NCj4gPj4+IC0tLQ0KPiA+Pj4g
-IGRyaXZlcnMveGVuL2dudGRldi5jIHwgMTEgKysrKysrLS0tLS0NCj4gPj4+ICAxIGZpbGUgY2hh
-bmdlZCwgNiBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQ0KPiA+PiBSZXZpZXdlZC1ieTog
-Qm9yaXMgT3N0cm92c2t5IDxib3Jpcy5vc3Ryb3Zza3lAb3JhY2xlLmNvbT4NCj4gPiBJcyB0aGVy
-ZSBhIHRyZWUgdGhhdCBjYW4gdGFrZSB0aGlzIGNoYW5nZT8gVHVybnMgb3V0IGl0IGlzIGJldHRl
-ciB0byBwcm9wYWdhdGUNCj4gY2hhbmdlcyB2aWEgc2VwYXJhdGUgdHJlZXMgYW5kIG9ubHkgbGVm
-dG92ZXJzIGNhbiBiZSB0YWtlbiB2aWEgR3JlZydzIHRyZWUuDQo+ID4NCj4gDQo+IFN1cmUsIHdl
-IGNhbiB0YWtlIGl0IHZpYSBYZW4gdHJlZSBmb3IgcmMzLg0KDQpUaGFuayB5b3UgdmVyeSBtdWNo
-IQ0KDQpCZXN0IFJlZ2FyZHMsDQpFbGVuYS4NCg0KPiANCj4gLWJvcmlzDQo=
+On Wed, Mar 01, 2017 at 03:49:04PM -0700, Logan Gunthorpe wrote:
+
+> Seems to me like an elegant solution would be to implement a 'cdev_kill'
+> function which could kill all the processes using a cdev. Thus, during
+> an unbind, a driver could call it and be sure that there are no users
+> left and it can safely allow the devres unwind to continue. Then no
+> difficult and racy 'alive' flags would be necessary and it would be much
+> easier on drivers.
+
+That could help, but this would mean cdev would have to insert a shim
+to grab locks around the various file ops.
+
+> > 3) A couple of drivers drivers/char/tpm doesn't seem to have any
+> > protection at all and appears like they would continue to use io
+> > operations even after the they may get unmapped because the char device
+> > persists.
+
+AFAIK TPM is correct and has been robustly tested now. We have a 'vtpm'
+driver that agressively uses hot-unplug.
+
+Firstly, TPM correctly tracks krefs on the 'chip', so the pointer is
+always valid.
+
+Next, anytime someone has a 'chip' pointer and wants to execute a TPM
+operation they have to call tpm_try_get_ops and hold that lock for the
+duration of their usage. Internally it does this:
+
+        down_read(&chip->ops_sem);
+        if (!chip->ops)
+                goto out_lock; // FAILURE
+
+In the cdev fops case this will cause the fop to return EPIPE if it
+fails. cdev holds this read side lock while it is running TPM commands
+inside the driver.
+
+This meshes with this code called by tpm_chip_unregister():
+
+        down_write(&chip->ops_sem);
+        chip->ops = NULL;
+        up_write(&chip->ops_sem);
+
+tpm_chip_unregister uses this to provide a strong fence guarentee to
+the driver. After tpm_chip_unregister return:
+ - Nothing is running in a TPM ops callback currently
+ - Nothing will ever call a TPM ops callback in future
+
+This allows the TPM drivers to be trivial: call tpm_chip_unregister(),
+kill the IRQ, and unmap the io resource, unload the module code.
+
+TPM drivers cannot associate HW resources to the 'chip' struct device,
+as it is unwound and devm triggered *during* tpm_chip_unregister and
+does not enjoy the strong fence guarantee.
+
+infiniband has a similar 'strong fence' unregister function. I think
+it is best-practice for subsystem design to provide that because
+drivers will never get it right on their own :(
+
+Both infiniband and TPM have the 'detach' flavour of unplug where the
+user is not forced to close their open cdevs. For simpler cases you
+can just wait for all cdevs to close with a simple rwsem, much like
+sysfs does already during device_del.
+
+Jason
