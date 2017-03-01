@@ -1,170 +1,188 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  2 Mar 2017 16:24:30 -0700
-Message-Id: <1488497074-14186-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v7 0/4] New Microsemi PCI Switch Management Driver
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Jean-Philippe Brucker <Jean-Philippe.Brucker@arm.com>
+Subject: RE: [RFC PATCH 30/30] vfio: Allow to bind foreign task
+Date: Wed, 1 Mar 2017 08:02:09 +0000
+Message-ID: <AADFC41AFE54684AB9EE6CBC0274A5D190C5018D@SHSMSX101.ccr.corp.intel.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-31-jean-philippe.brucker@arm.com>
+ <20170227205411.1abca59a@t450s.home>
+ <AADFC41AFE54684AB9EE6CBC0274A5D190C4CB9C@SHSMSX101.ccr.corp.intel.com>
+ <20170228152230.GB15153@e106794-lin.localdomain>
+In-Reply-To: <20170228152230.GB15153@e106794-lin.localdomain>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Shanker
+ Donthineni <shankerd@qti.qualcomm.com>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ Harv Abdulhamid <harba@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>, "Liu, Yi L" <yi.l.liu@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
+ David Woodhouse <dwmw2@infradead.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Because getting it right correctly the first time is appearantly hard
-and I caught this mistake while reading the email I had just sent :(
+> From: Jean-Philippe Brucker [mailto:Jean-Philippe.Brucker@arm.com]
+> Sent: Tuesday, February 28, 2017 11:23 PM
+> 
+> Hi Kevin,
+> 
+> On Tue, Feb 28, 2017 at 06:43:31AM +0000, Tian, Kevin wrote:
+> > > From: Alex Williamson
+> > > Sent: Tuesday, February 28, 2017 11:54 AM
+> > >
+> > > On Mon, 27 Feb 2017 19:54:41 +0000
+> > > Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
+> > >
+> > [...]
+> > > > diff --git a/include/uapi/linux/vfio.h b/include/uapi/linux/vfio.h
+> > > > index 3fe4197a5ea0..41ae8a231d42 100644
+> > > > --- a/include/uapi/linux/vfio.h
+> > > > +++ b/include/uapi/linux/vfio.h
+> > > > @@ -415,7 +415,9 @@ struct vfio_device_svm {
+> > > >  	__u32	flags;
+> > > >  #define VFIO_SVM_PASID_RELEASE_FLUSHED	(1 << 0)
+> > > >  #define VFIO_SVM_PASID_RELEASE_CLEAN	(1 << 1)
+> > > > +#define VFIO_SVM_PID			(1 << 2)
+> > > >  	__u32	pasid;
+> > > > +	__u32	pid;
+> > > >  };
+> > > >  /*
+> > > >   * VFIO_DEVICE_BIND_TASK - _IOWR(VFIO_TYPE, VFIO_BASE + 22,
+> > > > @@ -432,6 +434,19 @@ struct vfio_device_svm {
+> > > >   * On success, VFIO writes a Process Address Space ID (PASID) into @pasid. This
+> > > >   * ID is unique to a device.
+> > > >   *
+> > > > + * VFIO_SVM_PID: bind task @pid instead of current task. The shared address
+> > > > + *        space identified by @pasid is that of task identified by @pid.
+> > > > + *
+> > > > + *        Given that the caller owns the device, setting this flag grants the
+> > > > + *        caller read and write permissions on the entire address space of
+> > > > + *        foreign task described by @pid. Therefore, permission to perform the
+> > > > + *        bind operation on a foreign process is governed by the ptrace access
+> > > > + *        mode PTRACE_MODE_ATTACH_REALCREDS check. See man ptrace(2)
+> for
+> > > more
+> > > > + *        information.
+> > > > + *
+> > > > + *        If the VFIO_SVM_PID flag is not set, @pid is unused and it is the
+> > > > + *        current task that is bound to the device.
+> > > > + *
+> > > >   * The bond between device and process must be removed with
+> > > >   * VFIO_DEVICE_UNBIND_TASK before exiting.
+> > > >   *
+> > >
+> > > BTW, nice commit logs throughout this series, I probably need to read
+> > > through them a few more times to really digest it all.  AIUI, the VFIO
+> > > support here is really only useful for basic userspace drivers, I don't
+> > > see how we could take advantage of it for a VM use case where the guest
+> > > manages the PASID space for a domain.  Perhaps it hasn't spent enough
+> > > cycles bouncing around in my head yet.  Thanks,
+> > >
+> >
+> > Current definition doesn't work with virtualization usage, at least on Intel
+> > VT-d. To enable virtualized SVM within a VM, architecturally VT-d needs
+> > be in a nested mode - go through guest PASID table to find guest CR3,
+> > use guest CR3 as 1st level translation for GVA->GPA and then use 2nd
+> > level translation for GPA->HPA. PASID table is fully allocated/managed
+> > by VM. Within the translation process each guest pointer (PASID or 1st
+> > level paging structures) is treated as GPA which also goes through 2nd
+> > level translation. I didn't read ARM SMMU spec yet, but hope the basic
+> > mechanism stays similar.
+> 
+> If I understand correctly, it is very similar on ARM SMMU, where we have
+> two stages of translation. Stage-1 is GVA->GPA and stage-2 is GPA->HPA,
+> with all intermediate tables of stage-1 translation obtained via stage-2
+> as well. The SMMU holds stage-1 paging structure in the PASID tables.
 
-I'm very sorry about the extra noise.
+Good to know. :-)
 
-Logan
+> 
+> > Here we need an API which allows Qemu vIOMMU to bind guest PASID
+> > table pointer and enable nested mode for target device in underlying
+> > IOMMU hardware, while proposed API is only for user space driver
+> > regarding to binding a specific host address space.
+> >
+> > Based on above requirement difference, Alex, do you prefer to
+> > introducing one API covering both usages or separate APIs for their
+> > own purposes?
+> >
+> > btw Yi is working on a SVM virtualization prototype based on Intel
+> > VT-d. I hope soon he will send out a RFC so we can align the high
+> > level API requirement better. :-)
+> 
+> For IO virtualization on ARM, I'm currently working on a generic
+> para-virtualized IOMMU, where the IOMMU presented to the VM is different
+> from the hardware SMMU (I'll try not to go into details here, to avoid
+> derailing the discussion too much). For virtual SVM, the PASID table
+> format would be different between vIOMMU and pIOMMU, but the page table
+> formats would be the same as the MMU.
 
---
+When you say 'generic para-virtualized IOMMU', does 'generic' apply
+to ARM only (cross different ARM SMMU versions), or apply to other
+vendors (e.g. Intel, AMD, etc.)? Just want to touch base your high
+level idea here. 
 
-Changes since v6:
+> 
+> The VFIO interface for this would therefore have to be more fine-grained
+> than passing the whole PASID table. And could be implemented by
+> extending the interface proposed here.
+> 
+> User passes an opaque architecture-specific structure containing page
+> table format and pgd via the BIND_TASK VFIO ioctl. And the pIOMMU can
+> manage its own PASID tables, pointing to VM page tables. I was thinking
+> of letting the physical IOMMU handle PASID allocation and return it to
+> the VM via BIND_TASK instead of letting the guest do it, but that's more
+> of an implementation detail.
 
-* I screwed up the device_unregister path and left a potential use
-  after free bug in. I'm not sure why I didn't see a failure because of
-  it but it all tested fine. This version is correct though.
+I can see some value of doing this way... anyway not distract this thread.
+Let's discuss detail when you send out that RFC in future thread.
 
-Changes since v5:
+> 
+> When talking about SVM virtualization, there also is the case where the
+> VMM wants to avoid pinning all of the guest RAM prior to assigning
+> devices to a VM. In short, stage-2 SVM, where a device fault is handled
+> by KVM to map GPA->HPA. I think the interface presented in this patch
+> could also be reused, but there wouldn't be a lot of overlapping. The
+> PASID wouldn't be used, and we'd need to pass an eventfd or another
+> mechanism that allows KVM or the VMM to handle faults. This makes me
+> more confident that the name "VFIO_IOMMU_SVM_BIND" might be more
+> suitable than "VFIO_IOMMU_BIND_TASK".
 
-* Reworked cleanup during unbind again. This time we follow the pattern
-  roughly suggested by Jason Gunthorpe: we use an alive flag
-  that's checked with a rw semaphore held by the cdev ops. Except
-  instead of using the rwsem we just use the already existing
-  mrpc_mutex. (Seeing the vast majority of locations that would use the
-  semaphore overlap with the existing mutex.)
-* Added a small performance enhancement so the code reads less io memory
-  if the user is quick in submitting their read request.
+yes SVM_BIND sounds more general.
 
-Changes since v4:
+> 
+> To summarize, I think that this API can be reused when implementing a
+> para-virtualized IOMMU. But for the "full" virtualization case, a
+> somewhat orthogonal API would be needed. The fault reporting
+> infrastructure would most likely be common. So I don't think that this
+> proposal will collide with the SVM virtualization work for VT-d.
+> 
 
-* Turns out pushing the pci release code into the device release
-  function didn't work as I would have liked. If you try to unbind the
-  device with an instance open, then you hit a kernel bug at
-  drivers/pci/msi.c:371. (This didn't occur in v3.)
+Thanks for sharing your thought. Even for 'full' virtualization e.g. in 
+our case, we may also reuse the same API if you would like to go
+with new name, which is generic enough to cover all potential usages
+with sub-ops defined to differentiate (bind to host process, bind to 
+guest process, bind to guest PASID table, etc).
 
-  To solve this, we've moved the pci release code back into the
-  unregister function and reintroduced an alive flag. This time,
-  however, the alive flag is protected by mrpc_mutex and we're very
-  careful about what happens to devices still in use (they should
-  all be released through the timeout path and an ENODEV error
-  returned to userspace; while new commands are blocked with the
-  same error).
-
-Changes since v3:
-
-* Removed stdev_is_alive and moved pci deinit functions
-  into the device release function which only occurs after all
-  cdev instances are closed. (per Bjorn)
-* Reduced locking in read/write functions (per Bjorn)
-* Use pci_alloc_irq_vectors to vastly improve ISR initialization (Bjorn)
-* A few other minor nits and cleanup as noticed by Bjorn
-
-Changes since v2:
-
-* Collected reviewed and tested tags
-* Very minor fix to the error path in the create function
-
-Changes since v1:
-
-* Rebased onto 4.10-rc6 (cleanly)
-* Split the patch into a few more easily digestible patches (as
-  suggested by Greg Kroah-Hartman)
-* Folded switchtec.c into switchtec.h (per Greg)
-* Fixed a bunch of 32bit build warnings caught by the kbuild test robot
-* Fixed some issues in the documentation so it has a proper
-  reStructredText format (as noted by Jonathan Corbet)
-* Fixed padding and sizes in the IOCTL structures as noticed by Emil
-  Velikov and used pahole to verify their consistency across 32 and 64
-  bit builds
-* Reworked one of the IOCTL interfaces to be more future proof (per
-  Emil).
-
-Changes since RFC:
-
-* Fixed incorrect use of the drive model as pointed out by Greg
-  Kroah-Hartman
-* Used devm functions as suggested by Keith Busch
-* Added a handful of sysfs attributes to the switchtec class
-* Added a handful of IOCTLs to the switchtec device
-* A number of miscellaneous bug fixes
-
---
-
-Hi,
-
-This is a continuation of the RFC we posted lasted month [1] which
-proposes a management driver for Microsemi's Switchtec line of PCI
-switches. This hardware is still looking to be used in the Open
-Compute Platform
-
-To make this entirely clear: the Switchtec products are compliant
-with the PCI specifications and are supported today with the standard
-in-kernel driver. However, these devices also expose a management endpoint
-on a separate PCI function address which can be used to perform some
-advanced operations. This is a driver for that function. See the patch
-for more information.
-
-Since the RFC, we've made the changes requested by Greg Kroah-Hartman
-and Keith Busch, and we've also fleshed out a number of features. We've
-added a couple of IOCTLs and sysfs attributes which are documented in
-the patch. Significant work has also been done on the userspace tool
-which is available under a GPL license at [2]. We've also had testing
-done by some of the interested parties.
-
-We hope to see this work included in either 4.11 or 4.12 assuming a
-smooth review process.
-
-The patch is based off of the v4.10-rc6 release.
-
-Thanks for your review,
-
-Logan
-
-[1] https://www.spinics.net/lists/linux-pci/msg56897.html
-[2] https://github.com/sbates130272/switchtec-user
-
-Logan Gunthorpe (4):
-  MicroSemi Switchtec management interface driver
-  switchtec: Add user interface documentation
-  switchtec: Add sysfs attributes to the Switchtec driver
-  switchtec: Add IOCTLs to the Switchtec driver
-
- Documentation/ABI/testing/sysfs-class-switchtec |   96 ++
- Documentation/ioctl/ioctl-number.txt            |    1 +
- Documentation/switchtec.txt                     |   80 ++
- MAINTAINERS                                     |   11 +
- drivers/pci/Kconfig                             |    1 +
- drivers/pci/Makefile                            |    1 +
- drivers/pci/switch/Kconfig                      |   13 +
- drivers/pci/switch/Makefile                     |    1 +
- drivers/pci/switch/switchtec.c                  | 1600 +++++++++++++++++++++++
- include/uapi/linux/switchtec_ioctl.h            |  132 ++
- 10 files changed, 1936 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
- create mode 100644 Documentation/switchtec.txt
- create mode 100644 drivers/pci/switch/Kconfig
- create mode 100644 drivers/pci/switch/Makefile
- create mode 100644 drivers/pci/switch/switchtec.c
- create mode 100644 include/uapi/linux/switchtec_ioctl.h
-
---
-2.1.4
+Thanks
+Kevin
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
