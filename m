@@ -1,37 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.139]:35521 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752832AbdCWIM6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Mar 2017 04:12:58 -0400
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org
-Cc: robh@kernel.org, toshi.kani@hpe.com, shawn.lin@rock-chips.com,
-        briannorris@chromium.org, dianders@chromium.org,
-        bhelgaas@google.com, dtor@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        Frank Rowand <frowand.list@gmail.com>,
-        Rob Herring <robh+dt@kernel.org>
-Subject: [PATCH v2 0/2] Fix memory leak in of_pci_get_host_bridge_resources
-Date: Thu, 23 Mar 2017 16:12:33 +0800
-Message-Id: <1490256755-889-1-git-send-email-jeffy.chen@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 1 Mar 2017 17:18:27 +0100
+Message-ID: <CAK8P3a2ULkNH39UJAeZSuw2kS+7wNyySs1RaY74ELGm498NmnA@mail.gmail.com>
+Subject: Re: [PATCH 00/20] PCI: fix config and I/O Address space memory
+ mappings
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ linux-arch <linux-arch@vger.kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Jonathan Corbet <corbet@lwn.net>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
+ Murali Karicheri <m-karicheri2@ti.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In of_pci_get_host_bridge_resources, we alloced some struct resource
-variables, and they would cause memory leak since no where to free them.
+On Mon, Feb 27, 2017 at 4:14 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
 
-Changes in v2:
-Don't change the resource_list_create_entry's behavior.
+> This patch series[1] addresses both issues in one go:
+>
+> - It updates the pci_remap_iospace() function to use a page mapping
+>   that guarantees non-posted write transactions for I/O space addresses
+> - It adds a kernel API to remap PCI config space resources, so that
+>   architecture can override it with a mapping implementation that
+>   guarantees PCI specifications compliancy wrt non-posted write
+>   configuration transactions
+> - It updates all PCI host controller implementations (and the generic
+>   ECAM layer) to use the newly introduced mapping interface
+>
+> Tested on Juno ECAM based interface (DT/ACPI).
 
-Jeffy Chen (2):
-  PCI: return resource_entry in pci_add_resource helpers
-  of/pci: Fix memory leak in of_pci_get_host_bridge_resources
+This looks all good to me, nice work!
 
- drivers/of/of_pci.c | 57 +++++++++++++++++++++++------------------------------
- drivers/pci/bus.c   | 13 +++++++-----
- include/linux/pci.h |  8 +++++---
- 3 files changed, 38 insertions(+), 40 deletions(-)
+    Arnd
 
--- 
-2.1.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
