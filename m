@@ -1,164 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v5 4/7] PCI: dwc: all: Modify dbi accessors to take dbi_base
- as argument
-Date: Wed, 22 Mar 2017 20:40:55 +0530
-Message-ID: <20170322151055.15947-1-kishon@ti.com>
-In-Reply-To: <20170313134328.1588-5-kishon@ti.com>
-References: <20170313134328.1588-5-kishon@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com, kishon@ti.com
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0070.outbound.protection.outlook.com ([104.47.32.70]:39949
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752144AbdCAX2m (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 1 Mar 2017 18:28:42 -0500
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+To: Christoph Hellwig <hch@lst.de>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH] PCI/MSI: Only disable affinity settings if pre and post
+ vector count is equal to max_vecs and not min_vecs
+Date: Wed, 1 Mar 2017 23:27:56 +0000
+Message-ID: <SN1PR0701MB18371313B1C1AAE90B12169BF5290@SN1PR0701MB1837.namprd07.prod.outlook.com>
+References: <1487883699-3528-1-git-send-email-himanshu.madhani@cavium.com>
+ <20170301152056.GA12708@lst.de>
+In-Reply-To: <20170301152056.GA12708@lst.de>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-dwc has 2 dbi address space labeled dbics and dbics2. The existing
-helper to access dbi address space can access only dbics. However
-dbics2 has to be accessed for programming the BAR registers in the
-case of EP mode. This is in preparation for adding EP mode support
-to dwc driver.
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@lst.de]
+> Sent: Wednesday, March 1, 2017 7:21 AM
+> To: Madhani, Himanshu <Himanshu.Madhani@cavium.com>
+> Cc: bhelgaas@google.com; linux-pci@vger.kernel.org; hch@lst.de
+> Subject: Re: [PATCH] PCI/MSI: Only disable affinity settings if pre and p=
+ost
+> vector count is equal to max_vecs and not min_vecs
+>=20
+> > @@ -1206,16 +1228,6 @@ int pci_alloc_irq_vectors_affinity(struct pci_de=
+v
+> *dev, unsigned int min_vecs,
+> >  	if (flags & PCI_IRQ_AFFINITY) {
+> >  		if (!affd)
+> >  			affd =3D &msi_default_affd;
+> > -
+> > -		if (affd->pre_vectors + affd->post_vectors > min_vecs)
+> > -			return -EINVAL;
+>=20
+> Actually I think we can leave this check here.
+>=20
+> > -
+> > -		/*
+> > -		 * If there aren't any vectors left after applying the pre/post
+> > -		 * vectors don't bother with assigning affinity.
+> > -		 */
+> > -		if (affd->pre_vectors + affd->post_vectors =3D=3D min_vecs)
+> > -			affd =3D NULL;
+>=20
+> And only move this one down into the allocator helpers.
 
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-Acked-by: Niklas Cassel <niklas.cassel@axis.com>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
-Changes from v4:
-Add void as return type in dw_pcie_writel_dbi spotted by Niklas.
+Will send out update soon.=20
 
- drivers/pci/dwc/pci-exynos.c      | 10 ++++++----
- drivers/pci/dwc/pcie-designware.c | 13 +++++++------
- drivers/pci/dwc/pcie-designware.h | 20 ++++++++++++++++----
- 3 files changed, 29 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-index 993b650ef275..a0d40f74b88d 100644
---- a/drivers/pci/dwc/pci-exynos.c
-+++ b/drivers/pci/dwc/pci-exynos.c
-@@ -521,23 +521,25 @@ static void exynos_pcie_enable_interrupts(struct exynos_pcie *ep)
- 		exynos_pcie_msi_init(ep);
- }
- 
--static u32 exynos_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
-+static u32 exynos_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base,
-+				 u32 reg)
- {
- 	struct exynos_pcie *ep = to_exynos_pcie(pci);
- 	u32 val;
- 
- 	exynos_pcie_sideband_dbi_r_mode(ep, true);
--	val = readl(pci->dbi_base + reg);
-+	val = readl(base + reg);
- 	exynos_pcie_sideband_dbi_r_mode(ep, false);
- 	return val;
- }
- 
--static void exynos_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
-+static void exynos_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base,
-+				   u32 reg, u32 val)
- {
- 	struct exynos_pcie *ep = to_exynos_pcie(pci);
- 
- 	exynos_pcie_sideband_dbi_w_mode(ep, true);
--	writel(val, pci->dbi_base + reg);
-+	writel(val, base + reg);
- 	exynos_pcie_sideband_dbi_w_mode(ep, false);
- }
- 
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index 3eaf3ccdc118..ea403e2240cf 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -61,20 +61,21 @@ int dw_pcie_write(void __iomem *addr, int size, u32 val)
- 	return PCIBIOS_SUCCESSFUL;
- }
- 
--u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
-+u32 __dw_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg)
- {
- 	if (pci->ops->readl_dbi)
--		return pci->ops->readl_dbi(pci, reg);
-+		return pci->ops->readl_dbi(pci, base, reg);
- 
--	return readl(pci->dbi_base + reg);
-+	return readl(base + reg);
- }
- 
--void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
-+void __dw_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
-+			  u32 val)
- {
- 	if (pci->ops->writel_dbi)
--		pci->ops->writel_dbi(pci, reg, val);
-+		pci->ops->writel_dbi(pci, base, reg, val);
- 	else
--		writel(val, pci->dbi_base + reg);
-+		writel(val, base + reg);
- }
- 
- static u32 dw_pcie_readl_unroll(struct dw_pcie *pci, u32 index, u32 reg)
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 8f3dcb2b099b..09b334a12892 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -144,8 +144,9 @@ struct pcie_port {
- 
- struct dw_pcie_ops {
- 	u64	(*cpu_addr_fixup)(u64 cpu_addr);
--	u32	(*readl_dbi)(struct dw_pcie *pcie, u32 reg);
--	void	(*writel_dbi)(struct dw_pcie *pcie, u32 reg, u32 val);
-+	u32	(*readl_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg);
-+	void	(*writel_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
-+			      u32 val);
- 	int	(*link_up)(struct dw_pcie *pcie);
- };
- 
-@@ -163,8 +164,9 @@ struct dw_pcie {
- int dw_pcie_read(void __iomem *addr, int size, u32 *val);
- int dw_pcie_write(void __iomem *addr, int size, u32 val);
- 
--u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg);
--void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val);
-+u32 __dw_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg);
-+void __dw_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
-+			  u32 val);
- int dw_pcie_link_up(struct dw_pcie *pci);
- int dw_pcie_wait_for_link(struct dw_pcie *pci);
- void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
-@@ -172,6 +174,16 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
- 			       u32 size);
- void dw_pcie_setup(struct dw_pcie *pci);
- 
-+static inline void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
-+{
-+	__dw_pcie_writel_dbi(pci, pci->dbi_base, reg, val);
-+}
-+
-+static inline u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
-+{
-+	return  __dw_pcie_readl_dbi(pci, pci->dbi_base, reg);
-+}
-+
- #ifdef CONFIG_PCIE_DW_HOST
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
--- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Himanshu
