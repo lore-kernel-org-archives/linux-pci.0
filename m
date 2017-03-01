@@ -1,81 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RESEND PATCH v3 4/7] PCI: dwc: all: Modify dbi accessors to take
- dbi_base as argument
-To: Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas
- <bhelgaas@google.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>
-References: <1489041545-15730-1-git-send-email-kishon@ti.com>
- <1489041545-15730-5-git-send-email-kishon@ti.com>
- <4e13580d-2625-5eed-bcbc-2ffd7493b073@axis.com>
- <595fab62-fb7a-888a-f898-7b59030585f1@axis.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <58C28FCC.4070100@ti.com>
-Date: Fri, 10 Mar 2017 17:06:44 +0530
+Return-Path: <SRS0=Pck9=2K=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=Pck9=2K=deltatee.com=logang@kernel.org>
+To: Keith Busch <keith.busch@intel.com>, Bjorn Helgaas <helgaas@kernel.org>
+References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
+ <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
+ <20170301222651.GA14852@localhost.localdomain>
+Cc: Myron Stowe <myron.stowe@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Jonathan Corbet <corbet@lwn.net>, "David S. Miller" <davem@davemloft.net>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Emil Velikov <emil.l.velikov@gmail.com>,
+ Mauro Carvalho Chehab <mchehab@kernel.org>,
+ Guenter Roeck <linux@roeck-us.net>,
+ Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+ Linus Walleij <linus.walleij@linaro.org>,
+ Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+ Stefan Berger <stefanb@linux.vnet.ibm.com>, Wei Zhang <wzhang@fb.com>,
+ Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+ Stephen Bates <stephen.bates@microsemi.com>, linux-pci@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <84556478-c01c-0925-be75-13a61d4c8f4f@deltatee.com>
+Date: Wed, 1 Mar 2017 15:37:03 -0700
 MIME-Version: 1.0
-In-Reply-To: <595fab62-fb7a-888a-f898-7b59030585f1@axis.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
- Jesper Nilsson <jespern@axis.com>, Zhou Wang <wangzhou1@hisilicon.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170301222651.GA14852@localhost.localdomain>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
 
-On Thursday 09 March 2017 08:35 PM, Niklas Cassel wrote:
-> 
-> 
-> On 03/09/2017 03:48 PM, Niklas Cassel wrote:
->> On 03/09/2017 07:39 AM, Kishon Vijay Abraham I wrote:
->>> dwc has 2 dbi address space labeled dbics and dbics2. The existing
->>> helper to access dbi address space can access only dbics. However
->>> dbics2 has to be accessed for programming the BAR registers in the
->>> case of EP mode. This is in preparation for adding EP mode support
->>> to dwc driver.
->> Hello Kishon
->>
->> I don't really like the idea of adding an extra argument to every existing read/write.
->> Will not a read/write using dbi2 be quite uncommon compared to a read/write
->> using dbi?
->>
->> How about something like this:
->>
->> void __dw_pcie_writel(struct dw_pcie *pci, void __iomem *base, u32 reg, u32 val)
->> {
->>     if (pci->ops->writel_dbi)
->>         pci->ops->writel_dbi(pci, base, reg, val);
->>     else
->>         writel(val, base + reg);
->> }
->>
->> #define dw_pcie_writel_dbi(pci, reg, val) __dw_pcie_writel(pci, pci->dbi_base, reg, val)
->> #define dw_pcie_writel_dbi2(pci, reg, val) __dw_pcie_writel(pci, pci->dbi_base2, reg, val)
-> 
-> Perhaps make dw_pcie_writel_dbi2 a function rather than a define,
-> so we can return an error if pci->dbi_base2 == NULL.
 
-Should we return an error? We don't return error for dbi_base either. I think
-it should be sufficient to return errors while populating dbi_base or
-dbi_base2. Otherwise it's a bug and should result in abort. Joao?
+On 01/03/17 03:26 PM, Keith Busch wrote:
+> I think this is from using the managed device resource API to request the
+> irq actions. The scope of the resource used to be tied to the pci_dev's
+> dev, but now it's the new switchec class dev, which has a different
+> lifetime while open references exist, so it's not releasing the irq's.
 
-Thanks
-Kishon
+The scope of the IRQ was originally tied to the pci_dev. Then in v4 I
+tied it to the switchtec device in order to try and keep using the pci
+device after unbind. This didn't work, so I switched it back to using
+the pci_dev. (This seems to be the way most drivers work anyway.)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+> One thing about the BUG_ON that is confusing me is how it's getting
+> to free_msi_irq's BUG in v4 or v5. I don't see any part releasing the
+> allocated ones. Maybe the devres API is harder to use than having the
+> driver manage all the resources...
+
+free_msi_irqs seems to be called via pci_disable_device in pcim_release
+which devres will call during release of the PCI device and before all
+the references to the pci_dev are freed (I tried adding an extra
+get_device which gets put in the child devices release -- this didn't work):
+
+ [ 1079.845616] Call Trace:
+ [ 1079.845652]  ? pcim_release+0x35/0x96
+ [ 1079.845691]  ? release_nodes+0x15b/0x17c
+ [ 1079.845730]  ? device_release_driver_internal+0x12d/0x1cb
+ [ 1079.845771]  ? unbind_store+0x59/0x89
+ [ 1079.845809]  ? kernfs_fop_write+0xe7/0x129
+ [ 1079.845847]  ? __vfs_write+0x1c/0xa2
+ [ 1079.845885]  ? kmem_cache_alloc+0xc5/0x131
+ [ 1079.845923]  ? fput+0xd/0x7d
+ [ 1079.845958]  ? filp_close+0x5a/0x61
+ [ 1079.845993]  ? vfs_write+0xa2/0xe4
+ [ 1079.846028]  ? SyS_write+0x48/0x73
+ [ 1079.846066]  ? entry_SYSCALL_64_fastpath+0x13/0x94
+
+v5 is correct because it registers the irqs against the pci_dev (with
+devm_request_irq) and thus they get freed in time as part of the devres
+unwind.
+
+Logan
