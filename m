@@ -1,55 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45787 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751274AbdCMKxT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2017 06:53:19 -0400
-Date: Mon, 13 Mar 2017 13:52:53 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Logan Gunthorpe <logang@deltatee.com>
-Cc: Stephen Bates <stephen.bates@microsemi.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: [PATCH 2/2] switchtec: fix some error codes
-Message-ID: <20170313105253.GB24989@mwanda>
+Received: from mail-bn3nam01on0074.outbound.protection.outlook.com ([104.47.33.74]:61903
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752865AbdCAXdx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 1 Mar 2017 18:33:53 -0500
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>, <hch@lst.de>
+CC: <himanshu.madhani@cavium.com>
+Subject: [PATCH] PCI/MSI: Only disable affinity settings if pre and post vector count is equal to max_vecs and not min_vecs
+Date: Wed, 1 Mar 2017 15:31:58 -0800
+Message-ID: <20170301233158.1035-1-himanshu.madhani@cavium.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We shouldn't be changing these negative error codes to positive.
+From: Michael Hernandez <michael.hernandez@cavium.com>
 
-Fixes: dbdb73b1e2c0 ("MicroSemi Switchtec management interface driver")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+min_vecs is the minimum amount of vectors needed to operate in MSI-X mode
+which may just include the vectors that don't need affinity.
 
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 82ae08956457..fcde98161d9a 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -656,7 +656,7 @@ static ssize_t switchtec_dev_write(struct file *filp, const char __user *data,
+Disabling affinity settings causes the qla2xxx driver scsi_add_host
+to fail when blk_mq is enabled as the blk_mq_pci_map_queues expects
+affinity masks on each vector.
+
+v2 --> v3
+o fixed code as per review comments.
+
+v1 --> v2
+
+o Moved the check from pci_alloc_irq_vectors_affinity() to
+  __pci_enable_{msi|msix}_range()
+
+Fixes: dfef358 ("PCI/MSI: Don't apply affinity if there aren't enough vectors left")
+Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/msi.c |   25 ++++++++++++++++++-------
+ 1 files changed, 18 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 7f73bac..46c0cdd 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1091,6 +1091,15 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
  
- 	rc = lock_mutex_and_test_alive(stdev);
- 	if (rc)
--		return -rc;
-+		return rc;
+ 	for (;;) {
+ 		if (affd) {
++			/*
++			 * If there aren't any vectors left after applying the
++			 * pre/post vectors don't bother with assigning
++			 * affinity.
++			 */
++			if (affd->pre_vectors + affd->post_vectors == nvec)
++				affd = NULL;
++		}
++		if (affd) {
+ 			nvec = irq_calc_affinity_vectors(nvec, affd);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+@@ -1138,6 +1147,15 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
  
- 	if (stuser->state != MRPC_IDLE) {
- 		rc = -EBADE;
-@@ -700,7 +700,7 @@ static ssize_t switchtec_dev_read(struct file *filp, char __user *data,
+ 	for (;;) {
+ 		if (affd) {
++			/*
++			 * If there aren't any vectors left after applying the
++			 * pre/post vectors don't bother with assigning
++			 * affinity.
++			 */
++			if (affd->pre_vectors + affd->post_vectors == nvec)
++				affd = NULL;
++		}
++		if (affd) {
+ 			nvec = irq_calc_affinity_vectors(nvec, affd);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+@@ -1209,13 +1227,6 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
  
- 	rc = lock_mutex_and_test_alive(stdev);
- 	if (rc)
--		return -rc;
-+		return rc;
- 
- 	if (stuser->state == MRPC_IDLE) {
- 		mutex_unlock(&stdev->mrpc_mutex);
-@@ -722,7 +722,7 @@ static ssize_t switchtec_dev_read(struct file *filp, char __user *data,
- 
- 	rc = lock_mutex_and_test_alive(stdev);
- 	if (rc)
--		return -rc;
-+		return rc;
- 
- 	if (stuser->state != MRPC_DONE) {
- 		mutex_unlock(&stdev->mrpc_mutex);
+ 		if (affd->pre_vectors + affd->post_vectors > min_vecs)
+ 			return -EINVAL;
+-
+-		/*
+-		 * If there aren't any vectors left after applying the pre/post
+-		 * vectors don't bother with assigning affinity.
+-		 */
+-		if (affd->pre_vectors + affd->post_vectors == min_vecs)
+-			affd = NULL;
+ 	} else {
+ 		if (WARN_ON(affd))
+ 			affd = NULL;
+-- 
+1.7.1
