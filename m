@@ -1,167 +1,134 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v5 04/24] Documentation: PCI: Guide to use pci endpoint
- configfs
-Date: Mon, 27 Mar 2017 15:15:00 +0530
-Message-ID: <20170327094520.3129-5-kishon@ti.com>
-In-Reply-To: <20170327094520.3129-1-kishon@ti.com>
-References: <20170327094520.3129-1-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [RFC PATCH v2 08/32] x86: Use PAGE_KERNEL protection for ioremap of
+ memory page
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:13:32 -0500
+Message-ID: <148846761276.2349.4899767672892365544.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add Documentation to help users use pci endpoint to configure
-pci endpoint function and to bind the endpoint function
-with endpoint controller.
+From: Tom Lendacky <thomas.lendacky@amd.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+In order for memory pages to be properly mapped when SEV is active, we
+need to use the PAGE_KERNEL protection attribute as the base protection.
+This will insure that memory mapping of, e.g. ACPI tables, receives the
+proper mapping attributes.
+
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
 ---
- Documentation/PCI/00-INDEX                      |   2 +
- Documentation/PCI/endpoint/pci-endpoint-cfs.txt | 105 ++++++++++++++++++++++++
- 2 files changed, 107 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+ arch/x86/mm/ioremap.c |    8 ++++++++
+ include/linux/mm.h    |    1 +
+ kernel/resource.c     |   40 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 49 insertions(+)
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index ba950b296bd8..f84a23c7c74b 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -14,3 +14,5 @@ pcieaer-howto.txt
- 	- the PCI Express Advanced Error Reporting Driver Guide HOWTO
- endpoint/pci-endpoint.txt
- 	- guide to add endpoint controller driver and endpoint function driver.
-+endpoint/pci-endpoint-cfs.txt
-+	- guide to use configfs to configure the pci endpoint function.
-diff --git a/Documentation/PCI/endpoint/pci-endpoint-cfs.txt b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
-new file mode 100644
-index 000000000000..8b2a8280b131
---- /dev/null
-+++ b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
-@@ -0,0 +1,105 @@
-+                   CONFIGURING PCI ENDPOINT USING CONFIGFS
-+                    Kishon Vijay Abraham I <kishon@ti.com>
+diff --git a/arch/x86/mm/ioremap.c b/arch/x86/mm/ioremap.c
+index c400ab5..481c999 100644
+--- a/arch/x86/mm/ioremap.c
++++ b/arch/x86/mm/ioremap.c
+@@ -151,7 +151,15 @@ static void __iomem *__ioremap_caller(resource_size_t phys_addr,
+ 		pcm = new_pcm;
+ 	}
+ 
++	/*
++	 * If the page being mapped is in memory and SEV is active then
++	 * make sure the memory encryption attribute is enabled in the
++	 * resulting mapping.
++	 */
+ 	prot = PAGE_KERNEL_IO;
++	if (sev_active() && page_is_mem(pfn))
++		prot = __pgprot(pgprot_val(prot) | _PAGE_ENC);
 +
-+The PCI Endpoint Core exposes configfs entry (pci_ep) in order to configure the
-+PCI endpoint function and in order to bind the endpoint function
-+with the endpoint controller. (For introducing other mechanisms to
-+configure the PCI Endpoint Function refer [1]).
+ 	switch (pcm) {
+ 	case _PAGE_CACHE_MODE_UC:
+ 	default:
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index b84615b..825df27 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -445,6 +445,7 @@ static inline int get_page_unless_zero(struct page *page)
+ }
+ 
+ extern int page_is_ram(unsigned long pfn);
++extern int page_is_mem(unsigned long pfn);
+ 
+ enum {
+ 	REGION_INTERSECTS,
+diff --git a/kernel/resource.c b/kernel/resource.c
+index 9b5f044..db56ba3 100644
+--- a/kernel/resource.c
++++ b/kernel/resource.c
+@@ -518,6 +518,46 @@ int __weak page_is_ram(unsigned long pfn)
+ }
+ EXPORT_SYMBOL_GPL(page_is_ram);
+ 
++/*
++ * This function returns true if the target memory is marked as
++ * IORESOURCE_MEM and IORESOUCE_BUSY and described as other than
++ * IORES_DESC_NONE (e.g. IORES_DESC_ACPI_TABLES).
++ */
++static int walk_mem_range(unsigned long start_pfn, unsigned long nr_pages)
++{
++	struct resource res;
++	unsigned long pfn, end_pfn;
++	u64 orig_end;
++	int ret = -1;
 +
-+*) Mounting configfs
++	res.start = (u64) start_pfn << PAGE_SHIFT;
++	res.end = ((u64)(start_pfn + nr_pages) << PAGE_SHIFT) - 1;
++	res.flags = IORESOURCE_MEM | IORESOURCE_BUSY;
++	orig_end = res.end;
++	while ((res.start < res.end) &&
++		(find_next_iomem_res(&res, IORES_DESC_NONE, true) >= 0)) {
++		pfn = (res.start + PAGE_SIZE - 1) >> PAGE_SHIFT;
++		end_pfn = (res.end + 1) >> PAGE_SHIFT;
++		if (end_pfn > pfn)
++			ret = (res.desc != IORES_DESC_NONE) ? 1 : 0;
++		if (ret)
++			break;
++		res.start = res.end + 1;
++		res.end = orig_end;
++	}
++	return ret;
++}
 +
-+The PCI Endpoint Core layer creates pci_ep directory in the mounted configfs
-+directory. configfs can be mounted using the following command.
++/*
++ * This generic page_is_mem() returns true if specified address is
++ * registered as memory in iomem_resource list.
++ */
++int __weak page_is_mem(unsigned long pfn)
++{
++	return walk_mem_range(pfn, 1) == 1;
++}
++EXPORT_SYMBOL_GPL(page_is_mem);
 +
-+	mount -t configfs none /sys/kernel/config
-+
-+*) Directory Structure
-+
-+The pci_ep configfs has two directories at its root: controllers and
-+functions. Every EPC device present in the system will have an entry in
-+the *controllers* directory and and every EPF driver present in the system
-+will have an entry in the *functions* directory.
-+
-+/sys/kernel/config/pci_ep/
-+	.. controllers/
-+	.. functions/
-+
-+*) Creating EPF Device
-+
-+Every registered EPF driver will be listed in controllers directory. The
-+entries corresponding to EPF driver will be created by the EPF core.
-+
-+/sys/kernel/config/pci_ep/functions/
-+	.. <EPF Driver1>/
-+		... <EPF Device 11>/
-+		... <EPF Device 21>/
-+	.. <EPF Driver2>/
-+		... <EPF Device 12>/
-+		... <EPF Device 22>/
-+
-+In order to create a <EPF device> of the type probed by <EPF Driver>, the
-+user has to create a directory inside <EPF DriverN>.
-+
-+Every <EPF device> directory consists of the following entries that can be
-+used to configure the standard configuration header of the endpoint function.
-+(These entries are created by the framework when any new <EPF Device> is
-+created)
-+
-+	.. <EPF Driver1>/
-+		... <EPF Device 11>/
-+			... vendorid
-+			... deviceid
-+			... revid
-+			... progif_code
-+			... subclass_code
-+			... baseclass_code
-+			... cache_line_size
-+			... subsys_vendor_id
-+			... subsys_id
-+			... interrupt_pin
-+
-+*) EPC Device
-+
-+Every registered EPC device will be listed in controllers directory. The
-+entries corresponding to EPC device will be created by the EPC core.
-+
-+/sys/kernel/config/pci_ep/controllers/
-+	.. <EPC Device1>/
-+		... <Symlink EPF Device11>/
-+		... <Symlink EPF Device12>/
-+		... start
-+	.. <EPC Device2>/
-+		... <Symlink EPF Device21>/
-+		... <Symlink EPF Device22>/
-+		... start
-+
-+The <EPC Device> directory will have a list of symbolic links to
-+<EPF Device>. These symbolic links should be created by the user to
-+represent the functions present in the endpoint device.
-+
-+The <EPC Device> directory will also have a *start* field. Once
-+"1" is written to this field, the endpoint device will be ready to
-+establish the link with the host. This is usually done after
-+all the EPF devices are created and linked with the EPC device.
-+
-+
-+			 | controllers/
-+				| <Directory: EPC name>/
-+					| <Symbolic Link: Function>
-+					| start
-+			 | functions/
-+				| <Directory: EPF driver>/
-+					| <Directory: EPF device>/
-+						| vendorid
-+						| deviceid
-+						| revid
-+						| progif_code
-+						| subclass_code
-+						| baseclass_code
-+						| cache_line_size
-+						| subsys_vendor_id
-+						| subsys_id
-+						| interrupt_pin
-+						| function
-+
-+[1] -> Documentation/PCI/endpoint/pci-endpoint.txt
--- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ /**
+  * region_intersects() - determine intersection of region with known resources
+  * @start: region start address
