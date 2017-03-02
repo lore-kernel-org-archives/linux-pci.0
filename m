@@ -1,105 +1,98 @@
-Return-Path: <SRS0=cakr=3I=chromium.org=briannorris@kernel.org>
-Return-Path: <SRS0=cakr=3I=chromium.org=briannorris@kernel.org>
-Date: Fri, 31 Mar 2017 09:40:16 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Jeffy Chen <jeffy.chen@rock-chips.com>,
-	Wenrui Li <wenrui.li@rock-chips.com>, linux-pci@vger.kernel.org,
-	linux-rockchip@lists.infradead.org, Ray Jui <rjui@broadcom.com>
-Subject: Re: [PATCH v2 3/5] PCI: rockchip: add remove() support
-Message-ID: <20170331164015.GB146301@google.com>
-References: <20170310024617.67303-1-briannorris@chromium.org>
- <20170310024617.67303-3-briannorris@chromium.org>
- <20170324142541.GA25380@bhelgaas-glaptop.roam.corp.google.com>
- <20170324172218.GA119093@google.com>
- <20170330232825.GB3912@bhelgaas-glaptop.roam.corp.google.com>
- <20170331002608.GA72818@google.com>
- <20170331051702.GA13240@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [RFC PATCH v2 27/32] kvm: svm: Add support for SEV LAUNCH_FINISH
+ command
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:17:56 -0500
+Message-ID: <148846787592.2349.5101158172858135011.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170331051702.GA13240@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+The command is used for finializing the SEV guest launch process.
 
-On Fri, Mar 31, 2017 at 12:17:02AM -0500, Bjorn Helgaas wrote:
-> On Thu, Mar 30, 2017 at 05:26:09PM -0700, Brian Norris wrote:
-> > On Thu, Mar 30, 2017 at 06:28:25PM -0500, Bjorn Helgaas wrote:
-> > > Can we fix them all at the same time as you fix Rockchip?  Maybe we
-> > > should have a series that adds ".suppress_bind_attrs = true" to all
-> > > these drivers,
-> > 
-> > Sure, I can do that.
-> > 
-> > > including Rockchip.
-> > 
-> > Huh? Why? So I can revert that in the next patch?
-> > 
-> > > Then you could have this current 
-> > > series to make Rockchip modular on top, if there's still value in it.
-> > 
-> > I do see value in it. That's the whole reason I wrote this patchset.
-> > It's useful for stressing out certain behaviors that will happen all the
-> > time (i.e., boot-time initialization, from platform probe, to bus init,
-> > to client/EP init), via repeated bind/unbind (or modprobe/rmmod). It's
-> > much faster than reboot testing.
-> 
-> I didn't phrase that very well.  There's certainly value in stressing
-> the bind/unbind paths, but I thought the primary reason you wrote this
-> was to fix the fact that you could crash the system like this:
-> 
->   # echo f8000000.pcie > /sys/bus/platform/drivers/rockchip-pcie/unbind
->   # lspci
+Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+---
+ arch/x86/kvm/svm.c |   36 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
-Well, they're kinda two sides of the same coin; I was wanting to test
-the bind path, and when I tried this, I noticed that I could trivially
-crash the system. The crash seemed like a more important thing to
-document (because otherwise, it just looks like I'm adding a feature).
-
-> From my point of view, that's the issue that *has* to be fixed.
-> Better test coverage is icing.
-
-I didn't really view messing with /sys/.../unbind as a big issue,
-outside of development and testing (there's a lot of damage a malicious
-actor can do with unconstrained access to /sys/), so I guess I didn't
-put that aspect as super-high priority. If you'd like to prioritize
-that, then I'm OK with that.
-
-> It sounds like several drivers have that same issue, and the simplest
-> possible fix is to set .suppress_bind_attrs, so I suggested doing that 
-> so it's easy to analyze the tree as a whole and say "these drivers
-> all have the same problem, and all the fixes look the same."
-
-Sure, that is the simplest approach.
-
-> I guess if you'd rather skip that for Rockchip and apply a more
-> complicated fix there, I could go along with that.  But I don't think
-> it would hurt anything to set .suppress_bind_attrs, then remove it
-> when you add module support.  The concepts of .suppress_bind_attrs and
-> modularity are related, and doing this in a separate patch would make
-> it a nice example to follow if somebody wants to make other drivers
-> modular as well.
-
-I'll leave that up to you, and I can resubmit things if desired. As you
-have since noticed, I already sent a patch to add .suppress_bind_attrs
-to all the other drivers. If you'd like, feel free to add
-pcie-rockchip.c into that mix, it's not hard -- or I can redo it myself.
-Then I can modify and resend (or you can do the trivial modification
-required to) the current patch set.
-
-Just let me know.
-
-> > Personally, I'd rather just patch the other drivers, and you can wait
-> > until I follow through on that promise before applying my existing work
-> > for the Rockchip driver, if that's what you'd prefer.
-> 
-> It's not so much a question of using the Rockchip change as a stick.
-> I'm just thinking that it makes a more logical progression to fix the
-> more important issue globally first.
-
-Sure, I can grok that. Just let me know if you want any more action from
-me.
-
-Brian
+diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
+index 62c2b22..c108064 100644
+--- a/arch/x86/kvm/svm.c
++++ b/arch/x86/kvm/svm.c
+@@ -5921,6 +5921,38 @@ static int sev_launch_update_data(struct kvm *kvm, struct kvm_sev_cmd *argp)
+ 	return ret;
+ }
+ 
++static int sev_launch_finish(struct kvm *kvm, struct kvm_sev_cmd *argp)
++{
++	int i, ret;
++	struct sev_data_launch_finish *data;
++	struct kvm_vcpu *vcpu;
++
++	if (!sev_guest(kvm))
++		return -EINVAL;
++
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return -ENOMEM;
++
++	/* launch finish */
++	data->handle = sev_get_handle(kvm);
++	ret = sev_issue_cmd(kvm, SEV_CMD_LAUNCH_FINISH, data, &argp->error);
++	if (ret)
++		goto err_1;
++
++	/* Iterate through each vcpus and set SEV KVM_SEV_FEATURE bit in
++	 * KVM_CPUID_FEATURE to indicate that SEV is enabled on this vcpu
++	 */
++	kvm_for_each_vcpu(i, vcpu, kvm) {
++		sev_init_vmcb(to_svm(vcpu));
++		svm_cpuid_update(vcpu);
++	}
++
++err_1:
++	kfree(data);
++	return ret;
++}
++
+ static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
+ {
+ 	int r = -ENOTTY;
+@@ -5940,6 +5972,10 @@ static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
+ 		r = sev_launch_update_data(kvm, &sev_cmd);
+ 		break;
+ 	}
++	case KVM_SEV_LAUNCH_FINISH: {
++		r = sev_launch_finish(kvm, &sev_cmd);
++		break;
++	}
+ 	default:
+ 		break;
+ 	}
