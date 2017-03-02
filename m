@@ -1,55 +1,145 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 29 Mar 2017 17:32:53 +0200
-From: Borislav Petkov <bp@suse.de>
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
-        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
-        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
-        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org,
-        akpm@linux-foundation.org, davem@davemloft.net
-Subject: Re: [RFC PATCH v2 16/32] x86: kvm: Provide support to create Guest
- and HV shared per-CPU variables
-Message-ID: <20170329153252.kwwyedndwnfgvzcb@pd.tnic>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846773666.2349.9492983018843773590.stgit@brijesh-build-machine>
- <20170328183931.rqorduu5fnp5r3y2@pd.tnic>
- <9a8723fc-300d-eb76-deb1-cbc8492e9d49@redhat.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH 14/20] PCI: hisi: update PCI config space remap function
+Date: Thu, 2 Mar 2017 10:56:16 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1FA96A69@lhreml507-mbx>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-15-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170227151436.18698-15-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <9a8723fc-300d-eb76-deb1-cbc8492e9d49@redhat.com>
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "Wangzhou \(B\)" <wangzhou1@hisilicon.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 29, 2017 at 05:21:13PM +0200, Paolo Bonzini wrote:
-> The GHCB would have to be allocated much earlier, possibly even by
-> firmware depending on how things will be designed.
+Hi Lorenzo
 
-How about a statically allocated page like we do with the early
-pagetable pages in head_64.S?
+Many thanks for putting all of this together.
 
-> I think it's premature to consider SEV-ES requirements.
+> -----Original Message-----
+> From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
+> Sent: 27 February 2017 15:14
+> To: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org
+> Cc: linux-kernel@vger.kernel.org; linux-arch@vger.kernel.org; Lorenzo
+> Pieralisi; Bjorn Helgaas; Gabriele Paoloni; Wangzhou (B)
+> Subject: [PATCH 14/20] PCI: hisi: update PCI config space remap
+> function
+> 
+> PCI configuration space should be mapped with a memory region type that
+> generates on the CPU host bus non-posted write transations. Update the
+> driver to use the devm_pci_remap_cfg* interface to make sure the
+> correct
+> memory mappings for PCI configuration space are used.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> Cc: Zhou Wang <wangzhou1@hisilicon.com>
+> ---
+>  drivers/pci/dwc/pcie-hisi.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+> index e3e4fed..8042780 100644
+> --- a/drivers/pci/dwc/pcie-hisi.c
+> +++ b/drivers/pci/dwc/pcie-hisi.c
+> @@ -294,10 +294,9 @@ static int hisi_pcie_probe(struct platform_device
+> *pdev)
+>  	}
+> 
+>  	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+> "rc_dbi");
+> -	pci->dbi_base = devm_ioremap_resource(dev, reg);
+> +	pci->dbi_base = devm_pci_remap_cfg_resource(dev, reg);
+>  	if (IS_ERR(pci->dbi_base))
+>  		return PTR_ERR(pci->dbi_base);
+> -
+>  	platform_set_drvdata(pdev, hisi_pcie);
+> 
+>  	ret = hisi_add_pcie_port(hisi_pcie, pdev);
+> --
+> 2.10.0
 
-My only concern is not to have to redo a lot when SEV-ES gets enabled.
-So it would be prudent to design with SEV-ES in the back of our minds.
+I think you missed a couple of places where cfg space is ioremapped.
+I have added these and merged with your changes in the patch below:
 
+Thanks again
+Gab
+
+---------------------------------
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Date: Tue, 21 Feb 2017 15:24:34 +0000
+Subject: [PATCH 09/15] PCI: hisi: update PCI config space remap function
+
+PCI configuration space should be mapped with a memory region type that
+generates on the CPU host bus non-posted write transations. Update the
+driver to use the devm_pci_remap_cfg* interface to make sure the correct
+memory mappings for PCI configuration space are used.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Zhou Wang <wangzhou1@hisilicon.com>
+---
+ drivers/pci/dwc/pcie-hisi.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+index e3e4fed..a5b542c 100644
+--- a/drivers/pci/dwc/pcie-hisi.c
++++ b/drivers/pci/dwc/pcie-hisi.c
+@@ -99,7 +99,7 @@ static int hisi_pcie_init(struct pci_config_window *cfg)
+ 		return -ENOMEM;
+ 	}
+ 
+-	reg_base = devm_ioremap(dev, res->start, resource_size(res));
++	reg_base = devm_pci_remap_cfgspace(dev, res->start, resource_size(res));
+ 	if (!reg_base)
+ 		return -ENOMEM;
+ 
+@@ -294,10 +294,9 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
+-	pci->dbi_base = devm_ioremap_resource(dev, reg);
++	pci->dbi_base = devm_pci_remap_cfg_resource(dev, reg);
+ 	if (IS_ERR(pci->dbi_base))
+ 		return PTR_ERR(pci->dbi_base);
+-
+ 	platform_set_drvdata(pdev, hisi_pcie);
+ 
+ 	ret = hisi_add_pcie_port(hisi_pcie, pdev);
+@@ -358,7 +357,7 @@ static int hisi_pcie_platform_init(struct pci_config_window *cfg)
+ 		return -EINVAL;
+ 	}
+ 
+-	reg_base = devm_ioremap(dev, res->start, resource_size(res));
++	reg_base = devm_pci_remap_cfgspace(dev, res->start, resource_size(res));
+ 	if (!reg_base)
+ 		return -ENOMEM;
+ 
 -- 
-Regards/Gruss,
-    Boris.
+2.7.4
 
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
