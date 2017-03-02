@@ -1,78 +1,170 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- Oza Oza <oza.oza@broadcom.com>, JD Zheng <jiandong.zheng@broadcom.com>,
- Andy Gospodarek <gospo@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: pcie-iproc: broken 2nd (& 3rd?) controller support by c3245a566400
- ("PCI: iproc: Request host bridge window resources")
-Message-ID: <faab6b85-58e8-3e62-8763-56a94b13fba1@gmail.com>
-Date: Wed, 8 Mar 2017 13:56:35 +0100
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu,  2 Mar 2017 16:24:30 -0700
+Message-Id: <1488497074-14186-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v7 0/4] New Microsemi PCI Switch Management Driver
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGksCgpJIGp1c3QgdHJpZWQgdXBncmFkaW5nIEJDTTUzMDFYIGZyb20gNC40IHRvIDQuOSBhbmQg
-bm90aWNlZCBJIGRvbid0IHNlZSBjYXJkCmNvbm5lY3RlZCB0byB0aGUgMm5kIGNvbnRyb2xsZXIu
-CgpbICAgIDIuNTkzNTM0XSBwY2llX2lwcm9jX2JjbWEgYmNtYTA6NzogUENJIGhvc3QgYnJpZGdl
-IHRvIGJ1cyAwMDAwOjAwClsgICAgMi41OTk3ODZdIHBjaV9idXMgMDAwMDowMDogcm9vdCBidXMg
-cmVzb3VyY2UgW21lbSAweDA4MDAwMDAwLTB4MGZmZmZmZmZdClsgICAgMi42MDY2NjNdIHBjaWVf
-aXByb2NfYmNtYSBiY21hMDo3OiBsaW5rOiBVUApbICAgIDIuNjExMzE2XSBQQ0k6IGJ1czA6IEZh
-c3QgYmFjayB0byBiYWNrIHRyYW5zZmVycyBkaXNhYmxlZApbICAgIDIuNjE2ODk5XSBwY2kgMDAw
-MDowMDowMC4wOiBicmlkZ2UgY29uZmlndXJhdGlvbiBpbnZhbGlkIChbYnVzIDAwLTAwXSksIHJl
-Y29uZmlndXJpbmcKWyAgICAyLjYyNTM5NV0gUENJOiBidXMxOiBGYXN0IGJhY2sgdG8gYmFjayB0
-cmFuc2ZlcnMgZGlzYWJsZWQKWyAgICAyLjYzMTAxMV0gcGNpIDAwMDA6MDA6MDAuMDogQkFSIDg6
-IGFzc2lnbmVkIFttZW0gMHgwODAwMDAwMC0weDA4MGZmZmZmXQpbICAgIDIuNjM3Nzk1XSBwY2kg
-MDAwMDowMTowMC4wOiBCQVIgMDogYXNzaWduZWQgW21lbSAweDA4MDAwMDAwLTB4MDgwMDdmZmYg
-NjRiaXRdClsgICAgMi42NDUwOTFdIHBjaSAwMDAwOjAwOjAwLjA6IFBDSSBicmlkZ2UgdG8gW2J1
-cyAwMV0KWyAgICAyLjY1MDA0Ml0gcGNpIDAwMDA6MDA6MDAuMDogICBicmlkZ2Ugd2luZG93IFtt
-ZW0gMHgwODAwMDAwMC0weDA4MGZmZmZmXQoKWyAgICAyLjY1NzE5OV0gcGNpZV9pcHJvY19iY21h
-IGJjbWEwOjg6IHJlc291cmNlIGNvbGxpc2lvbjogW21lbSAweDQwMDAwMDAwLTB4NDdmZmZmZmZd
-IGNvbmZsaWN0cyB3aXRoIFBDSWUgTUVNIHNwYWNlIFttZW0gMHg0MDAwMDAwMC0weDQ3ZmZmZmZm
-XQpbICAgIDIuNjY5OTQ2XSBwY2llX2lwcm9jX2JjbWEgYmNtYTA6ODogUENJZSBjb250cm9sbGVy
-IHNldHVwIGZhaWxlZApbICAgIDIuNjc2MDMyXSBwY2llX2lwcm9jX2JjbWE6IHByb2JlIG9mIGJj
-bWEwOjggZmFpbGVkIHdpdGggZXJyb3IgLTE2CgoKVGhpcyB1c2VkIHRvIHdvcmsgd2l0aCBvbGRl
-ciBrZXJuZWxzIGJlY2F1c2UgdGhlcmUgd2Fzbid0IGFueSBjb2xsaXNpb24gY2hlY2s6CgpbICAg
-IDIuNTg3MTE3XSBwY2llX2lwcm9jX2JjbWEgYmNtYTA6NzogUENJIGhvc3QgYnJpZGdlIHRvIGJ1
-cyAwMDAwOjAwClsgICAgMi41OTMzNzhdIHBjaV9idXMgMDAwMDowMDogcm9vdCBidXMgcmVzb3Vy
-Y2UgW21lbSAweDA4MDAwMDAwLTB4MGZmZmZmZmZdClsgICAgMi42MDAyNTZdIHBjaWVfaXByb2Nf
-YmNtYSBiY21hMDo3OiBsaW5rOiBVUApbICAgIDIuNjA0ODg4XSBQQ0k6IGJ1czA6IEZhc3QgYmFj
-ayB0byBiYWNrIHRyYW5zZmVycyBkaXNhYmxlZApbICAgIDIuNjEwNDc0XSBwY2kgMDAwMDowMDow
-MC4wOiBicmlkZ2UgY29uZmlndXJhdGlvbiBpbnZhbGlkIChbYnVzIDAwLTAwXSksIHJlY29uZmln
-dXJpbmcKWyAgICAyLjYxODk3M10gUENJOiBidXMxOiBGYXN0IGJhY2sgdG8gYmFjayB0cmFuc2Zl
-cnMgZGlzYWJsZWQKWyAgICAyLjYyNDU5MV0gcGNpIDAwMDA6MDA6MDAuMDogQkFSIDg6IGFzc2ln
-bmVkIFttZW0gMHgwODAwMDAwMC0weDA4MGZmZmZmXQpbICAgIDIuNjMxMzgyXSBwY2kgMDAwMDow
-MTowMC4wOiBCQVIgMDogYXNzaWduZWQgW21lbSAweDA4MDAwMDAwLTB4MDgwMDdmZmYgNjRiaXRd
-ClsgICAgMi42Mzg2ODZdIHBjaSAwMDAwOjAwOjAwLjA6IFBDSSBicmlkZ2UgdG8gW2J1cyAwMV0K
-WyAgICAyLjY0MzYzM10gcGNpIDAwMDA6MDA6MDAuMDogICBicmlkZ2Ugd2luZG93IFttZW0gMHgw
-ODAwMDAwMC0weDA4MGZmZmZmXQoKWyAgICAyLjc3NzExOF0gcGNpZV9pcHJvY19iY21hIGJjbWEw
-Ojg6IFBDSSBob3N0IGJyaWRnZSB0byBidXMgMDAwMTowMApbICAgIDIuNzgzMzY3XSBwY2lfYnVz
-IDAwMDE6MDA6IHJvb3QgYnVzIHJlc291cmNlIFttZW0gMHg0MDAwMDAwMC0weDQ3ZmZmZmZmXQpb
-ICAgIDIuNzkwMjQ1XSBwY2llX2lwcm9jX2JjbWEgYmNtYTA6ODogbGluazogVVAKWyAgICAyLjc5
-NDg2Ml0gUENJOiBidXMwOiBGYXN0IGJhY2sgdG8gYmFjayB0cmFuc2ZlcnMgZGlzYWJsZWQKWyAg
-ICAyLjgwMDQ1Ml0gcGNpIDAwMDE6MDA6MDAuMDogYnJpZGdlIGNvbmZpZ3VyYXRpb24gaW52YWxp
-ZCAoW2J1cyAwMC0wMF0pLCByZWNvbmZpZ3VyaW5nClsgICAgMi44MDg5NDZdIFBDSTogYnVzMTog
-RmFzdCBiYWNrIHRvIGJhY2sgdHJhbnNmZXJzIGRpc2FibGVkClsgICAgMi44MTQ1NThdIHBjaSAw
-MDAxOjAwOjAwLjA6IEJBUiA4OiBhc3NpZ25lZCBbbWVtIDB4NDAwMDAwMDAtMHg0MDBmZmZmZl0K
-WyAgICAyLjgyMTM1Ml0gcGNpIDAwMDE6MDE6MDAuMDogQkFSIDA6IGFzc2lnbmVkIFttZW0gMHg0
-MDAwMDAwMC0weDQwMDA3ZmZmIDY0Yml0XQpbICAgIDIuODI4NjUwXSBwY2kgMDAwMTowMDowMC4w
-OiBQQ0kgYnJpZGdlIHRvIFtidXMgMDFdClsgICAgMi44MzM2MDBdIHBjaSAwMDAxOjAwOjAwLjA6
-ICAgYnJpZGdlIHdpbmRvdyBbbWVtIDB4NDAwMDAwMDAtMHg0MDBmZmZmZl0KCgpJIGd1ZXNzIHRo
-ZSBjaGVjayBpcyBPSyBhZnRlciBhbGwgYW5kIHRoZSByZWFsIHByb2JsZW0gaXMgaXByb2MgZHJp
-dmVyIGFzc2lnbmluZwp0aGUgc2FtZSByZXNvdXJjZS4KCkJyb2FkY29tIHRlYW06IGNvdWxkIHlv
-dSB0YWtlIGEgbG9vayBhdCB0aGlzLCBwbGVhc2U/CgotLSAKUmFmYcWCCgpfX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxp
-bmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3Rz
-LmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+Because getting it right correctly the first time is appearantly hard
+and I caught this mistake while reading the email I had just sent :(
+
+I'm very sorry about the extra noise.
+
+Logan
+
+--
+
+Changes since v6:
+
+* I screwed up the device_unregister path and left a potential use
+  after free bug in. I'm not sure why I didn't see a failure because of
+  it but it all tested fine. This version is correct though.
+
+Changes since v5:
+
+* Reworked cleanup during unbind again. This time we follow the pattern
+  roughly suggested by Jason Gunthorpe: we use an alive flag
+  that's checked with a rw semaphore held by the cdev ops. Except
+  instead of using the rwsem we just use the already existing
+  mrpc_mutex. (Seeing the vast majority of locations that would use the
+  semaphore overlap with the existing mutex.)
+* Added a small performance enhancement so the code reads less io memory
+  if the user is quick in submitting their read request.
+
+Changes since v4:
+
+* Turns out pushing the pci release code into the device release
+  function didn't work as I would have liked. If you try to unbind the
+  device with an instance open, then you hit a kernel bug at
+  drivers/pci/msi.c:371. (This didn't occur in v3.)
+
+  To solve this, we've moved the pci release code back into the
+  unregister function and reintroduced an alive flag. This time,
+  however, the alive flag is protected by mrpc_mutex and we're very
+  careful about what happens to devices still in use (they should
+  all be released through the timeout path and an ENODEV error
+  returned to userspace; while new commands are blocked with the
+  same error).
+
+Changes since v3:
+
+* Removed stdev_is_alive and moved pci deinit functions
+  into the device release function which only occurs after all
+  cdev instances are closed. (per Bjorn)
+* Reduced locking in read/write functions (per Bjorn)
+* Use pci_alloc_irq_vectors to vastly improve ISR initialization (Bjorn)
+* A few other minor nits and cleanup as noticed by Bjorn
+
+Changes since v2:
+
+* Collected reviewed and tested tags
+* Very minor fix to the error path in the create function
+
+Changes since v1:
+
+* Rebased onto 4.10-rc6 (cleanly)
+* Split the patch into a few more easily digestible patches (as
+  suggested by Greg Kroah-Hartman)
+* Folded switchtec.c into switchtec.h (per Greg)
+* Fixed a bunch of 32bit build warnings caught by the kbuild test robot
+* Fixed some issues in the documentation so it has a proper
+  reStructredText format (as noted by Jonathan Corbet)
+* Fixed padding and sizes in the IOCTL structures as noticed by Emil
+  Velikov and used pahole to verify their consistency across 32 and 64
+  bit builds
+* Reworked one of the IOCTL interfaces to be more future proof (per
+  Emil).
+
+Changes since RFC:
+
+* Fixed incorrect use of the drive model as pointed out by Greg
+  Kroah-Hartman
+* Used devm functions as suggested by Keith Busch
+* Added a handful of sysfs attributes to the switchtec class
+* Added a handful of IOCTLs to the switchtec device
+* A number of miscellaneous bug fixes
+
+--
+
+Hi,
+
+This is a continuation of the RFC we posted lasted month [1] which
+proposes a management driver for Microsemi's Switchtec line of PCI
+switches. This hardware is still looking to be used in the Open
+Compute Platform
+
+To make this entirely clear: the Switchtec products are compliant
+with the PCI specifications and are supported today with the standard
+in-kernel driver. However, these devices also expose a management endpoint
+on a separate PCI function address which can be used to perform some
+advanced operations. This is a driver for that function. See the patch
+for more information.
+
+Since the RFC, we've made the changes requested by Greg Kroah-Hartman
+and Keith Busch, and we've also fleshed out a number of features. We've
+added a couple of IOCTLs and sysfs attributes which are documented in
+the patch. Significant work has also been done on the userspace tool
+which is available under a GPL license at [2]. We've also had testing
+done by some of the interested parties.
+
+We hope to see this work included in either 4.11 or 4.12 assuming a
+smooth review process.
+
+The patch is based off of the v4.10-rc6 release.
+
+Thanks for your review,
+
+Logan
+
+[1] https://www.spinics.net/lists/linux-pci/msg56897.html
+[2] https://github.com/sbates130272/switchtec-user
+
+Logan Gunthorpe (4):
+  MicroSemi Switchtec management interface driver
+  switchtec: Add user interface documentation
+  switchtec: Add sysfs attributes to the Switchtec driver
+  switchtec: Add IOCTLs to the Switchtec driver
+
+ Documentation/ABI/testing/sysfs-class-switchtec |   96 ++
+ Documentation/ioctl/ioctl-number.txt            |    1 +
+ Documentation/switchtec.txt                     |   80 ++
+ MAINTAINERS                                     |   11 +
+ drivers/pci/Kconfig                             |    1 +
+ drivers/pci/Makefile                            |    1 +
+ drivers/pci/switch/Kconfig                      |   13 +
+ drivers/pci/switch/Makefile                     |    1 +
+ drivers/pci/switch/switchtec.c                  | 1600 +++++++++++++++++++++++
+ include/uapi/linux/switchtec_ioctl.h            |  132 ++
+ 10 files changed, 1936 insertions(+)
+ create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
+ create mode 100644 Documentation/switchtec.txt
+ create mode 100644 drivers/pci/switch/Kconfig
+ create mode 100644 drivers/pci/switch/Makefile
+ create mode 100644 drivers/pci/switch/switchtec.c
+ create mode 100644 include/uapi/linux/switchtec_ioctl.h
+
+--
+2.1.4
