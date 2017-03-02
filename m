@@ -1,172 +1,167 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:17265 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750815AbdCMNKQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2017 09:10:16 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Mark Rutland <mark.rutland@arm.com>
-CC: "liudongdong (C)" <liudongdong3@huawei.com>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: Bad DT binding (hisi-pcie-almost-ecam)
-Date: Mon, 13 Mar 2017 13:09:52 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E2047C93F@FRAEML521-MBX.china.huawei.com>
-References: <20170310174045.GB24571@leverpostej>
- <EE11001F9E5DDD47B7634E2F8A612F2E2047A8C1@FRAEML521-MBX.china.huawei.com>
- <20170313104356.GA23239@leverpostej>
-In-Reply-To: <20170313104356.GA23239@leverpostej>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu,  2 Mar 2017 16:07:43 -0700
+Message-Id: <1488496067-2763-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v6 0/4] New Microsemi PCI Switch Management Driver
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mark
+Hi,
 
-> -----Original Message-----
-> From: Mark Rutland [mailto:mark.rutland@arm.com]
-> Sent: 13 March 2017 10:44
-> To: Gabriele Paoloni
-> Cc: liudongdong (C); Bjorn Helgaas; Wangzhou (B);
-> devicetree@vger.kernel.org; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org
-> Subject: Re: Bad DT binding (hisi-pcie-almost-ecam)
-> 
-> Hi,
-> 
-> On Mon, Mar 13, 2017 at 08:14:19AM +0000, Gabriele Paoloni wrote:
-> > > -----Original Message-----
-> > > From: Mark Rutland [mailto:mark.rutland@arm.com]
-> 
-> > > The commit adds the "hisilicon,pcie-almost-ecam", which goes
-> against
-> > > the
-> > > usual DT conventions, and is non-sensical in that it describes the
-> IP
-> > > based on what it isn't.
-> > >
-> > > This binding shouldn't have gone in as-is, and we should fix it
-> before
-> > > v4.11.
-> > >
-> > > The binding states that this IP is found in Hip06 and Hip07. For
-> these
-> > > cases we'd usually take the name of the first implementation, e.g.
-> > > something like "hisilicon,hip06-pcie", which can be used as a
-> fallback
-> > > in the compatible list if reused in subsequent SoC generations.
-> > >
-> > > I also see that "hisilicon,hip06-pcie" already exists, so I'm even
-> more
-> > > suspicious.
-> >
-> > For Hip06 the IP is the same but in we have a different BIOS
-> configuration
-> > that allows the controller be ECAM compliant for all the devices of
-> the
-> > hierarchy except the RC.
-> >
-> > > What exactly is the "hisilicon,pcie-almost-ecam" binding trying to
-> > > describe? Is it a different IP also found on Hip06, or is it a new
-> > > binding for the same IP?
-> >
-> > The reason why we need this new BIOS is to support the recent PCIe
-> quirks
-> > for the ACPI Root Port driver (commit
-> 5b69b85ba1ddd36be01f5c57830b37a3c8256009
-> > "PCI/ACPI: Check for platform-specific MCFG quirks"). So using one
-> BIOS we
-> > support both DT and ACPI.
-> > This is the reason why you see Hip-06 being already there...
-> 
-> Ok. Thanks for clarifying that.
-> 
-> What I think we should do is:
-> 
-> a) Update the binding document to clarify when these strings are used.
-> 
-> b) Use an SoC prefix in the string. I'm happy to have both hip06 and
-> hip07
->    strings.
-> 
-> c) Drop the "almost", since we don't use that elsewhere. (e.g. for
->    cavium,pci-host-thunder-ecam"
-> 
-> Would you be happy with the below?
+Hopefully this is the last change necessary. The new code to handle
+unbind follows Jason's suggestions and is a lot easier to reason about.
+It's also been tested interrupting a number of operations.
 
-Yes indeed it would work for us.
+Thanks,
 
-We could discuss about the appropriateness of ecam vs almost-ecam,
-but I don't think it is of much value as long as we make the meaning
-clear in the Documentation
+Logan
 
-We'll send the fix below to lists in a separate patch...
+--
 
-Many Thanks
-Gab
+Changes since v5:
 
-> 
-> Thanks,
-> Mark.
-> 
-> ---->8----
-> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> index b7fa3b9..535426d 100644
-> --- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-> @@ -44,13 +44,19 @@ Hip05 Example (note that Hip06 is the same except
-> compatible):
->         };
-> 
->  HiSilicon Hip06/Hip07 PCIe host bridge DT (almost-ECAM) description.
-> +
-> +Some BIOSes place the host controller in a mode where it is ECAM
-> compliant for
-> +all devices other than the root complex. In such cases, the host
-> controller
-> +should be described as below.
-> +
->  The properties and their meanings are identical to those described in
->  host-generic-pci.txt except as listed below.
-> 
->  Properties of the host controller node that differ from
->  host-generic-pci.txt:
-> 
-> -- compatible     : Must be "hisilicon,pcie-almost-ecam"
-> +- compatible     : Must be "hisilicon,hip06-pcie-ecam", or
-> +                   "hisilicon,hip07-pcie-ecam"
-> 
->  - reg            : Two entries: First the ECAM configuration space for
-> any
->                    other bus underneath the root bus. Second, the base
-> @@ -59,7 +65,7 @@ host-generic-pci.txt:
-> 
->  Example:
->         pcie0: pcie@a0090000 {
-> -               compatible = "hisilicon,pcie-almost-ecam";
-> +               compatible = "hisilicon,hip06-pcie-ecam";
->                 reg = <0 0xb0000000 0 0x2000000>,  /*  ECAM
-> configuration space */
->                       <0 0xa0090000 0 0x10000>; /* host bridge
-> registers */
->                 bus-range = <0  31>;
-> diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
-> index fd66a31..bd5b1b4 100644
-> --- a/drivers/pci/dwc/pcie-hisi.c
-> +++ b/drivers/pci/dwc/pcie-hisi.c
-> @@ -380,7 +380,11 @@ struct pci_ecam_ops hisi_pcie_platform_ops = {
-> 
->  static const struct of_device_id hisi_pcie_almost_ecam_of_match[] = {
->         {
-> -               .compatible = "hisilicon,pcie-almost-ecam",
-> +               .compatible = "hisilicon,hip06-pcie-ecam",
-> +               .data       = (void *) &hisi_pcie_platform_ops,
-> +       },
-> +       {
-> +               .compatible = "hisilicon,hip07-pcie-ecam",
->                 .data       = (void *) &hisi_pcie_platform_ops,
->         },
->         {},
+* Reworked cleanup during unbind again. This time we follow the pattern
+  roughly suggested by Jason Gunthorpe: we use an alive flag
+  that's checked with a rw semaphore held by the cdev ops. Except
+  instead of using the rwsem we just use the already existing
+  mrpc_mutex. (Seeing the vast majority of locations that would use the
+  semaphore overlap with the existing mutex.)
+* Added a small performance enhancement so the code reads less io memory
+  if the user is quick in submitting their read request.
+
+Changes since v4:
+
+* Turns out pushing the pci release code into the device release
+  function didn't work as I would have liked. If you try to unbind the
+  device with an instance open, then you hit a kernel bug at
+  drivers/pci/msi.c:371. (This didn't occur in v3.)
+
+  To solve this, we've moved the pci release code back into the
+  unregister function and reintroduced an alive flag. This time,
+  however, the alive flag is protected by mrpc_mutex and we're very
+  careful about what happens to devices still in use (they should
+  all be released through the timeout path and an ENODEV error
+  returned to userspace; while new commands are blocked with the
+  same error).
+
+Changes since v3:
+
+* Removed stdev_is_alive and moved pci deinit functions
+  into the device release function which only occurs after all
+  cdev instances are closed. (per Bjorn)
+* Reduced locking in read/write functions (per Bjorn)
+* Use pci_alloc_irq_vectors to vastly improve ISR initialization (Bjorn)
+* A few other minor nits and cleanup as noticed by Bjorn
+
+Changes since v2:
+
+* Collected reviewed and tested tags
+* Very minor fix to the error path in the create function
+
+Changes since v1:
+
+* Rebased onto 4.10-rc6 (cleanly)
+* Split the patch into a few more easily digestible patches (as
+  suggested by Greg Kroah-Hartman)
+* Folded switchtec.c into switchtec.h (per Greg)
+* Fixed a bunch of 32bit build warnings caught by the kbuild test robot
+* Fixed some issues in the documentation so it has a proper
+  reStructredText format (as noted by Jonathan Corbet)
+* Fixed padding and sizes in the IOCTL structures as noticed by Emil
+  Velikov and used pahole to verify their consistency across 32 and 64
+  bit builds
+* Reworked one of the IOCTL interfaces to be more future proof (per
+  Emil).
+
+Changes since RFC:
+
+* Fixed incorrect use of the drive model as pointed out by Greg
+  Kroah-Hartman
+* Used devm functions as suggested by Keith Busch
+* Added a handful of sysfs attributes to the switchtec class
+* Added a handful of IOCTLs to the switchtec device
+* A number of miscellaneous bug fixes
+
+--
+
+Hi,
+
+This is a continuation of the RFC we posted lasted month [1] which
+proposes a management driver for Microsemi's Switchtec line of PCI
+switches. This hardware is still looking to be used in the Open
+Compute Platform
+
+To make this entirely clear: the Switchtec products are compliant
+with the PCI specifications and are supported today with the standard
+in-kernel driver. However, these devices also expose a management endpoint
+on a separate PCI function address which can be used to perform some
+advanced operations. This is a driver for that function. See the patch
+for more information.
+
+Since the RFC, we've made the changes requested by Greg Kroah-Hartman
+and Keith Busch, and we've also fleshed out a number of features. We've
+added a couple of IOCTLs and sysfs attributes which are documented in
+the patch. Significant work has also been done on the userspace tool
+which is available under a GPL license at [2]. We've also had testing
+done by some of the interested parties.
+
+We hope to see this work included in either 4.11 or 4.12 assuming a
+smooth review process.
+
+The patch is based off of the v4.10-rc6 release.
+
+Thanks for your review,
+
+Logan
+
+[1] https://www.spinics.net/lists/linux-pci/msg56897.html
+[2] https://github.com/sbates130272/switchtec-user
+
+Logan Gunthorpe (4):
+  MicroSemi Switchtec management interface driver
+  switchtec: Add user interface documentation
+  switchtec: Add sysfs attributes to the Switchtec driver
+  switchtec: Add IOCTLs to the Switchtec driver
+
+ Documentation/ABI/testing/sysfs-class-switchtec |   96 ++
+ Documentation/ioctl/ioctl-number.txt            |    1 +
+ Documentation/switchtec.txt                     |   80 ++
+ MAINTAINERS                                     |   11 +
+ drivers/pci/Kconfig                             |    1 +
+ drivers/pci/Makefile                            |    1 +
+ drivers/pci/switch/Kconfig                      |   13 +
+ drivers/pci/switch/Makefile                     |    1 +
+ drivers/pci/switch/switchtec.c                  | 1599 +++++++++++++++++++++++
+ include/uapi/linux/switchtec_ioctl.h            |  132 ++
+ 10 files changed, 1935 insertions(+)
+ create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
+ create mode 100644 Documentation/switchtec.txt
+ create mode 100644 drivers/pci/switch/Kconfig
+ create mode 100644 drivers/pci/switch/Makefile
+ create mode 100644 drivers/pci/switch/switchtec.c
+ create mode 100644 include/uapi/linux/switchtec_ioctl.h
+
+--
+2.1.4
