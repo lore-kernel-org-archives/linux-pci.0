@@ -1,101 +1,125 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V5 3/4] PCI/ASPM: save power on values during bridge init
-Date: Sat, 25 Mar 2017 17:38:12 -0400
-Message-Id: <1490477893-9517-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
-References: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
- linux-arm-msm@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
- linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- Julia Lawall <Julia.Lawall@lip6.fr>, Bjorn Helgaas <bhelgaas@google.com>,
- Rajat Jain <rajatja@google.com>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:33131 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751332AbdCCALQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 19:11:16 -0500
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu,  2 Mar 2017 16:07:45 -0700
+Message-Id: <1488496067-2763-3-git-send-email-logang@deltatee.com>
+In-Reply-To: <1488496067-2763-1-git-send-email-logang@deltatee.com>
+References: <1488496067-2763-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v6 2/4] switchtec: Add user interface documentation
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we added a hook to be called from device_add, save the
-default values from the HW registers early in the boot for further
-reuse during hot device add/remove operations.
+This adds standard documentation for the sysfs switchtec attributes and
+a RST formatted text file which documents the char device interface.
+Jonathan Corbet has indicated he will move this to a new user-space
+developer documentation book once it's created.
 
-Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
+Tested-by: Krishna Dhulipala <krishnad@fb.com>
+Reviewed-by: Wei Zhang <wzhang@fb.com>
+Reviewed-by: Jens Axboe <axboe@fb.com>
 ---
- drivers/pci/pcie/aspm.c | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
+ Documentation/switchtec.txt | 53 +++++++++++++++++++++++++++++++++++++++++++++
+ MAINTAINERS                 |  1 +
+ 2 files changed, 54 insertions(+)
+ create mode 100644 Documentation/switchtec.txt
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index f5b1fa0..f48bb29 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -521,8 +521,10 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
- 	 */
- 	if (dwreg.support & upreg.support & PCIE_LINK_STATE_L0S)
- 		link->aspm_support |= ASPM_STATE_L0S;
--	if (dwreg.enabled & PCIE_LINK_STATE_L0S)
-+	if (dwreg.enabled & PCIE_LINK_STATE_L0S) {
- 		link->aspm_enabled |= ASPM_STATE_L0S_UP;
-+		link->aspm_default |= ASPM_STATE_L0S_UP;
-+	}
- 	if (upreg.enabled & PCIE_LINK_STATE_L0S)
- 		link->aspm_enabled |= ASPM_STATE_L0S_DW;
- 	link->latency_up.l0s = calc_l0s_latency(upreg.latency_encoding_l0s);
-@@ -558,9 +560,6 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
- 	if (link->aspm_support & ASPM_STATE_L1SS)
- 		aspm_calc_l1ss_info(link, &upreg, &dwreg);
- 
--	/* Save default state */
--	link->aspm_default = link->aspm_enabled;
--
- 	/* Setup initial capable state. Will be updated later */
- 	link->aspm_capable = link->aspm_support;
- 	/*
-@@ -835,6 +834,7 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- int pci_aspm_init(struct pci_dev *pdev)
- {
- 	struct pcie_link_state *link;
-+	struct aspm_register_info upreg;
- 
- 	if (!aspm_support_enabled)
- 		return 0;
-@@ -851,6 +851,20 @@ int pci_aspm_init(struct pci_dev *pdev)
- 	if (!link)
- 		return -ENOMEM;
- 
-+	pcie_get_aspm_reg(pdev, &upreg);
-+	if (upreg.enabled & PCIE_LINK_STATE_L0S)
-+		link->aspm_default |= ASPM_STATE_L0S_DW;
-+	if (upreg.enabled & PCIE_LINK_STATE_L1)
-+		link->aspm_default |= ASPM_STATE_L1;
-+	if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_ASPM_L1_1)
-+		link->aspm_default |= ASPM_STATE_L1_1;
-+	if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_ASPM_L1_2)
-+		link->aspm_default |= ASPM_STATE_L1_2;
-+	if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_PCIPM_L1_1)
-+		link->aspm_default |= ASPM_STATE_L1_1_PCIPM;
-+	if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_PCIPM_L1_2)
-+		link->aspm_default |= ASPM_STATE_L1_2_PCIPM;
+diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt
+new file mode 100644
+index 0000000..4bced4c
+--- /dev/null
++++ b/Documentation/switchtec.txt
+@@ -0,0 +1,53 @@
++========================
++Linux Switchtec Support
++========================
 +
- 	return 0;
- }
++Microsemi's "Switchtec" line of PCI switch devices is already
++supported by the kernel with standard PCI switch drivers. However, the
++Switchtec device advertises a special management endpoint which
++enables some additional functionality. This includes:
++
++* Packet and Byte Counters
++* Firmware Upgrades
++* Event and Error logs
++* Querying port link status
++* Custom user firmware commands
++
++The switchtec kernel module implements this functionality.
++
++
++Interface
++=========
++
++The primary means of communicating with the Switchtec management firmware is
++through the Memory-mapped Remote Procedure Call (MRPC) interface.
++Commands are submitted to the interface with a 4-byte command
++identifier and up to 1KB of command specific data. The firmware will
++respond with a 4 bytes return code and up to 1KB of command specific
++data. The interface only processes a single command at a time.
++
++
++Userspace Interface
++===================
++
++The MRPC interface will be exposed to userspace through a simple char
++device: /dev/switchtec#, one for each management endpoint in the system.
++
++The char device has the following semantics:
++
++* A write must consist of at least 4 bytes and no more than 1028 bytes.
++  The first four bytes will be interpreted as the command to run and
++  the remainder will be used as the input data. A write will send the
++  command to the firmware to begin processing.
++
++* Each write must be followed by exactly one read. Any double write will
++  produce an error and any read that doesn't follow a write will
++  produce an error.
++
++* A read will block until the firmware completes the command and return
++  the four bytes of status plus up to 1024 bytes of output data. (The
++  length will be specified by the size parameter of the read call --
++  reading less than 4 bytes will produce an error.
++
++* The poll call will also be supported for userspace applications that
++  need to do other things while waiting for the command to complete.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a57686f..aa702b0 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9512,6 +9512,7 @@ M:	Stephen Bates <stephen.bates@microsemi.com>
+ M:	Logan Gunthorpe <logang@deltatee.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
++F:	Documentation/switchtec.txt
+ F:	drivers/pci/switch/switchtec*
  
+ PCI DRIVER FOR NVIDIA TEGRA
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.1.4
