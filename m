@@ -1,113 +1,206 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: Marc Zyngier <marc.zyngier@arm.com>, "bhelgaas@google.com"
- <bhelgaas@google.com>, "robh@kernel.org" <robh@kernel.org>,
- "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
- "colin.king@canonical.com" <colin.king@canonical.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH v5] PCI: Xilinx NWL: Modifying irq chip for legacy
- interrupts
-Date: Wed, 1 Mar 2017 09:47:09 +0000
-Message-ID: <8520D5D51A55D047800579B094147198263F6526@XAP-PVEXMBX02.xlnx.xilinx.com>
-References: <1486364596-19699-1-git-send-email-bharatku@xilinx.com>
- <4b04e834-08b6-a728-8fe5-13106d50b3b2@arm.com>
- <8520D5D51A55D047800579B094147198263E68AA@XAP-PVEXMBX02.xlnx.xilinx.com>
- <131228fb-d3f8-3836-3713-e948ed30d398@arm.com>
- <8520D5D51A55D047800579B094147198263E6AF3@XAP-PVEXMBX02.xlnx.xilinx.com>
- <2196f028-b834-9d32-cc3a-e3eb5ed6c3b1@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0048.outbound.protection.outlook.com ([104.47.36.48]:61227
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932090AbdCBP6k (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 10:58:40 -0500
+Subject: [RFC PATCH v2 16/32] x86: kvm: Provide support to create Guest and
+ HV shared per-CPU variables
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:15:36 -0500
+Message-ID: <148846773666.2349.9492983018843773590.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Ravikiran Gummaluri <rgummal@xilinx.com>, "arnd@arndb.de" <arnd@arndb.de>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "michal.simek@xilinx.com" <michal.simek@xilinx.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Waiting for Marc's Reply...
- 
-> > -----Original Message-----
-> > From: Marc Zyngier [mailto:marc.zyngier@arm.com]
-> > Sent: Thursday, February 09, 2017 9:33 PM
-> > To: Bharat Kumar Gogada <bharatku@xilinx.com>; bhelgaas@google.com;
-> > robh@kernel.org; paul.gortmaker@windriver.com; colin.king@canonical.com;
-> > linux-pci@vger.kernel.org
-> > Cc: linux-arm-kernel@lists.infradead.org; linux-kernel@vger.kernel.org;
-> > michal.simek@xilinx.com; arnd@arndb.de; Ravikiran Gummaluri
-> > <rgummal@xilinx.com>
-> > Subject: Re: [PATCH v5] PCI: Xilinx NWL: Modifying irq chip for legacy
-> interrupts
-> >
-> > On 09/02/17 15:16, Bharat Kumar Gogada wrote:
-> > >>
-> > >> On 09/02/17 12:01, Bharat Kumar Gogada wrote:
-> > >>>> On 06/02/17 07:03, Bharat Kumar Gogada wrote:
-> > >>>>> +static struct irq_chip nwl_leg_irq_chip = {
-> > >>>>> +	.name = "nwl_pcie:legacy",
-> > >>>>> +	.irq_enable = nwl_unmask_leg_irq,
-> > >>>>> +	.irq_disable = nwl_mask_leg_irq,
-> > >>>>
-> > >>>> You don't need these two if they are implemented in terms of
-> > mask/unmask.
-> > >>>
-> > >>> These are being invoked by some drivers other than interrupt flow.
-> > >>> Ex: drivers/net/wireless/ath/ath9k/main.c
-> > >>> static int ath_reset_internal(struct ath_softc *sc, struct
-> > >>> ath9k_channel *hchan) {
-> > >>>          ....
-> > >>>          disable_irq(sc->irq);
-> > >>>          tasklet_disable(&sc->intr_tq);
-> > >>>         ...
-> > >>>         ...
-> > >>>         enable_irq(sc->irq);
-> > >>>         spin_unlock_bh(&sc->sc_pcu_lock); } For us masking/unmasking
-> > >>> is the way to enable/disable interrupts.
-> > >>
-> > >> And if you looked at the way disable_irq is implemented, you would
-> > >> have found out that it falls back to masking if there is no disable
-> > >> method, preserving the semantic you expect.
-> > >>
-> > > Yes I did see, but this fall back requires extra "IRQ_DISABLE_UNLAZY" flag to
-> > be set to each virq.
-> >
-> > No it doesn't. If you do a disable_irq(), the interrupt is flagged as disabled, but
-> > nothing gets done. If an interrupt actually fires, then the interrupts gets
-> masked,
-> > and the handler is not called.
-> Yes agreed, this is where the problem comes for us. Here is the scenario
-> Ex:drivers/net/wireless/ath/ath9k/main.c
-> static int ath_reset_internal(struct ath_softc *sc, struct ath9k_channel *hchan)
-> {
->   ....
->    ath9k_hw_set_interrupts(ah);
->    ath9k_hw_enable_interrupts(ah);
->    ...
->   enable_irq(sc->irq);
->   ...
-> }
-> If you observe this they enable hardware interrupts first and then call enable_irq,
-> at this point of time
-> virq is in disabled state. So, if interrupt is raised in this period of time the handler
-> is never invoked
-> and DEASEERT_INTx will not be seen. As I mentioned in my subject the irq line
-> between bridge and
-> GIC goes low only after it sees DEASSERT_INTx. But since DEASSERT_INTx is
-> never seen line is always high
-> causing cpu stall.
-> So for this kind of EP's we need those two methods.
-> 
-> Bharat
+Some KVM specific MSR's (steal-time, asyncpf, avic_eio) allocates per-CPU
+variable at compile time and share its physical address with hypervisor.
+It presents a challege when SEV is active in guest OS. When SEV is active,
+guest memory is encrypted with guest key and hypervisor will no longer able
+to modify the guest memory. When SEV is active, we need to clear the
+encryption attribute of shared physical addresses so that both guest and
+hypervisor can access the data.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+To solve this problem, I have tried these three options:
+
+1) Convert the static per-CPU to dynamic per-CPU allocation. When SEV is
+detected then clear the encryption attribute. But while doing so I found
+that per-CPU dynamic allocator was not ready when kvm_guest_cpu_init was
+called.
+
+2) Since the encryption attributes works on PAGE_SIZE hence add some extra
+padding to 'struct kvm-steal-time' to make it PAGE_SIZE and then at runtime
+clear the encryption attribute of the full PAGE. The downside of this was
+now we need to modify structure which may break the compatibility.
+
+3) Define a new per-CPU section (.data..percpu.hv_shared) which will be
+used to hold the compile time shared per-CPU variables. When SEV is
+detected we map this section with encryption attribute cleared.
+
+This patch implements #3. It introduces a new DEFINE_PER_CPU_HV_SHAHRED
+macro to create a compile time per-CPU variable. When SEV is detected we
+map the per-CPU variable as decrypted (i.e with encryption attribute cleared).
+
+Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+---
+ arch/x86/kernel/kvm.c             |   43 +++++++++++++++++++++++++++++++------
+ include/asm-generic/vmlinux.lds.h |    3 +++
+ include/linux/percpu-defs.h       |    9 ++++++++
+ 3 files changed, 48 insertions(+), 7 deletions(-)
+
+diff --git a/arch/x86/kernel/kvm.c b/arch/x86/kernel/kvm.c
+index 099fcba..706a08e 100644
+--- a/arch/x86/kernel/kvm.c
++++ b/arch/x86/kernel/kvm.c
+@@ -75,8 +75,8 @@ static int parse_no_kvmclock_vsyscall(char *arg)
+ 
+ early_param("no-kvmclock-vsyscall", parse_no_kvmclock_vsyscall);
+ 
+-static DEFINE_PER_CPU(struct kvm_vcpu_pv_apf_data, apf_reason) __aligned(64);
+-static DEFINE_PER_CPU(struct kvm_steal_time, steal_time) __aligned(64);
++static DEFINE_PER_CPU_HV_SHARED(struct kvm_vcpu_pv_apf_data, apf_reason) __aligned(64);
++static DEFINE_PER_CPU_HV_SHARED(struct kvm_steal_time, steal_time) __aligned(64);
+ static int has_steal_clock = 0;
+ 
+ /*
+@@ -290,6 +290,22 @@ static void __init paravirt_ops_setup(void)
+ #endif
+ }
+ 
++static int kvm_map_percpu_hv_shared(void *addr, unsigned long size)
++{
++	/* When SEV is active, the percpu static variables initialized
++	 * in data section will contain the encrypted data so we first
++	 * need to decrypt it and then map it as decrypted.
++	 */
++	if (sev_active()) {
++		unsigned long pa = slow_virt_to_phys(addr);
++
++		sme_early_decrypt(pa, size);
++		return early_set_memory_decrypted(addr, size);
++	}
++
++	return 0;
++}
++
+ static void kvm_register_steal_time(void)
+ {
+ 	int cpu = smp_processor_id();
+@@ -298,12 +314,17 @@ static void kvm_register_steal_time(void)
+ 	if (!has_steal_clock)
+ 		return;
+ 
++	if (kvm_map_percpu_hv_shared(st, sizeof(*st))) {
++		pr_err("kvm-stealtime: failed to map hv_shared percpu\n");
++		return;
++	}
++
+ 	wrmsrl(MSR_KVM_STEAL_TIME, (slow_virt_to_phys(st) | KVM_MSR_ENABLED));
+ 	pr_info("kvm-stealtime: cpu %d, msr %llx\n",
+ 		cpu, (unsigned long long) slow_virt_to_phys(st));
+ }
+ 
+-static DEFINE_PER_CPU(unsigned long, kvm_apic_eoi) = KVM_PV_EOI_DISABLED;
++static DEFINE_PER_CPU_HV_SHARED(unsigned long, kvm_apic_eoi) = KVM_PV_EOI_DISABLED;
+ 
+ static notrace void kvm_guest_apic_eoi_write(u32 reg, u32 val)
+ {
+@@ -327,25 +348,33 @@ static void kvm_guest_cpu_init(void)
+ 	if (kvm_para_has_feature(KVM_FEATURE_ASYNC_PF) && kvmapf) {
+ 		u64 pa = slow_virt_to_phys(this_cpu_ptr(&apf_reason));
+ 
++		if (kvm_map_percpu_hv_shared(this_cpu_ptr(&apf_reason),
++					sizeof(struct kvm_vcpu_pv_apf_data)))
++			goto skip_asyncpf;
+ #ifdef CONFIG_PREEMPT
+ 		pa |= KVM_ASYNC_PF_SEND_ALWAYS;
+ #endif
+ 		wrmsrl(MSR_KVM_ASYNC_PF_EN, pa | KVM_ASYNC_PF_ENABLED);
+ 		__this_cpu_write(apf_reason.enabled, 1);
+-		printk(KERN_INFO"KVM setup async PF for cpu %d\n",
+-		       smp_processor_id());
++		printk(KERN_INFO"KVM setup async PF for cpu %d msr %llx\n",
++		       smp_processor_id(), pa);
+ 	}
+-
++skip_asyncpf:
+ 	if (kvm_para_has_feature(KVM_FEATURE_PV_EOI)) {
+ 		unsigned long pa;
+ 		/* Size alignment is implied but just to make it explicit. */
+ 		BUILD_BUG_ON(__alignof__(kvm_apic_eoi) < 4);
++		if (kvm_map_percpu_hv_shared(this_cpu_ptr(&kvm_apic_eoi),
++					sizeof(unsigned long)))
++			goto skip_pv_eoi;
+ 		__this_cpu_write(kvm_apic_eoi, 0);
+ 		pa = slow_virt_to_phys(this_cpu_ptr(&kvm_apic_eoi))
+ 			| KVM_MSR_ENABLED;
+ 		wrmsrl(MSR_KVM_PV_EOI_EN, pa);
++		printk(KERN_INFO"KVM setup PV EOI for cpu %d msr %lx\n",
++		       smp_processor_id(), pa);
+ 	}
+-
++skip_pv_eoi:
+ 	if (has_steal_clock)
+ 		kvm_register_steal_time();
+ }
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 0968d13..8d29910 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -773,6 +773,9 @@
+ 	. = ALIGN(cacheline);						\
+ 	*(.data..percpu)						\
+ 	*(.data..percpu..shared_aligned)				\
++	. = ALIGN(PAGE_SIZE);						\
++	*(.data..percpu..hv_shared)					\
++	. = ALIGN(PAGE_SIZE);						\
+ 	VMLINUX_SYMBOL(__per_cpu_end) = .;
+ 
+ /**
+diff --git a/include/linux/percpu-defs.h b/include/linux/percpu-defs.h
+index 8f16299..5af366e 100644
+--- a/include/linux/percpu-defs.h
++++ b/include/linux/percpu-defs.h
+@@ -172,6 +172,15 @@
+ #define DEFINE_PER_CPU_READ_MOSTLY(type, name)				\
+ 	DEFINE_PER_CPU_SECTION(type, name, "..read_mostly")
+ 
++/* Declaration/definition used for per-CPU variables that must be shared
++ * between hypervisor and guest OS.
++ */
++#define DECLARE_PER_CPU_HV_SHARED(type, name)				\
++	DECLARE_PER_CPU_SECTION(type, name, "..hv_shared")
++
++#define DEFINE_PER_CPU_HV_SHARED(type, name)				\
++	DEFINE_PER_CPU_SECTION(type, name, "..hv_shared")
++
+ /*
+  * Intermodule exports for per-CPU variables.  sparse forgets about
+  * address space across EXPORT_SYMBOL(), change EXPORT_SYMBOL() to
