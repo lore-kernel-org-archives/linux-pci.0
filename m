@@ -1,107 +1,231 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v7 0/4] i.MX7 PCI support
-Date: Tue, 21 Mar 2017 06:41:59 -0700
-Message-Id: <20170321134203.26325-1-andrew.smirnov@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [RFC PATCH v2 18/32] kvm: svm: Use the hardware provided GPA
+ instead of page walk
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:16:05 -0500
+Message-ID: <148846776540.2349.3123530065053870721.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Dong Aisheng <dongas86@gmail.com>,
- Andrey Smirnov <andrew.smirnov@gmail.com>, linux-kernel@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
- Fabio Estevam <fabio.estevam@nxp.com>, yurovsky@gmail.com,
- linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello, everyone:
+From: Tom Lendacky <thomas.lendacky@amd.com>
 
-This is a seventh iteration of the code that adds PCI-subsystem bits
-necessary for enabling PCI support on i.MX7.
+When a guest causes a NPF which requires emulation, KVM sometimes walks
+the guest page tables to translate the GVA to a GPA. This is unnecessary
+most of the time on AMD hardware since the hardware provides the GPA in
+EXITINFO2.
 
-NOTE: To test this patchset with real i.MX7 hardware, additional
-patches, that are being upstreamed via different trees, are needed. Full
-working tree is availible at:
+The only exception cases involve string operations involving rep or
+operations that use two memory locations. With rep, the GPA will only be
+the value of the initial NPF and with dual memory locations we won't know
+which memory address was translated into EXITINFO2.
 
-	https://github.com/ndreys/linux/tree/imx7d/pcie-support-v7
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+Reviewed-by: Borislav Petkov <bp@suse.de>
+Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+---
+ arch/x86/include/asm/kvm_emulate.h |    1 +
+ arch/x86/include/asm/kvm_host.h    |    3 ++
+ arch/x86/kvm/emulate.c             |   20 +++++++++++++---
+ arch/x86/kvm/svm.c                 |    2 ++
+ arch/x86/kvm/x86.c                 |   45 ++++++++++++++++++++++++++++--------
+ 5 files changed, 57 insertions(+), 14 deletions(-)
 
-Changes since v6 (can be found at [version6]):
-
-	- Rebased against latest changes in 'next' of PCI subsystem
-          git tree
-
-Chagnes since v5 (can be found at [version5]):
-
-	- Collected ACKs from Lee and Rob
-
-Changes since v4 (can be found at [version4]):
-
-	- Dropped typo-fix patch (originally patch #1 of the
-          series).
-
-	- Added patch with workaround to address speed change false
-          failures (I kept it as a separate patch to better document
-          exchange with NXP/Freescale that lead to that patch)
-
-	- Added patch to avoid speed change on links configured Gen1
-          only (Let me know if that is a terrible idea)
-
-	- Addressed section mismatch problem by moving call to
-          hook_fault_code to happend before driver registration.
-
-Changes since v3 (can be found at [version3]):
-	- Move all of the reset_control_assert's into imx6_pcie_assert_core_reset
-	- Documented required reset and power domain DT bindings
-
-Changes since v2 (can be found at [version2]):
-
-	- Collected Reviewed-by for patch #2 from Lucas
-	- Reset logic implementation moved out into a reset controller
-          driver (see [reset1])
-	- Removed unused leftover code
-
-Changes since v1 (can be found at [version1]):
-
-	- All GPC related code moved into a separate driver (see [gpc1])
-	- Removed GPIO probe deferral logging
-	- Fixed section mismatch warning
-	- Minor reformatting of fsl,imx6q-pcie.txt(as per Rob
-          Herring's request)
-
-[version6] https://lkml.org/lkml/2017/3/14/584
-[version5] https://lkml.org/lkml/2017/2/20/376
-[version4] https://lkml.org/lkml/2017/2/7/478
-[version3] https://lkml.org/lkml/2017/2/6/565
-[version2] https://lkml.org/lkml/2017/2/1/510
-[version1] https://lkml.org/lkml/2017/1/19/488
-[gpc1] https://lkml.org/lkml/2017/2/6/551
-[reset1] https://lkml.org/lkml/2017/2/6/554
-
-Andrey Smirnov (4):
-  PCI: imx6: Add code to support i.MX7D
-  PCI: imx6: Allow probe deferal by reset GPIO
-  PCI: imx6: Do not wait for speed change on i.MX7
-  PCI: imx6: Do not switch speed if Gen2 is disabled
-
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 +-
- drivers/pci/dwc/pci-imx6.c                         | 198 +++++++++++++++------
- include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
- 3 files changed, 160 insertions(+), 55 deletions(-)
-
--- 
-2.9.3
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/arch/x86/include/asm/kvm_emulate.h b/arch/x86/include/asm/kvm_emulate.h
+index e9cd7be..3e8c287 100644
+--- a/arch/x86/include/asm/kvm_emulate.h
++++ b/arch/x86/include/asm/kvm_emulate.h
+@@ -441,5 +441,6 @@ int emulator_task_switch(struct x86_emulate_ctxt *ctxt,
+ int emulate_int_real(struct x86_emulate_ctxt *ctxt, int irq);
+ void emulator_invalidate_register_cache(struct x86_emulate_ctxt *ctxt);
+ void emulator_writeback_register_cache(struct x86_emulate_ctxt *ctxt);
++bool emulator_can_use_gpa(struct x86_emulate_ctxt *ctxt);
+ 
+ #endif /* _ASM_X86_KVM_X86_EMULATE_H */
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 37326b5..bff1f15 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -668,6 +668,9 @@ struct kvm_vcpu_arch {
+ 
+ 	int pending_ioapic_eoi;
+ 	int pending_external_vector;
++
++	/* GPA available (AMD only) */
++	bool gpa_available;
+ };
+ 
+ struct kvm_lpage_info {
+diff --git a/arch/x86/kvm/emulate.c b/arch/x86/kvm/emulate.c
+index cedbba0..45c7306 100644
+--- a/arch/x86/kvm/emulate.c
++++ b/arch/x86/kvm/emulate.c
+@@ -173,6 +173,7 @@
+ #define NearBranch  ((u64)1 << 52)  /* Near branches */
+ #define No16	    ((u64)1 << 53)  /* No 16 bit operand */
+ #define IncSP       ((u64)1 << 54)  /* SP is incremented before ModRM calc */
++#define TwoMemOp    ((u64)1 << 55)  /* Instruction has two memory operand */
+ 
+ #define DstXacc     (DstAccLo | SrcAccHi | SrcWrite)
+ 
+@@ -4298,7 +4299,7 @@ static const struct opcode group1[] = {
+ };
+ 
+ static const struct opcode group1A[] = {
+-	I(DstMem | SrcNone | Mov | Stack | IncSP, em_pop), N, N, N, N, N, N, N,
++	I(DstMem | SrcNone | Mov | Stack | IncSP | TwoMemOp, em_pop), N, N, N, N, N, N, N,
+ };
+ 
+ static const struct opcode group2[] = {
+@@ -4336,7 +4337,7 @@ static const struct opcode group5[] = {
+ 	I(SrcMemFAddr | ImplicitOps,		em_call_far),
+ 	I(SrcMem | NearBranch,			em_jmp_abs),
+ 	I(SrcMemFAddr | ImplicitOps,		em_jmp_far),
+-	I(SrcMem | Stack,			em_push), D(Undefined),
++	I(SrcMem | Stack | TwoMemOp,		em_push), D(Undefined),
+ };
+ 
+ static const struct opcode group6[] = {
+@@ -4556,8 +4557,8 @@ static const struct opcode opcode_table[256] = {
+ 	/* 0xA0 - 0xA7 */
+ 	I2bv(DstAcc | SrcMem | Mov | MemAbs, em_mov),
+ 	I2bv(DstMem | SrcAcc | Mov | MemAbs | PageTable, em_mov),
+-	I2bv(SrcSI | DstDI | Mov | String, em_mov),
+-	F2bv(SrcSI | DstDI | String | NoWrite, em_cmp_r),
++	I2bv(SrcSI | DstDI | Mov | String | TwoMemOp, em_mov),
++	F2bv(SrcSI | DstDI | String | NoWrite | TwoMemOp, em_cmp_r),
+ 	/* 0xA8 - 0xAF */
+ 	F2bv(DstAcc | SrcImm | NoWrite, em_test),
+ 	I2bv(SrcAcc | DstDI | Mov | String, em_mov),
+@@ -5671,3 +5672,14 @@ void emulator_writeback_register_cache(struct x86_emulate_ctxt *ctxt)
+ {
+ 	writeback_registers(ctxt);
+ }
++
++bool emulator_can_use_gpa(struct x86_emulate_ctxt *ctxt)
++{
++	if (ctxt->rep_prefix && (ctxt->d & String))
++		return false;
++
++	if (ctxt->d & TwoMemOp)
++		return false;
++
++	return true;
++}
+diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
+index 36d61ff..b581499 100644
+--- a/arch/x86/kvm/svm.c
++++ b/arch/x86/kvm/svm.c
+@@ -4184,6 +4184,8 @@ static int handle_exit(struct kvm_vcpu *vcpu)
+ 
+ 	trace_kvm_exit(exit_code, vcpu, KVM_ISA_SVM);
+ 
++	vcpu->arch.gpa_available = (exit_code == SVM_EXIT_NPF);
++
+ 	if (!is_cr_intercept(svm, INTERCEPT_CR0_WRITE))
+ 		vcpu->arch.cr0 = svm->vmcb->save.cr0;
+ 	if (npt_enabled)
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 9e6a593..2099df8 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -4465,6 +4465,21 @@ int kvm_write_guest_virt_system(struct x86_emulate_ctxt *ctxt,
+ }
+ EXPORT_SYMBOL_GPL(kvm_write_guest_virt_system);
+ 
++static int vcpu_is_mmio_gpa(struct kvm_vcpu *vcpu, unsigned long gva,
++			    gpa_t gpa, bool write)
++{
++	/* For APIC access vmexit */
++	if ((gpa & PAGE_MASK) == APIC_DEFAULT_PHYS_BASE)
++		return 1;
++
++	if (vcpu_match_mmio_gpa(vcpu, gpa)) {
++		trace_vcpu_match_mmio(gva, gpa, write, true);
++		return 1;
++	}
++
++	return 0;
++}
++
+ static int vcpu_mmio_gva_to_gpa(struct kvm_vcpu *vcpu, unsigned long gva,
+ 				gpa_t *gpa, struct x86_exception *exception,
+ 				bool write)
+@@ -4491,16 +4506,7 @@ static int vcpu_mmio_gva_to_gpa(struct kvm_vcpu *vcpu, unsigned long gva,
+ 	if (*gpa == UNMAPPED_GVA)
+ 		return -1;
+ 
+-	/* For APIC access vmexit */
+-	if ((*gpa & PAGE_MASK) == APIC_DEFAULT_PHYS_BASE)
+-		return 1;
+-
+-	if (vcpu_match_mmio_gpa(vcpu, *gpa)) {
+-		trace_vcpu_match_mmio(gva, *gpa, write, true);
+-		return 1;
+-	}
+-
+-	return 0;
++	return vcpu_is_mmio_gpa(vcpu, gva, *gpa, write);
+ }
+ 
+ int emulator_write_phys(struct kvm_vcpu *vcpu, gpa_t gpa,
+@@ -4597,6 +4603,22 @@ static int emulator_read_write_onepage(unsigned long addr, void *val,
+ 	int handled, ret;
+ 	bool write = ops->write;
+ 	struct kvm_mmio_fragment *frag;
++	struct x86_emulate_ctxt *ctxt = &vcpu->arch.emulate_ctxt;
++
++	/*
++	 * If the exit was due to a NPF we may already have a GPA.
++	 * If the GPA is present, use it to avoid the GVA to GPA table walk.
++	 * Note, this cannot be used on string operations since string
++	 * operation using rep will only have the initial GPA from the NPF
++	 * occurred.
++	 */
++	if (vcpu->arch.gpa_available &&
++	    emulator_can_use_gpa(ctxt) &&
++	    vcpu_is_mmio_gpa(vcpu, addr, exception->address, write) &&
++	    (addr & ~PAGE_MASK) == (exception->address & ~PAGE_MASK)) {
++		gpa = exception->address;
++		goto mmio;
++	}
+ 
+ 	ret = vcpu_mmio_gva_to_gpa(vcpu, addr, &gpa, exception, write);
+ 
+@@ -5613,6 +5635,9 @@ int x86_emulate_instruction(struct kvm_vcpu *vcpu,
+ 	}
+ 
+ restart:
++	/* Save the faulting GPA (cr2) in the address field */
++	ctxt->exception.address = cr2;
++
+ 	r = x86_emulate_insn(ctxt);
+ 
+ 	if (r == EMULATION_INTERCEPTED)
