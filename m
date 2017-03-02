@@ -1,65 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Tue, 14 Mar 2017 15:04:11 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Adrian Hunter <adrian.hunter@intel.com>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        linux-pm <linux-pm@vger.kernel.org>,
-        linux-acpi <linux-acpi@vger.kernel.org>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Lukas Wunner <lukas@wunner.de>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [PATCH] PCI: For d3_delay and d3cold_delay, zero means zero
-Message-ID: <20170314200411.GE26264@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170314130305.GH8232@bhelgaas-glaptop.roam.corp.google.com>
- <1489497718-4099-1-git-send-email-adrian.hunter@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [RFC PATCH v2 06/32] x86/pci: Use memremap when walking setup data
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:13:10 -0500
+Message-ID: <148846759008.2349.8274808454274279039.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1489497718-4099-1-git-send-email-adrian.hunter@intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 14, 2017 at 03:21:58PM +0200, Adrian Hunter wrote:
-> msleep() still sleeps 1 jiffy even when told to sleep for zero
-> milliseconds. That can end up being 1-2 milliseconds or more. In the cases
-> of d3_delay and d3cold_delay, that unnecessarily increases suspend and/or
-> resume latencies.
-> 
-> So, do not sleep at all for the respective cases of d3_delay is zero or
-> d3cold_delay is zero.
-> 
-> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+From: Tom Lendacky <thomas.lendacky@amd.com>
 
-Applied with Rafael's ack to pci/pm for v4.12, thanks!
+The use of ioremap will force the setup data to be mapped decrypted even
+though setup data is encrypted.  Switch to using memremap which will be
+able to perform the proper mapping.
 
-> ---
->  drivers/pci/pci.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 7904d02ffdb9..9779483f81fd 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -66,7 +66,8 @@ static void pci_dev_d3_sleep(struct pci_dev *dev)
->  	if (delay < pci_pm_d3_delay)
->  		delay = pci_pm_d3_delay;
->  
-> -	msleep(delay);
-> +	if (delay)
-> +		msleep(delay);
->  }
->  
->  #ifdef CONFIG_PCI_DOMAINS
-> @@ -827,7 +828,8 @@ static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
->  		 * because have already delayed for the bridge.
->  		 */
->  		if (dev->runtime_d3cold) {
-> -			msleep(dev->d3cold_delay);
-> +			if (dev->d3cold_delay)
-> +				msleep(dev->d3cold_delay);
->  			/*
->  			 * When powering on a bridge from D3cold, the
->  			 * whole hierarchy may be powered on into
-> -- 
-> 1.9.1
-> 
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+---
+ arch/x86/pci/common.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+index a4fdfa7..0b06670 100644
+--- a/arch/x86/pci/common.c
++++ b/arch/x86/pci/common.c
+@@ -691,7 +691,7 @@ int pcibios_add_device(struct pci_dev *dev)
+ 
+ 	pa_data = boot_params.hdr.setup_data;
+ 	while (pa_data) {
+-		data = ioremap(pa_data, sizeof(*rom));
++		data = memremap(pa_data, sizeof(*rom), MEMREMAP_WB);
+ 		if (!data)
+ 			return -ENOMEM;
+ 
+@@ -710,7 +710,7 @@ int pcibios_add_device(struct pci_dev *dev)
+ 			}
+ 		}
+ 		pa_data = data->next;
+-		iounmap(data);
++		memunmap(data);
+ 	}
+ 	set_dma_domain_ops(dev);
+ 	set_dev_domain_options(dev);
