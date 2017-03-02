@@ -1,54 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52718 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751683AbdCNTrY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Mar 2017 15:47:24 -0400
-Date: Tue, 14 Mar 2017 14:47:20 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Andi Kleen <ak@linux.intel.com>, Andi Kleen <andi@firstfloor.org>,
-        bhelgaas@google.com, x86@kernel.org, linux-pci@vger.kernel.org,
-        eranian@google.com, Peter Zijlstra <peterz@infradead.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 3/4] x86, pci: Add interface to force mmconfig
-Message-ID: <20170314194720.GD26264@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170302232104.10136-1-andi@firstfloor.org>
- <20170302232104.10136-3-andi@firstfloor.org>
- <alpine.DEB.2.20.1703141407090.3619@nanos>
- <20170314154155.GG32070@tassilo.jf.intel.com>
- <alpine.DEB.2.20.1703141713010.3619@nanos>
- <20170314170255.GH32070@tassilo.jf.intel.com>
- <alpine.DEB.2.20.1703141849170.3619@nanos>
+Received: from mail-sn1nam02on0053.outbound.protection.outlook.com ([104.47.36.53]:43642
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751038AbdCBP3Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 10:29:24 -0500
+Subject: [RFC PATCH v2 02/32] x86: Secure Encrypted Virtualization (SEV)
+ support
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:12:20 -0500
+Message-ID: <148846754069.2349.4698319264278045964.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.20.1703141849170.3619@nanos>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 14, 2017 at 06:56:26PM +0100, Thomas Gleixner wrote:
-> On Tue, 14 Mar 2017, Andi Kleen wrote:
-> > The other option is to simply make it unconditional. That would
-> > be even simpler, but it is a bit more risky. Hmm, I suppose may
-> > be worth trying to find out what Windows uses. If they get away
-> > with MMCONFIG everywhere we should be too.
-> 
-> From the PCIe spec:
-> 
->  The PCI 3.0 compatible Configuration Space can be accessed using either
->  the mechanism defined in the PCI Local Bus Specification or the PCI
->  Express Enhanced Configuration Access Mechanism (ECAM) described later in
->  this section. Accesses made using either access mechanism are
->  equivalent. The PCI Express Extended Configuration Space can only be
->  accessed by using the ECAM.
-> 
-> The 1.0 spec has a similar wording (s/3.0/2.3).
-> 
-> Definitely the best way to go.
+From: Tom Lendacky <thomas.lendacky@amd.com>
 
-I agree that it should be fairly safe to do ECAM/MMCONFIG without
-locking.  Can we handle the decision part by adding a "lockless" bit
-to struct pci_ops?  Old ops don't mention that bit, so it will be
-initialized to zero and we'll do locking as today.  ECAM/MMCONFIG ops
-can set it and we can skip the locking.
+Provide support for Secure Encyrpted Virtualization (SEV). This initial
+support defines a flag that is used by the kernel to determine if it is
+running with SEV active.
 
-Bjorn
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+---
+ arch/x86/include/asm/mem_encrypt.h |   14 +++++++++++++-
+ arch/x86/mm/mem_encrypt.c          |    3 +++
+ include/linux/mem_encrypt.h        |    6 ++++++
+ 3 files changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/arch/x86/include/asm/mem_encrypt.h b/arch/x86/include/asm/mem_encrypt.h
+index 1fd5426..9799835 100644
+--- a/arch/x86/include/asm/mem_encrypt.h
++++ b/arch/x86/include/asm/mem_encrypt.h
+@@ -20,10 +20,16 @@
+ #ifdef CONFIG_AMD_MEM_ENCRYPT
+ 
+ extern unsigned long sme_me_mask;
++extern unsigned int sev_enabled;
+ 
+ static inline bool sme_active(void)
+ {
+-	return (sme_me_mask) ? true : false;
++	return (sme_me_mask && !sev_enabled) ? true : false;
++}
++
++static inline bool sev_active(void)
++{
++	return (sme_me_mask && sev_enabled) ? true : false;
+ }
+ 
+ static inline u64 sme_dma_mask(void)
+@@ -53,6 +59,7 @@ void swiotlb_set_mem_attributes(void *vaddr, unsigned long size);
+ 
+ #ifndef sme_me_mask
+ #define sme_me_mask	0UL
++#define sev_enabled	0
+ 
+ static inline bool sme_active(void)
+ {
+@@ -64,6 +71,11 @@ static inline u64 sme_dma_mask(void)
+ 	return 0ULL;
+ }
+ 
++static inline bool sev_active(void)
++{
++	return false;
++}
++
+ static inline int set_memory_encrypted(unsigned long vaddr, int numpages)
+ {
+ 	return 0;
+diff --git a/arch/x86/mm/mem_encrypt.c b/arch/x86/mm/mem_encrypt.c
+index c5062e1..090419b 100644
+--- a/arch/x86/mm/mem_encrypt.c
++++ b/arch/x86/mm/mem_encrypt.c
+@@ -34,6 +34,9 @@ void __init __early_pgtable_flush(void);
+ unsigned long sme_me_mask __section(.data) = 0;
+ EXPORT_SYMBOL_GPL(sme_me_mask);
+ 
++unsigned int sev_enabled __section(.data) = 0;
++EXPORT_SYMBOL_GPL(sev_enabled);
++
+ /* Buffer used for early in-place encryption by BSP, no locking needed */
+ static char sme_early_buffer[PAGE_SIZE] __aligned(PAGE_SIZE);
+ 
+diff --git a/include/linux/mem_encrypt.h b/include/linux/mem_encrypt.h
+index 913cf80..4b47c73 100644
+--- a/include/linux/mem_encrypt.h
++++ b/include/linux/mem_encrypt.h
+@@ -23,6 +23,7 @@
+ 
+ #ifndef sme_me_mask
+ #define sme_me_mask	0UL
++#define sev_enabled	0
+ 
+ static inline bool sme_active(void)
+ {
+@@ -34,6 +35,11 @@ static inline u64 sme_dma_mask(void)
+ 	return 0ULL;
+ }
+ 
++static inline bool sev_active(void)
++{
++	return false;
++}
++
+ static inline int set_memory_encrypted(unsigned long vaddr, int numpages)
+ {
+ 	return 0;
