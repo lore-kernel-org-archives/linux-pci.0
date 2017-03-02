@@ -1,163 +1,227 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rafael@kernel.org>, <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <mark.rutland@arm.com>, <brian.starkey@arm.com>, <olof@lixom.net>,
-        <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
-        <linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
-        <zourongrong@gmail.com>, <john.garry@huawei.com>,
-        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
-        <kantyzc@163.com>, <xuwei5@hisilicon.com>,
-        "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Subject: [PATCH V8 0/7] LPC: legacy ISA I/O support
-Date: Thu, 30 Mar 2017 23:26:53 +0800
-Message-ID: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
+Subject: [RFC PATCH v2 26/32] kvm: svm: Add support for SEV
+ LAUNCH_UPDATE_DATA command
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:17:47 -0500
+Message-ID: <148846786714.2349.17724971671841396908.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patchset supports the IPMI-bt device attached to the Low-Pin-Count
-interface implemented on Hisilicon Hip06/Hip07 SoC.
-	                -----------
-			| LPC host|
-	                |         |
-	                -----------
-	                     |
- 	        _____________V_______________LPC
-                  |			  |
-                  V	                  V
-			             ------------
-			             |  BT(ipmi)|
-			             ------------
+The command is used for encrypting the guest memory region using the VM
+encryption key (VEK) created from LAUNCH_START.
 
-When master accesses those peripherals beneath the Hip06/Hip07 LPC, a specific
-LPC driver is needed to make LPC host generate the standard LPC I/O cycles with
-the target peripherals'I/O port addresses. But on curent arm64 world, there is
-no real I/O accesses. All the I/O operations through in/out pair are based on
-MMIO which is not satisfied the I/O mechanism on Hip06/Hip07 LPC.
-To solve this issue and keep the relevant existing peripherals' driver
-untouched, this patchset implements:
-  - introduces a generic I/O space management framwork, LIBIO, to support I/O
-    operations of both MMIO buses and the host controllers which access their
-    peripherals with host local I/O addresses;
-  - redefines the in/out accessors to provide unified interfaces for MMIO and
-    legacy I/O. Based on the LIBIO, the calling of in/out() from upper-layer
-    drivers, such as ipmi-si, will be redirected to the corresponding
-    device-specific I/O hooks to perfrom the I/O accesses.
-Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC peripherals can
-be supported without any changes on the existing ipmi-si driver.
+Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+---
+ arch/x86/kvm/svm.c |  150 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 150 insertions(+)
 
-Changes from V7:
-  - Based on Arnd's comment, rename the LIBIO as LOGIC_PIO;
-  - Improved the mapping process in LOGIC_PIO to gain better efficiency when
-    redirecting the I/O accesses to right device driver;
-  - To reduce the impact on PCI MMIO to a minimum, add a new
-    CONFIG_INDIRECT_PIO for indirect-IO hosts/devices;
-  - Added a new ACPI handler for indirect-IO hosts/devices;
-  - Fixed the compile issues on V6; 
-
-Changes from V6:
-  - According to the comments from Bjorn and Alex, merge PCI IO and indirect-IO
-    into a generic I/O space management, LIBIO;
-  - Adopted the '_DEP' to replace the platform bus notifier. In this way, we can
-    ensure the LPC peripherals' I/O resources had been translated to logical IO
-    before the LPC peripheral enumeration;
-  - Replaced the rwlock with rcu list based on Alex's suggestion;
-  - Applied relaxed write/read to LPC driver;
-  - Some bugs fixing and some optimazations based on the comments of V6;
-
-Changes from V5:
-  - Made the extio driver more generic and locate in lib/;
-  - Supported multiple indirect-IO bus instances;
-  - Extended the pci_register_io_range() to support indirect-IO, then dropped
-  the I/O reservation used in previous patchset;
-  - Reimplemented the ACPI LPC support;
-  - Fixed some bugs, including the compile error on other archs, the module
-  building failure found by Ming Lei, etc;
-
-Changes from V4:
-  - Some revises based on the comments from Bjorn, Rob on V4;
-  - Fixed the compile error on some platforms, such as openrisc;
-
-Changes from V3:
-  - UART support deferred to a separate patchset; This patchset only support
-  ipmi device under LPC;
-  - LPC bus I/O range is fixed to 0 ~ (PCIBIOS_MIN_IO - 1), which is separeted
-  from PCI/PCIE PIO space;
-  - Based on Arnd's remarks, removed the ranges property from Hip06 lpc dts and
-  added a new fixup function, of_isa_indirect_io(), to get the I/O address
-  directly from LPC dts configurations;
-  - Support in(w,l)/out(w,l) for Hip06 lpc I/O;
-  - Decouple the header file dependency on the gerenic io.h by defining in/out
-  as normal functions in c file;
-  - removed unused macro definitions in the LPC driver;
-
-Changes from V2:
-  - Support the PIO retrieval from the linux PIO generated by
-  pci_address_to_pio. This method replace the 4K PIO reservation in V2;
-  - Support the flat-tree earlycon;
-  - Some revises based on Arnd's remarks;
-  - Make sure the linux PIO range allocated to Hip06 LPC peripherals starts
-  from non-ZERO;
-
-Changes from V1:
-  - Support the ACPI LPC device;
-  - Optimize the dts LPC driver in ISA compatible mode;
-  - Reserve the IO range below 4K in avoid the possible conflict with PCI host
-  IO ranges;
-  - Support the LPC uart and relevant earlycon;
-
-V7 thread here: https://lkml.org/lkml/2017/3/12/279
-v6 thread here: https://lkml.org/lkml/2017/1/24/25
-v5 thread here: https://lkml.org/lkml/2016/11/7/955
-v4 thread here: https://lkml.org/lkml/2016/10/20/149
-v3 thread here: https://lkml.org/lkml/2016/9/14/326
-v2 thread here: https://lkml.org/lkml/2016/9/7/356
-v1 thread here: https://lkml.org/lkml/2015/12/29/154
-
-
-Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
-zhichang.yuan (6):
-  LIBIO: Introduce a generic PIO mapping method
-  PCI: Apply the new generic I/O management on PCI IO hosts
-  OF: Add missing I/O range exception for indirect-IO devices
-  LPC: Support the device-tree LPC host on Hip06/Hip07
-  ACPI: Support the probing on the devices which apply indirect-IO
-  LPC: Add the ACPI LPC support
-
- .../arm/hisilicon/hisilicon-low-pin-count.txt      |  33 ++
- MAINTAINERS                                        |   8 +
- arch/arm64/boot/dts/hisilicon/hip06-d03.dts        |   4 +
- arch/arm64/boot/dts/hisilicon/hip06.dtsi           |  14 +
- arch/arm64/boot/dts/hisilicon/hip07-d05.dts        |   4 +
- arch/arm64/boot/dts/hisilicon/hip07.dtsi           |  14 +
- drivers/acpi/Makefile                              |   1 +
- drivers/acpi/acpi_indirectio.c                     | 344 +++++++++++++
- drivers/acpi/internal.h                            |   5 +
- drivers/acpi/pci_root.c                            |   8 +-
- drivers/acpi/scan.c                                |   1 +
- drivers/bus/Kconfig                                |   9 +
- drivers/bus/Makefile                               |   1 +
- drivers/bus/hisi_lpc.c                             | 547 +++++++++++++++++++++
- drivers/of/address.c                               |  95 +++-
- drivers/pci/pci.c                                  | 104 +---
- include/asm-generic/io.h                           |  50 ++
- include/linux/logic_pio.h                          | 174 +++++++
- include/linux/pci.h                                |   3 +-
- lib/Kconfig                                        |  26 +
- lib/Makefile                                       |   2 +
- lib/logic_pio.c                                    | 413 ++++++++++++++++
- 22 files changed, 1758 insertions(+), 102 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
- create mode 100644 drivers/acpi/acpi_indirectio.c
- create mode 100644 drivers/bus/hisi_lpc.c
- create mode 100644 include/linux/logic_pio.h
- create mode 100644 lib/logic_pio.c
-
--- 
-1.9.1
+diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
+index b5fa8c0..62c2b22 100644
+--- a/arch/x86/kvm/svm.c
++++ b/arch/x86/kvm/svm.c
+@@ -38,6 +38,8 @@
+ #include <linux/hashtable.h>
+ #include <linux/psp-sev.h>
+ #include <linux/file.h>
++#include <linux/pagemap.h>
++#include <linux/swap.h>
+ 
+ #include <asm/apic.h>
+ #include <asm/perf_event.h>
+@@ -502,6 +504,7 @@ static void sev_deactivate_handle(struct kvm *kvm);
+ static void sev_decommission_handle(struct kvm *kvm);
+ static int sev_asid_new(void);
+ static void sev_asid_free(int asid);
++#define __sev_page_pa(x) ((page_to_pfn(x) << PAGE_SHIFT) | sme_me_mask)
+ 
+ static bool kvm_sev_enabled(void)
+ {
+@@ -5775,6 +5778,149 @@ static int sev_launch_start(struct kvm *kvm, struct kvm_sev_cmd *argp)
+ 	return ret;
+ }
+ 
++static struct page **sev_pin_memory(unsigned long uaddr, unsigned long ulen,
++				    unsigned long *n)
++{
++	struct page **pages;
++	int first, last;
++	unsigned long npages, pinned;
++
++	/* Get number of pages */
++	first = (uaddr & PAGE_MASK) >> PAGE_SHIFT;
++	last = ((uaddr + ulen - 1) & PAGE_MASK) >> PAGE_SHIFT;
++	npages = (last - first + 1);
++
++	pages = kzalloc(npages * sizeof(struct page *), GFP_KERNEL);
++	if (!pages)
++		return NULL;
++
++	/* pin the user virtual address */
++	down_read(&current->mm->mmap_sem);
++	pinned = get_user_pages_fast(uaddr, npages, 1, pages);
++	up_read(&current->mm->mmap_sem);
++	if (pinned != npages) {
++		printk(KERN_ERR "SEV: failed to pin  %ld pages (got %ld)\n",
++				npages, pinned);
++		goto err;
++	}
++
++	*n = npages;
++	return pages;
++err:
++	if (pinned > 0)
++		release_pages(pages, pinned, 0);
++	kfree(pages);
++
++	return NULL;
++}
++
++static void sev_unpin_memory(struct page **pages, unsigned long npages)
++{
++	release_pages(pages, npages, 0);
++	kfree(pages);
++}
++
++static void sev_clflush_pages(struct page *pages[], int num_pages)
++{
++	unsigned long i;
++	uint8_t *page_virtual;
++
++	if (num_pages == 0 || pages == NULL)
++		return;
++
++	for (i = 0; i < num_pages; i++) {
++		page_virtual = kmap_atomic(pages[i]);
++		clflush_cache_range(page_virtual, PAGE_SIZE);
++		kunmap_atomic(page_virtual);
++	}
++}
++
++static int sev_launch_update_data(struct kvm *kvm, struct kvm_sev_cmd *argp)
++{
++	struct page **inpages;
++	unsigned long uaddr, ulen;
++	int i, len, ret, offset;
++	unsigned long nr_pages;
++	struct kvm_sev_launch_update_data params;
++	struct sev_data_launch_update_data *data;
++
++	if (!sev_guest(kvm))
++		return -EINVAL;
++
++	/* Get the parameters from the user */
++	ret = -EFAULT;
++	if (copy_from_user(&params, (void *)argp->data,
++			sizeof(struct kvm_sev_launch_update_data)))
++		goto err_1;
++
++	uaddr = params.address;
++	ulen = params.length;
++
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data) {
++		ret = -ENOMEM;
++		goto err_1;
++	}
++
++	/* pin user pages */
++	inpages = sev_pin_memory(params.address, params.length, &nr_pages);
++	if (!inpages) {
++		ret = -ENOMEM;
++		goto err_2;
++	}
++
++	/* invalidate the cache line for these pages to ensure that DRAM
++	 * has recent content before calling the SEV commands to perform
++	 * the encryption.
++	 */
++	sev_clflush_pages(inpages, nr_pages);
++
++	/* the array of pages returned by get_user_pages() is a page-aligned
++	 * memory. Since the user buffer is probably not page-aligned, we need
++	 * to calculate the offset within a page for first update entry.
++	 */
++	offset = uaddr & (PAGE_SIZE - 1);
++	len = min_t(size_t, (PAGE_SIZE - offset), ulen);
++	ulen -= len;
++
++	/* update first page -
++	 * special care need to be taken for the first page because we might
++	 * be dealing with offset within the page
++	 */
++	data->handle = sev_get_handle(kvm);
++	data->length = len;
++	data->address = __sev_page_pa(inpages[0]) + offset;
++	ret = sev_issue_cmd(kvm, SEV_CMD_LAUNCH_UPDATE_DATA,
++			data, &argp->error);
++	if (ret)
++		goto err_3;
++
++	/* update remaining pages */
++	for (i = 1; i < nr_pages; i++) {
++
++		len = min_t(size_t, PAGE_SIZE, ulen);
++		ulen -= len;
++		data->length = len;
++		data->address = __sev_page_pa(inpages[i]);
++		ret = sev_issue_cmd(kvm, SEV_CMD_LAUNCH_UPDATE_DATA,
++					data, &argp->error);
++		if (ret)
++			goto err_3;
++	}
++
++	/* mark pages dirty */
++	for (i = 0; i < nr_pages; i++) {
++		set_page_dirty_lock(inpages[i]);
++		mark_page_accessed(inpages[i]);
++	}
++err_3:
++	sev_unpin_memory(inpages, nr_pages);
++err_2:
++	kfree(data);
++err_1:
++	return ret;
++}
++
+ static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
+ {
+ 	int r = -ENOTTY;
+@@ -5790,6 +5936,10 @@ static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
+ 		r = sev_launch_start(kvm, &sev_cmd);
+ 		break;
+ 	}
++	case KVM_SEV_LAUNCH_UPDATE_DATA: {
++		r = sev_launch_update_data(kvm, &sev_cmd);
++		break;
++	}
+ 	default:
+ 		break;
+ 	}
