@@ -1,103 +1,74 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 23 Mar 2017 15:52:14 +0000
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: Joerg Roedel <joro@8bytes.org>
-Subject: Re: [RFC PATCH 24/30] iommu: Specify PASID state when unbinding a task
-Message-ID: <20170323145311.GA22972@e106794-lin.localdomain>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-25-jean-philippe.brucker@arm.com>
- <20170322154429.GE7266@8bytes.org>
- <e2bb4c67-9b61-01cf-cc17-68088cdc5e5b@arm.com>
- <20170322225320.GF7266@8bytes.org>
- <a093bc07-a345-a689-9d97-f15a306f922d@arm.com>
- <20170323143014.GK7266@8bytes.org>
+Return-Path: <SRS0=utPP=2L=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=utPP=2L=deltatee.com=logang@kernel.org>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
+ <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
+ <4a867c32-ed29-bc98-c7cb-6315243e664a@deltatee.com>
+ <b34d6872-35de-da6d-2d7f-8842642d3f21@deltatee.com>
+ <20170301235854.GF2820@obsidianresearch.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>,
+ Myron Stowe <myron.stowe@gmail.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Geert Uytterhoeven <geert+renesas@glider.be>,
+ Jonathan Corbet <corbet@lwn.net>, "David S. Miller" <davem@davemloft.net>,
+ Andrew Morton <akpm@linux-foundation.org>,
+ Emil Velikov <emil.l.velikov@gmail.com>,
+ Mauro Carvalho Chehab <mchehab@kernel.org>,
+ Guenter Roeck <linux@roeck-us.net>,
+ Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+ Linus Walleij <linus.walleij@linaro.org>,
+ Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+ Stefan Berger <stefanb@linux.vnet.ibm.com>, Wei Zhang <wzhang@fb.com>,
+ Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+ Stephen Bates <stephen.bates@microsemi.com>, linux-pci@vger.kernel.org,
+ linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <7d6b3b59-5cec-d73f-b65c-4d685ccc70f8@deltatee.com>
+Date: Wed, 1 Mar 2017 17:23:38 -0700
 MIME-Version: 1.0
-In-Reply-To: <20170323143014.GK7266@8bytes.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Sinan Kaya <okaya@qti.qualcomm.com>,
- Will Deacon <will.deacon@arm.com>, iommu@lists.linux-foundation.org,
- Harv Abdulhamid <harba@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
- David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170301235854.GF2820@obsidianresearch.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/03/17 14:30, Joerg Roedel wrote:
-> On Thu, Mar 23, 2017 at 01:37:41PM +0000, Jean-Philippe Brucker wrote:
->> On 22/03/17 22:53, Joerg Roedel wrote:
->>> That can't happen, when the device driver does its job right. It has to
->>> shut down the context which causes the PPR requests for the PASID on the
->>> device. This includes stopping the context and waiting until all PPR
->>> requests it sent are processed.
->>
->> By "processed", do you mean that they are committed to the IOMMU, or that
->> they came back with a PRG response?
-> 
-> By processed I mean the device received a response to the request, or is
-> at least no longer waiting for responses.
-> 
->> The driver might not be able to do the latter, since PCI defines two ways
->> of shutting down a context:
->>
->> * Either wait for all PPR requests to come back with a PRG response,
->> * Or send a Stop Marker PPR request and forget about it.
-> 
-> Are you sure about the meaning of the stop-marker? Can you point me to
-> where it is specified?
-
-The concept is introduced in the PCI ECN that adds PASIDs to the ATS
-specification. I have the following link, which is probably behind a
-wall:
-
-https://pcisig.com/sites/default/files/specification_documents/ECN-PASID-ATS-2011-03-31.pdf
-
-A Stop Marker is a PPR with flags Read=Write=0, Last=1, targeting the
-PASID that is being decommissioned. In section 4.1.2, the specifications
-details the two device-specific ways of stopping use of a PASID, with or
-without a Stop Marker. When done with a Stop Marker, the function doesn't
-have to wait for any outstanding PPR to return, the Stop Marker serves as
-a PASID barrier.
-
-Thanks,
-Jean-Philippe
-
-> I know about a different marker, which allows a device to issue several
-> PPR requests and only get one response for all of them. The last request
-> then has that marker set.
-> 
-> But I am not aware (yet) of a marker with which the device says it no
-> longer sends requests with this PASID.
-
->> My intent with passing flags to unbind() was to handle the case where VFIO
->> is unable to tell us whether PPRs are still being issued by the device.
->> But the issue seems moot to me now that I have a better understanding, as
->> there will be a detach_dev/attach_dev sequence before we start rebinding
->> PASIDs, and we can simply reset the PRI interface there (I'm currently
->> doing that in add_device, but I should move it.)
-> 
-> VFIO should completly reset the device before it is re-used, so I don't
-> think we run into problems there.
-> 
-> 
-> 
-> 	Joerg
-> 
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 01/03/17 04:58 PM, Jason Gunthorpe wrote:
+> On Wed, Mar 01, 2017 at 03:49:04PM -0700, Logan Gunthorpe wrote:
+> 
+>> Seems to me like an elegant solution would be to implement a 'cdev_kill'
+>> function which could kill all the processes using a cdev. Thus, during
+>> an unbind, a driver could call it and be sure that there are no users
+>> left and it can safely allow the devres unwind to continue. Then no
+>> difficult and racy 'alive' flags would be necessary and it would be much
+>> easier on drivers.
+> 
+> That could help, but this would mean cdev would have to insert a shim
+> to grab locks around the various file ops.
+
+Hmm, I was hoping something more along the lines of actually killing the
+processes instead of just shimming away fops.
+
+> AFAIK TPM is correct and has been robustly tested now. We have a 'vtpm'
+> driver that agressively uses hot-unplug.
+
+Ah, thanks for the explanation of how that works. I didn't notice the
+semaphore usage.
+
+Switchtec is a bit more tricky because a) there's no upper level driver
+to handle things and b) userspace may be inside a wait_for_completion
+(via read or poll) that needs to be completed. If a so called
+'cdev_kill' could actually just kill these processes it would be a bit
+easier.
+
+Currently, in the Switchtec code, there's a timeout if the interrupt
+doesn't fire (which occurs if the pci device has been torn down) and the
+code will check an alive bit (under mutex protection) and error out if
+it's not alive.
+
+Because of how poll works, I don't see how I can just hold a semaphore
+inside every fops call like the tpm code does.
+
+Logan
