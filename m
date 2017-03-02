@@ -1,34 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 28 Mar 2017 22:56:16 +0200
-From: 'Joerg Roedel' <jroedel@suse.de>
-To: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-Cc: 'Joerg Roedel' <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        "Nath, Arindam" <Arindam.Nath@amd.com>
-Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
-Message-ID: <20170328205616.GR8329@suse.de>
-References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
- <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328202844.GQ8329@suse.de>
- <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Wangzhou (B)" <wangzhou1@hisilicon.com>
+Subject: RE: [PATCH 14/20] PCI: hisi: update PCI config space remap function
+Date: Thu, 2 Mar 2017 11:53:44 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1FA96D4D@lhreml507-mbx>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-15-lorenzo.pieralisi@arm.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1FA96A69@lhreml507-mbx>
+ <20170302114937.GA17277@red-moon>
+In-Reply-To: <20170302114937.GA17277@red-moon>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 28, 2017 at 08:37:01PM +0000, Deucher, Alexander wrote:
-> The question is, could the problem stem from flushing an entity that
-> didn't request it, or should that not matter?  I guess it shouldn't
-> matter otherwise we'd see this on other platforms like Carrizo as
-> well.
+[...]
 
-What do you mean by "didn't request it"? The IOMMU driver only sends
-io/tlb invalidations to devices it enabled ATS on.
+> 
+> I will fold the changes into v2 (and I hope other host controllers
+> maintainers will follow suit - I do not have enough knowledge of
+> all host bridges drivers internals to understand what ioremap calls
+> need patching).
 
+Ok great, many thanks!
 
+Gab
 
-	Joerg
+> 
+> Thanks !
+> Lorenzo
