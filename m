@@ -1,101 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:50410 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756546AbdCUKl6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Mar 2017 06:41:58 -0400
-Subject: Re: Help: MSI DWC connecting with a MSIx Endpoint
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-References: <85bfa77f-6cd0-a669-c940-7fa7d9fb17a3@synopsys.com>
- <28a4e429-a2d2-8f28-e4fc-8eebae0b3367@arm.com>
- <4ade12d6-1887-4093-ee43-2101ca2986e0@synopsys.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <9eec7e57-456e-fc98-91d9-bd5a32c347af@arm.com>
-Date: Tue, 21 Mar 2017 10:41:55 +0000
-MIME-Version: 1.0
-In-Reply-To: <4ade12d6-1887-4093-ee43-2101ca2986e0@synopsys.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu,  2 Mar 2017 16:24:32 -0700
+Message-Id: <1488497074-14186-3-git-send-email-logang@deltatee.com>
+In-Reply-To: <1488497074-14186-1-git-send-email-logang@deltatee.com>
+References: <1488497074-14186-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v7 2/4] switchtec: Add user interface documentation
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21/03/17 10:27, Joao Pinto wrote:
-> 
-> Hi Mark,
-> 
-> Às 6:16 PM de 3/20/2017, Marc Zyngier escreveu:
->> Hi Joao,
->>
->> On 20/03/17 17:30, Joao Pinto wrote:
->>> Hi Mark,
->>>
->>> I am facing a challenge in a setup I must bring up that is composed by a
->>> Synopsys Root Complex connected to a MSIx-only Endpoint from Mellanox.
->>> The endpoint probe fails because it is not capable of enabling msix.
->>>
->>> In order to get more info about it, I added some debug messages to the msix
->>> enable process and got the following:
->>>
->>> MSIX DBG[mlx5_enable_msix]: Num. EQs: 256
->>> MSIX DBG[mlx5_enable_msix]: Num. Vectors: 4
->>> MSIX DBG[mlx5_enable_msix]: Min. Num. Vectors: 4
->>> MSIX DBG[mlx5_enable_msix]: Num. Online CPUs: 1
->>> MSIX DBG[mlx5_enable_msix]: MLX5_EQ_VEC_COMP_BASE: 3
->>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 0
->>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 1
->>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 2
->>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 3
->>> MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range
->>> MSIX DBG[__pci_enable_msix_range]: Enabling MSIX [Nvec: 4, Affinity: 0]
->>> MSIX DBG[__pci_enable_msix]: NVec: 4
->>> MSIX DBG[__pci_enable_msix]: Num. Entries: 64
->>> MSIX DBG[__pci_enable_msix]: Checking invalid entries
->>> MSIX DBG[msix_capability_init]: Ensure MSI is disable
->>> MSIX DBG[msix_capability_init]: Getting MSIX Capability
->>> MSIX DBG[msix_capability_init]: Mapping MSIX Capability Region
->>> MSIX DBG[msix_capability_init]: Setup Entries
->>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 0
->>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 1
->>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 2
->>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 3
->>> MSIX DBG[msix_capability_init]: Setup IRQS
->>> MSIX DBG[pci_msi_setup_msi_irqs]: Inside!
->>> MSIX DBG[arch_setup_msi_irqs]: Inside!
->>> MSIX DBG[msix_capability_init]: Failed pci_msi_setup_msi_irqs
->>> MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range, result: -22
->>> mlx5_core 0000:01:00.0: enable msix failed
->>>
->>> The conclusion I came up was that the msix setup in the endpoint fails because
->>> in the pcie-designware-host.c we are rejecting msix as you can see here:
->>>
->>> /* MSI-X interrupts are not supported */
->>> if (type == PCI_CAP_ID_MSIX)
->>>         return -EINVAL;
->>>
->>> Did you ever came across this problem?
->>
->> I don't have access to any system using this IP, unfortunately. This
->> looks like an arbitrary limitation of the host controller driver, as
->> there isn't much difference between MSI and MSI-X at the MSI controller
->> level, other than the reduced number of interrupts.
->>
->> Unfortunately, this driver seems to rely on rather old APIs, and could
->> use some care and attention. I'm pretty sure that converting this driver
->> to the generic MSI API would solve this problem entirely, but I'm afraid
->> I don't have the bandwidth to do so.
-> 
-> I volunteer to do it, no problem, but I will need some guidance and examples.
-> Could you give me some hints to get started?
+This adds standard documentation for the sysfs switchtec attributes and
+a RST formatted text file which documents the char device interface.
+Jonathan Corbet has indicated he will move this to a new user-space
+developer documentation book once it's created.
 
-A very simple example using the current API is pcie-altera-msi.c (some
-others are much more intricate), and should give you a good picture of
-how PCI/MSI, generic MSI and MSI controllers interact.
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
+Tested-by: Krishna Dhulipala <krishnad@fb.com>
+Reviewed-by: Wei Zhang <wzhang@fb.com>
+Reviewed-by: Jens Axboe <axboe@fb.com>
+---
+ Documentation/switchtec.txt | 53 +++++++++++++++++++++++++++++++++++++++++++++
+ MAINTAINERS                 |  1 +
+ 2 files changed, 54 insertions(+)
+ create mode 100644 Documentation/switchtec.txt
 
-Start with understanding how the various layers interact via their own
-IRQ domains, and implement their own IRQ chip. Happy to answer questions
-(I'm sure you'll have some).
-
-Thanks,
-
-	M.
+diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt
+new file mode 100644
+index 0000000..4bced4c
+--- /dev/null
++++ b/Documentation/switchtec.txt
+@@ -0,0 +1,53 @@
++========================
++Linux Switchtec Support
++========================
++
++Microsemi's "Switchtec" line of PCI switch devices is already
++supported by the kernel with standard PCI switch drivers. However, the
++Switchtec device advertises a special management endpoint which
++enables some additional functionality. This includes:
++
++* Packet and Byte Counters
++* Firmware Upgrades
++* Event and Error logs
++* Querying port link status
++* Custom user firmware commands
++
++The switchtec kernel module implements this functionality.
++
++
++Interface
++=========
++
++The primary means of communicating with the Switchtec management firmware is
++through the Memory-mapped Remote Procedure Call (MRPC) interface.
++Commands are submitted to the interface with a 4-byte command
++identifier and up to 1KB of command specific data. The firmware will
++respond with a 4 bytes return code and up to 1KB of command specific
++data. The interface only processes a single command at a time.
++
++
++Userspace Interface
++===================
++
++The MRPC interface will be exposed to userspace through a simple char
++device: /dev/switchtec#, one for each management endpoint in the system.
++
++The char device has the following semantics:
++
++* A write must consist of at least 4 bytes and no more than 1028 bytes.
++  The first four bytes will be interpreted as the command to run and
++  the remainder will be used as the input data. A write will send the
++  command to the firmware to begin processing.
++
++* Each write must be followed by exactly one read. Any double write will
++  produce an error and any read that doesn't follow a write will
++  produce an error.
++
++* A read will block until the firmware completes the command and return
++  the four bytes of status plus up to 1024 bytes of output data. (The
++  length will be specified by the size parameter of the read call --
++  reading less than 4 bytes will produce an error.
++
++* The poll call will also be supported for userspace applications that
++  need to do other things while waiting for the command to complete.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a57686f..aa702b0 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9512,6 +9512,7 @@ M:	Stephen Bates <stephen.bates@microsemi.com>
+ M:	Logan Gunthorpe <logang@deltatee.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Maintained
++F:	Documentation/switchtec.txt
+ F:	drivers/pci/switch/switchtec*
+ 
+ PCI DRIVER FOR NVIDIA TEGRA
 -- 
-Jazz is not dead. It just smells funny...
+2.1.4
