@@ -1,227 +1,101 @@
-Return-Path: <SRS0=PiGp=3F=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=PiGp=3F=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 28 Mar 2017 15:50:03 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Jonathan Corbet <corbet@lwn.net>,
-	Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	John Garry <john.garry@huawei.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	"Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH v2 08/22] lib: implement Devres ioremap_nopost() interface
-Message-ID: <20170328145003.GB18046@red-moon>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
- <20170327094954.7162-9-lorenzo.pieralisi@arm.com>
- <20170328014129.GJ25380@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0088.outbound.protection.outlook.com ([104.47.41.88]:61888
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753553AbdCBPwK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 10:52:10 -0500
+Subject: [RFC PATCH v2 03/32] KVM: SVM: prepare for new bit definition in
+ nested_ctl
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:12:37 -0500
+Message-ID: <148846755776.2349.6707914627128907579.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170328014129.GJ25380@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 27, 2017 at 08:41:29PM -0500, Bjorn Helgaas wrote:
-> On Mon, Mar 27, 2017 at 10:49:36AM +0100, Lorenzo Pieralisi wrote:
-> > The introduction of the ioremap_nopost() interface allows
-> > kernel drivers to map memory through a dedicated kernel
-> > interface providing non-posted writes semantics.
-> > 
-> > Introduce two new functions in the Devres kernel layer and Devres
-> > documentation:
-> > 
-> > - devm_ioremap_nopost()
-> > - devm_ioremap_nopost_resource()
-> > 
-> > so that drivers can make use of devm_* interface to map memory
-> > regions requiring non-posted writes memory attributes.
-> > 
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> > Cc: Jonathan Corbet <corbet@lwn.net>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: Tejun Heo <tj@kernel.org>
-> > ---
-> >  Documentation/driver-model/devres.txt |  3 ++
-> >  include/linux/device.h                |  2 +
-> >  include/linux/io.h                    |  2 +
-> >  lib/devres.c                          | 78 +++++++++++++++++++++++++++++++++++
-> >  4 files changed, 85 insertions(+)
-> > 
-> > diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
-> > index bf34d5b..9991a66 100644
-> > --- a/Documentation/driver-model/devres.txt
-> > +++ b/Documentation/driver-model/devres.txt
-> > @@ -294,7 +294,10 @@ IOMAP
-> >    devm_ioremap()
-> >    devm_ioremap_nocache()
-> >    devm_ioremap_wc()
-> > +  devm_ioremap_nopost()
-> >    devm_ioremap_resource() : checks resource, requests memory region, ioremaps
-> > +  devm_ioremap_nopost_resource() : do devm_ioremap_resource() with nopost
-> > +				   memory attributes
-> >    devm_iounmap()
-> >    pcim_iomap()
-> >    pcim_iomap_regions()	: do request_region() and iomap() on multiple BARs
-> > diff --git a/include/linux/device.h b/include/linux/device.h
-> > index 9ef518a..1dce865 100644
-> > --- a/include/linux/device.h
-> > +++ b/include/linux/device.h
-> > @@ -689,6 +689,8 @@ extern unsigned long devm_get_free_pages(struct device *dev,
-> >  extern void devm_free_pages(struct device *dev, unsigned long addr);
-> >  
-> >  void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res);
-> > +void __iomem *devm_ioremap_nopost_resource(struct device *dev,
-> > +					   struct resource *res);
-> >  
-> >  /* allows to add/remove a custom action to devres stack */
-> >  int devm_add_action(struct device *dev, void (*action)(void *), void *data);
-> > diff --git a/include/linux/io.h b/include/linux/io.h
-> > index 82ef36e..e34d799 100644
-> > --- a/include/linux/io.h
-> > +++ b/include/linux/io.h
-> > @@ -79,6 +79,8 @@ void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
-> >  				   resource_size_t size);
-> >  void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
-> >  				   resource_size_t size);
-> > +void __iomem *devm_ioremap_nopost(struct device *dev, resource_size_t offset,
-> > +				   resource_size_t size);
-> >  void devm_iounmap(struct device *dev, void __iomem *addr);
-> >  int check_signature(const volatile void __iomem *io_addr,
-> >  			const unsigned char *signature, int length);
-> > diff --git a/lib/devres.c b/lib/devres.c
-> > index cb1464c..4e05660 100644
-> > --- a/lib/devres.c
-> > +++ b/lib/devres.c
-> > @@ -100,6 +100,34 @@ void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
-> >  EXPORT_SYMBOL(devm_ioremap_wc);
-> >  
-> >  /**
-> > + * devm_ioremap_nopost - Managed ioremap_nopost()
-> > + * @dev: Generic device to remap IO address for
-> > + * @offset: BUS offset to map
-> 
-> I know this comment was just copied from other devm_ioremap*()
-> interfaces, but I think it's slightly misleading to call this the "BUS
-> offset".  That suggests this is a bus address, but it is not.  Maybe
-> it should be "resource address" or similar?
-> 
-> I propose a separate patch to update the existing comments, followed
-> by this patch to add this new one.
+From: Tom Lendacky <thomas.lendacky@amd.com>
 
-I agree with you, maybe Tejun has more context on why that parameter
-is called BUS offset ? Anyway, I can easily do what you suggest above,
-just asking Tejun if there is something I am missing.
+Currently the nested_ctl variable in the vmcb_control_area structure is
+used to indicate nested paging support. The nested paging support field
+is actually defined as bit 0 of the field. In order to support a new
+feature flag the usage of the nested_ctl and nested paging support must
+be converted to operate on a single bit.
 
-Tejun ?
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+---
+ arch/x86/include/asm/svm.h |    2 ++
+ arch/x86/kvm/svm.c         |    7 ++++---
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-Thanks !
-Lorenzo
-
-> 
-> > + * @size: Size of map
-> > + *
-> > + * Managed ioremap_nopost().  Map is automatically unmapped on driver detach.
-> > + */
-> > +void __iomem *devm_ioremap_nopost(struct device *dev, resource_size_t offset,
-> > +			      resource_size_t size)
-> > +{
-> > +	void __iomem **ptr, *addr;
-> > +
-> > +	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
-> > +	if (!ptr)
-> > +		return NULL;
-> > +
-> > +	addr = ioremap_nopost(offset, size);
-> > +	if (addr) {
-> > +		*ptr = addr;
-> > +		devres_add(dev, ptr);
-> > +	} else
-> > +		devres_free(ptr);
-> > +
-> > +	return addr;
-> > +}
-> > +EXPORT_SYMBOL(devm_ioremap_nopost);
-> > +
-> > +/**
-> >   * devm_iounmap - Managed iounmap()
-> >   * @dev: Generic device to unmap for
-> >   * @addr: Address to unmap
-> > @@ -163,6 +191,56 @@ void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res)
-> >  }
-> >  EXPORT_SYMBOL(devm_ioremap_resource);
-> >  
-> > +/**
-> > + * devm_ioremap_nopost_resource() - devm_ioremap_resource() nopost version
-> > + * @dev: generic device to handle the resource for
-> > + * @res: resource to be handled
-> > + *
-> > + * Checks that a resource is a valid memory region, requests the memory
-> > + * region and ioremaps it with ioremap_nopost() interface.
-> > + * All operations are managed and will be undone on driver detach.
-> > + *
-> > + * Returns a pointer to the remapped memory or an ERR_PTR() encoded error code
-> > + * on failure. Usage example:
-> > + *
-> > + *	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-> > + *	base = devm_ioremap_nopost_resource(&pdev->dev, res);
-> > + *	if (IS_ERR(base))
-> > + *		return PTR_ERR(base);
-> > + */
-> > +void __iomem *devm_ioremap_nopost_resource(struct device *dev,
-> > +					   struct resource *res)
-> > +{
-> > +	resource_size_t size;
-> > +	const char *name;
-> > +	void __iomem *dest_ptr;
-> > +
-> > +	BUG_ON(!dev);
-> > +
-> > +	if (!res || resource_type(res) != IORESOURCE_MEM) {
-> > +		dev_err(dev, "invalid resource\n");
-> > +		return IOMEM_ERR_PTR(-EINVAL);
-> > +	}
-> > +
-> > +	size = resource_size(res);
-> > +	name = res->name ?: dev_name(dev);
-> > +
-> > +	if (!devm_request_mem_region(dev, res->start, size, name)) {
-> > +		dev_err(dev, "can't request region for resource %pR\n", res);
-> > +		return IOMEM_ERR_PTR(-EBUSY);
-> > +	}
-> > +
-> > +	dest_ptr = devm_ioremap_nopost(dev, res->start, size);
-> > +	if (!dest_ptr) {
-> > +		dev_err(dev, "ioremap failed for resource %pR\n", res);
-> > +		devm_release_mem_region(dev, res->start, size);
-> > +		dest_ptr = IOMEM_ERR_PTR(-ENOMEM);
-> > +	}
-> > +
-> > +	return dest_ptr;
-> > +}
-> > +EXPORT_SYMBOL(devm_ioremap_nopost_resource);
-> > +
-> >  #ifdef CONFIG_HAS_IOPORT_MAP
-> >  /*
-> >   * Generic iomap devres
-> > -- 
-> > 2.10.0
-> > 
+diff --git a/arch/x86/include/asm/svm.h b/arch/x86/include/asm/svm.h
+index 14824fc..2aca535 100644
+--- a/arch/x86/include/asm/svm.h
++++ b/arch/x86/include/asm/svm.h
+@@ -136,6 +136,8 @@ struct __attribute__ ((__packed__)) vmcb_control_area {
+ #define SVM_VM_CR_SVM_LOCK_MASK 0x0008ULL
+ #define SVM_VM_CR_SVM_DIS_MASK  0x0010ULL
+ 
++#define SVM_NESTED_CTL_NP_ENABLE	BIT(0)
++
+ struct __attribute__ ((__packed__)) vmcb_seg {
+ 	u16 selector;
+ 	u16 attrib;
+diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
+index 08a4d3a..75b0645 100644
+--- a/arch/x86/kvm/svm.c
++++ b/arch/x86/kvm/svm.c
+@@ -1246,7 +1246,7 @@ static void init_vmcb(struct vcpu_svm *svm)
+ 
+ 	if (npt_enabled) {
+ 		/* Setup VMCB for Nested Paging */
+-		control->nested_ctl = 1;
++		control->nested_ctl |= SVM_NESTED_CTL_NP_ENABLE;
+ 		clr_intercept(svm, INTERCEPT_INVLPG);
+ 		clr_exception_intercept(svm, PF_VECTOR);
+ 		clr_cr_intercept(svm, INTERCEPT_CR3_READ);
+@@ -2840,7 +2840,8 @@ static bool nested_vmcb_checks(struct vmcb *vmcb)
+ 	if (vmcb->control.asid == 0)
+ 		return false;
+ 
+-	if (vmcb->control.nested_ctl && !npt_enabled)
++	if ((vmcb->control.nested_ctl & SVM_NESTED_CTL_NP_ENABLE) &&
++	    !npt_enabled)
+ 		return false;
+ 
+ 	return true;
+@@ -2915,7 +2916,7 @@ static bool nested_svm_vmrun(struct vcpu_svm *svm)
+ 	else
+ 		svm->vcpu.arch.hflags &= ~HF_HIF_MASK;
+ 
+-	if (nested_vmcb->control.nested_ctl) {
++	if (nested_vmcb->control.nested_ctl & SVM_NESTED_CTL_NP_ENABLE) {
+ 		kvm_mmu_unload(&svm->vcpu);
+ 		svm->nested.nested_cr3 = nested_vmcb->control.nested_cr3;
+ 		nested_svm_init_mmu_context(&svm->vcpu);
