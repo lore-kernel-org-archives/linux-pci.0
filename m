@@ -1,42 +1,152 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>, Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-2-git-send-email-logang@deltatee.com>
- <cb102386-0314-a3a3-ed44-b42debdf1512@codeaurora.org>
- <7158f2e8-2016-f398-e77f-0fcbe6cb41dd@deltatee.com>
- <e6a74aeb-9f54-51c5-8ad9-3b6fb92c03b3@codeaurora.org>
- <0280fbb4-ba9e-ac64-6bb3-b72590a54e57@deltatee.com>
- <0ae27bca-21be-b89c-aba4-6cc9766ebd7b@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <c8edc480-a2ac-a763-8438-18f3396db483@deltatee.com>
-Date: Fri, 31 Mar 2017 19:57:36 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 2 Mar 2017 11:49:37 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Subject: Re: [PATCH 14/20] PCI: hisi: update PCI config space remap function
+Message-ID: <20170302114937.GA17277@red-moon>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-15-lorenzo.pieralisi@arm.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E1FA96A69@lhreml507-mbx>
 MIME-Version: 1.0
-In-Reply-To: <0ae27bca-21be-b89c-aba4-6cc9766ebd7b@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E1FA96A69@lhreml507-mbx>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "Wangzhou \(B\)" <wangzhou1@hisilicon.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Gabriele,
 
+On Thu, Mar 02, 2017 at 10:56:16AM +0000, Gabriele Paoloni wrote:
+> Hi Lorenzo
+> 
+> Many thanks for putting all of this together.
+> 
+> > -----Original Message-----
+> > From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
+> > Sent: 27 February 2017 15:14
+> > To: linux-pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org
+> > Cc: linux-kernel@vger.kernel.org; linux-arch@vger.kernel.org; Lorenzo
+> > Pieralisi; Bjorn Helgaas; Gabriele Paoloni; Wangzhou (B)
+> > Subject: [PATCH 14/20] PCI: hisi: update PCI config space remap
+> > function
+> > 
+> > PCI configuration space should be mapped with a memory region type that
+> > generates on the CPU host bus non-posted write transations. Update the
+> > driver to use the devm_pci_remap_cfg* interface to make sure the
+> > correct
+> > memory mappings for PCI configuration space are used.
+> > 
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> > Cc: Zhou Wang <wangzhou1@hisilicon.com>
+> > ---
+> >  drivers/pci/dwc/pcie-hisi.c | 3 +--
+> >  1 file changed, 1 insertion(+), 2 deletions(-)
+> > 
+> > diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+> > index e3e4fed..8042780 100644
+> > --- a/drivers/pci/dwc/pcie-hisi.c
+> > +++ b/drivers/pci/dwc/pcie-hisi.c
+> > @@ -294,10 +294,9 @@ static int hisi_pcie_probe(struct platform_device
+> > *pdev)
+> >  	}
+> > 
+> >  	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM,
+> > "rc_dbi");
+> > -	pci->dbi_base = devm_ioremap_resource(dev, reg);
+> > +	pci->dbi_base = devm_pci_remap_cfg_resource(dev, reg);
+> >  	if (IS_ERR(pci->dbi_base))
+> >  		return PTR_ERR(pci->dbi_base);
+> > -
+> >  	platform_set_drvdata(pdev, hisi_pcie);
+> > 
+> >  	ret = hisi_add_pcie_port(hisi_pcie, pdev);
+> > --
+> > 2.10.0
+> 
+> I think you missed a couple of places where cfg space is ioremapped.
+> I have added these and merged with your changes in the patch below:
+> 
+> Thanks again
+> Gab
+> 
+> ---------------------------------
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Date: Tue, 21 Feb 2017 15:24:34 +0000
+> Subject: [PATCH 09/15] PCI: hisi: update PCI config space remap function
+> 
+> PCI configuration space should be mapped with a memory region type that
+> generates on the CPU host bus non-posted write transations. Update the
+> driver to use the devm_pci_remap_cfg* interface to make sure the correct
+> memory mappings for PCI configuration space are used.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+> Cc: Zhou Wang <wangzhou1@hisilicon.com>
+> ---
+>  drivers/pci/dwc/pcie-hisi.c | 7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+> index e3e4fed..a5b542c 100644
+> --- a/drivers/pci/dwc/pcie-hisi.c
+> +++ b/drivers/pci/dwc/pcie-hisi.c
+> @@ -99,7 +99,7 @@ static int hisi_pcie_init(struct pci_config_window *cfg)
+>  		return -ENOMEM;
+>  	}
+>  
+> -	reg_base = devm_ioremap(dev, res->start, resource_size(res));
+> +	reg_base = devm_pci_remap_cfgspace(dev, res->start, resource_size(res));
+>  	if (!reg_base)
+>  		return -ENOMEM;
+>  
+> @@ -294,10 +294,9 @@ static int hisi_pcie_probe(struct platform_device *pdev)
+>  	}
+>  
+>  	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
+> -	pci->dbi_base = devm_ioremap_resource(dev, reg);
+> +	pci->dbi_base = devm_pci_remap_cfg_resource(dev, reg);
+>  	if (IS_ERR(pci->dbi_base))
+>  		return PTR_ERR(pci->dbi_base);
+> -
+>  	platform_set_drvdata(pdev, hisi_pcie);
+>  
+>  	ret = hisi_add_pcie_port(hisi_pcie, pdev);
+> @@ -358,7 +357,7 @@ static int hisi_pcie_platform_init(struct pci_config_window *cfg)
+>  		return -EINVAL;
+>  	}
+>  
+> -	reg_base = devm_ioremap(dev, res->start, resource_size(res));
+> +	reg_base = devm_pci_remap_cfgspace(dev, res->start, resource_size(res));
+>  	if (!reg_base)
+>  		return -ENOMEM;
 
-On 31/03/17 05:51 PM, Sinan Kaya wrote:
-> You can put a restriction with DMI/SMBIOS such that all devices from 2016
-> work else they belong to blacklist.
+I will fold the changes into v2 (and I hope other host controllers
+maintainers will follow suit - I do not have enough knowledge of
+all host bridges drivers internals to understand what ioremap calls
+need patching).
 
-How do you get a manufacturing date for a given device within the
-kernel? Is this actually something generically available?
+Thanks !
+Lorenzo
 
-Logan
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
