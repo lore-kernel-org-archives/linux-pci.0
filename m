@@ -1,161 +1,496 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35196 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932359AbdCWUyG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 Mar 2017 16:54:06 -0400
-Date: Thu, 23 Mar 2017 15:53:42 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
-        gwshan@linux.vnet.ibm.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-        mpe@ellerman.id.au, paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: Re: [PATCH v9 2/3] PCI: Add a macro to set default alignment for all
- PCI devices
-Message-ID: <20170323205342.GB23612@bhelgaas-glaptop.roam.corp.google.com>
-References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1487141106-2503-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+Received: from mail-cys01nam02on0053.outbound.protection.outlook.com ([104.47.37.53]:19434
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752105AbdCBPwn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 10:52:43 -0500
+Subject: [RFC PATCH v2 24/32] kvm: x86: prepare for SEV guest management API
+ support
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:17:22 -0500
+Message-ID: <148846784278.2349.17771314083820274411.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1487141106-2503-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yongji,
+The patch adds initial support required to integrate Secure Encrypted
+Virtualization (SEV) feature.
 
-On Wed, Feb 15, 2017 at 02:45:05PM +0800, Yongji Xie wrote:
-> When vfio passthroughs a PCI device of which MMIO BARs are
-> smaller than PAGE_SIZE, guest will not handle the mmio
-> accesses to the BARs which leads to mmio emulations in host.
-> 
-> This is because vfio will not allow to passthrough one BAR's
-> mmio page which may be shared with other BARs. Otherwise,
-> there will be a backdoor that guest can use to access BARs
-> of other guest.
+ASID management:
+ - Reserve asid range for SEV guest, SEV asid range is obtained through
+   CPUID Fn8000_001f[ECX]. A non-SEV guest can use any asid outside the SEV
+   asid range.
+ - SEV guest must have asid value within asid range obtained through CPUID.
+ - SEV guest must have the same asid for all vcpu's. A TLB flush is required
+   if different vcpu for the same ASID is to be run on the same host CPU.
 
-Please include a pointer to the VFIO code that enforces this.  It's
-not obvious to me how it would do this.  This doesn't change the
-*size* of the resource, only the alignment.  So if VFIO sees a BAR
-like [mem 0x80000000-0x800000ff], it knows the BAR is aligned enough
-that it *could* be the only thing on a page, but I don't know how it
-could know that there will never be another BAR at 0x80000100.  Even
-if there's no other BAR on that page *now*, it would have to know that
-no hot-added device will ever be placed on that page.
+Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+---
+ arch/x86/include/asm/kvm_host.h |    8 ++
+ arch/x86/kvm/svm.c              |  189 +++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/kvm.h        |   98 ++++++++++++++++++++
+ 3 files changed, 294 insertions(+), 1 deletion(-)
 
-> This patch adds a macro to set default alignment for all
-> PCI devices. Then we could solve this issue on some platforms
-> which would easily hit this issue because of their 64K page
-> such as PowerNV platform by defining this macro as PAGE_SIZE.
-> 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> ---
->  arch/powerpc/include/asm/pci.h |    4 ++++
->  drivers/pci/pci.c              |    3 +++
->  2 files changed, 7 insertions(+), 0 deletions(-)
-> 
-> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-> index e9bd6cf..5e31bc2 100644
-> --- a/arch/powerpc/include/asm/pci.h
-> +++ b/arch/powerpc/include/asm/pci.h
-> @@ -28,6 +28,10 @@
->  #define PCIBIOS_MIN_IO		0x1000
->  #define PCIBIOS_MIN_MEM		0x10000000
->  
-> +#ifdef CONFIG_PPC_POWERNV
-> +#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
-> +#endif
-> +
->  struct pci_dev;
->  
->  /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a881c0d..2622e9b 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4965,6 +4965,9 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->  	resource_size_t align = 0;
->  	char *p;
->  
-> +#ifdef PCIBIOS_DEFAULT_ALIGNMENT
-> +	align = PCIBIOS_DEFAULT_ALIGNMENT;
-> +#endif
-
-I'd prefer to move this #ifdef out of the code path, as in the patch
-below.
-
-I don't know how powerpc kernels are built: can you build a kernel
-that will run on PowerNV as well as on different powerpc systems?  If
-so, is it acceptable to force that kernel to user 64K alignment even
-when it's running on non-PowerNV systems?  Or do you need a function
-call here instead of a #define?
-
->  	spin_lock(&resource_alignment_lock);
->  	p = resource_alignment_param;
->  	if (!*p)
-
-
-commit 60106ae302a264f9be15fa736dae2ea51140b988
-Author: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Date:   Wed Feb 15 14:45:05 2017 +0800
-
-    PCI: Add PCIBIOS_DEFAULT_ALIGNMENT for arch-specific alignment control
-    
-    When VFIO passes through a PCI device to a guest, it does not allow the
-    guest direct access to BARs that are smaller than PAGE_SIZE.  This is
-    because a page might contain several small BARs for unrelated devices and
-    a guest should not be able to access all of them.
-    
-    VFIO emulates guest accesses to these small BARs, which is functional but
-    slow.  On systems with large page sizes, e.g., PowerNV with 64K pages, BARs
-    are more likely to share a page and performance is more of a problem.
-    
-    Add a macro to set default alignment for all PCI devices.  An arch can set
-    this to PAGE_SIZE to prevent memory BARs from sharing a page.
-    
-    [bhelgaas: add default PCIBIOS_DEFAULT_ALIGNMENT definition, changelog]
-    Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index 93eded8d3843..dc3c81ab4cc4 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -28,6 +28,10 @@
- #define PCIBIOS_MIN_IO		0x1000
- #define PCIBIOS_MIN_MEM		0x10000000
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index 62651ad..fcc4710 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -719,6 +719,12 @@ struct kvm_hv {
+ 	HV_REFERENCE_TSC_PAGE tsc_ref;
+ };
  
-+#ifdef CONFIG_PPC_POWERNV
-+#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
-+#endif
++struct kvm_sev_info {
++	unsigned int handle;	/* firmware handle */
++	unsigned int asid;	/* asid for this guest */
++	int sev_fd;		/* SEV device fd */
++};
 +
- struct pci_dev;
+ struct kvm_arch {
+ 	unsigned int n_used_mmu_pages;
+ 	unsigned int n_requested_mmu_pages;
+@@ -805,6 +811,8 @@ struct kvm_arch {
  
- /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02ffdb9..e9a079063fd0 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4962,7 +4962,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 	bool x2apic_format;
+ 	bool x2apic_broadcast_quirk_disabled;
++
++	struct kvm_sev_info sev_info;
+ };
+ 
+ struct kvm_vm_stat {
+diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
+index 8d8fe62..fb63398 100644
+--- a/arch/x86/kvm/svm.c
++++ b/arch/x86/kvm/svm.c
+@@ -36,6 +36,7 @@
+ #include <linux/slab.h>
+ #include <linux/amd-iommu.h>
+ #include <linux/hashtable.h>
++#include <linux/psp-sev.h>
+ 
+ #include <asm/apic.h>
+ #include <asm/perf_event.h>
+@@ -211,6 +212,9 @@ struct vcpu_svm {
+ 	 */
+ 	struct list_head ir_list;
+ 	spinlock_t ir_list_lock;
++
++	/* which host cpu was used for running this vcpu */
++	bool last_cpuid;
+ };
+ 
+ /*
+@@ -490,6 +494,64 @@ static inline bool gif_set(struct vcpu_svm *svm)
+ 	return !!(svm->vcpu.arch.hflags & HF_GIF_MASK);
+ }
+ 
++/* Secure Encrypted Virtualization */
++static unsigned int max_sev_asid;
++static unsigned long *sev_asid_bitmap;
++
++static bool kvm_sev_enabled(void)
++{
++	return max_sev_asid ? 1 : 0;
++}
++
++static inline struct kvm_sev_info *sev_get_info(struct kvm *kvm)
++{
++	struct kvm_arch *vm_data = &kvm->arch;
++
++	return &vm_data->sev_info;
++}
++
++static unsigned int sev_get_handle(struct kvm *kvm)
++{
++	struct kvm_sev_info *sev_info = sev_get_info(kvm);
++
++	return sev_info->handle;
++}
++
++static inline int sev_guest(struct kvm *kvm)
++{
++	return sev_get_handle(kvm);
++}
++
++static inline int sev_get_asid(struct kvm *kvm)
++{
++	struct kvm_sev_info *sev_info = sev_get_info(kvm);
++
++	if (!sev_info)
++		return -EINVAL;
++
++	return sev_info->asid;
++}
++
++static inline int sev_get_fd(struct kvm *kvm)
++{
++	struct kvm_sev_info *sev_info = sev_get_info(kvm);
++
++	if (!sev_info)
++		return -EINVAL;
++
++	return sev_info->sev_fd;
++}
++
++static inline void sev_set_asid(struct kvm *kvm, int asid)
++{
++	struct kvm_sev_info *sev_info = sev_get_info(kvm);
++
++	if (!sev_info)
++		return;
++
++	sev_info->asid = asid;
++}
++
+ static unsigned long iopm_base;
+ 
+ struct kvm_ldttss_desc {
+@@ -511,6 +573,8 @@ struct svm_cpu_data {
+ 	struct kvm_ldttss_desc *tss_desc;
+ 
+ 	struct page *save_area;
++
++	struct vmcb **sev_vmcbs;  /* index = sev_asid, value = vmcb pointer */
+ };
+ 
+ static DEFINE_PER_CPU(struct svm_cpu_data *, svm_data);
+@@ -764,7 +828,7 @@ static int svm_hardware_enable(void)
+ 	sd->asid_generation = 1;
+ 	sd->max_asid = cpuid_ebx(SVM_CPUID_FUNC) - 1;
+ 	sd->next_asid = sd->max_asid + 1;
+-	sd->min_asid = 1;
++	sd->min_asid = max_sev_asid + 1;
+ 
+ 	native_store_gdt(&gdt_descr);
+ 	gdt = (struct desc_struct *)gdt_descr.address;
+@@ -825,6 +889,7 @@ static void svm_cpu_uninit(int cpu)
+ 
+ 	per_cpu(svm_data, raw_smp_processor_id()) = NULL;
+ 	__free_page(sd->save_area);
++	kfree(sd->sev_vmcbs);
+ 	kfree(sd);
+ }
+ 
+@@ -842,6 +907,14 @@ static int svm_cpu_init(int cpu)
+ 	if (!sd->save_area)
+ 		goto err_1;
+ 
++	if (kvm_sev_enabled()) {
++		sd->sev_vmcbs = kmalloc((max_sev_asid + 1) * sizeof(void *),
++					GFP_KERNEL);
++		r = -ENOMEM;
++		if (!sd->sev_vmcbs)
++			goto err_1;
++	}
++
+ 	per_cpu(svm_data, cpu) = sd;
+ 
+ 	return 0;
+@@ -1017,6 +1090,61 @@ static int avic_ga_log_notifier(u32 ga_tag)
+ 	return 0;
+ }
+ 
++static __init void sev_hardware_setup(void)
++{
++	int ret, error, nguests;
++	struct sev_data_init *init;
++	struct sev_data_status *status;
++
++	/*
++	 * Get maximum number of encrypted guest supported: Fn8001_001F[ECX]
++	 * 	Bit 31:0: Number of supported guest
++	 */
++	nguests = cpuid_ecx(0x8000001F);
++	if (!nguests)
++		return;
++
++	init = kzalloc(sizeof(*init), GFP_KERNEL);
++	if (!init)
++		return;
++
++	status = kzalloc(sizeof(*status), GFP_KERNEL);
++	if (!status)
++		goto err_1;
++
++	/* Initialize SEV firmware */
++	ret = sev_platform_init(init, &error);
++	if (ret) {
++		pr_err("SEV: PLATFORM_INIT ret=%d (%#x)\n", ret, error);
++		goto err_2;
++	}
++
++	/* Initialize SEV ASID bitmap */
++	sev_asid_bitmap = kcalloc(BITS_TO_LONGS(nguests),
++				  sizeof(unsigned long), GFP_KERNEL);
++	if (IS_ERR(sev_asid_bitmap)) {
++		sev_platform_shutdown(&error);
++		goto err_2;
++	}
++
++	/* Query the platform status and print API version */
++	ret = sev_platform_status(status, &error);
++	if (ret) {
++		printk(KERN_ERR "SEV: PLATFORM_STATUS ret=%#x\n", error);
++		goto err_2;
++	}
++
++	max_sev_asid = nguests;
++
++	printk(KERN_INFO "kvm: SEV enabled\n");
++	printk(KERN_INFO "SEV API: %d.%d\n",
++			status->api_major, status->api_minor);
++err_2:
++	kfree(status);
++err_1:
++	kfree(init);
++}
++
+ static __init int svm_hardware_setup(void)
  {
- 	int seg, bus, slot, func, align_order, count;
- 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
--	resource_size_t align = 0;
-+	resource_size_t align = PCIBIOS_DEFAULT_ALIGNMENT;
- 	char *p;
+ 	int cpu;
+@@ -1052,6 +1180,9 @@ static __init int svm_hardware_setup(void)
+ 		kvm_enable_efer_bits(EFER_SVME | EFER_LMSLE);
+ 	}
  
- 	spin_lock(&resource_alignment_lock);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index eb3da1a04e6c..618beb5809d1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1630,6 +1630,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- #define pci_root_bus_fwnode(bus)	NULL
- #endif
- 
-+#ifndef PCIBIOS_DEFAULT_ALIGNMENT
-+#define PCIBIOS_DEFAULT_ALIGNMENT	0
-+#endif
++	if (boot_cpu_has(X86_FEATURE_SEV))
++		sev_hardware_setup();
 +
- /* these helpers provide future and backwards compatibility
-  * for accessing popular PCI BAR info */
- #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
+ 	for_each_possible_cpu(cpu) {
+ 		r = svm_cpu_init(cpu);
+ 		if (r)
+@@ -1094,10 +1225,25 @@ static __init int svm_hardware_setup(void)
+ 	return r;
+ }
+ 
++static __exit void sev_hardware_unsetup(void)
++{
++	int ret, err;
++
++	ret = sev_platform_shutdown(&err);
++	if (ret)
++		printk(KERN_ERR "failed to shutdown PSP rc=%d (%#0x10x)\n",
++		ret, err);
++
++	kfree(sev_asid_bitmap);
++}
++
+ static __exit void svm_hardware_unsetup(void)
+ {
+ 	int cpu;
+ 
++	if (kvm_sev_enabled())
++		sev_hardware_unsetup();
++
+ 	for_each_possible_cpu(cpu)
+ 		svm_cpu_uninit(cpu);
+ 
+@@ -1157,6 +1303,11 @@ static void avic_init_vmcb(struct vcpu_svm *svm)
+ 	svm->vcpu.arch.apicv_active = true;
+ }
+ 
++static void sev_init_vmcb(struct vcpu_svm *svm)
++{
++	svm->vmcb->control.nested_ctl |= SVM_NESTED_CTL_SEV_ENABLE;
++}
++
+ static void init_vmcb(struct vcpu_svm *svm)
+ {
+ 	struct vmcb_control_area *control = &svm->vmcb->control;
+@@ -1271,6 +1422,9 @@ static void init_vmcb(struct vcpu_svm *svm)
+ 	if (avic)
+ 		avic_init_vmcb(svm);
+ 
++	if (sev_guest(svm->vcpu.kvm))
++		sev_init_vmcb(svm);
++
+ 	mark_all_dirty(svm->vmcb);
+ 
+ 	enable_gif(svm);
+@@ -2084,6 +2238,11 @@ static int pf_interception(struct vcpu_svm *svm)
+ 	default:
+ 		error_code = svm->vmcb->control.exit_info_1;
+ 
++		/* In SEV mode, the guest physical address will have C-bit
++		 * set. C-bit must be cleared before handling the fault.
++		 */
++		if (sev_guest(svm->vcpu.kvm))
++			fault_address &= ~sme_me_mask;
+ 		trace_kvm_page_fault(fault_address, error_code);
+ 		if (!npt_enabled && kvm_event_needs_reinjection(&svm->vcpu))
+ 			kvm_mmu_unprotect_page_virt(&svm->vcpu, fault_address);
+@@ -4258,12 +4417,40 @@ static void reload_tss(struct kvm_vcpu *vcpu)
+ 	load_TR_desc();
+ }
+ 
++static void pre_sev_run(struct vcpu_svm *svm)
++{
++	int asid = sev_get_asid(svm->vcpu.kvm);
++	int cpu = raw_smp_processor_id();
++	struct svm_cpu_data *sd = per_cpu(svm_data, cpu);
++
++	/* Assign the asid allocated for this SEV guest */
++	svm->vmcb->control.asid = asid;
++
++	/* Flush guest TLB:
++	 * - when different VMCB for the same ASID is to be run on the
++	 *   same host CPU
++	 *   or
++	 * - this VMCB was executed on different host cpu in previous VMRUNs.
++	 */
++	if (sd->sev_vmcbs[asid] != (void *)svm->vmcb ||
++		svm->last_cpuid != cpu)
++		svm->vmcb->control.tlb_ctl = TLB_CONTROL_FLUSH_ALL_ASID;
++
++	svm->last_cpuid = cpu;
++	sd->sev_vmcbs[asid] = (void *)svm->vmcb;
++
++	mark_dirty(svm->vmcb, VMCB_ASID);
++}
++
+ static void pre_svm_run(struct vcpu_svm *svm)
+ {
+ 	int cpu = raw_smp_processor_id();
+ 
+ 	struct svm_cpu_data *sd = per_cpu(svm_data, cpu);
+ 
++	if (sev_guest(svm->vcpu.kvm))
++		return pre_sev_run(svm);
++
+ 	/* FIXME: handle wraparound of asid_generation */
+ 	if (svm->asid_generation != sd->asid_generation)
+ 		new_asid(svm, sd);
+diff --git a/include/uapi/linux/kvm.h b/include/uapi/linux/kvm.h
+index fef7d83..9df37a2 100644
+--- a/include/uapi/linux/kvm.h
++++ b/include/uapi/linux/kvm.h
+@@ -1284,6 +1284,104 @@ struct kvm_s390_ucas_mapping {
+ /* Memory Encryption Commands */
+ #define KVM_MEMORY_ENCRYPT_OP	  _IOWR(KVMIO, 0xb8, unsigned long)
+ 
++/* Secure Encrypted Virtualization mode */
++enum sev_cmd_id {
++	/* Guest launch commands */
++	KVM_SEV_LAUNCH_START = 0,
++	KVM_SEV_LAUNCH_UPDATE_DATA,
++	KVM_SEV_LAUNCH_MEASURE,
++	KVM_SEV_LAUNCH_FINISH,
++	/* Guest migration commands (outgoing) */
++	KVM_SEV_SEND_START,
++	KVM_SEV_SEND_UPDATE_DATA,
++	KVM_SEV_SEND_FINISH,
++	/* Guest migration commands (incoming) */
++	KVM_SEV_RECEIVE_START,
++	KVM_SEV_RECEIVE_UPDATE_DATA,
++	KVM_SEV_RECEIVE_FINISH,
++	/* Guest status and debug commands */
++	KVM_SEV_GUEST_STATUS,
++	KVM_SEV_DBG_DECRYPT,
++	KVM_SEV_DBG_ENCRYPT,
++
++	KVM_SEV_NR_MAX,
++};
++
++struct kvm_sev_cmd {
++	__u32 id;
++	__u64 data;
++	__u32 error;
++	__u32 sev_fd;
++};
++
++struct kvm_sev_launch_start {
++	__u32 handle;
++	__u32 policy;
++	__u64 dh_cert_data;
++	__u32 dh_cert_length;
++	__u64 session_data;
++	__u32 session_length;
++};
++
++struct kvm_sev_launch_update_data {
++	__u64 address;
++	__u32 length;
++};
++
++struct kvm_sev_launch_measure {
++	__u64 address;
++	__u32 length;
++};
++
++struct kvm_sev_send_start {
++	__u64 pdh_cert_data;
++	__u32 pdh_cert_length;
++	__u64 plat_cert_data;
++	__u32 plat_cert_length;
++	__u64 amd_cert_data;
++	__u32 amd_cert_length;
++	__u64 session_data;
++	__u32 session_length;
++};
++
++struct kvm_sev_send_update_data {
++	__u64 hdr_data;
++	__u32 hdr_length;
++	__u64 guest_address;
++	__u32 guest_length;
++	__u64 host_address;
++	__u32 host_length;
++};
++
++struct kvm_sev_receive_start {
++	__u32 handle;
++	__u64 pdh_cert_data;
++	__u32 pdh_cert_length;
++	__u64 session_data;
++	__u32 session_length;
++};
++
++struct kvm_sev_receive_update_data {
++	__u64 hdr_data;
++	__u32 hdr_length;
++	__u64 guest_address;
++	__u32 guest_length;
++	__u64 host_address;
++	__u32 host_length;
++};
++
++struct kvm_sev_guest_status {
++	__u32 handle;
++	__u32 policy;
++	__u32 state;
++};
++
++struct kvm_sev_dbg {
++	__u64 src_addr;
++	__u64 dst_addr;
++	__u32 length;
++};
++
+ #define KVM_DEV_ASSIGN_ENABLE_IOMMU	(1 << 0)
+ #define KVM_DEV_ASSIGN_PCI_2_3		(1 << 1)
+ #define KVM_DEV_ASSIGN_MASK_INTX	(1 << 2)
