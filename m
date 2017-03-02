@@ -1,143 +1,78 @@
-Return-Path: <SRS0=AMEn=3H=linux.vnet.ibm.com=gwshan@kernel.org>
-Return-Path: <SRS0=AMEn=3H=linux.vnet.ibm.com=gwshan@kernel.org>
-Date: Fri, 31 Mar 2017 10:24:06 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, clsoto@us.ibm.com
-Subject: Re: [PATCH] PCI: Disable IOV before pcibios_sriov_disable()
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1488154712-8354-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <20170307201529.GF21358@bhelgaas-glaptop.roam.corp.google.com>
- <20170309003432.GA27263@gwshan>
- <20170318001907.GA16291@gwshan>
- <20170320154644.GA24572@bhelgaas-glaptop.roam.corp.google.com>
- <20170320225006.GA8591@gwshan>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:55680 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753623AbdCBA4u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 1 Mar 2017 19:56:50 -0500
+Date: Wed, 1 Mar 2017 18:32:16 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Keith Busch <keith.busch@intel.com>,
+        Myron Stowe <myron.stowe@gmail.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Jonathan Corbet <corbet@lwn.net>,
+        "David S. Miller" <davem@davemloft.net>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Emil Velikov <emil.l.velikov@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+        Stefan Berger <stefanb@linux.vnet.ibm.com>,
+        Wei Zhang <wzhang@fb.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Stephen Bates <stephen.bates@microsemi.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
+Message-ID: <20170302003216.GC13171@bhelgaas-glaptop.roam.corp.google.com>
+References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
+ <20170228150920.GB12481@bhelgaas-glaptop.roam.corp.google.com>
+ <d3d5567a-2147-43c5-d094-fb5345f02143@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170320225006.GA8591@gwshan>
-Message-Id: <20170330232406.GA14305@gwshan>
+In-Reply-To: <d3d5567a-2147-43c5-d094-fb5345f02143@deltatee.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 21, 2017 at 09:50:06AM +1100, Gavin Shan wrote:
->On Mon, Mar 20, 2017 at 10:46:44AM -0500, Bjorn Helgaas wrote:
->>On Sat, Mar 18, 2017 at 11:19:07AM +1100, Gavin Shan wrote:
->>> On Thu, Mar 09, 2017 at 11:34:32AM +1100, Gavin Shan wrote:
->>> >On Tue, Mar 07, 2017 at 02:15:29PM -0600, Bjorn Helgaas wrote:
->>> >>On Mon, Feb 27, 2017 at 11:18:32AM +1100, Gavin Shan wrote:
->>> >>> The PowerNV platform is the only user of pcibios_sriov_disable().
->>> >>> The IOV BAR could be shifted by pci_iov_update_resource(). The
->>> >>> warning message in the function is printed if the IOV capability
->>> >>> is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
->>> >>> 
->>> >>>    pci_disable_sriov
->>> >>>    sriov_disable
->>> >>>    pnv_pci_sriov_disable
->>> >>>    pnv_pci_vf_resource_shift
->>> >>>    pci_update_resource
->>> >>>    pci_iov_update_resource
->>> >>> 
->>> >>> This fixes the issue by disabling IOV capability before calling
->>> >>> pcibios_sriov_disable(). With it, the disabling path matches with
->>> >>> the enabling path: pcibios_sriov_enable() is called before the
->>> >>> IOV capability is enabled.
->>> >>
->>> >>I'm vaguely uncomfortable about this path:
->>> >>
->>> >>  pci_disable_sriov
->>> >>    sriov_disable
->>> >>      pcibios_sriov_disable           # powerpc version
->>> >>	pnv_pci_sriov_disable
->>> >>	  pnv_pci_vf_resource_shift
->>> >>	    res = &dev->resource[i + PCI_IOV_RESOURCES]
->>> >>	    res->start += size * offset
->>> >>	    pci_update_resource
->>> >>	      pci_iov_update_resource
->>> >>	  pnv_pci_vf_release_m64
->>> >>
->>> >>1) "res" is already in the resource tree, so we shouldn't be changing
->>> >>   its start address, because that may make the tree inconsistent,
->>> >>   e.g., the resource may no longer be completely contained in its
->>> >>   parent, it may conflict with a sibling, etc.
->>> >>
->>> >>2) If we update "res->start", shouldn't we update "res->end"
->>> >>   correspondingly?
->>> >>
->>> >>It seems like it'd be better if we didn't update the device resources
->>> >>in the enable/disable paths.  If we could do the resource adjustments
->>> >>earlier, somewhere before we give the device to a driver, it seems
->>> >>like it would avoid these issues.
->>> >>
->>> >>We might have talked about these questions in the past, so I apologize
->>> >>if you've already explained this.  If that's the case, maybe we just
->>> >>need some comments in the code to help the next confused reader.
->>> >>
->>> >
->>> >Bjorn, thanks for review. I agree it's not perfect. We discussed this long
->>> >time ago as I can remember. Let me try to make it a bit more clear: In our
->>> >PHB hardware, there are 16 MMIO BARs. Each of them can be shared by 256 PEs
->>> >(A) and owned exclusively by one PE (B). When VF BAR size is small enough,
->>> >we take (A). Otherwise, we have to take (B). Only when taking (A), we need
->>> >expand/move/shrink the IOV BAR. So lets stick to (A) for discussion here.
->>> >
->>> >Under (A), PF's IOV BAR size is extended to ((256 * (VF BAR size)) when the
->>> >PF is probed. Then the @res, which corresponds to the IOV BAR, is assigned
->>> >and put into the resource tree during resource sizing and assignment stage.
->>> >The IOV capability is going to be enabled by PF's driver or sysfs entry, it
->>> >calls into pnv_pci_sriov_enable() where number of contigous PEs (equal to
->>> >number of VFs to be enabled) are allocated. We shift the IOV BAR base according
->>> >to the starting PE number of the allocated block. Afterewards, the IOV BAR
->>> >is restored when the IOV capability is disabled. So it's all about the PE.
->>> >The IOV BAR's end address isn't touched, we needn't update @res->end when
->>> >restoring the IOV BAR.
->>> >
->>> >In order to avoid moving IOV BAR base address, I need know the the PEs
->>> >for the VFs before resourcd sizing and assignment stage. It means I need
->>> >to reserve PEs in advance, which isn't nice because we never enable the
->>> >VFs. In that case, the PEs are wasted.
->>> >
->>> >Yeah, it's nice to have add some comments in pnv_pci_vf_resource_shift()
->>> >where pci_update_resource() is called. I will post another patch to
->>> >linux-ppcdev and you'll be copied. If you agree, I think you can merge
->>> >this patch as none of the concerns are too much related.
->>> >
->>> 
->>> Sorry, Bjorn, ping! Please let me know if there are more concerns you have.
->>
->>I think we had a misunderstanding -- you mentioned adding some
->>comments and wrote "I will post another patch", and I *thought* you
->>meant you were going to post another version of *this* patch with some
->>updated comments.  So I've been waiting for that updated patch.  But I
->>think you've been waiting for me to merge *this* patch as-is.
->>
->>To avoid having this discussion a third time in the future, I think
->>you should add some comments at the point where you update the
->>resource.  Updating a resource after it's in the resource tree is
->>clearly dangerous, so we need some explanation of why it's sort of OK
->>in this particular case.
->>
->>If you can write a comment and dig up a URL to our previous
->>discussion, I'd like to incorporate that into *this* patch before I
->>merge it.  The sooner we can document this, the less work it will be
->>in the future.
->>
->
->Ok. Sorry for the confusion and that I should looked into the code for more.
->We already had one comment like below in arch/powerpc/platforms/powernv/pci-ioda.c::
->pnv_pci_vf_resource_shift(). I think it's exactly what you like to have, please
->help to confirm. I believe it was added based on your comments long time ago when
->you review the SRIOV (for PowerNV) patches.
->
->        /*
->         * After doing so, there would be a "hole" in the /proc/iomem when
->         * offset is a positive value. It looks like the device return some
->         * mmio back to the system, which actually no one could use it.
->         */
->
->http://www.spinics.net/lists/linux-pci/msg39424.html
->
+On Tue, Feb 28, 2017 at 10:11:56AM -0700, Logan Gunthorpe wrote:
+> 
+> > This driver doesn't have anything to do with the PCI core, other than
+> > using the pci_register_driver() interface (just like all other drivers
+> > for PCI-connected devices), so drivers/pci doesn't really feel like
+> > the right place for it.  Putting it in drivers/pci leads to the sort
+> > of confusion you mentioned above ("To make this entirely clear ...").
+> > 
+> > Would drivers/perf or drivers/misc/switchtec/ be possible places for
+> > it?
+> 
+> I made a similar argument when we made the decision of where to put the
+> code. In the end, the device _is_ a PCI Switch and someone going through
+> menuconfig or the source tree would probably look there first.
+> 
+> As for drivers/perf, our device does a fair bit more than performance
+> counters so it doesn't seem like it really fits in there. drivers/misc
+> just seems like a dumping ground which we'd prefer not to contribute to.
+> We also considered drivers/char (seeing it exposes a char device), but
+> that also seems like a dumping ground with stuff that belongs and other
+> stuff that just ended up stuck between the cracks.
+> 
+> If you still feel strongly about this we can move it into misc, but I
+> think from an organizational perspective pci/switch makes a bit more sense.
 
-Bjorn, please let me know if you have concerns.
+It's not a perfect fit in drivers/pci because it's not bus
+infrastructure and I don't want to be the default maintainer of it,
+but I agree there's not really an alternative that's clearly better,
+so let's leave it where it is for now.
 
-Thanks,
-Gavin
+> In any case, I also wish we could have had this discussion 3 months ago
+> when we posted the RFC and not when I have people pushing to get this
+> merged.
+
+You and me both!  I hope some of those same people are pushing to help
+avoid the tragedy of the commons by helping review other
+contributions.
+
+Bjorn
