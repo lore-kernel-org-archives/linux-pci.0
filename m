@@ -1,109 +1,130 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 14 Mar 2017 16:46:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Subject: Re: Neophyte questions about PCIe
-Message-ID: <20170314214631.GA2021@bhelgaas-glaptop.roam.corp.google.com>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
- <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
- <9ba05c2c-57ef-b2c0-6a7c-457c392d98b5@free.fr>
- <df517167-d692-38a8-9c8f-a1112c7f578d@free.fr>
- <94b3c89c-b116-288f-7530-15cc2611f425@free.fr>
- <912c26d5-835f-9f39-73ba-db561b5bcffa@free.fr>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [RFC PATCH v2 01/32] x86: Add the Secure Encrypted Virtualization
+ CPU feature
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:12:09 -0500
+Message-ID: <148846752953.2349.17505492128445909591.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-In-Reply-To: <912c26d5-835f-9f39-73ba-db561b5bcffa@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- David Laight <david.laight@aculab.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Robin Murphy <robin.murphy@arm.com>, Shawn Lin <shawn.lin@rock-chips.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 14, 2017 at 04:54:00PM +0100, Mason wrote:
-> On 14/03/2017 15:00, Mason wrote:
-> 
-> > On 10/03/2017 18:49, Mason wrote:
-> > 
-> >> /* Root complex reports incorrect device class */
-> >> static void tango_pcie_fixup_class(struct pci_dev *dev)
-> >> {
-> >> 	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
-> >> }
-> > 
-> > Gen1 controller reports class/rev = 0x04800001
-> > Gen2 controller reports class/rev = 0x06000001
-> > 
-> > #define PCI_CLASS_BRIDGE_HOST		0x0600
-> > #define PCI_CLASS_BRIDGE_ISA		0x0601
-> > #define PCI_CLASS_BRIDGE_EISA		0x0602
-> > #define PCI_CLASS_BRIDGE_MC		0x0603
-> > #define PCI_CLASS_BRIDGE_PCI		0x0604
-> > #define PCI_CLASS_BRIDGE_PCMCIA		0x0605
-> > #define PCI_CLASS_BRIDGE_NUBUS		0x0606
-> > #define PCI_CLASS_BRIDGE_CARDBUS	0x0607
-> > #define PCI_CLASS_BRIDGE_RACEWAY	0x0608
-> > #define PCI_CLASS_BRIDGE_OTHER		0x0680
-> > 
-> > My fixup replaces 0x048000 with 0x060400.
-> > 
-> > 	0x060400 != 0x060000
-> > 
-> > Which is correct:
-> > PCI_CLASS_BRIDGE_HOST or PCI_CLASS_BRIDGE_PCI?
-> > 
-> > Naively, I would expect Host/PCI bridge to be more correct
-> > for a root complex.
-> 
-> But that's very likely wrong, since the code in Linux does:
-> 
-> 	switch (dev->hdr_type) {		    /* header type */
-> 	case PCI_HEADER_TYPE_BRIDGE:		    /* bridge header */
-> 		if (class != PCI_CLASS_BRIDGE_PCI)
-> 			goto bad;
-> 		/* The PCI-to-PCI bridge spec requires that subtractive
-> 		   decoding (i.e. transparent) bridge must have programming
-> 		   interface code of 0x01. */
-> 
-> So a class of PCI_CLASS_BRIDGE_HOST would error out, I think.
-> Does this mean I need to fixup Gen2 as well?
-> (Since it reports 0x060000)
+From: Tom Lendacky <thomas.lendacky@amd.com>
 
-Header Type 1 (PCI_HEADER_TYPE_BRIDGE) identifies PCI-to-PCI bridges
-(see PCI spec r3.0, sec 6.1).  These devices use the type 1
-configuration header (PCI-to-PCI Bridge spec r1.2, sec 3.2) and they
-exist on a primary PCI bus and forward transactions between that bus
-and a secondary PCI bus.  The PCI core controls the memory, I/O, and
-prefetchable memory windows between the primary and secondary buses
-using the window registers in the type 1 header.
+Update the CPU features to include identifying and reporting on the
+Secure Encrypted Virtualization (SEV) feature.  SME is identified by
+CPUID 0x8000001f, but requires BIOS support to enable it (set bit 23 of
+MSR_K8_SYSCFG and set bit 0 of MSR_K7_HWCR).  Only show the SEV feature
+as available if reported by CPUID and enabled by BIOS.
 
-So I guess if this device has a type 1 header, it should use
-PCI_CLASS_BRIDGE_PCI; otherwise use PCI_CLASS_BRIDGE_HOST.
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+---
+ arch/x86/include/asm/cpufeatures.h |    1 +
+ arch/x86/include/asm/msr-index.h   |    2 ++
+ arch/x86/kernel/cpu/amd.c          |   22 ++++++++++++++++++----
+ arch/x86/kernel/cpu/scattered.c    |    1 +
+ 4 files changed, 22 insertions(+), 4 deletions(-)
 
-I don't know the topology of your hardware, but normally a Root
-Complex itself is not a PCI-to-PCI bridge.  It usually *contains*
-several Root Ports, which appear to be on the root PCI bus and act as
-bridges to a secondary bus.  The RC might appear as a type 0 device
-but the programming model is not specified.  The Root Ports would be
-type 1 devices like standard PCI-to-PCI bridges (PCIe spec r3.0, sec
-1.3.1 and 1.4).
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/arch/x86/include/asm/cpufeatures.h b/arch/x86/include/asm/cpufeatures.h
+index b1a4468..9907579 100644
+--- a/arch/x86/include/asm/cpufeatures.h
++++ b/arch/x86/include/asm/cpufeatures.h
+@@ -188,6 +188,7 @@
+  */
+ 
+ #define X86_FEATURE_SME		( 7*32+ 0) /* AMD Secure Memory Encryption */
++#define X86_FEATURE_SEV		( 7*32+ 1) /* AMD Secure Encrypted Virtualization */
+ #define X86_FEATURE_CPB		( 7*32+ 2) /* AMD Core Performance Boost */
+ #define X86_FEATURE_EPB		( 7*32+ 3) /* IA32_ENERGY_PERF_BIAS support */
+ #define X86_FEATURE_CAT_L3	( 7*32+ 4) /* Cache Allocation Technology L3 */
+diff --git a/arch/x86/include/asm/msr-index.h b/arch/x86/include/asm/msr-index.h
+index e2d0503..e8b3b28 100644
+--- a/arch/x86/include/asm/msr-index.h
++++ b/arch/x86/include/asm/msr-index.h
+@@ -361,6 +361,8 @@
+ #define MSR_K7_PERFCTR3			0xc0010007
+ #define MSR_K7_CLK_CTL			0xc001001b
+ #define MSR_K7_HWCR			0xc0010015
++#define MSR_K7_HWCR_SMMLOCK_BIT		0
++#define MSR_K7_HWCR_SMMLOCK		BIT_ULL(MSR_K7_HWCR_SMMLOCK_BIT)
+ #define MSR_K7_FID_VID_CTL		0xc0010041
+ #define MSR_K7_FID_VID_STATUS		0xc0010042
+ 
+diff --git a/arch/x86/kernel/cpu/amd.c b/arch/x86/kernel/cpu/amd.c
+index 6bddda3..675958e 100644
+--- a/arch/x86/kernel/cpu/amd.c
++++ b/arch/x86/kernel/cpu/amd.c
+@@ -617,10 +617,13 @@ static void early_init_amd(struct cpuinfo_x86 *c)
+ 		set_cpu_bug(c, X86_BUG_AMD_E400);
+ 
+ 	/*
+-	 * BIOS support is required for SME. If BIOS has enabld SME then
+-	 * adjust x86_phys_bits by the SME physical address space reduction
+-	 * value. If BIOS has not enabled SME then don't advertise the
+-	 * feature (set in scattered.c).
++	 * BIOS support is required for SME and SEV.
++	 *   For SME: If BIOS has enabled SME then adjust x86_phys_bits by
++	 *	      the SME physical address space reduction value.
++	 *	      If BIOS has not enabled SME then don't advertise the
++	 *	      SME feature (set in scattered.c).
++	 *   For SEV: If BIOS has not enabled SEV then don't advertise the
++	 *            SEV feature (set in scattered.c).
+ 	 */
+ 	if (c->extended_cpuid_level >= 0x8000001f) {
+ 		if (cpu_has(c, X86_FEATURE_SME)) {
+@@ -637,6 +640,17 @@ static void early_init_amd(struct cpuinfo_x86 *c)
+ 				clear_cpu_cap(c, X86_FEATURE_SME);
+ 			}
+ 		}
++
++		if (cpu_has(c, X86_FEATURE_SEV)) {
++			u64 syscfg, hwcr;
++
++			/* Check if SEV is enabled */
++			rdmsrl(MSR_K8_SYSCFG, syscfg);
++			rdmsrl(MSR_K7_HWCR, hwcr);
++			if (!(syscfg & MSR_K8_SYSCFG_MEM_ENCRYPT) ||
++			    !(hwcr & MSR_K7_HWCR_SMMLOCK))
++				clear_cpu_cap(c, X86_FEATURE_SEV);
++		}
+ 	}
+ }
+ 
+diff --git a/arch/x86/kernel/cpu/scattered.c b/arch/x86/kernel/cpu/scattered.c
+index cabda87..c3f58d9 100644
+--- a/arch/x86/kernel/cpu/scattered.c
++++ b/arch/x86/kernel/cpu/scattered.c
+@@ -31,6 +31,7 @@ static const struct cpuid_bit cpuid_bits[] = {
+ 	{ X86_FEATURE_CPB,		CPUID_EDX,  9, 0x80000007, 0 },
+ 	{ X86_FEATURE_PROC_FEEDBACK,    CPUID_EDX, 11, 0x80000007, 0 },
+ 	{ X86_FEATURE_SME,		CPUID_EAX,  0, 0x8000001f, 0 },
++	{ X86_FEATURE_SEV,		CPUID_EAX,  1, 0x8000001f, 0 },
+ 	{ 0, 0, 0, 0, 0 }
+ };
+ 
