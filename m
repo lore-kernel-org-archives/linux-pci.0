@@ -1,228 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v3 21/23] Documentation: PCI: Add userguide for PCI endpoint test function
-Date: Thu, 9 Mar 2017 13:27:32 +0530
-Message-ID: <1489046254-19919-22-git-send-email-kishon@ti.com>
-In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
-References: <1489046254-19919-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V2] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "timur@codeaurora.org" <timur@codeaurora.org>,
+ "cov@codeaurora.org" <cov@codeaurora.org>,
+ Bjorn Helgaas <bhelgaas@google.com>
+References: <1485891928-14573-1-git-send-email-okaya@codeaurora.org>
+ <92EBB4272BF81E4089A7126EC1E7B2846666830C@IRSMSX101.ger.corp.intel.com>
+ <b78207b6-2c22-3e6d-4837-8b4b396c4f5d@codeaurora.org>
+ <92EBB4272BF81E4089A7126EC1E7B28466668774@IRSMSX101.ger.corp.intel.com>
+ <f8f67b32-21eb-232b-2b7c-28b603865b9d@codeaurora.org>
+ <92EBB4272BF81E4089A7126EC1E7B28466669BFF@IRSMSX101.ger.corp.intel.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <fed12fe1-3b13-0118-6a11-5004779d9c06@codeaurora.org>
+Date: Thu, 2 Mar 2017 13:10:53 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B28466669BFF@IRSMSX101.ger.corp.intel.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add documentation to help users use pci-epf-test function driver
-and pci_endpoint_test host driver for testing PCI.
+Hi Mayurkumar
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/PCI/00-INDEX                    |    2 +
- Documentation/PCI/endpoint/pci-test-howto.txt |  179 +++++++++++++++++++++++++
- 2 files changed, 181 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/pci-test-howto.txt
+On 3/2/2017 11:05 AM, Patel, Mayurkumar wrote:
+>>
+>> Hi Bjorn,
+>>
+>> On 2/28/2017 1:57 PM, Patel, Mayurkumar wrote:
+>>>> I was trying to figure out when to use saved values vs. the values in
+>>>> registers by looking at the enable_cnt.
+>>>> enable_cnt is 0 during boot on my system.
+>>> enable_cnt for the root port on my system is set to 1 for "root port" already without saving
+>>> any ASPM related settings.
+>>>
+>>>
+>>
+>> What would be the best way to figure out when to save power-on values from
+>> the registers?
+>>
+> 
+> I can upload the diffs) because enable_cnt in pci_enable_device() can be triggered
+> from multiple places at boot time so it might not be safe to use it? 
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index 53717b7..fd533c7 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -18,5 +18,7 @@ endpoint/pci-endpoint-cfs.txt
- 	- guide to use configfs to configure the pci endpoint function.
- endpoint/pci-test-function.txt
- 	- specification of *pci test* function device.
-+endpoint/pci-test-howto.txt
-+	- userguide for PCI endpoint test function.
- endpoint/function/binding/
- 	- binding documentation for pci endpoint function
-diff --git a/Documentation/PCI/endpoint/pci-test-howto.txt b/Documentation/PCI/endpoint/pci-test-howto.txt
-new file mode 100644
-index 0000000..730b70c
---- /dev/null
-+++ b/Documentation/PCI/endpoint/pci-test-howto.txt
-@@ -0,0 +1,179 @@
-+			    PCI TEST USERGUIDE
-+		    Kishon Vijay Abraham I <kishon@ti.com>
-+
-+This document is a guide to help users use pci-epf-test function driver
-+and pci_endpoint_test host driver for testing PCI. The list of steps to
-+be followed in the host side and EP side is given below.
-+
-+1. Endpoint Device
-+
-+1.1 Endpoint Controller Devices
-+
-+To find the list of endpoint controller devices in the system:
-+
-+	# ls /sys/class/pci_epc/
-+	  51000000.pcie_ep
-+
-+If PCI_ENDPOINT_CONFIGFS is enabled
-+	# ls /sys/kernel/config/pci_ep/controllers
-+	  51000000.pcie_ep
-+
-+1.2 Endpoint Function Drivers
-+
-+To find the list of endpoint function drivers in the system:
-+
-+	# ls /sys/bus/pci-epf/drivers
-+	  pci_epf_test
-+
-+If PCI_ENDPOINT_CONFIGFS is enabled
-+	# ls /sys/kernel/config/pci_ep/functions
-+	  pci_epf_test
-+
-+1.3 Creating pci-epf-test Device
-+
-+PCI endpoint function device can be created using the configfs. To create
-+pci-epf-test device, the following commands can be used
-+
-+	# mount -t configfs none /sys/kernel/config
-+	# cd /sys/kernel/config/pci_ep/
-+	# mkdir functions/pci_epf_test/func1
-+
-+The "mkdir func1" above creates the pci-epf-test function device that will
-+be probed by pci_epf_test driver.
-+
-+The PCI endpoint framework populates the directory with the following
-+configurable fields.
-+
-+	# ls functions/pci_epf_test/func1
-+	  baseclass_code	interrupt_pin	revid		subsys_vendor_id
-+	  cache_line_size	msi_interrupts	subclass_code	vendorid
-+	  deviceid          	progif_code	subsys_id
-+
-+The pci endpoint function driver populates these entries with default values
-+when the device is bound to the driver. The pci-epf-test driver populates
-+vendorid with 0xffff and interrupt_pin with 0x0001
-+
-+	# cat functions/pci_epf_test/func1/vendorid
-+	  0xffff
-+	# cat functions/pci_epf_test/func1/interrupt_pin
-+	  0x0001
-+
-+1.4 Configuring pci-epf-test Device
-+
-+The user can configure the pci-epf-test device using configfs entry. In order
-+to change the vendorid and the number of MSI interrupts used by the function
-+device, the following commands can be used.
-+
-+	# echo 0x104c > functions/pci_epf_test/func1/vendorid
-+	# echo 0xb500 > functions/pci_epf_test/func1/deviceid
-+	# echo 16 > functions/pci_epf_test/func1/msi_interrupts
-+
-+1.5 Binding pci-epf-test Device to EP Controller
-+
-+In order for the endpoint function device to be useful, it has to be bound to
-+a PCI endpoint controller driver. Use the configfs to bind the function
-+device to one of the controller driver present in the system.
-+
-+	# ln -s functions/pci_epf_test/func1 controllers/51000000.pcie_ep/
-+
-+Once the above step is completed, the PCI endpoint is ready to establish a link
-+with the host.
-+
-+1.6 Start the Link
-+
-+In order for the endpoint device to establish a link with the host, the _start_
-+field should be populated with '1'.
-+
-+	# echo 1 > controllers/51000000.pcie_ep/start
-+
-+2. RootComplex Device
-+
-+2.1 lspci Output
-+
-+Note that the devices listed here correspond to the value populated in 1.4 above
-+
-+	00:00.0 PCI bridge: Texas Instruments Device 8888 (rev 01)
-+	01:00.0 Unassigned class [ff00]: Texas Instruments Device b500
-+
-+2.2 Using Endpoint Test function Device
-+
-+pcitest.sh added in tools/pci/ can be used to run all the default PCI endpoint
-+tests. Before pcitest.sh can be used pcitest.c should be compiled using the
-+following commands.
-+
-+	cd <kernel-dir>
-+	make headers_install ARCH=arm
-+	arm-linux-gnueabihf-gcc -Iusr/include tools/pci/pcitest.c -o pcitest
-+	cp pcitest  <rootfs>/usr/sbin/
-+	cp tools/pci/pcitest.sh <rootfs>
-+
-+2.2.1 pcitest.sh Output
-+	# ./pcitest.sh
-+	BAR tests
-+
-+	BAR0:           OKAY
-+	BAR1:           OKAY
-+	BAR2:           OKAY
-+	BAR3:           OKAY
-+	BAR4:           NOT OKAY
-+	BAR5:           NOT OKAY
-+
-+	Interrupt tests
-+
-+	LEGACY IRQ:     NOT OKAY
-+	MSI1:           OKAY
-+	MSI2:           OKAY
-+	MSI3:           OKAY
-+	MSI4:           OKAY
-+	MSI5:           OKAY
-+	MSI6:           OKAY
-+	MSI7:           OKAY
-+	MSI8:           OKAY
-+	MSI9:           OKAY
-+	MSI10:          OKAY
-+	MSI11:          OKAY
-+	MSI12:          OKAY
-+	MSI13:          OKAY
-+	MSI14:          OKAY
-+	MSI15:          OKAY
-+	MSI16:          OKAY
-+	MSI17:          NOT OKAY
-+	MSI18:          NOT OKAY
-+	MSI19:          NOT OKAY
-+	MSI20:          NOT OKAY
-+	MSI21:          NOT OKAY
-+	MSI22:          NOT OKAY
-+	MSI23:          NOT OKAY
-+	MSI24:          NOT OKAY
-+	MSI25:          NOT OKAY
-+	MSI26:          NOT OKAY
-+	MSI27:          NOT OKAY
-+	MSI28:          NOT OKAY
-+	MSI29:          NOT OKAY
-+	MSI30:          NOT OKAY
-+	MSI31:          NOT OKAY
-+	MSI32:          NOT OKAY
-+
-+	Read Tests
-+
-+	READ (      1 bytes):           OKAY
-+	READ (   1024 bytes):           OKAY
-+	READ (   1025 bytes):           OKAY
-+	READ (1024000 bytes):           OKAY
-+	READ (1024001 bytes):           OKAY
-+
-+	Write Tests
-+
-+	WRITE (      1 bytes):          OKAY
-+	WRITE (   1024 bytes):          OKAY
-+	WRITE (   1025 bytes):          OKAY
-+	WRITE (1024000 bytes):          OKAY
-+	WRITE (1024001 bytes):          OKAY
-+
-+	Copy Tests
-+
-+	COPY (      1 bytes):           OKAY
-+	COPY (   1024 bytes):           OKAY
-+	COPY (   1025 bytes):           OKAY
-+	COPY (1024000 bytes):           OKAY
-+	COPY (1024001 bytes):           OKAY
+Go ahead and share your diff. It doesn't hurt to look at other alternatives.
+
+> 
+> @Kaya/Bjorn: Do you have any other suggestions or Could you also please help by comment what would make sense?
+> 
+> 
+>> --
+>> Sinan Kaya
+>> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+>> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> Intel Deutschland GmbH
+> Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
+> Tel: +49 89 99 8853-0, www.intel.de
+> Managing Directors: Christin Eisenschmid, Christian Lamprechter
+> Chairperson of the Supervisory Board: Nicole Lau
+> Registered Office: Munich
+> Commercial Register: Amtsgericht Muenchen HRB 186928
+> 
+> 
+
+
 -- 
-1.7.9.5
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
