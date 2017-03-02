@@ -1,97 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:59356 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753707AbdCIIBE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2017 03:01:04 -0500
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v3 20/23] tools: PCI: Add sample test script to invoke pcitest
-Date: Thu, 9 Mar 2017 13:27:31 +0530
-Message-ID: <1489046254-19919-21-git-send-email-kishon@ti.com>
-In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
-References: <1489046254-19919-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [RFC PATCH v2 23/32] kvm: introduce KVM_MEMORY_ENCRYPT_OP ioctl
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:17:11 -0500
+Message-ID: <148846783136.2349.9362218518503742320.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a simple test script that invokes the pcitest userspace tool
-to perform all the PCI endpoint tests (BAR tests, interrupt tests,
-read tests, write tests and copy tests).
+If hardware supports encrypting then KVM_MEMORY_ENCRYPT_OP ioctl can
+be used by qemu to issue platform specific memory encryption commands.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
 ---
- tools/pci/pcitest.sh |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
- create mode 100644 tools/pci/pcitest.sh
+ arch/x86/include/asm/kvm_host.h |    2 ++
+ arch/x86/kvm/x86.c              |   12 ++++++++++++
+ include/uapi/linux/kvm.h        |    2 ++
+ 3 files changed, 16 insertions(+)
 
-diff --git a/tools/pci/pcitest.sh b/tools/pci/pcitest.sh
-new file mode 100644
-index 0000000..5442bbe
---- /dev/null
-+++ b/tools/pci/pcitest.sh
-@@ -0,0 +1,56 @@
-+#!/bin/sh
+diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+index bff1f15..62651ad 100644
+--- a/arch/x86/include/asm/kvm_host.h
++++ b/arch/x86/include/asm/kvm_host.h
+@@ -1033,6 +1033,8 @@ struct kvm_x86_ops {
+ 	void (*cancel_hv_timer)(struct kvm_vcpu *vcpu);
+ 
+ 	void (*setup_mce)(struct kvm_vcpu *vcpu);
 +
-+echo "BAR tests"
-+echo
++	int (*memory_encryption_op)(struct kvm *kvm, void __user *argp);
+ };
+ 
+ struct kvm_arch_async_pf {
+diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+index 2099df8..6a737e9 100644
+--- a/arch/x86/kvm/x86.c
++++ b/arch/x86/kvm/x86.c
+@@ -3926,6 +3926,14 @@ static int kvm_vm_ioctl_enable_cap(struct kvm *kvm,
+ 	return r;
+ }
+ 
++static int kvm_vm_ioctl_memory_encryption_op(struct kvm *kvm, void __user *argp)
++{
++	if (kvm_x86_ops->memory_encryption_op)
++		return kvm_x86_ops->memory_encryption_op(kvm, argp);
 +
-+bar=0
++	return -ENOTTY;
++}
 +
-+while [ $bar -lt 6 ]
-+do
-+	pcitest -b $bar
-+	bar=`expr $bar + 1`
-+done
-+echo
-+
-+echo "Interrupt tests"
-+echo
-+
-+pcitest -l
-+msi=1
-+
-+while [ $msi -lt 33 ]
-+do
-+        pcitest -m $msi
-+        msi=`expr $msi + 1`
-+done
-+echo
-+
-+echo "Read Tests"
-+echo
-+
-+pcitest -r -s 1
-+pcitest -r -s 1024
-+pcitest -r -s 1025
-+pcitest -r -s 1024000
-+pcitest -r -s 1024001
-+echo
-+
-+echo "Write Tests"
-+echo
-+
-+pcitest -w -s 1
-+pcitest -w -s 1024
-+pcitest -w -s 1025
-+pcitest -w -s 1024000
-+pcitest -w -s 1024001
-+echo
-+
-+echo "Copy Tests"
-+echo
-+
-+pcitest -c -s 1
-+pcitest -c -s 1024
-+pcitest -c -s 1025
-+pcitest -c -s 1024000
-+pcitest -c -s 1024001
-+echo
--- 
-1.7.9.5
+ long kvm_arch_vm_ioctl(struct file *filp,
+ 		       unsigned int ioctl, unsigned long arg)
+ {
+@@ -4189,6 +4197,10 @@ long kvm_arch_vm_ioctl(struct file *filp,
+ 		r = kvm_vm_ioctl_enable_cap(kvm, &cap);
+ 		break;
+ 	}
++	case KVM_MEMORY_ENCRYPT_OP: {
++		r = kvm_vm_ioctl_memory_encryption_op(kvm, argp);
++		break;
++	}
+ 	default:
+ 		r = kvm_vm_ioctl_assigned_device(kvm, ioctl, arg);
+ 	}
+diff --git a/include/uapi/linux/kvm.h b/include/uapi/linux/kvm.h
+index cac48ed..fef7d83 100644
+--- a/include/uapi/linux/kvm.h
++++ b/include/uapi/linux/kvm.h
+@@ -1281,6 +1281,8 @@ struct kvm_s390_ucas_mapping {
+ #define KVM_S390_GET_IRQ_STATE	  _IOW(KVMIO, 0xb6, struct kvm_s390_irq_state)
+ /* Available with KVM_CAP_X86_SMM */
+ #define KVM_SMI                   _IO(KVMIO,   0xb7)
++/* Memory Encryption Commands */
++#define KVM_MEMORY_ENCRYPT_OP	  _IOWR(KVMIO, 0xb8, unsigned long)
+ 
+ #define KVM_DEV_ASSIGN_ENABLE_IOMMU	(1 << 0)
+ #define KVM_DEV_ASSIGN_PCI_2_3		(1 << 1)
