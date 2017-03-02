@@ -1,105 +1,248 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41378 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752524AbdCAPjz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 1 Mar 2017 10:39:55 -0500
-Date: Wed, 1 Mar 2017 09:39:19 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joshua Kinard <kumba@gentoo.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        James Hogan <james.hogan@imgtec.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Linux/MIPS <linux-mips@linux-mips.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 12/12] MIPS: PCI: Fix IP27 for the PCI_PROBE_ONLY case
-Message-ID: <20170301153919.GA13171@bhelgaas-glaptop.roam.corp.google.com>
-References: <CAErSpo4LsrPCtdZwp6CyT0jKhXLt3j=fGSiFjpRRTPUjFoKHtQ@mail.gmail.com>
- <c7ed6a1d-f625-d294-8910-dd2d93d34292@gentoo.org>
- <20170213224512.GA8080@bhelgaas-glaptop.roam.corp.google.com>
- <8ec2a0bf-6bd7-1366-38bc-7f7ba9a29971@gentoo.org>
- <20170214145628.GA10418@bhelgaas-glaptop.roam.corp.google.com>
- <926cfb3a-085f-164b-4ec3-76dc9db3298b@gentoo.org>
- <20170224183803.GB15547@bhelgaas-glaptop.roam.corp.google.com>
- <eefac3de-c857-4bc9-72cb-dec4d2b3a756@gentoo.org>
- <20170227163609.GA11162@bhelgaas-glaptop.roam.corp.google.com>
- <8caa732f-cbfe-1c91-4b00-be8693c653ed@gentoo.org>
+Received: from mail-co1nam03on0048.outbound.protection.outlook.com ([104.47.40.48]:62991
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755125AbdCBSAg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 13:00:36 -0500
+Subject: [RFC PATCH v2 00/32] x86: Secure Encrypted Virtualization (AMD)
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:12:01 -0500
+Message-ID: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8caa732f-cbfe-1c91-4b00-be8693c653ed@gentoo.org>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 27, 2017 at 07:25:58PM -0500, Joshua Kinard wrote:
-> On 02/27/2017 11:36, Bjorn Helgaas wrote:
-> > On Sat, Feb 25, 2017 at 04:34:12AM -0500, Joshua Kinard wrote:
-> >> On 02/24/2017 13:38, Bjorn Helgaas wrote:
-> >>> On Fri, Feb 24, 2017 at 03:50:26AM -0500, Joshua Kinard wrote:
+This RFC series provides support for AMD's new Secure Encrypted Virtualization
+(SEV) feature. This RFC is build upon Secure Memory Encryption (SME) RFCv4 [1].
 
-> So the logic used to read the vendor/dev IDs can probably be
-> extended to poke the BARs via the ~0 trick OR read out the
-> pre-defined mappings from ARCS firmware, then use that info to size
-> out the BRIDGE windows into Crosstalk space and then set up our
-> IORESOURCE_MEM and IORESOURCE_IO structs with the right information
-> to pass into register_pci_controller().
+SEV is an extension to the AMD-V architecture which supports running multiple
+VMs under the control of a hypervisor. When enabled, SEV hardware tags all
+code and data with its VM ASID which indicates which VM the data originated
+from or is intended for. This tag is kept with the data at all times when
+inside the SOC, and prevents that data from being used by anyone other than the
+owner. While the tag protects VM data inside the SOC, AES with 128 bit
+encryption protects data outside the SOC. When data leaves or enters the SOC,
+it is encrypted/decrypted  respectively by hardware with a key based on the
+associated tag.
 
-As you probably know, you can determine the size of a BAR regardless of
-whether it has been assigned.  So it doesn't matter whether ARCS has
-already assigned anything.  See __pci_read_base().
+SEV guest VMs have the concept of private and shared memory.  Private memory is
+encrypted with the  guest-specific key, while shared memory may be encrypted
+with hypervisor key.  Certain types of memory (namely instruction pages and
+guest page tables) are always treated as private memory by the hardware.
+For data memory, SEV guest VMs can choose which pages they would like to be
+private. The choice is done using the standard CPU page tables using the C-bit,
+and is fully controlled by the guest. Due to security reasons all the DMA
+operations inside the  guest must be performed on shared pages (C-bit clear).
+Note that since C-bit is only controllable by the guest OS when it is operating
+in 64-bit or 32-bit PAE mode, in all other modes the SEV hardware forces the
+C-bit to a 1.
 
-> I dunno, I'll probably try reading the ARCS mappings idea first, as
-> that seems easier.  I won't have a lot of time to play with things
-> in March, so getting something to work, even if it is sub-optimal,
-> is better than nothing working at all.
+SEV is designed to protect guest VMs from a benign but vulnerable (i.e. not
+fully malicious) hypervisor. In particular, it reduces the attack surface of
+guest VMs and can prevent certain types of VM-escape bugs (e.g. hypervisor
+read-anywhere) from being used to steal guest data.
 
-The simplest possible thing is to enable some pre-defined set of
-windows and accept that this may lead to configuration restrictions,
-e.g., a device with large BARs may work only in certain slots.
+The RFC series also expands crypto driver (ccp.ko) to include the support for
+Platform Security Processor (PSP) which is used for communicating with SEV
+firmware that runs within the AMD secure processor providing a secure key
+management interfaces. The hypervisor uses this interface to encrypt the
+bootstrap code and perform common activities such as launching, running,
+snapshotting, migrating and debugging encrypted guest.
 
-> Each window, at least on Octane, lives at distinct addresses in
-> Crosstalk space.  A specific address within each window can point to
-> the same device on a subordinate PCI bus, but I think that will be
-> transparent to the Linux PCI core.  My thinking is, if I setup
-> IORESOURCE_MEM structs for each window for each BRIDGE widget, then
-> the PCI code will check each struct to see which one contains the
-> address range that the PCI device's BAR wants.
-> 
-> E.g., Using widget 0xd as an example for readability, if I know my
-> three windows in Crosstalk space are:
->     Small:  0x0000_1d00_0000 - 0x0000_1dff_ffff
->     Medium: 0x000e_8000_0000 - 0x000e_ffff_ffff
->     Large:  0x00d0_0000_0000 - 0x00df_ffff_ffff
-> 
-> And for that specific BRIDGE, if I pass those three ranges as
-> IORESOURCE_MEM structs, then shouldn't the PCI core, if it is told
-> that a specific devices BAR wants range 1d200000 to 1d203fff, select
-> the small window mapping?  E,g., is it going to try to find the
-> smallest possible window to fit first?  Or will it instead try to
-> match using the large window?
+A new ioctl (KVM_MEMORY_ENCRYPT_OP) is introduced which can be used by Qemu to
+issue SEV guest life cycle commands.
 
-No, when matching a BAR value to a host bridge window, the PCI core
-will definitely not look for the smallest (or largest) window that
-contains the BAR.  
+The RFC series also includes patches required in guest OS to enable SEV feature.
+A guest OS can check SEV support by calling KVM_FEATURE cpuid instruction.
 
-The core reads the BAR value (a bus address), then searches the host
-bridge windows for one that maps to a region that contains the bus
-address.  This happens in pcibios_bus_to_resource(), which is called
-by __pci_read_base().
+The patch breakdown:
+* [1 - 17]: guest OS specific changes when SEV is active
+* [18]: already queued in kvm upstream tree but was not in tip tree hence its
+  included so that build does not fail
+* [19 - 21]: since CCP and PSP shares the same PCIe ID hence the patch expands
+  the CCP driver by creating a high level AMD Secure Processor (SP) framework
+  to allow integration of PSP device into ccp.ko.
+* [22 - 32]: hypervisor changes to support memory encryption
 
-The search order is undefined because the core assumes the windows do
-not overlap in PCI bus address space.  It can't deal with two windows
-that map to the same PCI space because when we allocate space when
-assigning a BAR, we search for available CPU address space, not for
-available PCI bus address space.
+The following links provide additional details:
 
-If window A and window B both map to PCI bus address X, we may assign
-space from window A to PCI BAR 1 and space from window B to PCI BAR 2.
-Then we have two BARs at the same PCI bus address, which will cause
-conflicts.
+AMD Memory Encryption whitepaper:
+http://amd-dev.wpengine.netdna-cdn.com/wordpress/media/2013/12/AMD_Memory_Encryption_Whitepaper_v7-Public.pdf
 
-I don't think we currently check in the PCI core for host bridge
-windows that map to overlapping PCI bus space.  Maybe we should, and
-just reject anything that overlaps.
+AMD64 Architecture Programmer's Manual:
+    http://support.amd.com/TechDocs/24593.pdf
+    SME is section 7.10
+    SEV is section 15.34
 
-Bjorn
+Secure Encrypted Virutualization Key Management:
+http://support.amd.com/TechDocs/55766_SEV-KM API_Specification.pdf
+
+KVM Forum Presentation:
+http://www.linux-kvm.org/images/7/74/02x08A-Thomas_Lendacky-AMDs_Virtualizatoin_Memory_Encryption_Technology.pdf
+
+[1] http://marc.info/?l=linux-kernel&m=148725974113693&w=2
+
+---
+
+Based on the feedbacks, we have started adding the SEV guest support in OVMF
+BIOS. This series has been tested using EDK2/OVMF BIOS, the initial EDK2 patches
+has been submmited on edk2 mailing list for discussion.
+
+TODO:
+ - add support for migration commands
+ - update QEMU RFC's to SEV spec 0.14
+ - investigate virtio and vfio support for SEV guest
+ - investigate SMM support for SEV guest
+ - add support for nested virtualization
+
+Changes since v1:
+ - update to newer SEV key management API spec (0.12 -> 0.14)
+ - expand the CCP driver and integrate the PSP interface support
+ - remove the usage of SEV ref_count and release the SEV FW resources in
+   kvm_x86_ops->vm_destroy
+ - acquire the kvm->lock before executing the SEV commands and release on exit.
+ - rename ioctl from KVM_SEV_ISSUE_CMD to KVM_MEMORY_ENCRYPT_OP
+ - extend KVM_MEMORY_ENCRYPT_OP ioctl to require file descriptor for the SEV
+   device. A program without access to /dev/sev will not be able to issue SEV
+   commands
+ - update vmcb on succesful LAUNCH_FINISH to indicate that SEV is active
+ - serveral fixes based on Paolo's review feedbacks
+ - add APIs to support sharing the guest physical address with hypervisor
+ - update kvm pvclock driver to use the shared buffer when SEV is active
+ - pin the SEV guest memory
+
+Brijesh Singh (18):
+      x86: mm: Provide support to use memblock when spliting large pages
+      x86: Add support for changing memory encryption attribute in early boot
+      x86: kvm: Provide support to create Guest and HV shared per-CPU variables
+      x86: kvmclock: Clear encryption attribute when SEV is active
+      crypto: ccp: Introduce the AMD Secure Processor device
+      crypto: ccp: Add Platform Security Processor (PSP) interface support
+      crypto: ccp: Add Secure Encrypted Virtualization (SEV) interface support
+      kvm: svm: prepare to reserve asid for SEV guest
+      kvm: introduce KVM_MEMORY_ENCRYPT_OP ioctl
+      kvm: x86: prepare for SEV guest management API support
+      kvm: svm: Add support for SEV LAUNCH_START command
+      kvm: svm: Add support for SEV LAUNCH_UPDATE_DATA command
+      kvm: svm: Add support for SEV LAUNCH_FINISH command
+      kvm: svm: Add support for SEV GUEST_STATUS command
+      kvm: svm: Add support for SEV DEBUG_DECRYPT command
+      kvm: svm: Add support for SEV DEBUG_ENCRYPT command
+      kvm: svm: Add support for SEV LAUNCH_MEASURE command
+      x86: kvm: Pin the guest memory when SEV is active
+
+Tom Lendacky (14):
+      x86: Add the Secure Encrypted Virtualization CPU feature
+      x86: Secure Encrypted Virtualization (SEV) support
+      KVM: SVM: prepare for new bit definition in nested_ctl
+      KVM: SVM: Add SEV feature definitions to KVM
+      x86: Use encrypted access of BOOT related data with SEV
+      x86/pci: Use memremap when walking setup data
+      x86/efi: Access EFI data as encrypted when SEV is active
+      x86: Use PAGE_KERNEL protection for ioremap of memory page
+      x86: Change early_ioremap to early_memremap for BOOT data
+      x86: DMA support for SEV memory encryption
+      x86: Unroll string I/O when SEV is active
+      x86: Add early boot support when running with SEV active
+      KVM: SVM: Enable SEV by setting the SEV_ENABLE CPU feature
+      kvm: svm: Use the hardware provided GPA instead of page walk
+
+
+
+ arch/x86/boot/compressed/Makefile      |    2 
+ arch/x86/boot/compressed/head_64.S     |   16 
+ arch/x86/boot/compressed/mem_encrypt.S |   75 ++
+ arch/x86/include/asm/cpufeatures.h     |    1 
+ arch/x86/include/asm/io.h              |   26 +
+ arch/x86/include/asm/kvm_emulate.h     |    1 
+ arch/x86/include/asm/kvm_host.h        |   19 +
+ arch/x86/include/asm/mem_encrypt.h     |   29 +
+ arch/x86/include/asm/msr-index.h       |    2 
+ arch/x86/include/asm/svm.h             |    3 
+ arch/x86/include/uapi/asm/hyperv.h     |    4 
+ arch/x86/include/uapi/asm/kvm_para.h   |    4 
+ arch/x86/kernel/acpi/boot.c            |    4 
+ arch/x86/kernel/cpu/amd.c              |   22 +
+ arch/x86/kernel/cpu/scattered.c        |    1 
+ arch/x86/kernel/kvm.c                  |   43 +
+ arch/x86/kernel/kvmclock.c             |   65 ++
+ arch/x86/kernel/mem_encrypt_init.c     |   24 +
+ arch/x86/kernel/mpparse.c              |   10 
+ arch/x86/kvm/cpuid.c                   |    4 
+ arch/x86/kvm/emulate.c                 |   20 -
+ arch/x86/kvm/svm.c                     | 1051 ++++++++++++++++++++++++++++++++
+ arch/x86/kvm/x86.c                     |   60 ++
+ arch/x86/mm/ioremap.c                  |   44 +
+ arch/x86/mm/mem_encrypt.c              |  143 ++++
+ arch/x86/mm/pageattr.c                 |   51 +-
+ arch/x86/pci/common.c                  |    4 
+ arch/x86/platform/efi/efi_64.c         |   15 
+ drivers/crypto/Kconfig                 |   10 
+ drivers/crypto/ccp/Kconfig             |   55 +-
+ drivers/crypto/ccp/Makefile            |   10 
+ drivers/crypto/ccp/ccp-dev-v3.c        |   86 +--
+ drivers/crypto/ccp/ccp-dev-v5.c        |   73 +-
+ drivers/crypto/ccp/ccp-dev.c           |  137 ++--
+ drivers/crypto/ccp/ccp-dev.h           |   35 -
+ drivers/crypto/ccp/psp-dev.c           |  211 ++++++
+ drivers/crypto/ccp/psp-dev.h           |  102 +++
+ drivers/crypto/ccp/sev-dev.c           |  348 +++++++++++
+ drivers/crypto/ccp/sev-dev.h           |   67 ++
+ drivers/crypto/ccp/sev-ops.c           |  324 ++++++++++
+ drivers/crypto/ccp/sp-dev.c            |  324 ++++++++++
+ drivers/crypto/ccp/sp-dev.h            |  172 +++++
+ drivers/crypto/ccp/sp-pci.c            |  328 ++++++++++
+ drivers/crypto/ccp/sp-platform.c       |  268 ++++++++
+ drivers/sfi/sfi_core.c                 |    6 
+ include/asm-generic/vmlinux.lds.h      |    3 
+ include/linux/ccp.h                    |    3 
+ include/linux/mem_encrypt.h            |    6 
+ include/linux/mm.h                     |    1 
+ include/linux/percpu-defs.h            |    9 
+ include/linux/psp-sev.h                |  672 ++++++++++++++++++++
+ include/uapi/linux/Kbuild              |    1 
+ include/uapi/linux/kvm.h               |  100 +++
+ include/uapi/linux/psp-sev.h           |  123 ++++
+ kernel/resource.c                      |   40 +
+ 55 files changed, 4991 insertions(+), 266 deletions(-)
+ create mode 100644 arch/x86/boot/compressed/mem_encrypt.S
+ create mode 100644 drivers/crypto/ccp/psp-dev.c
+ create mode 100644 drivers/crypto/ccp/psp-dev.h
+ create mode 100644 drivers/crypto/ccp/sev-dev.c
+ create mode 100644 drivers/crypto/ccp/sev-dev.h
+ create mode 100644 drivers/crypto/ccp/sev-ops.c
+ create mode 100644 drivers/crypto/ccp/sp-dev.c
+ create mode 100644 drivers/crypto/ccp/sp-dev.h
+ create mode 100644 drivers/crypto/ccp/sp-pci.c
+ create mode 100644 drivers/crypto/ccp/sp-platform.c
+ create mode 100644 include/linux/psp-sev.h
+ create mode 100644 include/uapi/linux/psp-sev.h
+
+
+--
+Brijesh Singh
