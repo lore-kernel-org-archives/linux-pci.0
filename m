@@ -1,79 +1,150 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0113.outbound.protection.outlook.com ([104.47.34.113]:26047
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0042.outbound.protection.outlook.com ([104.47.38.42]:6064
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751526AbdC0SOY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Mar 2017 14:14:24 -0400
-From: Long Li <longli@microsoft.com>
-To: KY Srinivasan <kys@microsoft.com>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "leann.ogasawara@canonical.com" <leann.ogasawara@canonical.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        "Stephen Hemminger" <sthemmin@microsoft.com>
-CC: "stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: RE: [PATCH 2/2] pci-hyperv: Fix an atomic bug
-Date: Mon, 27 Mar 2017 18:14:01 +0000
-Message-ID: <BN3PR03MB222767E990C6D37430F965D4CE330@BN3PR03MB2227.namprd03.prod.outlook.com>
-References: <1490378800-26907-1-git-send-email-kys@exchange.microsoft.com>
- <1490378842-26950-3-git-send-email-kys@exchange.microsoft.com>
-In-Reply-To: <1490378842-26950-3-git-send-email-kys@exchange.microsoft.com>
-Content-Type: text/plain; charset="us-ascii"
+        id S1752095AbdCBPUE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 10:20:04 -0500
+Subject: [RFC PATCH v2 10/32] x86: DMA support for SEV memory encryption
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:14:25 -0500
+Message-ID: <148846766532.2349.4832844575566575886.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: devel [mailto:driverdev-devel-bounces@linuxdriverproject.org] On
-> Behalf Of kys@exchange.microsoft.com
-> Sent: Friday, March 24, 2017 11:07 AM
-> To: helgaas@kernel.org; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; devel@linuxdriverproject.org; olaf@aepfle.de;
-> apw@canonical.com; vkuznets@redhat.com; jasowang@redhat.com;
-> leann.ogasawara@canonical.com; marcelo.cerri@canonical.com; Stephen
-> Hemminger <sthemmin@microsoft.com>
-> Cc: stable@vger.kernel.org
-> Subject: [PATCH 2/2] pci-hyperv: Fix an atomic bug
->=20
-> From: K. Y. Srinivasan <kys@microsoft.com>
->=20
-> The memory allocation here needs to be non-blocking.
-> Fix the issue.
->=20
-> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
-> Cc: <stable@vger.kernel.org>
+From: Tom Lendacky <thomas.lendacky@amd.com>
 
-Reviewed-by: Long Li <longli@microsoft.com>
+DMA access to memory mapped as encrypted while SEV is active can not be
+encrypted during device write or decrypted during device read. In order
+for DMA to properly work when SEV is active, the swiotlb bounce buffers
+must be used.
 
-> ---
->  drivers/pci/host/pci-hyperv.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
->=20
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
-c
-> index 32a16fb..85088a1 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -877,7 +877,7 @@ static void hv_compose_msi_msg(struct irq_data
-> *data, struct msi_msg *msg)
->                 hv_int_desc_free(hpdev, int_desc);
->         }
->=20
-> -       int_desc =3D kzalloc(sizeof(*int_desc), GFP_KERNEL);
-> +       int_desc =3D kzalloc(sizeof(*int_desc), GFP_ATOMIC);
->         if (!int_desc)
->                 goto drop_reference;
->=20
-> --
-> 1.7.1
->=20
-> _______________________________________________
-> devel mailing list
-> devel@linuxdriverproject.org
-> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+---
+ arch/x86/mm/mem_encrypt.c |   77 +++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 77 insertions(+)
+
+diff --git a/arch/x86/mm/mem_encrypt.c b/arch/x86/mm/mem_encrypt.c
+index 090419b..7df5f4c 100644
+--- a/arch/x86/mm/mem_encrypt.c
++++ b/arch/x86/mm/mem_encrypt.c
+@@ -197,8 +197,81 @@ void __init sme_early_init(void)
+ 	/* Update the protection map with memory encryption mask */
+ 	for (i = 0; i < ARRAY_SIZE(protection_map); i++)
+ 		protection_map[i] = pgprot_encrypted(protection_map[i]);
++
++	if (sev_active())
++		swiotlb_force = SWIOTLB_FORCE;
++}
++
++static void *sme_alloc(struct device *dev, size_t size, dma_addr_t *dma_handle,
++		       gfp_t gfp, unsigned long attrs)
++{
++	unsigned long dma_mask;
++	unsigned int order;
++	struct page *page;
++	void *vaddr = NULL;
++
++	dma_mask = dma_alloc_coherent_mask(dev, gfp);
++	order = get_order(size);
++
++	gfp &= ~__GFP_ZERO;
++
++	page = alloc_pages_node(dev_to_node(dev), gfp, order);
++	if (page) {
++		dma_addr_t addr;
++
++		/*
++		 * Since we will be clearing the encryption bit, check the
++		 * mask with it already cleared.
++		 */
++		addr = phys_to_dma(dev, page_to_phys(page)) & ~sme_me_mask;
++		if ((addr + size) > dma_mask) {
++			__free_pages(page, get_order(size));
++		} else {
++			vaddr = page_address(page);
++			*dma_handle = addr;
++		}
++	}
++
++	if (!vaddr)
++		vaddr = swiotlb_alloc_coherent(dev, size, dma_handle, gfp);
++
++	if (!vaddr)
++		return NULL;
++
++	/* Clear the SME encryption bit for DMA use if not swiotlb area */
++	if (!is_swiotlb_buffer(dma_to_phys(dev, *dma_handle))) {
++		set_memory_decrypted((unsigned long)vaddr, 1 << order);
++		*dma_handle &= ~sme_me_mask;
++	}
++
++	return vaddr;
+ }
+ 
++static void sme_free(struct device *dev, size_t size, void *vaddr,
++		     dma_addr_t dma_handle, unsigned long attrs)
++{
++	/* Set the SME encryption bit for re-use if not swiotlb area */
++	if (!is_swiotlb_buffer(dma_to_phys(dev, dma_handle)))
++		set_memory_encrypted((unsigned long)vaddr,
++				     1 << get_order(size));
++
++	swiotlb_free_coherent(dev, size, vaddr, dma_handle);
++}
++
++static struct dma_map_ops sme_dma_ops = {
++	.alloc                  = sme_alloc,
++	.free                   = sme_free,
++	.map_page               = swiotlb_map_page,
++	.unmap_page             = swiotlb_unmap_page,
++	.map_sg                 = swiotlb_map_sg_attrs,
++	.unmap_sg               = swiotlb_unmap_sg_attrs,
++	.sync_single_for_cpu    = swiotlb_sync_single_for_cpu,
++	.sync_single_for_device = swiotlb_sync_single_for_device,
++	.sync_sg_for_cpu        = swiotlb_sync_sg_for_cpu,
++	.sync_sg_for_device     = swiotlb_sync_sg_for_device,
++	.mapping_error          = swiotlb_dma_mapping_error,
++};
++
+ /* Architecture __weak replacement functions */
+ void __init mem_encrypt_init(void)
+ {
+@@ -208,6 +281,10 @@ void __init mem_encrypt_init(void)
+ 	/* Call into SWIOTLB to update the SWIOTLB DMA buffers */
+ 	swiotlb_update_mem_attributes();
+ 
++	/* Use SEV DMA operations if SEV is active */
++	if (sev_active())
++		dma_ops = &sme_dma_ops;
++
+ 	pr_info("AMD Secure Memory Encryption (SME) active\n");
+ }
+ 
