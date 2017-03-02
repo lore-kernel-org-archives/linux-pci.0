@@ -1,65 +1,93 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:56954 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754443AbdCTRbW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2017 13:31:22 -0400
-To: <marc.zyngier@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: Help: MSI DWC connecting with a MSIx Endpoint
-Message-ID: <85bfa77f-6cd0-a669-c940-7fa7d9fb17a3@synopsys.com>
-Date: Mon, 20 Mar 2017 17:30:00 +0000
+Received: from mail-co1nam03on0061.outbound.protection.outlook.com ([104.47.40.61]:54886
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752105AbdCBPUZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 10:20:25 -0500
+Subject: [RFC PATCH v2 11/32] x86: Unroll string I/O when SEV is active
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:14:35 -0500
+Message-ID: <148846767530.2349.3396612151893482609.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mark,
+From: Tom Lendacky <thomas.lendacky@amd.com>
 
-I am facing a challenge in a setup I must bring up that is composed by a
-Synopsys Root Complex connected to a MSIx-only Endpoint from Mellanox.
-The endpoint probe fails because it is not capable of enabling msix.
+Secure Encrypted Virtualization (SEV) does not support string I/O, so
+unroll the string I/O operation into a loop operating on one element at
+a time.
 
-In order to get more info about it, I added some debug messages to the msix
-enable process and got the following:
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+---
+ arch/x86/include/asm/io.h |   26 ++++++++++++++++++++++----
+ 1 file changed, 22 insertions(+), 4 deletions(-)
 
-MSIX DBG[mlx5_enable_msix]: Num. EQs: 256
-MSIX DBG[mlx5_enable_msix]: Num. Vectors: 4
-MSIX DBG[mlx5_enable_msix]: Min. Num. Vectors: 4
-MSIX DBG[mlx5_enable_msix]: Num. Online CPUs: 1
-MSIX DBG[mlx5_enable_msix]: MLX5_EQ_VEC_COMP_BASE: 3
-MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 0
-MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 1
-MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 2
-MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 3
-MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range
-MSIX DBG[__pci_enable_msix_range]: Enabling MSIX [Nvec: 4, Affinity: 0]
-MSIX DBG[__pci_enable_msix]: NVec: 4
-MSIX DBG[__pci_enable_msix]: Num. Entries: 64
-MSIX DBG[__pci_enable_msix]: Checking invalid entries
-MSIX DBG[msix_capability_init]: Ensure MSI is disable
-MSIX DBG[msix_capability_init]: Getting MSIX Capability
-MSIX DBG[msix_capability_init]: Mapping MSIX Capability Region
-MSIX DBG[msix_capability_init]: Setup Entries
-MSIX DBG[msix_setup_entries]: Configuring MSIX entry 0
-MSIX DBG[msix_setup_entries]: Configuring MSIX entry 1
-MSIX DBG[msix_setup_entries]: Configuring MSIX entry 2
-MSIX DBG[msix_setup_entries]: Configuring MSIX entry 3
-MSIX DBG[msix_capability_init]: Setup IRQS
-MSIX DBG[pci_msi_setup_msi_irqs]: Inside!
-MSIX DBG[arch_setup_msi_irqs]: Inside!
-MSIX DBG[msix_capability_init]: Failed pci_msi_setup_msi_irqs
-MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range, result: -22
-mlx5_core 0000:01:00.0: enable msix failed
-
-The conclusion I came up was that the msix setup in the endpoint fails because
-in the pcie-designware-host.c we are rejecting msix as you can see here:
-
-/* MSI-X interrupts are not supported */
-if (type == PCI_CAP_ID_MSIX)
-        return -EINVAL;
-
-Did you ever came across this problem?
-
-Thanks,
-Joao
+diff --git a/arch/x86/include/asm/io.h b/arch/x86/include/asm/io.h
+index 833f7cc..b596114 100644
+--- a/arch/x86/include/asm/io.h
++++ b/arch/x86/include/asm/io.h
+@@ -327,14 +327,32 @@ static inline unsigned type in##bwl##_p(int port)			\
+ 									\
+ static inline void outs##bwl(int port, const void *addr, unsigned long count) \
+ {									\
+-	asm volatile("rep; outs" #bwl					\
+-		     : "+S"(addr), "+c"(count) : "d"(port));		\
++	if (sev_active()) {						\
++		unsigned type *value = (unsigned type *)addr;		\
++		while (count) {						\
++			out##bwl(*value, port);				\
++			value++;					\
++			count--;					\
++		}							\
++	} else {							\
++		asm volatile("rep; outs" #bwl				\
++			     : "+S"(addr), "+c"(count) : "d"(port));	\
++	}								\
+ }									\
+ 									\
+ static inline void ins##bwl(int port, void *addr, unsigned long count)	\
+ {									\
+-	asm volatile("rep; ins" #bwl					\
+-		     : "+D"(addr), "+c"(count) : "d"(port));		\
++	if (sev_active()) {						\
++		unsigned type *value = (unsigned type *)addr;		\
++		while (count) {						\
++			*value = in##bwl(port);				\
++			value++;					\
++			count--;					\
++		}							\
++	} else {							\
++		asm volatile("rep; ins" #bwl				\
++			     : "+D"(addr), "+c"(count) : "d"(port));	\
++	}								\
+ }
+ 
+ BUILDIO(b, b, char)
