@@ -1,171 +1,85 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 22 Mar 2017 10:29:39 +0000
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH v2] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-Message-ID: <20170322102939.GB3519@red-moon>
-References: <1490123810-12383-1-git-send-email-ard.biesheuvel@linaro.org>
+Return-Path: <SRS0=04sC=2L=obsidianresearch.com=jgunthorpe@kernel.org>
+Return-Path: <SRS0=04sC=2L=obsidianresearch.com=jgunthorpe@kernel.org>
+Date: Wed, 1 Mar 2017 17:50:47 -0700
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>,
+	Myron Stowe <myron.stowe@gmail.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Jonathan Corbet <corbet@lwn.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Emil Velikov <emil.l.velikov@gmail.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
+	Stefan Berger <stefanb@linux.vnet.ibm.com>,
+	Wei Zhang <wzhang@fb.com>,
+	Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+	Stephen Bates <stephen.bates@microsemi.com>,
+	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
+Message-ID: <20170302005047.GA14301@obsidianresearch.com>
+References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
+ <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
+ <4a867c32-ed29-bc98-c7cb-6315243e664a@deltatee.com>
+ <b34d6872-35de-da6d-2d7f-8842642d3f21@deltatee.com>
+ <20170301235854.GF2820@obsidianresearch.com>
+ <7d6b3b59-5cec-d73f-b65c-4d685ccc70f8@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <1490123810-12383-1-git-send-email-ard.biesheuvel@linaro.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-efi@vger.kernel.org, matt@codeblueprint.co.uk,
- linux-pci@vger.kernel.org, heyi.guo@linaro.org, pjones@redhat.com,
- hanjun.guo@linaro.org, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7d6b3b59-5cec-d73f-b65c-4d685ccc70f8@deltatee.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 21, 2017 at 07:16:50PM +0000, Ard Biesheuvel wrote:
-> On UEFI systems, the PCI subsystem is enumerated by the firmware,
-> and if a graphical framebuffer is exposed by a PCI device, its base
-> address and size are exposed to the OS via the Graphics Output
-> Protocol (GOP).
-> 
-> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
-> scratch at boot. This may result in the GOP framebuffer address to
-> become stale, if the BAR covering the framebuffer is modified. This
-> will cause the framebuffer to become unresponsive, and may in some
-> cases result in unpredictable behavior if the range is reassigned to
-> another device.
-> 
-> So add a quirk to the EFI fb driver to find the BAR associated with
-> the GOP base address, and set the IORESOURCE_PCI_FIXED attribute so
-> that the PCI core will leave it alone.
-> 
-> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-> ---
-> As it turns out, setting the IORESOURCE_PCI_FIXED flag is not sufficient
-> to make the PCI core leave the BARs alone, so instead, the BAR resource
-> is claimed in the quirk handler.
-> 
-> As suggested by Lorenzo, a check is added that the device has memory
-> decoding enabled, and if it doesn't, no attempt is made to use the
-> EFI framebuffer.
-> 
->  drivers/video/fbdev/efifb.c | 58 +++++++++++++++++++-
->  1 file changed, 57 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
-> index 8c4dc1e1f94f..eeeaf78c4a5b 100644
-> --- a/drivers/video/fbdev/efifb.c
-> +++ b/drivers/video/fbdev/efifb.c
-> @@ -10,6 +10,7 @@
->  #include <linux/efi.h>
->  #include <linux/errno.h>
->  #include <linux/fb.h>
-> +#include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/screen_info.h>
->  #include <video/vga.h>
-> @@ -143,6 +144,9 @@ static struct attribute *efifb_attrs[] = {
->  };
->  ATTRIBUTE_GROUPS(efifb);
->  
-> +static bool pci_bar_found;	/* did we find a BAR matching the efifb base? */
-> +static bool pci_bar_disabled;	/* was it disabled? */
-> +
->  static int efifb_probe(struct platform_device *dev)
->  {
->  	struct fb_info *info;
-> @@ -152,7 +156,7 @@ static int efifb_probe(struct platform_device *dev)
->  	unsigned int size_total;
->  	char *option = NULL;
->  
-> -	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
-> +	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI || pci_bar_disabled)
->  		return -ENODEV;
->  
->  	if (fb_get_options("efifb", &option))
-> @@ -360,3 +364,55 @@ static struct platform_driver efifb_driver = {
->  };
->  
->  builtin_platform_driver(efifb_driver);
-> +
-> +static void claim_efifb_bar(struct pci_dev *dev, int idx)
-> +{
-> +	u16 word;
-> +
-> +	pci_bar_found = true;
-> +
-> +	if (pci_claim_resource(dev, idx)) {
+On Wed, Mar 01, 2017 at 05:23:38PM -0700, Logan Gunthorpe wrote:
 
-I would not do that. If claiming the resource succeeds, it will become
-immutable (ie it becomes part of the resource tree), if it is your FB
-fine if it isn't this will mess things up since a) you won't be able to
-claim the PCI resources for the real FB and b) you won't be able to
-reallocate the PCI resources for the device we *think* is the FB but it
-actually isn't (unless we force a realloc).
-
-So, I would carry out the check below first, if the device is enabled
-we should flag its resource IORESOURCE_PCI_FIXED otherwise just do
-nothing and let PCI core (through arch specific realloc policy) handle
-it.
-
-Side note: I *think* it should be fine to claim a resource twice
-(ie in x86 the FB would have been claimed already by core x86 code),
-just thought it is worth checking.
-
-Lorenzo
-
-> +		pci_bar_disabled = true;
-> +		dev_err(&dev->dev, "BAR %d: failed to claim efifb BAR\n", idx);
-> +		return;
-> +	}
-> +
-> +	pci_read_config_word(dev, PCI_COMMAND, &word);
-> +	if (!(word & PCI_COMMAND_MEMORY)) {
-> +		pci_bar_disabled = true;
-> +		dev_err(&dev->dev,
-> +			"BAR %d: efifb BAR has memory decoding disabled!\n", idx);
-> +		return;
-> +	}
-> +
-> +	dev_info(&dev->dev, "BAR %d: claimed for efifb\n", idx);
-> +}
-> +
-> +static void efifb_fixup_resources(struct pci_dev *dev)
-> +{
-> +	u64 base = screen_info.lfb_base;
-> +	u64 size = screen_info.lfb_size;
-> +	int i;
-> +
-> +	if (pci_bar_found || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
-> +		return;
-> +
-> +	if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
-> +		base |= (u64)screen_info.ext_lfb_base << 32;
-> +
-> +	if (!base)
-> +		return;
-> +
-> +	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
-> +		struct resource *res = &dev->resource[i];
-> +
-> +		if (!(res->flags & IORESOURCE_MEM))
-> +			continue;
-> +
-> +		if (res->start <= base && res->end >= base + size - 1) {
-> +			claim_efifb_bar(dev, i);
-> +			break;
-> +		}
-> +	}
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, efifb_fixup_resources);
-> -- 
-> 2.7.4
+> > That could help, but this would mean cdev would have to insert a shim
+> > to grab locks around the various file ops.
 > 
+> Hmm, I was hoping something more along the lines of actually killing the
+> processes instead of just shimming away fops.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+That would probably make most cdev users unhappy, it is not what we
+want in tpm or infiniband, for instance.
+
+> > AFAIK TPM is correct and has been robustly tested now. We have a 'vtpm'
+> > driver that agressively uses hot-unplug.
+> 
+> Switchtec is a bit more tricky because a) there's no upper level driver
+> to handle things
+
+Introducing a light split between 'the upper part that owns the cdev'
+and 'the lower part that owns the hardware' makes things much easier
+to understand in a driver and it becomes clearer where, eg, devm
+actions should be linked (ie probably not to the cdev part)
+
+> and b) userspace may be inside a wait_for_completion (via read or
+> poll) that needs to be completed. If a so called 'cdev_kill' could
+> actually just kill these processes it would be a bit easier.
+
+For TPM, poll could be something like:
+
+static unsigned int tpm_poll(struct file *filp,
+                             struct poll_table_struct *wait)
+{
+   poll_wait(filp, &chip->poll_wait, wait);
+   if (tpm_try_get_ops(chip)) {
+          mask = chip->ops->driver_do_poll(...);
+          tpm_put_ops(chip);
+   } else 
+          mask = POLLIN | POLLRDHUP | POLLOUT | POLLERR | POLLHUP;
+   return mask;
+}
+
+And we would trigger chip->poll_wait in the unregister.
+
+wait_for_completion is similar, drop the rwsem while sleeping, add
+'ops = NULL' to the sleeping condition test, trigger the wait on
+unregister then reacquire the rwsem and test ops on wake.
+
+Jason
