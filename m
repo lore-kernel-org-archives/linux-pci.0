@@ -1,239 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 24 Mar 2017 16:34:45 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?= <deathsimple@vodafone.de>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/4] PCI: add functionality for resizing resources v2
-Message-ID: <20170324213445.GF25380@bhelgaas-glaptop.roam.corp.google.com>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
- <1489408896-25039-3-git-send-email-deathsimple@vodafone.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1489408896-25039-3-git-send-email-deathsimple@vodafone.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga05.intel.com ([192.55.52.43]:6001 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751083AbdCBXgZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 18:36:25 -0500
+From: Andi Kleen <andi@firstfloor.org>
+To: bhelgaas@google.com
+Cc: x86@kernel.org, linux-pci@vger.kernel.org, eranian@google.com,
+        peterz@infradead.org, linux-kernel@vger.kernel.org,
+        Andi Kleen <ak@linux.intel.com>
+Subject: [PATCH 1/4] pci: Allow lockless access path to PCI mmconfig
+Date: Thu,  2 Mar 2017 15:21:01 -0800
+Message-Id: <20170302232104.10136-1-andi@firstfloor.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 13, 2017 at 01:41:34PM +0100, Christian König wrote:
-> From: Christian König <christian.koenig@amd.com>
-> 
-> This allows device drivers to request resizing their BARs.
-> 
-> The function only tries to reprogram the windows of the bridge directly above
-> the requesting device and only the BAR of the same type (usually mem, 64bit,
-> prefetchable). This is done to make sure not to disturb other drivers by
-> changing the BARs of their devices.
-> 
-> If reprogramming the bridge BAR fails the old status is restored and -ENOSPC
-> returned to the calling device driver.
-> 
-> v2: rebase on changes in rbar support
-> 
-> Signed-off-by: Christian König <christian.koenig@amd.com>
-> ---
->  drivers/pci/setup-bus.c | 61 +++++++++++++++++++++++++++++++++++++++++++++++++
->  drivers/pci/setup-res.c | 51 +++++++++++++++++++++++++++++++++++++++++
->  include/linux/pci.h     |  2 ++
->  3 files changed, 114 insertions(+)
-> 
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index f30ca75..cfab2c7 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1923,6 +1923,67 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
->  }
->  EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
->  
-> +int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
-> +{
-> +	const unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-> +		IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
-> +
-> +	struct resource saved;
-> +	LIST_HEAD(add_list);
-> +	LIST_HEAD(fail_head);
-> +	struct pci_dev_resource *fail_res;
-> +	unsigned i;
-> +	int ret = 0;
-> +
-> +	/* Release all children from the matching bridge resource */
-> +	for (i = PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END; ++i) {
+From: Andi Kleen <ak@linux.intel.com>
 
-Nit: use post-increment unless you need pre-increment.
+The Intel uncore driver can do a lot of PCI config accesses to read
+performance counters. I had a situation on a 4S system where it
+was spending 40+% of CPU time grabbing the pci_cfg_lock due to that.
 
-> +		struct resource *res = &bridge->resource[i];
-> +
-> +		if ((res->flags & type_mask) != (type & type_mask))
-> +			continue;
-> +
-> +		saved = *res;
-> +		if (res->parent) {
-> +			release_child_resources(res);
+For 64bit x86 with MMCONFIG there isn't really any reason to take
+a lock. The access is directly mapped to an underlying MMIO area,
+which can fully operate lockless.
 
-Doesn't this recursively release *all* child resources?  There could
-be BARs from several devices, or even windows of downstream bridges,
-inside this window.  The drivers of those other devices aren't
-expecting things to change here.
+Add a new flag that allows the PCI mid layer to skip the lock
+and set it for the 64bit mmconfig code.
 
-> +			release_resource(res);
-> +		}
-> +		res->start = 0;
-> +		res->end = 0;
-> +		break;
-> +	}
-> +
-> +	if (i == PCI_BRIDGE_RESOURCE_END)
-> +		return -ENOENT;
-> +
-> +	__pci_bus_size_bridges(bridge->subordinate, &add_list);
-> +	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
-> +	BUG_ON(!list_empty(&add_list));
-> +
-> +	/* restore size and flags */
-> +	list_for_each_entry(fail_res, &fail_head, list) {
-> +		struct resource *res = fail_res->res;
-> +
-> +		res->start = fail_res->start;
-> +		res->end = fail_res->end;
-> +		res->flags = fail_res->flags;
-> +	}
-> +
-> +	/* Revert to the old configuration */
-> +	if (!list_empty(&fail_head)) {
-> +		struct resource *res = &bridge->resource[i];
-> +
-> +		res->start = saved.start;
-> +		res->end = saved.end;
-> +		res->flags = saved.flags;
-> +
-> +		pci_claim_resource(bridge, i);
-> +		ret = -ENOSPC;
-> +	}
-> +
-> +	free_list(&fail_head);
-> +	return ret;
-> +}
-> +
->  void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
->  {
->  	struct pci_dev *dev;
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 9526e34..3bb1e29 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -363,6 +363,57 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
->  	return 0;
->  }
->  
-> +int pci_resize_resource(struct pci_dev *dev, int resno, int size)
-> +{
-> +	struct resource *res = dev->resource + resno;
-> +	u32 sizes = pci_rbar_get_possible_sizes(dev, resno);
-> +	int old = pci_rbar_get_current_size(dev, resno);
-> +	u64 bytes = 1ULL << (size + 20);
-> +	int ret = 0;
+There's a small risk that someone relies on this lock for synchronization,
+but I think that's unlikely because there isn't really any useful
+synchronization at this individual operation level. Any useful
+synchronization would likely need to protect at least a
+read-modify-write or similar.  So I made it unconditional without opt-in.
 
-I think we should fail the request if the device is enabled, i.e., if
-the PCI_COMMAND_MEMORY bit is set.  We can't safely change the BAR
-while memory decoding is enabled.
+Signed-off-by: Andi Kleen <ak@linux.intel.com>
+---
+ arch/x86/pci/mmconfig_64.c |  1 +
+ drivers/pci/access.c       | 14 ++++++++++----
+ include/linux/pci.h        |  2 ++
+ 3 files changed, 13 insertions(+), 4 deletions(-)
 
-I know there's code in pci_std_update_resource() that turns off
-PCI_COMMAND_MEMORY, but I think that's a mistake: I think it should
-fail when asked to update an enabled BAR the same way
-pci_iov_update_resource() does.
-
-I'm not sure why you call pci_reenable_device() below, but I think I
-would rather have the driver do something like this:
-
-  pci_disable_device(dev);
-  pci_resize_resource(dev, 0, size);
-  pci_enable_device(dev);
-
-That way it's very clear to the driver that it must re-read all BARs
-after resizing this one.
-
-> +	if (!sizes)
-> +		return -ENOTSUPP;
-> +
-> +	if (!(sizes & (1 << size)))
-> +		return -EINVAL;
-> +
-> +	if (old < 0)
-> +		return old;
-> +
-> +	/* Make sure the resource isn't assigned before making it larger. */
-> +	if (resource_size(res) < bytes && res->parent) {
-> +		release_resource(res);
-> +		res->end = resource_size(res) - 1;
-> +		res->start = 0;
-> +		if (resno < PCI_BRIDGE_RESOURCES)
-> +			pci_update_resource(dev, resno);
-
-Why do we need to write this zero to the BAR?  If PCI_COMMAND_MEMORY
-is set, I think this is dangerous, and if it's not set, I think it's
-unnecessary.
-
-I think we should set the IORESOURCE_UNSET bit to indicate that the
-resource does not have an address assigned to it.  It should get
-cleared later anyway, but having IORESOURCE_UNSET will make any debug
-messages emitted while reassigning resources make more sense.
-
-> +	}
-> +
-> +	ret = pci_rbar_set_size(dev, resno, size);
-> +	if (ret)
-> +		goto error_reassign;
-> +
-> +	res->end = res->start + bytes - 1;
-> +
-> +	ret = pci_reassign_bridge_resources(dev->bus->self, res->flags);
-> +	if (ret)
-> +		goto error_resize;
-> +
-> +	pci_reenable_device(dev->bus->self);
-
-> +	return 0;
-> +
-> +error_resize:
-> +	pci_rbar_set_size(dev, resno, old);
-> +	res->end = res->start + (1ULL << (old + 20)) - 1;
-> +
-> +error_reassign:
-> +	pci_assign_unassigned_bus_resources(dev->bus);
-> +	pci_setup_bridge(dev->bus);
-
-Could this bridge-related recovery code go inside
-pci_reassign_bridge_resources()?
-
-> +	pci_reenable_device(dev->bus->self);
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL(pci_resize_resource);
-> +
->  int pci_enable_resources(struct pci_dev *dev, int mask)
->  {
->  	u16 cmd, old_cmd;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 6954e50..8eaebb4 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1055,6 +1055,7 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
->  void pci_update_resource(struct pci_dev *dev, int resno);
->  int __must_check pci_assign_resource(struct pci_dev *dev, int i);
->  int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
-> +int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
->  int pci_select_bars(struct pci_dev *dev, unsigned long flags);
->  bool pci_device_is_present(struct pci_dev *pdev);
->  void pci_ignore_hotplug(struct pci_dev *dev);
-> @@ -1135,6 +1136,7 @@ void pci_assign_unassigned_resources(void);
->  void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
->  void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
->  void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
-> +int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type);
->  void pdev_enable_device(struct pci_dev *);
->  int pci_enable_resources(struct pci_dev *, int mask);
->  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
-> -- 
-> 2.7.4
-> 
+diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+index bea52496aea6..8bf10f41e626 100644
+--- a/arch/x86/pci/mmconfig_64.c
++++ b/arch/x86/pci/mmconfig_64.c
+@@ -121,6 +121,7 @@ int __init pci_mmcfg_arch_init(void)
+ 		}
+ 
+ 	raw_pci_ext_ops = &pci_mmcfg;
++	pci_root_ops.ll_allowed = true;
+ 
+ 	return 1;
+ }
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index db239547fefd..22552c6606c1 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -32,11 +32,14 @@ int pci_bus_read_config_##size \
+ 	int res;							\
+ 	unsigned long flags;						\
+ 	u32 data = 0;							\
++	bool ll_allowed = bus->ops->ll_allowed;				\
+ 	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
+-	raw_spin_lock_irqsave(&pci_lock, flags);			\
++	if (!ll_allowed)						\
++		raw_spin_lock_irqsave(&pci_lock, flags);		\
+ 	res = bus->ops->read(bus, devfn, pos, len, &data);		\
+ 	*value = (type)data;						\
+-	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
++	if (!ll_allowed)						\
++		raw_spin_unlock_irqrestore(&pci_lock, flags);		\
+ 	return res;							\
+ }
+ 
+@@ -46,10 +49,13 @@ int pci_bus_write_config_##size \
+ {									\
+ 	int res;							\
+ 	unsigned long flags;						\
++	bool ll_allowed = bus->ops->ll_allowed;				\
+ 	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
+-	raw_spin_lock_irqsave(&pci_lock, flags);			\
++	if (!ll_allowed)						\
++		raw_spin_lock_irqsave(&pci_lock, flags);		\
+ 	res = bus->ops->write(bus, devfn, pos, len, value);		\
+-	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
++	if (!ll_allowed)						\
++		raw_spin_unlock_irqrestore(&pci_lock, flags);		\
+ 	return res;							\
+ }
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e2d1a124216a..9b234cbc7ae1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -612,6 +612,8 @@ struct pci_ops {
+ 	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
+ 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
+ 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
++	/* Set to true when pci_lock is not needed for read/write */
++	bool ll_allowed;
+ };
+ 
+ /*
+-- 
+2.9.3
