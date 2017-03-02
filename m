@@ -1,67 +1,100 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v2 18/22] PCI: xgene: update PCI config space remap function
-Date: Mon, 27 Mar 2017 10:49:46 +0100
-Message-Id: <20170327094954.7162-19-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, Tanmay Inamdar <tinamdar@apm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:53140 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751365AbdCBXXw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 18:23:52 -0500
+From: Andi Kleen <andi@firstfloor.org>
+To: bhelgaas@google.com
+Cc: x86@kernel.org, linux-pci@vger.kernel.org, eranian@google.com,
+        peterz@infradead.org, linux-kernel@vger.kernel.org,
+        Andi Kleen <ak@linux.intel.com>
+Subject: [PATCH 2/4] pci: Add generic pci_bus_force_mmconfig interface
+Date: Thu,  2 Mar 2017 15:21:02 -0800
+Message-Id: <20170302232104.10136-2-andi@firstfloor.org>
+In-Reply-To: <20170302232104.10136-1-andi@firstfloor.org>
+References: <20170302232104.10136-1-andi@firstfloor.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_ioremap_nopost* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+From: Andi Kleen <ak@linux.intel.com>
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Tanmay Inamdar <tinamdar@apm.com>
+x86 traditionally used mmconfig only for extended config space accesses
+with offsets larger than 256. For lower offsets it uses the classic
+Type 1 IO port access. This is quite slow and also requires taking
+a global spin lock to protect the Type 1 IO port mailbox.
+
+IIRC (I added it originally) it was merely to be conservative;
+I don't remember any actual cases where mmconfig did not work
+after passing the other sanity checks. But most devices
+don't use extended config space, so most devices were never
+tested with MMCONFIG. Starting to use MMCONFIG everywhere
+unconditionally seems somewhat risky as we never tested this
+
+Also for most drivers it doesn't really matter because they only
+use config accesses during driver initialization, which is
+not performance critical.
+
+But some drivers can do a lot of config bus accesses < 256.
+I ran into this problem with the Intel uncore PMU drivers
+when sampling uncore counters in many PMUs at a high frequency
+on a 4S system. This showed significant spin lock contention
+and also large overhead in accessing the IO port.
+
+For drivers like this is useful to be able to force MMCONFIG
+access. The interface is intended for devices integrated on a SOC,
+so there is no concern that some strange PCI bridges may
+incorrectly handle mmconfig.
+
+This patch adds a new function pci_bus_force_mmconfig() where
+a driver can force MMCONFIG for all accesses on the bus.
+
+This is a stub implementation, but the next patch will
+fill it in for x86.
+
+Signed-off-by: Andi Kleen <ak@linux.intel.com>
 ---
- drivers/pci/host/pci-xgene.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/pci.c   | 15 +++++++++++++++
+ include/linux/pci.h |  2 ++
+ 2 files changed, 17 insertions(+)
 
-diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-index 1a61087..df8e13c 100644
---- a/drivers/pci/host/pci-xgene.c
-+++ b/drivers/pci/host/pci-xgene.c
-@@ -248,7 +248,7 @@ static int xgene_pcie_ecam_init(struct pci_config_window *cfg, u32 ipversion)
- 		dev_err(dev, "can't get CSR resource\n");
- 		return ret;
- 	}
--	port->csr_base = devm_ioremap_resource(dev, &csr);
-+	port->csr_base = devm_ioremap_nopost_resource(dev, &csr);
- 	if (IS_ERR(port->csr_base))
- 		return PTR_ERR(port->csr_base);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02ffdb9..af68f1d9eed7 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5236,6 +5236,21 @@ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
+ #endif
  
-@@ -359,7 +359,7 @@ static int xgene_pcie_map_reg(struct xgene_pcie_port *port,
- 	struct resource *res;
+ /**
++ * pci_bus_force_mmconfig - enable mmconfig for all config accesses on bus.
++ *
++ * Allow mmconfig for all accesses to devices. This is mainly a performance
++ * optimization, and should be only used if the driver "knows" all the bridges
++ * involved (e.g. SOC on chip devices)
++ *
++ * Default implementation. Architectures can override this.
++ */
++__weak int pci_bus_force_mmconfig(struct pci_bus *bus)
++{
++	return 0;
++}
++EXPORT_SYMBOL(pci_bus_force_mmconfig);
++
++/**
+  * pci_ext_cfg_avail - can we access extended PCI config space?
+  *
+  * Returns 1 if we can access PCI extended config space (offsets
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9b234cbc7ae1..61b4437dc8e5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -891,6 +891,8 @@ void pci_sort_breadthfirst(void);
  
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr");
--	port->csr_base = devm_ioremap_resource(dev, res);
-+	port->csr_base = devm_ioremap_nopost_resource(dev, res);
- 	if (IS_ERR(port->csr_base))
- 		return PTR_ERR(port->csr_base);
+ /* Generic PCI functions exported to card drivers */
  
++int pci_bus_force_mmconfig(struct pci_bus *bus);
++
+ enum pci_lost_interrupt_reason {
+ 	PCI_LOST_IRQ_NO_INFORMATION = 0,
+ 	PCI_LOST_IRQ_DISABLE_MSI,
 -- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.9.3
