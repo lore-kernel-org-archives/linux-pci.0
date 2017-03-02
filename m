@@ -1,227 +1,178 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu, 30 Mar 2017 16:12:33 -0600
-Message-Id: <1490911959-5146-3-git-send-email-logang@deltatee.com>
-In-Reply-To: <1490911959-5146-1-git-send-email-logang@deltatee.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
-Subject: [RFC 2/8] cxgb4: setup pcie memory window 4 and create p2pmem region
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0050.outbound.protection.outlook.com ([104.47.41.50]:1516
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750787AbdCBQvW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 11:51:22 -0500
+Subject: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock when
+ spliting large pages
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:15:15 -0500
+Message-ID: <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Steve Wise <swise@opengridcomputing.com>
+If kernel_maps_pages_in_pgd is called early in boot process to change the
+memory attributes then it fails to allocate memory when spliting large
+pages. The patch extends the cpa_data to provide the support to use
+memblock_alloc when slab allocator is not available.
 
-Some cxgb4 cards expose memory as part of BAR4. This patch registers
-this memory as a p2pmem device.
+The feature will be used in Secure Encrypted Virtualization (SEV) mode,
+where we may need to change the memory region attributes in early boot
+process.
 
-Signed-off-by: Steve Wise <swise@opengridcomputing.com>
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Stephen Bates <sbates@raithlin.com>
+Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
 ---
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |  3 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c | 97 ++++++++++++++++++++++++-
- drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |  5 ++
- 3 files changed, 102 insertions(+), 3 deletions(-)
+ arch/x86/mm/pageattr.c |   51 ++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 42 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-index 163543b..e92443b 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4.h
-@@ -48,6 +48,7 @@
+diff --git a/arch/x86/mm/pageattr.c b/arch/x86/mm/pageattr.c
+index 46cc89d..9e4ab3b 100644
+--- a/arch/x86/mm/pageattr.c
++++ b/arch/x86/mm/pageattr.c
+@@ -14,6 +14,7 @@
+ #include <linux/gfp.h>
+ #include <linux/pci.h>
  #include <linux/vmalloc.h>
- #include <linux/etherdevice.h>
- #include <linux/net_tstamp.h>
-+#include <linux/p2pmem.h>
- #include <asm/io.h>
- #include "t4_chip_type.h"
- #include "cxgb4_uld.h"
-@@ -859,6 +860,8 @@ struct adapter {
++#include <linux/memblock.h>
  
- 	/* TC u32 offload */
- 	struct cxgb4_tc_u32_table *tc_u32;
-+
-+	struct p2pmem_dev *p2pmem;
+ #include <asm/e820/api.h>
+ #include <asm/processor.h>
+@@ -37,6 +38,7 @@ struct cpa_data {
+ 	int		flags;
+ 	unsigned long	pfn;
+ 	unsigned	force_split : 1;
++	unsigned	force_memblock :1;
+ 	int		curpage;
+ 	struct page	**pages;
  };
+@@ -627,9 +629,8 @@ try_preserve_large_page(pte_t *kpte, unsigned long address,
  
- /* Support for "sched-class" command to allow a TX Scheduling Class to be
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-index afb0967..a33bcd1 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-+++ b/drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c
-@@ -172,6 +172,11 @@ module_param(select_queue, int, 0644);
- MODULE_PARM_DESC(select_queue,
- 		 "Select between kernel provided method of selecting or driver method of selecting TX queue. Default is kernel method.");
- 
-+static bool use_p2pmem;
-+module_param(use_p2pmem, bool, 0644);
-+MODULE_PARM_DESC(use_p2pmem,
-+		 "Enable registering a p2pmem device with bar space (if available)");
-+
- static struct dentry *cxgb4_debugfs_root;
- 
- LIST_HEAD(adapter_list);
-@@ -2835,6 +2840,54 @@ static void setup_memwin_rdma(struct adapter *adap)
+ static int
+ __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
+-		   struct page *base)
++		  pte_t *pbase, unsigned long new_pfn)
+ {
+-	pte_t *pbase = (pte_t *)page_address(base);
+ 	unsigned long ref_pfn, pfn, pfninc = 1;
+ 	unsigned int i, level;
+ 	pte_t *tmp;
+@@ -646,7 +647,7 @@ __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
+ 		return 1;
  	}
- }
  
-+static void setup_memwin_p2pmem(struct adapter *adap)
-+{
-+	unsigned int mem_base = t4_read_reg(adap, CIM_EXTMEM2_BASE_ADDR_A);
-+	unsigned int mem_size = t4_read_reg(adap, CIM_EXTMEM2_ADDR_SIZE_A);
-+
-+	if (!use_p2pmem)
-+		return;
-+
-+	if (mem_base != 0 && mem_size != 0) {
-+		unsigned int sz_kb, pcieofst;
-+
-+		sz_kb = roundup_pow_of_two(mem_size) >> 10;
-+
-+		/*
-+		 * The start offset must be aligned to the window size.
-+		 * Also, BAR4 has MSIX vectors using the first 8KB.
-+		 * Further, the min allowed p2pmem region size is 1MB,
-+		 * so set the start offset to the memory size and we're aligned
-+		 * as well as past the 8KB vector table.
-+		 */
-+		pcieofst = sz_kb << 10;
-+
-+		dev_info(adap->pdev_dev,
-+			 "p2pmem base 0x%x, size %uB, ilog2(sk_kb) 0x%x, "
-+			 "pcieofst 0x%X\n", mem_base, mem_size, ilog2(sz_kb),
-+			 pcieofst);
-+
-+		/* Write the window offset and size */
-+		t4_write_reg(adap,
-+			PCIE_MEM_ACCESS_REG(PCIE_MEM_ACCESS_BASE_WIN_A,
-+					    MEMWIN_RSVD4),
-+			pcieofst | BIR_V(2) | WINDOW_V(ilog2(sz_kb)));
-+
-+		/* Write the adapter memory base/start */
-+		t4_write_reg(adap,
-+			PCIE_MEM_ACCESS_REG(PCIE_MEM_ACCESS_OFFSET_A,
-+					    MEMWIN_RSVD4),
-+			MEMOFST_V((mem_base >> MEMOFST_S)) | PFNUM_V(adap->pf));
-+
-+		/* Read it back to flush it */
-+		t4_read_reg(adap,
-+			PCIE_MEM_ACCESS_REG(PCIE_MEM_ACCESS_OFFSET_A,
-+					    MEMWIN_RSVD4));
-+	} else
-+		dev_info(adap->pdev_dev, "p2pmem memory not reserved, "
-+			 "base 0x%x size %uB\n", mem_base, mem_size);
-+}
-+
- static int adap_init1(struct adapter *adap, struct fw_caps_config_cmd *c)
- {
- 	u32 v;
-@@ -4622,6 +4675,42 @@ static int cxgb4_iov_configure(struct pci_dev *pdev, int num_vfs)
- }
- #endif
+-	paravirt_alloc_pte(&init_mm, page_to_pfn(base));
++	paravirt_alloc_pte(&init_mm, new_pfn);
  
-+static int init_p2pmem(struct adapter *adapter)
-+{
-+	unsigned int mem_size = t4_read_reg(adapter, CIM_EXTMEM2_ADDR_SIZE_A);
-+	struct p2pmem_dev *p;
-+	int rc;
-+	struct resource res;
-+
-+	if (!mem_size || !use_p2pmem)
-+		return 0;
-+
-+	mem_size = roundup_pow_of_two(mem_size);
-+
-+	/*
-+	 * Create a subset of BAR4 for the p2pmem region based on the
-+	 * exported memory size.
-+	 */
-+	memcpy(&res, &adapter->pdev->resource[4], sizeof(res));
-+	res.start += mem_size;
-+	res.end = res.start + mem_size - 1;
-+	dev_info(adapter->pdev_dev, "p2pmem resource start 0x%llx end 0x%llx size %lluB\n",
-+		 res.start, res.end, resource_size(&res));
-+
-+	p = p2pmem_create(&adapter->pdev->dev);
-+	if (IS_ERR(p))
-+		return PTR_ERR(p);
-+
-+	rc = p2pmem_add_resource(p, &res);
-+	if (rc) {
-+		p2pmem_unregister(p);
-+		return rc;
-+	}
-+	adapter->p2pmem = p;
-+
-+	return 0;
-+}
-+
- static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
- 	int func, i, err, s_qpp, qpp, num_seg;
-@@ -4784,8 +4873,8 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	bitmap_zero(adapter->sge.blocked_fl, adapter->sge.egr_sz);
- #endif
- 	setup_memwin_rdma(adapter);
--	if (err)
--		goto out_unmap_bar;
-+
-+	setup_memwin_p2pmem(adapter);
+ 	switch (level) {
+ 	case PG_LEVEL_2M:
+@@ -707,7 +708,8 @@ __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
+ 	 * pagetable protections, the actual ptes set above control the
+ 	 * primary protection behavior:
+ 	 */
+-	__set_pmd_pte(kpte, address, mk_pte(base, __pgprot(_KERNPG_TABLE)));
++	__set_pmd_pte(kpte, address,
++		native_make_pte((new_pfn << PAGE_SHIFT) + _KERNPG_TABLE));
  
- 	/* configure SGE_STAT_CFG_A to read WC stats */
- 	if (!is_t4(adapter->params.chip))
-@@ -4989,6 +5078,7 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	print_adapter_info(adapter);
- 	setup_fw_sge_queues(adapter);
-+	init_p2pmem(adapter);
+ 	/*
+ 	 * Intel Atom errata AAH41 workaround.
+@@ -723,21 +725,50 @@ __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
  	return 0;
+ }
  
- sriov:
-@@ -5047,7 +5137,6 @@ static int init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		free_msix_info(adapter);
- 	if (adapter->num_uld || adapter->num_ofld_uld)
- 		t4_uld_mem_free(adapter);
-- out_unmap_bar:
- 	if (!is_t4(adapter->params.chip))
- 		iounmap(adapter->bar2);
-  out_free_adapter:
-@@ -5075,6 +5164,8 @@ static void remove_one(struct pci_dev *pdev)
- 		return;
- 	}
- 
-+	p2pmem_unregister(adapter->p2pmem);
++static pte_t *try_alloc_pte(struct cpa_data *cpa, unsigned long *pfn)
++{
++	unsigned long phys;
++	struct page *base;
 +
- 	if (adapter->pf == 4) {
- 		int i;
- 
-diff --git a/drivers/net/ethernet/chelsio/cxgb4/t4_regs.h b/drivers/net/ethernet/chelsio/cxgb4/t4_regs.h
-index 3348d33..199ddfb 100644
---- a/drivers/net/ethernet/chelsio/cxgb4/t4_regs.h
-+++ b/drivers/net/ethernet/chelsio/cxgb4/t4_regs.h
-@@ -735,6 +735,11 @@
- 
- #define PCIE_MEM_ACCESS_OFFSET_A 0x306c
- 
-+#define MEMOFST_S    7
-+#define MEMOFST_M    0x1ffffffU
-+#define MEMOFST_V(x) ((x) << MEMOFST_S)
-+#define MEMOFST_G(x) (((x) >> MEMOFST_S) & MEMOFST_M)
++	if (cpa->force_memblock) {
++		phys = memblock_alloc(PAGE_SIZE, PAGE_SIZE);
++		if (!phys)
++			return NULL;
++		*pfn = phys >> PAGE_SHIFT;
++		return (pte_t *)__va(phys);
++	}
 +
- #define ENABLE_S    30
- #define ENABLE_V(x) ((x) << ENABLE_S)
- #define ENABLE_F    ENABLE_V(1U)
--- 
-2.1.4
++	base = alloc_pages(GFP_KERNEL | __GFP_NOTRACK, 0);
++	if (!base)
++		return NULL;
++	*pfn = page_to_pfn(base);
++	return (pte_t *)page_address(base);
++}
++
++static void try_free_pte(struct cpa_data *cpa, pte_t *pte)
++{
++	if (cpa->force_memblock)
++		memblock_free(__pa(pte), PAGE_SIZE);
++	else
++		__free_page((struct page *)pte);
++}
++
+ static int split_large_page(struct cpa_data *cpa, pte_t *kpte,
+ 			    unsigned long address)
+ {
+-	struct page *base;
++	pte_t *new_pte;
++	unsigned long new_pfn;
+ 
+ 	if (!debug_pagealloc_enabled())
+ 		spin_unlock(&cpa_lock);
+-	base = alloc_pages(GFP_KERNEL | __GFP_NOTRACK, 0);
++	new_pte = try_alloc_pte(cpa, &new_pfn);
+ 	if (!debug_pagealloc_enabled())
+ 		spin_lock(&cpa_lock);
+-	if (!base)
++	if (!new_pte)
+ 		return -ENOMEM;
+ 
+-	if (__split_large_page(cpa, kpte, address, base))
+-		__free_page(base);
++	if (__split_large_page(cpa, kpte, address, new_pte, new_pfn))
++		try_free_pte(cpa, new_pte);
+ 
+ 	return 0;
+ }
+@@ -2035,6 +2066,7 @@ int kernel_map_pages_in_pgd(pgd_t *pgd, u64 pfn, unsigned long address,
+ 			    unsigned numpages, unsigned long page_flags)
+ {
+ 	int retval = -EINVAL;
++	int use_memblock = !slab_is_available();
+ 
+ 	struct cpa_data cpa = {
+ 		.vaddr = &address,
+@@ -2044,6 +2076,7 @@ int kernel_map_pages_in_pgd(pgd_t *pgd, u64 pfn, unsigned long address,
+ 		.mask_set = __pgprot(0),
+ 		.mask_clr = __pgprot(0),
+ 		.flags = 0,
++		.force_memblock = use_memblock,
+ 	};
+ 
+ 	if (!(__supported_pte_mask & _PAGE_NX))
