@@ -1,38 +1,104 @@
-Return-Path: <SRS0=1MX4=3G=sigmadesigns.com=Marc_Gonzalez@kernel.org>
-Return-Path: <SRS0=1MX4=3G=sigmadesigns.com=Marc_Gonzalez@kernel.org>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Subject: [PATCH v3 0/2] Tango PCIe controller support
-To: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>
-CC: Robin Murphy <robin.murphy@arm.com>, Lorenzo Pieralisi
-	<lorenzo.pieralisi@arm.com>, Liviu Dudau <liviu.dudau@arm.com>, David Laight
-	<david.laight@aculab.com>, linux-pci <linux-pci@vger.kernel.org>, Linux ARM
-	<linux-arm-kernel@lists.infradead.org>, Thibaud Cornic
-	<thibaud_cornic@sigmadesigns.com>, Phuong Nguyen
-	<phuong_nguyen@sigmadesigns.com>, LKML <linux-kernel@vger.kernel.org>, DT
-	<devicetree@vger.kernel.org>, Mason <slash.tmp@free.fr>
-Message-ID: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
-Date: Wed, 29 Mar 2017 13:11:57 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam01on0075.outbound.protection.outlook.com ([104.47.34.75]:41376
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751995AbdCBPfh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 10:35:37 -0500
+Subject: [RFC PATCH v2 28/32] kvm: svm: Add support for SEV GUEST_STATUS
+ command
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:18:07 -0500
+Message-ID: <148846788726.2349.3437191329307712811.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+The command is used for querying the SEV guest status.
 
-The patch is split in two parts, to ease review of two orthogonal
-parts (MSI controller vs host bridge)
+Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+---
+ arch/x86/kvm/svm.c |   37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
 
-Marc Gonzalez (2):
-  PCI: Add tango MSI controller support
-  PCI: Add tango PCIe host bridge support
-
- Documentation/devicetree/bindings/pci/tango-pcie.txt |  34 ++++
- drivers/pci/host/Kconfig                             |   7 +
- drivers/pci/host/Makefile                            |   1 +
- drivers/pci/host/pcie-tango.c                        | 344 +++++++++++++++++++++++++++++++++++++++
- 4 files changed, 386 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/tango-pcie.txt
- create mode 100644 drivers/pci/host/pcie-tango.c
-
--- 
-2.11.0
+diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
+index c108064..977aa22 100644
+--- a/arch/x86/kvm/svm.c
++++ b/arch/x86/kvm/svm.c
+@@ -5953,6 +5953,39 @@ static int sev_launch_finish(struct kvm *kvm, struct kvm_sev_cmd *argp)
+ 	return ret;
+ }
+ 
++static int sev_guest_status(struct kvm *kvm, struct kvm_sev_cmd *argp)
++{
++	int ret;
++	struct kvm_sev_guest_status params;
++	struct sev_data_guest_status *data;
++
++	if (!sev_guest(kvm))
++		return -ENOTTY;
++
++	if (copy_from_user(&params, (void *) argp->data,
++				sizeof(struct kvm_sev_guest_status)))
++		return -EFAULT;
++
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return -ENOMEM;
++
++	data->handle = sev_get_handle(kvm);
++	ret = sev_issue_cmd(kvm, SEV_CMD_GUEST_STATUS, data, &argp->error);
++	if (ret)
++		goto err_1;
++
++	params.policy = data->policy;
++	params.state = data->state;
++
++	if (copy_to_user((void *) argp->data, &params,
++				sizeof(struct kvm_sev_guest_status)))
++		ret = -EFAULT;
++err_1:
++	kfree(data);
++	return ret;
++}
++
+ static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
+ {
+ 	int r = -ENOTTY;
+@@ -5976,6 +6009,10 @@ static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
+ 		r = sev_launch_finish(kvm, &sev_cmd);
+ 		break;
+ 	}
++	case KVM_SEV_GUEST_STATUS: {
++		r = sev_guest_status(kvm, &sev_cmd);
++		break;
++	}
+ 	default:
+ 		break;
+ 	}
