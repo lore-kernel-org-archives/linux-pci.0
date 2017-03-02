@@ -1,116 +1,151 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55792 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751629AbdCPKdR (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Mar 2017 06:33:17 -0400
-Subject: Re: [RFC PATCH v2 24/32] kvm: x86: prepare for SEV guest management
- API support
-To: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
-        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
-        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
-        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, bp@suse.de, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org,
-        akpm@linux-foundation.org, davem@davemloft.net
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [RFC PATCH v2 30/32] kvm: svm: Add support for SEV DEBUG_ENCRYPT
+ command
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:18:27 -0500
+Message-ID: <148846790758.2349.16768762953657853550.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846784278.2349.17771314083820274411.stgit@brijesh-build-machine>
-From: Paolo Bonzini <pbonzini@redhat.com>
-Message-ID: <e3624c9f-af1f-740d-d359-3703024e83fd@redhat.com>
-Date: Thu, 16 Mar 2017 11:33:03 +0100
 MIME-Version: 1.0
-In-Reply-To: <148846784278.2349.17771314083820274411.stgit@brijesh-build-machine>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The command copies a plain text into guest memory and encrypts it using
+the VM encryption key. The command will be used for debug purposes
+(e.g setting breakpoint through gdbserver)
 
+Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+---
+ arch/x86/kvm/svm.c |   87 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 87 insertions(+)
 
-On 02/03/2017 16:17, Brijesh Singh wrote:
-> ASID management:
->  - Reserve asid range for SEV guest, SEV asid range is obtained through
->    CPUID Fn8000_001f[ECX]. A non-SEV guest can use any asid outside the SEV
->    asid range.
-
-How is backwards compatibility handled?
-
->  - SEV guest must have asid value within asid range obtained through CPUID.
->  - SEV guest must have the same asid for all vcpu's. A TLB flush is required
->    if different vcpu for the same ASID is to be run on the same host CPU.
-
-[...]
-
-> +
-> +	/* which host cpu was used for running this vcpu */
-> +	bool last_cpuid;
-
-Should be unsigned int.
-
-> 
-> +	/* Assign the asid allocated for this SEV guest */
-> +	svm->vmcb->control.asid = asid;
-> +
-> +	/* Flush guest TLB:
-> +	 * - when different VMCB for the same ASID is to be run on the
-> +	 *   same host CPU
-> +	 *   or
-> +	 * - this VMCB was executed on different host cpu in previous VMRUNs.
-> +	 */
-> +	if (sd->sev_vmcbs[asid] != (void *)svm->vmcb ||
-
-Why the cast?
-
-> +		svm->last_cpuid != cpu)
-> +		svm->vmcb->control.tlb_ctl = TLB_CONTROL_FLUSH_ALL_ASID;
-
-If there is a match, you don't need to do anything else (neither reset
-the asid, nor mark it as dirty, nor update the fields), so:
-
-	if (sd->sev_vmcbs[asid] == svm->vmcb &&
-	    svm->last_cpuid == cpu)
-		return;
-
-	svm->last_cpuid = cpu;
-	sd->sev_vmcbs[asid] = svm->vmcb;
-	svm->vmcb->control.tlb_ctl = TLB_CONTROL_FLUSH_ALL_ASID;
-	svm->vmcb->control.asid = asid;
-	mark_dirty(svm->vmcb, VMCB_ASID);
-
-(plus comments ;)).
-
-Also, why not TLB_CONTROL_FLUSH_ASID if possible?
-
-> +	svm->last_cpuid = cpu;
-> +	sd->sev_vmcbs[asid] = (void *)svm->vmcb;
-> +
-> +	mark_dirty(svm->vmcb, VMCB_ASID);
-
-[...]
-
-> 
-> diff --git a/include/uapi/linux/kvm.h b/include/uapi/linux/kvm.h
-> index fef7d83..9df37a2 100644
-> --- a/include/uapi/linux/kvm.h
-> +++ b/include/uapi/linux/kvm.h
-> @@ -1284,6 +1284,104 @@ struct kvm_s390_ucas_mapping {
->  /* Memory Encryption Commands */
->  #define KVM_MEMORY_ENCRYPT_OP	  _IOWR(KVMIO, 0xb8, unsigned long)
->  
-> +/* Secure Encrypted Virtualization mode */
-> +enum sev_cmd_id {
-
-Please add documentation in Documentation/virtual/kvm/memory_encrypt.txt.
-
-Paolo
+diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
+index ce8819a..64899ed 100644
+--- a/arch/x86/kvm/svm.c
++++ b/arch/x86/kvm/svm.c
+@@ -6058,6 +6058,89 @@ static int sev_dbg_decrypt(struct kvm *kvm, struct kvm_sev_cmd *argp)
+ 	return ret;
+ }
+ 
++static int sev_dbg_encrypt(struct kvm *kvm, struct kvm_sev_cmd *argp)
++{
++	void *data;
++	int len, ret, d_off;
++	struct page **inpages;
++	struct kvm_sev_dbg debug;
++	struct sev_data_dbg *encrypt;
++	unsigned long src_addr, dst_addr, npages;
++
++	if (!sev_guest(kvm))
++		return -ENOTTY;
++
++	if (copy_from_user(&debug, argp, sizeof(*argp)))
++		return -EFAULT;
++
++	if (debug.length > PAGE_SIZE)
++		return -EINVAL;
++
++	len = debug.length;
++	src_addr = debug.src_addr;
++	dst_addr = debug.dst_addr;
++
++	inpages = sev_pin_memory(dst_addr, PAGE_SIZE, &npages);
++	if (!inpages)
++		return -EFAULT;
++
++	encrypt = kzalloc(sizeof(*encrypt), GFP_KERNEL);
++	if (!encrypt) {
++		ret = -ENOMEM;
++		goto err_1;
++	}
++
++	data = (void *) get_zeroed_page(GFP_KERNEL);
++	if (!data) {
++		ret = -ENOMEM;
++		goto err_2;
++	}
++
++	if ((len & 15) || (dst_addr & 15)) {
++		/* if destination address and length are not 16-byte
++		 * aligned then:
++		 * a) decrypt destination page into temporary buffer
++		 * b) copy source data into temporary buffer at correct offset
++		 * c) encrypt temporary buffer
++		 */
++		ret = __sev_dbg_decrypt_page(kvm, dst_addr, data, &argp->error);
++		if (ret)
++			goto err_3;
++		d_off = dst_addr & (PAGE_SIZE - 1);
++
++		if (copy_from_user(data + d_off,
++					(uint8_t *)debug.src_addr, len)) {
++			ret = -EFAULT;
++			goto err_3;
++		}
++
++		encrypt->length = PAGE_SIZE;
++		encrypt->src_addr = __psp_pa(data);
++		encrypt->dst_addr =  __sev_page_pa(inpages[0]);
++	} else {
++		if (copy_from_user(data, (uint8_t *)debug.src_addr, len)) {
++			ret = -EFAULT;
++			goto err_3;
++		}
++
++		d_off = dst_addr & (PAGE_SIZE - 1);
++		encrypt->length = len;
++		encrypt->src_addr = __psp_pa(data);
++		encrypt->dst_addr = __sev_page_pa(inpages[0]);
++		encrypt->dst_addr += d_off;
++	}
++
++	encrypt->handle = sev_get_handle(kvm);
++	ret = sev_issue_cmd(kvm, SEV_CMD_DBG_ENCRYPT, encrypt, &argp->error);
++err_3:
++	free_page((unsigned long)data);
++err_2:
++	kfree(encrypt);
++err_1:
++	sev_unpin_memory(inpages, npages);
++	return ret;
++}
++
+ static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
+ {
+ 	int r = -ENOTTY;
+@@ -6089,6 +6172,10 @@ static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
+ 		r = sev_dbg_decrypt(kvm, &sev_cmd);
+ 		break;
+ 	}
++	case KVM_SEV_DBG_ENCRYPT: {
++		r = sev_dbg_encrypt(kvm, &sev_cmd);
++		break;
++	}
+ 	default:
+ 		break;
+ 	}
