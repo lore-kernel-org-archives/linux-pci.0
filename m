@@ -1,82 +1,169 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v4 10/23] dt-bindings: PCI: Add dt bindings for pci designware EP mode
-Date: Mon, 13 Mar 2017 19:52:46 +0530
-Message-ID: <20170313142259.25397-11-kishon@ti.com>
-In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
-References: <20170313142259.25397-1-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0084.outbound.protection.outlook.com ([104.47.32.84]:65264
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752680AbdCBRz2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 2 Mar 2017 12:55:28 -0500
+Subject: [RFC PATCH v2 15/32] x86: Add support for changing memory
+ encryption attribute in early boot
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+Date: Thu, 2 Mar 2017 10:15:28 -0500
+Message-ID: <148846772794.2349.1396854638510933455.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device tree binding documentation for pci designware EP mode.
+Some KVM-specific custom MSRs shares the guest physical address with
+hypervisor. When SEV is active, the shared physical address must be mapped
+with encryption attribute cleared so that both hypervsior and guest can
+access the data.
 
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Add APIs to change memory encryption attribute in early boot code.
+
+Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
 ---
- .../devicetree/bindings/pci/designware-pcie.txt    | 26 +++++++++++++++-------
- 1 file changed, 18 insertions(+), 8 deletions(-)
+ arch/x86/include/asm/mem_encrypt.h |   15 +++++++++
+ arch/x86/mm/mem_encrypt.c          |   63 ++++++++++++++++++++++++++++++++++++
+ 2 files changed, 78 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 1392c705ceca..b2480dd38c11 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -6,30 +6,40 @@ Required properties:
- - reg-names: Must be "config" for the PCIe configuration space.
-     (The old way of getting the configuration address space from "ranges"
-     is deprecated and should be avoided.)
-+- num-lanes: number of lanes to use
-+RC mode:
- - #address-cells: set to <3>
- - #size-cells: set to <2>
- - device_type: set to "pci"
- - ranges: ranges for the PCI memory and I/O regions
- - #interrupt-cells: set to <1>
--- interrupt-map-mask and interrupt-map: standard PCI properties
--	to define the mapping of the PCIe interface to interrupt
-+- interrupt-map-mask and interrupt-map: standard PCI
-+	properties to define the mapping of the PCIe interface to interrupt
- 	numbers.
--- num-lanes: number of lanes to use
-+EP mode:
-+- num-ib-windows: number of inbound address translation
-+        windows
-+- num-ob-windows: number of outbound address translation
-+        windows
+diff --git a/arch/x86/include/asm/mem_encrypt.h b/arch/x86/include/asm/mem_encrypt.h
+index 9799835..95bbe4c 100644
+--- a/arch/x86/include/asm/mem_encrypt.h
++++ b/arch/x86/include/asm/mem_encrypt.h
+@@ -47,6 +47,9 @@ void __init sme_unmap_bootdata(char *real_mode_data);
  
- Optional properties:
--- num-viewport: number of view ports configured in hardware.  If a platform
--  does not specify it, the driver assumes 2.
- - num-lanes: number of lanes to use (this property should be specified unless
-   the link is brought already up in BIOS)
- - reset-gpio: gpio pin number of power good signal
--- bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
--  specify this property, to keep backwards compatibility a range of 0x00-0xff
--  is assumed if not present)
- - clocks: Must contain an entry for each entry in clock-names.
- 	See ../clocks/clock-bindings.txt for details.
- - clock-names: Must include the following entries:
- 	- "pcie"
- 	- "pcie_bus"
-+RC mode:
-+- num-viewport: number of view ports configured in
-+  hardware. If a platform does not specify it, the driver assumes 2.
-+- bus-range: PCI bus numbers covered (it is recommended
-+  for new devicetrees to specify this property, to keep backwards
-+  compatibility a range of 0x00-0xff is assumed if not present)
-+EP mode:
-+- max-functions: maximum number of functions that can be
-+  configured
+ void __init sme_early_init(void);
  
- Example configuration:
++int __init early_set_memory_decrypted(void *addr, unsigned long size);
++int __init early_set_memory_encrypted(void *addr, unsigned long size);
++
+ /* Architecture __weak replacement functions */
+ void __init mem_encrypt_init(void);
  
--- 
-2.11.0
+@@ -110,6 +113,18 @@ static inline void __init sme_early_init(void)
+ {
+ }
+ 
++static inline int __init early_set_memory_decrypted(void *addr,
++						    unsigned long size)
++{
++	return 1;
++}
++
++static inline int __init early_set_memory_encrypted(void *addr,
++						    unsigned long size)
++{
++	return 1;
++}
++
+ #define __sme_pa		__pa
+ #define __sme_pa_nodebug	__pa_nodebug
+ 
+diff --git a/arch/x86/mm/mem_encrypt.c b/arch/x86/mm/mem_encrypt.c
+index 7df5f4c..567e0d8 100644
+--- a/arch/x86/mm/mem_encrypt.c
++++ b/arch/x86/mm/mem_encrypt.c
+@@ -15,6 +15,7 @@
+ #include <linux/mm.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/swiotlb.h>
++#include <linux/mem_encrypt.h>
+ 
+ #include <asm/tlbflush.h>
+ #include <asm/fixmap.h>
+@@ -258,6 +259,68 @@ static void sme_free(struct device *dev, size_t size, void *vaddr,
+ 	swiotlb_free_coherent(dev, size, vaddr, dma_handle);
+ }
+ 
++static unsigned long __init get_pte_flags(unsigned long address)
++{
++	int level;
++	pte_t *pte;
++	unsigned long flags = _KERNPG_TABLE_NOENC | _PAGE_ENC;
++
++	pte = lookup_address(address, &level);
++	if (!pte)
++		return flags;
++
++	switch (level) {
++	case PG_LEVEL_4K:
++		flags = pte_flags(*pte);
++		break;
++	case PG_LEVEL_2M:
++		flags = pmd_flags(*(pmd_t *)pte);
++		break;
++	case PG_LEVEL_1G:
++		flags = pud_flags(*(pud_t *)pte);
++		break;
++	default:
++		break;
++	}
++
++	return flags;
++}
++
++int __init early_set_memory_enc_dec(void *vaddr, unsigned long size,
++				    unsigned long flags)
++{
++	unsigned long pfn, npages;
++	unsigned long addr = (unsigned long)vaddr & PAGE_MASK;
++
++	/* We are going to change the physical page attribute from C=1 to C=0.
++	 * Flush the caches to ensure that all the data with C=1 is flushed to
++	 * memory. Any caching of the vaddr after function returns will
++	 * use C=0.
++	 */
++	clflush_cache_range(vaddr, size);
++
++	npages = PAGE_ALIGN(size) >> PAGE_SHIFT;
++	pfn = slow_virt_to_phys((void *)addr) >> PAGE_SHIFT;
++
++	return kernel_map_pages_in_pgd(init_mm.pgd, pfn, addr, npages,
++					flags & ~sme_me_mask);
++
++}
++
++int __init early_set_memory_decrypted(void *vaddr, unsigned long size)
++{
++	unsigned long flags = get_pte_flags((unsigned long)vaddr);
++
++	return early_set_memory_enc_dec(vaddr, size, flags & ~sme_me_mask);
++}
++
++int __init early_set_memory_encrypted(void *vaddr, unsigned long size)
++{
++	unsigned long flags = get_pte_flags((unsigned long)vaddr);
++
++	return early_set_memory_enc_dec(vaddr, size, flags | _PAGE_ENC);
++}
++
+ static struct dma_map_ops sme_dma_ops = {
+ 	.alloc                  = sme_alloc,
+ 	.free                   = sme_free,
