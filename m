@@ -1,81 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from a2nlsmtp01-04.prod.iad2.secureserver.net ([198.71.225.38]:45144
-        "EHLO a2nlsmtp01-04.prod.iad2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751660AbdCWSte (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Mar 2017 14:49:34 -0400
-From: Long Li <longli@exchange.microsoft.com>
-To: linux-pci@vger.kernel.org, devel@linuxdriverproject.org
-Cc: Long Li <longli@microsoft.com>
-Subject: [Please ignore this is a test] pci-hyperv: properly handle pci bus remove
-Date: Thu, 23 Mar 2017 11:37:04 -0700
-Message-Id: <1490294224-3173-1-git-send-email-longli@exchange.microsoft.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <20170302120546.GB17277@red-moon>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-8-lorenzo.pieralisi@arm.com>
+ <CAHp75VfdE6_W+DxhejorLxra2JQDGF3cG0uBedyOohhmcLiKLg@mail.gmail.com>
+ <20170302120546.GB17277@red-moon>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Thu, 2 Mar 2017 14:50:00 +0200
+Message-ID: <CAHp75VfoZTr5L3z5_SXW58W2Ate5nCWSzP8hAA051fVwizSjag@mail.gmail.com>
+Subject: Re: [PATCH 07/20] PCI: implement Devres interface to map PCI config
+ space
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Tejun Heo <tj@kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Linux-Arch <linux-arch@vger.kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Jonathan Corbet <corbet@lwn.net>, Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
+ Murali Karicheri <m-karicheri2@ti.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
+ linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Long Li <longli@microsoft.com>
+On Thu, Mar 2, 2017 at 2:05 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Thu, Mar 02, 2017 at 01:54:42AM +0200, Andy Shevchenko wrote:
+>> On Mon, Feb 27, 2017 at 5:14 PM, Lorenzo Pieralisi
+>> <lorenzo.pieralisi@arm.com> wrote:
 
-hv_pci_devices_present is called in hv_pci_remove when we remove a PCI 
-device from host (e.g. by disabling SRIOV on a device). In hv_pci_remove,
-the bus is already removed before the call, so we don't need to rescan the 
-bus in the workqueue scheduled from hv_pci_devices_present. 
++Cc: Tejun, who is initial author of PCI managed resources implementation.
 
-By introducing status hv_pcibus_removed, we can avoid this situation.
+> I thought about that and did not do it because here we are remapping
+> resources that are _not_ PCI bus resources (ie it is not PCI BARs we
+> are remapping), keeping the devm_* prefix would be more consistent
+> to the typical device drivers remapping functions pattern (ie a
+> typical PCI host controller driver would mix devm_ and pcim_ calls
+> which is a bit hard to parse), that was my rationale.
+>
+> I am not too fussed about that either way, I am happy to update it to
+> pcim_* though, it is Bjorn/Arnd's decision.
 
-Signed-off-by: Long Li <longli@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
+I would vote for pcim_*() variant.
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index ada9856..8a92244 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -350,6 +350,7 @@ enum hv_pcibus_state {
- 	hv_pcibus_init = 0,
- 	hv_pcibus_probed,
- 	hv_pcibus_installed,
-+	hv_pcibus_removed,
- 	hv_pcibus_maximum
- };
- 
-@@ -1504,12 +1505,19 @@ static void pci_devices_present_work(struct work_struct *work)
- 		put_pcichild(hpdev, hv_pcidev_ref_initial);
- 	}
- 
--	/* Tell the core to rescan bus because there may have been changes. */
--	if (hbus->state == hv_pcibus_installed) {
-+	switch(hbus->state) {
-+	case hv_pcibus_installed:
-+		/*
-+		* Tell the core to rescan bus
-+		* because there may have been changes.
-+		*/
- 		pci_lock_rescan_remove();
- 		pci_scan_child_bus(hbus->pci_bus);
- 		pci_unlock_rescan_remove();
--	} else {
-+		break;
-+
-+	case hv_pcibus_init:
-+	case hv_pcibus_probed:
- 		survey_child_resources(hbus);
- 	}
- 
-@@ -2185,6 +2193,7 @@ static int hv_pci_probe(struct hv_device *hdev,
- 	hbus = kzalloc(sizeof(*hbus), GFP_KERNEL);
- 	if (!hbus)
- 		return -ENOMEM;
-+	hbus->state = hv_pcibus_init;
- 
- 	/*
- 	 * The PCI bus "domain" is what is called "segment" in ACPI and
-@@ -2348,6 +2357,7 @@ static int hv_pci_remove(struct hv_device *hdev)
- 		pci_stop_root_bus(hbus->pci_bus);
- 		pci_remove_root_bus(hbus->pci_bus);
- 		pci_unlock_rescan_remove();
-+		hbus->state = hv_pcibus_removed;
- 	}
- 
- 	hv_pci_bus_exit(hdev);
+>> 2. If you may notice there is no separate pcim_*map*() stuff, they are
+>> dynamically adapting to the case.
+>
+> I do not understand what you mean here I would ask you to elaborate
+> a bit more please so that I can do something about it.
+
+Oh, sorry, there are two examples currently, i.e.
+pci_enable_msi()/pci_enable_msix() and pci_request_region*() which has
+no "m" in the name, but are managed on release by pcim_release().
+Some developers consider this as a bad idea, but so far no patch has
+been sent to introduce pcim_*() variants of those.
+
+So, regarding to your stuff, I would stick with "pcim" prefix.
+
 -- 
-2.7.4
+With Best Regards,
+Andy Shevchenko
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
