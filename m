@@ -1,102 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50704 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932244AbdCUFGN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Mar 2017 01:06:13 -0400
-Date: Mon, 20 Mar 2017 22:57:08 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Bodong Wang <bodong@mellanox.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, <bhelgaas@google.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <saeedm@mellanox.com>, Eli Cohen <eli@mellanox.com>
-Subject: Re: [PATCH] pci/sriov: Add an option to probe VFs or not before
- enabling SR-IOV
-Message-ID: <20170320225708.6868676a@t450s.home>
-In-Reply-To: <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
-References: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
-        <20170320230706.GA12252@gwshan>
-        <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 2 Mar 2017 10:29:31 -0600
+From: Rob Herring <robh@kernel.org>
+To: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH 3/4 v3] ARM: gemini: select MIGHT_HAVE_PCI
+Message-ID: <20170302162931.tyngslqsr2axy5qx@rob-hp-laptop>
+References: <20170227190720.31409-1-linus.walleij@linaro.org>
+ <20170227190720.31409-3-linus.walleij@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170227190720.31409-3-linus.walleij@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: openwrt-devel@openwrt.org, devicetree@vger.kernel.org,
+ Florian Fainelli <f.fainelli@gmail.com>,
+ Feng-Hsin Chiang <john453@faraday-tech.com>,
+ Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-pci@vger.kernel.org,
+ Hans Ulli Kroll <ulli.kroll@googlemail.com>, Greentime Hu <green.hu@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Janos Laube <janos.dev@gmail.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 20 Mar 2017 18:34:23 -0500
-Bodong Wang <bodong@mellanox.com> wrote:
-
-> On 3/20/2017 6:07 PM, Gavin Shan wrote:
-> > On Mon, Mar 20, 2017 at 05:14:34PM +0200, bodong@mellanox.com wrote:  
-> >> From: Bodong Wang <bodong@mellanox.com>
-> >>
-> >> Sometimes it is not desirable to probe the virtual functions after
-> >> SRIOV is enabled. This can save host side resource usage by VF
-> >> instances which would be eventually probed to VMs.
-
-What resources would not be released when the VF driver is unbound?
-
-> >> Added a new PCI sysfs interface "sriov_probe_vfs" to control that
-> > >from PF, all current callers still retain the same functionality.
-> >> To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
-> >>
-> >> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
-> >>
-> >> Note that, the choice must be made before enabling VFs. The change
-> >> will not take effect if VFs are already enabled. Simply, one can set
-> >> sriov_numvfs to 0, choose whether to probe or not, and then resume
-> >> sriov_numvfs.
-> >>  
-> > Bodong, I'm not sure if there is a requirement to load driver for the
-> > specified number of VFs? That indicates no driver will be loaded for
-> > other VFs. If so, this interface might serve the purpose as well.  
-> Gavin, thanks for the review. That is indeed an interesting suggestion. 
-> Theoretically,  we can change that probe_vfs from boolean to integer. 
-> And use it as a counter to probe the first N VFs(if N < total_vfs).  
-> Let's see if there are any objections.
-
-Is it just me or does this seem like a confusing user interface, ie. to
-get binary on/off behavior a user now needs to 'cat total_vfs >
-sriov_probe_vfs'.  It's not very intuitive, what's the use case for it?
-
-
-> >
-> >
-> > +#ifdef CONFIG_PCI_IOV
-> > +	if (!pci_dev->is_virtfn ||
-> > +	    (pci_dev->is_virtfn && pci_dev->physfn->sriov->probe_vfs)) {
-> > +#endif
-> > +		error = __pci_device_probe(drv, pci_dev);
-> > +		if (error) {
-> > +			pcibios_free_irq(pci_dev);
-> > +			pci_dev_put(pci_dev);
-> > +		}
-> > +#ifdef CONFIG_PCI_IOV
-> > 	}
-> > +#endif
-> >
-> > I think it's reasonable to have a inline function for this check:  
-> It's doable, but what's the benefit?
-
-Way cleaner.
-
-> >
-> > #ifdef CONFIG_PCI_IOV
-> > static inline bool pci_device_can_probe(struct pci_dev *pdev)
-> > {
-> > 	return (!pdev->is_virtfn || pdev->physfn->sriov->probe_vfs);  
-> should be return (!pdev->is_virtfn || (pci_dev->is_virtfn && 
-> pci_dev->physfn->sriov->probe_vfs));
+On Mon, Feb 27, 2017 at 08:07:19PM +0100, Linus Walleij wrote:
+> As we have a PCI driver for the Gemini, we should select
+> MIGHT_HAVE_PCI.
 > 
-> We want to probe that device if 1) it's a PF 2) it'a VF and probe_vfs is set
-> > }
-> > #else
-> > static inline bool pci_device_can_probe(struct pci_dev *pdev)
-> > {
-> > 	return true;
-> > }  
-> This function will be a waste if CONFIG_PCI_IOV is not defined.
-> > #endif  
+> Cc: Janos Laube <janos.dev@gmail.com>
+> Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
+> Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+> Cc: Florian Fainelli <f.fainelli@gmail.com>
+> Cc: Feng-Hsin Chiang <john453@faraday-tech.com>
+> Cc: Greentime Hu <green.hu@gmail.com>
+> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+> ---
+> ChangeLog v1->v2->v3:
+> - No changes
 > 
-> > Thanks,
-> > Gavin
-> >  
+> PCI maintainers: this is FYI only, I will funnel this to the ARM
+> SoC tree once we are done with the PCI driver.
+> ---
+>  arch/arm/mach-gemini/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
 > 
+> diff --git a/arch/arm/mach-gemini/Kconfig b/arch/arm/mach-gemini/Kconfig
+> index a5ee5fbab796..21f89a4c16fe 100644
+> --- a/arch/arm/mach-gemini/Kconfig
+> +++ b/arch/arm/mach-gemini/Kconfig
+> @@ -6,6 +6,7 @@ menuconfig ARCH_GEMINI
+>  	select FTTMR010_TIMER
+>  	select GPIO_GEMINI
+>  	select GPIOLIB
+> +	select MIGHT_HAVE_PCI
+
+Doesn't Multi-platform do this for you? If not, IMO, we should do that 
+or kill this option. We don't do an option like this for I2C, SPI, 
+display, anything else (well, except GPIOLIB ;)).
+
+>  	select POWER_RESET
+>  	select POWER_RESET_SYSCON
+>  	select SERIAL_OF_PLATFORM
+> -- 
+> 2.9.3
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
