@@ -1,27 +1,24 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH v2 06/32] x86/pci: Use memremap when walking setup
- data
-To: Bjorn Helgaas <helgaas@kernel.org>,
-        Brijesh Singh <brijesh.singh@amd.com>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846759008.2349.8274808454274279039.stgit@brijesh-build-machine>
- <20170303204209.GA31767@bhelgaas-glaptop.roam.corp.google.com>
-CC: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <kvm@vger.kernel.org>, <rkrcmar@redhat.com>,
-        <matt@codeblueprint.co.uk>, <linux-pci@vger.kernel.org>,
-        <linus.walleij@linaro.org>, <gary.hook@amd.com>,
-        <linux-mm@kvack.org>, <paul.gortmaker@windriver.com>,
-        <hpa@zytor.com>, <cl@linux.com>, <dan.j.williams@intel.com>,
-        <aarcange@redhat.com>, <sfr@canb.auug.org.au>,
-        <andriy.shevchenko@linux.intel.com>, <herbert@gondor.apana.org.au>,
-        <bhe@redhat.com>, <xemul@parallels.com>, <joro@8bytes.org>,
-        <x86@kernel.org>, <peterz@infradead.org>, <piotr.luc@intel.com>,
-        <mingo@redhat.com>, <msalter@redhat.com>,
-        <ross.zwisler@linux.intel.com>, <bp@suse.de>, <dyoung@redhat.com>,
-        <jroedel@suse.de>, <keescook@chromium.org>, <arnd@arndb.de>,
-        <toshi.kani@hpe.com>, <mathieu.desnoyers@efficios.com>,
-        <luto@kernel.org>, <devel@linuxdriverproject.org>,
-        <bhelgaas@google.com>, <tglx@linutronix.de>, <mchehab@kernel.org>,
+Subject: [RFC PATCH v2 13/32] KVM: SVM: Enable SEV by setting the SEV_ENABLE
+ CPU feature
+From: Brijesh Singh <brijesh.singh@amd.com>
+To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
         <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
         <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
         <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
@@ -29,75 +26,87 @@ CC: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
         <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
         <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
         <davem@davemloft.net>
-From: Tom Lendacky <thomas.lendacky@amd.com>
-Message-ID: <df526224-0a4b-abc6-6377-efbca77284b1@amd.com>
-Date: Fri, 3 Mar 2017 15:15:34 -0600
+Date: Thu, 2 Mar 2017 10:15:01 -0500
+Message-ID: <148846770159.2349.16863375000963463500.stgit@brijesh-build-machine>
+In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-In-Reply-To: <20170303204209.GA31767@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/3/2017 2:42 PM, Bjorn Helgaas wrote:
-> On Thu, Mar 02, 2017 at 10:13:10AM -0500, Brijesh Singh wrote:
->> From: Tom Lendacky <thomas.lendacky@amd.com>
->>
->> The use of ioremap will force the setup data to be mapped decrypted even
->> though setup data is encrypted.  Switch to using memremap which will be
->> able to perform the proper mapping.
->
-> How should callers decide whether to use ioremap() or memremap()?
->
-> memremap() existed before SME and SEV, and this code is used even if
-> SME and SEV aren't supported, so the rationale for this change should
-> not need the decryption argument.
+From: Tom Lendacky <thomas.lendacky@amd.com>
 
-When SME or SEV is active an ioremap() will remove the encryption bit
-from the pagetable entry when it is mapped.  This allows MMIO, which
-doesn't support SME/SEV, to be performed successfully.  So my take is
-that ioremap() should be used for MMIO and memremap() for pages in RAM.
+Modify the SVM cpuid update function to indicate if Secure Encrypted
+Virtualization (SEV) is active in the guest by setting the SEV KVM CPU
+features bit. SEV is active if Secure Memory Encryption is enabled in
+the host and the SEV_ENABLE bit of the VMCB is set.
 
->
->> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
->> ---
->>  arch/x86/pci/common.c |    4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
->> index a4fdfa7..0b06670 100644
->> --- a/arch/x86/pci/common.c
->> +++ b/arch/x86/pci/common.c
->> @@ -691,7 +691,7 @@ int pcibios_add_device(struct pci_dev *dev)
->>
->>  	pa_data = boot_params.hdr.setup_data;
->>  	while (pa_data) {
->> -		data = ioremap(pa_data, sizeof(*rom));
->> +		data = memremap(pa_data, sizeof(*rom), MEMREMAP_WB);
->
-> I can't quite connect the dots here.  ioremap() on x86 would do
-> ioremap_nocache().  memremap(MEMREMAP_WB) would do arch_memremap_wb(),
-> which is ioremap_cache().  Is making a cacheable mapping the important
-> difference?
+Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+---
+ arch/x86/kvm/cpuid.c |    4 +++-
+ arch/x86/kvm/svm.c   |   18 ++++++++++++++++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
 
-The memremap(MEMREMAP_WB) will actually check to see if it can perform
-a __va(pa_data) in try_ram_remap() and then fallback to the
-arch_memremap_wb().  So it's actually the __va() vs the ioremap_cache()
-that is the difference.
-
-Thanks,
-Tom
-
->
->>  		if (!data)
->>  			return -ENOMEM;
->>
->> @@ -710,7 +710,7 @@ int pcibios_add_device(struct pci_dev *dev)
->>  			}
->>  		}
->>  		pa_data = data->next;
->> -		iounmap(data);
->> +		memunmap(data);
->>  	}
->>  	set_dma_domain_ops(dev);
->>  	set_dev_domain_options(dev);
->>
+diff --git a/arch/x86/kvm/cpuid.c b/arch/x86/kvm/cpuid.c
+index 1639de8..e0c40a8 100644
+--- a/arch/x86/kvm/cpuid.c
++++ b/arch/x86/kvm/cpuid.c
+@@ -601,7 +601,7 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
+ 		entry->edx = 0;
+ 		break;
+ 	case 0x80000000:
+-		entry->eax = min(entry->eax, 0x8000001a);
++		entry->eax = min(entry->eax, 0x8000001f);
+ 		break;
+ 	case 0x80000001:
+ 		entry->edx &= kvm_cpuid_8000_0001_edx_x86_features;
+@@ -634,6 +634,8 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
+ 		break;
+ 	case 0x8000001d:
+ 		break;
++	case 0x8000001f:
++		break;
+ 	/*Add support for Centaur's CPUID instruction*/
+ 	case 0xC0000000:
+ 		/*Just support up to 0xC0000004 now*/
+diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
+index 75b0645..36d61ff 100644
+--- a/arch/x86/kvm/svm.c
++++ b/arch/x86/kvm/svm.c
+@@ -46,6 +46,7 @@
+ #include <asm/irq_remapping.h>
+ 
+ #include <asm/virtext.h>
++#include <asm/mem_encrypt.h>
+ #include "trace.h"
+ 
+ #define __ex(x) __kvm_handle_fault_on_reboot(x)
+@@ -5005,10 +5006,27 @@ static void svm_cpuid_update(struct kvm_vcpu *vcpu)
+ {
+ 	struct vcpu_svm *svm = to_svm(vcpu);
+ 	struct kvm_cpuid_entry2 *entry;
++	struct vmcb_control_area *ca = &svm->vmcb->control;
++	struct kvm_cpuid_entry2 *features, *sev_info;
+ 
+ 	/* Update nrips enabled cache */
+ 	svm->nrips_enabled = !!guest_cpuid_has_nrips(&svm->vcpu);
+ 
++	/* Check for Secure Encrypted Virtualization support */
++	features = kvm_find_cpuid_entry(vcpu, KVM_CPUID_FEATURES, 0);
++	if (!features)
++		return;
++
++	sev_info = kvm_find_cpuid_entry(vcpu, 0x8000001f, 0);
++	if (!sev_info)
++		return;
++
++	if (ca->nested_ctl & SVM_NESTED_CTL_SEV_ENABLE) {
++		features->eax |= (1 << KVM_FEATURE_SEV);
++		cpuid(0x8000001f, &sev_info->eax, &sev_info->ebx,
++		      &sev_info->ecx, &sev_info->edx);
++	}
++
+ 	if (!kvm_vcpu_apicv_active(vcpu))
+ 		return;
+ 
