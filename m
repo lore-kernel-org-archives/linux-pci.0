@@ -1,109 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.131]:39222 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755314AbdCUDz6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2017 23:55:58 -0400
-Message-ID: <58D0A433.8050608@rock-chips.com>
-Date: Tue, 21 Mar 2017 11:55:31 +0800
-From: jeffy <jeffy.chen@rock-chips.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 3 Mar 2017 10:49:50 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Guenter Roeck <linux@roeck-us.net>,
+        Vivek Gautam <vivek.gautam@codeaurora.org>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Ley Foon Tan <ley.foon.tan@intel.com>
+Subject: [GIT PULL] PCI fixes for v4.11
+Message-ID: <20170303164950.GA30375@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-To: Brian Norris <briannorris@chromium.org>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH] PCI: rockchip: don't leak the PCI resource list
-References: <20170320224936.28605-1-briannorris@chromium.org> <108a73fe-f186-f9ef-81be-7941f3db9d7f@rock-chips.com> <20170321022127.GA68526@google.com>
-In-Reply-To: <20170321022127.GA68526@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi brian,
+PCI fixes:
 
-On 03/21/2017 10:21 AM, Brian Norris wrote:
-> On Tue, Mar 21, 2017 at 09:25:16AM +0800, Shawn Lin wrote:
->> On 2017/3/21 6:49, Brian Norris wrote:
->>> This list is local to the probe() function. We should free it up in both
->>> the success case and the error case, but currently we're only freeing it
->>> in the error case (see commit f1d722b607d6 ("PCI: rockchip: Fix
->>> rockchip_pcie_probe() error path to free resource list")).
->>>
->>> Caught by kmemleak, when doing repeated bind/unbind tests.
->>>
->>
->> It doesn't look natural to free it in probe, instead it looks more
->> like we should do the cleanup work when calling .remove
->
-> Hmm, I did write this one up pretty quickly, so I might have gotten it a
-> bit wrong. It's not clear there's a *real* problem with this patch,
-> since the bridge's window list doesn't actually get used much later, but
-> I agree this isn't correct.
->
-> And actually, I think my patch is a red herring; the leak is still
-> there. I notice that the resource list is actually freed in
-> pci_release_host_bridge_dev() already anyway.
->
->> I didn't know if there is something that still use this resource
->> , for instance, hotplug? But I noticed it from Bjron's statement[1]
->> that "The struct resource for each host bridge window must live as long
->> as the host bridge itself". So I didn't free it when finishing probe.
->> I guess the proper fix is to do it in pci_remove_root_bus or somewhere
->> of the cleanup code if I undertand it correctly.
->
-> That thread is talking about a different issue; in that driver, the
-> 'struct resource' is on the stack. That's not good. In our case, it's
-> just the resource list head that's on the stack, which is fine. The
-> relevant entries get spliced onto a longer-lived list in the end.
->
-> But then, we have these to consider for leaks:
->
-> (a) the 'resource_entry's allocated in
-> of_pci_get_host_bridge_resources() (via pci_add_resource() and
-> pci_add_resource_offset())
->
-> (b) the 'resource's allocated in
-> of_pci_get_host_bridge_resources(), to go with each of the
-> 'resource_entry's from (b)
->
-> As noted above, I think (a) is actually taken care of (and so my current
-> patch is not needed). The problem is only with (b). (I think?)
-yes, it looks like there's no way to free resources allocated in 
-of_pci_get_host_bridge_resources, expect for the err path: 
-kfree(window->res).
+  - fix NULL pointer dereferences in many DesignWare-based drivers due to
+    refactoring error
 
-i think it's a common issue, which may not get fix in rockchip pci driver.
-
-maybe we should modify of_pci_get_host_bridge_resources, pass the struct 
-device to it, and change all kzalloc to devm_kzalloc(also remove the kfree)
+  - fix Altera config write breakage due to my refactoring error
 
 
->
-> I'll double check this all tomorrow.
->
-> Brian
->
->> [1]: https://lkml.org/lkml/2017/2/8/802
->>
->>> Signed-off-by: Brian Norris <briannorris@chromium.org>
->>> ---
->>> drivers/pci/host/pcie-rockchip.c | 1 +
->>> 1 file changed, 1 insertion(+)
->>>
->>> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
->>> index bd6df7254de4..8087a0698d65 100644
->>> --- a/drivers/pci/host/pcie-rockchip.c
->>> +++ b/drivers/pci/host/pcie-rockchip.c
->>> @@ -1396,6 +1396,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
->>> 		goto err_free_res;
->>> 	}
->>> 	rockchip->root_bus = bus;
->>> +	pci_free_resource_list(&res);
->>>
->>> 	pci_bus_size_bridges(bus);
->>> 	pci_bus_assign_resources(bus);
->>>
->>
->
->
->
+The following changes since commit 9e314890292c0dd357eadef6a043704fa0b4c157:
+
+  Merge tag 'openrisc-for-linus' of git://github.com/openrisc/linux (2017-02-24 18:37:03 -0800)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.11-fixes-1
+
+for you to fetch changes up to 2a7275a3d867b228216886aae35e1f64291180b1:
+
+  PCI: altera: Fix TLP_CFG_DW0 for TLP write (2017-02-28 15:06:29 -0600)
+
+----------------------------------------------------------------
+pci-v4.11-fixes-1
+
+----------------------------------------------------------------
+Guenter Roeck (1):
+      PCI: dwc: Fix crashes seen due to missing assignments
+
+Ley Foon Tan (1):
+      PCI: altera: Fix TLP_CFG_DW0 for TLP write
+
+ drivers/pci/dwc/pci-exynos.c           |  1 +
+ drivers/pci/dwc/pci-imx6.c             |  1 +
+ drivers/pci/dwc/pci-keystone.c         |  2 ++
+ drivers/pci/dwc/pci-layerscape.c       |  2 ++
+ drivers/pci/dwc/pcie-armada8k.c        |  2 ++
+ drivers/pci/dwc/pcie-artpec6.c         |  2 ++
+ drivers/pci/dwc/pcie-designware-plat.c |  2 ++
+ drivers/pci/dwc/pcie-hisi.c            |  2 ++
+ drivers/pci/dwc/pcie-qcom.c            |  2 ++
+ drivers/pci/dwc/pcie-spear13xx.c       |  2 ++
+ drivers/pci/host/pcie-altera.c         | 10 +++++++---
+ 11 files changed, 25 insertions(+), 3 deletions(-)
