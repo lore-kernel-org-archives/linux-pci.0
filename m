@@ -1,174 +1,186 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 9 Mar 2017 13:55:31 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 3 Mar 2017 14:04:07 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7 0/4] New Microsemi PCI Switch Management Driver
-Message-ID: <20170309195531.GB19517@bhelgaas-glaptop.roam.corp.google.com>
-References: <1488497074-14186-1-git-send-email-logang@deltatee.com>
+To: Mason <slash.tmp@free.fr>
+Subject: Re: Using the generic host PCIe driver
+Message-ID: <20170303200407.GB30375@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170227164430.GB11162@bhelgaas-glaptop.roam.corp.google.com>
+ <8643c952-e915-bcd1-390e-9d4001789872@free.fr>
+ <20170227183534.GA12481@bhelgaas-glaptop.roam.corp.google.com>
+ <347d4200-e089-60df-5f60-58d16efc7c4e@free.fr>
+ <20170301161801.GB13171@bhelgaas-glaptop.roam.corp.google.com>
+ <98ee3041-6a94-91af-b4bf-208aa02624ed@free.fr>
+ <20170301215726.GA32286@bhelgaas-glaptop.roam.corp.google.com>
+ <258cd6f3-ef17-6705-ff48-ae06f26778c2@free.fr>
+ <20170303154628.GA21522@bhelgaas-glaptop.roam.corp.google.com>
+ <8e1a0b5d-8dfb-4be1-a049-b16892a6c0d0@free.fr>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1488497074-14186-1-git-send-email-logang@deltatee.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <8e1a0b5d-8dfb-4be1-a049-b16892a6c0d0@free.fr>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ David Daney <david.daney@cavium.com>, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Will Deacon <will.deacon@arm.com>, Thierry Reding <treding@nvidia.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 02, 2017 at 04:24:30PM -0700, Logan Gunthorpe wrote:
-> Because getting it right correctly the first time is appearantly hard
-> and I caught this mistake while reading the email I had just sent :(
+On Fri, Mar 03, 2017 at 06:18:02PM +0100, Mason wrote:
+> On 03/03/2017 16:46, Bjorn Helgaas wrote:
+> > On Fri, Mar 03, 2017 at 01:44:54PM +0100, Mason wrote:
+> >
+> >> For now, I have "hidden" the root's BAR0 from the system with:
+> >>
+> >> 	if (bus->number == 0 && where == PCI_BASE_ADDRESS_0) {
+> >> 		*val = 0;
+> >> 		return PCIBIOS_SUCCESSFUL;
+> >> 	}
+> > 
+> > I'm scratching my head about this a little.  Here's what your dmesg
+> > log contained originally:
+> > 
+> >   pci 0000:00:00.0: [1105:8758] type 01 class 0x048000
+> >   pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x00ffffff 64bit]
+> >   pci 0000:00:00.0: BAR 0: no space for [mem size 0x01000000 64bit]
+> >   pci 0000:00:00.0: BAR 0: failed to assign [mem size 0x01000000 64bit]
+> >   pci 0000:00:00.0: PCI bridge to [bus 01]
+> >   pcieport 0000:00:00.0: enabling device (0140 -> 0142)
+> > 
+> > This device is a bridge (a Root Port, per your lspci output).  With a
+> > BAR, which is legal but unusual.  We couldn't assign space for the
+> > BAR, which means we can't use whatever vendor-specific functionality
+> > it provides.
 > 
-> I'm very sorry about the extra noise.
+> I had several chats with the HW designer. I'll try to explain, only as
+> far as I could understand ;-)
 > 
-> Logan
-> 
-> --
-> 
-> Changes since v6:
-> 
-> * I screwed up the device_unregister path and left a potential use
->   after free bug in. I'm not sure why I didn't see a failure because of
->   it but it all tested fine. This version is correct though.
-> 
-> Changes since v5:
-> 
-> * Reworked cleanup during unbind again. This time we follow the pattern
->   roughly suggested by Jason Gunthorpe: we use an alive flag
->   that's checked with a rw semaphore held by the cdev ops. Except
->   instead of using the rwsem we just use the already existing
->   mrpc_mutex. (Seeing the vast majority of locations that would use the
->   semaphore overlap with the existing mutex.)
-> * Added a small performance enhancement so the code reads less io memory
->   if the user is quick in submitting their read request.
-> 
-> Changes since v4:
-> 
-> * Turns out pushing the pci release code into the device release
->   function didn't work as I would have liked. If you try to unbind the
->   device with an instance open, then you hit a kernel bug at
->   drivers/pci/msi.c:371. (This didn't occur in v3.)
-> 
->   To solve this, we've moved the pci release code back into the
->   unregister function and reintroduced an alive flag. This time,
->   however, the alive flag is protected by mrpc_mutex and we're very
->   careful about what happens to devices still in use (they should
->   all be released through the timeout path and an ENODEV error
->   returned to userspace; while new commands are blocked with the
->   same error).
-> 
-> Changes since v3:
-> 
-> * Removed stdev_is_alive and moved pci deinit functions
->   into the device release function which only occurs after all
->   cdev instances are closed. (per Bjorn)
-> * Reduced locking in read/write functions (per Bjorn)
-> * Use pci_alloc_irq_vectors to vastly improve ISR initialization (Bjorn)
-> * A few other minor nits and cleanup as noticed by Bjorn
-> 
-> Changes since v2:
-> 
-> * Collected reviewed and tested tags
-> * Very minor fix to the error path in the create function
-> 
-> Changes since v1:
-> 
-> * Rebased onto 4.10-rc6 (cleanly)
-> * Split the patch into a few more easily digestible patches (as
->   suggested by Greg Kroah-Hartman)
-> * Folded switchtec.c into switchtec.h (per Greg)
-> * Fixed a bunch of 32bit build warnings caught by the kbuild test robot
-> * Fixed some issues in the documentation so it has a proper
->   reStructredText format (as noted by Jonathan Corbet)
-> * Fixed padding and sizes in the IOCTL structures as noticed by Emil
->   Velikov and used pahole to verify their consistency across 32 and 64
->   bit builds
-> * Reworked one of the IOCTL interfaces to be more future proof (per
->   Emil).
-> 
-> Changes since RFC:
-> 
-> * Fixed incorrect use of the drive model as pointed out by Greg
->   Kroah-Hartman
-> * Used devm functions as suggested by Keith Busch
-> * Added a handful of sysfs attributes to the switchtec class
-> * Added a handful of IOCTLs to the switchtec device
-> * A number of miscellaneous bug fixes
-> 
-> --
-> 
-> Hi,
-> 
-> This is a continuation of the RFC we posted lasted month [1] which
-> proposes a management driver for Microsemi's Switchtec line of PCI
-> switches. This hardware is still looking to be used in the Open
-> Compute Platform
-> 
-> To make this entirely clear: the Switchtec products are compliant
-> with the PCI specifications and are supported today with the standard
-> in-kernel driver. However, these devices also expose a management endpoint
-> on a separate PCI function address which can be used to perform some
-> advanced operations. This is a driver for that function. See the patch
-> for more information.
-> 
-> Since the RFC, we've made the changes requested by Greg Kroah-Hartman
-> and Keith Busch, and we've also fleshed out a number of features. We've
-> added a couple of IOCTLs and sysfs attributes which are documented in
-> the patch. Significant work has also been done on the userspace tool
-> which is available under a GPL license at [2]. We've also had testing
-> done by some of the interested parties.
-> 
-> We hope to see this work included in either 4.11 or 4.12 assuming a
-> smooth review process.
-> 
-> The patch is based off of the v4.10-rc6 release.
-> 
-> Thanks for your review,
-> 
-> Logan
-> 
-> [1] https://www.spinics.net/lists/linux-pci/msg56897.html
-> [2] https://github.com/sbates130272/switchtec-user
-> 
-> Logan Gunthorpe (4):
->   MicroSemi Switchtec management interface driver
->   switchtec: Add user interface documentation
->   switchtec: Add sysfs attributes to the Switchtec driver
->   switchtec: Add IOCTLs to the Switchtec driver
-> 
->  Documentation/ABI/testing/sysfs-class-switchtec |   96 ++
->  Documentation/ioctl/ioctl-number.txt            |    1 +
->  Documentation/switchtec.txt                     |   80 ++
->  MAINTAINERS                                     |   11 +
->  drivers/pci/Kconfig                             |    1 +
->  drivers/pci/Makefile                            |    1 +
->  drivers/pci/switch/Kconfig                      |   13 +
->  drivers/pci/switch/Makefile                     |    1 +
->  drivers/pci/switch/switchtec.c                  | 1600 +++++++++++++++++++++++
->  include/uapi/linux/switchtec_ioctl.h            |  132 ++
->  10 files changed, 1936 insertions(+)
->  create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
->  create mode 100644 Documentation/switchtec.txt
->  create mode 100644 drivers/pci/switch/Kconfig
->  create mode 100644 drivers/pci/switch/Makefile
->  create mode 100644 drivers/pci/switch/switchtec.c
->  create mode 100644 include/uapi/linux/switchtec_ioctl.h
+> We used to make devices, before implementing a root. Since at least
+> one BAR is required (?) for a device, it was decided to have one BAR
+> for the root, for symmetry.
 
-Applied to pci/switchtec for v4.12, thanks!
+I'm not aware of a spec requirement for any BARs.  It's conceivable
+that one could build a device that only uses config space.  And of
+course, most bridges have windows but no BARs.  But that doesn't
+matter; the hardware is what it is and we have to deal with it.
+
+> In fact, I thought I could ignore that BAR, but it is apparently NOT
+> the case, as MSIs are supposed to be sent *within* the BAR of the root.
+
+I don't know much about this piece of the MSI puzzle, but maybe Marc
+can enlighten us.  If this Root Port is the target of MSIs and the
+Root Port turns them into some sort of interrupt on the CPU side, I
+can see how this might make sense.
+
+I think it's unusual for the PCI core to assign the MSI target using a
+BAR, though.  I think this means you'll have to implement your
+arch_setup_msi_irq() or .irq_compose_msi_msg() method such that it 
+looks up that BAR value, since you won't know it at build-time.
+
+> The weird twist is that the BAR advertizes a 64-bit memory zone,
+> but we will, in fact, map MMIO registers behind it. So all the
+> RAM Linux assigns to the area is wasted, IIUC.
+
+I'm not sure what this means.  You have this:
+
+> OF: PCI:   MEM 0x90000000..0x9fffffff -> 0x90000000
+> pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffffff]
+
+This [mem 0x90000000-0x9fffffff] host bridge window means there can't
+be RAM in that region.  CPU accesses to 0x90000000-0x9fffffff have to
+be claimed by the host bridge and forwarded to PCI.
+
+Linux doesn't "assign system RAM" anywhere; we just learn somehow
+where that RAM is.  Linux *does* assign BARs of PCI devices, and they
+have to be inside the host bridge windows(s).
+
+The BARs may contain registers, RAM, frame buffers, etc., that live
+on the PCI device.  It's totally up to the device what it is.
+
+> OF: PCI: host bridge /soc/pcie@50000000 ranges:
+> OF: PCI:   No bus range found for /soc/pcie@50000000, using [bus 00-ff]
+
+Tangent: the lack of a bus range is a defect in your DTS.
+
+> [    1.042737] pci_bus 0000:00: scanning bus
+> [    1.046895] pci 0000:00:00.0: [1105:0024] type 01 class 0x048000
+> [    1.053050] pci 0000:00:00.0: calling tango_pcie_fixup_class+0x0/0x10
+> [    1.059639] pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x00ffffff 64bit]
+> [    1.066583] pci 0000:00:00.0: calling pci_fixup_ide_bases+0x0/0x40
+> [    1.072929] pci 0000:00:00.0: supports D1 D2
+> [    1.077318] pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
+> [    1.083452] pci 0000:00:00.0: PME# disabled
+> [    1.087901] pci_bus 0000:00: fixups for bus
+> [    1.092212] PCI: bus0: Fast back to back transfers disabled
+> [    1.097913] pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 0
+> [    1.104746] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+> [    1.112893] pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 1
+> [    1.119800] pci_bus 0000:01: scanning bus
+> [    1.123972] pci 0000:01:00.0: [1912:0014] type 00 class 0x0c0330
+> [    1.130144] pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00001fff 64bit]
+> [    1.137147] pci 0000:01:00.0: calling pci_fixup_ide_bases+0x0/0x40
+> [    1.143577] pci 0000:01:00.0: PME# supported from D0 D3hot D3cold
+> [    1.149801] pci 0000:01:00.0: PME# disabled
+> [    1.154364] pci_bus 0000:01: fixups for bus
+> [    1.158671] PCI: bus1: Fast back to back transfers disabled
+> [    1.164368] pci_bus 0000:01: bus scan returning with max=01
+> [    1.170067] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+> [    1.176814] pci_bus 0000:00: bus scan returning with max=01
+> [    1.182511] pci 0000:00:00.0: fixup irq: got 0
+> [    1.187072] pci 0000:00:00.0: assigning IRQ 00
+> [    1.191658] pci 0000:01:00.0: fixup irq: got 20
+> [    1.196307] pci 0000:01:00.0: assigning IRQ 20
+> [    1.200892] pci 0000:00:00.0: BAR 0: assigned [mem 0x90000000-0x90ffffff 64bit]
+> [    1.208344] pci 0000:00:00.0: BAR 8: assigned [mem 0x91000000-0x910fffff]
+> [    1.215267] pci 0000:01:00.0: BAR 0: assigned [mem 0x91000000-0x91001fff 64bit]
+> [    1.222726] pci 0000:00:00.0: PCI bridge to [bus 01]
+> [    1.227812] pci 0000:00:00.0:   bridge window [mem 0x91000000-0x910fffff]
+> [    1.234781] pcieport 0000:00:00.0: enabling device (0140 -> 0142)
+> [    1.241013] pcieport 0000:00:00.0: enabling bus mastering
+> [    1.246634] pci 0000:01:00.0: calling quirk_usb_early_handoff+0x0/0x790
+> [    1.253389] pci 0000:01:00.0: enabling device (0140 -> 0142)
+> [    1.275215] pci 0000:01:00.0: xHCI HW did not halt within 16000 usec status = 0xd2f4167e
+> 
+> # /usr/sbin/lspci -v
+> 00:00.0 PCI bridge: Sigma Designs, Inc. Device 0024 (rev 01) (prog-if 00 [Normal decode])
+>         Flags: bus master, fast devsel, latency 0
+>         Memory at 90000000 (64-bit, non-prefetchable) [size=16M]
+>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+>         I/O behind bridge: 00000000-00000fff
+
+Something's wrong with this.  You have no I/O windows through the host
+bridge, which implies that you can't generic PCI I/O transactions, so
+this I/O window should be disabled.  This might be an lspci issue;
+what does "lspci -xxx" show?
+
+>         Memory behind bridge: 91000000-910fffff
+>         Prefetchable memory behind bridge: 00000000-000fffff
+
+This prefetchable memory window is bogus, too.  It should probably be
+disabled.  If the bridge doesn't support a prefetchable window, the
+base and limit should be hardwired to zero.  If it supports a window
+but it's disabled, the limit should be less than the base.  For
+example, on my system I see this for a bridge with the window
+disabled:
+
+  # setpci -s00:1c.0 PREF_MEMORY_BASE
+  fff1
+  # setpci -s00:1c.0 PREF_MEMORY_LIMIT
+  0001
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
