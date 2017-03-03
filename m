@@ -1,94 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:53254 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751367AbdCWQ0S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Mar 2017 12:26:18 -0400
-Subject: Re: Help: MSI DWC connecting with a MSIx Endpoint
-To: Marc Zyngier <marc.zyngier@arm.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <85bfa77f-6cd0-a669-c940-7fa7d9fb17a3@synopsys.com>
- <28a4e429-a2d2-8f28-e4fc-8eebae0b3367@arm.com>
- <4ade12d6-1887-4093-ee43-2101ca2986e0@synopsys.com>
- <9eec7e57-456e-fc98-91d9-bd5a32c347af@arm.com>
- <934e0800-a1df-2059-fc7e-def976572309@synopsys.com>
- <51813e48-210e-55a5-c904-fbf4562f48fe@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <5cc7196d-1f9f-64b7-bbeb-1e6cb4de00d2@synopsys.com>
-Date: Thu, 23 Mar 2017 16:25:00 +0000
+Return-Path: <SRS0=uxT7=2M=suse.de=bp@kernel.org>
+Return-Path: <SRS0=uxT7=2M=suse.de=bp@kernel.org>
+Date: Fri, 3 Mar 2017 21:51:30 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
+	linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
+	matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
+	linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
+	paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+	dan.j.williams@intel.com, aarcange@redhat.com, sfr@canb.auug.org.au,
+	andriy.shevchenko@linux.intel.com, herbert@gondor.apana.org.au,
+	bhe@redhat.com, xemul@parallels.com, joro@8bytes.org,
+	x86@kernel.org, peterz@infradead.org, piotr.luc@intel.com,
+	mingo@redhat.com, msalter@redhat.com, ross.zwisler@linux.intel.com,
+	dyoung@redhat.com, thomas.lendacky@amd.com, jroedel@suse.de,
+	keescook@chromium.org, arnd@arndb.de, toshi.kani@hpe.com,
+	mathieu.desnoyers@efficios.com, luto@kernel.org,
+	devel@linuxdriverproject.org, bhelgaas@google.com,
+	tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+	labbott@fedoraproject.org, tony.luck@intel.com,
+	alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+	linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+	linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
+	akpm@linux-foundation.org, davem@davemloft.net
+Subject: Re: [RFC PATCH v2 00/32] x86: Secure Encrypted Virtualization (AMD)
+Message-ID: <20170303205130.6xjinxnrlgmvxu2a@pd.tnic>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <20170303203323.GA5305@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <51813e48-210e-55a5-c904-fbf4562f48fe@arm.com>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170303203323.GA5305@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 3:52 PM de 3/23/2017, Marc Zyngier escreveu:
-> On 23/03/17 15:22, Joao Pinto wrote:
->> Hi Mark,
->>
->> Às 10:41 AM de 3/21/2017, Marc Zyngier escreveu:
->>> On 21/03/17 10:27, Joao Pinto wrote:
->>>>
->>>> Hi Mark,
->>>>
->>>> Às 6:16 PM de 3/20/2017, Marc Zyngier escreveu:
->>>>> Hi Joao,
->>>>>
->>>>> On 20/03/17 17:30, Joao Pinto wrote:
->>>>>> Hi Mark,
->>>>>>
->>> A very simple example using the current API is pcie-altera-msi.c (some
->>> others are much more intricate), and should give you a good picture of
->>> how PCI/MSI, generic MSI and MSI controllers interact.
->>>
->>> Start with understanding how the various layers interact via their own
->>> IRQ domains, and implement their own IRQ chip. Happy to answer questions
->>> (I'm sure you'll have some).
->>>
->>> Thanks,
->>>
->>> 	M.
->>
->> I have one quick question... What address should I configure in vector_phy?
->> is this needed in pcie-designware?
+On Fri, Mar 03, 2017 at 02:33:23PM -0600, Bjorn Helgaas wrote:
+> On Thu, Mar 02, 2017 at 10:12:01AM -0500, Brijesh Singh wrote:
+> > This RFC series provides support for AMD's new Secure Encrypted Virtualization
+> > (SEV) feature. This RFC is build upon Secure Memory Encryption (SME) RFCv4 [1].
 > 
-> You may be in a better place than me to answer that question! ;-)
-> 
-> If I remember well, the Altera RC needs to be programmed with the
-> address of the MSI doorbell so that it can detect the end-point writes
-> to it, and it can be anything you want. In order not to waste any memory
-> space, we use the base address of the RC.
-> 
-> Both very nice and dead ugly, if you want my opinion.
-> 
-> If we look at this:
-> 
-> void dw_pcie_msi_init(struct pcie_port *pp)
-> {
->         u64 msi_target;
-> 
->         pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
->         msi_target = virt_to_phys((void *)pp->msi_data);
-> 
->         /* program the msi_data */
->         dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
->                             (u32)(msi_target & 0xffffffff));
->         dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
->                             (u32)(msi_target >> 32 & 0xffffffff));
-> }
-> 
-> We can infer the Designware IP has a similar behaviour, except that it
-> wastes a page of RAM for no obvious reason. It'd be good to know if the
-> RC actually propagates the write to the memory. If it really does, then
-> that's the only way to do it. If it doesn't, then the Altera method is
-> much better...
+> What kernel version is this series based on?
 
-Thanks for the help, I am not very familar with the MSI mechanism, so still
-giving baby steps :) Yes, for now I am using "pp->msi_data =
-__get_free_pages(GFP_KERNEL, 0);". Thanks for the tip!
+Yeah, see that mail in [1]:
 
-> 
-> Hope this helps,
-> 
-> 	M.
-> 
+https://lkml.kernel.org/r/20170216154158.19244.66630.stgit@tlendack-t1.amdoffice.net
+
+"This patch series is based off of the master branch of tip.
+  Commit a27cb9e1b2b4 ("Merge branch 'WIP.sched/core'")"
+
+$ git describe a27cb9e1b2b4
+v4.10-rc7-681-ga27cb9e1b2b4
+
+So you need the SME pile first and then that SVE pile. But the first
+patch needs refreshing as it is using a different base than the SME
+pile. :-)
+
+Tom, Brijesh, perhaps you guys could push a full tree somewhere - github
+or so - for people to pull, in addition to the patchset on lkml.
+
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
