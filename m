@@ -1,496 +1,791 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0053.outbound.protection.outlook.com ([104.47.37.53]:19434
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752105AbdCBPwn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Mar 2017 10:52:43 -0500
-Subject: [RFC PATCH v2 24/32] kvm: x86: prepare for SEV guest management API
- support
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:17:22 -0500
-Message-ID: <148846784278.2349.17771314083820274411.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+ Florian Fainelli <f.fainelli@gmail.com>, Rob Herring <robh@kernel.org>,
+ devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 2/4 v4] PCI: add driver for Faraday Technology Host Bridge
+Date: Fri,  3 Mar 2017 09:44:07 +0100
+Message-Id: <20170303084407.17384-1-linus.walleij@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: openwrt-devel@openwrt.org, Feng-Hsin Chiang <john453@faraday-tech.com>,
+ Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-pci@vger.kernel.org,
+ Linus Walleij <linus.walleij@linaro.org>, Greentime Hu <green.hu@gmail.com>,
+ Janos Laube <janos.dev@gmail.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The patch adds initial support required to integrate Secure Encrypted
-Virtualization (SEV) feature.
+This adds a host bridge driver for the Faraday Technology
+FPPCI100 host bridge, used for Cortina Systems Gemini SoC
+(SL3516) PCI Host Bridge.
 
-ASID management:
- - Reserve asid range for SEV guest, SEV asid range is obtained through
-   CPUID Fn8000_001f[ECX]. A non-SEV guest can use any asid outside the SEV
-   asid range.
- - SEV guest must have asid value within asid range obtained through CPUID.
- - SEV guest must have the same asid for all vcpu's. A TLB flush is required
-   if different vcpu for the same ASID is to be run on the same host CPU.
+This code is inspired by the out-of-tree OpenWRT patch and
+then extensively rewritten for device tree and using the modern
+helpers to cut down and modernize the code to all new PCI
+frameworks. A driver exists in U-Boot as well.
 
-Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+Tested on the ITian Square One SQ201 NAS with the following
+result in the boot log (trimmed to relevant parts):
+
+OF: PCI: host bridge /soc/pci@50000000 ranges:
+OF: PCI:    IO 0x50000000..0x500fffff -> 0x00000000
+OF: PCI:   MEM 0x58000000..0x5fffffff -> 0x58000000
+ftpci100 50000000.pci: PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [bus 00-ff]
+pci_bus 0000:00: root bus resource [io  0x0000-0xfffff]
+pci_bus 0000:00: root bus resource [mem 0x58000000-0x5fffffff]
+ftpci100 50000000.pci:
+  DMA MEM1 BASE: 0x0000000000000000 -> 0x0000000007ffffff config 00070000
+ftpci100 50000000.pci:
+  DMA MEM2 BASE: 0x0000000000000000 -> 0x0000000003ffffff config 00060000
+ftpci100 50000000.pci:
+  DMA MEM3 BASE: 0x0000000000000000 -> 0x0000000003ffffff config 00060000
+PCI: bus0: Fast back to back transfers disabled
+pci 0000:00:00.0: of_irq_parse_pci() failed with rc=-22
+pci 0000:00:0c.0: BAR 0: assigned [mem 0x58000000-0x58007fff]
+pci 0000:00:09.2: BAR 0: assigned [mem 0x58008000-0x580080ff]
+pci 0000:00:09.0: BAR 4: assigned [io  0x1000-0x101f]
+pci 0000:00:09.1: BAR 4: assigned [io  0x1020-0x103f]
+pci 0000:00:09.0: enabling device (0140 -> 0141)
+pci 0000:00:09.0: HCRESET not completed yet!
+pci 0000:00:09.1: enabling device (0140 -> 0141)
+pci 0000:00:09.1: HCRESET not completed yet!
+pci 0000:00:09.2: enabling device (0140 -> 0142)
+rt61pci 0000:00:0c.0: enabling device (0140 -> 0142)
+ieee80211 phy0: rt2x00_set_chip: Info - Chipset detected -
+   rt: 2561, rf: 0003, rev: 000c
+ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
+ehci-pci: EHCI PCI platform driver
+ehci-pci 0000:00:09.2: EHCI Host Controller
+ehci-pci 0000:00:09.2: new USB bus registered, assigned bus number 1
+ehci-pci 0000:00:09.2: irq 125, io mem 0x58008000
+ehci-pci 0000:00:09.2: USB 2.0 started, EHCI 1.00
+hub 1-0:1.0: USB hub found
+hub 1-0:1.0: 4 ports detected
+uhci_hcd: USB Universal Host Controller Interface driver
+uhci_hcd 0000:00:09.0: UHCI Host Controller
+uhci_hcd 0000:00:09.0: new USB bus registered, assigned bus number 2
+uhci_hcd 0000:00:09.0: HCRESET not completed yet!
+uhci_hcd 0000:00:09.0: irq 123, io base 0x00001000
+hub 2-0:1.0: USB hub found
+hub 2-0:1.0: config failed, hub doesn't have any ports! (err -19)
+uhci_hcd 0000:00:09.1: UHCI Host Controller
+uhci_hcd 0000:00:09.1: new USB bus registered, assigned bus number 3
+uhci_hcd 0000:00:09.1: HCRESET not completed yet!
+uhci_hcd 0000:00:09.1: irq 124, io base 0x00001020
+hub 3-0:1.0: USB hub found
+hub 3-0:1.0: config failed, hub doesn't have any ports! (err -19)
+scsi 0:0:0:0: Direct-Access     USB      Flash Disk       1.00 PQ: 0 ANSI: 2
+sd 0:0:0:0: [sda] 7900336 512-byte logical blocks: (4.04 GB/3.77 GiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] No Caching mode page found
+sd 0:0:0:0: [sda] Assuming drive cache: write through
+ sda: sda1 sda2 sda3
+sd 0:0:0:0: [sda] Attached SCSI removable disk
+ieee80211 phy0: rt2x00lib_request_firmware: Info -
+   Loading firmware file 'rt2561s.bin'
+ieee80211 phy0: rt2x00lib_request_firmware: Info -
+   Firmware detected - version: 0.8
+IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+
+$ lspci
+00:00.0 Class 0600: 159b:4321
+00:09.2 Class 0c03: 1106:3104
+00:09.0 Class 0c03: 1106:3038
+00:09.1 Class 0c03: 1106:3038
+00:0c.0 Class 0280: 1814:0301
+
+cat /proc/interrupts
+           CPU0
+123:          0       PCI   0 Edge      uhci_hcd:usb2
+124:          0       PCI   1 Edge      uhci_hcd:usb3
+125:        159       PCI   2 Edge      ehci_hcd:usb1
+126:       1082       PCI   3 Edge      rt61pci
+
+cat /proc/iomem
+50000000-500000ff : /soc/pci@50000000
+58000000-5fffffff : Gemini PCI MEM
+  58000000-58007fff : 0000:00:0c.0
+    58000000-58007fff : 0000:00:0c.0
+  58008000-580080ff : 0000:00:09.2
+    58008000-580080ff : ehci_hcd
+
+The EHCI USB hub works fine, I can mount and manage
+files and the IRQs just keep ticking up. I can issue
+iwlist wlan0 scanning and see all the WLANs here, I don't have
+wpa_supplicant so have not tried connecting to them.
+
+Cc: Janos Laube <janos.dev@gmail.com>
+Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
+Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>
+Cc: Feng-Hsin Chiang <john453@faraday-tech.com>
+Cc: Greentime Hu <green.hu@gmail.com>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
 ---
- arch/x86/include/asm/kvm_host.h |    8 ++
- arch/x86/kvm/svm.c              |  189 +++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/kvm.h        |   98 ++++++++++++++++++++
- 3 files changed, 294 insertions(+), 1 deletion(-)
+ChangeLog v3->v4:
+- Change pr_dbg() to pr_debug(). The former does not exist and
+  for some reason I first changed pr_info() to pr_dbg() and didn't
+  test-compile it before submitting, mea culpa.
+ChangeLog v2->v3:
+- Rewrite to use pci_alloc_host_bridge() and
+  pci_register_host_bridge()
+- Change compatible strings to "faraday,ftpci100" and
+  "faraday,ftpci100-dual"
+- Rename driver file to pci-ftpci100.c to reflect the name
+  of the actual Faraday IP core.
+- Make the driver depend on ARM again as not all archs use
+  setup-irq.c which contains pci_fixup_irqs() that the driver
+  is using.
+- Add "dma-ranges" property, after deciphering that some hardcoded
+  constants in the driver is really about this.
+ChangeLog v1->v2:
+- Rename the bridge and symbols to reflect Faraday technology
+  as this IP block is clearly a Faraday block and not from
+  Storlink/Storm/Cortina at all.
+- Support both the regular and "dual" versions of the bridge,
+  where the regular has a cascaded IRQ controller and the dual
+  does not.
+- Encode per-variant characteristics in a variant struct in
+  the .data field of the OF match.
+- Drop the pointless spinlock in the config space accessors.
+- Drop manipulation of pcibios_min_io and pcibios_min_mem
+- Get the IO range size from the device tree, and set up the
+  bridge properly according to this. Currently we only support
+  a 1MiB size IO range, but hey, it's at least dynamic and
+  logical.
 
-diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
-index 62651ad..fcc4710 100644
---- a/arch/x86/include/asm/kvm_host.h
-+++ b/arch/x86/include/asm/kvm_host.h
-@@ -719,6 +719,12 @@ struct kvm_hv {
- 	HV_REFERENCE_TSC_PAGE tsc_ref;
- };
+This can be merged to the PCI tree whenever it is considered
+fine for inclusion.
+
+Andestech and Faraday guys: you are more likely than me to
+actually have documentation for this bridge. Please share with
+me if you can, especially the register defintions, because I
+want to set up IO and MEM windows properly from the device tree,
+not just rely on defaults. There are defines for these registers
+but no use or documentation.
+---
+ drivers/pci/host/Kconfig        |   6 +
+ drivers/pci/host/Makefile       |   1 +
+ drivers/pci/host/pci-ftpci100.c | 566 ++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 573 insertions(+)
+ create mode 100644 drivers/pci/host/pci-ftpci100.c
+
+diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+index 898d2c48239c..a2555e35a393 100644
+--- a/drivers/pci/host/Kconfig
++++ b/drivers/pci/host/Kconfig
+@@ -60,6 +60,12 @@ config PCI_EXYNOS
+ 	select PCIEPORTBUS
+ 	select PCIE_DW
  
-+struct kvm_sev_info {
-+	unsigned int handle;	/* firmware handle */
-+	unsigned int asid;	/* asid for this guest */
-+	int sev_fd;		/* SEV device fd */
++config PCI_FTPCI100
++	bool "Faraday Technology FTPCI100 PCI controller"
++	depends on OF
++	depends on ARM
++	default ARCH_GEMINI
++
+ config PCI_IMX6
+ 	bool "Freescale i.MX6 PCIe controller"
+ 	depends on SOC_IMX6Q
+diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
+index bfe3179ae74c..39f20b43414d 100644
+--- a/drivers/pci/host/Makefile
++++ b/drivers/pci/host/Makefile
+@@ -2,6 +2,7 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+ obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+ obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
+ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
++obj-$(CONFIG_PCI_FTPCI100) += pci-ftpci100.o
+ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+ obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
+ obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
+diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+new file mode 100644
+index 000000000000..438a1e95ee1b
+--- /dev/null
++++ b/drivers/pci/host/pci-ftpci100.c
+@@ -0,0 +1,566 @@
++/*
++ * Support for Faraday Technology FTPC100 PCI Controller
++ *
++ * Copyright (C) 2017 Linus Walleij <linus.walleij@linaro.org>
++ *
++ * Based on the out-of-tree OpenWRT patch for Cortina Gemini:
++ * Copyright (C) 2009 Janos Laube <janos.dev@gmail.com>
++ * Copyright (C) 2009 Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
++ * Based on SL2312 PCI controller code
++ * Storlink (C) 2003
++ */
++
++#include <linux/init.h>
++#include <linux/interrupt.h>
++#include <linux/io.h>
++#include <linux/kernel.h>
++#include <linux/of_address.h>
++#include <linux/of_device.h>
++#include <linux/of_irq.h>
++#include <linux/of_pci.h>
++#include <linux/pci.h>
++#include <linux/platform_device.h>
++#include <linux/slab.h>
++#include <linux/irqdomain.h>
++#include <linux/irqchip/chained_irq.h>
++#include <linux/bitops.h>
++#include <linux/irq.h>
++
++/*
++ * Special configuration registers directly in the first few words
++ * in he I/O space.
++ */
++#define PCI_IOSIZE	0x00
++#define PCI_PROT	0x04 /* AHB protection */
++#define PCI_CTRL	0x08 /* PCI control signal */
++#define PCI_SOFTRST	0x10 /* Soft reset counter and response error enable */
++#define PCI_CONFIG	0x28 /* PCI configuration command register */
++#define PCI_DATA	0x2C
++
++#define FARADAY_PCI_PMC			0x40 /* Power management control */
++#define FARADAY_PCI_PMCSR		0x44 /* Power management status */
++#define FARADAY_PCI_CTRL1		0x48 /* Control register 1 */
++#define FARADAY_PCI_CTRL2		0x4C /* Control register 2 */
++#define FARADAY_PCI_MEM1_BASE_SIZE	0x50 /* Memory base and size #1 */
++#define FARADAY_PCI_MEM2_BASE_SIZE	0x54 /* Memory base and size #2 */
++#define FARADAY_PCI_MEM3_BASE_SIZE	0x58 /* Memory base and size #3 */
++
++/* Bits 31..28 gives INTD..INTA status */
++#define PCI_CTRL2_INTSTS_SHIFT		28
++#define PCI_CTRL2_INTMASK_CMDERR	BIT(27)
++#define PCI_CTRL2_INTMASK_PARERR	BIT(26)
++/* Bits 25..22 masks INTD..INTA */
++#define PCI_CTRL2_INTMASK_SHIFT		22
++#define PCI_CTRL2_INTMASK_MABRT_RX	BIT(21)
++#define PCI_CTRL2_INTMASK_TABRT_RX	BIT(20)
++#define PCI_CTRL2_INTMASK_TABRT_TX	BIT(19)
++#define PCI_CTRL2_INTMASK_RETRY4	BIT(18)
++#define PCI_CTRL2_INTMASK_SERR_RX	BIT(17)
++#define PCI_CTRL2_INTMASK_PERR_RX	BIT(16)
++/* Bit 15 reserved */
++#define PCI_CTRL2_MSTPRI_REQ6		BIT(14)
++#define PCI_CTRL2_MSTPRI_REQ5		BIT(13)
++#define PCI_CTRL2_MSTPRI_REQ4		BIT(12)
++#define PCI_CTRL2_MSTPRI_REQ3		BIT(11)
++#define PCI_CTRL2_MSTPRI_REQ2		BIT(10)
++#define PCI_CTRL2_MSTPRI_REQ1		BIT(9)
++#define PCI_CTRL2_MSTPRI_REQ0		BIT(8)
++/* Bits 7..4 reserved */
++/* Bits 3..0 TRDYW */
++
++/*
++ * Memory configs:
++ * Bit 31..20 defines the PCI side memory base
++ * Bit 19..16 (4 bits) defines the size per below
++ */
++#define FARADAY_PCI_MEMBASE_MASK	0xfff00000
++#define FARADAY_PCI_MEMSIZE_1MB		0x0
++#define FARADAY_PCI_MEMSIZE_2MB		0x1
++#define FARADAY_PCI_MEMSIZE_4MB		0x2
++#define FARADAY_PCI_MEMSIZE_8MB		0x3
++#define FARADAY_PCI_MEMSIZE_16MB	0x4
++#define FARADAY_PCI_MEMSIZE_32MB	0x5
++#define FARADAY_PCI_MEMSIZE_64MB	0x6
++#define FARADAY_PCI_MEMSIZE_128MB	0x7
++#define FARADAY_PCI_MEMSIZE_256MB	0x8
++#define FARADAY_PCI_MEMSIZE_512MB	0x9
++#define FARADAY_PCI_MEMSIZE_1GB		0xa
++#define FARADAY_PCI_MEMSIZE_2GB		0xb
++#define FARADAY_PCI_MEMSIZE_SHIFT	16
++
++/*
++ * The DMA base is set to 0x0 for all memory segments, it reflects the
++ * fact that the memory of the host system starts at 0x0.
++ */
++#define FARADAY_PCI_DMA_MEM1_BASE	0x00000000
++#define FARADAY_PCI_DMA_MEM2_BASE	0x00000000
++#define FARADAY_PCI_DMA_MEM3_BASE	0x00000000
++
++/* Defines for PCI configuration command register */
++#define PCI_CONF_ENABLE		BIT(31)
++#define PCI_CONF_WHERE(r)	((r) & 0xFC)
++#define PCI_CONF_BUS(b)		(((b) & 0xFF) << 16)
++#define PCI_CONF_DEVICE(d)	(((d) & 0x1F) << 11)
++#define PCI_CONF_FUNCTION(f)	(((f) & 0x07) << 8)
++
++/**
++ * struct faraday_pci_variant - encodes IP block differences
++ * @cascaded_irq: this host has cascaded IRQs from an interrupt controller
++ *	embedded in the host bridge.
++ */
++struct faraday_pci_variant {
++	bool cascaded_irq;
 +};
 +
- struct kvm_arch {
- 	unsigned int n_used_mmu_pages;
- 	unsigned int n_requested_mmu_pages;
-@@ -805,6 +811,8 @@ struct kvm_arch {
- 
- 	bool x2apic_format;
- 	bool x2apic_broadcast_quirk_disabled;
++struct faraday_pci {
++	struct device *dev;
++	void __iomem *base;
++	struct irq_domain *irqdomain;
++	struct pci_bus *bus;
++};
 +
-+	struct kvm_sev_info sev_info;
- };
- 
- struct kvm_vm_stat {
-diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
-index 8d8fe62..fb63398 100644
---- a/arch/x86/kvm/svm.c
-+++ b/arch/x86/kvm/svm.c
-@@ -36,6 +36,7 @@
- #include <linux/slab.h>
- #include <linux/amd-iommu.h>
- #include <linux/hashtable.h>
-+#include <linux/psp-sev.h>
- 
- #include <asm/apic.h>
- #include <asm/perf_event.h>
-@@ -211,6 +212,9 @@ struct vcpu_svm {
- 	 */
- 	struct list_head ir_list;
- 	spinlock_t ir_list_lock;
-+
-+	/* which host cpu was used for running this vcpu */
-+	bool last_cpuid;
- };
- 
- /*
-@@ -490,6 +494,64 @@ static inline bool gif_set(struct vcpu_svm *svm)
- 	return !!(svm->vcpu.arch.hflags & HF_GIF_MASK);
- }
- 
-+/* Secure Encrypted Virtualization */
-+static unsigned int max_sev_asid;
-+static unsigned long *sev_asid_bitmap;
-+
-+static bool kvm_sev_enabled(void)
++static int faraday_res_to_memcfg(resource_size_t mem_base,
++				 resource_size_t mem_size,
++				 u32 *val)
 +{
-+	return max_sev_asid ? 1 : 0;
-+}
++	u32 outval;
 +
-+static inline struct kvm_sev_info *sev_get_info(struct kvm *kvm)
-+{
-+	struct kvm_arch *vm_data = &kvm->arch;
-+
-+	return &vm_data->sev_info;
-+}
-+
-+static unsigned int sev_get_handle(struct kvm *kvm)
-+{
-+	struct kvm_sev_info *sev_info = sev_get_info(kvm);
-+
-+	return sev_info->handle;
-+}
-+
-+static inline int sev_guest(struct kvm *kvm)
-+{
-+	return sev_get_handle(kvm);
-+}
-+
-+static inline int sev_get_asid(struct kvm *kvm)
-+{
-+	struct kvm_sev_info *sev_info = sev_get_info(kvm);
-+
-+	if (!sev_info)
++	switch (mem_size) {
++	case SZ_1M:
++		outval = FARADAY_PCI_MEMSIZE_1MB;
++		break;
++	case SZ_2M:
++		outval = FARADAY_PCI_MEMSIZE_2MB;
++		break;
++	case SZ_4M:
++		outval = FARADAY_PCI_MEMSIZE_4MB;
++		break;
++	case SZ_8M:
++		outval = FARADAY_PCI_MEMSIZE_8MB;
++		break;
++	case SZ_16M:
++		outval = FARADAY_PCI_MEMSIZE_16MB;
++		break;
++	case SZ_32M:
++		outval = FARADAY_PCI_MEMSIZE_32MB;
++		break;
++	case SZ_64M:
++		outval = FARADAY_PCI_MEMSIZE_64MB;
++		break;
++	case SZ_128M:
++		outval = FARADAY_PCI_MEMSIZE_128MB;
++		break;
++	case SZ_256M:
++		outval = FARADAY_PCI_MEMSIZE_256MB;
++		break;
++	case SZ_512M:
++		outval = FARADAY_PCI_MEMSIZE_512MB;
++		break;
++	case SZ_1G:
++		outval = FARADAY_PCI_MEMSIZE_1GB;
++		break;
++	case SZ_2G:
++		outval = FARADAY_PCI_MEMSIZE_2GB;
++		break;
++	default:
 +		return -EINVAL;
++	}
++	outval <<= FARADAY_PCI_MEMSIZE_SHIFT;
 +
-+	return sev_info->asid;
++	/* This is probably not good */
++	if (mem_base & ~(FARADAY_PCI_MEMBASE_MASK))
++		pr_warn("truncated PCI memory base\n");
++	/* Translate to bridge side address space */
++	outval |= (mem_base & FARADAY_PCI_MEMBASE_MASK);
++	pr_debug("Translated pci base @%08x, size %08x to config %08x\n",
++		 mem_base, mem_size, outval);
++
++	*val = outval;
++	return 0;
 +}
 +
-+static inline int sev_get_fd(struct kvm *kvm)
++static int faraday_pci_read_config(struct pci_bus *bus, unsigned int fn,
++				  int config, int size, u32 *value)
 +{
-+	struct kvm_sev_info *sev_info = sev_get_info(kvm);
++	struct faraday_pci *p = bus->sysdata;
 +
-+	if (!sev_info)
-+		return -EINVAL;
++	writel(PCI_CONF_BUS(bus->number) |
++			PCI_CONF_DEVICE(PCI_SLOT(fn)) |
++			PCI_CONF_FUNCTION(PCI_FUNC(fn)) |
++			PCI_CONF_WHERE(config) |
++			PCI_CONF_ENABLE,
++			p->base + PCI_CONFIG);
 +
-+	return sev_info->sev_fd;
++	*value = readl(p->base + PCI_DATA);
++
++	if (size == 1)
++		*value = (*value >> (8 * (config & 3))) & 0xFF;
++	else if (size == 2)
++		*value = (*value >> (8 * (config & 3))) & 0xFFFF;
++
++	dev_dbg(&bus->dev,
++		"[read]  slt: %.2d, fnc: %d, cnf: 0x%.2X, val (%d bytes): 0x%.8X\n",
++		PCI_SLOT(fn), PCI_FUNC(fn), config, size, *value);
++
++	return PCIBIOS_SUCCESSFUL;
 +}
 +
-+static inline void sev_set_asid(struct kvm *kvm, int asid)
++static int faraday_pci_write_config(struct pci_bus *bus, unsigned int fn,
++				   int config, int size, u32 value)
 +{
-+	struct kvm_sev_info *sev_info = sev_get_info(kvm);
++	struct faraday_pci *p = bus->sysdata;
++	int ret = PCIBIOS_SUCCESSFUL;
 +
-+	if (!sev_info)
-+		return;
++	dev_dbg(&bus->dev,
++		"[write] slt: %.2d, fnc: %d, cnf: 0x%.2X, val (%d bytes): 0x%.8X\n",
++		PCI_SLOT(fn), PCI_FUNC(fn), config, size, value);
 +
-+	sev_info->asid = asid;
-+}
++	writel(PCI_CONF_BUS(bus->number) |
++			PCI_CONF_DEVICE(PCI_SLOT(fn)) |
++			PCI_CONF_FUNCTION(PCI_FUNC(fn)) |
++			PCI_CONF_WHERE(config) |
++			PCI_CONF_ENABLE,
++			p->base + PCI_CONFIG);
 +
- static unsigned long iopm_base;
- 
- struct kvm_ldttss_desc {
-@@ -511,6 +573,8 @@ struct svm_cpu_data {
- 	struct kvm_ldttss_desc *tss_desc;
- 
- 	struct page *save_area;
-+
-+	struct vmcb **sev_vmcbs;  /* index = sev_asid, value = vmcb pointer */
- };
- 
- static DEFINE_PER_CPU(struct svm_cpu_data *, svm_data);
-@@ -764,7 +828,7 @@ static int svm_hardware_enable(void)
- 	sd->asid_generation = 1;
- 	sd->max_asid = cpuid_ebx(SVM_CPUID_FUNC) - 1;
- 	sd->next_asid = sd->max_asid + 1;
--	sd->min_asid = 1;
-+	sd->min_asid = max_sev_asid + 1;
- 
- 	native_store_gdt(&gdt_descr);
- 	gdt = (struct desc_struct *)gdt_descr.address;
-@@ -825,6 +889,7 @@ static void svm_cpu_uninit(int cpu)
- 
- 	per_cpu(svm_data, raw_smp_processor_id()) = NULL;
- 	__free_page(sd->save_area);
-+	kfree(sd->sev_vmcbs);
- 	kfree(sd);
- }
- 
-@@ -842,6 +907,14 @@ static int svm_cpu_init(int cpu)
- 	if (!sd->save_area)
- 		goto err_1;
- 
-+	if (kvm_sev_enabled()) {
-+		sd->sev_vmcbs = kmalloc((max_sev_asid + 1) * sizeof(void *),
-+					GFP_KERNEL);
-+		r = -ENOMEM;
-+		if (!sd->sev_vmcbs)
-+			goto err_1;
++	switch (size) {
++	case 4:
++		writel(value, p->base + PCI_DATA);
++		break;
++	case 2:
++		writew(value, p->base + PCI_DATA + (config & 3));
++		break;
++	case 1:
++		writeb(value, p->base + PCI_DATA + (config & 3));
++		break;
++	default:
++		ret = PCIBIOS_BAD_REGISTER_NUMBER;
 +	}
 +
- 	per_cpu(svm_data, cpu) = sd;
- 
- 	return 0;
-@@ -1017,6 +1090,61 @@ static int avic_ga_log_notifier(u32 ga_tag)
- 	return 0;
- }
- 
-+static __init void sev_hardware_setup(void)
++	return ret;
++}
++
++static struct pci_ops faraday_pci_ops = {
++	.read	= faraday_pci_read_config,
++	.write	= faraday_pci_write_config,
++};
++
++static void faraday_pci_ack_irq(struct irq_data *d)
 +{
-+	int ret, error, nguests;
-+	struct sev_data_init *init;
-+	struct sev_data_status *status;
++	struct faraday_pci *p = irq_data_get_irq_chip_data(d);
++	unsigned int reg;
++
++	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
++	reg &= ~(0xF << PCI_CTRL2_INTSTS_SHIFT);
++	reg |= BIT(irqd_to_hwirq(d) + PCI_CTRL2_INTSTS_SHIFT);
++	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, reg);
++}
++
++static void faraday_pci_mask_irq(struct irq_data *d)
++{
++	struct faraday_pci *p = irq_data_get_irq_chip_data(d);
++	unsigned int reg;
++
++	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
++	reg &= ~((0xF << PCI_CTRL2_INTSTS_SHIFT)
++		 | BIT(irqd_to_hwirq(d) + PCI_CTRL2_INTMASK_SHIFT));
++	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, reg);
++}
++
++static void faraday_pci_unmask_irq(struct irq_data *d)
++{
++	struct faraday_pci *p = irq_data_get_irq_chip_data(d);
++	unsigned int reg;
++
++	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
++	reg &= ~(0xF << PCI_CTRL2_INTSTS_SHIFT);
++	reg |= BIT(irqd_to_hwirq(d) + PCI_CTRL2_INTMASK_SHIFT);
++	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, reg);
++}
++
++static void faraday_pci_irq_handler(struct irq_desc *desc)
++{
++	struct faraday_pci *p = irq_desc_get_handler_data(desc);
++	struct irq_chip *irqchip = irq_desc_get_chip(desc);
++	unsigned int irq_stat, reg, i;
++
++	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
++	irq_stat = reg >> PCI_CTRL2_INTSTS_SHIFT;
++
++	chained_irq_enter(irqchip, desc);
++
++	for (i = 0; i < 4; i++) {
++		if ((irq_stat & BIT(i)) == 0)
++			continue;
++		generic_handle_irq(irq_find_mapping(p->irqdomain, i));
++	}
++
++	chained_irq_exit(irqchip, desc);
++}
++
++static struct irq_chip faraday_pci_irq_chip = {
++	.name = "PCI",
++	.irq_ack = faraday_pci_ack_irq,
++	.irq_mask = faraday_pci_mask_irq,
++	.irq_unmask = faraday_pci_unmask_irq,
++};
++
++static int faraday_pci_irq_map(struct irq_domain *domain, unsigned int irq,
++			      irq_hw_number_t hwirq)
++{
++	irq_set_chip_and_handler(irq, &faraday_pci_irq_chip, handle_level_irq);
++	irq_set_chip_data(irq, domain->host_data);
++
++	return 0;
++}
++
++static const struct irq_domain_ops faraday_pci_irqdomain_ops = {
++	.map = faraday_pci_irq_map,
++};
++
++static int faraday_pci_setup_cascaded_irq(struct faraday_pci *p)
++{
++	struct device_node *intc = of_get_next_child(p->dev->of_node, NULL);
++	int irq;
++	int i;
++
++	if (!intc) {
++		dev_err(p->dev, "missing child interrupt-controller node\n");
++		return -EINVAL;
++	}
++
++	/* All PCI IRQs cascade off this one */
++	irq = of_irq_get(intc, 0);
++	if (!irq) {
++		dev_err(p->dev, "failed to get parent IRQ\n");
++		return -EINVAL;
++	}
++
++	p->irqdomain = irq_domain_add_linear(intc, 4,
++					     &faraday_pci_irqdomain_ops,
++					     p);
++	if (!p->irqdomain) {
++		dev_err(p->dev, "failed to create Gemini PCI IRQ domain\n");
++		return -EINVAL;
++	}
++
++	irq_set_chained_handler_and_data(irq, faraday_pci_irq_handler, p);
++
++	for (i = 0; i < 4; i++)
++		irq_create_mapping(p->irqdomain, i);
++
++	return 0;
++}
++
++static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
++				     struct device_node *node)
++{
++	const int na = 3, ns = 2;
++	int rlen;
++
++	parser->node = node;
++	parser->pna = of_n_addr_cells(node);
++	parser->np = parser->pna + na + ns;
++
++	parser->range = of_get_property(node, "dma-ranges", &rlen);
++	if (!parser->range)
++		return -ENOENT;
++	parser->end = parser->range + rlen / sizeof(__be32);
++
++	return 0;
++}
++
++static int faraday_pci_parse_map_dma_ranges(struct faraday_pci *p,
++					    struct device_node *np)
++{
++	struct of_pci_range range;
++	struct of_pci_range_parser parser;
++	struct device *dev = p->dev;
++	u32 confreg[3] = {
++		FARADAY_PCI_MEM1_BASE_SIZE,
++		FARADAY_PCI_MEM2_BASE_SIZE,
++		FARADAY_PCI_MEM3_BASE_SIZE,
++	};
++	int i = 0;
++	u32 val;
++
++	if (pci_dma_range_parser_init(&parser, np)) {
++		dev_err(dev, "missing dma-ranges property\n");
++		return -EINVAL;
++	}
 +
 +	/*
-+	 * Get maximum number of encrypted guest supported: Fn8001_001F[ECX]
-+	 * 	Bit 31:0: Number of supported guest
++	 * Get the dma-ranges from the device tree
 +	 */
-+	nguests = cpuid_ecx(0x8000001F);
-+	if (!nguests)
-+		return;
++	for_each_of_pci_range(&parser, &range) {
++		u64 end = range.pci_addr + range.size - 1;
++		int ret;
 +
-+	init = kzalloc(sizeof(*init), GFP_KERNEL);
-+	if (!init)
-+		return;
++		ret = faraday_res_to_memcfg(range.pci_addr, range.size, &val);
++		if (ret) {
++			dev_err(dev,
++				"DMA range %d: illegal MEM resource size\n", i);
++			return -EINVAL;
++		}
 +
-+	status = kzalloc(sizeof(*status), GFP_KERNEL);
-+	if (!status)
-+		goto err_1;
++		dev_info(dev, "DMA MEM%d BASE: 0x%016llx -> 0x%016llx config %08x\n",
++			 i + 1, range.pci_addr, end, val);
++		if (i <= 2) {
++			faraday_pci_write_config(p->bus, 0, confreg[i],
++						 4, val);
++		} else {
++			dev_err(dev, "ignore extraneous dma-range %d\n", i);
++			break;
++		}
 +
-+	/* Initialize SEV firmware */
-+	ret = sev_platform_init(init, &error);
-+	if (ret) {
-+		pr_err("SEV: PLATFORM_INIT ret=%d (%#x)\n", ret, error);
-+		goto err_2;
++		i++;
 +	}
 +
-+	/* Initialize SEV ASID bitmap */
-+	sev_asid_bitmap = kcalloc(BITS_TO_LONGS(nguests),
-+				  sizeof(unsigned long), GFP_KERNEL);
-+	if (IS_ERR(sev_asid_bitmap)) {
-+		sev_platform_shutdown(&error);
-+		goto err_2;
-+	}
-+
-+	/* Query the platform status and print API version */
-+	ret = sev_platform_status(status, &error);
-+	if (ret) {
-+		printk(KERN_ERR "SEV: PLATFORM_STATUS ret=%#x\n", error);
-+		goto err_2;
-+	}
-+
-+	max_sev_asid = nguests;
-+
-+	printk(KERN_INFO "kvm: SEV enabled\n");
-+	printk(KERN_INFO "SEV API: %d.%d\n",
-+			status->api_major, status->api_minor);
-+err_2:
-+	kfree(status);
-+err_1:
-+	kfree(init);
++	return 0;
 +}
 +
- static __init int svm_hardware_setup(void)
- {
- 	int cpu;
-@@ -1052,6 +1180,9 @@ static __init int svm_hardware_setup(void)
- 		kvm_enable_efer_bits(EFER_SVME | EFER_LMSLE);
- 	}
- 
-+	if (boot_cpu_has(X86_FEATURE_SEV))
-+		sev_hardware_setup();
-+
- 	for_each_possible_cpu(cpu) {
- 		r = svm_cpu_init(cpu);
- 		if (r)
-@@ -1094,10 +1225,25 @@ static __init int svm_hardware_setup(void)
- 	return r;
- }
- 
-+static __exit void sev_hardware_unsetup(void)
++static int faraday_pci_probe(struct platform_device *pdev)
 +{
-+	int ret, err;
++	struct device *dev = &pdev->dev;
++	const struct faraday_pci_variant *variant =
++		of_device_get_match_data(dev);
++	struct resource *regs;
++	resource_size_t io_base;
++	struct resource_entry *win;
++	struct faraday_pci *p;
++	struct resource *mem;
++	struct resource *io;
++	struct pci_host_bridge *host;
++	int ret;
++	u32 val;
++	LIST_HEAD(res);
 +
-+	ret = sev_platform_shutdown(&err);
++	host = pci_alloc_host_bridge(sizeof(*p));
++	if (!host)
++		return -ENOMEM;
++
++	host->dev.parent = dev;
++	host->ops = &faraday_pci_ops;
++	host->busnr = 0;
++	host->msi = NULL;
++	p = pci_host_bridge_priv(host);
++	host->sysdata = p;
++	p->dev = dev;
++
++	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++	p->base = devm_ioremap_resource(dev, regs);
++	if (IS_ERR(p->base))
++		return PTR_ERR(p->base);
++
++	ret = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff,
++					       &res, &io_base);
 +	if (ret)
-+		printk(KERN_ERR "failed to shutdown PSP rc=%d (%#0x10x)\n",
-+		ret, err);
++		return ret;
 +
-+	kfree(sev_asid_bitmap);
++	ret = devm_request_pci_bus_resources(dev, &res);
++	if (ret)
++		return ret;
++
++	/* Get the I/O and memory ranges from DT */
++	resource_list_for_each_entry(win, &res) {
++		switch (resource_type(win->res)) {
++		case IORESOURCE_IO:
++			io = win->res;
++			io->name = "Gemini PCI I/O";
++			if (!faraday_res_to_memcfg(io->start - win->offset,
++						   resource_size(io),
++						   &val)) {
++				/* setup I/O space size */
++				writel(val, p->base + PCI_IOSIZE);
++			} else {
++				dev_err(dev,
++					"illegal IO mem size\n");
++				return -EINVAL;
++			}
++			ret = pci_remap_iospace(io, io_base);
++			if (ret) {
++				dev_warn(dev, "error %d: failed to map resource %pR\n",
++					 ret, io);
++				continue;
++			}
++			break;
++		case IORESOURCE_MEM:
++			mem = win->res;
++			mem->name = "Gemini PCI MEM";
++			break;
++		case IORESOURCE_BUS:
++			break;
++		default:
++			break;
++		}
++	}
++
++	/* Setup hostbridge */
++	val = readl(p->base + PCI_CTRL);
++	val |= PCI_COMMAND_IO;
++	val |= PCI_COMMAND_MEMORY;
++	val |= PCI_COMMAND_MASTER;
++	writel(val, p->base + PCI_CTRL);
++
++	list_splice_init(&res, &host->windows);
++	ret = pci_register_host_bridge(host);
++	if (ret) {
++		dev_err(dev, "failed to register host: %d\n", ret);
++		return ret;
++	}
++	p->bus = host->bus;
++
++	/* Mask and clear all interrupts */
++	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2 + 2, 2, 0xF000);
++	if (variant->cascaded_irq) {
++		ret = faraday_pci_setup_cascaded_irq(p);
++		if (ret) {
++			dev_err(dev, "failed to setup cascaded IRQ\n");
++			return ret;
++		}
++	}
++
++	ret = faraday_pci_parse_map_dma_ranges(p, dev->of_node);
++	if (ret)
++		return ret;
++
++	pci_scan_child_bus(p->bus);
++	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
++	pci_bus_assign_resources(p->bus);
++	pci_bus_add_devices(p->bus);
++	pci_free_resource_list(&res);
++
++	return 0;
 +}
 +
- static __exit void svm_hardware_unsetup(void)
- {
- 	int cpu;
- 
-+	if (kvm_sev_enabled())
-+		sev_hardware_unsetup();
-+
- 	for_each_possible_cpu(cpu)
- 		svm_cpu_uninit(cpu);
- 
-@@ -1157,6 +1303,11 @@ static void avic_init_vmcb(struct vcpu_svm *svm)
- 	svm->vcpu.arch.apicv_active = true;
- }
- 
-+static void sev_init_vmcb(struct vcpu_svm *svm)
-+{
-+	svm->vmcb->control.nested_ctl |= SVM_NESTED_CTL_SEV_ENABLE;
-+}
-+
- static void init_vmcb(struct vcpu_svm *svm)
- {
- 	struct vmcb_control_area *control = &svm->vmcb->control;
-@@ -1271,6 +1422,9 @@ static void init_vmcb(struct vcpu_svm *svm)
- 	if (avic)
- 		avic_init_vmcb(svm);
- 
-+	if (sev_guest(svm->vcpu.kvm))
-+		sev_init_vmcb(svm);
-+
- 	mark_all_dirty(svm->vmcb);
- 
- 	enable_gif(svm);
-@@ -2084,6 +2238,11 @@ static int pf_interception(struct vcpu_svm *svm)
- 	default:
- 		error_code = svm->vmcb->control.exit_info_1;
- 
-+		/* In SEV mode, the guest physical address will have C-bit
-+		 * set. C-bit must be cleared before handling the fault.
-+		 */
-+		if (sev_guest(svm->vcpu.kvm))
-+			fault_address &= ~sme_me_mask;
- 		trace_kvm_page_fault(fault_address, error_code);
- 		if (!npt_enabled && kvm_event_needs_reinjection(&svm->vcpu))
- 			kvm_mmu_unprotect_page_virt(&svm->vcpu, fault_address);
-@@ -4258,12 +4417,40 @@ static void reload_tss(struct kvm_vcpu *vcpu)
- 	load_TR_desc();
- }
- 
-+static void pre_sev_run(struct vcpu_svm *svm)
-+{
-+	int asid = sev_get_asid(svm->vcpu.kvm);
-+	int cpu = raw_smp_processor_id();
-+	struct svm_cpu_data *sd = per_cpu(svm_data, cpu);
-+
-+	/* Assign the asid allocated for this SEV guest */
-+	svm->vmcb->control.asid = asid;
-+
-+	/* Flush guest TLB:
-+	 * - when different VMCB for the same ASID is to be run on the
-+	 *   same host CPU
-+	 *   or
-+	 * - this VMCB was executed on different host cpu in previous VMRUNs.
-+	 */
-+	if (sd->sev_vmcbs[asid] != (void *)svm->vmcb ||
-+		svm->last_cpuid != cpu)
-+		svm->vmcb->control.tlb_ctl = TLB_CONTROL_FLUSH_ALL_ASID;
-+
-+	svm->last_cpuid = cpu;
-+	sd->sev_vmcbs[asid] = (void *)svm->vmcb;
-+
-+	mark_dirty(svm->vmcb, VMCB_ASID);
-+}
-+
- static void pre_svm_run(struct vcpu_svm *svm)
- {
- 	int cpu = raw_smp_processor_id();
- 
- 	struct svm_cpu_data *sd = per_cpu(svm_data, cpu);
- 
-+	if (sev_guest(svm->vcpu.kvm))
-+		return pre_sev_run(svm);
-+
- 	/* FIXME: handle wraparound of asid_generation */
- 	if (svm->asid_generation != sd->asid_generation)
- 		new_asid(svm, sd);
-diff --git a/include/uapi/linux/kvm.h b/include/uapi/linux/kvm.h
-index fef7d83..9df37a2 100644
---- a/include/uapi/linux/kvm.h
-+++ b/include/uapi/linux/kvm.h
-@@ -1284,6 +1284,104 @@ struct kvm_s390_ucas_mapping {
- /* Memory Encryption Commands */
- #define KVM_MEMORY_ENCRYPT_OP	  _IOWR(KVMIO, 0xb8, unsigned long)
- 
-+/* Secure Encrypted Virtualization mode */
-+enum sev_cmd_id {
-+	/* Guest launch commands */
-+	KVM_SEV_LAUNCH_START = 0,
-+	KVM_SEV_LAUNCH_UPDATE_DATA,
-+	KVM_SEV_LAUNCH_MEASURE,
-+	KVM_SEV_LAUNCH_FINISH,
-+	/* Guest migration commands (outgoing) */
-+	KVM_SEV_SEND_START,
-+	KVM_SEV_SEND_UPDATE_DATA,
-+	KVM_SEV_SEND_FINISH,
-+	/* Guest migration commands (incoming) */
-+	KVM_SEV_RECEIVE_START,
-+	KVM_SEV_RECEIVE_UPDATE_DATA,
-+	KVM_SEV_RECEIVE_FINISH,
-+	/* Guest status and debug commands */
-+	KVM_SEV_GUEST_STATUS,
-+	KVM_SEV_DBG_DECRYPT,
-+	KVM_SEV_DBG_ENCRYPT,
-+
-+	KVM_SEV_NR_MAX,
++/*
++ * We encode bridge variants here, we have at least two so it doesn't
++ * hurt to have infrastructure to encompass future variants as well.
++ */
++const struct faraday_pci_variant faraday_regular = {
++	.cascaded_irq = true,
 +};
 +
-+struct kvm_sev_cmd {
-+	__u32 id;
-+	__u64 data;
-+	__u32 error;
-+	__u32 sev_fd;
++const struct faraday_pci_variant faraday_dual = {
++	.cascaded_irq = false,
 +};
 +
-+struct kvm_sev_launch_start {
-+	__u32 handle;
-+	__u32 policy;
-+	__u64 dh_cert_data;
-+	__u32 dh_cert_length;
-+	__u64 session_data;
-+	__u32 session_length;
++static const struct of_device_id faraday_pci_of_match[] = {
++	{
++		.compatible = "faraday,ftpci100",
++		.data = &faraday_regular,
++	},
++	{
++		.compatible = "faraday,ftpci100-dual",
++		.data = &faraday_dual,
++	},
++	{},
 +};
 +
-+struct kvm_sev_launch_update_data {
-+	__u64 address;
-+	__u32 length;
++static struct platform_driver faraday_pci_driver = {
++	.driver = {
++		.name = "ftpci100",
++		.of_match_table = of_match_ptr(faraday_pci_of_match),
++	},
++	.probe  = faraday_pci_probe,
 +};
-+
-+struct kvm_sev_launch_measure {
-+	__u64 address;
-+	__u32 length;
-+};
-+
-+struct kvm_sev_send_start {
-+	__u64 pdh_cert_data;
-+	__u32 pdh_cert_length;
-+	__u64 plat_cert_data;
-+	__u32 plat_cert_length;
-+	__u64 amd_cert_data;
-+	__u32 amd_cert_length;
-+	__u64 session_data;
-+	__u32 session_length;
-+};
-+
-+struct kvm_sev_send_update_data {
-+	__u64 hdr_data;
-+	__u32 hdr_length;
-+	__u64 guest_address;
-+	__u32 guest_length;
-+	__u64 host_address;
-+	__u32 host_length;
-+};
-+
-+struct kvm_sev_receive_start {
-+	__u32 handle;
-+	__u64 pdh_cert_data;
-+	__u32 pdh_cert_length;
-+	__u64 session_data;
-+	__u32 session_length;
-+};
-+
-+struct kvm_sev_receive_update_data {
-+	__u64 hdr_data;
-+	__u32 hdr_length;
-+	__u64 guest_address;
-+	__u32 guest_length;
-+	__u64 host_address;
-+	__u32 host_length;
-+};
-+
-+struct kvm_sev_guest_status {
-+	__u32 handle;
-+	__u32 policy;
-+	__u32 state;
-+};
-+
-+struct kvm_sev_dbg {
-+	__u64 src_addr;
-+	__u64 dst_addr;
-+	__u32 length;
-+};
-+
- #define KVM_DEV_ASSIGN_ENABLE_IOMMU	(1 << 0)
- #define KVM_DEV_ASSIGN_PCI_2_3		(1 << 1)
- #define KVM_DEV_ASSIGN_MASK_INTX	(1 << 2)
++builtin_platform_driver(faraday_pci_driver);
+-- 
+2.9.3
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
