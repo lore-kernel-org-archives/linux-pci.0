@@ -1,176 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50076 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933062AbdC3NbH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Mar 2017 09:31:07 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: mayurkumar.patel@intel.com, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rajat Jain <rajatja@google.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        David Daney <david.daney@cavium.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Julia Lawall <Julia.Lawall@lip6.fr>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH V7 3/5] PCI/ASPM: add init hook to device_add
-Date: Thu, 30 Mar 2017 09:30:34 -0400
-Message-Id: <1490880636-30542-4-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
-References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 3 Mar 2017 09:46:28 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mason <slash.tmp@free.fr>
+Subject: Re: Using the generic host PCIe driver
+Message-ID: <20170303154628.GA21522@bhelgaas-glaptop.roam.corp.google.com>
+References: <8d4e5d8a-7683-0180-324c-0ffd1a9a641a@free.fr>
+ <20170227164430.GB11162@bhelgaas-glaptop.roam.corp.google.com>
+ <8643c952-e915-bcd1-390e-9d4001789872@free.fr>
+ <20170227183534.GA12481@bhelgaas-glaptop.roam.corp.google.com>
+ <347d4200-e089-60df-5f60-58d16efc7c4e@free.fr>
+ <20170301161801.GB13171@bhelgaas-glaptop.roam.corp.google.com>
+ <98ee3041-6a94-91af-b4bf-208aa02624ed@free.fr>
+ <20170301215726.GA32286@bhelgaas-glaptop.roam.corp.google.com>
+ <258cd6f3-ef17-6705-ff48-ae06f26778c2@free.fr>
+MIME-Version: 1.0
+In-Reply-To: <258cd6f3-ef17-6705-ff48-ae06f26778c2@free.fr>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ David Daney <david.daney@cavium.com>, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Will Deacon <will.deacon@arm.com>, Thierry Reding <treding@nvidia.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For bridges, have pcie_aspm_init_link_state() allocate a link_state,
-regardless of whether it currently has any children.
+On Fri, Mar 03, 2017 at 01:44:54PM +0100, Mason wrote:
+> For now, I have "hidden" the root's BAR0 from the system with:
+> 
+> 	if (bus->number == 0 && where == PCI_BASE_ADDRESS_0) {
+> 		*val = 0;
+> 		return PCIBIOS_SUCCESSFUL;
+> 	}
 
-pcie_aspm_init_link_state(): Called for bridges (upstream end of
-link) after all children have been enumerated.  No longer needs to
-check aspm_support_enabled or pdev->has_secondary_link or the VIA
-quirk: pci_aspm_init() already checked that stuff, so we only need
-to check pdev->link_state here.
+I'm scratching my head about this a little.  Here's what your dmesg
+log contained originally:
 
-Now that we are calling alloc_pcie_link_state() from pci_aspm_init()
-, get rid of pci_function_0 function and detect downstream link in
-pci_aspm_init_upstream() instead when the function number is 0.
+  pci 0000:00:00.0: [1105:8758] type 01 class 0x048000
+  pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x00ffffff 64bit]
+  pci 0000:00:00.0: BAR 0: no space for [mem size 0x01000000 64bit]
+  pci 0000:00:00.0: BAR 0: failed to assign [mem size 0x01000000 64bit]
+  pci 0000:00:00.0: PCI bridge to [bus 01]
+  pcieport 0000:00:00.0: enabling device (0140 -> 0142)
 
-Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pcie/aspm.c | 72 ++++++++++++++++++++++++-------------------------
- 1 file changed, 36 insertions(+), 36 deletions(-)
+This device is a bridge (a Root Port, per your lspci output).  With a
+BAR, which is legal but unusual.  We couldn't assign space for the
+BAR, which means we can't use whatever vendor-specific functionality
+it provides.
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index a80d64b..e33f84b 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -422,20 +422,6 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
- 	}
- }
- 
--/*
-- * The L1 PM substate capability is only implemented in function 0 in a
-- * multi function device.
-- */
--static struct pci_dev *pci_function_0(struct pci_bus *linkbus)
--{
--	struct pci_dev *child;
--
--	list_for_each_entry(child, &linkbus->devices, bus_list)
--		if (PCI_FUNC(child->devfn) == 0)
--			return child;
--	return NULL;
--}
--
- /* Calculate L1.2 PM substate timing parameters */
- static void aspm_calc_l1ss_info(struct pcie_link_state *link,
- 				struct aspm_register_info *upreg,
-@@ -798,7 +784,6 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- 	INIT_LIST_HEAD(&link->children);
- 	INIT_LIST_HEAD(&link->link);
- 	link->pdev = pdev;
--	link->downstream = pci_function_0(pdev->subordinate);
- 
- 	/*
- 	 * Root Ports and PCI/PCI-X to PCIe Bridges are roots of PCIe
-@@ -828,11 +813,33 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- 
- static int pci_aspm_init_downstream(struct pci_dev *pdev)
- {
-+	struct pcie_link_state *link;
-+	struct pci_dev *parent;
-+
-+	/*
-+	 * The L1 PM substate capability is only implemented in function 0 in a
-+	 * multi function device.
-+	 */
-+	if (PCI_FUNC(pdev->devfn) != 0)
-+		return -EINVAL;
-+
-+	parent = pdev->bus->self;
-+	if (!parent)
-+		return -EINVAL;
-+
-+	link = parent->link_state;
-+	link->downstream = pdev;
- 	return 0;
- }
- 
- static int pci_aspm_init_upstream(struct pci_dev *pdev)
- {
-+	struct pcie_link_state *link;
-+
-+	link = alloc_pcie_link_state(pdev);
-+	if (!link)
-+		return -ENOMEM;
-+
- 	return 0;
- }
- 
-@@ -843,6 +850,17 @@ static int pci_aspm_init_upstream(struct pci_dev *pdev)
-  */
- int pci_aspm_init(struct pci_dev *pdev)
- {
-+	if (!aspm_support_enabled)
-+		return 0;
-+
-+	if (!pci_is_pcie(pdev))
-+		return -EINVAL;
-+
-+	/* VIA has a strange chipset, root port is under a bridge */
-+	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
-+	    pdev->bus->self)
-+		return 0;
-+
- 	if (!pdev->has_secondary_link)
- 		return pci_aspm_init_downstream(pdev);
- 
-@@ -859,33 +877,16 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
- 	struct pcie_link_state *link;
- 	int blacklist = !!pcie_aspm_sanity_check(pdev);
- 
--	if (!aspm_support_enabled)
--		return;
--
--	if (pdev->link_state)
--		return;
--
--	/*
--	 * We allocate pcie_link_state for the component on the upstream
--	 * end of a Link, so there's nothing to do unless this device has a
--	 * Link on its secondary side.
--	 */
--	if (!pdev->has_secondary_link)
--		return;
--
--	/* VIA has a strange chipset, root port is under a bridge */
--	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
--	    pdev->bus->self)
-+	if (!pdev->link_state)
- 		return;
- 
-+	link = pdev->link_state;
- 	down_read(&pci_bus_sem);
- 	if (list_empty(&pdev->subordinate->devices))
- 		goto out;
- 
- 	mutex_lock(&aspm_lock);
--	link = alloc_pcie_link_state(pdev);
--	if (!link)
--		goto unlock;
-+
- 	/*
- 	 * Setup initial ASPM state. Note that we need to configure
- 	 * upstream links also because capable state of them can be
-@@ -910,7 +911,6 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
- 		pcie_set_clkpm(link, policy_to_clkpm_state(link));
- 	}
- 
--unlock:
- 	mutex_unlock(&aspm_lock);
- out:
- 	up_read(&pci_bus_sem);
--- 
-1.9.1
+What's puzzling me is that pcieport was able to enable the device and
+turn on PCI_COMMAND_MEMORY (the 0x2 bit).  It seems like this should
+have failed because pci_enable_resources() checks to see that all the
+BARs have been assigned.
+
+Since this is a bridge, we really *have* to turn on PCI_COMMAND_MEMORY
+in order for the bridge to forward memory transactions to its
+secondary bus (bus 01).  But we can't safely enable PCI_COMMAND_MEMORY
+unless all its memory BARs are assigned.
+
+So it's not safe to hide BAR0 from the PCI core.  That makes Linux
+think the BAR doesn't exist, but of course it still exists in the
+hardware itself, and it will respond at whatever address it happens to
+contain.  In this case, that address happens to be zero, and the host
+bridge does not advertise a window that maps to bus address zero, so
+you probably won't see a conflict right away, but it's a latent issue
+that may come back to bite you some day.
+
+The easiest fix would be for you to increase the host bridge memory
+window size.  It's currently [mem 0xa0000000-0xa03fffff], which is
+only 4MB, which is *tiny*.  You need 16MB just to contain the bridge
+BAR, plus at least 8K for the USB controller.
+
+If you can't make space for a bigger window, it's possible the Root
+Port has some device-specific way to disable BAR0 in hardware, e.g.,
+some register your firmware or an early Linux quirk could write.  That
+would be much safer than enabling an unassigned BAR.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
