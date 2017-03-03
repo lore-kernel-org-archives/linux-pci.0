@@ -1,66 +1,85 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=6Mcr=2M=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=6Mcr=2M=free.fr=slash.tmp@kernel.org>
+Subject: Re: Using the generic host PCIe driver
+To: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Will Deacon <will.deacon@arm.com>, David Daney <david.daney@cavium.com>,
+ Rob Herring <robh@kernel.org>, Thierry Reding <treding@nvidia.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>
+References: <8d4e5d8a-7683-0180-324c-0ffd1a9a641a@free.fr>
+ <20170227164430.GB11162@bhelgaas-glaptop.roam.corp.google.com>
+ <8643c952-e915-bcd1-390e-9d4001789872@free.fr>
+ <20170227183534.GA12481@bhelgaas-glaptop.roam.corp.google.com>
+ <347d4200-e089-60df-5f60-58d16efc7c4e@free.fr>
+ <20170301161801.GB13171@bhelgaas-glaptop.roam.corp.google.com>
+ <01f41dd8-e8e6-f880-cad8-5cb83bf0a167@arm.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <4059f88f-0f70-38c2-f2f9-58dd2bd5b280@free.fr>
+Date: Fri, 3 Mar 2017 12:26:27 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170312222352.2413-1-linus.walleij@linaro.org>
-References: <20170312222352.2413-1-linus.walleij@linaro.org>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Fri, 24 Mar 2017 10:54:14 +0100
-Message-ID: <CACRpkdZ7mQuaYUTVuKEC=FRmx7ie64cd_R0O58C10Kpm75-mAA@mail.gmail.com>
-Subject: Re: [PATCH 1/4 v5] PCI: add DT bindings for Faraday Technology PCI
- Host Bridge
-To: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: openwrt-devel@openwrt.org, Rob Herring <robh@kernel.org>,
- Florian Fainelli <f.fainelli@gmail.com>,
- Feng-Hsin Chiang <john453@faraday-tech.com>,
- Paulius Zaleckas <paulius.zaleckas@gmail.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linus Walleij <linus.walleij@linaro.org>, Greentime Hu <green.hu@gmail.com>,
- Janos Laube <janos.dev@gmail.com>, Hans Ulli Kroll <ulli.kroll@googlemail.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <01f41dd8-e8e6-f880-cad8-5cb83bf0a167@arm.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Mar 12, 2017 at 11:23 PM, Linus Walleij
-<linus.walleij@linaro.org> wrote:
+On 01/03/2017 17:36, Marc Zyngier wrote:
 
-> This adds device tree bindings for the Faraday technology PCI
-> Host Bridge. This IP is found in the Storlink/Storm/Cortina
-> Gemini SoC platform.
->
-> Cc: Janos Laube <janos.dev@gmail.com>
-> Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
-> Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-> Cc: Florian Fainelli <f.fainelli@gmail.com>
-> Cc: devicetree@vger.kernel.org
-> Cc: Feng-Hsin Chiang <john453@faraday-tech.com>
-> Cc: Greentime Hu <green.hu@gmail.com>
-> Acked-by: Rob Herring <robh@kernel.org>
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-> ---
-> ChangeLog v4->v5:
-> - No changes, just resend as everything else is rebased onto
->   v4.11-rc1.
+> Mason: while the kernel has generic support for dealing with MSI, there
+> is not standardization at the interrupt controller level, so you do have
+> to write your own driver, and wire it in the rest of the framework.
+> 
+> I suggest you look at things like drivers/pci/host/pcie-altera-msi.c,
+> which has an extremely simple implementation. You can use this as a
+> starting point for your own driver.
 
-Bjorn do you have any further comments or can we queue patch
-1+2 of this series?
+Thanks Marc,
 
-I want to submit the DTS patches to the ARM SoC tree, so I need
-to be sure the bindings+driver are merge material first.
+I'll have a close look at the Altera driver.
 
-Yours,
-Linus Walleij
+I'm having a hard time understanding 3 different kinds of interrupts:
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+  1. MSI (message-signalled interrupts)
+  2. legacy interrupts
+  3. custom interrupts
+
+I mostly understand MSI. When a device needs attention from the CPU,
+it sends a specific packet over the PCIe data link to a specific
+PCI bus address, which the PCIe controller knows to interpret as
+an interrupt request, so it raises the appropriate signal to
+interrupt the CPU.
+
+Legacy interrupts are the old-style PCI interrupts, when a device
+expects to have an actual physical interrupt line to the PCI
+controller, correct? The controller then forwards the interrupt
+request to the CPU, as with MSIs.
+
+Custom interrupts, I'm not sure. Here's the list:
+
+system_error : indicates that the interrupt is triggered by a system error, signaled by the lower layers.
+dma_rd_int : interrupt is triggered by DMA read availability.
+dma_wr_int : interrupt is triggered by DMA write availability.
+cpl_ur : interrupt is triggered by unsupported completion request.
+cpl_crs : interrupt is triggered by configuration request retry status.
+cpl_ca : interrupt is triggered by completer abort event.
+cpl_timeout : interrupt is triggered by a completion timeout event.
+pci_intx : one of selected legacy interrupts INTx is triggered. 
+
+Notes:
+
+It appears that legacy interrupts are supported through this
+custom register.
+
+I think I might be able to ignore DMA for the time being.
+
+cpl_* interrupts look somewhat standard, yet the PCI framework
+cannot know they exist, since they are in some random MMIO register.
+I'm confused about these and system_error. I guess I can ignore
+them at first, or just print a message when they trigger, to try
+to figure out what to do with them.
+
+
+I suppose the interrupt controller I'm supposed to write needs
+to handle all 3 types of interrupts?
+
+Regards.
