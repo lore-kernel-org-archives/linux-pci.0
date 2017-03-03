@@ -1,65 +1,155 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Mason' <slash.tmp@free.fr>, linux-pci <linux-pci@vger.kernel.org>,
- "Linux ARM" <linux-arm-kernel@lists.infradead.org>
-Subject: RE: Neophyte questions about PCIe
-Date: Wed, 8 Mar 2017 14:38:00 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DCFE7A879@AcuExch.aculab.com>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <063D6719AE5E284EB5DD2968C1650D6DCFE7A70A@AcuExch.aculab.com>
- <b735b894-4c6c-5eb0-524e-dccee648d0f8@free.fr>
-In-Reply-To: <b735b894-4c6c-5eb0-524e-dccee648d0f8@free.fr>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:33056 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751593AbdCCVLp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Mar 2017 16:11:45 -0500
+Date: Fri, 3 Mar 2017 15:11:40 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Shanker Donthineni <shankerd@qti.qualcomm.com>,
+        kvm@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Sinan Kaya <okaya@qti.qualcomm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        iommu@lists.linux-foundation.org,
+        Harv Abdulhamid <harba@qti.qualcomm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        linux-arm-kernel@lists.infradead.org,
+        Nate Watterson <nwatters@qti.qualcomm.com>
+Subject: Re: [RFC PATCH 18/30] PCI: Make "PRG Response PASID Required"
+ handling common
+Message-ID: <20170303211140.GC31767@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-19-jean-philippe.brucker@arm.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Marc Zyngier <marc.zyngier@arm.com>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Bjorn Helgaas <helgaas@kernel.org>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Shawn Lin <shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170227195441.5170-19-jean-philippe.brucker@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Mason
-> Sent: 08 March 2017 14:18
-...
-> > Don't think config space fits.
-> > With the 'obvious' mapping the 'bus number' is in the top
-> > 8 bits of the address.
+On Mon, Feb 27, 2017 at 07:54:29PM +0000, Jean-Philippe Brucker wrote:
+> The PASID ECN to the PCIe spec added a bit in the PRI status register that
+> allows a Function to declare whether a PRG Response should contain the
+> PASID prefix or not.
 > 
-> https://www.kernel.org/doc/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+> Move the helper that accesses it from amd_iommu into the PCI subsystem,
+> renaming it to something more consistent with the spec, and introducing
+> another obscure acronym to make it all fit.
+
+Maybe mention the acronym itelf and spell it out here?
+
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
+>  drivers/iommu/amd_iommu.c     | 19 +------------------
+>  drivers/pci/ats.c             | 17 +++++++++++++++++
+>  include/linux/pci-ats.h       |  8 ++++++++
+>  include/uapi/linux/pci_regs.h |  1 +
+>  4 files changed, 27 insertions(+), 18 deletions(-)
 > 
-> 	cfg_offset(bus, device, function, register) =
-> 		bus << 20 | device << 15 | function << 12 | register
+> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
+> index 98940d1392cb..c5c598bf4ba3 100644
+> --- a/drivers/iommu/amd_iommu.c
+> +++ b/drivers/iommu/amd_iommu.c
+> @@ -2024,23 +2024,6 @@ static int pdev_iommuv2_enable(struct pci_dev *pdev)
+>  	return ret;
+>  }
+>  
+> -/* FIXME: Move this to PCI code */
+> -#define PCI_PRI_TLP_OFF		(1 << 15)
+> -
+> -static bool pci_pri_tlp_required(struct pci_dev *pdev)
+> -{
+> -	u16 status;
+> -	int pos;
+> -
+> -	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
+> -	if (!pos)
+> -		return false;
+> -
+> -	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
+> -
+> -	return (status & PCI_PRI_TLP_OFF) ? true : false;
+> -}
+> -
+>  /*
+>   * If a device is not yet associated with a domain, this function
+>   * assigns it visible for the hardware
+> @@ -2069,7 +2052,7 @@ static int attach_device(struct device *dev,
+>  
+>  			dev_data->ats.enabled = true;
+>  			dev_data->ats.qdep    = pci_ats_queue_depth(pdev);
+> -			dev_data->pri_tlp     = pci_pri_tlp_required(pdev);
+> +			dev_data->pri_tlp     = pci_prg_resp_requires_prefix(pdev);
+>  		}
+>  	} else if (amd_iommu_iotlb_sup &&
+>  		   pci_enable_ats(pdev, PAGE_SHIFT) == 0) {
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index eeb9fb2b47aa..331376e9bb8b 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -334,3 +334,20 @@ int pci_max_pasids(struct pci_dev *pdev)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_max_pasids);
+>  #endif /* CONFIG_PCI_PASID */
+> +
+> +#if defined(CONFIG_PCI_PASID) && defined(CONFIG_PCI_PRI)
+> +bool pci_prg_resp_requires_prefix(struct pci_dev *pdev)
+> +{
+> +	u16 status;
+> +	int pos;
+> +
+> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
+> +	if (!pos)
+> +		return false;
+> +
+> +	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
+> +
+> +	return !!(status & PCI_PRI_STATUS_PRPR);
+> +}
+> +EXPORT_SYMBOL_GPL(pci_prg_resp_requires_prefix);
+> +#endif /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
+> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+> index 57e0b8250947..e21bcacbe80c 100644
+> --- a/include/linux/pci-ats.h
+> +++ b/include/linux/pci-ats.h
+> @@ -57,5 +57,13 @@ static inline int pci_max_pasids(struct pci_dev *pdev)
+>  
+>  #endif /* CONFIG_PCI_PASID */
+>  
+> +#if defined(CONFIG_PCI_PASID) && defined(CONFIG_PCI_PRI)
+> +bool pci_prg_resp_requires_prefix(struct pci_dev *pdev);
+> +#else
+> +static inline bool pci_prg_resp_requires_prefix(struct pci_dev *pdev)
+> +{
+> +	return false;
+> +}
+> +#endif /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
+>  
+>  #endif /* LINUX_PCI_ATS_H*/
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 634c9c44ed6c..bae815876be6 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -864,6 +864,7 @@
+>  #define  PCI_PRI_STATUS_RF	0x001	/* Response Failure */
+>  #define  PCI_PRI_STATUS_UPRGI	0x002	/* Unexpected PRG index */
+>  #define  PCI_PRI_STATUS_STOPPED	0x100	/* PRI Stopped */
+> +#define  PCI_PRI_STATUS_PRPR	0x8000	/* PRG Response requires PASID prefix */
+>  #define PCI_PRI_MAX_REQ		0x08	/* PRI max reqs supported */
+>  #define PCI_PRI_ALLOC_REQ	0x0c	/* PRI max reqs allowed */
+>  #define PCI_EXT_CAP_PRI_SIZEOF	16
+> -- 
+> 2.11.0
 > 
-> 8 bits for bus, 5 bits for device, 3 bits for function, 12 bits for reg offset
-> 1 MB per bus, 256 buses max => 256 MB max
 > 
-> Supporting "only" 64 buses is good enough, I believe.
-
-I was comparing the PCIe TLP layout for config cycles and normal read/write.
-There bus/dev/fun are in the top 16 bits with 4 reserved bits above the
-register address (effectively allowing 64k of config space per function).
-
-Possibly some logic shifting the address across for config cycles.
-
-The TLP type also has a bit for type-0 v type-1 config cycles.
-I can't quite remember the difference.
-
-	David
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
