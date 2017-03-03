@@ -1,94 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:46645 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755348AbdCUKhE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Mar 2017 06:37:04 -0400
-Subject: Re: Help: MSI DWC connecting with a MSIx Endpoint
-To: Marc Zyngier <marc.zyngier@arm.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <85bfa77f-6cd0-a669-c940-7fa7d9fb17a3@synopsys.com>
- <28a4e429-a2d2-8f28-e4fc-8eebae0b3367@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <4ade12d6-1887-4093-ee43-2101ca2986e0@synopsys.com>
-Date: Tue, 21 Mar 2017 10:27:40 +0000
+Received: from mx2.suse.de ([195.135.220.15]:47520 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751641AbdCCQ70 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 3 Mar 2017 11:59:26 -0500
+Date: Fri, 3 Mar 2017 17:59:15 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Brijesh Singh <brijesh.singh@amd.com>
+Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
+        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
+        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
+        gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
+        akpm@linux-foundation.org, davem@davemloft.net
+Subject: Re: [RFC PATCH v2 01/32] x86: Add the Secure Encrypted
+ Virtualization CPU feature
+Message-ID: <20170303165915.3233fx7wo74vsslx@pd.tnic>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846752953.2349.17505492128445909591.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-In-Reply-To: <28a4e429-a2d2-8f28-e4fc-8eebae0b3367@arm.com>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <148846752953.2349.17505492128445909591.stgit@brijesh-build-machine>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Mar 02, 2017 at 10:12:09AM -0500, Brijesh Singh wrote:
+> From: Tom Lendacky <thomas.lendacky@amd.com>
+> 
+> Update the CPU features to include identifying and reporting on the
+> Secure Encrypted Virtualization (SEV) feature.  SME is identified by
+> CPUID 0x8000001f, but requires BIOS support to enable it (set bit 23 of
+> MSR_K8_SYSCFG and set bit 0 of MSR_K7_HWCR).  Only show the SEV feature
+> as available if reported by CPUID and enabled by BIOS.
+> 
+> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+> ---
+>  arch/x86/include/asm/cpufeatures.h |    1 +
+>  arch/x86/include/asm/msr-index.h   |    2 ++
+>  arch/x86/kernel/cpu/amd.c          |   22 ++++++++++++++++++----
+>  arch/x86/kernel/cpu/scattered.c    |    1 +
+>  4 files changed, 22 insertions(+), 4 deletions(-)
 
-Hi Mark,
+So this patchset is not really ontop of Tom's patchset because this
+patch doesn't apply. The reason is, Tom did the SME bit this way:
 
-Às 6:16 PM de 3/20/2017, Marc Zyngier escreveu:
-> Hi Joao,
-> 
-> On 20/03/17 17:30, Joao Pinto wrote:
->> Hi Mark,
->>
->> I am facing a challenge in a setup I must bring up that is composed by a
->> Synopsys Root Complex connected to a MSIx-only Endpoint from Mellanox.
->> The endpoint probe fails because it is not capable of enabling msix.
->>
->> In order to get more info about it, I added some debug messages to the msix
->> enable process and got the following:
->>
->> MSIX DBG[mlx5_enable_msix]: Num. EQs: 256
->> MSIX DBG[mlx5_enable_msix]: Num. Vectors: 4
->> MSIX DBG[mlx5_enable_msix]: Min. Num. Vectors: 4
->> MSIX DBG[mlx5_enable_msix]: Num. Online CPUs: 1
->> MSIX DBG[mlx5_enable_msix]: MLX5_EQ_VEC_COMP_BASE: 3
->> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 0
->> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 1
->> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 2
->> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 3
->> MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range
->> MSIX DBG[__pci_enable_msix_range]: Enabling MSIX [Nvec: 4, Affinity: 0]
->> MSIX DBG[__pci_enable_msix]: NVec: 4
->> MSIX DBG[__pci_enable_msix]: Num. Entries: 64
->> MSIX DBG[__pci_enable_msix]: Checking invalid entries
->> MSIX DBG[msix_capability_init]: Ensure MSI is disable
->> MSIX DBG[msix_capability_init]: Getting MSIX Capability
->> MSIX DBG[msix_capability_init]: Mapping MSIX Capability Region
->> MSIX DBG[msix_capability_init]: Setup Entries
->> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 0
->> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 1
->> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 2
->> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 3
->> MSIX DBG[msix_capability_init]: Setup IRQS
->> MSIX DBG[pci_msi_setup_msi_irqs]: Inside!
->> MSIX DBG[arch_setup_msi_irqs]: Inside!
->> MSIX DBG[msix_capability_init]: Failed pci_msi_setup_msi_irqs
->> MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range, result: -22
->> mlx5_core 0000:01:00.0: enable msix failed
->>
->> The conclusion I came up was that the msix setup in the endpoint fails because
->> in the pcie-designware-host.c we are rejecting msix as you can see here:
->>
->> /* MSI-X interrupts are not supported */
->> if (type == PCI_CAP_ID_MSIX)
->>         return -EINVAL;
->>
->> Did you ever came across this problem?
-> 
-> I don't have access to any system using this IP, unfortunately. This
-> looks like an arbitrary limitation of the host controller driver, as
-> there isn't much difference between MSI and MSI-X at the MSI controller
-> level, other than the reduced number of interrupts.
-> 
-> Unfortunately, this driver seems to rely on rather old APIs, and could
-> use some care and attention. I'm pretty sure that converting this driver
-> to the generic MSI API would solve this problem entirely, but I'm afraid
-> I don't have the bandwidth to do so.
+https://lkml.kernel.org/r/20170216154236.19244.7580.stgit@tlendack-t1.amdoffice.net
 
-I volunteer to do it, no problem, but I will need some guidance and examples.
-Could you give me some hints to get started?
+but it should've been in scattered.c.
 
-> 
-> Thanks,
-> 
-> 	M.
-> 
+> diff --git a/arch/x86/kernel/cpu/scattered.c b/arch/x86/kernel/cpu/scattered.c
+> index cabda87..c3f58d9 100644
+> --- a/arch/x86/kernel/cpu/scattered.c
+> +++ b/arch/x86/kernel/cpu/scattered.c
+> @@ -31,6 +31,7 @@ static const struct cpuid_bit cpuid_bits[] = {
+>  	{ X86_FEATURE_CPB,		CPUID_EDX,  9, 0x80000007, 0 },
+>  	{ X86_FEATURE_PROC_FEEDBACK,    CPUID_EDX, 11, 0x80000007, 0 },
+>  	{ X86_FEATURE_SME,		CPUID_EAX,  0, 0x8000001f, 0 },
+> +	{ X86_FEATURE_SEV,		CPUID_EAX,  1, 0x8000001f, 0 },
+>  	{ 0, 0, 0, 0, 0 }
+
+... and here it is in scattered.c, as it should be. So you've used an
+older version of the patch, it seems.
+
+Please sync with Tom to see whether he's reworked the v4 version of that
+patch already. If yes, then you could send only the SME and SEV adding
+patches as a reply to this message so that I can continue reviewing in
+the meantime.
 
 Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
