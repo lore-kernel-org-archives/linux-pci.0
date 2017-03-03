@@ -1,164 +1,212 @@
-Return-Path: <SRS0=nDpC=2T=arm.com=robin.murphy@kernel.org>
-Return-Path: <SRS0=nDpC=2T=arm.com=robin.murphy@kernel.org>
-Subject: Re: Neophyte questions about PCIe
-To: Mason <slash.tmp@free.fr>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
- <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
- <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
- <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
-Cc: David Laight <David.Laight@ACULAB.COM>, Bjorn Helgaas
- <helgaas@kernel.org>, Rob Herring <robh@kernel.org>,
- Arnd Bergmann <arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- linux-usb <linux-usb@vger.kernel.org>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Shawn Lin <shawn.lin@rock-chips.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <4f37cc08-d4fd-b207-63d2-4ac038d2fcec@arm.com>
-Date: Fri, 10 Mar 2017 15:23:26 +0000
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+ Florian Fainelli <f.fainelli@gmail.com>, Rob Herring <robh@kernel.org>,
+ devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 1/4 v4] PCI: add DT bindings for Faraday Technology PCI Host
+ Bridge
+Date: Fri,  3 Mar 2017 09:43:47 +0100
+Message-Id: <20170303084347.17335-1-linus.walleij@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: openwrt-devel@openwrt.org, Feng-Hsin Chiang <john453@faraday-tech.com>,
+ Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-pci@vger.kernel.org,
+ Linus Walleij <linus.walleij@linaro.org>, Greentime Hu <green.hu@gmail.com>,
+ Janos Laube <janos.dev@gmail.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/03/17 15:05, Mason wrote:
-> On 10/03/2017 15:06, David Laight wrote:
-> 
->> Robin Murphy wrote:
->>
->>> On 09/03/17 23:43, Mason wrote:
->>>
->>>> I think I'm making progress, in that I now have a better
->>>> idea of what I don't understand. So I'm able to ask
->>>> (hopefully) less vague questions.
->>>>
->>>> Take the USB3 PCIe adapter I've been testing with. At some
->>>> point during init, the XHCI driver request some memory
->>>> (via kmalloc?) in order to exchange data with the host, right?
->>>>
->>>> On my SoC, the RAM used by Linux lives at physical range
->>>> [0x8000_0000, 0x8800_0000[ => 128 MB
->>>>
->>>> How does the XHCI driver make the adapter aware of where
->>>> it can scribble data? The XHCI driver has no notion that
->>>> the device is behind a bus, does it?
->>>>
->>>> At some point, the physical addresses must be converted
->>>> to PCI bus addresses, right? Is it computed subtracting
->>>> the offset defined in the DT?
->>
->> The driver should call dma_alloc_coherent() which returns both the
->> kernel virtual address and the device (xhci controller) has
->> to use to access it.
->> The cpu physical address is irrelevant (although it might be
->> calculated in the middle somewhere).
-> 
-> Thank you for that missing piece of the puzzle.
-> I see some relevant action in drivers/usb/host/xhci-mem.c
-> 
-> And I now see this log:
-> 
-> [    2.499320] xhci_hcd 0000:01:00.0: // Device context base array address = 0x8e07e000 (DMA), d0855000 (virt)
-> [    2.509156] xhci_hcd 0000:01:00.0: Allocated command ring at cfb04200
-> [    2.515640] xhci_hcd 0000:01:00.0: First segment DMA is 0x8e07f000
-> [    2.521863] xhci_hcd 0000:01:00.0: // Setting command ring address to 0x20
-> [    2.528786] xhci_hcd 0000:01:00.0: // xHC command ring deq ptr low bits + flags = @00000000
-> [    2.537188] xhci_hcd 0000:01:00.0: // xHC command ring deq ptr high bits = @00000000
-> [    2.545002] xhci_hcd 0000:01:00.0: // Doorbell array is located at offset 0x800 from cap regs base addr
-> [    2.554455] xhci_hcd 0000:01:00.0: // xHCI capability registers at d0852000:
-> [    2.561550] xhci_hcd 0000:01:00.0: // @d0852000 = 0x1000020 (CAPLENGTH AND HCIVERSION)
-> 
-> I believe 0x8e07e000 is a CPU address, not a PCI bus address.
-> 
-> 
->>>> Then suppose the USB3 card wants to write to an address
->>>> in RAM. It sends a packet on the PCIe bus, targeting
->>>> the PCI bus address of that RAM, right? Is this address
->>>> supposed to be in BAR0 of the root complex? I guess not,
->>>> since Bjorn said that it was unusual for a RC to have
->>>> a BAR at all. So I'll hand-wave, and decree that, by some
->>>> protocol magic, the packet arrives at the PCIe controller.
->>>> And this controller knows to forward this write request
->>>> over the memory bus. Does that look about right?
->>>
->>> Generally, yes - if an area of memory space *is* claimed by a BAR, then
->>> another PCI device accessing that would be treated as peer-to-peer DMA,
->>> which may or may not be allowed (or supported at all).
->>
->> So PCIe addresses that refer to the host memory addresses are
->> just forwarded to the memory subsystem.
->> In practise this is almost everything.
-> 
-> My RC drops packets not targeting its BAR0.
+This adds device tree bindings for the Faraday technology PCI
+Host Bridge. This IP is found in the Storlink/Storm/Cortina
+Gemini SoC platform.
 
-OK, so it does sound like you're in a particularly awkward position that
-rules out using a sane 1:1 mapping between mem space and the system
-address map.
+Cc: Janos Laube <janos.dev@gmail.com>
+Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
+Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>
+Cc: devicetree@vger.kernel.org
+Cc: Feng-Hsin Chiang <john453@faraday-tech.com>
+Cc: Greentime Hu <green.hu@gmail.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+---
+ChangeLog v3->v4:
+- Add Rob's ACK
+ChangeLog v2->v3:
+- Reinstate the specific-to-generic bindings also specifying the
+  "cortina,gemini-pci" fixture for the Faraday block.
+- Set compatible to "faraday,ftpci100" and "faraday,ftpci100-dual"
+  this is clearly closer to or equal to what the IP blocks from
+  Faraday are actually named.
+- Add "dma-ranges" property, after deciphering that some hardcoded
+  constants in the driver is really about this.
+ChangeLog v1->v2:
+- Rename from Cortina prefixes to Faraday. This is clearly
+  a Faraday IP block.
+- Support both the version with cascaded interrupts and the
+  "dual" version with 1-to-1 mapped interrupts.
+- Change bus-range to <0x00 0xff>
+- Fix spelling mistake
+- Write a bit about swizzling interrupts on the interrupt
+  controller side
+- Reasonable swizzling in the interrupt mapping example
 
->> The only other PCIe writes the host will see are likely to be associated
->> with MIS and MSI-X interrupt support.
-> 
-> Rev 1 of the PCIe controller is supposed to forward MSI doorbell
-> writes over the global bus to the PCIe controller's MMIO register.
-> 
->> Some PCIe root complex support peer-to-peer writes but not reads.
->> Write are normally 'posted' (so are 'fire and forget') reads need the
->> completion TLP (containing the data) sent back - all hard and difficult.
->>
->>> For mem space
->>> which isn't claimed by BARs, it's up to the RC to decide what to do. As
->>> a concrete example (which might possibly be relevant) the PLDA XR3-AXI
->>> IP which we have in the ARM Juno SoC has the ATR_PCIE_WINx registers in
->>> its root port configuration block that control what ranges of mem space
->>> are mapped to the external AXI master interface and how.
->>>
->>>> My problem is that, in the current implementation of the
->>>> PCIe controller, the USB device that wants to write to
->>>> memory is supposed to target BAR0 of the RC.
->>>
->>> That doesn't sound right at all. If the RC has a BAR, I'd expect it to
->>> be for poking the guts of the RC device itself (since this prompted me
->>> to go and compare, I see the Juno RC does indeed have it own enigmatic
->>> 16KB BAR, which reads as ever-changing random junk; no idea what that's
->>> about).
->>>
->>>> Since my mem space is limited to 256 MB, then BAR0 is
->>>> limited to 256 MB (or even 128 MB, since I also need
->>>> to mapthe device's BAR into the same mem space).
->>>
->>> Your window into mem space *from the CPU's point of view* is limited to
->>> 256MB. The relationship between mem space and the system (AXI) memory
->>> map from the point of view of PCI devices is a separate issue; if it's
->>> configurable at all, it probably makes sense to have the firmware set an
->>> outbound window to at least cover DRAM 1:1, then forget about it (this
->>> is essentially what Juno UEFI does, for example).
->>
->> So you have 128MB (max) of system memory that has cpu physical
->> addresses 0x80000000 upwards.
->> I'd expect it all to be accessible from any PCIe card at some PCIe
->> address, it might be at address 0, 0x80000000 or any other offset.
->>
->> I don't know which DT entry controls that offset.
-> 
-> This is a crucial point, I think.
+This can be merged to the PCI tree whenever it is considered
+fine for inclusion.
+---
+ .../devicetree/bindings/pci/faraday,ftpci100.txt   | 129 +++++++++++++++++++++
+ 1 file changed, 129 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
 
-The appropriate DT property would be "dma-ranges", i.e.
+diff --git a/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt b/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
+new file mode 100644
+index 000000000000..35d4a979bb7b
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
+@@ -0,0 +1,129 @@
++Faraday Technology FTPCI100 PCI Host Bridge
++
++This PCI bridge is found inside that Cortina Systems Gemini SoC platform and
++is a generic IP block from Faraday Technology. It exists in two variants:
++plain and dual PCI. The plain version embeds a cascading interrupt controller
++into the host bridge. The dual version routes the interrupts to the host
++chips interrupt controller.
++
++The host controller appear on the PCI bus with vendor ID 0x159b (Faraday
++Technology) and product ID 0x4321.
++
++Mandatory properties:
++
++- compatible: ranging from specific to generic, should be one of
++  "cortina,gemini-pci", "faraday,ftpci100"
++  "cortina,gemini-pci-dual", "faraday,ftpci100-dual"
++  "faraday,ftpci100"
++  "faraday,ftpci100-dual"
++- reg: memory base and size for the host bridge
++- #address-cells: set to <3>
++- #size-cells: set to <2>
++- #interrupt-cells: set to <1>
++- bus-range: set to <0x00 0xff>
++- device_type, set to "pci"
++- ranges: see pci.txt
++- interrupt-map-mask: see pci.txt
++- interrupt-map: see pci.txt
++- dma-ranges: three ranges for the inbound memory region. The ranges must
++  be aligned to a 1MB boundary, and may be 1MB, 2MB, 4MB, 8MB, 16MB, 32MB, 64MB,
++  128MB, 256MB, 512MB, 1GB or 2GB in size. The memory should be marked as
++  pre-fetchable.
++
++Mandatory subnodes:
++- For "faraday,ftpci100" a node representing the interrupt-controller inside the
++  host bridge is mandatory. It has the following mandatory properties:
++  - interrupt: see interrupt-controller/interrupts.txt
++  - interrupt-parent: see interrupt-controller/interrupts.txt
++  - interrupt-controller: see interrupt-controller/interrupts.txt
++  - #address-cells: set to <0>
++  - #interrupt-cells: set to <1>
++
++I/O space considerations:
++
++The plain variant has 128MiB of non-prefetchable memory space, whereas the
++"dual" variant has 64MiB. Take this into account when describing the ranges.
++
++Interrupt map considerations:
++
++The "dual" variant will get INT A, B, C, D from the system interrupt controller
++and should point to respective interrupt in that controller in its
++interrupt-map.
++
++The code which is the only documentation of how the Faraday PCI (the non-dual
++variant) interrupts assigns the default interrupt mapping/swizzling has
++typically been like this, doing the swizzling on the interrupt controller side
++rather than in the interconnect:
++
++interrupt-map-mask = <0xf800 0 0 7>;
++interrupt-map =
++	<0x4800 0 0 1 &pci_intc 0>, /* Slot 9 */
++	<0x4800 0 0 2 &pci_intc 1>,
++	<0x4800 0 0 3 &pci_intc 2>,
++	<0x4800 0 0 4 &pci_intc 3>,
++	<0x5000 0 0 1 &pci_intc 1>, /* Slot 10 */
++	<0x5000 0 0 2 &pci_intc 2>,
++	<0x5000 0 0 3 &pci_intc 3>,
++	<0x5000 0 0 4 &pci_intc 0>,
++	<0x5800 0 0 1 &pci_intc 2>, /* Slot 11 */
++	<0x5800 0 0 2 &pci_intc 3>,
++	<0x5800 0 0 3 &pci_intc 0>,
++	<0x5800 0 0 4 &pci_intc 1>,
++	<0x6000 0 0 1 &pci_intc 3>, /* Slot 12 */
++	<0x6000 0 0 2 &pci_intc 0>,
++	<0x6000 0 0 3 &pci_intc 1>,
++	<0x6000 0 0 4 &pci_intc 2>;
++
++Example:
++
++pci@50000000 {
++	compatible = "cortina,gemini-pci", "faraday,ftpci100";
++	reg = <0x50000000 0x100>;
++	interrupts = <8 IRQ_TYPE_LEVEL_HIGH>, /* PCI A */
++			<26 IRQ_TYPE_LEVEL_HIGH>, /* PCI B */
++			<27 IRQ_TYPE_LEVEL_HIGH>, /* PCI C */
++			<28 IRQ_TYPE_LEVEL_HIGH>; /* PCI D */
++	#address-cells = <3>;
++	#size-cells = <2>;
++	#interrupt-cells = <1>;
++
++	bus-range = <0x00 0xff>;
++	ranges = /* 1MiB I/O space 0x50000000-0x500fffff */
++		 <0x01000000 0 0          0x50000000 0 0x00100000>,
++		 /* 128MiB non-prefetchable memory 0x58000000-0x5fffffff */
++		 <0x02000000 0 0x58000000 0x58000000 0 0x08000000>;
++
++	/* DMA ranges */
++	dma-ranges =
++	/* 128MiB at 0x00000000-0x07ffffff */
++	<0x02000000 0 0x00000000 0x00000000 0 0x08000000>,
++	/* 64MiB at 0x00000000-0x03ffffff */
++	<0x02000000 0 0x00000000 0x00000000 0 0x04000000>,
++	/* 64MiB at 0x00000000-0x03ffffff */
++	<0x02000000 0 0x00000000 0x00000000 0 0x04000000>;
++
++	interrupt-map-mask = <0xf800 0 0 7>;
++	interrupt-map =
++		<0x4800 0 0 1 &pci_intc 0>, /* Slot 9 */
++		<0x4800 0 0 2 &pci_intc 1>,
++		<0x4800 0 0 3 &pci_intc 2>,
++		<0x4800 0 0 4 &pci_intc 3>,
++		<0x5000 0 0 1 &pci_intc 1>, /* Slot 10 */
++		<0x5000 0 0 2 &pci_intc 2>,
++		<0x5000 0 0 3 &pci_intc 3>,
++		<0x5000 0 0 4 &pci_intc 0>,
++		<0x5800 0 0 1 &pci_intc 2>, /* Slot 11 */
++		<0x5800 0 0 2 &pci_intc 3>,
++		<0x5800 0 0 3 &pci_intc 0>,
++		<0x5800 0 0 4 &pci_intc 1>,
++		<0x6000 0 0 1 &pci_intc 3>, /* Slot 12 */
++		<0x6000 0 0 2 &pci_intc 0>,
++		<0x6000 0 0 3 &pci_intc 0>,
++		<0x6000 0 0 4 &pci_intc 0>;
++	pci_intc: interrupt-controller {
++		interrupt-parent = <&intcon>;
++		interrupt-controller;
++		#address-cells = <0>;
++		#interrupt-cells = <1>;
++	};
++};
+-- 
+2.9.3
 
-pci@... {
-	...
-	dma-ranges = <(PCI bus address) (CPU phys address) (size)>;
-}
 
-The fun part is that that will only actually match the hardware once the
-magic BAR has actually been programmed with (bus address), so you end up
-with this part of your DT being more of a prophecy than a property :)
-
-Robin.
-
-> 
-> Regards.
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
