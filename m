@@ -1,84 +1,70 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-Date: Thu, 30 Mar 2017 07:42:12 -0400
-From: okaya@codeaurora.org
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-In-Reply-To: <CAKv+Gu-ff98HrPK3f+E8soGJUXaaMxPLs2AuJ+rvXd0HWX-jXw@mail.gmail.com>
-References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170322193111.GA8190@wunner.de>
- <CAKv+Gu_X-SEnz7h9J8boqqjOQGHQawwdSAq4haH-OGu8zdfNfA@mail.gmail.com>
- <20170323084819.GA23281@h08.hostsharing.net>
- <CAKv+Gu93eJ-js3g7M6Jdm6XGMaWMswFmzBG2qNT4rn+3=1+EyA@mail.gmail.com>
- <20170323105727.GA2441@red-moon>
- <466dcd2b-a781-2fe7-6ef0-5a3767c793e0@codeaurora.org>
- <CAKv+Gu9LbwpnJNi1OL25MWvYPxEOfKRHcs2jA2121BPaQWPzow@mail.gmail.com>
- <27f50de3-721e-e8ec-00c8-b7a9d3cff0d6@codeaurora.org>
- <CAKv+Gu-qRg8-YRCairppKrEfeLcW+OwVF8qZHp7vxXJA_AwPOw@mail.gmail.com>
- <20170330100524.GA22801@red-moon>
- <CAKv+Gu-ff98HrPK3f+E8soGJUXaaMxPLs2AuJ+rvXd0HWX-jXw@mail.gmail.com>
-Message-ID: <0c8ba1ac389560358458c10915d85526@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-efi@vger.kernel.org, Lukas Wunner <lukas@wunner.de>,
- Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
- Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Yinghai Lu <yinghai@kernel.org>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1488549318.20145.76.camel@linux.intel.com>
+Subject: Re: [RFC PATCH v2 19/32] crypto: ccp: Introduce the AMD Secure
+ Processor device
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Brijesh Singh <brijesh.singh@amd.com>,
+        Mark Rutland <mark.rutland@arm.com>
+Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
+        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
+        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
+        gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, herbert@gondor.apana.org.au, bhe@redhat.com,
+        xemul@parallels.com, joro@8bytes.org, x86@kernel.org,
+        peterz@infradead.org, piotr.luc@intel.com, mingo@redhat.com,
+        msalter@redhat.com, ross.zwisler@linux.intel.com, bp@suse.de,
+        dyoung@redhat.com, thomas.lendacky@amd.com, jroedel@suse.de,
+        keescook@chromium.org, arnd@arndb.de, toshi.kani@hpe.com,
+        mathieu.desnoyers@efficios.com, luto@kernel.org,
+        devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
+        akpm@linux-foundation.org, davem@davemloft.net
+Date: Fri, 03 Mar 2017 15:55:18 +0200
+In-Reply-To: <0db0055f-9208-524f-74aa-674894ee90d3@amd.com>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+         <148846777589.2349.11698765767451886038.stgit@brijesh-build-machine>
+         <20170302173936.GC11970@leverpostej>
+         <0db0055f-9208-524f-74aa-674894ee90d3@amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-03-30 06:09, Ard Biesheuvel wrote:
-> On 30 March 2017 at 11:05, Lorenzo Pieralisi 
-> <lorenzo.pieralisi@arm.com> wrote:
->> On Thu, Mar 30, 2017 at 09:46:39AM +0100, Ard Biesheuvel wrote:
->> 
->> [...]
->> 
->>> > I'm asking why we don't fix the actual problem in PCIe ARM64 adaptation instead
->>> > of working around it by quirks.
->>> >
->>> > I don't see any reason why ACPI ARM64 should carry the burden of legacy systems.
->>> >
->>> > Legacy only applies to DT based systems.
->>> >
->>> 
->>> I fully agree with this point: ACPI implies firmware, and so we 
->>> should
->>> be able to rely on firmware to have initialized the PCIe subsystem by
->>> the time the kernel gets to access it.
->> 
->> https://lkml.org/lkml/2016/3/3/458
->> 
+On Thu, 2017-03-02 at 13:11 -0600, Brijesh Singh wrote:
+> Hi Mark,
 > 
-> I don't think the fact that at least one system existed over a year
-> ago whose UEFI assigned resources incorrectly should prevent us from
-> being normative in this case.
+> On 03/02/2017 11:39 AM, Mark Rutland wrote:
+> > On Thu, Mar 02, 2017 at 10:16:15AM -0500, Brijesh Singh wrote:
 
-My suggestion is to try to reuse the resources if possible. Otherwise, 
-reassign the resources.
+> > > 
+> > > +ccp-$(CONFIG_CRYPTO_DEV_CCP) += ccp-dev.o \
+> > >  	    ccp-ops.o \
+> > >  	    ccp-dev-v3.o \
+> > >  	    ccp-dev-v5.o \
+> > > -	    ccp-platform.o \
+> > >  	    ccp-dmaengine.o
+> > 
+> > It looks like ccp-platform.c has morphed into sp-platform.c (judging
+> > by
+> > the compatible string and general shape of the code), and the
+> > original
+> > ccp-platform.c is no longer built.
+> > 
+> > Shouldn't ccp-platform.c be deleted by this patch?
+> > 
+> 
+> Good catch. Both ccp-platform.c and ccp-pci.c should have been
+> deleted 
+> by this patch. I missed deleting it, will fix in next rev.
 
-There were implementation problems by the time you proposed your patch 
-and it was delaying progess. That was my objection.
+Don't forget to use -M -C when preparing / sending patches.
 
-Now that base pci support is in and everybody is  somewhat happy, let's 
-figure out the bugs and get this done.
-
-I am ready to test/debug.
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
