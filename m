@@ -1,97 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 21 Mar 2017 11:24:45 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Bodong Wang <bodong@mellanox.com>
-Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        saeedm@mellanox.com, Eli Cohen <eli@mellanox.com>
-Subject: Re: [PATCH] pci/sriov: Add an option to probe VFs or not before
- enabling SR-IOV
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
- <20170320230706.GA12252@gwshan>
- <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
+Return-Path: <SRS0=Ymp8=2N=wunner.de=lukas@kernel.org>
+Return-Path: <SRS0=Ymp8=2N=wunner.de=lukas@kernel.org>
+Date: Sat, 4 Mar 2017 12:14:46 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: dri-devel@lists.freedesktop.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Michael Jamet <michael.jamet@intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	linux-pci@vger.kernel.org, Darren Hart <dvhart@infradead.org>,
+	Andy Shevchenko <andy@infradead.org>,
+	platform-driver-x86@vger.kernel.org,
+	Ben Skeggs <bskeggs@redhat.com>, nouveau@lists.freedesktop.org,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Christian Koenig <christian.koenig@amd.com>,
+	amd-gfx@lists.freedesktop.org, Peter Wu <peter@lekensteyn.nl>,
+	Amir Levy <amir.jer.levy@intel.com>
+Subject: Re: [PATCH 1/5] PCI: Recognize Thunderbolt devices
+Message-ID: <20170304111446.GB3143@wunner.de>
+References: <cover.1487938188.git.lukas@wunner.de>
+ <c42a235e126f273e9b8712a7154f813f757db507.1487938188.git.lukas@wunner.de>
+ <20170224221724.GA26430@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
-Message-Id: <20170321002445.GA24862@gwshan>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170224221724.GA26430@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 20, 2017 at 06:34:23PM -0500, Bodong Wang wrote:
->On 3/20/2017 6:07 PM, Gavin Shan wrote:
->>On Mon, Mar 20, 2017 at 05:14:34PM +0200, bodong@mellanox.com wrote:
->>>From: Bodong Wang <bodong@mellanox.com>
->>>
->>>Sometimes it is not desirable to probe the virtual functions after
->>>SRIOV is enabled. This can save host side resource usage by VF
->>>instances which would be eventually probed to VMs.
->>>
->>>Added a new PCI sysfs interface "sriov_probe_vfs" to control that
->>>from PF, all current callers still retain the same functionality.
->>>To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
->>>
->>>/sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
->>>
->>>Note that, the choice must be made before enabling VFs. The change
->>>will not take effect if VFs are already enabled. Simply, one can set
->>>sriov_numvfs to 0, choose whether to probe or not, and then resume
->>>sriov_numvfs.
->>>
->>Bodong, I'm not sure if there is a requirement to load driver for the
->>specified number of VFs? That indicates no driver will be loaded for
->>other VFs. If so, this interface might serve the purpose as well.
->Gavin, thanks for the review. That is indeed an interesting suggestion.
->Theoretically,  we can change that probe_vfs from boolean to integer. And use
->it as a counter to probe the first N VFs(if N < total_vfs).  Let's see if
->there are any objections.
+On Fri, Feb 24, 2017 at 04:17:24PM -0600, Bjorn Helgaas wrote:
+> On Fri, Feb 24, 2017 at 08:19:45PM +0100, Lukas Wunner wrote:
+> > Detect on probe whether a PCI device is part of a Thunderbolt controller.
+[...]
+> > * If an external Thunderbolt GPU is connected to a dual GPU laptop (Mac
+> >   or not), that GPU is currently registered with vga_switcheroo even
+> >   though it can neither drive the laptop's panel nor be powered off by
+> >   the platform.  To vga_switcheroo it will appear as if two discrete
+> >   GPUs are present.  As a result, when the external GPU is runtime
+> >   suspended, vga_switcheroo will cut power to the internal discrete GPU
+> >   which may not be runtime suspended at all at this moment.  The
+> >   solution is to not register external GPUs with vga_switcheroo, which
+> >   necessitates a way to recognize if they're on a Thunderbolt daisy
+> >   chain.
+> 
+> If I understand correctly, vga_switcheroo manages two GPUs that have a
+> single output: either there's a mux that connects one GPU or the other
+> to the output, or one GPU is permanently connected to the output and
+> the other does offline rendering.
 
-Ok.
+There are two aspects to hybrid graphics, switching the panel between
+GPUs and powering off the discrete GPU.  (Some laptops can also switch
+external DP ports between GPUs and some, as you say, cannot switch the
+panel and only use the discrete GPU for render offloading.)
 
->>+#ifdef CONFIG_PCI_IOV
->>+	if (!pci_dev->is_virtfn ||
->>+	    (pci_dev->is_virtfn && pci_dev->physfn->sriov->probe_vfs)) {
->>+#endif
->>+		error = __pci_device_probe(drv, pci_dev);
->>+		if (error) {
->>+			pcibios_free_irq(pci_dev);
->>+			pci_dev_put(pci_dev);
->>+		}
->>+#ifdef CONFIG_PCI_IOV
->>	}
->>+#endif
->>
->>I think it's reasonable to have a inline function for this check:
->It's doable, but what's the benefit?
->>
->>#ifdef CONFIG_PCI_IOV
->>static inline bool pci_device_can_probe(struct pci_dev *pdev)
->>{
->>	return (!pdev->is_virtfn || pdev->physfn->sriov->probe_vfs);
->should be return (!pdev->is_virtfn || (pci_dev->is_virtfn &&
->pci_dev->physfn->sriov->probe_vfs));
->
->We want to probe that device if 1) it's a PF 2) it'a VF and probe_vfs is set
->>}
->>#else
->>static inline bool pci_device_can_probe(struct pci_dev *pdev)
->>{
->>	return true;
->>}
->This function will be a waste if CONFIG_PCI_IOV is not defined.
->>#endif
 
-It makes the code a bit clean. Nope, the proposed conditional
-expression is elaborate. Yeah, the purpose is exactly same as
-you said: probe driver for non-VF or VFs that were allowed.
+> To this non-GPU person, it sounds like the important question is
+> whether two GPUs are related in this way (either they feed the same
+> mux, or there's some special offline rendering connection between
+> them).  That sounds unrelated to the question of how the GPUs
+> themselves are connected to the PCI hierarchy.
 
-     (!pdev->is_virtfn || pdev->physfn->sriov->probe_vfs);
+To the best of my knowledge there's no definite way to determine whether
+two GPUs are connected to the same panel via a mux.
 
-When pdev->is_virtfn is flase, "pdev->physfn->sriov->probe_vfs"
-doesn't take effect. Otherwise, it means pdev->is_virtfn is true
-indirectly and going to check "pdev->physfn->sriov->probe_vfs".
-So it needn't check pdev->is_virtfn explicitly in later case,
-but it isn't wrong :)
+There is also no such thing as a special render offloading connection:
+Frames are computed on a discrete GPU, then copied over PCIe into the
+framebuffer of the integrated GPU.  Whether that discrete GPU is
+on-board or externally connected is completely transparent and not
+discernible other than by looking at the PCI hierarchy.
+
+The same issue exists for HD Audio controllers integrated into many
+discrete GPUs:  To the OS these look like separate PCI functions
+and in sound/pci/hda/hda_intel.c:get_bound_vga() we leverage the fact
+that the GPU is always function 0 and the HD Audio is function 1 to
+discover the GPU corresponding to a particular HD Audio controller.
+So again that relationship is deduced from the PCI hierarchy.
+
+
+> From a pure PCI perspective, I assume it would be conceivable to have
+> two Thunderbolt-connected GPUs feeding into a mux.  Or to have a GPU
+> (unrelated to the mux) in a non-Thunderbolt plugin slot or connected
+> externally via a non-Thunderbolt switch and an iPass cable.
+
+Technically such products would be possible, but I believe they don't
+exist.  (Unlike Thunderbolt eGPUs, which have been on the market for
+a few years.)
 
 Thanks,
-Gavin
+
+Lukas
