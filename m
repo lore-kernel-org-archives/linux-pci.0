@@ -1,106 +1,163 @@
-Return-Path: <SRS0=1EYN=2T=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=1EYN=2T=free.fr=slash.tmp@kernel.org>
-Subject: Re: Neophyte questions about PCIe
-To: Robin Murphy <robin.murphy@arm.com>
+Return-Path: <SRS0=ftyf=2N=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=ftyf=2N=free.fr=slash.tmp@kernel.org>
+Subject: Re: Using the generic host PCIe driver
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 Cc: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>,
- Arnd Bergmann <arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ David Daney <david.daney@cavium.com>, Marc Zyngier <marc.zyngier@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
  Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- linux-usb <linux-usb@vger.kernel.org>, David Laight
- <david.laight@aculab.com>, Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Thierry Reding <treding@nvidia.com>,
  Linux ARM <linux-arm-kernel@lists.infradead.org>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
- <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
- <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
+References: <20170227164430.GB11162@bhelgaas-glaptop.roam.corp.google.com>
+ <8643c952-e915-bcd1-390e-9d4001789872@free.fr>
+ <20170227183534.GA12481@bhelgaas-glaptop.roam.corp.google.com>
+ <347d4200-e089-60df-5f60-58d16efc7c4e@free.fr>
+ <20170301161801.GB13171@bhelgaas-glaptop.roam.corp.google.com>
+ <98ee3041-6a94-91af-b4bf-208aa02624ed@free.fr>
+ <20170301215726.GA32286@bhelgaas-glaptop.roam.corp.google.com>
+ <258cd6f3-ef17-6705-ff48-ae06f26778c2@free.fr>
+ <20170303154628.GA21522@bhelgaas-glaptop.roam.corp.google.com>
+ <8e1a0b5d-8dfb-4be1-a049-b16892a6c0d0@free.fr>
+ <20170303200407.GB30375@bhelgaas-glaptop.roam.corp.google.com>
+ <5c899946-4220-a63e-fe98-6a103200c2ad@free.fr>
+ <CAKv+Gu-QxUYZcg4DPwuhhfqKCp4eJEWXCh43ZyvDe12=exEhWw@mail.gmail.com>
 From: Mason <slash.tmp@free.fr>
-Message-ID: <18b339ae-d8da-25ac-0eea-2e147a7e29d2@free.fr>
-Date: Fri, 10 Mar 2017 15:53:24 +0100
+Message-ID: <8daa1f79-8fda-bef9-e216-3c15f53c4f32@free.fr>
+Date: Sat, 4 Mar 2017 11:56:26 +0100
 MIME-Version: 1.0
-In-Reply-To: <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <CAKv+Gu-QxUYZcg4DPwuhhfqKCp4eJEWXCh43ZyvDe12=exEhWw@mail.gmail.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/03/2017 14:15, Robin Murphy wrote:
-> On 09/03/17 23:43, Mason wrote:
->> On 08/03/2017 16:17, Bjorn Helgaas wrote:
->> [snip excellent in-depth overview]
+On 04/03/2017 10:35, Ard Biesheuvel wrote:
+> On 3 March 2017 at 23:23, Mason <slash.tmp@free.fr> wrote:
+>> On 03/03/2017 21:04, Bjorn Helgaas wrote:
+>>> On Fri, Mar 03, 2017 at 06:18:02PM +0100, Mason wrote:
+>>>> On 03/03/2017 16:46, Bjorn Helgaas wrote:
+>>>>> On Fri, Mar 03, 2017 at 01:44:54PM +0100, Mason wrote:
+>>>>>
+>>>>>> For now, I have "hidden" the root's BAR0 from the system with:
+>>>>>>
+>>>>>>    if (bus->number == 0 && where == PCI_BASE_ADDRESS_0) {
+>>>>>>            *val = 0;
+>>>>>>            return PCIBIOS_SUCCESSFUL;
+>>>>>>    }
+>>>>>
+>>>>> I'm scratching my head about this a little.  Here's what your dmesg
+>>>>> log contained originally:
+>>>>>
+>>>>>   pci 0000:00:00.0: [1105:8758] type 01 class 0x048000
+>>>>>   pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x00ffffff 64bit]
+>>>>>   pci 0000:00:00.0: BAR 0: no space for [mem size 0x01000000 64bit]
+>>>>>   pci 0000:00:00.0: BAR 0: failed to assign [mem size 0x01000000 64bit]
+>>>>>   pci 0000:00:00.0: PCI bridge to [bus 01]
+>>>>>   pcieport 0000:00:00.0: enabling device (0140 -> 0142)
+>>>>>
+>>>>> This device is a bridge (a Root Port, per your lspci output).  With a
+>>>>> BAR, which is legal but unusual.  We couldn't assign space for the
+>>>>> BAR, which means we can't use whatever vendor-specific functionality
+>>>>> it provides.
+>>>>
+>>>> I had several chats with the HW designer. I'll try to explain, only as
+>>>> far as I could understand ;-)
+>>>>
+>>>> We used to make devices, before implementing a root. Since at least
+>>>> one BAR is required (?) for a device, it was decided to have one BAR
+>>>> for the root, for symmetry.
+>>>
+>>> I'm not aware of a spec requirement for any BARs.  It's conceivable
+>>> that one could build a device that only uses config space.  And of
+>>> course, most bridges have windows but no BARs.  But that doesn't
+>>> matter; the hardware is what it is and we have to deal with it.
 >>
->> I think I'm making progress, in that I now have a better
->> idea of what I don't understand. So I'm able to ask
->> (hopefully) less vague questions.
+>> I appreciate the compassion. RMK considered the DMA HW too screwy
+>> to bother supporting ;-)
 >>
->> Take the USB3 PCIe adapter I've been testing with. At some
->> point during init, the XHCI driver request some memory
->> (via kmalloc?) in order to exchange data with the host, right?
+>>>> In fact, I thought I could ignore that BAR, but it is apparently NOT
+>>>> the case, as MSIs are supposed to be sent *within* the BAR of the root.
+>>>
+>>> I don't know much about this piece of the MSI puzzle, but maybe Marc
+>>> can enlighten us.  If this Root Port is the target of MSIs and the
+>>> Root Port turns them into some sort of interrupt on the CPU side, I
+>>> can see how this might make sense.
+>>>
+>>> I think it's unusual for the PCI core to assign the MSI target using a
+>>> BAR, though.  I think this means you'll have to implement your
+>>> arch_setup_msi_irq() or .irq_compose_msi_msg() method such that it
+>>> looks up that BAR value, since you won't know it at build-time.
 >>
->> On my SoC, the RAM used by Linux lives at physical range
->> [0x8000_0000, 0x8800_0000[ => 128 MB
+>> I'll hack the Altera driver to fit my purpose.
 >>
->> How does the XHCI driver make the adapter aware of where
->> it can scribble data? The XHCI driver has no notion that
->> the device is behind a bus, does it?
+>>>> The weird twist is that the BAR advertizes a 64-bit memory zone,
+>>>> but we will, in fact, map MMIO registers behind it. So all the
+>>>> RAM Linux assigns to the area is wasted, IIUC.
+>>>
+>>> I'm not sure what this means.  You have this:
+>>>
+>>>> OF: PCI:   MEM 0x90000000..0x9fffffff -> 0x90000000
 >>
->> At some point, the physical addresses must be converted
->> to PCI bus addresses, right? Is it computed subtracting
->> the offset defined in the DT?
+>> This means I've put 256 MB of system RAM aside for PCIe devices.
+>> This memory is no longer available for Linux "stuff".
 >>
->> Then suppose the USB3 card wants to write to an address
->> in RAM. It sends a packet on the PCIe bus, targeting
->> the PCI bus address of that RAM, right? Is this address
->> supposed to be in BAR0 of the root complex? I guess not,
->> since Bjorn said that it was unusual for a RC to have
->> a BAR at all. So I'll hand-wave, and decree that, by some
->> protocol magic, the packet arrives at the PCIe controller.
->> And this controller knows to forward this write request
->> over the memory bus. Does that look about right?
 > 
-> Generally, yes - if an area of memory space *is* claimed by a BAR, then
-> another PCI device accessing that would be treated as peer-to-peer DMA,
-> which may or may not be allowed (or supported at all). For mem space
-> which isn't claimed by BARs, it's up to the RC to decide what to do. As
-> a concrete example (which might possibly be relevant) the PLDA XR3-AXI
-> IP which we have in the ARM Juno SoC has the ATR_PCIE_WINx registers in
-> its root port configuration block that control what ranges of mem space
-> are mapped to the external AXI master interface and how.
-
-The HW dev told me that the Verilog code for the RC considers
-packets not targeted at RC BAR0 an error, and drops it.
-
-
->> My problem is that, in the current implementation of the
->> PCIe controller, the USB device that wants to write to
->> memory is supposed to target BAR0 of the RC.
+> No it doesn't. It is a physical memory *range* that is assigned to the
+> PCI host bridge. Any memory accesses by the CPU to that window will be
+> forwarded to the PCI bus by the host bridge. From the kernel driver's
+> POV, this range is a given, but your host bridge h/w may involve some
+> configuration to make the host bridge 'listen' to this range. This is
+> h/w specific, and as Bjorn pointed out, usually configured by the
+> firmware so that the kernel driver does not require any knowledge of
+> those internals.
 > 
-> That doesn't sound right at all. If the RC has a BAR, I'd expect it to
-> be for poking the guts of the RC device itself (since this prompted me
-> to go and compare, I see the Juno RC does indeed have it own enigmatic
-> 16KB BAR, which reads as ever-changing random junk; no idea what that's
-> about).
-
-That's not how our RC works. If I want to poke its guts, I have
-some MMIO addresses on the global bus. RC BAR0 is strictly used
-as a window to the global bus.
-
-
->> Since my mem space is limited to 256 MB, then BAR0 is
->> limited to 256 MB (or even 128 MB, since I also need
->> to mapthe device's BAR into the same mem space).
+>>>> pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffffff]
+>>
+>> I suppose this is the PCI bus address. As we've discussed,
+>> I used the identity to map bus <-> CPU addresses.
+>>
 > 
-> Your window into mem space *from the CPU's point of view* is limited to
-> 256MB. The relationship between mem space and the system (AXI) memory
-> map from the point of view of PCI devices is a separate issue; if it's
-> configurable at all, it probably makes sense to have the firmware set an
-> outbound window to at least cover DRAM 1:1, then forget about it (this
-> is essentially what Juno UEFI does, for example).
+> Yes, that is fine
+> 
+>>> This [mem 0x90000000-0x9fffffff] host bridge window means there can't
+>>> be RAM in that region.  CPU accesses to 0x90000000-0x9fffffff have to
+>>> be claimed by the host bridge and forwarded to PCI.
+>>>
+>>> Linux doesn't "assign system RAM" anywhere; we just learn somehow
+>>> where that RAM is.  Linux *does* assign BARs of PCI devices, and they
+>>> have to be inside the host bridge windows(s).
+>>
+>> I'm confused, I thought I had understood that part...
+>> I thought the binding required me to specify (in the "ranges"
+>> property) a non-prefetchable zone of system RAM, and this
+>> memory is then "handed out" by Linux to different devices.
+>> Or do I just need to specify some address range that's not
+>> necessarily backed with actual RAM?
+>>
+> 
+> Yes. Each PCI device advertises its need of memory windows via its
+> BARs, but the actual placement of those windows inside the host
+> bridge's memory range is configured dynamically, usually by the
+> firmware (on PCs) but on ARM/arm64 systems, this is done from scratch
+> by the kernel. The *purpose* of those memory windows is device
+> specific, but whatever is behind it lives on the PCI device. So this
+> is *not* system RAM.
 
-The size of RC BAR0 is limited to 1 GB, so best case I can map
-1 GB back to the system RAM. Well, actually best case is 896 MB
-since 1/8 of the window must map the MSI doorbell region.
+Hello Ard,
 
-I'll see what I can come up with.
+It appears I have misunderstood something fundamental.
 
-Thanks a lot for your comments.
+The binding for generic PCI support
+http://lxr.free-electrons.com/source/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+requires two address-type specs
+(please correct me if I'm wrong)
+1) in the "reg" prop, the address of the configuration space (CPU physical)
+2) in the "ranges" prop, at least a non-prefetchable area
+http://elinux.org/Device_Tree_Usage#PCI_Address_Translation
+
+In my 32-bit system, there are 2GB of RAM at [0x8000_0000,0x10000_0000[
+There are MMIO registers at [0, 16MB[ and also other stuff higher
+Suppose there is nothing mapped at [0x7000_0000, 0x8000_0000[
+
+Can I provide that range to the PCI subsystem?
 
 Regards.
