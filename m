@@ -1,75 +1,94 @@
-Return-Path: <SRS0=04wA=26=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=04wA=26=free.fr=slash.tmp@kernel.org>
-Subject: Re: [RFC PATCH v0.001] PCI: Add support for tango PCIe controller
-To: Liviu Dudau <liviu.dudau@arm.com>
-References: <ab110ce2-8678-9b34-6bd1-6cfaaa7fea04@free.fr>
- <f13c385d-dcc9-dacd-2b2c-ca098228f4f4@free.fr>
- <20170321123129.GB6816@e110455-lin.cambridge.arm.com>
- <d5062453-39cc-1435-bb13-87c81b6ef0b3@free.fr>
- <20170321142305.GC6816@e110455-lin.cambridge.arm.com>
-From: Mason <slash.tmp@free.fr>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- David Laight <david.laight@aculab.com>, linux-pci
- <linux-pci@vger.kernel.org>, Linux ARM
- <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Joerg Roedel <joro@8bytes.org>, iommu <iommu@lists.linux-foundation.org>
-Message-ID: <c4115685-577c-aa6a-3bf7-422ab711d214@free.fr>
-Date: Tue, 21 Mar 2017 17:19:29 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35882 "EHLO
+        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750773AbdCEHQP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Mar 2017 02:16:15 -0500
 MIME-Version: 1.0
-In-Reply-To: <20170321142305.GC6816@e110455-lin.cambridge.arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20170213214457.248084de@t450s.home>
+References: <56ABC5AE.1050209@caviumnetworks.com> <20170213214457.248084de@t450s.home>
+From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+Date: Sun, 5 Mar 2017 12:37:31 +0530
+Message-ID: <CA+sq2CeV-YDkUViJVo9ioiYvAu0oxKJZxqgw8sDN9Lf7y4Gr-g@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Add cavium acs pci quirk
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Manish Jaggi <mjaggi@caviumnetworks.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Tirumalesh Chalamarla <tchalamarla@cavium.com>,
+        "Richter, Robert" <Robert.Richter@caviumnetworks.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21/03/2017 15:23, Liviu Dudau wrote:
-
-> On Tue, Mar 21, 2017 at 02:01:57PM +0100, Mason wrote:
+On Tue, Feb 14, 2017 at 10:14 AM, Alex Williamson
+<alex.williamson@redhat.com> wrote:
+> On Sat, 30 Jan 2016 01:33:58 +0530
+> Manish Jaggi <mjaggi@caviumnetworks.com> wrote:
 >
->> My PCIe controller is b/d/f 0/0/0.
->> It ignores all PCI addresses that do not fall within the range
->> defined in BAR0 of b/d/f 0/0/0.
+>> Cavium devices matching this quirk do not perform
+>> peer-to-peer with other functions, allowing masking out
+>> these bits as if they were unimplemented in the ACS capability.
 >>
->> BAR0 has a configurable width of 2^(23+i) bytes, i < 8
->> It is implicitly split in 8 regions, which can map to
->> anywhere in CPU space. However, my understanding is that,
->> by default, the DMA framework expects PCI address X to
->> map to CPU address X...
->> (My understanding of that part is still a bit hazy.)
-> 
-> It looks very much like your PCIe controller (host bridge) has the configuration
-> registers on the wrong side of the bridge (PCIe one vs the more normal host side).
-> But otherwise it does look very much like an ATS system, where you program how the
-> PCIe bus addresses map into the system (you call them CPU) addresses. Do you also
-> have a way of controlling the direction of the mapping? (in other words, those 8
-> regions are only for translating request coming out of the PCIe bus into system
-> addresses, or can you also set the direct mapping of system address to PCIe address?).
+>> Acked-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
+>> Signed-off-by: Manish Jaggi <mjaggi@caviumnetworks.com>
+>> ---
+>>  drivers/pci/quirks.c | 15 +++++++++++++++
+>>  1 file changed, 15 insertions(+)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index 7e32730..a300fa6 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -3814,6 +3814,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
+>>  #endif
+>>  }
+>>
+>> +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+>> +{
+>> +     /*
+>> +      * Cavium devices matching this quirk do not perform
+>> +      * peer-to-peer with other functions, allowing masking out
+>> +      * these bits as if they were unimplemented in the ACS capability.
+>> +      */
+>> +     acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
+>> +                    PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+>> +
+>> +     return acs_flags ? 0 : 1;
+>> +}
+>> +
+>>  /*
+>>   * Many Intel PCH root ports do provide ACS-like features to disable peer
+>>   * transactions and validate bus numbers in requests, but do not provide an
+>> @@ -3966,6 +3979,8 @@ static const struct pci_dev_acs_enabled {
+>>       { PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
+>>       { 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
+>>       { 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
+>> +     /* Cavium ThunderX */
+>> +     { PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
+>>       { 0 }
+>>  };
+>>
+>
+> Apologies for not catching this, but what sort of crystal ball do you
+> have that can predict not only current devices, but future devices will
+> not support peer-to-peer features?  Is there an internal design
+> guidelines reference specification for Cavium that we can realistically
+> expect this to remain consistent, or is this just an attempt to never
+> think about ACS again at the customer's peril?  What about the existing
+> non-ThunderX products with Cavium vendor ID, does this really apply to
+> those?  I would strongly suggest taking the device ID into account.
+> See examples like the pci_quirk_intel_pch_acs quirk where the initial
+> filter is PCI_ANY_ID, but specific device types and ranges of device
+> IDs are identified by the function for evaluation.  This seems reckless
+> to me and I'd advise that it be reverted.  Thanks,
+>
+> Alex
 
-There are two (asymmetric) features for these mappings.
+Just a thought, even if Cavium considers to support ACS for future devices,
+wouldn't it be better to add exception list inside the quirk on a need basis
+rather than adding big list of devices that don't. Especially when currently
+almost all Cavium PCI devices don't support ACS.
 
-For bus-to-system accesses, the scheme described above
-of "bus addresses within BAR0 fall into 1 of 8 regions,
-and 8 registers define 8 target system addresses".
-
-For system-to-bus accesses, there is a single "offset"
-register which gets added to the system address, to form
-the bus address. I just use a 0 offset.
-
-(This is made slightly more complex on later chips because
-someone in marketing thought it would look good on the
-data sheet to support 4 GB of RAM in a SoC using 32-bit
-processors. There is an additional cpu-to-foo mapping.)
-
-> As for DMA framework expectations, I'm not sure how that plays a role, unless you
-> have some DMA engines on the PCIe bus.
-
-I think the USB3 PCIe card I'm using is a bus master, so
-it's able to push data to RAM without any help from the
-ARM core.
-
-Regards.
-
-P.S. something in your message is confusing my MUA, likely
-your Mail-Followup-To field. My MUA thinks it should not
-send you my reply. Is that really what you want?
+Thanks,
+Sunil.
