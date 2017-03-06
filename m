@@ -1,79 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0041.outbound.protection.outlook.com ([104.47.32.41]:35456
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752473AbdC2RIx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Mar 2017 13:08:53 -0400
-Subject: Re: [RFC PATCH v2 18/32] kvm: svm: Use the hardware provided GPA
- instead of page walk
-To: Borislav Petkov <bp@suse.de>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846776540.2349.3123530065053870721.stgit@brijesh-build-machine>
- <20170329151413.l2on26mdyyskwqlu@pd.tnic>
-CC: <brijesh.singh@amd.com>, <simon.guinot@sequanux.org>,
-        <linux-efi@vger.kernel.org>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-From: Brijesh Singh <brijesh.singh@amd.com>
-Message-ID: <fc944319-ce21-7ba7-ffc3-9b0bb3c710b6@amd.com>
-Date: Wed, 29 Mar 2017 12:08:38 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170329151413.l2on26mdyyskwqlu@pd.tnic>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 27/29] drivers, usb: convert ep_data.count from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:21:14 +0200
+Message-Id: <1488810076-3754-28-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Boris,
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-On 03/29/2017 10:14 AM, Borislav Petkov wrote:
-> On Thu, Mar 02, 2017 at 10:16:05AM -0500, Brijesh Singh wrote:
->> From: Tom Lendacky <thomas.lendacky@amd.com>
->>
->> When a guest causes a NPF which requires emulation, KVM sometimes walks
->> the guest page tables to translate the GVA to a GPA. This is unnecessary
->> most of the time on AMD hardware since the hardware provides the GPA in
->> EXITINFO2.
->>
->> The only exception cases involve string operations involving rep or
->> operations that use two memory locations. With rep, the GPA will only be
->> the value of the initial NPF and with dual memory locations we won't know
->> which memory address was translated into EXITINFO2.
->>
->> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
->> Reviewed-by: Borislav Petkov <bp@suse.de>
->
-> I think I already asked you to remove Revewed-by tags when you have to
-> change an already reviewed patch in non-trivial manner. Why does this
-> one still have my Reviewed-by tag?
->
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/usb/gadget/legacy/inode.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Actually this patch is included in RFCv2 series for the completeness.
-
-The patch is already been reviewed and accepted in kvm upstream tree but it
-was not present in the tip branch hence I cherry-picked into RFC so that we do
-not break the build. SEV runtime behavior needs this patch. I have tried to
-highlight it in cover letter. It was my bad that I missed fixing the Reviewed-by
-tag during cherry picking. Sorry about that and will be extra careful next time around. Thanks
-
-
-~ Brijesh
+diff --git a/drivers/usb/gadget/legacy/inode.c b/drivers/usb/gadget/legacy/inode.c
+index 81d76f3..d21a5f8 100644
+--- a/drivers/usb/gadget/legacy/inode.c
++++ b/drivers/usb/gadget/legacy/inode.c
+@@ -191,7 +191,7 @@ enum ep_state {
+ struct ep_data {
+ 	struct mutex			lock;
+ 	enum ep_state			state;
+-	atomic_t			count;
++	refcount_t			count;
+ 	struct dev_data			*dev;
+ 	/* must hold dev->lock before accessing ep or req */
+ 	struct usb_ep			*ep;
+@@ -206,12 +206,12 @@ struct ep_data {
+ 
+ static inline void get_ep (struct ep_data *data)
+ {
+-	atomic_inc (&data->count);
++	refcount_inc (&data->count);
+ }
+ 
+ static void put_ep (struct ep_data *data)
+ {
+-	if (likely (!atomic_dec_and_test (&data->count)))
++	if (likely (!refcount_dec_and_test (&data->count)))
+ 		return;
+ 	put_dev (data->dev);
+ 	/* needs no more cleanup */
+@@ -1562,7 +1562,7 @@ static int activate_ep_files (struct dev_data *dev)
+ 		init_waitqueue_head (&data->wait);
+ 
+ 		strncpy (data->name, ep->name, sizeof (data->name) - 1);
+-		atomic_set (&data->count, 1);
++		refcount_set (&data->count, 1);
+ 		data->dev = dev;
+ 		get_dev (dev);
+ 
+-- 
+2.7.4
