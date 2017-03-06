@@ -1,129 +1,88 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] PCI: dwc: fix crash seen due to missing ops
-To: Niklas Cassel <niklas.cassel@axis.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>
-References: <20170321144354.15452-1-niklass@axis.com>
- <ffb1d92b-a637-2ed9-51d3-6b9fbb790635@synopsys.com>
- <744bf393-4fd8-5e64-423f-f9a033d61106@axis.com>
-CC: <linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <0aec14f1-619a-e6a2-2e1c-1230e373a551@ti.com>
-Date: Mon, 27 Mar 2017 11:13:20 +0530
-MIME-Version: 1.0
-In-Reply-To: <744bf393-4fd8-5e64-423f-f9a033d61106@axis.com>
-Content-Type: text/plain; charset="windows-1252"
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 06/29] drivers, md: convert dm_cache_metadata.ref_count from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:20:53 +0200
+Message-Id: <1488810076-3754-7-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-On Thursday 23 March 2017 01:10 PM, Niklas Cassel wrote:
-> On 03/22/2017 04:47 PM, Joao Pinto wrote:
->> Hi Niklas,
->>
->> Às 2:43 PM de 3/21/2017, Niklas Cassel escreveu:
->>> From: Niklas Cassel <niklas.cassel@axis.com>
->>>
->>> Fix the following crash, seen in dwc/pcie-artpec6.
->>>
->>>   Unable to handle kernel NULL pointer dereference at virtual address 00000004
->>>   pgd = c0204000
->>>   [00000004] *pgd=00000000
->>>   Internal error: Oops: 5 [#1] SMP ARM
->>>   Modules linked in:
->>>   CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.11.0-rc3-next-20170321 #1
->>>   Hardware name: Axis ARTPEC-6 Platform
->>>   task: db098000 task.stack: db096000
->>>   PC is at dw_pcie_writel_dbi+0x2c/0xd0
->>>   ...
->>>
->>> While at it, fix the same problem for pcie-designware-plat.
->>>
->>> Fixes: 442ec4c04d12 ("PCI: dwc: all: Split struct pcie_port into host-only and core structures")
->>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
->>> ---
->>>  drivers/pci/dwc/pcie-artpec6.c         | 4 ++++
->>>  drivers/pci/dwc/pcie-designware-plat.c | 4 ++++
->>>  2 files changed, 8 insertions(+)
->>>
->>> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
->>> index fcd3ef845883..6d23683c0892 100644
->>> --- a/drivers/pci/dwc/pcie-artpec6.c
->>> +++ b/drivers/pci/dwc/pcie-artpec6.c
->>> @@ -234,6 +234,9 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
->>>  	return 0;
->>>  }
->>>  
->>> +static const struct dw_pcie_ops dw_pcie_ops = {
->>> +};
->>> +
->>>  static int artpec6_pcie_probe(struct platform_device *pdev)
->>>  {
->>>  	struct device *dev = &pdev->dev;
->>> @@ -252,6 +255,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
->>>  		return -ENOMEM;
->>>  
->>>  	pci->dev = dev;
->>> +	pci->ops = &dw_pcie_ops;
->>>  
->>>  	artpec6_pcie->pci = pci;
->>>  
->>> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
->>> index b6c832ba39dd..f20d494922ab 100644
->>> --- a/drivers/pci/dwc/pcie-designware-plat.c
->>> +++ b/drivers/pci/dwc/pcie-designware-plat.c
->>> @@ -86,6 +86,9 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
->>>  	return 0;
->>>  }
->>>  
->>> +static const struct dw_pcie_ops dw_pcie_ops = {
->>> +};
->>> +
->>>  static int dw_plat_pcie_probe(struct platform_device *pdev)
->>>  {
->>>  	struct device *dev = &pdev->dev;
->>> @@ -103,6 +106,7 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
->>>  		return -ENOMEM;
->>>  
->>>  	pci->dev = dev;
->>> +	pci->ops = &dw_pcie_ops;
->>>  
->>>  	dw_plat_pcie->pci = pci;
->>>  
->>>
->> In the case of pcie-designware-plat you have the declaration of pci->ops:
->> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/tree/drivers/pci/dwc/pcie-designware-plat.c#n78
->>
->> and in artpec6 in here:
->> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/tree/drivers/pci/dwc/pcie-artpec6.c#n226
->>
->> Both declarations are made previously of calling dw_pcie_host_init(), so why do
->> you need this dummy ops in the probe function? I never had that necessity.
-> 
-> Hello Joao
-> 
-> Since commit 442ec4c04d12, we now have two different ops,
-> dw_pcie_ops (ops for dw_pcie) and dw_pcie_host_ops (ops for a pcie_port),
-> note that they are different. The dw_pcie_ops is missing for pcie-artpec6
-> and pcie-designware-plat (since we are using the generic link-up function).
-> 
-> Before commit 442ec4c04d12, dw_pcie_writel_dbi had dw_pcie_host_ops as
-> parameter, after the commit it has dw_pcie_ops as parameter.
-> It should crash on pcie-designware-plat as well, since there are other
-> functions, like dw_pcie_link_up, that assumes that pci->ops != null.
-> 
-> Another alternative to adding the dummy ops would be to add null checks
-> for all uses off pci->ops in pcie-designware.c.
-> I don't like the idea to sprinkle null checks everywhere pci->ops is used.
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/md/dm-cache-metadata.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-I'm okay either ways.
-
-Acked-by: Kishon Vijay Abraham I <kishon@ti.com>
-
-> 
-> One could add a null check in dw_pcie_host_init, but without a dummy ops
-> we would still fail this check, so our drivers would still be non-functional
-> in Linus's tree.
-> 
+diff --git a/drivers/md/dm-cache-metadata.c b/drivers/md/dm-cache-metadata.c
+index e4c2c1a..6d26e71 100644
+--- a/drivers/md/dm-cache-metadata.c
++++ b/drivers/md/dm-cache-metadata.c
+@@ -13,6 +13,7 @@
+ #include "persistent-data/dm-transaction-manager.h"
+ 
+ #include <linux/device-mapper.h>
++#include <linux/refcount.h>
+ 
+ /*----------------------------------------------------------------*/
+ 
+@@ -102,7 +103,7 @@ struct cache_disk_superblock {
+ } __packed;
+ 
+ struct dm_cache_metadata {
+-	atomic_t ref_count;
++	refcount_t ref_count;
+ 	struct list_head list;
+ 
+ 	unsigned version;
+@@ -756,7 +757,7 @@ static struct dm_cache_metadata *metadata_open(struct block_device *bdev,
+ 	}
+ 
+ 	cmd->version = metadata_version;
+-	atomic_set(&cmd->ref_count, 1);
++	refcount_set(&cmd->ref_count, 1);
+ 	init_rwsem(&cmd->root_lock);
+ 	cmd->bdev = bdev;
+ 	cmd->data_block_size = data_block_size;
+@@ -794,7 +795,7 @@ static struct dm_cache_metadata *lookup(struct block_device *bdev)
+ 
+ 	list_for_each_entry(cmd, &table, list)
+ 		if (cmd->bdev == bdev) {
+-			atomic_inc(&cmd->ref_count);
++			refcount_inc(&cmd->ref_count);
+ 			return cmd;
+ 		}
+ 
+@@ -865,7 +866,7 @@ struct dm_cache_metadata *dm_cache_metadata_open(struct block_device *bdev,
+ 
+ void dm_cache_metadata_close(struct dm_cache_metadata *cmd)
+ {
+-	if (atomic_dec_and_test(&cmd->ref_count)) {
++	if (refcount_dec_and_test(&cmd->ref_count)) {
+ 		mutex_lock(&table_lock);
+ 		list_del(&cmd->list);
+ 		mutex_unlock(&table_lock);
+-- 
+2.7.4
