@@ -1,76 +1,97 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170322193111.GA8190@wunner.de>
- <31da6db5-be22-9e84-5e76-67c519bc0b34@codeaurora.org>
- <CAKv+Gu8Uw-X3AR6aQYevPdRfcgPNnqL4O3sRoKxsZAiW29sbqg@mail.gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <704b8b8c-e607-29b3-e101-bbecd90073bb@codeaurora.org>
-Date: Wed, 22 Mar 2017 15:49:21 -0400
-MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu8Uw-X3AR6aQYevPdRfcgPNnqL4O3sRoKxsZAiW29sbqg@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
- Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
- Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
- Lukas Wunner <lukas@wunner.de>, Hanjun Guo <hanjun.guo@linaro.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Yinghai Lu <yinghai@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 29/29] drivers, xen: convert grant_map.users from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:21:16 +0200
+Message-Id: <1488810076-3754-30-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/22/2017 3:41 PM, Ard Biesheuvel wrote:
->> As far as I know, kernel honors resource assignments done by the UEFI BIOS if
->> they are correct. Kernel will reassign the resources only if something is wrong.
->>
-> No, the kernel always reassigns all BARs on arm64.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-I think this is where the problem is.
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/xen/gntdev.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-I'm not seeing this happen on QDF2400 which supports ACPI + UEFI BIOS
-combination only. 
-
-I see that kernel honored the resources assigned by UEFI BIOS if I compare
-the BAR addresses.
-
-I see reassignment only when something is horribly broken. Then, there would
-be a bridge configuration invalid message in the boot log to confirm this.
-
-> 
->> Will this code break other platforms/architectures?
->>
-> Which platforms/architectures are you referring to? EFIFB on a PCI
-> device is currently broken on arm64. 
-
-In general or on your particular platform?
-
-> On x86, it works, given that BARs
-> are usually not reassigned, and so the patch should be a no-op in that
-> case (although I'd argue it is still an improvement to check whether
-> the device that owns the BAR actually has memory decoding enabled
-> before we attach the framebuffer driver to it)
-> 
-
-I'm fine as long as it doesn't break anything. That's why, I'm asking.
-
+diff --git a/drivers/xen/gntdev.c b/drivers/xen/gntdev.c
+index 2ef2b61..b183cb2 100644
+--- a/drivers/xen/gntdev.c
++++ b/drivers/xen/gntdev.c
+@@ -35,6 +35,7 @@
+ #include <linux/spinlock.h>
+ #include <linux/slab.h>
+ #include <linux/highmem.h>
++#include <linux/refcount.h>
+ 
+ #include <xen/xen.h>
+ #include <xen/grant_table.h>
+@@ -85,7 +86,7 @@ struct grant_map {
+ 	int index;
+ 	int count;
+ 	int flags;
+-	atomic_t users;
++	refcount_t users;
+ 	struct unmap_notify notify;
+ 	struct ioctl_gntdev_grant_ref *grants;
+ 	struct gnttab_map_grant_ref   *map_ops;
+@@ -165,7 +166,7 @@ static struct grant_map *gntdev_alloc_map(struct gntdev_priv *priv, int count)
+ 
+ 	add->index = 0;
+ 	add->count = count;
+-	atomic_set(&add->users, 1);
++	refcount_set(&add->users, 1);
+ 
+ 	return add;
+ 
+@@ -211,7 +212,7 @@ static void gntdev_put_map(struct gntdev_priv *priv, struct grant_map *map)
+ 	if (!map)
+ 		return;
+ 
+-	if (!atomic_dec_and_test(&map->users))
++	if (!refcount_dec_and_test(&map->users))
+ 		return;
+ 
+ 	atomic_sub(map->count, &pages_mapped);
+@@ -399,7 +400,7 @@ static void gntdev_vma_open(struct vm_area_struct *vma)
+ 	struct grant_map *map = vma->vm_private_data;
+ 
+ 	pr_debug("gntdev_vma_open %p\n", vma);
+-	atomic_inc(&map->users);
++	refcount_inc(&map->users);
+ }
+ 
+ static void gntdev_vma_close(struct vm_area_struct *vma)
+@@ -1003,7 +1004,7 @@ static int gntdev_mmap(struct file *flip, struct vm_area_struct *vma)
+ 		goto unlock_out;
+ 	}
+ 
+-	atomic_inc(&map->users);
++	refcount_inc(&map->users);
+ 
+ 	vma->vm_ops = &gntdev_vmops;
+ 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.7.4
