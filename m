@@ -1,59 +1,92 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v5 16/24] dt-bindings: PCI: dra7xx: Add dt bindings to enable
- unaligned access
-Date: Mon, 27 Mar 2017 15:15:12 +0530
-Message-ID: <20170327094520.3129-17-kishon@ti.com>
-In-Reply-To: <20170327094520.3129-1-kishon@ti.com>
-References: <20170327094520.3129-1-kishon@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga04.intel.com ([192.55.52.120]:52309 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753887AbdCFPWP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Mar 2017 10:22:15 -0500
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 03/29] drivers, char: convert vma_data.refcnt from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:20:50 +0200
+Message-Id: <1488810076-3754-4-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Update device tree binding documentation of TI's dra7xx PCI
-controller to include property for enabling unaligned mem access.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- Documentation/devicetree/bindings/pci/ti-pci.txt | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/char/mspec.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-index 190828a5f32a..b69dd7dbd29e 100644
---- a/Documentation/devicetree/bindings/pci/ti-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-@@ -39,6 +39,11 @@ DEVICE MODE
-  - interrupts : one interrupt entries must be specified for main interrupt.
-  - num-ib-windows : number of inbound address translation windows
-  - num-ob-windows : number of outbound address translation windows
-+ - ti,syscon-unaligned-access: phandle to the syscon dt node. The 1st argument
-+			       should contain the register offset within syscon
-+			       and the 2nd argument should contain the bit field
-+			       for setting the bit to enable unaligned
-+			       access.
+diff --git a/drivers/char/mspec.c b/drivers/char/mspec.c
+index a9c2fa3..7b75669 100644
+--- a/drivers/char/mspec.c
++++ b/drivers/char/mspec.c
+@@ -43,6 +43,7 @@
+ #include <linux/string.h>
+ #include <linux/slab.h>
+ #include <linux/numa.h>
++#include <linux/refcount.h>
+ #include <asm/page.h>
+ #include <asm/pgtable.h>
+ #include <linux/atomic.h>
+@@ -89,7 +90,7 @@ static int is_sn2;
+  * protect in fork case where multiple tasks share the vma_data.
+  */
+ struct vma_data {
+-	atomic_t refcnt;	/* Number of vmas sharing the data. */
++	refcount_t refcnt;	/* Number of vmas sharing the data. */
+ 	spinlock_t lock;	/* Serialize access to this structure. */
+ 	int count;		/* Number of pages allocated. */
+ 	enum mspec_page_type type; /* Type of pages allocated. */
+@@ -144,7 +145,7 @@ mspec_open(struct vm_area_struct *vma)
+ 	struct vma_data *vdata;
  
- Optional Property:
-  - gpios : Should be added if a gpio line is required to drive PERST# line
+ 	vdata = vma->vm_private_data;
+-	atomic_inc(&vdata->refcnt);
++	refcount_inc(&vdata->refcnt);
+ }
+ 
+ /*
+@@ -162,7 +163,7 @@ mspec_close(struct vm_area_struct *vma)
+ 
+ 	vdata = vma->vm_private_data;
+ 
+-	if (!atomic_dec_and_test(&vdata->refcnt))
++	if (!refcount_dec_and_test(&vdata->refcnt))
+ 		return;
+ 
+ 	last_index = (vdata->vm_end - vdata->vm_start) >> PAGE_SHIFT;
+@@ -274,7 +275,7 @@ mspec_mmap(struct file *file, struct vm_area_struct *vma,
+ 	vdata->vm_end = vma->vm_end;
+ 	vdata->type = type;
+ 	spin_lock_init(&vdata->lock);
+-	atomic_set(&vdata->refcnt, 1);
++	refcount_set(&vdata->refcnt, 1);
+ 	vma->vm_private_data = vdata;
+ 
+ 	vma->vm_flags |= VM_IO | VM_PFNMAP | VM_DONTEXPAND | VM_DONTDUMP;
 -- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.7.4
