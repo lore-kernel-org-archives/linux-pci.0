@@ -1,167 +1,120 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [RFC PATCH v2 17/32] x86: kvmclock: Clear encryption attribute when
- SEV is active
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:15:48 -0500
-Message-ID: <148846774841.2349.10333552865190947646.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 24/29] drivers: convert iblock_req.pending from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:21:11 +0200
+Message-Id: <1488810076-3754-25-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The guest physical memory area holding the struct pvclock_wall_clock and
-struct pvclock_vcpu_time_info are shared with the hypervisor. Hypervisor
-periodically updates the contents of the memory. When SEV is active we must
-clear the encryption attributes of the shared memory pages so that both
-hypervisor and guest can access the data.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- arch/x86/kernel/kvmclock.c |   65 ++++++++++++++++++++++++++++++++++++++------
- 1 file changed, 56 insertions(+), 9 deletions(-)
+ drivers/target/target_core_iblock.c | 12 ++++++------
+ drivers/target/target_core_iblock.h |  3 ++-
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/arch/x86/kernel/kvmclock.c b/arch/x86/kernel/kvmclock.c
-index 278de4f..3b38b3d 100644
---- a/arch/x86/kernel/kvmclock.c
-+++ b/arch/x86/kernel/kvmclock.c
-@@ -27,6 +27,7 @@
- #include <linux/sched.h>
- #include <linux/sched/clock.h>
+diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+index d316ed5..bb069eb 100644
+--- a/drivers/target/target_core_iblock.c
++++ b/drivers/target/target_core_iblock.c
+@@ -279,7 +279,7 @@ static void iblock_complete_cmd(struct se_cmd *cmd)
+ 	struct iblock_req *ibr = cmd->priv;
+ 	u8 status;
  
-+#include <asm/mem_encrypt.h>
- #include <asm/x86_init.h>
- #include <asm/reboot.h>
- 
-@@ -44,7 +45,7 @@ early_param("no-kvmclock", parse_no_kvmclock);
- 
- /* The hypervisor will put information about time periodically here */
- static struct pvclock_vsyscall_time_info *hv_clock;
--static struct pvclock_wall_clock wall_clock;
-+static struct pvclock_wall_clock *wall_clock;
- 
- struct pvclock_vsyscall_time_info *pvclock_pvti_cpu0_va(void)
- {
-@@ -62,15 +63,18 @@ static void kvm_get_wallclock(struct timespec *now)
- 	int low, high;
- 	int cpu;
- 
--	low = (int)__pa_symbol(&wall_clock);
--	high = ((u64)__pa_symbol(&wall_clock) >> 32);
-+	if (!wall_clock)
-+		return;
-+
-+	low = (int)slow_virt_to_phys(wall_clock);
-+	high = ((u64)slow_virt_to_phys(wall_clock) >> 32);
- 
- 	native_write_msr(msr_kvm_wall_clock, low, high);
- 
- 	cpu = get_cpu();
- 
- 	vcpu_time = &hv_clock[cpu].pvti;
--	pvclock_read_wallclock(&wall_clock, vcpu_time, now);
-+	pvclock_read_wallclock(wall_clock, vcpu_time, now);
- 
- 	put_cpu();
- }
-@@ -246,11 +250,40 @@ static void kvm_shutdown(void)
- 	native_machine_shutdown();
- }
- 
-+static phys_addr_t kvm_memblock_alloc(phys_addr_t size, phys_addr_t align)
-+{
-+	phys_addr_t mem;
-+
-+	mem = memblock_alloc(size, align);
-+	if (!mem)
-+		return 0;
-+
-+	/* When SEV is active clear the encryption attributes of the pages */
-+	if (sev_active()) {
-+		if (early_set_memory_decrypted(__va(mem), size))
-+			goto e_free;
-+	}
-+
-+	return mem;
-+e_free:
-+	memblock_free(mem, size);
-+	return 0;
-+}
-+
-+static void kvm_memblock_free(phys_addr_t addr, phys_addr_t size)
-+{
-+	/* When SEV is active restore the encryption attributes of the pages */
-+	if (sev_active())
-+		early_set_memory_encrypted(__va(addr), size);
-+
-+	memblock_free(addr, size);
-+}
-+
- void __init kvmclock_init(void)
- {
- 	struct pvclock_vcpu_time_info *vcpu_time;
--	unsigned long mem;
--	int size, cpu;
-+	unsigned long mem, mem_wall_clock;
-+	int size, cpu, wall_clock_size;
- 	u8 flags;
- 
- 	size = PAGE_ALIGN(sizeof(struct pvclock_vsyscall_time_info)*NR_CPUS);
-@@ -267,15 +300,29 @@ void __init kvmclock_init(void)
- 	printk(KERN_INFO "kvm-clock: Using msrs %x and %x",
- 		msr_kvm_system_time, msr_kvm_wall_clock);
- 
--	mem = memblock_alloc(size, PAGE_SIZE);
--	if (!mem)
-+	wall_clock_size = PAGE_ALIGN(sizeof(struct pvclock_wall_clock));
-+	mem_wall_clock = kvm_memblock_alloc(wall_clock_size, PAGE_SIZE);
-+	if (!mem_wall_clock)
+-	if (!atomic_dec_and_test(&ibr->pending))
++	if (!refcount_dec_and_test(&ibr->pending))
  		return;
-+
-+	wall_clock = __va(mem_wall_clock);
-+	memset(wall_clock, 0, wall_clock_size);
-+
-+	mem = kvm_memblock_alloc(size, PAGE_SIZE);
-+	if (!mem) {
-+		kvm_memblock_free(mem_wall_clock, wall_clock_size);
-+		wall_clock = NULL;
-+		return;
-+	}
-+
- 	hv_clock = __va(mem);
- 	memset(hv_clock, 0, size);
  
- 	if (kvm_register_clock("primary cpu clock")) {
- 		hv_clock = NULL;
--		memblock_free(mem, size);
-+		kvm_memblock_free(mem, size);
-+		kvm_memblock_free(mem_wall_clock, wall_clock_size);
-+		wall_clock = NULL;
- 		return;
+ 	if (atomic_read(&ibr->ib_bio_err_cnt))
+@@ -487,7 +487,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 	bio_list_init(&list);
+ 	bio_list_add(&list, bio);
+ 
+-	atomic_set(&ibr->pending, 1);
++	refcount_set(&ibr->pending, 1);
+ 
+ 	while (sectors) {
+ 		while (bio_add_page(bio, sg_page(sg), sg->length, sg->offset)
+@@ -498,7 +498,7 @@ iblock_execute_write_same(struct se_cmd *cmd)
+ 			if (!bio)
+ 				goto fail_put_bios;
+ 
+-			atomic_inc(&ibr->pending);
++			refcount_inc(&ibr->pending);
+ 			bio_list_add(&list, bio);
+ 		}
+ 
+@@ -706,7 +706,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	cmd->priv = ibr;
+ 
+ 	if (!sgl_nents) {
+-		atomic_set(&ibr->pending, 1);
++		refcount_set(&ibr->pending, 1);
+ 		iblock_complete_cmd(cmd);
+ 		return 0;
  	}
+@@ -719,7 +719,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 	bio_list_init(&list);
+ 	bio_list_add(&list, bio);
  
+-	atomic_set(&ibr->pending, 2);
++	refcount_set(&ibr->pending, 2);
+ 	bio_cnt = 1;
+ 
+ 	for_each_sg(sgl, sg, sgl_nents, i) {
+@@ -740,7 +740,7 @@ iblock_execute_rw(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
+ 			if (!bio)
+ 				goto fail_put_bios;
+ 
+-			atomic_inc(&ibr->pending);
++			refcount_inc(&ibr->pending);
+ 			bio_list_add(&list, bio);
+ 			bio_cnt++;
+ 		}
+diff --git a/drivers/target/target_core_iblock.h b/drivers/target/target_core_iblock.h
+index 718d3fc..f2a5797 100644
+--- a/drivers/target/target_core_iblock.h
++++ b/drivers/target/target_core_iblock.h
+@@ -2,6 +2,7 @@
+ #define TARGET_CORE_IBLOCK_H
+ 
+ #include <linux/atomic.h>
++#include <linux/refcount.h>
+ #include <target/target_core_base.h>
+ 
+ #define IBLOCK_VERSION		"4.0"
+@@ -10,7 +11,7 @@
+ #define IBLOCK_LBA_SHIFT	9
+ 
+ struct iblock_req {
+-	atomic_t pending;
++	refcount_t pending;
+ 	atomic_t ib_bio_err_cnt;
+ } ____cacheline_aligned;
+ 
+-- 
+2.7.4
