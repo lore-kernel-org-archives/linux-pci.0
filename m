@@ -1,81 +1,124 @@
-Return-Path: <SRS0=Vjgc=26=arm.com=Liviu.Dudau@kernel.org>
-Return-Path: <SRS0=Vjgc=26=arm.com=Liviu.Dudau@kernel.org>
-Date: Tue, 21 Mar 2017 12:31:29 +0000
-From: Liviu Dudau <liviu.dudau@arm.com>
-To: Mason <slash.tmp@free.fr>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	David Laight <david.laight@aculab.com>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>,
-	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
-	Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	iommu <iommu@lists.linux-foundation.org>
-Subject: Re: [RFC PATCH v0.001] PCI: Add support for tango PCIe controller
-Message-ID: <20170321123129.GB6816@e110455-lin.cambridge.arm.com>
-References: <ab110ce2-8678-9b34-6bd1-6cfaaa7fea04@free.fr>
- <f13c385d-dcc9-dacd-2b2c-ca098228f4f4@free.fr>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-qk0-f169.google.com ([209.85.220.169]:36022 "EHLO
+        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753253AbdCFMU0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Mar 2017 07:20:26 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <f13c385d-dcc9-dacd-2b2c-ca098228f4f4@free.fr>
+In-Reply-To: <1488800428-2854-1-git-send-email-deathsimple@vodafone.de>
+References: <1488800428-2854-1-git-send-email-deathsimple@vodafone.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Mon, 6 Mar 2017 14:20:24 +0200
+Message-ID: <CAHp75Vet-gb_mXA2Uwdai+G2AeJ4p10eTjgmC2h5Gnmosd69WA@mail.gmail.com>
+Subject: Re: [PATCH 1/5] PCI: add resizeable BAR infrastructure v2
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        dri-devel@lists.freedesktop.org,
+        Platform Driver <platform-driver-x86@vger.kernel.org>,
+        amd-gfx@lists.freedesktop.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 21, 2017 at 11:15:16AM +0100, Mason wrote:
-> [ Adding iommu ML ]
-> 
-> On 17/03/2017 17:11, Mason wrote:
-> 
-> > + * QUIRK #5
-> > + * Only transfers within the BAR are forwarded to the host.
-> > + * By default, the DMA framework expects that
-> > + * PCI address 0x8000_0000 -> CPU address 0x8000_0000
-> > + * which is where DRAM0 is mapped.
-> 
-> I have an additional question on this topic.
-> 
-> In a typical system, PCI bus masters are able to access all of RAM,
-> unless there is some kind of IOMMU, right?
+On Mon, Mar 6, 2017 at 1:40 PM, Christian K=C3=B6nig <deathsimple@vodafone.=
+de> wrote:
+> From: Christian K=C3=B6nig <christian.koenig@amd.com>
+>
+> Just the defines and helper functions to read the possible sizes of a BAR=
+ and
+> update it's size.
+>
+> See https://pcisig.com/sites/default/files/specification_documents/ECN_Re=
+sizable-BAR_24Apr2008.pdf.
+>
+> v2: provide read helper as well
 
-Depends where the ATS (Address translation service) lives and what gets
-programmed there, but usually one can restrict the RAM (or system address
-space, to be more precise) that can be accessed from the PCI bus masters
-by only providing PCI(e)-to-system bus mappings that make sense. Remember
-that on any PCI bus you can only see addresses that are a subset of your
-parent bus addresses. If the root PCI bus only allows access to a predefined
-range of addresses, then that is all you can access in the system.
+Commit message left away the explanation at which point this API might
+be useful and how it fits in managed resources model?
 
-> 
-> I suppose one may consider the above limitation ("Only transfers
-> within the BAR are forwarded to the host") as some form of weird
-> IOMMU? (There is, in fact, some remapping logic in the controller
-> setup which I haven't discussed so far.)
+>  /**
+> + * pci_rbar_get_sizes - get possible sizes for BAR
 
-Not sure I understand the quirk. What BAR are you referring to when you say
-"within the BAR"? The bus master's? Are you saying that only if you write
-to a PCI bus address XXXXXXX that is in the range assigned by the parent
-bus then you can escape your bus hierarchy and target the system RAM? That
-sounds backwards to me.
+Why not simple pci_rbar_get_possible_sizes() ?
 
-> 
-> Since this SoC is used for TV, the media cartels mandate some way
-> to limit where PCI bus masters can peek/poke in RAM.
+> +u32 pci_rbar_get_sizes(struct pci_dev *pdev, int bar)
+> +{
+> +       int pos, nbars;
+> +       u32 ctrl, cap;
+> +       int i;
+> +
+> +       pos =3D pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
+> +       if (!pos)
 
-And that is usually done by either having a TrustZone controller on top of
-your PCI host bridge or by putting an IOMMU.
+> +               return 0x0;
 
-Best regards,
-Liviu
+return 0;
 
-> 
-> Regards.
+> +
+> +       pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+> +       nbars =3D (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBA=
+R_SHIFT;
+> +
 
--- 
-====================
-| I would like to |
-| fix the world,  |
-| but they're not |
-| giving me the   |
- \ source code!  /
-  ---------------
-    ¯\_(ツ)_/¯
+> +       for (i =3D 0; i < nbars; ++i, pos +=3D 8) {
+
+8 is defined somewhere in the spec? (Yes, I understand that is just 64
+bits shift)
+
+> +               int bar_idx;
+> +
+> +               pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+> +               bar_idx =3D (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
+> +                               PCI_REBAR_CTRL_BAR_IDX_SHIFT;
+> +               if (bar_idx !=3D bar)
+> +                       continue;
+> +
+> +               pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
+> +               return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
+> +                       PCI_REBAR_CTRL_SIZES_SHIFT;
+> +       }
+> +
+
+> +       return 0x0;
+
+return 0;
+
+> +/**
+> + * pci_rbar_get_size - get the current size of a BAR
+
+pci_rbar_get_current_size() ?
+
+> +/**
+> + * pci_rbar_set_size - set a new size for a BAR
+> + * @dev: PCI device
+> + * @bar: BAR to set size to
+
+> + * @size: new size as defined in the spec.
+
+ * @size: bitmasked value of new size (bit 0=3D1MB, ..., bit 19=3D512G)
+
+?
+
+It will briefly get a clue without reading either spec or long description.
+
+> + *
+> + * Set the new size of a BAR as defined in the spec (0=3D1MB, 19=3D512GB=
+).
+> + * Returns true if resizing was successful, false otherwise.
+> + */
+
+> +bool pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
+
+I would return int and error code. It would be better in the future
+and seems in alignment with above.
+
+> +{
+> +       int pos, nbars;
+> +       u32 ctrl;
+> +       int i;
+
+All ints are unsigned?
+
+--=20
+With Best Regards,
+Andy Shevchenko
