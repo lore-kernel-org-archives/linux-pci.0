@@ -1,222 +1,217 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v3 19/23] tools: PCI: Add a userspace tool to test PCI endpoint
-Date: Thu, 9 Mar 2017 13:27:30 +0530
-Message-ID: <1489046254-19919-20-git-send-email-kishon@ti.com>
-In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
-References: <1489046254-19919-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Liu, Yi L" <yi.l.liu@intel.com>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: RE: [RFC PATCH 00/30] Add PCIe SVM support to ARM SMMUv3
+Date: Mon, 6 Mar 2017 08:20:25 +0000
+Message-ID: <A2975661238FB949B60364EF0F2C2574390186B8@shsmsx102.ccr.corp.intel.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+In-Reply-To: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "Liu, Yi L" <yi.l.liu@intel.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Sinan Kaya <okaya@qti.qualcomm.com>,
+ Will Deacon <will.deacon@arm.com>, Harv
+ Abdulhamid <harba@qti.qualcomm.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, David Woodhouse <dwmw2@infradead.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a userspace tool to invoke the ioctls exposed by the
-PCI endpoint test driver to perform various PCI tests.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- tools/pci/pcitest.c |  186 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 186 insertions(+)
- create mode 100644 tools/pci/pcitest.c
 
-diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
-new file mode 100644
-index 0000000..39b5b0b
---- /dev/null
-+++ b/tools/pci/pcitest.c
-@@ -0,0 +1,186 @@
-+/**
-+ * Userspace PCI Endpoint Test Module
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <errno.h>
-+#include <fcntl.h>
-+#include <stdbool.h>
-+#include <stdio.h>
-+#include <stdlib.h>
-+#include <sys/ioctl.h>
-+#include <time.h>
-+#include <unistd.h>
-+
-+#include <linux/pcitest.h>
-+
-+#define BILLION 1E9
-+
-+static char *result[] = { "NOT OKAY", "OKAY" };
-+
-+struct pci_test {
-+	char		*device;
-+	char		barnum;
-+	bool		legacyirq;
-+	unsigned int	msinum;
-+	bool		read;
-+	bool		write;
-+	bool		copy;
-+	unsigned long	size;
-+};
-+
-+static int run_test(struct pci_test *test)
-+{
-+	long ret;
-+	int fd;
-+	struct timespec start, end;
-+	double time;
-+
-+	fd = open(test->device, O_RDWR);
-+	if (fd < 0) {
-+		perror("can't open PCI Endpoint Test device");
-+		return fd;
-+	}
-+
-+	if (test->barnum >= 0 && test->barnum <= 5) {
-+		ret = ioctl(fd, PCITEST_BAR, test->barnum);
-+		fprintf(stdout, "BAR%d:\t\t", test->barnum);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	if (test->legacyirq) {
-+		ret = ioctl(fd, PCITEST_LEGACY_IRQ, 0);
-+		fprintf(stdout, "LEGACY IRQ:\t");
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	if (test->msinum > 0 && test->msinum <= 32) {
-+		ret = ioctl(fd, PCITEST_MSI, test->msinum);
-+		fprintf(stdout, "MSI%d:\t\t", test->msinum);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	if (test->write) {
-+		ret = ioctl(fd, PCITEST_WRITE, test->size);
-+		fprintf(stdout, "WRITE (%7ld bytes):\t\t", test->size);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	if (test->read) {
-+		ret = ioctl(fd, PCITEST_READ, test->size);
-+		fprintf(stdout, "READ (%7ld bytes):\t\t", test->size);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	if (test->copy) {
-+		ret = ioctl(fd, PCITEST_COPY, test->size);
-+		fprintf(stdout, "COPY (%7ld bytes):\t\t", test->size);
-+		if (ret < 0)
-+			fprintf(stdout, "TEST FAILED\n");
-+		else
-+			fprintf(stdout, "%s\n", result[ret]);
-+	}
-+
-+	fflush(stdout);
-+}
-+
-+int main(int argc, char **argv)
-+{
-+	int c;
-+	struct pci_test *test;
-+
-+	test = calloc(1, sizeof(*test));
-+	if (!test) {
-+		perror("Fail to allocate memory for pci_test\n");
-+		return -ENOMEM;
-+	}
-+
-+	/* since '0' is a valid BAR number, initialize it to -1 */
-+	test->barnum = -1;
-+
-+	/* set default size as 100KB */
-+	test->size = 0x19000;
-+
-+	/* set default endpoint device */
-+	test->device = "/dev/pci-endpoint-test.0";
-+
-+	while ((c = getopt(argc, argv, "D:b:m:lrwcs:")) != EOF)
-+	switch (c) {
-+	case 'D':
-+		test->device = optarg;
-+		continue;
-+	case 'b':
-+		test->barnum = atoi(optarg);
-+		if (test->barnum < 0 || test->barnum > 5)
-+			goto usage;
-+		continue;
-+	case 'l':
-+		test->legacyirq = true;
-+		continue;
-+	case 'm':
-+		test->msinum = atoi(optarg);
-+		if (test->msinum < 1 || test->msinum > 32)
-+			goto usage;
-+		continue;
-+	case 'r':
-+		test->read = true;
-+		continue;
-+	case 'w':
-+		test->write = true;
-+		continue;
-+	case 'c':
-+		test->copy = true;
-+		continue;
-+	case 's':
-+		test->size = strtoul(optarg, NULL, 0);
-+		continue;
-+	case '?':
-+	case 'h':
-+	default:
-+usage:
-+		fprintf(stderr,
-+			"usage: %s [options]\n"
-+			"Options:\n"
-+			"\t-D <dev>		pci endpoint test device {default: /dev/pci-endpoint-test.0}\n"
-+			"\t-b <bar num>		BAR test (bar number between 0..5)\n"
-+			"\t-m <msi num>		MSI test (msi number between 1..32)\n"
-+			"\t-r			Read buffer test\n"
-+			"\t-w			Write buffer test\n"
-+			"\t-c			Copy buffer test\n"
-+			"\t-s <size>		Size of buffer {default: 100KB}\n",
-+			argv[0]);
-+		return -EINVAL;
-+	}
-+
-+	run_test(test);
-+	return 0;
-+}
--- 
-1.7.9.5
+> -----Original Message-----
+> From: iommu-bounces@lists.linux-foundation.org [mailto:iommu-
+> bounces@lists.linux-foundation.org] On Behalf Of Jean-Philippe Brucker
+> Sent: Tuesday, February 28, 2017 3:54 AM
+> Cc: Shanker Donthineni <shankerd@qti.qualcomm.com>; kvm@vger.kernel.org;
+> Catalin Marinas <catalin.marinas@arm.com>; Sinan Kaya
+> <okaya@qti.qualcomm.com>; Will Deacon <will.deacon@arm.com>;
+> iommu@lists.linux-foundation.org; Harv Abdulhamid <harba@qti.qualcomm.com>;
+> linux-pci@vger.kernel.org; Bjorn Helgaas <bhelgaas@google.com>; David
+> Woodhouse <dwmw2@infradead.org>; linux-arm-kernel@lists.infradead.org; Nate
+> Watterson <nwatters@qti.qualcomm.com>
+> Subject: [RFC PATCH 00/30] Add PCIe SVM support to ARM SMMUv3
+> 
+> Hi,
+> 
+> This series adds support for PCI ATS, PRI and PASID extensions to the
+> SMMUv3 driver. In systems that support it, it is now possible for some high-end
+> devices to perform DMA into process address spaces. Page tables are shared
+> between MMU and SMMU; page faults from devices are recoverable and handled by
+> the mm subsystem.
+> 
+> We propose an extension to the IOMMU API that unifies existing SVM
+> implementations (AMD, Intel and ARM) in patches 22 and 24. Nothing is set in stone,
+> the goal is to start discussions and find an intersection between implementations.
+> 
+> We also propose a VFIO interface in patches 29 and 30, that allows userspace device
+> drivers to make use of SVM. It would also serve as example implementation for
+> other device drivers.
+> 
+> Overview of the patches:
+> 
+> * 1 and 2 prepare the SMMUv3 structures for ATS,
+> * 3 to 5 enable ATS for devices that support it.
+> * 6 to 10 prepare the SMMUv3 structures for PASID and PRI. Patch 9,
+>   in particular, provides details on the structure requirements.
+> * 11 introduces an interface for sharing ASIDs on ARM64,
+> * 12 to 17 add more infrastructure for sharing page tables,
+> * 18 and 19 add minor helpers to PCI,
+> * 20 enables PASID in devices that support it,
+
+Jean, supposedly, you will introduce a PASID management mechanism in
+SMMU v3 driver. Here I have a question about PASID management on ARM.
+Will there be a system wide PASID table? Or there is equivalent implementation.
+
+Thanks,
+Yi L 
+
+> * 21 enables PRI and adds device fault handler,
+> * 22 and 24 draft a possible interface for SVM in the IOMMU API
+> * 23 and 25-28 finalize support for SVM in SMMUv3
+> * 29 and 30 draft a possible interface for SVM in VFIO.
+> 
+> The series is available on git://linux-arm.org/linux-jpb.git svm/rfc1 Enable
+> CONFIG_PCI_PASID, CONFIG_PCI_PRI and you should be good to go.
+> 
+> So far, this has only been tested with a software model of an SMMUv3 and a PCIe
+> DMA engine. We don't intend to get this merged until it has been tested on silicon,
+> but at least the driver implementation should be mature enough. I might split next
+> versions depending on what is ready and what needs more work so we can merge it
+> progressively.
+> 
+> A lot of open questions remain:
+> 
+> 1. Can we declare that PASID 0 is always invalid?
+> 
+> 2. For this prototype, I kept the interface simple from an implementation
+>    perspective. At the moment is is "bind this device to that address
+>    space". For consistency with the rest of VFIO and IOMMU, I think "bind
+>    this container to that address space" would be more in line with VFIO,
+>    and "bind that group to that address space" more in line with IOMMU.
+>    VFIO would tell the IOMMU "for all groups in this container, bind to
+>    that address space".
+>    This raises the question of inconsistency between device capabilities.
+>    When adding a device that supports less PASID bits to a group, what do
+>    we do? What if we already allocated a PASID that is out of range for
+>    the new device?
+> 
+> 3. How do we reconcile the IOMMU fault reporting infrastructure with the
+>    SVM interface?
+> 
+> 4. SVM is the product of two features: handling device faults, and devices
+>    having multiple address spaces. What about one feature without the
+>    other?
+>    a. If we cannot afford to have a device fault, can we at least share a
+>       pinned address space? Pinning all current memory would be done by
+>       vfio, but there also need to be pinning of all future mappings.
+>       (mlock isn't sufficient, still allows for minor faults.)
+>    b. If the device has a single address space, can we still bind it to a
+>       process? The main issue with unifying DMA and process page tables is
+>       reserved regions on the device side. What do we do if, for instance,
+>       and MSI frame address clashes with a process mapping? Or if a
+>       process mapping exists outside of the device's DMA window?
+> 
+> Please find more details in the IOMMU API and VFIO patches.
+> 
+> Thanks,
+> Jean-Philippe
+> 
+> Cc: Harv Abdulhamid <harba@qti.qualcomm.com>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Shanker Donthineni <shankerd@qti.qualcomm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Sinan Kaya <okaya@qti.qualcomm.com>
+> Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Nate Watterson <nwatters@qti.qualcomm.com>
+> Cc: Alex Williamson <alex.williamson@redhat.com>
+> Cc: David Woodhouse <dwmw2@infradead.org>
+> 
+> Cc: linux-arm-kernel@lists.infradead.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: iommu@lists.linux-foundation.org
+> Cc: kvm@vger.kernel.org
+> 
+> Jean-Philippe Brucker (30):
+>   iommu/arm-smmu-v3: Link groups and devices
+>   iommu/arm-smmu-v3: Link groups and domains
+>   PCI: Move ATS declarations outside of CONFIG_PCI
+>   iommu/arm-smmu-v3: Add support for PCI ATS
+>   iommu/arm-smmu-v3: Disable tagged pointers when ATS is in use
+>   iommu/arm-smmu-v3: Add support for Substream IDs
+>   iommu/arm-smmu-v3: Add second level of context descriptor table
+>   iommu/arm-smmu-v3: Add support for VHE
+>   iommu/arm-smmu-v3: Support broadcast TLB maintenance
+>   iommu/arm-smmu-v3: Add task contexts
+>   arm64: mm: Pin down ASIDs for sharing contexts with devices
+>   iommu/arm-smmu-v3: Keep track of process address spaces
+>   iommu/io-pgtable-arm: Factor out ARM LPAE register defines
+>   iommu/arm-smmu-v3: Share process page tables
+>   iommu/arm-smmu-v3: Steal private ASID from a domain
+>   iommu/arm-smmu-v3: Use shared ASID set
+>   iommu/arm-smmu-v3: Add SVM feature checking
+>   PCI: Make "PRG Response PASID Required" handling common
+>   PCI: Cache PRI and PASID bits in pci_dev
+>   iommu/arm-smmu-v3: Enable PCI PASID in masters
+>   iommu/arm-smmu-v3: Handle device faults from PRI
+>   iommu: Bind/unbind tasks to/from devices
+>   iommu/arm-smmu-v3: Bind/unbind device and task
+>   iommu: Specify PASID state when unbinding a task
+>   iommu/arm-smmu-v3: Safe invalidation and recycling of PASIDs
+>   iommu/arm-smmu-v3: Fix PRI queue overflow acknowledgement
+>   iommu/arm-smmu-v3: Handle PRI queue overflow
+>   iommu/arm-smmu-v3: Add support for Hardware Translation Table Update
+>     at stage 1
+>   vfio: Add support for Shared Virtual Memory
+>   vfio: Allow to bind foreign task
+> 
+>  MAINTAINERS                          |    1 +
+>  arch/arm64/include/asm/mmu.h         |    1 +
+>  arch/arm64/include/asm/mmu_context.h |   11 +-
+>  arch/arm64/mm/context.c              |   80 +-
+>  drivers/iommu/amd_iommu.c            |   19 +-
+>  drivers/iommu/arm-smmu-v3.c          | 2593 ++++++++++++++++++++++++++++++++-
+> -
+>  drivers/iommu/io-pgtable-arm.c       |   48 +-
+>  drivers/iommu/io-pgtable-arm.h       |   67 +
+>  drivers/iommu/iommu.c                |  116 ++
+>  drivers/pci/ats.c                    |   40 +
+>  drivers/vfio/pci/vfio_pci.c          |   24 +
+>  drivers/vfio/vfio.c                  |  135 ++
+>  include/linux/iommu.h                |   57 +
+>  include/linux/pci-ats.h              |    8 +
+>  include/linux/pci.h                  |   28 +-
+>  include/uapi/linux/pci_regs.h        |    1 +
+>  include/uapi/linux/vfio.h            |   70 +
+>  17 files changed, 3084 insertions(+), 215 deletions(-)  create mode 100644
+> drivers/iommu/io-pgtable-arm.h
+> 
+> --
+> 2.11.0
+> 
+> _______________________________________________
+> iommu mailing list
+> iommu@lists.linux-foundation.org
+> https://lists.linuxfoundation.org/mailman/listinfo/iommu
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
