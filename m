@@ -1,45 +1,44 @@
-Return-Path: <SRS0=04wA=26=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=04wA=26=free.fr=slash.tmp@kernel.org>
-Subject: Re: [RFC PATCH v0.001] PCI: Add support for tango PCIe controller
-From: Mason <slash.tmp@free.fr>
+Return-Path: <SRS0=QSaZ=2P=arm.com=Jean-Philippe.Brucker@kernel.org>
+Return-Path: <SRS0=QSaZ=2P=arm.com=Jean-Philippe.Brucker@kernel.org>
+Date: Mon, 6 Mar 2017 11:31:08 +0000
+From: Jean-Philippe Brucker <Jean-Philippe.Brucker@arm.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Joerg Roedel <joro@8bytes.org>, iommu <iommu@lists.linux-foundation.org>
-References: <ab110ce2-8678-9b34-6bd1-6cfaaa7fea04@free.fr>
-Message-ID: <f13c385d-dcc9-dacd-2b2c-ca098228f4f4@free.fr>
-Date: Tue, 21 Mar 2017 11:15:16 +0100
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Joerg Roedel <joro@8bytes.org>, Sinan Kaya <okaya@qti.qualcomm.com>,
+	Will Deacon <will.deacon@arm.com>, iommu@lists.linux-foundation.org,
+	Harv Abdulhamid <harba@qti.qualcomm.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	linux-arm-kernel@lists.infradead.org,
+	Nate Watterson <nwatters@qti.qualcomm.com>
+Subject: Re: [RFC PATCH 18/30] PCI: Make "PRG Response PASID Required"
+ handling common
+Message-ID: <20170306113108.GC28804@e106794-lin.localdomain>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-19-jean-philippe.brucker@arm.com>
+ <20170303211140.GC31767@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <ab110ce2-8678-9b34-6bd1-6cfaaa7fea04@free.fr>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170303211140.GC31767@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-[ Adding iommu ML ]
+On Fri, Mar 03, 2017 at 03:11:40PM -0600, Bjorn Helgaas wrote:
+> On Mon, Feb 27, 2017 at 07:54:29PM +0000, Jean-Philippe Brucker wrote:
+> > The PASID ECN to the PCIe spec added a bit in the PRI status register that
+> > allows a Function to declare whether a PRG Response should contain the
+> > PASID prefix or not.
+> > 
+> > Move the helper that accesses it from amd_iommu into the PCI subsystem,
+> > renaming it to something more consistent with the spec, and introducing
+> > another obscure acronym to make it all fit.
+> 
+> Maybe mention the acronym itelf and spell it out here?
 
-On 17/03/2017 17:11, Mason wrote:
+Sure, I'll add this.
 
-> + * QUIRK #5
-> + * Only transfers within the BAR are forwarded to the host.
-> + * By default, the DMA framework expects that
-> + * PCI address 0x8000_0000 -> CPU address 0x8000_0000
-> + * which is where DRAM0 is mapped.
-
-I have an additional question on this topic.
-
-In a typical system, PCI bus masters are able to access all of RAM,
-unless there is some kind of IOMMU, right?
-
-I suppose one may consider the above limitation ("Only transfers
-within the BAR are forwarded to the host") as some form of weird
-IOMMU? (There is, in fact, some remapping logic in the controller
-setup which I haven't discussed so far.)
-
-Since this SoC is used for TV, the media cartels mandate some way
-to limit where PCI bus masters can peek/poke in RAM.
-
-Regards.
+Thanks,
+Jean-Philippe
