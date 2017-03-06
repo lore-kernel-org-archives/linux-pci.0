@@ -1,72 +1,70 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 30 Mar 2017 17:20:16 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v2 07/22] PCI: ECAM: use ioremap_nopost() to map config
- region
-Message-ID: <20170330162015.GB5623@arm.com>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
- <20170327094954.7162-8-lorenzo.pieralisi@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 11/29] drivers, media: convert cx88_core.refcount from
+ atomic_t to refcount_t
+To: Elena Reshetova <elena.reshetova@intel.com>,
+        gregkh@linuxfoundation.org
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <c6987419-f708-9923-0f9f-87b715600045@cogentembedded.com>
+Date: Mon, 6 Mar 2017 19:26:23 +0300
 MIME-Version: 1.0
-In-Reply-To: <20170327094954.7162-8-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
- Shawn Lin <shawn.lin@rock-chips.com>, Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Murali Karicheri <m-karicheri2@ti.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Arnd Bergmann <arnd@arndb.de>,
- Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
- John Garry <john.garry@huawei.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 27, 2017 at 10:49:35AM +0100, Lorenzo Pieralisi wrote:
-> Current ECAM kernel implementation uses ioremap() to map the ECAM
-> configuration space memory region; this is not safe in that on some
-> architectures the ioremap interface provides mappings that allow posted
-> write transactions. This, as highlighted in the PCIe specifications
-> (4.0 - Rev0.3, "Ordering Considerations for the Enhanced Configuration
-> Address Mechanism"), can create ordering issues for software because
-> posted writes transactions on the CPU host bus are non posted in the
-> PCI express fabric.
-> 
-> Update the ioremap() interface to use ioremap_nopost() whose
-> mapping attributes guarantee that non-posted writes transactions
-> are issued for memory writes within the ECAM memory mapped address
-> region.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  drivers/pci/ecam.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+Hello.
 
-Acked-by: Will Deacon <will.deacon@arm.com>
+On 03/06/2017 05:20 PM, Elena Reshetova wrote:
 
-Will
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+>
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
+[...]
+> diff --git a/drivers/media/pci/cx88/cx88.h b/drivers/media/pci/cx88/cx88.h
+> index 115414c..16c1313 100644
+> --- a/drivers/media/pci/cx88/cx88.h
+> +++ b/drivers/media/pci/cx88/cx88.h
+> @@ -24,6 +24,7 @@
+>  #include <linux/i2c-algo-bit.h>
+>  #include <linux/videodev2.h>
+>  #include <linux/kdev_t.h>
+> +#include <linux/refcount.h>
+>
+>  #include <media/v4l2-device.h>
+>  #include <media/v4l2-fh.h>
+> @@ -339,7 +340,7 @@ struct cx8802_dev;
+>
+>  struct cx88_core {
+>  	struct list_head           devlist;
+> -	atomic_t                   refcount;
+> +	refcount_t                   refcount;
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+    Could you please keep the name aligned with above and below?
+
+>
+>  	/* board name */
+>  	int                        nr;
+>
+
+MBR, Sergei
