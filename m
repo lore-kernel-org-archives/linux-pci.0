@@ -1,62 +1,93 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v2 20/22] PCI: layerscape: update PCI config space remap
- function
-Date: Mon, 27 Mar 2017 10:49:48 +0100
-Message-Id: <20170327094954.7162-21-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
- Roy Zang <tie-fei.zang@freescale.com>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 08/29] drivers, md: convert mddev.active from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:20:55 +0200
+Message-Id: <1488810076-3754-9-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_ioremap_nopost* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mingkai Hu <mingkai.hu@freescale.com>
-Cc: Minghuan Lian <minghuan.Lian@freescale.com>
-Cc: Roy Zang <tie-fei.zang@freescale.com>
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- drivers/pci/dwc/pci-layerscape.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/md.c | 6 +++---
+ drivers/md/md.h | 3 ++-
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index c32e392..a1bd86a 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -283,7 +283,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
- 	pcie->pci = pci;
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index 985374f..94c8ebf 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -449,7 +449,7 @@ EXPORT_SYMBOL(md_unplug);
  
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
--	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
-+	pci->dbi_base = devm_ioremap_nopost_resource(dev, dbi_base);
- 	if (IS_ERR(pci->dbi_base))
- 		return PTR_ERR(pci->dbi_base);
+ static inline struct mddev *mddev_get(struct mddev *mddev)
+ {
+-	atomic_inc(&mddev->active);
++	refcount_inc(&mddev->active);
+ 	return mddev;
+ }
  
+@@ -459,7 +459,7 @@ static void mddev_put(struct mddev *mddev)
+ {
+ 	struct bio_set *bs = NULL;
+ 
+-	if (!atomic_dec_and_lock(&mddev->active, &all_mddevs_lock))
++	if (!refcount_dec_and_lock(&mddev->active, &all_mddevs_lock))
+ 		return;
+ 	if (!mddev->raid_disks && list_empty(&mddev->disks) &&
+ 	    mddev->ctime == 0 && !mddev->hold_active) {
+@@ -495,7 +495,7 @@ void mddev_init(struct mddev *mddev)
+ 	INIT_LIST_HEAD(&mddev->all_mddevs);
+ 	setup_timer(&mddev->safemode_timer, md_safemode_timeout,
+ 		    (unsigned long) mddev);
+-	atomic_set(&mddev->active, 1);
++	refcount_set(&mddev->active, 1);
+ 	atomic_set(&mddev->openers, 0);
+ 	atomic_set(&mddev->active_io, 0);
+ 	spin_lock_init(&mddev->lock);
+diff --git a/drivers/md/md.h b/drivers/md/md.h
+index b8859cb..4811663 100644
+--- a/drivers/md/md.h
++++ b/drivers/md/md.h
+@@ -22,6 +22,7 @@
+ #include <linux/list.h>
+ #include <linux/mm.h>
+ #include <linux/mutex.h>
++#include <linux/refcount.h>
+ #include <linux/timer.h>
+ #include <linux/wait.h>
+ #include <linux/workqueue.h>
+@@ -360,7 +361,7 @@ struct mddev {
+ 	 */
+ 	struct mutex			open_mutex;
+ 	struct mutex			reconfig_mutex;
+-	atomic_t			active;		/* general refcount */
++	refcount_t			active;		/* general refcount */
+ 	atomic_t			openers;	/* number of active opens */
+ 
+ 	int				changed;	/* True if we might need to
 -- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.7.4
