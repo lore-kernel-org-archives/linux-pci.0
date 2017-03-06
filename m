@@ -1,87 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52592 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755860AbdCGTJ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Mar 2017 14:09:59 -0500
-Date: Tue, 7 Mar 2017 13:09:55 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-Subject: Re: [patch] PCI: dwc: uninitialized variable in dw_handle_msi_irq()
-Message-ID: <20170307190955.GE21358@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170217232618.GC26717@mwanda>
- <933041dd-288f-4cde-c10f-5b0b3ab49f15@synopsys.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <933041dd-288f-4cde-c10f-5b0b3ab49f15@synopsys.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 02/29] drivers, firewire: convert fw_node.ref_count from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:20:49 +0200
+Message-Id: <1488810076-3754-3-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 22, 2017 at 03:08:07PM -0800, Joao Pinto wrote:
-> Hi Dan,
-> 
-> Às 3:26 PM de 2/17/2017, Dan Carpenter escreveu:
-> > The bug is that "val" is unsigned long but we only initialize 32 bits
-> > of it.  Then we test "if (val)" and that might be true not because we
-> > set the bits but because some were never initialized.
-> > 
-> > Fixes: f342d940ee0e ("PCI: exynos: Add support for MSI")
-> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > ---
-> > Static analysis.  Not tested.
-> 
-> What you are statiting makes perfect sense, since the register is indeed 32 bits
-> and can have undesirable behavior in 64-bit systems for example.
-> We have more examples like this for MSI related operations in pcie-designware.
-> Could you please change them as well just?
-> 
-> For example, the irq variable declaration is also not consistent as you can see
-> in these examples:
-> 
->  static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
-> 
->  static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
->                            irq_hw_number_t hwirq)
-> 
->  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-> 
->  static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Where are we with this?  It sounds like there's a real problem here,
-and Dan's original patch fixes one case of it.  But if there are other
-similar cases, we should fix them all at once.
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/firewire/core-topology.c | 2 +-
+ drivers/firewire/core.h          | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-Since this doesn't sound like an urgent bug fix (I don't see user
-problem reports), I guess I'll wait for an updated patch?
-
-> > diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-> > index af8f6e92e885..5bfc377b83e4 100644
-> > --- a/drivers/pci/dwc/pcie-designware.c
-> > +++ b/drivers/pci/dwc/pcie-designware.c
-> > @@ -257,17 +257,18 @@ static struct irq_chip dw_msi_irq_chip = {
-> >  /* MSI int handler */
-> >  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
-> >  {
-> > -	unsigned long val;
-> > +	u32 val;
-> >  	int i, pos, irq;
-> >  	irqreturn_t ret = IRQ_NONE;
-> >  
-> >  	for (i = 0; i < MAX_MSI_CTRLS; i++) {
-> >  		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
-> > -				(u32 *)&val);
-> > +				    &val);
-> >  		if (val) {
-> >  			ret = IRQ_HANDLED;
-> >  			pos = 0;
-> > -			while ((pos = find_next_bit(&val, 32, pos)) != 32) {
-> > +			while ((pos = find_next_bit((unsigned long *)&val, 32,
-> > +						    pos)) != 32) {
-> >  				irq = irq_find_mapping(pp->irq_domain,
-> >  						i * 32 + pos);
-> >  				dw_pcie_wr_own_conf(pp,
-> > 
-> 
+diff --git a/drivers/firewire/core-topology.c b/drivers/firewire/core-topology.c
+index 0de8350..939d259 100644
+--- a/drivers/firewire/core-topology.c
++++ b/drivers/firewire/core-topology.c
+@@ -124,7 +124,7 @@ static struct fw_node *fw_node_create(u32 sid, int port_count, int color)
+ 	node->initiated_reset = SELF_ID_PHY_INITIATOR(sid);
+ 	node->port_count = port_count;
+ 
+-	atomic_set(&node->ref_count, 1);
++	refcount_set(&node->ref_count, 1);
+ 	INIT_LIST_HEAD(&node->link);
+ 
+ 	return node;
+diff --git a/drivers/firewire/core.h b/drivers/firewire/core.h
+index e1480ff6..c07962e 100644
+--- a/drivers/firewire/core.h
++++ b/drivers/firewire/core.h
+@@ -12,7 +12,7 @@
+ #include <linux/slab.h>
+ #include <linux/types.h>
+ 
+-#include <linux/atomic.h>
++#include <linux/refcount.h>
+ 
+ struct device;
+ struct fw_card;
+@@ -184,7 +184,7 @@ struct fw_node {
+ 			 * local node to this node. */
+ 	u8 max_depth:4;	/* Maximum depth to any leaf node */
+ 	u8 max_hops:4;	/* Max hops in this sub tree */
+-	atomic_t ref_count;
++	refcount_t ref_count;
+ 
+ 	/* For serializing node topology into a list. */
+ 	struct list_head link;
+@@ -197,14 +197,14 @@ struct fw_node {
+ 
+ static inline struct fw_node *fw_node_get(struct fw_node *node)
+ {
+-	atomic_inc(&node->ref_count);
++	refcount_inc(&node->ref_count);
+ 
+ 	return node;
+ }
+ 
+ static inline void fw_node_put(struct fw_node *node)
+ {
+-	if (atomic_dec_and_test(&node->ref_count))
++	if (refcount_dec_and_test(&node->ref_count))
+ 		kfree(node);
+ }
+ 
+-- 
+2.7.4
