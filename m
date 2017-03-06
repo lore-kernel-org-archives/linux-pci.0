@@ -1,94 +1,92 @@
-Return-Path: <SRS0=6Mcr=2M=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=6Mcr=2M=free.fr=slash.tmp@kernel.org>
-Subject: Re: Using the generic host PCIe driver
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Will Deacon <will.deacon@arm.com>, David Daney <david.daney@cavium.com>,
- Rob Herring <robh@kernel.org>, Thierry Reding <treding@nvidia.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Marc Zyngier <marc.zyngier@arm.com>
-References: <8d4e5d8a-7683-0180-324c-0ffd1a9a641a@free.fr>
- <20170227164430.GB11162@bhelgaas-glaptop.roam.corp.google.com>
- <8643c952-e915-bcd1-390e-9d4001789872@free.fr>
- <20170227183534.GA12481@bhelgaas-glaptop.roam.corp.google.com>
- <347d4200-e089-60df-5f60-58d16efc7c4e@free.fr>
- <20170301161801.GB13171@bhelgaas-glaptop.roam.corp.google.com>
- <98ee3041-6a94-91af-b4bf-208aa02624ed@free.fr>
- <20170301215726.GA32286@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <258cd6f3-ef17-6705-ff48-ae06f26778c2@free.fr>
-Date: Fri, 3 Mar 2017 13:44:54 +0100
-MIME-Version: 1.0
-In-Reply-To: <20170301215726.GA32286@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:42872 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753216AbdCFOY4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Mar 2017 09:24:56 -0500
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 01/29] drivers, block: convert xen_blkif.refcnt from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:20:48 +0200
+Message-Id: <1488810076-3754-2-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 01/03/2017 22:57, Bjorn Helgaas wrote:
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-> On Wed, Mar 01, 2017 at 07:05:26PM +0100, Mason wrote:
-> 
->> Another thing I don't understand... According to this reference:
->> http://elinux.org/Device_Tree_Usage#PCI_Address_Translation
->>
->> The "ranges" prop starts with:
->>
->>     phys.hi  cell: npt000ss bbbbbbbb dddddfff rrrrrrrr
->>     phys.mid cell: hhhhhhhh hhhhhhhh hhhhhhhh hhhhhhhh
->>     phys.low cell: llllllll llllllll llllllll llllllll
->>
->> So I thought it might be possible to specify bbbbbbbb = 0x01
->> to mean "I want to assign memory only to bus 1, don't assign
->> any memory to bus 0". Am I mistaken?
-> 
-> I don't really understand the "bbbbbbbb" field in that range.  The
-> bridge has a "bus-ranges" property that defines the PCI bus numbers
-> below the bridge.  As I understand it, the first number in bus-ranges
-> is the root bus (the bus immediately below the host bridge).  Is
-> "bbbbbbbb" supposed to be identical to the that root bus number?  If
-> so, it seems redundant, so why does the "bbbbbbbb" field even exist?
-> 
-> If "bbbbbbbb" can be different from the root bus number, I don't know
-> what it means.  The host bridge translates CPU physical addresses to
-> PCI bus address on the root bus (the PCI bus immediately below the
-> bridge).  Once on the PCI side, the correspondence of memory addresses
-> to bus numbers is controlled completely by PCI-to-PCI bridges,
-> independent of what DT contains.
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/block/xen-blkback/common.h | 7 ++++---
+ drivers/block/xen-blkback/xenbus.c | 2 +-
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-The answer (probably) lies in
-PCI Bus Binding to: IEEE Std 1275-1994
-Standard for Boot (Initialization Configuration) Firmware, Revision 2.1
-[What does "to" mean in "PCI Bus Binding to"? Is it a typo?]
-
-> 12. Use of the "ranges" property
-> 
-> The "ranges" property of Open Firmware represents how address
-> transformation is done across bus bridges. The "ranges" property
-> conveys this information for PCI, but the use of the property is not
-> as straightforward as on some other busses.
-> 
-> In particular, the phys.hi fields of the child address spaces in the
-> "ranges" property for PCI does not contain the same information as
-> "reg" property entries within PCI nodes. The only information that is
-> present in "ranges" phys.hi entries are the non-relocatable,
-> prefetchable and the PCI address space bits for which the entry
-> applies. I.e., only the n, p and ss bits are present; the bbbbbbbb,
-> ddddd, fff and rrrrrrrr fields are 0.
-> 
-> When an address is to be mapped through a PCI bus bridge node, the
-> phys.hi value of the address to be mapped and the child field of a
-> "ranges" entry should be masked so that only the ss bits are
-> compared. I.e., the only portion of phys.hi that should participate
-> in the range determination is the address space indicator (the ss bits).
-
-So my bbbbbbbb = 0x01 attempt was non-sensical (as I expected).
-
-For now, I have "hidden" the root's BAR0 from the system with:
-
-	if (bus->number == 0 && where == PCI_BASE_ADDRESS_0) {
-		*val = 0;
-		return PCIBIOS_SUCCESSFUL;
-	}
-
-Regards.
+diff --git a/drivers/block/xen-blkback/common.h b/drivers/block/xen-blkback/common.h
+index dea61f6..2ccfd62 100644
+--- a/drivers/block/xen-blkback/common.h
++++ b/drivers/block/xen-blkback/common.h
+@@ -35,6 +35,7 @@
+ #include <linux/wait.h>
+ #include <linux/io.h>
+ #include <linux/rbtree.h>
++#include <linux/refcount.h>
+ #include <asm/setup.h>
+ #include <asm/pgalloc.h>
+ #include <asm/hypervisor.h>
+@@ -333,7 +334,7 @@ struct xen_blkif {
+ 	struct xen_vbd		vbd;
+ 	/* Back pointer to the backend_info. */
+ 	struct backend_info	*be;
+-	atomic_t		refcnt;
++	refcount_t		refcnt;
+ 	/* for barrier (drain) requests */
+ 	struct completion	drain_complete;
+ 	atomic_t		drain;
+@@ -386,10 +387,10 @@ struct pending_req {
+ 			 (_v)->bdev->bd_part->nr_sects : \
+ 			  get_capacity((_v)->bdev->bd_disk))
+ 
+-#define xen_blkif_get(_b) (atomic_inc(&(_b)->refcnt))
++#define xen_blkif_get(_b) (refcount_inc(&(_b)->refcnt))
+ #define xen_blkif_put(_b)				\
+ 	do {						\
+-		if (atomic_dec_and_test(&(_b)->refcnt))	\
++		if (refcount_dec_and_test(&(_b)->refcnt))	\
+ 			schedule_work(&(_b)->free_work);\
+ 	} while (0)
+ 
+diff --git a/drivers/block/xen-blkback/xenbus.c b/drivers/block/xen-blkback/xenbus.c
+index 8fe61b5..9f89be3 100644
+--- a/drivers/block/xen-blkback/xenbus.c
++++ b/drivers/block/xen-blkback/xenbus.c
+@@ -176,7 +176,7 @@ static struct xen_blkif *xen_blkif_alloc(domid_t domid)
+ 		return ERR_PTR(-ENOMEM);
+ 
+ 	blkif->domid = domid;
+-	atomic_set(&blkif->refcnt, 1);
++	refcount_set(&blkif->refcnt, 1);
+ 	init_completion(&blkif->drain_complete);
+ 	INIT_WORK(&blkif->free_work, xen_blkif_deferred_free);
+ 
+-- 
+2.7.4
