@@ -1,81 +1,103 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 21 Mar 2017 08:47:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jon Masters <jcm@jonmasters.org>
-Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
-Message-ID: <20170321134744.GA13150@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170131142525.GA9942@bhelgaas-glaptop.roam.corp.google.com>
- <20170131145720.GA14231@localhost.localdomain>
- <20170131203109.GA14127@bhelgaas-glaptop.roam.corp.google.com>
- <20170201125325.GA15805@localhost.localdomain>
- <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
- <376ae1df-da85-e576-75d6-3ae2ab0f1b41@jonmasters.org>
- <20170315113323.GA28027@localhost.localdomain>
- <251db823-591b-483b-9c55-13c911020fd1@jonmasters.org>
- <48b93116-cc0f-e59d-8aa3-704052ad6759@gmail.com>
- <c3392131-9243-24d3-30b4-4d7e84019d6f@jonmasters.org>
-MIME-Version: 1.0
-In-Reply-To: <c3392131-9243-24d3-30b4-4d7e84019d6f@jonmasters.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: David.Daney@cavium.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com,
- David Daney <ddaney.cavm@gmail.com>,
- Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>, bhelgaas@google.com,
- tn@semihalf.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 18/29] drivers, s390: convert urdev.ref_count from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:21:05 +0200
+Message-Id: <1488810076-3754-19-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 21, 2017 at 07:38:07AM -0400, Jon Masters wrote:
-> On 03/16/2017 12:25 PM, David Daney wrote:
-> > On 03/16/2017 07:32 AM, Jon Masters wrote:
-> 
-> >>> Yes, it is now contains "CAVxxx" as _HID for device config object.
-> >>
-> >> Which is different from the version that was merged into upstream. That
-> >> should never have happened. It will never happen again. I have spent some
-> >> time over the past few days ensuring folks understand that I will not
-> >> allow a repeat of this to occur the next time around. We will have
-> >> platforms that are bulletproof and supported by upstream with any
-> >> errata fixes in a very carefully controlled manner. There will
-> >> under no circumstances ever be a situation like this again.
-> > 
-> > We are still evaluating the merits of registering the values that appeared
-> > in v4.10, and not changing them.  We should know more in a couple of days.
-> 
-> Thanks David. What was the verdict? (for the public record). If we need to
-> get a change into upstream, let's get that teed up before 4.12 merge.
-> 
-> And for other folks following along with this thread: I'm not just picking
-> on Cavium here. I'll be doing the same with *every* ARM server SoC company
-> as necessary over the coming months. We are going to have militantly
-> compliant standards adherence in this industry and every ARM server SoC is
-> going to "just work" with an upstream Linux kernel with an ACPI enabled 
-> platform. This will be so utterly clean and boring it'll be amazing.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Thanks for keeping on top of this, Jon.  I agree, we should not be
-using unregistered vendor prefixes, e.g., the "THRX" added by
-44f22bd91e88 ("PCI: Add MCFG quirks for Cavium ThunderX pass2.x host
-controller").  I'm sorry I merged that without doing the due
-diligence.
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/s390/char/vmur.c | 8 ++++----
+ drivers/s390/char/vmur.h | 4 +++-
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-I suspect the resolution will be to register "THRX".  If that doesn't
-happen, I'll propose reverting 44f22bd91e88, not because I want to
-break things, but only because I'm not personally in a position to do
-anything smarter.  So please propose a better solution that fits
-within the ACPI _HID/_CID model :)
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/s390/char/vmur.c b/drivers/s390/char/vmur.c
+index 04aceb6..ced8151 100644
+--- a/drivers/s390/char/vmur.c
++++ b/drivers/s390/char/vmur.c
+@@ -110,7 +110,7 @@ static struct urdev *urdev_alloc(struct ccw_device *cdev)
+ 	mutex_init(&urd->io_mutex);
+ 	init_waitqueue_head(&urd->wait);
+ 	spin_lock_init(&urd->open_lock);
+-	atomic_set(&urd->ref_count,  1);
++	refcount_set(&urd->ref_count,  1);
+ 	urd->cdev = cdev;
+ 	get_device(&cdev->dev);
+ 	return urd;
+@@ -126,7 +126,7 @@ static void urdev_free(struct urdev *urd)
+ 
+ static void urdev_get(struct urdev *urd)
+ {
+-	atomic_inc(&urd->ref_count);
++	refcount_inc(&urd->ref_count);
+ }
+ 
+ static struct urdev *urdev_get_from_cdev(struct ccw_device *cdev)
+@@ -159,7 +159,7 @@ static struct urdev *urdev_get_from_devno(u16 devno)
+ 
+ static void urdev_put(struct urdev *urd)
+ {
+-	if (atomic_dec_and_test(&urd->ref_count))
++	if (refcount_dec_and_test(&urd->ref_count))
+ 		urdev_free(urd);
+ }
+ 
+@@ -946,7 +946,7 @@ static int ur_set_offline_force(struct ccw_device *cdev, int force)
+ 		rc = -EBUSY;
+ 		goto fail_urdev_put;
+ 	}
+-	if (!force && (atomic_read(&urd->ref_count) > 2)) {
++	if (!force && (refcount_read(&urd->ref_count) > 2)) {
+ 		/* There is still a user of urd (e.g. ur_open) */
+ 		TRACE("ur_set_offline: BUSY\n");
+ 		rc = -EBUSY;
+diff --git a/drivers/s390/char/vmur.h b/drivers/s390/char/vmur.h
+index fa320ad..35ea9d1 100644
+--- a/drivers/s390/char/vmur.h
++++ b/drivers/s390/char/vmur.h
+@@ -11,6 +11,8 @@
+ #ifndef _VMUR_H_
+ #define _VMUR_H_
+ 
++#include <linux/refcount.h>
++
+ #define DEV_CLASS_UR_I 0x20 /* diag210 unit record input device class */
+ #define DEV_CLASS_UR_O 0x10 /* diag210 unit record output device class */
+ /*
+@@ -69,7 +71,7 @@ struct urdev {
+ 	size_t reclen;			/* Record length for *write* CCWs */
+ 	int class;			/* VM device class */
+ 	int io_request_rc;		/* return code from I/O request */
+-	atomic_t ref_count;		/* reference counter */
++	refcount_t ref_count;		/* reference counter */
+ 	wait_queue_head_t wait;		/* wait queue to serialize open */
+ 	int open_flag;			/* "urdev is open" flag */
+ 	spinlock_t open_lock;		/* serialize critical sections */
+-- 
+2.7.4
