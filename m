@@ -1,75 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44870 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750898AbdCQLxu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Mar 2017 07:53:50 -0400
-Date: Fri, 17 Mar 2017 12:33:47 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
-        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
-        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
-        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org
-Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
- when spliting large pages
-Message-ID: <20170317113337.syvpat3c4s2l4nuz@pd.tnic>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
- <20170310110657.hophlog2juw5hpzz@pd.tnic>
- <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
- <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
- <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
- <20170317101737.icdois7sdmtutt6b@pd.tnic>
- <b6f9f46c-58c4-a19c-4955-2d07bd411443@redhat.com>
- <20170317105610.musvo4baokgssvye@pd.tnic>
- <78c99889-f175-f60f-716b-34a62203418a@redhat.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 6 Mar 2017 11:14:51 +0000
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+To: "Liu, Yi L" <yi.l.liu@intel.com>
+Subject: Re: [RFC PATCH 00/30] Add PCIe SVM support to ARM SMMUv3
+Message-ID: <20170306111451.GA28804@e106794-lin.localdomain>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <A2975661238FB949B60364EF0F2C2574390186B8@shsmsx102.ccr.corp.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <78c99889-f175-f60f-716b-34a62203418a@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <A2975661238FB949B60364EF0F2C2574390186B8@shsmsx102.ccr.corp.intel.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Shanker Donthineni <shankerd@qti.qualcomm.com>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Sinan Kaya <okaya@qti.qualcomm.com>,
+ Will Deacon <will.deacon@arm.com>, Harv Abdulhamid <harba@qti.qualcomm.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, David Woodhouse <dwmw2@infradead.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 17, 2017 at 12:03:31PM +0100, Paolo Bonzini wrote:
+Hi Yi,
 
-> If it is possible to do it in a fairly hypervisor-independent manner,
-> I'm all for it.  That is, only by looking at AMD-specified CPUID leaves
-> and at kernel ELF sections.
+On 06/03/17 08:20, Liu, Yi L wrote:
+> 
+> 
+>> -----Original Message-----
+>> From: iommu-bounces@lists.linux-foundation.org [mailto:iommu-
+>> bounces@lists.linux-foundation.org] On Behalf Of Jean-Philippe Brucker
+>> Sent: Tuesday, February 28, 2017 3:54 AM
+>> Cc: Shanker Donthineni <shankerd@qti.qualcomm.com>; kvm@vger.kernel.org;
+>> Catalin Marinas <catalin.marinas@arm.com>; Sinan Kaya
+>> <okaya@qti.qualcomm.com>; Will Deacon <will.deacon@arm.com>;
+>> iommu@lists.linux-foundation.org; Harv Abdulhamid <harba@qti.qualcomm.com>;
+>> linux-pci@vger.kernel.org; Bjorn Helgaas <bhelgaas@google.com>; David
+>> Woodhouse <dwmw2@infradead.org>; linux-arm-kernel@lists.infradead.org; Nate
+>> Watterson <nwatters@qti.qualcomm.com>
+>> Subject: [RFC PATCH 00/30] Add PCIe SVM support to ARM SMMUv3
+>>
+>> Hi,
+>>
+>> This series adds support for PCI ATS, PRI and PASID extensions to the
+>> SMMUv3 driver. In systems that support it, it is now possible for some high-end
+>> devices to perform DMA into process address spaces. Page tables are shared
+>> between MMU and SMMU; page faults from devices are recoverable and handled by
+>> the mm subsystem.
+>>
+>> We propose an extension to the IOMMU API that unifies existing SVM
+>> implementations (AMD, Intel and ARM) in patches 22 and 24. Nothing is set in stone,
+>> the goal is to start discussions and find an intersection between implementations.
+>>
+>> We also propose a VFIO interface in patches 29 and 30, that allows userspace device
+>> drivers to make use of SVM. It would also serve as example implementation for
+>> other device drivers.
+>>
+>> Overview of the patches:
+>>
+>> * 1 and 2 prepare the SMMUv3 structures for ATS,
+>> * 3 to 5 enable ATS for devices that support it.
+>> * 6 to 10 prepare the SMMUv3 structures for PASID and PRI. Patch 9,
+>>   in particular, provides details on the structure requirements.
+>> * 11 introduces an interface for sharing ASIDs on ARM64,
+>> * 12 to 17 add more infrastructure for sharing page tables,
+>> * 18 and 19 add minor helpers to PCI,
+>> * 20 enables PASID in devices that support it,
+> 
+> Jean, supposedly, you will introduce a PASID management mechanism in
+> SMMU v3 driver. Here I have a question about PASID management on ARM.
+> Will there be a system wide PASID table? Or there is equivalent implementation.
 
-Not even that.
+Yes the SMMUv3 driver allocates and manages PASIDs. In this series I
+implemented one PASID table for each device (for simplicity), but as
+explained in my reply on patch 22, I'd like to introduce a PASID table
+for each IOMMU domain in the next version.
 
-What that needs to be able to do is:
+Thanks,
+Jean-Philippe
 
-	kvm_map_percpu_hv_shared(st, sizeof(*st)))
-
-where st is the percpu steal time ptr:
-
-	struct kvm_steal_time *st = &per_cpu(steal_time, cpu);
-
-Underneath, what it does basically is it clears the encryption mask from
-the pte, see patch 16/32.
-
-And I keep talking about SEV-ES because this is going to expand on the
-need of having a shared memory region which the hypervisor and the guest
-needs to access, thus unencrypted. See
-
-http://support.amd.com/TechDocs/Protecting%20VM%20Register%20State%20with%20SEV-ES.pdf
-
-This is where you come in and say what would be the best approach there...
-
--- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
