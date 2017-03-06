@@ -1,95 +1,374 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v6 0/4] i.MX7 PCI support
-Date: Tue, 14 Mar 2017 08:18:23 -0700
-Message-Id: <20170314151827.31248-1-andrew.smirnov@gmail.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, linux-kernel@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
- Fabio Estevam <fabio.estevam@nxp.com>, yurovsky@gmail.com,
- linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 10/29] drivers, md: convert stripe_head.count from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:20:57 +0200
+Message-Id: <1488810076-3754-11-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello, everyone:
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-This is a sixth iteration of the code that adds PCI-subsystem bits
-necessary for enabling PCI support on i.MX7.
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/md/raid5-cache.c |  8 +++---
+ drivers/md/raid5.c       | 66 ++++++++++++++++++++++++------------------------
+ drivers/md/raid5.h       |  3 ++-
+ 3 files changed, 39 insertions(+), 38 deletions(-)
 
-Chagnes since v5:
-
-	- Collected ACKs from Lee and Rob
-
-Changes since v4 (can be found at [version4]):
-
-	- Dropped typo-fix patch (originally patch #1 of the
-          series). Bjorn, I am assuming that patch from v4 survived
-          and stayed in your tree, let me know if that is not true.
-
-	- Added patch with workaround to address speed change false
-          failures (I kept it as a separate patch to better document
-          exchange with NXP/Freescale that lead to that patch)
-
-	- Added patch to avoid speed change on links configured Gen1
-          only (Let me know if that is a terrible idea)
-
-	- Addressed section mismatch problem by moving call to
-          hook_fault_code to happend before driver registration.
-
-Changes since v3 (can be found at [version3]):
-	- Move all of the reset_control_assert's into imx6_pcie_assert_core_reset
-	- Documented required reset and power domain DT bindings
-
-Changes since v2 (can be found at [version2]):
-
-	- Collected Reviewed-by for patch #2 from Lucas
-	- Reset logic implementation moved out into a reset controller
-          driver (see [reset1])
-	- Removed unused leftover code
-
-Changes since v1 (can be found at [version1]):
-
-	- All GPC related code moved into a separate driver (see [gpc1])
-	- Removed GPIO probe deferral logging
-	- Fixed section mismatch warning
-	- Minor reformatting of fsl,imx6q-pcie.txt(as per Rob
-          Herring's request)
-
-[version5] https://lkml.org/lkml/2017/2/20/376
-[version4] https://lkml.org/lkml/2017/2/7/478
-[version3] https://lkml.org/lkml/2017/2/6/565
-[version2] https://lkml.org/lkml/2017/2/1/510
-[version1] https://lkml.org/lkml/2017/1/19/488
-[gpc1] https://lkml.org/lkml/2017/2/6/551
-[reset1] https://lkml.org/lkml/2017/2/6/554
-
-Andrey Smirnov (4):
-  PCI: imx6: Add code to support i.MX7D
-  PCI: imx6: Do not wait for speed change on i.MX7
-  PCI: imx6: Do not switch speed if Gen2 is disabled
-  PCI: imx6: Allow probe deferal by reset GPIO
-
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 +-
- drivers/pci/host/pci-imx6.c                        | 199 +++++++++++++++------
- include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
- 3 files changed, 161 insertions(+), 55 deletions(-)
-
+diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+index 3f307be..6c05e12 100644
+--- a/drivers/md/raid5-cache.c
++++ b/drivers/md/raid5-cache.c
+@@ -979,7 +979,7 @@ int r5l_write_stripe(struct r5l_log *log, struct stripe_head *sh)
+ 	 * don't delay.
+ 	 */
+ 	clear_bit(STRIPE_DELAYED, &sh->state);
+-	atomic_inc(&sh->count);
++	refcount_inc(&sh->count);
+ 
+ 	mutex_lock(&log->io_mutex);
+ 	/* meta + data */
+@@ -1321,7 +1321,7 @@ static void r5c_flush_stripe(struct r5conf *conf, struct stripe_head *sh)
+ 	assert_spin_locked(&conf->device_lock);
+ 
+ 	list_del_init(&sh->lru);
+-	atomic_inc(&sh->count);
++	refcount_inc(&sh->count);
+ 
+ 	set_bit(STRIPE_HANDLE, &sh->state);
+ 	atomic_inc(&conf->active_stripes);
+@@ -1424,7 +1424,7 @@ static void r5c_do_reclaim(struct r5conf *conf)
+ 			 */
+ 			if (!list_empty(&sh->lru) &&
+ 			    !test_bit(STRIPE_HANDLE, &sh->state) &&
+-			    atomic_read(&sh->count) == 0) {
++			    refcount_read(&sh->count) == 0) {
+ 				r5c_flush_stripe(conf, sh);
+ 				if (count++ >= R5C_RECLAIM_STRIPE_GROUP)
+ 					break;
+@@ -2650,7 +2650,7 @@ r5c_cache_data(struct r5l_log *log, struct stripe_head *sh,
+ 	 * don't delay.
+ 	 */
+ 	clear_bit(STRIPE_DELAYED, &sh->state);
+-	atomic_inc(&sh->count);
++	refcount_inc(&sh->count);
+ 
+ 	mutex_lock(&log->io_mutex);
+ 	/* meta + data */
+diff --git a/drivers/md/raid5.c b/drivers/md/raid5.c
+index 2ce23b0..30c96a8 100644
+--- a/drivers/md/raid5.c
++++ b/drivers/md/raid5.c
+@@ -296,7 +296,7 @@ static void do_release_stripe(struct r5conf *conf, struct stripe_head *sh,
+ static void __release_stripe(struct r5conf *conf, struct stripe_head *sh,
+ 			     struct list_head *temp_inactive_list)
+ {
+-	if (atomic_dec_and_test(&sh->count))
++	if (refcount_dec_and_test(&sh->count))
+ 		do_release_stripe(conf, sh, temp_inactive_list);
+ }
+ 
+@@ -388,7 +388,7 @@ void raid5_release_stripe(struct stripe_head *sh)
+ 
+ 	/* Avoid release_list until the last reference.
+ 	 */
+-	if (atomic_add_unless(&sh->count, -1, 1))
++	if (refcount_dec_not_one(&sh->count))
+ 		return;
+ 
+ 	if (unlikely(!conf->mddev->thread) ||
+@@ -401,7 +401,7 @@ void raid5_release_stripe(struct stripe_head *sh)
+ slow_path:
+ 	local_irq_save(flags);
+ 	/* we are ok here if STRIPE_ON_RELEASE_LIST is set or not */
+-	if (atomic_dec_and_lock(&sh->count, &conf->device_lock)) {
++	if (refcount_dec_and_lock(&sh->count, &conf->device_lock)) {
+ 		INIT_LIST_HEAD(&list);
+ 		hash = sh->hash_lock_index;
+ 		do_release_stripe(conf, sh, &list);
+@@ -491,7 +491,7 @@ static void init_stripe(struct stripe_head *sh, sector_t sector, int previous)
+ 	struct r5conf *conf = sh->raid_conf;
+ 	int i, seq;
+ 
+-	BUG_ON(atomic_read(&sh->count) != 0);
++	BUG_ON(refcount_read(&sh->count) != 0);
+ 	BUG_ON(test_bit(STRIPE_HANDLE, &sh->state));
+ 	BUG_ON(stripe_operations_active(sh));
+ 	BUG_ON(sh->batch_head);
+@@ -668,11 +668,11 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
+ 					  &conf->cache_state);
+ 			} else {
+ 				init_stripe(sh, sector, previous);
+-				atomic_inc(&sh->count);
++				refcount_inc(&sh->count);
+ 			}
+-		} else if (!atomic_inc_not_zero(&sh->count)) {
++		} else if (!refcount_inc_not_zero(&sh->count)) {
+ 			spin_lock(&conf->device_lock);
+-			if (!atomic_read(&sh->count)) {
++			if (!refcount_read(&sh->count)) {
+ 				if (!test_bit(STRIPE_HANDLE, &sh->state))
+ 					atomic_inc(&conf->active_stripes);
+ 				BUG_ON(list_empty(&sh->lru) &&
+@@ -688,7 +688,7 @@ raid5_get_active_stripe(struct r5conf *conf, sector_t sector,
+ 					sh->group = NULL;
+ 				}
+ 			}
+-			atomic_inc(&sh->count);
++			refcount_inc(&sh->count);
+ 			spin_unlock(&conf->device_lock);
+ 		}
+ 	} while (sh == NULL);
+@@ -752,9 +752,9 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
+ 	hash = stripe_hash_locks_hash(head_sector);
+ 	spin_lock_irq(conf->hash_locks + hash);
+ 	head = __find_stripe(conf, head_sector, conf->generation);
+-	if (head && !atomic_inc_not_zero(&head->count)) {
++	if (head && !refcount_inc_not_zero(&head->count)) {
+ 		spin_lock(&conf->device_lock);
+-		if (!atomic_read(&head->count)) {
++		if (!refcount_read(&head->count)) {
+ 			if (!test_bit(STRIPE_HANDLE, &head->state))
+ 				atomic_inc(&conf->active_stripes);
+ 			BUG_ON(list_empty(&head->lru) &&
+@@ -770,7 +770,7 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
+ 				head->group = NULL;
+ 			}
+ 		}
+-		atomic_inc(&head->count);
++		refcount_inc(&head->count);
+ 		spin_unlock(&conf->device_lock);
+ 	}
+ 	spin_unlock_irq(conf->hash_locks + hash);
+@@ -833,7 +833,7 @@ static void stripe_add_to_batch_list(struct r5conf *conf, struct stripe_head *sh
+ 		sh->batch_head->bm_seq = seq;
+ 	}
+ 
+-	atomic_inc(&sh->count);
++	refcount_inc(&sh->count);
+ unlock_out:
+ 	unlock_two_stripes(head, sh);
+ out:
+@@ -1036,9 +1036,9 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 			pr_debug("%s: for %llu schedule op %d on disc %d\n",
+ 				__func__, (unsigned long long)sh->sector,
+ 				bi->bi_opf, i);
+-			atomic_inc(&sh->count);
++			refcount_inc(&sh->count);
+ 			if (sh != head_sh)
+-				atomic_inc(&head_sh->count);
++				refcount_inc(&head_sh->count);
+ 			if (use_new_offset(conf, sh))
+ 				bi->bi_iter.bi_sector = (sh->sector
+ 						 + rdev->new_data_offset);
+@@ -1097,9 +1097,9 @@ static void ops_run_io(struct stripe_head *sh, struct stripe_head_state *s)
+ 				 "replacement disc %d\n",
+ 				__func__, (unsigned long long)sh->sector,
+ 				rbi->bi_opf, i);
+-			atomic_inc(&sh->count);
++			refcount_inc(&sh->count);
+ 			if (sh != head_sh)
+-				atomic_inc(&head_sh->count);
++				refcount_inc(&head_sh->count);
+ 			if (use_new_offset(conf, sh))
+ 				rbi->bi_iter.bi_sector = (sh->sector
+ 						  + rrdev->new_data_offset);
+@@ -1275,7 +1275,7 @@ static void ops_run_biofill(struct stripe_head *sh)
+ 		}
+ 	}
+ 
+-	atomic_inc(&sh->count);
++	refcount_inc(&sh->count);
+ 	init_async_submit(&submit, ASYNC_TX_ACK, tx, ops_complete_biofill, sh, NULL);
+ 	async_trigger_callback(&submit);
+ }
+@@ -1353,7 +1353,7 @@ ops_run_compute5(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 		if (i != target)
+ 			xor_srcs[count++] = sh->dev[i].page;
+ 
+-	atomic_inc(&sh->count);
++	refcount_inc(&sh->count);
+ 
+ 	init_async_submit(&submit, ASYNC_TX_FENCE|ASYNC_TX_XOR_ZERO_DST, NULL,
+ 			  ops_complete_compute, sh, to_addr_conv(sh, percpu, 0));
+@@ -1441,7 +1441,7 @@ ops_run_compute6_1(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	BUG_ON(!test_bit(R5_Wantcompute, &tgt->flags));
+ 	dest = tgt->page;
+ 
+-	atomic_inc(&sh->count);
++	refcount_inc(&sh->count);
+ 
+ 	if (target == qd_idx) {
+ 		count = set_syndrome_sources(blocks, sh, SYNDROME_SRC_ALL);
+@@ -1516,7 +1516,7 @@ ops_run_compute6_2(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	pr_debug("%s: stripe: %llu faila: %d failb: %d\n",
+ 		 __func__, (unsigned long long)sh->sector, faila, failb);
+ 
+-	atomic_inc(&sh->count);
++	refcount_inc(&sh->count);
+ 
+ 	if (failb == syndrome_disks+1) {
+ 		/* Q disk is one of the missing disks */
+@@ -1784,7 +1784,7 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 			break;
+ 	}
+ 	if (i >= sh->disks) {
+-		atomic_inc(&sh->count);
++		refcount_inc(&sh->count);
+ 		set_bit(R5_Discard, &sh->dev[pd_idx].flags);
+ 		ops_complete_reconstruct(sh);
+ 		return;
+@@ -1825,7 +1825,7 @@ ops_run_reconstruct5(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 		flags = ASYNC_TX_ACK |
+ 			(prexor ? ASYNC_TX_XOR_DROP_DST : ASYNC_TX_XOR_ZERO_DST);
+ 
+-		atomic_inc(&head_sh->count);
++		refcount_inc(&head_sh->count);
+ 		init_async_submit(&submit, flags, tx, ops_complete_reconstruct, head_sh,
+ 				  to_addr_conv(sh, percpu, j));
+ 	} else {
+@@ -1867,7 +1867,7 @@ ops_run_reconstruct6(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 			break;
+ 	}
+ 	if (i >= sh->disks) {
+-		atomic_inc(&sh->count);
++		refcount_inc(&sh->count);
+ 		set_bit(R5_Discard, &sh->dev[sh->pd_idx].flags);
+ 		set_bit(R5_Discard, &sh->dev[sh->qd_idx].flags);
+ 		ops_complete_reconstruct(sh);
+@@ -1891,7 +1891,7 @@ ops_run_reconstruct6(struct stripe_head *sh, struct raid5_percpu *percpu,
+ 				 struct stripe_head, batch_list) == head_sh;
+ 
+ 	if (last_stripe) {
+-		atomic_inc(&head_sh->count);
++		refcount_inc(&head_sh->count);
+ 		init_async_submit(&submit, txflags, tx, ops_complete_reconstruct,
+ 				  head_sh, to_addr_conv(sh, percpu, j));
+ 	} else
+@@ -1948,7 +1948,7 @@ static void ops_run_check_p(struct stripe_head *sh, struct raid5_percpu *percpu)
+ 	tx = async_xor_val(xor_dest, xor_srcs, 0, count, STRIPE_SIZE,
+ 			   &sh->ops.zero_sum_result, &submit);
+ 
+-	atomic_inc(&sh->count);
++	refcount_inc(&sh->count);
+ 	init_async_submit(&submit, ASYNC_TX_ACK, tx, ops_complete_check, sh, NULL);
+ 	tx = async_trigger_callback(&submit);
+ }
+@@ -1967,7 +1967,7 @@ static void ops_run_check_pq(struct stripe_head *sh, struct raid5_percpu *percpu
+ 	if (!checkp)
+ 		srcs[count] = NULL;
+ 
+-	atomic_inc(&sh->count);
++	refcount_inc(&sh->count);
+ 	init_async_submit(&submit, ASYNC_TX_ACK, NULL, ops_complete_check,
+ 			  sh, to_addr_conv(sh, percpu, 0));
+ 	async_syndrome_val(srcs, 0, count+2, STRIPE_SIZE,
+@@ -2057,7 +2057,7 @@ static struct stripe_head *alloc_stripe(struct kmem_cache *sc, gfp_t gfp,
+ 		INIT_LIST_HEAD(&sh->lru);
+ 		INIT_LIST_HEAD(&sh->r5c);
+ 		INIT_LIST_HEAD(&sh->log_list);
+-		atomic_set(&sh->count, 1);
++		refcount_set(&sh->count, 1);
+ 		sh->log_start = MaxSector;
+ 		for (i = 0; i < disks; i++) {
+ 			struct r5dev *dev = &sh->dev[i];
+@@ -2354,7 +2354,7 @@ static int drop_one_stripe(struct r5conf *conf)
+ 	spin_unlock_irq(conf->hash_locks + hash);
+ 	if (!sh)
+ 		return 0;
+-	BUG_ON(atomic_read(&sh->count));
++	BUG_ON(refcount_read(&sh->count));
+ 	shrink_buffers(sh);
+ 	kmem_cache_free(conf->slab_cache, sh);
+ 	atomic_dec(&conf->active_stripes);
+@@ -2386,7 +2386,7 @@ static void raid5_end_read_request(struct bio * bi)
+ 			break;
+ 
+ 	pr_debug("end_read_request %llu/%d, count: %d, error %d.\n",
+-		(unsigned long long)sh->sector, i, atomic_read(&sh->count),
++		(unsigned long long)sh->sector, i, refcount_read(&sh->count),
+ 		bi->bi_error);
+ 	if (i == disks) {
+ 		bio_reset(bi);
+@@ -2523,7 +2523,7 @@ static void raid5_end_write_request(struct bio *bi)
+ 		}
+ 	}
+ 	pr_debug("end_write_request %llu/%d, count %d, error: %d.\n",
+-		(unsigned long long)sh->sector, i, atomic_read(&sh->count),
++		(unsigned long long)sh->sector, i, refcount_read(&sh->count),
+ 		bi->bi_error);
+ 	if (i == disks) {
+ 		bio_reset(bi);
+@@ -4545,7 +4545,7 @@ static void handle_stripe(struct stripe_head *sh)
+ 	pr_debug("handling stripe %llu, state=%#lx cnt=%d, "
+ 		"pd_idx=%d, qd_idx=%d\n, check:%d, reconstruct:%d\n",
+ 	       (unsigned long long)sh->sector, sh->state,
+-	       atomic_read(&sh->count), sh->pd_idx, sh->qd_idx,
++	       refcount_read(&sh->count), sh->pd_idx, sh->qd_idx,
+ 	       sh->check_state, sh->reconstruct_state);
+ 
+ 	analyse_stripe(sh, &s);
+@@ -4924,7 +4924,7 @@ static void activate_bit_delay(struct r5conf *conf,
+ 		struct stripe_head *sh = list_entry(head.next, struct stripe_head, lru);
+ 		int hash;
+ 		list_del_init(&sh->lru);
+-		atomic_inc(&sh->count);
++		refcount_inc(&sh->count);
+ 		hash = sh->hash_lock_index;
+ 		__release_stripe(conf, sh, &temp_inactive_list[hash]);
+ 	}
+@@ -5240,7 +5240,7 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
+ 		sh->group = NULL;
+ 	}
+ 	list_del_init(&sh->lru);
+-	BUG_ON(atomic_inc_return(&sh->count) != 1);
++	BUG_ON(refcount_inc_not_zero(&sh->count));
+ 	return sh;
+ }
+ 
+diff --git a/drivers/md/raid5.h b/drivers/md/raid5.h
+index 4bb27b9..a1ed351 100644
+--- a/drivers/md/raid5.h
++++ b/drivers/md/raid5.h
+@@ -3,6 +3,7 @@
+ 
+ #include <linux/raid/xor.h>
+ #include <linux/dmaengine.h>
++#include <linux/refcount.h>
+ 
+ /*
+  *
+@@ -207,7 +208,7 @@ struct stripe_head {
+ 	short			ddf_layout;/* use DDF ordering to calculate Q */
+ 	short			hash_lock_index;
+ 	unsigned long		state;		/* state flags */
+-	atomic_t		count;	      /* nr of active thread/requests */
++	refcount_t		count;	      /* nr of active thread/requests */
+ 	int			bm_seq;	/* sequence number for bitmap flushes */
+ 	int			disks;		/* disks in stripe */
+ 	int			overwrite_disks; /* total overwrite disks in stripe,
 -- 
-2.9.3
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.7.4
