@@ -1,110 +1,88 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 07/17] pci: Use BAR index in sysfs attr->private instead of resource pointer
-Date: Wed, 22 Mar 2017 13:25:21 +0000
-Message-Id: <985f4e5c7356be06ecc26ba5aa2d5fcacce83d2d.1490188942.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 13/29] drivers, media: convert vb2_vmarea_handler.refcount from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:21:00 +0200
+Message-Id: <1488810076-3754-14-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-We store the pointer, and then on *every* use of it we loop over the
-device's resources to find out the index. That's kind of silly.
-
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- drivers/pci/pci-sysfs.c | 38 ++++++++++++++------------------------
- 1 file changed, 14 insertions(+), 24 deletions(-)
+ drivers/media/v4l2-core/videobuf2-memops.c | 6 +++---
+ include/media/videobuf2-memops.h           | 3 ++-
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 07cb2fc..8a2d77b 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1017,26 +1017,20 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
- 			     struct vm_area_struct *vma, int write_combine)
- {
- 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
--	struct resource *res = attr->private;
-+	int bar = (unsigned long)attr->private;
- 	enum pci_mmap_state mmap_type;
- 	resource_size_t start, end;
--	int i;
--
--	for (i = 0; i < PCI_ROM_RESOURCE; i++)
--		if (res == &pdev->resource[i])
--			break;
--	if (i >= PCI_ROM_RESOURCE)
--		return -ENODEV;
-+	struct resource *res = &pdev->resource[bar];
+diff --git a/drivers/media/v4l2-core/videobuf2-memops.c b/drivers/media/v4l2-core/videobuf2-memops.c
+index 1cd322e..4bb8424 100644
+--- a/drivers/media/v4l2-core/videobuf2-memops.c
++++ b/drivers/media/v4l2-core/videobuf2-memops.c
+@@ -96,10 +96,10 @@ static void vb2_common_vm_open(struct vm_area_struct *vma)
+ 	struct vb2_vmarea_handler *h = vma->vm_private_data;
  
- 	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
- 		return -EINVAL;
+ 	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
+-	       __func__, h, atomic_read(h->refcount), vma->vm_start,
++	       __func__, h, refcount_read(h->refcount), vma->vm_start,
+ 	       vma->vm_end);
  
--	if (!pci_mmap_fits(pdev, i, vma, PCI_MMAP_SYSFS)) {
-+	if (!pci_mmap_fits(pdev, bar, vma, PCI_MMAP_SYSFS)) {
- 		WARN(1, "process \"%s\" tried to map 0x%08lx bytes at page 0x%08lx on %s BAR %d (start 0x%16Lx, size 0x%16Lx)\n",
- 			current->comm, vma->vm_end-vma->vm_start, vma->vm_pgoff,
--			pci_name(pdev), i,
--			(u64)pci_resource_start(pdev, i),
--			(u64)pci_resource_len(pdev, i));
-+			pci_name(pdev), bar,
-+			(u64)pci_resource_start(pdev, bar),
-+			(u64)pci_resource_len(pdev, bar));
- 		return -EINVAL;
- 	}
+-	atomic_inc(h->refcount);
++	refcount_inc(h->refcount);
+ }
  
-@@ -1044,7 +1038,7 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
- 	 * from /proc/bus/pci/ which is a "user visible" value. If this is
- 	 * different from the resource itself, arch will do necessary fixup.
- 	 */
--	pci_resource_to_user(pdev, i, res, &start, &end);
-+	pci_resource_to_user(pdev, bar, res, &start, &end);
- 	vma->vm_pgoff += start >> PAGE_SHIFT;
- 	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
- 	return pci_mmap_page_range(pdev, vma, mmap_type, write_combine);
-@@ -1069,22 +1063,18 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
- 			       loff_t off, size_t count, bool write)
- {
- 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
--	struct resource *res = attr->private;
-+	int bar = (unsigned long)attr->private;
-+	struct resource *res;
- 	unsigned long port = off;
--	int i;
+ /**
+@@ -114,7 +114,7 @@ static void vb2_common_vm_close(struct vm_area_struct *vma)
+ 	struct vb2_vmarea_handler *h = vma->vm_private_data;
  
--	for (i = 0; i < PCI_ROM_RESOURCE; i++)
--		if (res == &pdev->resource[i])
--			break;
--	if (i >= PCI_ROM_RESOURCE)
--		return -ENODEV;
-+	res = &pdev->resource[bar];
+ 	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
+-	       __func__, h, atomic_read(h->refcount), vma->vm_start,
++	       __func__, h, refcount_read(h->refcount), vma->vm_start,
+ 	       vma->vm_end);
  
--	port += pci_resource_start(pdev, i);
-+	port += pci_resource_start(pdev, bar);
+ 	h->put(h->arg);
+diff --git a/include/media/videobuf2-memops.h b/include/media/videobuf2-memops.h
+index 36565c7a..a6ed091 100644
+--- a/include/media/videobuf2-memops.h
++++ b/include/media/videobuf2-memops.h
+@@ -16,6 +16,7 @@
  
--	if (port > pci_resource_end(pdev, i))
-+	if (port > pci_resource_end(pdev, bar))
- 		return 0;
+ #include <media/videobuf2-v4l2.h>
+ #include <linux/mm.h>
++#include <linux/refcount.h>
  
--	if (port + count - 1 > pci_resource_end(pdev, i))
-+	if (port + count - 1 > pci_resource_end(pdev, bar))
- 		return -EINVAL;
- 
- 	switch (count) {
-@@ -1187,7 +1177,7 @@ static int pci_create_attr(struct pci_dev *pdev, int num, int write_combine)
- 	res_attr->attr.name = res_attr_name;
- 	res_attr->attr.mode = S_IRUSR | S_IWUSR;
- 	res_attr->size = pci_resource_len(pdev, num);
--	res_attr->private = &pdev->resource[num];
-+	res_attr->private = (void *)(unsigned long)num;
- 	retval = sysfs_create_bin_file(&pdev->dev.kobj, res_attr);
- 	if (retval)
- 		kfree(res_attr);
+ /**
+  * struct vb2_vmarea_handler - common vma refcount tracking handler
+@@ -25,7 +26,7 @@
+  * @arg:	argument for @put callback
+  */
+ struct vb2_vmarea_handler {
+-	atomic_t		*refcount;
++	refcount_t		*refcount;
+ 	void			(*put)(void *arg);
+ 	void			*arg;
+ };
 -- 
-2.9.3
+2.7.4
