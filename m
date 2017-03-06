@@ -1,72 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:61938 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751188AbdCNRDH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Mar 2017 13:03:07 -0400
-Date: Tue, 14 Mar 2017 10:02:55 -0700
-From: Andi Kleen <ak@linux.intel.com>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Andi Kleen <andi@firstfloor.org>, bhelgaas@google.com,
-        x86@kernel.org, linux-pci@vger.kernel.org, eranian@google.com,
-        Peter Zijlstra <peterz@infradead.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 3/4] x86, pci: Add interface to force mmconfig
-Message-ID: <20170314170255.GH32070@tassilo.jf.intel.com>
-References: <20170302232104.10136-1-andi@firstfloor.org>
- <20170302232104.10136-3-andi@firstfloor.org>
- <alpine.DEB.2.20.1703141407090.3619@nanos>
- <20170314154155.GG32070@tassilo.jf.intel.com>
- <alpine.DEB.2.20.1703141713010.3619@nanos>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.20.1703141713010.3619@nanos>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 05/29] drivers, md, bcache: convert cached_dev.count from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:20:52 +0200
+Message-Id: <1488810076-3754-6-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> > Or define some quirk table just for this purpose?
-> 
-> Nope. It's about identifying the bus.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-PCI just has no good way to identify busses.
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/md/bcache/bcache.h    | 7 ++++---
+ drivers/md/bcache/super.c     | 6 +++---
+ drivers/md/bcache/writeback.h | 2 +-
+ 3 files changed, 8 insertions(+), 7 deletions(-)
 
-> 
-> The bus which contains the uncore devices:
-> 
->  The Uncore devices reside on CPUBUSNO(1), which is the PCI bus assigned
->  for the processor socket. The bus number is derived from the max bus range
->  setting and the processor socket number.
-
-I have had bad experiences with hard coding topology like this. These
-things tend to be very configurable by BIOS.
-
-> 
-> So there should be a way to detect that and it would be appreciated if you
-> could talk to your hardware folks what's the programmatic way to figure it
-> out. 
-
-There's likely some hidden register somewhere. But then it would be
-
-check model number
-look for hidden register
-configure these busses
-
-and it will likely change often.
-
-Frankly I fail to see how such a thing is better than just using
-the device ID. Perhaps the driver is not the right place for it,
-but the ID seems to be.
-
-The other option is to simply make it unconditional. That would
-be even simpler, but it is a bit more risky. Hmm, I suppose may
-be worth trying to find out what Windows uses. If they get away
-with MMCONFIG everywhere we should be too.
-
-Or the third option would be to move the ops pointer into the 
-PCI device, so it's a per device setting. If people are ok with that
-I can look into it.
-
-> Maybe there is information in ACPI as well.
-
-I don't think ACPI has any concept of "internal SOC busses"
-
--Andi
+diff --git a/drivers/md/bcache/bcache.h b/drivers/md/bcache/bcache.h
+index c3ea03c..de2be28 100644
+--- a/drivers/md/bcache/bcache.h
++++ b/drivers/md/bcache/bcache.h
+@@ -184,6 +184,7 @@
+ #include <linux/mutex.h>
+ #include <linux/rbtree.h>
+ #include <linux/rwsem.h>
++#include <linux/refcount.h>
+ #include <linux/types.h>
+ #include <linux/workqueue.h>
+ 
+@@ -299,7 +300,7 @@ struct cached_dev {
+ 	struct semaphore	sb_write_mutex;
+ 
+ 	/* Refcount on the cache set. Always nonzero when we're caching. */
+-	atomic_t		count;
++	refcount_t		count;
+ 	struct work_struct	detach;
+ 
+ 	/*
+@@ -805,13 +806,13 @@ do {									\
+ 
+ static inline void cached_dev_put(struct cached_dev *dc)
+ {
+-	if (atomic_dec_and_test(&dc->count))
++	if (refcount_dec_and_test(&dc->count))
+ 		schedule_work(&dc->detach);
+ }
+ 
+ static inline bool cached_dev_get(struct cached_dev *dc)
+ {
+-	if (!atomic_inc_not_zero(&dc->count))
++	if (!refcount_inc_not_zero(&dc->count))
+ 		return false;
+ 
+ 	/* Paired with the mb in cached_dev_attach */
+diff --git a/drivers/md/bcache/super.c b/drivers/md/bcache/super.c
+index 85e3f21..cc36ce4 100644
+--- a/drivers/md/bcache/super.c
++++ b/drivers/md/bcache/super.c
+@@ -891,7 +891,7 @@ static void cached_dev_detach_finish(struct work_struct *w)
+ 	closure_init_stack(&cl);
+ 
+ 	BUG_ON(!test_bit(BCACHE_DEV_DETACHING, &dc->disk.flags));
+-	BUG_ON(atomic_read(&dc->count));
++	BUG_ON(refcount_read(&dc->count));
+ 
+ 	mutex_lock(&bch_register_lock);
+ 
+@@ -1018,7 +1018,7 @@ int bch_cached_dev_attach(struct cached_dev *dc, struct cache_set *c)
+ 	 * dc->c must be set before dc->count != 0 - paired with the mb in
+ 	 * cached_dev_get()
+ 	 */
+-	atomic_set(&dc->count, 1);
++	refcount_set(&dc->count, 1);
+ 
+ 	/* Block writeback thread, but spawn it */
+ 	down_write(&dc->writeback_lock);
+@@ -1030,7 +1030,7 @@ int bch_cached_dev_attach(struct cached_dev *dc, struct cache_set *c)
+ 	if (BDEV_STATE(&dc->sb) == BDEV_STATE_DIRTY) {
+ 		bch_sectors_dirty_init(dc);
+ 		atomic_set(&dc->has_dirty, 1);
+-		atomic_inc(&dc->count);
++		refcount_inc(&dc->count);
+ 		bch_writeback_queue(dc);
+ 	}
+ 
+diff --git a/drivers/md/bcache/writeback.h b/drivers/md/bcache/writeback.h
+index 629bd1a..5bac1b0 100644
+--- a/drivers/md/bcache/writeback.h
++++ b/drivers/md/bcache/writeback.h
+@@ -70,7 +70,7 @@ static inline void bch_writeback_add(struct cached_dev *dc)
+ {
+ 	if (!atomic_read(&dc->has_dirty) &&
+ 	    !atomic_xchg(&dc->has_dirty, 1)) {
+-		atomic_inc(&dc->count);
++		refcount_inc(&dc->count);
+ 
+ 		if (BDEV_STATE(&dc->sb) != BDEV_STATE_DIRTY) {
+ 			SET_BDEV_STATE(&dc->sb, BDEV_STATE_DIRTY);
+-- 
+2.7.4
