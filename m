@@ -1,91 +1,98 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v3 3/7] PCI: dwc: artpec6: Populate cpu_addr_fixup ops
-Date: Wed, 8 Mar 2017 16:17:13 +0530
-Message-ID: <1488970037-17740-4-git-send-email-kishon@ti.com>
-In-Reply-To: <1488970037-17740-1-git-send-email-kishon@ti.com>
-References: <1488970037-17740-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Niklas Cassel <niklas.cassel@axis.com>, nsekhar@ti.com,
- Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 11/29] drivers, media: convert cx88_core.refcount from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:20:58 +0200
+Message-Id: <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Populate cpu_addr_fixup ops to extract the least 28 bits of the
-corresponding cpu address.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Cc: Niklas Cassel <niklas.cassel@axis.com>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
 ---
- drivers/pci/dwc/pcie-artpec6.c |   15 ++++++++++-----
- 1 file changed, 10 insertions(+), 5 deletions(-)
+ drivers/media/pci/cx88/cx88-cards.c | 2 +-
+ drivers/media/pci/cx88/cx88-core.c  | 4 ++--
+ drivers/media/pci/cx88/cx88.h       | 3 ++-
+ 3 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index fcd3ef8..5b3b3af 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -78,6 +78,11 @@ static void artpec6_pcie_writel(struct artpec6_pcie *artpec6_pcie, u32 offset, u
- 	regmap_write(artpec6_pcie->regmap, offset, val);
- }
+diff --git a/drivers/media/pci/cx88/cx88-cards.c b/drivers/media/pci/cx88/cx88-cards.c
+index cdfbde2..7fc5f5f 100644
+--- a/drivers/media/pci/cx88/cx88-cards.c
++++ b/drivers/media/pci/cx88/cx88-cards.c
+@@ -3670,7 +3670,7 @@ struct cx88_core *cx88_core_create(struct pci_dev *pci, int nr)
+ 	if (!core)
+ 		return NULL;
  
-+static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
-+{
-+	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
-+}
-+
- static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
- {
- 	struct dw_pcie *pci = artpec6_pcie->pci;
-@@ -142,11 +147,6 @@ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
- 	 */
- 	dw_pcie_writel_dbi(pci, MISC_CONTROL_1_OFF, DBI_RO_WR_EN);
+-	atomic_inc(&core->refcount);
++	refcount_set(&core->refcount, 1);
+ 	core->pci_bus  = pci->bus->number;
+ 	core->pci_slot = PCI_SLOT(pci->devfn);
+ 	core->pci_irqmask = PCI_INT_RISC_RD_BERRINT | PCI_INT_RISC_WR_BERRINT |
+diff --git a/drivers/media/pci/cx88/cx88-core.c b/drivers/media/pci/cx88/cx88-core.c
+index 973a9cd4..8bfa5b7 100644
+--- a/drivers/media/pci/cx88/cx88-core.c
++++ b/drivers/media/pci/cx88/cx88-core.c
+@@ -1052,7 +1052,7 @@ struct cx88_core *cx88_core_get(struct pci_dev *pci)
+ 			mutex_unlock(&devlist);
+ 			return NULL;
+ 		}
+-		atomic_inc(&core->refcount);
++		refcount_inc(&core->refcount);
+ 		mutex_unlock(&devlist);
+ 		return core;
+ 	}
+@@ -1073,7 +1073,7 @@ void cx88_core_put(struct cx88_core *core, struct pci_dev *pci)
+ 	release_mem_region(pci_resource_start(pci, 0),
+ 			   pci_resource_len(pci, 0));
  
--	pp->io_base &= ARTPEC6_CPU_TO_BUS_ADDR;
--	pp->mem_base &= ARTPEC6_CPU_TO_BUS_ADDR;
--	pp->cfg0_base &= ARTPEC6_CPU_TO_BUS_ADDR;
--	pp->cfg1_base &= ARTPEC6_CPU_TO_BUS_ADDR;
--
- 	/* setup root complex */
- 	dw_pcie_setup_rc(pp);
+-	if (!atomic_dec_and_test(&core->refcount))
++	if (!refcount_dec_and_test(&core->refcount))
+ 		return;
  
-@@ -234,6 +234,10 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
- 	return 0;
- }
+ 	mutex_lock(&devlist);
+diff --git a/drivers/media/pci/cx88/cx88.h b/drivers/media/pci/cx88/cx88.h
+index 115414c..16c1313 100644
+--- a/drivers/media/pci/cx88/cx88.h
++++ b/drivers/media/pci/cx88/cx88.h
+@@ -24,6 +24,7 @@
+ #include <linux/i2c-algo-bit.h>
+ #include <linux/videodev2.h>
+ #include <linux/kdev_t.h>
++#include <linux/refcount.h>
  
-+static const struct dw_pcie_ops dw_pcie_ops = {
-+	.cpu_addr_fixup = artpec6_pcie_cpu_addr_fixup,
-+};
-+
- static int artpec6_pcie_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-@@ -252,6 +256,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
- 		return -ENOMEM;
+ #include <media/v4l2-device.h>
+ #include <media/v4l2-fh.h>
+@@ -339,7 +340,7 @@ struct cx8802_dev;
  
- 	pci->dev = dev;
-+	pci->ops = &dw_pcie_ops;
+ struct cx88_core {
+ 	struct list_head           devlist;
+-	atomic_t                   refcount;
++	refcount_t                   refcount;
  
- 	artpec6_pcie->pci = pci;
- 
+ 	/* board name */
+ 	int                        nr;
 -- 
-1.7.9.5
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.7.4
