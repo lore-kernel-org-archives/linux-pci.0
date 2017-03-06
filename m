@@ -1,97 +1,90 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx193.ext.ti.com ([198.47.27.77]:37156 "EHLO
-        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753414AbdCMOYw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2017 10:24:52 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v4 20/23] tools: PCI: Add sample test script to invoke pcitest
-Date: Mon, 13 Mar 2017 19:52:56 +0530
-Message-ID: <20170313142259.25397-21-kishon@ti.com>
-In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
-References: <20170313142259.25397-1-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 3/5] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 30h-3fh) Processors
+Date: Mon,  6 Mar 2017 12:40:26 +0100
+Message-Id: <1488800428-2854-3-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1488800428-2854-1-git-send-email-deathsimple@vodafone.de>
+References: <1488800428-2854-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a simple test script that invokes the pcitest userspace tool
-to perform all the PCI endpoint tests (BAR tests, interrupt tests,
-read tests, write tests and copy tests).
+From: Christian König <christian.koenig@amd.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Most BIOS don't enable this because of compatibility reasons.
+
+Manually enable a 64bit BAR of 64GB size so that we have
+enough room for PCI devices.
+
+Signed-off-by: Christian König <christian.koenig@amd.com>
 ---
- tools/pci/pcitest.sh | 56 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
- create mode 100644 tools/pci/pcitest.sh
+ arch/x86/pci/fixup.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
 
-diff --git a/tools/pci/pcitest.sh b/tools/pci/pcitest.sh
-new file mode 100644
-index 000000000000..5442bbea4c22
---- /dev/null
-+++ b/tools/pci/pcitest.sh
-@@ -0,0 +1,56 @@
-+#!/bin/sh
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 6d52b94..bff5242 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -571,3 +571,56 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
 +
-+echo "BAR tests"
-+echo
++static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
++{
++	const uint64_t size = 64ULL * 1024 * 1024 * 1024;
++	uint32_t base, limit, high;
++	struct resource *res;
++	unsigned i;
++	int r;
 +
-+bar=0
++	for (i = 0; i < 8; ++i) {
 +
-+while [ $bar -lt 6 ]
-+do
-+	pcitest -b $bar
-+	bar=`expr $bar + 1`
-+done
-+echo
++		pci_read_config_dword(dev, 0x80 + i * 0x8, &base);
++		pci_read_config_dword(dev, 0x180 + i * 0x4, &high);
 +
-+echo "Interrupt tests"
-+echo
++		/* Is this slot free? */
++		if ((base & 0x3) == 0x0)
++			break;
 +
-+pcitest -l
-+msi=1
++		base >>= 8;
++		base |= high << 24;
 +
-+while [ $msi -lt 33 ]
-+do
-+        pcitest -m $msi
-+        msi=`expr $msi + 1`
-+done
-+echo
++		/* Abort if a slot already configures a 64bit BAR. */
++		if (base > 0x10000)
++			return;
 +
-+echo "Read Tests"
-+echo
++	}
 +
-+pcitest -r -s 1
-+pcitest -r -s 1024
-+pcitest -r -s 1025
-+pcitest -r -s 1024000
-+pcitest -r -s 1024001
-+echo
++	if (i == 8)
++		return;
 +
-+echo "Write Tests"
-+echo
++	res = kzalloc(sizeof(*res), GFP_KERNEL);
++	res->flags = IORESOURCE_MEM | IORESOURCE_PREFETCH | IORESOURCE_MEM_64 |
++		IORESOURCE_WINDOW;
++	res->name = dev->bus->name;
++	r = allocate_resource(&iomem_resource, res, size, 0x100000000,
++			      0xfd00000000, size, NULL, NULL);
++	if (r) {
++		kfree(res);
++		return;
++	}
 +
-+pcitest -w -s 1
-+pcitest -w -s 1024
-+pcitest -w -s 1025
-+pcitest -w -s 1024000
-+pcitest -w -s 1024001
-+echo
++	base = ((res->start >> 8) & 0xffffff00) | 0x3;
++	limit = ((res->end + 1) >> 8) & 0xffffff00;
++	high = ((res->start >> 40) & 0xff) |
++		((((res->end + 1) >> 40) & 0xff) << 16);
 +
-+echo "Copy Tests"
-+echo
++	pci_write_config_dword(dev, 0x180 + i * 0x4, high);
++	pci_write_config_dword(dev, 0x84 + i * 0x8, limit);
++	pci_write_config_dword(dev, 0x80 + i * 0x8, base);
 +
-+pcitest -c -s 1
-+pcitest -c -s 1024
-+pcitest -c -s 1025
-+pcitest -c -s 1024000
-+pcitest -c -s 1024001
-+echo
++	pci_bus_add_resource(dev->bus, res, 0);
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
 -- 
-2.11.0
+2.7.4
