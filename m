@@ -1,89 +1,184 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.134]:35521 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751923AbdCXBuz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Mar 2017 21:50:55 -0400
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org
-Cc: robh@kernel.org, toshi.kani@hpe.com, shawn.lin@rock-chips.com,
-        briannorris@chromium.org, dianders@chromium.org,
-        bhelgaas@google.com, dtor@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v3 1/2] PCI: return resource_entry in pci_add_resource helpers
-Date: Fri, 24 Mar 2017 09:50:40 +0800
-Message-Id: <1490320241-9250-2-git-send-email-jeffy.chen@rock-chips.com>
-In-Reply-To: <1490320241-9250-1-git-send-email-jeffy.chen@rock-chips.com>
-References: <1490320241-9250-1-git-send-email-jeffy.chen@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 2/5] PCI: add functionality for resizing resources
+Date: Mon,  6 Mar 2017 12:40:25 +0100
+Message-Id: <1488800428-2854-2-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1488800428-2854-1-git-send-email-deathsimple@vodafone.de>
+References: <1488800428-2854-1-git-send-email-deathsimple@vodafone.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+From: Christian König <christian.koenig@amd.com>
+
+This allows device drivers to request resizing their BARs.
+
+The function only tries to reprogram the windows of the bridge directly above
+the requesting device and only the BAR of the same type (usually mem, 64bit,
+prefetchable). This is done to make sure not to disturb other drivers by
+changing the BARs of their devices.
+
+If reprogramming the bridge BAR fails the old status is restored and -ENOSPC
+returned to the calling device driver.
+
+Signed-off-by: Christian König <christian.koenig@amd.com>
 ---
+ drivers/pci/setup-bus.c | 61 +++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/setup-res.c | 45 ++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h     |  2 ++
+ 3 files changed, 108 insertions(+)
 
-Changes in v3: None
-Changes in v2: None
-
- drivers/pci/bus.c   | 13 ++++++++-----
- include/linux/pci.h |  8 +++++---
- 2 files changed, 13 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index bc56cf1..36a1861 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -17,25 +17,28 @@
- 
- #include "pci.h"
- 
--void pci_add_resource_offset(struct list_head *resources, struct resource *res,
--			     resource_size_t offset)
-+struct resource_entry *pci_add_resource_offset(struct list_head *resources,
-+					       struct resource *res,
-+					       resource_size_t offset)
- {
- 	struct resource_entry *entry;
- 
- 	entry = resource_list_create_entry(res, 0);
- 	if (!entry) {
- 		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
--		return;
-+		return NULL;
- 	}
- 
- 	entry->offset = offset;
- 	resource_list_add_tail(entry, resources);
-+	return entry;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f30ca75..cfab2c7 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1923,6 +1923,67 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
  }
- EXPORT_SYMBOL(pci_add_resource_offset);
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
  
--void pci_add_resource(struct list_head *resources, struct resource *res)
-+struct resource_entry *pci_add_resource(struct list_head *resources,
-+					struct resource *res)
++int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
++{
++	const unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
++		IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
++
++	struct resource saved;
++	LIST_HEAD(add_list);
++	LIST_HEAD(fail_head);
++	struct pci_dev_resource *fail_res;
++	unsigned i;
++	int ret = 0;
++
++	/* Release all children from the matching bridge resource */
++	for (i = PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END; ++i) {
++		struct resource *res = &bridge->resource[i];
++
++		if ((res->flags & type_mask) != (type & type_mask))
++			continue;
++
++		saved = *res;
++		if (res->parent) {
++			release_child_resources(res);
++			release_resource(res);
++		}
++		res->start = 0;
++		res->end = 0;
++		break;
++	}
++
++	if (i == PCI_BRIDGE_RESOURCE_END)
++		return -ENOENT;
++
++	__pci_bus_size_bridges(bridge->subordinate, &add_list);
++	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
++	BUG_ON(!list_empty(&add_list));
++
++	/* restore size and flags */
++	list_for_each_entry(fail_res, &fail_head, list) {
++		struct resource *res = fail_res->res;
++
++		res->start = fail_res->start;
++		res->end = fail_res->end;
++		res->flags = fail_res->flags;
++	}
++
++	/* Revert to the old configuration */
++	if (!list_empty(&fail_head)) {
++		struct resource *res = &bridge->resource[i];
++
++		res->start = saved.start;
++		res->end = saved.end;
++		res->flags = saved.flags;
++
++		pci_claim_resource(bridge, i);
++		ret = -ENOSPC;
++	}
++
++	free_list(&fail_head);
++	return ret;
++}
++
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
  {
--	pci_add_resource_offset(resources, res, 0);
-+	return pci_add_resource_offset(resources, res, 0);
+ 	struct pci_dev *dev;
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 9526e34..d03e6f1 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -363,6 +363,51 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+ 	return 0;
  }
- EXPORT_SYMBOL(pci_add_resource);
  
++int pci_resize_resource(struct pci_dev *dev, int resno, int size)
++{
++	struct resource *res = dev->resource + resno;
++	u32 sizes = pci_rbar_get_sizes(dev, resno);
++	int old = pci_rbar_get_size(dev, resno);
++	u64 bytes = 1ULL << (size + 20);
++	int ret = 0;
++
++	if (!sizes)
++		return -ENOTSUPP;
++
++	if (!(sizes & (1 << size)))
++		return -EINVAL;
++
++	if (old < 0)
++		return old;
++
++	/* Make sure the resource isn't assigned before making it larger. */
++	if (resource_size(res) < bytes && res->parent) {
++		release_resource(res);
++		res->end = resource_size(res) - 1;
++		res->start = 0;
++		if (resno < PCI_BRIDGE_RESOURCES)
++			pci_update_resource(dev, resno);
++	}
++
++	if (pci_rbar_set_size(dev, resno, size))
++		res->end = res->start + bytes - 1;
++	else
++		return -EIO;
++
++	ret = pci_reassign_bridge_resources(dev->bus->self, res->flags);
++	if (ret) {
++		pci_rbar_set_size(dev, resno, old);
++		res->end = res->start + (1ULL << (old + 20)) - 1;
++
++		pci_assign_unassigned_bus_resources(dev->bus);
++		pci_setup_bridge(dev->bus);
++	}
++
++	pci_reenable_device(dev->bus->self);
++	return ret;
++}
++EXPORT_SYMBOL(pci_resize_resource);
++
+ int pci_enable_resources(struct pci_dev *dev, int mask)
+ {
+ 	u16 cmd, old_cmd;
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index eb3da1a..ab16abe 100644
+index 9f26ca4..c85d8d7 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -1167,9 +1167,11 @@ void pci_release_selected_regions(struct pci_dev *, int);
- /* drivers/pci/bus.c */
- struct pci_bus *pci_bus_get(struct pci_bus *bus);
- void pci_bus_put(struct pci_bus *bus);
--void pci_add_resource(struct list_head *resources, struct resource *res);
--void pci_add_resource_offset(struct list_head *resources, struct resource *res,
--			     resource_size_t offset);
-+struct resource_entry *pci_add_resource(struct list_head *resources,
-+					struct resource *res);
-+struct resource_entry *pci_add_resource_offset(struct list_head *resources,
-+					       struct resource *res,
-+					       resource_size_t offset);
- void pci_free_resource_list(struct list_head *resources);
- void pci_bus_add_resource(struct pci_bus *bus, struct resource *res,
- 			  unsigned int flags);
+@@ -1055,6 +1055,7 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+ int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
++int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
+ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+ bool pci_device_is_present(struct pci_dev *pdev);
+ void pci_ignore_hotplug(struct pci_dev *dev);
+@@ -1135,6 +1136,7 @@ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
+ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
++int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
 -- 
-2.1.4
+2.7.4
