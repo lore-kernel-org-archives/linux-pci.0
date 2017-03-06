@@ -1,97 +1,93 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50764 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755402AbdCJStf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Mar 2017 13:49:35 -0500
-Date: Fri, 10 Mar 2017 12:49:30 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Cc: David Laight <David.Laight@ACULAB.COM>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Rob Herring <robh@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
-        linux-usb <linux-usb@vger.kernel.org>,
-        Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>
-Subject: Re: Neophyte questions about PCIe
-Message-ID: <20170310184930.GG19517@bhelgaas-glaptop.roam.corp.google.com>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
- <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
- <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
- <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 09/29] drivers, md: convert table_device.count from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:20:56 +0200
+Message-Id: <1488810076-3754-10-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 10, 2017 at 04:05:50PM +0100, Mason wrote:
-> On 10/03/2017 15:06, David Laight wrote:
-> 
-> > Robin Murphy wrote:
-> >
-> >> On 09/03/17 23:43, Mason wrote:
-> >>
-> >>> I think I'm making progress, in that I now have a better
-> >>> idea of what I don't understand. So I'm able to ask
-> >>> (hopefully) less vague questions.
-> >>>
-> >>> Take the USB3 PCIe adapter I've been testing with. At some
-> >>> point during init, the XHCI driver request some memory
-> >>> (via kmalloc?) in order to exchange data with the host, right?
-> >>>
-> >>> On my SoC, the RAM used by Linux lives at physical range
-> >>> [0x8000_0000, 0x8800_0000[ => 128 MB
-> >>>
-> >>> How does the XHCI driver make the adapter aware of where
-> >>> it can scribble data? The XHCI driver has no notion that
-> >>> the device is behind a bus, does it?
-> >>>
-> >>> At some point, the physical addresses must be converted
-> >>> to PCI bus addresses, right? Is it computed subtracting
-> >>> the offset defined in the DT?
-> > 
-> > The driver should call dma_alloc_coherent() which returns both the
-> > kernel virtual address and the device (xhci controller) has
-> > to use to access it.
-> > The cpu physical address is irrelevant (although it might be
-> > calculated in the middle somewhere).
-> 
-> Thank you for that missing piece of the puzzle.
-> I see some relevant action in drivers/usb/host/xhci-mem.c
-> 
-> And I now see this log:
-> 
-> [    2.499320] xhci_hcd 0000:01:00.0: // Device context base array address = 0x8e07e000 (DMA), d0855000 (virt)
-> [    2.509156] xhci_hcd 0000:01:00.0: Allocated command ring at cfb04200
-> [    2.515640] xhci_hcd 0000:01:00.0: First segment DMA is 0x8e07f000
-> [    2.521863] xhci_hcd 0000:01:00.0: // Setting command ring address to 0x20
-> [    2.528786] xhci_hcd 0000:01:00.0: // xHC command ring deq ptr low bits + flags = @00000000
-> [    2.537188] xhci_hcd 0000:01:00.0: // xHC command ring deq ptr high bits = @00000000
-> [    2.545002] xhci_hcd 0000:01:00.0: // Doorbell array is located at offset 0x800 from cap regs base addr
-> [    2.554455] xhci_hcd 0000:01:00.0: // xHCI capability registers at d0852000:
-> [    2.561550] xhci_hcd 0000:01:00.0: // @d0852000 = 0x1000020 (CAPLENGTH AND HCIVERSION)
-> 
-> I believe 0x8e07e000 is a CPU address, not a PCI bus address.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Sounds like you've made good progress since this email, but I think
-0x8e07e000 is a PCI bus address, not a CPU address.  The code in
-xhci_mem_init() is this:
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/md/dm.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-  xhci->dcbaa = dma_alloc_coherent(dev, sizeof(*xhci->dcbaa), &dma, flags);
-  xhci->dcbaa->dma = dma;
-  xhci_dbg_trace("Device context base array address = 0x%llx (DMA), %p (virt)",
-                 (unsigned long long)xhci->dcbaa->dma, xhci->dcbaa);
-
-dma_alloc_coherent() allocates a buffer and returns two values: the
-CPU virtual address ("xhci->dcbaa" here) for use by the driver and the
-corresponding DMA address the device can use to reach the buffer
-("dma").
-
-Documentation/DMA-API-HOWTO.txt has more details that might be useful.
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 9f37d7f..cba91c3 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -21,6 +21,7 @@
+ #include <linux/delay.h>
+ #include <linux/wait.h>
+ #include <linux/pr.h>
++#include <linux/refcount.h>
+ 
+ #define DM_MSG_PREFIX "core"
+ 
+@@ -96,7 +97,7 @@ struct dm_md_mempools {
+ 
+ struct table_device {
+ 	struct list_head list;
+-	atomic_t count;
++	refcount_t count;
+ 	struct dm_dev dm_dev;
+ };
+ 
+@@ -680,10 +681,11 @@ int dm_get_table_device(struct mapped_device *md, dev_t dev, fmode_t mode,
+ 
+ 		format_dev_t(td->dm_dev.name, dev);
+ 
+-		atomic_set(&td->count, 0);
++		refcount_set(&td->count, 1);
+ 		list_add(&td->list, &md->table_devices);
++	} else {
++		refcount_inc(&td->count);
+ 	}
+-	atomic_inc(&td->count);
+ 	mutex_unlock(&md->table_devices_lock);
+ 
+ 	*result = &td->dm_dev;
+@@ -696,7 +698,7 @@ void dm_put_table_device(struct mapped_device *md, struct dm_dev *d)
+ 	struct table_device *td = container_of(d, struct table_device, dm_dev);
+ 
+ 	mutex_lock(&md->table_devices_lock);
+-	if (atomic_dec_and_test(&td->count)) {
++	if (refcount_dec_and_test(&td->count)) {
+ 		close_table_device(td, md);
+ 		list_del(&td->list);
+ 		kfree(td);
+@@ -713,7 +715,7 @@ static void free_table_devices(struct list_head *devices)
+ 		struct table_device *td = list_entry(tmp, struct table_device, list);
+ 
+ 		DMWARN("dm_destroy: %s still exists with %d references",
+-		       td->dm_dev.name, atomic_read(&td->count));
++		       td->dm_dev.name, refcount_read(&td->count));
+ 		kfree(td);
+ 	}
+ }
+-- 
+2.7.4
