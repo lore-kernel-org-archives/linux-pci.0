@@ -1,110 +1,93 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 3/7] PCI: dwc: artpec6: Populate cpu_addr_fixup ops
-To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
-References: <1488880372-7390-1-git-send-email-kishon@ti.com>
- <1488880372-7390-4-git-send-email-kishon@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <bf20e36d-ba5f-1da6-8dda-6d2c8ac7023b@synopsys.com>
-Date: Tue, 7 Mar 2017 11:12:50 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38470 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932156AbdCFV6i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Mar 2017 16:58:38 -0500
+Date: Mon, 6 Mar 2017 15:38:29 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        devel@linuxdriverproject.org
+Subject: Re: [PATCH 17/29] drivers, pci: convert hv_pci_dev.refs from
+ atomic_t to refcount_t
+Message-ID: <20170306213829.GB5305@bhelgaas-glaptop.roam.corp.google.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-18-git-send-email-elena.reshetova@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1488880372-7390-4-git-send-email-kishon@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: nsekhar@ti.com, Niklas Cassel <niklas.cassel@axis.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1488810076-3754-18-git-send-email-elena.reshetova@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-=C0s 9:52 AM de 3/7/2017, Kishon Vijay Abraham I escreveu:
-> Populate cpu_addr_fixup ops to extract the least 28 bits of the
-> corresponding cpu address.
-> =
+[+cc Hyper-V folks, -cc others]
 
-> Cc: Niklas Cassel <niklas.cassel@axis.com>
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+On Mon, Mar 06, 2017 at 04:21:04PM +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+> 
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
 > ---
->  drivers/pci/dwc/pcie-artpec6.c |   15 ++++++++++-----
->  1 file changed, 10 insertions(+), 5 deletions(-)
-> =
-
-> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec=
-6.c
-> index fcd3ef8..5b3b3af 100644
-> --- a/drivers/pci/dwc/pcie-artpec6.c
-> +++ b/drivers/pci/dwc/pcie-artpec6.c
-> @@ -78,6 +78,11 @@ static void artpec6_pcie_writel(struct artpec6_pcie *a=
-rtpec6_pcie, u32 offset, u
->  	regmap_write(artpec6_pcie->regmap, offset, val);
->  }
->  =
-
-> +static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
-> +{
-> +	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
-> +}
-> +
->  static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
+>  drivers/pci/host/pci-hyperv.c | 9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index cd114c6..870deed 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -56,6 +56,7 @@
+>  #include <asm/apic.h>
+>  #include <linux/msi.h>
+>  #include <linux/hyperv.h>
+> +#include <linux/refcount.h>
+>  #include <asm/mshyperv.h>
+>  
+>  /*
+> @@ -421,7 +422,7 @@ enum hv_pcidev_ref_reason {
+>  struct hv_pci_dev {
+>  	/* List protected by pci_rescan_remove_lock */
+>  	struct list_head list_entry;
+> -	atomic_t refs;
+> +	refcount_t refs;
+>  	enum hv_pcichild_state state;
+>  	struct pci_function_description desc;
+>  	bool reported_missing;
+> @@ -1254,13 +1255,13 @@ static void q_resource_requirements(void *context, struct pci_response *resp,
+>  static void get_pcichild(struct hv_pci_dev *hpdev,
+>  			    enum hv_pcidev_ref_reason reason)
 >  {
->  	struct dw_pcie *pci =3D artpec6_pcie->pci;
-> @@ -142,11 +147,6 @@ static int artpec6_pcie_establish_link(struct artpec=
-6_pcie *artpec6_pcie)
->  	 */
->  	dw_pcie_writel_dbi(pci, MISC_CONTROL_1_OFF, DBI_RO_WR_EN);
->  =
-
-> -	pp->io_base &=3D ARTPEC6_CPU_TO_BUS_ADDR;
-> -	pp->mem_base &=3D ARTPEC6_CPU_TO_BUS_ADDR;
-> -	pp->cfg0_base &=3D ARTPEC6_CPU_TO_BUS_ADDR;
-> -	pp->cfg1_base &=3D ARTPEC6_CPU_TO_BUS_ADDR;
-> -
->  	/* setup root complex */
->  	dw_pcie_setup_rc(pp);
->  =
-
-> @@ -234,6 +234,10 @@ static int artpec6_add_pcie_port(struct artpec6_pcie=
- *artpec6_pcie,
->  	return 0;
+> -	atomic_inc(&hpdev->refs);
+> +	refcount_inc(&hpdev->refs);
 >  }
->  =
-
-> +static const struct dw_pcie_ops dw_pcie_ops =3D {
-> +	.cpu_addr_fixup =3D artpec6_pcie_cpu_addr_fixup,
-> +};
-> +
->  static int artpec6_pcie_probe(struct platform_device *pdev)
+>  
+>  static void put_pcichild(struct hv_pci_dev *hpdev,
+>  			    enum hv_pcidev_ref_reason reason)
 >  {
->  	struct device *dev =3D &pdev->dev;
-> @@ -252,6 +256,7 @@ static int artpec6_pcie_probe(struct platform_device =
-*pdev)
->  		return -ENOMEM;
->  =
-
->  	pci->dev =3D dev;
-> +	pci->ops =3D &dw_pcie_ops;
->  =
-
->  	artpec6_pcie->pci =3D pci;
->  =
-
-> =
-
-
-Simpler, no doubt.
-
-Acked-By: Joao Pinto <jpinto@synopsys.com>
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> -	if (atomic_dec_and_test(&hpdev->refs))
+> +	if (refcount_dec_and_test(&hpdev->refs))
+>  		kfree(hpdev);
+>  }
+>  
+> @@ -1314,7 +1315,7 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
+>  	wait_for_completion(&comp_pkt.host_event);
+>  
+>  	hpdev->desc = *desc;
+> -	get_pcichild(hpdev, hv_pcidev_ref_initial);
+> +	refcount_set(&hpdev->refs, 1);
+>  	get_pcichild(hpdev, hv_pcidev_ref_childlist);
+>  	spin_lock_irqsave(&hbus->device_list_lock, flags);
+>  	list_add_tail(&hpdev->list_entry, &hbus->children);
+> -- 
+> 2.7.4
+> 
