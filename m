@@ -1,151 +1,93 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu_iUir5d3evOvS3tUK6vY1H7KBktDf253MA8vyZDwOKPA@mail.gmail.com>
-References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170322193111.GA8190@wunner.de>
- <CAKv+Gu_X-SEnz7h9J8boqqjOQGHQawwdSAq4haH-OGu8zdfNfA@mail.gmail.com>
- <20170323084819.GA23281@h08.hostsharing.net>
- <CAKv+Gu93eJ-js3g7M6Jdm6XGMaWMswFmzBG2qNT4rn+3=1+EyA@mail.gmail.com>
- <20170323105727.GA2441@red-moon>
- <CAKv+Gu-J664KXaZR19nViq4o1n_x=P-trsZ0oNDiONuBpAcd7A@mail.gmail.com>
- <20170323143151.GA21544@red-moon>
- <CAKv+Gu_iUir5d3evOvS3tUK6vY1H7KBktDf253MA8vyZDwOKPA@mail.gmail.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 27 Mar 2017 16:37:57 +0100
-Message-ID: <CAKv+Gu90Q77fOi73Ui++cOip4uHwPgXXo6aj8c2O3mjtnqQEgg@mail.gmail.com>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
- Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
- Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
- Lukas Wunner <lukas@wunner.de>, Hanjun Guo <hanjun.guo@linaro.org>,
- Yinghai Lu <yinghai@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 07/29] drivers, md: convert dm_dev_internal.count from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:20:54 +0200
+Message-Id: <1488810076-3754-8-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23 March 2017 at 15:15, Ard Biesheuvel <ard.biesheuvel@linaro.org> wrote:
-> On 23 March 2017 at 14:31, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
->> On Thu, Mar 23, 2017 at 12:25:48PM +0000, Ard Biesheuvel wrote:
->>> On 23 March 2017 at 10:57, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
->>> > On Thu, Mar 23, 2017 at 09:04:03AM +0000, Ard Biesheuvel wrote:
->>> >> On 23 March 2017 at 08:48, Lukas Wunner <lukas@wunner.de> wrote:
->>> >> > On Wed, Mar 22, 2017 at 07:32:43PM +0000, Ard Biesheuvel wrote:
->>> >> >> On 22 March 2017 at 19:31, Lukas Wunner <lukas@wunner.de> wrote:
->>> >> >> > On Wed, Mar 22, 2017 at 03:30:29PM +0000, Ard Biesheuvel wrote:
->>> >> >> >> On UEFI systems, the PCI subsystem is enumerated by the firmware,
->>> >> >> >> and if a graphical framebuffer is exposed by a PCI device, its base
->>> >> >> >> address and size are exposed to the OS via the Graphics Output
->>> >> >> >> Protocol (GOP).
->>> >> >> >>
->>> >> >> >> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
->>> >> >> >> scratch at boot. This may result in the GOP framebuffer address to
->>> >> >> >> become stale, if the BAR covering the framebuffer is modified. This
->>> >> >> >> will cause the framebuffer to become unresponsive, and may in some
->>> >> >> >> cases result in unpredictable behavior if the range is reassigned to
->>> >> >> >> another device.
->>> >> >> >
->>> >> >> > Hm, commit message seems to indicate the issue is restricted to arm64,
->>> >> >> > yet there's no IS_ENABLED(ARM64) to constrain the added code to that arch?
->>> >> >>
->>> >> >> True. I am eager to get some x86 coverage for this, since I would
->>> >> >> expect this not to do any harm. But I'm fine with making it ARM/arm64
->>> >> >> specific in the final version.
->>> >> >
->>> >> > I see.  IIUC, this is only a problem because pci_bus_assign_resources()
->>> >> > is called from arch/arm64/kernel/pci.c:pci_acpi_scan_root() (as well as
->>> >> > the host drivers) and x86 isn't affected because it doesn't do that.
->>> >> >
->>> >>
->>> >> Correct. But on x86 (or rather, on a PC), you can be sure that UEFI
->>> >> (or the legacy PCI bios) performed the resource assignment already.
->>> >> One could argue that this is equally the case when running arm64 in
->>> >> ACPI mode, but in general, you cannot assume the presence of firmware
->>> >> on ARM/arm64 that has already taken care of this, and so the state of
->>> >> the BARs has to be presumed invalid.
->>> >
->>> > The story is a bit more convoluted than that owing to x86 (and other
->>> > arches) legacy.
->>> >
->>> > x86 tries to claim all PCI resources (in two passes - first enabled
->>> > devices, second disabled devices) and that predates ACPI/UEFI.
->>> >
->>> > Mind, x86 reassign resources that can't be claimed too, the only
->>> > difference with ARM64 is that, for the better or the worse, we
->>> > have decided not to claim the FW PCI set-up on ARM64 even if it
->>> > is sane, we do not even try, it was a deliberate choice.
->>> >
->>> > This patch should be harmless on x86 since if the FB PCI BAR is set
->>> > up sanely, claiming it again should be a nop (to be checked).
->>> >
->>>
->>> I have checked this with OVMF under QEMU. Claiming the resource early
->>> like we do this in this patch does not result in any diagnostic output
->>> or other symptoms that would suggest that anything unexpected occurs.
->>
->> There is something that I do not understand on how the resource
->> claiming works on x86. IIUC on x86, resource claiming is done in:
->>
->> arch/x86/pci/legacy.c
->>
->> pci_subsys_init()
->>  -> pcibios_init()
->>   -> pcibios_resource_survey()
->>
->> pci_subsys_init() is run in a subsys_initcall.
->>
->
-> Yes, the call trace I get for the resource claim for the efifb BAR
-> without this patch is
->
-> pci_subsys_init+0x3f/0x43
-> - pcibios_init+0x2c/0x3d
-> -- pcibios_resource_survey+0x38/0x6a
-> --- pci_legacy_init+0x2e/0x2e
-> ---- pcibios_allocate_resources+0x8a/0x240
-> ----- pci_claim_resource+0xdc/0x140
->
->
->> Now, how do we ensure that resource claiming is carried out _after_
->> the PCI root busses have been actually scanned ?
->>
->> The ACPI scan handler interface (so the interface to actually scan
->> a PCI root bridge in ACPI) is initialized in acpi_init() (which
->> is a subsys_initcall), how do we guarantee that is run before
->> pci_subsys_init() ?
->>
->
-> $ nm vmlinux |grep -E '__initcall_(acpi_init|pci_subsys_init)'
-> ffffffff81d540b8 t __initcall_acpi_init4
-> ffffffff81d54158 t __initcall_pci_subsys_init4
->
-> so it appears to depend on link order currently.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Bjorn, what is your take on this?
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/md/dm-table.c | 6 +++---
+ drivers/md/dm.h       | 3 ++-
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-Claiming the BAR resources associated with the efifb region from a
-DECLARE_PCI_FIXUP_HEADER() handler does not seem to interfere with the
-way resources are claimed later on. For arm64, we need this to ensure
-that the BAR doesn't move, but for x86 this does not seem to be an
-issue. This means we could potentially make the quirk ARM-only, but I
-am a bit reluctant to do so and create even more divergence.
-
-Thanks,
-Ard.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+index 3ad16d9..d2e2741 100644
+--- a/drivers/md/dm-table.c
++++ b/drivers/md/dm-table.c
+@@ -416,15 +416,15 @@ int dm_get_device(struct dm_target *ti, const char *path, fmode_t mode,
+ 			return r;
+ 		}
+ 
+-		atomic_set(&dd->count, 0);
++		refcount_set(&dd->count, 1);
+ 		list_add(&dd->list, &t->devices);
+ 
+ 	} else if (dd->dm_dev->mode != (mode | dd->dm_dev->mode)) {
+ 		r = upgrade_mode(dd, mode, t->md);
+ 		if (r)
+ 			return r;
++		refcount_inc(&dd->count);
+ 	}
+-	atomic_inc(&dd->count);
+ 
+ 	*result = dd->dm_dev;
+ 	return 0;
+@@ -478,7 +478,7 @@ void dm_put_device(struct dm_target *ti, struct dm_dev *d)
+ 		       dm_device_name(ti->table->md), d->name);
+ 		return;
+ 	}
+-	if (atomic_dec_and_test(&dd->count)) {
++	if (refcount_dec_and_test(&dd->count)) {
+ 		dm_put_table_device(ti->table->md, d);
+ 		list_del(&dd->list);
+ 		kfree(dd);
+diff --git a/drivers/md/dm.h b/drivers/md/dm.h
+index f298b01..63b8142 100644
+--- a/drivers/md/dm.h
++++ b/drivers/md/dm.h
+@@ -19,6 +19,7 @@
+ #include <linux/hdreg.h>
+ #include <linux/completion.h>
+ #include <linux/kobject.h>
++#include <linux/refcount.h>
+ 
+ #include "dm-stats.h"
+ 
+@@ -38,7 +39,7 @@
+  */
+ struct dm_dev_internal {
+ 	struct list_head list;
+-	atomic_t count;
++	refcount_t count;
+ 	struct dm_dev *dm_dev;
+ };
+ 
+-- 
+2.7.4
