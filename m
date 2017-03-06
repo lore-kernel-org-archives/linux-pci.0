@@ -1,112 +1,83 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Yuanzhichang <yuanzhichang@hisilicon.com>
-CC: "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Linuxarm <linuxarm@huawei.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
-        "zourongrong@gmail.com" <zourongrong@gmail.com>,
-        John Garry <john.garry@huawei.com>,
-        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
-        "kantyzc@163.com" <kantyzc@163.com>,
-        "xuwei (O)" <xuwei5@hisilicon.com>
-Subject: RE: [PATCH V7 5/7] ACPI: Delay the enumeration on the devices whose
-  dependency has not met
-Date: Tue, 14 Mar 2017 08:14:51 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E204822B1@FRAEML521-MBX.china.huawei.com>
-References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
- <1489372963-9000-6-git-send-email-yuanzhichang@hisilicon.com>
- <4600523.rWNiWKrYZC@aspire.rjw.lan>
-In-Reply-To: <4600523.rWNiWKrYZC@aspire.rjw.lan>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38810 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751537AbdCFTDq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 6 Mar 2017 14:03:46 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v26GrtKn117319
+        for <linux-pci@vger.kernel.org>; Mon, 6 Mar 2017 11:54:52 -0500
+Received: from e06smtp06.uk.ibm.com (e06smtp06.uk.ibm.com [195.75.94.102])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 291814kgu2-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 06 Mar 2017 11:54:52 -0500
+Received: from localhost
+        by e06smtp06.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
+        Mon, 6 Mar 2017 16:54:48 -0000
+Received: from b06cxnps4074.portsmouth.uk.ibm.com (d06relay11.portsmouth.uk.ibm.com [9.149.109.196])
+        by d06dlp02.portsmouth.uk.ibm.com (Postfix) with ESMTP id 82D432190056
+        for <linux-pci@vger.kernel.org>; Mon,  6 Mar 2017 16:53:45 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
+        by b06cxnps4074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v26GsjoO5702110
+        for <linux-pci@vger.kernel.org>; Mon, 6 Mar 2017 16:54:45 GMT
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id A5D7AA4051
+        for <linux-pci@vger.kernel.org>; Mon,  6 Mar 2017 16:54:42 +0000 (GMT)
+Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 8BA62A4059
+        for <linux-pci@vger.kernel.org>; Mon,  6 Mar 2017 16:54:42 +0000 (GMT)
+Received: from bblock-ThinkPad-W530 (unknown [9.152.212.209])
+        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP
+        for <linux-pci@vger.kernel.org>; Mon,  6 Mar 2017 16:54:42 +0000 (GMT)
+Date: Mon, 6 Mar 2017 17:54:44 +0100
+From: Benjamin Block <bblock@linux.vnet.ibm.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Elena Reshetova <elena.reshetova@intel.com>,
+        gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, netdev@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: Re: [PATCH 21/29] drivers, s390: convert fc_fcp_pkt.ref_cnt from
+ atomic_t to refcount_t
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-22-git-send-email-elena.reshetova@intel.com>
+ <536a58ba-8896-5639-cab9-bd2f13bed325@suse.de>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <536a58ba-8896-5639-cab9-bd2f13bed325@suse.de>
+Message-Id: <20170306165444.GC7420@bblock-ThinkPad-W530>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rafael
-
-Many thanks for your review
-
-> -----Original Message-----
-> From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
-> Sent: 13 March 2017 21:25
-> To: Yuanzhichang
-> Cc: catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
-> frowand.list@gmail.com; bhelgaas@google.com; rafael@kernel.org;
-> mark.rutland@arm.com; arnd@arndb.de; linux-arm-
-> kernel@lists.infradead.org; linux-acpi@vger.kernel.org;
-> lorenzo.pieralisi@arm.com; benh@kernel.crashing.org; linux-
-> kernel@vger.kernel.org; Linuxarm; devicetree@vger.kernel.org; linux-
-> pci@vger.kernel.org; linux-serial@vger.kernel.org; minyard@acm.org;
-> liviu.dudau@arm.com; zourongrong@gmail.com; John Garry; Gabriele
-> Paoloni; zhichang.yuan02@gmail.com; kantyzc@163.com; xuwei (O)
-> Subject: Re: [PATCH V7 5/7] ACPI: Delay the enumeration on the devices
-> whose dependency has not met
+On Mon, Mar 06, 2017 at 04:27:11PM +0100, Johannes Thumshirn wrote:
+> On 03/06/2017 03:21 PM, Elena Reshetova wrote:
+> > refcount_t type and corresponding API should be
+> > used instead of atomic_t when the variable is used as
+> > a reference counter. This allows to avoid accidental
+> > refcounter overflows that might lead to use-after-free
+> > situations.
 > 
-> On Monday, March 13, 2017 10:42:41 AM zhichang.yuan wrote:
-> > In commit 40e7fcb1929(ACPI: Add _DEP support to fix battery issue on
-> Asus
-> > T100TA), the '_DEP' was supported to solve the dependency of Asus
-> battery. But
-> > this patch is specific to Asus battery device.
-> > In the real world, there are other devices which need the dependency
-> to play the
-> > role on the enumeration order. For example, all the Hip06 LPC
-> > periperals(IPMI-BT, uart, etc) must be scanned after the LPC host
-> driver
-> > finished the probing. So, it makes sense to add a checking whether
-> the ACPI
-> > device meet all the dependencies during its enumeration slot, if not,
-> the
-> > enumeration will be delayed till all dependency master finish their
-> work.
-> >
-> > This patch adds the dependency checking in ACPI enumeration, also the
-> > corresponding handling to retrigger the Hip06 LPC peripherals'
-> scanning.
+> The subject is wrong, should be something like "scsi: libfc convert
+> fc_fcp_pkt.ref_cnt from atomic_t to refcount_t" but not s390.
 > 
-> AFAICS, _DEP is generally abused in the wild and cannot be made
-> generic.  Sorry.
 
-Another option here would be to revert this patch and add a dependency
-check in the probe functions of the LPC possible children nodes (e.g. 
-in the IPMI driver:
-http://elixir.free-electrons.com/source/drivers/char/ipmi/ipmi_si_intf.c?v=4.10#L2683
-)  
+Yes please, I was extremely confused for a moment here.
 
-we could add 
 
-	if (device->dep_unmet)
-		return -EPROBE_DEFER;
 
-as we now have in acpi/battery.c...
-
-I think this should not make any difference for current shipped FW that has
-got no DEP method...
-
-What do you think?
-
-Many Thanks
-Gab
-
-> 
-> Thanks,
-> Rafael
-
+                                                    Beste Grüße / Best regards,
+                                                      - Benjamin Block
+-- 
+Linux on z Systems Development         /         IBM Systems & Technology Group
+		  IBM Deutschland Research & Development GmbH 
+Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
