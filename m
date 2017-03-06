@@ -1,85 +1,103 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <704b8b8c-e607-29b3-e101-bbecd90073bb@codeaurora.org>
-References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170322193111.GA8190@wunner.de>
- <31da6db5-be22-9e84-5e76-67c519bc0b34@codeaurora.org>
- <CAKv+Gu8Uw-X3AR6aQYevPdRfcgPNnqL4O3sRoKxsZAiW29sbqg@mail.gmail.com>
- <704b8b8c-e607-29b3-e101-bbecd90073bb@codeaurora.org>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Wed, 22 Mar 2017 19:52:24 +0000
-Message-ID: <CAKv+Gu-3wAXLyogLxg3N=6vf6Ryz2cLXw01tZUR_E48ddVU22A@mail.gmail.com>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-To: Sinan Kaya <okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
- Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
- Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
- Lukas Wunner <lukas@wunner.de>, Hanjun Guo <hanjun.guo@linaro.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Yinghai Lu <yinghai@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga06.intel.com ([134.134.136.31]:35724 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753159AbdCFOY5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Mar 2017 09:24:57 -0500
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 04/29] drivers, connector: convert cn_callback_entry.refcnt from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:20:51 +0200
+Message-Id: <1488810076-3754-5-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22 March 2017 at 19:49, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 3/22/2017 3:41 PM, Ard Biesheuvel wrote:
->>> As far as I know, kernel honors resource assignments done by the UEFI BIOS if
->>> they are correct. Kernel will reassign the resources only if something is wrong.
->>>
->> No, the kernel always reassigns all BARs on arm64.
->
-> I think this is where the problem is.
->
-> I'm not seeing this happen on QDF2400 which supports ACPI + UEFI BIOS
-> combination only.
->
-> I see that kernel honored the resources assigned by UEFI BIOS if I compare
-> the BAR addresses.
->
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-Well, if you are using the standard MdeModulePkg PciHostBridgeDxe
-driver in UEFI, the logic is quite similar, and so you usually end up
-with the same resource assignments. But the kernel does recompute them
-from scratch, and ignores the existing configuration that is present
-in the BARs
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/connector/cn_queue.c  | 4 ++--
+ drivers/connector/connector.c | 2 +-
+ include/linux/connector.h     | 4 ++--
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-> I see reassignment only when something is horribly broken. Then, there would
-> be a bridge configuration invalid message in the boot log to confirm this.
->
->>
->>> Will this code break other platforms/architectures?
->>>
->> Which platforms/architectures are you referring to? EFIFB on a PCI
->> device is currently broken on arm64.
->
-> In general or on your particular platform?
->
->> On x86, it works, given that BARs
->> are usually not reassigned, and so the patch should be a no-op in that
->> case (although I'd argue it is still an improvement to check whether
->> the device that owns the BAR actually has memory decoding enabled
->> before we attach the framebuffer driver to it)
->>
->
-> I'm fine as long as it doesn't break anything. That's why, I'm asking.
->
-
-If you have working EFIFB on your platform, it works by accident. This
-patch is needed to ensure that the BAR associated with the EFI
-framebuffer is left untouched.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/connector/cn_queue.c b/drivers/connector/cn_queue.c
+index 1f8bf05..9c54fdf 100644
+--- a/drivers/connector/cn_queue.c
++++ b/drivers/connector/cn_queue.c
+@@ -45,7 +45,7 @@ cn_queue_alloc_callback_entry(struct cn_queue_dev *dev, const char *name,
+ 		return NULL;
+ 	}
+ 
+-	atomic_set(&cbq->refcnt, 1);
++	refcount_set(&cbq->refcnt, 1);
+ 
+ 	atomic_inc(&dev->refcnt);
+ 	cbq->pdev = dev;
+@@ -58,7 +58,7 @@ cn_queue_alloc_callback_entry(struct cn_queue_dev *dev, const char *name,
+ 
+ void cn_queue_release_callback(struct cn_callback_entry *cbq)
+ {
+-	if (!atomic_dec_and_test(&cbq->refcnt))
++	if (!refcount_dec_and_test(&cbq->refcnt))
+ 		return;
+ 
+ 	atomic_dec(&cbq->pdev->refcnt);
+diff --git a/drivers/connector/connector.c b/drivers/connector/connector.c
+index 25693b0..8615594b 100644
+--- a/drivers/connector/connector.c
++++ b/drivers/connector/connector.c
+@@ -157,7 +157,7 @@ static int cn_call_callback(struct sk_buff *skb)
+ 	spin_lock_bh(&dev->cbdev->queue_lock);
+ 	list_for_each_entry(i, &dev->cbdev->queue_list, callback_entry) {
+ 		if (cn_cb_equal(&i->id.id, &msg->id)) {
+-			atomic_inc(&i->refcnt);
++			refcount_inc(&i->refcnt);
+ 			cbq = i;
+ 			break;
+ 		}
+diff --git a/include/linux/connector.h b/include/linux/connector.h
+index f8fe863..032102b 100644
+--- a/include/linux/connector.h
++++ b/include/linux/connector.h
+@@ -22,7 +22,7 @@
+ #define __CONNECTOR_H
+ 
+ 
+-#include <linux/atomic.h>
++#include <linux/refcount.h>
+ 
+ #include <linux/list.h>
+ #include <linux/workqueue.h>
+@@ -49,7 +49,7 @@ struct cn_callback_id {
+ 
+ struct cn_callback_entry {
+ 	struct list_head callback_entry;
+-	atomic_t refcnt;
++	refcount_t refcnt;
+ 	struct cn_queue_dev *pdev;
+ 
+ 	struct cn_callback_id id;
+-- 
+2.7.4
