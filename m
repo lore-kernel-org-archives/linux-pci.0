@@ -1,61 +1,97 @@
-Return-Path: <SRS0=h4BL=2Z=firstfloor.org=andi@kernel.org>
-Return-Path: <SRS0=h4BL=2Z=firstfloor.org=andi@kernel.org>
-Date: Wed, 15 Mar 2017 17:02:48 -0700
-From: Andi Kleen <andi@firstfloor.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Andi Kleen <andi@firstfloor.org>,
-	Andi Kleen <ak@linux.intel.com>, bhelgaas@google.com,
-	x86@kernel.org, linux-pci@vger.kernel.org, eranian@google.com,
-	Peter Zijlstra <peterz@infradead.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 3/4] x86, pci: Add interface to force mmconfig
-Message-ID: <20170316000247.GD14380@two.firstfloor.org>
-References: <20170302232104.10136-3-andi@firstfloor.org>
- <alpine.DEB.2.20.1703141407090.3619@nanos>
- <20170314154155.GG32070@tassilo.jf.intel.com>
- <alpine.DEB.2.20.1703141713010.3619@nanos>
- <20170314170255.GH32070@tassilo.jf.intel.com>
- <alpine.DEB.2.20.1703141849170.3619@nanos>
- <20170314194720.GD26264@bhelgaas-glaptop.roam.corp.google.com>
- <20170315022414.GC14380@two.firstfloor.org>
- <20170315025549.GA13191@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.DEB.2.20.1703150954180.3554@nanos>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.20.1703150954180.3554@nanos>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 15/29] drivers, media: convert vb2_dma_sg_buf.refcount from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:21:02 +0200
+Message-Id: <1488810076-3754-16-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> pci_root_ops is what is finally handed in to pci_scan_root_bus() as ops
-> argument for any bus segment no matter which type it is.
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-mmconfig is only initialized after PCI is initialized
-(an ordering problem with ACPI). So it would require
-updating existing busses with likely interesting race
-conditions.
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/media/v4l2-core/videobuf2-dma-sg.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-There are also other ordering problems in the PCI layer,
-that is one of the reason early and raw PCI accesses even exist.
-
-> 
-> The locking aspect is interesting as well. The type0/1 functions are having
-> their own internal locking. Oh, well.
-
-Right it could set lockless too. The internal locking is still needed
-because there are other users too.
-
-> What we really want is to differentiate bus segments. That means a PCIe
-> segment takes mmconfig ops and a PCI segment the type0/1 ops. That way we
-> can do what you suggested above, i.e. marking the ecam/mmconfig ops as
-> lockless.
-
-There's no need to separate PCIe and PCI. mmconfig has nothing to do
-with that.
-
-> Sure that's more work than just whacking a sloppy quirk into the code, but
-> the right thing to do.
-
-Before proposing grandiose plans it would be better if you
-acquired some basic understanding of the constraints this
-code is operating under first.
-
--Andi
+diff --git a/drivers/media/v4l2-core/videobuf2-dma-sg.c b/drivers/media/v4l2-core/videobuf2-dma-sg.c
+index ecff8f4..29fde1a 100644
+--- a/drivers/media/v4l2-core/videobuf2-dma-sg.c
++++ b/drivers/media/v4l2-core/videobuf2-dma-sg.c
+@@ -12,6 +12,7 @@
+ 
+ #include <linux/module.h>
+ #include <linux/mm.h>
++#include <linux/refcount.h>
+ #include <linux/scatterlist.h>
+ #include <linux/sched.h>
+ #include <linux/slab.h>
+@@ -46,7 +47,7 @@ struct vb2_dma_sg_buf {
+ 	struct sg_table			*dma_sgt;
+ 	size_t				size;
+ 	unsigned int			num_pages;
+-	atomic_t			refcount;
++	refcount_t			refcount;
+ 	struct vb2_vmarea_handler	handler;
+ 
+ 	struct dma_buf_attachment	*db_attach;
+@@ -150,7 +151,7 @@ static void *vb2_dma_sg_alloc(struct device *dev, unsigned long dma_attrs,
+ 	buf->handler.put = vb2_dma_sg_put;
+ 	buf->handler.arg = buf;
+ 
+-	atomic_inc(&buf->refcount);
++	refcount_set(&buf->refcount, 1);
+ 
+ 	dprintk(1, "%s: Allocated buffer of %d pages\n",
+ 		__func__, buf->num_pages);
+@@ -176,7 +177,7 @@ static void vb2_dma_sg_put(void *buf_priv)
+ 	struct sg_table *sgt = &buf->sg_table;
+ 	int i = buf->num_pages;
+ 
+-	if (atomic_dec_and_test(&buf->refcount)) {
++	if (refcount_dec_and_test(&buf->refcount)) {
+ 		dprintk(1, "%s: Freeing buffer of %d pages\n", __func__,
+ 			buf->num_pages);
+ 		dma_unmap_sg_attrs(buf->dev, sgt->sgl, sgt->orig_nents,
+@@ -320,7 +321,7 @@ static unsigned int vb2_dma_sg_num_users(void *buf_priv)
+ {
+ 	struct vb2_dma_sg_buf *buf = buf_priv;
+ 
+-	return atomic_read(&buf->refcount);
++	return refcount_read(&buf->refcount);
+ }
+ 
+ static int vb2_dma_sg_mmap(void *buf_priv, struct vm_area_struct *vma)
+@@ -530,7 +531,7 @@ static struct dma_buf *vb2_dma_sg_get_dmabuf(void *buf_priv, unsigned long flags
+ 		return NULL;
+ 
+ 	/* dmabuf keeps reference to vb2 buffer */
+-	atomic_inc(&buf->refcount);
++	refcount_inc(&buf->refcount);
+ 
+ 	return dbuf;
+ }
+-- 
+2.7.4
