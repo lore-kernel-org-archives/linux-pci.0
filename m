@@ -1,63 +1,116 @@
-Return-Path: <SRS0=7U76=3G=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=7U76=3G=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v3 1/2] PCI: Add tango MSI controller support
-From: Mason <slash.tmp@free.fr>
-To: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>, DT <devicetree@vger.kernel.org>
-References: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
- <f37d7b55-e065-72aa-e690-13dd4718a9ce@sigmadesigns.com>
- <a12a79fd-94f9-5aa4-5aa0-5dccb6c5d615@arm.com>
- <0541e62a-c87a-2e69-a7d1-28f886ad04c2@free.fr>
-Message-ID: <e8076081-545c-4c20-2d80-b66e9d3c8d9a@free.fr>
-Date: Wed, 29 Mar 2017 17:50:52 +0200
-MIME-Version: 1.0
-In-Reply-To: <0541e62a-c87a-2e69-a7d1-28f886ad04c2@free.fr>
-Content-Type: text/plain; charset=ISO-8859-15
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:49105 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753282AbdCFOY5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 6 Mar 2017 09:24:57 -0500
+From: Elena Reshetova <elena.reshetova@intel.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
+        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Elena Reshetova <elena.reshetova@intel.com>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: [PATCH 28/29] drivers: convert sbd_duart.map_guard from atomic_t to refcount_t
+Date: Mon,  6 Mar 2017 16:21:15 +0200
+Message-Id: <1488810076-3754-29-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29/03/2017 15:16, Mason wrote:
+refcount_t type and corresponding API should be
+used instead of atomic_t when the variable is used as
+a reference counter. This allows to avoid accidental
+refcounter overflows that might lead to use-after-free
+situations.
 
-> But I don't understand how to get my pcie pointer back in irq_ack
-> or irq_unmask, or the relevant msi. Can you throw me a clue?
+Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Signed-off-by: David Windsor <dwindsor@gmail.com>
+---
+ drivers/tty/serial/sb1250-duart.c | 18 +++++++-----------
+ 1 file changed, 7 insertions(+), 11 deletions(-)
 
-Let's see... the irq_chip call-backs receive an irq_data pointer.
-
-struct irq_data - per irq chip data passed down to chip functions
-struct irq_chip - hardware interrupt chip descriptor
-
-irq_data contains a void *chip_data member.
-Can I use chip_data to stash a struct tango_pcie pointer?
-
-/**
- *	irq_set_chip_data - set irq chip data for an irq
- *	@irq:	Interrupt number
- *	@data:	Pointer to chip specific data
- *
- *	Set the hardware irq chip data for an irq
- */
-int irq_set_chip_data(unsigned int irq, void *data)
-
-But where would I call it? And for which irq?
-
-
-Otherwise, I found by trial-and-error that I can reach pcie through
-
-data->domain->parent->host_data
-
-data->domain == msi_dom
-msi_dom->parent == irq_dom
-irq_dom->host_data == pcie
-
-But data->irq and data->hwirq don't hold the MSI index :-(
-
-I suppose I have to ask for some mapping?
-
-Regards.
+diff --git a/drivers/tty/serial/sb1250-duart.c b/drivers/tty/serial/sb1250-duart.c
+index 771f361..041625c 100644
+--- a/drivers/tty/serial/sb1250-duart.c
++++ b/drivers/tty/serial/sb1250-duart.c
+@@ -41,7 +41,7 @@
+ #include <linux/tty_flip.h>
+ #include <linux/types.h>
+ 
+-#include <linux/atomic.h>
++#include <linux/refcount.h>
+ #include <asm/io.h>
+ #include <asm/war.h>
+ 
+@@ -103,7 +103,7 @@ struct sbd_port {
+ struct sbd_duart {
+ 	struct sbd_port		sport[2];
+ 	unsigned long		mapctrl;
+-	atomic_t		map_guard;
++	refcount_t		map_guard;
+ };
+ 
+ #define to_sport(uport) container_of(uport, struct sbd_port, port)
+@@ -654,15 +654,13 @@ static void sbd_release_port(struct uart_port *uport)
+ {
+ 	struct sbd_port *sport = to_sport(uport);
+ 	struct sbd_duart *duart = sport->duart;
+-	int map_guard;
+ 
+ 	iounmap(sport->memctrl);
+ 	sport->memctrl = NULL;
+ 	iounmap(uport->membase);
+ 	uport->membase = NULL;
+ 
+-	map_guard = atomic_add_return(-1, &duart->map_guard);
+-	if (!map_guard)
++	if(refcount_dec_and_test(&duart->map_guard))
+ 		release_mem_region(duart->mapctrl, DUART_CHANREG_SPACING);
+ 	release_mem_region(uport->mapbase, DUART_CHANREG_SPACING);
+ }
+@@ -698,7 +696,6 @@ static int sbd_request_port(struct uart_port *uport)
+ {
+ 	const char *err = KERN_ERR "sbd: Unable to reserve MMIO resource\n";
+ 	struct sbd_duart *duart = to_sport(uport)->duart;
+-	int map_guard;
+ 	int ret = 0;
+ 
+ 	if (!request_mem_region(uport->mapbase, DUART_CHANREG_SPACING,
+@@ -706,11 +703,11 @@ static int sbd_request_port(struct uart_port *uport)
+ 		printk(err);
+ 		return -EBUSY;
+ 	}
+-	map_guard = atomic_add_return(1, &duart->map_guard);
+-	if (map_guard == 1) {
++	refcount_inc(&duart->map_guard);
++	if (refcount_read(&duart->map_guard) == 1) {
+ 		if (!request_mem_region(duart->mapctrl, DUART_CHANREG_SPACING,
+ 					"sb1250-duart")) {
+-			atomic_add(-1, &duart->map_guard);
++			refcount_dec(&duart->map_guard);
+ 			printk(err);
+ 			ret = -EBUSY;
+ 		}
+@@ -718,8 +715,7 @@ static int sbd_request_port(struct uart_port *uport)
+ 	if (!ret) {
+ 		ret = sbd_map_port(uport);
+ 		if (ret) {
+-			map_guard = atomic_add_return(-1, &duart->map_guard);
+-			if (!map_guard)
++			if (refcount_dec_and_test(&duart->map_guard))
+ 				release_mem_region(duart->mapctrl,
+ 						   DUART_CHANREG_SPACING);
+ 		}
+-- 
+2.7.4
