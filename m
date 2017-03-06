@@ -1,85 +1,192 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: mayurkumar.patel@intel.com, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rajat Jain <rajatja@google.com>,
-        David Daney <david.daney@cavium.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Julia Lawall <Julia.Lawall@lip6.fr>,
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH V5 1/4] PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
-Date: Sat, 25 Mar 2017 17:38:10 -0400
-Message-Id: <1490477893-9517-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
-References: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
+Subject: [PATCH 1/5] PCI: add resizeable BAR infrastructure v2
+Date: Mon,  6 Mar 2017 12:40:24 +0100
+Message-Id: <1488800428-2854-1-git-send-email-deathsimple@vodafone.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need a callback from pci_init_capabilities function for every
-single new PCI device that is currently being added.
+From: Christian König <christian.koenig@amd.com>
 
-pci_aspm_init() will be used to save the power on state of the HW.
+Just the defines and helper functions to read the possible sizes of a BAR and
+update it's size.
 
-Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+See https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf.
+
+v2: provide read helper as well
+
+Signed-off-by: Christian König <christian.koenig@amd.com>
 ---
- drivers/pci/pcie/aspm.c | 10 ++++++++++
- drivers/pci/probe.c     |  3 +++
- include/linux/pci.h     |  2 ++
- 3 files changed, 15 insertions(+)
+ drivers/pci/pci.c             | 115 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h           |   3 ++
+ include/uapi/linux/pci_regs.h |   7 +++
+ 3 files changed, 125 insertions(+)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 973472c..74fd7c5 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -828,6 +828,16 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ba34907..9658aa7 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2944,6 +2944,121 @@ bool pci_acs_path_enabled(struct pci_dev *start,
  }
  
- /*
-+ * pci_aspm_init: Initiate PCI express link state.
-+ * It is called from device_add for every single pci device.
-+ * @pdev: all pci devices
+ /**
++ * pci_rbar_get_sizes - get possible sizes for BAR
++ * @dev: PCI device
++ * @bar: BAR to query
++ *
++ * Get the possible sizes of a resizeable BAR as bitmask defined in the spec
++ * (bit 0=1MB, bit 19=512GB). Returns 0 if BAR isn't resizeable.
 + */
-+int pci_aspm_init(struct pci_dev *pdev)
++u32 pci_rbar_get_sizes(struct pci_dev *pdev, int bar)
 +{
-+	return 0;
++	int pos, nbars;
++	u32 ctrl, cap;
++	int i;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return 0x0;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx != bar)
++			continue;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
++		return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
++			PCI_REBAR_CTRL_SIZES_SHIFT;
++	}
++
++	return 0x0;
 +}
 +
-+/*
-  * pcie_aspm_init_link_state: Initiate PCI express link state.
-  * It is called after the pcie and its children devices are scanned.
-  * @pdev: the root port or switch downstream port
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index dfc9a27..1e19364 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1847,6 +1847,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 
- 	/* Advanced Error Reporting */
- 	pci_aer_init(dev);
++/**
++ * pci_rbar_get_size - get the current size of a BAR
++ * @dev: PCI device
++ * @bar: BAR to set size to
++ *
++ * Read the size of a BAR from the resizeable BAR config.
++ * Returns size if found or negativ error code.
++ */
++int pci_rbar_get_size(struct pci_dev *pdev, int bar)
++{
++	int pos, nbars;
++	u32 ctrl;
++	int i;
 +
-+	/* Active State Power Management */
-+	pci_aspm_init(dev);
- }
- 
- /*
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return -ENOTSUPP;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx != bar)
++			continue;
++
++		return (ctrl & PCI_REBAR_CTRL_BAR_SIZE_MASK) >>
++			PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
++	}
++
++	return -ENOENT;
++}
++
++/**
++ * pci_rbar_set_size - set a new size for a BAR
++ * @dev: PCI device
++ * @bar: BAR to set size to
++ * @size: new size as defined in the spec.
++ *
++ * Set the new size of a BAR as defined in the spec (0=1MB, 19=512GB).
++ * Returns true if resizing was successful, false otherwise.
++ */
++bool pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
++{
++	int pos, nbars;
++	u32 ctrl;
++	int i;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return false;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx != bar)
++			continue;
++
++		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE_MASK;
++		ctrl |= size << PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
++		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
++		return true;
++	}
++
++	return false;
++}
++
++/**
+  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+  * @dev: the PCI device
+  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index eb3da1a..8828dd7 100644
+index a38772a..9f26ca4 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -1396,8 +1396,10 @@ static inline int pci_irq_get_node(struct pci_dev *pdev, int vec)
+@@ -1946,6 +1946,9 @@ void pci_request_acs(void);
+ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+ bool pci_acs_path_enabled(struct pci_dev *start,
+ 			  struct pci_dev *end, u16 acs_flags);
++u32 pci_rbar_get_sizes(struct pci_dev *pdev, int bar);
++int pci_rbar_get_size(struct pci_dev *pdev, int bar);
++bool pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
  
- #ifdef CONFIG_PCIEASPM
- bool pcie_aspm_support_enabled(void);
-+int pci_aspm_init(struct pci_dev *pdev);
- #else
- static inline bool pcie_aspm_support_enabled(void) { return false; }
-+static inline int pci_aspm_init(struct pci_dev *pdev) { return -ENODEV; }
- #endif
+ #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+ #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index e5a2e68..6de29d6 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -932,9 +932,16 @@
+ #define PCI_SATA_SIZEOF_LONG	16
  
- #ifdef CONFIG_PCIEAER
+ /* Resizable BARs */
++#define PCI_REBAR_CAP		4	/* capability register */
++#define  PCI_REBAR_CTRL_SIZES_MASK	(0xFFFFF << 4)	/* mask for sizes */
++#define  PCI_REBAR_CTRL_SIZES_SHIFT	4	/* shift for sizes */
+ #define PCI_REBAR_CTRL		8	/* control register */
++#define  PCI_REBAR_CTRL_BAR_IDX_MASK	(7 << 0)	/* mask for bar index */
++#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT	0	/* shift for bar index */
+ #define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # bars */
+ #define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # bars */
++#define  PCI_REBAR_CTRL_BAR_SIZE_MASK	(0x1F << 8)	/* mask for bar size */
++#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT	8	/* shift for bar size */
+ 
+ /* Dynamic Power Allocation */
+ #define PCI_DPA_CAP		4	/* capability register */
 -- 
-1.9.1
+2.7.4
