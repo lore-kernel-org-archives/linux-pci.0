@@ -1,87 +1,104 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 24 Mar 2017 16:42:15 -0500
+Date: Tue, 7 Mar 2017 13:07:31 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian =?iso-8859-1?Q?K=F6nig?= <deathsimple@vodafone.de>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
-Message-ID: <20170324214215.GG25380@bhelgaas-glaptop.roam.corp.google.com>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
- <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Jess Frazelle <me@jessfraz.com>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "open list:Hyper-V CORE AND DRIVERS" <devel@linuxdriverproject.org>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        kernel-hardening@lists.openwall.com,
+        Kees Cook <keescook@chromium.org>,
+        Marc Zyngier <marc.zyngier@arm.com>
+Subject: Re: [PATCH v2 3/5] pci: set msi_domain_ops as __ro_after_init
+Message-ID: <20170307190731.GD21358@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170211013758.3288-1-me@jessfraz.com>
+ <20170211013758.3288-3-me@jessfraz.com>
+ <20170215203347.GA6981@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.20.1702152143520.3805@nanos>
+ <20170216143509.GA22820@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.20.1702161536150.3543@nanos>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.20.1702161536150.3543@nanos>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 13, 2017 at 01:41:36PM +0100, Christian König wrote:
-> From: Christian König <christian.koenig@amd.com>
+On Thu, Feb 16, 2017 at 03:38:05PM +0100, Thomas Gleixner wrote:
+> On Thu, 16 Feb 2017, Bjorn Helgaas wrote:
+> > On Wed, Feb 15, 2017 at 10:16:32PM +0100, Thomas Gleixner wrote:
+> > 
+> > > I think I suggested to Jiang to do that 'update with default functions' to
+> > > 
+> > > - avoid exporting the world and some more
+> > > 
+> > > - have the flexibility to add new functions to the ops w/o updating a
+> > >   gazillion of existing usage sites, which has saved us lots of chaising in
+> > >   the last years
+> > > 
+> > > - avoid the if (ops->ptr) ops->ptr(); else default_fn(); constructs all
+> > >   over the place.
+> > > 
+> > > I admit I did not think about the fact that this makes the structs non
+> > > const.
+> > > 
+> > > Mopping that up by exporting the default functions and setting all the
+> > > function pointers is tedious and requires a full tree sweep when we add new
+> > > stuff. There's also code shared between PCI/platform/DT based stuff, so
+> > > that becomes interesting.
+> > 
+> > It's legal to initialize a field multiple times, and the last one
+> > takes precedence, so doing this might at least avoid the full tree
+> > sweeps:
+> > 
+> >   static struct msi_domain_ops vmd_msi_domain_ops = {
+> >     MSI_DOMAIN_DEFAULT_OPS,
+> >     .get_hwirq = vmd_get_hwirq,
+> >   };
+> > 
+> > The functions referenced by MSI_DOMAIN_DEFAULT_OPS would still have to
+> > be exported, though.
 > 
-> Try to resize BAR0 to let CPU access all of VRAM.
+> Hmm, that'd work. Though it will fall apart for those pieces where we share
+> code across backends. But I did not yet go through all the places and check
+> them.
 > 
-> Signed-off-by: Christian König <christian.koenig@amd.com>
-> ---
->  drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
->  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 29 +++++++++++++++++++++++++++++
->  drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 +++++---
->  drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 +++++---
->  4 files changed, 40 insertions(+), 6 deletions(-)
+> > > Doing the if (ops->ptr) ops->ptr() else default_fn(); dance should be
+> > > simpler to pull off. There are not that many sites to look at, but then we
+> > > have some of the GICv3 code using the domain ops out of core.
+> > > 
+> > > For now doing the __ro_after_init is definitely the simplest and fastest
+> > > solution to tighten these statically allocated structures.
+> > 
+> > I'm OK with __ro_after_init, at least as an interim solution.
+> > 
+> > I do think it would be good to audit all the uses of
+> > MSI_FLAG_USE_DEF_DOM_OPS and MSI_FLAG_USE_DEF_CHIP_OPS, since they
+> > seem to be the primary indicator of when the struct might be modified.
+> > I suspect we could add __ro_after_init to more than just pci-hyperv.c,
+> > vmd.c, and msi.c
 > 
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-> index 3b81ded..905ded9 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-> @@ -1719,6 +1719,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct amdgpu_device *adev, struct ttm_tt *ttm,
->  				 struct ttm_mem_reg *mem);
->  void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_mc *mc, u64 base);
->  void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc);
-> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
->  void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64 size);
->  int amdgpu_ttm_init(struct amdgpu_device *adev);
->  void amdgpu_ttm_fini(struct amdgpu_device *adev);
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> index 118f4e6..92955fe 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> @@ -692,6 +692,35 @@ void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc)
->  			mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end);
->  }
->  
-> +/**
-> + * amdgpu_resize_bar0 - try to resize BAR0
-> + *
-> + * @adev: amdgpu_device pointer
-> + *
-> + * Try to resize BAR0 to make all VRAM CPU accessible.
-> + */
-> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
-> +{
-> +	u32 size = max(ilog2(adev->mc.real_vram_size - 1) + 1, 20) - 20;
-> +	int r;
-> +
-> +	r = pci_resize_resource(adev->pdev, 0, size);
-> +
-> +	if (r == -ENOTSUPP) {
-> +		/* The hardware don't support the extension. */
-> +		return;
-> +
-> +	} else if (r == -ENOSPC) {
-> +		DRM_INFO("Not enoigh PCI address space for a large BAR.");
+> Agreed. I have it on my radar.
 
-s/enoigh/enough/
+This seems like a worthwhile change, so I don't want to just drop this
+patch.  But if we're going to do something, I'd like to do it
+everywhere that it makes sense, all at the same time.
 
-> +	} else if (r) {
-> +		DRM_ERROR("Problem resizing BAR0 (%d).", r);
-> +	}
-> +
-> +	/* Reinit the doorbell mapping, it is most likely moved as well */
+It looks like the v2 series was split up by subsystem, which is fine
+with me.  I'll happily apply the PCI parts (or ack them, since it
+might make sense to apply all of them via the same non-PCI tree).
 
-I think you should assume all BARs moved (I don't know how many you have;
-maybe this already covers all of them).
+But I *would* like to include the following users of
+MSI_FLAG_USE_DEF_DOM_OPS and MSI_FLAG_USE_DEF_CHIP_OPS at the same
+time (or explain why __ro_after_init won't work for them):
 
-> +	amdgpu_doorbell_fini(adev);
-> +	BUG_ON(amdgpu_doorbell_init(adev));
+  pci-xgene-msi.c
+  pcie-altera-msi.c
+  pcie-iproc-msi.c
+  pcie-xilinx-nwl.c
 
-I think things inside BUG_ON() tend to get overlooked, so I avoid things
-that have side-effects.  But that's just my personal preference.
+Bjorn
