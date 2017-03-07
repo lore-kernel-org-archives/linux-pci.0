@@ -1,197 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lhrrgout.huawei.com ([194.213.3.17]:16717 "EHLO
-        lhrrgout.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751385AbdC0P7h (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Mar 2017 11:59:37 -0400
-From: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
-To: Robin Murphy <robin.murphy@arm.com>,
-        Sricharan R <sricharan@codeaurora.org>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "tn@semihalf.com" <tn@semihalf.com>,
-        "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
-        "okaya@codeaurora.org" <okaya@codeaurora.org>
-Subject: RE: [PATCH V9 00/11] IOMMU probe deferral support
-Date: Mon, 27 Mar 2017 15:58:37 +0000
-Message-ID: <5FC3163CFD30C246ABAA99954A238FA81750CCC4@lhreml504-mbs>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <58D49845.9060407@hisilicon.com>
- <0ea8022b-a19b-335d-6cc6-81510196f891@codeaurora.org>
- <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
- <db3d68f8-713c-9ae2-7df9-324bc1b375b1@arm.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.kernel.org ([198.145.29.136]:40388 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756029AbdCGUsf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Mar 2017 15:48:35 -0500
+Date: Tue, 7 Mar 2017 14:22:17 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ethan Zhao <ethan.zhao@oracle.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, ethan.kernel@gmail.com,
+        babu.moger@oracle.com
+Subject: Re: [PATCH] pci: Prevent VPD access for QLogic ISP2722
+Message-ID: <20170307202217.GG21358@bhelgaas-glaptop.roam.corp.google.com>
+References: <1488182924-23334-1-git-send-email-ethan.zhao@oracle.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1488182924-23334-1-git-send-email-ethan.zhao@oracle.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-> -----Original Message-----
-> From: Shameerali Kolothum Thodi
-> Sent: Monday, March 27, 2017 3:53 PM
-> To: 'Robin Murphy'; Sricharan R; Wangzhou (B); will.deacon@arm.com;
-> joro@8bytes.org; lorenzo.pieralisi@arm.com; iommu@lists.linux-
-> foundation.org; linux-arm-kernel@lists.infradead.org; linux-arm-
-> msm@vger.kernel.org; m.szyprowski@samsung.com;
-> bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
-> acpi@vger.kernel.org; tn@semihalf.com; hanjun.guo@linaro.org;
-> okaya@codeaurora.org
-> Subject: RE: [PATCH V9 00/11] IOMMU probe deferral support
+On Mon, Feb 27, 2017 at 05:08:44PM +0900, Ethan Zhao wrote:
+> QLogic ISP2722-based 16/32Gb Fibre Channel to PCIe Adapter has the VPD
+> access issue too, while read the common pci-sysfs access interface shown as
 > 
+>  /sys/devices/pci0000:00/0000:00:03.2/0000:0b:00.0/vpd
 > 
-> > -----Original Message-----
-> > From: Robin Murphy [mailto:robin.murphy@arm.com]
-> > Sent: Friday, March 24, 2017 6:39 PM
-> > To: Shameerali Kolothum Thodi; Sricharan R; Wangzhou (B);
-> > will.deacon@arm.com; joro@8bytes.org; lorenzo.pieralisi@arm.com;
-> > iommu@lists.linux-foundation.org; linux-arm-kernel@lists.infradead.org;
-> > linux-arm-msm@vger.kernel.org; m.szyprowski@samsung.com;
-> > bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
-> > acpi@vger.kernel.org; tn@semihalf.com; hanjun.guo@linaro.org;
-> > okaya@codeaurora.org
-> > Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
-> >
-> > On 24/03/17 09:27, Shameerali Kolothum Thodi wrote:
-> > > Hi Sricharan,
-> > >
-> > >> -----Original Message-----
-> > >> From: Sricharan R [mailto:sricharan@codeaurora.org]
-> [...]
-> > >> Looks like this triggers the start of the bug.
-> > >> So the below check in iommu_dma_init_domain fails,
-> > >>
-> > >>          if (domain->geometry.force_aperture) {
-> > >>                  if (base > domain->geometry.aperture_end ||
-> > >>                      base + size <= domain->geometry.aperture_start) {
-> > >>
-> > >> and the rest goes out of sync after that. Can you print out the base,
-> > >> aperture_start and end values to see why the check fails ?
-> > >
-> > > dev_info(dev, "0x%llx 0x%llx, 0x%llx 0x%llx, 0x%llx 0x%llx\n", base, size,
-> > domain->geometry.aperture_start, domain->geometry.aperture_end,
-> > *dev->dma_mask, dev->coherent_dma_mask);
-> > >
-> > > [  183.752100] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff,
-> > 0xffffffff 0xffffffff
-> > > .....
-> > > [  319.508037] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff,
-> > 0xffffffffffffffff 0xffffffffffffffff
-> > >
-> > > Yes, size seems to be the problem here. When the VF  device gets
-> attached
-> > to vfio-pci,
-> > > somehow the dev->coherent_dma_mask is set to 64 bits and size
-> become
-> > zero.
-> >
-> > AFAICS, this is either down to patch 3 (which should apply on its own
-> > easily enough for testing), or patch 6, implying that somehow the
-> > vfio-pci device gets its DMA mask widened to 64 bits somewhere between
-> > very soon after after creation (where we originally called
-> > of_dma_configure()) and immediately before probe (where we now call
-> it).
-> >
-> > Either way I guess this is yet more motivation to write that "change the
-> > arch_setup_dma_ops() interface to take a mask instead of a size" patch...
+> with simple 'cat' could cause system hang and panic:
 > 
-> Just applying the patch 3 and binding the device into vfio-pci is fine. Please
-> find the
-> log below (with  dev_info debug added to iommu_dma_init_domain ).
-> ...
-> [  142.851906] iommu: Adding device 0000:81:10.0 to group 6
-> [  142.852063] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff,
-> 0xffffffff 0xffffffff   ---->dev_info()
-> [  142.852836] ixgbevf 0000:81:10.0: enabling device (0000 -> 0002)
-> [  142.852962] ixgbe 0000:81:00.0 eth0: VF Reset msg received from vf 0
-> [  142.853833] ixgbe 0000:81:00.0: VF 0 has no MAC address assigned, you
-> may have to assign one manually
-> [  142.863956] ixgbevf 0000:81:10.0: MAC address not assigned by
-> administrator.
-> [  142.863960] ixgbevf 0000:81:10.0: Assigning random MAC address
-> [  142.865689] ixgbevf 0000:81:10.0: da:9f:f8:1e:57:3a
-> [  142.865692] ixgbevf 0000:81:10.0: MAC: 1
-> [  142.865693] ixgbevf 0000:81:10.0: Intel(R) 82599 Virtual Function
-> [  142.939145] ixgbe 0000:81:00.0 eth0: NIC Link is Up 1 Gbps, Flow Control:
-> None
-> [  152.902894] nfs: server 172.18.45.166 not responding, still trying
-> [  188.980933] nfs: server 172.18.45.166 not responding, still trying
-> [  188.981298] nfs: server 172.18.45.166 OK
-> [  188.981593] nfs: server 172.18.45.166 OK
-> [  221.755626] VFIO - User Level meta-driver version: 0.3
-> ...
+> [   48.219586] Kernel panic - not syncing: An NMI occurred. Depending on your system
+>  the reason for the NMI is logged in any one of the following resources:
+> [   48.219586] 1. Integrated Management Log (IML)
+> [   48.219586] 2. OA Syslog
+> [   48.219586] 3. OA Forward Progress Log
+> [   48.219586] 4. iLO Event Log
+> [   48.352034] CPU: 0 PID: 15070 Comm: udevadm Not tainted 4.1.12
+> [   48.390989] Hardware name: HP ProLiant DL380 Gen9/ProLiant DL380 Gen9, BIOS P89 12/27/2015
+> [   48.431201]  0000000000000086 000000007f0cdf51 ffff880c4fa05d58 ffffffff817193de
+> [   48.467185]  ffffffffa00b42d8 0000000000000075 ffff880c4fa05dd8 ffffffff81714072
+> [   48.502631]  0000000000000008 ffff880c4fa05de8 ffff880c4fa05d88 000000007f0cdf51
+> [   48.538427] Call Trace:
+> [   48.549991]  <NMI>  [<ffffffff817193de>] dump_stack+0x63/0x81
+> [   48.577496]  [<ffffffff81714072>] panic+0xd0/0x20e
+> [   48.600598]  [<ffffffffa00b390d>] hpwdt_pretimeout+0xdd/0xe0 [hpwdt]
+> [   48.630913]  [<ffffffff81021fc9>] ? sched_clock+0x9/0x10
+> [   48.656286]  [<ffffffff8101c101>] nmi_handle+0x91/0x170
+> [   48.681362]  [<ffffffff8101c10c>] ? nmi_handle+0x9c/0x170
+> [   48.707383]  [<ffffffff8101c5fe>] io_check_error+0x1e/0xa0
+> [   48.733603]  [<ffffffff8101c719>] default_do_nmi+0x99/0x140
+> [   48.759570]  [<ffffffff8101c8b4>] do_nmi+0xf4/0x170
+> [   48.782977]  [<ffffffff817232c5>] end_repeat_nmi+0x1a/0x1e
+> [   48.809290]  [<ffffffff815d724b>] ? pci_conf1_read+0xeb/0x120
+> [   48.837782]  [<ffffffff815d724b>] ? pci_conf1_read+0xeb/0x120
+> [   48.865045]  [<ffffffff815d724b>] ? pci_conf1_read+0xeb/0x120
+> [   48.892877]  <<EOE>>  [<ffffffff815db4b3>] raw_pci_read+0x23/0x40
+> [   48.923060]  [<ffffffff815db4fc>] pci_read+0x2c/0x30
+> [   48.947340]  [<ffffffff8136f612>] pci_user_read_config_word+0x72/0x110
+> [   48.978937]  [<ffffffff8136f746>] pci_vpd_pci22_wait+0x96/0x130
+> [   49.007983]  [<ffffffff8136ff9b>] pci_vpd_pci22_read+0xdb/0x1a0
+> [   49.036370]  [<ffffffff8136ea30>] pci_read_vpd+0x20/0x30
+> [   49.062608]  [<ffffffff8137d590>] read_vpd_attr+0x30/0x40
+> [   49.088627]  [<ffffffff8128e037>] sysfs_kf_bin_read+0x47/0x70
+> [   49.116383]  [<ffffffff8128d24e>] kernfs_fop_read+0xae/0x180
+> [   49.143396]  [<ffffffff8120dd97>] __vfs_read+0x37/0x100
+> [   49.169059]  [<ffffffff812ba7e4>] ? security_file_permission+0x84/0xa0
+> [   49.200526]  [<ffffffff8120e366>] ? rw_verify_area+0x56/0xe0
+> [   49.227578]  [<ffffffff8120e476>] vfs_read+0x86/0x140
+> [   49.252842]  [<ffffffff8120f3f5>] SyS_read+0x55/0xd0
+> [   49.277378]  [<ffffffff81720f2e>] system_call_fastpath+0x12/0x71
+> [   50.349812] Shutting down cpus with NMI
+> [   50.368388] Kernel Offset: disabled
+> [   50.385327] drm_kms_helper: panic occurred, switching back to text console
 > 
-> Applied up to patch 6, and the issue appeared,
+> So blacklist the access to its VPD.
 > 
-> [  145.212351] iommu: Adding device 0000:81:10.0 to group 5
-> [  145.212367] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff,
-> 0xffffffff 0xffffffff
-> [  145.213261] ixgbevf 0000:81:10.0: enabling device (0000 -> 0002)
-> [  145.213394] ixgbe 0000:81:00.0 eth0: VF Reset msg received from vf 0
-> [  145.214272] ixgbe 0000:81:00.0: VF 0 has no MAC address assigned, you
-> may have to assign one manually
-> [  145.224379] ixgbevf 0000:81:10.0: MAC address not assigned by
-> administrator.
-> [  145.224384] ixgbevf 0000:81:10.0: Assigning random MAC address
-> [  145.225941] ixgbevf 0000:81:10.0: 1a:85:06:48:a7:19
-> [  145.225944] ixgbevf 0000:81:10.0: MAC: 1
-> [  145.225946] ixgbevf 0000:81:10.0: Intel(R) 82599 Virtual Function
-> [  145.299961] ixgbe 0000:81:00.0 eth0: NIC Link is Up 1 Gbps, Flow Control:
-> None
-> [  154.947742] nfs: server 172.18.45.166 not responding, still trying
-> [  191.025780] nfs: server 172.18.45.166 not responding, still trying
-> [  191.026122] nfs: server 172.18.45.166 OK
-> [  191.026317] nfs: server 172.18.45.166 OK
-> [  263.706402] VFIO - User Level meta-driver version: 0.3
-> [  269.757613] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff, 0xffffffffffffffff
-> 0xffffffffffffffff
-> [  269.757617] specified DMA range outside IOMMU capability
-> [  269.757618] Failed to set up IOMMU for device 0000:81:10.0; retaining
-> platform DMA ops
+> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
+
+Applied to for-linus for v4.11, thanks!
+
+I added a stable tag for v4.6+ because quirk_blacklist_vpd() was added
+by 7c20078a8197 ("PCI: Prevent VPD access for buggy devices"), which
+appeared in v4.6.
+
+> ---
+>  drivers/pci/quirks.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
->  From the logs its clear that  when ixgbevf driver originally probes and adds
-> the device
->  to smmu  the dma mask is 32, but when it binds to vfio-pci, it becomes 64 bit.
-
-Just to add to that, the mask is set to 64 bit in the ixgebvf driver probe[1]
-
-[  127.914001] ixgbe 0000:81:00.0 eth0: SR-IOV enabled with 1 VFs
-[  127.914106] ixgbe 0000:81:00.0: removed PHC on eth0
-[  128.125166] ixgbe 0000:81:00.0: Multiqueue Enabled: Rx Queue count = 4, Tx Queue count = 4
-[  128.143857] ixgbe 0000:81:00.0: registered PHC device on eth0
-[  128.314754] ixgbe 0000:81:00.0 eth0: detected SFP+: 11
-[  128.357878] pci 0000:81:10.0: [8086:10ed] type 00 class 0x020000
-[  128.358416] iommu: Adding device 0000:81:10.0 to group 5
-[  128.358443] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff, 0xffffffff 0xffffffff
-[  128.359326] ixgbevf 0000:81:10.0: enabling device (0000 -> 0002)
-[  128.359333] Shameer: ixgbevf_probe, 64 bit			------------->mask set to 64 bit
-[  128.359462] ixgbe 0000:81:00.0 eth0: VF Reset msg received from vf 0
-[  128.360331] ixgbe 0000:81:00.0: VF 0 has no MAC address assigned, you may have to assign one manually
-[  128.370470] ixgbevf 0000:81:10.0: MAC address not assigned by administrator.
-[  128.370474] ixgbevf 0000:81:10.0: Assigning random MAC address
-[  128.372172] ixgbevf 0000:81:10.0: ea:40:b9:e9:cb:04
-[  128.372176] ixgbevf 0000:81:10.0: MAC: 1
-[  128.372178] ixgbevf 0000:81:10.0: Intel(R) 82599 Virtual Function
-[  128.445551] ixgbe 0000:81:00.0 eth0: NIC Link is Up 1 Gbps, Flow Control: None
-[  138.089869] nfs: server 172.18.45.166 not responding, still trying
-[  174.697868] nfs: server 172.18.45.166 not responding, still trying
-[  174.698359] nfs: server 172.18.45.166 OK
-[  174.698582] nfs: server 172.18.45.166 OK
-[  465.942259] VFIO - User Level meta-driver version: 0.3
- [  472.754074] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff, 0xffffffffffffffff 0xffffffffffffffff
-[  472.754075] specified DMA range outside IOMMU capability
-[  472.754077] Failed to set up IOMMU for device 0000:81:10.0; retaining platform DMA ops
-
-1. http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c#L3996
-
-
- 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 3a035e07..087a218 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -2173,6 +2173,7 @@ static void quirk_blacklist_vpd(struct pci_dev *dev)
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f, quirk_blacklist_vpd);
+>  DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID,
+>  		quirk_blacklist_vpd);
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_QLOGIC, 0x2261, quirk_blacklist_vpd);
+>  
+>  /*
+>   * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
+> -- 
+> 1.8.3.1
+> 
