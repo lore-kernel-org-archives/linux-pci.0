@@ -1,111 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0077.outbound.protection.outlook.com ([104.47.41.77]:40396
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753402AbdCPSes (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Mar 2017 14:34:48 -0400
-Subject: Re: [RFC PATCH v2 30/32] kvm: svm: Add support for SEV DEBUG_ENCRYPT
- command
-To: Paolo Bonzini <pbonzini@redhat.com>, <simon.guinot@sequanux.org>,
-        <linux-efi@vger.kernel.org>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <akpm@linux-foundation.org>, <davem@davemloft.net>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846790758.2349.16768762953657853550.stgit@brijesh-build-machine>
- <05dbd756-e8e9-9384-2759-898e230a6909@redhat.com>
-CC: <brijesh.singh@amd.com>
-From: Brijesh Singh <brijesh.singh@amd.com>
-Message-ID: <1d195fc9-8021-cd6d-727f-845586f70375@amd.com>
-Date: Thu, 16 Mar 2017 13:34:19 -0500
+Received: from mail.kernel.org ([198.145.29.136]:52592 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755860AbdCGTJ7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Mar 2017 14:09:59 -0500
+Date: Tue, 7 Mar 2017 13:09:55 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: Re: [patch] PCI: dwc: uninitialized variable in dw_handle_msi_irq()
+Message-ID: <20170307190955.GE21358@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170217232618.GC26717@mwanda>
+ <933041dd-288f-4cde-c10f-5b0b3ab49f15@synopsys.com>
 MIME-Version: 1.0
-In-Reply-To: <05dbd756-e8e9-9384-2759-898e230a6909@redhat.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <933041dd-288f-4cde-c10f-5b0b3ab49f15@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Wed, Feb 22, 2017 at 03:08:07PM -0800, Joao Pinto wrote:
+> Hi Dan,
+> 
+> Às 3:26 PM de 2/17/2017, Dan Carpenter escreveu:
+> > The bug is that "val" is unsigned long but we only initialize 32 bits
+> > of it.  Then we test "if (val)" and that might be true not because we
+> > set the bits but because some were never initialized.
+> > 
+> > Fixes: f342d940ee0e ("PCI: exynos: Add support for MSI")
+> > Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> > ---
+> > Static analysis.  Not tested.
+> 
+> What you are statiting makes perfect sense, since the register is indeed 32 bits
+> and can have undesirable behavior in 64-bit systems for example.
+> We have more examples like this for MSI related operations in pcie-designware.
+> Could you please change them as well just?
+> 
+> For example, the irq variable declaration is also not consistent as you can see
+> in these examples:
+> 
+>  static void dw_msi_setup_msg(struct pcie_port *pp, unsigned int irq, u32 pos)
+> 
+>  static int dw_pcie_msi_map(struct irq_domain *domain, unsigned int irq,
+>                            irq_hw_number_t hwirq)
+> 
+>  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+> 
+>  static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
 
+Where are we with this?  It sounds like there's a real problem here,
+and Dan's original patch fixes one case of it.  But if there are other
+similar cases, we should fix them all at once.
 
-On 03/16/2017 06:03 AM, Paolo Bonzini wrote:
->
->
-> On 02/03/2017 16:18, Brijesh Singh wrote:
->> +	data = (void *) get_zeroed_page(GFP_KERNEL);
->
-> The page does not need to be zeroed, does it?
->
+Since this doesn't sound like an urgent bug fix (I don't see user
+problem reports), I guess I'll wait for an updated patch?
 
-No, we don't have to zero it. I will fix it.
-
->> +
->> +	if ((len & 15) || (dst_addr & 15)) {
->> +		/* if destination address and length are not 16-byte
->> +		 * aligned then:
->> +		 * a) decrypt destination page into temporary buffer
->> +		 * b) copy source data into temporary buffer at correct offset
->> +		 * c) encrypt temporary buffer
->> +		 */
->> +		ret = __sev_dbg_decrypt_page(kvm, dst_addr, data, &argp->error);
->
-> Ah, I see now you're using this function here for read-modify-write.
-> data is already pinned here, so even if you keep the function it makes
-> sense to push pinning out of __sev_dbg_decrypt_page and into
-> sev_dbg_decrypt.
-
-I can push out pinning part outside __sev_dbg_decrypt_page
-
->
->> +		if (ret)
->> +			goto err_3;
->> +		d_off = dst_addr & (PAGE_SIZE - 1);
->> +
->> +		if (copy_from_user(data + d_off,
->> +					(uint8_t *)debug.src_addr, len)) {
->> +			ret = -EFAULT;
->> +			goto err_3;
->> +		}
->> +
->> +		encrypt->length = PAGE_SIZE;
->
-> Why decrypt/re-encrypt all the page instead of just the 16 byte area
-> around the [dst_addr, dst_addr+len) range?
->
-
-good catch, I should be fine just decrypting a 16 byte area. Will fix in next rev
-
->> +		encrypt->src_addr = __psp_pa(data);
->> +		encrypt->dst_addr =  __sev_page_pa(inpages[0]);
->> +	} else {
->> +		if (copy_from_user(data, (uint8_t *)debug.src_addr, len)) {
->> +			ret = -EFAULT;
->> +			goto err_3;
->> +		}
->
-> Do you need copy_from_user, or can you just pin/unpin memory as for
-> DEBUG_DECRYPT?
->
-
-We can work either with pin/unpin or copy_from_user. I think I choose copy_from_user because
-in most of time ENCRYPT path was used when I set breakpoint through gdb which basically
-requires copying pretty small data into guest memory. It may be very much possible that
-someone can try to copy lot more data and then pin/unpin can speedup the things.
-
--Brijesh
+> > diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+> > index af8f6e92e885..5bfc377b83e4 100644
+> > --- a/drivers/pci/dwc/pcie-designware.c
+> > +++ b/drivers/pci/dwc/pcie-designware.c
+> > @@ -257,17 +257,18 @@ static struct irq_chip dw_msi_irq_chip = {
+> >  /* MSI int handler */
+> >  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
+> >  {
+> > -	unsigned long val;
+> > +	u32 val;
+> >  	int i, pos, irq;
+> >  	irqreturn_t ret = IRQ_NONE;
+> >  
+> >  	for (i = 0; i < MAX_MSI_CTRLS; i++) {
+> >  		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_STATUS + i * 12, 4,
+> > -				(u32 *)&val);
+> > +				    &val);
+> >  		if (val) {
+> >  			ret = IRQ_HANDLED;
+> >  			pos = 0;
+> > -			while ((pos = find_next_bit(&val, 32, pos)) != 32) {
+> > +			while ((pos = find_next_bit((unsigned long *)&val, 32,
+> > +						    pos)) != 32) {
+> >  				irq = irq_find_mapping(pp->irq_domain,
+> >  						i * 32 + pos);
+> >  				dw_pcie_wr_own_conf(pp,
+> > 
+> 
