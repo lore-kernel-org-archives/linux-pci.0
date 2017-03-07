@@ -1,9 +1,14 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-To: Johannes Thumshirn <jthumshirn@suse.de>,
-        Chris Leech <cleech@redhat.com>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 11/29] drivers, media: convert cx88_core.refcount from
+ atomic_t to refcount_t
+To: "Reshetova, Elena" <elena.reshetova@intel.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
+ <c6987419-f708-9923-0f9f-87b715600045@cogentembedded.com>
+ <2236FBA76BA1254E88B949DDB74E612B41C556E2@IRSMSX102.ger.corp.intel.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
         "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
         "linux1394-devel@lists.sourceforge.net"
@@ -25,59 +30,51 @@ CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
         Hans Liljestrand <ishkamiel@gmail.com>,
         Kees Cook <keescook@chromium.org>,
         David Windsor <dwindsor@gmail.com>
-Subject: RE: [PATCH 22/29] drivers, scsi: convert iscsi_task.refcount from
- atomic_t to refcount_t
-Date: Thu, 9 Mar 2017 09:26:03 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C56ABF@IRSMSX102.ger.corp.intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-23-git-send-email-elena.reshetova@intel.com>
- <20170308184740.4gueok5csdkt7u62@straylight.hirudinean.org>
- <2236FBA76BA1254E88B949DDB74E612B41C569DC@IRSMSX102.ger.corp.intel.com>
- <5a1f7860-b650-9fe7-fafb-1f0c7cae00e7@suse.de>
-In-Reply-To: <5a1f7860-b650-9fe7-fafb-1f0c7cae00e7@suse.de>
-Content-Type: text/plain; charset="iso-8859-1"
+Message-ID: <71ea983c-c2e4-9145-634b-78aef993d982@cogentembedded.com>
+Date: Tue, 7 Mar 2017 13:40:07 +0300
 MIME-Version: 1.0
+In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C556E2@IRSMSX102.ger.corp.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 3/7/2017 10:52 AM, Reshetova, Elena wrote:
 
-> On 03/09/2017 08:18 AM, Reshetova, Elena wrote:
-> >> On Mon, Mar 06, 2017 at 04:21:09PM +0200, Elena Reshetova wrote:
-> >>> refcount_t type and corresponding API should be
-> >>> used instead of atomic_t when the variable is used as
-> >>> a reference counter. This allows to avoid accidental
-> >>> refcounter overflows that might lead to use-after-free
-> >>> situations.
-> >>>
-> >>> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> >>> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> >>> Signed-off-by: Kees Cook <keescook@chromium.org>
-> >>> Signed-off-by: David Windsor <dwindsor@gmail.com>
-> >>
-> >> This looks OK to me.
-> >>
-> >> Acked-by: Chris Leech <cleech@redhat.com>
-> >
-> > Thank you for review! Do you have a tree that can take this change?
-> 
-> Hi Elena,
-> 
-> iscsi like fcoe should go via the SCSI tree.
+>>> refcount_t type and corresponding API should be
+>>> used instead of atomic_t when the variable is used as
+>>> a reference counter. This allows to avoid accidental
+>>> refcounter overflows that might lead to use-after-free
+>>> situations.
+>>>
+>>> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+>>> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+>>> Signed-off-by: Kees Cook <keescook@chromium.org>
+>>> Signed-off-by: David Windsor <dwindsor@gmail.com>
+>> [...]
+>>> diff --git a/drivers/media/pci/cx88/cx88.h b/drivers/media/pci/cx88/cx88.h
+>>> index 115414c..16c1313 100644
+>>> --- a/drivers/media/pci/cx88/cx88.h
+>>> +++ b/drivers/media/pci/cx88/cx88.h
+[...]
+>>> @@ -339,7 +340,7 @@ struct cx8802_dev;
+>>>
+>>>  struct cx88_core {
+>>>  	struct list_head           devlist;
+>>> -	atomic_t                   refcount;
+>>> +	refcount_t                   refcount;
+>>
+>>     Could you please keep the name aligned with above and below?
+>
+> You mean "not aligned" to devlist, but with a shift like it was before?
 
-Thanks Johannes! Should I resend with "Acked-by" added in order for it to be picked up? 
+    I mean aligned, like it was before. :-)
 
-Best Regards,
-Elena.
+> Sure, will fix. Is the patch ok otherwise?
 
+    I haven't noticed anything else...
 
-> 
-> Byte,
-> 	Johannes
-> 
-> --
-> Johannes Thumshirn                                          Storage
-> jthumshirn@suse.de                                +49 911 74053 689
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-> GF: Felix Imendörffer, Jane Smithard, Graham Norton
-> HRB 21284 (AG Nürnberg)
-> Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+> Best Regards,
+> Elena.
+[...]
+
+MBR, Sergei
