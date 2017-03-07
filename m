@@ -1,105 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:43366 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752170AbdCHKQf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Mar 2017 05:16:35 -0500
-Message-ID: <58BFB2DA.2070306@intel.com>
-Date: Wed, 08 Mar 2017 15:29:30 +0800
-From: Jike Song <jike.song@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: Marc Zyngier <marc.zyngier@arm.com>, "bhelgaas@google.com"
+ <bhelgaas@google.com>, "robh@kernel.org" <robh@kernel.org>,
+ "paul.gortmaker@windriver.com" <paul.gortmaker@windriver.com>,
+ "colin.king@canonical.com" <colin.king@canonical.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH v5] PCI: Xilinx NWL: Modifying irq chip for legacy
+ interrupts
+Date: Tue, 7 Mar 2017 05:48:03 +0000
+Message-ID: <8520D5D51A55D047800579B094147198263FBCF4@XAP-PVEXMBX02.xlnx.xilinx.com>
+References: <1486364596-19699-1-git-send-email-bharatku@xilinx.com>
+ <4b04e834-08b6-a728-8fe5-13106d50b3b2@arm.com>
+ <8520D5D51A55D047800579B094147198263E68AA@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <131228fb-d3f8-3836-3713-e948ed30d398@arm.com>
+ <8520D5D51A55D047800579B094147198263E6AF3@XAP-PVEXMBX02.xlnx.xilinx.com>
+ <2196f028-b834-9d32-cc3a-e3eb5ed6c3b1@arm.com>  
 MIME-Version: 1.0
-To: Ilya Lesokhin <ilyal@mellanox.com>
-CC: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
-        bhelgaas@google.com, alex.williamson@redhat.com,
-        noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
-        liranl@mellanox.com, "You, Lizhen" <lizhen.you@intel.com>
-Subject: Re: [PATCH V3 0/3] VFIO SRIOV support
-References: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
-In-Reply-To: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Ravikiran Gummaluri <rgummal@xilinx.com>, "arnd@arndb.de" <arnd@arndb.de>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "michal.simek@xilinx.com" <michal.simek@xilinx.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/18/2016 03:29 PM, Ilya Lesokhin wrote:
-> Changes from V2:
->         1. Enabling and disabling SR-IOV is now done
->         through the sysfs interface, requiring
->         admin privileges.
->         2. Since admin privileges are now required
->         to enable SR-IOV most of the the security
->         measures introduced in RFC V2 were removed.
->         Unfortunately we still need a mutex to prevent
->         the VFIO user from changing the number of
->         VFs while enable_sriov is in progress.
-> 
-> Changes from V1:
->         1. The VF are no longer assigned to PFs iommu group
->         2. Add a pci_enable_sriov_with_override API to allow
->         enablind sriov without probing the VFs with the
->         default driver
-> 
-> Changes from RFC V2:
->         1. pci_disable_sriov() is now called from a workqueue
->         To avoid the situation where a process is blocked
->         in pci_disable_sriov() wating for itself to relase the VFs.
->         2. a mutex was added to synchronize calls to
->         pci_enable_sriov() and pci_disable_sriov()
-> 
-> Changes from RFC V1:
->         Due to the security concern raised in RFC V1, we add two patches
->         to make sure the VFs belong to the same IOMMU group as
->         the PF and are probed by VFIO.
-> 
-> Today the QEMU hypervisor allows assigning a physical device to a VM,
-> facilitating driver development. However, it does not support enabling
-> SR-IOV by the VM kernel driver. Our goal is to implement such support,
-> allowing developers working on SR-IOV physical function drivers to work
-> inside VMs as well.
-> 
-> This patch series implements the kernel side of our solution.  It extends
-> the VFIO driver to support the PCIE SRIOV extended capability with
-> following features:
-> 1. The ability to probe SR-IOV BAR sizes.
-> 2. The ability to enable and disable SR-IOV.
-> 
-> This patch series is going to be used by QEMU to expose SR-IOV capabilities
-> to VM. We already have an early prototype based on Knut Omang's patches for
-> SR-IOV[1].
-> 
-> Limitations:
-> 1. Per SR-IOV spec section 3.3.12, PFs are required to support
-> 4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB page sizes.
-> Unfourtently the kernel currently initializes the System Page Size register once
-> and assumes it doesn't change therefore we cannot allow guests to change this
-> register at will. We currently map both the Supported Page sizes and
-> System Page Size as virtualized and read only in violation of the spec.
-> In practice this is not an issue since both the hypervisor and the
-> guest typically select the same System Page Size.
-> 
-> [1] https://github.com/knuto/qemu/tree/sriov_patches_v6
-> 
-> Ilya Lesokhin (3):
->   pci: Extend PCI IOV API
->   vfio/pci: Allow control SR-IOV through sysfs interface
->   vfio/pci: Add support for SR-IOV extended capablity
-> 
->  drivers/pci/iov.c                   |  41 ++++++++--
->  drivers/vfio/pci/vfio_pci.c         |  43 ++++++++--
->  drivers/vfio/pci/vfio_pci_config.c  | 151 ++++++++++++++++++++++++++++++++----
->  drivers/vfio/pci/vfio_pci_private.h |   2 +
->  include/linux/pci.h                 |  13 +++-
->  5 files changed, 219 insertions(+), 31 deletions(-)
-> 
+Hi Marc,
 
-+Lizhen
+can you please look into my last comments ?
 
+Regards,
+Bharat
+> Subject: RE: [PATCH v5] PCI: Xilinx NWL: Modifying irq chip for legacy interrupts
+> 
+> Waiting for Marc's Reply...
+> 
+> > > -----Original Message-----
+> > > From: Marc Zyngier [mailto:marc.zyngier@arm.com]
+> > > Sent: Thursday, February 09, 2017 9:33 PM
+> > > To: Bharat Kumar Gogada <bharatku@xilinx.com>; bhelgaas@google.com;
+> > > robh@kernel.org; paul.gortmaker@windriver.com;
+> > > colin.king@canonical.com; linux-pci@vger.kernel.org
+> > > Cc: linux-arm-kernel@lists.infradead.org;
+> > > linux-kernel@vger.kernel.org; michal.simek@xilinx.com;
+> > > arnd@arndb.de; Ravikiran Gummaluri <rgummal@xilinx.com>
+> > > Subject: Re: [PATCH v5] PCI: Xilinx NWL: Modifying irq chip for
+> > > legacy
+> > interrupts
+> > >
+> > > On 09/02/17 15:16, Bharat Kumar Gogada wrote:
+> > > >>
+> > > >> On 09/02/17 12:01, Bharat Kumar Gogada wrote:
+> > > >>>> On 06/02/17 07:03, Bharat Kumar Gogada wrote:
+> > > >>>>> +static struct irq_chip nwl_leg_irq_chip = {
+> > > >>>>> +	.name = "nwl_pcie:legacy",
+> > > >>>>> +	.irq_enable = nwl_unmask_leg_irq,
+> > > >>>>> +	.irq_disable = nwl_mask_leg_irq,
+> > > >>>>
+> > > >>>> You don't need these two if they are implemented in terms of
+> > > mask/unmask.
+> > > >>>
+> > > >>> These are being invoked by some drivers other than interrupt flow.
+> > > >>> Ex: drivers/net/wireless/ath/ath9k/main.c
+> > > >>> static int ath_reset_internal(struct ath_softc *sc, struct
+> > > >>> ath9k_channel *hchan) {
+> > > >>>          ....
+> > > >>>          disable_irq(sc->irq);
+> > > >>>          tasklet_disable(&sc->intr_tq);
+> > > >>>         ...
+> > > >>>         ...
+> > > >>>         enable_irq(sc->irq);
+> > > >>>         spin_unlock_bh(&sc->sc_pcu_lock); } For us
+> > > >>> masking/unmasking is the way to enable/disable interrupts.
+> > > >>
+> > > >> And if you looked at the way disable_irq is implemented, you
+> > > >> would have found out that it falls back to masking if there is no
+> > > >> disable method, preserving the semantic you expect.
+> > > >>
+> > > > Yes I did see, but this fall back requires extra
+> > > > "IRQ_DISABLE_UNLAZY" flag to
+> > > be set to each virq.
+> > >
+> > > No it doesn't. If you do a disable_irq(), the interrupt is flagged
+> > > as disabled, but nothing gets done. If an interrupt actually fires,
+> > > then the interrupts gets
+> > masked,
+> > > and the handler is not called.
+> > Yes agreed, this is where the problem comes for us. Here is the
+> > scenario Ex:drivers/net/wireless/ath/ath9k/main.c
+> > static int ath_reset_internal(struct ath_softc *sc, struct
+> > ath9k_channel *hchan) {
+> >   ....
+> >    ath9k_hw_set_interrupts(ah);
+> >    ath9k_hw_enable_interrupts(ah);
+> >    ...
+> >   enable_irq(sc->irq);
+> >   ...
+> > }
+> > If you observe this they enable hardware interrupts first and then
+> > call enable_irq, at this point of time virq is in disabled state. So,
+> > if interrupt is raised in this period of time the handler is never
+> > invoked and DEASEERT_INTx will not be seen. As I mentioned in my
+> > subject the irq line between bridge and GIC goes low only after it
+> > sees DEASSERT_INTx. But since DEASSERT_INTx is never seen line is
+> > always high causing cpu stall.
+> > So for this kind of EP's we need those two methods.
+> >
+> > Bharat
 
-Hi Ilya,
-
-Sorry for jumping in abruptly. We are also looking forward to have PF
-used within a VM, would you please share your next plan with us? Likely
-there will be a v4 shortly?
-
-
---
-Thanks,
-Jike
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
