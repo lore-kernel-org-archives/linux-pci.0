@@ -1,18 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V8 5/6] ACPI: Support the probing on the devices which
- apply indirect-IO
-To: "Rafael J. Wysocki" <rafael@kernel.org>,
- "zhichang.yuan" <yuanzhichang@hisilicon.com>
-References: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
- <1490887619-61732-6-git-send-email-yuanzhichang@hisilicon.com>
- <1908501.jAQQKvjW4f@aspire.rjw.lan> <58DDFCBE.1030705@hisilicon.com>
- <CAJZ5v0gZdghH7jjd-zMmqXNkuvVVVSPDHfBrJXx5OXR2NE0KgA@mail.gmail.com>
-From: "zhichang.yuan" <zhichang.yuan02@gmail.com>
-Message-ID: <bfdf2de0-c309-0139-4075-dfcd678b6d51@gmail.com>
-Date: Sat, 1 Apr 2017 10:16:53 +0800
-MIME-Version: 1.0
-In-Reply-To: <CAJZ5v0gZdghH7jjd-zMmqXNkuvVVVSPDHfBrJXx5OXR2NE0KgA@mail.gmail.com>
+From: Radoslaw Biernacki <rad@semihalf.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Sunil.Goutham@cavium.com,
+ Robert Richter <robert.richter@cavium.com>,
+ David Daney <ddaney@caviumnetworks.com>, Robert Richter <rric@kernel.org>,
+ David Miller <davem@davemloft.net>
+Subject: [PATCH] PCI: Add pci reset quirk for Cavium VNIC
+Date: Tue,  7 Mar 2017 16:04:48 +0100
+Message-Id: <1488899088-10194-1-git-send-email-rad@semihalf.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,73 +15,148 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Linux PCI <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
- linuxarm@huawei.com, Frank Rowand <frowand.list@gmail.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Arnd Bergmann <arnd@arndb.de>,
- xuwei5@hisilicon.com, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Corey Minyard <minyard@acm.org>, John Garry <john.garry@huawei.com>,
- Zou Rongrong <zourongrong@gmail.com>, Rob Herring <robh+dt@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, kantyzc@163.com,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Olof Johansson <olof@lixom.net>, Brian Starkey <brian.starkey@arm.com>
+Cc: Linu.Cherian@cavium.com, Radoslaw Biernacki <rbiernacki@caviumnetworks.com>,
+ Maciej Czekaj <mjc@semihalf.com>, Tomasz Nowicki <tn@semihalf.com>,
+ Radoslaw Biernacki <rad@semihalf.com>, linux-kernel@vger.kernel.org,
+ netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+ Marcin Wojtas <mw@semihalf.com>, linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+From: Radoslaw Biernacki <rbiernacki@caviumnetworks.com>
 
+PCI reset quirk is needed for Cavium Function NIC since it does not
+handle a function level reset.
+This cause problems when VNIC is used from userspace by vfio.
+If application (or VM) does not stop the VNIC queues, HW may cause
+overwrite of memory locations when next application that use it will
+establish new SMMU mappings. More likely HW it will cause SMMU exception,
+when network packet will came before new SMMU mappings will be made.
 
-On 04/01/2017 07:02 AM, Rafael J. Wysocki wrote:
-> On Fri, Mar 31, 2017 at 8:52 AM, zhichang.yuan
-> <yuanzhichang@hisilicon.com> wrote:
->> Hi, Rafael,
->>
->> Thanks for reviewing this!
->>
->> On 2017/3/31 4:31, Rafael J. Wysocki wrote:
->>> On Thursday, March 30, 2017 11:26:58 PM zhichang.yuan wrote:
->>>> On some platforms(such as Hip06/Hip07), the legacy ISA/LPC devices access I/O
->>>> with some special host-local I/O ports known on x86. To access the I/O
->>>> peripherals, an indirect-IO mechanism is introduced to mapped the host-local
->>>> I/O to system logical/fake PIO similar the PCI MMIO on architectures where no
->>>> separate I/O space exists. Just as PCI MMIO, the host I/O range should be
->>>> registered before probing the downstream devices and set up the I/O mapping.
->>>> But current ACPI bus probing doesn't support these indirect-IO hosts/devices.
->>>>
->>>> This patch introdueces a new ACPI handler for this device category. Through the
->>>> handler attach callback, the indirect-IO hosts I/O registration is done and
->>>> all peripherals' I/O resources are translated into logic/fake PIO before
->>>> starting the enumeration.
->>>
->>> Can you explain to me briefly what exactly this code is expected to be doing?
->>
->> As you know currently for ARM architecture IO space is memory mapped and
->> is only used by pci devices. The port number is dynamically allocated
->> converting the device IO address into a PIO token: i.e.
->> http://lxr.free-electrons.com/source/drivers/acpi/pci_root.c#L745
->> This patch is meant to support a new class of IO host controller
->> that are not PCI based and that still require to have the IO addresses
->> be translated in the same PIO token space as the PCI controller
-> 
-> IOW, this is ARM-specific, right?
+Signed-off-by: Radoslaw Biernacki <rbiernacki@caviumnetworks.com>
+Reviewed-by: Sunil Goutham <Sunil.Goutham@cavium.com>
+---
+ drivers/pci/quirks.c | 90 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 90 insertions(+)
 
-Yes. The current host added in this patch with _HID "HISI0191" is on ARM64.
-But, I think the handler driver is architecture dependent.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index f754453..f7cdbe5 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3783,10 +3783,98 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
+ 	return 0;
+ }
+ 
++#define CAVIUM_VNIC_QSET_RQ_0_7_CFG		(0x010600)
++#define CAVIUM_VNIC_QSET_CQ_0_7_CFG		(0x010400)
++#define CAVIUM_VNIC_QSET_CQ_0_7_CFG2		(0x010408)
++#define CAVIUM_VNIC_QSET_SQ_0_7_CFG		(0x010800)
++#define CAVIUM_VNIC_QSET_SQ_0_7_STATUS		(0x010840)
++#define CAVIUM_VNIC_QSET_RBDR_0_1_CFG		(0x010C00)
++#define CAVIUM_VNIC_QSET_RBDR_0_1_STATUS0	(0x010C40)
++
++#define CAVIUM_VNIC_Q_SHIFT		(18)
++#define CAVIUM_VNIC_CQ_RESET		(1ULL << 41)
++#define CAVIUM_VNIC_SQ_RESET		(1ULL << 17)
++#define CAVIUM_VNIC_RBDR_RESET		(1ULL << 43)
++#define CAVIUM_VNIC_RBDR_FIFO_STATE_SHIFT (62)
++
++/* Poll a register for a specific value */
++static int cavium_vnic_poll(struct pci_dev *pdev,
++			    void __iomem *addr, size_t bit_pos,
++			    size_t bits, u64 val)
++{
++	u64 bit_mask;
++	u64 reg_val;
++	size_t timeout = 10;
++
++	bit_mask = (1ULL << bits) - 1;
++	bit_mask = (bit_mask << bit_pos);
++
++	while (timeout) {
++		reg_val = readq(addr);
++		if (((reg_val & bit_mask) >> bit_pos) == val)
++			return 0;
++		usleep_range(1000, 2000);
++		timeout--;
++	}
++	dev_err(&pdev->dev, "Poll on addr %p failed\n", addr);
++	return -1;
++}
++
++static int cavium_vnic_reset(struct pci_dev *pdev, int probe)
++{
++	size_t qidx;
++	void __iomem *bar_base;
++	void __iomem *qset_base;
++
++	bar_base = pci_iomap(pdev, 0, 0);
++	if (!bar_base)
++		return -ENOMEM;
++
++	/* For each of 8 RQ/CQ/SQ (queues) in VF */
++	for (qidx = 0; qidx < 8; qidx++) {
++		/* Disable receive queue */
++		qset_base = bar_base + (qidx << CAVIUM_VNIC_Q_SHIFT);
++		writeq(0, qset_base + CAVIUM_VNIC_QSET_RQ_0_7_CFG);
++
++		/* Disable timer threshold (doesn't get reset upon CQ reset */
++		writeq(0, qset_base + CAVIUM_VNIC_QSET_CQ_0_7_CFG2);
++		/* Disable completion queue */
++		writeq(0, qset_base + CAVIUM_VNIC_QSET_CQ_0_7_CFG);
++		/* Reset completion queue */
++		writeq(CAVIUM_VNIC_CQ_RESET,
++			  qset_base + CAVIUM_VNIC_QSET_CQ_0_7_CFG);
++
++		/* Disable send queue */
++		writeq(0, qset_base + CAVIUM_VNIC_QSET_SQ_0_7_CFG);
++		/* Reset send queue */
++		writeq(CAVIUM_VNIC_SQ_RESET,
++		       qset_base + CAVIUM_VNIC_QSET_SQ_0_7_CFG);
++	}
++
++	/* Reset and disable both RBDR's */
++	for (qidx = 0; qidx < 2; qidx++) {
++		qset_base = bar_base +
++			(qidx << CAVIUM_VNIC_Q_SHIFT);
++		writeq(CAVIUM_VNIC_RBDR_RESET,
++		       qset_base + CAVIUM_VNIC_QSET_RBDR_0_1_CFG);
++		writeq(0, qset_base + CAVIUM_VNIC_QSET_RBDR_0_1_CFG);
++		if (cavium_vnic_poll(pdev, qset_base +
++				     CAVIUM_VNIC_QSET_RBDR_0_1_STATUS0,
++				     CAVIUM_VNIC_RBDR_FIFO_STATE_SHIFT,
++				     2, 0x00))
++			dev_err(&pdev->dev, "Timeout on RBDR reset sequence");
++	}
++
++	pci_iounmap(pdev, bar_base);
++	return 0;
++}
++
+ #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
+ #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+ #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+ 
++#define PCI_DEVICE_ID_CAVIUM_NIC_VF        0xA034
++
+ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+ 	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+ 		 reset_intel_82599_sfp_virtfn },
+@@ -3796,6 +3884,8 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
+ 		reset_ivb_igd },
+ 	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+ 		reset_chelsio_generic_dev },
++	{ PCI_VENDOR_ID_CAVIUM, PCI_DEVICE_ID_CAVIUM_NIC_VF,
++		cavium_vnic_reset },
+ 	{ 0 }
+ };
+ 
+-- 
+1.9.1
 
-Thanks,
-Zhichang
-
-> 
-> Thanks,
-> Rafael
-> 
 
 _______________________________________________
 linux-arm-kernel mailing list
