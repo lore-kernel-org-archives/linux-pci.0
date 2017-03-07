@@ -1,67 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:40083 "EHLO theia.8bytes.org"
+Received: from mga11.intel.com ([192.55.52.93]:63147 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752686AbdC0PdZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Mar 2017 11:33:25 -0400
-Date: Mon, 27 Mar 2017 17:33:12 +0200
-From: Joerg Roedel <joro@8bytes.org>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc: Harv Abdulhamid <harba@qti.qualcomm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Shanker Donthineni <shankerd@qti.qualcomm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@qti.qualcomm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Nate Watterson <nwatters@qti.qualcomm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Subject: Re: [RFC PATCH 24/30] iommu: Specify PASID state when unbinding a
- task
-Message-ID: <20170327153312.GP7266@8bytes.org>
-References: <20170322154429.GE7266@8bytes.org>
- <e2bb4c67-9b61-01cf-cc17-68088cdc5e5b@arm.com>
- <20170322225320.GF7266@8bytes.org>
- <a093bc07-a345-a689-9d97-f15a306f922d@arm.com>
- <20170323143014.GK7266@8bytes.org>
- <20170323145311.GA22972@e106794-lin.localdomain>
- <20170323165218.GL7266@8bytes.org>
- <9d318e88-11af-6dab-b30e-d6b5c02443fe@arm.com>
- <20170324110045.GM7266@8bytes.org>
- <7386120a-2848-059f-4de0-7888a2698923@arm.com>
+        id S932848AbdCGOsw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Mar 2017 09:48:52 -0500
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+To: Sakari Ailus <sakari.ailus@iki.fi>
+CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux1394-devel@lists.sourceforge.net"
+        <linux1394-devel@lists.sourceforge.net>,
+        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+        "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
+        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        "peterz@infradead.org" <peterz@infradead.org>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: RE: [PATCH 13/29] drivers, media: convert
+ vb2_vmarea_handler.refcount from atomic_t to refcount_t
+Date: Tue, 7 Mar 2017 14:48:43 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C558E6@IRSMSX102.ger.corp.intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-14-git-send-email-elena.reshetova@intel.com>
+ <20170307085005.GH3220@valkosipuli.retiisi.org.uk>
+In-Reply-To: <20170307085005.GH3220@valkosipuli.retiisi.org.uk>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7386120a-2848-059f-4de0-7888a2698923@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 24, 2017 at 07:08:47PM +0000, Jean-Philippe Brucker wrote:
-> On 24/03/17 11:00, Joerg Roedel wrote:
-> > The document you posted is an addition to the spec, so we can't rely on
-> > a stop marker being sent by a device when it shuts down a context.
-> > Current AMD GPUs don't send one, afaik.
+> Hi Elena,
 > 
-> Fair enough, though on the SMMU side we still don't know which shutdown
-> model hardware vendors are more likely to choose. Devices could use the
-> stop marker and never wait for completion of PPRs. In that case context
-> shutdown would only have to make sure that PPRs are outside the PCI
-> network, return immediately and allow the device driver to call unbind().
+> On Mon, Mar 06, 2017 at 04:21:00PM +0200, Elena Reshetova wrote:
+> > refcount_t type and corresponding API should be
+> > used instead of atomic_t when the variable is used as
+> > a reference counter. This allows to avoid accidental
+> > refcounter overflows that might lead to use-after-free
+> > situations.
+> >
+> > Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> > Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> > Signed-off-by: Kees Cook <keescook@chromium.org>
+> > Signed-off-by: David Windsor <dwindsor@gmail.com>
+> > ---
+> >  drivers/media/v4l2-core/videobuf2-memops.c | 6 +++---
+> >  include/media/videobuf2-memops.h           | 3 ++-
+> >  2 files changed, 5 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/media/v4l2-core/videobuf2-memops.c b/drivers/media/v4l2-
+> core/videobuf2-memops.c
+> > index 1cd322e..4bb8424 100644
+> > --- a/drivers/media/v4l2-core/videobuf2-memops.c
+> > +++ b/drivers/media/v4l2-core/videobuf2-memops.c
+> > @@ -96,10 +96,10 @@ static void vb2_common_vm_open(struct
+> vm_area_struct *vma)
+> >  	struct vb2_vmarea_handler *h = vma->vm_private_data;
+> >
+> >  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
+> > -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
+> > +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
+> >  	       vma->vm_end);
+> >
+> > -	atomic_inc(h->refcount);
+> > +	refcount_inc(h->refcount);
+> >  }
+> >
+> >  /**
+> > @@ -114,7 +114,7 @@ static void vb2_common_vm_close(struct
+> vm_area_struct *vma)
+> >  	struct vb2_vmarea_handler *h = vma->vm_private_data;
+> >
+> >  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
+> > -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
+> > +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
+> >  	       vma->vm_end);
+> >
+> >  	h->put(h->arg);
+> > diff --git a/include/media/videobuf2-memops.h b/include/media/videobuf2-
+> memops.h
+> > index 36565c7a..a6ed091 100644
+> > --- a/include/media/videobuf2-memops.h
+> > +++ b/include/media/videobuf2-memops.h
+> > @@ -16,6 +16,7 @@
+> >
+> >  #include <media/videobuf2-v4l2.h>
+> >  #include <linux/mm.h>
+> > +#include <linux/refcount.h>
+> >
+> >  /**
+> >   * struct vb2_vmarea_handler - common vma refcount tracking handler
+> > @@ -25,7 +26,7 @@
+> >   * @arg:	argument for @put callback
+> >   */
+> >  struct vb2_vmarea_handler {
+> > -	atomic_t		*refcount;
+> > +	refcount_t		*refcount;
+> 
+> This is a pointer to refcount, not refcount itself. The refcount is part of
+> a memory type specific struct, the types that you change in the following
+> three patches. I guess it would still compile and work as separate patches
+> but you'd sure get warnings at least.
 
-Yes, on a stop-marker we should immediatly remove the PASID from the
-IOMMU and inform the driver. It might call unbind or do something with
-the device.
+Actually it doesn't compile without this patch if I remember it correctly back in past when I was initially splitting the patches per variable. 
 
-> So to be on the safe side I think I will by default assume that PPRs are
-> in flight during unbind, and drain both software and hardware queue to
-> ensure we catch them all.
+> 
+> How about merging this and the three following patches that change the memop
+> refcount types?
 
-The AMD driver first removes the internal mapping of the PASID to its
-managing data-structures, so that any follow-on faults will get
-rejected.
+Sounds good!
 
-
-
-	Joerg
+Best Regards,
+Elena.
+> 
+> >  	void			(*put)(void *arg);
+> >  	void			*arg;
+> >  };
+> 
+> --
+> Kind regards,
+> 
+> Sakari Ailus
+> e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
