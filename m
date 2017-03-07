@@ -1,100 +1,45 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RESEND PATCH v3 5/7] PCI: dwc: all: Modify dbi accessors to
- access data of 4/2/1 bytes
-To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-References: <1489041545-15730-1-git-send-email-kishon@ti.com>
- <1489041545-15730-6-git-send-email-kishon@ti.com>
- <a56e462d-83ee-194f-1f9f-3f4c339cad46@axis.com> <58C29648.5020708@ti.com>
- <61f90a03-7164-8e79-f1c2-0ae48b5892a8@axis.com> <58C2A46D.2080907@ti.com>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <90b8c0de-e3e8-546f-9327-2e1a21376c88@axis.com>
-Date: Fri, 10 Mar 2017 15:59:04 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 7 Mar 2017 10:22:50 +0200
+From: Sakari Ailus <sakari.ailus@iki.fi>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, netdev@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: Re: [PATCH 11/29] drivers, media: convert cx88_core.refcount from
+ atomic_t to refcount_t
+Message-ID: <20170307082250.GF3220@valkosipuli.retiisi.org.uk>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <58C2A46D.2080907@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
- Jesper Nilsson <jespern@axis.com>, Zhou Wang <wangzhou1@hisilicon.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/10/2017 02:04 PM, Kishon Vijay Abraham I wrote:
-> Hi,
->
-> On Friday 10 March 2017 06:26 PM, Niklas Cassel wrote:
->> On 03/10/2017 01:04 PM, Kishon Vijay Abraham I wrote:
->>> Hi,
->>>
->>> On Thursday 09 March 2017 08:18 PM, Niklas Cassel wrote:
->>>> On 03/09/2017 07:39 AM, Kishon Vijay Abraham I wrote:
->>>>> Previously dbi accessors can be used to access data of size 4
->>>>> bytes. But there might be situations (like accessing
->>>>> MSI_MESSAGE_CONTROL in order to set/get the number of required
->>>>> MSI interrupts in EP mode) where dbi accessors must
->>>>> be used to access data of size 2. This is in preparation for
->>>>> adding endpoint mode support to designware driver.
->>>> Hello Kishon
->>>>
->>>> I don't really like the idea of adding an extra argument to every existing read/write.
->>>> Will not a read/write of length != 32 be quite uncommon compared to
->>>> a read/write of length == 32?
->>>>
->>>> How about adding some defines to pcie-designware.h:
->>>>
->>>> #define dw_pcie_writel_dbi(pci, base, reg, val) dw_pcie_write_dbi(pci, base, reg, 0x4, val)
->>>> #define dw_pcie_readl_dbi(pci, base, reg) dw_pcie_read_dbi(pci, base, reg, 0x4)
->>>>
->>>> That way we don't have to change every existing read/write.
->>>>
->>>>
->>>>
->>>> Is there a reason why we can't just do:
->>>>
->>>> vial = dw_pcie_readl_dbi(pci, base, MSI_MESSAGE_CONTROL);
->>> MSI_MESSAGE_CONTROL is 0x52 (MSI capability offset + 2). I'm not sure if we can
->>> do a readl that crosses the alignment boundary in all platforms. The other
->>> option is to readl from "MSI capability offset + 0" and extract the last 16
->>> bits. I felt this is more clear since we are interested only in the
->>> MSI_MESSAGE_CONTROL.
->>>
->>>> <shifting+masking the bits we need to get/set>
->>>> dw_pcie_writel_dbi(pci, base, MSI_MESSAGE_CONTROL, val);
->>>>
->>>> Or are we going to be doing read/writes of length != 32 so often that
->>>> you think that it's cleaner to have this abstraction?
->>> it's used mainly for accessing configuration space header fields. Even the pci
->>> core uses *pci_read_config_word* for accessing such fields.
->> I see. Adding an extra size argument is a good thing then,
->> since it's consistent with the pci generic code.
->>
->> However, I still think that having defines for writel/readl is a
->> good thing :)
-> sure, having defines is fine. How about something like below (readl, readw: to
-> differentiate 4byte and 2 byte access?)
->
-> #define dw_pcie_readl_dbi(pci, base, reg) __dw_pcie_read_dbi(pci, base, reg, 0x4)
-> #define dw_pcie_readw_dbi(pci, base, reg) __dw_pcie_read_dbi(pci, base, reg, 0x2)
+On Mon, Mar 06, 2017 at 04:20:58PM +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+> 
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
 
-Looks good to me.
-But if we add readw, we might as well add readb :P
+Acked-by: Sakari Ailus <sakari.ailus@linux.intel.com>
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Sakari Ailus
+e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
