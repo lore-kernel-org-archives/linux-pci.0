@@ -1,56 +1,94 @@
-Return-Path: <SRS0=E94C=26=jonmasters.org=jcm@kernel.org>
-Return-Path: <SRS0=E94C=26=jonmasters.org=jcm@kernel.org>
-To: David Daney <ddaney.cavm@gmail.com>,
- Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-References: <1485793552-12614-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <20170130211236.GW20550@bhelgaas-glaptop.roam.corp.google.com>
- <20170131102830.GA13854@localhost.localdomain>
- <20170131142525.GA9942@bhelgaas-glaptop.roam.corp.google.com>
- <20170131145720.GA14231@localhost.localdomain>
- <20170131203109.GA14127@bhelgaas-glaptop.roam.corp.google.com>
- <20170201125325.GA15805@localhost.localdomain>
- <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
- <376ae1df-da85-e576-75d6-3ae2ab0f1b41@jonmasters.org>
- <20170315113323.GA28027@localhost.localdomain>
- <251db823-591b-483b-9c55-13c911020fd1@jonmasters.org>
- <48b93116-cc0f-e59d-8aa3-704052ad6759@gmail.com>
-Cc: David.Daney@cavium.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com,
- Bjorn Helgaas <helgaas@kernel.org>, tn@semihalf.com, bhelgaas@google.com,
- linux-arm-kernel@lists.infradead.org
-From: Jon Masters <jcm@jonmasters.org>
-Message-ID: <c3392131-9243-24d3-30b4-4d7e84019d6f@jonmasters.org>
-Date: Tue, 21 Mar 2017 07:38:07 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 2/7] PCI: dwc: dra7xx: Populate cpu_addr_fixup ops
+To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
+References: <1488880372-7390-1-git-send-email-kishon@ti.com>
+ <1488880372-7390-3-git-send-email-kishon@ti.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <14c771fd-f225-338b-3b1a-255df0e0b278@synopsys.com>
+Date: Tue, 7 Mar 2017 11:12:36 +0000
 MIME-Version: 1.0
-In-Reply-To: <48b93116-cc0f-e59d-8aa3-704052ad6759@gmail.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
+In-Reply-To: <1488880372-7390-3-git-send-email-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: nsekhar@ti.com
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/16/2017 12:25 PM, David Daney wrote:
-> On 03/16/2017 07:32 AM, Jon Masters wrote:
+=C0s 9:52 AM de 3/7/2017, Kishon Vijay Abraham I escreveu:
+> Populate cpu_addr_fixup ops to extract the least 28 bits of the
+> corresponding cpu address.
+> =
 
->>> Yes, it is now contains "CAVxxx" as _HID for device config object.
->>
->> Which is different from the version that was merged into upstream. That
->> should never have happened. It will never happen again. I have spent some
->> time over the past few days ensuring folks understand that I will not
->> allow a repeat of this to occur the next time around. We will have
->> platforms that are bulletproof and supported by upstream with any
->> errata fixes in a very carefully controlled manner. There will
->> under no circumstances ever be a situation like this again.
-> 
-> We are still evaluating the merits of registering the values that appeared
-> in v4.10, and not changing them.  We should know more in a couple of days.
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/dwc/pci-dra7xx.c |   11 ++++++-----
+>  1 file changed, 6 insertions(+), 5 deletions(-)
+> =
 
-Thanks David. What was the verdict? (for the public record). If we need to
-get a change into upstream, let's get that teed up before 4.12 merge.
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index 0984baf..07c45ec 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -88,6 +88,11 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pc=
+ie *pcie, u32 offset,
+>  	writel(value, pcie->base + offset);
+>  }
+>  =
 
-And for other folks following along with this thread: I'm not just picking
-on Cavium here. I'll be doing the same with *every* ARM server SoC company
-as necessary over the coming months. We are going to have militantly
-compliant standards adherence in this industry and every ARM server SoC is
-going to "just work" with an upstream Linux kernel with an ACPI enabled 
-platform. This will be so utterly clean and boring it'll be amazing.
+> +static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
+> +{
+> +	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
+> +}
+> +
+>  static int dra7xx_pcie_link_up(struct dw_pcie *pci)
+>  {
+>  	struct dra7xx_pcie *dra7xx =3D to_dra7xx_pcie(pci);
+> @@ -152,11 +157,6 @@ static void dra7xx_pcie_host_init(struct pcie_port *=
+pp)
+>  	struct dw_pcie *pci =3D to_dw_pcie_from_pp(pp);
+>  	struct dra7xx_pcie *dra7xx =3D to_dra7xx_pcie(pci);
+>  =
 
-Jon.
+> -	pp->io_base &=3D DRA7XX_CPU_TO_BUS_ADDR;
+> -	pp->mem_base &=3D DRA7XX_CPU_TO_BUS_ADDR;
+> -	pp->cfg0_base &=3D DRA7XX_CPU_TO_BUS_ADDR;
+> -	pp->cfg1_base &=3D DRA7XX_CPU_TO_BUS_ADDR;
+> -
+>  	dw_pcie_setup_rc(pp);
+>  =
+
+>  	dra7xx_pcie_establish_link(dra7xx);
+> @@ -329,6 +329,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_=
+pcie *dra7xx,
+>  }
+>  =
+
+>  static const struct dw_pcie_ops dw_pcie_ops =3D {
+> +	.cpu_addr_fixup =3D dra7xx_pcie_cpu_addr_fixup,
+>  	.link_up =3D dra7xx_pcie_link_up,
+>  };
+>  =
+
+> =
+
+
+Simpler, no doubt.
+
+Acked-By: Joao Pinto <jpinto@synopsys.com>
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
