@@ -1,149 +1,88 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0070.outbound.protection.outlook.com ([104.47.34.70]:50176
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752344AbdCMUJI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Mar 2017 16:09:08 -0400
-Subject: Re: [RFC PATCH v2 06/32] x86/pci: Use memremap when walking setup
- data
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846759008.2349.8274808454274279039.stgit@brijesh-build-machine>
- <20170303204209.GA31767@bhelgaas-glaptop.roam.corp.google.com>
- <df526224-0a4b-abc6-6377-efbca77284b1@amd.com>
- <20170307000349.GC5305@bhelgaas-glaptop.roam.corp.google.com>
-CC: Brijesh Singh <brijesh.singh@amd.com>, <simon.guinot@sequanux.org>,
-        <linux-efi@vger.kernel.org>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <jroedel@suse.de>, <keescook@chromium.org>,
-        <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-From: Tom Lendacky <thomas.lendacky@amd.com>
-Message-ID: <a0c3ebb9-37b4-3f47-86df-eac110c07032@amd.com>
-Date: Mon, 13 Mar 2017 15:08:52 -0500
+Received: from mail.kernel.org ([198.145.29.136]:48606 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755925AbdCGVb0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Mar 2017 16:31:26 -0500
+Date: Tue, 7 Mar 2017 15:20:59 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Rajat Jain <rajatja@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] PCI/aspm: Fix link->downstream setting
+Message-ID: <20170307212059.GH21358@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170301082540.23995-1-yinghai@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170307000349.GC5305@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170301082540.23995-1-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/6/2017 6:03 PM, Bjorn Helgaas wrote:
-> On Fri, Mar 03, 2017 at 03:15:34PM -0600, Tom Lendacky wrote:
->> On 3/3/2017 2:42 PM, Bjorn Helgaas wrote:
->>> On Thu, Mar 02, 2017 at 10:13:10AM -0500, Brijesh Singh wrote:
->>>> From: Tom Lendacky <thomas.lendacky@amd.com>
->>>>
->>>> The use of ioremap will force the setup data to be mapped decrypted even
->>>> though setup data is encrypted.  Switch to using memremap which will be
->>>> able to perform the proper mapping.
->>>
->>> How should callers decide whether to use ioremap() or memremap()?
->>>
->>> memremap() existed before SME and SEV, and this code is used even if
->>> SME and SEV aren't supported, so the rationale for this change should
->>> not need the decryption argument.
->>
->> When SME or SEV is active an ioremap() will remove the encryption bit
->> from the pagetable entry when it is mapped.  This allows MMIO, which
->> doesn't support SME/SEV, to be performed successfully.  So my take is
->> that ioremap() should be used for MMIO and memremap() for pages in RAM.
->
-> OK, thanks.  The commit message should say something like "this is
-> RAM, not MMIO, so we should map it with memremap(), not ioremap()".
-> That's the part that determines whether the change is correct.
->
-> You can mention the encryption part, too, but it's definitely
-> secondary because the change has to make sense on its own, without
-> SME/SEV.
->
+On Wed, Mar 01, 2017 at 12:25:40AM -0800, Yinghai Lu wrote:
+> ~ # echo 1 > /sys/bus/pci/devices/0000\:0b\:00.0/remove
+> ...
+>  BUG: unable to handle kernel NULL pointer dereference at 0000000000000080
+>  IP: pcie_config_aspm_link+0x5d/0x2b0
+>  Call Trace:
+>   pcie_aspm_exit_link_state+0x75/0x130
+>   pci_stop_bus_device+0xa4/0xb0
+>   pci_stop_and_remove_bus_device_locked+0x1a/0x30
+>   remove_store+0x50/0x70
+>   dev_attr_store+0x18/0x30
+>   sysfs_kf_write+0x44/0x60
+>   kernfs_fop_write+0x10e/0x190
+>   __vfs_write+0x28/0x110
+>   ? rcu_read_lock_sched_held+0x5d/0x80
+>   ? rcu_sync_lockdep_assert+0x2c/0x60
+>   ? __sb_start_write+0x173/0x1a0
+>   ? vfs_write+0xb3/0x180
+>   vfs_write+0xc4/0x180
+>   SyS_write+0x49/0xa0
+>   do_syscall_64+0xa6/0x1c0
+>   entry_SYSCALL64_slow_path+0x25/0x25
+>  ---[ end trace bd187ee0267df5d9 ]---
+> 
+> set downstream even with blacklist path.
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
 
-Ok, that makes sense, will do.
+Applied with Rajat's ack to for-linus for v4.11, thanks!
 
-> The following commits (from https://github.com/codomania/tip/branches)
-> all do basically the same thing so the changelogs (and summaries)
-> should all be basically the same:
->
->   cb0d0d1eb0a6 x86: Change early_ioremap to early_memremap for BOOT data
->   91acb68b8333 x86/pci: Use memremap when walking setup data
->   4f687503e23f x86: Access the setup data through sysfs decrypted
->   e90246b8c229 x86: Access the setup data through debugfs decrypted
->
-> I would collect them all together and move them to the beginning of
-> your series, since they don't depend on anything else.
+I added a stable tag, since I think this bug has been there a long time and
+it causes a NULL pointer dereference.
 
-I'll do that.
-
->
-> Also, change "x86/pci: " to "x86/PCI" so it matches the previous
-> convention.
-
-Will do.
-
-Thanks,
-Tom
-
->
->>>> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
->
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
->
->>>> ---
->>>> arch/x86/pci/common.c |    4 ++--
->>>> 1 file changed, 2 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
->>>> index a4fdfa7..0b06670 100644
->>>> --- a/arch/x86/pci/common.c
->>>> +++ b/arch/x86/pci/common.c
->>>> @@ -691,7 +691,7 @@ int pcibios_add_device(struct pci_dev *dev)
->>>>
->>>> 	pa_data = boot_params.hdr.setup_data;
->>>> 	while (pa_data) {
->>>> -		data = ioremap(pa_data, sizeof(*rom));
->>>> +		data = memremap(pa_data, sizeof(*rom), MEMREMAP_WB);
->>>
->>> I can't quite connect the dots here.  ioremap() on x86 would do
->>> ioremap_nocache().  memremap(MEMREMAP_WB) would do arch_memremap_wb(),
->>> which is ioremap_cache().  Is making a cacheable mapping the important
->>> difference?
->>
->> The memremap(MEMREMAP_WB) will actually check to see if it can perform
->> a __va(pa_data) in try_ram_remap() and then fallback to the
->> arch_memremap_wb().  So it's actually the __va() vs the ioremap_cache()
->> that is the difference.
->>
->> Thanks,
->> Tom
->>
->>>
->>>> 		if (!data)
->>>> 			return -ENOMEM;
->>>>
->>>> @@ -710,7 +710,7 @@ int pcibios_add_device(struct pci_dev *dev)
->>>> 			}
->>>> 		}
->>>> 		pa_data = data->next;
->>>> -		iounmap(data);
->>>> +		memunmap(data);
->>>> 	}
->>>> 	set_dma_domain_ops(dev);
->>>> 	set_dev_domain_options(dev);
->>>>
+> ---
+>  drivers/pci/pcie/aspm.c |    5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+> 
+> Index: linux-2.6/drivers/pci/pcie/aspm.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/pci/pcie/aspm.c
+> +++ linux-2.6/drivers/pci/pcie/aspm.c
+> @@ -478,7 +478,7 @@ static void aspm_calc_l1ss_info(struct p
+>  
+>  static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+>  {
+> -	struct pci_dev *child, *parent = link->pdev;
+> +	struct pci_dev *child = link->downstream, *parent = link->pdev;
+>  	struct pci_bus *linkbus = parent->subordinate;
+>  	struct aspm_register_info upreg, dwreg;
+>  
+> @@ -491,9 +491,7 @@ static void pcie_aspm_cap_init(struct pc
+>  
+>  	/* Get upstream/downstream components' register state */
+>  	pcie_get_aspm_reg(parent, &upreg);
+> -	child = pci_function_0(linkbus);
+>  	pcie_get_aspm_reg(child, &dwreg);
+> -	link->downstream = child;
+>  
+>  	/*
+>  	 * If ASPM not supported, don't mess with the clocks and link,
+> @@ -800,6 +798,7 @@ static struct pcie_link_state *alloc_pci
+>  	INIT_LIST_HEAD(&link->children);
+>  	INIT_LIST_HEAD(&link->link);
+>  	link->pdev = pdev;
+> +	link->downstream = pci_function_0(pdev->subordinate);
+>  
+>  	/*
+>  	 * Root Ports and PCI/PCI-X to PCIe Bridges are roots of PCIe
