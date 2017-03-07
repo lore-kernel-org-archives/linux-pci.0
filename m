@@ -1,60 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 8 Mar 2017 11:19:14 +0100
-From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-To: "Reshetova, Elena" <elena.reshetova@intel.com>
-Cc: Shaohua Li <shli@kernel.org>,
-        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
-        Kees Cook <keescook@chromium.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        David Windsor <dwindsor@gmail.com>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "linux1394-devel@lists.sourceforge.net"
-        <linux1394-devel@lists.sourceforge.net>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>
-Subject: Re: [PATCH 08/29] drivers, md: convert mddev.active from atomic_t to
- refcount_t
-Message-ID: <20170308101914.GB15198@kroah.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-9-git-send-email-elena.reshetova@intel.com>
- <20170307190449.baceyzzngsz776x7@kernel.org>
- <2236FBA76BA1254E88B949DDB74E612B41C5606B@IRSMSX102.ger.corp.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:39520 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755649AbdCGUlT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 7 Mar 2017 15:41:19 -0500
+Date: Tue, 7 Mar 2017 14:15:29 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, clsoto@us.ibm.com
+Subject: Re: [PATCH] PCI: Disable IOV before pcibios_sriov_disable()
+Message-ID: <20170307201529.GF21358@bhelgaas-glaptop.roam.corp.google.com>
+References: <1488154712-8354-1-git-send-email-gwshan@linux.vnet.ibm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C5606B@IRSMSX102.ger.corp.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1488154712-8354-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 08, 2017 at 09:42:09AM +0000, Reshetova, Elena wrote:
-> > On Mon, Mar 06, 2017 at 04:20:55PM +0200, Elena Reshetova wrote:
-> > > refcount_t type and corresponding API should be
-> > > used instead of atomic_t when the variable is used as
-> > > a reference counter. This allows to avoid accidental
-> > > refcounter overflows that might lead to use-after-free
-> > > situations.
-> > 
-> > Looks good. Let me know how do you want to route the patch to upstream.
+Hi Gavin,
+
+On Mon, Feb 27, 2017 at 11:18:32AM +1100, Gavin Shan wrote:
+> The PowerNV platform is the only user of pcibios_sriov_disable().
+> The IOV BAR could be shifted by pci_iov_update_resource(). The
+> warning message in the function is printed if the IOV capability
+> is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
 > 
-> Greg, you previously mentioned that driver's conversions can go via your tree. Does this still apply?
-> Or should I be asking maintainers to merge these patches via their trees? 
+>    pci_disable_sriov
+>    sriov_disable
+>    pnv_pci_sriov_disable
+>    pnv_pci_vf_resource_shift
+>    pci_update_resource
+>    pci_iov_update_resource
+> 
+> This fixes the issue by disabling IOV capability before calling
+> pcibios_sriov_disable(). With it, the disabling path matches with
+> the enabling path: pcibios_sriov_enable() is called before the
+> IOV capability is enabled.
 
-You should ask them to take them through their trees, if they have them.
-I'll be glad to scoop up all of the remaining ones that get missed, or
-for subsystems that do not have trees.
+I'm vaguely uncomfortable about this path:
 
-thanks,
+  pci_disable_sriov
+    sriov_disable
+      pcibios_sriov_disable           # powerpc version
+	pnv_pci_sriov_disable
+	  pnv_pci_vf_resource_shift
+	    res = &dev->resource[i + PCI_IOV_RESOURCES]
+	    res->start += size * offset
+	    pci_update_resource
+	      pci_iov_update_resource
+	  pnv_pci_vf_release_m64
 
-greg k-h
+1) "res" is already in the resource tree, so we shouldn't be changing
+   its start address, because that may make the tree inconsistent,
+   e.g., the resource may no longer be completely contained in its
+   parent, it may conflict with a sibling, etc.
+
+2) If we update "res->start", shouldn't we update "res->end"
+   correspondingly?
+
+It seems like it'd be better if we didn't update the device resources
+in the enable/disable paths.  If we could do the resource adjustments
+earlier, somewhere before we give the device to a driver, it seems
+like it would avoid these issues.
+
+We might have talked about these questions in the past, so I apologize
+if you've already explained this.  If that's the case, maybe we just
+need some comments in the code to help the next confused reader.
+
+> Reported-by: Carol L Soto <clsoto@us.ibm.com>
+> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Tested-by: Carol L Soto <clsoto@us.ibm.com>
+> ---
+>  drivers/pci/iov.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 2479ae8..138830f 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -331,7 +331,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	while (i--)
+>  		pci_iov_remove_virtfn(dev, i, 0);
+>  
+> -	pcibios_sriov_disable(dev);
+>  err_pcibios:
+>  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>  	pci_cfg_access_lock(dev);
+> @@ -339,6 +338,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
+>  	ssleep(1);
+>  	pci_cfg_access_unlock(dev);
+>  
+> +	pcibios_sriov_disable(dev);
+> +
+>  	if (iov->link != dev->devfn)
+>  		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>  
+> @@ -357,14 +358,14 @@ static void sriov_disable(struct pci_dev *dev)
+>  	for (i = 0; i < iov->num_VFs; i++)
+>  		pci_iov_remove_virtfn(dev, i, 0);
+>  
+> -	pcibios_sriov_disable(dev);
+> -
+>  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
+>  	pci_cfg_access_lock(dev);
+>  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
+>  	ssleep(1);
+>  	pci_cfg_access_unlock(dev);
+>  
+> +	pcibios_sriov_disable(dev);
+> +
+>  	if (iov->link != dev->devfn)
+>  		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+>  
+> -- 
+> 2.7.4
+> 
