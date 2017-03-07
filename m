@@ -1,87 +1,51 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V2] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>,
- "cov@codeaurora.org" <cov@codeaurora.org>,
- Bjorn Helgaas <bhelgaas@google.com>
-References: <1485891928-14573-1-git-send-email-okaya@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B2846666830C@IRSMSX101.ger.corp.intel.com>
- <b78207b6-2c22-3e6d-4837-8b4b396c4f5d@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B28466668774@IRSMSX101.ger.corp.intel.com>
- <f8f67b32-21eb-232b-2b7c-28b603865b9d@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B28466669BFF@IRSMSX101.ger.corp.intel.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <fed12fe1-3b13-0118-6a11-5004779d9c06@codeaurora.org>
-Date: Thu, 2 Mar 2017 13:10:53 -0500
-MIME-Version: 1.0
-In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B28466669BFF@IRSMSX101.ger.corp.intel.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=HmHo=2Q=samsung.com=jh80.chung@kernel.org>
+Return-Path: <SRS0=HmHo=2Q=samsung.com=jh80.chung@kernel.org>
+From: Jaehoon Chung <jh80.chung@samsung.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, helgaas@kernel.org, jingoohan1@gmail.com,
+ Jaehoon Chung <jh80.chung@samsung.com>
+Subject: [PATCH] PCI: exynos: fix the NULL pointer dereference about elbi_base
+Date: Tue, 07 Mar 2017 19:54:05 +0900
+Message-id: <20170307105405.7874-1-jh80.chung@samsung.com>
+References: 
+ <CGME20170307105407epcas5p3e77181793b26a5d2710bb6d7557033bb@epcas5p3.samsung.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mayurkumar
+Even though using phy framework, it has to get the elbi_base.
+Before this patch, elbi_base should be NULL pointer.
 
-On 3/2/2017 11:05 AM, Patel, Mayurkumar wrote:
->>
->> Hi Bjorn,
->>
->> On 2/28/2017 1:57 PM, Patel, Mayurkumar wrote:
->>>> I was trying to figure out when to use saved values vs. the values in
->>>> registers by looking at the enable_cnt.
->>>> enable_cnt is 0 during boot on my system.
->>> enable_cnt for the root port on my system is set to 1 for "root port" already without saving
->>> any ASPM related settings.
->>>
->>>
->>
->> What would be the best way to figure out when to save power-on values from
->> the registers?
->>
-> 
-> I can upload the diffs) because enable_cnt in pci_enable_device() can be triggered
-> from multiple places at boot time so it might not be safe to use it? 
+Fixes: e7cd7ef58e1f ("PCI: exynos: Support the PHY generic framework")
 
-Go ahead and share your diff. It doesn't hurt to look at other alternatives.
+Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+---
+ drivers/pci/dwc/pci-exynos.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-> 
-> @Kaya/Bjorn: Do you have any other suggestions or Could you also please help by comment what would make sense?
-> 
-> 
->> --
->> Sinan Kaya
->> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
->> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-> Intel Deutschland GmbH
-> Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-> Tel: +49 89 99 8853-0, www.intel.de
-> Managing Directors: Christin Eisenschmid, Christian Lamprechter
-> Chairperson of the Supervisory Board: Nicole Lau
-> Registered Office: Munich
-> Commercial Register: Amtsgericht Muenchen HRB 186928
-> 
-> 
-
-
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index 993b650..44f774c 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -132,10 +132,6 @@ static int exynos5440_pcie_get_mem_resources(struct platform_device *pdev,
+ 	struct device *dev = pci->dev;
+ 	struct resource *res;
+ 
+-	/* If using the PHY framework, doesn't need to get other resource */
+-	if (ep->using_phy)
+-		return 0;
+-
+ 	ep->mem_res = devm_kzalloc(dev, sizeof(*ep->mem_res), GFP_KERNEL);
+ 	if (!ep->mem_res)
+ 		return -ENOMEM;
+@@ -145,6 +141,10 @@ static int exynos5440_pcie_get_mem_resources(struct platform_device *pdev,
+ 	if (IS_ERR(ep->mem_res->elbi_base))
+ 		return PTR_ERR(ep->mem_res->elbi_base);
+ 
++	/* If using the PHY framework, doesn't need to get other resource */
++	if (ep->using_phy)
++		return 0;
++
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
+ 	ep->mem_res->phy_base = devm_ioremap_resource(dev, res);
+ 	if (IS_ERR(ep->mem_res->phy_base))
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.10.2
