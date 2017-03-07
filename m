@@ -1,69 +1,80 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v4 15/23] dt-bindings: PCI: dra7xx: Add dt bindings to
- enable unaligned access
-To: Rob Herring <robh@kernel.org>
-References: <20170313142259.25397-1-kishon@ti.com>
- <20170313142259.25397-16-kishon@ti.com>
- <20170320214316.yah5cvfdabiceywf@rob-hp-laptop>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <a3b44129-38b5-fb19-c931-108079b0c382@ti.com>
-Date: Wed, 22 Mar 2017 20:07:18 +0530
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 7 Mar 2017 01:50:53 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Brijesh Singh <brijesh.singh@amd.com>
+Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
+        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
+        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
+        gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
+        akpm@linux-foundation.org, davem@davemloft.net
+Subject: Re: [RFC PATCH v2 04/32] KVM: SVM: Add SEV feature definitions to KVM
+Message-ID: <20170307005053.izjygz6mcebo5hza@pd.tnic>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846756856.2349.18360437323368784256.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-In-Reply-To: <20170320214316.yah5cvfdabiceywf@rob-hp-laptop>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, hch@infradead.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <148846756856.2349.18360437323368784256.stgit@brijesh-build-machine>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rob,
-
-On Tuesday 21 March 2017 03:13 AM, Rob Herring wrote:
-> On Mon, Mar 13, 2017 at 07:52:51PM +0530, Kishon Vijay Abraham I wrote:
->> Update device tree binding documentation of TI's dra7xx PCI
->> controller to include property for enabling unaligned mem access.
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  Documentation/devicetree/bindings/pci/ti-pci.txt | 5 +++++
->>  1 file changed, 5 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
->> index 190828a5f32a..b69dd7dbd29e 100644
->> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
->> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
->> @@ -39,6 +39,11 @@ DEVICE MODE
->>   - interrupts : one interrupt entries must be specified for main interrupt.
->>   - num-ib-windows : number of inbound address translation windows
->>   - num-ob-windows : number of outbound address translation windows
->> + - ti,syscon-unaligned-access: phandle to the syscon dt node. The 1st argument
->> +			       should contain the register offset within syscon
->> +			       and the 2nd argument should contain the bit field
->> +			       for setting the bit to enable unaligned
->> +			       access.
+On Thu, Mar 02, 2017 at 10:12:48AM -0500, Brijesh Singh wrote:
+> From: Tom Lendacky <thomas.lendacky@amd.com>
 > 
-> This should be setup by the firmware/bootloader or some platform code. 
-> Why does the PCI host need to configure this?
+> Define a new KVM CPU feature for Secure Encrypted Virtualization (SEV).
+> The kernel will check for the presence of this feature to determine if
+> it is running with SEV active.
+> 
+> Define the SEV enable bit for the VMCB control structure. The hypervisor
+> will use this bit to enable SEV in the guest.
+> 
+> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+> ---
+>  arch/x86/include/asm/svm.h           |    1 +
+>  arch/x86/include/uapi/asm/kvm_para.h |    1 +
+>  2 files changed, 2 insertions(+)
+> 
+> diff --git a/arch/x86/include/asm/svm.h b/arch/x86/include/asm/svm.h
+> index 2aca535..fba2a7b 100644
+> --- a/arch/x86/include/asm/svm.h
+> +++ b/arch/x86/include/asm/svm.h
+> @@ -137,6 +137,7 @@ struct __attribute__ ((__packed__)) vmcb_control_area {
+>  #define SVM_VM_CR_SVM_DIS_MASK  0x0010ULL
+>  
+>  #define SVM_NESTED_CTL_NP_ENABLE	BIT(0)
+> +#define SVM_NESTED_CTL_SEV_ENABLE	BIT(1)
+>  
+>  struct __attribute__ ((__packed__)) vmcb_seg {
+>  	u16 selector;
+> diff --git a/arch/x86/include/uapi/asm/kvm_para.h b/arch/x86/include/uapi/asm/kvm_para.h
+> index 1421a65..bc2802f 100644
+> --- a/arch/x86/include/uapi/asm/kvm_para.h
+> +++ b/arch/x86/include/uapi/asm/kvm_para.h
+> @@ -24,6 +24,7 @@
+>  #define KVM_FEATURE_STEAL_TIME		5
+>  #define KVM_FEATURE_PV_EOI		6
+>  #define KVM_FEATURE_PV_UNHALT		7
+> +#define KVM_FEATURE_SEV			8
 
-That would create a dependency between the bootloader and kernel which is
-usually avoided in platforms like dra7xx.
+This looks like it needs documenting in Documentation/virtual/kvm/cpuid.txt
 
-Thanks
-Kishon
+-- 
+Regards/Gruss,
+    Boris.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
