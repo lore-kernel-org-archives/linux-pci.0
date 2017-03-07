@@ -1,50 +1,83 @@
-Return-Path: <SRS0=AZSo=3A=gmail.com=arndbergmann@kernel.org>
-Return-Path: <SRS0=AZSo=3A=gmail.com=arndbergmann@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
+Subject: [PATCH v2 7/7] PCI: dwc: dra7xx: Push request_irq call to the bottom
+ of probe
+Date: Tue, 7 Mar 2017 15:22:52 +0530
+Message-ID: <1488880372-7390-8-git-send-email-kishon@ti.com>
+In-Reply-To: <1488880372-7390-1-git-send-email-kishon@ti.com>
+References: <1488880372-7390-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Sender: arndbergmann@gmail.com
-In-Reply-To: <dc0416ae-d28b-0d9a-cfbd-2bd98abc69d0@gmail.com>
-References: <26e69b06-dde2-2ed5-0288-ee5d58676d7e@gmail.com>
- <CAK8P3a1gAFFjmxY70-YaX+woSJLPUN7Ss-gatgVKgG1uNxWc9A@mail.gmail.com> <dc0416ae-d28b-0d9a-cfbd-2bd98abc69d0@gmail.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Thu, 23 Mar 2017 15:11:10 +0100
-Message-ID: <CAK8P3a0TDRdsUQjkgNMFNV_Yin5SPAKyUn97ju8A7v=jKq+V8g@mail.gmail.com>
-Subject: Re: Purpose of PCI address in ranges property
-To: valmiki <valmikibow@gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>
-Content-Type: text/plain; charset=UTF-8
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Keerthy <j-keerthy@ti.com>, nsekhar@ti.com,
+ Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 23, 2017 at 3:59 AM, valmiki <valmikibow@gmail.com> wrote:
-> On 3/20/2017 3:15 AM, Arnd Bergmann wrote:
->>
->> On Sun, Mar 19, 2017 at 3:14 PM, valmiki <valmikibow@gmail.com> wrote:
->>>
->>> Hi,
->>>
->>> When ranges property is being parsed using
->>> of_pci_get_host_bridge_resources,
->>> the pci address is being used for
->>> calculating the offset for pci_add_resource_offset.
->>>
->>> What is this offset for ?
->>>
->>> So the cpu address is being used for programming memory base and limit
->>> registers ?
->>
->>
->> Linux IORESOURCE_MEM resources are defined in terms of CPU addresses,
->> while PCI config space BAR registers are programmed with bus addresses.
->> These are often the same, but on some machines they are not, which results
->> in an offset that has to be used when accessing the BARs.
->>
-> Thanks Arnd. So mem base and limit registers of RP are programmed with CPU
-> addresses,
-> and EP BARs are programmed with PCI bus addresses ?
-> So when will this offset be used, only when RP assigns BAR's to RP ?
+From: Keerthy <j-keerthy@ti.com>
 
-I think depending on your platform, we either assign the BARs or we
-read the ones that the firmware has assigned, and either way the
-offset has to be applied in or way or the other.
+Currently devm_request_irq is being called before base, pci fields
+of dra7xx_pcie structure are populated. It is called even before
+pm_runtime_enable and pm_runtime_get_sync are called. This will
+lead to exceptions if in case an interrupt is triggered before
+the all of the above are done. Hence push the devm_request_irq
+call to the end of the probe.
 
-      Arnd
+Signed-off-by: Keerthy <j-keerthy@ti.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index c6fef0a..8c53233 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -410,13 +410,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
+-			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
+-	if (ret) {
+-		dev_err(dev, "failed to request irq\n");
+-		return ret;
+-	}
+-
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
+ 	base = devm_ioremap_nocache(dev, res->start, resource_size(res));
+ 	if (!base)
+@@ -478,6 +471,13 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		goto err_gpio;
+ 
++	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
++			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
++	if (ret) {
++		dev_err(dev, "failed to request irq\n");
++		goto err_gpio;
++	}
++
+ 	return 0;
+ 
+ err_gpio:
+-- 
+1.7.9.5
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
