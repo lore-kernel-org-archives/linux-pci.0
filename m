@@ -1,74 +1,55 @@
-Return-Path: <SRS0=9UDy=2X=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=9UDy=2X=free.fr=slash.tmp@kernel.org>
-Subject: Re: Neophyte questions about PCIe
-From: Mason <slash.tmp@free.fr>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>, Rob Herring <robh@kernel.org>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- David Laight <david.laight@aculab.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Robin Murphy <robin.murphy@arm.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
- <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
- <9ba05c2c-57ef-b2c0-6a7c-457c392d98b5@free.fr>
- <df517167-d692-38a8-9c8f-a1112c7f578d@free.fr>
- <94b3c89c-b116-288f-7530-15cc2611f425@free.fr>
-Message-ID: <912c26d5-835f-9f39-73ba-db561b5bcffa@free.fr>
-Date: Tue, 14 Mar 2017 16:54:00 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 7 Mar 2017 12:19:31 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Brijesh Singh <brijesh.singh@amd.com>
+Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
+        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
+        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
+        gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
+        akpm@linux-foundation.org, davem@davemloft.net
+Subject: Re: [RFC PATCH v2 02/32] x86: Secure Encrypted Virtualization (SEV)
+ support
+Message-ID: <20170307111931.3rz5ia3ewimfi7gq@pd.tnic>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846754069.2349.4698319264278045964.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-In-Reply-To: <94b3c89c-b116-288f-7530-15cc2611f425@free.fr>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <148846754069.2349.4698319264278045964.stgit@brijesh-build-machine>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 14/03/2017 15:00, Mason wrote:
+On Thu, Mar 02, 2017 at 10:12:20AM -0500, Brijesh Singh wrote:
+> From: Tom Lendacky <thomas.lendacky@amd.com>
+> 
+> Provide support for Secure Encyrpted Virtualization (SEV). This initial
+> support defines a flag that is used by the kernel to determine if it is
+> running with SEV active.
+> 
+> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
 
-> On 10/03/2017 18:49, Mason wrote:
-> 
->> /* Root complex reports incorrect device class */
->> static void tango_pcie_fixup_class(struct pci_dev *dev)
->> {
->> 	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
->> }
-> 
-> Gen1 controller reports class/rev = 0x04800001
-> Gen2 controller reports class/rev = 0x06000001
-> 
-> #define PCI_CLASS_BRIDGE_HOST		0x0600
-> #define PCI_CLASS_BRIDGE_ISA		0x0601
-> #define PCI_CLASS_BRIDGE_EISA		0x0602
-> #define PCI_CLASS_BRIDGE_MC		0x0603
-> #define PCI_CLASS_BRIDGE_PCI		0x0604
-> #define PCI_CLASS_BRIDGE_PCMCIA		0x0605
-> #define PCI_CLASS_BRIDGE_NUBUS		0x0606
-> #define PCI_CLASS_BRIDGE_CARDBUS	0x0607
-> #define PCI_CLASS_BRIDGE_RACEWAY	0x0608
-> #define PCI_CLASS_BRIDGE_OTHER		0x0680
-> 
-> My fixup replaces 0x048000 with 0x060400.
-> 
-> 	0x060400 != 0x060000
-> 
-> Which is correct:
-> PCI_CLASS_BRIDGE_HOST or PCI_CLASS_BRIDGE_PCI?
-> 
-> Naively, I would expect Host/PCI bridge to be more correct
-> for a root complex.
+Btw,
 
-But that's very likely wrong, since the code in Linux does:
+you need to add your Signed-off-by here after Tom's to denote that
+you're handing that patch forward.
 
-	switch (dev->hdr_type) {		    /* header type */
-	case PCI_HEADER_TYPE_BRIDGE:		    /* bridge header */
-		if (class != PCI_CLASS_BRIDGE_PCI)
-			goto bad;
-		/* The PCI-to-PCI bridge spec requires that subtractive
-		   decoding (i.e. transparent) bridge must have programming
-		   interface code of 0x01. */
+-- 
+Regards/Gruss,
+    Boris.
 
-So a class of PCI_CLASS_BRIDGE_HOST would error out, I think.
-Does this mean I need to fixup Gen2 as well?
-(Since it reports 0x060000)
-
-Regards.
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
