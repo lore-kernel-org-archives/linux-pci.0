@@ -1,136 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0069.outbound.protection.outlook.com ([104.47.42.69]:6992
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932323AbdC3X0A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Mar 2017 19:26:00 -0400
-Date: Thu, 30 Mar 2017 16:25:54 -0700 (PDT)
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: bhelgaas@google.com, linux-pci@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH] PCI/MSI: Only disable affinity settings if pre and post
- vector count is equal to max_vecs and not min_vecs
-In-Reply-To: <20170330232120.GC2496@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.DEB.2.20.1703301622500.23529@dut5108.mv.qlogic.com>
-References: <20170301233158.1035-1-himanshu.madhani@cavium.com> <20170323172928.GA23612@bhelgaas-glaptop.roam.corp.google.com> <20170330232120.GC2496@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI: Add pci reset quirk for Cavium VNIC
+References: <1488899088-10194-1-git-send-email-rad@semihalf.com>
+To: Radoslaw Biernacki <rad@semihalf.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Sunil.Goutham@cavium.com,
+ Robert Richter <robert.richter@cavium.com>,
+ David Daney <ddaney@caviumnetworks.com>, Robert Richter <rric@kernel.org>,
+ David Miller <davem@davemloft.net>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <0bfc40dd-89a2-9b4b-4983-8ecb32734d1d@arm.com>
+Date: Tue, 7 Mar 2017 16:16:07 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1488899088-10194-1-git-send-email-rad@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Radoslaw Biernacki <rbiernacki@caviumnetworks.com>,
+ Maciej Czekaj <mjc@semihalf.com>, Tomasz Nowicki <tn@semihalf.com>,
+ Linu.Cherian@cavium.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+ Marcin Wojtas <mw@semihalf.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-Hi Bjorn,
-
-On Thu, 30 Mar 2017, 4:21pm, Bjorn Helgaas wrote:
-
-> On Thu, Mar 23, 2017 at 12:29:28PM -0500, Bjorn Helgaas wrote:
-> > On Wed, Mar 01, 2017 at 03:31:58PM -0800, Himanshu Madhani wrote:
-> > > From: Michael Hernandez <michael.hernandez@cavium.com>
-> > > 
-> > > min_vecs is the minimum amount of vectors needed to operate in MSI-X mode
-> > > which may just include the vectors that don't need affinity.
-> > > 
-> > > Disabling affinity settings causes the qla2xxx driver scsi_add_host
-> > > to fail when blk_mq is enabled as the blk_mq_pci_map_queues expects
-> > > affinity masks on each vector.
-> > > 
-> > > v2 --> v3
-> > > o fixed code as per review comments.
-> > > 
-> > > v1 --> v2
-> > > 
-> > > o Moved the check from pci_alloc_irq_vectors_affinity() to
-> > >   __pci_enable_{msi|msix}_range()
-> > > 
-> > > Fixes: dfef358 ("PCI/MSI: Don't apply affinity if there aren't enough vectors left")
-> > > Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
-> > > Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-> > > Cc: Christoph Hellwig <hch@lst.de>
-> > > Cc: stable@vger.kernel.org
-> > > ---
-> > >  drivers/pci/msi.c |   25 ++++++++++++++++++-------
-> > >  1 files changed, 18 insertions(+), 7 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> > > index 7f73bac..46c0cdd 100644
-> > > --- a/drivers/pci/msi.c
-> > > +++ b/drivers/pci/msi.c
-> > > @@ -1091,6 +1091,15 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
-> > >  
-> > >  	for (;;) {
-> > >  		if (affd) {
-> > > +			/*
-> > > +			 * If there aren't any vectors left after applying the
-> > > +			 * pre/post vectors don't bother with assigning
-> > > +			 * affinity.
-> > > +			 */
-> > > +			if (affd->pre_vectors + affd->post_vectors == nvec)
-> > > +				affd = NULL;
-> > > +		}
-> > 
-> > I don't really like this because affd->pre_vectors and
-> > affd->post_vectors are not PCI MSI concepts.  I think they really
-> > belong in irq/affinity.c, e.g., maybe this could be checked in
-> > irq_create_affinity_masks().
-> > 
-> > If that could be done, we wouldn't have to duplicate the checks here
-> > for both MSI and MSI-X.
-> > 
-> > I raised a similar question earlier:
-> > http://lkml.kernel.org/r/20170202173659.GD21267@bhelgaas-glaptop.roam.corp.google.com
+On 07/03/17 15:04, Radoslaw Biernacki wrote:
+> From: Radoslaw Biernacki <rbiernacki@caviumnetworks.com>
 > 
-> I want to make progress on this, but that means a little conversation
-> here.  Maybe we want to merge this patch as-is, but I'd like to hear
-> the reasons why it wouldn't really work to move the checks to
-> irq/affinity.c.
+> PCI reset quirk is needed for Cavium Function NIC since it does not
+> handle a function level reset.
+> This cause problems when VNIC is used from userspace by vfio.
+> If application (or VM) does not stop the VNIC queues, HW may cause
+> overwrite of memory locations when next application that use it will
+> establish new SMMU mappings. More likely HW it will cause SMMU exception,
+> when network packet will came before new SMMU mappings will be made.
 > 
-> For now I'll mark it as "changes requested" in patchwork, which means
-> it will fall off my to-do list until it's reposted.
->
+> Signed-off-by: Radoslaw Biernacki <rbiernacki@caviumnetworks.com>
+> Reviewed-by: Sunil Goutham <Sunil.Goutham@cavium.com>
+> ---
+>  drivers/pci/quirks.c | 90 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 90 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index f754453..f7cdbe5 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3783,10 +3783,98 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
+>  	return 0;
+>  }
+>  
+> +#define CAVIUM_VNIC_QSET_RQ_0_7_CFG		(0x010600)
+> +#define CAVIUM_VNIC_QSET_CQ_0_7_CFG		(0x010400)
+> +#define CAVIUM_VNIC_QSET_CQ_0_7_CFG2		(0x010408)
+> +#define CAVIUM_VNIC_QSET_SQ_0_7_CFG		(0x010800)
+> +#define CAVIUM_VNIC_QSET_SQ_0_7_STATUS		(0x010840)
+> +#define CAVIUM_VNIC_QSET_RBDR_0_1_CFG		(0x010C00)
+> +#define CAVIUM_VNIC_QSET_RBDR_0_1_STATUS0	(0x010C40)
+> +
+> +#define CAVIUM_VNIC_Q_SHIFT		(18)
+> +#define CAVIUM_VNIC_CQ_RESET		(1ULL << 41)
+> +#define CAVIUM_VNIC_SQ_RESET		(1ULL << 17)
+> +#define CAVIUM_VNIC_RBDR_RESET		(1ULL << 43)
+> +#define CAVIUM_VNIC_RBDR_FIFO_STATE_SHIFT (62)
+> +
+> +/* Poll a register for a specific value */
+> +static int cavium_vnic_poll(struct pci_dev *pdev,
+> +			    void __iomem *addr, size_t bit_pos,
+> +			    size_t bits, u64 val)
+> +{
+> +	u64 bit_mask;
+> +	u64 reg_val;
+> +	size_t timeout = 10;
+> +
+> +	bit_mask = (1ULL << bits) - 1;
+> +	bit_mask = (bit_mask << bit_pos);
 
-Sorry for going silent on this patch. We've been working internally to 
-update patch as per your suggestion. I am planning to repost new patch 
-once we have completed our testing.  I should be able to post updated 
-patch sometimes next week for your review. 
+GENMASK_ULL(bit_pos, bit_pos + bits - 1)? Admittedly it's not an awful
+lot tidier :/
 
-> > > +		if (affd) {
-> > >  			nvec = irq_calc_affinity_vectors(nvec, affd);
-> > >  			if (nvec < minvec)
-> > >  				return -ENOSPC;
-> > > @@ -1138,6 +1147,15 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
-> > >  
-> > >  	for (;;) {
-> > >  		if (affd) {
-> > > +			/*
-> > > +			 * If there aren't any vectors left after applying the
-> > > +			 * pre/post vectors don't bother with assigning
-> > > +			 * affinity.
-> > > +			 */
-> > > +			if (affd->pre_vectors + affd->post_vectors == nvec)
-> > > +				affd = NULL;
-> > > +		}
-> > > +		if (affd) {
-> > >  			nvec = irq_calc_affinity_vectors(nvec, affd);
-> > >  			if (nvec < minvec)
-> > >  				return -ENOSPC;
-> > > @@ -1209,13 +1227,6 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
-> > >  
-> > >  		if (affd->pre_vectors + affd->post_vectors > min_vecs)
-> > >  			return -EINVAL;
-> > > -
-> > > -		/*
-> > > -		 * If there aren't any vectors left after applying the pre/post
-> > > -		 * vectors don't bother with assigning affinity.
-> > > -		 */
-> > > -		if (affd->pre_vectors + affd->post_vectors == min_vecs)
-> > > -			affd = NULL;
-> > >  	} else {
-> > >  		if (WARN_ON(affd))
-> > >  			affd = NULL;
-> > > -- 
-> > > 1.7.1
-> > > 
+> +
+> +	while (timeout) {
+> +		reg_val = readq(addr);
+> +		if (((reg_val & bit_mask) >> bit_pos) == val)
+> +			return 0;
+> +		usleep_range(1000, 2000);
+> +		timeout--;
+> +	}
+
+This is essentially an open-coded version of readq_poll_timeout() from
+<linux/iopoll.h>, which could be used instead. Doing "val <<= bitpos"
+first might help simplify the condition, although since it's only called
+with val == 0 it seems that "(reg_val & bit_mask)" would suffice.
+
+Robin.
+
+> +	dev_err(&pdev->dev, "Poll on addr %p failed\n", addr);
+> +	return -1;
+> +}
+> +
+> +static int cavium_vnic_reset(struct pci_dev *pdev, int probe)
+> +{
+> +	size_t qidx;
+> +	void __iomem *bar_base;
+> +	void __iomem *qset_base;
+> +
+> +	bar_base = pci_iomap(pdev, 0, 0);
+> +	if (!bar_base)
+> +		return -ENOMEM;
+> +
+> +	/* For each of 8 RQ/CQ/SQ (queues) in VF */
+> +	for (qidx = 0; qidx < 8; qidx++) {
+> +		/* Disable receive queue */
+> +		qset_base = bar_base + (qidx << CAVIUM_VNIC_Q_SHIFT);
+> +		writeq(0, qset_base + CAVIUM_VNIC_QSET_RQ_0_7_CFG);
+> +
+> +		/* Disable timer threshold (doesn't get reset upon CQ reset */
+> +		writeq(0, qset_base + CAVIUM_VNIC_QSET_CQ_0_7_CFG2);
+> +		/* Disable completion queue */
+> +		writeq(0, qset_base + CAVIUM_VNIC_QSET_CQ_0_7_CFG);
+> +		/* Reset completion queue */
+> +		writeq(CAVIUM_VNIC_CQ_RESET,
+> +			  qset_base + CAVIUM_VNIC_QSET_CQ_0_7_CFG);
+> +
+> +		/* Disable send queue */
+> +		writeq(0, qset_base + CAVIUM_VNIC_QSET_SQ_0_7_CFG);
+> +		/* Reset send queue */
+> +		writeq(CAVIUM_VNIC_SQ_RESET,
+> +		       qset_base + CAVIUM_VNIC_QSET_SQ_0_7_CFG);
+> +	}
+> +
+> +	/* Reset and disable both RBDR's */
+> +	for (qidx = 0; qidx < 2; qidx++) {
+> +		qset_base = bar_base +
+> +			(qidx << CAVIUM_VNIC_Q_SHIFT);
+> +		writeq(CAVIUM_VNIC_RBDR_RESET,
+> +		       qset_base + CAVIUM_VNIC_QSET_RBDR_0_1_CFG);
+> +		writeq(0, qset_base + CAVIUM_VNIC_QSET_RBDR_0_1_CFG);
+> +		if (cavium_vnic_poll(pdev, qset_base +
+> +				     CAVIUM_VNIC_QSET_RBDR_0_1_STATUS0,
+> +				     CAVIUM_VNIC_RBDR_FIFO_STATE_SHIFT,
+> +				     2, 0x00))
+> +			dev_err(&pdev->dev, "Timeout on RBDR reset sequence");
+> +	}
+> +
+> +	pci_iounmap(pdev, bar_base);
+> +	return 0;
+> +}
+> +
+>  #define PCI_DEVICE_ID_INTEL_82599_SFP_VF   0x10ed
+>  #define PCI_DEVICE_ID_INTEL_IVB_M_VGA      0x0156
+>  #define PCI_DEVICE_ID_INTEL_IVB_M2_VGA     0x0166
+>  
+> +#define PCI_DEVICE_ID_CAVIUM_NIC_VF        0xA034
+> +
+>  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>  		 reset_intel_82599_sfp_virtfn },
+> @@ -3796,6 +3884,8 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
+>  		reset_ivb_igd },
+>  	{ PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+>  		reset_chelsio_generic_dev },
+> +	{ PCI_VENDOR_ID_CAVIUM, PCI_DEVICE_ID_CAVIUM_NIC_VF,
+> +		cavium_vnic_reset },
+>  	{ 0 }
+>  };
+>  
 > 
 
-Thanks,
-- Himanshu
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
