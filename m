@@ -1,43 +1,74 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: Re: [PATCH 17/17] arm64: Do not expose PCI mmap through procfs
-To: David Woodhouse <dwmw2@infradead.org>, linux-pci@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <cover.1490188942.git.dwmw2@infradead.org>
- <4281f8e01b9fc5628cbf4a5c77abd642801e23c7.1490188942.git.dwmw2@infradead.org>
- <cd878fb7-86f1-50cc-d394-364cb8bde344@codeaurora.org>
- <1490191473.28249.9.camel@infradead.org>
-Cc: Will Deacon <will.deacon@arm.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <5362b452-8526-1a97-ebf7-7052f1af56f7@codeaurora.org>
-Date: Wed, 22 Mar 2017 10:15:04 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 7 Mar 2017 11:07:59 -0800
+From: Shaohua Li <shli@kernel.org>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, netdev@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: Re: [PATCH 10/29] drivers, md: convert stripe_head.count from
+ atomic_t to refcount_t
+Message-ID: <20170307190759.jnrq66kfpkr4m7zl@kernel.org>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-11-git-send-email-elena.reshetova@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <1490191473.28249.9.camel@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1488810076-3754-11-git-send-email-elena.reshetova@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/22/2017 10:04 AM, David Woodhouse wrote:
-> On Wed, 2017-03-22 at 09:54 -0400, Sinan Kaya wrote:
->> On 3/22/2017 9:25 AM, David Woodhouse wrote:
->>>
->>>  
->>> +#ifdef __aarch64__
->>> +/* ARM64 wants to be special and not expose this through /proc
->>> like everyone else */
->>> +#undef HAVE_PCI_MMAP
->>> +#endif
->>> +
->> Where is this ARM64 special requirement coming from?
+On Mon, Mar 06, 2017 at 04:20:57PM +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
 > 
-> The idea is that as a new platform, ARM64 shouldn't need to implement
-> legacy userspace interfaces.
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
+> ---
+>  drivers/md/raid5-cache.c |  8 +++---
+>  drivers/md/raid5.c       | 66 ++++++++++++++++++++++++------------------------
+>  drivers/md/raid5.h       |  3 ++-
+>  3 files changed, 39 insertions(+), 38 deletions(-)
 > 
-> http://lists.infradead.org/pipermail/linux-arm-kernel/2016-April/422571.html
-> 
+> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
+> index 3f307be..6c05e12 100644
+> --- a/drivers/md/raid5-cache.c
+> +++ b/drivers/md/raid5-cache.c
 
-Aren't we breaking an ABI for userspace? I know DPDK relies on this feature.
+snip
+>  	       sh->check_state, sh->reconstruct_state);
+>  
+>  	analyse_stripe(sh, &s);
+> @@ -4924,7 +4924,7 @@ static void activate_bit_delay(struct r5conf *conf,
+>  		struct stripe_head *sh = list_entry(head.next, struct stripe_head, lru);
+>  		int hash;
+>  		list_del_init(&sh->lru);
+> -		atomic_inc(&sh->count);
+> +		refcount_inc(&sh->count);
+>  		hash = sh->hash_lock_index;
+>  		__release_stripe(conf, sh, &temp_inactive_list[hash]);
+>  	}
+> @@ -5240,7 +5240,7 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
+>  		sh->group = NULL;
+>  	}
+>  	list_del_init(&sh->lru);
+> -	BUG_ON(atomic_inc_return(&sh->count) != 1);
+> +	BUG_ON(refcount_inc_not_zero(&sh->count));
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+This changes the behavior. refcount_inc_not_zero doesn't inc if original value is 0
+
+Thanks,
+Shaohua
