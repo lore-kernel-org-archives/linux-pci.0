@@ -1,77 +1,91 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lelnx194.ext.ti.com ([198.47.27.80]:13851 "EHLO
-        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752704AbdCIH7C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2017 02:59:02 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v3 11/23] PCI: dwc: dra7xx: Facilitate wrapper and msi interrupts to be enabled independently
-Date: Thu, 9 Mar 2017 13:27:22 +0530
-Message-ID: <1489046254-19919-12-git-send-email-kishon@ti.com>
-In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
-References: <1489046254-19919-1-git-send-email-kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
+Subject: [PATCH v2 3/7] PCI: dwc: artpec6: Populate cpu_addr_fixup ops
+Date: Tue, 7 Mar 2017 15:22:48 +0530
+Message-ID: <1488880372-7390-4-git-send-email-kishon@ti.com>
+In-Reply-To: <1488880372-7390-1-git-send-email-kishon@ti.com>
+References: <1488880372-7390-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Niklas Cassel <niklas.cassel@axis.com>, nsekhar@ti.com,
+ Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change. Split dra7xx_pcie_enable_interrupts into
-dra7xx_pcie_enable_wrapper_interrupts and dra7xx_pcie_enable_msi_interrupts
-so that wrapper interrupts and msi interrupts can be enabled independently.
-This is in preparation for adding EP mode support to dra7xx driver since
-EP mode doesn't have to enable msi_interrupts.
+Populate cpu_addr_fixup ops to extract the least 28 bits of the
+corresponding cpu address.
 
+Cc: Niklas Cassel <niklas.cassel@axis.com>
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/dwc/pci-dra7xx.c |   24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+ drivers/pci/dwc/pcie-artpec6.c |   15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 8c53233..be5ebfa 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -140,18 +140,30 @@ static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
- 	return dw_pcie_wait_for_link(pci);
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index fcd3ef8..5b3b3af 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -78,6 +78,11 @@ static void artpec6_pcie_writel(struct artpec6_pcie *artpec6_pcie, u32 offset, u
+ 	regmap_write(artpec6_pcie->regmap, offset, val);
  }
  
--static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
-+static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
- {
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
--			   ~INTERRUPTS);
--	dra7xx_pcie_writel(dra7xx,
--			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN, INTERRUPTS);
- 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MSI,
- 			   ~LEG_EP_INTERRUPTS & ~MSI);
--	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
++static u64 artpec6_pcie_cpu_addr_fixup(u64 pci_addr)
++{
++	return pci_addr & ARTPEC6_CPU_TO_BUS_ADDR;
++}
 +
-+	dra7xx_pcie_writel(dra7xx,
-+			   PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MSI,
- 			   MSI | LEG_EP_INTERRUPTS);
+ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
+ {
+ 	struct dw_pcie *pci = artpec6_pcie->pci;
+@@ -142,11 +147,6 @@ static int artpec6_pcie_establish_link(struct artpec6_pcie *artpec6_pcie)
+ 	 */
+ 	dw_pcie_writel_dbi(pci, MISC_CONTROL_1_OFF, DBI_RO_WR_EN);
+ 
+-	pp->io_base &= ARTPEC6_CPU_TO_BUS_ADDR;
+-	pp->mem_base &= ARTPEC6_CPU_TO_BUS_ADDR;
+-	pp->cfg0_base &= ARTPEC6_CPU_TO_BUS_ADDR;
+-	pp->cfg1_base &= ARTPEC6_CPU_TO_BUS_ADDR;
+-
+ 	/* setup root complex */
+ 	dw_pcie_setup_rc(pp);
+ 
+@@ -234,6 +234,10 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 	return 0;
  }
  
-+static void dra7xx_pcie_enable_wrapper_interrupts(struct dra7xx_pcie *dra7xx)
-+{
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN,
-+			   ~INTERRUPTS);
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_IRQENABLE_SET_MAIN,
-+			   INTERRUPTS);
-+}
++static const struct dw_pcie_ops dw_pcie_ops = {
++	.cpu_addr_fixup = artpec6_pcie_cpu_addr_fixup,
++};
 +
-+static void dra7xx_pcie_enable_interrupts(struct dra7xx_pcie *dra7xx)
-+{
-+	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
-+	dra7xx_pcie_enable_msi_interrupts(dra7xx);
-+}
-+
- static void dra7xx_pcie_host_init(struct pcie_port *pp)
+ static int artpec6_pcie_probe(struct platform_device *pdev)
  {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct device *dev = &pdev->dev;
+@@ -252,6 +256,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	pci->dev = dev;
++	pci->ops = &dw_pcie_ops;
+ 
+ 	artpec6_pcie->pci = pci;
+ 
 -- 
 1.7.9.5
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
