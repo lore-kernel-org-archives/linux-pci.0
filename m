@@ -1,70 +1,70 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 11/17] cris: Use generic pci_mmap_resource_range()
-Date: Wed, 22 Mar 2017 13:25:25 +0000
-Message-Id: <1e68573b4fe52b24d770a8582a7db59272862a52.1490188942.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from nblzone-211-213.nblnetworks.fi ([83.145.211.213]:57762 "EHLO
+        hillosipuli.retiisi.org.uk" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751258AbdCGId1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Mar 2017 03:33:27 -0500
+Date: Tue, 7 Mar 2017 10:30:17 +0200
+From: Sakari Ailus <sakari.ailus@iki.fi>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, netdev@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: Re: [PATCH 12/29] drivers, media: convert s2255_dev.num_channels
+ from atomic_t to refcount_t
+Message-ID: <20170307083016.GG3220@valkosipuli.retiisi.org.uk>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-13-git-send-email-elena.reshetova@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1488810076-3754-13-git-send-email-elena.reshetova@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+Hi Elena,
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/cris/arch-v32/drivers/pci/bios.c | 23 -----------------------
- arch/cris/include/asm/pci.h           |  1 +
- 2 files changed, 1 insertion(+), 23 deletions(-)
+On Mon, Mar 06, 2017 at 04:20:59PM +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+> 
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
+> ---
+...
+> @@ -1688,7 +1689,7 @@ static int s2255_probe_v4l(struct s2255_dev *dev)
+>  				"failed to register video device!\n");
+>  			break;
+>  		}
+> -		atomic_inc(&dev->num_channels);
+> +		refcount_set(&dev->num_channels, 1);
 
-diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-index a589686d..394c2a73 100644
---- a/arch/cris/arch-v32/drivers/pci/bios.c
-+++ b/arch/cris/arch-v32/drivers/pci/bios.c
-@@ -14,29 +14,6 @@ void pcibios_set_master(struct pci_dev *dev)
- 	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	unsigned long prot;
--
--	/* Leave vm_pgoff as-is, the PCI space address is the physical
--	 * address on this platform.
--	 */
--	prot = pgprot_val(vma->vm_page_prot);
--	vma->vm_page_prot = __pgprot(prot);
--
--	/* Write-combine setting is ignored, it is changed via the mtrr
--	 * interfaces on this platform.
--	 */
--	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			     vma->vm_end - vma->vm_start,
--			     vma->vm_page_prot))
--		return -EAGAIN;
--
--	return 0;
--}
--
- resource_size_t
- pcibios_align_resource(void *data, const struct resource *res,
- 		       resource_size_t size, resource_size_t align)
-diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
-index 65198cb..6e50533 100644
---- a/arch/cris/include/asm/pci.h
-+++ b/arch/cris/include/asm/pci.h
-@@ -42,6 +42,7 @@ struct pci_dev;
- #define PCI_DMA_BUS_IS_PHYS	(1)
- 
- #define HAVE_PCI_MMAP
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE
- 
- #endif /* __KERNEL__ */
- 
+That's not right. The loop runs four iterations and the value after the
+loop should be indeed the number of channels.
+
+atomic_t isn't really used for reference counting here, but storing out how
+many "channels" there are per hardware device, with maximum number of four
+(4). I'd leave this driver using atomic_t.
+
+>  		v4l2_info(&dev->v4l2_dev, "V4L2 device registered as %s\n",
+>  			  video_device_node_name(&vc->vdev));
+>  
+
 -- 
-2.9.3
+Kind regards,
+
+Sakari Ailus
+e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
