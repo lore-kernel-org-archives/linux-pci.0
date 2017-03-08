@@ -1,19 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RESEND PATCH v3 5/7] PCI: dwc: all: Modify dbi accessors to
- access data of 4/2/1 bytes
-To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-References: <1489041545-15730-1-git-send-email-kishon@ti.com>
- <1489041545-15730-6-git-send-email-kishon@ti.com>
- <a56e462d-83ee-194f-1f9f-3f4c339cad46@axis.com> <58C29648.5020708@ti.com>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <61f90a03-7164-8e79-f1c2-0ae48b5892a8@axis.com>
-Date: Fri, 10 Mar 2017 13:56:17 +0100
+Subject: Re: [RFC PATCH 04/30] iommu/arm-smmu-v3: Add support for PCI ATS
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-5-jean-philippe.brucker@arm.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <c0f74140-f1f6-7c52-295a-5d4722017664@codeaurora.org>
+Date: Wed, 8 Mar 2017 10:26:50 -0500
 MIME-Version: 1.0
-In-Reply-To: <58C29648.5020708@ti.com>
+In-Reply-To: <20170227195441.5170-5-jean-philippe.brucker@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,71 +16,31 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
- Jesper Nilsson <jespern@axis.com>, Zhou Wang <wangzhou1@hisilicon.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Lucas Stach <l.stach@pengutronix.de>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
+ David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/10/2017 01:04 PM, Kishon Vijay Abraham I wrote:
-> Hi,
->
-> On Thursday 09 March 2017 08:18 PM, Niklas Cassel wrote:
->> On 03/09/2017 07:39 AM, Kishon Vijay Abraham I wrote:
->>> Previously dbi accessors can be used to access data of size 4
->>> bytes. But there might be situations (like accessing
->>> MSI_MESSAGE_CONTROL in order to set/get the number of required
->>> MSI interrupts in EP mode) where dbi accessors must
->>> be used to access data of size 2. This is in preparation for
->>> adding endpoint mode support to designware driver.
->> Hello Kishon
->>
->> I don't really like the idea of adding an extra argument to every existing read/write.
->> Will not a read/write of length != 32 be quite uncommon compared to
->> a read/write of length == 32?
->>
->> How about adding some defines to pcie-designware.h:
->>
->> #define dw_pcie_writel_dbi(pci, base, reg, val) dw_pcie_write_dbi(pci, base, reg, 0x4, val)
->> #define dw_pcie_readl_dbi(pci, base, reg) dw_pcie_read_dbi(pci, base, reg, 0x4)
->>
->> That way we don't have to change every existing read/write.
->>
->>
->>
->> Is there a reason why we can't just do:
->>
->> vial = dw_pcie_readl_dbi(pci, base, MSI_MESSAGE_CONTROL);
-> MSI_MESSAGE_CONTROL is 0x52 (MSI capability offset + 2). I'm not sure if we can
-> do a readl that crosses the alignment boundary in all platforms. The other
-> option is to readl from "MSI capability offset + 0" and extract the last 16
-> bits. I felt this is more clear since we are interested only in the
-> MSI_MESSAGE_CONTROL.
->
->> <shifting+masking the bits we need to get/set>
->> dw_pcie_writel_dbi(pci, base, MSI_MESSAGE_CONTROL, val);
->>
->> Or are we going to be doing read/writes of length != 32 so often that
->> you think that it's cleaner to have this abstraction?
-> it's used mainly for accessing configuration space header fields. Even the pci
-> core uses *pci_read_config_word* for accessing such fields.
+On 2/27/2017 2:54 PM, Jean-Philippe Brucker wrote:
+> +	ats_enabled = !arm_smmu_enable_ats(master);
+> +
 
-I see. Adding an extra size argument is a good thing then,
-since it's consistent with the pci generic code.
+You should make ats_supported field in IORT table part of the decision
+process for when to enable ATS.
 
-However, I still think that having defines for writel/readl is a
-good thing :)
-
-
->
-> Thanks
-> Kishon
-
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
 _______________________________________________
 linux-arm-kernel mailing list
