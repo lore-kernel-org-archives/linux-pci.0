@@ -1,19 +1,20 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 1/7] PCI: dwc: designware: Add new *ops* for cpu addr
- fixup
-To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
-References: <1488880372-7390-1-git-send-email-kishon@ti.com>
- <1488880372-7390-2-git-send-email-kishon@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <2372241a-759c-e521-6d65-5a762ab159c4@synopsys.com>
-Date: Tue, 7 Mar 2017 11:11:38 +0000
+Subject: Re: [PATCH V8 01/11] iommu/of: Refactor of_iommu_configure() for
+ error handling
+To: Sricharan R <sricharan@codeaurora.org>, robin.murphy@arm.com,
+ will.deacon@arm.com, joro@8bytes.org, lorenzo.pieralisi@arm.com,
+ iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+ bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org
+References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+ <1486136933-20328-2-git-send-email-sricharan@codeaurora.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <8701bfbe-e52e-0e26-2a71-f5f81684de70@arm.com>
+Date: Wed, 8 Mar 2017 18:58:20 +0000
 MIME-Version: 1.0
-In-Reply-To: <1488880372-7390-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1486136933-20328-2-git-send-email-sricharan@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,68 +22,189 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: nsekhar@ti.com
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-=C0s 9:52 AM de 3/7/2017, Kishon Vijay Abraham I escreveu:
-> Some platforms (like dra7xx) require only the least 28 bits of the
-> corresponding 32 bit CPU address to be programmed in the address
-> translation unit. This modified address is stored in io_base/mem_base/
-> cfg0_base/cfg1_base in dra7xx_pcie_host_init. While this is okay for
-> host mode where the address range is fixed, device mode requires
-> different addresses to be programmed based on the host buffer address.
-> Add a new ops to get the least 28 bits of the corresponding 32 bit
-> CPU address and invoke it before programming the address translation
-> unit.
-> =
+Hello,
 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+On 03/02/17 15:48, Sricharan R wrote:
+> From: Robin Murphy <robin.murphy@arm.com>
+> 
+> In preparation for some upcoming cleverness, rework the control flow in
+> of_iommu_configure() to minimise duplication and improve the propogation
+> of errors. It's also as good a time as any to switch over from the
+> now-just-a-compatibility-wrapper of_iommu_get_ops() to using the generic
+> IOMMU instance interface directly.
+> 
+> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
 > ---
->  drivers/pci/dwc/pcie-designware.c |    3 +++
->  drivers/pci/dwc/pcie-designware.h |    1 +
->  2 files changed, 4 insertions(+)
-> =
-
-> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-des=
-ignware.c
-> index 7e1fb7d..14ee7a3 100644
-> --- a/drivers/pci/dwc/pcie-designware.c
-> +++ b/drivers/pci/dwc/pcie-designware.c
-> @@ -97,6 +97,9 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int=
- index, int type,
->  {
->  	u32 retries, val;
->  =
-
-> +	if (pp->ops->cpu_addr_fixup)
-> +		cpu_addr =3D pp->ops->cpu_addr_fixup(cpu_addr);
+>  [*] Resolved a conflict while rebasing on top linux-next as the patch
+>      is not there in mainline master.
+> 
+>         "iommu: Drop the of_iommu_{set/get}_ops() interface"
+>         https://lkml.org/lkml/2017/1/3/489
+> 
+>  drivers/iommu/of_iommu.c | 83 +++++++++++++++++++++++++++++++-----------------
+>  1 file changed, 53 insertions(+), 30 deletions(-)
+> 
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index d7f480a..ee49081 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -96,6 +96,28 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+>  }
+>  EXPORT_SYMBOL_GPL(of_get_dma_window);
+>  
+> +static const struct iommu_ops
+> +*of_iommu_xlate(struct device *dev, struct of_phandle_args *iommu_spec)
+> +{
+> +	const struct iommu_ops *ops;
+> +	struct fwnode_handle *fwnode = &iommu_spec->np->fwnode;
+> +	int err;
 > +
->  	if (pci->iatu_unroll_enabled) {
->  		dw_pcie_writel_unroll(pci, index, PCIE_ATU_UNR_LOWER_BASE,
->  				      lower_32_bits(cpu_addr));
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-des=
-ignware.h
-> index cd3b871..8f3dcb2 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -143,6 +143,7 @@ struct pcie_port {
->  };
->  =
+> +	ops = iommu_get_instance(fwnode);
+> +	if (!ops || !ops->of_xlate)
+> +		return NULL;
+> +
+> +	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
+> +	if (err)
+> +		return ERR_PTR(err);
+> +
+> +	err = ops->of_xlate(dev, iommu_spec);
+> +	if (err)
+> +		return ERR_PTR(err);
+> +
+> +	return ops;
+> +}
+> +
+>  static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+>  {
+>  	struct of_phandle_args *iommu_spec = data;
+> @@ -105,10 +127,11 @@ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+>  }
+>  
+>  static const struct iommu_ops
+> -*of_pci_iommu_configure(struct pci_dev *pdev, struct device_node *bridge_np)
+> +*of_pci_iommu_init(struct pci_dev *pdev, struct device_node *bridge_np)
+>  {
+>  	const struct iommu_ops *ops;
+>  	struct of_phandle_args iommu_spec;
+> +	int err;
+>  
+>  	/*
+>  	 * Start by tracing the RID alias down the PCI topology as
+> @@ -123,56 +146,56 @@ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+>  	 * bus into the system beyond, and which IOMMU it ends up at.
+>  	 */
+>  	iommu_spec.np = NULL;
+> -	if (of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
+> -			   "iommu-map-mask", &iommu_spec.np, iommu_spec.args))
+> -		return NULL;
+> +	err = of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
+> +			     "iommu-map-mask", &iommu_spec.np,
+> +			     iommu_spec.args);
+> +	if (err)
+> +		return ERR_PTR(err);
 
->  struct dw_pcie_ops {
-> +	u64	(*cpu_addr_fixup)(u64 cpu_addr);
->  	u32	(*readl_dbi)(struct dw_pcie *pcie, u32 reg);
->  	void	(*writel_dbi)(struct dw_pcie *pcie, u32 reg, u32 val);
->  	int	(*link_up)(struct dw_pcie *pcie);
-> =
+This change doesn't work with of_pci_map_rid when the PCI RC isn't behind
+an IOMMU:
 
+        map = of_get_property(np, map_name, &map_len);
+        if (!map) {
+                if (target)
+                        return -ENODEV;
+                /* Otherwise, no map implies no translation */
+                *id_out = rid;
+                return 0;
+        }
 
-Looks good.
+Previously with no iommu-map, we returned -ENODEV but it was discarded by
+of_pci_iommu_configure. Now it is propagated and the whole device probing
+fails. Instead, maybe of_pci_map_rid should always return 0 if no
+iommu-map, and the caller should check if *target is still NULL?
 
-Acked-by: Joao Pinto <jpinto@synopsys.com>
+Thanks,
+Jean-Philippe
+
+>  
+> -	ops = iommu_get_instance(&iommu_spec.np->fwnode);
+> -	if (!ops || !ops->of_xlate ||
+> -	    iommu_fwspec_init(&pdev->dev, &iommu_spec.np->fwnode, ops) ||
+> -	    ops->of_xlate(&pdev->dev, &iommu_spec))
+> -		ops = NULL;
+> +	ops = of_iommu_xlate(&pdev->dev, &iommu_spec);
+>  
+>  	of_node_put(iommu_spec.np);
+>  	return ops;
+>  }
+>  
+> -const struct iommu_ops *of_iommu_configure(struct device *dev,
+> -					   struct device_node *master_np)
+> +static const struct iommu_ops
+> +*of_platform_iommu_init(struct device *dev, struct device_node *np)
+>  {
+>  	struct of_phandle_args iommu_spec;
+> -	struct device_node *np;
+>  	const struct iommu_ops *ops = NULL;
+>  	int idx = 0;
+>  
+> -	if (dev_is_pci(dev))
+> -		return of_pci_iommu_configure(to_pci_dev(dev), master_np);
+> -
+>  	/*
+>  	 * We don't currently walk up the tree looking for a parent IOMMU.
+>  	 * See the `Notes:' section of
+>  	 * Documentation/devicetree/bindings/iommu/iommu.txt
+>  	 */
+> -	while (!of_parse_phandle_with_args(master_np, "iommus",
+> -					   "#iommu-cells", idx,
+> -					   &iommu_spec)) {
+> -		np = iommu_spec.np;
+> -		ops = iommu_get_instance(&np->fwnode);
+> -
+> -		if (!ops || !ops->of_xlate ||
+> -		    iommu_fwspec_init(dev, &np->fwnode, ops) ||
+> -		    ops->of_xlate(dev, &iommu_spec))
+> -			goto err_put_node;
+> -
+> -		of_node_put(np);
+> +	while (!of_parse_phandle_with_args(np, "iommus", "#iommu-cells",
+> +					   idx, &iommu_spec)) {
+> +		ops = of_iommu_xlate(dev, &iommu_spec);
+> +		of_node_put(iommu_spec.np);
+>  		idx++;
+> +		if (IS_ERR_OR_NULL(ops))
+> +			break;
+>  	}
+>  
+>  	return ops;
+> +}
+> +
+> +const struct iommu_ops *of_iommu_configure(struct device *dev,
+> +					   struct device_node *master_np)
+> +{
+> +	const struct iommu_ops *ops;
+> +
+> +	if (!master_np)
+> +		return NULL;
+> +
+> +	if (dev_is_pci(dev))
+> +		ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
+> +	else
+> +		ops = of_platform_iommu_init(dev, master_np);
+>  
+> -err_put_node:
+> -	of_node_put(np);
+> -	return NULL;
+> +	return IS_ERR(ops) ? NULL : ops;
+>  }
+>  
+>  static int __init of_iommu_init(void)
+> 
+
 
 _______________________________________________
 linux-arm-kernel mailing list
