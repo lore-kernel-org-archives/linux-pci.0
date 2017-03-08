@@ -1,17 +1,16 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC PATCH 22/30] iommu: Bind/unbind tasks to/from devices
-To: Joerg Roedel <joro@8bytes.org>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-23-jean-philippe.brucker@arm.com>
- <1488534044.6234.14.camel@infradead.org>
- <20170303183958.GA15146@e106794-lin.localdomain>
- <20170322153610.GC7266@8bytes.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <426ce726-e4e3-ea7c-81ac-154ee40a2d79@arm.com>
-Date: Wed, 22 Mar 2017 18:30:56 +0000
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
+Subject: [PATCH v3 2/7] PCI: dwc: dra7xx: Populate cpu_addr_fixup ops
+Date: Wed, 8 Mar 2017 16:17:12 +0530
+Message-ID: <1488970037-17740-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1488970037-17740-1-git-send-email-kishon@ti.com>
+References: <1488970037-17740-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20170322153610.GC7266@8bytes.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,49 +18,59 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Sinan Kaya <okaya@qti.qualcomm.com>,
- Will Deacon <will.deacon@arm.com>, Robin Murphy <robin.murphy@arm.com>,
- Harv Abdulhamid <harba@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>, iommu@lists.linux-foundation.org,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
+Cc: nsekhar@ti.com, Kishon Vijay Abraham I <kishon@ti.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joerg,
+Populate cpu_addr_fixup ops to extract the least 28 bits of the
+corresponding cpu address.
 
-On 22/03/17 15:36, Joerg Roedel wrote:
-> On Fri, Mar 03, 2017 at 06:39:58PM +0000, Jean-Philippe Brucker wrote:
->> Yes, it would be nice to have a common PASID allocator. But I don't
->> think that a system-wide PASID space is workable for us. At the moment
->> systems might have a few identical devices all supporting 20 bits of
->> PASID. But consider the case where one odd device can only handle four
->> address spaces, and supports a maximum of two PASID bits. We'd quickly
->> run out of PASIDs to hand to such devices, even though we could easily
->> have one PASID space per endpoint (from a quick glance at the specs, I
->> assume that both Intel and AMD IOMMUs offer one PASID table per RID.)
-> 
-> But that shouldn't be a problem if we allocate PASIDs top-down (meaning
-> starting from the biggest value supported by a given device), right?
-> 
-> Then we can satisfy the devices with 16 or 20 bit PASIDs and still have
-> the 2-bit PASIDs free for the devices that need it.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-But if there is more than 4 devices that only support 2 bit PASIDs, you
-still get a starvation that you wouldn't get with per-domain/device PASID
-allocator. Arguably I have no real-world example to back this up, we can
-probably expect vendors to always implement a sane amount of PASID bits.
-Unifying the API is certainly more important than imagining all the
-twisted configurations possible, and a PASID allocator with per-task
-top-down allocation seems to me like an acceptable compromise.
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 0984baf..07c45ec 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -88,6 +88,11 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
+ 	writel(value, pcie->base + offset);
+ }
+ 
++static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
++{
++	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
++}
++
+ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
+ {
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+@@ -152,11 +157,6 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+ 
+-	pp->io_base &= DRA7XX_CPU_TO_BUS_ADDR;
+-	pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR;
+-	pp->cfg0_base &= DRA7XX_CPU_TO_BUS_ADDR;
+-	pp->cfg1_base &= DRA7XX_CPU_TO_BUS_ADDR;
+-
+ 	dw_pcie_setup_rc(pp);
+ 
+ 	dra7xx_pcie_establish_link(dra7xx);
+@@ -329,6 +329,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ }
+ 
+ static const struct dw_pcie_ops dw_pcie_ops = {
++	.cpu_addr_fixup = dra7xx_pcie_cpu_addr_fixup,
+ 	.link_up = dra7xx_pcie_link_up,
+ };
+ 
+-- 
+1.7.9.5
 
-Thanks,
-Jean-Philippe
 
 _______________________________________________
 linux-arm-kernel mailing list
