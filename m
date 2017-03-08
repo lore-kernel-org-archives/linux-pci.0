@@ -1,115 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:34285 "EHLO
-        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754747AbdCIPNM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2017 10:13:12 -0500
-Received: by mail-wm0-f67.google.com with SMTP id u132so11415009wmg.1
-        for <linux-pci@vger.kernel.org>; Thu, 09 Mar 2017 07:13:06 -0800 (PST)
-Date: Thu, 9 Mar 2017 16:03:47 +0100
-From: Daniel Vetter <daniel@ffwll.ch>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: dri-devel@lists.freedesktop.org,
-        Michael Jamet <michael.jamet@intel.com>,
-        linux-pci@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Ben Skeggs <bskeggs@redhat.com>, nouveau@lists.freedesktop.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Darren Hart <dvhart@infradead.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Christian Koenig <christian.koenig@amd.com>,
-        Andy Shevchenko <andy@infradead.org>,
-        Peter Wu <peter@lekensteyn.nl>
-Subject: Re: [PATCH 0/5] Thunderbolt GPU fixes
-Message-ID: <20170309150347.a4k4w2sclox2365t@phenom.ffwll.local>
-References: <cover.1487938188.git.lukas@wunner.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
+Subject: [PATCH v3 7/7] PCI: dwc: dra7xx: Push request_irq call to the bottom
+ of probe
+Date: Wed, 8 Mar 2017 16:17:17 +0530
+Message-ID: <1488970037-17740-8-git-send-email-kishon@ti.com>
+In-Reply-To: <1488970037-17740-1-git-send-email-kishon@ti.com>
+References: <1488970037-17740-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1487938188.git.lukas@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Keerthy <j-keerthy@ti.com>, nsekhar@ti.com,
+ Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 24, 2017 at 08:19:45PM +0100, Lukas Wunner wrote:
-> Fix Thunderbolt-related issues in apple-gmux and vga_switcheroo:
-> 
-> Patch [1/5] ("Recognize Thunderbolt devices") has already been subjected
-> to a fair amount of scrutiny over at linux-pci@, I've submitted it 5 times
-> total since May 2016.  With luck it may be in ack-able shape now.
-> 
-> Patch [2/5] amends apple-gmux to handle combined DP/Thunderbolt ports
-> properly on newer MacBook Pros.
-> 
-> Patches [3/5] to [5/5] avoid registering external Thunderbolt GPUs with
-> vga_switcheroo:  Dave Airlie designed vga_switcheroo to register GPUs
-> unconditionally.  So if a desktop box has multiple GPUs, vga_switcheroo
-> will see more than one discrete GPU but that's not a problem because on
-> desktop boxes no handler is registered and thus vga_switcheroo_enable()
-> is never called.  Hybrid graphics laptops on the other hand do register
-> a handler, but are assumed to never register more than one discrete GPU.
-> However once a Thunderbolt eGPU is attached to a hybrid graphics laptop,
-> that assumption is no longer true and things go south when vga_switcheroo
-> runtime suspends the external discrete GPU and then calls the handler to
-> cut power to the internal discrete GPU.  The driver for the internal GPU
-> will sit there puzzled and typically cause a lockup.
-> 
-> This series is just a first step towards proper handling of eGPUs, another
-> will be support for surprise removal:  DRM drivers need to cease MMIO and
-> PCI config space access once a device is gone to avoid delaying device
-> teardown or accessing a newly attached replacement device.  Also, MMIO
-> reads to removed devices return "all ones", which results in an infinite
-> loop e.g. in nouveau's nvkm_nsec().
-> 
-> The question is how to recognize device removal.  One common method is to
-> read the vendor register with pci_device_is_present(), but this reports
-> a false positive if the device is present but in D3cold.  A better method
-> is to let the PCIe hotplug driver recognize and cache device removal.
-> Keith Busch has developed patches which do exactly that, they're now at
-> v6 and fully reviewed by Christoph Hellwig but alas were not included in
-> the 4.11 PCI pull for some reason:
-> http://www.spinics.net/lists/linux-pci/msg58123.html
-> 
-> I've pushed the present series to GitHub in case anyone prefers reviewing
-> it in a GUI:
-> https://github.com/l1k/linux/commits/thunderbolt_gpu_v1
+From: Keerthy <j-keerthy@ti.com>
 
-For merging, should I smash this all into drm-misc? The only thing outside
-is the apple-gmux driver ...
--Daniel
+Currently devm_request_irq is being called before base, pci fields
+of dra7xx_pcie structure are populated. It is called even before
+pm_runtime_enable and pm_runtime_get_sync are called. This will
+lead to exceptions if in case an interrupt is triggered before
+the all of the above are done. Hence push the devm_request_irq
+call to the end of the probe.
 
+Signed-off-by: Keerthy <j-keerthy@ti.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c |   14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-> 
-> Thanks,
-> 
-> Lukas
-> 
-> 
-> Lukas Wunner (5):
->   PCI: Recognize Thunderbolt devices
->   apple-gmux: Don't switch external DP port on 2011+ MacBook Pros
->   drm/nouveau: Don't register Thunderbolt eGPU with vga_switcheroo
->   drm/radeon: Don't register Thunderbolt eGPU with vga_switcheroo
->   drm/amdgpu: Don't register Thunderbolt eGPU with vga_switcheroo
-> 
->  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  7 +++++--
->  drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c    |  3 ++-
->  drivers/gpu/drm/nouveau/nouveau_vga.c      | 10 +++++++++-
->  drivers/gpu/drm/radeon/radeon_device.c     |  7 +++++--
->  drivers/gpu/drm/radeon/radeon_kms.c        |  3 ++-
->  drivers/pci/pci.h                          |  2 ++
->  drivers/pci/probe.c                        | 21 ++++++++++++++++++++
->  drivers/platform/x86/apple-gmux.c          | 31 +++++++++++++++++++++++++++++-
->  include/linux/pci.h                        | 23 ++++++++++++++++++++++
->  9 files changed, 99 insertions(+), 8 deletions(-)
-> 
-> -- 
-> 2.11.0
-> 
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/dri-devel
-
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index c6fef0a..8c53233 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -410,13 +410,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 		return -EINVAL;
+ 	}
+ 
+-	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
+-			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
+-	if (ret) {
+-		dev_err(dev, "failed to request irq\n");
+-		return ret;
+-	}
+-
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
+ 	base = devm_ioremap_nocache(dev, res->start, resource_size(res));
+ 	if (!base)
+@@ -478,6 +471,13 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	if (ret < 0)
+ 		goto err_gpio;
+ 
++	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
++			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
++	if (ret) {
++		dev_err(dev, "failed to request irq\n");
++		goto err_gpio;
++	}
++
+ 	return 0;
+ 
+ err_gpio:
 -- 
-Daniel Vetter
-Software Engineer, Intel Corporation
-http://blog.ffwll.ch
+1.7.9.5
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
