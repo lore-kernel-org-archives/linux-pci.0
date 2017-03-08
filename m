@@ -1,197 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 9 Mar 2017 15:07:48 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
-        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
-        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
-        gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
-        akpm@linux-foundation.org, davem@davemloft.net
-Subject: Re: [RFC PATCH v2 12/32] x86: Add early boot support when running
- with SEV active
-Message-ID: <20170309140748.tg67yo2jmc5ahck3@pd.tnic>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846768878.2349.15757532025749214650.stgit@brijesh-build-machine>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 08/22] PCI: dwc: designware: Add EP mode support
+To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
+ <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han
+ <jingoohan1@gmail.com>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+ <1487325042-28227-9-git-send-email-kishon@ti.com>
+ <45e5288e-d11f-c855-af9b-692a42d878c6@synopsys.com> <58BE42B2.20305@ti.com>
+ <02461be2-268d-485a-2bc4-3b148726d37d@synopsys.com>
+ <aa9835a7-07f4-d042-d04a-b0d9cc0ea3de@synopsys.com> <58BFEC7D.3090608@ti.com>
+ <35d539ba-956f-330e-c28d-b67c3d414578@synopsys.com> <58C00798.1030302@ti.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <650c53fc-482c-feab-faa3-c30689d3d128@synopsys.com>
+Date: Wed, 8 Mar 2017 15:32:03 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <148846768878.2349.15757532025749214650.stgit@brijesh-build-machine>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <58C00798.1030302@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+ linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 02, 2017 at 10:14:48AM -0500, Brijesh Singh wrote:
-> From: Tom Lendacky <thomas.lendacky@amd.com>
-> 
-> Early in the boot process, add checks to determine if the kernel is
-> running with Secure Encrypted Virtualization (SEV) active by issuing
-> a CPUID instruction.
-> 
-> During early compressed kernel booting, if SEV is active the pagetables are
-> updated so that data is accessed and decompressed with encryption.
-> 
-> During uncompressed kernel booting, if SEV is the memory encryption mask is
-> set and a flag is set to indicate that SEV is enabled.
+=C0s 1:31 PM de 3/8/2017, Kishon Vijay Abraham I escreveu:
+> Hi,
+> =
 
-I don't know how many times I have to say this but I'm going to keep
-doing it until it sticks: :-)
+> On Wednesday 08 March 2017 05:07 PM, Joao Pinto wrote:
+>> =C0s 11:35 AM de 3/8/2017, Kishon Vijay Abraham I escreveu:
+>>> Hi,
+>>>
+>>> On Wednesday 08 March 2017 05:02 PM, Joao Pinto wrote:
+>>>>
+>>>> Hi Kishon,
+>>>>
+>>>>>> Can you provide PCIE_GET_ATU_INB_UNR_REG_OFFSET (similar to
+>>>>>> PCIE_GET_ATU_OUTB_UNR_REG_OFFSET)?
+>>>>>
+>>>>> Yes of course, I will send you the definition soon.
+>>>>
+>>>> As promissed here is the definition for Inbound:
+>>>>
+>>>> +/* register address builder */
+>>>> +#define PCIE_GET_ATU_INB_UNR_REG_ADDR(region, register)		\
+>>>> +					((0x3 << 20) | (region << 9) |	\
+>>>> +					(0x1 << 8) | (register << 2))
+>>>
+>>> Cool, thanks!
+>>
+>> No problem! If you have doubts, please let me know.
+> =
 
-Please, no "WHAT" in the commit messages - I can see the "WHAT - but
-"WHY".
+> Okay, so this looks slightly different than the outbound macro since it t=
+akes
+> the register argument. In the case of outbound PCIE_GET_ATU_OUTB_UNR_REG_=
+OFFSET
+> returns the offset which was used like
+> dw_pcie_write_dbi(pci, base, offset + reg, 0x4, val);
+> =
 
-Ok?
+> How should the value from PCIE_GET_ATU_INB_UNR_REG_ADDR be used?
 
-> diff --git a/arch/x86/boot/compressed/mem_encrypt.S b/arch/x86/boot/compressed/mem_encrypt.S
-> new file mode 100644
-> index 0000000..8313c31
-> --- /dev/null
-> +++ b/arch/x86/boot/compressed/mem_encrypt.S
-> @@ -0,0 +1,75 @@
-> +/*
-> + * AMD Memory Encryption Support
-> + *
-> + * Copyright (C) 2016 Advanced Micro Devices, Inc.
-> + *
-> + * Author: Tom Lendacky <thomas.lendacky@amd.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + */
-> +
-> +#include <linux/linkage.h>
-> +
-> +#include <asm/processor-flags.h>
-> +#include <asm/msr.h>
-> +#include <asm/asm-offsets.h>
-> +#include <uapi/asm/kvm_para.h>
-> +
-> +	.text
-> +	.code32
-> +ENTRY(sev_enabled)
-> +	xor	%eax, %eax
-> +
-> +#ifdef CONFIG_AMD_MEM_ENCRYPT
-> +	push	%ebx
-> +	push	%ecx
-> +	push	%edx
-> +
-> +	/* Check if running under a hypervisor */
-> +	movl	$0x40000000, %eax
-> +	cpuid
-> +	cmpl	$0x40000001, %eax
-> +	jb	.Lno_sev
-> +
-> +	movl	$0x40000001, %eax
-> +	cpuid
-> +	bt	$KVM_FEATURE_SEV, %eax
-> +	jnc	.Lno_sev
-> +
-> +	/*
-> +	 * Check for memory encryption feature:
-> +	 *   CPUID Fn8000_001F[EAX] - Bit 0
-> +	 */
-> +	movl	$0x8000001f, %eax
-> +	cpuid
-> +	bt	$0, %eax
-> +	jnc	.Lno_sev
-> +
-> +	/*
-> +	 * Get memory encryption information:
-> +	 *   CPUID Fn8000_001F[EBX] - Bits 5:0
-> +	 *     Pagetable bit position used to indicate encryption
-> +	 */
-> +	movl	%ebx, %eax
-> +	andl	$0x3f, %eax
-> +	movl	%eax, sev_enc_bit(%ebp)
-> +	jmp	.Lsev_exit
-> +
-> +.Lno_sev:
-> +	xor	%eax, %eax
-> +
-> +.Lsev_exit:
-> +	pop	%edx
-> +	pop	%ecx
-> +	pop	%ebx
-> +
-> +#endif	/* CONFIG_AMD_MEM_ENCRYPT */
-> +
-> +	ret
-> +ENDPROC(sev_enabled)
+My original way was this one:
 
-Right, as said in another mail earlier, this could be written in C. And
-then the sme_enable() piece below looks the same as this one above. So
-since you want to run it before kernel decompression and after, you
-could extract this code into a separate .c file which you can link in
-both places, similar to what we do with verify_cpu with the difference
-that verify_cpu is getting included.
++/* Register address builder */
++#define PCIE_GET_ATU_OUTB_UNR_REG_ADDR(region, register)		\
++					((0x3 << 20) | (region << 9) |	\
++					(register << 2))
 
-Alternatively, we still have some room in setup_header.xloadflags to
-pass boot info to kernel proper from before the decompression stage.
+Bjorn then converted to offset:
 
-But I'd prefer linking with both stages as it is cheaper and those flags
-we can use for something which really wants to use a flag like that.
+#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)  ((0x3 << 20) | (region <<=
+ 9))
 
-> diff --git a/arch/x86/kernel/mem_encrypt_init.c b/arch/x86/kernel/mem_encrypt_init.c
-> index 35c5e3d..5d514e6 100644
-> --- a/arch/x86/kernel/mem_encrypt_init.c
-> +++ b/arch/x86/kernel/mem_encrypt_init.c
-> @@ -22,6 +22,7 @@
->  #include <asm/processor-flags.h>
->  #include <asm/msr.h>
->  #include <asm/cmdline.h>
-> +#include <asm/kvm_para.h>
->  
->  static char sme_cmdline_arg_on[] __initdata = "mem_encrypt=on";
->  static char sme_cmdline_arg_off[] __initdata = "mem_encrypt=off";
-> @@ -232,6 +233,29 @@ unsigned long __init sme_enable(void *boot_data)
->  	void *cmdline_arg;
->  	u64 msr;
->  
-> +	/* Check if running under a hypervisor */
-> +	eax = 0x40000000;
-> +	ecx = 0;
-> +	native_cpuid(&eax, &ebx, &ecx, &edx);
-> +	if (eax > 0x40000000) {
-> +		eax = 0x40000001;
-> +		ecx = 0;
-> +		native_cpuid(&eax, &ebx, &ecx, &edx);
-> +		if (!(eax & BIT(KVM_FEATURE_SEV)))
-> +			goto out;
-> +
-> +		eax = 0x8000001f;
-> +		ecx = 0;
-> +		native_cpuid(&eax, &ebx, &ecx, &edx);
-> +		if (!(eax & 1))
-> +			goto out;
-> +
-> +		sme_me_mask = 1UL << (ebx & 0x3f);
-> +		sev_enabled = 1;
-> +
-> +		goto out;
-> +	}
-> +
->  	/* Check for an AMD processor */
->  	eax = 0;
->  	ecx = 0;
-> 
+and applied the <<2 shift to the ATU registers.
 
--- 
-Regards/Gruss,
-    Boris.
+So you can use:
 
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+#define PCIE_GET_ATU_INB_UNR_REG_ADDR(region, register)		\
+					((0x3 << 20) | (region << 9) |	\
+					(0x1 << 8)
+
+Thanks.
+
+> =
+
+> Thanks
+> Kishon
+> =
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
