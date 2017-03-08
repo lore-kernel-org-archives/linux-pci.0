@@ -1,15 +1,16 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [V9, 07/11] iommu: of: Handle IOMMU lookup failure with deferred
- probing or error
-To: Rob Herring <robh@kernel.org>
-References: <1489086061-9356-8-git-send-email-sricharan@codeaurora.org>
- <20170328150001.j57jko6mx35npgp2@rob-hp-laptop>
-From: Sricharan R <sricharan@codeaurora.org>
-Message-ID: <7312ddb8-3d6e-0665-9e7e-1a39c6fb597b@codeaurora.org>
-Date: Tue, 28 Mar 2017 21:36:30 +0530
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+ <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
+Subject: [PATCH v3 1/7] PCI: dwc: designware: Add new *ops* for cpu addr fixup
+Date: Wed, 8 Mar 2017 16:17:11 +0530
+Message-ID: <1488970037-17740-2-git-send-email-kishon@ti.com>
+In-Reply-To: <1488970037-17740-1-git-send-email-kishon@ti.com>
+References: <1488970037-17740-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20170328150001.j57jko6mx35npgp2@rob-hp-laptop>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,77 +18,57 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: lorenzo.pieralisi@arm.com, linux-arm-msm@vger.kernel.org, joro@8bytes.org,
- will.deacon@arm.com, iommu@lists.linux-foundation.org, okaya@codeaurora.org,
- linux-acpi@vger.kernel.org, robdclark@gmail.com, hanjun.guo@linaro.org,
- linux-pci@vger.kernel.org, bhelgaas@google.com, tn@semihalf.com,
- robin.murphy@arm.com, linux-arm-kernel@lists.infradead.org,
- m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Cc: nsekhar@ti.com, Kishon Vijay Abraham I <kishon@ti.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+Some platforms (like dra7xx) require only the least 28 bits of the
+corresponding 32 bit CPU address to be programmed in the address
+translation unit. This modified address is stored in io_base/mem_base/
+cfg0_base/cfg1_base in dra7xx_pcie_host_init. While this is okay for
+host mode where the address range is fixed, device mode requires
+different addresses to be programmed based on the host buffer address.
+Add a new ops to get the least 28 bits of the corresponding 32 bit
+CPU address and invoke it before programming the address translation
+unit.
 
-On 3/28/2017 8:30 PM, Rob Herring wrote:
-> On Fri, Mar 10, 2017 at 12:30:57AM +0530, Sricharan R wrote:
->> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
->>
->> Failures to look up an IOMMU when parsing the DT iommus property need to
->> be handled separately from the .of_xlate() failures to support deferred
->> probing.
->>
->> The lack of a registered IOMMU can be caused by the lack of a driver for
->> the IOMMU, the IOMMU device probe not having been performed yet, having
->> been deferred, or having failed.
->>
->> The first case occurs when the device tree describes the bus master and
->> IOMMU topology correctly but no device driver exists for the IOMMU yet
->> or the device driver has not been compiled in. Return NULL, the caller
->> will configure the device without an IOMMU.
->>
->> The second and third cases are handled by deferring the probe of the bus
->> master device which will eventually get reprobed after the IOMMU.
->>
->> The last case is currently handled by deferring the probe of the bus
->> master device as well. A mechanism to either configure the bus master
->> device without an IOMMU or to fail the bus master device probe depending
->> on whether the IOMMU is optional or mandatory would be a good
->> enhancement.
->>
->> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
->> Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
->> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> ---
->>  drivers/base/dma-mapping.c | 5 +++--
->>  drivers/iommu/of_iommu.c   | 4 ++--
->>  drivers/of/device.c        | 7 ++++++-
->>  include/linux/of_device.h  | 9 ++++++---
->>  4 files changed, 17 insertions(+), 8 deletions(-)
->
-> Maybe it is the same issue reported for VFIO, but virtio-pci is broken
-> with v8 of this series. Bisecting blames this commit which looks like it
-> hasn't changeed.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pcie-designware.c |    3 +++
+ drivers/pci/dwc/pcie-designware.h |    1 +
+ 2 files changed, 4 insertions(+)
 
-Ya, as Robin mentioned it was broken at patch #2 and
-comes out after this patch. I am going to repost this series with
-couple of more fixes added as well.
-
->
-> Rob
->
-> P.S. Doesn't look like you have copied the DT maintainers nor list for
-> the DT changes.
-
-Ha, really sorry about that. will add it.
-
-Regards,
-  Sricharan
-
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index 7e1fb7d..14ee7a3 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -97,6 +97,9 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+ {
+ 	u32 retries, val;
+ 
++	if (pp->ops->cpu_addr_fixup)
++		cpu_addr = pp->ops->cpu_addr_fixup(cpu_addr);
++
+ 	if (pci->iatu_unroll_enabled) {
+ 		dw_pcie_writel_unroll(pci, index, PCIE_ATU_UNR_LOWER_BASE,
+ 				      lower_32_bits(cpu_addr));
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index cd3b871..8f3dcb2 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -143,6 +143,7 @@ struct pcie_port {
+ };
+ 
+ struct dw_pcie_ops {
++	u64	(*cpu_addr_fixup)(u64 cpu_addr);
+ 	u32	(*readl_dbi)(struct dw_pcie *pcie, u32 reg);
+ 	void	(*writel_dbi)(struct dw_pcie *pcie, u32 reg, u32 val);
+ 	int	(*link_up)(struct dw_pcie *pcie);
 -- 
-"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a 
-member of Code Aurora Forum, hosted by The Linux Foundation
+1.7.9.5
+
 
 _______________________________________________
 linux-arm-kernel mailing list
