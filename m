@@ -1,65 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50162 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932930AbdCGSwl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Mar 2017 13:52:41 -0500
-Date: Tue, 7 Mar 2017 12:52:37 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jaehoon Chung <jh80.chung@samsung.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        jingoohan1@gmail.com
-Subject: Re: [PATCH] PCI: exynos: fix the NULL pointer dereference about
- elbi_base
-Message-ID: <20170307185237.GC21358@bhelgaas-glaptop.roam.corp.google.com>
-References: <CGME20170307105407epcas5p3e77181793b26a5d2710bb6d7557033bb@epcas5p3.samsung.com>
- <20170307105405.7874-1-jh80.chung@samsung.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 8 Mar 2017 11:14:19 -0800
+From: Christoph Hellwig <hch@infradead.org>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Re: [PATCH v2 08/22] PCI: dwc: designware: Add EP mode support
+Message-ID: <20170308191419.GA12085@infradead.org>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+ <1487325042-28227-9-git-send-email-kishon@ti.com>
+ <45e5288e-d11f-c855-af9b-692a42d878c6@synopsys.com>
+ <58BE42B2.20305@ti.com>
+ <02461be2-268d-485a-2bc4-3b148726d37d@synopsys.com>
+ <aa9835a7-07f4-d042-d04a-b0d9cc0ea3de@synopsys.com>
+ <58BFEC7D.3090608@ti.com>
+ <35d539ba-956f-330e-c28d-b67c3d414578@synopsys.com>
+ <58C00798.1030302@ti.com>
+ <650c53fc-482c-feab-faa3-c30689d3d128@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170307105405.7874-1-jh80.chung@samsung.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <650c53fc-482c-feab-faa3-c30689d3d128@synopsys.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+ Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, Kishon Vijay Abraham I <kishon@ti.com>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 07, 2017 at 07:54:05PM +0900, Jaehoon Chung wrote:
-> Even though using phy framework, it has to get the elbi_base.
-> Before this patch, elbi_base should be NULL pointer.
-> 
-> Fixes: e7cd7ef58e1f ("PCI: exynos: Support the PHY generic framework")
-> 
-> Signed-off-by: Jaehoon Chung <jh80.chung@samsung.com>
+On Wed, Mar 08, 2017 at 03:32:03PM +0000, Joao Pinto wrote:
+> #define PCIE_GET_ATU_INB_UNR_REG_ADDR(region, register)		\
+> 					((0x3 << 20) | (region << 9) |	\
+> 					(0x1 << 8)
 
-Provisionally applied to for-linus for v4.11, pending Jingoo's ack.
-Thanks, Jaehoon!
+Can you turn this and any similar macro into inline functions?
 
-> ---
->  drivers/pci/dwc/pci-exynos.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
-> index 993b650..44f774c 100644
-> --- a/drivers/pci/dwc/pci-exynos.c
-> +++ b/drivers/pci/dwc/pci-exynos.c
-> @@ -132,10 +132,6 @@ static int exynos5440_pcie_get_mem_resources(struct platform_device *pdev,
->  	struct device *dev = pci->dev;
->  	struct resource *res;
->  
-> -	/* If using the PHY framework, doesn't need to get other resource */
-> -	if (ep->using_phy)
-> -		return 0;
-> -
->  	ep->mem_res = devm_kzalloc(dev, sizeof(*ep->mem_res), GFP_KERNEL);
->  	if (!ep->mem_res)
->  		return -ENOMEM;
-> @@ -145,6 +141,10 @@ static int exynos5440_pcie_get_mem_resources(struct platform_device *pdev,
->  	if (IS_ERR(ep->mem_res->elbi_base))
->  		return PTR_ERR(ep->mem_res->elbi_base);
->  
-> +	/* If using the PHY framework, doesn't need to get other resource */
-> +	if (ep->using_phy)
-> +		return 0;
-> +
->  	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
->  	ep->mem_res->phy_base = devm_ioremap_resource(dev, res);
->  	if (IS_ERR(ep->mem_res->phy_base))
-> -- 
-> 2.10.2
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
