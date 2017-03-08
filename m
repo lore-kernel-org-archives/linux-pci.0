@@ -1,39 +1,57 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 4/5] drm/amdgpu: fix printing the doorbell BAR info
-Date: Mon,  6 Mar 2017 12:40:27 +0100
-Message-Id: <1488800428-2854-4-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1488800428-2854-1-git-send-email-deathsimple@vodafone.de>
-References: <1488800428-2854-1-git-send-email-deathsimple@vodafone.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f49.google.com ([74.125.83.49]:33168 "EHLO
+        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751825AbdCHXjE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 8 Mar 2017 18:39:04 -0500
+Received: by mail-pg0-f49.google.com with SMTP id 25so18810550pgy.0
+        for <linux-pci@vger.kernel.org>; Wed, 08 Mar 2017 15:38:00 -0800 (PST)
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH 1/3] PCI: rockchip: fix sign issues for current limits
+Date: Wed,  8 Mar 2017 15:37:46 -0800
+Message-Id: <20170308233748.54706-1-briannorris@chromium.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+The regulator framework can return negative error codes via
+regulator_get_current_limit() for regulators that don't provide current
+information. The subsequent check for postive values isn't very useful,
+if the variable is unsigned.
 
-The address is 64bit, not 32bit.
+Let's just match the signedness of the return value.
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
+Prevents error messages like this, seen on Samsung Chromebook Plus:
+
+[    1.069372] rockchip-pcie f8000000.pcie: invalid power supply
+
+Fixes: 4816c4c7b82b ("PCI: rockchip: Provide captured slot power limit and scale")
+Signed-off-by: Brian Norris <briannorris@chromium.org>
 ---
- drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v4.11 candidate?
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-index bf31aaf..a470869 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-@@ -385,7 +385,7 @@ static int amdgpu_doorbell_init(struct amdgpu_device *adev)
- 	if (adev->doorbell.ptr == NULL) {
- 		return -ENOMEM;
- 	}
--	DRM_INFO("doorbell mmio base: 0x%08X\n", (uint32_t)adev->doorbell.base);
-+	DRM_INFO("doorbell mmio base: 0x%llX\n", (uint64_t)adev->doorbell.base);
- 	DRM_INFO("doorbell mmio size: %u\n", (unsigned)adev->doorbell.size);
+ drivers/pci/host/pcie-rockchip.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 26ddd3535272..d785f64ec03b 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -425,7 +425,8 @@ static struct pci_ops rockchip_pcie_ops = {
  
- 	return 0;
+ static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
+ {
+-	u32 status, curr, scale, power;
++	int curr;
++	u32 status, scale, power;
+ 
+ 	if (IS_ERR(rockchip->vpcie3v3))
+ 		return;
 -- 
-2.7.4
+2.12.0.246.ga2ecc84866-goog
