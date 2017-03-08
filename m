@@ -1,110 +1,105 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 16 Mar 2017 15:06:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Long Li <longli@microsoft.com>
-Cc: KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/2 v4] pci-hyperv: properly handle pci bus remove
-Message-ID: <20170316200658.GC9739@bhelgaas-glaptop.roam.corp.google.com>
-References: <BN3PR03MB22270F97B502941940E0E91ECE560@BN3PR03MB2227.namprd03.prod.outlook.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:43366 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752170AbdCHKQf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 8 Mar 2017 05:16:35 -0500
+Message-ID: <58BFB2DA.2070306@intel.com>
+Date: Wed, 08 Mar 2017 15:29:30 +0800
+From: Jike Song <jike.song@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BN3PR03MB22270F97B502941940E0E91ECE560@BN3PR03MB2227.namprd03.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
+To: Ilya Lesokhin <ilyal@mellanox.com>
+CC: kvm@vger.kernel.org, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, alex.williamson@redhat.com,
+        noaos@mellanox.com, haggaie@mellanox.com, ogerlitz@mellanox.com,
+        liranl@mellanox.com, "You, Lizhen" <lizhen.you@intel.com>
+Subject: Re: [PATCH V3 0/3] VFIO SRIOV support
+References: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
+In-Reply-To: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 28, 2017 at 02:19:45AM +0000, Long Li wrote:
-> hv_pci_devices_present is called in hv_pci_remove when we remove a PCI
-> device from host (e.g. by disabling SRIOV on a device). In hv_pci_remove,
-> the bus is already removed before the call, so we don't need to rescan 
-> the bus in the workqueue scheduled from hv_pci_devices_present. By 
-> introducing status hv_pcibus_removed, we can avoid this situation.
+On 08/18/2016 03:29 PM, Ilya Lesokhin wrote:
+> Changes from V2:
+>         1. Enabling and disabling SR-IOV is now done
+>         through the sysfs interface, requiring
+>         admin privileges.
+>         2. Since admin privileges are now required
+>         to enable SR-IOV most of the the security
+>         measures introduced in RFC V2 were removed.
+>         Unfortunately we still need a mutex to prevent
+>         the VFIO user from changing the number of
+>         VFs while enable_sriov is in progress.
 > 
-> Signed-off-by: Long Li <longli@microsoft.com>
-> Reported-by: Xiaofeng Wang <xiaofwan@redhat.com>
-> Acked-by: K. Y. Srinivasan <kys@microsoft.com>
-
-This didn't apply for me because saving it to a file resulted in some
-encoded file with "=3D" instead of "=".  I see that mutt is smart enough to
-deal with that in this reply, so there's probably a way for it to decode it
-when saving to a file, but I don't know it.
-
-I tried to apply it by hand, but the hunk in hv_pci_remove() doesn't match
-the context.  I think your patch is based on something previous to
-17978524a636 ("PCI: hv: Fix hv_pci_remove() for hot-remove").  Please
-refresh the patch so it applies to my "master" branch (currently
-v4.11-rc1).
-
-Also, the "default: break;" case below is redundant and can be removed.
-
-So I'll wait for your updated versions of both these patches.
-
-> ---
->  drivers/pci/host/pci-hyperv.c | 20 +++++++++++++++++---
->  1 file changed, 17 insertions(+), 3 deletions(-)
+> Changes from V1:
+>         1. The VF are no longer assigned to PFs iommu group
+>         2. Add a pci_enable_sriov_with_override API to allow
+>         enablind sriov without probing the VFs with the
+>         default driver
 > 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index a8deeca..4a37598 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -348,6 +348,7 @@ enum hv_pcibus_state {
->  	hv_pcibus_init = 0,
->  	hv_pcibus_probed,
->  	hv_pcibus_installed,
-> +	hv_pcibus_removed,
->  	hv_pcibus_maximum
->  };
->  
-> @@ -1481,13 +1482,24 @@ static void pci_devices_present_work(struct work_struct *work)
->  		put_pcichild(hpdev, hv_pcidev_ref_initial);
->  	}
->  
-> -	/* Tell the core to rescan bus because there may have been changes. */
-> -	if (hbus->state == hv_pcibus_installed) {
-> +	switch (hbus->state) {
-> +	case hv_pcibus_installed:
-> +		/*
-> +		 * Tell the core to rescan bus
-> +		 * because there may have been changes.
-> +		 */
->  		pci_lock_rescan_remove();
->  		pci_scan_child_bus(hbus->pci_bus);
->  		pci_unlock_rescan_remove();
-> -	} else {
-> +		break;
-> +
-> +	case hv_pcibus_init:
-> +	case hv_pcibus_probed:
->  		survey_child_resources(hbus);
-> +		break;
-> +
-> +	default:
-> +		break;
+> Changes from RFC V2:
+>         1. pci_disable_sriov() is now called from a workqueue
+>         To avoid the situation where a process is blocked
+>         in pci_disable_sriov() wating for itself to relase the VFs.
+>         2. a mutex was added to synchronize calls to
+>         pci_enable_sriov() and pci_disable_sriov()
+> 
+> Changes from RFC V1:
+>         Due to the security concern raised in RFC V1, we add two patches
+>         to make sure the VFs belong to the same IOMMU group as
+>         the PF and are probed by VFIO.
+> 
+> Today the QEMU hypervisor allows assigning a physical device to a VM,
+> facilitating driver development. However, it does not support enabling
+> SR-IOV by the VM kernel driver. Our goal is to implement such support,
+> allowing developers working on SR-IOV physical function drivers to work
+> inside VMs as well.
+> 
+> This patch series implements the kernel side of our solution.  It extends
+> the VFIO driver to support the PCIE SRIOV extended capability with
+> following features:
+> 1. The ability to probe SR-IOV BAR sizes.
+> 2. The ability to enable and disable SR-IOV.
+> 
+> This patch series is going to be used by QEMU to expose SR-IOV capabilities
+> to VM. We already have an early prototype based on Knut Omang's patches for
+> SR-IOV[1].
+> 
+> Limitations:
+> 1. Per SR-IOV spec section 3.3.12, PFs are required to support
+> 4-KB, 8-KB, 64-KB, 256-KB, 1-MB, and 4-MB page sizes.
+> Unfourtently the kernel currently initializes the System Page Size register once
+> and assumes it doesn't change therefore we cannot allow guests to change this
+> register at will. We currently map both the Supported Page sizes and
+> System Page Size as virtualized and read only in violation of the spec.
+> In practice this is not an issue since both the hypervisor and the
+> guest typically select the same System Page Size.
+> 
+> [1] https://github.com/knuto/qemu/tree/sriov_patches_v6
+> 
+> Ilya Lesokhin (3):
+>   pci: Extend PCI IOV API
+>   vfio/pci: Allow control SR-IOV through sysfs interface
+>   vfio/pci: Add support for SR-IOV extended capablity
+> 
+>  drivers/pci/iov.c                   |  41 ++++++++--
+>  drivers/vfio/pci/vfio_pci.c         |  43 ++++++++--
+>  drivers/vfio/pci/vfio_pci_config.c  | 151 ++++++++++++++++++++++++++++++++----
+>  drivers/vfio/pci/vfio_pci_private.h |   2 +
+>  include/linux/pci.h                 |  13 +++-
+>  5 files changed, 219 insertions(+), 31 deletions(-)
+> 
 
-^ This is redundant.
++Lizhen
 
->  	}
->  
->  	up(&hbus->enum_sem);
-> @@ -2163,6 +2175,7 @@ static int hv_pci_probe(struct hv_device *hdev,
->  	hbus = kzalloc(sizeof(*hbus), GFP_KERNEL);
->  	if (!hbus)
->  		return -ENOMEM;
-> +	hbus->state = hv_pcibus_init;
->  
->  	/*
->  	 * The PCI bus "domain" is what is called "segment" in ACPI and
-> @@ -2305,6 +2318,7 @@ static int hv_pci_remove(struct hv_device *hdev)
->  		pci_stop_root_bus(hbus->pci_bus);
->  		pci_remove_root_bus(hbus->pci_bus);
->  		pci_unlock_rescan_remove();
-> +		hbus->state = hv_pcibus_removed;
->  	}
->  
->  	ret = hv_send_resources_released(hdev);
-> -- 
-> 1.8.5.6
+
+Hi Ilya,
+
+Sorry for jumping in abruptly. We are also looking forward to have PF
+used within a VM, would you please share your next plan with us? Likely
+there will be a v4 shortly?
+
+
+--
+Thanks,
+Jike
