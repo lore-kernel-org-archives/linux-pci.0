@@ -1,55 +1,121 @@
-Return-Path: <SRS0=+N2R=2M=amd.com=brijesh.singh@kernel.org>
-Return-Path: <SRS0=+N2R=2M=amd.com=brijesh.singh@kernel.org>
-Subject: Re: [RFC PATCH v2 00/32] x86: Secure Encrypted Virtualization (AMD)
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <20170303203323.GA5305@bhelgaas-glaptop.roam.corp.google.com>
-CC: <brijesh.singh@amd.com>, <simon.guinot@sequanux.org>,
-	<linux-efi@vger.kernel.org>, <kvm@vger.kernel.org>, <rkrcmar@redhat.com>,
-	<matt@codeblueprint.co.uk>, <linux-pci@vger.kernel.org>,
-	<linus.walleij@linaro.org>, <gary.hook@amd.com>, <linux-mm@kvack.org>,
-	<paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-	<dan.j.williams@intel.com>, <aarcange@redhat.com>, <sfr@canb.auug.org.au>,
-	<andriy.shevchenko@linux.intel.com>, <herbert@gondor.apana.org.au>,
-	<bhe@redhat.com>, <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-	<peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-	<msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-	<dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-	<keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-	<mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-	<devel@linuxdriverproject.org>, <bhelgaas@google.com>, <tglx@linutronix.de>,
-	<mchehab@kernel.org>, <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-	<tony.luck@intel.com>, <alexandre.bounine@idt.com>, <kuleshovmail@gmail.com>,
-	<linux-kernel@vger.kernel.org>, <mcgrof@kernel.org>, <mst@redhat.com>,
-	<linux-crypto@vger.kernel.org>, <tj@kernel.org>, <pbonzini@redhat.com>,
-	<akpm@linux-foundation.org>, <davem@davemloft.net>
-From: Brijesh Singh <brijesh.singh@amd.com>
-Message-ID: <d1ded08e-1a53-4762-84af-c5979bf9ed32@amd.com>
-Date: Fri, 3 Mar 2017 15:15:30 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 08/22] PCI: dwc: designware: Add EP mode support
+To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
+ <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han
+ <jingoohan1@gmail.com>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+ <1487325042-28227-9-git-send-email-kishon@ti.com>
+ <45e5288e-d11f-c855-af9b-692a42d878c6@synopsys.com> <58BE42B2.20305@ti.com>
+ <02461be2-268d-485a-2bc4-3b148726d37d@synopsys.com>
+ <aa9835a7-07f4-d042-d04a-b0d9cc0ea3de@synopsys.com> <58BFEC7D.3090608@ti.com>
+ <35d539ba-956f-330e-c28d-b67c3d414578@synopsys.com> <58C00798.1030302@ti.com>
+ <650c53fc-482c-feab-faa3-c30689d3d128@synopsys.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <32adcffc-4d63-5953-9e61-3f48773a5e14@synopsys.com>
+Date: Wed, 8 Mar 2017 15:33:36 +0000
 MIME-Version: 1.0
-In-Reply-To: <20170303203323.GA5305@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+In-Reply-To: <650c53fc-482c-feab-faa3-c30689d3d128@synopsys.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+ linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
+ linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+=C0s 3:32 PM de 3/8/2017, Joao Pinto escreveu:
+> =C0s 1:31 PM de 3/8/2017, Kishon Vijay Abraham I escreveu:
+>> Hi,
+>>
+>> On Wednesday 08 March 2017 05:07 PM, Joao Pinto wrote:
+>>> =C0s 11:35 AM de 3/8/2017, Kishon Vijay Abraham I escreveu:
+>>>> Hi,
+>>>>
+>>>> On Wednesday 08 March 2017 05:02 PM, Joao Pinto wrote:
+>>>>>
+>>>>> Hi Kishon,
+>>>>>
+>>>>>>> Can you provide PCIE_GET_ATU_INB_UNR_REG_OFFSET (similar to
+>>>>>>> PCIE_GET_ATU_OUTB_UNR_REG_OFFSET)?
+>>>>>>
+>>>>>> Yes of course, I will send you the definition soon.
+>>>>>
+>>>>> As promissed here is the definition for Inbound:
+>>>>>
+>>>>> +/* register address builder */
+>>>>> +#define PCIE_GET_ATU_INB_UNR_REG_ADDR(region, register)		\
+>>>>> +					((0x3 << 20) | (region << 9) |	\
+>>>>> +					(0x1 << 8) | (register << 2))
+>>>>
+>>>> Cool, thanks!
+>>>
+>>> No problem! If you have doubts, please let me know.
+>>
+>> Okay, so this looks slightly different than the outbound macro since it =
+takes
+>> the register argument. In the case of outbound PCIE_GET_ATU_OUTB_UNR_REG=
+_OFFSET
+>> returns the offset which was used like
+>> dw_pcie_write_dbi(pci, base, offset + reg, 0x4, val);
+>>
+>> How should the value from PCIE_GET_ATU_INB_UNR_REG_ADDR be used?
+> =
 
-On 03/03/2017 02:33 PM, Bjorn Helgaas wrote:
-> On Thu, Mar 02, 2017 at 10:12:01AM -0500, Brijesh Singh wrote:
->> This RFC series provides support for AMD's new Secure Encrypted Virtualization
->> (SEV) feature. This RFC is build upon Secure Memory Encryption (SME) RFCv4 [1].
->
-> What kernel version is this series based on?
->
+> My original way was this one:
+> =
 
-This patch series is based off of the master branch of tip.
-   Commit a27cb9e1b2b4 ("Merge branch 'WIP.sched/core'")
-   Tom's RFC v4 patches (http://marc.info/?l=linux-mm&m=148725973013686&w=2)
+> +/* Register address builder */
+> +#define PCIE_GET_ATU_OUTB_UNR_REG_ADDR(region, register)		\
+> +					((0x3 << 20) | (region << 9) |	\
+> +					(register << 2))
+> =
 
-Accidentally, I ended up rebasing SEV RFCv2 patches from updated SME v4 
-instead of original SME v4. So you may need to apply patch [1]
+> Bjorn then converted to offset:
+> =
 
-[1] http://marc.info/?l=linux-mm&m=148857523132253&w=2
+> #define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)  ((0x3 << 20) | (region =
+<< 9))
+> =
 
-Optionally, I have posted the full git tree here [2]
+> and applied the <<2 shift to the ATU registers.
+> =
 
-[2] https://github.com/codomania/tip/branches
+> So you can use:
+> =
+
+> #define PCIE_GET_ATU_INB_UNR_REG_ADDR(region, register)		\
+> 					((0x3 << 20) | (region << 9) |	\
+> 					(0x1 << 8)
+> =
+
+
+This one has the right name :)
+
+#define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region, register)		\
+					((0x3 << 20) | (region << 9) |	\
+					(0x1 << 8)
+
+
+> Thanks.
+> =
+
+>>
+>> Thanks
+>> Kishon
+>>
+> =
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
