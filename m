@@ -1,46 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:60178 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752565AbdC0KB4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Mar 2017 06:01:56 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v2 11/22] PCI: spear13xx: update PCI config space remap function
-Date: Mon, 27 Mar 2017 10:49:39 +0100
-Message-Id: <20170327094954.7162-12-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1488958624.10589.10.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 24/29] drivers: convert iblock_req.pending from atomic_t
+ to refcount_t
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, netdev@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Date: Tue, 07 Mar 2017 23:37:04 -0800
+In-Reply-To: <1488810076-3754-25-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+         <1488810076-3754-25-git-send-email-elena.reshetova@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generate on the CPU host bus non-posted write transations. Update the
-driver to use the devm_ioremap_nopost* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+Hi Elena,
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/dwc/pcie-spear13xx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Mon, 2017-03-06 at 16:21 +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+> 
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
+> ---
+>  drivers/target/target_core_iblock.c | 12 ++++++------
+>  drivers/target/target_core_iblock.h |  3 ++-
+>  2 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
-index eaa4ea8..0fe2b2b 100644
---- a/drivers/pci/dwc/pcie-spear13xx.c
-+++ b/drivers/pci/dwc/pcie-spear13xx.c
-@@ -273,7 +273,7 @@ static int spear13xx_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
--	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
-+	pci->dbi_base = devm_ioremap_nopost_resource(dev, dbi_base);
- 	if (IS_ERR(pci->dbi_base)) {
- 		dev_err(dev, "couldn't remap dbi base %p\n", dbi_base);
- 		ret = PTR_ERR(pci->dbi_base);
--- 
-2.10.0
+For the target_core_iblock part:
+
+Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
