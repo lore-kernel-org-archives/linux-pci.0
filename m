@@ -1,95 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:35110 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751084AbdCYMhA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Mar 2017 08:37:00 -0400
-Received: by mail-pg0-f67.google.com with SMTP id g2so2773239pge.2
-        for <linux-pci@vger.kernel.org>; Sat, 25 Mar 2017 05:36:54 -0700 (PDT)
-From: Yongji Xie <elohimes@gmail.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
-        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
-        paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: Re: [PATCH v9 2/3] PCI: Add a macro to set default alignment for all PCI devices
-Date: Sat, 25 Mar 2017 20:36:52 +0800
-Message-Id: <1490445412-4050-1-git-send-email-elohimes@gmail.com>
-In-Reply-To: <20170323205342.GB23612@bhelgaas-glaptop.roam.corp.google.com> 
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 8 Mar 2017 16:39:38 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: James Morse <james.morse@arm.com>
+Cc: Rajat Jain <rajatja@google.com>, Rajat Jain <rajatxjain@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Andreas Ziegler <andreas.ziegler@fau.de>,
+        Jonathan Yong <jonathan.yong@intel.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        David Daney <david.daney@cavium.com>,
+        Julia Lawall <Julia.Lawall@lip6.fr>,
+        Ram Amrani <Ram.Amrani@cavium.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Wang Sheng-Hui <shhuiw@foxmail.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Brian Norris <briannorris@google.com>
+Subject: Re: [PATCH 5/6] PCI/ASPM: Actually configure the L1 substate
+ settings to the device
+Message-ID: <20170308223938.GA28050@bhelgaas-glaptop.roam.corp.google.com>
+References: <1483425255-101923-1-git-send-email-rajatja@google.com>
+ <1483425255-101923-6-git-send-email-rajatja@google.com>
+ <58C05114.5030202@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <58C05114.5030202@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 23, 2017 at 03:53:42PM -0500, Bjorn Helgaas wrote:
-> Hi Yongji,
->
-> On Wed, Feb 15, 2017 at 02:45:05PM +0800, Yongji Xie wrote:
->> When vfio passthroughs a PCI device of which MMIO BARs are
->> smaller than PAGE_SIZE, guest will not handle the mmio
->> accesses to the BARs which leads to mmio emulations in host.
->>
->> This is because vfio will not allow to passthrough one BAR's
->> mmio page which may be shared with other BARs. Otherwise,
->> there will be a backdoor that guest can use to access BARs
->> of other guest.
->
-> Please include a pointer to the VFIO code that enforces this.  It's
-> not obvious to me how it would do this.  This doesn't change the
-> *size* of the resource, only the alignment.  So if VFIO sees a BAR
-> like [mem 0x80000000-0x800000ff], it knows the BAR is aligned enough
-> that it *could* be the only thing on a page, but I don't know how it
-> could know that there will never be another BAR at 0x80000100.  Even
-> if there's no other BAR on that page *now*, it would have to know that
-> no hot-added device will ever be placed on that page.
->
->> This patch adds a macro to set default alignment for all
->> PCI devices. Then we could solve this issue on some platforms
->> which would easily hit this issue because of their 64K page
->> such as PowerNV platform by defining this macro as PAGE_SIZE.
->>
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->> arch/powerpc/include/asm/pci.h |    4 ++++
->> drivers/pci/pci.c              |    3 +++
->> 2 files changed, 7 insertions(+), 0 deletions(-)
->>
->> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
->> index e9bd6cf..5e31bc2 100644
->> --- a/arch/powerpc/include/asm/pci.h
->> +++ b/arch/powerpc/include/asm/pci.h
->> @@ -28,6 +28,10 @@
->> #define PCIBIOS_MIN_IO               0x1000
->> #define PCIBIOS_MIN_MEM              0x10000000
->>
->> +#ifdef CONFIG_PPC_POWERNV
->> +#define PCIBIOS_DEFAULT_ALIGNMENT   PAGE_SIZE
->> +#endif
->> +
->> struct pci_dev;
->>
->> /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index a881c0d..2622e9b 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -4965,6 +4965,9 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->>      resource_size_t align = 0;
->>      char *p;
->>
->> +#ifdef PCIBIOS_DEFAULT_ALIGNMENT
->> +    align = PCIBIOS_DEFAULT_ALIGNMENT;
->> +#endif
->
-> I'd prefer to move this #ifdef out of the code path, as in the patch
-> below.
->
-> I don't know how powerpc kernels are built: can you build a kernel
-> that will run on PowerNV as well as on different powerpc systems?  If
-> so, is it acceptable to force that kernel to user 64K alignment even
-> when it's running on non-PowerNV systems?  Or do you need a function
-> call here instead of a #define?
->
+Hi James,
 
-That's a good point, the macro may be also defined on non-PowerNV systems.
-Maybe an arch-specific function is more reasonable here.
+On Wed, Mar 08, 2017 at 06:44:36PM +0000, James Morse wrote:
+> Hi!
+> 
+> On 03/01/17 06:34, Rajat Jain wrote:
+> > Add code to actually configure the L1 substate settigns on the
+> > upstream and downstream device, while taking care of the rules
+> > dictated by the PCIe spec.
+> 
+> While testing hibernate on an arm64 juno with v4.11-rc1, I get a NULL pointer
+> dereference from pcie_config_aspm_link():
+> 
+> 
+> > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> > index a70afdf..6735f38 100644
+> > --- a/drivers/pci/pcie/aspm.c
+> > +++ b/drivers/pci/pcie/aspm.c
+> > @@ -597,11 +683,23 @@ static void pcie_config_aspm_dev(struct pci_dev *pdev, u32 val)
+> >  static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
+> >  {
+> >  	u32 upstream = 0, dwstream = 0;
+> > -	struct pci_dev *child, *parent = link->pdev;
+> > +	struct pci_dev *child = link->downstream, *parent = link->pdev;
+> 
+> 
+> Here link->downstream is NULL,
 
-Thanks,
-Yongji
+Sorry about the breakage.  Can you try also cherry-picking this
+commit:
+
+https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?h=for-linus&id=3bd7db63a841e8c5297bb18ad801df67d5e38ad2
+
+Yinghai tripped over a similar problem in a different way, but I
+suspect his fix might also fix the problem you're seeing.
+
+If that doesn't fix it, we'll have to look farther.
+
+I'm planning to ask Linus to pull this fix for v4.11-rc2.
+
+Bjorn
