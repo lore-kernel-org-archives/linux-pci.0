@@ -1,58 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ca-mx01.263.net ([50.18.194.75]:19692 "EHLO smtphy.263.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750926AbdCQH51 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Mar 2017 03:57:27 -0400
-Received: from transport.263xmail.com (unknown [38.83.106.156])
-        by smtphy.263.net (Postfix) with ESMTPS id 42D8FA01D8
-        for <linux-pci@vger.kernel.org>; Fri, 17 Mar 2017 15:41:15 +0800 (CST)
-Received: from lucky1.263xmail.com (unknown [192.168.165.164])
-        by transportlucky.263xmail.com (Postfix) with ESMTP id 8A3CD4389
-        for <linux-pci@vger.kernel.org>; Fri, 17 Mar 2017 15:41:10 +0800 (CST)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] PCI: rockchip: Mark SLC bit as well as CCC bit for RC
-Date: Fri, 17 Mar 2017 15:24:53 +0800
-Message-Id: <1489735493-148838-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+To: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+CC: "peterz@infradead.org" <peterz@infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux1394-devel@lists.sourceforge.net"
+        <linux1394-devel@lists.sourceforge.net>,
+        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>,
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
+        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
+        "Hans Liljestrand" <ishkamiel@gmail.com>,
+        David Windsor <dwindsor@gmail.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        Juergen Gross <jgross@suse.com>
+Subject: RE: [Xen-devel] [PATCH 29/29] drivers, xen: convert grant_map.users
+ from atomic_t to refcount_t
+Date: Wed, 8 Mar 2017 13:49:32 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C56177@IRSMSX102.ger.corp.intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-30-git-send-email-elena.reshetova@intel.com>
+ <99270126-7751-eed0-5efa-fc695ff3be25@oracle.com>
+In-Reply-To: <99270126-7751-eed0-5efa-fc695ff3be25@oracle.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-lspci traces CCC to see if the end-2-end supports common
-clock, so the current code should work as we mark the CCC bit
-of RC. However, ASPM code actually check SLC bit of RC and try to
-compare it with the downstream components' SLC instead. So when
-enabling ASPM, CCC will be cleared after failing to match SLC with
-the corresponding bit of downstream components. On one hand, from the
-code of pcie_aspm_configure_common_clock, we could find that what we
-actually need to set is SLC. On the other hand, we should also guarantee
-that CCC should be marked w/o supporting ASPM. This patch fixes this
-issue.
-
-Cc: Brian Norris <briannorris@chromium.org>
-Cc: jeffy.chen <jeffy.chen@rock-chips.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
-
- drivers/pci/host/pcie-rockchip.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 26ddd35..7cd4d5c 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -596,7 +596,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 
- 	/* Set RC's clock architecture as common clock */
- 	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
--	status |= PCI_EXP_LNKCTL_CCC;
-+	status |= (PCI_EXP_LNKCTL_CCC | PCI_EXP_LNKSTA_SLC << 16);
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
- 
- 	/* Enable Gen1 training */
--- 
-1.9.1
+DQo+IE9uIDAzLzA2LzIwMTcgMDk6MjEgQU0sIEVsZW5hIFJlc2hldG92YSB3cm90ZToNCj4gPiBy
+ZWZjb3VudF90IHR5cGUgYW5kIGNvcnJlc3BvbmRpbmcgQVBJIHNob3VsZCBiZQ0KPiA+IHVzZWQg
+aW5zdGVhZCBvZiBhdG9taWNfdCB3aGVuIHRoZSB2YXJpYWJsZSBpcyB1c2VkIGFzDQo+ID4gYSBy
+ZWZlcmVuY2UgY291bnRlci4gVGhpcyBhbGxvd3MgdG8gYXZvaWQgYWNjaWRlbnRhbA0KPiA+IHJl
+ZmNvdW50ZXIgb3ZlcmZsb3dzIHRoYXQgbWlnaHQgbGVhZCB0byB1c2UtYWZ0ZXItZnJlZQ0KPiA+
+IHNpdHVhdGlvbnMuDQo+ID4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBFbGVuYSBSZXNoZXRvdmEgPGVs
+ZW5hLnJlc2hldG92YUBpbnRlbC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogSGFucyBMaWxqZXN0
+cmFuZCA8aXNoa2FtaWVsQGdtYWlsLmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBLZWVzIENvb2sg
+PGtlZXNjb29rQGNocm9taXVtLm9yZz4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBEYXZpZCBXaW5kc29y
+IDxkd2luZHNvckBnbWFpbC5jb20+DQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMveGVuL2dudGRldi5j
+IHwgMTEgKysrKysrLS0tLS0NCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDYgaW5zZXJ0aW9ucygrKSwg
+NSBkZWxldGlvbnMoLSkNCj4gDQo+IFJldmlld2VkLWJ5OiBCb3JpcyBPc3Ryb3Zza3kgPGJvcmlz
+Lm9zdHJvdnNreUBvcmFjbGUuY29tPg0KDQpJcyB0aGVyZSBhIHRyZWUgdGhhdCBjYW4gdGFrZSB0
+aGlzIGNoYW5nZT8gVHVybnMgb3V0IGl0IGlzIGJldHRlciB0byBwcm9wYWdhdGUgY2hhbmdlcyB2
+aWEgc2VwYXJhdGUgdHJlZXMgYW5kIG9ubHkgbGVmdG92ZXJzIGNhbiBiZSB0YWtlbiB2aWEgR3Jl
+ZydzIHRyZWUuICANCg0KQmVzdCBSZWdhcmRzLA0KRWxlbmEuDQoNCg==
