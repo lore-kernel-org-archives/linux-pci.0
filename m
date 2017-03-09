@@ -1,102 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [RFC PATCH v2 23/32] kvm: introduce KVM_MEMORY_ENCRYPT_OP ioctl
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:17:11 -0500
-Message-ID: <148846783136.2349.9362218518503742320.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <SRS0=J5Gl=2S=arm.com=james.morse@kernel.org>
+Return-Path: <SRS0=J5Gl=2S=arm.com=james.morse@kernel.org>
+Message-ID: <58C135B4.2000809@arm.com>
+Date: Thu, 09 Mar 2017 11:00:04 +0000
+From: James Morse <james.morse@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+To: Rajat Jain <rajatja@google.com>, Bjorn Helgaas <helgaas@kernel.org>
+CC: Rajat Jain <rajatxjain@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Keith Busch <keith.busch@intel.com>,
+ Andreas Ziegler <andreas.ziegler@fau.de>,
+ Jonathan Yong <jonathan.yong@intel.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>,
+ David Daney <david.daney@cavium.com>,
+ Julia Lawall <Julia.Lawall@lip6.fr>,
+ Ram Amrani <Ram.Amrani@cavium.com>, Doug Ledford <dledford@redhat.com>,
+ Wang Sheng-Hui <shhuiw@foxmail.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Brian Norris <briannorris@google.com>
+Subject: Re: [PATCH 5/6] PCI/ASPM: Actually configure the L1 substate settings
+ to the device
+References: <1483425255-101923-1-git-send-email-rajatja@google.com> <1483425255-101923-6-git-send-email-rajatja@google.com> <58C05114.5030202@arm.com> <20170308223938.GA28050@bhelgaas-glaptop.roam.corp.google.com> <CACK8Z6H7V=dM71LuUh7653qnLXJmGCNVcm3cG4_s4hwQKe58aA@mail.gmail.com>
+In-Reply-To: <CACK8Z6H7V=dM71LuUh7653qnLXJmGCNVcm3cG4_s4hwQKe58aA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-If hardware supports encrypting then KVM_MEMORY_ENCRYPT_OP ioctl can
-be used by qemu to issue platform specific memory encryption commands.
+Hi guys,
 
-Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
----
- arch/x86/include/asm/kvm_host.h |    2 ++
- arch/x86/kvm/x86.c              |   12 ++++++++++++
- include/uapi/linux/kvm.h        |    2 ++
- 3 files changed, 16 insertions(+)
+On 08/03/17 23:08, Rajat Jain wrote:
+> On Wed, Mar 8, 2017 at 2:39 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+>> On Wed, Mar 08, 2017 at 06:44:36PM +0000, James Morse wrote:
+>>> On 03/01/17 06:34, Rajat Jain wrote:
+>>>> Add code to actually configure the L1 substate settigns on the
+>>>> upstream and downstream device, while taking care of the rules
+>>>> dictated by the PCIe spec.
+>>>
+>>> While testing hibernate on an arm64 juno with v4.11-rc1, I get a NULL
+>> pointer
+>>> dereference from pcie_config_aspm_link():
+>>>
+>>>
+>>>> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+>>>> index a70afdf..6735f38 100644
+>>>> --- a/drivers/pci/pcie/aspm.c
+>>>> +++ b/drivers/pci/pcie/aspm.c
+>>>> @@ -597,11 +683,23 @@ static void pcie_config_aspm_dev(struct pci_dev
+>> *pdev, u32 val)
+>>>>  static void pcie_config_aspm_link(struct pcie_link_state *link, u32
+>> state)
+>>>>  {
+>>>>     u32 upstream = 0, dwstream = 0;
+>>>> -   struct pci_dev *child, *parent = link->pdev;
+>>>> +   struct pci_dev *child = link->downstream, *parent = link->pdev;
+>>>
+>>>
+>>> Here link->downstream is NULL,
+>>
+>> Sorry about the breakage.  Can you try also cherry-picking this
+>> commit:
+>>
+>> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.
+>> git/commit/?h=for-linus&id=3bd7db63a841e8c5297bb18ad801df67d5e38ad2
+>>
+>> Yinghai tripped over a similar problem in a different way, but I
+>> suspect his fix might also fix the problem you're seeing.
+>>
+> 
+> Yes, I think that should fix it.
 
-diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
-index bff1f15..62651ad 100644
---- a/arch/x86/include/asm/kvm_host.h
-+++ b/arch/x86/include/asm/kvm_host.h
-@@ -1033,6 +1033,8 @@ struct kvm_x86_ops {
- 	void (*cancel_hv_timer)(struct kvm_vcpu *vcpu);
- 
- 	void (*setup_mce)(struct kvm_vcpu *vcpu);
-+
-+	int (*memory_encryption_op)(struct kvm *kvm, void __user *argp);
- };
- 
- struct kvm_arch_async_pf {
-diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
-index 2099df8..6a737e9 100644
---- a/arch/x86/kvm/x86.c
-+++ b/arch/x86/kvm/x86.c
-@@ -3926,6 +3926,14 @@ static int kvm_vm_ioctl_enable_cap(struct kvm *kvm,
- 	return r;
- }
- 
-+static int kvm_vm_ioctl_memory_encryption_op(struct kvm *kvm, void __user *argp)
-+{
-+	if (kvm_x86_ops->memory_encryption_op)
-+		return kvm_x86_ops->memory_encryption_op(kvm, argp);
-+
-+	return -ENOTTY;
-+}
-+
- long kvm_arch_vm_ioctl(struct file *filp,
- 		       unsigned int ioctl, unsigned long arg)
- {
-@@ -4189,6 +4197,10 @@ long kvm_arch_vm_ioctl(struct file *filp,
- 		r = kvm_vm_ioctl_enable_cap(kvm, &cap);
- 		break;
- 	}
-+	case KVM_MEMORY_ENCRYPT_OP: {
-+		r = kvm_vm_ioctl_memory_encryption_op(kvm, argp);
-+		break;
-+	}
- 	default:
- 		r = kvm_vm_ioctl_assigned_device(kvm, ioctl, arg);
- 	}
-diff --git a/include/uapi/linux/kvm.h b/include/uapi/linux/kvm.h
-index cac48ed..fef7d83 100644
---- a/include/uapi/linux/kvm.h
-+++ b/include/uapi/linux/kvm.h
-@@ -1281,6 +1281,8 @@ struct kvm_s390_ucas_mapping {
- #define KVM_S390_GET_IRQ_STATE	  _IOW(KVMIO, 0xb6, struct kvm_s390_irq_state)
- /* Available with KVM_CAP_X86_SMM */
- #define KVM_SMI                   _IO(KVMIO,   0xb7)
-+/* Memory Encryption Commands */
-+#define KVM_MEMORY_ENCRYPT_OP	  _IOWR(KVMIO, 0xb8, unsigned long)
- 
- #define KVM_DEV_ASSIGN_ENABLE_IOMMU	(1 << 0)
- #define KVM_DEV_ASSIGN_PCI_2_3		(1 << 1)
+Yes, this fixes the problem. Thanks!
+
+I should have dug through the list a little more to see if there was an existing
+fix...
+
+
+Thanks,
+
+James
