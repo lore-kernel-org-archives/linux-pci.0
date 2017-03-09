@@ -1,91 +1,63 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:56506 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751180AbdCQSuZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Mar 2017 14:50:25 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Hans Verkuil <hans.verkuil@cisco.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Boris Brezillon <boris.brezillon@free-electrons.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Cyrille Pitchen <cyrille.pitchen@atmel.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        rtc-linux@googlegroups.com, linux-mtd@lists.infradead.org,
-        linux-media@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-gpio@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Fri, 17 Mar 2017 12:48:17 -0600
-Message-Id: <1489776503-3151-11-git-send-email-logang@deltatee.com>
-In-Reply-To: <1489776503-3151-1-git-send-email-logang@deltatee.com>
-References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v5 10/16] iio:core: utilize new cdev_device_add helper function
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V9 05/11] ACPI/IORT: Add function to check SMMUs drivers presence
+Date: Fri, 10 Mar 2017 00:30:55 +0530
+Message-Id: <1489086061-9356-6-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace the open coded registration of the cdev and dev with the
-new device_add_cdev() helper. The helper replaces a common pattern by
-taking the proper reference against the parent device and adding both
-the cdev and the device.
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-In doing so we have to remove a guard statement from cdev_del,
-but this doesn't appear to be required in any way.
+The IOMMU probe deferral implementation requires a mechanism to detect
+if drivers for SMMU components are built-in in the kernel to detect
+whether IOMMU configuration for a given device should be deferred (ie
+SMMU drivers present but still not probed) or not (drivers not present).
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Add a simple function to IORT to detect if SMMU drivers for SMMU
+components managed by IORT are built-in in the kernel.
+
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Sricharan R <sricharan@codeaurora.org>
 ---
- drivers/iio/industrialio-core.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+ drivers/acpi/arm64/iort.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
-index d18ded4..26a03c6 100644
---- a/drivers/iio/industrialio-core.c
-+++ b/drivers/iio/industrialio-core.c
-@@ -1720,18 +1720,13 @@ int iio_device_register(struct iio_dev *indio_dev)
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 4a5bb96..3dd9ec3 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -523,6 +523,19 @@ static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
+ 	return ret;
+ }
  
- 	cdev_init(&indio_dev->chrdev, &iio_buffer_fileops);
- 	indio_dev->chrdev.owner = indio_dev->info->driver_module;
--	indio_dev->chrdev.kobj.parent = &indio_dev->dev.kobj;
--	ret = cdev_add(&indio_dev->chrdev, indio_dev->dev.devt, 1);
--	if (ret < 0)
--		goto error_unreg_eventset;
- 
--	ret = device_add(&indio_dev->dev);
-+	ret = cdev_device_add(&indio_dev->chrdev, &indio_dev->dev);
- 	if (ret < 0)
--		goto error_cdev_del;
-+		goto error_unreg_eventset;
- 
- 	return 0;
--error_cdev_del:
--	cdev_del(&indio_dev->chrdev);
++static inline bool iort_iommu_driver_enabled(u8 type)
++{
++	switch (type) {
++	case ACPI_IORT_NODE_SMMU_V3:
++		return IS_BUILTIN(CONFIG_ARM_SMMU_V3);
++	case ACPI_IORT_NODE_SMMU:
++		return IS_BUILTIN(CONFIG_ARM_SMMU);
++	default:
++		pr_warn("IORT node type %u does not describe an SMMU\n", type);
++		return false;
++	}
++}
 +
- error_unreg_eventset:
- 	iio_device_unregister_eventset(indio_dev);
- error_free_sysfs:
-@@ -1752,10 +1747,8 @@ void iio_device_unregister(struct iio_dev *indio_dev)
- {
- 	mutex_lock(&indio_dev->info_exist_lock);
- 
--	device_del(&indio_dev->dev);
-+	cdev_device_del(&indio_dev->chrdev, &indio_dev->dev);
- 
--	if (indio_dev->chrdev.dev)
--		cdev_del(&indio_dev->chrdev);
- 	iio_device_unregister_debugfs(indio_dev);
- 
- 	iio_disable_all_buffers(indio_dev);
+ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+ 					struct acpi_iort_node *node,
+ 					u32 streamid)
 -- 
-2.1.4
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
