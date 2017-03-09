@@ -1,443 +1,197 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:9527 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753564AbdCMO0O (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2017 10:26:14 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v4 12/23] PCI: dwc: dra7xx: Add EP mode support
-Date: Mon, 13 Mar 2017 19:52:48 +0530
-Message-ID: <20170313142259.25397-13-kishon@ti.com>
-In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
-References: <20170313142259.25397-1-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 9 Mar 2017 15:07:48 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Brijesh Singh <brijesh.singh@amd.com>
+Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
+        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
+        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
+        gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
+        akpm@linux-foundation.org, davem@davemloft.net
+Subject: Re: [RFC PATCH v2 12/32] x86: Add early boot support when running
+ with SEV active
+Message-ID: <20170309140748.tg67yo2jmc5ahck3@pd.tnic>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846768878.2349.15757532025749214650.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <148846768878.2349.15757532025749214650.stgit@brijesh-build-machine>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCIe controller integrated in dra7xx SoCs is capable of operating
-in endpoint mode. Add endpoint mode support to dra7xx driver.
+On Thu, Mar 02, 2017 at 10:14:48AM -0500, Brijesh Singh wrote:
+> From: Tom Lendacky <thomas.lendacky@amd.com>
+> 
+> Early in the boot process, add checks to determine if the kernel is
+> running with Secure Encrypted Virtualization (SEV) active by issuing
+> a CPUID instruction.
+> 
+> During early compressed kernel booting, if SEV is active the pagetables are
+> updated so that data is accessed and decompressed with encryption.
+> 
+> During uncompressed kernel booting, if SEV is the memory encryption mask is
+> set and a flag is set to indicate that SEV is enabled.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/Kconfig           |  31 +++++-
- drivers/pci/dwc/Makefile          |   4 +-
- drivers/pci/dwc/pci-dra7xx.c      | 197 +++++++++++++++++++++++++++++++++++---
- drivers/pci/dwc/pcie-designware.h |   7 ++
- 4 files changed, 221 insertions(+), 18 deletions(-)
+I don't know how many times I have to say this but I'm going to keep
+doing it until it sticks: :-)
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index 00335c71404e..96e6d17d2ae1 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -16,14 +16,37 @@ config PCIE_DW_EP
- 
- config PCI_DRA7XX
- 	bool "TI DRA7xx PCIe controller"
--	depends on PCI
-+	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
- 	depends on OF && HAS_IOMEM && TI_PIPE3
-+	help
-+	 Enables support for the PCIe controller in the DRA7xx SoC. There
-+	 are two instances of PCIe controller in DRA7xx. This controller can
-+	 work either as EP or RC. In order to enable host specific features
-+	 PCI_DRA7XX_HOST must be selected and in order to enable device
-+	 specific features PCI_DRA7XX_EP must be selected. This uses
-+	 the Designware core.
-+
-+if PCI_DRA7XX
-+
-+config PCI_DRA7XX_HOST
-+	bool "PCI DRA7xx Host Mode"
-+	depends on PCI
- 	depends on PCI_MSI_IRQ_DOMAIN
- 	select PCIE_DW_HOST
-+	default y
- 	help
--	 Enables support for the PCIe controller in the DRA7xx SoC.  There
--	 are two instances of PCIe controller in DRA7xx.  This controller can
--	 act both as EP and RC.  This reuses the Designware core.
-+	 Enables support for the PCIe controller in the DRA7xx SoC to work in
-+	 host mode.
-+
-+config PCI_DRA7XX_EP
-+	bool "PCI DRA7xx Endpoint Mode"
-+	depends on PCI_ENDPOINT
-+	select PCIE_DW_EP
-+	help
-+	 Enables support for the PCIe controller in the DRA7xx SoC to work in
-+	 endpoint mode.
-+
-+endif
- 
- config PCIE_DW_PLAT
- 	bool "Platform bus based DesignWare PCIe Controller"
-diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-index b38425d36200..f31a8596442a 100644
---- a/drivers/pci/dwc/Makefile
-+++ b/drivers/pci/dwc/Makefile
-@@ -2,7 +2,9 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
- obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
- obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
- obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
--obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
-+ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
-+        obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
-+endif
- obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
- obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
- obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index d78974d20360..35c18534469c 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -10,12 +10,14 @@
-  * published by the Free Software Foundation.
-  */
- 
-+#include <linux/delay.h>
- #include <linux/err.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
-+#include <linux/of_device.h>
- #include <linux/of_gpio.h>
- #include <linux/of_pci.h>
- #include <linux/pci.h>
-@@ -57,6 +59,11 @@
- #define	MSI						BIT(4)
- #define	LEG_EP_INTERRUPTS (INTA | INTB | INTC | INTD)
- 
-+#define	PCIECTRL_TI_CONF_DEVICE_TYPE			0x0100
-+#define	DEVICE_TYPE_EP					0x0
-+#define	DEVICE_TYPE_LEG_EP				0x1
-+#define	DEVICE_TYPE_RC					0x4
-+
- #define	PCIECTRL_DRA7XX_CONF_DEVICE_CMD			0x0104
- #define	LTSSM_EN					0x1
- 
-@@ -66,6 +73,13 @@
- 
- #define EXP_CAP_ID_OFFSET				0x70
- 
-+#define	PCIECTRL_TI_CONF_INTX_ASSERT			0x0124
-+#define	PCIECTRL_TI_CONF_INTX_DEASSERT			0x0128
-+
-+#define	PCIECTRL_TI_CONF_MSI_XMT			0x012c
-+#define MSI_REQ_GRANT					BIT(0)
-+#define MSI_VECTOR_SHIFT				7
-+
- struct dra7xx_pcie {
- 	struct dw_pcie		*pci;
- 	void __iomem		*base;		/* DT ti_conf */
-@@ -73,6 +87,11 @@ struct dra7xx_pcie {
- 	struct phy		**phy;
- 	int			link_gen;
- 	struct irq_domain	*irq_domain;
-+	enum dw_pcie_device_mode mode;
-+};
-+
-+struct dra7xx_pcie_of_data {
-+	enum dw_pcie_device_mode mode;
- };
- 
- #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
-@@ -101,9 +120,19 @@ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
- 	return !!(reg & LINK_UP);
- }
- 
--static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
-+static void dra7xx_pcie_stop_link(struct dw_pcie *pci)
- {
--	struct dw_pcie *pci = dra7xx->pci;
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-+	u32 reg;
-+
-+	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
-+	reg &= ~LTSSM_EN;
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
-+}
-+
-+static int dra7xx_pcie_establish_link(struct dw_pcie *pci)
-+{
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
- 	struct device *dev = pci->dev;
- 	u32 reg;
- 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
-@@ -137,7 +166,7 @@ static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
- 	reg |= LTSSM_EN;
- 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
- 
--	return dw_pcie_wait_for_link(pci);
-+	return 0;
- }
- 
- static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
-@@ -171,7 +200,8 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
- 
- 	dw_pcie_setup_rc(pp);
- 
--	dra7xx_pcie_establish_link(dra7xx);
-+	dra7xx_pcie_establish_link(pci);
-+	dw_pcie_wait_for_link(pci);
- 	dw_pcie_msi_init(pp);
- 	dra7xx_pcie_enable_interrupts(dra7xx);
- }
-@@ -249,6 +279,7 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	struct dra7xx_pcie *dra7xx = arg;
- 	struct dw_pcie *pci = dra7xx->pci;
- 	struct device *dev = pci->dev;
-+	struct dw_pcie_ep *ep = &pci->ep;
- 	u32 reg;
- 
- 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
-@@ -285,8 +316,11 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	if (reg & LINK_REQ_RST)
- 		dev_dbg(dev, "Link Request Reset\n");
- 
--	if (reg & LINK_UP_EVT)
-+	if (reg & LINK_UP_EVT) {
-+		if (dra7xx->mode == DW_PCIE_EP_TYPE)
-+			dw_pcie_ep_linkup(ep);
- 		dev_dbg(dev, "Link-up state change\n");
-+	}
- 
- 	if (reg & CFG_BME_EVT)
- 		dev_dbg(dev, "CFG 'Bus Master Enable' change\n");
-@@ -299,6 +333,94 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
-+static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-+
-+	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
-+}
-+
-+static void dra7xx_pcie_raise_legacy_irq(struct dra7xx_pcie *dra7xx)
-+{
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_INTX_ASSERT, 0x1);
-+	mdelay(1);
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_INTX_DEASSERT, 0x1);
-+}
-+
-+static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
-+				      u8 interrupt_num)
-+{
-+	u32 reg;
-+
-+	reg = (interrupt_num - 1) << MSI_VECTOR_SHIFT;
-+	reg |= MSI_REQ_GRANT;
-+	dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_MSI_XMT, reg);
-+}
-+
-+static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep,
-+				 enum pci_epc_irq_type type, u8 interrupt_num)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-+
-+	switch (type) {
-+	case PCI_EPC_IRQ_LEGACY:
-+		dra7xx_pcie_raise_legacy_irq(dra7xx);
-+		break;
-+	case PCI_EPC_IRQ_MSI:
-+		dra7xx_pcie_raise_msi_irq(dra7xx, interrupt_num);
-+		break;
-+	default:
-+		dev_err(pci->dev, "UNKNOWN IRQ type\n");
-+	}
-+
-+	return 0;
-+}
-+
-+static struct dw_pcie_ep_ops pcie_ep_ops = {
-+	.ep_init = dra7xx_pcie_ep_init,
-+	.raise_irq = dra7xx_pcie_raise_irq,
-+};
-+
-+static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
-+				     struct platform_device *pdev)
-+{
-+	int ret;
-+	struct dw_pcie_ep *ep;
-+	struct resource *res;
-+	struct device *dev = &pdev->dev;
-+	struct dw_pcie *pci = dra7xx->pci;
-+
-+	ep = &pci->ep;
-+	ep->ops = &pcie_ep_ops;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
-+	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
-+	if (!pci->dbi_base)
-+		return -ENOMEM;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
-+	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
-+	if (!pci->dbi_base2)
-+		return -ENOMEM;
-+
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
-+	if (!res)
-+		return -EINVAL;
-+
-+	ep->phys_base = res->start;
-+	ep->addr_size = resource_size(res);
-+
-+	ret = dw_pcie_ep_init(ep);
-+	if (ret) {
-+		dev_err(dev, "failed to initialize endpoint\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
- static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 				       struct platform_device *pdev)
- {
-@@ -342,6 +464,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- 
- static const struct dw_pcie_ops dw_pcie_ops = {
- 	.cpu_addr_fixup = dra7xx_pcie_cpu_addr_fixup,
-+	.start_link = dra7xx_pcie_establish_link,
-+	.stop_link = dra7xx_pcie_stop_link,
- 	.link_up = dra7xx_pcie_link_up,
- };
- 
-@@ -384,6 +508,26 @@ static int dra7xx_pcie_enable_phy(struct dra7xx_pcie *dra7xx)
- 	return ret;
- }
- 
-+static const struct dra7xx_pcie_of_data dra7xx_pcie_rc_of_data = {
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
-+static const struct dra7xx_pcie_of_data dra7xx_pcie_ep_of_data = {
-+	.mode = DW_PCIE_EP_TYPE,
-+};
-+
-+static const struct of_device_id of_dra7xx_pcie_match[] = {
-+	{
-+		.compatible = "ti,dra7-pcie",
-+		.data = &dra7xx_pcie_rc_of_data,
-+	},
-+	{
-+		.compatible = "ti,dra7-pcie-ep",
-+		.data = &dra7xx_pcie_ep_of_data,
-+	},
-+	{},
-+};
-+
- static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- {
- 	u32 reg;
-@@ -401,6 +545,16 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	struct device_node *np = dev->of_node;
- 	char name[10];
- 	struct gpio_desc *reset;
-+	const struct of_device_id *match;
-+	const struct dra7xx_pcie_of_data *data;
-+	enum dw_pcie_device_mode mode;
-+
-+	match = of_match_device(of_match_ptr(of_dra7xx_pcie_match), dev);
-+	if (!match)
-+		return -EINVAL;
-+
-+	data = (struct dra7xx_pcie_of_data *)match->data;
-+	mode = (enum dw_pcie_device_mode)data->mode;
- 
- 	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
- 	if (!dra7xx)
-@@ -479,9 +633,25 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	if (dra7xx->link_gen < 0 || dra7xx->link_gen > 2)
- 		dra7xx->link_gen = 2;
- 
--	ret = dra7xx_add_pcie_port(dra7xx, pdev);
--	if (ret < 0)
--		goto err_gpio;
-+	switch (mode) {
-+	case DW_PCIE_RC_TYPE:
-+		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
-+				   DEVICE_TYPE_RC);
-+		ret = dra7xx_add_pcie_port(dra7xx, pdev);
-+		if (ret < 0)
-+			goto err_gpio;
-+		break;
-+	case DW_PCIE_EP_TYPE:
-+		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
-+				   DEVICE_TYPE_EP);
-+		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
-+		if (ret < 0)
-+			goto err_gpio;
-+		break;
-+	default:
-+		dev_err(dev, "INVALID device type %d\n", mode);
-+	}
-+	dra7xx->mode = mode;
- 
- 	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
- 			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
-@@ -509,6 +679,9 @@ static int dra7xx_pcie_suspend(struct device *dev)
- 	struct dw_pcie *pci = dra7xx->pci;
- 	u32 val;
- 
-+	if (dra7xx->mode != DW_PCIE_RC_TYPE)
-+		return 0;
-+
- 	/* clear MSE */
- 	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
- 	val &= ~PCI_COMMAND_MEMORY;
-@@ -523,6 +696,9 @@ static int dra7xx_pcie_resume(struct device *dev)
- 	struct dw_pcie *pci = dra7xx->pci;
- 	u32 val;
- 
-+	if (dra7xx->mode != DW_PCIE_RC_TYPE)
-+		return 0;
-+
- 	/* set MSE */
- 	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
- 	val |= PCI_COMMAND_MEMORY;
-@@ -561,11 +737,6 @@ static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
- 				      dra7xx_pcie_resume_noirq)
- };
- 
--static const struct of_device_id of_dra7xx_pcie_match[] = {
--	{ .compatible = "ti,dra7-pcie", },
--	{},
--};
--
- static struct platform_driver dra7xx_pcie_driver = {
- 	.driver = {
- 		.name	= "dra7-pcie",
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index 3cafba40abbc..c6a840575796 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -120,6 +120,13 @@ enum dw_pcie_region_type {
- 	DW_PCIE_REGION_OUTBOUND,
- };
- 
-+enum dw_pcie_device_mode {
-+	DW_PCIE_UNKNOWN_TYPE,
-+	DW_PCIE_EP_TYPE,
-+	DW_PCIE_LEG_EP_TYPE,
-+	DW_PCIE_RC_TYPE,
-+};
-+
- struct dw_pcie_host_ops {
- 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
- 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
+Please, no "WHAT" in the commit messages - I can see the "WHAT - but
+"WHY".
+
+Ok?
+
+> diff --git a/arch/x86/boot/compressed/mem_encrypt.S b/arch/x86/boot/compressed/mem_encrypt.S
+> new file mode 100644
+> index 0000000..8313c31
+> --- /dev/null
+> +++ b/arch/x86/boot/compressed/mem_encrypt.S
+> @@ -0,0 +1,75 @@
+> +/*
+> + * AMD Memory Encryption Support
+> + *
+> + * Copyright (C) 2016 Advanced Micro Devices, Inc.
+> + *
+> + * Author: Tom Lendacky <thomas.lendacky@amd.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + */
+> +
+> +#include <linux/linkage.h>
+> +
+> +#include <asm/processor-flags.h>
+> +#include <asm/msr.h>
+> +#include <asm/asm-offsets.h>
+> +#include <uapi/asm/kvm_para.h>
+> +
+> +	.text
+> +	.code32
+> +ENTRY(sev_enabled)
+> +	xor	%eax, %eax
+> +
+> +#ifdef CONFIG_AMD_MEM_ENCRYPT
+> +	push	%ebx
+> +	push	%ecx
+> +	push	%edx
+> +
+> +	/* Check if running under a hypervisor */
+> +	movl	$0x40000000, %eax
+> +	cpuid
+> +	cmpl	$0x40000001, %eax
+> +	jb	.Lno_sev
+> +
+> +	movl	$0x40000001, %eax
+> +	cpuid
+> +	bt	$KVM_FEATURE_SEV, %eax
+> +	jnc	.Lno_sev
+> +
+> +	/*
+> +	 * Check for memory encryption feature:
+> +	 *   CPUID Fn8000_001F[EAX] - Bit 0
+> +	 */
+> +	movl	$0x8000001f, %eax
+> +	cpuid
+> +	bt	$0, %eax
+> +	jnc	.Lno_sev
+> +
+> +	/*
+> +	 * Get memory encryption information:
+> +	 *   CPUID Fn8000_001F[EBX] - Bits 5:0
+> +	 *     Pagetable bit position used to indicate encryption
+> +	 */
+> +	movl	%ebx, %eax
+> +	andl	$0x3f, %eax
+> +	movl	%eax, sev_enc_bit(%ebp)
+> +	jmp	.Lsev_exit
+> +
+> +.Lno_sev:
+> +	xor	%eax, %eax
+> +
+> +.Lsev_exit:
+> +	pop	%edx
+> +	pop	%ecx
+> +	pop	%ebx
+> +
+> +#endif	/* CONFIG_AMD_MEM_ENCRYPT */
+> +
+> +	ret
+> +ENDPROC(sev_enabled)
+
+Right, as said in another mail earlier, this could be written in C. And
+then the sme_enable() piece below looks the same as this one above. So
+since you want to run it before kernel decompression and after, you
+could extract this code into a separate .c file which you can link in
+both places, similar to what we do with verify_cpu with the difference
+that verify_cpu is getting included.
+
+Alternatively, we still have some room in setup_header.xloadflags to
+pass boot info to kernel proper from before the decompression stage.
+
+But I'd prefer linking with both stages as it is cheaper and those flags
+we can use for something which really wants to use a flag like that.
+
+> diff --git a/arch/x86/kernel/mem_encrypt_init.c b/arch/x86/kernel/mem_encrypt_init.c
+> index 35c5e3d..5d514e6 100644
+> --- a/arch/x86/kernel/mem_encrypt_init.c
+> +++ b/arch/x86/kernel/mem_encrypt_init.c
+> @@ -22,6 +22,7 @@
+>  #include <asm/processor-flags.h>
+>  #include <asm/msr.h>
+>  #include <asm/cmdline.h>
+> +#include <asm/kvm_para.h>
+>  
+>  static char sme_cmdline_arg_on[] __initdata = "mem_encrypt=on";
+>  static char sme_cmdline_arg_off[] __initdata = "mem_encrypt=off";
+> @@ -232,6 +233,29 @@ unsigned long __init sme_enable(void *boot_data)
+>  	void *cmdline_arg;
+>  	u64 msr;
+>  
+> +	/* Check if running under a hypervisor */
+> +	eax = 0x40000000;
+> +	ecx = 0;
+> +	native_cpuid(&eax, &ebx, &ecx, &edx);
+> +	if (eax > 0x40000000) {
+> +		eax = 0x40000001;
+> +		ecx = 0;
+> +		native_cpuid(&eax, &ebx, &ecx, &edx);
+> +		if (!(eax & BIT(KVM_FEATURE_SEV)))
+> +			goto out;
+> +
+> +		eax = 0x8000001f;
+> +		ecx = 0;
+> +		native_cpuid(&eax, &ebx, &ecx, &edx);
+> +		if (!(eax & 1))
+> +			goto out;
+> +
+> +		sme_me_mask = 1UL << (ebx & 0x3f);
+> +		sev_enabled = 1;
+> +
+> +		goto out;
+> +	}
+> +
+>  	/* Check for an AMD processor */
+>  	eax = 0;
+>  	ecx = 0;
+> 
+
 -- 
-2.11.0
+Regards/Gruss,
+    Boris.
+
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
