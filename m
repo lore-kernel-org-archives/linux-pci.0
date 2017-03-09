@@ -1,53 +1,80 @@
-Return-Path: <SRS0=q5GP=2Z=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=q5GP=2Z=linutronix.de=tglx@kernel.org>
-Date: Thu, 16 Mar 2017 20:36:19 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Mason <slash.tmp@free.fr>
-cc: LKML <linux-kernel@vger.kernel.org>,
-    Linux ARM <linux-arm-kernel@lists.infradead.org>,
-    Marc Zyngier <marc.zyngier@arm.com>, Jason Cooper <jason@lakedaemon.net>,
-    linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-    Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
-    Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
-    Robin Murphy <robin.murphy@arm.com>, Liviu Dudau <liviu.dudau@arm.com>,
-    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-    Uwe Kleine-Konig <u.kleine-koenig@pengutronix.de>,
-    Rob Herring <robh@kernel.org>
-Subject: Re: Legacy PCI interrupt support in PCIe host driver
-In-Reply-To: <4e54c5f9-7cc1-cfab-592d-a87795147020@free.fr>
-Message-ID: <alpine.DEB.2.20.1703162034430.4110@nanos>
-References: <5612adb6-af5c-9fbf-e725-813ee7fe1b4b@free.fr> <8443b350-6aa6-75f8-af48-892c722fc2d9@free.fr> <alpine.DEB.2.20.1703161843420.3586@nanos> <4e54c5f9-7cc1-cfab-592d-a87795147020@free.fr>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC PATCH v2 12/32] x86: Add early boot support when running
+ with SEV active
+To: Borislav Petkov <bp@suse.de>, Brijesh Singh <brijesh.singh@amd.com>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846768878.2349.15757532025749214650.stgit@brijesh-build-machine>
+ <20170309140748.tg67yo2jmc5ahck3@pd.tnic>
+Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
+        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
+        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
+        gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org,
+        akpm@linux-foundation.org, davem@davemloft.net
+From: Paolo Bonzini <pbonzini@redhat.com>
+Message-ID: <5d62b16f-16ef-1bd7-1551-f0c4c43573f4@redhat.com>
+Date: Thu, 9 Mar 2017 17:13:33 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20170309140748.tg67yo2jmc5ahck3@pd.tnic>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 16 Mar 2017, Mason wrote:
 
-> On 16/03/2017 18:47, Thomas Gleixner wrote:
-> > On Thu, 16 Mar 2017, Mason wrote:
-> >> I guess if two interrupts fire at the same time, we'll just take two
-> >> separate exceptions?
-> > 
-> > Wrong guess. That might work with level interrupts, but with other types
-> > nothing will raise another exception. Sharing interrupts on edge types is a
-> > stupid idea, but hardware folks insist on implementing stupid ideas.
-> 
-> When you say "That might work with level interrupts", what is "that" ?
 
-That you take two exceptions because if both have raised the irq it will
-stay raised when you only handle one. Non level types will not keep it
-raised in the CPU and you lost.
+On 09/03/2017 15:07, Borislav Petkov wrote:
+> +	/* Check if running under a hypervisor */
+> +	eax = 0x40000000;
+> +	ecx = 0;
+> +	native_cpuid(&eax, &ebx, &ecx, &edx);
 
-> In my case,
-> 
-> 	interrupt-map = <0 0 0 1 &irq0 54 IRQ_TYPE_LEVEL_HIGH>;
-> 	interrupts = <54 IRQ_TYPE_LEVEL_HIGH>;
-> 
-> Both ISRs expect LEVEL_HIGH. In fact, doesn't request_irq
-> return an error if the triggers are different?
+This is not how you check if running under a hypervisor; you should
+check the HYPERVISOR bit, i.e. bit 31 of cpuid(1).ecx.  This in turn
+tells you if leaf 0x40000000 is valid.
 
-That's completely irrelevant.
+That said, the main issue with this function is that it hardcodes the
+behavior for KVM.  It is possible that another hypervisor defines its
+0x40000001 leaf in such a way that KVM_FEATURE_SEV has a different meaning.
+
+Instead, AMD should define a "well-known" bit in its own space (i.e.
+0x800000xx) that is only used by hypervisors that support SEV.  This is
+similar to how Intel defined one bit in leaf 1 to say "is leaf
+0x40000000 valid".
 
 Thanks,
 
-	tglx
+Paolo
+
+> +	if (eax > 0x40000000) {
+> +		eax = 0x40000001;
+> +		ecx = 0;
+> +		native_cpuid(&eax, &ebx, &ecx, &edx);
+> +		if (!(eax & BIT(KVM_FEATURE_SEV)))
+> +			goto out;
+> +
+> +		eax = 0x8000001f;
+> +		ecx = 0;
+> +		native_cpuid(&eax, &ebx, &ecx, &edx);
+> +		if (!(eax & 1))
+> +			goto out;
+> +
+> +		sme_me_mask = 1UL << (ebx & 0x3f);
+> +		sev_enabled = 1;
+> +
+> +		goto out;
+> +	}
+> +
