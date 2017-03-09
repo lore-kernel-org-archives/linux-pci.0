@@ -1,58 +1,55 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 3 Mar 2017 10:49:50 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Guenter Roeck <linux@roeck-us.net>,
-        Vivek Gautam <vivek.gautam@codeaurora.org>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Ley Foon Tan <ley.foon.tan@intel.com>
-Subject: [GIT PULL] PCI fixes for v4.11
-Message-ID: <20170303164950.GA30375@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 16/23] PCI: Add device IDs for DRA74x and DRA72x
+Date: Thu, 9 Mar 2017 13:27:27 +0530
+Message-ID: <1489046254-19919-17-git-send-email-kishon@ti.com>
+In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
+References: <1489046254-19919-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI fixes:
+Add device IDs for DRA74x and DRA72x devices. These devices have
+configurable PCI endpoint.
 
-  - fix NULL pointer dereferences in many DesignWare-based drivers due to
-    refactoring error
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ include/linux/pci_ids.h |    2 ++
+ 1 file changed, 2 insertions(+)
 
-  - fix Altera config write breakage due to my refactoring error
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index a4f77fe..5f6b71d 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -862,6 +862,8 @@
+ #define PCI_DEVICE_ID_TI_X620		0xac8d
+ #define PCI_DEVICE_ID_TI_X420		0xac8e
+ #define PCI_DEVICE_ID_TI_XX20_FM	0xac8f
++#define PCI_DEVICE_ID_TI_DRA74x		0xb500
++#define PCI_DEVICE_ID_TI_DRA72x		0xb501
+ 
+ #define PCI_VENDOR_ID_SONY		0x104d
+ 
+-- 
+1.7.9.5
 
 
-The following changes since commit 9e314890292c0dd357eadef6a043704fa0b4c157:
-
-  Merge tag 'openrisc-for-linus' of git://github.com/openrisc/linux (2017-02-24 18:37:03 -0800)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.11-fixes-1
-
-for you to fetch changes up to 2a7275a3d867b228216886aae35e1f64291180b1:
-
-  PCI: altera: Fix TLP_CFG_DW0 for TLP write (2017-02-28 15:06:29 -0600)
-
-----------------------------------------------------------------
-pci-v4.11-fixes-1
-
-----------------------------------------------------------------
-Guenter Roeck (1):
-      PCI: dwc: Fix crashes seen due to missing assignments
-
-Ley Foon Tan (1):
-      PCI: altera: Fix TLP_CFG_DW0 for TLP write
-
- drivers/pci/dwc/pci-exynos.c           |  1 +
- drivers/pci/dwc/pci-imx6.c             |  1 +
- drivers/pci/dwc/pci-keystone.c         |  2 ++
- drivers/pci/dwc/pci-layerscape.c       |  2 ++
- drivers/pci/dwc/pcie-armada8k.c        |  2 ++
- drivers/pci/dwc/pcie-artpec6.c         |  2 ++
- drivers/pci/dwc/pcie-designware-plat.c |  2 ++
- drivers/pci/dwc/pcie-hisi.c            |  2 ++
- drivers/pci/dwc/pcie-qcom.c            |  2 ++
- drivers/pci/dwc/pcie-spear13xx.c       |  2 ++
- drivers/pci/host/pcie-altera.c         | 10 +++++++---
- 11 files changed, 25 insertions(+), 3 deletions(-)
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
