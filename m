@@ -1,119 +1,97 @@
-Return-Path: <SRS0=DqO1=3F=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=DqO1=3F=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
-To: Mason <slash.tmp@free.fr>
-References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
- <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
- <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
- <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
- <0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
- <4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
- <cc958b0c-b947-2b3f-9e4b-9216e0085e6e@free.fr> <8637dyo2d9.fsf@arm.com>
- <b180c091-e4a4-7f58-7378-e0f3a24e44d6@free.fr>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
- Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <05801ad3-23b0-be04-883c-a018fd5df6f8@arm.com>
-Date: Tue, 28 Mar 2017 09:21:51 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:59356 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753707AbdCIIBE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2017 03:01:04 -0500
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v3 20/23] tools: PCI: Add sample test script to invoke pcitest
+Date: Thu, 9 Mar 2017 13:27:31 +0530
+Message-ID: <1489046254-19919-21-git-send-email-kishon@ti.com>
+In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
+References: <1489046254-19919-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <b180c091-e4a4-7f58-7378-e0f3a24e44d6@free.fr>
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/03/17 23:04, Mason wrote:
-> On 27/03/2017 23:07, Marc Zyngier wrote:
-> 
->> On Mon, Mar 27 2017 at 08:44:08 PM, Mason wrote:
->>
->>> On 27/03/2017 19:09, Marc Zyngier wrote:
->>>
->>>> On 27/03/17 16:53, Mason wrote:
->>>>
->>>>> I have one remaining issue with bitmaps.
->>>>>
->>>>> My HW regs are 32b. How do I grab e.g. bits 96-127?
->>>>> All I can think of is
->>>>>   u32 val = ((u32 *)bitmap)[3];
->>>>>
->>>>> Is this acceptable?
->>>>
->>>> No.
->>>>
->>>>> mrutland mentioned bitmap_to_u32array() but IIUC it is used to
->>>>> copy an entire bitmap.
->>>>
->>>> The real question is "Why do you need such a thing?".
->>>
->>> You told me to use an in-memory version of the "unmasked"
->>> bitmap, yes? In that case, I need to be able to grab
->>> a piece of said bitmap, to update the corresponding piece
->>> of the HW bitmap.
->>>
->>> For example, assume the first 3 MSIs are unmasked,
->>> in other words, unmasked = 0x7
->>>
->>> A new user comes along and wants to assign an MSI.
->>> Scan "unmasked", found bit at pos 3.
->>> Update "unmasked" to 0xf.
->>> At some point, I need to write 0xf to some HW reg.
->>> So I need to grab a piece of "unmasked" (bits 0-31 in my example)
->>>
->>>   pos = find_first_zero_bit(unmasked, COUNT);
->>>   __set_bit(pos, unmasked);
->>>   int reg_index = pos / 32;
->>>   u32 val = ((u32 *)unmasked)[reg_index];
->>>   writel_relaxed(val, pcie->enabled + reg_index * 4);
->>>
->>> Or did I miss something in your suggestion?
->>
->> I don't know, I'm sightly taken aback by your question. Completely
->> puzzled, actually. "Read Modify Write" is a fairly obvious construct.
->>
->>      val = readl_relaxed(pcie->enabled + reg_index);
->>      writel_relaxed(val | BIT(pos % 32), pcie->enabled + reg_index);
->>
->> I never realized this could be such a novel concept. Replace pos with
->> hwirq, add a spinlock, and that's your irq_unmask.
-> 
-> I'm not sure why you would think I'm not familiar with RMW.
-> 
-> My original code was:
-> 
-> 	mask = readl_relaxed(pcie->msi_mask);
-> 	pos = find_first_zero_bit(&mask, 32);
-> 	writel(mask | BIT(pos), pcie->msi_mask);
-> 
-> To which you replied:
-> "Do you really need to read this from the HW each time you allocate an
-> interrupt? That feels pretty crazy. You're much better off having an
-> in-memory bitmap that will make things more efficient"
-> 
-> This is why I was trying to avoid a MMIO read from the HW
-> each time I allocate an interrupt.
+Add a simple test script that invokes the pcitest userspace tool
+to perform all the PCI endpoint tests (BAR tests, interrupt tests,
+read tests, write tests and copy tests).
 
-Yes, and I stand by this comment. I also said, in the bit that you
-didn't quote, that the RMW was to be moved to the irq_unmask method.
-This ensures separation of IRQ allocation and IRQ chip operations.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ tools/pci/pcitest.sh |   56 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+ create mode 100644 tools/pci/pcitest.sh
 
->> My suggestion was to use a bitmap in order not to perform extra MMIO
->> accesses on the fast path. It doesn't mean that you cannot read from the
->> register under any circumstances. It just means that you don't do it
->> when there are more efficient ways to do it.
-> 
-> The fast path is the interrupt handler, right?
-> (I didn't read the interrupt mask in the ISR.)
-
-You didn't then, and yet you have to, since you need to support more
-than 32 MSIs, requiring you to either read these mask regs in the HW, or
-(tata!) look into the allocation bitmap.
-
-	M.
+diff --git a/tools/pci/pcitest.sh b/tools/pci/pcitest.sh
+new file mode 100644
+index 0000000..5442bbe
+--- /dev/null
++++ b/tools/pci/pcitest.sh
+@@ -0,0 +1,56 @@
++#!/bin/sh
++
++echo "BAR tests"
++echo
++
++bar=0
++
++while [ $bar -lt 6 ]
++do
++	pcitest -b $bar
++	bar=`expr $bar + 1`
++done
++echo
++
++echo "Interrupt tests"
++echo
++
++pcitest -l
++msi=1
++
++while [ $msi -lt 33 ]
++do
++        pcitest -m $msi
++        msi=`expr $msi + 1`
++done
++echo
++
++echo "Read Tests"
++echo
++
++pcitest -r -s 1
++pcitest -r -s 1024
++pcitest -r -s 1025
++pcitest -r -s 1024000
++pcitest -r -s 1024001
++echo
++
++echo "Write Tests"
++echo
++
++pcitest -w -s 1
++pcitest -w -s 1024
++pcitest -w -s 1025
++pcitest -w -s 1024000
++pcitest -w -s 1024001
++echo
++
++echo "Copy Tests"
++echo
++
++pcitest -c -s 1
++pcitest -c -s 1024
++pcitest -c -s 1025
++pcitest -c -s 1024000
++pcitest -c -s 1024001
++echo
 -- 
-Jazz is not dead. It just smells funny...
+1.7.9.5
