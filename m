@@ -1,143 +1,221 @@
-Return-Path: <SRS0=1EYN=2T=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=1EYN=2T=free.fr=slash.tmp@kernel.org>
-Subject: Re: Neophyte questions about PCIe
-To: David Laight <David.Laight@ACULAB.COM>,
- Robin Murphy <robin.murphy@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>,
- Arnd Bergmann <arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- linux-usb <linux-usb@vger.kernel.org>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Shawn Lin <shawn.lin@rock-chips.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
- <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
- <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
-Date: Fri, 10 Mar 2017 16:05:50 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RESEND PATCH v3 6/7] PCI: dwc: designware: Move _unroll
+ configurations to a separate function
+To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+References: <1489041545-15730-1-git-send-email-kishon@ti.com>
+ <1489041545-15730-7-git-send-email-kishon@ti.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <e4cf80f5-08f3-5ebc-ef55-8d43f8e02104@synopsys.com>
+Date: Thu, 9 Mar 2017 12:25:05 +0000
 MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <1489041545-15730-7-git-send-email-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: nsekhar@ti.com
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/03/2017 15:06, David Laight wrote:
+=C0s 6:39 AM de 3/9/2017, Kishon Vijay Abraham I escreveu:
+> No functional change. Rename dw_pcie_writel_unroll/dw_pcie_readl_unroll
+> to dw_pcie_writel_ob_unroll/dw_pcie_readl_ob_unroll respectively as these
+> functions are used to perform only outbound configurations. Also move
+> these _unroll configurations to a separate function.
+> =
 
-> Robin Murphy wrote:
->
->> On 09/03/17 23:43, Mason wrote:
->>
->>> I think I'm making progress, in that I now have a better
->>> idea of what I don't understand. So I'm able to ask
->>> (hopefully) less vague questions.
->>>
->>> Take the USB3 PCIe adapter I've been testing with. At some
->>> point during init, the XHCI driver request some memory
->>> (via kmalloc?) in order to exchange data with the host, right?
->>>
->>> On my SoC, the RAM used by Linux lives at physical range
->>> [0x8000_0000, 0x8800_0000[ => 128 MB
->>>
->>> How does the XHCI driver make the adapter aware of where
->>> it can scribble data? The XHCI driver has no notion that
->>> the device is behind a bus, does it?
->>>
->>> At some point, the physical addresses must be converted
->>> to PCI bus addresses, right? Is it computed subtracting
->>> the offset defined in the DT?
-> 
-> The driver should call dma_alloc_coherent() which returns both the
-> kernel virtual address and the device (xhci controller) has
-> to use to access it.
-> The cpu physical address is irrelevant (although it might be
-> calculated in the middle somewhere).
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/dwc/pcie-designware.c |  112 ++++++++++++++++++++++---------=
+------
+>  1 file changed, 67 insertions(+), 45 deletions(-)
+> =
 
-Thank you for that missing piece of the puzzle.
-I see some relevant action in drivers/usb/host/xhci-mem.c
+> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-des=
+ignware.c
+> index 557ee53..6657a84 100644
+> --- a/drivers/pci/dwc/pcie-designware.c
+> +++ b/drivers/pci/dwc/pcie-designware.c
+> @@ -92,22 +92,64 @@ void dw_pcie_write_dbi(struct dw_pcie *pci, void __io=
+mem *base, u32 reg,
+>  		dev_err(pci->dev, "write DBI address failed\n");
+>  }
+>  =
 
-And I now see this log:
+> -static u32 dw_pcie_readl_unroll(struct dw_pcie *pci, void __iomem *base,
+> -				u32 index, u32 reg)
+> +static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, void __iomem *ba=
+se,
+> +				   u32 index, u32 reg)
+>  {
+>  	u32 offset =3D PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+>  =
 
-[    2.499320] xhci_hcd 0000:01:00.0: // Device context base array address = 0x8e07e000 (DMA), d0855000 (virt)
-[    2.509156] xhci_hcd 0000:01:00.0: Allocated command ring at cfb04200
-[    2.515640] xhci_hcd 0000:01:00.0: First segment DMA is 0x8e07f000
-[    2.521863] xhci_hcd 0000:01:00.0: // Setting command ring address to 0x20
-[    2.528786] xhci_hcd 0000:01:00.0: // xHC command ring deq ptr low bits + flags = @00000000
-[    2.537188] xhci_hcd 0000:01:00.0: // xHC command ring deq ptr high bits = @00000000
-[    2.545002] xhci_hcd 0000:01:00.0: // Doorbell array is located at offset 0x800 from cap regs base addr
-[    2.554455] xhci_hcd 0000:01:00.0: // xHCI capability registers at d0852000:
-[    2.561550] xhci_hcd 0000:01:00.0: // @d0852000 = 0x1000020 (CAPLENGTH AND HCIVERSION)
+>  	return dw_pcie_read_dbi(pci, base, offset + reg, 0x4);
+>  }
+>  =
 
-I believe 0x8e07e000 is a CPU address, not a PCI bus address.
+> -static void dw_pcie_writel_unroll(struct dw_pcie *pci, void __iomem *bas=
+e,
+> -				  u32 index, u32 reg, u32 val)
+> +static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, void __iomem *=
+base,
+> +				     u32 index, u32 reg, u32 val)
+>  {
+>  	u32 offset =3D PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
+>  =
+
+>  	dw_pcie_write_dbi(pci, base, offset + reg, 0x4, val);
+>  }
+>  =
+
+> +void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index, in=
+t type,
+> +				      u64 cpu_addr, u64 pci_addr, u32 size)
+> +{
+> +	u32 retries, val;
+> +	void __iomem *base =3D pci->dbi_base;
+> +
+> +	dw_pcie_writel_ob_unroll(pci, base, index,
+> +				 PCIE_ATU_UNR_LOWER_BASE,
+> +				 lower_32_bits(cpu_addr));
+> +	dw_pcie_writel_ob_unroll(pci, base, index,
+> +				 PCIE_ATU_UNR_UPPER_BASE,
+> +				 upper_32_bits(cpu_addr));
+> +	dw_pcie_writel_ob_unroll(pci, base, index, PCIE_ATU_UNR_LIMIT,
+> +				 lower_32_bits(cpu_addr + size - 1));
+> +	dw_pcie_writel_ob_unroll(pci, base, index,
+> +				 PCIE_ATU_UNR_LOWER_TARGET,
+> +				 lower_32_bits(pci_addr));
+> +	dw_pcie_writel_ob_unroll(pci, base, index,
+> +				 PCIE_ATU_UNR_UPPER_TARGET,
+> +				 upper_32_bits(pci_addr));
+> +	dw_pcie_writel_ob_unroll(pci, base, index,
+> +				 PCIE_ATU_UNR_REGION_CTRL1,
+> +				 type);
+> +	dw_pcie_writel_ob_unroll(pci, base, index,
+> +				 PCIE_ATU_UNR_REGION_CTRL2,
+> +				 PCIE_ATU_ENABLE);
+> +
+> +	/*
+> +	 * Make sure ATU enable takes effect before any subsequent config
+> +	 * and I/O accesses.
+> +	 */
+> +	for (retries =3D 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
+> +		val =3D dw_pcie_readl_ob_unroll(pci, base, index,
+> +					      PCIE_ATU_UNR_REGION_CTRL2);
+> +		if (val & PCIE_ATU_ENABLE)
+> +			return;
+> +
+> +		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+> +	}
+> +	dev_err(pci->dev, "outbound iATU is not being enabled\n");
+> +}
+> +
+>  void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
+>  			       u64 cpu_addr, u64 pci_addr, u32 size)
+>  {
+> @@ -118,59 +160,39 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci,=
+ int index, int type,
+>  		cpu_addr =3D pci->ops->cpu_addr_fixup(cpu_addr);
+>  =
+
+>  	if (pci->iatu_unroll_enabled) {
+> -		dw_pcie_writel_unroll(pci, base, index, PCIE_ATU_UNR_LOWER_BASE,
+> -				      lower_32_bits(cpu_addr));
+> -		dw_pcie_writel_unroll(pci, base, index, PCIE_ATU_UNR_UPPER_BASE,
+> -				      upper_32_bits(cpu_addr));
+> -		dw_pcie_writel_unroll(pci, base, index, PCIE_ATU_UNR_LIMIT,
+> -				      lower_32_bits(cpu_addr + size - 1));
+> -		dw_pcie_writel_unroll(pci, base, index,
+> -				      PCIE_ATU_UNR_LOWER_TARGET,
+> -				      lower_32_bits(pci_addr));
+> -		dw_pcie_writel_unroll(pci, base, index,
+> -				      PCIE_ATU_UNR_UPPER_TARGET,
+> -				      upper_32_bits(pci_addr));
+> -		dw_pcie_writel_unroll(pci, base, index,
+> -				      PCIE_ATU_UNR_REGION_CTRL1,
+> -				      type);
+> -		dw_pcie_writel_unroll(pci, base, index,
+> -				      PCIE_ATU_UNR_REGION_CTRL2,
+> -				      PCIE_ATU_ENABLE);
+> -	} else {
+> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_VIEWPORT, 0x4,
+> -				  PCIE_ATU_REGION_OUTBOUND | index);
+> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_LOWER_BASE, 0x4,
+> -				  lower_32_bits(cpu_addr));
+> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_UPPER_BASE, 0x4,
+> -				  upper_32_bits(cpu_addr));
+> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_LIMIT, 0x4,
+> -				  lower_32_bits(cpu_addr + size - 1));
+> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_LOWER_TARGET, 0x4,
+> -				  lower_32_bits(pci_addr));
+> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_UPPER_TARGET, 0x4,
+> -				  upper_32_bits(pci_addr));
+> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_CR1, 0x4, type);
+> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_CR2, 0x4,
+> -				  PCIE_ATU_ENABLE);
+> +		dw_pcie_prog_outbound_atu_unroll(pci, index, type, cpu_addr,
+> +						 pci_addr, size);
+> +		return;
+>  	}
+>  =
+
+> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_VIEWPORT, 0x4,
+> +			  PCIE_ATU_REGION_OUTBOUND | index);
+> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_LOWER_BASE, 0x4,
+> +			  lower_32_bits(cpu_addr));
+> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_UPPER_BASE, 0x4,
+> +			  upper_32_bits(cpu_addr));
+> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_LIMIT, 0x4,
+> +			  lower_32_bits(cpu_addr + size - 1));
+> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_LOWER_TARGET, 0x4,
+> +			  lower_32_bits(pci_addr));
+> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_UPPER_TARGET, 0x4,
+> +			  upper_32_bits(pci_addr));
+> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_CR1, 0x4, type);
+> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_CR2, 0x4,
+> +			  PCIE_ATU_ENABLE);
+> +
+>  	/*
+>  	 * Make sure ATU enable takes effect before any subsequent config
+>  	 * and I/O accesses.
+>  	 */
+>  	for (retries =3D 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
+> -		if (pci->iatu_unroll_enabled)
+> -			val =3D dw_pcie_readl_unroll(pci, base, index,
+> -						   PCIE_ATU_UNR_REGION_CTRL2);
+> -		else
+> -			val =3D dw_pcie_read_dbi(pci, base, PCIE_ATU_CR2, 0x4);
+> -
+> +		val =3D dw_pcie_read_dbi(pci, base, PCIE_ATU_CR2, 0x4);
+>  		if (val =3D=3D PCIE_ATU_ENABLE)
+>  			return;
+>  =
+
+>  		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
+>  	}
+> -	dev_err(pci->dev, "iATU is not being enabled\n");
+> +	dev_err(pci->dev, "outbound iATU is not being enabled\n");
+>  }
+>  =
+
+>  int dw_pcie_wait_for_link(struct dw_pcie *pci)
+> =
 
 
->>> Then suppose the USB3 card wants to write to an address
->>> in RAM. It sends a packet on the PCIe bus, targeting
->>> the PCI bus address of that RAM, right? Is this address
->>> supposed to be in BAR0 of the root complex? I guess not,
->>> since Bjorn said that it was unusual for a RC to have
->>> a BAR at all. So I'll hand-wave, and decree that, by some
->>> protocol magic, the packet arrives at the PCIe controller.
->>> And this controller knows to forward this write request
->>> over the memory bus. Does that look about right?
->>
->> Generally, yes - if an area of memory space *is* claimed by a BAR, then
->> another PCI device accessing that would be treated as peer-to-peer DMA,
->> which may or may not be allowed (or supported at all).
-> 
-> So PCIe addresses that refer to the host memory addresses are
-> just forwarded to the memory subsystem.
-> In practise this is almost everything.
+Acked-By: Joao Pinto <jpinto@synopsys.com>
 
-My RC drops packets not targeting its BAR0.
-
-> The only other PCIe writes the host will see are likely to be associated
-> with MIS and MSI-X interrupt support.
-
-Rev 1 of the PCIe controller is supposed to forward MSI doorbell
-writes over the global bus to the PCIe controller's MMIO register.
-
-> Some PCIe root complex support peer-to-peer writes but not reads.
-> Write are normally 'posted' (so are 'fire and forget') reads need the
-> completion TLP (containing the data) sent back - all hard and difficult.
-> 
->> For mem space
->> which isn't claimed by BARs, it's up to the RC to decide what to do. As
->> a concrete example (which might possibly be relevant) the PLDA XR3-AXI
->> IP which we have in the ARM Juno SoC has the ATR_PCIE_WINx registers in
->> its root port configuration block that control what ranges of mem space
->> are mapped to the external AXI master interface and how.
->>
->>> My problem is that, in the current implementation of the
->>> PCIe controller, the USB device that wants to write to
->>> memory is supposed to target BAR0 of the RC.
->>
->> That doesn't sound right at all. If the RC has a BAR, I'd expect it to
->> be for poking the guts of the RC device itself (since this prompted me
->> to go and compare, I see the Juno RC does indeed have it own enigmatic
->> 16KB BAR, which reads as ever-changing random junk; no idea what that's
->> about).
->>
->>> Since my mem space is limited to 256 MB, then BAR0 is
->>> limited to 256 MB (or even 128 MB, since I also need
->>> to mapthe device's BAR into the same mem space).
->>
->> Your window into mem space *from the CPU's point of view* is limited to
->> 256MB. The relationship between mem space and the system (AXI) memory
->> map from the point of view of PCI devices is a separate issue; if it's
->> configurable at all, it probably makes sense to have the firmware set an
->> outbound window to at least cover DRAM 1:1, then forget about it (this
->> is essentially what Juno UEFI does, for example).
-> 
-> So you have 128MB (max) of system memory that has cpu physical
-> addresses 0x80000000 upwards.
-> I'd expect it all to be accessible from any PCIe card at some PCIe
-> address, it might be at address 0, 0x80000000 or any other offset.
-> 
-> I don't know which DT entry controls that offset.
-
-This is a crucial point, I think.
-
-Regards.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
