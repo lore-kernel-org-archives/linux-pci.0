@@ -1,116 +1,103 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39520 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755649AbdCGUlT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Mar 2017 15:41:19 -0500
-Date: Tue, 7 Mar 2017 14:15:29 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, clsoto@us.ibm.com
-Subject: Re: [PATCH] PCI: Disable IOV before pcibios_sriov_disable()
-Message-ID: <20170307201529.GF21358@bhelgaas-glaptop.roam.corp.google.com>
-References: <1488154712-8354-1-git-send-email-gwshan@linux.vnet.ibm.com>
+Received: from mail-he1eur01on0069.outbound.protection.outlook.com ([104.47.0.69]:30944
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750812AbdCIGZK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Mar 2017 01:25:10 -0500
+From: Ilya Lesokhin <ilyal@mellanox.com>
+To: Jike Song <jike.song@intel.com>
+CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        Noa Osherovich <noaos@mellanox.com>,
+        Haggai Eran <haggaie@mellanox.com>,
+        Or Gerlitz <ogerlitz@mellanox.com>,
+        Liran Liss <liranl@mellanox.com>,
+        "You, Lizhen" <lizhen.you@intel.com>
+Subject: RE: [PATCH V3 0/3] VFIO SRIOV support
+Date: Thu, 9 Mar 2017 06:24:18 +0000
+Message-ID: <VI1PR0502MB29572DE43EEBD50B490EFD15D4210@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+References: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
+ <58BFB2DA.2070306@intel.com>
+In-Reply-To: <58BFB2DA.2070306@intel.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1488154712-8354-1-git-send-email-gwshan@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Gavin,
-
-On Mon, Feb 27, 2017 at 11:18:32AM +1100, Gavin Shan wrote:
-> The PowerNV platform is the only user of pcibios_sriov_disable().
-> The IOV BAR could be shifted by pci_iov_update_resource(). The
-> warning message in the function is printed if the IOV capability
-> is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
-> 
->    pci_disable_sriov
->    sriov_disable
->    pnv_pci_sriov_disable
->    pnv_pci_vf_resource_shift
->    pci_update_resource
->    pci_iov_update_resource
-> 
-> This fixes the issue by disabling IOV capability before calling
-> pcibios_sriov_disable(). With it, the disabling path matches with
-> the enabling path: pcibios_sriov_enable() is called before the
-> IOV capability is enabled.
-
-I'm vaguely uncomfortable about this path:
-
-  pci_disable_sriov
-    sriov_disable
-      pcibios_sriov_disable           # powerpc version
-	pnv_pci_sriov_disable
-	  pnv_pci_vf_resource_shift
-	    res = &dev->resource[i + PCI_IOV_RESOURCES]
-	    res->start += size * offset
-	    pci_update_resource
-	      pci_iov_update_resource
-	  pnv_pci_vf_release_m64
-
-1) "res" is already in the resource tree, so we shouldn't be changing
-   its start address, because that may make the tree inconsistent,
-   e.g., the resource may no longer be completely contained in its
-   parent, it may conflict with a sibling, etc.
-
-2) If we update "res->start", shouldn't we update "res->end"
-   correspondingly?
-
-It seems like it'd be better if we didn't update the device resources
-in the enable/disable paths.  If we could do the resource adjustments
-earlier, somewhere before we give the device to a driver, it seems
-like it would avoid these issues.
-
-We might have talked about these questions in the past, so I apologize
-if you've already explained this.  If that's the case, maybe we just
-need some comments in the code to help the next confused reader.
-
-> Reported-by: Carol L Soto <clsoto@us.ibm.com>
-> Signed-off-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
-> Tested-by: Carol L Soto <clsoto@us.ibm.com>
-> ---
->  drivers/pci/iov.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index 2479ae8..138830f 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -331,7 +331,6 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  	while (i--)
->  		pci_iov_remove_virtfn(dev, i, 0);
->  
-> -	pcibios_sriov_disable(dev);
->  err_pcibios:
->  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
->  	pci_cfg_access_lock(dev);
-> @@ -339,6 +338,8 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
->  	ssleep(1);
->  	pci_cfg_access_unlock(dev);
->  
-> +	pcibios_sriov_disable(dev);
-> +
->  	if (iov->link != dev->devfn)
->  		sysfs_remove_link(&dev->dev.kobj, "dep_link");
->  
-> @@ -357,14 +358,14 @@ static void sriov_disable(struct pci_dev *dev)
->  	for (i = 0; i < iov->num_VFs; i++)
->  		pci_iov_remove_virtfn(dev, i, 0);
->  
-> -	pcibios_sriov_disable(dev);
-> -
->  	iov->ctrl &= ~(PCI_SRIOV_CTRL_VFE | PCI_SRIOV_CTRL_MSE);
->  	pci_cfg_access_lock(dev);
->  	pci_write_config_word(dev, iov->pos + PCI_SRIOV_CTRL, iov->ctrl);
->  	ssleep(1);
->  	pci_cfg_access_unlock(dev);
->  
-> +	pcibios_sriov_disable(dev);
-> +
->  	if (iov->link != dev->devfn)
->  		sysfs_remove_link(&dev->dev.kobj, "dep_link");
->  
-> -- 
-> 2.7.4
-> 
+SGkgSmlrZSwNCkkgZG9uJ3QgaGF2ZSBhIHBsYW4gdG8gd29yayBvbiBpdCBpbiB0aGUgbmVhciBm
+dXR1cmUsIGJ1dCB3ZSBjYW4gc2hhcmUgdGhlIGNvZGUgaWYgeW91IGFyZSBpbnRlcmVzdGVkLg0K
+DQpUaGFua3MsDQpJbHlhDQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTog
+SmlrZSBTb25nIFttYWlsdG86amlrZS5zb25nQGludGVsLmNvbV0NCj4gU2VudDogV2VkbmVzZGF5
+LCBNYXJjaCAwOCwgMjAxNyA5OjMwIEFNDQo+IFRvOiBJbHlhIExlc29raGluIDxpbHlhbEBtZWxs
+YW5veC5jb20+DQo+IENjOiBrdm1Admdlci5rZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5rZXJu
+ZWwub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOw0KPiBhbGV4LndpbGxpYW1zb25AcmVkaGF0LmNv
+bTsgTm9hIE9zaGVyb3ZpY2ggPG5vYW9zQG1lbGxhbm94LmNvbT47DQo+IEhhZ2dhaSBFcmFuIDxo
+YWdnYWllQG1lbGxhbm94LmNvbT47IE9yIEdlcmxpdHogPG9nZXJsaXR6QG1lbGxhbm94LmNvbT47
+DQo+IExpcmFuIExpc3MgPGxpcmFubEBtZWxsYW5veC5jb20+OyBZb3UsIExpemhlbiA8bGl6aGVu
+LnlvdUBpbnRlbC5jb20+DQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggVjMgMC8zXSBWRklPIFNSSU9W
+IHN1cHBvcnQNCj4gDQo+IE9uIDA4LzE4LzIwMTYgMDM6MjkgUE0sIElseWEgTGVzb2toaW4gd3Jv
+dGU6DQo+ID4gQ2hhbmdlcyBmcm9tIFYyOg0KPiA+ICAgICAgICAgMS4gRW5hYmxpbmcgYW5kIGRp
+c2FibGluZyBTUi1JT1YgaXMgbm93IGRvbmUNCj4gPiAgICAgICAgIHRocm91Z2ggdGhlIHN5c2Zz
+IGludGVyZmFjZSwgcmVxdWlyaW5nDQo+ID4gICAgICAgICBhZG1pbiBwcml2aWxlZ2VzLg0KPiA+
+ICAgICAgICAgMi4gU2luY2UgYWRtaW4gcHJpdmlsZWdlcyBhcmUgbm93IHJlcXVpcmVkDQo+ID4g
+ICAgICAgICB0byBlbmFibGUgU1ItSU9WIG1vc3Qgb2YgdGhlIHRoZSBzZWN1cml0eQ0KPiA+ICAg
+ICAgICAgbWVhc3VyZXMgaW50cm9kdWNlZCBpbiBSRkMgVjIgd2VyZSByZW1vdmVkLg0KPiA+ICAg
+ICAgICAgVW5mb3J0dW5hdGVseSB3ZSBzdGlsbCBuZWVkIGEgbXV0ZXggdG8gcHJldmVudA0KPiA+
+ICAgICAgICAgdGhlIFZGSU8gdXNlciBmcm9tIGNoYW5naW5nIHRoZSBudW1iZXIgb2YNCj4gPiAg
+ICAgICAgIFZGcyB3aGlsZSBlbmFibGVfc3Jpb3YgaXMgaW4gcHJvZ3Jlc3MuDQo+ID4NCj4gPiBD
+aGFuZ2VzIGZyb20gVjE6DQo+ID4gICAgICAgICAxLiBUaGUgVkYgYXJlIG5vIGxvbmdlciBhc3Np
+Z25lZCB0byBQRnMgaW9tbXUgZ3JvdXANCj4gPiAgICAgICAgIDIuIEFkZCBhIHBjaV9lbmFibGVf
+c3Jpb3Zfd2l0aF9vdmVycmlkZSBBUEkgdG8gYWxsb3cNCj4gPiAgICAgICAgIGVuYWJsaW5kIHNy
+aW92IHdpdGhvdXQgcHJvYmluZyB0aGUgVkZzIHdpdGggdGhlDQo+ID4gICAgICAgICBkZWZhdWx0
+IGRyaXZlcg0KPiA+DQo+ID4gQ2hhbmdlcyBmcm9tIFJGQyBWMjoNCj4gPiAgICAgICAgIDEuIHBj
+aV9kaXNhYmxlX3NyaW92KCkgaXMgbm93IGNhbGxlZCBmcm9tIGEgd29ya3F1ZXVlDQo+ID4gICAg
+ICAgICBUbyBhdm9pZCB0aGUgc2l0dWF0aW9uIHdoZXJlIGEgcHJvY2VzcyBpcyBibG9ja2VkDQo+
+ID4gICAgICAgICBpbiBwY2lfZGlzYWJsZV9zcmlvdigpIHdhdGluZyBmb3IgaXRzZWxmIHRvIHJl
+bGFzZSB0aGUgVkZzLg0KPiA+ICAgICAgICAgMi4gYSBtdXRleCB3YXMgYWRkZWQgdG8gc3luY2hy
+b25pemUgY2FsbHMgdG8NCj4gPiAgICAgICAgIHBjaV9lbmFibGVfc3Jpb3YoKSBhbmQgcGNpX2Rp
+c2FibGVfc3Jpb3YoKQ0KPiA+DQo+ID4gQ2hhbmdlcyBmcm9tIFJGQyBWMToNCj4gPiAgICAgICAg
+IER1ZSB0byB0aGUgc2VjdXJpdHkgY29uY2VybiByYWlzZWQgaW4gUkZDIFYxLCB3ZSBhZGQgdHdv
+IHBhdGNoZXMNCj4gPiAgICAgICAgIHRvIG1ha2Ugc3VyZSB0aGUgVkZzIGJlbG9uZyB0byB0aGUg
+c2FtZSBJT01NVSBncm91cCBhcw0KPiA+ICAgICAgICAgdGhlIFBGIGFuZCBhcmUgcHJvYmVkIGJ5
+IFZGSU8uDQo+ID4NCj4gPiBUb2RheSB0aGUgUUVNVSBoeXBlcnZpc29yIGFsbG93cyBhc3NpZ25p
+bmcgYSBwaHlzaWNhbCBkZXZpY2UgdG8gYSBWTSwNCj4gPiBmYWNpbGl0YXRpbmcgZHJpdmVyIGRl
+dmVsb3BtZW50LiBIb3dldmVyLCBpdCBkb2VzIG5vdCBzdXBwb3J0IGVuYWJsaW5nDQo+ID4gU1It
+SU9WIGJ5IHRoZSBWTSBrZXJuZWwgZHJpdmVyLiBPdXIgZ29hbCBpcyB0byBpbXBsZW1lbnQgc3Vj
+aCBzdXBwb3J0LA0KPiA+IGFsbG93aW5nIGRldmVsb3BlcnMgd29ya2luZyBvbiBTUi1JT1YgcGh5
+c2ljYWwgZnVuY3Rpb24gZHJpdmVycyB0bw0KPiA+IHdvcmsgaW5zaWRlIFZNcyBhcyB3ZWxsLg0K
+PiA+DQo+ID4gVGhpcyBwYXRjaCBzZXJpZXMgaW1wbGVtZW50cyB0aGUga2VybmVsIHNpZGUgb2Yg
+b3VyIHNvbHV0aW9uLiAgSXQNCj4gPiBleHRlbmRzIHRoZSBWRklPIGRyaXZlciB0byBzdXBwb3J0
+IHRoZSBQQ0lFIFNSSU9WIGV4dGVuZGVkIGNhcGFiaWxpdHkNCj4gPiB3aXRoIGZvbGxvd2luZyBm
+ZWF0dXJlczoNCj4gPiAxLiBUaGUgYWJpbGl0eSB0byBwcm9iZSBTUi1JT1YgQkFSIHNpemVzLg0K
+PiA+IDIuIFRoZSBhYmlsaXR5IHRvIGVuYWJsZSBhbmQgZGlzYWJsZSBTUi1JT1YuDQo+ID4NCj4g
+PiBUaGlzIHBhdGNoIHNlcmllcyBpcyBnb2luZyB0byBiZSB1c2VkIGJ5IFFFTVUgdG8gZXhwb3Nl
+IFNSLUlPVg0KPiA+IGNhcGFiaWxpdGllcyB0byBWTS4gV2UgYWxyZWFkeSBoYXZlIGFuIGVhcmx5
+IHByb3RvdHlwZSBiYXNlZCBvbiBLbnV0DQo+ID4gT21hbmcncyBwYXRjaGVzIGZvciBTUi1JT1Zb
+MV0uDQo+ID4NCj4gPiBMaW1pdGF0aW9uczoNCj4gPiAxLiBQZXIgU1ItSU9WIHNwZWMgc2VjdGlv
+biAzLjMuMTIsIFBGcyBhcmUgcmVxdWlyZWQgdG8gc3VwcG9ydCA0LUtCLA0KPiA+IDgtS0IsIDY0
+LUtCLCAyNTYtS0IsIDEtTUIsIGFuZCA0LU1CIHBhZ2Ugc2l6ZXMuDQo+ID4gVW5mb3VydGVudGx5
+IHRoZSBrZXJuZWwgY3VycmVudGx5IGluaXRpYWxpemVzIHRoZSBTeXN0ZW0gUGFnZSBTaXplDQo+
+ID4gcmVnaXN0ZXIgb25jZSBhbmQgYXNzdW1lcyBpdCBkb2Vzbid0IGNoYW5nZSB0aGVyZWZvcmUg
+d2UgY2Fubm90IGFsbG93DQo+ID4gZ3Vlc3RzIHRvIGNoYW5nZSB0aGlzIHJlZ2lzdGVyIGF0IHdp
+bGwuIFdlIGN1cnJlbnRseSBtYXAgYm90aCB0aGUNCj4gPiBTdXBwb3J0ZWQgUGFnZSBzaXplcyBh
+bmQgU3lzdGVtIFBhZ2UgU2l6ZSBhcyB2aXJ0dWFsaXplZCBhbmQgcmVhZCBvbmx5IGluDQo+IHZp
+b2xhdGlvbiBvZiB0aGUgc3BlYy4NCj4gPiBJbiBwcmFjdGljZSB0aGlzIGlzIG5vdCBhbiBpc3N1
+ZSBzaW5jZSBib3RoIHRoZSBoeXBlcnZpc29yIGFuZCB0aGUNCj4gPiBndWVzdCB0eXBpY2FsbHkg
+c2VsZWN0IHRoZSBzYW1lIFN5c3RlbSBQYWdlIFNpemUuDQo+ID4NCj4gPiBbMV0gaHR0cHM6Ly9n
+aXRodWIuY29tL2tudXRvL3FlbXUvdHJlZS9zcmlvdl9wYXRjaGVzX3Y2DQo+ID4NCj4gPiBJbHlh
+IExlc29raGluICgzKToNCj4gPiAgIHBjaTogRXh0ZW5kIFBDSSBJT1YgQVBJDQo+ID4gICB2Zmlv
+L3BjaTogQWxsb3cgY29udHJvbCBTUi1JT1YgdGhyb3VnaCBzeXNmcyBpbnRlcmZhY2UNCj4gPiAg
+IHZmaW8vcGNpOiBBZGQgc3VwcG9ydCBmb3IgU1ItSU9WIGV4dGVuZGVkIGNhcGFibGl0eQ0KPiA+
+DQo+ID4gIGRyaXZlcnMvcGNpL2lvdi5jICAgICAgICAgICAgICAgICAgIHwgIDQxICsrKysrKysr
+LS0NCj4gPiAgZHJpdmVycy92ZmlvL3BjaS92ZmlvX3BjaS5jICAgICAgICAgfCAgNDMgKysrKysr
+KystLQ0KPiA+ICBkcml2ZXJzL3ZmaW8vcGNpL3ZmaW9fcGNpX2NvbmZpZy5jICB8IDE1MQ0KPiAr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0NCj4gPiAgZHJpdmVycy92ZmlvL3Bj
+aS92ZmlvX3BjaV9wcml2YXRlLmggfCAgIDIgKw0KPiA+ICBpbmNsdWRlL2xpbnV4L3BjaS5oICAg
+ICAgICAgICAgICAgICB8ICAxMyArKystDQo+ID4gIDUgZmlsZXMgY2hhbmdlZCwgMjE5IGluc2Vy
+dGlvbnMoKyksIDMxIGRlbGV0aW9ucygtKQ0KPiA+DQo+IA0KPiArTGl6aGVuDQo+IA0KPiANCj4g
+SGkgSWx5YSwNCj4gDQo+IFNvcnJ5IGZvciBqdW1waW5nIGluIGFicnVwdGx5LiBXZSBhcmUgYWxz
+byBsb29raW5nIGZvcndhcmQgdG8gaGF2ZSBQRiB1c2VkDQo+IHdpdGhpbiBhIFZNLCB3b3VsZCB5
+b3UgcGxlYXNlIHNoYXJlIHlvdXIgbmV4dCBwbGFuIHdpdGggdXM/IExpa2VseSB0aGVyZSB3aWxs
+DQo+IGJlIGEgdjQgc2hvcnRseT8NCj4gDQo+IA0KPiAtLQ0KPiBUaGFua3MsDQo+IEppa2UNCg==
