@@ -1,244 +1,167 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0045.outbound.protection.outlook.com ([104.47.34.45]:6426
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751445AbdCBPYw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Mar 2017 10:24:52 -0500
-Subject: [RFC PATCH v2 32/32] x86: kvm: Pin the guest memory when SEV is
- active
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:18:57 -0500
-Message-ID: <148846793743.2349.8478208161427437950.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 04/23] Documentation: PCI: Guide to use pci endpoint
+ configfs
+Date: Thu, 9 Mar 2017 13:27:15 +0530
+Message-ID: <1489046254-19919-5-git-send-email-kishon@ti.com>
+In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
+References: <1489046254-19919-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The SEV memory encryption engine uses a tweak such that two identical
-plaintexts at different location will have a different ciphertexts.
-So swapping or moving ciphertexts of two pages will not result in
-plaintexts being swapped. Relocating (or migrating) a physical backing pages
-for SEV guest will require some additional steps. The current SEV key
-management spec [1] does not provide commands to swap or migrate (move)
-ciphertexts. For now we pin the memory allocated for the SEV guest. In
-future when SEV key management spec provides the commands to support the
-page migration we can update the KVM code to remove the pinning logical
-without making any changes into userspace (qemu).
+Add Documentation to help users use pci endpoint to configure
+pci endpoint function and to bind the endpoint function
+with endpoint controller.
 
-The patch pins userspace memory when a new slot is created and unpin the
-memory when slot is removed.
-
-[1] http://support.amd.com/TechDocs/55766_SEV-KM%20API_Spec.pdf
-
-Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- arch/x86/include/asm/kvm_host.h |    6 +++
- arch/x86/kvm/svm.c              |   93 +++++++++++++++++++++++++++++++++++++++
- arch/x86/kvm/x86.c              |    3 +
- 3 files changed, 102 insertions(+)
+ Documentation/PCI/00-INDEX                      |    2 +
+ Documentation/PCI/endpoint/pci-endpoint-cfs.txt |  105 +++++++++++++++++++++++
+ 2 files changed, 107 insertions(+)
+ create mode 100644 Documentation/PCI/endpoint/pci-endpoint-cfs.txt
 
-diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
-index fcc4710..9dc59f0 100644
---- a/arch/x86/include/asm/kvm_host.h
-+++ b/arch/x86/include/asm/kvm_host.h
-@@ -723,6 +723,7 @@ struct kvm_sev_info {
- 	unsigned int handle;	/* firmware handle */
- 	unsigned int asid;	/* asid for this guest */
- 	int sev_fd;		/* SEV device fd */
-+	struct list_head pinned_memory_slot;
- };
- 
- struct kvm_arch {
-@@ -1043,6 +1044,11 @@ struct kvm_x86_ops {
- 	void (*setup_mce)(struct kvm_vcpu *vcpu);
- 
- 	int (*memory_encryption_op)(struct kvm *kvm, void __user *argp);
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index ba950b2..f84a23c 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -14,3 +14,5 @@ pcieaer-howto.txt
+ 	- the PCI Express Advanced Error Reporting Driver Guide HOWTO
+ endpoint/pci-endpoint.txt
+ 	- guide to add endpoint controller driver and endpoint function driver.
++endpoint/pci-endpoint-cfs.txt
++	- guide to use configfs to configure the pci endpoint function.
+diff --git a/Documentation/PCI/endpoint/pci-endpoint-cfs.txt b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+new file mode 100644
+index 0000000..8b2a828
+--- /dev/null
++++ b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+@@ -0,0 +1,105 @@
++                   CONFIGURING PCI ENDPOINT USING CONFIGFS
++                    Kishon Vijay Abraham I <kishon@ti.com>
 +
-+	void (*prepare_memory_region)(struct kvm *kvm,
-+			struct kvm_memory_slot *memslot,
-+			const struct kvm_userspace_memory_region *mem,
-+			enum kvm_mr_change change);
- };
- 
- struct kvm_arch_async_pf {
-diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
-index 13996d6..ab973f9 100644
---- a/arch/x86/kvm/svm.c
-+++ b/arch/x86/kvm/svm.c
-@@ -498,12 +498,21 @@ static inline bool gif_set(struct vcpu_svm *svm)
- }
- 
- /* Secure Encrypted Virtualization */
-+struct kvm_sev_pinned_memory_slot {
-+	struct list_head list;
-+	unsigned long npages;
-+	struct page **pages;
-+	unsigned long userspace_addr;
-+	short id;
-+};
++The PCI Endpoint Core exposes configfs entry (pci_ep) in order to configure the
++PCI endpoint function and in order to bind the endpoint function
++with the endpoint controller. (For introducing other mechanisms to
++configure the PCI Endpoint Function refer [1]).
 +
- static unsigned int max_sev_asid;
- static unsigned long *sev_asid_bitmap;
- static void sev_deactivate_handle(struct kvm *kvm);
- static void sev_decommission_handle(struct kvm *kvm);
- static int sev_asid_new(void);
- static void sev_asid_free(int asid);
-+static void sev_unpin_memory(struct page **pages, unsigned long npages);
- #define __sev_page_pa(x) ((page_to_pfn(x) << PAGE_SHIFT) | sme_me_mask)
- 
- static bool kvm_sev_enabled(void)
-@@ -1544,9 +1553,25 @@ static inline int avic_free_vm_id(int id)
- 
- static void sev_vm_destroy(struct kvm *kvm)
- {
-+	struct list_head *pos, *q;
-+	struct kvm_sev_pinned_memory_slot *pinned_slot;
-+	struct list_head *head = &kvm->arch.sev_info.pinned_memory_slot;
++*) Mounting configfs
 +
- 	if (!sev_guest(kvm))
- 		return;
- 
-+	/* if guest memory is pinned then unpin it now */
-+	if (!list_empty(head)) {
-+		list_for_each_safe(pos, q, head) {
-+			pinned_slot = list_entry(pos,
-+				struct kvm_sev_pinned_memory_slot, list);
-+			sev_unpin_memory(pinned_slot->pages,
-+					pinned_slot->npages);
-+			list_del(pos);
-+			kfree(pinned_slot);
-+		}
-+	}
++The PCI Endpoint Core layer creates pci_ep directory in the mounted configfs
++directory. configfs can be mounted using the following command.
 +
- 	/* release the firmware resources */
- 	sev_deactivate_handle(kvm);
- 	sev_decommission_handle(kvm);
-@@ -5663,6 +5688,8 @@ static int sev_pre_start(struct kvm *kvm, int *asid)
- 		}
- 		*asid = ret;
- 		ret = 0;
++	mount -t configfs none /sys/kernel/config
 +
-+		INIT_LIST_HEAD(&kvm->arch.sev_info.pinned_memory_slot);
- 	}
- 
- 	return ret;
-@@ -6189,6 +6216,71 @@ static int sev_launch_measure(struct kvm *kvm, struct kvm_sev_cmd *argp)
- 	return ret;
- }
- 
-+static struct kvm_sev_pinned_memory_slot *sev_find_pinned_memory_slot(
-+		struct kvm *kvm, struct kvm_memory_slot *slot)
-+{
-+	struct kvm_sev_pinned_memory_slot *i;
-+	struct list_head *head = &kvm->arch.sev_info.pinned_memory_slot;
++*) Directory Structure
 +
-+	list_for_each_entry(i, head, list) {
-+		if (i->userspace_addr == slot->userspace_addr &&
-+			i->id == slot->id)
-+			return i;
-+	}
++The pci_ep configfs has two directories at its root: controllers and
++functions. Every EPC device present in the system will have an entry in
++the *controllers* directory and and every EPF driver present in the system
++will have an entry in the *functions* directory.
 +
-+	return NULL;
-+}
++/sys/kernel/config/pci_ep/
++	.. controllers/
++	.. functions/
 +
-+static void amd_prepare_memory_region(struct kvm *kvm,
-+				struct kvm_memory_slot *memslot,
-+				const struct kvm_userspace_memory_region *mem,
-+				enum kvm_mr_change change)
-+{
-+	struct kvm_sev_pinned_memory_slot *pinned_slot;
-+	struct list_head *head = &kvm->arch.sev_info.pinned_memory_slot;
++*) Creating EPF Device
 +
-+	mutex_lock(&kvm->lock);
++Every registered EPF driver will be listed in controllers directory. The
++entries corresponding to EPF driver will be created by the EPF core.
 +
-+	if (!sev_guest(kvm))
-+		goto unlock;
++/sys/kernel/config/pci_ep/functions/
++	.. <EPF Driver1>/
++		... <EPF Device 11>/
++		... <EPF Device 21>/
++	.. <EPF Driver2>/
++		... <EPF Device 12>/
++		... <EPF Device 22>/
 +
-+	if (change == KVM_MR_CREATE) {
++In order to create a <EPF device> of the type probed by <EPF Driver>, the
++user has to create a directory inside <EPF DriverN>.
 +
-+		if (!mem->memory_size)
-+			goto unlock;
++Every <EPF device> directory consists of the following entries that can be
++used to configure the standard configuration header of the endpoint function.
++(These entries are created by the framework when any new <EPF Device> is
++created)
 +
-+		pinned_slot = kmalloc(sizeof(*pinned_slot), GFP_KERNEL);
-+		if (pinned_slot == NULL)
-+			goto unlock;
++	.. <EPF Driver1>/
++		... <EPF Device 11>/
++			... vendorid
++			... deviceid
++			... revid
++			... progif_code
++			... subclass_code
++			... baseclass_code
++			... cache_line_size
++			... subsys_vendor_id
++			... subsys_id
++			... interrupt_pin
 +
-+		pinned_slot->pages = sev_pin_memory(mem->userspace_addr,
-+				mem->memory_size, &pinned_slot->npages);
-+		if (pinned_slot->pages == NULL) {
-+			kfree(pinned_slot);
-+			goto unlock;
-+		}
++*) EPC Device
 +
-+		sev_clflush_pages(pinned_slot->pages, pinned_slot->npages);
++Every registered EPC device will be listed in controllers directory. The
++entries corresponding to EPC device will be created by the EPC core.
 +
-+		pinned_slot->id = memslot->id;
-+		pinned_slot->userspace_addr = mem->userspace_addr;
-+		list_add_tail(&pinned_slot->list, head);
++/sys/kernel/config/pci_ep/controllers/
++	.. <EPC Device1>/
++		... <Symlink EPF Device11>/
++		... <Symlink EPF Device12>/
++		... start
++	.. <EPC Device2>/
++		... <Symlink EPF Device21>/
++		... <Symlink EPF Device22>/
++		... start
 +
-+	} else if  (change == KVM_MR_DELETE) {
++The <EPC Device> directory will have a list of symbolic links to
++<EPF Device>. These symbolic links should be created by the user to
++represent the functions present in the endpoint device.
 +
-+		pinned_slot = sev_find_pinned_memory_slot(kvm, memslot);
-+		if (!pinned_slot)
-+			goto unlock;
++The <EPC Device> directory will also have a *start* field. Once
++"1" is written to this field, the endpoint device will be ready to
++establish the link with the host. This is usually done after
++all the EPF devices are created and linked with the EPC device.
 +
-+		sev_unpin_memory(pinned_slot->pages, pinned_slot->npages);
-+		list_del(&pinned_slot->list);
-+		kfree(pinned_slot);
-+	}
 +
-+unlock:
-+	mutex_unlock(&kvm->lock);
-+}
++			 | controllers/
++				| <Directory: EPC name>/
++					| <Symbolic Link: Function>
++					| start
++			 | functions/
++				| <Directory: EPF driver>/
++					| <Directory: EPF device>/
++						| vendorid
++						| deviceid
++						| revid
++						| progif_code
++						| subclass_code
++						| baseclass_code
++						| cache_line_size
++						| subsys_vendor_id
++						| subsys_id
++						| interrupt_pin
++						| function
 +
- static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
- {
- 	int r = -ENOTTY;
-@@ -6355,6 +6447,7 @@ static struct kvm_x86_ops svm_x86_ops __ro_after_init = {
- 	.update_pi_irte = svm_update_pi_irte,
- 
- 	.memory_encryption_op = amd_memory_encryption_cmd,
-+	.prepare_memory_region = amd_prepare_memory_region,
- };
- 
- static int __init svm_init(void)
-diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
-index 6a737e9..e05069d 100644
---- a/arch/x86/kvm/x86.c
-+++ b/arch/x86/kvm/x86.c
-@@ -8195,6 +8195,9 @@ int kvm_arch_prepare_memory_region(struct kvm *kvm,
- 				const struct kvm_userspace_memory_region *mem,
- 				enum kvm_mr_change change)
- {
-+	if (kvm_x86_ops->prepare_memory_region)
-+		kvm_x86_ops->prepare_memory_region(kvm, memslot, mem, change);
-+
- 	return 0;
- }
- 
++[1] -> Documentation/PCI/endpoint/pci-endpoint.txt
+-- 
+1.7.9.5
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
