@@ -1,135 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40640 "EHLO mx2.suse.de"
+Received: from mga14.intel.com ([192.55.52.115]:34486 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755119AbdCGPQH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Mar 2017 10:16:07 -0500
-Date: Tue, 7 Mar 2017 15:59:54 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
-        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
-        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
-        gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
-        akpm@linux-foundation.org, davem@davemloft.net
-Subject: Re: [RFC PATCH v2 08/32] x86: Use PAGE_KERNEL protection for ioremap
- of memory page
-Message-ID: <20170307145954.l2fqy5s5h65wbtyz@pd.tnic>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846761276.2349.4899767672892365544.stgit@brijesh-build-machine>
+        id S1751013AbdCIGcG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Mar 2017 01:32:06 -0500
+From: "You, Lizhen" <lizhen.you@intel.com>
+To: Ilya Lesokhin <ilyal@mellanox.com>,
+        "Song, Jike" <jike.song@intel.com>
+CC: "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "alex.williamson@redhat.com" <alex.williamson@redhat.com>,
+        Noa Osherovich <noaos@mellanox.com>,
+        Haggai Eran <haggaie@mellanox.com>,
+        Or Gerlitz <ogerlitz@mellanox.com>,
+        Liran Liss <liranl@mellanox.com>
+Subject: RE: [PATCH V3 0/3] VFIO SRIOV support
+Date: Thu, 9 Mar 2017 06:29:58 +0000
+Message-ID: <AD4B58344A9BCE45A17661C5F05E0D8938E89E84@shsmsx102.ccr.corp.intel.com>
+References: <1471505357-78110-1-git-send-email-ilyal@mellanox.com>
+ <58BFB2DA.2070306@intel.com>
+ <VI1PR0502MB29572DE43EEBD50B490EFD15D4210@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+In-Reply-To: <VI1PR0502MB29572DE43EEBD50B490EFD15D4210@VI1PR0502MB2957.eurprd05.prod.outlook.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <148846761276.2349.4899767672892365544.stgit@brijesh-build-machine>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 02, 2017 at 10:13:32AM -0500, Brijesh Singh wrote:
-> From: Tom Lendacky <thomas.lendacky@amd.com>
-> 
-> In order for memory pages to be properly mapped when SEV is active, we
-> need to use the PAGE_KERNEL protection attribute as the base protection.
-> This will insure that memory mapping of, e.g. ACPI tables, receives the
-> proper mapping attributes.
-> 
-> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
-> ---
-
-> diff --git a/arch/x86/mm/ioremap.c b/arch/x86/mm/ioremap.c
-> index c400ab5..481c999 100644
-> --- a/arch/x86/mm/ioremap.c
-> +++ b/arch/x86/mm/ioremap.c
-> @@ -151,7 +151,15 @@ static void __iomem *__ioremap_caller(resource_size_t phys_addr,
->                 pcm = new_pcm;
->         }
-> 
-> +       /*
-> +        * If the page being mapped is in memory and SEV is active then
-> +        * make sure the memory encryption attribute is enabled in the
-> +        * resulting mapping.
-> +        */
->         prot = PAGE_KERNEL_IO;
-> +       if (sev_active() && page_is_mem(pfn))
-
-Hmm, a resource tree walk per ioremap call. This could get expensive for
-ioremap-heavy workloads.
-
-__ioremap_caller() gets called here during boot 55 times so not a whole
-lot but I wouldn't be surprised if there were some nasty use cases which
-ioremap a lot.
-
-...
-
-> diff --git a/kernel/resource.c b/kernel/resource.c
-> index 9b5f044..db56ba3 100644
-> --- a/kernel/resource.c
-> +++ b/kernel/resource.c
-> @@ -518,6 +518,46 @@ int __weak page_is_ram(unsigned long pfn)
->  }
->  EXPORT_SYMBOL_GPL(page_is_ram);
->  
-> +/*
-> + * This function returns true if the target memory is marked as
-> + * IORESOURCE_MEM and IORESOUCE_BUSY and described as other than
-> + * IORES_DESC_NONE (e.g. IORES_DESC_ACPI_TABLES).
-> + */
-> +static int walk_mem_range(unsigned long start_pfn, unsigned long nr_pages)
-> +{
-> +	struct resource res;
-> +	unsigned long pfn, end_pfn;
-> +	u64 orig_end;
-> +	int ret = -1;
-> +
-> +	res.start = (u64) start_pfn << PAGE_SHIFT;
-> +	res.end = ((u64)(start_pfn + nr_pages) << PAGE_SHIFT) - 1;
-> +	res.flags = IORESOURCE_MEM | IORESOURCE_BUSY;
-> +	orig_end = res.end;
-> +	while ((res.start < res.end) &&
-> +		(find_next_iomem_res(&res, IORES_DESC_NONE, true) >= 0)) {
-> +		pfn = (res.start + PAGE_SIZE - 1) >> PAGE_SHIFT;
-> +		end_pfn = (res.end + 1) >> PAGE_SHIFT;
-> +		if (end_pfn > pfn)
-> +			ret = (res.desc != IORES_DESC_NONE) ? 1 : 0;
-> +		if (ret)
-> +			break;
-> +		res.start = res.end + 1;
-> +		res.end = orig_end;
-> +	}
-> +	return ret;
-> +}
-
-So the relevant difference between this one and walk_system_ram_range()
-is this:
-
--			ret = (*func)(pfn, end_pfn - pfn, arg);
-+			ret = (res.desc != IORES_DESC_NONE) ? 1 : 0;
-
-so it seems to me you can have your own *func() pointer which does that
-IORES_DESC_NONE comparison. And then you can define your own workhorse
-__walk_memory_range() which gets called by both walk_mem_range() and
-walk_system_ram_range() instead of almost duplicating them.
-
-And looking at walk_system_ram_res(), that one looks similar too except
-the pfn computation. But AFAICT the pfn/end_pfn things are computed from
-res.start and res.end so it looks to me like all those three functions
-are crying for unification...
-
--- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+SGkgSWx5YSwNCg0KV2UnZCBsaWtlIHRvIGdpdmUgaXQgYSB0cnkuIElmIHlvdSBjYW4gc2hhcmUg
+dGhlIGNvZGVzIHRoYXQgd291bGQgYmUgcmVhbGx5IGFwcHJlY2lhdGVkISEgIEFuZCBEbyB5b3Ug
+aGF2ZSBhIGNvcHkgb2YgdGhlIHFlbXUgcmVsYXRlZCBjb2Rlcz8gDQoNClRoYW5rcywNCkxpemhl
+bg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogSWx5YSBMZXNva2hpbiBbbWFp
+bHRvOmlseWFsQG1lbGxhbm94LmNvbV0gDQpTZW50OiBUaHVyc2RheSwgTWFyY2ggOSwgMjAxNyAy
+OjI0IFBNDQpUbzogU29uZywgSmlrZSA8amlrZS5zb25nQGludGVsLmNvbT4NCkNjOiBrdm1Admdl
+ci5rZXJuZWwub3JnOyBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBiaGVsZ2Fhc0Bnb29nbGUu
+Y29tOyBhbGV4LndpbGxpYW1zb25AcmVkaGF0LmNvbTsgTm9hIE9zaGVyb3ZpY2ggPG5vYW9zQG1l
+bGxhbm94LmNvbT47IEhhZ2dhaSBFcmFuIDxoYWdnYWllQG1lbGxhbm94LmNvbT47IE9yIEdlcmxp
+dHogPG9nZXJsaXR6QG1lbGxhbm94LmNvbT47IExpcmFuIExpc3MgPGxpcmFubEBtZWxsYW5veC5j
+b20+OyBZb3UsIExpemhlbiA8bGl6aGVuLnlvdUBpbnRlbC5jb20+DQpTdWJqZWN0OiBSRTogW1BB
+VENIIFYzIDAvM10gVkZJTyBTUklPViBzdXBwb3J0DQoNCkhpIEppa2UsDQpJIGRvbid0IGhhdmUg
+YSBwbGFuIHRvIHdvcmsgb24gaXQgaW4gdGhlIG5lYXIgZnV0dXJlLCBidXQgd2UgY2FuIHNoYXJl
+IHRoZSBjb2RlIGlmIHlvdSBhcmUgaW50ZXJlc3RlZC4NCg0KVGhhbmtzLA0KSWx5YQ0KDQo+IC0t
+LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEppa2UgU29uZyBbbWFpbHRvOmppa2Uu
+c29uZ0BpbnRlbC5jb21dDQo+IFNlbnQ6IFdlZG5lc2RheSwgTWFyY2ggMDgsIDIwMTcgOTozMCBB
+TQ0KPiBUbzogSWx5YSBMZXNva2hpbiA8aWx5YWxAbWVsbGFub3guY29tPg0KPiBDYzoga3ZtQHZn
+ZXIua2VybmVsLm9yZzsgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgDQo+IGJoZWxnYWFzQGdv
+b2dsZS5jb207IGFsZXgud2lsbGlhbXNvbkByZWRoYXQuY29tOyBOb2EgT3NoZXJvdmljaCANCj4g
+PG5vYW9zQG1lbGxhbm94LmNvbT47IEhhZ2dhaSBFcmFuIDxoYWdnYWllQG1lbGxhbm94LmNvbT47
+IE9yIEdlcmxpdHogDQo+IDxvZ2VybGl0ekBtZWxsYW5veC5jb20+OyBMaXJhbiBMaXNzIDxsaXJh
+bmxAbWVsbGFub3guY29tPjsgWW91LCBMaXpoZW4gDQo+IDxsaXpoZW4ueW91QGludGVsLmNvbT4N
+Cj4gU3ViamVjdDogUmU6IFtQQVRDSCBWMyAwLzNdIFZGSU8gU1JJT1Ygc3VwcG9ydA0KPiANCj4g
+T24gMDgvMTgvMjAxNiAwMzoyOSBQTSwgSWx5YSBMZXNva2hpbiB3cm90ZToNCj4gPiBDaGFuZ2Vz
+IGZyb20gVjI6DQo+ID4gICAgICAgICAxLiBFbmFibGluZyBhbmQgZGlzYWJsaW5nIFNSLUlPViBp
+cyBub3cgZG9uZQ0KPiA+ICAgICAgICAgdGhyb3VnaCB0aGUgc3lzZnMgaW50ZXJmYWNlLCByZXF1
+aXJpbmcNCj4gPiAgICAgICAgIGFkbWluIHByaXZpbGVnZXMuDQo+ID4gICAgICAgICAyLiBTaW5j
+ZSBhZG1pbiBwcml2aWxlZ2VzIGFyZSBub3cgcmVxdWlyZWQNCj4gPiAgICAgICAgIHRvIGVuYWJs
+ZSBTUi1JT1YgbW9zdCBvZiB0aGUgdGhlIHNlY3VyaXR5DQo+ID4gICAgICAgICBtZWFzdXJlcyBp
+bnRyb2R1Y2VkIGluIFJGQyBWMiB3ZXJlIHJlbW92ZWQuDQo+ID4gICAgICAgICBVbmZvcnR1bmF0
+ZWx5IHdlIHN0aWxsIG5lZWQgYSBtdXRleCB0byBwcmV2ZW50DQo+ID4gICAgICAgICB0aGUgVkZJ
+TyB1c2VyIGZyb20gY2hhbmdpbmcgdGhlIG51bWJlciBvZg0KPiA+ICAgICAgICAgVkZzIHdoaWxl
+IGVuYWJsZV9zcmlvdiBpcyBpbiBwcm9ncmVzcy4NCj4gPg0KPiA+IENoYW5nZXMgZnJvbSBWMToN
+Cj4gPiAgICAgICAgIDEuIFRoZSBWRiBhcmUgbm8gbG9uZ2VyIGFzc2lnbmVkIHRvIFBGcyBpb21t
+dSBncm91cA0KPiA+ICAgICAgICAgMi4gQWRkIGEgcGNpX2VuYWJsZV9zcmlvdl93aXRoX292ZXJy
+aWRlIEFQSSB0byBhbGxvdw0KPiA+ICAgICAgICAgZW5hYmxpbmQgc3Jpb3Ygd2l0aG91dCBwcm9i
+aW5nIHRoZSBWRnMgd2l0aCB0aGUNCj4gPiAgICAgICAgIGRlZmF1bHQgZHJpdmVyDQo+ID4NCj4g
+PiBDaGFuZ2VzIGZyb20gUkZDIFYyOg0KPiA+ICAgICAgICAgMS4gcGNpX2Rpc2FibGVfc3Jpb3Yo
+KSBpcyBub3cgY2FsbGVkIGZyb20gYSB3b3JrcXVldWUNCj4gPiAgICAgICAgIFRvIGF2b2lkIHRo
+ZSBzaXR1YXRpb24gd2hlcmUgYSBwcm9jZXNzIGlzIGJsb2NrZWQNCj4gPiAgICAgICAgIGluIHBj
+aV9kaXNhYmxlX3NyaW92KCkgd2F0aW5nIGZvciBpdHNlbGYgdG8gcmVsYXNlIHRoZSBWRnMuDQo+
+ID4gICAgICAgICAyLiBhIG11dGV4IHdhcyBhZGRlZCB0byBzeW5jaHJvbml6ZSBjYWxscyB0bw0K
+PiA+ICAgICAgICAgcGNpX2VuYWJsZV9zcmlvdigpIGFuZCBwY2lfZGlzYWJsZV9zcmlvdigpDQo+
+ID4NCj4gPiBDaGFuZ2VzIGZyb20gUkZDIFYxOg0KPiA+ICAgICAgICAgRHVlIHRvIHRoZSBzZWN1
+cml0eSBjb25jZXJuIHJhaXNlZCBpbiBSRkMgVjEsIHdlIGFkZCB0d28gcGF0Y2hlcw0KPiA+ICAg
+ICAgICAgdG8gbWFrZSBzdXJlIHRoZSBWRnMgYmVsb25nIHRvIHRoZSBzYW1lIElPTU1VIGdyb3Vw
+IGFzDQo+ID4gICAgICAgICB0aGUgUEYgYW5kIGFyZSBwcm9iZWQgYnkgVkZJTy4NCj4gPg0KPiA+
+IFRvZGF5IHRoZSBRRU1VIGh5cGVydmlzb3IgYWxsb3dzIGFzc2lnbmluZyBhIHBoeXNpY2FsIGRl
+dmljZSB0byBhIA0KPiA+IFZNLCBmYWNpbGl0YXRpbmcgZHJpdmVyIGRldmVsb3BtZW50LiBIb3dl
+dmVyLCBpdCBkb2VzIG5vdCBzdXBwb3J0IA0KPiA+IGVuYWJsaW5nIFNSLUlPViBieSB0aGUgVk0g
+a2VybmVsIGRyaXZlci4gT3VyIGdvYWwgaXMgdG8gaW1wbGVtZW50IA0KPiA+IHN1Y2ggc3VwcG9y
+dCwgYWxsb3dpbmcgZGV2ZWxvcGVycyB3b3JraW5nIG9uIFNSLUlPViBwaHlzaWNhbCANCj4gPiBm
+dW5jdGlvbiBkcml2ZXJzIHRvIHdvcmsgaW5zaWRlIFZNcyBhcyB3ZWxsLg0KPiA+DQo+ID4gVGhp
+cyBwYXRjaCBzZXJpZXMgaW1wbGVtZW50cyB0aGUga2VybmVsIHNpZGUgb2Ygb3VyIHNvbHV0aW9u
+LiAgSXQgDQo+ID4gZXh0ZW5kcyB0aGUgVkZJTyBkcml2ZXIgdG8gc3VwcG9ydCB0aGUgUENJRSBT
+UklPViBleHRlbmRlZCANCj4gPiBjYXBhYmlsaXR5IHdpdGggZm9sbG93aW5nIGZlYXR1cmVzOg0K
+PiA+IDEuIFRoZSBhYmlsaXR5IHRvIHByb2JlIFNSLUlPViBCQVIgc2l6ZXMuDQo+ID4gMi4gVGhl
+IGFiaWxpdHkgdG8gZW5hYmxlIGFuZCBkaXNhYmxlIFNSLUlPVi4NCj4gPg0KPiA+IFRoaXMgcGF0
+Y2ggc2VyaWVzIGlzIGdvaW5nIHRvIGJlIHVzZWQgYnkgUUVNVSB0byBleHBvc2UgU1ItSU9WIA0K
+PiA+IGNhcGFiaWxpdGllcyB0byBWTS4gV2UgYWxyZWFkeSBoYXZlIGFuIGVhcmx5IHByb3RvdHlw
+ZSBiYXNlZCBvbiBLbnV0IA0KPiA+IE9tYW5nJ3MgcGF0Y2hlcyBmb3IgU1ItSU9WWzFdLg0KPiA+
+DQo+ID4gTGltaXRhdGlvbnM6DQo+ID4gMS4gUGVyIFNSLUlPViBzcGVjIHNlY3Rpb24gMy4zLjEy
+LCBQRnMgYXJlIHJlcXVpcmVkIHRvIHN1cHBvcnQgNC1LQiwgDQo+ID4gOC1LQiwgNjQtS0IsIDI1
+Ni1LQiwgMS1NQiwgYW5kIDQtTUIgcGFnZSBzaXplcy4NCj4gPiBVbmZvdXJ0ZW50bHkgdGhlIGtl
+cm5lbCBjdXJyZW50bHkgaW5pdGlhbGl6ZXMgdGhlIFN5c3RlbSBQYWdlIFNpemUgDQo+ID4gcmVn
+aXN0ZXIgb25jZSBhbmQgYXNzdW1lcyBpdCBkb2Vzbid0IGNoYW5nZSB0aGVyZWZvcmUgd2UgY2Fu
+bm90IA0KPiA+IGFsbG93IGd1ZXN0cyB0byBjaGFuZ2UgdGhpcyByZWdpc3RlciBhdCB3aWxsLiBX
+ZSBjdXJyZW50bHkgbWFwIGJvdGggDQo+ID4gdGhlIFN1cHBvcnRlZCBQYWdlIHNpemVzIGFuZCBT
+eXN0ZW0gUGFnZSBTaXplIGFzIHZpcnR1YWxpemVkIGFuZCANCj4gPiByZWFkIG9ubHkgaW4NCj4g
+dmlvbGF0aW9uIG9mIHRoZSBzcGVjLg0KPiA+IEluIHByYWN0aWNlIHRoaXMgaXMgbm90IGFuIGlz
+c3VlIHNpbmNlIGJvdGggdGhlIGh5cGVydmlzb3IgYW5kIHRoZSANCj4gPiBndWVzdCB0eXBpY2Fs
+bHkgc2VsZWN0IHRoZSBzYW1lIFN5c3RlbSBQYWdlIFNpemUuDQo+ID4NCj4gPiBbMV0gaHR0cHM6
+Ly9naXRodWIuY29tL2tudXRvL3FlbXUvdHJlZS9zcmlvdl9wYXRjaGVzX3Y2DQo+ID4NCj4gPiBJ
+bHlhIExlc29raGluICgzKToNCj4gPiAgIHBjaTogRXh0ZW5kIFBDSSBJT1YgQVBJDQo+ID4gICB2
+ZmlvL3BjaTogQWxsb3cgY29udHJvbCBTUi1JT1YgdGhyb3VnaCBzeXNmcyBpbnRlcmZhY2UNCj4g
+PiAgIHZmaW8vcGNpOiBBZGQgc3VwcG9ydCBmb3IgU1ItSU9WIGV4dGVuZGVkIGNhcGFibGl0eQ0K
+PiA+DQo+ID4gIGRyaXZlcnMvcGNpL2lvdi5jICAgICAgICAgICAgICAgICAgIHwgIDQxICsrKysr
+KysrLS0NCj4gPiAgZHJpdmVycy92ZmlvL3BjaS92ZmlvX3BjaS5jICAgICAgICAgfCAgNDMgKysr
+KysrKystLQ0KPiA+ICBkcml2ZXJzL3ZmaW8vcGNpL3ZmaW9fcGNpX2NvbmZpZy5jICB8IDE1MQ0K
+PiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0tLS0NCj4gPiAgZHJpdmVycy92Zmlv
+L3BjaS92ZmlvX3BjaV9wcml2YXRlLmggfCAgIDIgKw0KPiA+ICBpbmNsdWRlL2xpbnV4L3BjaS5o
+ICAgICAgICAgICAgICAgICB8ICAxMyArKystDQo+ID4gIDUgZmlsZXMgY2hhbmdlZCwgMjE5IGlu
+c2VydGlvbnMoKyksIDMxIGRlbGV0aW9ucygtKQ0KPiA+DQo+IA0KPiArTGl6aGVuDQo+IA0KPiAN
+Cj4gSGkgSWx5YSwNCj4gDQo+IFNvcnJ5IGZvciBqdW1waW5nIGluIGFicnVwdGx5LiBXZSBhcmUg
+YWxzbyBsb29raW5nIGZvcndhcmQgdG8gaGF2ZSBQRiANCj4gdXNlZCB3aXRoaW4gYSBWTSwgd291
+bGQgeW91IHBsZWFzZSBzaGFyZSB5b3VyIG5leHQgcGxhbiB3aXRoIHVzPyANCj4gTGlrZWx5IHRo
+ZXJlIHdpbGwgYmUgYSB2NCBzaG9ydGx5Pw0KPiANCj4gDQo+IC0tDQo+IFRoYW5rcywNCj4gSmlr
+ZQ0K
