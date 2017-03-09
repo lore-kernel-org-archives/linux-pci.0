@@ -1,69 +1,83 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0089.outbound.protection.outlook.com ([104.47.36.89]:45248
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755038AbdC2JsB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Mar 2017 05:48:01 -0400
-From: "Nath, Arindam" <Arindam.Nath@amd.com>
-To: 'Joerg Roedel' <jroedel@suse.de>
-CC: "Deucher, Alexander" <Alexander.Deucher@amd.com>,
-        'Joerg Roedel' <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>,
+        Chris Leech <cleech@redhat.com>
+CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>
-Subject: RE: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
-Date: Wed, 29 Mar 2017 09:47:52 +0000
-Message-ID: <MWHPR12MB1518C2D19EC3E8CF964AB1259C350@MWHPR12MB1518.namprd12.prod.outlook.com>
-References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
- <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328202844.GQ8329@suse.de>
- <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328205616.GR8329@suse.de>
- <BN6PR12MB165289163EA3548B59D0C1ACF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328222627.GS8329@suse.de>
- <MWHPR12MB15181A0AC24BC60C4579742D9C350@MWHPR12MB1518.namprd12.prod.outlook.com>
- <20170329094218.GU8329@suse.de>
-In-Reply-To: <20170329094218.GU8329@suse.de>
-Content-Type: text/plain; charset="us-ascii"
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux1394-devel@lists.sourceforge.net"
+        <linux1394-devel@lists.sourceforge.net>,
+        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+        "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
+        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        "peterz@infradead.org" <peterz@infradead.org>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Subject: RE: [PATCH 22/29] drivers, scsi: convert iscsi_task.refcount from
+ atomic_t to refcount_t
+Date: Thu, 9 Mar 2017 09:26:03 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C56ABF@IRSMSX102.ger.corp.intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-23-git-send-email-elena.reshetova@intel.com>
+ <20170308184740.4gueok5csdkt7u62@straylight.hirudinean.org>
+ <2236FBA76BA1254E88B949DDB74E612B41C569DC@IRSMSX102.ger.corp.intel.com>
+ <5a1f7860-b650-9fe7-fafb-1f0c7cae00e7@suse.de>
+In-Reply-To: <5a1f7860-b650-9fe7-fafb-1f0c7cae00e7@suse.de>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
->-----Original Message-----
->From: 'Joerg Roedel' [mailto:jroedel@suse.de]
->Sent: Wednesday, March 29, 2017 3:12 PM
->To: Nath, Arindam
->Cc: Deucher, Alexander; 'Joerg Roedel'; Bjorn Helgaas; linux-
->pci@vger.kernel.org; linux-kernel@vger.kernel.org; Daniel Drake
->Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
->
->Hi Arindam,
->
->On Wed, Mar 29, 2017 at 07:15:42AM +0000, Nath, Arindam wrote:
->> Joerg, as per my limited understanding of ATS, the ATC will respond to
->> invalidation requests after making sure there are no in-flight DMA
->> transactions with the address requested by IOMMU to be invalidated.
->> Now since the IOMMU was sending invalidate command to GPU even
->though
->> there was no explicit page unmapping request from the graphics
->> subsystem, we _might_ end up in a situation where the ATC takes longer
->> than the invalidation timeout to respond to IOMMU.
->
->The maximum wait-time in the loop is 100ms. This should be more than
->enough for the ATC to complete any in-flight transaction and flush its
->internal TLB.
->
->If that is not enough, there is almost certainly something wrong with
->the hardware.
 
-Actually what you said is correct. Before creating the patch, I had experim=
-ented with 1s and 10s invalidation timeout values, but none of them helped.
+> On 03/09/2017 08:18 AM, Reshetova, Elena wrote:
+> >> On Mon, Mar 06, 2017 at 04:21:09PM +0200, Elena Reshetova wrote:
+> >>> refcount_t type and corresponding API should be
+> >>> used instead of atomic_t when the variable is used as
+> >>> a reference counter. This allows to avoid accidental
+> >>> refcounter overflows that might lead to use-after-free
+> >>> situations.
+> >>>
+> >>> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> >>> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> >>> Signed-off-by: Kees Cook <keescook@chromium.org>
+> >>> Signed-off-by: David Windsor <dwindsor@gmail.com>
+> >>
+> >> This looks OK to me.
+> >>
+> >> Acked-by: Chris Leech <cleech@redhat.com>
+> >
+> > Thank you for review! Do you have a tree that can take this change?
+> 
+> Hi Elena,
+> 
+> iscsi like fcoe should go via the SCSI tree.
 
-Thanks,
-Arindam
+Thanks Johannes! Should I resend with "Acked-by" added in order for it to be picked up? 
 
->
->
->
->	Joerg
+Best Regards,
+Elena.
+
+
+> 
+> Byte,
+> 	Johannes
+> 
+> --
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+> GF: Felix Imendörffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG Nürnberg)
+> Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
