@@ -1,79 +1,96 @@
-Return-Path: <SRS0=CwFM=25=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=CwFM=25=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V4 0/3] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1489438085-2055-1-git-send-email-okaya@codeaurora.org>
- <20170313214616.GE8232@bhelgaas-glaptop.roam.corp.google.com>
- <c6b78903-ea09-9719-7073-c679b0b64a05@codeaurora.org>
- <20170313230855.GG8232@bhelgaas-glaptop.roam.corp.google.com>
- <b44fa6b3-7db5-bea4-7f2e-7f880362d171@codeaurora.org>
- <20170314192138.GA26264@bhelgaas-glaptop.roam.corp.google.com>
- <8fa282de-9896-0e2a-01cb-7146817268e6@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-arm-msm@vger.kernel.org, mayurkumar.patel@intel.com,
- linux-arm-kernel@lists.infradead.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <5049bf09-6283-b617-2c21-acf56a1faab3@codeaurora.org>
-Date: Mon, 20 Mar 2017 13:43:52 -0400
-MIME-Version: 1.0
-In-Reply-To: <8fa282de-9896-0e2a-01cb-7146817268e6@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V9 04/11] of: dma: Make of_dma_deconfigure() public
+Date: Fri, 10 Mar 2017 00:30:54 +0530
+Message-Id: <1489086061-9356-5-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
-On 3/15/2017 10:33 AM, Sinan Kaya wrote:
-> On 3/14/2017 3:21 PM, Bjorn Helgaas wrote:
->> On Mon, Mar 13, 2017 at 07:21:42PM -0400, Sinan Kaya wrote:
->>> On 3/13/2017 7:08 PM, Bjorn Helgaas wrote:
->>>> On Mon, Mar 13, 2017 at 06:05:55PM -0400, Sinan Kaya wrote:
->>>>> On 3/13/2017 5:46 PM, Bjorn Helgaas wrote:
->>>>>> What is this series based on?  Unless they depend on other in-flight
->>>>>> patches, I apply patches to branches based on my "master" branch,
->>>>>> which is typically -rc1 or -rc2 (it's currently v4.11-rc1).  These
->>>>>> don't apply to either.
->>>>>
->>>>> It looks like I am on 4.10. I can rebase and post again. 
->>>>
->>>> Rebasing would be good, but I can give you some comments on your v4,
->>>> now that I can apply it and see what it looks like.
->>>>
->>>
->>> Thanks, 
->>>
->>> I'm mostly done with the rebase. I'll have to retest tomorrow morning and
->>> then post.
->>>
->>> I had to drop this
->>>
->>>    - for endpoints, have pcie_aspm_init_link_state() do the actual ASPM
->>>       setup of the link as it currently does.
->>>
->>> during rebase.
->>>
->>> The reason is that the clock configuration needs to switch to common clock
->>> mode across all the devices before any ASPM latency is read/configured.
->>>
->>> Common clock configuration seem to be trying to walk the device list.
->>>
->>> Here is the untested version. It might not even compile.
->>> I'll wait until I receive your comments.
->>
->> I had already started looking at v4, so these comments are based on
->> that.  Your v4 is a great start and these are all general comments so
->> I didn't try to match each one up with the code.
->>
->>   - Goal: retain BIOS ASPM config of bridge even if children are
->>     removed and re-added.  Is there a bugzilla for this problem?
-> 
+As part of moving DMA initializing to probe time the
+of_dma_deconfigure() function will need to be called from different
+source files. Make it public and move it to drivers/of/device.c where
+the of_dma_configure() function is.
 
-Is there a common place to add code after the bus scan similar to pci_init_capabilities(). 
-I really don't like the ASPM call in the middle of scan function.
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+---
+ drivers/of/device.c       | 12 ++++++++++++
+ drivers/of/platform.c     |  5 -----
+ include/linux/of_device.h |  3 +++
+ 3 files changed, 15 insertions(+), 5 deletions(-)
 
-Sinan
-
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index 09dedd0..c17c19d 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -136,6 +136,18 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+ }
+ EXPORT_SYMBOL_GPL(of_dma_configure);
+ 
++/**
++ * of_dma_deconfigure - Clean up DMA configuration
++ * @dev:	Device for which to clean up DMA configuration
++ *
++ * Clean up all configuration performed by of_dma_configure_ops() and free all
++ * resources that have been allocated.
++ */
++void of_dma_deconfigure(struct device *dev)
++{
++	arch_teardown_dma_ops(dev);
++}
++
+ int of_device_register(struct platform_device *pdev)
+ {
+ 	device_initialize(&pdev->dev);
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index 5dfcc96..5344db5 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -158,11 +158,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
+ }
+ EXPORT_SYMBOL(of_device_alloc);
+ 
+-static void of_dma_deconfigure(struct device *dev)
+-{
+-	arch_teardown_dma_ops(dev);
+-}
+-
+ /**
+  * of_platform_device_create_pdata - Alloc, initialize and register an of_device
+  * @np: pointer to node to create device for
+diff --git a/include/linux/of_device.h b/include/linux/of_device.h
+index c12dace..af98455 100644
+--- a/include/linux/of_device.h
++++ b/include/linux/of_device.h
+@@ -56,6 +56,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+ }
+ 
+ void of_dma_configure(struct device *dev, struct device_node *np);
++void of_dma_deconfigure(struct device *dev);
+ #else /* CONFIG_OF */
+ 
+ static inline int of_driver_match_device(struct device *dev,
+@@ -105,6 +106,8 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+ }
+ static inline void of_dma_configure(struct device *dev, struct device_node *np)
+ {}
++static inline void of_dma_deconfigure(struct device *dev)
++{}
+ #endif /* CONFIG_OF */
+ 
+ #endif /* _LINUX_OF_DEVICE_H */
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
