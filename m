@@ -1,71 +1,100 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60164 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751792AbdCUGLT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 21 Mar 2017 02:11:19 -0400
-Date: Tue, 21 Mar 2017 00:01:58 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: Bodong Wang <bodong@mellanox.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        saeedm@mellanox.com, Eli Cohen <eli@mellanox.com>
-Subject: Re: [PATCH] pci/sriov: Add an option to probe VFs or not before
- enabling SR-IOV
-Message-ID: <20170321000158.444991a3@t450s.home>
-In-Reply-To: <20170321054305.GA12230@gwshan>
-References: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
-        <20170320230706.GA12252@gwshan>
-        <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
-        <20170320225708.6868676a@t450s.home>
-        <20170321054305.GA12230@gwshan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V9 03/11] of: dma: Move range size workaround to of_dma_get_range()
+Date: Fri, 10 Mar 2017 00:30:53 +0530
+Message-Id: <1489086061-9356-4-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 21 Mar 2017 16:43:05 +1100
-Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
-> On Mon, Mar 20, 2017 at 10:57:08PM -0600, Alex Williamson wrote:
-> >On Mon, 20 Mar 2017 18:34:23 -0500
-> >Bodong Wang <bodong@mellanox.com> wrote:  
-> 
-> .../...
-> 
-> >> > Bodong, I'm not sure if there is a requirement to load driver for the
-> >> > specified number of VFs? That indicates no driver will be loaded for
-> >> > other VFs. If so, this interface might serve the purpose as well.    
-> >> Gavin, thanks for the review. That is indeed an interesting suggestion. 
-> >> Theoretically,  we can change that probe_vfs from boolean to integer. 
-> >> And use it as a counter to probe the first N VFs(if N < total_vfs).  
-> >> Let's see if there are any objections.  
-> >
-> >Is it just me or does this seem like a confusing user interface, ie. to
-> >get binary on/off behavior a user now needs to 'cat total_vfs >
-> >sriov_probe_vfs'.  It's not very intuitive, what's the use case for it?
-> >  
-> 
-> After it's changed to integer, it accepts number. If users want to load
-> driver for all VFs and don't want to check the maximal number of VFs,
-> they can simply write 0xffffffff. So "on" and "off" are replaced with 0xffffffff
-> and 0, but users has to press the keyboard more times though.
-> 
-> drivers/net/ethernet/mellanox/mlx4/main.c::probe_vfs_argc allows to specify
-> the number of VFs with which we're going to bind drivers. Less time is needed
-> to enable SRIOV capability. As I had in some development environment: assume
-> PF supports 256 VFs and I'm going to enable all of them, but I only want to
-> load driver for two of them, then test the data path on those two VFs. Besides,
-> I can image the VF needn't a driver in host if it's going to be passed to guest. 
-> Not sure how much sense it makes.
+Invalid dma-ranges values should be worked around when retrieving the
+DMA range in of_dma_get_range(), not by all callers of the function.
+This isn't much of a problem now that we have a single caller, but that
+situation will change when moving DMA configuration to device probe
+time.
 
-Yes, I understand what you're trying to do, but I still think it's
-confusing for a user interface.  This also doesn't answer what's the
-practical, typical user case you see where it's useful to probe some
-VFs but not others.  The case listed is a development case where you
-could just as easily disable all probing, then manually bind the first
-two VFs to the host driver.  Which is the better design, impose a
-confusing interface on all users to simplify an obscure development
-environment or simplify the user interface and assume developers know
-how to bind devices otherwise?  Thanks,
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+---
+ drivers/of/address.c | 20 ++++++++++++++++++--
+ drivers/of/device.c  | 15 ---------------
+ 2 files changed, 18 insertions(+), 17 deletions(-)
 
-Alex
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 02b2903..6aeb816 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -819,8 +819,8 @@ void __iomem *of_io_request_and_map(struct device_node *np, int index,
+  *	CPU addr (phys_addr_t)	: pna cells
+  *	size			: nsize cells
+  *
+- * It returns -ENODEV if "dma-ranges" property was not found
+- * for this device in DT.
++ * Return 0 on success, -ENODEV if the "dma-ranges" property was not found for
++ * this device in DT, or -EINVAL if the CPU address or size is invalid.
+  */
+ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *size)
+ {
+@@ -880,6 +880,22 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
+ 	*dma_addr = dmaaddr;
+ 
+ 	*size = of_read_number(ranges + naddr + pna, nsize);
++	/*
++	 * DT nodes sometimes incorrectly set the size as a mask. Work around
++	 * those incorrect DT by computing the size as mask + 1.
++	 */
++	if (*size & 1) {
++		pr_warn("%s: size 0x%llx for dma-range in node(%s) set as mask\n",
++			__func__, *size, np->full_name);
++		*size = *size + 1;
++	}
++
++	if (!*size) {
++		pr_err("%s: invalid size zero for dma-range in node(%s)\n",
++		       __func__, np->full_name);
++		ret = -EINVAL;
++		goto out;
++	}
+ 
+ 	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
+ 		 *dma_addr, *paddr, *size);
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index b1e6beb..09dedd0 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -110,21 +110,6 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+ 		size = dev->coherent_dma_mask + 1;
+ 	} else {
+ 		offset = PFN_DOWN(paddr - dma_addr);
+-
+-		/*
+-		 * Add a work around to treat the size as mask + 1 in case
+-		 * it is defined in DT as a mask.
+-		 */
+-		if (size & 1) {
+-			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
+-				 size);
+-			size = size + 1;
+-		}
+-
+-		if (!size) {
+-			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
+-			return;
+-		}
+ 		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+ 	}
+ 
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
