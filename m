@@ -1,69 +1,87 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Joerg Roedel <joro@8bytes.org>,
-	Robin Murphy <robin.murphy@arm.com>
-Subject: [RFC PATCH 3/3] of: fix node traversing in of_dma_get_range
-Date: Sat, 25 Mar 2017 11:01:33 +0530
-Message-Id: <1490419893-5073-3-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
-References: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
- bcm-kernel-feedback-list@broadcom.com, Oza Pawandeep <oza.oza@broadcom.com>,
- linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:54678 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932790AbdCITCu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2017 14:02:50 -0500
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V9 11/11] ACPI/IORT: Remove linker section for IORT entries probing
+Date: Fri, 10 Mar 2017 00:31:01 +0530
+Message-Id: <1489086061-9356-12-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-it jumps to the parent node without examining the child node.
-also with that, it throws "no dma-ranges found for node"
-for pci dma-ranges.
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 
-this patch fixes device node traversing for dma-ranges.
+The IORT linker section introduced by commit 34ceea275f62
+("ACPI/IORT: Introduce linker section for IORT entries probing")
+was needed to make sure SMMU drivers are registered (and therefore
+probed) in the kernel before devices using the SMMU have a chance
+to probe in turn.
 
-Reviewed-by: Anup Patel <anup.patel@broadcom.com>
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+Through the introduction of deferred IOMMU configuration the linker
+section based IORT probing infrastructure is not needed any longer, in
+that device/SMMU probe dependencies are managed through the probe
+deferral mechanism, making the IORT linker section infrastructure
+unused, so that it can be removed.
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 02b2903..3293d55 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -836,9 +836,6 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
- 	while (1) {
- 		naddr = of_n_addr_cells(node);
- 		nsize = of_n_size_cells(node);
--		node = of_get_next_parent(node);
--		if (!node)
--			break;
- 
- 		ranges = of_get_property(node, "dma-ranges", &len);
- 
-@@ -852,6 +849,10 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
- 		 */
- 		if (!ranges)
- 			break;
-+
-+		node = of_get_next_parent(node);
-+		if (!node)
-+			break;
+Remove the unused IORT linker section probing infrastructure
+from the kernel to complete the ACPI IORT IOMMU configure probe
+deferral mechanism implementation.
+
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: Sricharan R <sricharan@codeaurora.org>
+---
+ drivers/acpi/arm64/iort.c         | 2 --
+ include/asm-generic/vmlinux.lds.h | 1 -
+ include/linux/acpi_iort.h         | 3 ---
+ 3 files changed, 6 deletions(-)
+
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index a1000fb..36a9abf 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -992,6 +992,4 @@ void __init acpi_iort_init(void)
  	}
  
- 	if (!ranges) {
+ 	iort_init_platform_devices();
+-
+-	acpi_probe_device_table(iort);
+ }
+diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+index 0968d13..9faa26c 100644
+--- a/include/asm-generic/vmlinux.lds.h
++++ b/include/asm-generic/vmlinux.lds.h
+@@ -566,7 +566,6 @@
+ 	IRQCHIP_OF_MATCH_TABLE()					\
+ 	ACPI_PROBE_TABLE(irqchip)					\
+ 	ACPI_PROBE_TABLE(clksrc)					\
+-	ACPI_PROBE_TABLE(iort)						\
+ 	EARLYCON_TABLE()
+ 
+ #define INIT_TEXT							\
+diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
+index 77e0809..f167e1d04 100644
+--- a/include/linux/acpi_iort.h
++++ b/include/linux/acpi_iort.h
+@@ -52,7 +52,4 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+ { return NULL; }
+ #endif
+ 
+-#define IORT_ACPI_DECLARE(name, table_id, fn)		\
+-	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
+-
+ #endif /* __ACPI_IORT_H__ */
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
