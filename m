@@ -1,202 +1,115 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
-        <rjw@rjwysocki.net>, <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <linux-acpi@vger.kernel.org>, <lorenzo.pieralisi@arm.com>,
-        <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-serial@vger.kernel.org>,
-        <minyard@acm.org>, <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
-        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
-        <xuwei5@hisilicon.com>,
-        "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Subject: [PATCH V7 3/7] OF: Add missing I/O range exception for indirect-IO   devices
-Date: Mon, 13 Mar 2017 10:42:39 +0800
-Message-ID: <1489372963-9000-4-git-send-email-yuanzhichang@hisilicon.com>
-In-Reply-To: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
-References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34285 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754747AbdCIPNM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2017 10:13:12 -0500
+Received: by mail-wm0-f67.google.com with SMTP id u132so11415009wmg.1
+        for <linux-pci@vger.kernel.org>; Thu, 09 Mar 2017 07:13:06 -0800 (PST)
+Date: Thu, 9 Mar 2017 16:03:47 +0100
+From: Daniel Vetter <daniel@ffwll.ch>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: dri-devel@lists.freedesktop.org,
+        Michael Jamet <michael.jamet@intel.com>,
+        linux-pci@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Ben Skeggs <bskeggs@redhat.com>, nouveau@lists.freedesktop.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Darren Hart <dvhart@infradead.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Christian Koenig <christian.koenig@amd.com>,
+        Andy Shevchenko <andy@infradead.org>,
+        Peter Wu <peter@lekensteyn.nl>
+Subject: Re: [PATCH 0/5] Thunderbolt GPU fixes
+Message-ID: <20170309150347.a4k4w2sclox2365t@phenom.ffwll.local>
+References: <cover.1487938188.git.lukas@wunner.de>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <cover.1487938188.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are some special ISA/LPC devices that work on a specific I/O range where
-it is not correct to specify a 'ranges' property in DTS parent node as cpu
-addresses translated from DTS node are only for memory space on some
-architectures, such as Arm64. Without the parent 'ranges' property, current
-of_translate_address() return an error.
-Here we add special handlings for this case.
-During the OF address translation, some checkings will be perfromed to
-identify whether the device node is registered as indirect-IO. If yes, the I/O
-translation will be done in a different way from that one of PCI MMIO.
-In this way, the I/O 'reg' property of the special ISA/LPC devices will be
-parsed correctly.
+On Fri, Feb 24, 2017 at 08:19:45PM +0100, Lukas Wunner wrote:
+> Fix Thunderbolt-related issues in apple-gmux and vga_switcheroo:
+> 
+> Patch [1/5] ("Recognize Thunderbolt devices") has already been subjected
+> to a fair amount of scrutiny over at linux-pci@, I've submitted it 5 times
+> total since May 2016.  With luck it may be in ack-able shape now.
+> 
+> Patch [2/5] amends apple-gmux to handle combined DP/Thunderbolt ports
+> properly on newer MacBook Pros.
+> 
+> Patches [3/5] to [5/5] avoid registering external Thunderbolt GPUs with
+> vga_switcheroo:  Dave Airlie designed vga_switcheroo to register GPUs
+> unconditionally.  So if a desktop box has multiple GPUs, vga_switcheroo
+> will see more than one discrete GPU but that's not a problem because on
+> desktop boxes no handler is registered and thus vga_switcheroo_enable()
+> is never called.  Hybrid graphics laptops on the other hand do register
+> a handler, but are assumed to never register more than one discrete GPU.
+> However once a Thunderbolt eGPU is attached to a hybrid graphics laptop,
+> that assumption is no longer true and things go south when vga_switcheroo
+> runtime suspends the external discrete GPU and then calls the handler to
+> cut power to the internal discrete GPU.  The driver for the internal GPU
+> will sit there puzzled and typically cause a lockup.
+> 
+> This series is just a first step towards proper handling of eGPUs, another
+> will be support for surprise removal:  DRM drivers need to cease MMIO and
+> PCI config space access once a device is gone to avoid delaying device
+> teardown or accessing a newly attached replacement device.  Also, MMIO
+> reads to removed devices return "all ones", which results in an infinite
+> loop e.g. in nouveau's nvkm_nsec().
+> 
+> The question is how to recognize device removal.  One common method is to
+> read the vendor register with pci_device_is_present(), but this reports
+> a false positive if the device is present but in D3cold.  A better method
+> is to let the PCIe hotplug driver recognize and cache device removal.
+> Keith Busch has developed patches which do exactly that, they're now at
+> v6 and fully reviewed by Christoph Hellwig but alas were not included in
+> the 4.11 PCI pull for some reason:
+> http://www.spinics.net/lists/linux-pci/msg58123.html
+> 
+> I've pushed the present series to GitHub in case anyone prefers reviewing
+> it in a GUI:
+> https://github.com/l1k/linux/commits/thunderbolt_gpu_v1
 
-Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>    #earlier draft
-Acked-by: Rob Herring <robh@kernel.org>
----
- drivers/of/address.c | 90 ++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 74 insertions(+), 16 deletions(-)
+For merging, should I smash this all into drm-misc? The only thing outside
+is the apple-gmux driver ...
+-Daniel
 
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index fb5d16a..676e474 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -551,9 +551,14 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
-  * that translation is impossible (that is we are not dealing with a value
-  * that can be mapped to a cpu physical address). This is not really specified
-  * that way, but this is traditionally the way IBM at least do things
-+ *
-+ * Whenever the translation fails, the *host pointer will be set to the
-+ * device that had registered logical PIO mapping, and the return code is relative to
-+ * that node.
-  */
- static u64 __of_translate_address(struct device_node *dev,
--				  const __be32 *in_addr, const char *rprop)
-+				  const __be32 *in_addr, const char *rprop,
-+				  struct device_node **host)
- {
- 	struct device_node *parent = NULL;
- 	struct of_bus *bus, *pbus;
-@@ -566,6 +571,7 @@ static u64 __of_translate_address(struct device_node *dev,
- 	/* Increase refcount at current level */
- 	of_node_get(dev);
- 
-+	*host = NULL;
- 	/* Get parent & match bus type */
- 	parent = of_get_parent(dev);
- 	if (parent == NULL)
-@@ -586,6 +592,8 @@ static u64 __of_translate_address(struct device_node *dev,
- 
- 	/* Translate */
- 	for (;;) {
-+		struct libio_range *iorange;
-+
- 		/* Switch to parent bus */
- 		of_node_put(dev);
- 		dev = parent;
-@@ -598,6 +606,19 @@ static u64 __of_translate_address(struct device_node *dev,
- 			break;
- 		}
- 
-+		/*
-+		 * For indirectIO device which has no ranges property, get
-+		 * the address from reg directly.
-+		 */
-+		iorange = find_io_range_from_fwnode(&dev->fwnode);
-+		if (iorange && !(iorange->flags & IO_CPU_MMIO)) {
-+			result = of_read_number(addr + 1, na - 1);
-+			pr_debug("indirectIO matched(%s) 0x%llx\n",
-+					of_node_full_name(dev), result);
-+			*host = of_node_get(dev);
-+			break;
-+		}
-+
- 		/* Get new parent bus and counts */
- 		pbus = of_match_bus(parent);
- 		pbus->count_cells(dev, &pna, &pns);
-@@ -630,13 +651,32 @@ static u64 __of_translate_address(struct device_node *dev,
- 
- u64 of_translate_address(struct device_node *dev, const __be32 *in_addr)
- {
--	return __of_translate_address(dev, in_addr, "ranges");
-+	struct device_node *host;
-+	u64 ret;
-+
-+	ret =  __of_translate_address(dev, in_addr, "ranges", &host);
-+	if (host) {
-+		of_node_put(host);
-+		return OF_BAD_ADDR;
-+	}
-+
-+	return ret;
- }
- EXPORT_SYMBOL(of_translate_address);
- 
- u64 of_translate_dma_address(struct device_node *dev, const __be32 *in_addr)
- {
--	return __of_translate_address(dev, in_addr, "dma-ranges");
-+	struct device_node *host;
-+	u64 ret;
-+
-+	ret = __of_translate_address(dev, in_addr, "dma-ranges", &host);
-+
-+	if (host) {
-+		of_node_put(host);
-+		return OF_BAD_ADDR;
-+	}
-+
-+	return ret;
- }
- EXPORT_SYMBOL(of_translate_dma_address);
- 
-@@ -678,29 +718,47 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
- }
- EXPORT_SYMBOL(of_get_address);
- 
-+static u64 of_translate_ioport(struct device_node *dev, const __be32 *in_addr)
-+{
-+	u64 taddr;
-+	unsigned long port;
-+	struct device_node *host;
-+
-+	taddr = __of_translate_address(dev, in_addr, "ranges", &host);
-+	if (host) {
-+		/* host specific port access */
-+		port = libio_translate_hwaddr(&host->fwnode, taddr);
-+		of_node_put(host);
-+	} else {
-+		/* memory mapped I/O range */
-+		port = pci_address_to_pio(taddr);
-+	}
-+
-+	if (port == (unsigned long)-1)
-+		return OF_BAD_ADDR;
-+
-+	return port;
-+}
-+
- static int __of_address_to_resource(struct device_node *dev,
- 		const __be32 *addrp, u64 size, unsigned int flags,
- 		const char *name, struct resource *r)
- {
- 	u64 taddr;
- 
--	if ((flags & (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
-+	if (flags & IORESOURCE_MEM)
-+		taddr = of_translate_address(dev, addrp);
-+	else if (flags & IORESOURCE_IO)
-+		taddr = of_translate_ioport(dev, addrp);
-+	else
- 		return -EINVAL;
--	taddr = of_translate_address(dev, addrp);
-+
- 	if (taddr == OF_BAD_ADDR)
- 		return -EINVAL;
- 	memset(r, 0, sizeof(struct resource));
--	if (flags & IORESOURCE_IO) {
--		unsigned long port;
--		port = pci_address_to_pio(taddr);
--		if (port == (unsigned long)-1)
--			return -EINVAL;
--		r->start = port;
--		r->end = port + size - 1;
--	} else {
--		r->start = taddr;
--		r->end = taddr + size - 1;
--	}
-+
-+	r->start = taddr;
-+	r->end = taddr + size - 1;
- 	r->flags = flags;
- 	r->name = name ? name : dev->full_name;
- 
+
+> 
+> Thanks,
+> 
+> Lukas
+> 
+> 
+> Lukas Wunner (5):
+>   PCI: Recognize Thunderbolt devices
+>   apple-gmux: Don't switch external DP port on 2011+ MacBook Pros
+>   drm/nouveau: Don't register Thunderbolt eGPU with vga_switcheroo
+>   drm/radeon: Don't register Thunderbolt eGPU with vga_switcheroo
+>   drm/amdgpu: Don't register Thunderbolt eGPU with vga_switcheroo
+> 
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  7 +++++--
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_kms.c    |  3 ++-
+>  drivers/gpu/drm/nouveau/nouveau_vga.c      | 10 +++++++++-
+>  drivers/gpu/drm/radeon/radeon_device.c     |  7 +++++--
+>  drivers/gpu/drm/radeon/radeon_kms.c        |  3 ++-
+>  drivers/pci/pci.h                          |  2 ++
+>  drivers/pci/probe.c                        | 21 ++++++++++++++++++++
+>  drivers/platform/x86/apple-gmux.c          | 31 +++++++++++++++++++++++++++++-
+>  include/linux/pci.h                        | 23 ++++++++++++++++++++++
+>  9 files changed, 99 insertions(+), 8 deletions(-)
+> 
+> -- 
+> 2.11.0
+> 
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+
 -- 
-1.9.1
-
+Daniel Vetter
+Software Engineer, Intel Corporation
+http://blog.ffwll.ch
