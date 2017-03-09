@@ -1,130 +1,164 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V8 01/11] iommu/of: Refactor of_iommu_configure() for
- error handling
-To: sricharan <sricharan@codeaurora.org>,
- 'Jean-Philippe Brucker' <jean-philippe.brucker@arm.com>,
- will.deacon@arm.com, joro@8bytes.org, lorenzo.pieralisi@arm.com,
- iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
- <1486136933-20328-2-git-send-email-sricharan@codeaurora.org>
- <8701bfbe-e52e-0e26-2a71-f5f81684de70@arm.com>
- <76844d3e-ae7a-5113-1a76-18312e9f51ce@arm.com>
- <1cba01d298ba$ee931000$cbb93000$@codeaurora.org>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <ee887c44-b3c3-f9e3-8e94-1619bf34dd5b@arm.com>
-Date: Thu, 9 Mar 2017 11:21:05 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:37276 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753747AbdCIWgT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Mar 2017 17:36:19 -0500
+Date: Thu, 9 Mar 2017 16:27:51 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+        linux-arm-msm@vger.kernel.org,
+        Mayurkumar Patel <mayurkumar.patel@intel.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH V3] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+Message-ID: <20170309222751.GD19517@bhelgaas-glaptop.roam.corp.google.com>
+References: <1489005551-23598-1-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <1cba01d298ba$ee931000$cbb93000$@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1489005551-23598-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 09/03/17 09:52, sricharan wrote:
-> Hi Robin,
-> 
->> On 08/03/17 18:58, Jean-Philippe Brucker wrote:
->> [...]
->>>>  static const struct iommu_ops
->>>> -*of_pci_iommu_configure(struct pci_dev *pdev, struct device_node
->>>> *bridge_np)
->>>> +*of_pci_iommu_init(struct pci_dev *pdev, struct device_node
->>>> +*bridge_np)
->>>>  {
->>>>  	const struct iommu_ops *ops;
->>>>  	struct of_phandle_args iommu_spec;
->>>> +	int err;
->>>>
->>>>  	/*
->>>>  	 * Start by tracing the RID alias down the PCI topology as @@
->>>> -123,56 +146,56 @@ static int __get_pci_rid(struct pci_dev *pdev, u16
->> alias, void *data)
->>>>  	 * bus into the system beyond, and which IOMMU it ends up at.
->>>>  	 */
->>>>  	iommu_spec.np = NULL;
->>>> -	if (of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
->>>> -			   "iommu-map-mask", &iommu_spec.np,
->> iommu_spec.args))
->>>> -		return NULL;
->>>> +	err = of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
->>>> +			     "iommu-map-mask", &iommu_spec.np,
->>>> +			     iommu_spec.args);
->>>> +	if (err)
->>>> +		return ERR_PTR(err);
->>>
->>> This change doesn't work with of_pci_map_rid when the PCI RC isn't
->>> behind an IOMMU:
->>>
->>>         map = of_get_property(np, map_name, &map_len);
->>>         if (!map) {
->>>                 if (target)
->>>                         return -ENODEV;
->>>                 /* Otherwise, no map implies no translation */
->>>                 *id_out = rid;
->>>                 return 0;
->>>         }
->>>
->>> Previously with no iommu-map, we returned -ENODEV but it was discarded
->>> by of_pci_iommu_configure. Now it is propagated and the whole device
->>> probing fails. Instead, maybe of_pci_map_rid should always return 0 if
->>> no iommu-map, and the caller should check if *target is still NULL?
->>
->> Ah yes, Tomasz had found breakages with the "mmu-masters" binding
->> before, and I'd already pushed out a fixup for this one[1], but I forgot
-> that
->> that discussion was all off-list (out of diplomatic concern that the
-> breakage
->> might have been intentional - it wasn't, honest!)
->>
->> Now that rc1 is out I should re-do that branch with v8 of this series plus
-> the
->> fixups folded in, unless Sricharan beats me to it.
->>
-> 
-> Right, I had this one [1] as V9 which had all your fixes that we discussed
-> offline as
-> well.  I was about to post a V9 today on top of -rc1 today as well.
-> 
-> [1] https://github.com/sricharanaz/iommu/tree/pd_v9
+Hi Sinan,
 
-Awesome, I'll try to get on with testing that ASAP. Thanks!
-
-Robin.
-
+On Wed, Mar 08, 2017 at 03:39:11PM -0500, Sinan Kaya wrote:
+> When the operating system is booted with the default ASPM policy
+> (POLICY_DEFAULT), current code is querying the enable/disable
+> states from ASPM registers to determine the policy.
 > 
-> Regards,
->  Sricharan
+> For example, a BIOS could set the power saving state to performance
+> and clear all ASPM control registers. A balanced ASPM policy could
+> enable L0s and disable L1. A power conscious BIOS could enable both
+> L0s and L1 to trade off latency and performance vs. power.
 > 
+> After hotplug removal, pcie_aspm_exit_link_state() function clears
+> the ASPM registers. An insertion following hotplug removal reads
+> incorrect policy as ASPM disabled even though ASPM was enabled
+> during boot.
 > 
->> Thanks for the reminder,
->> Robin.
->>
->> [1]:http://www.linux-arm.org/git?p=linux-
->> rm.git;a=commitdiff;h=0049a34e523506813995c05766f5e2c16d616354
->>
->>>
->>> Thanks,
->>> Jean-Philippe
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
->> the body of a message to majordomo@vger.kernel.org More majordomo info
->> at  http://vger.kernel.org/majordomo-info.html
+> This is caused by the fact that same function is used for reconfiguring
+> ASPM regardless of the of the power on state.
 > 
+> This patch builds some state info into pcie_aspm_cap_init() function.
+> 
+> Adding a flag and a counter to the struct pci_dev to save the
+> power up policy in the bridge during boot. ASPM enable counter is
+> used as a switch to determine when to use saved value.
+> 
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> Signed-off-by: Mayurkumar Patel <mayurkumar.patel@intel.com>
+> ---
+>  drivers/pci/pcie/aspm.c | 21 +++++++++++++++++----
+>  include/linux/pci.h     |  2 ++
+>  2 files changed, 19 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index 17ac1dc..63435b0 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -338,8 +338,9 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
+>  	}
+>  }
+>  
+> -static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+> +static void pcie_aspm_cap_init(struct pci_dev *pdev, int blacklist)
+>  {
+> +	struct pcie_link_state *link = pdev->link_state;
+>  	struct pci_dev *child, *parent = link->pdev;
+>  	struct pci_bus *linkbus = parent->subordinate;
+>  	struct aspm_register_info upreg, dwreg;
+> @@ -397,8 +398,20 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+>  	link->latency_up.l1 = calc_l1_latency(upreg.latency_encoding_l1);
+>  	link->latency_dw.l1 = calc_l1_latency(dwreg.latency_encoding_l1);
+>  
+> -	/* Save default state */
+> -	link->aspm_default = link->aspm_enabled;
+> +	/*
+> +	 * Save default state from FW when enabling ASPM for the first time
+> +	 * during boot by looking at the calculated link->aspm_enabled bits
+> +	 * above and aspm_enable_cnt will be zero.
+> +	 *
+> +	 * If this path is getting called for the second/third time
+> +	 * (aspm_enable_cnt will be non-zero). Assume that the current state
+> +	 * of the ASPM registers may not necessarily match what FW asked us to
+> +	 * do as in the case of hotplug insertion/removal.
+> +	 */
+> +	if (atomic_inc_return(&pdev->aspm_enable_cnt) == 1)
+> +		pdev->aspm_default = link->aspm_default = link->aspm_enabled;
+> +	else
+> +		link->aspm_default = pdev->aspm_default;
 
+This is an aspect of the ASPM design that I don't like:
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+  - pcie_aspm_init_link_state() is called on a *bridge* after we've
+    enumerated any devices below the bridge, and we allocate the
+    link_state.
+
+  - pcie_aspm_exit_link_state() is called on an *endpoint*, and if
+    we're removing the last endpoint below a bridge, we release the
+    *parent's* link_state.
+
+This leads to the problem you're trying to solve here: we throw away
+all the bridge's ASPM information when the child is removed, so we
+lose the original settings from firmware.
+
+Your solution is to add some state outside the link_state structure,
+and initialize it the first time we enable ASPM for the link.  With
+the current design, you don't really have much choice, but I think it
+ends up being more complicated than it should be.
+
+How hard do you think it would be to rework this path slightly so we:
+
+  - call pcie_aspm_init_link_state() for every device, maybe from
+    pci_init_capabilities()
+
+  - for bridges, have pcie_aspm_init_link_state() allocate a
+    link_state, regardless of whether it currently has any children,
+    and save the ASPM settings done by firmware
+
+  - for endpoints, have pcie_aspm_init_link_state() do the actual ASPM
+    setup of the link as it currently does
+
+  - for endpoints, change pcie_aspm_exit_link_state() so it cleans up
+    the device's own state and disables ASPM if necessary, but doesn't
+    remove the parent's link_state
+
+  - for bridges, change pcie_aspm_exit_link_state() so it frees the
+    bridge's own link_state
+
+?
+
+>  	/* Setup initial capable state. Will be updated later */
+>  	link->aspm_capable = link->aspm_support;
+> @@ -599,7 +612,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+>  	 * upstream links also because capable state of them can be
+>  	 * update through pcie_aspm_cap_init().
+>  	 */
+> -	pcie_aspm_cap_init(link, blacklist);
+> +	pcie_aspm_cap_init(pdev, blacklist);
+>  
+>  	/* Setup initial Clock PM state */
+>  	pcie_clkpm_cap_init(link, blacklist);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e2d1a12..aa7bd7e 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -321,6 +321,8 @@ struct pci_dev {
+>  
+>  #ifdef CONFIG_PCIEASPM
+>  	struct pcie_link_state	*link_state;	/* ASPM link state */
+> +	unsigned int	aspm_default;		/* ASPM policy set by BIOS */
+> +	atomic_t	aspm_enable_cnt;	/* ASPM policy initialization */
+>  #endif
+>  
+>  	pci_channel_state_t error_state;	/* current connectivity state */
+> -- 
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
