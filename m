@@ -1,124 +1,284 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V5 2/4] PCI/ASPM: add init hook to device_add
-Date: Sat, 25 Mar 2017 17:38:11 -0400
-Message-Id: <1490477893-9517-3-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
-References: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
- linux-arm-msm@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
- linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- Julia Lawall <Julia.Lawall@lip6.fr>, Bjorn Helgaas <bhelgaas@google.com>,
- Rajat Jain <rajatja@google.com>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V9 06/11] of/acpi: Configure dma operations at probe time for platform/amba/pci bus devices
+Date: Fri, 10 Mar 2017 00:30:56 +0530
+Message-Id: <1489086061-9356-7-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For bridges, have pcie_aspm_init_link_state() allocate a link_state,
-regardless of whether it currently has any children.
+Configuring DMA ops at probe time will allow deferring device probe when
+the IOMMU isn't available yet. The dma_configure for the device is
+now called from the generic device_attach callback just before the
+bus/driver probe is called. This way, configuring the DMA ops for the
+device would be called at the same place for all bus_types, hence the
+deferred probing mechanism should work for all buses as well.
 
-pcie_aspm_init_link_state(): Called for bridges (upstream end of
-link) after all children have been enumerated.  No longer needs to
-check aspm_support_enabled or pdev->has_secondary_link or the VIA
-quirk: pci_aspm_init() already checked that stuff, so we only need
-to check pdev->link_state here.
+pci_bus_add_devices    (platform/amba)(_device_create/driver_register)
+       |                         |
+pci_bus_add_device     (device_add/driver_register)
+       |                         |
+device_attach           device_initial_probe
+       |                         |
+__device_attach_driver    __device_attach_driver
+       |
+driver_probe_device
+       |
+really_probe
+       |
+dma_configure
 
-Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Similarly on the device/driver_unregister path __device_release_driver is
+called which inturn calls dma_deconfigure.
+
+This patch changes the dma ops configuration to probe time for
+both OF and ACPI based platform/amba/pci bus devices.
+
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com> (drivers/pci part)
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
 ---
- drivers/pci/pcie/aspm.c | 41 ++++++++++++++++++++---------------------
- 1 file changed, 20 insertions(+), 21 deletions(-)
+ drivers/acpi/glue.c         |  5 -----
+ drivers/base/dd.c           |  9 +++++++++
+ drivers/base/dma-mapping.c  | 40 ++++++++++++++++++++++++++++++++++++++++
+ drivers/of/platform.c       |  5 +----
+ drivers/pci/probe.c         | 28 ----------------------------
+ include/linux/dma-mapping.h |  3 +++
+ 6 files changed, 53 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 74fd7c5..f5b1fa0 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -834,6 +834,23 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+index fb19e1c..c05f241 100644
+--- a/drivers/acpi/glue.c
++++ b/drivers/acpi/glue.c
+@@ -176,7 +176,6 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+ 	struct list_head *physnode_list;
+ 	unsigned int node_id;
+ 	int retval = -EINVAL;
+-	enum dev_dma_attr attr;
+ 
+ 	if (has_acpi_companion(dev)) {
+ 		if (acpi_dev) {
+@@ -233,10 +232,6 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+ 	if (!has_acpi_companion(dev))
+ 		ACPI_COMPANION_SET(dev, acpi_dev);
+ 
+-	attr = acpi_get_dma_attr(acpi_dev);
+-	if (attr != DEV_DMA_NOT_SUPPORTED)
+-		acpi_dma_configure(dev, attr);
+-
+ 	acpi_physnode_link_name(physical_node_name, node_id);
+ 	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
+ 				   physical_node_name);
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index a1fbf55..4882f06 100644
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -19,6 +19,7 @@
+ 
+ #include <linux/device.h>
+ #include <linux/delay.h>
++#include <linux/dma-mapping.h>
+ #include <linux/module.h>
+ #include <linux/kthread.h>
+ #include <linux/wait.h>
+@@ -356,6 +357,10 @@ static int really_probe(struct device *dev, struct device_driver *drv)
+ 	if (ret)
+ 		goto pinctrl_bind_failed;
+ 
++	ret = dma_configure(dev);
++	if (ret)
++		goto dma_failed;
++
+ 	if (driver_sysfs_add(dev)) {
+ 		printk(KERN_ERR "%s: driver_sysfs_add(%s) failed\n",
+ 			__func__, dev_name(dev));
+@@ -417,6 +422,8 @@ static int really_probe(struct device *dev, struct device_driver *drv)
+ 	goto done;
+ 
+ probe_failed:
++	dma_deconfigure(dev);
++dma_failed:
+ 	if (dev->bus)
+ 		blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
+ 					     BUS_NOTIFY_DRIVER_NOT_BOUND, dev);
+@@ -826,6 +833,8 @@ static void __device_release_driver(struct device *dev, struct device *parent)
+ 			drv->remove(dev);
+ 
+ 		device_links_driver_cleanup(dev);
++		dma_deconfigure(dev);
++
+ 		devres_release_all(dev);
+ 		dev->driver = NULL;
+ 		dev_set_drvdata(dev, NULL);
+diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+index efd71cf..449b948 100644
+--- a/drivers/base/dma-mapping.c
++++ b/drivers/base/dma-mapping.c
+@@ -7,9 +7,11 @@
+  * This file is released under the GPLv2.
   */
- int pci_aspm_init(struct pci_dev *pdev)
- {
-+	struct pcie_link_state *link;
+ 
++#include <linux/acpi.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/export.h>
+ #include <linux/gfp.h>
++#include <linux/of_device.h>
+ #include <linux/slab.h>
+ #include <linux/vmalloc.h>
+ 
+@@ -341,3 +343,41 @@ void dma_common_free_remap(void *cpu_addr, size_t size, unsigned long vm_flags)
+ 	vunmap(cpu_addr);
+ }
+ #endif
 +
-+	if (!aspm_support_enabled)
-+		return 0;
++/*
++ * Common configuration to enable DMA API use for a device
++ */
++#include <linux/pci.h>
 +
-+	/* VIA has a strange chipset, root port is under a bridge */
-+	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
-+	    pdev->bus->self)
-+		return 0;
++int dma_configure(struct device *dev)
++{
++	struct device *bridge = NULL, *dma_dev = dev;
++	enum dev_dma_attr attr;
 +
-+	if (!pdev->has_secondary_link)
-+		return 0;
++	if (dev_is_pci(dev)) {
++		bridge = pci_get_host_bridge_device(to_pci_dev(dev));
++		dma_dev = bridge;
++		if (IS_ENABLED(CONFIG_OF) && dma_dev->parent &&
++		    dma_dev->parent->of_node)
++			dma_dev = dma_dev->parent;
++	}
 +
-+	link = alloc_pcie_link_state(pdev);
-+	if (!link)
-+		return -ENOMEM;
++	if (dma_dev->of_node) {
++		of_dma_configure(dev, dma_dev->of_node);
++	} else if (has_acpi_companion(dma_dev)) {
++		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
++		if (attr != DEV_DMA_NOT_SUPPORTED)
++			acpi_dma_configure(dev, attr);
++	}
 +
++	if (bridge)
++		pci_put_host_bridge_device(bridge);
++
++	return 0;
++}
++
++void dma_deconfigure(struct device *dev)
++{
++	of_dma_deconfigure(dev);
++	acpi_dma_deconfigure(dev);
++}
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index 5344db5..2aa4ebb 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -22,6 +22,7 @@
+ #include <linux/slab.h>
+ #include <linux/of_address.h>
+ #include <linux/of_device.h>
++#include <linux/of_iommu.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
+@@ -186,11 +187,9 @@ static struct platform_device *of_platform_device_create_pdata(
+ 
+ 	dev->dev.bus = &platform_bus_type;
+ 	dev->dev.platform_data = platform_data;
+-	of_dma_configure(&dev->dev, dev->dev.of_node);
+ 	of_msi_configure(&dev->dev, dev->dev.of_node);
+ 
+ 	if (of_device_add(dev) != 0) {
+-		of_dma_deconfigure(&dev->dev);
+ 		platform_device_put(dev);
+ 		goto err_clear_flag;
+ 	}
+@@ -248,7 +247,6 @@ static struct amba_device *of_amba_device_create(struct device_node *node,
+ 		dev_set_name(&dev->dev, "%s", bus_id);
+ 	else
+ 		of_device_make_bus_id(&dev->dev);
+-	of_dma_configure(&dev->dev, dev->dev.of_node);
+ 
+ 	/* Allow the HW Peripheral ID to be overridden */
+ 	prop = of_get_property(node, "arm,primecell-periphid", NULL);
+@@ -542,7 +540,6 @@ static int of_platform_device_destroy(struct device *dev, void *data)
+ 		amba_device_unregister(to_amba_device(dev));
+ #endif
+ 
+-	of_dma_deconfigure(dev);
+ 	of_node_clear_flag(dev->of_node, OF_POPULATED);
+ 	of_node_clear_flag(dev->of_node, OF_POPULATED_BUS);
  	return 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index dfc9a27..5a8dd43 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1893,33 +1893,6 @@ static void pci_set_msi_domain(struct pci_dev *dev)
+ 	dev_set_msi_domain(&dev->dev, d);
  }
  
-@@ -847,33 +864,16 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
- 	struct pcie_link_state *link;
- 	int blacklist = !!pcie_aspm_sanity_check(pdev);
- 
--	if (!aspm_support_enabled)
--		return;
+-/**
+- * pci_dma_configure - Setup DMA configuration
+- * @dev: ptr to pci_dev struct of the PCI device
+- *
+- * Function to update PCI devices's DMA configuration using the same
+- * info from the OF node or ACPI node of host bridge's parent (if any).
+- */
+-static void pci_dma_configure(struct pci_dev *dev)
+-{
+-	struct device *bridge = pci_get_host_bridge_device(dev);
 -
--	if (pdev->link_state)
--		return;
+-	if (IS_ENABLED(CONFIG_OF) &&
+-		bridge->parent && bridge->parent->of_node) {
+-			of_dma_configure(&dev->dev, bridge->parent->of_node);
+-	} else if (has_acpi_companion(bridge)) {
+-		struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
+-		enum dev_dma_attr attr = acpi_get_dma_attr(adev);
 -
--	/*
--	 * We allocate pcie_link_state for the component on the upstream
--	 * end of a Link, so there's nothing to do unless this device has a
--	 * Link on its secondary side.
--	 */
--	if (!pdev->has_secondary_link)
--		return;
+-		if (attr == DEV_DMA_NOT_SUPPORTED)
+-			dev_warn(&dev->dev, "DMA not supported.\n");
+-		else
+-			acpi_dma_configure(&dev->dev, attr);
+-	}
 -
--	/* VIA has a strange chipset, root port is under a bridge */
--	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
--	    pdev->bus->self)
-+	if (!pdev->link_state)
- 		return;
+-	pci_put_host_bridge_device(bridge);
+-}
+-
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+@@ -1933,7 +1906,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+ 	dev->dev.coherent_dma_mask = 0xffffffffull;
+-	pci_dma_configure(dev);
  
-+	link = pdev->link_state;
- 	down_read(&pci_bus_sem);
- 	if (list_empty(&pdev->subordinate->devices))
- 		goto out;
+ 	pci_set_dma_max_seg_size(dev, 65536);
+ 	pci_set_dma_seg_boundary(dev, 0xffffffff);
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index 0977317..6d08016 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -728,6 +728,9 @@ void *dma_mark_declared_memory_occupied(struct device *dev,
+ }
+ #endif /* CONFIG_HAVE_GENERIC_DMA_COHERENT */
  
- 	mutex_lock(&aspm_lock);
--	link = alloc_pcie_link_state(pdev);
--	if (!link)
--		goto unlock;
++int dma_configure(struct device *dev);
++void dma_deconfigure(struct device *dev);
 +
- 	/*
- 	 * Setup initial ASPM state. Note that we need to configure
- 	 * upstream links also because capable state of them can be
-@@ -898,7 +898,6 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
- 		pcie_set_clkpm(link, policy_to_clkpm_state(link));
- 	}
- 
--unlock:
- 	mutex_unlock(&aspm_lock);
- out:
- 	up_read(&pci_bus_sem);
+ /*
+  * Managed DMA API
+  */
 -- 
-1.9.1
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
