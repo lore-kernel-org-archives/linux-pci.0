@@ -1,118 +1,54 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Hans Verkuil <hans.verkuil@cisco.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Boris Brezillon <boris.brezillon@free-electrons.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Cyrille Pitchen <cyrille.pitchen@atmel.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        rtc-linux@googlegroups.com, linux-mtd@lists.infradead.org,
-        linux-media@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-gpio@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Fri, 17 Mar 2017 12:48:10 -0600
-Message-Id: <1489776503-3151-4-git-send-email-logang@deltatee.com>
-In-Reply-To: <1489776503-3151-1-git-send-email-logang@deltatee.com>
-References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v5 03/16] device-dax: utilize new cdev_device_add helper function
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=6R1E=2S=gmail.com=arndbergmann@kernel.org>
+Return-Path: <SRS0=6R1E=2S=gmail.com=arndbergmann@kernel.org>
+MIME-Version: 1.0
+Sender: arndbergmann@gmail.com
+In-Reply-To: <20170309181134.GA15721@bhelgaas-glaptop.roam.corp.google.com>
+References: <EE11001F9E5DDD47B7634E2F8A612F2E2046C6AC@FRAEML521-MBX.china.huawei.com>
+ <20170309181134.GA15721@bhelgaas-glaptop.roam.corp.google.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 9 Mar 2017 23:09:24 +0100
+Message-ID: <CAK8P3a0iECAKBKG6zqXO5VaPze9OzxzSY+cBFHsM46xVAGhE1A@mail.gmail.com>
+Subject: Re: [QUESTION]: Same IO bus address in different _CRS methods
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Tomasz Nowicki <tn@semihalf.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	"agraf@suse.de" <agraf@suse.de>, Yuanzhichang <yuanzhichang@hisilicon.com>,
+	"xuwei (O)" <xuwei5@hisilicon.com>, John Garry <john.garry@huawei.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Replace the open coded registration of the cdev and dev with the
-new device_add_cdev() helper. The helper replaces a common pattern by
-taking the proper reference against the parent device and adding both
-the cdev and the device.
+On Thu, Mar 9, 2017 at 7:11 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Mar 09, 2017 at 03:41:03PM +0000, Gabriele Paoloni wrote:
+>> Hi Bjorn and all
+>>
+>> I have a question regarding bus addresses for IO resources in the
+>> ACPI table.
+>>
+>> The question is if from an ACPI perspective it is legal to have two
+>> entries in separate _CRS methods using the same IO bus address.
+>>
+>> As an example please see the code at the bottom: we have the same
+>> bus address starting at 0x0 with (obviously) different offsets
+>> leading to different CPU physical addresses. Is this legal?
+>
+> Yes.
+>
+> These are on separate PCI buses (PCI0 leads to 0000:00 and PCI1 leads
+> to 0001:e0), so there should be no conflict.  Those are completely
+> independent PCI buses, and their bus address spaces are also
+> independent.
+>
+> You do have to make sure the CPU physical addresses don't conflict, of
+> course.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/dax/dax.c | 18 +++++-------------
- 1 file changed, 5 insertions(+), 13 deletions(-)
+Ok. My reading of the ia64 code was that it would reject this as being
+overlapping resources, but I was probably misreading then.
 
-diff --git a/drivers/dax/dax.c b/drivers/dax/dax.c
-index a5ed59a..e5f8555 100644
---- a/drivers/dax/dax.c
-+++ b/drivers/dax/dax.c
-@@ -677,8 +677,6 @@ static void dax_dev_release(struct device *dev)
- 
- static void kill_dax_dev(struct dax_dev *dax_dev)
- {
--	struct cdev *cdev = &dax_dev->cdev;
--
- 	/*
- 	 * Note, rcu is not protecting the liveness of dax_dev, rcu is
- 	 * ensuring that any fault handlers that might have seen
-@@ -689,7 +687,6 @@ static void kill_dax_dev(struct dax_dev *dax_dev)
- 	dax_dev->alive = false;
- 	synchronize_rcu();
- 	unmap_mapping_range(dax_dev->inode->i_mapping, 0, 0, 1);
--	cdev_del(cdev);
- }
- 
- static void unregister_dax_dev(void *dev)
-@@ -699,7 +696,8 @@ static void unregister_dax_dev(void *dev)
- 	dev_dbg(dev, "%s\n", __func__);
- 
- 	kill_dax_dev(dax_dev);
--	device_unregister(dev);
-+	cdev_device_del(&dax_dev->cdev, dev);
-+	put_device(dev);
- }
- 
- struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
-@@ -750,18 +748,13 @@ struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
- 		goto err_inode;
- 	}
- 
--	/* device_initialize() so cdev can reference kobj parent */
-+	/* from here on we're committed to teardown via dax_dev_release() */
- 	device_initialize(dev);
- 
- 	cdev = &dax_dev->cdev;
- 	cdev_init(cdev, &dax_fops);
- 	cdev->owner = parent->driver->owner;
--	cdev->kobj.parent = &dev->kobj;
--	rc = cdev_add(&dax_dev->cdev, dev_t, 1);
--	if (rc)
--		goto err_cdev;
- 
--	/* from here on we're committed to teardown via dax_dev_release() */
- 	dax_dev->num_resources = count;
- 	dax_dev->alive = true;
- 	dax_dev->region = dax_region;
-@@ -773,7 +766,8 @@ struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
- 	dev->groups = dax_attribute_groups;
- 	dev->release = dax_dev_release;
- 	dev_set_name(dev, "dax%d.%d", dax_region->id, dax_dev->id);
--	rc = device_add(dev);
-+
-+	rc = cdev_device_add(cdev, dev);
- 	if (rc) {
- 		kill_dax_dev(dax_dev);
- 		put_device(dev);
-@@ -786,8 +780,6 @@ struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
- 
- 	return dax_dev;
- 
-- err_cdev:
--	iput(dax_dev->inode);
-  err_inode:
- 	ida_simple_remove(&dax_minor_ida, minor);
-  err_minor:
--- 
-2.1.4
+What is the expected way to deal with a device using an I/O resource
+that is not a child of either PCI host bridge in this case (e.g. a
+BMC behind a PCI-LPC bridge)? Is this only allowed to exist below
+the device that provides the respective I/O space?
+
+     Arnd
