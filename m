@@ -1,283 +1,276 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [RFC PATCH v2 12/32] x86: Add early boot support when running with
- SEV active
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:14:48 -0500
-Message-ID: <148846768878.2349.15757532025749214650.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 02/23] Documentation: PCI: Guide to use PCI Endpoint Core
+ Layer
+Date: Thu, 9 Mar 2017 13:27:13 +0530
+Message-ID: <1489046254-19919-3-git-send-email-kishon@ti.com>
+In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
+References: <1489046254-19919-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tom Lendacky <thomas.lendacky@amd.com>
+Add Documentation to help users use endpoint library to enable endpoint
+mode in the PCI controller and add new PCI endpoint functions.
 
-Early in the boot process, add checks to determine if the kernel is
-running with Secure Encrypted Virtualization (SEV) active by issuing
-a CPUID instruction.
-
-During early compressed kernel booting, if SEV is active the pagetables are
-updated so that data is accessed and decompressed with encryption.
-
-During uncompressed kernel booting, if SEV is the memory encryption mask is
-set and a flag is set to indicate that SEV is enabled.
-
-Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- arch/x86/boot/compressed/Makefile      |    2 +
- arch/x86/boot/compressed/head_64.S     |   16 +++++++
- arch/x86/boot/compressed/mem_encrypt.S |   75 ++++++++++++++++++++++++++++++++
- arch/x86/include/uapi/asm/hyperv.h     |    4 ++
- arch/x86/include/uapi/asm/kvm_para.h   |    3 +
- arch/x86/kernel/mem_encrypt_init.c     |   24 ++++++++++
- 6 files changed, 124 insertions(+)
- create mode 100644 arch/x86/boot/compressed/mem_encrypt.S
+ Documentation/PCI/00-INDEX                  |    2 +
+ Documentation/PCI/endpoint/pci-endpoint.txt |  215 +++++++++++++++++++++++++++
+ 2 files changed, 217 insertions(+)
+ create mode 100644 Documentation/PCI/endpoint/pci-endpoint.txt
 
-diff --git a/arch/x86/boot/compressed/Makefile b/arch/x86/boot/compressed/Makefile
-index 44163e8..51f9cd0 100644
---- a/arch/x86/boot/compressed/Makefile
-+++ b/arch/x86/boot/compressed/Makefile
-@@ -72,6 +72,8 @@ vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
- 	$(obj)/string.o $(obj)/cmdline.o $(obj)/error.o \
- 	$(obj)/piggy.o $(obj)/cpuflags.o
- 
-+vmlinux-objs-$(CONFIG_X86_64) += $(obj)/mem_encrypt.o
-+
- vmlinux-objs-$(CONFIG_EARLY_PRINTK) += $(obj)/early_serial_console.o
- vmlinux-objs-$(CONFIG_RANDOMIZE_BASE) += $(obj)/kaslr.o
- ifdef CONFIG_X86_64
-diff --git a/arch/x86/boot/compressed/head_64.S b/arch/x86/boot/compressed/head_64.S
-index d2ae1f8..625b5380 100644
---- a/arch/x86/boot/compressed/head_64.S
-+++ b/arch/x86/boot/compressed/head_64.S
-@@ -130,6 +130,19 @@ ENTRY(startup_32)
-  /*
-   * Build early 4G boot pagetable
-   */
-+	/*
-+	 * If SEV is active set the encryption mask in the page tables. This
-+	 * will insure that when the kernel is copied and decompressed it
-+	 * will be done so encrypted.
-+	 */
-+	call	sev_enabled
-+	xorl	%edx, %edx
-+	testl	%eax, %eax
-+	jz	1f
-+	subl	$32, %eax	/* Encryption bit is always above bit 31 */
-+	bts	%eax, %edx	/* Set encryption mask for page tables */
-+1:
-+
- 	/* Initialize Page tables to 0 */
- 	leal	pgtable(%ebx), %edi
- 	xorl	%eax, %eax
-@@ -140,12 +153,14 @@ ENTRY(startup_32)
- 	leal	pgtable + 0(%ebx), %edi
- 	leal	0x1007 (%edi), %eax
- 	movl	%eax, 0(%edi)
-+	addl	%edx, 4(%edi)
- 
- 	/* Build Level 3 */
- 	leal	pgtable + 0x1000(%ebx), %edi
- 	leal	0x1007(%edi), %eax
- 	movl	$4, %ecx
- 1:	movl	%eax, 0x00(%edi)
-+	addl	%edx, 0x04(%edi)
- 	addl	$0x00001000, %eax
- 	addl	$8, %edi
- 	decl	%ecx
-@@ -156,6 +171,7 @@ ENTRY(startup_32)
- 	movl	$0x00000183, %eax
- 	movl	$2048, %ecx
- 1:	movl	%eax, 0(%edi)
-+	addl	%edx, 4(%edi)
- 	addl	$0x00200000, %eax
- 	addl	$8, %edi
- 	decl	%ecx
-diff --git a/arch/x86/boot/compressed/mem_encrypt.S b/arch/x86/boot/compressed/mem_encrypt.S
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index 147231f..ba950b2 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -12,3 +12,5 @@ pci.txt
+ 	- info on the PCI subsystem for device driver authors
+ pcieaer-howto.txt
+ 	- the PCI Express Advanced Error Reporting Driver Guide HOWTO
++endpoint/pci-endpoint.txt
++	- guide to add endpoint controller driver and endpoint function driver.
+diff --git a/Documentation/PCI/endpoint/pci-endpoint.txt b/Documentation/PCI/endpoint/pci-endpoint.txt
 new file mode 100644
-index 0000000..8313c31
+index 0000000..4a3e438
 --- /dev/null
-+++ b/arch/x86/boot/compressed/mem_encrypt.S
-@@ -0,0 +1,75 @@
-+/*
-+ * AMD Memory Encryption Support
-+ *
-+ * Copyright (C) 2016 Advanced Micro Devices, Inc.
-+ *
-+ * Author: Tom Lendacky <thomas.lendacky@amd.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
++++ b/Documentation/PCI/endpoint/pci-endpoint.txt
+@@ -0,0 +1,215 @@
++			    PCI ENDPOINT FRAMEWORK
++		    Kishon Vijay Abraham I <kishon@ti.com>
 +
-+#include <linux/linkage.h>
++This document is a guide to use the PCI Endpoint Framework in order to create
++endpoint controller driver, endpoint function driver and using configfs
++interface to bind the function driver to the controller driver.
 +
-+#include <asm/processor-flags.h>
-+#include <asm/msr.h>
-+#include <asm/asm-offsets.h>
-+#include <uapi/asm/kvm_para.h>
++1. Introduction
 +
-+	.text
-+	.code32
-+ENTRY(sev_enabled)
-+	xor	%eax, %eax
++*Linux* has a comprehensive PCI subsystem to support PCI controllers that
++operates in Root Complex mode. The subsystem has capability to scan PCI bus,
++assign memory resources and irq resources, load PCI driver (based on
++vendorid, deviceid), support other services like hot-plug, power management,
++advanced error reporting and virtual channels.
 +
-+#ifdef CONFIG_AMD_MEM_ENCRYPT
-+	push	%ebx
-+	push	%ecx
-+	push	%edx
++However PCI controller IPs integrated in certain SoC is capable of operating
++either in Root Complex mode or Endpoint mode. PCI Endpoint Framework will
++add endpoint mode support in *Linux*. This will help to run Linux in an
++EP system which can have a wide variety of use cases from testing or
++validation, co-processor accelerator etc..
 +
-+	/* Check if running under a hypervisor */
-+	movl	$0x40000000, %eax
-+	cpuid
-+	cmpl	$0x40000001, %eax
-+	jb	.Lno_sev
++2. PCI Endpoint Core
 +
-+	movl	$0x40000001, %eax
-+	cpuid
-+	bt	$KVM_FEATURE_SEV, %eax
-+	jnc	.Lno_sev
++The PCI Endpoint Core layer comprises of 3 components: the Endpoint Controller
++library, the Endpoint Function library and the configfs layer to bind the
++endpoint function with the endpoint controller.
 +
-+	/*
-+	 * Check for memory encryption feature:
-+	 *   CPUID Fn8000_001F[EAX] - Bit 0
-+	 */
-+	movl	$0x8000001f, %eax
-+	cpuid
-+	bt	$0, %eax
-+	jnc	.Lno_sev
++2.1 PCI Endpoint Controller(EPC) Library
 +
-+	/*
-+	 * Get memory encryption information:
-+	 *   CPUID Fn8000_001F[EBX] - Bits 5:0
-+	 *     Pagetable bit position used to indicate encryption
-+	 */
-+	movl	%ebx, %eax
-+	andl	$0x3f, %eax
-+	movl	%eax, sev_enc_bit(%ebp)
-+	jmp	.Lsev_exit
++The EPC library provides APIs to be used by the controller that can operate
++in endpoint mode. It also provides APIs to be used by function driver/library
++in order to implement a particular endpoint function.
 +
-+.Lno_sev:
-+	xor	%eax, %eax
++2.1.1 APIs for the PCI controller Driver
 +
-+.Lsev_exit:
-+	pop	%edx
-+	pop	%ecx
-+	pop	%ebx
++This section lists the APIs that the PCI Endpoint core provides to be used
++by the PCI controller driver.
 +
-+#endif	/* CONFIG_AMD_MEM_ENCRYPT */
++*) devm_pci_epc_create()/pci_epc_create()
 +
-+	ret
-+ENDPROC(sev_enabled)
++   The PCI controller driver should implement the following ops:
++	 * write_header: ops to populate configuration space header
++	 * set_bar: ops to configure the BAR
++	 * clear_bar: ops to reset the BAR
++	 * alloc_addr_space: ops to allocate *in* PCI controller address space
++	 * free_addr_space: ops to free the allocated address space
++	 * raise_irq: ops to raise a legacy or MSI interrupt
++	 * start: ops to start the PCI link
++	 * stop: ops to stop the PCI link
 +
-+	.bss
-+sev_enc_bit:
-+	.word	0
-diff --git a/arch/x86/include/uapi/asm/hyperv.h b/arch/x86/include/uapi/asm/hyperv.h
-index 9b1a918..8278161 100644
---- a/arch/x86/include/uapi/asm/hyperv.h
-+++ b/arch/x86/include/uapi/asm/hyperv.h
-@@ -3,6 +3,8 @@
- 
- #include <linux/types.h>
- 
-+#ifndef __ASSEMBLY__
++   The PCI controller driver can then create a new EPC device by invoking
++   devm_pci_epc_create/pci_epc_create.
 +
- /*
-  * The below CPUID leaves are present if VersionAndFeatures.HypervisorPresent
-  * is set by CPUID(HvCpuIdFunctionVersionAndFeatures).
-@@ -363,4 +365,6 @@ struct hv_timer_message_payload {
- #define HV_STIMER_AUTOENABLE		(1ULL << 3)
- #define HV_STIMER_SINT(config)		(__u8)(((config) >> 16) & 0x0F)
- 
-+#endif	/* __ASSEMBLY__ */
++*) devm_pci_epc_destroy()/pci_epc_destroy()
 +
- #endif
-diff --git a/arch/x86/include/uapi/asm/kvm_para.h b/arch/x86/include/uapi/asm/kvm_para.h
-index bc2802f..e81b74a 100644
---- a/arch/x86/include/uapi/asm/kvm_para.h
-+++ b/arch/x86/include/uapi/asm/kvm_para.h
-@@ -26,6 +26,8 @@
- #define KVM_FEATURE_PV_UNHALT		7
- #define KVM_FEATURE_SEV			8
- 
-+#ifndef __ASSEMBLY__
++   The PCI controller driver can destroy the EPC device created by either
++   devm_pci_epc_create or pci_epc_create using devm_pci_epc_destroy() or
++   /pci_epc_destroy()
 +
- /* The last 8 bits are used to indicate how to interpret the flags field
-  * in pvclock structure. If no bits are set, all flags are ignored.
-  */
-@@ -100,5 +102,6 @@ struct kvm_vcpu_pv_apf_data {
- #define KVM_PV_EOI_ENABLED KVM_PV_EOI_MASK
- #define KVM_PV_EOI_DISABLED 0x0
- 
-+#endif	/* __ASSEMBLY__ */
- 
- #endif /* _UAPI_ASM_X86_KVM_PARA_H */
-diff --git a/arch/x86/kernel/mem_encrypt_init.c b/arch/x86/kernel/mem_encrypt_init.c
-index 35c5e3d..5d514e6 100644
---- a/arch/x86/kernel/mem_encrypt_init.c
-+++ b/arch/x86/kernel/mem_encrypt_init.c
-@@ -22,6 +22,7 @@
- #include <asm/processor-flags.h>
- #include <asm/msr.h>
- #include <asm/cmdline.h>
-+#include <asm/kvm_para.h>
- 
- static char sme_cmdline_arg_on[] __initdata = "mem_encrypt=on";
- static char sme_cmdline_arg_off[] __initdata = "mem_encrypt=off";
-@@ -232,6 +233,29 @@ unsigned long __init sme_enable(void *boot_data)
- 	void *cmdline_arg;
- 	u64 msr;
- 
-+	/* Check if running under a hypervisor */
-+	eax = 0x40000000;
-+	ecx = 0;
-+	native_cpuid(&eax, &ebx, &ecx, &edx);
-+	if (eax > 0x40000000) {
-+		eax = 0x40000001;
-+		ecx = 0;
-+		native_cpuid(&eax, &ebx, &ecx, &edx);
-+		if (!(eax & BIT(KVM_FEATURE_SEV)))
-+			goto out;
++*) pci_epc_linkup()
 +
-+		eax = 0x8000001f;
-+		ecx = 0;
-+		native_cpuid(&eax, &ebx, &ecx, &edx);
-+		if (!(eax & 1))
-+			goto out;
++   In order to notify all the function devices that the EPC device to which
++   they are linked has established a link with the host, the PCI controller
++   driver should invoke pci_epc_linkup().
 +
-+		sme_me_mask = 1UL << (ebx & 0x3f);
-+		sev_enabled = 1;
++*) pci_epc_mem_init()
 +
-+		goto out;
-+	}
++   Initialize the pci_epc_mem structure used for allocating EPC addr space.
 +
- 	/* Check for an AMD processor */
- 	eax = 0;
- 	ecx = 0;
++*) pci_epc_mem_exit()
++
++   Cleanup the pci_epc_mem structure allocated during pci_epc_mem_init().
++
++2.1.2 APIs for the PCI Endpoint Function Driver
++
++This section lists the APIs that the PCI Endpoint core provides to be used
++by the PCI endpoint function driver.
++
++*) pci_epc_write_header()
++
++   The PCI endpoint function driver should use pci_epc_write_header() to
++   write the standard configuration header to the endpoint controller.
++
++*) pci_epc_set_bar()
++
++   The PCI endpoint function driver should use pci_epc_set_bar() to configure
++   the Base Address Register in order for the host to assign PCI addr space.
++   Register space of the function driver is usually configured
++   using this API.
++
++*) pci_epc_clear_bar()
++
++   The PCI endpoint function driver should use pci_epc_clear_bar() to reset
++   the BAR.
++
++*) pci_epc_raise_irq()
++
++   The PCI endpoint function driver should use pci_epc_raise_irq() to raise
++   Legacy Interrupt or MSI Interrupt.
++
++*) pci_epc_mem_alloc_addr()
++
++   The PCI endpoint function driver should use pci_epc_mem_alloc_addr(), to
++   allocate memory address from EPC addr space which is required to access
++   RC's buffer
++
++*) pci_epc_mem_free_addr()
++
++   The PCI endpoint function driver should use pci_epc_mem_free_addr() to
++   free the memory space allocated using pci_epc_mem_alloc_addr().
++
++2.1.3 Other APIs
++
++There are other APIs provided by the EPC library. These are used for binding
++the epf device with epc device. pci-ep-cfs.c can be used as reference for
++using these APIs.
++
++*) pci_epc_get()
++
++   Get a reference to the pci endpoint controller based on the device name of
++   the controller.
++
++*) pci_epc_put()
++
++   Release the reference to the pci endpoint controller obtained using
++   pci_epc_get()
++
++*) pci_epc_add_epf()
++
++   Add a pci endpoint function to a pci endpoint controller. A pcie device
++   can have upto 8 functions according to the specification.
++
++*) pci_epc_remove_epf()
++
++   Remove the pci endpoint function from pci endpoint controller.
++
++*) pci_epc_start()
++
++   The PCI endpoint function driver should invoke pci_epc_start() once it
++   has configured the endpoint function and wants to start the PCI link.
++
++*) pci_epc_stop()
++
++   The PCI endpoint function driver should invoke pci_epc_stop() to stop
++   the PCI LINK.
++
++2.2 PCI Endpoint Function(EPF) Library
++
++The EPF library provides APIs to be used by the function driver and the EPC
++library in order to provide endpoint mode functionality.
++
++2.2.1 APIs for the PCI Endpoint Function Driver
++
++This section lists the APIs that the PCI Endpoint core provides to be used
++by the PCI endpoint function driver.
++
++*) pci_epf_register_driver()
++
++   The PCI Endpoint Function driver should implement the following ops:
++	 * bind: ops to perform when a EPC device has been bound to EPF device
++	 * unbind: ops to perform when a binding has been lost between a EPC
++	   device and EPF device
++	 * linkup: ops to perform when the EPC device has established a
++	   connection with a host system
++
++  The PCI Function driver can then register the PCI EPF driver by using
++  pci_epf_register_driver().
++
++*) pci_epf_unregister_driver()
++
++  The PCI Function driver can unregister the PCI EPF driver by using
++  pci_epf_unregister_driver().
++
++*) pci_epf_alloc_space()
++
++  The PCI Function driver can allocate space for a particular BAR using
++  pci_epf_alloc_space().
++
++*) pci_epf_free_space()
++
++  The PCI Function driver can free the allocated space
++  (using pci_epf_alloc_space) by invoking pci_epf_free_space().
++
++2.2.2 APIs for the PCI Endpoint Controller Library
++This section lists the APIs that the PCI Endpoint core provides to be used
++by the PCI endpoint controller library.
++
++*) pci_epf_linkup()
++
++   The PCI endpoint controller library invokes pci_epf_linkup() when the
++   EPC device has established the connection to the host.
++
++2.2.2 Other APIs
++There are other APIs provided by the EPF library. These are used to notify
++the function driver when the EPF device is bound to the EPC device.
++pci-ep-cfs.c can be used as reference for using these APIs.
++
++*) pci_epf_create()
++
++   Create a new PCI EPF device by passing the name of the PCI EPF device.
++   This name will be used to bind the the EPF device to a EPF driver.
++
++*) pci_epf_destroy()
++
++   Destroy the created PCI EPF device.
++
++*) pci_epf_bind()
++
++   pci_epf_bind() should be invoked when the EPF device has been bound to
++   a EPC device.
++
++*) pci_epf_unbind()
++
++   pci_epf_unbind() should be invoked when the binding between EPC device
++   and EPF device is lost.
+-- 
+1.7.9.5
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
