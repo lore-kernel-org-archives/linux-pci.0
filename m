@@ -1,92 +1,61 @@
-Return-Path: <SRS0=7U76=3G=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=7U76=3G=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v3 2/2] PCI: Add tango PCIe host bridge support
-To: Robin Murphy <robin.murphy@arm.com>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
- Thomas Gleixner <tglx@linutronix.de>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>, DT <devicetree@vger.kernel.org>
-References: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
- <65114e62-7458-b6f7-327c-f07a5096a452@sigmadesigns.com>
- <01516ad9-e187-4bac-7c65-a7a90c576ce2@arm.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <96da696c-141a-3e8d-1fb7-2c024a295f58@free.fr>
-Date: Wed, 29 Mar 2017 14:53:47 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Reshetova, Elena" <elena.reshetova@intel.com>
+To: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+CC: "peterz@infradead.org" <peterz@infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux1394-devel@lists.sourceforge.net"
+        <linux1394-devel@lists.sourceforge.net>,
+        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>,
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
+        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
+        "Hans Liljestrand" <ishkamiel@gmail.com>,
+        David Windsor <dwindsor@gmail.com>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        Juergen Gross <jgross@suse.com>
+Subject: RE: [Xen-devel] [PATCH 29/29] drivers, xen: convert grant_map.users
+ from atomic_t to refcount_t
+Date: Thu, 9 Mar 2017 07:19:12 +0000
+Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C569F1@IRSMSX102.ger.corp.intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-30-git-send-email-elena.reshetova@intel.com>
+ <99270126-7751-eed0-5efa-fc695ff3be25@oracle.com>
+ <2236FBA76BA1254E88B949DDB74E612B41C56177@IRSMSX102.ger.corp.intel.com>
+ <c4ea3925-f505-3c5b-a9fc-c74ea5a7cbe9@oracle.com>
+In-Reply-To: <c4ea3925-f505-3c5b-a9fc-c74ea5a7cbe9@oracle.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <01516ad9-e187-4bac-7c65-a7a90c576ce2@arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29/03/2017 14:19, Robin Murphy wrote:
-
-> On 29/03/17 12:34, Marc Gonzalez wrote:
-> 
->> +	/*
->> +	 * QUIRK #3
->> +	 * Unfortunately, config and mem spaces are muxed.
->> +	 * Linux does not support such a setting, since drivers are free
->> +	 * to access mem space directly, at any time.
->> +	 * Therefore, we can only PRAY that config and mem space accesses
->> +	 * NEVER occur concurrently.
->> +	 */
-> 
-> What about David's suggestion of using an IPI for safe mutual exclusion?
-
-I was left with the impression that this wouldn't solve the problem.
-If a mem space access is "in flight" on core0 when core1 starts a
-config space access, an IPI will not prevent breakage.
-
-Did I misunderstand?
-
-For my education, what is the API to send an IPI?
-And the API to handle an IPI?
-
->> +	if (of_device_is_compatible(dev->of_node, "sigma,smp8759-pcie"))
->> +		smp8759_init(pcie, base);
-> 
-> ...then retrieve it with of_device_get_match_data() here. No need to
-> reinvent the wheel (or have to worry about the ordering of multiple
-> compatibles once rev. n+1 comes around).
-
-I actually asked about this on IRC. The consensus was "use what
-best fits your use case". I need to do some processing based on
-the revision, so I thought
-
-  if (chip_x)
-	do_chip_x_init()
-
-was a good way to express my intent. Did I misunderstand?
-
-For example, the init function for rev2 currently looks like this:
-
-static void rev2_init(struct tango_pcie *pcie, void __iomem *base)
-{
-	void __iomem *misc_irq	= base + 0x40;
-	void __iomem *doorbell	= base + 0x8c;
-
-	pcie->mux		= base + 0x2c;
-	pcie->msi_status	= base + 0x4c;
-	pcie->msi_mask		= base + 0x6c;
-	pcie->msi_doorbell	= 0x80000000;
-
-	writel(lower_32_bits(pcie->msi_doorbell), doorbell + 0);
-	writel(upper_32_bits(pcie->msi_doorbell), doorbell + 4);
-
-	/* Enable legacy PCI interrupts */
-	writel(BIT(15), misc_irq);
-	writel(0xf << 4, misc_irq + 4);
-}
-
->> +#define VENDOR_SIGMA	0x1105
-> 
-> Should this not be in include/linux/pci_ids.h?
-
-Doh! Very likely. Thanks.
-
-Regards.
+DQo+IE9uIDAzLzA4LzIwMTcgMDg6NDkgQU0sIFJlc2hldG92YSwgRWxlbmEgd3JvdGU6DQo+ID4+
+IE9uIDAzLzA2LzIwMTcgMDk6MjEgQU0sIEVsZW5hIFJlc2hldG92YSB3cm90ZToNCj4gPj4+IHJl
+ZmNvdW50X3QgdHlwZSBhbmQgY29ycmVzcG9uZGluZyBBUEkgc2hvdWxkIGJlDQo+ID4+PiB1c2Vk
+IGluc3RlYWQgb2YgYXRvbWljX3Qgd2hlbiB0aGUgdmFyaWFibGUgaXMgdXNlZCBhcw0KPiA+Pj4g
+YSByZWZlcmVuY2UgY291bnRlci4gVGhpcyBhbGxvd3MgdG8gYXZvaWQgYWNjaWRlbnRhbA0KPiA+
+Pj4gcmVmY291bnRlciBvdmVyZmxvd3MgdGhhdCBtaWdodCBsZWFkIHRvIHVzZS1hZnRlci1mcmVl
+DQo+ID4+PiBzaXR1YXRpb25zLg0KPiA+Pj4NCj4gPj4+IFNpZ25lZC1vZmYtYnk6IEVsZW5hIFJl
+c2hldG92YSA8ZWxlbmEucmVzaGV0b3ZhQGludGVsLmNvbT4NCj4gPj4+IFNpZ25lZC1vZmYtYnk6
+IEhhbnMgTGlsamVzdHJhbmQgPGlzaGthbWllbEBnbWFpbC5jb20+DQo+ID4+PiBTaWduZWQtb2Zm
+LWJ5OiBLZWVzIENvb2sgPGtlZXNjb29rQGNocm9taXVtLm9yZz4NCj4gPj4+IFNpZ25lZC1vZmYt
+Ynk6IERhdmlkIFdpbmRzb3IgPGR3aW5kc29yQGdtYWlsLmNvbT4NCj4gPj4+IC0tLQ0KPiA+Pj4g
+IGRyaXZlcnMveGVuL2dudGRldi5jIHwgMTEgKysrKysrLS0tLS0NCj4gPj4+ICAxIGZpbGUgY2hh
+bmdlZCwgNiBpbnNlcnRpb25zKCspLCA1IGRlbGV0aW9ucygtKQ0KPiA+PiBSZXZpZXdlZC1ieTog
+Qm9yaXMgT3N0cm92c2t5IDxib3Jpcy5vc3Ryb3Zza3lAb3JhY2xlLmNvbT4NCj4gPiBJcyB0aGVy
+ZSBhIHRyZWUgdGhhdCBjYW4gdGFrZSB0aGlzIGNoYW5nZT8gVHVybnMgb3V0IGl0IGlzIGJldHRl
+ciB0byBwcm9wYWdhdGUNCj4gY2hhbmdlcyB2aWEgc2VwYXJhdGUgdHJlZXMgYW5kIG9ubHkgbGVm
+dG92ZXJzIGNhbiBiZSB0YWtlbiB2aWEgR3JlZydzIHRyZWUuDQo+ID4NCj4gDQo+IFN1cmUsIHdl
+IGNhbiB0YWtlIGl0IHZpYSBYZW4gdHJlZSBmb3IgcmMzLg0KDQpUaGFuayB5b3UgdmVyeSBtdWNo
+IQ0KDQpCZXN0IFJlZ2FyZHMsDQpFbGVuYS4NCg0KPiANCj4gLWJvcmlzDQo=
