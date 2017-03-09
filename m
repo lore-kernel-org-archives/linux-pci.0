@@ -1,97 +1,85 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:19292 "EHLO mga06.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:47197 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751181AbdCSIPq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 19 Mar 2017 04:15:46 -0400
-From: Sasha Neftin <sasha.neftin@intel.com>
-To: linux-pci@vger.kernel.org, bhelgaas@google.com,
-        alex.williamson@redhat.com, dima.ruinskiy@intel.com,
-        alexander.h.duyck@intel.com, sasha.neftin@intel.com
-Subject: [PATCH] PCI: do not perform FLR for 82579 devices
-Date: Sun, 19 Mar 2017 10:15:42 +0200
-Message-Id: <20170319081542.20908-1-sasha.neftin@intel.com>
+        id S1751375AbdCIJcw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 9 Mar 2017 04:32:52 -0500
+Subject: Re: [PATCH 22/29] drivers, scsi: convert iscsi_task.refcount from
+ atomic_t to refcount_t
+To: "Reshetova, Elena" <elena.reshetova@intel.com>,
+        Chris Leech <cleech@redhat.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+ <1488810076-3754-23-git-send-email-elena.reshetova@intel.com>
+ <20170308184740.4gueok5csdkt7u62@straylight.hirudinean.org>
+ <2236FBA76BA1254E88B949DDB74E612B41C569DC@IRSMSX102.ger.corp.intel.com>
+ <5a1f7860-b650-9fe7-fafb-1f0c7cae00e7@suse.de>
+ <2236FBA76BA1254E88B949DDB74E612B41C56ABF@IRSMSX102.ger.corp.intel.com>
+Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux1394-devel@lists.sourceforge.net"
+        <linux1394-devel@lists.sourceforge.net>,
+        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+        "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
+        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
+        "peterz@infradead.org" <peterz@infradead.org>,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Message-ID: <b1abd29e-5bce-59a4-a66d-d78310921545@suse.de>
+Date: Thu, 9 Mar 2017 10:32:03 +0100
+MIME-Version: 1.0
+In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C56ABF@IRSMSX102.ger.corp.intel.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch come to solve problem of 82579 network adapters hang.
-Link on Datasheets and Specification Updates:
-http://www.intel.com/content/www/us/en/embedded/products
-/networking/82579-gigabit-ethernet-connection-family-documentation.html
-Please, refer to Specification Update:
-http://www.intel.com/content/dam/www/public/us/en/documents/
-specification-updates/
-82579lm-82579v-gigabit-network-connection-spec-update.pdf
+On 03/09/2017 10:26 AM, Reshetova, Elena wrote:
+> 
+>> On 03/09/2017 08:18 AM, Reshetova, Elena wrote:
+>>>> On Mon, Mar 06, 2017 at 04:21:09PM +0200, Elena Reshetova wrote:
+>>>>> refcount_t type and corresponding API should be
+>>>>> used instead of atomic_t when the variable is used as
+>>>>> a reference counter. This allows to avoid accidental
+>>>>> refcounter overflows that might lead to use-after-free
+>>>>> situations.
+>>>>>
+>>>>> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+>>>>> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+>>>>> Signed-off-by: Kees Cook <keescook@chromium.org>
+>>>>> Signed-off-by: David Windsor <dwindsor@gmail.com>
+>>>>
+>>>> This looks OK to me.
+>>>>
+>>>> Acked-by: Chris Leech <cleech@redhat.com>
+>>>
+>>> Thank you for review! Do you have a tree that can take this change?
+>>
+>> Hi Elena,
+>>
+>> iscsi like fcoe should go via the SCSI tree.
+> 
+> Thanks Johannes! Should I resend with "Acked-by" added in order for it to be picked up? 
 
-Reproduction:
-Attach the device to a VM, then detach and try to attach again.
+Yes I think this would be a good way to go.
 
-Fix:
-Operating system won't support FLR for 82579 devices.
-
-Signed-off-by: Sasha Neftin <sasha.neftin@intel.com>
----
- drivers/pci/pci.c    |  6 ++++++
- drivers/pci/quirks.c | 13 +++++++++++++
- include/linux/pci.h  |  2 ++
- 3 files changed, 21 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02ffdb9..bef14777bb30 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3781,6 +3781,9 @@ static int pcie_flr(struct pci_dev *dev, int probe)
- 	if (!(cap & PCI_EXP_DEVCAP_FLR))
- 		return -ENOTTY;
- 
-+	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
-+		return -ENOTTY;
-+
- 	if (probe)
- 		return 0;
- 
-@@ -3801,6 +3804,9 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
- 	if (!pos)
- 		return -ENOTTY;
- 
-+	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
-+		return -ENOTTY;
-+
- 	pci_read_config_byte(dev, pos + PCI_AF_CAP, &cap);
- 	if (!(cap & PCI_AF_CAP_TP) || !(cap & PCI_AF_CAP_FLR))
- 		return -ENOTTY;
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 1800befa8b8b..eb333a61637e 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4566,3 +4566,16 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
-+
-+/*
-+ * Workaround FLR issues for 82579 devices
-+ * This code make sure not perform the FLR (Function Level Reset) via PCIe,
-+ * in order to workaround a bug found while using device passthrough,
-+ * where the interface would become non-responsive.
-+ */
-+static void quirk_intel_no_flr(struct pci_dev *dev)
-+{
-+	dev->dev_flags |= PCI_DEV_FLAGS_NO_FLR_RESET;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a124216a..f4fea5ad2d12 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -178,6 +178,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
- 	/* Get VPD from function 0 VPD */
- 	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
-+	/* Do not use FLR even if device advertises PCI_AF_CAP */
-+	PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 9),
- };
- 
- enum pci_irq_reroute_variant {
+Byte,
+	Johannes
 -- 
-2.11.0
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
