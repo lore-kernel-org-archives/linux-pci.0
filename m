@@ -1,119 +1,50 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v3 14/23] PCI: dwc: dra7xx: Workaround for errata id i870
-Date: Thu, 9 Mar 2017 13:27:25 +0530
-Message-ID: <1489046254-19919-15-git-send-email-kishon@ti.com>
-In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
-References: <1489046254-19919-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1489046254-19919-9-git-send-email-kishon@ti.com>
+References: <1489046254-19919-1-git-send-email-kishon@ti.com>
+ <1489046254-19919-9-git-send-email-kishon@ti.com>
+From: Rami Rosen <roszenrami@gmail.com>
+Date: Thu, 9 Mar 2017 23:59:18 +0200
+Message-ID: <CAKoUArkTXbMvfTmNjA_VGWodbP5JxVNBP1DNUTYND2LvUfKsJQ@mail.gmail.com>
+Subject: Re: [PATCH v3 08/23] Documentation: PCI: Add binding documentation
+ for pci-test endpoint function
+To: Kishon Vijay Abraham I <kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Linux Doc Mailing List <linux-doc@vger.kernel.org>, linux-pci@vger.kernel.org,
+ nsekhar@ti.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ hch@infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Linux OMAP Mailing List <linux-omap@vger.kernel.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to errata i870, access to the PCIe slave port
-that are not 32-bit aligned will result in incorrect mapping
-to TLP Address and Byte enable fields.
+Hi,
+Minor comment: typo, should be: don't care:
 
-Accessing non 32-bit aligned data causes incorrect data in the target
-buffer if memcpy is used. Implement the workaround for this
-errata here.
+> +revid           : dont't care
+> +progif_code     : don't care
+> +subclass_code   : don't care
+> +baseclass_code  : should be 0xff
+> +cache_line_size         : don't care
+> +subsys_vendor_id : don't care
+> +subsys_id       : don't care
+> +interrupt_pin   : Should be 1 - INTA, 2 - INTB, 3 - INTC, 4 -INTD
+> +msi_interrupts  : Should be 1 to 32 depending on the number of msi
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c |   53 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
+Regards,
+Rami Rosen
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 1cd5c2b..71783a6 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -26,6 +26,8 @@
- #include <linux/pm_runtime.h>
- #include <linux/resource.h>
- #include <linux/types.h>
-+#include <linux/mfd/syscon.h>
-+#include <linux/regmap.h>
- 
- #include "pcie-designware.h"
- 
-@@ -528,6 +530,51 @@ static int dra7xx_pcie_enable_phy(struct dra7xx_pcie *dra7xx)
- 	{},
- };
- 
-+/*
-+ * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
-+ * @dra7xx: the dra7xx device where the workaround should be applied
-+ *
-+ * Access to the PCIe slave port that are not 32-bit aligned will result
-+ * in incorrect mapping to TLP Address and Byte enable fields. Therefore,
-+ * byte and half-word accesses are not possible to byte offset 0x1, 0x2, or
-+ * 0x3.
-+ *
-+ * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
-+ */
-+static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
-+{
-+	int ret;
-+	struct device_node *np = dev->of_node;
-+	struct regmap *regmap;
-+	unsigned int reg;
-+	unsigned int field;
-+
-+	regmap = syscon_regmap_lookup_by_phandle(np,
-+						 "ti,syscon-unaligned-access");
-+	if (IS_ERR(regmap)) {
-+		dev_dbg(dev, "can't get ti,syscon-unaligned-access\n");
-+		return -EINVAL;
-+	}
-+
-+	if (of_property_read_u32_index(np, "ti,syscon-unaligned-access", 1,
-+				       &reg)) {
-+		dev_err(dev, "couldn't get legacy mode register offset\n");
-+		return -EINVAL;
-+	}
-+
-+	if (of_property_read_u32_index(np, "ti,syscon-unaligned-access", 2,
-+				       &field)) {
-+		dev_err(dev, "can't get bit field for setting legacy mode\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = regmap_update_bits(regmap, reg, field, field);
-+	if (ret)
-+		dev_err(dev, "failed to enable unaligned access\n");
-+
-+	return ret;
-+}
-+
- static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- {
- 	u32 reg;
-@@ -637,6 +684,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	case DW_PCIE_RC_TYPE:
- 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
- 				   DEVICE_TYPE_RC);
-+
- 		ret = dra7xx_add_pcie_port(dra7xx, pdev);
- 		if (ret < 0)
- 			goto err_gpio;
-@@ -644,6 +692,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	case DW_PCIE_EP_TYPE:
- 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
- 				   DEVICE_TYPE_EP);
-+
-+		ret = dra7xx_pcie_ep_unaligned_memaccess(dev);
-+		if (ret)
-+			goto err_gpio;
-+
- 		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
- 		if (ret < 0)
- 			goto err_gpio;
--- 
-1.7.9.5
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
