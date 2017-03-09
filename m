@@ -1,57 +1,78 @@
-Return-Path: <SRS0=9UDy=2X=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=9UDy=2X=free.fr=slash.tmp@kernel.org>
-Subject: Re: Neophyte questions about PCIe
-From: Mason <slash.tmp@free.fr>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>, Rob Herring <robh@kernel.org>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- David Laight <david.laight@aculab.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Robin Murphy <robin.murphy@arm.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
- <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
- <9ba05c2c-57ef-b2c0-6a7c-457c392d98b5@free.fr>
- <df517167-d692-38a8-9c8f-a1112c7f578d@free.fr>
-Message-ID: <94b3c89c-b116-288f-7530-15cc2611f425@free.fr>
-Date: Tue, 14 Mar 2017 15:00:11 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v3 08/23] Documentation: PCI: Add binding documentation for
+ pci-test endpoint function
+Date: Thu, 9 Mar 2017 13:27:19 +0530
+Message-ID: <1489046254-19919-9-git-send-email-kishon@ti.com>
+In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
+References: <1489046254-19919-1-git-send-email-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <df517167-d692-38a8-9c8f-a1112c7f578d@free.fr>
-Content-Type: text/plain; charset=ISO-8859-15
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/03/2017 18:49, Mason wrote:
+Add binding documentation for pci-test endpoint function that helps in
+adding and configuring pci-test endpoint function.
 
-> /* Root complex reports incorrect device class */
-> static void tango_pcie_fixup_class(struct pci_dev *dev)
-> {
-> 	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
-> }
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/PCI/00-INDEX                         |    2 ++
+ .../PCI/endpoint/function/binding/pci-test.txt     |   17 +++++++++++++++++
+ 2 files changed, 19 insertions(+)
+ create mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.txt
 
-Gen1 controller reports class/rev = 0x04800001
-Gen2 controller reports class/rev = 0x06000001
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index 4e5a283..53717b7 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -18,3 +18,5 @@ endpoint/pci-endpoint-cfs.txt
+ 	- guide to use configfs to configure the pci endpoint function.
+ endpoint/pci-test-function.txt
+ 	- specification of *pci test* function device.
++endpoint/function/binding/
++	- binding documentation for pci endpoint function
+diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+new file mode 100644
+index 0000000..02a6c94
+--- /dev/null
++++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+@@ -0,0 +1,17 @@
++PCI TEST ENDPOINT FUNCTION
++
++name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
++
++Configurable Fields:
++vendorid	 : should be 0x104c
++deviceid	 : should be 0xb500 for DRA74x and 0xb501 for DRA72x
++revid		 : dont't care
++progif_code	 : don't care
++subclass_code	 : don't care
++baseclass_code	 : should be 0xff
++cache_line_size	 : don't care
++subsys_vendor_id : don't care
++subsys_id	 : don't care
++interrupt_pin	 : Should be 1 - INTA, 2 - INTB, 3 - INTC, 4 -INTD
++msi_interrupts	 : Should be 1 to 32 depending on the number of msi interrupts
++		   to test
+-- 
+1.7.9.5
 
-#define PCI_CLASS_BRIDGE_HOST		0x0600
-#define PCI_CLASS_BRIDGE_ISA		0x0601
-#define PCI_CLASS_BRIDGE_EISA		0x0602
-#define PCI_CLASS_BRIDGE_MC		0x0603
-#define PCI_CLASS_BRIDGE_PCI		0x0604
-#define PCI_CLASS_BRIDGE_PCMCIA		0x0605
-#define PCI_CLASS_BRIDGE_NUBUS		0x0606
-#define PCI_CLASS_BRIDGE_CARDBUS	0x0607
-#define PCI_CLASS_BRIDGE_RACEWAY	0x0608
-#define PCI_CLASS_BRIDGE_OTHER		0x0680
 
-My fixup replaces 0x048000 with 0x060400.
-
-	0x060400 != 0x060000
-
-Which is correct:
-PCI_CLASS_BRIDGE_HOST or PCI_CLASS_BRIDGE_PCI?
-
-Naively, I would expect Host/PCI bridge to be more correct
-for a root complex.
-
-Regards.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
