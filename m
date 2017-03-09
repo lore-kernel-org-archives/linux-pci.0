@@ -1,53 +1,61 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40193 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752106AbdC1W0A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Mar 2017 18:26:00 -0400
-Date: Wed, 29 Mar 2017 00:26:27 +0200
-From: 'Joerg Roedel' <jroedel@suse.de>
-To: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-Cc: 'Joerg Roedel' <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        "Nath, Arindam" <Arindam.Nath@amd.com>
-Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
-Message-ID: <20170328222627.GS8329@suse.de>
-References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
- <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328202844.GQ8329@suse.de>
- <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328205616.GR8329@suse.de>
- <BN6PR12MB165289163EA3548B59D0C1ACF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 08/22] PCI: dwc: designware: Add EP mode support
+To: Christoph Hellwig <hch@infradead.org>, Joao Pinto
+ <Joao.Pinto@synopsys.com>, Kishon Vijay Abraham I <kishon@ti.com>
+References: <1487325042-28227-1-git-send-email-kishon@ti.com>
+ <1487325042-28227-9-git-send-email-kishon@ti.com>
+ <45e5288e-d11f-c855-af9b-692a42d878c6@synopsys.com> <58BE42B2.20305@ti.com>
+ <02461be2-268d-485a-2bc4-3b148726d37d@synopsys.com>
+ <aa9835a7-07f4-d042-d04a-b0d9cc0ea3de@synopsys.com> <58BFEC7D.3090608@ti.com>
+ <35d539ba-956f-330e-c28d-b67c3d414578@synopsys.com> <58C00798.1030302@ti.com>
+ <650c53fc-482c-feab-faa3-c30689d3d128@synopsys.com>
+ <20170308191419.GA12085@infradead.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <af4dd1db-dc24-1797-a43a-8487a95e47f9@synopsys.com>
+Date: Thu, 9 Mar 2017 11:55:01 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <BN6PR12MB165289163EA3548B59D0C1ACF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170308191419.GA12085@infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
+ Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="windows-1252"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 28, 2017 at 09:13:23PM +0000, Deucher, Alexander wrote:
-> If I understand Arindam's patch correctly, it only flushes TLB entries
-> for domains in the flush queue whereas the previous behavior was to
-> flush all domains.  If there was no TLB flush in the queue for that
-> domain, could flushing it cause a problem?
+Hi Christoph,
 
-No, that can't cause a problem. An io/tlb flush for the device is just a
-message that the device should invalidate its own tlb. The device can't
-know and doesn't need to know whether the page-tables it used to fill
-the tlb really changed.
+=C0s 7:14 PM de 3/8/2017, Christoph Hellwig escreveu:
+> On Wed, Mar 08, 2017 at 03:32:03PM +0000, Joao Pinto wrote:
+>> #define PCIE_GET_ATU_INB_UNR_REG_ADDR(region, register)		\
+>> 					((0x3 << 20) | (region << 9) |	\
+>> 					(0x1 << 8)
+> =
 
-As it looks, the problem we are seeing here is that we are sending a
-large amount of these requests to the GPU device, and wait for its
-completion every time. This shouldn't be a problem for ATS devices, but
-the GPU here seems to fail at some point and doesn't answer to the
-invalidation request anymore, causing the completion-wait loop timeouts.
-
-Arindam's patch makes the high flush-frequency less likely, but it can
-still happen, depending on how the GPU is used. So its the best to
-keep ATS disabled on the device as it doesn't work correctly and we risk
-running in the same problem again when we leave it enabled and just make
-the trigger less likely.
+> Can you turn this and any similar macro into inline functions?
+> =
 
 
-	Joerg
+Use an inline functions instead of macro is fine by me. In the initial patc=
+h I
+implemented as a macro since it only does simple bit shifts and nothing els=
+e and
+seemed simpler as a macro.
+
+Thanks,
+Joao
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
