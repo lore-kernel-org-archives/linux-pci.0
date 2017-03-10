@@ -1,19 +1,22 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170322193111.GA8190@wunner.de>
- <31da6db5-be22-9e84-5e76-67c519bc0b34@codeaurora.org>
- <CAKv+Gu8Uw-X3AR6aQYevPdRfcgPNnqL4O3sRoKxsZAiW29sbqg@mail.gmail.com>
- <704b8b8c-e607-29b3-e101-bbecd90073bb@codeaurora.org>
- <CAKv+Gu-3wAXLyogLxg3N=6vf6Ryz2cLXw01tZUR_E48ddVU22A@mail.gmail.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <4ccb4d92-3830-3980-38c3-7085a3d97734@codeaurora.org>
-Date: Wed, 22 Mar 2017 15:57:56 -0400
+Subject: Re: [RESEND PATCH v3 4/7] PCI: dwc: all: Modify dbi accessors to take
+ dbi_base as argument
+To: Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas
+ <bhelgaas@google.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, <linux-pci@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+ <linux-arm-kernel@lists.infradead.org>
+References: <1489041545-15730-1-git-send-email-kishon@ti.com>
+ <1489041545-15730-5-git-send-email-kishon@ti.com>
+ <4e13580d-2625-5eed-bcbc-2ffd7493b073@axis.com>
+ <595fab62-fb7a-888a-f898-7b59030585f1@axis.com> <58C28FCC.4070100@ti.com>
+ <d920d892-af48-b94f-6eb7-e9e0ff5d40c0@axis.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <58C2A28C.60703@ti.com>
+Date: Fri, 10 Mar 2017 18:26:44 +0530
 MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu-3wAXLyogLxg3N=6vf6Ryz2cLXw01tZUR_E48ddVU22A@mail.gmail.com>
+In-Reply-To: <d920d892-af48-b94f-6eb7-e9e0ff5d40c0@axis.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,78 +24,71 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
- Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
- Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
- Lukas Wunner <lukas@wunner.de>, Hanjun Guo <hanjun.guo@linaro.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Yinghai Lu <yinghai@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
+ Jesper Nilsson <jespern@axis.com>, Zhou Wang <wangzhou1@hisilicon.com>,
+ Murali Karicheri <m-karicheri2@ti.com>, Lucas Stach <l.stach@pengutronix.de>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/22/2017 3:52 PM, Ard Biesheuvel wrote:
-> On 22 March 2017 at 19:49, Sinan Kaya <okaya@codeaurora.org> wrote:
->> On 3/22/2017 3:41 PM, Ard Biesheuvel wrote:
->>>> As far as I know, kernel honors resource assignments done by the UEFI BIOS if
->>>> they are correct. Kernel will reassign the resources only if something is wrong.
->>>>
->>> No, the kernel always reassigns all BARs on arm64.
->>
->> I think this is where the problem is.
->>
->> I'm not seeing this happen on QDF2400 which supports ACPI + UEFI BIOS
->> combination only.
->>
->> I see that kernel honored the resources assigned by UEFI BIOS if I compare
->> the BAR addresses.
->>
-> 
-> Well, if you are using the standard MdeModulePkg PciHostBridgeDxe
-> driver in UEFI, the logic is quite similar, and so you usually end up
-> with the same resource assignments. But the kernel does recompute them
-> from scratch, and ignores the existing configuration that is present
-> in the BARs
+Hi Niklas,
 
-Yes, standard stuff in UEFI. OK. That may explain what I'm seeing.
-
-> 
->> I see reassignment only when something is horribly broken. Then, there would
->> be a bridge configuration invalid message in the boot log to confirm this.
+On Friday 10 March 2017 06:01 PM, Niklas Cassel wrote:
+> On 03/10/2017 12:36 PM, Kishon Vijay Abraham I wrote:
+>> Hi,
 >>
+>> On Thursday 09 March 2017 08:35 PM, Niklas Cassel wrote:
 >>>
->>>> Will this code break other platforms/architectures?
+>>> On 03/09/2017 03:48 PM, Niklas Cassel wrote:
+>>>> On 03/09/2017 07:39 AM, Kishon Vijay Abraham I wrote:
+>>>>> dwc has 2 dbi address space labeled dbics and dbics2. The existing
+>>>>> helper to access dbi address space can access only dbics. However
+>>>>> dbics2 has to be accessed for programming the BAR registers in the
+>>>>> case of EP mode. This is in preparation for adding EP mode support
+>>>>> to dwc driver.
+>>>> Hello Kishon
 >>>>
->>> Which platforms/architectures are you referring to? EFIFB on a PCI
->>> device is currently broken on arm64.
->>
->> In general or on your particular platform?
->>
->>> On x86, it works, given that BARs
->>> are usually not reassigned, and so the patch should be a no-op in that
->>> case (although I'd argue it is still an improvement to check whether
->>> the device that owns the BAR actually has memory decoding enabled
->>> before we attach the framebuffer driver to it)
->>>
->>
->> I'm fine as long as it doesn't break anything. That's why, I'm asking.
->>
+>>>> I don't really like the idea of adding an extra argument to every existing read/write.
+>>>> Will not a read/write using dbi2 be quite uncommon compared to a read/write
+>>>> using dbi?
+>>>>
+>>>> How about something like this:
+>>>>
+>>>> void __dw_pcie_writel(struct dw_pcie *pci, void __iomem *base, u32 reg, u32 val)
+>>>> {
+>>>>     if (pci->ops->writel_dbi)
+>>>>         pci->ops->writel_dbi(pci, base, reg, val);
+>>>>     else
+>>>>         writel(val, base + reg);
+>>>> }
+>>>>
+>>>> #define dw_pcie_writel_dbi(pci, reg, val) __dw_pcie_writel(pci, pci->dbi_base, reg, val)
+>>>> #define dw_pcie_writel_dbi2(pci, reg, val) __dw_pcie_writel(pci, pci->dbi_base2, reg, val)
+>>> Perhaps make dw_pcie_writel_dbi2 a function rather than a define,
+>>> so we can return an error if pci->dbi_base2 == NULL.
+>> Should we return an error? We don't return error for dbi_base either. I think
+>> it should be sufficient to return errors while populating dbi_base or
+>> dbi_base2. Otherwise it's a bug and should result in abort. Joao?
 > 
-> If you have working EFIFB on your platform, it works by accident. This
-> patch is needed to ensure that the BAR associated with the EFI
-> framebuffer is left untouched.
+> Sorry for previous empty email.
 > 
+> 
+> What I meant to write:
+> 
+> Right now we do error checking for dbi_base in platform specific code
+> and in pcie-designware-host.c:dw_pcie_host_init.
 
-I never claimed that. I was just double checking your assumptions.
-I really don't like ARM64 specific PCI code in general. PCI doesn't care
-about CPU type. I hope to see this patch become part of common code.
+it's been done in dw_pcie_host_init not as an error checking but since it's
+*optional* for certain platforms to populate dbi_base (i.e where dbi_base is
+mapped to configuration space), host_init takes care of assigning dbi_base to
+configuration space address.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Thanks
+Kishon
 
 _______________________________________________
 linux-arm-kernel mailing list
