@@ -1,48 +1,94 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 21/29] drivers, s390: convert fc_fcp_pkt.ref_cnt from
- atomic_t to refcount_t
-To: Elena Reshetova <elena.reshetova@intel.com>,
-        gregkh@linuxfoundation.org
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-22-git-send-email-elena.reshetova@intel.com>
-Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
-        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, peterz@infradead.org,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Message-ID: <536a58ba-8896-5639-cab9-bd2f13bed325@suse.de>
-Date: Mon, 6 Mar 2017 16:27:11 +0100
-MIME-Version: 1.0
-In-Reply-To: <1488810076-3754-22-git-send-email-elena.reshetova@intel.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.130]:52036 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752187AbdCJIBr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2017 03:01:47 -0500
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [RFT PATCH] PCI: provide helper to reset all domain for host drivers
+Date: Fri, 10 Mar 2017 15:58:26 +0800
+Message-Id: <1489132706-56952-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/06/2017 03:21 PM, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
+Otherwise the domain_nr will be increased if doing ubind and
+bind host drives. I don't find any useful routine to reset it
+from current code, so add this helper. This patch is based on patchset[1]
+from Brian.
 
-The subject is wrong, should be something like "scsi: libfc convert
-fc_fcp_pkt.ref_cnt from atomic_t to refcount_t" but not s390.
+[1]: https://patchwork.kernel.org/patch/9614517/
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Other than that
-Acked-by: Johannes Thumshirn <jth@kernel.org>
+---
+Hi Brian,
 
+I wasn't able to run my platfrom with linux-next but I test this for
+my local kernel-v4.4, and I just send this for test!
+
+ drivers/pci/host/pcie-rockchip.c | 1 +
+ drivers/pci/pci.c                | 6 ++++++
+ include/linux/pci.h              | 3 +++
+ 3 files changed, 10 insertions(+)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index bd6df72..61787e7 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -1435,6 +1435,7 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+ 	pci_remove_root_bus(rockchip->root_bus);
+ 	pci_unmap_iospace(rockchip->io);
+ 	irq_domain_remove(rockchip->irq_domain);
++	pci_reset_all_domain();
+ 
+ 	phy_power_off(rockchip->phy);
+ 	phy_exit(rockchip->phy);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 3ec24877..7c7c63b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5181,6 +5181,12 @@ int pci_get_new_domain_nr(void)
+ 	return atomic_inc_return(&__domain_nr);
+ }
+ 
++void pci_reset_all_domain(void)
++{
++	atomic_set(&__domain_nr, -1);
++}
++EXPORT_SYMBOL(pci_reset_all_domain);
++
+ #ifdef CONFIG_PCI_DOMAINS_GENERIC
+ static int of_pci_bus_find_domain_nr(struct device *parent)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eb3da1a..c9bd939 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1456,11 +1456,13 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+ #ifdef CONFIG_PCI_DOMAINS
+ extern int pci_domains_supported;
+ int pci_get_new_domain_nr(void);
++void pci_reset_all_domain(void);
+ #else
+ enum { pci_domains_supported = 0 };
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
++static inline void pci_reset_all_domain(void) {}
+ #endif /* CONFIG_PCI_DOMAINS */
+ 
+ /*
+@@ -1617,6 +1619,7 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+ static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+ static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
+ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
++static inline void pci_reset_all_domain(void) {};
+ 
+ #define dev_is_pci(d) (false)
+ #define dev_is_pf(d) (false)
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+1.9.1
