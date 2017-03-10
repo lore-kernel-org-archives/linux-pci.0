@@ -1,185 +1,116 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=Soie=2T=ACULAB.COM=David.Laight@kernel.org>
+Return-Path: <SRS0=Soie=2T=ACULAB.COM=David.Laight@kernel.org>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Robin Murphy' <robin.murphy@arm.com>, Mason <slash.tmp@free.fr>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>, "Arnd
+ Bergmann" <arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, "Marc
+ Zyngier" <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>, linux-usb
+	<linux-usb@vger.kernel.org>, Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>, Linux ARM
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: Neophyte questions about PCIe
+Date: Fri, 10 Mar 2017 14:06:07 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
+References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
+ <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
+ <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
+ <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
+In-Reply-To: <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-In-Reply-To: <20170322113500.GA3940@red-moon>
-References: <1490123810-12383-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170322102939.GB3519@red-moon>
- <35F65528-FC1F-4813-A0C6-641CF864212A@linaro.org>
- <20170322113500.GA3940@red-moon>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Wed, 22 Mar 2017 12:39:57 +0000
-Message-ID: <CAKv+Gu-XJK8bJvPrjfHbFHsOmuJ96RRgdsg2E7vgC0HZDemyFg@mail.gmail.com>
-Subject: Re: [PATCH v2] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
- Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
- Heyi Guo <heyi.guo@linaro.org>, Peter Jones <pjones@redhat.com>,
- Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Yinghai Lu <yinghai@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22 March 2017 at 11:35, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> [+Yinghai]
->
-> On Wed, Mar 22, 2017 at 11:08:48AM +0000, Ard Biesheuvel wrote:
->>
->> > On 22 Mar 2017, at 10:29, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
->> >
->> >> On Tue, Mar 21, 2017 at 07:16:50PM +0000, Ard Biesheuvel wrote:
->> >> On UEFI systems, the PCI subsystem is enumerated by the firmware,
->> >> and if a graphical framebuffer is exposed by a PCI device, its base
->> >> address and size are exposed to the OS via the Graphics Output
->> >> Protocol (GOP).
->> >>
->> >> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
->> >> scratch at boot. This may result in the GOP framebuffer address to
->> >> become stale, if the BAR covering the framebuffer is modified. This
->> >> will cause the framebuffer to become unresponsive, and may in some
->> >> cases result in unpredictable behavior if the range is reassigned to
->> >> another device.
->> >>
->> >> So add a quirk to the EFI fb driver to find the BAR associated with
->> >> the GOP base address, and set the IORESOURCE_PCI_FIXED attribute so
->> >> that the PCI core will leave it alone.
->> >>
->> >> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
->> >> ---
->> >> As it turns out, setting the IORESOURCE_PCI_FIXED flag is not sufficient
->> >> to make the PCI core leave the BARs alone, so instead, the BAR resource
->> >> is claimed in the quirk handler.
->> >>
->> >> As suggested by Lorenzo, a check is added that the device has memory
->> >> decoding enabled, and if it doesn't, no attempt is made to use the
->> >> EFI framebuffer.
->> >>
->> >> drivers/video/fbdev/efifb.c | 58 +++++++++++++++++++-
->> >> 1 file changed, 57 insertions(+), 1 deletion(-)
->> >>
->> >> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
->> >> index 8c4dc1e1f94f..eeeaf78c4a5b 100644
->> >> --- a/drivers/video/fbdev/efifb.c
->> >> +++ b/drivers/video/fbdev/efifb.c
->> >> @@ -10,6 +10,7 @@
->> >> #include <linux/efi.h>
->> >> #include <linux/errno.h>
->> >> #include <linux/fb.h>
->> >> +#include <linux/pci.h>
->> >> #include <linux/platform_device.h>
->> >> #include <linux/screen_info.h>
->> >> #include <video/vga.h>
->> >> @@ -143,6 +144,9 @@ static struct attribute *efifb_attrs[] = {
->> >> };
->> >> ATTRIBUTE_GROUPS(efifb);
->> >>
->> >> +static bool pci_bar_found;    /* did we find a BAR matching the efifb base? */
->> >> +static bool pci_bar_disabled;    /* was it disabled? */
->> >> +
->> >> static int efifb_probe(struct platform_device *dev)
->> >> {
->> >>    struct fb_info *info;
->> >> @@ -152,7 +156,7 @@ static int efifb_probe(struct platform_device *dev)
->> >>    unsigned int size_total;
->> >>    char *option = NULL;
->> >>
->> >> -    if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
->> >> +    if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI || pci_bar_disabled)
->> >>        return -ENODEV;
->> >>
->> >>    if (fb_get_options("efifb", &option))
->> >> @@ -360,3 +364,55 @@ static struct platform_driver efifb_driver = {
->> >> };
->> >>
->> >> builtin_platform_driver(efifb_driver);
->> >> +
->> >> +static void claim_efifb_bar(struct pci_dev *dev, int idx)
->> >> +{
->> >> +    u16 word;
->> >> +
->> >> +    pci_bar_found = true;
->> >> +
->> >> +    if (pci_claim_resource(dev, idx)) {
->> >
->> > I would not do that. If claiming the resource succeeds, it will become
->> > immutable (ie it becomes part of the resource tree), if it is your FB
->> > fine if it isn't this will mess things up since a) you won't be able to
->> > claim the PCI resources for the real FB and b) you won't be able to
->> > reallocate the PCI resources for the device we *think* is the FB but it
->> > actually isn't (unless we force a realloc).
->> >
->> > So, I would carry out the check below first, if the device is enabled
->> > we should flag its resource IORESOURCE_PCI_FIXED otherwise just do
->> > nothing and let PCI core (through arch specific realloc policy) handle
->> > it.
->> >
->>
->> Well, it turned out that this does not actually work: the BAR is not
->> reassigned, but the same range ends up being given to another device
->> in some cases.
->
-> Ok, that's because the PCI core just prevent assigning that resource
-> but it does not request it (ie insert it in the resource tree) which
-> is what you do when claiming it.
->
+From: Robin Murphy
+> Sent: 10 March 2017 13:16
+> On 09/03/17 23:43, Mason wrote:
+> > On 08/03/2017 16:17, Bjorn Helgaas wrote:
+> > [snip excellent in-depth overview]
+> >
+> > I think I'm making progress, in that I now have a better
+> > idea of what I don't understand. So I'm able to ask
+> > (hopefully) less vague questions.
+> >
+> > Take the USB3 PCIe adapter I've been testing with. At some
+> > point during init, the XHCI driver request some memory
+> > (via kmalloc?) in order to exchange data with the host, right?
+> >
+> > On my SoC, the RAM used by Linux lives at physical range
+> > [0x8000_0000, 0x8800_0000[ =3D> 128 MB
+> >
+> > How does the XHCI driver make the adapter aware of where
+> > it can scribble data? The XHCI driver has no notion that
+> > the device is behind a bus, does it?
+> >
+> > At some point, the physical addresses must be converted
+> > to PCI bus addresses, right? Is it computed subtracting
+> > the offset defined in the DT?
 
-Yes, that seems to be what is happening.
+The driver should call dma_alloc_coherent() which returns both the
+kernel virtual address and the device (xhci controller) has
+to use to access it.
+The cpu physical address is irrelevant (although it might be
+calculated in the middle somewhere).
 
-> I wonder how IORESOURCE_PCI_FIXED works on eg x86, I think it is time
-> to have a proper look into resources allocation code because there
-> are bits and pieces that are quite obscure to me.
->
 
-I did a quick test with calling request_mem_region(), in which case we
-end up with something like
+> > Then suppose the USB3 card wants to write to an address
+> > in RAM. It sends a packet on the PCIe bus, targeting
+> > the PCI bus address of that RAM, right? Is this address
+> > supposed to be in BAR0 of the root complex? I guess not,
+> > since Bjorn said that it was unusual for a RC to have
+> > a BAR at all. So I'll hand-wave, and decree that, by some
+> > protocol magic, the packet arrives at the PCIe controller.
+> > And this controller knows to forward this write request
+> > over the memory bus. Does that look about right?
+>=20
+> Generally, yes - if an area of memory space *is* claimed by a BAR, then
+> another PCI device accessing that would be treated as peer-to-peer DMA,
+> which may or may not be allowed (or supported at all).
 
-10000000-3efeffff : PCI Bus 0000:00
-  10000000-101d4bff : efifb:pci
-  101d5000-101d5fff : 0000:00:01.0
-  101d6000-101d6fff : 0000:00:02.0
-  101d7000-101d7fff : 0000:00:04.0
-    101d7000-101d7fff : ehci_hcd
-  101d8000-101d8fff : 0000:00:05.0
-  101e0000-101effff : 0000:00:05.0
-  10200000-1023ffff : 0000:00:02.0
+So PCIe addresses that refer to the host memory addresses are
+just forwarded to the memory subsystem.
+In practise this is almost everything.
 
-which works, because the region is no longer assigned to another BAR.
+The only other PCIe writes the host will see are likely to be associated
+with MIS and MSI-X interrupt support.
 
-But I think claiming the resource via the PCI subsystem is probably
-more appropriate, because then we get
+Some PCIe root complex support peer-to-peer writes but not reads.
+Write are normally 'posted' (so are 'fire and forget') reads need the
+completion TLP (containing the data) sent back - all hard and difficult.
 
-10000000-3efeffff : PCI Bus 0000:00
-  10000000-10ffffff : 0000:00:05.0
-    10000000-101d4fff : efifb
-  11000000-1103ffff : 0000:00:02.0
-  11040000-1104ffff : 0000:00:05.0
-  11050000-11050fff : 0000:00:01.0
-  11051000-11051fff : 0000:00:02.0
-  11052000-11052fff : 0000:00:04.0
-    11052000-11052fff : ehci_hcd
-  11053000-11053fff : 0000:00:05.0
+> For mem space
+> which isn't claimed by BARs, it's up to the RC to decide what to do. As
+> a concrete example (which might possibly be relevant) the PLDA XR3-AXI
+> IP which we have in the ARM Juno SoC has the ATR_PCIE_WINx registers in
+> its root port configuration block that control what ranges of mem space
+> are mapped to the external AXI master interface and how.
+>=20
+> > My problem is that, in the current implementation of the
+> > PCIe controller, the USB device that wants to write to
+> > memory is supposed to target BAR0 of the RC.
+>=20
+> That doesn't sound right at all. If the RC has a BAR, I'd expect it to
+> be for poking the guts of the RC device itself (since this prompted me
+> to go and compare, I see the Juno RC does indeed have it own enigmatic
+> 16KB BAR, which reads as ever-changing random junk; no idea what that's
+> about).
+>=20
+> > Since my mem space is limited to 256 MB, then BAR0 is
+> > limited to 256 MB (or even 128 MB, since I also need
+> > to mapthe device's BAR into the same mem space).
+>=20
+> Your window into mem space *from the CPU's point of view* is limited to
+> 256MB. The relationship between mem space and the system (AXI) memory
+> map from the point of view of PCI devices is a separate issue; if it's
+> configurable at all, it probably makes sense to have the firmware set an
+> outbound window to at least cover DRAM 1:1, then forget about it (this
+> is essentially what Juno UEFI does, for example).
 
-(Note that efifb does not use the entire BAR resource)
+So you have 128MB (max) of system memory that has cpu physical
+addresses 0x80000000 upwards.
+I'd expect it all to be accessible from any PCIe card at some PCIe
+address, it might be at address 0, 0x80000000 or any other offset.
 
-> I think I would reverse the order in which you carry out the BAR
-> reservation anyway (first check if the device is enabled second request
-> the resource ie claim it).
->
+I don't know which DT entry controls that offset.
 
-I will spin a v3 with the check and the claim in reverse order. But I
-think we should keep the pci_claim() call.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+	David
