@@ -1,68 +1,107 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.130]:42110 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750981AbdCJIoy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2017 03:44:54 -0500
+Subject: Re: [RFT PATCH] PCI: provide helper to reset all domain for host
+ drivers
+To: Brian Norris <briannorris@chromium.org>
+References: <1489132706-56952-1-git-send-email-shawn.lin@rock-chips.com>
+Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <6d207d54-bc32-f307-2aa1-0afed821342e@rock-chips.com>
+Date: Fri, 10 Mar 2017 16:44:42 +0800
 MIME-Version: 1.0
-In-Reply-To: <20170330100524.GA22801@red-moon>
-References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170322193111.GA8190@wunner.de>
- <CAKv+Gu_X-SEnz7h9J8boqqjOQGHQawwdSAq4haH-OGu8zdfNfA@mail.gmail.com>
- <20170323084819.GA23281@h08.hostsharing.net>
- <CAKv+Gu93eJ-js3g7M6Jdm6XGMaWMswFmzBG2qNT4rn+3=1+EyA@mail.gmail.com>
- <20170323105727.GA2441@red-moon>
- <466dcd2b-a781-2fe7-6ef0-5a3767c793e0@codeaurora.org>
- <CAKv+Gu9LbwpnJNi1OL25MWvYPxEOfKRHcs2jA2121BPaQWPzow@mail.gmail.com>
- <27f50de3-721e-e8ec-00c8-b7a9d3cff0d6@codeaurora.org>
- <CAKv+Gu-qRg8-YRCairppKrEfeLcW+OwVF8qZHp7vxXJA_AwPOw@mail.gmail.com>
- <20170330100524.GA22801@red-moon>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Thu, 30 Mar 2017 11:09:56 +0100
-Message-ID: <CAKv+Gu-ff98HrPK3f+E8soGJUXaaMxPLs2AuJ+rvXd0HWX-jXw@mail.gmail.com>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
- Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
- Peter Jones <pjones@redhat.com>, Sinan Kaya <okaya@codeaurora.org>,
- Heyi Guo <heyi.guo@linaro.org>, Lukas Wunner <lukas@wunner.de>,
- Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Yinghai Lu <yinghai@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1489132706-56952-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Type: text/plain; charset=gbk; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30 March 2017 at 11:05, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> On Thu, Mar 30, 2017 at 09:46:39AM +0100, Ard Biesheuvel wrote:
+On 2017/3/10 15:58, Shawn Lin wrote:
+> Otherwise the domain_nr will be increased if doing ubind and
+> bind host drives. I don't find any useful routine to reset it
+> from current code, so add this helper. This patch is based on patchset[1]
+> from Brian.
 >
-> [...]
->
->> > I'm asking why we don't fix the actual problem in PCIe ARM64 adaptation instead
->> > of working around it by quirks.
->> >
->> > I don't see any reason why ACPI ARM64 should carry the burden of legacy systems.
->> >
->> > Legacy only applies to DT based systems.
->> >
->>
->> I fully agree with this point: ACPI implies firmware, and so we should
->> be able to rely on firmware to have initialized the PCIe subsystem by
->> the time the kernel gets to access it.
->
-> https://lkml.org/lkml/2016/3/3/458
+> [1]: https://patchwork.kernel.org/patch/9614517/
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 >
 
-I don't think the fact that at least one system existed over a year
-ago whose UEFI assigned resources incorrectly should prevent us from
-being normative in this case.
+Oh, add "linux,pci-domain = <0>" for our DT could also works.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+> ---
+> Hi Brian,
+>
+> I wasn't able to run my platfrom with linux-next but I test this for
+> my local kernel-v4.4, and I just send this for test!
+>
+>  drivers/pci/host/pcie-rockchip.c | 1 +
+>  drivers/pci/pci.c                | 6 ++++++
+>  include/linux/pci.h              | 3 +++
+>  3 files changed, 10 insertions(+)
+>
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index bd6df72..61787e7 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -1435,6 +1435,7 @@ static int rockchip_pcie_remove(struct platform_device *pdev)
+>  	pci_remove_root_bus(rockchip->root_bus);
+>  	pci_unmap_iospace(rockchip->io);
+>  	irq_domain_remove(rockchip->irq_domain);
+> +	pci_reset_all_domain();
+>
+>  	phy_power_off(rockchip->phy);
+>  	phy_exit(rockchip->phy);
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 3ec24877..7c7c63b 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -5181,6 +5181,12 @@ int pci_get_new_domain_nr(void)
+>  	return atomic_inc_return(&__domain_nr);
+>  }
+>
+> +void pci_reset_all_domain(void)
+> +{
+> +	atomic_set(&__domain_nr, -1);
+> +}
+> +EXPORT_SYMBOL(pci_reset_all_domain);
+> +
+>  #ifdef CONFIG_PCI_DOMAINS_GENERIC
+>  static int of_pci_bus_find_domain_nr(struct device *parent)
+>  {
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index eb3da1a..c9bd939 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1456,11 +1456,13 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
+>  #ifdef CONFIG_PCI_DOMAINS
+>  extern int pci_domains_supported;
+>  int pci_get_new_domain_nr(void);
+> +void pci_reset_all_domain(void);
+>  #else
+>  enum { pci_domains_supported = 0 };
+>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>  static inline int pci_proc_domain(struct pci_bus *bus) { return 0; }
+>  static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+> +static inline void pci_reset_all_domain(void) {}
+>  #endif /* CONFIG_PCI_DOMAINS */
+>
+>  /*
+> @@ -1617,6 +1619,7 @@ static inline struct pci_dev *pci_get_bus_and_slot(unsigned int bus,
+>  static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
+>  static inline struct pci_dev *pci_dev_get(struct pci_dev *dev) { return NULL; }
+>  static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+> +static inline void pci_reset_all_domain(void) {};
+>
+>  #define dev_is_pci(d) (false)
+>  #define dev_is_pf(d) (false)
+>
+
+
+-- 
+Best Regards
+Shawn Lin
