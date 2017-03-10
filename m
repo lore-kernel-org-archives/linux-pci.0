@@ -1,244 +1,143 @@
-Return-Path: <SRS0=PHxk=2Z=gmail.com=alexdeucher@kernel.org>
-Return-Path: <SRS0=PHxk=2Z=gmail.com=alexdeucher@kernel.org>
+Return-Path: <SRS0=1EYN=2T=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=1EYN=2T=free.fr=slash.tmp@kernel.org>
+Subject: Re: Neophyte questions about PCIe
+To: David Laight <David.Laight@ACULAB.COM>,
+ Robin Murphy <robin.murphy@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>,
+ Arnd Bergmann <arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ linux-usb <linux-usb@vger.kernel.org>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
+ <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
+ <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
+ <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
+ <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
+Date: Fri, 10 Mar 2017 16:05:50 +0100
 MIME-Version: 1.0
-In-Reply-To: <DM5PR12MB18188AF745E7FB6B021E6600FF260@DM5PR12MB1818.namprd12.prod.outlook.com>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
- <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
- <CAPyr0yLWiGzU5ihFcj_NmA2Vk2R7GsKqo2LK8o3Eu+Df9m7vhw@mail.gmail.com>
- <6fac05e4-26ae-e959-9af6-cb68a04a1110@vodafone.de> <MWHPR1201MB0206CA2E6DAC3B83ACA52ADBB4270@MWHPR1201MB0206.namprd12.prod.outlook.com>
- <17c470c4-d406-b5ac-73d1-4dd5b83cfca8@vodafone.de> <DM5PR12MB18188AF745E7FB6B021E6600FF260@DM5PR12MB1818.namprd12.prod.outlook.com>
-From: Alex Deucher <alexdeucher@gmail.com>
-Date: Wed, 15 Mar 2017 22:25:08 -0400
-Message-ID: <CADnq5_NzFTWEB8NXT6LM9U=JfexpbZxQCyja1VqZv+NYMCmJwQ@mail.gmail.com>
-Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
-To: "Zhang, Jerry" <Jerry.Zhang@amd.com>
-Cc: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>,
-	"Zhou, David(ChunMing)" <David1.Zhou@amd.com>, Ayyappa Ch <ayyappa.ch.linux@gmail.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-	"platform-driver-x86@vger.kernel.org" <platform-driver-x86@vger.kernel.org>,
-	"helgaas@kernel.org" <helgaas@kernel.org>,
-	"amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 15, 2017 at 10:19 PM, Zhang, Jerry <Jerry.Zhang@amd.com> wrote:
->> -----Original Message-----
->> From: dri-devel [mailto:dri-devel-bounces@lists.freedesktop.org] On Beha=
-lf Of
->> Christian K?nig
->> Sent: Wednesday, March 15, 2017 17:29
->> To: Zhou, David(ChunMing); Ayyappa Ch
->> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; amd-
->> gfx@lists.freedesktop.org; platform-driver-x86@vger.kernel.org;
->> helgaas@kernel.org; dri-devel@lists.freedesktop.org
->> Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
->>
->> Yes, exactly that.
+On 10/03/2017 15:06, David Laight wrote:
+
+> Robin Murphy wrote:
 >
-> (I'm not familiar with PCI too much.)
-> Is there any restrict for PCI device?
-> I'm concerning if any PCI couldn't support it on some motherboard.
+>> On 09/03/17 23:43, Mason wrote:
+>>
+>>> I think I'm making progress, in that I now have a better
+>>> idea of what I don't understand. So I'm able to ask
+>>> (hopefully) less vague questions.
+>>>
+>>> Take the USB3 PCIe adapter I've been testing with. At some
+>>> point during init, the XHCI driver request some memory
+>>> (via kmalloc?) in order to exchange data with the host, right?
+>>>
+>>> On my SoC, the RAM used by Linux lives at physical range
+>>> [0x8000_0000, 0x8800_0000[ => 128 MB
+>>>
+>>> How does the XHCI driver make the adapter aware of where
+>>> it can scribble data? The XHCI driver has no notion that
+>>> the device is behind a bus, does it?
+>>>
+>>> At some point, the physical addresses must be converted
+>>> to PCI bus addresses, right? Is it computed subtracting
+>>> the offset defined in the DT?
+> 
+> The driver should call dma_alloc_coherent() which returns both the
+> kernel virtual address and the device (xhci controller) has
+> to use to access it.
+> The cpu physical address is irrelevant (although it might be
+> calculated in the middle somewhere).
 
-It depends on the PCI root bridge.  This patch set only implements
-support for AMD root bridges.  Intel and other vendors would need
-similar code.
+Thank you for that missing piece of the puzzle.
+I see some relevant action in drivers/usb/host/xhci-mem.c
 
-Alex
+And I now see this log:
 
->
+[    2.499320] xhci_hcd 0000:01:00.0: // Device context base array address = 0x8e07e000 (DMA), d0855000 (virt)
+[    2.509156] xhci_hcd 0000:01:00.0: Allocated command ring at cfb04200
+[    2.515640] xhci_hcd 0000:01:00.0: First segment DMA is 0x8e07f000
+[    2.521863] xhci_hcd 0000:01:00.0: // Setting command ring address to 0x20
+[    2.528786] xhci_hcd 0000:01:00.0: // xHC command ring deq ptr low bits + flags = @00000000
+[    2.537188] xhci_hcd 0000:01:00.0: // xHC command ring deq ptr high bits = @00000000
+[    2.545002] xhci_hcd 0000:01:00.0: // Doorbell array is located at offset 0x800 from cap regs base addr
+[    2.554455] xhci_hcd 0000:01:00.0: // xHCI capability registers at d0852000:
+[    2.561550] xhci_hcd 0000:01:00.0: // @d0852000 = 0x1000020 (CAPLENGTH AND HCIVERSION)
+
+I believe 0x8e07e000 is a CPU address, not a PCI bus address.
+
+
+>>> Then suppose the USB3 card wants to write to an address
+>>> in RAM. It sends a packet on the PCIe bus, targeting
+>>> the PCI bus address of that RAM, right? Is this address
+>>> supposed to be in BAR0 of the root complex? I guess not,
+>>> since Bjorn said that it was unusual for a RC to have
+>>> a BAR at all. So I'll hand-wave, and decree that, by some
+>>> protocol magic, the packet arrives at the PCIe controller.
+>>> And this controller knows to forward this write request
+>>> over the memory bus. Does that look about right?
 >>
->> Christian.
+>> Generally, yes - if an area of memory space *is* claimed by a BAR, then
+>> another PCI device accessing that would be treated as peer-to-peer DMA,
+>> which may or may not be allowed (or supported at all).
+> 
+> So PCIe addresses that refer to the host memory addresses are
+> just forwarded to the memory subsystem.
+> In practise this is almost everything.
+
+My RC drops packets not targeting its BAR0.
+
+> The only other PCIe writes the host will see are likely to be associated
+> with MIS and MSI-X interrupt support.
+
+Rev 1 of the PCIe controller is supposed to forward MSI doorbell
+writes over the global bus to the PCIe controller's MMIO register.
+
+> Some PCIe root complex support peer-to-peer writes but not reads.
+> Write are normally 'posted' (so are 'fire and forget') reads need the
+> completion TLP (containing the data) sent back - all hard and difficult.
+> 
+>> For mem space
+>> which isn't claimed by BARs, it's up to the RC to decide what to do. As
+>> a concrete example (which might possibly be relevant) the PLDA XR3-AXI
+>> IP which we have in the ARM Juno SoC has the ATR_PCIE_WINx registers in
+>> its root port configuration block that control what ranges of mem space
+>> are mapped to the external AXI master interface and how.
 >>
->> Am 15.03.2017 um 09:25 schrieb Zhou, David(ChunMing):
->> > Does that means we don't need invisible vram later?
->> >
->> > David
->> >
->> > -----Original Message-----
->> > From: dri-devel [mailto:dri-devel-bounces@lists.freedesktop.org] On
->> > Behalf Of Christian K?nig
->> > Sent: Wednesday, March 15, 2017 3:38 PM
->> > To: Ayyappa Ch <ayyappa.ch.linux@gmail.com>
->> > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
->> > amd-gfx@lists.freedesktop.org; platform-driver-x86@vger.kernel.org;
->> > helgaas@kernel.org; dri-devel@lists.freedesktop.org
->> > Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
->> >
->> > Carizzo is an APU and resizing BARs isn't needed nor supported there.
->> > The CPU can access the full stolen VRAM directly on that hardware.
->> >
->> > As far as I know ASICs with support for this are Tonga, Fiji and all P=
-olaris variants.
->> >
->> > Christian.
->> >
->> > Am 15.03.2017 um 08:23 schrieb Ayyappa Ch:
->> >> Is it possible on Carrizo asics? Or only supports on newer asics?
->> >>
->> >> On Mon, Mar 13, 2017 at 6:11 PM, Christian K=C3=B6nig
->> >> <deathsimple@vodafone.de> wrote:
->> >>> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->> >>>
->> >>> Try to resize BAR0 to let CPU access all of VRAM.
->> >>>
->> >>> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
->> >>> ---
->> >>>    drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
->> >>>    drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 29
->> +++++++++++++++++++++++++++++
->> >>>    drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 +++++---
->> >>>    drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 +++++---
->> >>>    4 files changed, 40 insertions(+), 6 deletions(-)
->> >>>
->> >>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->> >>> b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->> >>> index 3b81ded..905ded9 100644
->> >>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->> >>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->> >>> @@ -1719,6 +1719,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct
->> amdgpu_device *adev, struct ttm_tt *ttm,
->> >>>                                    struct ttm_mem_reg *mem);
->> >>>    void amdgpu_vram_location(struct amdgpu_device *adev, struct
->> amdgpu_mc *mc, u64 base);
->> >>>    void amdgpu_gtt_location(struct amdgpu_device *adev, struct
->> >>> amdgpu_mc *mc);
->> >>> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
->> >>>    void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev,
->> u64 size);
->> >>>    int amdgpu_ttm_init(struct amdgpu_device *adev);
->> >>>    void amdgpu_ttm_fini(struct amdgpu_device *adev); diff --git
->> >>> a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->> >>> b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->> >>> index 118f4e6..92955fe 100644
->> >>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->> >>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->> >>> @@ -692,6 +692,35 @@ void amdgpu_gtt_location(struct amdgpu_device
->> *adev, struct amdgpu_mc *mc)
->> >>>                           mc->gtt_size >> 20, mc->gtt_start, mc->gtt=
-_end);
->> >>>    }
->> >>>
->> >>> +/**
->> >>> + * amdgpu_resize_bar0 - try to resize BAR0
->> >>> + *
->> >>> + * @adev: amdgpu_device pointer
->> >>> + *
->> >>> + * Try to resize BAR0 to make all VRAM CPU accessible.
->> >>> + */
->> >>> +void amdgpu_resize_bar0(struct amdgpu_device *adev) {
->> >>> +       u32 size =3D max(ilog2(adev->mc.real_vram_size - 1) + 1, 20)=
- - 20;
->> >>> +       int r;
->> >>> +
->> >>> +       r =3D pci_resize_resource(adev->pdev, 0, size);
->> >>> +
->> >>> +       if (r =3D=3D -ENOTSUPP) {
->> >>> +               /* The hardware don't support the extension. */
->> >>> +               return;
->> >>> +
->> >>> +       } else if (r =3D=3D -ENOSPC) {
->> >>> +               DRM_INFO("Not enoigh PCI address space for a large B=
-AR.");
->> >>> +       } else if (r) {
->> >>> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
->> >>> +       }
->> >>> +
->> >>> +       /* Reinit the doorbell mapping, it is most likely moved as w=
-ell */
->> >>> +       amdgpu_doorbell_fini(adev);
->> >>> +       BUG_ON(amdgpu_doorbell_init(adev));
->> >>> +}
->> >>> +
->> >>>    /*
->> >>>     * GPU helpers function.
->> >>>     */
->> >>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->> >>> b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->> >>> index dc9b6d6..36a7aa5 100644
->> >>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->> >>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->> >>> @@ -367,13 +367,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_devi=
-ce
->> *adev)
->> >>>                   break;
->> >>>           }
->> >>>           adev->mc.vram_width =3D numchan * chansize;
->> >>> -       /* Could aper size report 0 ? */
->> >>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->> >>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->> >>>           /* size in MB on si */
->> >>>           adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024U=
-LL *
->> 1024ULL;
->> >>>           adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) *
->> >>> 1024ULL
->> >>> * 1024ULL;
->> >>>
->> >>> +       if (!(adev->flags & AMD_IS_APU))
->> >>> +               amdgpu_resize_bar0(adev);
->> >>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->> >>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->> >>> +
->> >>>    #ifdef CONFIG_X86_64
->> >>>           if (adev->flags & AMD_IS_APU) {
->> >>>                   adev->mc.aper_base =3D
->> >>> ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22; diff --git
->> >>> a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->> >>> b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->> >>> index c087b00..7761ad3 100644
->> >>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->> >>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->> >>> @@ -459,13 +459,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_devi=
-ce
->> *adev)
->> >>>                   break;
->> >>>           }
->> >>>           adev->mc.vram_width =3D numchan * chansize;
->> >>> -       /* Could aper size report 0 ? */
->> >>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->> >>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->> >>>           /* size in MB on si */
->> >>>           adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024U=
-LL *
->> 1024ULL;
->> >>>           adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) *
->> >>> 1024ULL
->> >>> * 1024ULL;
->> >>>
->> >>> +       if (!(adev->flags & AMD_IS_APU))
->> >>> +               amdgpu_resize_bar0(adev);
->> >>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->> >>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->> >>> +
->> >>>    #ifdef CONFIG_X86_64
->> >>>           if (adev->flags & AMD_IS_APU) {
->> >>>                   adev->mc.aper_base =3D
->> >>> ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
->> >>> --
->> >>> 2.7.4
->> >>>
->> >>> _______________________________________________
->> >>> dri-devel mailing list
->> >>> dri-devel@lists.freedesktop.org
->> >>> https://lists.freedesktop.org/mailman/listinfo/dri-devel
->> >
->> > _______________________________________________
->> > dri-devel mailing list
->> > dri-devel@lists.freedesktop.org
->> > https://lists.freedesktop.org/mailman/listinfo/dri-devel
->> > _______________________________________________
->> > amd-gfx mailing list
->> > amd-gfx@lists.freedesktop.org
->> > https://lists.freedesktop.org/mailman/listinfo/amd-gfx
+>>> My problem is that, in the current implementation of the
+>>> PCIe controller, the USB device that wants to write to
+>>> memory is supposed to target BAR0 of the RC.
 >>
+>> That doesn't sound right at all. If the RC has a BAR, I'd expect it to
+>> be for poking the guts of the RC device itself (since this prompted me
+>> to go and compare, I see the Juno RC does indeed have it own enigmatic
+>> 16KB BAR, which reads as ever-changing random junk; no idea what that's
+>> about).
 >>
->> _______________________________________________
->> dri-devel mailing list
->> dri-devel@lists.freedesktop.org
->> https://lists.freedesktop.org/mailman/listinfo/dri-devel
-> _______________________________________________
-> amd-gfx mailing list
-> amd-gfx@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/amd-gfx
+>>> Since my mem space is limited to 256 MB, then BAR0 is
+>>> limited to 256 MB (or even 128 MB, since I also need
+>>> to mapthe device's BAR into the same mem space).
+>>
+>> Your window into mem space *from the CPU's point of view* is limited to
+>> 256MB. The relationship between mem space and the system (AXI) memory
+>> map from the point of view of PCI devices is a separate issue; if it's
+>> configurable at all, it probably makes sense to have the firmware set an
+>> outbound window to at least cover DRAM 1:1, then forget about it (this
+>> is essentially what Juno UEFI does, for example).
+> 
+> So you have 128MB (max) of system memory that has cpu physical
+> addresses 0x80000000 upwards.
+> I'd expect it all to be accessible from any PCIe card at some PCIe
+> address, it might be at address 0, 0x80000000 or any other offset.
+> 
+> I don't know which DT entry controls that offset.
+
+This is a crucial point, I think.
+
+Regards.
