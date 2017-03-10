@@ -1,74 +1,97 @@
-Return-Path: <SRS0=utPP=2L=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=utPP=2L=deltatee.com=logang@kernel.org>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
- <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
- <4a867c32-ed29-bc98-c7cb-6315243e664a@deltatee.com>
- <b34d6872-35de-da6d-2d7f-8842642d3f21@deltatee.com>
- <20170301235854.GF2820@obsidianresearch.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>,
- Myron Stowe <myron.stowe@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Jonathan Corbet <corbet@lwn.net>, "David S. Miller" <davem@davemloft.net>,
- Andrew Morton <akpm@linux-foundation.org>,
- Emil Velikov <emil.l.velikov@gmail.com>,
- Mauro Carvalho Chehab <mchehab@kernel.org>,
- Guenter Roeck <linux@roeck-us.net>,
- Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
- Linus Walleij <linus.walleij@linaro.org>,
- Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
- Stefan Berger <stefanb@linux.vnet.ibm.com>, Wei Zhang <wzhang@fb.com>,
- Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
- Stephen Bates <stephen.bates@microsemi.com>, linux-pci@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <7d6b3b59-5cec-d73f-b65c-4d685ccc70f8@deltatee.com>
-Date: Wed, 1 Mar 2017 17:23:38 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:50764 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755402AbdCJStf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Mar 2017 13:49:35 -0500
+Date: Fri, 10 Mar 2017 12:49:30 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mason <slash.tmp@free.fr>
+Cc: David Laight <David.Laight@ACULAB.COM>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Rob Herring <robh@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        Marc Zyngier <marc.zyngier@arm.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+        linux-usb <linux-usb@vger.kernel.org>,
+        Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>
+Subject: Re: Neophyte questions about PCIe
+Message-ID: <20170310184930.GG19517@bhelgaas-glaptop.roam.corp.google.com>
+References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
+ <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
+ <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
+ <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
+ <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
+ <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
 MIME-Version: 1.0
-In-Reply-To: <20170301235854.GF2820@obsidianresearch.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 01/03/17 04:58 PM, Jason Gunthorpe wrote:
-> On Wed, Mar 01, 2017 at 03:49:04PM -0700, Logan Gunthorpe wrote:
+On Fri, Mar 10, 2017 at 04:05:50PM +0100, Mason wrote:
+> On 10/03/2017 15:06, David Laight wrote:
 > 
->> Seems to me like an elegant solution would be to implement a 'cdev_kill'
->> function which could kill all the processes using a cdev. Thus, during
->> an unbind, a driver could call it and be sure that there are no users
->> left and it can safely allow the devres unwind to continue. Then no
->> difficult and racy 'alive' flags would be necessary and it would be much
->> easier on drivers.
+> > Robin Murphy wrote:
+> >
+> >> On 09/03/17 23:43, Mason wrote:
+> >>
+> >>> I think I'm making progress, in that I now have a better
+> >>> idea of what I don't understand. So I'm able to ask
+> >>> (hopefully) less vague questions.
+> >>>
+> >>> Take the USB3 PCIe adapter I've been testing with. At some
+> >>> point during init, the XHCI driver request some memory
+> >>> (via kmalloc?) in order to exchange data with the host, right?
+> >>>
+> >>> On my SoC, the RAM used by Linux lives at physical range
+> >>> [0x8000_0000, 0x8800_0000[ => 128 MB
+> >>>
+> >>> How does the XHCI driver make the adapter aware of where
+> >>> it can scribble data? The XHCI driver has no notion that
+> >>> the device is behind a bus, does it?
+> >>>
+> >>> At some point, the physical addresses must be converted
+> >>> to PCI bus addresses, right? Is it computed subtracting
+> >>> the offset defined in the DT?
+> > 
+> > The driver should call dma_alloc_coherent() which returns both the
+> > kernel virtual address and the device (xhci controller) has
+> > to use to access it.
+> > The cpu physical address is irrelevant (although it might be
+> > calculated in the middle somewhere).
 > 
-> That could help, but this would mean cdev would have to insert a shim
-> to grab locks around the various file ops.
+> Thank you for that missing piece of the puzzle.
+> I see some relevant action in drivers/usb/host/xhci-mem.c
+> 
+> And I now see this log:
+> 
+> [    2.499320] xhci_hcd 0000:01:00.0: // Device context base array address = 0x8e07e000 (DMA), d0855000 (virt)
+> [    2.509156] xhci_hcd 0000:01:00.0: Allocated command ring at cfb04200
+> [    2.515640] xhci_hcd 0000:01:00.0: First segment DMA is 0x8e07f000
+> [    2.521863] xhci_hcd 0000:01:00.0: // Setting command ring address to 0x20
+> [    2.528786] xhci_hcd 0000:01:00.0: // xHC command ring deq ptr low bits + flags = @00000000
+> [    2.537188] xhci_hcd 0000:01:00.0: // xHC command ring deq ptr high bits = @00000000
+> [    2.545002] xhci_hcd 0000:01:00.0: // Doorbell array is located at offset 0x800 from cap regs base addr
+> [    2.554455] xhci_hcd 0000:01:00.0: // xHCI capability registers at d0852000:
+> [    2.561550] xhci_hcd 0000:01:00.0: // @d0852000 = 0x1000020 (CAPLENGTH AND HCIVERSION)
+> 
+> I believe 0x8e07e000 is a CPU address, not a PCI bus address.
 
-Hmm, I was hoping something more along the lines of actually killing the
-processes instead of just shimming away fops.
+Sounds like you've made good progress since this email, but I think
+0x8e07e000 is a PCI bus address, not a CPU address.  The code in
+xhci_mem_init() is this:
 
-> AFAIK TPM is correct and has been robustly tested now. We have a 'vtpm'
-> driver that agressively uses hot-unplug.
+  xhci->dcbaa = dma_alloc_coherent(dev, sizeof(*xhci->dcbaa), &dma, flags);
+  xhci->dcbaa->dma = dma;
+  xhci_dbg_trace("Device context base array address = 0x%llx (DMA), %p (virt)",
+                 (unsigned long long)xhci->dcbaa->dma, xhci->dcbaa);
 
-Ah, thanks for the explanation of how that works. I didn't notice the
-semaphore usage.
+dma_alloc_coherent() allocates a buffer and returns two values: the
+CPU virtual address ("xhci->dcbaa" here) for use by the driver and the
+corresponding DMA address the device can use to reach the buffer
+("dma").
 
-Switchtec is a bit more tricky because a) there's no upper level driver
-to handle things and b) userspace may be inside a wait_for_completion
-(via read or poll) that needs to be completed. If a so called
-'cdev_kill' could actually just kill these processes it would be a bit
-easier.
-
-Currently, in the Switchtec code, there's a timeout if the interrupt
-doesn't fire (which occurs if the pci device has been torn down) and the
-code will check an alive bit (under mutex protection) and error out if
-it's not alive.
-
-Because of how poll works, I don't see how I can just hold a semaphore
-inside every fops call like the tpm code does.
-
-Logan
+Documentation/DMA-API-HOWTO.txt has more details that might be useful.
