@@ -1,67 +1,95 @@
-Return-Path: <SRS0=X++C=2X=gmail.com=rjwysocki@kernel.org>
-Return-Path: <SRS0=X++C=2X=gmail.com=rjwysocki@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 10 Mar 2017 11:47:40 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: pcie-iproc: broken 2nd (& 3rd?) controller support by
+ c3245a566400 ("PCI: iproc: Request host bridge window resources")
+Message-ID: <20170310174740.GF19517@bhelgaas-glaptop.roam.corp.google.com>
+References: <faab6b85-58e8-3e62-8763-56a94b13fba1@gmail.com>
+ <f40bbf2f-3ba9-3992-d417-6588085f3d62@gmail.com>
+ <20170309182205.GB3685@bhelgaas-glaptop.roam.corp.google.com>
+ <04f747ef-0f39-33ec-0cea-2e9fb85d46e8@gmail.com>
 MIME-Version: 1.0
-Sender: rjwysocki@gmail.com
-In-Reply-To: <1489497718-4099-1-git-send-email-adrian.hunter@intel.com>
-References: <20170314130305.GH8232@bhelgaas-glaptop.roam.corp.google.com> <1489497718-4099-1-git-send-email-adrian.hunter@intel.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 14 Mar 2017 18:52:48 +0100
-Message-ID: <CAJZ5v0iB81hTsWdhCyPSOoe3GZ1jUKDqhFcZp2i8B8=+Z7DG4A@mail.gmail.com>
-Subject: Re: [PATCH] PCI: For d3_delay and d3cold_delay, zero means zero
-To: Adrian Hunter <adrian.hunter@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	linux-pm <linux-pm@vger.kernel.org>, linux-acpi <linux-acpi@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>, Lukas Wunner <lukas@wunner.de>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <04f747ef-0f39-33ec-0cea-2e9fb85d46e8@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: JD Zheng <jiandong.zheng@broadcom.com>,
+ Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+ Ray Jui <rjui@broadcom.com>, Oza Oza <oza.oza@broadcom.com>,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ bcm-kernel-feedback-list@broadcom.com, Andy Gospodarek <gospo@broadcom.com>,
+ linux-arm-kernel@lists.infradead.org, Felix Fietkau <nbd@nbd.name>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 14, 2017 at 2:21 PM, Adrian Hunter <adrian.hunter@intel.com> wrote:
-> msleep() still sleeps 1 jiffy even when told to sleep for zero
-> milliseconds. That can end up being 1-2 milliseconds or more. In the cases
-> of d3_delay and d3cold_delay, that unnecessarily increases suspend and/or
-> resume latencies.
->
-> So, do not sleep at all for the respective cases of d3_delay is zero or
-> d3cold_delay is zero.
->
-> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-
-> ---
->  drivers/pci/pci.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 7904d02ffdb9..9779483f81fd 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -66,7 +66,8 @@ static void pci_dev_d3_sleep(struct pci_dev *dev)
->         if (delay < pci_pm_d3_delay)
->                 delay = pci_pm_d3_delay;
->
-> -       msleep(delay);
-> +       if (delay)
-> +               msleep(delay);
->  }
->
->  #ifdef CONFIG_PCI_DOMAINS
-> @@ -827,7 +828,8 @@ static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
->                  * because have already delayed for the bridge.
->                  */
->                 if (dev->runtime_d3cold) {
-> -                       msleep(dev->d3cold_delay);
-> +                       if (dev->d3cold_delay)
-> +                               msleep(dev->d3cold_delay);
->                         /*
->                          * When powering on a bridge from D3cold, the
->                          * whole hierarchy may be powered on into
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gRnJpLCBNYXIgMTAsIDIwMTcgYXQgMDU6MDI6NDhQTSArMDEwMCwgUmFmYcWCIE1pxYJlY2tp
+IHdyb3RlOgo+IE9uIDAzLzA5LzIwMTcgMDc6MjIgUE0sIEJqb3JuIEhlbGdhYXMgd3JvdGU6Cj4g
+Pk9uIFRodSwgTWFyIDA5LCAyMDE3IGF0IDA4OjM5OjA3QU0gKzAxMDAsIFJhZmHFgiBNacWCZWNr
+aSB3cm90ZToKPiA+Pk9uIDAzLzA4LzIwMTcgMDE6NTYgUE0sIFJhZmHFgiBNacWCZWNraSB3cm90
+ZToKPiA+Pj5JIGp1c3QgdHJpZWQgdXBncmFkaW5nIEJDTTUzMDFYIGZyb20gNC40IHRvIDQuOSBh
+bmQgbm90aWNlZCBJIGRvbid0IHNlZSBjYXJkCj4gPj4+Y29ubmVjdGVkIHRvIHRoZSAybmQgY29u
+dHJvbGxlci4KPiA+Pj4KPiA+Pj5wY2llX2lwcm9jX2JjbWEgYmNtYTA6NzogUENJIGhvc3QgYnJp
+ZGdlIHRvIGJ1cyAwMDAwOjAwCj4gPj4+cGNpX2J1cyAwMDAwOjAwOiByb290IGJ1cyByZXNvdXJj
+ZSBbbWVtIDB4MDgwMDAwMDAtMHgwZmZmZmZmZl0KPiA+Pj5wY2llX2lwcm9jX2JjbWEgYmNtYTA6
+NzogbGluazogVVAKPiA+Pj5QQ0k6IGJ1czA6IEZhc3QgYmFjayB0byBiYWNrIHRyYW5zZmVycyBk
+aXNhYmxlZAo+ID4+PnBjaSAwMDAwOjAwOjAwLjA6IGJyaWRnZSBjb25maWd1cmF0aW9uIGludmFs
+aWQgKFtidXMgMDAtMDBdKSwgcmVjb25maWd1cmluZwo+ID4+PlBDSTogYnVzMTogRmFzdCBiYWNr
+IHRvIGJhY2sgdHJhbnNmZXJzIGRpc2FibGVkCj4gPj4+cGNpIDAwMDA6MDA6MDAuMDogQkFSIDg6
+IGFzc2lnbmVkIFttZW0gMHgwODAwMDAwMC0weDA4MGZmZmZmXQo+ID4+PnBjaSAwMDAwOjAxOjAw
+LjA6IEJBUiAwOiBhc3NpZ25lZCBbbWVtIDB4MDgwMDAwMDAtMHgwODAwN2ZmZiA2NGJpdF0KPiA+
+Pj5wY2kgMDAwMDowMDowMC4wOiBQQ0kgYnJpZGdlIHRvIFtidXMgMDFdCj4gPj4+cGNpIDAwMDA6
+MDA6MDAuMDogICBicmlkZ2Ugd2luZG93IFttZW0gMHgwODAwMDAwMC0weDA4MGZmZmZmXQo+ID4+
+Pgo+ID4+PnBjaWVfaXByb2NfYmNtYSBiY21hMDo4OiByZXNvdXJjZSBjb2xsaXNpb246IFttZW0g
+MHg0MDAwMDAwMC0weDQ3ZmZmZmZmXSBjb25mbGljdHMgd2l0aCBQQ0llIE1FTSBzcGFjZSBbbWVt
+IDB4NDAwMDAwMDAtMHg0N2ZmZmZmZl0KPiA+Pj5wY2llX2lwcm9jX2JjbWEgYmNtYTA6ODogUENJ
+ZSBjb250cm9sbGVyIHNldHVwIGZhaWxlZAo+ID4+PnBjaWVfaXByb2NfYmNtYTogcHJvYmUgb2Yg
+YmNtYTA6OCBmYWlsZWQgd2l0aCBlcnJvciAtMTYKPiA+Pj4KPiA+Pj4KPiA+Pj5UaGlzIHVzZWQg
+dG8gd29yayB3aXRoIG9sZGVyIGtlcm5lbHMgYmVjYXVzZSB0aGVyZSB3YXNuJ3QgYW55IGNvbGxp
+c2lvbiBjaGVjazoKPiA+Pj4KPiA+Pj5wY2llX2lwcm9jX2JjbWEgYmNtYTA6NzogUENJIGhvc3Qg
+YnJpZGdlIHRvIGJ1cyAwMDAwOjAwCj4gPj4+cGNpX2J1cyAwMDAwOjAwOiByb290IGJ1cyByZXNv
+dXJjZSBbbWVtIDB4MDgwMDAwMDAtMHgwZmZmZmZmZl0KPiA+Pj5wY2llX2lwcm9jX2JjbWEgYmNt
+YTA6NzogbGluazogVVAKPiA+Pj5QQ0k6IGJ1czA6IEZhc3QgYmFjayB0byBiYWNrIHRyYW5zZmVy
+cyBkaXNhYmxlZAo+ID4+PnBjaSAwMDAwOjAwOjAwLjA6IGJyaWRnZSBjb25maWd1cmF0aW9uIGlu
+dmFsaWQgKFtidXMgMDAtMDBdKSwgcmVjb25maWd1cmluZwo+ID4+PlBDSTogYnVzMTogRmFzdCBi
+YWNrIHRvIGJhY2sgdHJhbnNmZXJzIGRpc2FibGVkCj4gPj4+cGNpIDAwMDA6MDA6MDAuMDogQkFS
+IDg6IGFzc2lnbmVkIFttZW0gMHgwODAwMDAwMC0weDA4MGZmZmZmXQo+ID4+PnBjaSAwMDAwOjAx
+OjAwLjA6IEJBUiAwOiBhc3NpZ25lZCBbbWVtIDB4MDgwMDAwMDAtMHgwODAwN2ZmZiA2NGJpdF0K
+PiA+Pj5wY2kgMDAwMDowMDowMC4wOiBQQ0kgYnJpZGdlIHRvIFtidXMgMDFdCj4gPj4+cGNpIDAw
+MDA6MDA6MDAuMDogICBicmlkZ2Ugd2luZG93IFttZW0gMHgwODAwMDAwMC0weDA4MGZmZmZmXQo+
+ID4+Pgo+ID4+PnBjaWVfaXByb2NfYmNtYSBiY21hMDo4OiBQQ0kgaG9zdCBicmlkZ2UgdG8gYnVz
+IDAwMDE6MDAKPiA+Pj5wY2lfYnVzIDAwMDE6MDA6IHJvb3QgYnVzIHJlc291cmNlIFttZW0gMHg0
+MDAwMDAwMC0weDQ3ZmZmZmZmXQo+ID4+PnBjaWVfaXByb2NfYmNtYSBiY21hMDo4OiBsaW5rOiBV
+UAo+ID4+PlBDSTogYnVzMDogRmFzdCBiYWNrIHRvIGJhY2sgdHJhbnNmZXJzIGRpc2FibGVkCj4g
+Pj4+cGNpIDAwMDE6MDA6MDAuMDogYnJpZGdlIGNvbmZpZ3VyYXRpb24gaW52YWxpZCAoW2J1cyAw
+MC0wMF0pLCByZWNvbmZpZ3VyaW5nCj4gPj4+UENJOiBidXMxOiBGYXN0IGJhY2sgdG8gYmFjayB0
+cmFuc2ZlcnMgZGlzYWJsZWQKPiA+Pj5wY2kgMDAwMTowMDowMC4wOiBCQVIgODogYXNzaWduZWQg
+W21lbSAweDQwMDAwMDAwLTB4NDAwZmZmZmZdCj4gPj4+cGNpIDAwMDE6MDE6MDAuMDogQkFSIDA6
+IGFzc2lnbmVkIFttZW0gMHg0MDAwMDAwMC0weDQwMDA3ZmZmIDY0Yml0XQo+ID4+PnBjaSAwMDAx
+OjAwOjAwLjA6IFBDSSBicmlkZ2UgdG8gW2J1cyAwMV0KPiA+Pj5wY2kgMDAwMTowMDowMC4wOiAg
+IGJyaWRnZSB3aW5kb3cgW21lbSAweDQwMDAwMDAwLTB4NDAwZmZmZmZdCj4gPj4+Cj4gPj4+Cj4g
+Pj4+SSBndWVzcyB0aGUgY2hlY2sgaXMgT0sgYWZ0ZXIgYWxsIGFuZCB0aGUgcmVhbCBwcm9ibGVt
+IGlzIGlwcm9jIGRyaXZlciBhc3NpZ25pbmcKPiA+Pj50aGUgc2FtZSByZXNvdXJjZS4KPiA+Pj4K
+PiA+Pj5Ccm9hZGNvbSB0ZWFtOiBjb3VsZCB5b3UgdGFrZSBhIGxvb2sgYXQgdGhpcywgcGxlYXNl
+Pwo+ID4+Cj4gPj5JIGZvdW5kIGEgcmVhc29uIG9mIHRoaXMgY29uZmxpY3QgKGFuZCBwcm9iYWJs
+eSByYW5kb20gY3Jhc2hlcyBJIHN0YXJ0ZWQKPiA+PnNlZWluZyB3aXRoIDQuOSkuIEkgYmVsaWV2
+ZSB3ZSBoYXZlIGEgbWVtb3J5IGNvcnJ1cHRpb24uCj4gPgo+ID5ZZXAsIHdlJ3JlIHVzaW5nIGEg
+cmVzb3VyY2Ugc3RydWN0dXJlIG9uIHRoZSBzdGFjayB3aGVuIHdlIHNob3VsZG4ndC4gIENhbgo+
+ID55b3UgdHJ5IHRoZSBwYXRjaCBiZWxvdz8KPiAKPiBXb3JrcyBncmVhdCEgV2lsbCB5b3UgcHVz
+aCBpdCB3aXRoCj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcgIyB2NC44Kwo+IHBsZWFzZT8K
+ClRoYW5rcyBmb3IgdGVzdGluZyB0aGlzLiAgSSBhcHBsaWVkIHRoZSBwYXRjaCAod2l0aCB0aGUg
+YnJhY2VzIGZpeCkgdG8KZm9yLWxpbnVzIGZvciB2NC4xMS4KCj4gPiguLi4pCj4gPiAJaWYgKHJl
+dCkKPiA+IAkJZGV2X2VycihkZXYsICJQQ0llIGNvbnRyb2xsZXIgc2V0dXAgZmFpbGVkXG4iKTsK
+PiA+LQo+ID4tCXBjaV9mcmVlX3Jlc291cmNlX2xpc3QoJnJlcyk7Cj4gPisJCXBjaV9mcmVlX3Jl
+c291cmNlX2xpc3QoJnJlc291cmNlcyk7Cj4gPisJCXJldHVybiByZXQ7Cj4gPisJfQo+IAo+IFdv
+cmtzIGdyZWF0LCBleGNlcHQgaXQgZG9lc24ndCBjb21waWxlIChicmFjZXMpIDspCgpfX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVs
+IG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDov
+L2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
