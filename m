@@ -1,88 +1,172 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [Intel-wired-lan] [BUG] 4.11.0-rc1 panic on shutdown X61s
-To: "Brown, Aaron F" <aaron.f.brown@intel.com>,
-        =?UTF-8?Q?Bj=c3=b8rn_Mork?= <bjorn@mork.no>,
-        Borislav Petkov <bp@alien8.de>
-References: <20170312053723.GH802@shells.gnugeneration.com>
- <20170312115703.GA18197@nazgul.tnic> <20170312122621.GA2823@nazgul.tnic>
- <CAHp75Ve7SWivf=TTuq-qA=iM20E==OmSZD2YAmt0LVJQg47Osg@mail.gmail.com>
- <20170312222333.hm54nl2ul5iuixap@pd.tnic> <87shmhjfap.fsf@miraculix.mork.no>
- <309B89C4C689E141A5FF6A0C5FB2118B8C5B3F9B@ORSMSX101.amr.corp.intel.com>
-Cc: "vcaputo@pengaru.com" <vcaputo@pengaru.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        David Singleton <davsingl@cisco.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        khalidm <khalidm@cisco.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        "lkml@pengaru.com" <lkml@pengaru.com>,
-        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>
-From: "Neftin, Sasha" <sasha.neftin@intel.com>
-Message-ID: <985d8ca4-df0a-5eb7-6c43-d57b843cbd18@intel.com>
-Date: Tue, 14 Mar 2017 09:49:24 +0200
+Subject: Re: [PATCH v2 3/5] PCI: rockchip: add remove() support
+To: Brian Norris <briannorris@chromium.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+References: <20170310024617.67303-1-briannorris@chromium.org>
+ <20170310024617.67303-3-briannorris@chromium.org>
+ <de4d1e8a-c971-1f4d-2996-883341d287b3@rock-chips.com>
+Cc: shawn.lin@rock-chips.com, linux-kernel@vger.kernel.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <5cec190e-4eee-fc55-7039-2336ba5253f3@rock-chips.com>
+Date: Fri, 10 Mar 2017 12:20:54 +0800
 MIME-Version: 1.0
-In-Reply-To: <309B89C4C689E141A5FF6A0C5FB2118B8C5B3F9B@ORSMSX101.amr.corp.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <de4d1e8a-c971-1f4d-2996-883341d287b3@rock-chips.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/14/2017 03:20, Brown, Aaron F wrote:
->> From: Bjørn Mork [mailto:bjorn@mork.no]
->> Sent: Monday, March 13, 2017 9:46 AM
->> To: Borislav Petkov <bp@alien8.de>
->> Cc: Andy Shevchenko <andy.shevchenko@gmail.com>; lkml@pengaru.com;
->> linux-kernel <linux-kernel@vger.kernel.org>; vcaputo@pengaru.com; linux-
->> pci@vger.kernel.org; intel-wired-lan@lists.osuosl.org; khalidm
->> <khalidm@cisco.com>; David Singleton <davsingl@cisco.com>; Brown, Aaron
->> F <aaron.f.brown@intel.com>; Kirsher, Jeffrey T
->> <jeffrey.t.kirsher@intel.com>
->> Subject: Re: [BUG] 4.11.0-rc1 panic on shutdown X61s
+On 2017/3/10 11:22, Shawn Lin wrote:
+> On 2017/3/10 10:46, Brian Norris wrote:
+>> Currently, if we try to unbind the platform device, the remove will
+>> succeed, but the removal won't undo most of the registration, leaving
+>> partially-configured PCI devices in the system.
 >>
->> Borislav Petkov <bp@alien8.de> writes:
->>> On Sun, Mar 12, 2017 at 03:55:08PM +0200, Andy Shevchenko wrote:
->>>
->>>> The only change that IMHO matters happened between v4.10 and v4.11-
->> rc1 is this:
->>>> @@ -6276,8 +6274,8 @@ static int e1000e_pm_freeze(struct device *dev)
->>>>                  /* Quiesce the device without resetting the hardware */
->>>>                  e1000e_down(adapter, false);
->>>>                  e1000_free_irq(adapter);
->>>> +               e1000e_reset_interrupt_capability(adapter);
->>>>          }
->>>> -       e1000e_reset_interrupt_capability(adapter);
->>>>
->>>> So, it apparently misses something for the other case, like
->>>> pci_disable_msi() call or so.
->>> Well, lemme add the people from
->>>
->>>    7e54d9d063fa ("e1000e: driver trying to free already-free irq")
->>>
->>> to CC then. :-)
->> Already did that a week ago:
->> https://www.spinics.net/lists/netdev/msg423379.html
+>> This allows, for example, a simple 'lspci' to crash the system, as it
+>> will try to touch the freed (via devm_*) driver structures.
 >>
->> Haven't heard anything back yet.  Wondering if they are waiting for
->> someone else to submit the pretty obvious revert?  Don't understand why
->> that should take more than a minute to figure out.  It's not like they
->> are testing these changes anyway...
-> Believe it or not we actually do test these changes.  This one was tested by me and I did not have the same results you and the other people reporting this trace did.  I made it back in the lab today and have spent a good part of the day attempting to reproduce this bug without success.  Freeze / resume works for me on all the systems I have tried, which includes a sampling of all the current parts and many older ones.  Given there are several other reports of this it is obviously an issue and I would like to be able to reproduce it in case another patch to resolve the issue this attempts to fix comes back in another form.  So I want to know what's different between the systems that hit this and my bank of systems that don't.
->
-> What exact part (or parts) are we looking at (lspci|grep -i eth) that trigger this?  Could it be a difference in .config files?  The trace says it is falling back to legacy interrupts, does the system continue to work and does the network continue to function in that mode?  In case it's related to user space what is the base distro?  Any other information you think can help me reproduce the issue would be appreciated.
->
-> Thanks,
-> Aaron
->
+>> So let's implement device remove().
 >>
->> Bjørn
-> _______________________________________________
-> Intel-wired-lan mailing list
-> Intel-wired-lan@lists.osuosl.org
-> http://lists.osuosl.org/mailman/listinfo/intel-wired-lan
+>
+> As this patchset seems to be merged together so I think the following
+> warning will be ok? if my git-am robot only pick your patch 1->compile->
+> patch 2->compile->patch 3 then
+>
+> drivers/pci/host/pcie-rockchip.c: In function 'rockchip_pcie_remove':
+> drivers/pci/host/pcie-rockchip.c:1435:2: error: implicit declaration of
+> function 'pci_unmap_iospace' [-Werror=implicit-function-declaration]
+>   pci_unmap_iospace(rockchip->io);
+>
+> but I guess you may need to move your patch 4 ahead of patch 3?
+>
 
-Hello,
+Well, I am not sure if something is wrong here.
 
-I suggest revert commit of this patch. We recommended do not apply this 
-change.
+But when booting up the system for the first time, we got
+[    0.527263] PCI host bridge /pcie@f8000000 ranges:
+[    0.527293]   MEM 0xfa000000..0xfa5fffff -> 0xfa000000
+[    0.527308]    IO 0xfa600000..0xfa6fffff -> 0xfa600000
+[    0.527544] rockchip-pcie f8000000.pcie: PCI host bridge to bus 0000:0
 
-Thanks,
+so the hierarchy(lspci -t) looks like:
+lspci -t
+-[0000:00]---00.0-[01]----00.0
 
-Sasha
+and lspci
+0000:00:00.0 Class 0604: Device 1d87:0100
+0001:01:00.0 Class 0108: Device 8086:f1a5 (rev 03)
+
+but if I did unbind and bind, the bus number is different.
+
+lspci
+0001:00:00.0 Class 0604: Device 1d87:0100
+0001:01:00.0 Class 0108: Device 8086:f1a5 (rev 03)
+
+lspci -t
+-+-[0001:00]---00.0-[01]----00.0
+  \-[0000:00]-
+
+This hierarchy looks wrong to me.
+
+>
+>> Signed-off-by: Brian Norris <briannorris@chromium.org>
+>> ---
+>> v2:
+>> * unmap IO space with pci_unmap_iospace()
+>> * remove IRQ domain
+>> ---
+>>  drivers/pci/host/pcie-rockchip.c | 36
+>> ++++++++++++++++++++++++++++++++++--
+>>  1 file changed, 34 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pcie-rockchip.c
+>> b/drivers/pci/host/pcie-rockchip.c
+>> index 5d7b27b1e941..d2e5078ae331 100644
+>> --- a/drivers/pci/host/pcie-rockchip.c
+>> +++ b/drivers/pci/host/pcie-rockchip.c
+>> @@ -223,9 +223,11 @@ struct rockchip_pcie {
+>>      int    link_gen;
+>>      struct    device *dev;
+>>      struct    irq_domain *irq_domain;
+>> -    u32     io_size;
+>>      int     offset;
+>> +    struct pci_bus *root_bus;
+>> +    struct resource *io;
+>>      phys_addr_t io_bus_addr;
+>> +    u32     io_size;
+>>      void    __iomem *msg_region;
+>>      u32     mem_size;
+>>      phys_addr_t msg_bus_addr;
+>> @@ -1360,6 +1362,7 @@ static int rockchip_pcie_probe(struct
+>> platform_device *pdev)
+>>                       err, io);
+>>                  continue;
+>>              }
+>> +            rockchip->io = io;
+>>              break;
+>>          case IORESOURCE_MEM:
+>>              mem = win->res;
+>> @@ -1391,6 +1394,7 @@ static int rockchip_pcie_probe(struct
+>> platform_device *pdev)
+>>          err = -ENOMEM;
+>>          goto err_free_res;
+>>      }
+>> +    rockchip->root_bus = bus;
+>>
+>>      pci_bus_size_bridges(bus);
+>>      pci_bus_assign_resources(bus);
+>> @@ -1421,6 +1425,34 @@ static int rockchip_pcie_probe(struct
+>> platform_device *pdev)
+>>      return err;
+>>  }
+>>
+>> +static int rockchip_pcie_remove(struct platform_device *pdev)
+>> +{
+>> +    struct device *dev = &pdev->dev;
+>> +    struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+>> +
+>> +    pci_stop_root_bus(rockchip->root_bus);
+>> +    pci_remove_root_bus(rockchip->root_bus);
+>> +    pci_unmap_iospace(rockchip->io);
+>> +    irq_domain_remove(rockchip->irq_domain);
+>> +
+>> +    phy_power_off(rockchip->phy);
+>> +    phy_exit(rockchip->phy);
+>> +
+>> +    clk_disable_unprepare(rockchip->clk_pcie_pm);
+>> +    clk_disable_unprepare(rockchip->hclk_pcie);
+>> +    clk_disable_unprepare(rockchip->aclk_perf_pcie);
+>> +    clk_disable_unprepare(rockchip->aclk_pcie);
+>> +
+>> +    if (!IS_ERR(rockchip->vpcie3v3))
+>> +        regulator_disable(rockchip->vpcie3v3);
+>> +    if (!IS_ERR(rockchip->vpcie1v8))
+>> +        regulator_disable(rockchip->vpcie1v8);
+>> +    if (!IS_ERR(rockchip->vpcie0v9))
+>> +        regulator_disable(rockchip->vpcie0v9);
+>> +
+>> +    return 0;
+>> +}
+>> +
+>>  static const struct dev_pm_ops rockchip_pcie_pm_ops = {
+>>      SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(rockchip_pcie_suspend_noirq,
+>>                        rockchip_pcie_resume_noirq)
+>> @@ -1438,6 +1470,6 @@ static struct platform_driver
+>> rockchip_pcie_driver = {
+>>          .pm = &rockchip_pcie_pm_ops,
+>>      },
+>>      .probe = rockchip_pcie_probe,
+>> -
+>> +    .remove = rockchip_pcie_remove,
+>>  };
+>>  builtin_platform_driver(rockchip_pcie_driver);
+>>
+>
+>
+
+
+-- 
+Best Regards
+Shawn Lin
