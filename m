@@ -1,48 +1,99 @@
-Return-Path: <SRS0=M6Q2=2X=free-electrons.com=thomas.petazzoni@kernel.org>
-Return-Path: <SRS0=M6Q2=2X=free-electrons.com=thomas.petazzoni@kernel.org>
-Date: Tue, 14 Mar 2017 21:27:13 +0100
-From: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Return-Path: <SRS0=YAYN=2T=gmail.com=zajec5@kernel.org>
+Return-Path: <SRS0=YAYN=2T=gmail.com=zajec5@kernel.org>
+Subject: Re: pcie-iproc: broken 2nd (& 3rd?) controller support by
+ c3245a566400 ("PCI: iproc: Request host bridge window resources")
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Stephen Boyd <stephen.boyd@linaro.org>, Bjorn Helgaas
- <bhelgaas@google.com>, linux-pci@vger.kernel.org, Srinivas Kandagatla
- <srinivas.kandagatla@linaro.org>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: aardvark: Remove msi-controller dt node probing
-Message-ID: <20170314212713.1afb7a9f@free-electrons.com>
-In-Reply-To: <20170314193005.GC26264@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170314190851.28203-1-stephen.boyd@linaro.org>
-	<20170314193005.GC26264@bhelgaas-glaptop.roam.corp.google.com>
+References: <faab6b85-58e8-3e62-8763-56a94b13fba1@gmail.com>
+ <f40bbf2f-3ba9-3992-d417-6588085f3d62@gmail.com>
+ <20170309182205.GB3685@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
+ Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
+ Oza Oza <oza.oza@broadcom.com>, JD Zheng <jiandong.zheng@broadcom.com>,
+ Andy Gospodarek <gospo@broadcom.com>, linux-pci@vger.kernel.org,
+ bcm-kernel-feedback-list@broadcom.com, linux-arm-kernel@lists.infradead.org,
+ Felix Fietkau <nbd@nbd.name>
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Message-ID: <04f747ef-0f39-33ec-0cea-2e9fb85d46e8@gmail.com>
+Date: Fri, 10 Mar 2017 17:02:48 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20170309182205.GB3685@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On 03/09/2017 07:22 PM, Bjorn Helgaas wrote:
+> On Thu, Mar 09, 2017 at 08:39:07AM +0100, Rafał Miłecki wrote:
+>> On 03/08/2017 01:56 PM, Rafał Miłecki wrote:
+>>> I just tried upgrading BCM5301X from 4.4 to 4.9 and noticed I don't see card
+>>> connected to the 2nd controller.
+>>>
+>>> pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
+>>> pci_bus 0000:00: root bus resource [mem 0x08000000-0x0fffffff]
+>>> pcie_iproc_bcma bcma0:7: link: UP
+>>> PCI: bus0: Fast back to back transfers disabled
+>>> pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+>>> PCI: bus1: Fast back to back transfers disabled
+>>> pci 0000:00:00.0: BAR 8: assigned [mem 0x08000000-0x080fffff]
+>>> pci 0000:01:00.0: BAR 0: assigned [mem 0x08000000-0x08007fff 64bit]
+>>> pci 0000:00:00.0: PCI bridge to [bus 01]
+>>> pci 0000:00:00.0:   bridge window [mem 0x08000000-0x080fffff]
+>>>
+>>> pcie_iproc_bcma bcma0:8: resource collision: [mem 0x40000000-0x47ffffff] conflicts with PCIe MEM space [mem 0x40000000-0x47ffffff]
+>>> pcie_iproc_bcma bcma0:8: PCIe controller setup failed
+>>> pcie_iproc_bcma: probe of bcma0:8 failed with error -16
+>>>
+>>>
+>>> This used to work with older kernels because there wasn't any collision check:
+>>>
+>>> pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
+>>> pci_bus 0000:00: root bus resource [mem 0x08000000-0x0fffffff]
+>>> pcie_iproc_bcma bcma0:7: link: UP
+>>> PCI: bus0: Fast back to back transfers disabled
+>>> pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+>>> PCI: bus1: Fast back to back transfers disabled
+>>> pci 0000:00:00.0: BAR 8: assigned [mem 0x08000000-0x080fffff]
+>>> pci 0000:01:00.0: BAR 0: assigned [mem 0x08000000-0x08007fff 64bit]
+>>> pci 0000:00:00.0: PCI bridge to [bus 01]
+>>> pci 0000:00:00.0:   bridge window [mem 0x08000000-0x080fffff]
+>>>
+>>> pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
+>>> pci_bus 0001:00: root bus resource [mem 0x40000000-0x47ffffff]
+>>> pcie_iproc_bcma bcma0:8: link: UP
+>>> PCI: bus0: Fast back to back transfers disabled
+>>> pci 0001:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+>>> PCI: bus1: Fast back to back transfers disabled
+>>> pci 0001:00:00.0: BAR 8: assigned [mem 0x40000000-0x400fffff]
+>>> pci 0001:01:00.0: BAR 0: assigned [mem 0x40000000-0x40007fff 64bit]
+>>> pci 0001:00:00.0: PCI bridge to [bus 01]
+>>> pci 0001:00:00.0:   bridge window [mem 0x40000000-0x400fffff]
+>>>
+>>>
+>>> I guess the check is OK after all and the real problem is iproc driver assigning
+>>> the same resource.
+>>>
+>>> Broadcom team: could you take a look at this, please?
+>>
+>> I found a reason of this conflict (and probably random crashes I started
+>> seeing with 4.9). I believe we have a memory corruption.
+>
+> Yep, we're using a resource structure on the stack when we shouldn't.  Can
+> you try the patch below?
 
-On Tue, 14 Mar 2017 14:30:05 -0500, Bjorn Helgaas wrote:
-> On Tue, Mar 14, 2017 at 12:08:51PM -0700, Stephen Boyd wrote:
-> > This code assigns variables that are never used. Remove them.
-> > 
-> > Reported-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
-> > Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-> > Signed-off-by: Stephen Boyd <stephen.boyd@linaro.org>  
-> 
-> I love removing unused code!  Applied to pci/host-aardvark for v4.12,
-> thanks!
+Works great! Will you push it with
+Cc: stable@vger.kernel.org # v4.8+
+please?
 
-Why? I have already sent a patch that also does this (and much more!) a
-number of times already, and it has never been applied. See:
+Thanks for looking at this!
 
-  [PATCH v3 1/3] pci: pci-aardvark: move to MSI handling using generic MSI support
+Also see below...
 
-v1 on September 1st, 2016
-v2 on December 23th, 2016
-v3 on February 28th, 2017
 
-Best regards,
+> (...)
+>  	if (ret)
+>  		dev_err(dev, "PCIe controller setup failed\n");
+> -
+> -	pci_free_resource_list(&res);
+> +		pci_free_resource_list(&resources);
+> +		return ret;
+> +	}
 
-Thomas
-
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+Works great, except it doesn't compile (braces) ;)
