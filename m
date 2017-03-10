@@ -1,183 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
- lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org
-Subject: [PATCH V9 01/11] iommu/of: Refactor of_iommu_configure() for error
- handling
-Date: Fri, 10 Mar 2017 00:30:51 +0530
-Message-Id: <1489086061-9356-2-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sricharan@codeaurora.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60842 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932697AbdCJUPB (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Mar 2017 15:15:01 -0500
+Date: Fri, 10 Mar 2017 14:14:52 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Sinan Kaya <okaya@codeaurora.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        iommu@lists.linux-foundation.org
+Subject: Re: Partial BAR Address Allocation
+Message-ID: <20170310201452.GH19517@bhelgaas-glaptop.roam.corp.google.com>
+References: <35c6bec9-58e8-a1f7-5a85-d80c23480d32@codeaurora.org>
+ <20170222184440.GA2132@bhelgaas-glaptop.roam.corp.google.com>
+ <43c1ff36-fc50-8ea4-02fe-7b1d573a1efd@codeaurora.org>
+ <20170222233944.GB4359@bhelgaas-glaptop.roam.corp.google.com>
+ <20170306110439.GC27724@8bytes.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170306110439.GC27724@8bytes.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Robin Murphy <robin.murphy@arm.com>
+On Mon, Mar 06, 2017 at 12:04:39PM +0100, Joerg Roedel wrote:
+> On Wed, Feb 22, 2017 at 05:39:44PM -0600, Bjorn Helgaas wrote:
+> > [+cc Joerg, iommu list]
+> > 
+> > On Wed, Feb 22, 2017 at 03:44:53PM -0500, Sinan Kaya wrote:
+> > > On 2/22/2017 1:44 PM, Bjorn Helgaas wrote:
+> > > > There is no way for a driver to say "I only need this memory BAR and
+> > > > not the other ones."  The reason is because the PCI_COMMAND_MEMORY bit
+> > > > enables *all* the memory BARs; there's no way to enable memory BARs
+> > > > selectively.  If we enable memory BARs and one of them is unassigned,
+> > > > that unassigned BAR is enabled, and the device will respond at
+> > > > whatever address the register happens to contain, and that may cause
+> > > > conflicts.
+> 
+> Hmm, maybe I am missing something, but isn't this only a problem if the
+> 'unassigned' BAR as an address configured that also falls into the
+> Bridge-Window of the parent bridge? Otherwise no requests should be
+> routed to the BAR anyway, right?
 
-In preparation for some upcoming cleverness, rework the control flow in
-of_iommu_configure() to minimise duplication and improve the propogation
-of errors. It's also as good a time as any to switch over from the
-now-just-a-compatibility-wrapper of_iommu_get_ops() to using the generic
-IOMMU instance interface directly.
+I guess it's true that we could safely enable a memory BAR if the
+upstream bridge would never route anything to it.
 
-Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
----
- drivers/iommu/of_iommu.c | 83 +++++++++++++++++++++++++++++++-----------------
- 1 file changed, 53 insertions(+), 30 deletions(-)
+But it would depend on the size of the BAR and the upstream bridge's
+configuration, so it doesn't feel like it would really be reliable in
+general.
 
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index 2683e9f..8f4e599 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -96,6 +96,28 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
- }
- EXPORT_SYMBOL_GPL(of_get_dma_window);
- 
-+static const struct iommu_ops
-+*of_iommu_xlate(struct device *dev, struct of_phandle_args *iommu_spec)
-+{
-+	const struct iommu_ops *ops;
-+	struct fwnode_handle *fwnode = &iommu_spec->np->fwnode;
-+	int err;
-+
-+	ops = iommu_ops_from_fwnode(fwnode);
-+	if (!ops || !ops->of_xlate)
-+		return NULL;
-+
-+	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
-+	if (err)
-+		return ERR_PTR(err);
-+
-+	err = ops->of_xlate(dev, iommu_spec);
-+	if (err)
-+		return ERR_PTR(err);
-+
-+	return ops;
-+}
-+
- static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
- {
- 	struct of_phandle_args *iommu_spec = data;
-@@ -105,10 +127,11 @@ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
- }
- 
- static const struct iommu_ops
--*of_pci_iommu_configure(struct pci_dev *pdev, struct device_node *bridge_np)
-+*of_pci_iommu_init(struct pci_dev *pdev, struct device_node *bridge_np)
- {
- 	const struct iommu_ops *ops;
- 	struct of_phandle_args iommu_spec;
-+	int err;
- 
- 	/*
- 	 * Start by tracing the RID alias down the PCI topology as
-@@ -123,56 +146,56 @@ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
- 	 * bus into the system beyond, and which IOMMU it ends up at.
- 	 */
- 	iommu_spec.np = NULL;
--	if (of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
--			   "iommu-map-mask", &iommu_spec.np, iommu_spec.args))
--		return NULL;
-+	err = of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
-+			     "iommu-map-mask", &iommu_spec.np,
-+			     iommu_spec.args);
-+	if (err)
-+		return err == -ENODEV ? NULL : ERR_PTR(err);
- 
--	ops = iommu_ops_from_fwnode(&iommu_spec.np->fwnode);
--	if (!ops || !ops->of_xlate ||
--	    iommu_fwspec_init(&pdev->dev, &iommu_spec.np->fwnode, ops) ||
--	    ops->of_xlate(&pdev->dev, &iommu_spec))
--		ops = NULL;
-+	ops = of_iommu_xlate(&pdev->dev, &iommu_spec);
- 
- 	of_node_put(iommu_spec.np);
- 	return ops;
- }
- 
--const struct iommu_ops *of_iommu_configure(struct device *dev,
--					   struct device_node *master_np)
-+static const struct iommu_ops
-+*of_platform_iommu_init(struct device *dev, struct device_node *np)
- {
- 	struct of_phandle_args iommu_spec;
--	struct device_node *np;
- 	const struct iommu_ops *ops = NULL;
- 	int idx = 0;
- 
--	if (dev_is_pci(dev))
--		return of_pci_iommu_configure(to_pci_dev(dev), master_np);
--
- 	/*
- 	 * We don't currently walk up the tree looking for a parent IOMMU.
- 	 * See the `Notes:' section of
- 	 * Documentation/devicetree/bindings/iommu/iommu.txt
- 	 */
--	while (!of_parse_phandle_with_args(master_np, "iommus",
--					   "#iommu-cells", idx,
--					   &iommu_spec)) {
--		np = iommu_spec.np;
--		ops = iommu_ops_from_fwnode(&np->fwnode);
--
--		if (!ops || !ops->of_xlate ||
--		    iommu_fwspec_init(dev, &np->fwnode, ops) ||
--		    ops->of_xlate(dev, &iommu_spec))
--			goto err_put_node;
--
--		of_node_put(np);
-+	while (!of_parse_phandle_with_args(np, "iommus", "#iommu-cells",
-+					   idx, &iommu_spec)) {
-+		ops = of_iommu_xlate(dev, &iommu_spec);
-+		of_node_put(iommu_spec.np);
- 		idx++;
-+		if (IS_ERR_OR_NULL(ops))
-+			break;
- 	}
- 
- 	return ops;
-+}
-+
-+const struct iommu_ops *of_iommu_configure(struct device *dev,
-+					   struct device_node *master_np)
-+{
-+	const struct iommu_ops *ops;
-+
-+	if (!master_np)
-+		return NULL;
-+
-+	if (dev_is_pci(dev))
-+		ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
-+	else
-+		ops = of_platform_iommu_init(dev, master_np);
- 
--err_put_node:
--	of_node_put(np);
--	return NULL;
-+	return IS_ERR(ops) ? NULL : ops;
- }
- 
- static int __init of_iommu_init(void)
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+> > But if there *is* address translation in the PIO direction, we can
+> > have conflicts because the bridge can translate CPU-side PIO accesses
+> > to arbitrary PCI bus addresses.
+> 
+> I am not aware of any hardware that does translation on the PIO space.
+> The IOMMUs I know of don't care about PIO at all.
 
+Right, address translation in the PIO direction would be done by the
+host bridge, not the IOMMU.  There are a fair number of bridges that
+do this -- basically all the callers of pci_add_resource_offset().
+They just apply a constant offset, often by chopping off some
+high-order bits of the CPU address.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bjorn
