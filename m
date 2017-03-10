@@ -1,116 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0060.outbound.protection.outlook.com ([104.47.34.60]:12061
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933582AbdCJQfz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Mar 2017 11:35:55 -0500
-Subject: Re: [RFC PATCH v2 12/32] x86: Add early boot support when running
- with SEV active
-To: Borislav Petkov <bp@suse.de>, Paolo Bonzini <pbonzini@redhat.com>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846768878.2349.15757532025749214650.stgit@brijesh-build-machine>
- <20170309140748.tg67yo2jmc5ahck3@pd.tnic>
- <5d62b16f-16ef-1bd7-1551-f0c4c43573f4@redhat.com>
- <20170309162942.jwtb3l33632zhbaz@pd.tnic>
-CC: <brijesh.singh@amd.com>, <simon.guinot@sequanux.org>,
-        <linux-efi@vger.kernel.org>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <akpm@linux-foundation.org>, <davem@davemloft.net>
-From: Brijesh Singh <brijesh.singh@amd.com>
-Message-ID: <1fe1e177-f588-fe5a-dc13-e9fde00e8958@amd.com>
-Date: Fri, 10 Mar 2017 10:35:30 -0600
+Return-Path: <SRS0=ogIK=2T=huawei.com=gabriele.paoloni@kernel.org>
+Return-Path: <SRS0=ogIK=2T=huawei.com=gabriele.paoloni@kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Lorenzo Pieralisi
+	<lorenzo.pieralisi@arm.com>,
+        "agraf@suse.de" <agraf@suse.de>,
+        Yuanzhichang
+	<yuanzhichang@hisilicon.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>,
+        John Garry
+	<john.garry@huawei.com>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org"
+	<linux-acpi@vger.kernel.org>
+Subject: RE: [QUESTION]: Same IO bus address in different _CRS methods
+Date: Fri, 10 Mar 2017 09:57:28 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E2046F035@FRAEML521-MBX.china.huawei.com>
+References: <EE11001F9E5DDD47B7634E2F8A612F2E2046C6AC@FRAEML521-MBX.china.huawei.com>
+ <20170309181134.GA15721@bhelgaas-glaptop.roam.corp.google.com>
+ <CAK8P3a0iECAKBKG6zqXO5VaPze9OzxzSY+cBFHsM46xVAGhE1A@mail.gmail.com>
+ <20170309223738.GE19517@bhelgaas-glaptop.roam.corp.google.com>
+ <CAK8P3a3vQ+ZO3tcO41uTOVYQszXj-_x-mEFMkZmnE0A1efTxUw@mail.gmail.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E2046D682@FRAEML521-MBX.china.huawei.com>
+ <CAK8P3a1vpEqa89E9uEKGStRCdzge1au=WYEe9dkBHOo+YZUptQ@mail.gmail.com>
+In-Reply-To: <CAK8P3a1vpEqa89E9uEKGStRCdzge1au=WYEe9dkBHOo+YZUptQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20170309162942.jwtb3l33632zhbaz@pd.tnic>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Boris and Paolo,
-
-On 03/09/2017 10:29 AM, Borislav Petkov wrote:
-> On Thu, Mar 09, 2017 at 05:13:33PM +0100, Paolo Bonzini wrote:
->> This is not how you check if running under a hypervisor; you should
->> check the HYPERVISOR bit, i.e. bit 31 of cpuid(1).ecx.  This in turn
->> tells you if leaf 0x40000000 is valid.
->
-> Ah, good point, I already do that in the microcode loader :)
->
->         /*
->          * CPUID(1).ECX[31]: reserved for hypervisor use. This is still not
->          * completely accurate as xen pv guests don't see that CPUID bit set but
->          * that's good enough as they don't land on the BSP path anyway.
->          */
->         if (native_cpuid_ecx(1) & BIT(31))
->                 return *res;
->
->> That said, the main issue with this function is that it hardcodes the
->> behavior for KVM.  It is possible that another hypervisor defines its
->> 0x40000001 leaf in such a way that KVM_FEATURE_SEV has a different meaning.
->>
->> Instead, AMD should define a "well-known" bit in its own space (i.e.
->> 0x800000xx) that is only used by hypervisors that support SEV.  This is
->> similar to how Intel defined one bit in leaf 1 to say "is leaf
->> 0x40000000 valid".
->>
->>> +	if (eax > 0x40000000) {
->>> +		eax = 0x40000001;
->>> +		ecx = 0;
->>> +		native_cpuid(&eax, &ebx, &ecx, &edx);
->>> +		if (!(eax & BIT(KVM_FEATURE_SEV)))
->>> +			goto out;
->>> +
->>> +		eax = 0x8000001f;
->>> +		ecx = 0;
->>> +		native_cpuid(&eax, &ebx, &ecx, &edx);
->>> +		if (!(eax & 1))
->
-> Right, so this is testing CPUID_0x8000001f_ECX(0)[0], SME. Why not
-> simply set that bit for the guest too, in kvm?
->
-
-CPUID_8000_001F[EAX] indicates whether the feature is supported.
-CPUID_0x8000001F[EAX]:
-  * Bit 0 - SME supported
-  * Bit 1 - SEV supported
-  * Bit 3 - SEV-ES supported
-
-We can use MSR_K8_SYSCFG[MemEncryptionModeEnc] to check if memory encryption is enabled.
-Currently, KVM returns zero when guest OS read MSR_K8_SYSCFG. I can update my patch sets
-to set this bit for SEV enabled guests.
-
-We could update this patch to use the below logic:
-
-  * CPUID(0) - Check for AuthenticAMD
-  * CPID(1) - Check if under hypervisor
-  * CPUID(0x80000000) - Check for highest supported leaf
-  * CPUID(0x8000001F).EAX - Check for SME and SEV support
-  * rdmsr (MSR_K8_SYSCFG)[MemEncryptionModeEnc] - Check if SMEE is set
-
-
-Paolo,
-
-One question, do we need "AuthenticAMD" check when we are running under hypervisor ?
-I was looking at qemu code and found that qemu exposes parameters to change the CPU
-vendor id. The above check will fail if user changes the vendor id while launching
-the SEV guest.
-
--Brijesh
+Wy4uLl0NCg0KPiA+DQo+ID4gSWYgeW91IGd1eXMgYWdyZWUgb24gdGhlIGNvbmNsdXNpb24gYWJv
+dmUgSSB3aWxsIGNvbnRpbnVlIHdpdGggdGhlDQo+ID4gcmV3b3JrIG9mIHRoZSBIaVNpbGljb24g
+TFBDIGRyaXZlciB3aXRoIHRoZSBhc3N1bXB0aW9uIHRoYXQgd2UgbmVlZA0KPiA+IGR5bmFtaWNh
+bGx5IGFzc2lnbmVkIHRva2VucyBhbHNvIGZvciBBQ1BJLg0KPiANCj4gWWVzLCB1bmxlc3MgQmpv
+cm4gaGFzIHNvbWUgbGFzdCBjb25jZXJucywgSSB0aGluayB0aGlzIGlzIGFsbCBnb29kDQo+IGFu
+ZCB0aGUgb25seSBwcm9wZXIgd2F5IHRvIGNvbnRpbnVlLiBUaGFua3MgZm9yIGJlYXJpbmcgd2l0
+aCBtZQ0KPiB0aHJvdWdoIHRoZSBkZXRvdXIgdGhhdCBlbmRlZCB1cCBpbiB0aGUgc2FtZSBwbGFj
+ZSB3ZSB3ZXJlIGluDQo+IGJlZm9yZS4uLg0KDQpObyB3b3JyaWVzLCBhY3R1YWxseSB0aGFuayB5
+b3UgYW5kIEJqb3JuIGZvciB5b3VyIHRpbWUgYW5kIHN1cHBvcnQuDQoNCkNoZWVycw0KR2FiDQoN
+Cj4gDQo+ICAgICBBcm5kDQo=
