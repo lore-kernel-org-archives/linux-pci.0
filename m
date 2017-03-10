@@ -1,59 +1,104 @@
-Return-Path: <SRS0=YVMP=3A=chromium.org=briannorris@kernel.org>
-Return-Path: <SRS0=YVMP=3A=chromium.org=briannorris@kernel.org>
-Date: Thu, 23 Mar 2017 15:33:49 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:36508 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755351AbdCJTko (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2017 14:40:44 -0500
+Received: by mail-pg0-f50.google.com with SMTP id g2so24919301pge.3
+        for <linux-pci@vger.kernel.org>; Fri, 10 Mar 2017 11:40:15 -0800 (PST)
+Date: Fri, 10 Mar 2017 11:40:12 -0800
 From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Jeffy Chen <jeffy.chen@rock-chips.com>,
-	Wenrui Li <wenrui.li@rock-chips.com>, linux-pci@vger.kernel.org,
-	linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH v2 1/5] PCI: rockchip: fix sign issues for current limits
-Message-ID: <20170323223348.GA102312@google.com>
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v2 3/5] PCI: rockchip: add remove() support
+Message-ID: <20170310194011.GA16352@google.com>
 References: <20170310024617.67303-1-briannorris@chromium.org>
- <20170323222717.GD23612@bhelgaas-glaptop.roam.corp.google.com>
+ <20170310024617.67303-3-briannorris@chromium.org>
+ <de4d1e8a-c971-1f4d-2996-883341d287b3@rock-chips.com>
+ <5cec190e-4eee-fc55-7039-2336ba5253f3@rock-chips.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170323222717.GD23612@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <5cec190e-4eee-fc55-7039-2336ba5253f3@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 23, 2017 at 05:27:17PM -0500, Bjorn Helgaas wrote:
-> On Thu, Mar 09, 2017 at 06:46:13PM -0800, Brian Norris wrote:
-> > The regulator framework can return negative error codes via
-> > regulator_get_current_limit() for regulators that don't provide current
-> > information. The subsequent check for postive values isn't very useful,
-> > if the variable is unsigned.
-> > 
-> > Let's just match the signedness of the return value.
-> > 
-> > Prevents error messages like this, seen on Samsung Chromebook Plus:
-> > 
-> > [    1.069372] rockchip-pcie f8000000.pcie: invalid power supply
-> > 
-> > Fixes: 4816c4c7b82b ("PCI: rockchip: Provide captured slot power limit and scale")
-> > Signed-off-by: Brian Norris <briannorris@chromium.org>
-> > Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+On Fri, Mar 10, 2017 at 12:20:54PM +0800, Shawn Lin wrote:
+> On 2017/3/10 11:22, Shawn Lin wrote:
+> >On 2017/3/10 10:46, Brian Norris wrote:
+> >>Currently, if we try to unbind the platform device, the remove will
+> >>succeed, but the removal won't undo most of the registration, leaving
+> >>partially-configured PCI devices in the system.
+> >>
+> >>This allows, for example, a simple 'lspci' to crash the system, as it
+> >>will try to touch the freed (via devm_*) driver structures.
+> >>
+> >>So let's implement device remove().
+> >>
+> >
+> >As this patchset seems to be merged together so I think the following
+> >warning will be ok? if my git-am robot only pick your patch 1->compile->
+> >patch 2->compile->patch 3 then
+> >
+> >drivers/pci/host/pcie-rockchip.c: In function 'rockchip_pcie_remove':
+> >drivers/pci/host/pcie-rockchip.c:1435:2: error: implicit declaration of
+> >function 'pci_unmap_iospace' [-Werror=implicit-function-declaration]
+> >  pci_unmap_iospace(rockchip->io);
+
+I'm not sure what you're doing here, but when I test patches 1-3, this
+all compiles fine for me. Maybe you're testing an old kernel that does
+not have pci_unmap_iospace()?
+
+> >but I guess you may need to move your patch 4 ahead of patch 3?
+
+No. Patch 4 is only necessary for building modules that can use those
+functions; your PCIe driver doesn't build as a module until patch 5.
+
+I'm going to guess that you're testing your hacky vendor tree, and not
+pure upstream.
+
+> Well, I am not sure if something is wrong here.
 > 
-> I applied the first two patches (this already has Shawn's ack and the
-> second is trivially obvious) to pci/host-rockchip.
+> But when booting up the system for the first time, we got
+> [    0.527263] PCI host bridge /pcie@f8000000 ranges:
+> [    0.527293]   MEM 0xfa000000..0xfa5fffff -> 0xfa000000
+> [    0.527308]    IO 0xfa600000..0xfa6fffff -> 0xfa600000
+> [    0.527544] rockchip-pcie f8000000.pcie: PCI host bridge to bus 0000:0
+> 
+> so the hierarchy(lspci -t) looks like:
+> lspci -t
+> -[0000:00]---00.0-[01]----00.0
+> 
+> and lspci
+> 0000:00:00.0 Class 0604: Device 1d87:0100
+> 0001:01:00.0 Class 0108: Device 8086:f1a5 (rev 03)
+> 
+> but if I did unbind and bind, the bus number is different.
+> 
+> lspci
+> 0001:00:00.0 Class 0604: Device 1d87:0100
+> 0001:01:00.0 Class 0108: Device 8086:f1a5 (rev 03)
+> 
+> lspci -t
+> -+-[0001:00]---00.0-[01]----00.0
+>  \-[0000:00]-
+> 
+> This hierarchy looks wrong to me.
 
-Thanks!
+That looks like it's somewhat an artifact of lspci's tree view, which
+manufactures the 0000:00 root.
 
-> I'm not sure what the
-> current state of the others is.
+I might comment on your "RFT" patch too but... it does touch on the
+problem (that the domain numbers don't get reused), but I don't think
+it's a good idea. What if we add another domain after the Rockchip
+PCIe domain? You'll clobber all the domain allocations the first time
+you remove the Rockchip one. Instead, if we want to actually stabilize
+this indexing across hotplug, we need the core PCI code to take care of
+this for us. e.g., maybe use one of the existing indexing ID mechanisms
+in the kernel, like IDR?
 
-Patch 4 seems like it should be fine (it was discussed previously, but
-never done).
-
-Apart from existing leaks in the PCI framework (which Jeffy and Shawn
-are trying to patch [1]), I don't think there are any known issues with
-3 and 5. It's certainly better than having 100% broken unbind at least,
-IMO.
-
-I suppose it's worth getting an ack/nack from Shawn though.
+Anyway, other than the bad lspci -t output, is there any actual bug
+here? I didn't think the domain numbers were actually so special.
 
 Brian
-
-[1] https://patchwork.kernel.org/patch/9638353/
-    https://patchwork.kernel.org/patch/9640545/
-    https://patchwork.kernel.org/patch/9640549/
