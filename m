@@ -1,106 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:6001 "EHLO mga05.intel.com"
+Received: from mx2.suse.de ([195.135.220.15]:38006 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751083AbdCBXgZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Mar 2017 18:36:25 -0500
-From: Andi Kleen <andi@firstfloor.org>
-To: bhelgaas@google.com
-Cc: x86@kernel.org, linux-pci@vger.kernel.org, eranian@google.com,
-        peterz@infradead.org, linux-kernel@vger.kernel.org,
-        Andi Kleen <ak@linux.intel.com>
-Subject: [PATCH 1/4] pci: Allow lockless access path to PCI mmconfig
-Date: Thu,  2 Mar 2017 15:21:01 -0800
-Message-Id: <20170302232104.10136-1-andi@firstfloor.org>
+        id S934473AbdCJLHU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Mar 2017 06:07:20 -0500
+Date: Fri, 10 Mar 2017 12:06:57 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Brijesh Singh <brijesh.singh@amd.com>,
+        Paolo Bonzini <pbonzini@redhat.com>
+Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
+        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
+        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
+        gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
+        akpm@linux-foundation.org, davem@davemloft.net
+Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
+ when spliting large pages
+Message-ID: <20170310110657.hophlog2juw5hpzz@pd.tnic>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Andi Kleen <ak@linux.intel.com>
+On Thu, Mar 02, 2017 at 10:15:15AM -0500, Brijesh Singh wrote:
+> If kernel_maps_pages_in_pgd is called early in boot process to change the
 
-The Intel uncore driver can do a lot of PCI config accesses to read
-performance counters. I had a situation on a 4S system where it
-was spending 40+% of CPU time grabbing the pci_cfg_lock due to that.
+kernel_map_pages_in_pgd()
 
-For 64bit x86 with MMCONFIG there isn't really any reason to take
-a lock. The access is directly mapped to an underlying MMIO area,
-which can fully operate lockless.
+> memory attributes then it fails to allocate memory when spliting large
+> pages. The patch extends the cpa_data to provide the support to use
+> memblock_alloc when slab allocator is not available.
+> 
+> The feature will be used in Secure Encrypted Virtualization (SEV) mode,
+> where we may need to change the memory region attributes in early boot
+> process.
+> 
+> Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+> ---
+>  arch/x86/mm/pageattr.c |   51 ++++++++++++++++++++++++++++++++++++++++--------
+>  1 file changed, 42 insertions(+), 9 deletions(-)
+> 
+> diff --git a/arch/x86/mm/pageattr.c b/arch/x86/mm/pageattr.c
+> index 46cc89d..9e4ab3b 100644
+> --- a/arch/x86/mm/pageattr.c
+> +++ b/arch/x86/mm/pageattr.c
+> @@ -14,6 +14,7 @@
+>  #include <linux/gfp.h>
+>  #include <linux/pci.h>
+>  #include <linux/vmalloc.h>
+> +#include <linux/memblock.h>
+>  
+>  #include <asm/e820/api.h>
+>  #include <asm/processor.h>
+> @@ -37,6 +38,7 @@ struct cpa_data {
+>  	int		flags;
+>  	unsigned long	pfn;
+>  	unsigned	force_split : 1;
+> +	unsigned	force_memblock :1;
+>  	int		curpage;
+>  	struct page	**pages;
+>  };
+> @@ -627,9 +629,8 @@ try_preserve_large_page(pte_t *kpte, unsigned long address,
+>  
+>  static int
+>  __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
+> -		   struct page *base)
+> +		  pte_t *pbase, unsigned long new_pfn)
+>  {
+> -	pte_t *pbase = (pte_t *)page_address(base);
+>  	unsigned long ref_pfn, pfn, pfninc = 1;
+>  	unsigned int i, level;
+>  	pte_t *tmp;
+> @@ -646,7 +647,7 @@ __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
+>  		return 1;
+>  	}
+>  
+> -	paravirt_alloc_pte(&init_mm, page_to_pfn(base));
+> +	paravirt_alloc_pte(&init_mm, new_pfn);
+>  
+>  	switch (level) {
+>  	case PG_LEVEL_2M:
+> @@ -707,7 +708,8 @@ __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
+>  	 * pagetable protections, the actual ptes set above control the
+>  	 * primary protection behavior:
+>  	 */
+> -	__set_pmd_pte(kpte, address, mk_pte(base, __pgprot(_KERNPG_TABLE)));
+> +	__set_pmd_pte(kpte, address,
+> +		native_make_pte((new_pfn << PAGE_SHIFT) + _KERNPG_TABLE));
+>  
+>  	/*
+>  	 * Intel Atom errata AAH41 workaround.
+> @@ -723,21 +725,50 @@ __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
+>  	return 0;
+>  }
+>  
+> +static pte_t *try_alloc_pte(struct cpa_data *cpa, unsigned long *pfn)
+> +{
+> +	unsigned long phys;
+> +	struct page *base;
+> +
+> +	if (cpa->force_memblock) {
+> +		phys = memblock_alloc(PAGE_SIZE, PAGE_SIZE);
 
-Add a new flag that allows the PCI mid layer to skip the lock
-and set it for the 64bit mmconfig code.
+Maybe there's a reason this fires:
 
-There's a small risk that someone relies on this lock for synchronization,
-but I think that's unlikely because there isn't really any useful
-synchronization at this individual operation level. Any useful
-synchronization would likely need to protect at least a
-read-modify-write or similar.  So I made it unconditional without opt-in.
+WARNING: modpost: Found 2 section mismatch(es).
+To see full details build your kernel with:
+'make CONFIG_DEBUG_SECTION_MISMATCH=y'
 
-Signed-off-by: Andi Kleen <ak@linux.intel.com>
----
- arch/x86/pci/mmconfig_64.c |  1 +
- drivers/pci/access.c       | 14 ++++++++++----
- include/linux/pci.h        |  2 ++
- 3 files changed, 13 insertions(+), 4 deletions(-)
+WARNING: vmlinux.o(.text+0x48edc): Section mismatch in reference from the function __change_page_attr() to the function .init.text:memblock_alloc()
+The function __change_page_attr() references
+the function __init memblock_alloc().
+This is often because __change_page_attr lacks a __init
+annotation or the annotation of memblock_alloc is wrong.
 
-diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-index bea52496aea6..8bf10f41e626 100644
---- a/arch/x86/pci/mmconfig_64.c
-+++ b/arch/x86/pci/mmconfig_64.c
-@@ -121,6 +121,7 @@ int __init pci_mmcfg_arch_init(void)
- 		}
- 
- 	raw_pci_ext_ops = &pci_mmcfg;
-+	pci_root_ops.ll_allowed = true;
- 
- 	return 1;
- }
-diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-index db239547fefd..22552c6606c1 100644
---- a/drivers/pci/access.c
-+++ b/drivers/pci/access.c
-@@ -32,11 +32,14 @@ int pci_bus_read_config_##size \
- 	int res;							\
- 	unsigned long flags;						\
- 	u32 data = 0;							\
-+	bool ll_allowed = bus->ops->ll_allowed;				\
- 	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
--	raw_spin_lock_irqsave(&pci_lock, flags);			\
-+	if (!ll_allowed)						\
-+		raw_spin_lock_irqsave(&pci_lock, flags);		\
- 	res = bus->ops->read(bus, devfn, pos, len, &data);		\
- 	*value = (type)data;						\
--	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
-+	if (!ll_allowed)						\
-+		raw_spin_unlock_irqrestore(&pci_lock, flags);		\
- 	return res;							\
- }
- 
-@@ -46,10 +49,13 @@ int pci_bus_write_config_##size \
- {									\
- 	int res;							\
- 	unsigned long flags;						\
-+	bool ll_allowed = bus->ops->ll_allowed;				\
- 	if (PCI_##size##_BAD) return PCIBIOS_BAD_REGISTER_NUMBER;	\
--	raw_spin_lock_irqsave(&pci_lock, flags);			\
-+	if (!ll_allowed)						\
-+		raw_spin_lock_irqsave(&pci_lock, flags);		\
- 	res = bus->ops->write(bus, devfn, pos, len, value);		\
--	raw_spin_unlock_irqrestore(&pci_lock, flags);		\
-+	if (!ll_allowed)						\
-+		raw_spin_unlock_irqrestore(&pci_lock, flags);		\
- 	return res;							\
- }
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a124216a..9b234cbc7ae1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -612,6 +612,8 @@ struct pci_ops {
- 	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
- 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
- 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
-+	/* Set to true when pci_lock is not needed for read/write */
-+	bool ll_allowed;
- };
- 
- /*
+WARNING: vmlinux.o(.text+0x491d1): Section mismatch in reference from the function __change_page_attr() to the function .meminit.text:memblock_free()
+The function __change_page_attr() references
+the function __meminit memblock_free().
+This is often because __change_page_attr lacks a __meminit
+annotation or the annotation of memblock_free is wrong.
+
+Why do we need this whole early mapping? For the guest? I don't like
+that memblock thing at all.
+
+So I think the approach with the .data..percpu..hv_shared section is
+fine and we should consider SEV-ES
+
+http://support.amd.com/TechDocs/Protecting%20VM%20Register%20State%20with%20SEV-ES.pdf
+
+and do this right from the get-go so that when SEV-ES comes along, we
+should simply be ready and extend that mechanism to put the whole Guest
+Hypervisor Communication Block in there.
+
+But then the fact that you're mapping those decrypted in init_mm.pgd
+makes me think you don't need that early mapping thing at all. Those are
+the decrypted mappings of the hypervisor. And that you can do late.
+
+Now, what would be better, IMHO (and I have no idea about virtualization
+design so take with a grain of salt) is if the guest would allocate
+enough memory for the GHCB and mark it decrypted from the very
+beginning. It will be the communication vehicle with the hypervisor
+anyway.
+
+And we already do similar things in sme_map_bootdata() for the baremetal
+kernel to map boot_data, initrd, EFI, ... and so on things decrypted.
+
+And we should extend that mechanism to map the GHCB in the guest too and
+then we can get rid of all that need for ->force_memblock which makes
+the crazy mess in pageattr.c even crazier. And it would be lovely if we
+can do it without it.
+
+But maybe Paolo might have an even better idea...
+
+Thanks.
+
 -- 
-2.9.3
+Regards/Gruss,
+    Boris.
+
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
