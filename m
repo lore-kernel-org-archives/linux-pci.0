@@ -1,75 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 16 Mar 2017 19:28:36 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Brijesh Singh <brijesh.singh@amd.com>,
-        Paolo Bonzini <pbonzini@redhat.com>
-Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
-        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
-        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
-        gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org,
-        akpm@linux-foundation.org, davem@davemloft.net
-Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
- when spliting large pages
-Message-ID: <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
- <20170310110657.hophlog2juw5hpzz@pd.tnic>
- <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f54.google.com ([74.125.83.54]:35659 "EHLO
+        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752935AbdCJCrR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2017 21:47:17 -0500
+Received: by mail-pg0-f54.google.com with SMTP id b129so33416999pgc.2
+        for <linux-pci@vger.kernel.org>; Thu, 09 Mar 2017 18:46:30 -0800 (PST)
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: <linux-kernel@vger.kernel.org>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH v2 2/5] PCI: rockchip: make 'return 0' more obvious in probe()
+Date: Thu,  9 Mar 2017 18:46:14 -0800
+Message-Id: <20170310024617.67303-2-briannorris@chromium.org>
+In-Reply-To: <20170310024617.67303-1-briannorris@chromium.org>
+References: <20170310024617.67303-1-briannorris@chromium.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 10, 2017 at 04:41:56PM -0600, Brijesh Singh wrote:
-> I can take a look at fixing those warning. In my initial attempt was to create
-> a new function to clear encryption bit but it ended up looking very similar to
-> __change_page_attr_set_clr() hence decided to extend the exiting function to
-> use memblock_alloc().
+There's no way to get here with 'err != 0'. Just return 0 to be more
+obvious and prevent future changes from accidentally erroring out here
+without going through the right error paths.
 
-... except that having all that SEV-specific code in main code paths is
-yucky and I'd like to avoid it, if possible.
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+v2: no change
+---
+ drivers/pci/host/pcie-rockchip.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Early in boot process, guest kernel allocates some structure (its either
-> statically allocated or dynamic allocated via memblock_alloc). And shares the physical
-> address of these structure with hypervisor. Since entire guest memory area is mapped
-> as encrypted hence those structure's are mapped as encrypted memory range. We need
-> a method to clear the encryption bit. Sometime these structure maybe part of 2M pages
-> and need to split into smaller pages.
-
-So how hard would it be if the hypervisor allocated that memory for the
-guest instead? It would allocate it decrypted and guest would need to
-access it decrypted too. All in preparation for SEV-ES which will need a
-block of unencrypted memory for the guest anyway...
-
-> In most cases, guest and hypervisor communication starts as soon as guest provides
-> the physical address to hypervisor. So we must map the pages as decrypted before
-> sharing the physical address to hypervisor.
-
-See above: so purely theoretically speaking, the hypervisor could prep
-that decrypted range for the guest. I'd look in Paolo's direction,
-though, for the feasibility of something like that.
-
-Thanks.
-
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index d785f64ec03b..5d7b27b1e941 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -1398,7 +1398,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		pcie_bus_configure_settings(child);
+ 
+ 	pci_bus_add_devices(bus);
+-	return err;
++	return 0;
+ 
+ err_free_res:
+ 	pci_free_resource_list(&res);
 -- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+2.12.0.246.ga2ecc84866-goog
