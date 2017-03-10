@@ -1,74 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35369 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751009AbdCQKeO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Mar 2017 06:34:14 -0400
-Date: Fri, 17 Mar 2017 11:17:37 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
-        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
-        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
-        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedo.suse.de
-Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
- when spliting large pages
-Message-ID: <20170317101737.icdois7sdmtutt6b@pd.tnic>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
- <20170310110657.hophlog2juw5hpzz@pd.tnic>
- <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
- <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
- <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
+Return-Path: <SRS0=Soie=2T=ACULAB.COM=David.Laight@kernel.org>
+Return-Path: <SRS0=Soie=2T=ACULAB.COM=David.Laight@kernel.org>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Robin Murphy' <robin.murphy@arm.com>, Mason <slash.tmp@free.fr>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>, "Arnd
+ Bergmann" <arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, "Marc
+ Zyngier" <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>, linux-usb
+	<linux-usb@vger.kernel.org>, Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>, Linux ARM
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: Neophyte questions about PCIe
+Date: Fri, 10 Mar 2017 15:35:16 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DCFE7C9B9@AcuExch.aculab.com>
+References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
+ <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
+ <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
+ <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
+ <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
+ <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
+ <4f37cc08-d4fd-b207-63d2-4ac038d2fcec@arm.com>
+In-Reply-To: <4f37cc08-d4fd-b207-63d2-4ac038d2fcec@arm.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 16, 2017 at 11:25:36PM +0100, Paolo Bonzini wrote:
-> The kvmclock memory is initially zero so there is no need for the
-> hypervisor to allocate anything; the point of these patches is just to
-> access the data in a natural way from Linux source code.
+From: Robin Murphy=20
+> Sent: 10 March 2017 15:23
+...
+> >> So you have 128MB (max) of system memory that has cpu physical
+> >> addresses 0x80000000 upwards.
+> >> I'd expect it all to be accessible from any PCIe card at some PCIe
+> >> address, it might be at address 0, 0x80000000 or any other offset.
+> >>
+> >> I don't know which DT entry controls that offset.
+> >
+> > This is a crucial point, I think.
+>=20
+> The appropriate DT property would be "dma-ranges", i.e.
+>=20
+> pci@... {
+> 	...
+> 	dma-ranges =3D <(PCI bus address) (CPU phys address) (size)>;
+> }
 
-I realize that.
+Isn't that just saying which physical addresses the cpu can assign
+for buffers for those devices?
+There is also an offset between the 'cpu physical address' and the
+'dma address'.
+This might be implicit in the 'BAR0' base address register.
+=20
+> The fun part is that that will only actually match the hardware once the
+> magic BAR has actually been programmed with (bus address), so you end up
+> with this part of your DT being more of a prophecy than a property :)
 
-> I also don't really like the patch as is (plus it fails modpost), but
-> IMO reusing __change_page_attr and __split_large_page is the right thing
-> to do.
+The BAR0 values could easily be programmed into the cpld/fpga - so
+not need writing by the cpu at all.
 
-Right, so teaching pageattr.c about memblock could theoretically come
-around and bite us later when a page allocated with memblock gets freed
-with free_page().
-
-And looking at this more, we have all this kernel pagetable preparation
-code down the init_mem_mapping() call and the pagetable setup in
-arch/x86/mm/init_{32,64}.c
-
-And that code even does some basic page splitting. Oh and it uses
-alloc_low_pages() which knows whether to do memblock reservation or the
-common __get_free_pages() when slabs are up.
-
-So what would be much cleaner, IMHO, is if one would reuse that code to
-change init_mm.pgd mappings early without copying pageattr.c.
-
-init_mem_mapping() gets called before kvm_guest_init() in setup_arch()
-so the guest would simply fixup its pagetable right there.
-
--- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+	David
