@@ -1,83 +1,47 @@
-Return-Path: <SRS0=04wA=26=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=04wA=26=free.fr=slash.tmp@kernel.org>
-Subject: Re: [RFC PATCH v0.001] PCI: Add support for tango PCIe controller
-To: Liviu Dudau <liviu.dudau@arm.com>
-References: <ab110ce2-8678-9b34-6bd1-6cfaaa7fea04@free.fr>
- <f13c385d-dcc9-dacd-2b2c-ca098228f4f4@free.fr>
- <20170321123129.GB6816@e110455-lin.cambridge.arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- David Laight <david.laight@aculab.com>, linux-pci
- <linux-pci@vger.kernel.org>, Linux ARM
- <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Joerg Roedel <joro@8bytes.org>, iommu <iommu@lists.linux-foundation.org>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <d5062453-39cc-1435-bb13-87c81b6ef0b3@free.fr>
-Date: Tue, 21 Mar 2017 14:01:57 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp-out4.electric.net ([192.162.216.189]:61679 "EHLO
+        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932759AbdCJPPZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2017 10:15:25 -0500
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Mason' <slash.tmp@free.fr>, Robin Murphy <robin.murphy@arm.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>,
+        "Arnd Bergmann" <arnd@arndb.de>,
+        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+        "Marc Zyngier" <marc.zyngier@arm.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+        linux-usb <linux-usb@vger.kernel.org>,
+        Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>
+Subject: RE: Neophyte questions about PCIe
+Date: Fri, 10 Mar 2017 15:14:59 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DCFE7C973@AcuExch.aculab.com>
+References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
+ <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
+ <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
+ <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
+ <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
+ <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
+In-Reply-To: <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-In-Reply-To: <20170321123129.GB6816@e110455-lin.cambridge.arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21/03/2017 13:31, Liviu Dudau wrote:
+From: Mason
+> Sent: 10 March 2017 15:06
+...
+> My RC drops packets not targeting its BAR0.
 
-> On Tue, Mar 21, 2017 at 11:15:16AM +0100, Mason wrote:
->>
->> On 17/03/2017 17:11, Mason wrote:
->>
->>> + * QUIRK #5
->>> + * Only transfers within the BAR are forwarded to the host.
->>> + * By default, the DMA framework expects that
->>> + * PCI address 0x8000_0000 -> CPU address 0x8000_0000
->>> + * which is where DRAM0 is mapped.
->>
->> I have an additional question on this topic.
->>
->> In a typical system, PCI bus masters are able to access all of RAM,
->> unless there is some kind of IOMMU, right?
-> 
-> Depends where the ATS (Address translation service) lives and what gets
-> programmed there, but usually one can restrict the RAM (or system address
-> space, to be more precise) that can be accessed from the PCI bus masters
-> by only providing PCI(e)-to-system bus mappings that make sense. Remember
-> that on any PCI bus you can only see addresses that are a subset of your
-> parent bus addresses. If the root PCI bus only allows access to a predefined
-> range of addresses, then that is all you can access in the system.
+I suspect the fpga/cpld logic supports RC and endpoint modes
+and is using much the same names for the registers (and logic
+implementation).
 
-Hmmm, where do I configure the range of addresses which the root
-PCI bus allows access to? In the DT?
+If your cpu support more than 1GB of memory but only part is
+PCIe accessible you'll have to ensure that all the memory
+definitions are set correctly and 'bounce buffers' used for
+some operations.
 
->> I suppose one may consider the above limitation ("Only transfers
->> within the BAR are forwarded to the host") as some form of weird
->> IOMMU? (There is, in fact, some remapping logic in the controller
->> setup which I haven't discussed so far.)
-> 
-> Not sure I understand the quirk. What BAR are you referring to when you say
-> "within the BAR"? The bus master's? Are you saying that only if you write
-> to a PCI bus address XXXXXXX that is in the range assigned by the parent
-> bus then you can escape your bus hierarchy and target the system RAM? That
-> sounds backwards to me.
-
-My PCIe controller is b/d/f 0/0/0.
-It ignores all PCI addresses that do not fall within the range
-defined in BAR0 of b/d/f 0/0/0.
-
-BAR0 has a configurable width of 2^(23+i) bytes, i < 8
-It is implicitly split in 8 regions, which can map to
-anywhere in CPU space. However, my understanding is that,
-by default, the DMA framework expects PCI address X to
-map to CPU address X...
-(My understanding of that part is still a bit hazy.)
-
->> Since this SoC is used for TV, the media cartels mandate some way
->> to limit where PCI bus masters can peek/poke in RAM.
-> 
-> And that is usually done by either having a TrustZone controller on top of
-> your PCI host bridge or by putting an IOMMU.
-
-It seems we don't have this HW, therefore some kind of custom
-HW quirk was required.
-
-Regards.
+	David
