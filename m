@@ -1,40 +1,116 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cn.fujitsu.com ([59.151.112.132]:16647 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750725AbdCAKDr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 1 Mar 2017 05:03:47 -0500
-From: Cao jin <caoj.fnst@cn.fujitsu.com>
-To: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>
-CC: <bhelgaas@google.com>, <corbet@lwn.net>
-Subject: [PATCH] pcieaer doc: update the link
-Date: Wed, 1 Mar 2017 17:05:28 +0800
-Message-ID: <1488359128-7917-1-git-send-email-caoj.fnst@cn.fujitsu.com>
+Received: from mail-by2nam01on0060.outbound.protection.outlook.com ([104.47.34.60]:12061
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933582AbdCJQfz (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Mar 2017 11:35:55 -0500
+Subject: Re: [RFC PATCH v2 12/32] x86: Add early boot support when running
+ with SEV active
+To: Borislav Petkov <bp@suse.de>, Paolo Bonzini <pbonzini@redhat.com>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846768878.2349.15757532025749214650.stgit@brijesh-build-machine>
+ <20170309140748.tg67yo2jmc5ahck3@pd.tnic>
+ <5d62b16f-16ef-1bd7-1551-f0c4c43573f4@redhat.com>
+ <20170309162942.jwtb3l33632zhbaz@pd.tnic>
+CC: <brijesh.singh@amd.com>, <simon.guinot@sequanux.org>,
+        <linux-efi@vger.kernel.org>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <akpm@linux-foundation.org>, <davem@davemloft.net>
+From: Brijesh Singh <brijesh.singh@amd.com>
+Message-ID: <1fe1e177-f588-fe5a-dc13-e9fde00e8958@amd.com>
+Date: Fri, 10 Mar 2017 10:35:30 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170309162942.jwtb3l33632zhbaz@pd.tnic>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The original link is empty, replace it.
+Hi Boris and Paolo,
 
-Signed-off-by: Cao jin <caoj.fnst@cn.fujitsu.com>
----
-The new link is the only one I can find in kernel.org.
+On 03/09/2017 10:29 AM, Borislav Petkov wrote:
+> On Thu, Mar 09, 2017 at 05:13:33PM +0100, Paolo Bonzini wrote:
+>> This is not how you check if running under a hypervisor; you should
+>> check the HYPERVISOR bit, i.e. bit 31 of cpuid(1).ecx.  This in turn
+>> tells you if leaf 0x40000000 is valid.
+>
+> Ah, good point, I already do that in the microcode loader :)
+>
+>         /*
+>          * CPUID(1).ECX[31]: reserved for hypervisor use. This is still not
+>          * completely accurate as xen pv guests don't see that CPUID bit set but
+>          * that's good enough as they don't land on the BSP path anyway.
+>          */
+>         if (native_cpuid_ecx(1) & BIT(31))
+>                 return *res;
+>
+>> That said, the main issue with this function is that it hardcodes the
+>> behavior for KVM.  It is possible that another hypervisor defines its
+>> 0x40000001 leaf in such a way that KVM_FEATURE_SEV has a different meaning.
+>>
+>> Instead, AMD should define a "well-known" bit in its own space (i.e.
+>> 0x800000xx) that is only used by hypervisors that support SEV.  This is
+>> similar to how Intel defined one bit in leaf 1 to say "is leaf
+>> 0x40000000 valid".
+>>
+>>> +	if (eax > 0x40000000) {
+>>> +		eax = 0x40000001;
+>>> +		ecx = 0;
+>>> +		native_cpuid(&eax, &ebx, &ecx, &edx);
+>>> +		if (!(eax & BIT(KVM_FEATURE_SEV)))
+>>> +			goto out;
+>>> +
+>>> +		eax = 0x8000001f;
+>>> +		ecx = 0;
+>>> +		native_cpuid(&eax, &ebx, &ecx, &edx);
+>>> +		if (!(eax & 1))
+>
+> Right, so this is testing CPUID_0x8000001f_ECX(0)[0], SME. Why not
+> simply set that bit for the guest too, in kvm?
+>
 
- Documentation/PCI/pcieaer-howto.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+CPUID_8000_001F[EAX] indicates whether the feature is supported.
+CPUID_0x8000001F[EAX]:
+  * Bit 0 - SME supported
+  * Bit 1 - SEV supported
+  * Bit 3 - SEV-ES supported
 
-diff --git a/Documentation/PCI/pcieaer-howto.txt b/Documentation/PCI/pcieaer-howto.txt
-index ea8cafba255c..acd0dddd6bb8 100644
---- a/Documentation/PCI/pcieaer-howto.txt
-+++ b/Documentation/PCI/pcieaer-howto.txt
-@@ -256,7 +256,7 @@ After reboot with new kernel or insert the module, a device file named
- 
- Then, you need a user space tool named aer-inject, which can be gotten
- from:
--    http://www.kernel.org/pub/linux/utils/pci/aer-inject/
-+    https://git.kernel.org/cgit/linux/kernel/git/gong.chen/aer-inject.git/
- 
- More information about aer-inject can be found in the document comes
- with its source code.
--- 
-2.1.0
+We can use MSR_K8_SYSCFG[MemEncryptionModeEnc] to check if memory encryption is enabled.
+Currently, KVM returns zero when guest OS read MSR_K8_SYSCFG. I can update my patch sets
+to set this bit for SEV enabled guests.
+
+We could update this patch to use the below logic:
+
+  * CPUID(0) - Check for AuthenticAMD
+  * CPID(1) - Check if under hypervisor
+  * CPUID(0x80000000) - Check for highest supported leaf
+  * CPUID(0x8000001F).EAX - Check for SME and SEV support
+  * rdmsr (MSR_K8_SYSCFG)[MemEncryptionModeEnc] - Check if SMEE is set
+
+
+Paolo,
+
+One question, do we need "AuthenticAMD" check when we are running under hypervisor ?
+I was looking at qemu code and found that qemu exposes parameters to change the CPU
+vendor id. The above check will fail if user changes the vendor id while launching
+the SEV guest.
+
+-Brijesh
