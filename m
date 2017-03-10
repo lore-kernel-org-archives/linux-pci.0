@@ -1,63 +1,45 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0061.outbound.protection.outlook.com ([104.47.32.61]:43712
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752175AbdC2QVM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Mar 2017 12:21:12 -0400
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: 'Joerg Roedel' <jroedel@suse.de>
-CC: 'Joerg Roedel' <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        "Nath, Arindam" <Arindam.Nath@amd.com>
-Subject: RE: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
-Date: Wed, 29 Mar 2017 16:21:08 +0000
-Message-ID: <BN6PR12MB1652773FC29C98A899FD5689F7350@BN6PR12MB1652.namprd12.prod.outlook.com>
-References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
- <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328202844.GQ8329@suse.de>
- <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328205616.GR8329@suse.de>
- <BN6PR12MB165289163EA3548B59D0C1ACF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328222627.GS8329@suse.de>
-In-Reply-To: <20170328222627.GS8329@suse.de>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mout3.freenet.de ([195.4.92.93]:35410 "EHLO mout3.freenet.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750826AbdCJF2T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 10 Mar 2017 00:28:19 -0500
+Received: from [195.4.92.142] (helo=mjail2.freenet.de)
+        by mout3.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.85 #1)
+        id 1cmCsb-0002ly-9m
+        for linux-pci@vger.kernel.org; Fri, 10 Mar 2017 06:14:17 +0100
+Received: from localhost ([::1]:57111 helo=mjail2.freenet.de)
+        by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.85 #1)
+        id 1cmCsb-00035B-62
+        for linux-pci@vger.kernel.org; Fri, 10 Mar 2017 06:14:17 +0100
+Received: from mx5.freenet.de ([195.4.92.15]:50821)
+        by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.85 #1)
+        id 1cmCov-0002NQ-Pm
+        for linux-pci@vger.kernel.org; Fri, 10 Mar 2017 06:10:29 +0100
+Received: from p5deb0bf1.dip0.t-ipconnect.de ([93.235.11.241]:46766 helo=mail.maya.org)
+        by mx5.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1.2:DHE-RSA-AES256-GCM-SHA384:256) (port 465) (Exim 4.85 #1)
+        id 1cmCov-0002Nr-LS
+        for linux-pci@vger.kernel.org; Fri, 10 Mar 2017 06:10:29 +0100
+To: linux-pci@vger.kernel.org
+From: Andreas Hartmann <andihartmann@01019freenet.de>
+Subject: IOMMU suuport for Ryzen / x370?
+Message-ID: <658a7e9c-7dff-f62e-e2ba-fe151fdbe7d2@01019freenet.de>
+Date: Fri, 10 Mar 2017 06:10:27 +0100
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: 'Joerg Roedel' [mailto:jroedel@suse.de]
-> Sent: Tuesday, March 28, 2017 6:26 PM
-> To: Deucher, Alexander
-> Cc: 'Joerg Roedel'; Bjorn Helgaas; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Daniel Drake; Nath, Arindam
-> Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
->=20
-> On Tue, Mar 28, 2017 at 09:13:23PM +0000, Deucher, Alexander wrote:
-> > If I understand Arindam's patch correctly, it only flushes TLB entries
-> > for domains in the flush queue whereas the previous behavior was to
-> > flush all domains.  If there was no TLB flush in the queue for that
-> > domain, could flushing it cause a problem?
->=20
-> No, that can't cause a problem. An io/tlb flush for the device is just a
-> message that the device should invalidate its own tlb. The device can't
-> know and doesn't need to know whether the page-tables it used to fill
-> the tlb really changed.
->=20
-> As it looks, the problem we are seeing here is that we are sending a
-> large amount of these requests to the GPU device, and wait for its
-> completion every time. This shouldn't be a problem for ATS devices, but
-> the GPU here seems to fail at some point and doesn't answer to the
-> invalidation request anymore, causing the completion-wait loop timeouts.
->=20
-> Arindam's patch makes the high flush-frequency less likely, but it can
-> still happen, depending on how the GPU is used. So its the best to
-> keep ATS disabled on the device as it doesn't work correctly and we risk
-> running in the same problem again when we leave it enabled and just make
-> the trigger less likely.
+Hello all!
 
-Thanks for clarifying.  The patch is:
-Acked-by: Alex Deucher <alexander.deucher@amd.com>
+
+I've got just one quick question: Is there already usable support for
+IOMMU in an actual released kernel (chipset x370)? I would need it for
+virtualization with vfio / vfio_pci to passthrough PCI and PCIIE cards
+to kvm VMs as I'm already doing it with FX 8350 processor (AMD 990X
+chipset).
+
+
+
+Thanks,
+regards,
+Andreas
