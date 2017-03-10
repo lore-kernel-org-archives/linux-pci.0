@@ -1,90 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from office.codexdigital.com ([193.203.82.50]:52713 "EHLO
-        office.codexdigital.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757076AbdCURo7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Mar 2017 13:44:59 -0400
-From: Harry Mallon <Harry@codexdigital.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: PCIe native hotplug under root port with ACPI disable
-Date: Tue, 21 Mar 2017 17:29:44 +0000
-Message-ID: <5AA13D87-AEC8-49A6-A826-FF17A5EEB35D@codex.london>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RESEND PATCH v3 4/7] PCI: dwc: all: Modify dbi accessors to take
+ dbi_base as argument
+To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+References: <1489041545-15730-1-git-send-email-kishon@ti.com>
+ <1489041545-15730-5-git-send-email-kishon@ti.com>
+ <4e13580d-2625-5eed-bcbc-2ffd7493b073@axis.com>
+ <595fab62-fb7a-888a-f898-7b59030585f1@axis.com> <58C28FCC.4070100@ti.com>
+ <d920d892-af48-b94f-6eb7-e9e0ff5d40c0@axis.com> <58C2A28C.60703@ti.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <6d667068-81af-5ce4-3d94-c5aa987632a4@axis.com>
+Date: Fri, 10 Mar 2017 16:47:12 +0100
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <58C2A28C.60703@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
+ Jesper Nilsson <jespern@axis.com>, Zhou Wang <wangzhou1@hisilicon.com>,
+ Murali Karicheri <m-karicheri2@ti.com>, Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGVsbG8gYWxsLA0KDQpJIGhhdmUgYSBQQ0llIHN3aXRjaCBhdHRhY2hlZCB0byBteSByb290IFBD
-SWUgZGV2aWNlLiBUaGUgc3dpdGNoIHN1cHBvcnRzIG5hdGl2ZSBob3RwbHVnLiBJIHRoZW4gdHJ5
-IHRvIGhvdHBsdWcgZGV2aWNlcyBpbnRvIHRoZSBkb3duc3RyZWFtIHBvcnRzIGFuZCBpdCBkb2Vz
-bid0IHdvcmsgd2l0aG91dCB0aGUga2VybmVsIGNvbW1hbmQgbGluZSAicGNpZV9wb3J0cz1uYXRp
-dmUiIHdoaWNoIGlnbm9yZXMgdGhlIEFDUEkgc2V0dXAgd2hlbiBhZGRpbmcgUENJZSBmZWF0dXJl
-cy4gV2l0aCAicGNpZV9wb3J0cz1uYXRpdmUiIGNvbW1hbmQgbGluZSBpbnRlcnJ1cHRzIGFyZSBj
-b3JyZWN0bHkgYXR0YWNoZWQgYW5kIGhvdHBsdWdnaW5nIHdvcmtzLg0KDQpUaGlzIGlzIHRoZSBs
-YXlvdXQ6DQpbSW50ZWwgTW90aGVyYm9hcmQgUENJZV0gLSBbUExYIFBDSWUgc3dpdGNoXSAtIFtI
-b3RwbHVnIGRldmljZXNdDQoNCkxpbnV4IGN1cnJlbnRseSBjaGVja3MgKHVzaW5nIEFDUEkgX09T
-QyBjb21tYW5kIG9uIFBDSTApIHdoZXRoZXIgdGhlIHJvb3QgYnJpZGdlIChJbnRlbCBtb3RoZXJi
-b2FyZCBkZXZpY2UpIHdpbGwgdHJhbnNmZXIgY29tbWFuZCBvZiBuYXRpdmUgaG90cGx1ZyB0byB0
-aGUgT1MuIFRoZSBIUCBCSU9TIHNldHMgdGhhdCBiaXQgdG8gMC4gSSBnZXQgdGhlIGZvbGxvd2lu
-ZyB0cmFjZSBpbiBkbWVzZzoNCg0Ka2VybmVsOiBhY3BpIFBOUDBBMDg6MDA6IF9PU0M6IE9TIHN1
-cHBvcnRzIFtFeHRlbmRlZENvbmZpZyBBU1BNIENsb2NrUE0gU2VnbWVudHMgTVNJXQ0Ka2VybmVs
-OiBhY3BpIFBOUDBBMDg6MDA6IF9PU0M6IHBsYXRmb3JtIGRvZXMgbm90IHN1cHBvcnQgW1BDSWVI
-b3RwbHVnIFBNRV0NCmtlcm5lbDogYWNwaSBQTlAwQTA4OjAwOiBfT1NDOiBPUyBub3cgY29udHJv
-bHMgW0FFUiBQQ0llQ2FwYWJpbGl0eV0NCg0KV2hlbiB0aGUgc3dpdGNoIGlzIGFkZGVkIHRoZSBr
-ZXJuZWwgY2xpbWJzIHRoZSB0cmVlIHRvIHRoZSByb290IHBvcnQgaW4gcGNpZV9wb3J0X2FjcGlf
-c2V0dXAgYW5kIGNoZWNrcyBpdCdzIGNhcGFiaWxpdGllcy4gVGhlcmVmb3JlIG5hdGl2ZSBob3Rw
-bHVnIGlzIGRpc2FibGVkIG9uIG15IHN3aXRjaCBiZWNhdXNlIHRoZSBfT1NDIGNvbW1hbmQgcmVm
-dXNlcyB0byBnaXZlIGxpbnV4IGNvbnRyb2wgb2YgaG90cGx1ZyBvbiB0aGUgcm9vdCBwb3J0Lg0K
-DQpEb2VzICJfT1NDIGFwcGxpZXMgdG8gdGhlIGVudGlyZSBoaWVyYXJjaHkgb3JpZ2luYXRlZCBi
-eSBhIFBDSSBIb3N0IEJyaWRnZSIgKFBDSSBmaXJtd2FyZSBzcGVjLCByZXYgMy4yLCBzZWMgNC41
-LjEsIHNlZSBBZGRlbmR1bSkgbWVhbiB0aGF0IEkgYW0gbm90IGFsbG93ZWQgdG8gdXNlIHRoZSBO
-YXRpdmUgaG90cGx1ZyBzeXN0ZW0gYWxsIHRoZSB3YXkgZG93biB0aGUgdHJlZT8gU2hvdWxkIEkg
-dHJ5IHRvIGdldCBob2xkIG9mIHRoZSBCSU9TIHZlbmRvciAoSFApIHRvIGZpbmQgb3V0IHdoeSBp
-dCByZWZ1c2VzIHRoZSB0cmFuc2Zlcj8NCg0KVGhhbmtzLA0KSGFycnkNCg0KQWRkZW5kdW06DQoN
-CkkgYXNrZWQgdGhpcyBlYXJsaWVyIG9uIElSQyBhbmQgQmpvcm4gbG9va2VkIHNvbWUgdGhpbmdz
-IHVwIGZvciBtZS4gSGVyZSB0aGV5IGFyZSBzbyB5b3UgZG9uJ3QgaGF2ZSB0byBsb29rIHRoZW0g
-dXAgdG9vOg0KDQpmcm9tIHRoZSBQQ0kgZmlybXdhcmUgc3BlYywgcmV2IDMuMiwgc2VjIDQuNS4x
-Og0KVGhlIHRoaXJkIERXT1JEIGluIHRoZSBfT1NDIENhcGFiaWxpdGllcyBCdWZmZXIgaXMgdGhl
-IENvbnRyb2wgRmllbGQuIEJpdHMgZGVmaW5lZCBpbiB0aGUgQ29udHJvbCBGaWVsZCBhcmUgdXNl
-ZCB0byBzdWJtaXQgcmVxdWVzdHMgYnkgdGhlIG9wZXJhdGluZyBzeXN0ZW0gZm9yIGNvbnRyb2wv
-aGFuZGxpbmcgb2YgdGhlIGFzc29jaWF0ZWQgZmVhdHVyZSwgdHlwaWNhbGx5IChidXQgbm90IGV4
-Y2x1ZGVkIHRvKSB0aG9zZSBmZWF0dXJlcyB0aGF0IHV0aWxpemUgbmF0aXZlIGludGVycnVwdHMg
-b3IgZXZlbnRzIGhhbmRsZWQgYnkgYW4gb3BlcmF0aW5nIHN5c3RlbS1sZXZlbCBkcml2ZXIuIElm
-IGFueSBiaXRzIGluIHRoZSBDb250cm9sIEZpZWxkIGFyZSByZXR1cm5lZCBjbGVhcmVkIChtYXNr
-ZWQgdG8gemVybykgYnkgdGhlIF9PU0MgY29udHJvbCBtZXRob2QsIHRoZSByZXNwZWN0aXZlIGZl
-YXR1cmUgaXMgZGVzaWduYXRlZCB1bnN1cHBvcnRlZCBieSB0aGUgcGxhdGZvcm0gYW5kIG11c3Qg
-bm90IGJlIGVuYWJsZWQgYnkgdGhlIG9wZXJhdGluZyBzeXN0ZW0uIFNvbWUgb2YgdGhlc2UgZmVh
-dHVyZXMgbWF5IGJlIGNvbnRyb2xsZWQgYnkgcGxhdGZvcm0gZmlybXdhcmUgcHJpb3IgdG8gb3Bl
-cmF0aW5nIHN5c3RlbSBib290IG9yIGR1cmluZyBydW50aW1lIGZvciBhIGxlZ2FjeSBvcGVyYXRp
-bmcgc3lzdGVtLCB3aGlsZSBvdGhlcnMgbWF5IGJlIGRpc2FibGVkL2lub3BlcmF0aXZlIHVudGls
-IG5hdGl2ZSBvcGVyYXRpbmcgc3lzdGVtIHN1cHBvcnQgaXMgYXZhaWxhYmxlLiBTeXN0ZW0gZmly
-bXdhcmUgbXVzdCBvbmx5IG1hc2sgYSBDb250cm9sIEZpZWxkIGJpdCB0byB6ZXJvIGlmIGl0IGhh
-cyBleHBsaWNpdCBrbm93bGVkZ2UgdGhhdCB0aGUgZmVhdHVyZSB3aWxsIG5vdCB3b3JrIHByb3Bl
-cmx5IHVuZGVyIG5hdGl2ZSBvcGVyYXRpbmcgc3lzdGVtIGNvbnRyb2wsIGR1ZSB0byBwbGF0Zm9y
-bSBlcnJhdGEgb3Igb3RoZXIgaW5jb21wYXRpYmlsaXRpZXMuDQoNClNpbmNlIF9PU0MgYXBwbGll
-cyB0byB0aGUgZW50aXJlIGhpZXJhcmNoeSBvcmlnaW5hdGVkIGJ5IGEgUENJIEhvc3QgQnJpZGdl
-LCBhbmQgc3lzdGVtIGZpcm13YXJlIGNhbm5vdCBnZW5lcmFsbHkgY29tcHJlaGVuZCB0aGUgZmVh
-dHVyZXMgYW5kIGNhcGFiaWxpdGllcyBvZiBhbGwgZGV2aWNlcyB0aGF0IG1heSBiZSBob3QtcGx1
-Z2dlZCBpbnRvIGEgc3lzdGVtLCBsYWNrIG9mIGV4cGxpY2l0IHN1cHBvcnQgb2YgYSBmZWF0dXJl
-IGluIHRoZSBzeXN0ZW0gZmlybXdhcmUgaXMgbm90IGEgcmVhc29uIHRvIG1hc2sgYSBDb250cm9s
-IEZpZWxkIGJpdCB0byB6ZXJvLiBGb3IgZXhhbXBsZSwgdW5sZXNzIHN5c3RlbSBmaXJtd2FyZSBo
-YXMga25vd2xlZGdlIHRoYXQgdGhlIHN5c3RlbSBjb250YWlucyBoYXJkd2FyZSB0aGF0IGRvZXMg
-bm90IHdvcmsgcHJvcGVybHkgd2l0aCBTdGFuZGFyZCBIb3QtUGx1ZyBDb250cm9sbGVyIChTSFBD
-KSBvciBQQ0kgRXhwcmVzcyBOYXRpdmUgSG90IFBsdWcgc29mdHdhcmUsIGl0IG11c3Qgc2V0IGJv
-dGggdGhlIFBDSSBFeHByZXNzIE5hdGl2ZSBIb3QgUGx1ZyBjb250cm9sIGFuZCBTSFBDIE5hdGl2
-ZSBIb3QgUGx1ZyBjb250cm9sIGJpdHMsIGV2ZW4gaWYgdGhlIHN5c3RlbSBkb2VzIG5vdCBleHBs
-aWNpdGx5IHN1cHBvcnQgaG90IHBsdWcuIEl0IGlzIHRoZSBvcGVyYXRpbmcgc3lzdGVt4oCZcyBy
-ZXNwb25zaWJpbGl0eSB0byBkZXRlcm1pbmUgd2hldGhlciBhIHNsb3QgaW4gdGhlIGhpZXJhcmNo
-eSBpcyBob3QgcGx1Z2dhYmxlIGJ5IGluY29tcGF0aWJsZSBlbmNvZGluZyBleGFtaW5pbmcgdGhl
-IHN0YXR1cyBvZiB0aGUgc2xvdHMgYmFzZWQgb24gdGhlIFBDSSBFeHByZXNzIEJhc2UgU3BlY2lm
-aWNhdGlvbiBhbmQgdGhlIFBDSSBTSFBDIFNwZWNpZmljYXRpb24uDQpGb3IgdGhlIGFib3ZlIHJl
-YXNvbiwgc3lzdGVtIGZpcm13YXJlIG11c3QgYWx3YXlzIGFzc3VtZSB0aGF0IFBDSS1YIGZlYXR1
-cmVzIGFyZSBzdXBwb3J0ZWQNCg0KUENJIEV4cHJlc3MgTmF0aXZlIEhvdCBQbHVnIGNvbnRyb2wN
-ClRoZSBvcGVyYXRpbmcgc3lzdGVtIHNldHMgdGhpcyBiaXQgdG8gMSB0byByZXF1ZXN0IGNvbnRy
-b2wgb3ZlciBQQ0kgRXhwcmVzcyBuYXRpdmUgaG90IHBsdWcuIElmIHRoZSBvcGVyYXRpbmcgc3lz
-dGVtIHN1Y2Nlc3NmdWxseSByZWNlaXZlcyBjb250cm9sIG9mIHRoaXMgZmVhdHVyZSwgaXQgbXVz
-dCB0cmFjayBhbmQgdXBkYXRlIHRoZSBzdGF0dXMgb2YgaG90IHBsdWcgc2xvdHMgYW5kIGhhbmRs
-ZSBob3QgcGx1ZyBldmVudHMgYXMgZGVzY3JpYmVkIGluIHRoZSBQQ0kgRXhwcmVzcyBCYXNlIFNw
-ZWNpZmljYXRpb24gKGluY2x1ZGluZyBkZXRlcm1pbmluZyB3aGV0aGVyIHRoZSBhc3NvY2lhdGVk
-IHNsb3Qocykgc3VwcG9ydCBob3QgcGx1ZykuDQoNCkhhcnJ5IE1hbGxvbg0KQ09ERVggfCBTb2Z0
-d2FyZSBFbmdpbmVlcg0KNjAgUG9sYW5kIFN0cmVldCB8IExvbmRvbiB8IEVuZ2xhbmQgfCBXMUYg
-N05UDQpFIGhhcnJ5QGNvZGV4ZGlnaXRhbC5jb20gfCBUICs0NCAyMDMgNzAwMCA5ODkNCg==
+
+
+On 03/10/2017 01:56 PM, Kishon Vijay Abraham I wrote:
+> Hi Niklas,
+>
+> On Friday 10 March 2017 06:01 PM, Niklas Cassel wrote:
+>> On 03/10/2017 12:36 PM, Kishon Vijay Abraham I wrote:
+>>> Hi,
+>>>
+>>> On Thursday 09 March 2017 08:35 PM, Niklas Cassel wrote:
+>>>> On 03/09/2017 03:48 PM, Niklas Cassel wrote:
+>>>>> On 03/09/2017 07:39 AM, Kishon Vijay Abraham I wrote:
+>>>>>> dwc has 2 dbi address space labeled dbics and dbics2. The existing
+>>>>>> helper to access dbi address space can access only dbics. However
+>>>>>> dbics2 has to be accessed for programming the BAR registers in the
+>>>>>> case of EP mode. This is in preparation for adding EP mode support
+>>>>>> to dwc driver.
+>>>>> Hello Kishon
+>>>>>
+>>>>> I don't really like the idea of adding an extra argument to every existing read/write.
+>>>>> Will not a read/write using dbi2 be quite uncommon compared to a read/write
+>>>>> using dbi?
+>>>>>
+>>>>> How about something like this:
+>>>>>
+>>>>> void __dw_pcie_writel(struct dw_pcie *pci, void __iomem *base, u32 reg, u32 val)
+>>>>> {
+>>>>>     if (pci->ops->writel_dbi)
+>>>>>         pci->ops->writel_dbi(pci, base, reg, val);
+>>>>>     else
+>>>>>         writel(val, base + reg);
+>>>>> }
+>>>>>
+>>>>> #define dw_pcie_writel_dbi(pci, reg, val) __dw_pcie_writel(pci, pci->dbi_base, reg, val)
+>>>>> #define dw_pcie_writel_dbi2(pci, reg, val) __dw_pcie_writel(pci, pci->dbi_base2, reg, val)
+>>>> Perhaps make dw_pcie_writel_dbi2 a function rather than a define,
+>>>> so we can return an error if pci->dbi_base2 == NULL.
+>>> Should we return an error? We don't return error for dbi_base either. I think
+>>> it should be sufficient to return errors while populating dbi_base or
+>>> dbi_base2. Otherwise it's a bug and should result in abort. Joao?
+>> Sorry for previous empty email.
+>>
+>>
+>> What I meant to write:
+>>
+>> Right now we do error checking for dbi_base in platform specific code
+>> and in pcie-designware-host.c:dw_pcie_host_init.
+> it's been done in dw_pcie_host_init not as an error checking but since it's
+> *optional* for certain platforms to populate dbi_base (i.e where dbi_base is
+> mapped to configuration space), host_init takes care of assigning dbi_base to
+> configuration space address.
+
+What I'm afraid of is that we might get a NULL ptr dereference
+when using dw_pcie_writel_dbi2, if platform specific code has
+not populated dbi_base2.
+
+Having a NULL check in generic code is just a fail safe if some
+platform specific code failed to NULL check.
+
+The code in dw_pcie_host_init might have been written just
+to populate dbi_base when dbi is mapped to config space,
+but the end result is that if platform specific code did not
+populate dbi_base (and did not populate pp->cfg),
+we will return -ENOMEM.
+Which means that we can never get a NULL ptr dereference
+when using dw_pcie_writel_dbi.
+
+It might be a good idea to have a NULL check in generic code,
+just as a fail safe, also for dw_pcie_ep_init.
+That way we know that we will not get a NULL ptr dereference
+when using dw_pcie_writel_dbi2.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
