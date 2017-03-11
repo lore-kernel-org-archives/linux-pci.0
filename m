@@ -1,85 +1,184 @@
-Return-Path: <SRS0=04sC=2L=obsidianresearch.com=jgunthorpe@kernel.org>
-Return-Path: <SRS0=04sC=2L=obsidianresearch.com=jgunthorpe@kernel.org>
-Date: Wed, 1 Mar 2017 17:50:47 -0700
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Emil Velikov <emil.l.velikov@gmail.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-	Stefan Berger <stefanb@linux.vnet.ibm.com>,
-	Wei Zhang <wzhang@fb.com>,
-	Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-	Stephen Bates <stephen.bates@microsemi.com>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
-Message-ID: <20170302005047.GA14301@obsidianresearch.com>
-References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
- <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
- <4a867c32-ed29-bc98-c7cb-6315243e664a@deltatee.com>
- <b34d6872-35de-da6d-2d7f-8842642d3f21@deltatee.com>
- <20170301235854.GF2820@obsidianresearch.com>
- <7d6b3b59-5cec-d73f-b65c-4d685ccc70f8@deltatee.com>
+Return-Path: <SRS0=v5Vi=2U=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=v5Vi=2U=free.fr=slash.tmp@kernel.org>
+Subject: Re: Neophyte questions about PCIe
+From: Mason <slash.tmp@free.fr>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+ linux-usb <linux-usb@vger.kernel.org>, Rob Herring <robh@kernel.org>,
+ Arnd Bergmann <arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Marc Zyngier <marc.zyngier@arm.com>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ David Laight <david.laight@aculab.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Robin Murphy <robin.murphy@arm.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Arnd Bergmann <arnd@arndb.de>, Kevin Hilman <khilman@kernel.org>
+References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
+ <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
+ <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
+ <9ba05c2c-57ef-b2c0-6a7c-457c392d98b5@free.fr>
+ <df517167-d692-38a8-9c8f-a1112c7f578d@free.fr>
+Message-ID: <c0a353cb-aa1f-25db-eccd-7a1618e655b3@free.fr>
+Date: Sat, 11 Mar 2017 11:57:56 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <7d6b3b59-5cec-d73f-b65c-4d685ccc70f8@deltatee.com>
+In-Reply-To: <df517167-d692-38a8-9c8f-a1112c7f578d@free.fr>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 01, 2017 at 05:23:38PM -0700, Logan Gunthorpe wrote:
+On 10/03/2017 18:49, Mason wrote:
 
-> > That could help, but this would mean cdev would have to insert a shim
-> > to grab locks around the various file ops.
+> And my current code, to work-around the silicon bugs:
 > 
-> Hmm, I was hoping something more along the lines of actually killing the
-> processes instead of just shimming away fops.
-
-That would probably make most cdev users unhappy, it is not what we
-want in tpm or infiniband, for instance.
-
-> > AFAIK TPM is correct and has been robustly tested now. We have a 'vtpm'
-> > driver that agressively uses hot-unplug.
+> #include <linux/kernel.h>
+> #include <linux/init.h>
+> #include <linux/ioport.h>
+> #include <linux/of_pci.h>
+> #include <linux/of.h>
+> #include <linux/pci-ecam.h>
+> #include <linux/platform_device.h>
 > 
-> Switchtec is a bit more tricky because a) there's no upper level driver
-> to handle things
+> //#define DEBUG_CONFIG
+> 
+> static int tango_config_read(struct pci_bus *bus, unsigned int devfn,
+> 				    int where, int size, u32 *val)
+> {
+> 	int ret;
+> 	void __iomem *pci_conf = (void *)0xf002e048;
+> 
+> #ifdef DEBUG_CONFIG
+> 	if (where == PCI_BASE_ADDRESS_0)
+> 		dump_stack();
+> #endif
+> 
+> 	writel(1, pci_conf);
 
-Introducing a light split between 'the upper part that owns the cdev'
-and 'the lower part that owns the hardware' makes things much easier
-to understand in a driver and it becomes clearer where, eg, devm
-actions should be linked (ie probably not to the cdev part)
+This sets the config/mem mux to CONFIG SPACE.
 
-> and b) userspace may be inside a wait_for_completion (via read or
-> poll) that needs to be completed. If a so called 'cdev_kill' could
-> actually just kill these processes it would be a bit easier.
+> 	if (devfn != 0) {
+> 		*val = ~0;
+> 		return PCIBIOS_DEVICE_NOT_FOUND;
+> 	}
 
-For TPM, poll could be something like:
+This works around a silicon bug, where accesses to devices or
+functions not 0 return garbage.
 
-static unsigned int tpm_poll(struct file *filp,
-                             struct poll_table_struct *wait)
-{
-   poll_wait(filp, &chip->poll_wait, wait);
-   if (tpm_try_get_ops(chip)) {
-          mask = chip->ops->driver_do_poll(...);
-          tpm_put_ops(chip);
-   } else 
-          mask = POLLIN | POLLRDHUP | POLLOUT | POLLERR | POLLHUP;
-   return mask;
-}
+> 	ret = pci_generic_config_read(bus, devfn, where, size, val);
+> 
+> 	writel(0, pci_conf);
 
-And we would trigger chip->poll_wait in the unregister.
+This resets the config/mem mux back to MEM SPACE.
 
-wait_for_completion is similar, drop the rwsem while sleeping, add
-'ops = NULL' to the sleeping condition test, trigger the wait on
-unregister then reacquire the rwsem and test ops on wake.
+If anything tries to access MEM in that time frame, we're toast.
 
-Jason
+> #ifdef DEBUG_CONFIG
+> 	printk("%s: bus=%d where=%d size=%d val=0x%x\n",
+> 			__func__, bus->number, where, size, *val);
+> #endif
+> 
+> 	return ret;
+> }
+> 
+> static int tango_config_write(struct pci_bus *bus, unsigned int devfn,
+> 				     int where, int size, u32 val)
+> {
+> 	int ret;
+> 	void __iomem *pci_conf = (void *)0xf002e048;
+> 
+> #ifdef DEBUG_CONFIG
+> 	if (where == PCI_BASE_ADDRESS_0)
+> 		dump_stack();
+> #endif
+> 
+> #ifdef DEBUG_CONFIG
+> 	printk("%s: bus=%d where=%d size=%d val=0x%x\n",
+> 			__func__, bus->number, where, size, val);
+> #endif
+> 
+> 	writel(1, pci_conf);
+> 
+> 	ret = pci_generic_config_write(bus, devfn, where, size, val);
+> 
+> 	writel(0, pci_conf);
+> 
+> 	return ret;
+> }
+> 
+> static struct pci_ecam_ops tango_pci_ops = {
+> 	.bus_shift	= 20,
+> 	.pci_ops	= {
+> 		.map_bus        = pci_ecam_map_bus,
+> 		.read           = tango_config_read,
+> 		.write          = tango_config_write,
+> 	}
+> };
+> 
+> static const struct of_device_id tango_pci_ids[] = {
+> 	{ .compatible = "sigma,smp8759-pcie" },
+> 	{ /* sentinel */ },
+> };
+> 
+> static int tango_pci_probe(struct platform_device *pdev)
+> {
+> 	return pci_host_common_probe(pdev, &tango_pci_ops);
+> }
+> 
+> static struct platform_driver tango_pci_driver = {
+> 	.probe = tango_pci_probe,
+> 	.driver = {
+> 		.name = KBUILD_MODNAME,
+> 		.of_match_table = tango_pci_ids,
+> 	},
+> };
+> 
+> builtin_platform_driver(tango_pci_driver);
+> 
+> #define RIESLING_B 0x24
+> 
+> /* Root complex reports incorrect device class */
+> static void tango_pcie_fixup_class(struct pci_dev *dev)
+> {
+> 	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
+> }
+> DECLARE_PCI_FIXUP_EARLY(0x1105, RIESLING_B, tango_pcie_fixup_class);
+
+This works around another silicon bug.
+
+> static void tango_pcie_bar_quirk(struct pci_dev *dev)
+> {
+> 	struct pci_bus *bus = dev->bus;
+> 
+> 	printk("%s: bus=%d devfn=%d\n", __func__, bus->number, dev->devfn);
+> 
+>         pci_write_config_dword(dev, PCI_BASE_ADDRESS_0, 0x80000004);
+> }
+> DECLARE_PCI_FIXUP_FINAL(0x1105, PCI_ANY_ID, tango_pcie_bar_quirk);
+
+And this is where the elusive "black magic" happens.
+
+Is it "safe" to configure a BAR behind Linux's back?
+
+Basically, there seems to be an identity map between RAM and PCI space.
+(Is that, perhaps, some kind of default? I would think that the default
+would have been defined by the "ranges" prop in the pci DT node.)
+
+So PCI address 0x8000_0000 maps to CPU address 0x8000_0000, i.e. the
+start of system RAM. And when dev 1 accesses RAM, the RC correctly
+forwards the packet to the memory bus.
+
+However, RC BAR0 is limited to 1 GB (split across 8 x 128 MB "region").
+
+Thus, to properly set this up, I need to account for what memory
+Linux is managing, i.e. the mem= command line argument.
+(I don't know how to access that at run-time.)
+
+For example, if we have 2 x 512 MB of RAM.
+DRAM0 is at [0x8000_0000, 0xa000_0000[
+DRAM1 is at [0xc000_0000, 0xe000_0000[
+
+But a different situation is 1 x 1 GB of RAM.
+DRAM0 is at [0x8000_0000, 0xc000_0000[
+
+I need to program different region targets.
+How to do that in a way that is acceptable upstream?
+
+Regards.
