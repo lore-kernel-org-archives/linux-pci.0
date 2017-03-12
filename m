@@ -1,45 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mout3.freenet.de ([195.4.92.93]:35410 "EHLO mout3.freenet.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750826AbdCJF2T (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 10 Mar 2017 00:28:19 -0500
-Received: from [195.4.92.142] (helo=mjail2.freenet.de)
-        by mout3.freenet.de with esmtpa (ID andihartmann@freenet.de) (port 25) (Exim 4.85 #1)
-        id 1cmCsb-0002ly-9m
-        for linux-pci@vger.kernel.org; Fri, 10 Mar 2017 06:14:17 +0100
-Received: from localhost ([::1]:57111 helo=mjail2.freenet.de)
-        by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.85 #1)
-        id 1cmCsb-00035B-62
-        for linux-pci@vger.kernel.org; Fri, 10 Mar 2017 06:14:17 +0100
-Received: from mx5.freenet.de ([195.4.92.15]:50821)
-        by mjail2.freenet.de with esmtpa (ID andihartmann@freenet.de) (Exim 4.85 #1)
-        id 1cmCov-0002NQ-Pm
-        for linux-pci@vger.kernel.org; Fri, 10 Mar 2017 06:10:29 +0100
-Received: from p5deb0bf1.dip0.t-ipconnect.de ([93.235.11.241]:46766 helo=mail.maya.org)
-        by mx5.freenet.de with esmtpsa (ID andihartmann@freenet.de) (TLSv1.2:DHE-RSA-AES256-GCM-SHA384:256) (port 465) (Exim 4.85 #1)
-        id 1cmCov-0002Nr-LS
-        for linux-pci@vger.kernel.org; Fri, 10 Mar 2017 06:10:29 +0100
-To: linux-pci@vger.kernel.org
-From: Andreas Hartmann <andihartmann@01019freenet.de>
-Subject: IOMMU suuport for Ryzen / x370?
-Message-ID: <658a7e9c-7dff-f62e-e2ba-fe151fdbe7d2@01019freenet.de>
-Date: Fri, 10 Mar 2017 06:10:27 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170312122621.GA2823@nazgul.tnic>
+References: <20170312053723.GH802@shells.gnugeneration.com>
+ <20170312115703.GA18197@nazgul.tnic> <20170312122621.GA2823@nazgul.tnic>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Sun, 12 Mar 2017 15:55:08 +0200
+Message-ID: <CAHp75Ve7SWivf=TTuq-qA=iM20E==OmSZD2YAmt0LVJQg47Osg@mail.gmail.com>
+Subject: Re: [BUG] 4.11.0-rc1 panic on shutdown X61s
+To: Borislav Petkov <bp@alien8.de>
+Cc: lkml@pengaru.com, linux-kernel <linux-kernel@vger.kernel.org>,
+        vcaputo@pengaru.com,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        intel-wired-lan@lists.osuosl.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello all!
+On Sun, Mar 12, 2017 at 2:26 PM, Borislav Petkov <bp@alien8.de> wrote:
+> On Sun, Mar 12, 2017 at 12:57:03PM +0100, Borislav Petkov wrote:
+>> On Sat, Mar 11, 2017 at 09:37:23PM -0800, lkml@pengaru.com wrote:
+>> > Hello list,
+>> >
+>> > Here's a photo of the panic, on imgur to be kind to vger:
+>> > http://imgur.com/a/wZI32
+>> >
+>> > I'm out on a sailboat so can't really do much, but had a chance with internet
+>>
+>> So you didn't bring another box with you on the sailboat to connect it to the
+>> laptop over netconsole to catch full dmesg, did you?
+>
+> Hahah, you're so in luck: I just sent this mail and hibernated my laptop
+> and got the same BUG. What's the chance of that happening?! Apparently
+> big enough.
+>
+> But I was able to catch the warning before it too. So the question is,
+> do you have an e1000e eth controller in that machine too?
+>
+> Because the symptoms below are consistent with the observed behavior:
+> e1000e fails to initialize MSI interrupts for whatever reason and falls
+> back to legacy interrupts.
+>
+> Then, PCI core shuts down and BUGs because the msi_list is empty.
+>
+> Anyway, lemme add e1000e people too to the fun thread.
+>
 
+The only change that IMHO matters happened between v4.10 and v4.11-rc1 is this:
 
-I've got just one quick question: Is there already usable support for
-IOMMU in an actual released kernel (chipset x370)? I would need it for
-virtualization with vfio / vfio_pci to passthrough PCI and PCIIE cards
-to kvm VMs as I'm already doing it with FX 8350 processor (AMD 990X
-chipset).
+@@ -6276,8 +6274,8 @@ static int e1000e_pm_freeze(struct device *dev)
+                /* Quiesce the device without resetting the hardware */
+                e1000e_down(adapter, false);
+                e1000_free_irq(adapter);
++               e1000e_reset_interrupt_capability(adapter);
+        }
+-       e1000e_reset_interrupt_capability(adapter);
 
+So, it apparently misses something for the other case, like
+pci_disable_msi() call or so.
 
+P.S. I'm not PCI or e1000e guy :-)
 
-Thanks,
-regards,
-Andreas
+-- 
+With Best Regards,
+Andy Shevchenko
