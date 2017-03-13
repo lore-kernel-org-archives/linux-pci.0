@@ -1,87 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:47872 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754963AbdCaWmN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 31 Mar 2017 18:42:13 -0400
-To: Sinan Kaya <okaya@codeaurora.org>, Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-2-git-send-email-logang@deltatee.com>
- <cb102386-0314-a3a3-ed44-b42debdf1512@codeaurora.org>
- <7158f2e8-2016-f398-e77f-0fcbe6cb41dd@deltatee.com>
- <e6a74aeb-9f54-51c5-8ad9-3b6fb92c03b3@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <0280fbb4-ba9e-ac64-6bb3-b72590a54e57@deltatee.com>
-Date: Fri, 31 Mar 2017 16:42:01 -0600
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: helgaas@kernel.org, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org
+Subject: Resizeable PCI BAR support V3
+Date: Mon, 13 Mar 2017 13:41:32 +0100
+Message-Id: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <e6a74aeb-9f54-51c5-8ad9-3b6fb92c03b3@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Bjorn and others on the lists,
 
+it's over a year that I initially came up with that, but now I
+finally have the time to finish it up.
 
-On 31/03/17 03:38 PM, Sinan Kaya wrote:
-> On 3/31/2017 5:23 PM, Logan Gunthorpe wrote:
->> What exactly would you white/black list? It can't be the NIC or the
->> disk. If it's going to be a white/black list on the switch or root port
->> then you'd need essentially the same code to ensure they are all behind
->> the same switch or root port.
-> 
-> What is so special about being connected to the same switch?
-> 
-> Why don't we allow the feature by default and blacklist by the root ports
-> that don't work with a quirk.
+This set of patches allows device drivers to resize and most likely also
+relocate the PCI BAR of devices they manage to allow the CPU to access
+all of the device local memory at once.
 
-Well root ports have the same issue here. There may be more than one
-root port or other buses (ie QPI) between the devices in question. So
-you can't just say "this system has root port X therefore we can always
-use p2pmem". In the end, if you want to do any kind of restrictions
-you're going to have to walk the tree, as the code currently does, and
-figure out what's between the devices being used and black or white list
-accordingly. Then seeing there's just such a vast number of devices out
-there you'd almost certainly have to use some kind of white list and not
-a black list. Then the question becomes which devices will be white
-listed? The first to be listed would be switches seeing they will always
-work. This is pretty much what we have (though it doesn't currently
-cover multiple levels of switches). The next step, if someone wanted to
-test with specific hardware, might be to allow the case where all the
-devices are behind the same root port which Intel Ivy Bridge or newer.
-However, I don't think a comprehensive white list should be a
-requirement for this work to go forward and I don't think anything
-you've suggested will remove any of the "ugliness".
+This is very useful for GFX device drivers where the default PCI BAR is only
+about 256MB in size for compatibility reasons, but the device easily have
+multiple gigabyte of local memory.
 
-What we discussed at LSF was that only allowing cases with a switch was
-the simplest way to be sure any given setup would actually work.
+Additional to the pure resize functionality this set also adds a quirk to
+enable a 64bit bar above 4GB on AMD Family 15h CPUs/APUs. Doing so is
+actually trivial and I plan to extend this to all recent AMD CPUs/APUs.
 
-> I'm looking at this from portability perspective to be honest.
+Open questions:
 
-I'm looking at this from the fact that there's a vast number of
-topologies and devices involved, and figuring out which will work is
-very complicated and could require a lot of hardware testing. The LSF
-folks were primarily concerned with not having users enable the feature
-and see breakage or terrible performance.
+1. Is this the right location to implement the 64bit BAR above 4GB for AMD CPUs?
+I guess that this needs a bit more cleanup.
 
-> I'd rather see the feature enabled by default without any assumptions.
-> Using it with a switch is just a use case that you happened to test.
-> It can allow new architectures to use your code tomorrow.
+2. Any idea how to better handle intermediate bridges? Reprogramming them isn't
+possible after drivers are loaded, but at least for GFX drivers we need to load
+them first to know how large we actually want our BAR to be (and to kick our
+vesafb/efifb).
 
-That's why I was advocating for letting userspace decide such that if
-you're setting up a system with this you say to use a specific p2pmem
-device and then you are responsible to test and benchmark it and decide
-to use it in going forward. However, this has received a lot of push back.
-
-Logan
+Thanks in advance,
+Christian.
