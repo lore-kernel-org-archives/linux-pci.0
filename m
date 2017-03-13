@@ -1,80 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0076.outbound.protection.outlook.com ([104.47.34.76]:53909
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751585AbdCBPSw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Mar 2017 10:18:52 -0500
-Subject: [RFC PATCH v2 04/32] KVM: SVM: Add SEV feature definitions to KVM
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:12:48 -0500
-Message-ID: <148846756856.2349.18360437323368784256.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Received: from userp1040.oracle.com ([156.151.31.81]:37665 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751568AbdCMKud (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2017 06:50:33 -0400
+Date: Mon, 13 Mar 2017 13:50:04 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Cc: Stephen Bates <stephen.bates@microsemi.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: [PATCH 1/2] switchtec: off by one in ioctl_event_ctl()
+Message-ID: <20170313105004.GA24989@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tom Lendacky <thomas.lendacky@amd.com>
+The > should be >= SWITCHTEC_IOCTL_MAX_EVENTS.  Otherwise we probably
+read one space beyond the end of the loop, hit a sanity check and return
+-EINVAL.  This bug doesn't look super serious.
 
-Define a new KVM CPU feature for Secure Encrypted Virtualization (SEV).
-The kernel will check for the presence of this feature to determine if
-it is running with SEV active.
+Fixes: 61c2e02154a9 ("switchtec: Add IOCTLs to the Switchtec driver")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Define the SEV enable bit for the VMCB control structure. The hypervisor
-will use this bit to enable SEV in the guest.
-
-Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
----
- arch/x86/include/asm/svm.h           |    1 +
- arch/x86/include/uapi/asm/kvm_para.h |    1 +
- 2 files changed, 2 insertions(+)
-
-diff --git a/arch/x86/include/asm/svm.h b/arch/x86/include/asm/svm.h
-index 2aca535..fba2a7b 100644
---- a/arch/x86/include/asm/svm.h
-+++ b/arch/x86/include/asm/svm.h
-@@ -137,6 +137,7 @@ struct __attribute__ ((__packed__)) vmcb_control_area {
- #define SVM_VM_CR_SVM_DIS_MASK  0x0010ULL
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 1f045c95dec6..82ae08956457 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -1049,7 +1049,7 @@ static int ioctl_event_ctl(struct switchtec_dev *stdev,
+ 	if (copy_from_user(&ctl, uctl, sizeof(ctl)))
+ 		return -EFAULT;
  
- #define SVM_NESTED_CTL_NP_ENABLE	BIT(0)
-+#define SVM_NESTED_CTL_SEV_ENABLE	BIT(1)
+-	if (ctl.event_id > SWITCHTEC_IOCTL_MAX_EVENTS)
++	if (ctl.event_id >= SWITCHTEC_IOCTL_MAX_EVENTS)
+ 		return -EINVAL;
  
- struct __attribute__ ((__packed__)) vmcb_seg {
- 	u16 selector;
-diff --git a/arch/x86/include/uapi/asm/kvm_para.h b/arch/x86/include/uapi/asm/kvm_para.h
-index 1421a65..bc2802f 100644
---- a/arch/x86/include/uapi/asm/kvm_para.h
-+++ b/arch/x86/include/uapi/asm/kvm_para.h
-@@ -24,6 +24,7 @@
- #define KVM_FEATURE_STEAL_TIME		5
- #define KVM_FEATURE_PV_EOI		6
- #define KVM_FEATURE_PV_UNHALT		7
-+#define KVM_FEATURE_SEV			8
- 
- /* The last 8 bits are used to indicate how to interpret the flags field
-  * in pvclock structure. If no bits are set, all flags are ignored.
+ 	if (ctl.flags & SWITCHTEC_IOCTL_EVENT_FLAG_UNUSED)
