@@ -1,227 +1,136 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 15 Mar 2017 16:25:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Woodhouse <dwmw2@infradead.org>
-Subject: Re: [PATCH v2 2/4] pci: Add arch_can_pci_mmap_wc() macro
-Message-ID: <20170315212506.GB31690@bhelgaas-glaptop.roam.corp.google.com>
-References: <1489610546.86622.20.camel@infradead.org>
+Return-Path: <SRS0=bmI6=2W=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=bmI6=2W=free.fr=slash.tmp@kernel.org>
+Subject: Re: Neophyte questions about PCIe
+To: Robin Murphy <robin.murphy@arm.com>,
+ David Laight <david.laight@aculab.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>,
+ Mark Rutland <mark.rutland@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+ DT <devicetree@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>
+References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
+ <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
+ <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
+ <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
+ <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
+ <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
+ <4f37cc08-d4fd-b207-63d2-4ac038d2fcec@arm.com>
+ <063D6719AE5E284EB5DD2968C1650D6DCFE7C9B9@AcuExch.aculab.com>
+ <504fdb97-f058-e1fb-0fe2-7f01c46db513@arm.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <e31d5d71-cc90-86cf-d8cb-3367d42e1d41@free.fr>
+Date: Mon, 13 Mar 2017 11:59:57 +0100
 MIME-Version: 1.0
-In-Reply-To: <1489610546.86622.20.camel@infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arch@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <504fdb97-f058-e1fb-0fe2-7f01c46db513@arm.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc linux-pci; there are a couple more: see LKML and please add linux-pci
-if you respond]
+On 10/03/2017 17:00, Robin Murphy wrote:
 
-On Wed, Mar 15, 2017 at 08:42:26PM +0000, David Woodhouse wrote:
-> From: David Woodhouse <dwmw@amazon.co.uk>
+> On 10/03/17 15:35, David Laight wrote:
+>
+>> Robin Murphy wrote:
+>> 
+>>> The appropriate DT property would be "dma-ranges", i.e.
+>>>
+>>> pci@... {
+>>> 	...
+>>> 	dma-ranges = <(PCI bus address) (CPU phys address) (size)>;
+>>> }
+>>
+>> Isn't that just saying which physical addresses the cpu can assign
+>> for buffers for those devices?
+>> There is also an offset between the 'cpu physical address' and the
+>> 'dma address'.
 > 
-> Most of the almost-identical versions of pci_mmap_page_range() silently
-> ignore the 'write_combine' argument and give uncached mappings.
+> That offset is inherent in what "dma-ranges" describes. Say (for ease of
+> calculation) that BAR0 has been put at a mem space address of 0x20000000
+> and maps the first 1GB of physical DRAM. That would give us:
 > 
-> Yet we allow the PCIIOC_WRITE_COMBINE ioctl in /proc/bus/pci, expose the
-> 'resourceX_wc' file in sysfs, and allow an attempted mapping to apparently
-> succeed.
+> 	dma-ranges = <0x20000000 0x80000000 0x40000000>;
 > 
-> To fix this, introduce a macro arch_can_pci_mmap_wc() which indicates
-> whether the platform can do a write-combining mapping. On x86 this ends
-> up being pat_enabled(), while the few other platforms that support it
-> can just set it to a literal '1'.
+> Then a "virt = dma_alloc_coherent(..., &handle, ...)", borrowing the
+> numbers from earlier in the thread, would automatically end up with:
 > 
-> Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
-> ---
->  Documentation/filesystems/sysfs-pci.txt |  4 ++++
->  arch/arm64/include/asm/pci.h            |  1 +
->  arch/ia64/include/asm/pci.h             |  2 ++
->  arch/powerpc/include/asm/pci.h          |  5 +++--
->  arch/x86/include/asm/pci.h              |  2 ++
->  arch/xtensa/include/asm/pci.h           |  6 +++++-
->  arch/xtensa/kernel/pci.c                |  2 +-
->  drivers/pci/pci-sysfs.c                 |  6 ++++--
->  drivers/pci/proc.c                      | 17 ++++++++++-------
->  9 files changed, 32 insertions(+), 13 deletions(-)
+> 	virt == 0xd0855000;
+> 	handle == 0x2e07e000;
 > 
-> diff --git a/Documentation/filesystems/sysfs-pci.txt b/Documentation/filesystems/sysfs-pci.txt
-> index 6ea1ced..25b7f1c 100644
-> --- a/Documentation/filesystems/sysfs-pci.txt
-> +++ b/Documentation/filesystems/sysfs-pci.txt
-> @@ -117,6 +117,10 @@ code must define HAVE_PCI_MMAP and provide a pci_mmap_page_range function.
->  Platforms are free to only support subsets of the mmap functionality, but
->  useful return codes should be provided.
->  
-> +Platforms which support write-combining maps of PCI resources must define
-> +arch_can_pci_mmap_wc() which shall evaluate to non-zero at runtime when
-> +write-combining is permitted.
-> +
->  Legacy resources are protected by the HAVE_PCI_LEGACY define.  Platforms
->  wishing to support legacy functionality should define it and provide
->  pci_legacy_read, pci_legacy_write and pci_mmap_legacy_page_range functions.
-> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
-> index f73734f..53b1541 100644
-> --- a/arch/arm64/include/asm/pci.h
-> +++ b/arch/arm64/include/asm/pci.h
-> @@ -38,6 +38,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
->  #endif  /* CONFIG_PCI */
->  
->  #define HAVE_PCI_MMAP
-> +#define arch_can_pci_mmap_wc()	1
->  extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
->  			       enum pci_mmap_state mmap_state, int write_combine);
->  
-> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-> index c0835b0..6283758 100644
-> --- a/arch/ia64/include/asm/pci.h
-> +++ b/arch/ia64/include/asm/pci.h
-> @@ -51,6 +51,8 @@ extern unsigned long ia64_max_iommu_merge_mask;
->  #define PCI_DMA_BUS_IS_PHYS	(ia64_max_iommu_merge_mask == ~0UL)
->  
->  #define HAVE_PCI_MMAP
-> +#define arch_can_pci_mmap_wc()	1
-> +
->  extern int pci_mmap_page_range (struct pci_dev *dev, struct vm_area_struct *vma,
->  				enum pci_mmap_state mmap_state, int write_combine);
->  #define HAVE_PCI_LEGACY
-> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-> index 93eded8..b5b68c6 100644
-> --- a/arch/powerpc/include/asm/pci.h
-> +++ b/arch/powerpc/include/asm/pci.h
-> @@ -81,8 +81,9 @@ struct vm_area_struct;
->  int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
->  			enum pci_mmap_state mmap_state, int write_combine);
->  
-> -/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
-> -#define HAVE_PCI_MMAP	1
-> +/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() and it does WC */
-> +#define HAVE_PCI_MMAP		1
-> +#define arch_can_pci_mmap_wc()	1
->  
->  extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
->  			   size_t count);
-> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-> index 1411dbe..f6e22c2 100644
-> --- a/arch/x86/include/asm/pci.h
-> +++ b/arch/x86/include/asm/pci.h
-> @@ -7,6 +7,7 @@
->  #include <linux/string.h>
->  #include <linux/scatterlist.h>
->  #include <asm/io.h>
-> +#include <asm/pat.h>
->  #include <asm/x86_init.h>
->  
->  #ifdef __KERNEL__
-> @@ -102,6 +103,7 @@ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
->  
->  
->  #define HAVE_PCI_MMAP
-> +#define arch_can_pci_mmap_wc()	pat_enabled()
->  extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
->  			       enum pci_mmap_state mmap_state,
->  			       int write_combine);
-> diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
-> index 5d6bd93..f106879 100644
-> --- a/arch/xtensa/include/asm/pci.h
-> +++ b/arch/xtensa/include/asm/pci.h
-> @@ -51,7 +51,11 @@ int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
->  			enum pci_mmap_state mmap_state, int write_combine);
->  
->  /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
-> -#define HAVE_PCI_MMAP	1
-> +#define HAVE_PCI_MMAP		1
-> +
-> +/* This was wrapped in #if 0 since the first merge of xtensa support...
-> +#define arch_can_pci_mmap_wc()	1
-> +*/
->  
->  #endif /* __KERNEL__ */
->  
-> diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-> index b848cc3..c5944d3 100644
-> --- a/arch/xtensa/kernel/pci.c
-> +++ b/arch/xtensa/kernel/pci.c
-> @@ -345,7 +345,7 @@ __pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vma,
->  
->  	/* Set to write-through */
->  	prot = (prot & _PAGE_CA_MASK) | _PAGE_CA_WT;
-> -#if 0
-> +#ifdef arch_can_pci_mmap_wc
->  	if (!write_combine)
->  		prot |= _PAGE_WRITETHRU;
->  #endif
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 25d010d..e0474f3 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -1206,10 +1206,12 @@ static int pci_create_resource_files(struct pci_dev *pdev)
->  			continue;
->  
->  		retval = pci_create_attr(pdev, i, 0);
-> +#ifdef arch_can_pci_mmap_wc
->  		/* for prefetchable resources, create a WC mappable file */
-> -		if (!retval && pdev->resource[i].flags & IORESOURCE_PREFETCH)
-> +		if (!retval && arch_can_pci_mmap_wc() &&
-> +		    pdev->resource[i].flags & IORESOURCE_PREFETCH)
->  			retval = pci_create_attr(pdev, i, 1);
-> -
-> +#endif
->  		if (retval) {
->  			pci_remove_resource_files(pdev);
->  			return retval;
-> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-> index f82710a..5cd960c 100644
-> --- a/drivers/pci/proc.c
-> +++ b/drivers/pci/proc.c
-> @@ -209,15 +209,18 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
->  		fpriv->mmap_state = pci_mmap_mem;
->  		break;
->  
-> +#ifdef arch_can_pci_mmap_wc
->  	case PCIIOC_WRITE_COMBINE:
-> -		if (arg)
-> -			fpriv->write_combine = 1;
-> -		else
-> -			fpriv->write_combine = 0;
-> -		break;
-> -
-> +		if (arch_can_pci_mmap_wc()) {
-> +			if (arg)
-> +				fpriv->write_combine = 1;
-> +			else
-> +				fpriv->write_combine = 0;
-> +			break;
-> +		}
-> +		/* If arch decided it can't, fall through... */
-> +#endif /* arch_can_pci_mmap_wc */
->  #endif /* HAVE_PCI_MMAP */
-> -
->  	default:
->  		ret = -EINVAL;
->  		break;
-> -- 
-> dwmw2
+> (with the physical address of 0x8e07e000 in between being irrelevant to
+> the consuming driver)
+> 
+> It is true that the device's DMA mask assignment is also part and parcel
+> of this, whereby we will limit what physical addresses the kernel
+> considers valid for DMA involving devices behind this range to the lower
+> 3GB (i.e. 0x80000000 + 0x40000000 - 1). With a bit of luck,
+> CONFIG_DMABOUNCE should do the rest of the job of working around that
+> where necessary.
+
+AFAICT, the parser for the "dma-ranges" property is implemented
+in of_dma_get_range() in drivers/of/address.c
+
+http://lxr.free-electrons.com/source/drivers/of/address.c#L808
+
+/**
+ * of_dma_get_range - Get DMA range info
+ * @np:		device node to get DMA range info
+ * @dma_addr:	pointer to store initial DMA address of DMA range
+ * @paddr:	pointer to store initial CPU address of DMA range
+ * @size:	pointer to store size of DMA range
+ *
+ * Look in bottom up direction for the first "dma-ranges" property
+ * and parse it.
+ *  dma-ranges format:
+ *	DMA addr (dma_addr)	: naddr cells
+ *	CPU addr (phys_addr_t)	: pna cells
+ *	size			: nsize cells
+ *
+ * It returns -ENODEV if "dma-ranges" property was not found
+ * for this device in DT.
+ */
+
+I didn't find anything relevant in Documentation/devicetree/bindings
+except Documentation/devicetree/bindings/iommu/iommu.txt but I'm not
+sure this applies to my SoC.
+
+It's not clear to me how ranges and dma-ranges interact...
+Is it perhaps: ranges for cpu-to-bus, dma-ranges for bus-to-cpu?
 
 
+ePAPR (Version 1.1 -- 08 April) provides a formal definition
 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.3.9 dma-ranges
+
+Property: dma-ranges
+
+Value type: <empty> or <prop-encoded-array> encoded as arbitrary number
+of triplets of (child-bus-address, parent-bus-address, length).
+
+Description:
+
+The dma-ranges property is used to describe the direct memory access (DMA) structure of a
+memory-mapped bus whose device tree parent can be accessed from DMA operations
+originating from the bus. It provides a means of defining a mapping or translation between the
+physical address space of the bus and the physical address space of the parent of the bus.
+The format of the value of the dma-ranges property is an arbitrary number of triplets of
+(child-bus-address, parent-bus-address, length). Each triplet specified describes a contiguous
+DMA address range.
+
+o The child-bus-address is a physical address within the child bus' address space. The
+number of cells to represent the address depends on the bus and can be determined
+from the #address-cells of this node (the node in which the dma-ranges property
+appears).
+
+o The parent-bus-address is a physical address within the parent bus' address space.
+The number of cells to represent the parent address is bus dependent and can be
+determined from the #address-cells property of the node that defines the parent's
+address space.
+
+o The length specifies the size of the range in the child's address space. The number of
+cells to represent the size can be determined from the #size-cells of this node (the
+node in which the dma-ranges property appears).
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I'm still digging :-)
+
+Regards.
