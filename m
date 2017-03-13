@@ -1,128 +1,187 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v4 06/23] Documentation: PCI: Add specification for the *pci
- test* function device
-Date: Mon, 13 Mar 2017 19:52:42 +0530
-Message-ID: <20170313142259.25397-7-kishon@ti.com>
-In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
-References: <20170313142259.25397-1-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v4 5/7] PCI: dwc: all: Modify dbi accessors to access data
+ of 4/2/1 bytes
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+References: <20170313134328.1588-1-kishon@ti.com>
+ <20170313134328.1588-6-kishon@ti.com>
+CC: <nsekhar@ti.com>, Jingoo Han <jingoohan1@gmail.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <3353f3f7-9c27-b929-c8d4-e8e2605c11bc@axis.com>
+Date: Mon, 13 Mar 2017 15:32:16 +0100
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170313134328.1588-6-kishon@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add specification for the *pci test* virtual function device. The endpoint
-function driver and the host pci driver should be created based on this
-specification.
+Acked-by: Niklas Cassel <niklas.cassel@axis.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/PCI/00-INDEX                       |  2 +
- Documentation/PCI/endpoint/pci-test-function.txt | 66 ++++++++++++++++++++++++
- 2 files changed, 68 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/pci-test-function.txt
-
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index f84a23c7c74b..4e5a2832f4e7 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -16,3 +16,5 @@ endpoint/pci-endpoint.txt
- 	- guide to add endpoint controller driver and endpoint function driver.
- endpoint/pci-endpoint-cfs.txt
- 	- guide to use configfs to configure the pci endpoint function.
-+endpoint/pci-test-function.txt
-+	- specification of *pci test* function device.
-diff --git a/Documentation/PCI/endpoint/pci-test-function.txt b/Documentation/PCI/endpoint/pci-test-function.txt
-new file mode 100644
-index 000000000000..1324376ec6a3
---- /dev/null
-+++ b/Documentation/PCI/endpoint/pci-test-function.txt
-@@ -0,0 +1,66 @@
-+				PCI TEST
-+		    Kishon Vijay Abraham I <kishon@ti.com>
-+
-+Traditionally PCI RC has always been validated by using standard
-+PCI cards like ethernet PCI cards or USB PCI cards or SATA PCI cards.
-+However with the addition of EP-core in linux kernel, it is possible
-+to configure a PCI controller that can operate in EP mode to work as
-+a test device.
-+
-+The PCI endpoint test device is a virtual device (defined in software)
-+used to test the endpoint functionality and serve as a sample driver
-+for other PCI endpoint devices (to use the EP framework).
-+
-+The PCI endpoint test device has the following registers:
-+
-+	1) PCI_ENDPOINT_TEST_MAGIC
-+	2) PCI_ENDPOINT_TEST_COMMAND
-+	3) PCI_ENDPOINT_TEST_STATUS
-+	4) PCI_ENDPOINT_TEST_SRC_ADDR
-+	5) PCI_ENDPOINT_TEST_DST_ADDR
-+	6) PCI_ENDPOINT_TEST_SIZE
-+	7) PCI_ENDPOINT_TEST_CHECKSUM
-+
-+*) PCI_ENDPOINT_TEST_MAGIC
-+
-+This register will be used to test BAR0. A known pattern will be written
-+and read back from MAGIC register to verify BAR0.
-+
-+*) PCI_ENDPOINT_TEST_COMMAND:
-+
-+This register will be used by the host driver to indicate the function
-+that the endpoint device must perform.
-+
-+Bitfield Description:
-+  Bit 0		: raise legacy irq
-+  Bit 1		: raise MSI irq
-+  Bit 2 - 7	: MSI interrupt number
-+  Bit 8		: read command (read data from RC buffer)
-+  Bit 9		: write command (write data to RC buffer)
-+  Bit 10	: copy command (copy data from one RC buffer to another
-+		  RC buffer)
-+
-+*) PCI_ENDPOINT_TEST_STATUS
-+
-+This register reflects the status of the PCI endpoint device.
-+
-+Bitfield Description:
-+  Bit 0		: read success
-+  Bit 1		: read fail
-+  Bit 2		: write success
-+  Bit 3		: write fail
-+  Bit 4		: copy success
-+  Bit 5		: copy fail
-+  Bit 6		: irq raised
-+  Bit 7		: source address is invalid
-+  Bit 8		: destination address is invalid
-+
-+*) PCI_ENDPOINT_TEST_SRC_ADDR
-+
-+This register contains the source address (RC buffer address) for the
-+COPY/READ command.
-+
-+*) PCI_ENDPOINT_TEST_DST_ADDR
-+
-+This register contains the destination address (RC buffer address) for
-+the COPY/WRITE command.
--- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 03/13/2017 02:43 PM, Kishon Vijay Abraham I wrote:
+> Previously dbi accessors can be used to access data of size 4
+> bytes. But there might be situations (like accessing
+> MSI_MESSAGE_CONTROL in order to set/get the number of required
+> MSI interrupts in EP mode) where dbi accessors must
+> be used to access data of size 2. This is in preparation for
+> adding endpoint mode support to designware driver.
+>
+> Cc: Jingoo Han <jingoohan1@gmail.com>
+> Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/dwc/pci-exynos.c      | 16 ++++++++--------
+>  drivers/pci/dwc/pcie-designware.c | 34 ++++++++++++++++++++++++----------
+>  drivers/pci/dwc/pcie-designware.h | 20 +++++++++++---------
+>  3 files changed, 43 insertions(+), 27 deletions(-)
+>
+> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+> index a0d40f74b88d..37d6d2b7378f 100644
+> --- a/drivers/pci/dwc/pci-exynos.c
+> +++ b/drivers/pci/dwc/pci-exynos.c
+> @@ -521,25 +521,25 @@ static void exynos_pcie_enable_interrupts(struct exynos_pcie *ep)
+>  		exynos_pcie_msi_init(ep);
+>  }
+>  
+> -static u32 exynos_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base,
+> -				 u32 reg)
+> +static u32 exynos_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
+> +				u32 reg, size_t size)
+>  {
+>  	struct exynos_pcie *ep = to_exynos_pcie(pci);
+>  	u32 val;
+>  
+>  	exynos_pcie_sideband_dbi_r_mode(ep, true);
+> -	val = readl(base + reg);
+> +	dw_pcie_read(base + reg, size, &val);
+>  	exynos_pcie_sideband_dbi_r_mode(ep, false);
+>  	return val;
+>  }
+>  
+> -static void exynos_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base,
+> -				   u32 reg, u32 val)
+> +static void exynos_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
+> +				  u32 reg, size_t size, u32 val)
+>  {
+>  	struct exynos_pcie *ep = to_exynos_pcie(pci);
+>  
+>  	exynos_pcie_sideband_dbi_w_mode(ep, true);
+> -	writel(val, base + reg);
+> +	dw_pcie_write(base + reg, size, val);
+>  	exynos_pcie_sideband_dbi_w_mode(ep, false);
+>  }
+>  
+> @@ -646,8 +646,8 @@ static int __init exynos_add_pcie_port(struct exynos_pcie *ep,
+>  }
+>  
+>  static const struct dw_pcie_ops dw_pcie_ops = {
+> -	.readl_dbi = exynos_pcie_readl_dbi,
+> -	.writel_dbi = exynos_pcie_writel_dbi,
+> +	.read_dbi = exynos_pcie_read_dbi,
+> +	.write_dbi = exynos_pcie_write_dbi,
+>  	.link_up = exynos_pcie_link_up,
+>  };
+>  
+> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+> index ea403e2240cf..734acac1926d 100644
+> --- a/drivers/pci/dwc/pcie-designware.c
+> +++ b/drivers/pci/dwc/pcie-designware.c
+> @@ -61,21 +61,35 @@ int dw_pcie_write(void __iomem *addr, int size, u32 val)
+>  	return PCIBIOS_SUCCESSFUL;
+>  }
+>  
+> -u32 __dw_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg)
+> +u32 __dw_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+> +		       size_t size)
+>  {
+> -	if (pci->ops->readl_dbi)
+> -		return pci->ops->readl_dbi(pci, base, reg);
+> +	int ret;
+> +	u32 val;
+> +
+> +	if (pci->ops->read_dbi)
+> +		return pci->ops->read_dbi(pci, base, reg, size);
+>  
+> -	return readl(base + reg);
+> +	ret = dw_pcie_read(base + reg, size, &val);
+> +	if (ret)
+> +		dev_err(pci->dev, "read DBI address failed\n");
+> +
+> +	return val;
+>  }
+>  
+> -void __dw_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+> -			  u32 val)
+> +void __dw_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+> +			 size_t size, u32 val)
+>  {
+> -	if (pci->ops->writel_dbi)
+> -		pci->ops->writel_dbi(pci, base, reg, val);
+> -	else
+> -		writel(val, base + reg);
+> +	int ret;
+> +
+> +	if (pci->ops->write_dbi) {
+> +		pci->ops->write_dbi(pci, base, reg, size, val);
+> +		return;
+> +	}
+> +
+> +	ret = dw_pcie_write(base + reg, size, val);
+> +	if (ret)
+> +		dev_err(pci->dev, "write DBI address failed\n");
+>  }
+>  
+>  static u32 dw_pcie_readl_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+> index e97fc4ce7d49..bfaf2b850a88 100644
+> --- a/drivers/pci/dwc/pcie-designware.h
+> +++ b/drivers/pci/dwc/pcie-designware.h
+> @@ -144,9 +144,10 @@ struct pcie_port {
+>  
+>  struct dw_pcie_ops {
+>  	u64	(*cpu_addr_fixup)(u64 cpu_addr);
+> -	u32	(*readl_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg);
+> -	void	(*writel_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+> -			      u32 val);
+> +	u32	(*read_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+> +			    size_t size);
+> +	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+> +			     size_t size, u32 val);
+>  	int	(*link_up)(struct dw_pcie *pcie);
+>  };
+>  
+> @@ -164,9 +165,10 @@ struct dw_pcie {
+>  int dw_pcie_read(void __iomem *addr, int size, u32 *val);
+>  int dw_pcie_write(void __iomem *addr, int size, u32 val);
+>  
+> -u32 __dw_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg);
+> -void __dw_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+> -			  u32 val);
+> +u32 __dw_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+> +		       size_t size);
+> +void __dw_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+> +			 size_t size, u32 val);
+>  int dw_pcie_link_up(struct dw_pcie *pci);
+>  int dw_pcie_wait_for_link(struct dw_pcie *pci);
+>  void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+> @@ -174,14 +176,14 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+>  			       u32 size);
+>  void dw_pcie_setup(struct dw_pcie *pci);
+>  
+> -static inline dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
+> +static inline void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
+>  {
+> -	__dw_pcie_writel_dbi(pci, pci->dbi_base, reg, val);
+> +	__dw_pcie_write_dbi(pci, pci->dbi_base, reg, 0x4, val);
+>  }
+>  
+>  static inline u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
+>  {
+> -	return  __dw_pcie_readl_dbi(pci, pci->dbi_base, reg);
+> +	return __dw_pcie_read_dbi(pci, pci->dbi_base, reg, 0x4);
+>  }
+>  
+>  #ifdef CONFIG_PCIE_DW_HOST
