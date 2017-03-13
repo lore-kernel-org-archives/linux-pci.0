@@ -1,169 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0084.outbound.protection.outlook.com ([104.47.32.84]:65264
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752680AbdCBRz2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Mar 2017 12:55:28 -0500
-Subject: [RFC PATCH v2 15/32] x86: Add support for changing memory
- encryption attribute in early boot
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:15:28 -0500
-Message-ID: <148846772794.2349.1396854638510933455.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Niklas Cassel <niklas.cassel@axis.com>, <linux-omap@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v4 1/7] PCI: dwc: designware: Add new *ops* for cpu addr fixup
+Date: Mon, 13 Mar 2017 19:13:22 +0530
+Message-ID: <20170313134328.1588-2-kishon@ti.com>
+In-Reply-To: <20170313134328.1588-1-kishon@ti.com>
+References: <20170313134328.1588-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some KVM-specific custom MSRs shares the guest physical address with
-hypervisor. When SEV is active, the shared physical address must be mapped
-with encryption attribute cleared so that both hypervsior and guest can
-access the data.
+Some platforms (like dra7xx) require only the least 28 bits of the
+corresponding 32 bit CPU address to be programmed in the address
+translation unit. This modified address is stored in io_base/mem_base/
+cfg0_base/cfg1_base in dra7xx_pcie_host_init. While this is okay for
+host mode where the address range is fixed, device mode requires
+different addresses to be programmed based on the host buffer address.
+Add a new ops to get the least 28 bits of the corresponding 32 bit
+CPU address and invoke it before programming the address translation
+unit.
 
-Add APIs to change memory encryption attribute in early boot code.
-
-Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+Acked-by: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- arch/x86/include/asm/mem_encrypt.h |   15 +++++++++
- arch/x86/mm/mem_encrypt.c          |   63 ++++++++++++++++++++++++++++++++++++
- 2 files changed, 78 insertions(+)
+ drivers/pci/dwc/pcie-designware.c | 3 +++
+ drivers/pci/dwc/pcie-designware.h | 1 +
+ 2 files changed, 4 insertions(+)
 
-diff --git a/arch/x86/include/asm/mem_encrypt.h b/arch/x86/include/asm/mem_encrypt.h
-index 9799835..95bbe4c 100644
---- a/arch/x86/include/asm/mem_encrypt.h
-+++ b/arch/x86/include/asm/mem_encrypt.h
-@@ -47,6 +47,9 @@ void __init sme_unmap_bootdata(char *real_mode_data);
- 
- void __init sme_early_init(void);
- 
-+int __init early_set_memory_decrypted(void *addr, unsigned long size);
-+int __init early_set_memory_encrypted(void *addr, unsigned long size);
-+
- /* Architecture __weak replacement functions */
- void __init mem_encrypt_init(void);
- 
-@@ -110,6 +113,18 @@ static inline void __init sme_early_init(void)
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index 7e1fb7d6643c..3eaf3ccdc118 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -97,6 +97,9 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
  {
- }
+ 	u32 retries, val;
  
-+static inline int __init early_set_memory_decrypted(void *addr,
-+						    unsigned long size)
-+{
-+	return 1;
-+}
++	if (pci->ops->cpu_addr_fixup)
++		cpu_addr = pci->ops->cpu_addr_fixup(cpu_addr);
 +
-+static inline int __init early_set_memory_encrypted(void *addr,
-+						    unsigned long size)
-+{
-+	return 1;
-+}
-+
- #define __sme_pa		__pa
- #define __sme_pa_nodebug	__pa_nodebug
+ 	if (pci->iatu_unroll_enabled) {
+ 		dw_pcie_writel_unroll(pci, index, PCIE_ATU_UNR_LOWER_BASE,
+ 				      lower_32_bits(cpu_addr));
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index cd3b8713fe50..8f3dcb2b099b 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -143,6 +143,7 @@ struct pcie_port {
+ };
  
-diff --git a/arch/x86/mm/mem_encrypt.c b/arch/x86/mm/mem_encrypt.c
-index 7df5f4c..567e0d8 100644
---- a/arch/x86/mm/mem_encrypt.c
-+++ b/arch/x86/mm/mem_encrypt.c
-@@ -15,6 +15,7 @@
- #include <linux/mm.h>
- #include <linux/dma-mapping.h>
- #include <linux/swiotlb.h>
-+#include <linux/mem_encrypt.h>
- 
- #include <asm/tlbflush.h>
- #include <asm/fixmap.h>
-@@ -258,6 +259,68 @@ static void sme_free(struct device *dev, size_t size, void *vaddr,
- 	swiotlb_free_coherent(dev, size, vaddr, dma_handle);
- }
- 
-+static unsigned long __init get_pte_flags(unsigned long address)
-+{
-+	int level;
-+	pte_t *pte;
-+	unsigned long flags = _KERNPG_TABLE_NOENC | _PAGE_ENC;
-+
-+	pte = lookup_address(address, &level);
-+	if (!pte)
-+		return flags;
-+
-+	switch (level) {
-+	case PG_LEVEL_4K:
-+		flags = pte_flags(*pte);
-+		break;
-+	case PG_LEVEL_2M:
-+		flags = pmd_flags(*(pmd_t *)pte);
-+		break;
-+	case PG_LEVEL_1G:
-+		flags = pud_flags(*(pud_t *)pte);
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	return flags;
-+}
-+
-+int __init early_set_memory_enc_dec(void *vaddr, unsigned long size,
-+				    unsigned long flags)
-+{
-+	unsigned long pfn, npages;
-+	unsigned long addr = (unsigned long)vaddr & PAGE_MASK;
-+
-+	/* We are going to change the physical page attribute from C=1 to C=0.
-+	 * Flush the caches to ensure that all the data with C=1 is flushed to
-+	 * memory. Any caching of the vaddr after function returns will
-+	 * use C=0.
-+	 */
-+	clflush_cache_range(vaddr, size);
-+
-+	npages = PAGE_ALIGN(size) >> PAGE_SHIFT;
-+	pfn = slow_virt_to_phys((void *)addr) >> PAGE_SHIFT;
-+
-+	return kernel_map_pages_in_pgd(init_mm.pgd, pfn, addr, npages,
-+					flags & ~sme_me_mask);
-+
-+}
-+
-+int __init early_set_memory_decrypted(void *vaddr, unsigned long size)
-+{
-+	unsigned long flags = get_pte_flags((unsigned long)vaddr);
-+
-+	return early_set_memory_enc_dec(vaddr, size, flags & ~sme_me_mask);
-+}
-+
-+int __init early_set_memory_encrypted(void *vaddr, unsigned long size)
-+{
-+	unsigned long flags = get_pte_flags((unsigned long)vaddr);
-+
-+	return early_set_memory_enc_dec(vaddr, size, flags | _PAGE_ENC);
-+}
-+
- static struct dma_map_ops sme_dma_ops = {
- 	.alloc                  = sme_alloc,
- 	.free                   = sme_free,
+ struct dw_pcie_ops {
++	u64	(*cpu_addr_fixup)(u64 cpu_addr);
+ 	u32	(*readl_dbi)(struct dw_pcie *pcie, u32 reg);
+ 	void	(*writel_dbi)(struct dw_pcie *pcie, u32 reg, u32 val);
+ 	int	(*link_up)(struct dw_pcie *pcie);
+-- 
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
