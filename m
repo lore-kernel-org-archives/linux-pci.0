@@ -1,78 +1,159 @@
-Return-Path: <SRS0=J5Gl=2S=arm.com=james.morse@kernel.org>
-Return-Path: <SRS0=J5Gl=2S=arm.com=james.morse@kernel.org>
-Message-ID: <58C135B4.2000809@arm.com>
-Date: Thu, 09 Mar 2017 11:00:04 +0000
-From: James Morse <james.morse@arm.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:4299 "EHLO
+        dggrg01-dlp.huawei.com" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755853AbdCMCNR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 12 Mar 2017 22:13:17 -0400
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
+        <rjw@rjwysocki.net>, <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <linux-acpi@vger.kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-serial@vger.kernel.org>,
+        <minyard@acm.org>, <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
+        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
+        <xuwei5@hisilicon.com>,
+        "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Subject: [PATCH V7 0/7] LPC: legacy ISA I/O support
+Date: Mon, 13 Mar 2017 10:42:36 +0800
+Message-ID: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
 MIME-Version: 1.0
-To: Rajat Jain <rajatja@google.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: Rajat Jain <rajatxjain@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Keith Busch <keith.busch@intel.com>,
- Andreas Ziegler <andreas.ziegler@fau.de>,
- Jonathan Yong <jonathan.yong@intel.com>,
- Shawn Lin <shawn.lin@rock-chips.com>,
- David Daney <david.daney@cavium.com>,
- Julia Lawall <Julia.Lawall@lip6.fr>,
- Ram Amrani <Ram.Amrani@cavium.com>, Doug Ledford <dledford@redhat.com>,
- Wang Sheng-Hui <shhuiw@foxmail.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Brian Norris <briannorris@google.com>
-Subject: Re: [PATCH 5/6] PCI/ASPM: Actually configure the L1 substate settings
- to the device
-References: <1483425255-101923-1-git-send-email-rajatja@google.com> <1483425255-101923-6-git-send-email-rajatja@google.com> <58C05114.5030202@arm.com> <20170308223938.GA28050@bhelgaas-glaptop.roam.corp.google.com> <CACK8Z6H7V=dM71LuUh7653qnLXJmGCNVcm3cG4_s4hwQKe58aA@mail.gmail.com>
-In-Reply-To: <CACK8Z6H7V=dM71LuUh7653qnLXJmGCNVcm3cG4_s4hwQKe58aA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi guys,
+This patchset supports the IPMI-bt device attached to the Low-Pin-Count
+interface implemented on Hisilicon Hip06/Hip07 SoC.
+	                -----------
+			| LPC host|
+	                |         |
+	                -----------
+	                     |
+ 	        _____________V_______________LPC
+                  |			  |
+                  V	                  V
+			             ------------
+			             |  BT(ipmi)|
+			             ------------
 
-On 08/03/17 23:08, Rajat Jain wrote:
-> On Wed, Mar 8, 2017 at 2:39 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> On Wed, Mar 08, 2017 at 06:44:36PM +0000, James Morse wrote:
->>> On 03/01/17 06:34, Rajat Jain wrote:
->>>> Add code to actually configure the L1 substate settigns on the
->>>> upstream and downstream device, while taking care of the rules
->>>> dictated by the PCIe spec.
->>>
->>> While testing hibernate on an arm64 juno with v4.11-rc1, I get a NULL
->> pointer
->>> dereference from pcie_config_aspm_link():
->>>
->>>
->>>> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
->>>> index a70afdf..6735f38 100644
->>>> --- a/drivers/pci/pcie/aspm.c
->>>> +++ b/drivers/pci/pcie/aspm.c
->>>> @@ -597,11 +683,23 @@ static void pcie_config_aspm_dev(struct pci_dev
->> *pdev, u32 val)
->>>>  static void pcie_config_aspm_link(struct pcie_link_state *link, u32
->> state)
->>>>  {
->>>>     u32 upstream = 0, dwstream = 0;
->>>> -   struct pci_dev *child, *parent = link->pdev;
->>>> +   struct pci_dev *child = link->downstream, *parent = link->pdev;
->>>
->>>
->>> Here link->downstream is NULL,
->>
->> Sorry about the breakage.  Can you try also cherry-picking this
->> commit:
->>
->> https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.
->> git/commit/?h=for-linus&id=3bd7db63a841e8c5297bb18ad801df67d5e38ad2
->>
->> Yinghai tripped over a similar problem in a different way, but I
->> suspect his fix might also fix the problem you're seeing.
->>
-> 
-> Yes, I think that should fix it.
+When master accesses those peripherals beneath the Hip06/Hip07 LPC, a specific
+LPC driver is needed to make LPC host generate the standard LPC I/O cycles with
+the target peripherals'I/O port addresses. But on curent arm64 world, there is
+no real I/O accesses. All the I/O operations through in/out pair are based on
+MMIO which is not satisfied the I/O mechanism on Hip06/Hip07 LPC.
+To solve this issue and keep the relevant existing peripherals' driver
+untouched, this patchset implements:
+  - introduces a generic I/O space management framwork, LIBIO, to support I/O
+    operations of both MMIO buses and the host controllers which access their
+    peripherals with host local I/O addresses;
+  - redefines the in/out accessors to provide unified interfaces for MMIO and
+    legacy I/O. Based on the LIBIO, the calling of in/out() from upper-layer
+    drivers, such as ipmi-si, will be redirected to the corresponding
+    device-specific I/O hooks to perfrom the I/O accesses.
+Based on this patch-set, all the I/O accesses to Hip06/Hip07 LPC peripherals
+can be supported without any changes on the existing ipmi-si driver.
 
-Yes, this fixes the problem. Thanks!
+Changes from V6:
+  - According to the comments from Bjorn and Alex, merge PCI IO and indirect-IO
+    into a generic I/O space management, LIBIO;
+  - Adopted the '_DEP' to replace the platform bus notifier. In this way, we
+    can ensure the LPC peripherals' I/O resources had been translated to
+    logical IO before the LPC peripheral enumeration;
+  - Replaced the rwlock with rcu list based on Alex's suggestion;
+  - Applied relaxed write/read to LPC driver;
+  - Some bugs fixing and some optimazations based on the comments of V6;
 
-I should have dug through the list a little more to see if there was an existing
-fix...
+Changes from V5:
+  - Made the extio driver more generic and locate in lib/;
+  - Supported multiple indirect-IO bus instances;
+  - Extended the pci_register_io_range() to support indirect-IO, then dropped
+  the I/O reservation used in previous patchset;
+  - Reimplemented the ACPI LPC support;
+  - Fixed some bugs, including the compile error on other archs, the module
+  building failure found by Ming Lei, etc;
+
+Changes from V4:
+  - Some revises based on the comments from Bjorn, Rob on V4;
+  - Fixed the compile error on some platforms, such as openrisc;
+
+Changes from V3:
+  - UART support deferred to a separate patchset; This patchset only support
+  ipmi device under LPC;
+  - LPC bus I/O range is fixed to 0 ~ (PCIBIOS_MIN_IO - 1), which is separeted
+  from PCI/PCIE PIO space;
+  - Based on Arnd's remarks, removed the ranges property from Hip06 lpc dts and
+  added a new fixup function, of_isa_indirect_io(), to get the I/O address
+  directly from LPC dts configurations;
+  - Support in(w,l)/out(w,l) for Hip06 lpc I/O;
+  - Decouple the header file dependency on the gerenic io.h by defining in/out
+  as normal functions in c file;
+  - removed unused macro definitions in the LPC driver;
+
+Changes from V2:
+  - Support the PIO retrieval from the linux PIO generated by
+  pci_address_to_pio. This method replace the 4K PIO reservation in V2;
+  - Support the flat-tree earlycon;
+  - Some revises based on Arnd's remarks;
+  - Make sure the linux PIO range allocated to Hip06 LPC peripherals starts
+  from non-ZERO;
+
+Changes from V1:
+  - Support the ACPI LPC device;
+  - Optimize the dts LPC driver in ISA compatible mode;
+  - Reserve the IO range below 4K in avoid the possible conflict with PCI host
+  IO ranges;
+  - Support the LPC uart and relevant earlycon;
+
+v6 thread here: https://lkml.org/lkml/2017/1/24/25
+v5 thread here: https://lkml.org/lkml/2016/11/7/955
+v4 thread here: https://lkml.org/lkml/2016/10/20/149
+v3 thread here: https://lkml.org/lkml/2016/9/14/326
+v2 thread here: https://lkml.org/lkml/2016/9/7/356
+v1 thread here: https://lkml.org/lkml/2015/12/29/154
 
 
-Thanks,
+Signed-off-by: Zhichang Yuan <yuanzhichang@hisilicon.com>
+zhichang.yuan (7):
+  LIBIO: Introduce a generic PIO mapping method
+  PCI: Apply the new generic I/O management on PCI IO hosts
+  OF: Add missing I/O range exception for indirect-IO  devices
+  LPC: Support the device-tree LPC host on Hip06/Hip07
+  ACPI: Delay the enumeration on the devices whose dependency has not
+    met
+  LIBIO: Support the dynamically logical PIO registration of ACPI host
+    I/O
+  LPC: Add the ACPI LPC support
 
-James
+ .../arm/hisilicon/hisilicon-low-pin-count.txt      |  33 ++
+ MAINTAINERS                                        |   8 +
+ arch/arm64/boot/dts/hisilicon/hip06-d03.dts        |   4 +
+ arch/arm64/boot/dts/hisilicon/hip06.dtsi           |  14 +
+ arch/arm64/boot/dts/hisilicon/hip07-d05.dts        |   4 +
+ arch/arm64/boot/dts/hisilicon/hip07.dtsi           |  14 +
+ drivers/acpi/battery.c                             |   3 -
+ drivers/acpi/pci_root.c                            |   8 +-
+ drivers/acpi/scan.c                                |   3 +
+ drivers/bus/Kconfig                                |   8 +
+ drivers/bus/Makefile                               |   1 +
+ drivers/bus/hisi_lpc.c                             | 608 +++++++++++++++++++++
+ drivers/of/address.c                               |  94 +++-
+ drivers/pci/pci.c                                  |  96 +---
+ include/asm-generic/io.h                           |  50 ++
+ include/linux/io.h                                 |   1 +
+ include/linux/libio.h                              |  98 ++++
+ include/linux/pci.h                                |   3 +-
+ lib/Kconfig                                        |  14 +
+ lib/Makefile                                       |   2 +
+ lib/libio.c                                        | 548 +++++++++++++++++++
+ 21 files changed, 1514 insertions(+), 100 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/arm/hisilicon/hisilicon-low-pin-count.txt
+ create mode 100644 drivers/bus/hisi_lpc.c
+ create mode 100644 include/linux/libio.h
+ create mode 100644 lib/libio.c
+
+-- 
+1.9.1
