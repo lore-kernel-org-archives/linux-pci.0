@@ -1,211 +1,148 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:55376 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1758022AbdCUX4C (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Mar 2017 19:56:02 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2LNroYi112046
-        for <linux-pci@vger.kernel.org>; Tue, 21 Mar 2017 19:55:51 -0400
-Received: from e23smtp04.au.ibm.com (e23smtp04.au.ibm.com [202.81.31.146])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 29b9vqajwa-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Tue, 21 Mar 2017 19:55:50 -0400
-Received: from localhost
-        by e23smtp04.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Wed, 22 Mar 2017 09:55:48 +1000
-Date: Wed, 22 Mar 2017 10:54:49 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: bodong@mellanox.com
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, saeedm@mellanox.com,
-        Eli Cohen <eli@mellanox.com>
-Subject: Re: [V1,1/1] pci/sriov: Add an option to probe VFs or not before
- enabling SR-IOV
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1490125247-83685-1-git-send-email-bodong@mellanox.com>
+Return-Path: <SRS0=z6/A=2W=arm.com=robin.murphy@kernel.org>
+Return-Path: <SRS0=z6/A=2W=arm.com=robin.murphy@kernel.org>
+Subject: Re: Neophyte questions about PCIe
+To: Mason <slash.tmp@free.fr>
+References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
+ <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
+ <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
+ <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
+ <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
+ <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
+ <4f37cc08-d4fd-b207-63d2-4ac038d2fcec@arm.com>
+ <063D6719AE5E284EB5DD2968C1650D6DCFE7C9B9@AcuExch.aculab.com>
+ <504fdb97-f058-e1fb-0fe2-7f01c46db513@arm.com>
+ <e31d5d71-cc90-86cf-d8cb-3367d42e1d41@free.fr>
+Cc: David Laight <david.laight@aculab.com>, Bjorn Helgaas
+ <helgaas@kernel.org>, Rob Herring <robh@kernel.org>,
+ Mark Rutland <mark.rutland@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
+ DT <devicetree@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <e3d1c2a5-fec0-960a-c904-22ce80582a81@arm.com>
+Date: Mon, 13 Mar 2017 11:56:54 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1490125247-83685-1-git-send-email-bodong@mellanox.com>
-Message-Id: <20170321235449.GC3972@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <e31d5d71-cc90-86cf-d8cb-3367d42e1d41@free.fr>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 21, 2017 at 09:40:47PM +0200, bodong@mellanox.com wrote:
->From: Bodong Wang <bodong@mellanox.com>
->
->Sometimes it is not desirable to probe the virtual functions after
->SRIOV is enabled. This can save host side resource usage by VF
->instances which would be eventually probed to VMs.
->
->Added a new PCI sysfs interface "sriov_probe_vfs" to control that
->from PF, all current callers still retain the same functionality.
->To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
->
->/sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
->
->Note that, the choice must be made before enabling VFs. The change
->will not take effect if VFs are already enabled. Simply, one can set
->sriov_numvfs to 0, choose whether to probe or not, and then resume
->sriov_numvfs.
->
->Signed-off-by: Bodong Wang <bodong@mellanox.com>
->Signed-off-by: Eli Cohen <eli@mellanox.com>
+On 13/03/17 10:59, Mason wrote:
+> On 10/03/2017 17:00, Robin Murphy wrote:
+> 
+>> On 10/03/17 15:35, David Laight wrote:
+>>
+>>> Robin Murphy wrote:
+>>>
+>>>> The appropriate DT property would be "dma-ranges", i.e.
+>>>>
+>>>> pci@... {
+>>>> 	...
+>>>> 	dma-ranges = <(PCI bus address) (CPU phys address) (size)>;
+>>>> }
+>>>
+>>> Isn't that just saying which physical addresses the cpu can assign
+>>> for buffers for those devices?
+>>> There is also an offset between the 'cpu physical address' and the
+>>> 'dma address'.
+>>
+>> That offset is inherent in what "dma-ranges" describes. Say (for ease of
+>> calculation) that BAR0 has been put at a mem space address of 0x20000000
+>> and maps the first 1GB of physical DRAM. That would give us:
+>>
+>> 	dma-ranges = <0x20000000 0x80000000 0x40000000>;
+>>
+>> Then a "virt = dma_alloc_coherent(..., &handle, ...)", borrowing the
+>> numbers from earlier in the thread, would automatically end up with:
+>>
+>> 	virt == 0xd0855000;
+>> 	handle == 0x2e07e000;
+>>
+>> (with the physical address of 0x8e07e000 in between being irrelevant to
+>> the consuming driver)
+>>
+>> It is true that the device's DMA mask assignment is also part and parcel
+>> of this, whereby we will limit what physical addresses the kernel
+>> considers valid for DMA involving devices behind this range to the lower
+>> 3GB (i.e. 0x80000000 + 0x40000000 - 1). With a bit of luck,
+>> CONFIG_DMABOUNCE should do the rest of the job of working around that
+>> where necessary.
+> 
+> AFAICT, the parser for the "dma-ranges" property is implemented
+> in of_dma_get_range() in drivers/of/address.c
+> 
+> http://lxr.free-electrons.com/source/drivers/of/address.c#L808
+> 
+> /**
+>  * of_dma_get_range - Get DMA range info
+>  * @np:		device node to get DMA range info
+>  * @dma_addr:	pointer to store initial DMA address of DMA range
+>  * @paddr:	pointer to store initial CPU address of DMA range
+>  * @size:	pointer to store size of DMA range
+>  *
+>  * Look in bottom up direction for the first "dma-ranges" property
+>  * and parse it.
+>  *  dma-ranges format:
+>  *	DMA addr (dma_addr)	: naddr cells
+>  *	CPU addr (phys_addr_t)	: pna cells
+>  *	size			: nsize cells
+>  *
+>  * It returns -ENODEV if "dma-ranges" property was not found
+>  * for this device in DT.
+>  */
+> 
+> I didn't find anything relevant in Documentation/devicetree/bindings
+> except Documentation/devicetree/bindings/iommu/iommu.txt but I'm not
+> sure this applies to my SoC.
+> 
+> It's not clear to me how ranges and dma-ranges interact...
+> Is it perhaps: ranges for cpu-to-bus, dma-ranges for bus-to-cpu?
 
-Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+That's it exactly. FWIW the in-kernel description can be found in
+Documentation/devicetree/booting-without-of.txt, but the
+www.devicetree.org spec (which succeeds ePAPR) should be the
+authoritative reference now. Note that the property itself is fully
+capable of describing multiple discontiguous ranges which might look
+like the perfect solution to your multiple-DRAM-banks problem, but Linux
+can't actually cope with that at all :(
 
-The subject would be [PATCH v2 xxx]. Some minor comments as below.
+Robin.
 
->---
-> Documentation/PCI/pci-iov-howto.txt | 10 ++++++++++
-> drivers/pci/iov.c                   |  1 +
-> drivers/pci/pci-driver.c            | 23 +++++++++++++++++++----
-> drivers/pci/pci-sysfs.c             | 28 ++++++++++++++++++++++++++++
-> drivers/pci/pci.h                   |  1 +
-> 5 files changed, 59 insertions(+), 4 deletions(-)
->
->diff --git a/Documentation/PCI/pci-iov-howto.txt b/Documentation/PCI/pci-iov-howto.txt
->index 2d91ae2..902a528 100644
->--- a/Documentation/PCI/pci-iov-howto.txt
->+++ b/Documentation/PCI/pci-iov-howto.txt
->@@ -68,6 +68,16 @@ To disable SR-IOV capability:
-> 	echo  0 > \
->         /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_numvfs
->
->+To enable probing VFs by a compatible driver on the host:
->+Before enabling SR-IOV capabilities, do:
->+	echo 1 > \
->+        /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
->+
->+To disable probing VFs by a compatible driver on the host:
->+Before enabling SR-IOV capabilities, do:
->+	echo  0 > \
->+        /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
->+
-> 3.2 Usage example
->
-> Following piece of code illustrates the usage of the SR-IOV API.
->diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
->index 2479ae8..70691de 100644
->--- a/drivers/pci/iov.c
->+++ b/drivers/pci/iov.c
->@@ -450,6 +450,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
-> 	iov->total_VFs = total;
-> 	iov->pgsz = pgsz;
-> 	iov->self = dev;
->+	iov->probe_vfs = true;
-> 	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
-> 	pci_read_config_byte(dev, pos + PCI_SRIOV_FUNC_LINK, &iov->link);
-> 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END)
->diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
->index afa7271..cc3a479 100644
->--- a/drivers/pci/pci-driver.c
->+++ b/drivers/pci/pci-driver.c
->@@ -394,6 +394,18 @@ void __weak pcibios_free_irq(struct pci_dev *dev)
-> {
-> }
->
->+#ifdef CONFIG_PCI_IOV
->+static inline bool pci_device_can_probe(struct pci_dev *pdev)
->+{
->+	return (!pdev->is_virtfn || pdev->physfn->sriov->probe_vfs);
->+}
->+#else
->+static inline bool pci_device_can_probe(struct pci_dev *pdev)
->+{
->+	return true;
->+}
->+#endif
->+
-> static int pci_device_probe(struct device *dev)
-> {
-> 	int error;
->@@ -405,10 +417,13 @@ static int pci_device_probe(struct device *dev)
-> 		return error;
->
-> 	pci_dev_get(pci_dev);
->-	error = __pci_device_probe(drv, pci_dev);
->-	if (error) {
->-		pcibios_free_irq(pci_dev);
->-		pci_dev_put(pci_dev);
->+
-
-It seems this blank line isn't needed.
-
->+	if (pci_device_can_probe(pci_dev)) {
->+		error = __pci_device_probe(drv, pci_dev);
->+		if (error) {
->+			pcibios_free_irq(pci_dev);
->+			pci_dev_put(pci_dev);
->+		}
-> 	}
->
-> 	return error;
->diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
->index 25d010d..1d5b89d 100644
->--- a/drivers/pci/pci-sysfs.c
->+++ b/drivers/pci/pci-sysfs.c
->@@ -526,10 +526,37 @@ static ssize_t sriov_numvfs_store(struct device *dev,
-> 	return count;
-> }
->
->+static ssize_t sriov_probe_vfs_show(struct device *dev,
->+				    struct device_attribute *attr,
->+				    char *buf)
->+{
->+	struct pci_dev *pdev = to_pci_dev(dev);
->+
->+	return sprintf(buf, "%u\n", pdev->sriov->probe_vfs);
->+}
->+
->+static ssize_t sriov_probe_vfs_store(struct device *dev,
->+				     struct device_attribute *attr,
->+				     const char *buf, size_t count)
->+{
->+	struct pci_dev *pdev = to_pci_dev(dev);
->+	bool probe_vfs;
->+
->+	if (kstrtobool(buf, &probe_vfs) < 0)
->+		return -EINVAL;
->+
->+	pdev->sriov->probe_vfs = probe_vfs;
->+
->+	return count;
->+}
->+
-> static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
-> static struct device_attribute sriov_numvfs_attr =
-> 		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
-> 		       sriov_numvfs_show, sriov_numvfs_store);
->+static struct device_attribute sriov_probe_vfs_attr =
->+		__ATTR(sriov_probe_vfs, (S_IRUGO|S_IWUSR|S_IWGRP),
->+		       sriov_probe_vfs_show, sriov_probe_vfs_store);
-> #endif /* CONFIG_PCI_IOV */
->
-> static ssize_t driver_override_store(struct device *dev,
->@@ -1549,6 +1576,7 @@ static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
-> static struct attribute *sriov_dev_attrs[] = {
-> 	&sriov_totalvfs_attr.attr,
-> 	&sriov_numvfs_attr.attr,
->+	&sriov_probe_vfs_attr.attr,
-> 	NULL,
-> };
->
->diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
->index 8dd38e6..a62c6bf 100644
->--- a/drivers/pci/pci.h
->+++ b/drivers/pci/pci.h
->@@ -272,6 +272,7 @@ struct pci_sriov {
-> 	struct pci_dev *self;	/* this PF */
-> 	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
-> 	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
->+	bool probe_vfs;		/* probe VFs or not */
-
-It could be a bit clearer:      /* Load driver for VFs or not */
-
-> };
->
-> #ifdef CONFIG_PCI_ATS
-
-Thanks,
-Gavin
+> ePAPR (Version 1.1 -- 08 April) provides a formal definition
+> 
+> 2.3.9 dma-ranges
+> 
+> Property: dma-ranges
+> 
+> Value type: <empty> or <prop-encoded-array> encoded as arbitrary number
+> of triplets of (child-bus-address, parent-bus-address, length).
+> 
+> Description:
+> 
+> The dma-ranges property is used to describe the direct memory access (DMA) structure of a
+> memory-mapped bus whose device tree parent can be accessed from DMA operations
+> originating from the bus. It provides a means of defining a mapping or translation between the
+> physical address space of the bus and the physical address space of the parent of the bus.
+> The format of the value of the dma-ranges property is an arbitrary number of triplets of
+> (child-bus-address, parent-bus-address, length). Each triplet specified describes a contiguous
+> DMA address range.
+> 
+> o The child-bus-address is a physical address within the child bus' address space. The
+> number of cells to represent the address depends on the bus and can be determined
+> from the #address-cells of this node (the node in which the dma-ranges property
+> appears).
+> 
+> o The parent-bus-address is a physical address within the parent bus' address space.
+> The number of cells to represent the parent address is bus dependent and can be
+> determined from the #address-cells property of the node that defines the parent's
+> address space.
+> 
+> o The length specifies the size of the range in the child's address space. The number of
+> cells to represent the size can be determined from the #size-cells of this node (the
+> node in which the dma-ranges property appears).
+> 
+> 
+> I'm still digging :-)
+> 
+> Regards.
+> 
