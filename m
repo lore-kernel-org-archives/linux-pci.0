@@ -1,72 +1,443 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 21/29] drivers, s390: convert fc_fcp_pkt.ref_cnt from
- atomic_t to refcount_t
-To: "Reshetova, Elena" <elena.reshetova@intel.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-22-git-send-email-elena.reshetova@intel.com>
- <536a58ba-8896-5639-cab9-bd2f13bed325@suse.de>
- <2236FBA76BA1254E88B949DDB74E612B41C5615F@IRSMSX102.ger.corp.intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux1394-devel@lists.sourceforge.net"
-        <linux1394-devel@lists.sourceforge.net>,
-        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-        "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
-        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Message-ID: <36e6c54c-5e4b-fe16-86e2-fdef7a52d048@suse.de>
-Date: Wed, 8 Mar 2017 15:06:53 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:9527 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753564AbdCMO0O (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2017 10:26:14 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v4 12/23] PCI: dwc: dra7xx: Add EP mode support
+Date: Mon, 13 Mar 2017 19:52:48 +0530
+Message-ID: <20170313142259.25397-13-kishon@ti.com>
+In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
+References: <20170313142259.25397-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C5615F@IRSMSX102.ger.corp.intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/08/2017 02:48 PM, Reshetova, Elena wrote:
->> On 03/06/2017 03:21 PM, Elena Reshetova wrote:
->>> refcount_t type and corresponding API should be
->>> used instead of atomic_t when the variable is used as
->>> a reference counter. This allows to avoid accidental
->>> refcounter overflows that might lead to use-after-free
->>> situations.
->>
->> The subject is wrong, should be something like "scsi: libfc convert
->> fc_fcp_pkt.ref_cnt from atomic_t to refcount_t" but not s390.
->>
->> Other than that
->> Acked-by: Johannes Thumshirn <jth@kernel.org>
->
-> Turns out that it is better that all these patches go through the respective maintainer trees, if present.
-> If I send an updated patch (with subject fixed), could you merge it through your tree?
+The PCIe controller integrated in dra7xx SoCs is capable of operating
+in endpoint mode. Add endpoint mode support to dra7xx driver.
 
-Yes, but this would be the normal scsi tree from Martin and James.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/Kconfig           |  31 +++++-
+ drivers/pci/dwc/Makefile          |   4 +-
+ drivers/pci/dwc/pci-dra7xx.c      | 197 +++++++++++++++++++++++++++++++++++---
+ drivers/pci/dwc/pcie-designware.h |   7 ++
+ 4 files changed, 221 insertions(+), 18 deletions(-)
 
-Please include my Ack in the re-sends.
-
-Thanks a lot,
-	Johannes
-
-
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index 00335c71404e..96e6d17d2ae1 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -16,14 +16,37 @@ config PCIE_DW_EP
+ 
+ config PCI_DRA7XX
+ 	bool "TI DRA7xx PCIe controller"
+-	depends on PCI
++	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
++	help
++	 Enables support for the PCIe controller in the DRA7xx SoC. There
++	 are two instances of PCIe controller in DRA7xx. This controller can
++	 work either as EP or RC. In order to enable host specific features
++	 PCI_DRA7XX_HOST must be selected and in order to enable device
++	 specific features PCI_DRA7XX_EP must be selected. This uses
++	 the Designware core.
++
++if PCI_DRA7XX
++
++config PCI_DRA7XX_HOST
++	bool "PCI DRA7xx Host Mode"
++	depends on PCI
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW_HOST
++	default y
+ 	help
+-	 Enables support for the PCIe controller in the DRA7xx SoC.  There
+-	 are two instances of PCIe controller in DRA7xx.  This controller can
+-	 act both as EP and RC.  This reuses the Designware core.
++	 Enables support for the PCIe controller in the DRA7xx SoC to work in
++	 host mode.
++
++config PCI_DRA7XX_EP
++	bool "PCI DRA7xx Endpoint Mode"
++	depends on PCI_ENDPOINT
++	select PCIE_DW_EP
++	help
++	 Enables support for the PCIe controller in the DRA7xx SoC to work in
++	 endpoint mode.
++
++endif
+ 
+ config PCIE_DW_PLAT
+ 	bool "Platform bus based DesignWare PCIe Controller"
+diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+index b38425d36200..f31a8596442a 100644
+--- a/drivers/pci/dwc/Makefile
++++ b/drivers/pci/dwc/Makefile
+@@ -2,7 +2,9 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+ obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+ obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
+ obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+-obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
++ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
++        obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
++endif
+ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index d78974d20360..35c18534469c 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -10,12 +10,14 @@
+  * published by the Free Software Foundation.
+  */
+ 
++#include <linux/delay.h>
+ #include <linux/err.h>
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
++#include <linux/of_device.h>
+ #include <linux/of_gpio.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci.h>
+@@ -57,6 +59,11 @@
+ #define	MSI						BIT(4)
+ #define	LEG_EP_INTERRUPTS (INTA | INTB | INTC | INTD)
+ 
++#define	PCIECTRL_TI_CONF_DEVICE_TYPE			0x0100
++#define	DEVICE_TYPE_EP					0x0
++#define	DEVICE_TYPE_LEG_EP				0x1
++#define	DEVICE_TYPE_RC					0x4
++
+ #define	PCIECTRL_DRA7XX_CONF_DEVICE_CMD			0x0104
+ #define	LTSSM_EN					0x1
+ 
+@@ -66,6 +73,13 @@
+ 
+ #define EXP_CAP_ID_OFFSET				0x70
+ 
++#define	PCIECTRL_TI_CONF_INTX_ASSERT			0x0124
++#define	PCIECTRL_TI_CONF_INTX_DEASSERT			0x0128
++
++#define	PCIECTRL_TI_CONF_MSI_XMT			0x012c
++#define MSI_REQ_GRANT					BIT(0)
++#define MSI_VECTOR_SHIFT				7
++
+ struct dra7xx_pcie {
+ 	struct dw_pcie		*pci;
+ 	void __iomem		*base;		/* DT ti_conf */
+@@ -73,6 +87,11 @@ struct dra7xx_pcie {
+ 	struct phy		**phy;
+ 	int			link_gen;
+ 	struct irq_domain	*irq_domain;
++	enum dw_pcie_device_mode mode;
++};
++
++struct dra7xx_pcie_of_data {
++	enum dw_pcie_device_mode mode;
+ };
+ 
+ #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
+@@ -101,9 +120,19 @@ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
+ 	return !!(reg & LINK_UP);
+ }
+ 
+-static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
++static void dra7xx_pcie_stop_link(struct dw_pcie *pci)
+ {
+-	struct dw_pcie *pci = dra7xx->pci;
++	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
++	u32 reg;
++
++	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
++	reg &= ~LTSSM_EN;
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
++}
++
++static int dra7xx_pcie_establish_link(struct dw_pcie *pci)
++{
++	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+ 	struct device *dev = pci->dev;
+ 	u32 reg;
+ 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
+@@ -137,7 +166,7 @@ static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
+ 	reg |= LTSSM_EN;
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+ 
+-	return dw_pcie_wait_for_link(pci);
++	return 0;
+ }
+ 
+ static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+@@ -171,7 +200,8 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+ 
+ 	dw_pcie_setup_rc(pp);
+ 
+-	dra7xx_pcie_establish_link(dra7xx);
++	dra7xx_pcie_establish_link(pci);
++	dw_pcie_wait_for_link(pci);
+ 	dw_pcie_msi_init(pp);
+ 	dra7xx_pcie_enable_interrupts(dra7xx);
+ }
+@@ -249,6 +279,7 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	struct dra7xx_pcie *dra7xx = arg;
+ 	struct dw_pcie *pci = dra7xx->pci;
+ 	struct device *dev = pci->dev;
++	struct dw_pcie_ep *ep = &pci->ep;
+ 	u32 reg;
+ 
+ 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
+@@ -285,8 +316,11 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	if (reg & LINK_REQ_RST)
+ 		dev_dbg(dev, "Link Request Reset\n");
+ 
+-	if (reg & LINK_UP_EVT)
++	if (reg & LINK_UP_EVT) {
++		if (dra7xx->mode == DW_PCIE_EP_TYPE)
++			dw_pcie_ep_linkup(ep);
+ 		dev_dbg(dev, "Link-up state change\n");
++	}
+ 
+ 	if (reg & CFG_BME_EVT)
+ 		dev_dbg(dev, "CFG 'Bus Master Enable' change\n");
+@@ -299,6 +333,94 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
++static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
++
++	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
++}
++
++static void dra7xx_pcie_raise_legacy_irq(struct dra7xx_pcie *dra7xx)
++{
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_INTX_ASSERT, 0x1);
++	mdelay(1);
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_INTX_DEASSERT, 0x1);
++}
++
++static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
++				      u8 interrupt_num)
++{
++	u32 reg;
++
++	reg = (interrupt_num - 1) << MSI_VECTOR_SHIFT;
++	reg |= MSI_REQ_GRANT;
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_MSI_XMT, reg);
++}
++
++static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep,
++				 enum pci_epc_irq_type type, u8 interrupt_num)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
++
++	switch (type) {
++	case PCI_EPC_IRQ_LEGACY:
++		dra7xx_pcie_raise_legacy_irq(dra7xx);
++		break;
++	case PCI_EPC_IRQ_MSI:
++		dra7xx_pcie_raise_msi_irq(dra7xx, interrupt_num);
++		break;
++	default:
++		dev_err(pci->dev, "UNKNOWN IRQ type\n");
++	}
++
++	return 0;
++}
++
++static struct dw_pcie_ep_ops pcie_ep_ops = {
++	.ep_init = dra7xx_pcie_ep_init,
++	.raise_irq = dra7xx_pcie_raise_irq,
++};
++
++static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
++				     struct platform_device *pdev)
++{
++	int ret;
++	struct dw_pcie_ep *ep;
++	struct resource *res;
++	struct device *dev = &pdev->dev;
++	struct dw_pcie *pci = dra7xx->pci;
++
++	ep = &pci->ep;
++	ep->ops = &pcie_ep_ops;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
++	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
++	if (!pci->dbi_base)
++		return -ENOMEM;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
++	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
++	if (!pci->dbi_base2)
++		return -ENOMEM;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
++	if (!res)
++		return -EINVAL;
++
++	ep->phys_base = res->start;
++	ep->addr_size = resource_size(res);
++
++	ret = dw_pcie_ep_init(ep);
++	if (ret) {
++		dev_err(dev, "failed to initialize endpoint\n");
++		return ret;
++	}
++
++	return 0;
++}
++
+ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 				       struct platform_device *pdev)
+ {
+@@ -342,6 +464,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 
+ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.cpu_addr_fixup = dra7xx_pcie_cpu_addr_fixup,
++	.start_link = dra7xx_pcie_establish_link,
++	.stop_link = dra7xx_pcie_stop_link,
+ 	.link_up = dra7xx_pcie_link_up,
+ };
+ 
+@@ -384,6 +508,26 @@ static int dra7xx_pcie_enable_phy(struct dra7xx_pcie *dra7xx)
+ 	return ret;
+ }
+ 
++static const struct dra7xx_pcie_of_data dra7xx_pcie_rc_of_data = {
++	.mode = DW_PCIE_RC_TYPE,
++};
++
++static const struct dra7xx_pcie_of_data dra7xx_pcie_ep_of_data = {
++	.mode = DW_PCIE_EP_TYPE,
++};
++
++static const struct of_device_id of_dra7xx_pcie_match[] = {
++	{
++		.compatible = "ti,dra7-pcie",
++		.data = &dra7xx_pcie_rc_of_data,
++	},
++	{
++		.compatible = "ti,dra7-pcie-ep",
++		.data = &dra7xx_pcie_ep_of_data,
++	},
++	{},
++};
++
+ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ {
+ 	u32 reg;
+@@ -401,6 +545,16 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	struct device_node *np = dev->of_node;
+ 	char name[10];
+ 	struct gpio_desc *reset;
++	const struct of_device_id *match;
++	const struct dra7xx_pcie_of_data *data;
++	enum dw_pcie_device_mode mode;
++
++	match = of_match_device(of_match_ptr(of_dra7xx_pcie_match), dev);
++	if (!match)
++		return -EINVAL;
++
++	data = (struct dra7xx_pcie_of_data *)match->data;
++	mode = (enum dw_pcie_device_mode)data->mode;
+ 
+ 	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
+ 	if (!dra7xx)
+@@ -479,9 +633,25 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	if (dra7xx->link_gen < 0 || dra7xx->link_gen > 2)
+ 		dra7xx->link_gen = 2;
+ 
+-	ret = dra7xx_add_pcie_port(dra7xx, pdev);
+-	if (ret < 0)
+-		goto err_gpio;
++	switch (mode) {
++	case DW_PCIE_RC_TYPE:
++		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
++				   DEVICE_TYPE_RC);
++		ret = dra7xx_add_pcie_port(dra7xx, pdev);
++		if (ret < 0)
++			goto err_gpio;
++		break;
++	case DW_PCIE_EP_TYPE:
++		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
++				   DEVICE_TYPE_EP);
++		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
++		if (ret < 0)
++			goto err_gpio;
++		break;
++	default:
++		dev_err(dev, "INVALID device type %d\n", mode);
++	}
++	dra7xx->mode = mode;
+ 
+ 	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
+ 			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
+@@ -509,6 +679,9 @@ static int dra7xx_pcie_suspend(struct device *dev)
+ 	struct dw_pcie *pci = dra7xx->pci;
+ 	u32 val;
+ 
++	if (dra7xx->mode != DW_PCIE_RC_TYPE)
++		return 0;
++
+ 	/* clear MSE */
+ 	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
+ 	val &= ~PCI_COMMAND_MEMORY;
+@@ -523,6 +696,9 @@ static int dra7xx_pcie_resume(struct device *dev)
+ 	struct dw_pcie *pci = dra7xx->pci;
+ 	u32 val;
+ 
++	if (dra7xx->mode != DW_PCIE_RC_TYPE)
++		return 0;
++
+ 	/* set MSE */
+ 	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
+ 	val |= PCI_COMMAND_MEMORY;
+@@ -561,11 +737,6 @@ static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
+ 				      dra7xx_pcie_resume_noirq)
+ };
+ 
+-static const struct of_device_id of_dra7xx_pcie_match[] = {
+-	{ .compatible = "ti,dra7-pcie", },
+-	{},
+-};
+-
+ static struct platform_driver dra7xx_pcie_driver = {
+ 	.driver = {
+ 		.name	= "dra7-pcie",
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 3cafba40abbc..c6a840575796 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -120,6 +120,13 @@ enum dw_pcie_region_type {
+ 	DW_PCIE_REGION_OUTBOUND,
+ };
+ 
++enum dw_pcie_device_mode {
++	DW_PCIE_UNKNOWN_TYPE,
++	DW_PCIE_EP_TYPE,
++	DW_PCIE_LEG_EP_TYPE,
++	DW_PCIE_RC_TYPE,
++};
++
+ struct dw_pcie_host_ops {
+ 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
+ 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.11.0
