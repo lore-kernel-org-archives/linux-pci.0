@@ -1,81 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43586 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751795AbdCHIqi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 8 Mar 2017 03:46:38 -0500
-Date: Wed, 8 Mar 2017 09:46:02 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
-        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
-        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
-        gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
-        akpm@linux-foundation.org, davem@davemloft.net
-Subject: Re: [RFC PATCH v2 09/32] x86: Change early_ioremap to early_memremap
- for BOOT data
-Message-ID: <20170308084602.z6t44k2izdum3w3v@pd.tnic>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846763334.2349.9327692408737971533.stgit@brijesh-build-machine>
+Return-Path: <SRS0=z6/A=2W=arm.com=robin.murphy@kernel.org>
+Return-Path: <SRS0=z6/A=2W=arm.com=robin.murphy@kernel.org>
+Subject: Re: Legacy features in PCI Express devices
+To: Mason <slash.tmp@free.fr>, linux-pci <linux-pci@vger.kernel.org>
+References: <ef5c9778-fbae-9f4f-ac2e-29b8597537a5@free.fr>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, David Laight
+ <david.laight@aculab.com>, Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ netdev <netdev@vger.kernel.org>, Tim Harvey <tharvey@gateworks.com>,
+ Arnd Bergmann <arnd@arndb.de>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <96b57ba5-641d-46c8-6ba0-cee2c0613a6f@arm.com>
+Date: Mon, 13 Mar 2017 17:12:41 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <148846763334.2349.9327692408737971533.stgit@brijesh-build-machine>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <ef5c9778-fbae-9f4f-ac2e-29b8597537a5@free.fr>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 02, 2017 at 10:13:53AM -0500, Brijesh Singh wrote:
-> From: Tom Lendacky <thomas.lendacky@amd.com>
+On 13/03/17 16:10, Mason wrote:
+> Hello,
 > 
-> In order to map BOOT data with the proper encryption bit, the
-
-Btw, what does that all-caps spelling "BOOT" denote? Something I'm
-missing?
-
-> early_ioremap() function calls are changed to early_memremap() calls.
-> This allows the proper access for both SME and SEV.
+> There are two revisions of our PCI Express controller.
 > 
-> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
-> ---
->  arch/x86/kernel/acpi/boot.c |    4 ++--
->  arch/x86/kernel/mpparse.c   |   10 +++++-----
->  drivers/sfi/sfi_core.c      |    6 +++---
->  3 files changed, 10 insertions(+), 10 deletions(-)
+> Rev 1 did not support the following features:
 > 
-> diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-> index 35174c6..468c25a 100644
-> --- a/arch/x86/kernel/acpi/boot.c
-> +++ b/arch/x86/kernel/acpi/boot.c
-> @@ -124,7 +124,7 @@ char *__init __acpi_map_table(unsigned long phys, unsigned long size)
->  	if (!phys || !size)
->  		return NULL;
->  
-> -	return early_ioremap(phys, size);
-> +	return early_memremap(phys, size);
+>   1) legacy PCI interrupt delivery (INTx signals)
+>   2) I/O address space
+> 
+> Internally, someone stated that such missing support would prevent
+> some PCIe cards from working with our controller.
+> 
+> Are there really modern PCIe cards that require 1) and/or 2)
+> to function?
+> 
+> Can someone provide examples of such cards, so that I may test them
+> on both revisions?
+> 
+> I was told to check ath9k-based cards. Any other examples?
+> 
+> Looking around, I came across this thread:
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2016-March/418254.html
+> "i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity"
+> 
+> IIUC, although some PCIe boards do support MSI, the driver might not
+> put in the work to use that infrastructure, and instead reverts to
+> legacy interrupts. (So it is a SW issue, in a sense.)
 
-Right, the question will keep popping up why we can simply replace
-memremap with ioremap and the general difference wrt to SME/SEV. So it
-would be a good idea to have a comment in, say, arch/x86/mm/ioremap.c,
-explaining the general situation.
+Secondary to that category is endpoints which nominally support MSI, but
+in a way which is unreliable or otherwise broken. My experience shows
+that the Silicon Image SiI 3132 (as integrated on ARM Juno boards, but
+seemingly also relatively common on 'generic' 2-port SATA cards) falls
+into that category - using the command-line parameter to force MSIs
+instead of legacy interrupts leads to the the machine barely reaching
+userspace before something goes horribly wrong:
 
-Thanks.
+...
+         Activating swap Swap Partition...
+[   10.817806] Adding 524284k swap on /dev/sda2.  Priority:-1 extents:1
+across:524284k SS
+         Starting File System Check on /dev/disk/by-uuid/1000-9346...
+[  OK  ] Activated swap Swap Partition.
+[  OK  ] Activated swap
+/dev/disk/by-partuui…6cda4-9f73-4e26-bf19-e71f9319b5ce.
+[  OK  ] Reached target Swap.
+         Mounting Temporary Directory...
+[  OK  ] Mounted Temporary Directory.
+[  OK  ] Started File System Check on /dev/disk/by-uuid/1000-9346.
+[   46.036065] Unhandled fault: synchronous external abort (0x96000210)
+at 0xffff0000092f5000
+[   46.044273] Internal error: : 96000210 [#1] PREEMPT SMP
+[   46.049445] Modules linked in:
+[   46.052474] CPU: 0 PID: 122 Comm: scsi_eh_0 Not tainted 4.11.0-rc1+ #1753
+[   46.059192] Hardware name: ARM Juno development board (r1) (DT)
+[   46.065052] task: ffff8009763b8000 task.stack: ffff800975f70000
+[   46.070918] PC is at ata_wait_register+0x2c/0xa0
+[   46.075491] LR is at sil24_init_port+0x60/0x110
+[   46.079974] pc : [<ffff0000085b342c>] lr : [<ffff0000085d2b78>]
+pstate: 40000145
+...
 
--- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+Robin.
