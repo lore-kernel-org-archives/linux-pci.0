@@ -1,119 +1,128 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 3 Mar 2017 15:09:26 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [RFC PATCH 03/30] PCI: Move ATS declarations outside of CONFIG_PCI
-Message-ID: <20170303210926.GB31767@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-4-jean-philippe.brucker@arm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: helgaas@kernel.org, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
+Date: Mon, 13 Mar 2017 13:41:36 +0100
+Message-Id: <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <20170227195441.5170-4-jean-philippe.brucker@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
- linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 27, 2017 at 07:54:14PM +0000, Jean-Philippe Brucker wrote:
-> Currently ATS helpers like pci_enable_ats are only defined when CONFIG_PCI
-> is enabled. The ARM SMMU driver might get built with CONFIG_PCI disabled.
-> It would thus have to wrap any use of ATS helpers around #ifdef
-> CONFIG_PCI, which isn't ideal.
-> 
-> A nicer solution is to always define these helpers. Since CONFIG_PCI_ATS
-> is only enabled in association with CONFIG_PCI, move defines outside of
-> CONFIG_PCI to prevent build failure when PCI is disabled.
-> 
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+From: Christian König <christian.koenig@amd.com>
 
-I don't think there's any reason to make a pci_ats_init() stub when
-CONFIG_PCI is not enabled, because it's only called from the PCI core.
-But it does make some sense to keep them all together in one place.
+Try to resize BAR0 to let CPU access all of VRAM.
 
-I think you could also remove the #ifdef CONFIG_PCI_ATS in
-arm_smmu_enable_ats() ("[RFC PATCH 04/30] iommu/arm-smmu-v3: Add
-support for PCI ATS"), right?
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 29 +++++++++++++++++++++++++++++
+ drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 +++++---
+ drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 +++++---
+ 4 files changed, 40 insertions(+), 6 deletions(-)
 
-If you remove the #ifdef, we'll call pci_enable_ats(), and it will
-fail if !pdev->ats_cap.
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  include/linux/pci.h | 26 +++++++++++++-------------
->  1 file changed, 13 insertions(+), 13 deletions(-)
-> 
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 282ed32244ce..e606f289bf5f 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1418,19 +1418,6 @@ int  ht_create_irq(struct pci_dev *dev, int idx);
->  void ht_destroy_irq(unsigned int irq);
->  #endif /* CONFIG_HT_IRQ */
->  
-> -#ifdef CONFIG_PCI_ATS
-> -/* Address Translation Service */
-> -void pci_ats_init(struct pci_dev *dev);
-> -int pci_enable_ats(struct pci_dev *dev, int ps);
-> -void pci_disable_ats(struct pci_dev *dev);
-> -int pci_ats_queue_depth(struct pci_dev *dev);
-> -#else
-> -static inline void pci_ats_init(struct pci_dev *d) { }
-> -static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
-> -static inline void pci_disable_ats(struct pci_dev *d) { }
-> -static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
-> -#endif
-> -
->  #ifdef CONFIG_PCIE_PTM
->  int pci_enable_ptm(struct pci_dev *dev, u8 *granularity);
->  #else
-> @@ -1616,6 +1603,19 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
->  #define dev_is_pf(d) (false)
->  #endif /* CONFIG_PCI */
->  
-> +#ifdef CONFIG_PCI_ATS
-> +/* Address Translation Service */
-> +void pci_ats_init(struct pci_dev *dev);
-> +int pci_enable_ats(struct pci_dev *dev, int ps);
-> +void pci_disable_ats(struct pci_dev *dev);
-> +int pci_ats_queue_depth(struct pci_dev *dev);
-> +#else
-> +static inline void pci_ats_init(struct pci_dev *d) { }
-> +static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
-> +static inline void pci_disable_ats(struct pci_dev *d) { }
-> +static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
-> +#endif
-> +
->  /* Include architecture-dependent settings and functions */
->  
->  #include <asm/pci.h>
-> -- 
-> 2.11.0
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+index 3b81ded..905ded9 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+@@ -1719,6 +1719,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct amdgpu_device *adev, struct ttm_tt *ttm,
+ 				 struct ttm_mem_reg *mem);
+ void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_mc *mc, u64 base);
+ void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc);
++void amdgpu_resize_bar0(struct amdgpu_device *adev);
+ void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64 size);
+ int amdgpu_ttm_init(struct amdgpu_device *adev);
+ void amdgpu_ttm_fini(struct amdgpu_device *adev);
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+index 118f4e6..92955fe 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+@@ -692,6 +692,35 @@ void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc)
+ 			mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end);
+ }
+ 
++/**
++ * amdgpu_resize_bar0 - try to resize BAR0
++ *
++ * @adev: amdgpu_device pointer
++ *
++ * Try to resize BAR0 to make all VRAM CPU accessible.
++ */
++void amdgpu_resize_bar0(struct amdgpu_device *adev)
++{
++	u32 size = max(ilog2(adev->mc.real_vram_size - 1) + 1, 20) - 20;
++	int r;
++
++	r = pci_resize_resource(adev->pdev, 0, size);
++
++	if (r == -ENOTSUPP) {
++		/* The hardware don't support the extension. */
++		return;
++
++	} else if (r == -ENOSPC) {
++		DRM_INFO("Not enoigh PCI address space for a large BAR.");
++	} else if (r) {
++		DRM_ERROR("Problem resizing BAR0 (%d).", r);
++	}
++
++	/* Reinit the doorbell mapping, it is most likely moved as well */
++	amdgpu_doorbell_fini(adev);
++	BUG_ON(amdgpu_doorbell_init(adev));
++}
++
+ /*
+  * GPU helpers function.
+  */
+diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+index dc9b6d6..36a7aa5 100644
+--- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
++++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+@@ -367,13 +367,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device *adev)
+ 		break;
+ 	}
+ 	adev->mc.vram_width = numchan * chansize;
+-	/* Could aper size report 0 ? */
+-	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
+-	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+ 	/* size in MB on si */
+ 	adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+ 	adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+ 
++	if (!(adev->flags & AMD_IS_APU))
++		amdgpu_resize_bar0(adev);
++	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
++	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
++
+ #ifdef CONFIG_X86_64
+ 	if (adev->flags & AMD_IS_APU) {
+ 		adev->mc.aper_base = ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
+diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+index c087b00..7761ad3 100644
+--- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
++++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+@@ -459,13 +459,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device *adev)
+ 		break;
+ 	}
+ 	adev->mc.vram_width = numchan * chansize;
+-	/* Could aper size report 0 ? */
+-	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
+-	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+ 	/* size in MB on si */
+ 	adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+ 	adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+ 
++	if (!(adev->flags & AMD_IS_APU))
++		amdgpu_resize_bar0(adev);
++	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
++	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
++
+ #ifdef CONFIG_X86_64
+ 	if (adev->flags & AMD_IS_APU) {
+ 		adev->mc.aper_base = ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
+-- 
+2.7.4
