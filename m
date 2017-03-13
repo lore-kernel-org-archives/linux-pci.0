@@ -1,52 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0066.outbound.protection.outlook.com ([104.47.33.66]:35293
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752363AbdC1VNd (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Mar 2017 17:13:33 -0400
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: 'Joerg Roedel' <jroedel@suse.de>
-CC: 'Joerg Roedel' <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        "Nath, Arindam" <Arindam.Nath@amd.com>
-Subject: RE: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
-Date: Tue, 28 Mar 2017 21:13:23 +0000
-Message-ID: <BN6PR12MB165289163EA3548B59D0C1ACF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
-References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
- <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328202844.GQ8329@suse.de>
- <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328205616.GR8329@suse.de>
-In-Reply-To: <20170328205616.GR8329@suse.de>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v4 13/23] dt-bindings: PCI: dra7xx: Add dt bindings for pci
+ dra7xx EP mode
+Date: Mon, 13 Mar 2017 19:52:49 +0530
+Message-ID: <20170313142259.25397-14-kishon@ti.com>
+In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
+References: <20170313142259.25397-1-kishon@ti.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: 'Joerg Roedel' [mailto:jroedel@suse.de]
-> Sent: Tuesday, March 28, 2017 4:56 PM
-> To: Deucher, Alexander
-> Cc: 'Joerg Roedel'; Bjorn Helgaas; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Daniel Drake; Nath, Arindam
-> Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
->=20
-> On Tue, Mar 28, 2017 at 08:37:01PM +0000, Deucher, Alexander wrote:
-> > The question is, could the problem stem from flushing an entity that
-> > didn't request it, or should that not matter?  I guess it shouldn't
-> > matter otherwise we'd see this on other platforms like Carrizo as
-> > well.
->=20
-> What do you mean by "didn't request it"? The IOMMU driver only sends
-> io/tlb invalidations to devices it enabled ATS on.
+Add device tree binding documentation for pci dra7xx EP mode.
 
-If I understand Arindam's patch correctly, it only flushes TLB entries for =
-domains in the flush queue whereas the previous behavior was to flush all d=
-omains.  If there was no TLB flush in the queue for that domain, could flus=
-hing it cause a problem?  Sorry, I'm not too familiar with the IOMMU code o=
-r ATS.
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/devicetree/bindings/pci/ti-pci.txt | 37 +++++++++++++++++++-----
+ 1 file changed, 30 insertions(+), 7 deletions(-)
 
-Alex
+diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+index 60e25161f351..190828a5f32a 100644
+--- a/Documentation/devicetree/bindings/pci/ti-pci.txt
++++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+@@ -1,17 +1,22 @@
+ TI PCI Controllers
+ 
+ PCIe Designware Controller
+- - compatible: Should be "ti,dra7-pcie""
+- - reg : Two register ranges as listed in the reg-names property
+- - reg-names : The first entry must be "ti-conf" for the TI specific registers
+-	       The second entry must be "rc-dbics" for the designware pcie
+-	       registers
+-	       The third entry must be "config" for the PCIe configuration space
++ - compatible: Should be "ti,dra7-pcie" for RC
++	       Should be "ti,dra7-pcie-ep" for EP
+  - phys : list of PHY specifiers (used by generic PHY framework)
+  - phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
+ 	       number of PHYs as specified in *phys* property.
+  - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
+ 	       where <X> is the instance number of the pcie from the HW spec.
++ - num-lanes as specified in ../designware-pcie.txt
++
++HOST MODE
++=========
++ - reg : Two register ranges as listed in the reg-names property
++ - reg-names : The first entry must be "ti-conf" for the TI specific registers
++	       The second entry must be "rc-dbics" for the designware pcie
++	       registers
++	       The third entry must be "config" for the PCIe configuration space
+  - interrupts : Two interrupt entries must be specified. The first one is for
+ 		main interrupt line and the second for MSI interrupt line.
+  - #address-cells,
+@@ -19,13 +24,31 @@ PCIe Designware Controller
+    #interrupt-cells,
+    device_type,
+    ranges,
+-   num-lanes,
+    interrupt-map-mask,
+    interrupt-map : as specified in ../designware-pcie.txt
+ 
++DEVICE MODE
++===========
++ - reg : Four register ranges as listed in the reg-names property
++ - reg-names : "ti-conf" for the TI specific registers
++	       "ep_dbics" for the standard configuration registers as
++		they are locally accessed within the DIF CS space
++	       "ep_dbics2" for the standard configuration registers as
++		they are locally accessed within the DIF CS2 space
++	       "addr_space" used to map remote RC address space
++ - interrupts : one interrupt entries must be specified for main interrupt.
++ - num-ib-windows : number of inbound address translation windows
++ - num-ob-windows : number of outbound address translation windows
++
+ Optional Property:
+  - gpios : Should be added if a gpio line is required to drive PERST# line
+ 
++NOTE: Two dt nodes may be added for each PCI controller; one for host
++mode and another for device mode. So in order for PCI to
++work in host mode, EP mode dt node should be disabled and in order to PCI to
++work in EP mode, host mode dt node should be disabled. And host mode and EP
++mode are mutually exclusive.
++
+ Example:
+ axi {
+ 	compatible = "simple-bus";
+-- 
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
