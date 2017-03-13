@@ -1,151 +1,199 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:60174 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752369AbdC0KBh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Mar 2017 06:01:37 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Russell King <linux@armlinux.org.uk>,
-        Will Deacon <will.deacon@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        John Garry <john.garry@huawei.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v2 06/22] ARM: implement ioremap_nopost() interface
-Date: Mon, 27 Mar 2017 10:49:34 +0100
-Message-Id: <20170327094954.7162-7-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: helgaas@kernel.org, linux-pci@vger.kernel.org,
+        dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 1/4] PCI: add resizeable BAR infrastructure v3
+Date: Mon, 13 Mar 2017 13:41:33 +0100
+Message-Id: <1489408896-25039-2-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI bus specifications (rev 3.0, 3.2.5 "Transaction Ordering
-and Posting") define rules for PCI configuration space transactions
-ordering and posting, that state that configuration writes have to
-be non-posted transactions.
+From: Christian König <christian.koenig@amd.com>
 
-Current ioremap interface on ARM provides mapping functions that
-provide "bufferable" writes transactions (ie ioremap uses MT_DEVICE
-memory type) aka posted writes, so PCI host controller drivers have
-no arch interface to remap PCI configuration space with memory
-attributes that comply with the PCI specifications for configuration
-space.
+Just the defines and helper functions to read the possible sizes of a BAR and
+update it's size.
 
-Implement an ARM specific ioremap_nopost() interface that allows to
-map PCI config memory regions with MT_UNCACHED memory type (ie strongly
-ordered - non-posted writes), providing a remap function that complies
-with PCI specifications for config space transactions.
+See https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Russell King <linux@armlinux.org.uk>
+This is useful for hardware with large local storage (mostly GFX) which only
+expose 256MB BARs initially to be compatible with 32bit systems.
+
+v2: provide read helper as well
+v3: improve function names, use unsigned values, add better comments.
+
+Signed-off-by: Christian König <christian.koenig@amd.com>
 ---
- arch/arm/include/asm/io.h | 10 ++++++++++
- arch/arm/mm/ioremap.c     |  7 +++++++
- arch/arm/mm/nommu.c       |  9 +++++++++
- 3 files changed, 26 insertions(+)
+ drivers/pci/pci.c             | 115 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h           |   3 ++
+ include/uapi/linux/pci_regs.h |   7 +++
+ 3 files changed, 125 insertions(+)
 
-diff --git a/arch/arm/include/asm/io.h b/arch/arm/include/asm/io.h
-index 42871fb..49913d1 100644
---- a/arch/arm/include/asm/io.h
-+++ b/arch/arm/include/asm/io.h
-@@ -352,6 +352,7 @@ static inline void memcpy_toio(volatile void __iomem *to, const void *from,
-  * mapping has specific properties.
-  *
-  * Function		Memory type	Cacheability	Cache hint
-+ * ioremap_nopost()	SO		n/a		n/a
-  * ioremap()		Device		n/a		n/a
-  * ioremap_nocache()	Device		n/a		n/a
-  * ioremap_cache()	Normal		Writeback	Read allocate
-@@ -372,6 +373,12 @@ static inline void memcpy_toio(volatile void __iomem *to, const void *from,
-  * compiler may generate unaligned accesses - eg, via inlining its own
-  * memcpy.
-  *
-+ * ioremap_nopost() maps memory as strongly ordered, to be used for
-+ * specific mappings (eg PCI config space) that require non-posted
-+ * write transactions. Strongly ordered transactions are ordered wrt
-+ * device mappings, which means that ioremap_nopost() is the same
-+ * as ioremap() except for non-posted writes behaviour.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ba34907..c2d9f78 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2944,6 +2944,121 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+ }
+ 
+ /**
++ * pci_rbar_get_possible_sizes - get possible sizes for BAR
++ * @dev: PCI device
++ * @bar: BAR to query
 + *
-  * All normal memory mappings have the following properties:
-  * - reads can be repeated with no side effects
-  * - repeated reads return the last value written
-@@ -407,6 +414,9 @@ void __iomem *ioremap_wc(resource_size_t res_cookie, size_t size);
- #define ioremap_wc ioremap_wc
- #define ioremap_wt ioremap_wc
- 
-+void __iomem *ioremap_nopost(resource_size_t res_cookie, size_t size);
-+#define ioremap_nopost ioremap_nopost
-+
- void iounmap(volatile void __iomem *iomem_cookie);
- #define iounmap iounmap
- 
-diff --git a/arch/arm/mm/ioremap.c b/arch/arm/mm/ioremap.c
-index ff0eed2..4ffaf16 100644
---- a/arch/arm/mm/ioremap.c
-+++ b/arch/arm/mm/ioremap.c
-@@ -463,6 +463,13 @@ void iounmap(volatile void __iomem *cookie)
- }
- EXPORT_SYMBOL(iounmap);
- 
-+void __iomem *ioremap_nopost(resource_size_t res_cookie, size_t size)
++ * Get the possible sizes of a resizeable BAR as bitmask defined in the spec
++ * (bit 0=1MB, bit 19=512GB). Returns 0 if BAR isn't resizeable.
++ */
++u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar)
 +{
-+	return arch_ioremap_caller(res_cookie, size, MT_UNCACHED,
-+				   __builtin_return_address(0));
++	unsigned pos, nbars;
++	u32 ctrl, cap;
++	unsigned i;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return 0;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx != bar)
++			continue;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
++		return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
++			PCI_REBAR_CTRL_SIZES_SHIFT;
++	}
++
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(ioremap_nopost);
 +
- #ifdef CONFIG_PCI
- static int pci_ioremap_mem_type = MT_DEVICE;
- 
-diff --git a/arch/arm/mm/nommu.c b/arch/arm/mm/nommu.c
-index 3b5c7aa..dfd736a 100644
---- a/arch/arm/mm/nommu.c
-+++ b/arch/arm/mm/nommu.c
-@@ -21,6 +21,8 @@
- #include <asm/mpu.h>
- #include <asm/procinfo.h>
- 
-+#include <asm/mach/map.h>
-+
- #include "mm.h"
- 
- unsigned long vectors_base;
-@@ -433,6 +435,13 @@ void __iomem *ioremap_wc(resource_size_t res_cookie, size_t size)
- }
- EXPORT_SYMBOL(ioremap_wc);
- 
-+void __iomem *ioremap_nopost(resource_size_t res_cookie, size_t size)
++/**
++ * pci_rbar_get_current_size - get the current size of a BAR
++ * @dev: PCI device
++ * @bar: BAR to set size to
++ *
++ * Read the size of a BAR from the resizeable BAR config.
++ * Returns size if found or negativ error code.
++ */
++int pci_rbar_get_current_size(struct pci_dev *pdev, int bar)
 +{
-+	return __arm_ioremap_caller(res_cookie, size, MT_UNCACHED,
-+				    __builtin_return_address(0));
-+}
-+EXPORT_SYMBOL(ioremap_nopost);
++	unsigned pos, nbars;
++	u32 ctrl;
++	unsigned i;
 +
- void *arch_memremap_wb(phys_addr_t phys_addr, size_t size)
- {
- 	return (void *)phys_addr;
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return -ENOTSUPP;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx != bar)
++			continue;
++
++		return (ctrl & PCI_REBAR_CTRL_BAR_SIZE_MASK) >>
++			PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
++	}
++
++	return -ENOENT;
++}
++
++/**
++ * pci_rbar_set_size - set a new size for a BAR
++ * @dev: PCI device
++ * @bar: BAR to set size to
++ * @size: new size as defined in the spec (log2(size in bytes) - 20)
++ *
++ * Set the new size of a BAR as defined in the spec (0=1MB, 19=512GB).
++ * Returns true if resizing was successful, false otherwise.
++ */
++int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
++{
++	unsigned pos, nbars;
++	u32 ctrl;
++	unsigned i;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return -ENOTSUPP;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx != bar)
++			continue;
++
++		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE_MASK;
++		ctrl |= size << PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
++		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
++		return 0;
++	}
++
++	return -ENOENT;
++}
++
++/**
+  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+  * @dev: the PCI device
+  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a38772a..6954e50 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1946,6 +1946,9 @@ void pci_request_acs(void);
+ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+ bool pci_acs_path_enabled(struct pci_dev *start,
+ 			  struct pci_dev *end, u16 acs_flags);
++u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar);
++int pci_rbar_get_current_size(struct pci_dev *pdev, int bar);
++int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
+ 
+ #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+ #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index e5a2e68..6de29d6 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -932,9 +932,16 @@
+ #define PCI_SATA_SIZEOF_LONG	16
+ 
+ /* Resizable BARs */
++#define PCI_REBAR_CAP		4	/* capability register */
++#define  PCI_REBAR_CTRL_SIZES_MASK	(0xFFFFF << 4)	/* mask for sizes */
++#define  PCI_REBAR_CTRL_SIZES_SHIFT	4	/* shift for sizes */
+ #define PCI_REBAR_CTRL		8	/* control register */
++#define  PCI_REBAR_CTRL_BAR_IDX_MASK	(7 << 0)	/* mask for bar index */
++#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT	0	/* shift for bar index */
+ #define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # bars */
+ #define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # bars */
++#define  PCI_REBAR_CTRL_BAR_SIZE_MASK	(0x1F << 8)	/* mask for bar size */
++#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT	8	/* shift for bar size */
+ 
+ /* Dynamic Power Allocation */
+ #define PCI_DPA_CAP		4	/* capability register */
 -- 
-2.10.0
+2.7.4
