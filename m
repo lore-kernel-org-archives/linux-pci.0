@@ -1,84 +1,91 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
+        <rjw@rjwysocki.net>, <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <linux-acpi@vger.kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-serial@vger.kernel.org>,
+        <minyard@acm.org>, <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
+        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
+        <xuwei5@hisilicon.com>,
+        "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Subject: [PATCH V7 7/7] LPC: Add the ACPI LPC support
+Date: Mon, 13 Mar 2017 10:42:43 +0800
+Message-ID: <1489372963-9000-8-git-send-email-yuanzhichang@hisilicon.com>
+In-Reply-To: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
+References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <20170320070930.GB11325@b29396-OptiPlex-7040>
-References: <20170314151827.31248-1-andrew.smirnov@gmail.com>
- <20170320070930.GB11325@b29396-OptiPlex-7040>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-Date: Mon, 20 Mar 2017 10:20:56 -0700
-Message-ID: <CAHQ1cqGRc8HU52uuoycDOEesLBOCLChJEjZj2PtB+4Nket_jiA@mail.gmail.com>
-Subject: Re: [PATCH v6 0/4] i.MX7 PCI support
-To: Dong Aisheng <dongas86@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
- Fabio Estevam <fabio.estevam@nxp.com>, Andrey Yurovsky <yurovsky@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 20, 2017 at 12:09 AM, Dong Aisheng <dongas86@gmail.com> wrote:
-> On Tue, Mar 14, 2017 at 08:18:23AM -0700, Andrey Smirnov wrote:
->> Hello, everyone:
->>
->> This is a sixth iteration of the code that adds PCI-subsystem bits
->> necessary for enabling PCI support on i.MX7.
->>
->
-> ....
->
->> Andrey Smirnov (4):
->>   PCI: imx6: Add code to support i.MX7D
->>   PCI: imx6: Do not wait for speed change on i.MX7
->>   PCI: imx6: Do not switch speed if Gen2 is disabled
->>   PCI: imx6: Allow probe deferal by reset GPIO
->>
->>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 +-
->>  drivers/pci/host/pci-imx6.c                        | 199 +++++++++++++++------
->
-> Can't apply and test it.
+The patch update the _CRS of LPC children based on the relevant LIBIO
+interfaces. Then the ACPI platform device enumeration for LPC can apply the
+right I/O resource to request the system I/O space from ioport_resource and
+ensure the LPC peripherals work well.
 
-Sorry about that. I'll rebase the set and submit it as v7.
+Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/bus/hisi_lpc.c | 29 +++++++++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
->
-> The directory has been changed to drivers/pci/host/dwc/pci-imx6.c
-> since the commit below:
-> commit 950bf6388bc22c2749b8b66c501df1462639d6bd
-> Author: Kishon Vijay Abraham I <kishon@ti.com>
-> Date:   Fri Jan 6 18:22:48 2017 +0530
->
->     PCI: Move DesignWare IP support to new drivers/pci/dwc/ directory
->
->     Group all the PCI drivers that use DesignWare core in dwc directory.
->     dwc IP is capable of operating in both host mode and device mode and
->     keeping it inside the *host* directory is misleading.
->
->     Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->     Acked-by: Jingoo Han <jingoohan1@gmail.com>
->     Acked-By: Joao Pinto <jpinto@synopsys.com>
->
-> Regards
-> Dong Aisheng
->
->>  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
->>  3 files changed, 161 insertions(+), 55 deletions(-)
->>
->
->
->> --
->> 2.9.3
->>
+diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
+index 345ea12..3796b1f 100644
+--- a/drivers/bus/hisi_lpc.c
++++ b/drivers/bus/hisi_lpc.c
+@@ -464,6 +464,27 @@ static int hisilpc_host_io_register(struct device *dev,
+ 
+ 	lpcdev->io_host = range;
+ 
++	/*
++	 * For ACPI children, translate the bus-local I/O range to logical
++	 * I/O range and set it as the current resource before the children
++	 * are enumerated.
++	 */
++	if (has_acpi_companion(dev)) {
++		struct acpi_device *root, *child;
++
++		root = to_acpi_device_node(dev->fwnode);
++		/* For hisilpc, only care about the sons of host. */
++		list_for_each_entry(child, &root->children, node) {
++			int ret;
++
++			ret = acpi_set_libio_resource(child, root);
++			if (ret) {
++				dev_err(&child->dev, "set resource failed..\n");
++				return ret;
++			}
++		}
++	}
++
+ 	return 0;
+ }
+ 
+@@ -558,10 +579,18 @@ static int hisilpc_probe(struct platform_device *pdev)
+ 	{},
+ };
+ 
++#ifdef CONFIG_ACPI
++static const struct acpi_device_id hisilpc_acpi_match[] = {
++	{"HISI0191", },
++	{},
++};
++#endif
++
+ static struct platform_driver hisilpc_driver = {
+ 	.driver = {
+ 		.name           = "hisi_lpc",
+ 		.of_match_table = hisilpc_of_match,
++		.acpi_match_table = ACPI_PTR(hisilpc_acpi_match),
+ 	},
+ 	.probe = hisilpc_probe,
+ };
+-- 
+1.9.1
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
