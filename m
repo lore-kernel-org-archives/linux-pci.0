@@ -1,261 +1,153 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48088 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750991AbdCNRrJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Mar 2017 13:47:09 -0400
-Received: from int-mx13.intmail.prod.int.phx2.redhat.com (int-mx13.intmail.prod.int.phx2.redhat.com [10.5.11.26])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 0527CC054904
-        for <linux-pci@vger.kernel.org>; Tue, 14 Mar 2017 17:47:09 +0000 (UTC)
-From: Prarit Bhargava <prarit@redhat.com>
-To: linux-pci@vger.kernel.org
-Cc: Prarit Bhargava <prarit@redhat.com>
-Subject: [PATCH] pci: Add WARN_ON() for some pci= kernel parameters
-Date: Tue, 14 Mar 2017 13:46:57 -0400
-Message-Id: <1489513617-9833-1-git-send-email-prarit@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH v4 4/7] PCI: dwc: all: Modify dbi accessors to take
+ dbi_base as argument
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+References: <20170313134328.1588-1-kishon@ti.com>
+ <20170313134328.1588-5-kishon@ti.com>
+CC: <nsekhar@ti.com>, Jingoo Han <jingoohan1@gmail.com>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <8e8e984e-ac9a-f9a7-29eb-aa1c617c14c5@axis.com>
+Date: Mon, 13 Mar 2017 15:30:46 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170313134328.1588-5-kishon@ti.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn, sorry for not getting back to this.  I forgot about it and was
-reminded of it in a bug where someone had disabled ACPI and was wondering
-why their system wouldn't boot.
+On 03/13/2017 02:43 PM, Kishon Vijay Abraham I wrote:
+> dwc has 2 dbi address space labeled dbics and dbics2. The existing
+> helper to access dbi address space can access only dbics. However
+> dbics2 has to be accessed for programming the BAR registers in the
+> case of EP mode. This is in preparation for adding EP mode support
+> to dwc driver.
+>
+> Cc: Jingoo Han <jingoohan1@gmail.com>
+> Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/dwc/pci-exynos.c      | 10 ++++++----
+>  drivers/pci/dwc/pcie-designware.c | 13 +++++++------
+>  drivers/pci/dwc/pcie-designware.h | 20 ++++++++++++++++----
+>  3 files changed, 29 insertions(+), 14 deletions(-)
+>
+> diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+> index 993b650ef275..a0d40f74b88d 100644
+> --- a/drivers/pci/dwc/pci-exynos.c
+> +++ b/drivers/pci/dwc/pci-exynos.c
+> @@ -521,23 +521,25 @@ static void exynos_pcie_enable_interrupts(struct exynos_pcie *ep)
+>  		exynos_pcie_msi_init(ep);
+>  }
+>  
+> -static u32 exynos_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
+> +static u32 exynos_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base,
+> +				 u32 reg)
+>  {
+>  	struct exynos_pcie *ep = to_exynos_pcie(pci);
+>  	u32 val;
+>  
+>  	exynos_pcie_sideband_dbi_r_mode(ep, true);
+> -	val = readl(pci->dbi_base + reg);
+> +	val = readl(base + reg);
+>  	exynos_pcie_sideband_dbi_r_mode(ep, false);
+>  	return val;
+>  }
+>  
+> -static void exynos_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
+> +static void exynos_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base,
+> +				   u32 reg, u32 val)
+>  {
+>  	struct exynos_pcie *ep = to_exynos_pcie(pci);
+>  
+>  	exynos_pcie_sideband_dbi_w_mode(ep, true);
+> -	writel(val, pci->dbi_base + reg);
+> +	writel(val, base + reg);
+>  	exynos_pcie_sideband_dbi_w_mode(ep, false);
+>  }
+>  
+> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+> index 3eaf3ccdc118..ea403e2240cf 100644
+> --- a/drivers/pci/dwc/pcie-designware.c
+> +++ b/drivers/pci/dwc/pcie-designware.c
+> @@ -61,20 +61,21 @@ int dw_pcie_write(void __iomem *addr, int size, u32 val)
+>  	return PCIBIOS_SUCCESSFUL;
+>  }
+>  
+> -u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
+> +u32 __dw_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg)
+>  {
+>  	if (pci->ops->readl_dbi)
+> -		return pci->ops->readl_dbi(pci, reg);
+> +		return pci->ops->readl_dbi(pci, base, reg);
+>  
+> -	return readl(pci->dbi_base + reg);
+> +	return readl(base + reg);
+>  }
+>  
+> -void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
+> +void __dw_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+> +			  u32 val)
+>  {
+>  	if (pci->ops->writel_dbi)
+> -		pci->ops->writel_dbi(pci, reg, val);
+> +		pci->ops->writel_dbi(pci, base, reg, val);
+>  	else
+> -		writel(val, pci->dbi_base + reg);
+> +		writel(val, base + reg);
+>  }
+>  
+>  static u32 dw_pcie_readl_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+> index 8f3dcb2b099b..e97fc4ce7d49 100644
+> --- a/drivers/pci/dwc/pcie-designware.h
+> +++ b/drivers/pci/dwc/pcie-designware.h
+> @@ -144,8 +144,9 @@ struct pcie_port {
+>  
+>  struct dw_pcie_ops {
+>  	u64	(*cpu_addr_fixup)(u64 cpu_addr);
+> -	u32	(*readl_dbi)(struct dw_pcie *pcie, u32 reg);
+> -	void	(*writel_dbi)(struct dw_pcie *pcie, u32 reg, u32 val);
+> +	u32	(*readl_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg);
+> +	void	(*writel_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+> +			      u32 val);
+>  	int	(*link_up)(struct dw_pcie *pcie);
+>  };
+>  
+> @@ -163,8 +164,9 @@ struct dw_pcie {
+>  int dw_pcie_read(void __iomem *addr, int size, u32 *val);
+>  int dw_pcie_write(void __iomem *addr, int size, u32 val);
+>  
+> -u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg);
+> -void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val);
+> +u32 __dw_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg);
+> +void __dw_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
+> +			  u32 val);
+>  int dw_pcie_link_up(struct dw_pcie *pci);
+>  int dw_pcie_wait_for_link(struct dw_pcie *pci);
+>  void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+> @@ -172,6 +174,16 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+>  			       u32 size);
+>  void dw_pcie_setup(struct dw_pcie *pci);
+>  
+> +static inline dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
 
-P.
+Add void as return type, then you can add:
 
----8<---
+Acked-by: Niklas Cassel <niklas.cassel@axis.com>
 
-Many of the pci= kernel parameters are used to work around BIOS and
-platform issues.  The result is a system which boots but the problem
-never is reported back to the hardware vendors.
-
-When these types of parameters are used the PCI subsystem must output a
-loud warning so that the user will report the issue to the hardware
-vendor.
-
-Signed-off-by: Prarit Bhargava <prarit@redhat.com>
----
- arch/x86/pci/common.c |   62 +++++++++++++++++++++++++++----------------------
- drivers/pci/pci.c     |   27 +++++++++++++++++++--
- 2 files changed, 59 insertions(+), 30 deletions(-)
-
-diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-index 190e718694b1..4ab9c8f161f4 100644
---- a/arch/x86/pci/common.c
-+++ b/arch/x86/pci/common.c
-@@ -533,106 +533,112 @@ char *__init pcibios_setup(char *str)
- {
- 	if (!strcmp(str, "off")) {
- 		pci_probe = 0;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "bfsort")) {
- 		pci_bf_sort = pci_force_bf;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "nobfsort")) {
- 		pci_bf_sort = pci_force_nobf;
--		return NULL;
-+		goto out;
- 	}
- #ifdef CONFIG_PCI_BIOS
- 	else if (!strcmp(str, "bios")) {
- 		pci_probe = PCI_PROBE_BIOS;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "nobios")) {
- 		pci_probe &= ~PCI_PROBE_BIOS;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "biosirq")) {
- 		pci_probe |= PCI_BIOS_IRQ_SCAN;
--		return NULL;
-+		goto out;
- 	} else if (!strncmp(str, "pirqaddr=", 9)) {
- 		pirq_table_addr = simple_strtoul(str+9, NULL, 0);
--		return NULL;
-+		goto out;
- 	}
- #endif
- #ifdef CONFIG_PCI_DIRECT
- 	else if (!strcmp(str, "conf1")) {
- 		pci_probe = PCI_PROBE_CONF1 | PCI_NO_CHECKS;
--		return NULL;
-+		goto out;
- 	}
- 	else if (!strcmp(str, "conf2")) {
- 		pci_probe = PCI_PROBE_CONF2 | PCI_NO_CHECKS;
--		return NULL;
-+		goto out;
- 	}
- #endif
- #ifdef CONFIG_PCI_MMCONFIG
- 	else if (!strcmp(str, "nommconf")) {
- 		pci_probe &= ~PCI_PROBE_MMCONF;
--		return NULL;
-+		goto out;
- 	}
- 	else if (!strcmp(str, "check_enable_amd_mmconf")) {
- 		pci_probe |= PCI_CHECK_ENABLE_AMD_MMCONF;
--		return NULL;
-+		goto out;
- 	}
- #endif
- 	else if (!strcmp(str, "noacpi")) {
- 		acpi_noirq_set();
--		return NULL;
-+		goto out;
- 	}
- 	else if (!strcmp(str, "noearly")) {
- 		pci_probe |= PCI_PROBE_NOEARLY;
--		return NULL;
-+		goto out;
- 	}
- 	else if (!strcmp(str, "usepirqmask")) {
- 		pci_probe |= PCI_USE_PIRQ_MASK;
--		return NULL;
-+		goto out;
- 	} else if (!strncmp(str, "irqmask=", 8)) {
- 		pcibios_irq_mask = simple_strtol(str+8, NULL, 0);
--		return NULL;
-+		goto out;
- 	} else if (!strncmp(str, "lastbus=", 8)) {
- 		pcibios_last_bus = simple_strtol(str+8, NULL, 0);
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "rom")) {
- 		pci_probe |= PCI_ASSIGN_ROMS;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "norom")) {
- 		pci_probe |= PCI_NOASSIGN_ROMS;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "nobar")) {
- 		pci_probe |= PCI_NOASSIGN_BARS;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "assign-busses")) {
- 		pci_probe |= PCI_ASSIGN_ALL_BUSSES;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "use_crs")) {
- 		pci_probe |= PCI_USE__CRS;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "nocrs")) {
- 		pci_probe |= PCI_ROOT_NO_CRS;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "earlydump")) {
- 		pci_early_dump_regs = 1;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "routeirq")) {
- 		pci_routeirq = 1;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "skip_isa_align")) {
- 		pci_probe |= PCI_CAN_SKIP_ISA_ALIGN;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "noioapicquirk")) {
- 		noioapicquirk = 1;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "ioapicreroute")) {
- 		if (noioapicreroute != -1)
- 			noioapicreroute = 0;
--		return NULL;
-+		goto out;
- 	} else if (!strcmp(str, "noioapicreroute")) {
- 		if (noioapicreroute != -1)
- 			noioapicreroute = 1;
--		return NULL;
-+		goto out;
- 	}
- 	return str;
-+
-+out:
-+	WARN(1,
-+	     "PCI: pcibios pci=%s option used.  This implies a workaround for a BIOS or hardware issue.  Please send this report to your Hardware Vendor.",
-+	     str);
-+	return NULL;
- }
- 
- unsigned int pcibios_assign_all_busses(void)
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02ffdb9..a17a62c6908f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5254,6 +5254,18 @@ void __weak pci_fixup_cardbus(struct pci_bus *bus)
- 
- static int __init pci_setup(char *str)
- {
-+	/*
-+	 * When adding additional pci= parameters the value of warn must be
-+	 * considered and set appropriately.  Setting warn to 1 indicates that
-+	 * the usage of the specific parameter is being used to work around a
-+	 * platform design or BIOS issue and the resulting warning can be used
-+	 * to file a report with the hardware vendor.  If a parameter is used
-+	 * to change the existing default in Linux (hotplug windows, Max
-+	 * Payload Size settings for better performance, etc.) the parameter
-+	 * should NOT set warn to 1 as they are valid runtime settings.
-+	 */
-+	int warn = 0;
-+
- 	while (str) {
- 		char *k = strchr(str, ',');
- 		if (k)
-@@ -5261,16 +5273,22 @@ static int __init pci_setup(char *str)
- 		if (*str && (str = pcibios_setup(str)) && *str) {
- 			if (!strcmp(str, "nomsi")) {
- 				pci_no_msi();
-+				warn = 1;
- 			} else if (!strcmp(str, "noaer")) {
- 				pci_no_aer();
-+				warn = 1;
- 			} else if (!strncmp(str, "realloc=", 8)) {
- 				pci_realloc_get_opt(str + 8);
-+				warn = 1;
- 			} else if (!strncmp(str, "realloc", 7)) {
- 				pci_realloc_get_opt("on");
-+				warn = 1;
- 			} else if (!strcmp(str, "nodomains")) {
- 				pci_no_domains();
-+				warn = 1;
- 			} else if (!strncmp(str, "noari", 5)) {
- 				pcie_ari_disabled = true;
-+				warn = 1;
- 			} else if (!strncmp(str, "cbiosize=", 9)) {
- 				pci_cardbus_io_size = memparse(str + 9, &str);
- 			} else if (!strncmp(str, "cbmemsize=", 10)) {
-@@ -5278,8 +5296,10 @@ static int __init pci_setup(char *str)
- 			} else if (!strncmp(str, "resource_alignment=", 19)) {
- 				pci_set_resource_alignment_param(str + 19,
- 							strlen(str + 19));
-+				warn = 1;
- 			} else if (!strncmp(str, "ecrc=", 5)) {
- 				pcie_ecrc_get_policy(str + 5);
-+				warn = 1;
- 			} else if (!strncmp(str, "hpiosize=", 9)) {
- 				pci_hotplug_io_size = memparse(str + 9, &str);
- 			} else if (!strncmp(str, "hpmemsize=", 10)) {
-@@ -5299,10 +5319,13 @@ static int __init pci_setup(char *str)
- 				pcie_bus_config = PCIE_BUS_PEER2PEER;
- 			} else if (!strncmp(str, "pcie_scan_all", 13)) {
- 				pci_add_flags(PCI_SCAN_ALL_PCIE_DEVS);
-+				warn = 1;
- 			} else {
--				printk(KERN_ERR "PCI: Unknown option `%s'\n",
--						str);
-+				WARN(1, "PCI: Unknown option `%s'\n", str);
- 			}
-+			WARN(warn,
-+			     "PCI: pci=%s option used.  This implies a workaround for a BIOS or hardware issue.  Please send this report to your Hardware Vendor.",
-+			     str);
- 		}
- 		str = k;
- 	}
--- 
-1.7.9.3
+> +{
+> +	__dw_pcie_writel_dbi(pci, pci->dbi_base, reg, val);
+> +}
+> +
+> +static inline u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
+> +{
+> +	return  __dw_pcie_readl_dbi(pci, pci->dbi_base, reg);
+> +}
+> +
+>  #ifdef CONFIG_PCIE_DW_HOST
+>  irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+>  void dw_pcie_msi_init(struct pcie_port *pp);
