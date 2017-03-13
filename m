@@ -1,55 +1,46 @@
-Return-Path: <SRS0=M0Me=2W=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=M0Me=2W=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V3] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1489005551-23598-1-git-send-email-okaya@codeaurora.org>
- <20170309222751.GD19517@bhelgaas-glaptop.roam.corp.google.com>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-arm-msm@vger.kernel.org, Mayurkumar Patel
- <mayurkumar.patel@intel.com>, open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <48b14a37-3b5c-e128-aa96-b924d05b7636@codeaurora.org>
-Date: Mon, 13 Mar 2017 17:06:46 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lelnx194.ext.ti.com ([198.47.27.80]:12244 "EHLO
+        lelnx194.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752099AbdCMOZX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2017 10:25:23 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v4 16/23] PCI: Add device IDs for DRA74x and DRA72x
+Date: Mon, 13 Mar 2017 19:52:52 +0530
+Message-ID: <20170313142259.25397-17-kishon@ti.com>
+In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
+References: <20170313142259.25397-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20170309222751.GD19517@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+Add device IDs for DRA74x and DRA72x devices. These devices have
+configurable PCI endpoint.
 
-On 3/9/2017 5:27 PM, Bjorn Helgaas wrote:
-> This is an aspect of the ASPM design that I don't like:
-> 
->   - pcie_aspm_init_link_state() is called on a *bridge* after we've
->     enumerated any devices below the bridge, and we allocate the
->     link_state.
-> 
->   - pcie_aspm_exit_link_state() is called on an *endpoint*, and if
->     we're removing the last endpoint below a bridge, we release the
->     *parent's* link_state.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ include/linux/pci_ids.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-I just posted V4 a minute ago. I divided ASPM init into two so that the
-ASPM registers are captured in device_add path. 
-
-There is a section of the ASPM init code that needs to walk all the devices
-under the bridge. 
-
-This section of the code is not working in device_add path as the link list
-for child devices has not been set up yet. 
-
-Unless you tell me there is a better way to handle this, I don't see how
-we can remove the call from scan_slot. 
-
-After further review, I think I can split PATCH V4 3/3 into two. Before
-diving into too much clean up, I wanted to get some feedback as it is
-obvious from the messed up cover letter.
-
-Sinan
-
-
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index a4f77feecbb0..5f6b71d15393 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -862,6 +862,8 @@
+ #define PCI_DEVICE_ID_TI_X620		0xac8d
+ #define PCI_DEVICE_ID_TI_X420		0xac8e
+ #define PCI_DEVICE_ID_TI_XX20_FM	0xac8f
++#define PCI_DEVICE_ID_TI_DRA74x		0xb500
++#define PCI_DEVICE_ID_TI_DRA72x		0xb501
+ 
+ #define PCI_VENDOR_ID_SONY		0x104d
+ 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.11.0
