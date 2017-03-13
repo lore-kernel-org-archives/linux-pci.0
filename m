@@ -1,38 +1,66 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>
-Subject: RE: [PATCH 14/20] PCI: hisi: update PCI config space remap function
-Date: Thu, 2 Mar 2017 11:53:44 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E1FA96D4D@lhreml507-mbx>
-References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
- <20170227151436.18698-15-lorenzo.pieralisi@arm.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E1FA96A69@lhreml507-mbx>
- <20170302114937.GA17277@red-moon>
-In-Reply-To: <20170302114937.GA17277@red-moon>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=bmI6=2W=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=bmI6=2W=free.fr=slash.tmp@kernel.org>
+Subject: Re: Legacy features in PCI Express devices
+To: Robin Murphy <robin.murphy@arm.com>, linux-pci <linux-pci@vger.kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, David Laight
+ <david.laight@aculab.com>, Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ netdev <netdev@vger.kernel.org>, Tim Harvey <tharvey@gateworks.com>,
+ Arnd Bergmann <arnd@arndb.de>
+References: <ef5c9778-fbae-9f4f-ac2e-29b8597537a5@free.fr>
+ <96b57ba5-641d-46c8-6ba0-cee2c0613a6f@arm.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <58fb1386-fa94-dde3-b361-597f9486fa41@free.fr>
+Date: Mon, 13 Mar 2017 18:39:55 +0100
 MIME-Version: 1.0
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <96b57ba5-641d-46c8-6ba0-cee2c0613a6f@arm.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-[...]
+On 13/03/2017 18:12, Robin Murphy wrote:
 
+> On 13/03/17 16:10, Mason wrote:
+>
+>> There are two revisions of our PCI Express controller.
+>>
+>> Rev 1 did not support the following features:
+>>
+>>   1) legacy PCI interrupt delivery (INTx signals)
+>>   2) I/O address space
+>>
+>> Internally, someone stated that such missing support would prevent
+>> some PCIe cards from working with our controller.
+>>
+>> Are there really modern PCIe cards that require 1) and/or 2)
+>> to function?
+>>
+>> Can someone provide examples of such cards, so that I may test them
+>> on both revisions?
+>>
+>> I was told to check ath9k-based cards. Any other examples?
+>>
+>> Looking around, I came across this thread:
+>> http://lists.infradead.org/pipermail/linux-arm-kernel/2016-March/418254.html
+>> "i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity"
+>>
+>> IIUC, although some PCIe boards do support MSI, the driver might not
+>> put in the work to use that infrastructure, and instead reverts to
+>> legacy interrupts. (So it is a SW issue, in a sense.)
 > 
-> I will fold the changes into v2 (and I hope other host controllers
-> maintainers will follow suit - I do not have enough knowledge of
-> all host bridges drivers internals to understand what ioremap calls
-> need patching).
+> Secondary to that category is endpoints which nominally support MSI, but
+> in a way which is unreliable or otherwise broken. My experience shows
+> that the Silicon Image SiI 3132 (as integrated on ARM Juno boards, but
+> seemingly also relatively common on 'generic' 2-port SATA cards) falls
+> into that category - using the command-line parameter to force MSIs
+> instead of legacy interrupts leads to the the machine barely reaching
+> userspace before something goes horribly wrong:
 
-Ok great, many thanks!
+Do drivers typically support *both* MSI and INTx?
 
-Gab
+Specifically, would the xhci driver support both?
 
-> 
-> Thanks !
-> Lorenzo
+If I remove MSI support from my kernel, I might be able to test
+legacy interrupt support that way, right?
+
+Regards.
