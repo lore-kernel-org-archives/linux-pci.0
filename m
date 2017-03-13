@@ -1,29 +1,43 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ms.lwn.net ([45.79.88.28]:48704 "EHLO ms.lwn.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752261AbdCCXQF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 3 Mar 2017 18:16:05 -0500
-Date: Fri, 3 Mar 2017 15:51:14 -0700
-From: Jonathan Corbet <corbet@lwn.net>
-To: Cao jin <caoj.fnst@cn.fujitsu.com>
-Cc: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <bhelgaas@google.com>
-Subject: Re: [PATCH] pcieaer doc: update the link
-Message-ID: <20170303155114.459652ac@lwn.net>
-In-Reply-To: <1488359128-7917-1-git-send-email-caoj.fnst@cn.fujitsu.com>
-References: <1488359128-7917-1-git-send-email-caoj.fnst@cn.fujitsu.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Cc: catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        frowand.list@gmail.com, bhelgaas@google.com, rafael@kernel.org,
+        mark.rutland@arm.com, arnd@arndb.de,
+        linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+        lorenzo.pieralisi@arm.com, benh@kernel.crashing.org,
+        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-serial@vger.kernel.org, minyard@acm.org, liviu.dudau@arm.com,
+        zourongrong@gmail.com, john.garry@huawei.com,
+        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
+        kantyzc@163.com, xuwei5@hisilicon.com
+Subject: Re: [PATCH V7 5/7] ACPI: Delay the enumeration on the devices whose  dependency has not met
+Date: Mon, 13 Mar 2017 22:24:34 +0100
+Message-ID: <4600523.rWNiWKrYZC@aspire.rjw.lan>
+In-Reply-To: <1489372963-9000-6-git-send-email-yuanzhichang@hisilicon.com>
+References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com> <1489372963-9000-6-git-send-email-yuanzhichang@hisilicon.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 1 Mar 2017 17:05:28 +0800
-Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
-
-> The original link is empty, replace it.
+On Monday, March 13, 2017 10:42:41 AM zhichang.yuan wrote:
+> In commit 40e7fcb1929(ACPI: Add _DEP support to fix battery issue on Asus
+> T100TA), the '_DEP' was supported to solve the dependency of Asus battery. But
+> this patch is specific to Asus battery device.
+> In the real world, there are other devices which need the dependency to play the
+> role on the enumeration order. For example, all the Hip06 LPC
+> periperals(IPMI-BT, uart, etc) must be scanned after the LPC host driver
+> finished the probing. So, it makes sense to add a checking whether the ACPI
+> device meet all the dependencies during its enumeration slot, if not, the
+> enumeration will be delayed till all dependency master finish their work.
 > 
-> Signed-off-by: Cao jin <caoj.fnst@cn.fujitsu.com>
+> This patch adds the dependency checking in ACPI enumeration, also the
+> corresponding handling to retrigger the Hip06 LPC peripherals' scanning.
 
-Applied to the docs tree, thanks.
+AFAICS, _DEP is generally abused in the wild and cannot be made generic.  Sorry.
 
-jon
+Thanks,
+Rafael
+
