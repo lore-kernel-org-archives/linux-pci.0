@@ -1,80 +1,232 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Subject: Re: [PATCH 11/29] drivers, media: convert cx88_core.refcount from
- atomic_t to refcount_t
-To: "Reshetova, Elena" <elena.reshetova@intel.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
- <c6987419-f708-9923-0f9f-87b715600045@cogentembedded.com>
- <2236FBA76BA1254E88B949DDB74E612B41C556E2@IRSMSX102.ger.corp.intel.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux1394-devel@lists.sourceforge.net"
-        <linux1394-devel@lists.sourceforge.net>,
-        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-        "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
-        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-Message-ID: <71ea983c-c2e4-9145-634b-78aef993d982@cogentembedded.com>
-Date: Tue, 7 Mar 2017 13:40:07 +0300
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:9548 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752099AbdCMO0N (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2017 10:26:13 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v4 21/23] Documentation: PCI: Add userguide for PCI endpoint test function
+Date: Mon, 13 Mar 2017 19:52:57 +0530
+Message-ID: <20170313142259.25397-22-kishon@ti.com>
+In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
+References: <20170313142259.25397-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C556E2@IRSMSX102.ger.corp.intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/7/2017 10:52 AM, Reshetova, Elena wrote:
+Add documentation to help users use pci-epf-test function driver
+and pci_endpoint_test host driver for testing PCI.
 
->>> refcount_t type and corresponding API should be
->>> used instead of atomic_t when the variable is used as
->>> a reference counter. This allows to avoid accidental
->>> refcounter overflows that might lead to use-after-free
->>> situations.
->>>
->>> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
->>> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
->>> Signed-off-by: Kees Cook <keescook@chromium.org>
->>> Signed-off-by: David Windsor <dwindsor@gmail.com>
->> [...]
->>> diff --git a/drivers/media/pci/cx88/cx88.h b/drivers/media/pci/cx88/cx88.h
->>> index 115414c..16c1313 100644
->>> --- a/drivers/media/pci/cx88/cx88.h
->>> +++ b/drivers/media/pci/cx88/cx88.h
-[...]
->>> @@ -339,7 +340,7 @@ struct cx8802_dev;
->>>
->>>  struct cx88_core {
->>>  	struct list_head           devlist;
->>> -	atomic_t                   refcount;
->>> +	refcount_t                   refcount;
->>
->>     Could you please keep the name aligned with above and below?
->
-> You mean "not aligned" to devlist, but with a shift like it was before?
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/PCI/00-INDEX                    |   2 +
+ Documentation/PCI/endpoint/pci-test-howto.txt | 179 ++++++++++++++++++++++++++
+ 2 files changed, 181 insertions(+)
+ create mode 100644 Documentation/PCI/endpoint/pci-test-howto.txt
 
-    I mean aligned, like it was before. :-)
-
-> Sure, will fix. Is the patch ok otherwise?
-
-    I haven't noticed anything else...
-
-> Best Regards,
-> Elena.
-[...]
-
-MBR, Sergei
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index 53717b7fcdd4..fd533c79fa19 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -18,5 +18,7 @@ endpoint/pci-endpoint-cfs.txt
+ 	- guide to use configfs to configure the pci endpoint function.
+ endpoint/pci-test-function.txt
+ 	- specification of *pci test* function device.
++endpoint/pci-test-howto.txt
++	- userguide for PCI endpoint test function.
+ endpoint/function/binding/
+ 	- binding documentation for pci endpoint function
+diff --git a/Documentation/PCI/endpoint/pci-test-howto.txt b/Documentation/PCI/endpoint/pci-test-howto.txt
+new file mode 100644
+index 000000000000..730b70c73055
+--- /dev/null
++++ b/Documentation/PCI/endpoint/pci-test-howto.txt
+@@ -0,0 +1,179 @@
++			    PCI TEST USERGUIDE
++		    Kishon Vijay Abraham I <kishon@ti.com>
++
++This document is a guide to help users use pci-epf-test function driver
++and pci_endpoint_test host driver for testing PCI. The list of steps to
++be followed in the host side and EP side is given below.
++
++1. Endpoint Device
++
++1.1 Endpoint Controller Devices
++
++To find the list of endpoint controller devices in the system:
++
++	# ls /sys/class/pci_epc/
++	  51000000.pcie_ep
++
++If PCI_ENDPOINT_CONFIGFS is enabled
++	# ls /sys/kernel/config/pci_ep/controllers
++	  51000000.pcie_ep
++
++1.2 Endpoint Function Drivers
++
++To find the list of endpoint function drivers in the system:
++
++	# ls /sys/bus/pci-epf/drivers
++	  pci_epf_test
++
++If PCI_ENDPOINT_CONFIGFS is enabled
++	# ls /sys/kernel/config/pci_ep/functions
++	  pci_epf_test
++
++1.3 Creating pci-epf-test Device
++
++PCI endpoint function device can be created using the configfs. To create
++pci-epf-test device, the following commands can be used
++
++	# mount -t configfs none /sys/kernel/config
++	# cd /sys/kernel/config/pci_ep/
++	# mkdir functions/pci_epf_test/func1
++
++The "mkdir func1" above creates the pci-epf-test function device that will
++be probed by pci_epf_test driver.
++
++The PCI endpoint framework populates the directory with the following
++configurable fields.
++
++	# ls functions/pci_epf_test/func1
++	  baseclass_code	interrupt_pin	revid		subsys_vendor_id
++	  cache_line_size	msi_interrupts	subclass_code	vendorid
++	  deviceid          	progif_code	subsys_id
++
++The pci endpoint function driver populates these entries with default values
++when the device is bound to the driver. The pci-epf-test driver populates
++vendorid with 0xffff and interrupt_pin with 0x0001
++
++	# cat functions/pci_epf_test/func1/vendorid
++	  0xffff
++	# cat functions/pci_epf_test/func1/interrupt_pin
++	  0x0001
++
++1.4 Configuring pci-epf-test Device
++
++The user can configure the pci-epf-test device using configfs entry. In order
++to change the vendorid and the number of MSI interrupts used by the function
++device, the following commands can be used.
++
++	# echo 0x104c > functions/pci_epf_test/func1/vendorid
++	# echo 0xb500 > functions/pci_epf_test/func1/deviceid
++	# echo 16 > functions/pci_epf_test/func1/msi_interrupts
++
++1.5 Binding pci-epf-test Device to EP Controller
++
++In order for the endpoint function device to be useful, it has to be bound to
++a PCI endpoint controller driver. Use the configfs to bind the function
++device to one of the controller driver present in the system.
++
++	# ln -s functions/pci_epf_test/func1 controllers/51000000.pcie_ep/
++
++Once the above step is completed, the PCI endpoint is ready to establish a link
++with the host.
++
++1.6 Start the Link
++
++In order for the endpoint device to establish a link with the host, the _start_
++field should be populated with '1'.
++
++	# echo 1 > controllers/51000000.pcie_ep/start
++
++2. RootComplex Device
++
++2.1 lspci Output
++
++Note that the devices listed here correspond to the value populated in 1.4 above
++
++	00:00.0 PCI bridge: Texas Instruments Device 8888 (rev 01)
++	01:00.0 Unassigned class [ff00]: Texas Instruments Device b500
++
++2.2 Using Endpoint Test function Device
++
++pcitest.sh added in tools/pci/ can be used to run all the default PCI endpoint
++tests. Before pcitest.sh can be used pcitest.c should be compiled using the
++following commands.
++
++	cd <kernel-dir>
++	make headers_install ARCH=arm
++	arm-linux-gnueabihf-gcc -Iusr/include tools/pci/pcitest.c -o pcitest
++	cp pcitest  <rootfs>/usr/sbin/
++	cp tools/pci/pcitest.sh <rootfs>
++
++2.2.1 pcitest.sh Output
++	# ./pcitest.sh
++	BAR tests
++
++	BAR0:           OKAY
++	BAR1:           OKAY
++	BAR2:           OKAY
++	BAR3:           OKAY
++	BAR4:           NOT OKAY
++	BAR5:           NOT OKAY
++
++	Interrupt tests
++
++	LEGACY IRQ:     NOT OKAY
++	MSI1:           OKAY
++	MSI2:           OKAY
++	MSI3:           OKAY
++	MSI4:           OKAY
++	MSI5:           OKAY
++	MSI6:           OKAY
++	MSI7:           OKAY
++	MSI8:           OKAY
++	MSI9:           OKAY
++	MSI10:          OKAY
++	MSI11:          OKAY
++	MSI12:          OKAY
++	MSI13:          OKAY
++	MSI14:          OKAY
++	MSI15:          OKAY
++	MSI16:          OKAY
++	MSI17:          NOT OKAY
++	MSI18:          NOT OKAY
++	MSI19:          NOT OKAY
++	MSI20:          NOT OKAY
++	MSI21:          NOT OKAY
++	MSI22:          NOT OKAY
++	MSI23:          NOT OKAY
++	MSI24:          NOT OKAY
++	MSI25:          NOT OKAY
++	MSI26:          NOT OKAY
++	MSI27:          NOT OKAY
++	MSI28:          NOT OKAY
++	MSI29:          NOT OKAY
++	MSI30:          NOT OKAY
++	MSI31:          NOT OKAY
++	MSI32:          NOT OKAY
++
++	Read Tests
++
++	READ (      1 bytes):           OKAY
++	READ (   1024 bytes):           OKAY
++	READ (   1025 bytes):           OKAY
++	READ (1024000 bytes):           OKAY
++	READ (1024001 bytes):           OKAY
++
++	Write Tests
++
++	WRITE (      1 bytes):          OKAY
++	WRITE (   1024 bytes):          OKAY
++	WRITE (   1025 bytes):          OKAY
++	WRITE (1024000 bytes):          OKAY
++	WRITE (1024001 bytes):          OKAY
++
++	Copy Tests
++
++	COPY (      1 bytes):           OKAY
++	COPY (   1024 bytes):           OKAY
++	COPY (   1025 bytes):           OKAY
++	COPY (1024000 bytes):           OKAY
++	COPY (1024001 bytes):           OKAY
+-- 
+2.11.0
