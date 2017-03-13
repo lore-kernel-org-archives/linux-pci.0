@@ -1,78 +1,97 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v2 2/7] PCI: dwc: dra7xx: Populate cpu_addr_fixup ops
-Date: Tue, 7 Mar 2017 15:22:47 +0530
-Message-ID: <1488880372-7390-3-git-send-email-kishon@ti.com>
-In-Reply-To: <1488880372-7390-1-git-send-email-kishon@ti.com>
-References: <1488880372-7390-1-git-send-email-kishon@ti.com>
+Return-Path: <SRS0=wqlW=2W=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <SRS0=wqlW=2W=gmail.com=andy.shevchenko@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: nsekhar@ti.com, Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1489408896-25039-4-git-send-email-deathsimple@vodafone.de>
+References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de> <1489408896-25039-4-git-send-email-deathsimple@vodafone.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Mon, 13 Mar 2017 18:49:00 +0200
+Message-ID: <CAHp75Ve4RXtuh7=8FUDv8RXGFMuYLte9GCOd02Y427BrFtPzYA@mail.gmail.com>
+Subject: Re: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models
+ 30h-3fh) Processors
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
+Cc: helgaas@kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
+	Platform Driver <platform-driver-x86@vger.kernel.org>, amd-gfx@lists.freedesktop.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Populate cpu_addr_fixup ops to extract the least 28 bits of the
-corresponding cpu address.
+On Mon, Mar 13, 2017 at 2:41 PM, Christian K=C3=B6nig
+<deathsimple@vodafone.de> wrote:
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+> Most BIOS don't enable this because of compatibility reasons.
+>
+> Manually enable a 64bit BAR of 64GB size so that we have
+> enough room for PCI devices.
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 0984baf..07c45ec 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -88,6 +88,11 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
- 	writel(value, pcie->base + offset);
- }
- 
-+static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
-+{
-+	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
-+}
-+
- static int dra7xx_pcie_link_up(struct dw_pcie *pci)
- {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-@@ -152,11 +157,6 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
- 
--	pp->io_base &= DRA7XX_CPU_TO_BUS_ADDR;
--	pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR;
--	pp->cfg0_base &= DRA7XX_CPU_TO_BUS_ADDR;
--	pp->cfg1_base &= DRA7XX_CPU_TO_BUS_ADDR;
--
- 	dw_pcie_setup_rc(pp);
- 
- 	dra7xx_pcie_establish_link(dra7xx);
-@@ -329,6 +329,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- }
- 
- static const struct dw_pcie_ops dw_pcie_ops = {
-+	.cpu_addr_fixup = dra7xx_pcie_cpu_addr_fixup,
- 	.link_up = dra7xx_pcie_link_up,
- };
- 
--- 
-1.7.9.5
+> +static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+> +{
+> +       const uint64_t size =3D 64ULL * 1024 * 1024 * 1024;
 
+Perhaps extend <linux/sizes.h> and use SZ_64G here?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+It would be nice to do, since some of the drivers already are using
+sizes like 4GB and alike.
+
+> +       uint32_t base, limit, high;
+> +       struct resource *res;
+> +       unsigned i;
+> +       int r;
+> +
+
+> +       for (i =3D 0; i < 8; ++i) {
+
+> +
+
+Redundant empty line.
+
+> +               pci_read_config_dword(dev, 0x80 + i * 0x8, &base);
+> +               pci_read_config_dword(dev, 0x180 + i * 0x4, &high);
+> +
+> +               /* Is this slot free? */
+> +               if ((base & 0x3) =3D=3D 0x0)
+> +                       break;
+> +
+> +               base >>=3D 8;
+> +               base |=3D high << 24;
+> +
+> +               /* Abort if a slot already configures a 64bit BAR. */
+> +               if (base > 0x10000)
+> +                       return;
+
+> +
+
+Ditto.
+
+> +       }
+
+> +
+
+Ditto.
+
+> +       if (i =3D=3D 8)
+> +               return;
+> +
+> +       res =3D kzalloc(sizeof(*res), GFP_KERNEL);
+> +       res->flags =3D IORESOURCE_MEM | IORESOURCE_PREFETCH | IORESOURCE_=
+MEM_64 |
+> +               IORESOURCE_WINDOW;
+> +       res->name =3D dev->bus->name;
+> +       r =3D allocate_resource(&iomem_resource, res, size, 0x100000000,
+> +                             0xfd00000000, size, NULL, NULL);
+> +       if (r) {
+> +               kfree(res);
+> +               return;
+> +       }
+> +
+> +       base =3D ((res->start >> 8) & 0xffffff00) | 0x3;
+> +       limit =3D ((res->end + 1) >> 8) & 0xffffff00;
+> +       high =3D ((res->start >> 40) & 0xff) |
+> +               ((((res->end + 1) >> 40) & 0xff) << 16);
+
+Perhaps some of constants can be replaced by defines (I think some of
+them are already defined in ioport.h or somewhere else).
+
+--=20
+With Best Regards,
+Andy Shevchenko
