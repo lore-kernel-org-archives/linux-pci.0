@@ -1,93 +1,97 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38470 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932156AbdCFV6i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Mar 2017 16:58:38 -0500
-Date: Mon, 6 Mar 2017 15:38:29 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        devel@linuxdriverproject.org
-Subject: Re: [PATCH 17/29] drivers, pci: convert hv_pci_dev.refs from
- atomic_t to refcount_t
-Message-ID: <20170306213829.GB5305@bhelgaas-glaptop.roam.corp.google.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-18-git-send-email-elena.reshetova@intel.com>
+Received: from lelnx193.ext.ti.com ([198.47.27.77]:37156 "EHLO
+        lelnx193.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753414AbdCMOYw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2017 10:24:52 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v4 20/23] tools: PCI: Add sample test script to invoke pcitest
+Date: Mon, 13 Mar 2017 19:52:56 +0530
+Message-ID: <20170313142259.25397-21-kishon@ti.com>
+In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
+References: <20170313142259.25397-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1488810076-3754-18-git-send-email-elena.reshetova@intel.com>
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Hyper-V folks, -cc others]
+Add a simple test script that invokes the pcitest userspace tool
+to perform all the PCI endpoint tests (BAR tests, interrupt tests,
+read tests, write tests and copy tests).
 
-On Mon, Mar 06, 2017 at 04:21:04PM +0200, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
-> 
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
-> ---
->  drivers/pci/host/pci-hyperv.c | 9 +++++----
->  1 file changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-> index cd114c6..870deed 100644
-> --- a/drivers/pci/host/pci-hyperv.c
-> +++ b/drivers/pci/host/pci-hyperv.c
-> @@ -56,6 +56,7 @@
->  #include <asm/apic.h>
->  #include <linux/msi.h>
->  #include <linux/hyperv.h>
-> +#include <linux/refcount.h>
->  #include <asm/mshyperv.h>
->  
->  /*
-> @@ -421,7 +422,7 @@ enum hv_pcidev_ref_reason {
->  struct hv_pci_dev {
->  	/* List protected by pci_rescan_remove_lock */
->  	struct list_head list_entry;
-> -	atomic_t refs;
-> +	refcount_t refs;
->  	enum hv_pcichild_state state;
->  	struct pci_function_description desc;
->  	bool reported_missing;
-> @@ -1254,13 +1255,13 @@ static void q_resource_requirements(void *context, struct pci_response *resp,
->  static void get_pcichild(struct hv_pci_dev *hpdev,
->  			    enum hv_pcidev_ref_reason reason)
->  {
-> -	atomic_inc(&hpdev->refs);
-> +	refcount_inc(&hpdev->refs);
->  }
->  
->  static void put_pcichild(struct hv_pci_dev *hpdev,
->  			    enum hv_pcidev_ref_reason reason)
->  {
-> -	if (atomic_dec_and_test(&hpdev->refs))
-> +	if (refcount_dec_and_test(&hpdev->refs))
->  		kfree(hpdev);
->  }
->  
-> @@ -1314,7 +1315,7 @@ static struct hv_pci_dev *new_pcichild_device(struct hv_pcibus_device *hbus,
->  	wait_for_completion(&comp_pkt.host_event);
->  
->  	hpdev->desc = *desc;
-> -	get_pcichild(hpdev, hv_pcidev_ref_initial);
-> +	refcount_set(&hpdev->refs, 1);
->  	get_pcichild(hpdev, hv_pcidev_ref_childlist);
->  	spin_lock_irqsave(&hbus->device_list_lock, flags);
->  	list_add_tail(&hpdev->list_entry, &hbus->children);
-> -- 
-> 2.7.4
-> 
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ tools/pci/pcitest.sh | 56 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 56 insertions(+)
+ create mode 100644 tools/pci/pcitest.sh
+
+diff --git a/tools/pci/pcitest.sh b/tools/pci/pcitest.sh
+new file mode 100644
+index 000000000000..5442bbea4c22
+--- /dev/null
++++ b/tools/pci/pcitest.sh
+@@ -0,0 +1,56 @@
++#!/bin/sh
++
++echo "BAR tests"
++echo
++
++bar=0
++
++while [ $bar -lt 6 ]
++do
++	pcitest -b $bar
++	bar=`expr $bar + 1`
++done
++echo
++
++echo "Interrupt tests"
++echo
++
++pcitest -l
++msi=1
++
++while [ $msi -lt 33 ]
++do
++        pcitest -m $msi
++        msi=`expr $msi + 1`
++done
++echo
++
++echo "Read Tests"
++echo
++
++pcitest -r -s 1
++pcitest -r -s 1024
++pcitest -r -s 1025
++pcitest -r -s 1024000
++pcitest -r -s 1024001
++echo
++
++echo "Write Tests"
++echo
++
++pcitest -w -s 1
++pcitest -w -s 1024
++pcitest -w -s 1025
++pcitest -w -s 1024000
++pcitest -w -s 1024001
++echo
++
++echo "Copy Tests"
++echo
++
++pcitest -c -s 1
++pcitest -c -s 1024
++pcitest -c -s 1025
++pcitest -c -s 1024000
++pcitest -c -s 1024001
++echo
+-- 
+2.11.0
