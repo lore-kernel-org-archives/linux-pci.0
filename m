@@ -1,57 +1,45 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Subject: Re: [PATCH V8 5/6] ACPI: Support the probing on the devices which
- apply indirect-IO
-Date: Thu, 30 Mar 2017 22:31:10 +0200
-Message-ID: <1908501.jAQQKvjW4f@aspire.rjw.lan>
-In-Reply-To: <1490887619-61732-6-git-send-email-yuanzhichang@hisilicon.com>
-References: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
- <1490887619-61732-6-git-send-email-yuanzhichang@hisilicon.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v4 15/23] dt-bindings: PCI: dra7xx: Add dt bindings to enable unaligned access
+Date: Mon, 13 Mar 2017 19:52:51 +0530
+Message-ID: <20170313142259.25397-16-kishon@ti.com>
+In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
+References: <20170313142259.25397-1-kishon@ti.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, benh@kernel.crashing.org, gabriele.paoloni@huawei.com,
- rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com,
- linuxarm@huawei.com, frowand.list@gmail.com, lorenzo.pieralisi@arm.com,
- arnd@arndb.de, xuwei5@hisilicon.com, linux-acpi@vger.kernel.org,
- catalin.marinas@arm.com, devicetree@vger.kernel.org, minyard@acm.org,
- john.garry@huawei.com, zourongrong@gmail.com, robh+dt@kernel.org,
- bhelgaas@google.com, kantyzc@163.com, zhichang.yuan02@gmail.com,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
- olof@lixom.net, brian.starkey@arm.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, March 30, 2017 11:26:58 PM zhichang.yuan wrote:
-> On some platforms(such as Hip06/Hip07), the legacy ISA/LPC devices access I/O
-> with some special host-local I/O ports known on x86. To access the I/O
-> peripherals, an indirect-IO mechanism is introduced to mapped the host-local
-> I/O to system logical/fake PIO similar the PCI MMIO on architectures where no
-> separate I/O space exists. Just as PCI MMIO, the host I/O range should be
-> registered before probing the downstream devices and set up the I/O mapping.
-> But current ACPI bus probing doesn't support these indirect-IO hosts/devices.
-> 
-> This patch introdueces a new ACPI handler for this device category. Through the
-> handler attach callback, the indirect-IO hosts I/O registration is done and
-> all peripherals' I/O resources are translated into logic/fake PIO before
-> starting the enumeration.
+Update device tree binding documentation of TI's dra7xx PCI
+controller to include property for enabling unaligned mem access.
 
-Can you explain to me briefly what exactly this code is expected to be doing?
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/devicetree/bindings/pci/ti-pci.txt | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-Thanks,
-Rafael
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+index 190828a5f32a..b69dd7dbd29e 100644
+--- a/Documentation/devicetree/bindings/pci/ti-pci.txt
++++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+@@ -39,6 +39,11 @@ DEVICE MODE
+  - interrupts : one interrupt entries must be specified for main interrupt.
+  - num-ib-windows : number of inbound address translation windows
+  - num-ob-windows : number of outbound address translation windows
++ - ti,syscon-unaligned-access: phandle to the syscon dt node. The 1st argument
++			       should contain the register offset within syscon
++			       and the 2nd argument should contain the bit field
++			       for setting the bit to enable unaligned
++			       access.
+ 
+ Optional Property:
+  - gpios : Should be added if a gpio line is required to drive PERST# line
+-- 
+2.11.0
