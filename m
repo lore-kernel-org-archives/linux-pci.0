@@ -1,68 +1,129 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 24 Mar 2017 10:38:05 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: [PATCH 2/4 v5] PCI: add driver for Faraday Technology Host Bridge
-Message-ID: <20170324153805.GA31729@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170312222403.2473-1-linus.walleij@linaro.org>
- <20170324150753.GC25380@bhelgaas-glaptop.roam.corp.google.com>
- <CACRpkdbkhui0iwJbOeD8uwurdWvOYdPKtRPQhSkg0atpAB174Q@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:47542 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751521AbdCMKoq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Mar 2017 06:44:46 -0400
+Date: Mon, 13 Mar 2017 10:44:28 +0000
+From: Mark Rutland <mark.rutland@arm.com>
+To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: "liudongdong (C)" <liudongdong3@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: Bad DT binding (hisi-pcie-almost-ecam)
+Message-ID: <20170313104356.GA23239@leverpostej>
+References: <20170310174045.GB24571@leverpostej>
+ <EE11001F9E5DDD47B7634E2F8A612F2E2047A8C1@FRAEML521-MBX.china.huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <CACRpkdbkhui0iwJbOeD8uwurdWvOYdPKtRPQhSkg0atpAB174Q@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: openwrt-devel@openwrt.org, Rob Herring <robh@kernel.org>,
- Florian Fainelli <f.fainelli@gmail.com>,
- Feng-Hsin Chiang <john453@faraday-tech.com>, Arnd Bergmann <arnd@arndb.de>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- linux-pci <linux-pci@vger.kernel.org>,
- Hans Ulli Kroll <ulli.kroll@googlemail.com>, Greentime Hu <green.hu@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Janos Laube <janos.dev@gmail.com>,
- Paulius Zaleckas <paulius.zaleckas@gmail.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E2047A8C1@FRAEML521-MBX.china.huawei.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 24, 2017 at 04:14:43PM +0100, Linus Walleij wrote:
-> On Fri, Mar 24, 2017 at 4:07 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> 
-> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Thanks!
-> 
-> > I don't know enough to review the DT patch, but you have Rob's ack
-> > already.
-> >
-> > Not sure how you want to merge these; if you want to feed the whole
-> > thing via ARM SoC, that's fine with me.  Otherwise, let me know if
-> > you'd like me to take anything.
-> 
-> It'd be perfect if you could merge patches 1+2 into the PCI tree,
-> there are no dependencies to the ARM tree.
-> 
-> > Noticed one trivial typo below.
-> >
-> >> + * Special configuration registers directly in the first few words
-> >> + * in he I/O space.
-> >
-> > s/he//
-> 
-> Can you fix it when applying or do you want me to resend it with
-> this fixed?
+Hi,
 
-I fixed it.
+On Mon, Mar 13, 2017 at 08:14:19AM +0000, Gabriele Paoloni wrote:
+> > -----Original Message-----
+> > From: Mark Rutland [mailto:mark.rutland@arm.com]
 
-Applied 1 & 2 to pci/host-faraday for v4.12, thanks!
+> > The commit adds the "hisilicon,pcie-almost-ecam", which goes against
+> > the
+> > usual DT conventions, and is non-sensical in that it describes the IP
+> > based on what it isn't.
+> > 
+> > This binding shouldn't have gone in as-is, and we should fix it before
+> > v4.11.
+> > 
+> > The binding states that this IP is found in Hip06 and Hip07. For these
+> > cases we'd usually take the name of the first implementation, e.g.
+> > something like "hisilicon,hip06-pcie", which can be used as a fallback
+> > in the compatible list if reused in subsequent SoC generations.
+> > 
+> > I also see that "hisilicon,hip06-pcie" already exists, so I'm even more
+> > suspicious.
+> 
+> For Hip06 the IP is the same but in we have a different BIOS configuration
+> that allows the controller be ECAM compliant for all the devices of the
+> hierarchy except the RC.
+> 
+> > What exactly is the "hisilicon,pcie-almost-ecam" binding trying to
+> > describe? Is it a different IP also found on Hip06, or is it a new
+> > binding for the same IP?
+> 
+> The reason why we need this new BIOS is to support the recent PCIe quirks
+> for the ACPI Root Port driver (commit 5b69b85ba1ddd36be01f5c57830b37a3c8256009
+> "PCI/ACPI: Check for platform-specific MCFG quirks"). So using one BIOS we
+> support both DT and ACPI.
+> This is the reason why you see Hip-06 being already there...
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Ok. Thanks for clarifying that.
+
+What I think we should do is:
+
+a) Update the binding document to clarify when these strings are used.
+
+b) Use an SoC prefix in the string. I'm happy to have both hip06 and hip07
+   strings.
+
+c) Drop the "almost", since we don't use that elsewhere. (e.g. for
+   cavium,pci-host-thunder-ecam"
+
+Would you be happy with the below?
+
+Thanks,
+Mark.
+
+---->8----
+diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+index b7fa3b9..535426d 100644
+--- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+@@ -44,13 +44,19 @@ Hip05 Example (note that Hip06 is the same except compatible):
+        };
+ 
+ HiSilicon Hip06/Hip07 PCIe host bridge DT (almost-ECAM) description.
++
++Some BIOSes place the host controller in a mode where it is ECAM compliant for
++all devices other than the root complex. In such cases, the host controller
++should be described as below.
++
+ The properties and their meanings are identical to those described in
+ host-generic-pci.txt except as listed below.
+ 
+ Properties of the host controller node that differ from
+ host-generic-pci.txt:
+ 
+-- compatible     : Must be "hisilicon,pcie-almost-ecam"
++- compatible     : Must be "hisilicon,hip06-pcie-ecam", or
++                   "hisilicon,hip07-pcie-ecam"
+ 
+ - reg            : Two entries: First the ECAM configuration space for any
+                   other bus underneath the root bus. Second, the base
+@@ -59,7 +65,7 @@ host-generic-pci.txt:
+ 
+ Example:
+        pcie0: pcie@a0090000 {
+-               compatible = "hisilicon,pcie-almost-ecam";
++               compatible = "hisilicon,hip06-pcie-ecam";
+                reg = <0 0xb0000000 0 0x2000000>,  /*  ECAM configuration space */
+                      <0 0xa0090000 0 0x10000>; /* host bridge registers */
+                bus-range = <0  31>;
+diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+index fd66a31..bd5b1b4 100644
+--- a/drivers/pci/dwc/pcie-hisi.c
++++ b/drivers/pci/dwc/pcie-hisi.c
+@@ -380,7 +380,11 @@ struct pci_ecam_ops hisi_pcie_platform_ops = {
+ 
+ static const struct of_device_id hisi_pcie_almost_ecam_of_match[] = {
+        {
+-               .compatible = "hisilicon,pcie-almost-ecam",
++               .compatible = "hisilicon,hip06-pcie-ecam",
++               .data       = (void *) &hisi_pcie_platform_ops,
++       },
++       {
++               .compatible = "hisilicon,hip07-pcie-ecam",
+                .data       = (void *) &hisi_pcie_platform_ops,
+        },
+        {},
