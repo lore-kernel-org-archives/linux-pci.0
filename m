@@ -1,177 +1,53 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52616 "EHLO mail.kernel.org"
+Received: from ale.deltatee.com ([207.54.116.67]:41605 "EHLO ale.deltatee.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934066AbdBQP3I (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Feb 2017 10:29:08 -0500
-Date: Fri, 17 Feb 2017 09:29:03 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Andreas Noever <andreas.noever@gmail.com>,
-        linux-pci@vger.kernel.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Erik Veijola <erik.veijola@linux.intel.com>,
-        Ashok Raj <ashok.raj@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: Re: [PATCH v6 1/8] PCI: Recognize Thunderbolt devices
-Message-ID: <20170217152903.GB10663@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1486913733.git.lukas@wunner.de>
- <fee5154ef747e34684f316a9edf1ec7f635fd0f8.1486913733.git.lukas@wunner.de>
+        id S1750945AbdCMQi0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Mar 2017 12:38:26 -0400
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
+References: <20170313105004.GA24989@mwanda>
+Cc: Stephen Bates <stephen.bates@microsemi.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <d7484df5-6951-a8eb-fbf5-aa945aa4c7f8@deltatee.com>
+Date: Mon, 13 Mar 2017 10:38:16 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <fee5154ef747e34684f316a9edf1ec7f635fd0f8.1486913733.git.lukas@wunner.de>
+In-Reply-To: <20170313105004.GA24989@mwanda>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH 1/2] switchtec: off by one in ioctl_event_ctl()
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc other recipients of cover letter]
+Hi Dan,
 
-Hi Lukas,
+Thanks for catching these!
 
-On Sun, Feb 12, 2017 at 05:07:45PM +0100, Lukas Wunner wrote:
-> Detect on device probe whether a PCI device is part of a Thunderbolt
-> daisy chain (i.e. it is either part of a Thunderbolt controller or part
-> of the hierarchy below a Thunderbolt controller).
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 
-My problem with this is that "is_thunderbolt" is not well-defined.
-The PCI specs lay out the common vocabulary and framework for this
-area.  To keep the code maintainable, we need to connect things back
-to the specs somehow.
+(for both patches)
 
-For example, it might make sense to have a bit that means "this device
-can generate PME from D3hot", because PME and D3hot are part of that
-common understanding of how PCI works, and we can use that information
-to design the software.
+Logan
 
-An "is_thunderbolt" bit doesn't have any of that context.  It doesn't
-say anything about how the device behaves, so I can't evaluate the
-code that uses it.
-
-A secondary issue is that I think whatever bit you define here should
-only be set for the actual Thunderbolt device itself.  The bit will
-presumably tell us something about how that particular device works.
-This is an enumeration-time thing and could be done either as in this
-path or as a quirk, since it only affects one device.
-
-If runtime code needs to know whether any upstream bridge is
-Thunderbolt, it can always search up the hierarchy.  I think that
-would improve readability because the software model would map more
-closely to the hardware situation.
-
-> Intel uses a Vendor-Specific Extended Capability (VSEC) with ID 0x1234
-> on devices belonging to a Thunderbolt controller.  Detect presence of
-> this VSEC on the device itself or on one of its parents and cache it in
-> a newly added is_thunderbolt bit in struct pci_dev.
+On 13/03/17 04:50 AM, Dan Carpenter wrote:
+> The > should be >= SWITCHTEC_IOCTL_MAX_EVENTS.  Otherwise we probably
+> read one space beyond the end of the loop, hit a sanity check and return
+> -EINVAL.  This bug doesn't look super serious.
 > 
-> The necessity arises from the following:
+> Fixes: 61c2e02154a9 ("switchtec: Add IOCTLs to the Switchtec driver")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > 
-> * To power off Thunderbolt controllers on Macs when nothing is plugged
->   in, we need to allow runtime PM on their PCIe ports in
->   pci_bridge_d3_possible().  For this we need a way to recognize them.
-> 
-> * Dual GPU MacBook Pros introduced 2011+ can no longer switch external
->   DisplayPort ports between GPUs.  (They're no longer just used for DP
->   but have become combined DP/Thunderbolt ports.)  The driver to switch
->   the ports, drivers/platform/x86/apple-gmux.c, needs to detect presence
->   of a Thunderbolt controller and, if found, keep external ports
->   permanently switched to the discrete GPU.
-> 
-> * If an external Thunderbolt GPU is connected to a dual GPU laptop (Mac
->   or not), that GPU is currently registered with vga_switcheroo even
->   though it can neither drive the laptop's panel nor be powered off by
->   the platform.  To vga_switcheroo it will appear as if two discrete
->   GPUs are present.  As a result, when the external GPU is runtime
->   suspended, vga_switcheroo will cut power to the internal discrete GPU
->   which may not be runtime suspended at all at this moment.  The
->   solution is to not register external GPUs with vga_switcheroo, which
->   necessitates a way to recognize if they're part of a Thunderbolt daisy
->   chain.
-> 
-> Cc: Andreas Noever <andreas.noever@gmail.com>
-> Cc: Tomas Winkler <tomas.winkler@intel.com>
-> Cc: Amir Levy <amir.jer.levy@intel.com>
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
->  drivers/pci/pci.h   |  2 ++
->  drivers/pci/probe.c | 32 ++++++++++++++++++++++++++++++++
->  include/linux/pci.h |  1 +
->  3 files changed, 35 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index cb17db242f30..45c2b8144911 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -3,6 +3,8 @@
+> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+> index 1f045c95dec6..82ae08956457 100644
+> --- a/drivers/pci/switch/switchtec.c
+> +++ b/drivers/pci/switch/switchtec.c
+> @@ -1049,7 +1049,7 @@ static int ioctl_event_ctl(struct switchtec_dev *stdev,
+>  	if (copy_from_user(&ctl, uctl, sizeof(ctl)))
+>  		return -EFAULT;
 >  
->  #define PCI_FIND_CAP_TTL	48
+> -	if (ctl.event_id > SWITCHTEC_IOCTL_MAX_EVENTS)
+> +	if (ctl.event_id >= SWITCHTEC_IOCTL_MAX_EVENTS)
+>  		return -EINVAL;
 >  
-> +#define PCI_VSEC_ID_INTEL_TBT	0x1234	/* Thunderbolt */
-> +
->  extern const unsigned char pcie_link_speed[];
->  
->  bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 204960e70333..2fcbc535786e 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1208,6 +1208,35 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
->  		pdev->is_hotplug_bridge = 1;
->  }
->  
-> +static void set_pcie_thunderbolt(struct pci_dev *dev)
-> +{
-> +	struct pci_dev *parent = dev;
-> +	int vsec = 0;
-> +	u32 header;
-> +
-> +	/* Is the device part of a Thunderbolt controller? */
-> +	while ((vsec = pci_find_next_ext_capability(dev, vsec,
-> +						    PCI_EXT_CAP_ID_VNDR))) {
-> +		pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER, &header);
-> +		if (dev->vendor == PCI_VENDOR_ID_INTEL &&
-> +		    PCI_VNDR_HEADER_ID(header) == PCI_VSEC_ID_INTEL_TBT) {
-> +			dev->is_thunderbolt = 1;
-> +			return;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * Is the device attached with Thunderbolt?  Walk upwards and check for
-> +	 * each encountered bridge if it's part of a Thunderbolt controller.
-> +	 * Reaching the host bridge means dev is soldered to the mainboard.
-> +	 */
-> +	while ((parent = pci_upstream_bridge(parent)))
-> +		if (parent->is_thunderbolt) {
-> +			dev->is_thunderbolt = 1;
-> +			return;
-> +		}
-> +}
-> +
->  /**
->   * pci_ext_cfg_is_aliased - is ext config space just an alias of std config?
->   * @dev: PCI device
-> @@ -1360,6 +1389,9 @@ int pci_setup_device(struct pci_dev *dev)
->  	/* need to have dev->class ready */
->  	dev->cfg_size = pci_cfg_space_size(dev);
->  
-> +	/* need to have dev->cfg_size ready */
-> +	set_pcie_thunderbolt(dev);
-> +
->  	/* "Unknown power state" */
->  	dev->current_state = PCI_UNKNOWN;
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index e2d1a124216a..3c775e8498f1 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -358,6 +358,7 @@ struct pci_dev {
->  	unsigned int	is_virtfn:1;
->  	unsigned int	reset_fn:1;
->  	unsigned int    is_hotplug_bridge:1;
-> +	unsigned int	is_thunderbolt:1; /* part of Thunderbolt daisy chain */
->  	unsigned int    __aer_firmware_first_valid:1;
->  	unsigned int	__aer_firmware_first:1;
->  	unsigned int	broken_intx_masking:1;
-> -- 
-> 2.11.0
+>  	if (ctl.flags & SWITCHTEC_IOCTL_EVENT_FLAG_UNUSED)
 > 
