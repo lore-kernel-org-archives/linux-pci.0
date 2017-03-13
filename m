@@ -1,86 +1,134 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51642 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751112AbdCQOpi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Mar 2017 10:45:38 -0400
-Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
- when spliting large pages
-To: Borislav Petkov <bp@suse.de>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
- <20170310110657.hophlog2juw5hpzz@pd.tnic>
- <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
- <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
- <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
- <20170317101737.icdois7sdmtutt6b@pd.tnic>
- <b6f9f46c-58c4-a19c-4955-2d07bd411443@redhat.com>
- <20170317105610.musvo4baokgssvye@pd.tnic>
- <78c99889-f175-f60f-716b-34a62203418a@redhat.com>
- <20170317113337.syvpat3c4s2l4nuz@pd.tnic>
-Cc: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
-        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
-        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
-        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org
-From: Paolo Bonzini <pbonzini@redhat.com>
-Message-ID: <b516a873-029a-b20a-3c43-d8bf4a200cb7@redhat.com>
-Date: Fri, 17 Mar 2017 15:45:26 +0100
+Return-Path: <SRS0=gHfc=2W=gmail.com=ddaney.cavm@kernel.org>
+Return-Path: <SRS0=gHfc=2W=gmail.com=ddaney.cavm@kernel.org>
+Subject: Re: Legacy features in PCI Express devices
+To: Mason <slash.tmp@free.fr>, linux-pci <linux-pci@vger.kernel.org>
+References: <ef5c9778-fbae-9f4f-ac2e-29b8597537a5@free.fr>
+Cc: Arnd Bergmann <arnd@arndb.de>, netdev <netdev@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ David Laight <david.laight@aculab.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Robin Murphy <robin.murphy@arm.com>, Tim Harvey <tharvey@gateworks.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+From: David Daney <ddaney.cavm@gmail.com>
+Message-ID: <b26272ff-346a-9774-405f-f1238a89aa8b@gmail.com>
+Date: Mon, 13 Mar 2017 10:24:53 -0700
 MIME-Version: 1.0
-In-Reply-To: <20170317113337.syvpat3c4s2l4nuz@pd.tnic>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <ef5c9778-fbae-9f4f-ac2e-29b8597537a5@free.fr>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
+On 03/13/2017 09:10 AM, Mason wrote:
+> Hello,
+>
+> There are two revisions of our PCI Express controller.
+>
+> Rev 1 did not support the following features:
+>
+>   1) legacy PCI interrupt delivery (INTx signals)
+>   2) I/O address space
+>
+> Internally, someone stated that such missing support would prevent
+> some PCIe cards from working with our controller.
+>
+> Are there really modern PCIe cards that require 1) and/or 2)
+> to function?
+
+It depends on your definition of "modern".  I have some JMicron AHCI 
+SATA controllers that support legacy interrupts only.  These are cheap 
+$20 PCIe devices I picked up at Fry's a couple of years ago.  Do they 
+count as modern?
+
+I/O address space is probably less important I would say.
+
+David.
+
+>
+> Can someone provide examples of such cards, so that I may test them
+> on both revisions?
 
 
-On 17/03/2017 12:33, Borislav Petkov wrote:
-> On Fri, Mar 17, 2017 at 12:03:31PM +0100, Paolo Bonzini wrote:
-> 
->> If it is possible to do it in a fairly hypervisor-independent manner,
->> I'm all for it.  That is, only by looking at AMD-specified CPUID leaves
->> and at kernel ELF sections.
-> 
-> Not even that.
-> 
-> What that needs to be able to do is:
-> 
-> 	kvm_map_percpu_hv_shared(st, sizeof(*st)))
-> 
-> where st is the percpu steal time ptr:
-> 
-> 	struct kvm_steal_time *st = &per_cpu(steal_time, cpu);
-> 
-> Underneath, what it does basically is it clears the encryption mask from
-> the pte, see patch 16/32.
+[root@localhost ddaney]# lspci -s 0005:90:00.0 -vvv
+0005:90:00.0 SATA controller: JMicron Technology Corp. JMB363 SATA/IDE 
+Controller (rev 03) (prog-if 01 [AHCI 1.0])
+	Subsystem: JMicron Technology Corp. JMB363 SATA/IDE Controller
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 26
+	NUMA node: 0
+	Region 5: Memory at 899010010000 (32-bit, non-prefetchable) [size=8K]
+	Expansion ROM at 899010000000 [disabled] [size=64K]
+	Capabilities: [68] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [50] Express (v1) Legacy Endpoint, MSI 01
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr+ UnsuppReq+ AuxPwr- TransPend-
+		LnkCap:	Port #1, Speed 2.5GT/s, Width x1, ASPM L0s, Exit Latency L0s 
+unlimited, L1 unlimited
+			ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- 
+BWMgmt- ABWMgmt-
+	Kernel driver in use: ahci
 
-Yes, and I'd like that to be done with a new data section rather than a
-special KVM hook.
+[root@localhost ddaney]# lspci -s 0005:90:00.0 -vvv -n
+0005:90:00.0 0106: 197b:2363 (rev 03) (prog-if 01 [AHCI 1.0])
+	Subsystem: 197b:2363
+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- 
+Stepping- SERR- FastB2B- DisINTx-
+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- 
+<MAbort- >SERR- <PERR- INTx-
+	Latency: 0
+	Interrupt: pin A routed to IRQ 26
+	NUMA node: 0
+	Region 5: Memory at 899010010000 (32-bit, non-prefetchable) [size=8K]
+	Expansion ROM at 899010000000 [disabled] [size=64K]
+	Capabilities: [68] Power Management version 2
+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot+,D3cold-)
+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+	Capabilities: [50] Express (v1) Legacy Endpoint, MSI 01
+		DevCap:	MaxPayload 128 bytes, PhantFunc 0, Latency L0s <64ns, L1 <1us
+			ExtTag- AttnBtn- AttnInd- PwrInd- RBE- FLReset-
+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
+			MaxPayload 128 bytes, MaxReadReq 512 bytes
+		DevSta:	CorrErr- UncorrErr- FatalErr+ UnsuppReq+ AuxPwr- TransPend-
+		LnkCap:	Port #1, Speed 2.5GT/s, Width x1, ASPM L0s, Exit Latency L0s 
+unlimited, L1 unlimited
+			ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
+		LnkCtl:	ASPM Disabled; RCB 64 bytes Disabled- CommClk-
+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+		LnkSta:	Speed 2.5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive- 
+BWMgmt- ABWMgmt-
+	Kernel driver in use: ahci
 
-> And I keep talking about SEV-ES because this is going to expand on the
-> need of having a shared memory region which the hypervisor and the guest
-> needs to access, thus unencrypted. See
-> 
-> http://support.amd.com/TechDocs/Protecting%20VM%20Register%20State%20with%20SEV-ES.pdf
-> 
-> This is where you come in and say what would be the best approach there...
 
-I have no idea.  SEV-ES seems to be very hard to set up at the beginning
-of the kernel bootstrap.  There's all sorts of chicken and egg problems,
-as well as complicated handshakes between the firmware and the guest,
-and the way to do it also depends on the trust and threat models.
 
-A much simpler way is to just boot under a trusted hypervisor, do
-"modprobe sev-es" and save a snapshot of the guest.  Then you sign the
-snapshot and pass it to your cloud provider.
+Look!  No MSI.
 
-Paolo
+>
+> I was told to check ath9k-based cards. Any other examples?
+>
+> Looking around, I came across this thread:
+> http://lists.infradead.org/pipermail/linux-arm-kernel/2016-March/418254.html
+> "i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity"
+>
+> IIUC, although some PCIe boards do support MSI, the driver might not
+> put in the work to use that infrastructure, and instead reverts to
+> legacy interrupts. (So it is a SW issue, in a sense.)
+>
+> Regards.
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
