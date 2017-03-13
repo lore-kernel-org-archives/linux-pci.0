@@ -1,85 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 23 Mar 2017 09:48:19 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-Message-ID: <20170323084819.GA23281@h08.hostsharing.net>
-References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170322193111.GA8190@wunner.de>
- <CAKv+Gu_X-SEnz7h9J8boqqjOQGHQawwdSAq4haH-OGu8zdfNfA@mail.gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu_X-SEnz7h9J8boqqjOQGHQawwdSAq4haH-OGu8zdfNfA@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
- Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
- "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
- Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Yinghai Lu <yinghai@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Return-Path: <SRS0=Ad0z=2W=intel.com=mayurkumar.patel@kernel.org>
+Return-Path: <SRS0=Ad0z=2W=intel.com=mayurkumar.patel@kernel.org>
+From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"timur@codeaurora.org" <timur@codeaurora.org>,
+	"linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, open list
+	<linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>
+Subject: RE: [PATCH V3] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+Date: Mon, 13 Mar 2017 08:49:30 +0000
+Message-ID: <92EBB4272BF81E4089A7126EC1E7B28466670D75@IRSMSX101.ger.corp.intel.com>
+References: <1489005551-23598-1-git-send-email-okaya@codeaurora.org>
+ <20170309222751.GD19517@bhelgaas-glaptop.roam.corp.google.com>
+ <ec7ee607-60f3-7e1a-b1cd-8e4534ab98eb@codeaurora.org>
+In-Reply-To: <ec7ee607-60f3-7e1a-b1cd-8e4534ab98eb@codeaurora.org>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 22, 2017 at 07:32:43PM +0000, Ard Biesheuvel wrote:
-> On 22 March 2017 at 19:31, Lukas Wunner <lukas@wunner.de> wrote:
-> > On Wed, Mar 22, 2017 at 03:30:29PM +0000, Ard Biesheuvel wrote:
-> >> On UEFI systems, the PCI subsystem is enumerated by the firmware,
-> >> and if a graphical framebuffer is exposed by a PCI device, its base
-> >> address and size are exposed to the OS via the Graphics Output
-> >> Protocol (GOP).
-> >>
-> >> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
-> >> scratch at boot. This may result in the GOP framebuffer address to
-> >> become stale, if the BAR covering the framebuffer is modified. This
-> >> will cause the framebuffer to become unresponsive, and may in some
-> >> cases result in unpredictable behavior if the range is reassigned to
-> >> another device.
-> >
-> > Hm, commit message seems to indicate the issue is restricted to arm64,
-> > yet there's no IS_ENABLED(ARM64) to constrain the added code to that arch?
-> 
-> True. I am eager to get some x86 coverage for this, since I would
-> expect this not to do any harm. But I'm fine with making it ARM/arm64
-> specific in the final version.
 
-I see.  IIUC, this is only a problem because pci_bus_assign_resources()
-is called from arch/arm64/kernel/pci.c:pci_acpi_scan_root() (as well as
-the host drivers) and x86 isn't affected because it doesn't do that.
+>
+>Hi Bjorn,
+>
+>On 3/9/2017 5:27 PM, Bjorn Helgaas wrote:
+>> How hard do you think it would be to rework this path slightly so we:
+>>
+>>   - call pcie_aspm_init_link_state() for every device, maybe from
+>>     pci_init_capabilities()
+>>
+>>   - for bridges, have pcie_aspm_init_link_state() allocate a
+>>     link_state, regardless of whether it currently has any children,
+>>     and save the ASPM settings done by firmware
+>>
+>>   - for endpoints, have pcie_aspm_init_link_state() do the actual ASPM
+>>     setup of the link as it currently does
+>>
+>>   - for endpoints, change pcie_aspm_exit_link_state() so it cleans up
+>>     the device's own state and disables ASPM if necessary, but doesn't
+>>     remove the parent's link_state
+>>
+>>   - for bridges, change pcie_aspm_exit_link_state() so it frees the
+>>     bridge's own link_state
+>
+>Thanks for the feedback, Let me take a stab at this.
+>Sinan
 
-I have no opinion on executing the quirk on x86 as well, I was just
-confused by the discrepancy between commit message and patch, but that
-can easily be remedied with a copy+paste of what you replied to Sinan:
+Thanks Bjorn and Sinan. I will wait for new patch-sets from Sinan.
 
-       "On x86, it works, given that BARs are usually not reassigned,
-	and so the patch should be a no-op in that case, although it
-	should still be an improvement to check whether the device that
-	owns the BAR actually has memory decoding enabled before we
-	attach the framebuffer driver to it."
-
-
-> >> +DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, efifb_fixup_resources);
-> >
-> > Maybe this can be constrained to PCI_BASE_CLASS_DISPLAY?
-> 
-> How does one do that with DECLARE_PCI_FIXUP_HEADER?
-
-With DECLARE_PCI_FIXUP_CLASS_HEADER().
-
-Thanks,
-
-Lukas
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
+>--
+>Sinan Kaya
+>Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technol=
+ogies, Inc.
+>Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux =
+Foundation Collaborative Project.
+Intel Deutschland GmbH
+Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
+Tel: +49 89 99 8853-0, www.intel.de
+Managing Directors: Christin Eisenschmid, Christian Lamprechter
+Chairperson of the Supervisory Board: Nicole Lau
+Registered Office: Munich
+Commercial Register: Amtsgericht Muenchen HRB 186928
