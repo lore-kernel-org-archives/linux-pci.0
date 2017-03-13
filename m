@@ -1,316 +1,640 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, yurovsky@gmail.com,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Fabio Estevam <fabio.estevam@nxp.com>,
-        Dong Aisheng <dongas86@gmail.com>,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v7 1/4] PCI: imx6: Add code to support i.MX7D
-Date: Tue, 21 Mar 2017 06:42:00 -0700
-Message-Id: <20170321134203.26325-2-andrew.smirnov@gmail.com>
-In-Reply-To: <20170321134203.26325-1-andrew.smirnov@gmail.com>
-References: <20170321134203.26325-1-andrew.smirnov@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v4 03/23] PCI: endpoint: Introduce configfs entry for
+ configuring EP functions
+Date: Mon, 13 Mar 2017 19:52:39 +0530
+Message-ID: <20170313142259.25397-4-kishon@ti.com>
+In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
+References: <20170313142259.25397-1-kishon@ti.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add various bits of code needed to support i.MX7D variant of the IP.
+Introduce a new configfs entry to configure the EP function (like
+configuring the standard configuration header entries) and to
+bind the EP function with EP controller.
 
-Cc: yurovsky@gmail.com
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh+dt@kernel.org>
-Cc: Mark Rutland <mark.rutland@arm.com>
-Cc: Lee Jones <lee.jones@linaro.org>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: Dong Aisheng <dongas86@gmail.com>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: devicetree@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Acked-by: Lee Jones <lee.jones@linaro.org>
-Acked-by: Rob Herring <robh@kernel.org>
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 ++-
- drivers/pci/dwc/pci-imx6.c                         | 120 ++++++++++++++++-----
- include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
- 3 files changed, 111 insertions(+), 26 deletions(-)
+ drivers/pci/endpoint/Kconfig      |   9 +
+ drivers/pci/endpoint/Makefile     |   1 +
+ drivers/pci/endpoint/pci-ep-cfs.c | 509 ++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-ep-cfs.h        |  41 +++
+ 4 files changed, 560 insertions(+)
+ create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
+ create mode 100644 include/linux/pci-ep-cfs.h
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-index 83aeb1f..11db2ab 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.txt
-@@ -4,7 +4,11 @@ This PCIe host controller is based on the Synopsis Designware PCIe IP
- and thus inherits all the common properties defined in designware-pcie.txt.
+diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
+index a5442ace7077..c86bca9b7de3 100644
+--- a/drivers/pci/endpoint/Kconfig
++++ b/drivers/pci/endpoint/Kconfig
+@@ -17,4 +17,13 @@ config PCI_ENDPOINT
  
- Required properties:
--- compatible: "fsl,imx6q-pcie", "fsl,imx6sx-pcie", "fsl,imx6qp-pcie"
-+- compatible:
-+	- "fsl,imx6q-pcie"
-+	- "fsl,imx6sx-pcie",
-+	- "fsl,imx6qp-pcie"
-+	- "fsl,imx7d-pcie"
- - reg: base address and length of the PCIe controller
- - interrupts: A list of interrupt outputs of the controller. Must contain an
-   entry for each entry in the interrupt-names property.
-@@ -34,6 +38,13 @@ Additional required properties for imx6sx-pcie:
- - clock names: Must include the following additional entries:
- 	- "pcie_inbound_axi"
+ 	   If in doubt, say "N" to disable Endpoint support.
  
-+Additional required properties for imx7d-pcie:
-+- power-domains: Must be set to a phandle pointing to PCIE_PHY power domain
-+- resets: Must contain phandles to PCIE related reset lines exposed by SRC IP block
-+- reset-names: Must contain the following entires:
-+  	       - "pciephy"
-+	       - "apps"
++config PCI_ENDPOINT_CONFIGFS
++	bool "PCI Endpoint Configfs Support"
++	depends on PCI_ENDPOINT
++	select CONFIGFS_FS
++	help
++	   This will enable the configfs entry that can be used to
++	   configure the endpoint function and used to bind the
++	   function with a endpoint controller.
 +
- Example:
+ endmenu
+diff --git a/drivers/pci/endpoint/Makefile b/drivers/pci/endpoint/Makefile
+index dc1bc16491e6..7219d51bb401 100644
+--- a/drivers/pci/endpoint/Makefile
++++ b/drivers/pci/endpoint/Makefile
+@@ -2,5 +2,6 @@
+ # Makefile for PCI Endpoint Support
+ #
  
- 	pcie@0x01000000 {
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index 801e46c..e0c36d6 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -17,6 +17,7 @@
- #include <linux/kernel.h>
- #include <linux/mfd/syscon.h>
- #include <linux/mfd/syscon/imx6q-iomuxc-gpr.h>
-+#include <linux/mfd/syscon/imx7-iomuxc-gpr.h>
- #include <linux/module.h>
- #include <linux/of_gpio.h>
- #include <linux/of_device.h>
-@@ -27,6 +28,7 @@
- #include <linux/signal.h>
- #include <linux/types.h>
- #include <linux/interrupt.h>
-+#include <linux/reset.h>
- 
- #include "pcie-designware.h"
- 
-@@ -36,6 +38,7 @@ enum imx6_pcie_variants {
- 	IMX6Q,
- 	IMX6SX,
- 	IMX6QP,
-+	IMX7D,
- };
- 
- struct imx6_pcie {
-@@ -47,6 +50,8 @@ struct imx6_pcie {
- 	struct clk		*pcie_inbound_axi;
- 	struct clk		*pcie;
- 	struct regmap		*iomuxc_gpr;
-+	struct reset_control	*pciephy_reset;
-+	struct reset_control	*apps_reset;
- 	enum imx6_pcie_variants variant;
- 	u32			tx_deemph_gen1;
- 	u32			tx_deemph_gen2_3p5db;
-@@ -56,6 +61,11 @@ struct imx6_pcie {
- 	int			link_gen;
- };
- 
-+/* Parameters for the waiting for PCIe PHY PLL to lock on i.MX7 */
-+#define PHY_PLL_LOCK_WAIT_MAX_RETRIES	2000
-+#define PHY_PLL_LOCK_WAIT_USLEEP_MIN	50
-+#define PHY_PLL_LOCK_WAIT_USLEEP_MAX	200
++obj-$(CONFIG_PCI_ENDPOINT_CONFIGFS)	+= pci-ep-cfs.o
+ obj-$(CONFIG_PCI_ENDPOINT)		+= pci-epc-core.o pci-epf-core.o\
+ 					   pci-epc-mem.o
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+new file mode 100644
+index 000000000000..424fdd6ed1ca
+--- /dev/null
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -0,0 +1,509 @@
++/**
++ * configfs to configure the PCI endpoint
++ *
++ * Copyright (C) 2017 Texas Instruments
++ * Author: Kishon Vijay Abraham I <kishon@ti.com>
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 of
++ * the License as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
 +
- /* PCIe Root Complex registers (memory-mapped) */
- #define PCIE_RC_LCR				0x7c
- #define PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN1	0x1
-@@ -248,6 +258,10 @@ static int imx6q_pcie_abort_handler(unsigned long addr,
- static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
- {
- 	switch (imx6_pcie->variant) {
-+	case IMX7D:
-+		reset_control_assert(imx6_pcie->pciephy_reset);
-+		reset_control_assert(imx6_pcie->apps_reset);
-+		break;
- 	case IMX6SX:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
-@@ -303,11 +317,32 @@ static int imx6_pcie_enable_ref_clk(struct imx6_pcie *imx6_pcie)
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR1,
- 				   IMX6Q_GPR1_PCIE_REF_CLK_EN, 1 << 16);
- 		break;
-+	case IMX7D:
-+		break;
- 	}
- 
- 	return ret;
- }
- 
-+static void imx7d_pcie_wait_for_phy_pll_lock(struct imx6_pcie *imx6_pcie)
++#include <linux/module.h>
++#include <linux/slab.h>
++
++#include <linux/pci-epc.h>
++#include <linux/pci-epf.h>
++#include <linux/pci-ep-cfs.h>
++
++static struct config_group *functions_group;
++static struct config_group *controllers_group;
++
++struct pci_epf_group {
++	struct config_group group;
++	struct pci_epf *epf;
++};
++
++struct pci_epc_group {
++	struct config_group group;
++	struct pci_epc *epc;
++	bool start;
++	unsigned long function_num_map;
++};
++
++static inline struct pci_epf_group *to_pci_epf_group(struct config_item *item)
 +{
-+	u32 val;
-+	unsigned int retries;
-+	struct device *dev = imx6_pcie->pci->dev;
-+
-+	for (retries = 0; retries < PHY_PLL_LOCK_WAIT_MAX_RETRIES; retries++) {
-+		regmap_read(imx6_pcie->iomuxc_gpr, IOMUXC_GPR22, &val);
-+
-+		if (val & IMX7D_GPR22_PCIE_PHY_PLL_LOCKED)
-+			return;
-+
-+		usleep_range(PHY_PLL_LOCK_WAIT_USLEEP_MIN,
-+			     PHY_PLL_LOCK_WAIT_USLEEP_MAX);
-+	}
-+
-+	dev_err(dev, "PCIe PLL lock timeout\n");
++	return container_of(to_config_group(item), struct pci_epf_group, group);
 +}
 +
- static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- {
- 	struct dw_pcie *pci = imx6_pcie->pci;
-@@ -351,6 +386,10 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 	}
- 
- 	switch (imx6_pcie->variant) {
-+	case IMX7D:
-+		reset_control_deassert(imx6_pcie->pciephy_reset);
-+		imx7d_pcie_wait_for_phy_pll_lock(imx6_pcie);
-+		break;
- 	case IMX6SX:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR5,
- 				   IMX6SX_GPR5_PCIE_BTNRST_RESET, 0);
-@@ -377,35 +416,44 @@ static void imx6_pcie_deassert_core_reset(struct imx6_pcie *imx6_pcie)
- 
- static void imx6_pcie_init_phy(struct imx6_pcie *imx6_pcie)
- {
--	if (imx6_pcie->variant == IMX6SX)
-+	switch (imx6_pcie->variant) {
-+	case IMX7D:
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+				   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL, 0);
-+		break;
-+	case IMX6SX:
- 		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 				   IMX6SX_GPR12_PCIE_RX_EQ_MASK,
- 				   IMX6SX_GPR12_PCIE_RX_EQ_2);
-+		/* FALLTHROUGH */
-+	default:
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+				   IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
- 
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
--			IMX6Q_GPR12_PCIE_CTL_2, 0 << 10);
-+		/* configure constant input signal to the pcie ctrl and phy */
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+				   IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
++static inline struct pci_epc_group *to_pci_epc_group(struct config_item *item)
++{
++	return container_of(to_config_group(item), struct pci_epc_group, group);
++}
 +
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-+				   IMX6Q_GPR8_TX_DEEMPH_GEN1,
-+				   imx6_pcie->tx_deemph_gen1 << 0);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-+				   IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
-+				   imx6_pcie->tx_deemph_gen2_3p5db << 6);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-+				   IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
-+				   imx6_pcie->tx_deemph_gen2_6db << 12);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-+				   IMX6Q_GPR8_TX_SWING_FULL,
-+				   imx6_pcie->tx_swing_full << 18);
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
-+				   IMX6Q_GPR8_TX_SWING_LOW,
-+				   imx6_pcie->tx_swing_low << 25);
-+		break;
++static ssize_t pci_epc_start_store(struct config_item *item, const char *page,
++				   size_t len)
++{
++	int ret;
++	bool start;
++	struct pci_epc *epc;
++	struct pci_epc_group *epc_group = to_pci_epc_group(item);
++
++	epc = epc_group->epc;
++
++	ret = kstrtobool(page, &start);
++	if (ret)
++		return ret;
++
++	if (!start) {
++		pci_epc_stop(epc);
++		return len;
 +	}
- 
--	/* configure constant input signal to the pcie ctrl and phy */
- 	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
- 			IMX6Q_GPR12_DEVICE_TYPE, PCI_EXP_TYPE_ROOT_PORT << 12);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
--			IMX6Q_GPR12_LOS_LEVEL, 9 << 4);
--
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			   IMX6Q_GPR8_TX_DEEMPH_GEN1,
--			   imx6_pcie->tx_deemph_gen1 << 0);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			   IMX6Q_GPR8_TX_DEEMPH_GEN2_3P5DB,
--			   imx6_pcie->tx_deemph_gen2_3p5db << 6);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			   IMX6Q_GPR8_TX_DEEMPH_GEN2_6DB,
--			   imx6_pcie->tx_deemph_gen2_6db << 12);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			   IMX6Q_GPR8_TX_SWING_FULL,
--			   imx6_pcie->tx_swing_full << 18);
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR8,
--			   IMX6Q_GPR8_TX_SWING_LOW,
--			   imx6_pcie->tx_swing_low << 25);
- }
- 
- static int imx6_pcie_wait_for_link(struct imx6_pcie *imx6_pcie)
-@@ -469,8 +517,11 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
- 	dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
- 
- 	/* Start LTSSM. */
--	regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
--			IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
-+	if (imx6_pcie->variant == IMX7D)
-+		reset_control_deassert(imx6_pcie->apps_reset);
-+	else
-+		regmap_update_bits(imx6_pcie->iomuxc_gpr, IOMUXC_GPR12,
-+				   IMX6Q_GPR12_PCIE_CTL_2, 1 << 10);
- 
- 	ret = imx6_pcie_wait_for_link(imx6_pcie);
- 	if (ret)
-@@ -653,13 +704,31 @@ static int __init imx6_pcie_probe(struct platform_device *pdev)
- 		return PTR_ERR(imx6_pcie->pcie);
- 	}
- 
--	if (imx6_pcie->variant == IMX6SX) {
-+	switch (imx6_pcie->variant) {
-+	case IMX6SX:
- 		imx6_pcie->pcie_inbound_axi = devm_clk_get(dev,
- 							   "pcie_inbound_axi");
- 		if (IS_ERR(imx6_pcie->pcie_inbound_axi)) {
- 			dev_err(dev, "pcie_inbound_axi clock missing or invalid\n");
- 			return PTR_ERR(imx6_pcie->pcie_inbound_axi);
- 		}
-+		break;
-+	case IMX7D:
-+		imx6_pcie->pciephy_reset = devm_reset_control_get(dev,
-+								  "pciephy");
-+		if (IS_ERR(imx6_pcie->pciephy_reset)) {
-+			dev_err(dev, "Failed to get PCIEPHY reset contol\n");
-+			return PTR_ERR(imx6_pcie->pciephy_reset);
-+		}
 +
-+		imx6_pcie->apps_reset = devm_reset_control_get(dev, "apps");
-+		if (IS_ERR(imx6_pcie->apps_reset)) {
-+			dev_err(dev, "Failed to get PCIE APPS reset contol\n");
-+			return PTR_ERR(imx6_pcie->apps_reset);
-+		}
-+		break;
-+	default:
-+		break;
- 	}
- 
- 	/* Grab GPR config register range */
-@@ -718,6 +787,7 @@ static const struct of_device_id imx6_pcie_of_match[] = {
- 	{ .compatible = "fsl,imx6q-pcie",  .data = (void *)IMX6Q,  },
- 	{ .compatible = "fsl,imx6sx-pcie", .data = (void *)IMX6SX, },
- 	{ .compatible = "fsl,imx6qp-pcie", .data = (void *)IMX6QP, },
-+	{ .compatible = "fsl,imx7d-pcie",  .data = (void *)IMX7D,  },
- 	{},
- };
- 
-diff --git a/include/linux/mfd/syscon/imx7-iomuxc-gpr.h b/include/linux/mfd/syscon/imx7-iomuxc-gpr.h
-index 4585d61..abbd524 100644
---- a/include/linux/mfd/syscon/imx7-iomuxc-gpr.h
-+++ b/include/linux/mfd/syscon/imx7-iomuxc-gpr.h
-@@ -44,4 +44,8 @@
- 
- #define IMX7D_GPR5_CSI_MUX_CONTROL_MIPI		(0x1 << 4)
- 
-+#define IMX7D_GPR12_PCIE_PHY_REFCLK_SEL		BIT(5)
++	ret = pci_epc_start(epc);
++	if (ret) {
++		dev_err(&epc->dev, "failed to start endpoint controller\n");
++		return -EINVAL;
++	}
 +
-+#define IMX7D_GPR22_PCIE_PHY_PLL_LOCKED		BIT(31)
++	epc_group->start = start;
 +
- #endif /* __LINUX_IMX7_IOMUXC_GPR_H */
++	return len;
++}
++
++static ssize_t pci_epc_start_show(struct config_item *item, char *page)
++{
++	return sprintf(page, "%d\n",
++		       to_pci_epc_group(item)->start);
++}
++
++CONFIGFS_ATTR(pci_epc_, start);
++
++static struct configfs_attribute *pci_epc_attrs[] = {
++	&pci_epc_attr_start,
++	NULL,
++};
++
++static int pci_epc_epf_link(struct config_item *epc_item,
++			    struct config_item *epf_item)
++{
++	int ret;
++	u32 func_no = 0;
++	struct pci_epc *epc;
++	struct pci_epf *epf;
++	struct pci_epf_group *epf_group = to_pci_epf_group(epf_item);
++	struct pci_epc_group *epc_group = to_pci_epc_group(epc_item);
++
++	epc = epc_group->epc;
++	epf = epf_group->epf;
++	ret = pci_epc_add_epf(epc, epf);
++	if (ret)
++		goto err_add_epf;
++
++	func_no = find_first_zero_bit(&epc_group->function_num_map,
++				      sizeof(epc_group->function_num_map));
++	set_bit(func_no, &epc_group->function_num_map);
++	epf->func_no = func_no;
++
++	ret = pci_epf_bind(epf);
++	if (ret)
++		goto err_epf_bind;
++
++	return 0;
++
++err_epf_bind:
++	pci_epc_remove_epf(epc, epf);
++
++err_add_epf:
++	clear_bit(func_no, &epc_group->function_num_map);
++
++	return ret;
++}
++
++static void pci_epc_epf_unlink(struct config_item *epc_item,
++			       struct config_item *epf_item)
++{
++	struct pci_epc *epc;
++	struct pci_epf *epf;
++	struct pci_epf_group *epf_group = to_pci_epf_group(epf_item);
++	struct pci_epc_group *epc_group = to_pci_epc_group(epc_item);
++
++	WARN_ON_ONCE(epc_group->start);
++
++	epc = epc_group->epc;
++	epf = epf_group->epf;
++	clear_bit(epf->func_no, &epc_group->function_num_map);
++	pci_epf_unbind(epf);
++	pci_epc_remove_epf(epc, epf);
++}
++
++static struct configfs_item_operations pci_epc_item_ops = {
++	.allow_link	= pci_epc_epf_link,
++	.drop_link	= pci_epc_epf_unlink,
++};
++
++static struct config_item_type pci_epc_type = {
++	.ct_item_ops	= &pci_epc_item_ops,
++	.ct_attrs	= pci_epc_attrs,
++	.ct_owner	= THIS_MODULE,
++};
++
++struct config_group *pci_ep_cfs_add_epc_group(const char *name)
++{
++	int ret;
++	struct pci_epc *epc;
++	struct config_group *group;
++	struct pci_epc_group *epc_group;
++
++	epc_group = kzalloc(sizeof(*epc_group), GFP_KERNEL);
++	if (!epc_group) {
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	group = &epc_group->group;
++
++	config_group_init_type_name(group, name, &pci_epc_type);
++	ret = configfs_register_group(controllers_group, group);
++	if (ret) {
++		pr_err("failed to register configfs group for %s\n", name);
++		goto err_register_group;
++	}
++
++	epc = pci_epc_get(name);
++	if (IS_ERR(epc)) {
++		ret = PTR_ERR(epc);
++		goto err_epc_get;
++	}
++
++	epc_group->epc = epc;
++
++	return group;
++
++err_epc_get:
++	configfs_unregister_group(group);
++
++err_register_group:
++	kfree(epc_group);
++
++err:
++	return ERR_PTR(ret);
++}
++EXPORT_SYMBOL(pci_ep_cfs_add_epc_group);
++
++void pci_ep_cfs_remove_epc_group(struct config_group *group)
++{
++	struct pci_epc_group *epc_group;
++
++	if (!group)
++		return;
++
++	epc_group = container_of(group, struct pci_epc_group, group);
++	pci_epc_put(epc_group->epc);
++	configfs_unregister_group(&epc_group->group);
++	kfree(epc_group);
++}
++EXPORT_SYMBOL(pci_ep_cfs_remove_epc_group);
++
++#define PCI_EPF_HEADER_R(_name)						       \
++static ssize_t pci_epf_##_name##_show(struct config_item *item,	char *page)    \
++{									       \
++	struct pci_epf *epf = to_pci_epf_group(item)->epf;		       \
++	if (WARN_ON_ONCE(!epf->header))					       \
++		return -EINVAL;						       \
++	return sprintf(page, "0x%04x\n", epf->header->_name);		       \
++}
++
++#define PCI_EPF_HEADER_W_u32(_name)					       \
++static ssize_t pci_epf_##_name##_store(struct config_item *item,	       \
++				       const char *page, size_t len)	       \
++{									       \
++	u32 val;							       \
++	int ret;							       \
++	struct pci_epf *epf = to_pci_epf_group(item)->epf;		       \
++	if (WARN_ON_ONCE(!epf->header))					       \
++		return -EINVAL;						       \
++	ret = kstrtou32(page, 0, &val);					       \
++	if (ret)							       \
++		return ret;						       \
++	epf->header->_name = val;					       \
++	return len;							       \
++}
++
++#define PCI_EPF_HEADER_W_u16(_name)					       \
++static ssize_t pci_epf_##_name##_store(struct config_item *item,	       \
++				       const char *page, size_t len)	       \
++{									       \
++	u16 val;							       \
++	int ret;							       \
++	struct pci_epf *epf = to_pci_epf_group(item)->epf;		       \
++	if (WARN_ON_ONCE(!epf->header))					       \
++		return -EINVAL;						       \
++	ret = kstrtou16(page, 0, &val);					       \
++	if (ret)							       \
++		return ret;						       \
++	epf->header->_name = val;					       \
++	return len;							       \
++}
++
++#define PCI_EPF_HEADER_W_u8(_name)					       \
++static ssize_t pci_epf_##_name##_store(struct config_item *item,	       \
++				       const char *page, size_t len)	       \
++{									       \
++	u8 val;								       \
++	int ret;							       \
++	struct pci_epf *epf = to_pci_epf_group(item)->epf;		       \
++	if (WARN_ON_ONCE(!epf->header))					       \
++		return -EINVAL;						       \
++	ret = kstrtou8(page, 0, &val);					       \
++	if (ret)							       \
++		return ret;						       \
++	epf->header->_name = val;					       \
++	return len;							       \
++}
++
++static ssize_t pci_epf_msi_interrupts_store(struct config_item *item,
++					    const char *page, size_t len)
++{
++	u8 val;
++	int ret;
++
++	ret = kstrtou8(page, 0, &val);
++	if (ret)
++		return ret;
++
++	to_pci_epf_group(item)->epf->msi_interrupts = val;
++
++	return len;
++}
++
++static ssize_t pci_epf_msi_interrupts_show(struct config_item *item,
++					   char *page)
++{
++	return sprintf(page, "%d\n",
++		       to_pci_epf_group(item)->epf->msi_interrupts);
++}
++
++PCI_EPF_HEADER_R(vendorid)
++PCI_EPF_HEADER_W_u16(vendorid)
++
++PCI_EPF_HEADER_R(deviceid)
++PCI_EPF_HEADER_W_u16(deviceid)
++
++PCI_EPF_HEADER_R(revid)
++PCI_EPF_HEADER_W_u8(revid)
++
++PCI_EPF_HEADER_R(progif_code)
++PCI_EPF_HEADER_W_u8(progif_code)
++
++PCI_EPF_HEADER_R(subclass_code)
++PCI_EPF_HEADER_W_u8(subclass_code)
++
++PCI_EPF_HEADER_R(baseclass_code)
++PCI_EPF_HEADER_W_u8(baseclass_code)
++
++PCI_EPF_HEADER_R(cache_line_size)
++PCI_EPF_HEADER_W_u8(cache_line_size)
++
++PCI_EPF_HEADER_R(subsys_vendor_id)
++PCI_EPF_HEADER_W_u16(subsys_vendor_id)
++
++PCI_EPF_HEADER_R(subsys_id)
++PCI_EPF_HEADER_W_u16(subsys_id)
++
++PCI_EPF_HEADER_R(interrupt_pin)
++PCI_EPF_HEADER_W_u8(interrupt_pin)
++
++CONFIGFS_ATTR(pci_epf_, vendorid);
++CONFIGFS_ATTR(pci_epf_, deviceid);
++CONFIGFS_ATTR(pci_epf_, revid);
++CONFIGFS_ATTR(pci_epf_, progif_code);
++CONFIGFS_ATTR(pci_epf_, subclass_code);
++CONFIGFS_ATTR(pci_epf_, baseclass_code);
++CONFIGFS_ATTR(pci_epf_, cache_line_size);
++CONFIGFS_ATTR(pci_epf_, subsys_vendor_id);
++CONFIGFS_ATTR(pci_epf_, subsys_id);
++CONFIGFS_ATTR(pci_epf_, interrupt_pin);
++CONFIGFS_ATTR(pci_epf_, msi_interrupts);
++
++static struct configfs_attribute *pci_epf_attrs[] = {
++	&pci_epf_attr_vendorid,
++	&pci_epf_attr_deviceid,
++	&pci_epf_attr_revid,
++	&pci_epf_attr_progif_code,
++	&pci_epf_attr_subclass_code,
++	&pci_epf_attr_baseclass_code,
++	&pci_epf_attr_cache_line_size,
++	&pci_epf_attr_subsys_vendor_id,
++	&pci_epf_attr_subsys_id,
++	&pci_epf_attr_interrupt_pin,
++	&pci_epf_attr_msi_interrupts,
++	NULL,
++};
++
++static void pci_epf_release(struct config_item *item)
++{
++	struct pci_epf_group *epf_group = to_pci_epf_group(item);
++
++	pci_epf_destroy(epf_group->epf);
++	kfree(epf_group);
++}
++
++static struct configfs_item_operations pci_epf_ops = {
++	.release		= pci_epf_release,
++};
++
++static struct config_item_type pci_epf_type = {
++	.ct_item_ops	= &pci_epf_ops,
++	.ct_attrs	= pci_epf_attrs,
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct config_group *pci_epf_make(struct config_group *group,
++					 const char *name)
++{
++	struct pci_epf_group *epf_group;
++	struct pci_epf *epf;
++
++	epf_group = kzalloc(sizeof(*epf_group), GFP_KERNEL);
++	if (!epf_group)
++		return ERR_PTR(-ENOMEM);
++
++	config_group_init_type_name(&epf_group->group, name, &pci_epf_type);
++
++	epf = pci_epf_create(group->cg_item.ci_name);
++	if (IS_ERR(epf)) {
++		pr_err("failed to create endpoint function device\n");
++		return ERR_PTR(-EINVAL);
++	}
++
++	epf_group->epf = epf;
++
++	return &epf_group->group;
++}
++
++static void pci_epf_drop(struct config_group *group, struct config_item *item)
++{
++	config_item_put(item);
++}
++
++static struct configfs_group_operations pci_epf_group_ops = {
++	.make_group     = &pci_epf_make,
++	.drop_item      = &pci_epf_drop,
++};
++
++static struct config_item_type pci_epf_group_type = {
++	.ct_group_ops	= &pci_epf_group_ops,
++	.ct_owner	= THIS_MODULE,
++};
++
++struct config_group *pci_ep_cfs_add_epf_group(const char *name)
++{
++	struct config_group *group;
++
++	group = configfs_register_default_group(functions_group, name,
++						&pci_epf_group_type);
++	if (IS_ERR(group))
++		pr_err("failed to register configfs group for %s function\n",
++		       name);
++
++	return group;
++}
++EXPORT_SYMBOL(pci_ep_cfs_add_epf_group);
++
++void pci_ep_cfs_remove_epf_group(struct config_group *group)
++{
++	if (IS_ERR_OR_NULL(group))
++		return;
++
++	configfs_unregister_default_group(group);
++}
++EXPORT_SYMBOL(pci_ep_cfs_remove_epf_group);
++
++static struct config_item_type pci_functions_type = {
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct config_item_type pci_controllers_type = {
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct config_item_type pci_ep_type = {
++	.ct_owner	= THIS_MODULE,
++};
++
++static struct configfs_subsystem pci_ep_cfs_subsys = {
++	.su_group = {
++		.cg_item = {
++			.ci_namebuf = "pci_ep",
++			.ci_type = &pci_ep_type,
++		},
++	},
++	.su_mutex = __MUTEX_INITIALIZER(pci_ep_cfs_subsys.su_mutex),
++};
++
++static int __init pci_ep_cfs_init(void)
++{
++	int ret;
++	struct config_group *root = &pci_ep_cfs_subsys.su_group;
++
++	config_group_init(root);
++
++	ret = configfs_register_subsystem(&pci_ep_cfs_subsys);
++	if (ret) {
++		pr_err("Error %d while registering subsystem %s\n",
++		       ret, root->cg_item.ci_namebuf);
++		goto err;
++	}
++
++	functions_group = configfs_register_default_group(root, "functions",
++							  &pci_functions_type);
++	if (IS_ERR(functions_group)) {
++		ret = PTR_ERR(functions_group);
++		pr_err("Error %d while registering functions group\n",
++		       ret);
++		goto err_functions_group;
++	}
++
++	controllers_group =
++		configfs_register_default_group(root, "controllers",
++						&pci_controllers_type);
++	if (IS_ERR(controllers_group)) {
++		ret = PTR_ERR(controllers_group);
++		pr_err("Error %d while registering controllers group\n",
++		       ret);
++		goto err_controllers_group;
++	}
++
++	return 0;
++
++err_controllers_group:
++	configfs_unregister_default_group(functions_group);
++
++err_functions_group:
++	configfs_unregister_subsystem(&pci_ep_cfs_subsys);
++
++err:
++	return ret;
++}
++module_init(pci_ep_cfs_init);
++
++static void __exit pci_ep_cfs_exit(void)
++{
++	configfs_unregister_default_group(controllers_group);
++	configfs_unregister_default_group(functions_group);
++	configfs_unregister_subsystem(&pci_ep_cfs_subsys);
++}
++module_exit(pci_ep_cfs_exit);
++
++MODULE_DESCRIPTION("PCI EP CONFIGFS");
++MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
++MODULE_LICENSE("GPL v2");
+diff --git a/include/linux/pci-ep-cfs.h b/include/linux/pci-ep-cfs.h
+new file mode 100644
+index 000000000000..263b89ea5705
+--- /dev/null
++++ b/include/linux/pci-ep-cfs.h
+@@ -0,0 +1,41 @@
++/**
++ * PCI Endpoint ConfigFS header file
++ *
++ * Copyright (C) 2017 Texas Instruments
++ * Author: Kishon Vijay Abraham I <kishon@ti.com>
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 of
++ * the License as published by the Free Software Foundation.
++ */
++
++#ifndef __LINUX_PCI_EP_CFS_H
++#define __LINUX_PCI_EP_CFS_H
++
++#include <linux/configfs.h>
++
++#ifdef CONFIG_PCI_ENDPOINT_CONFIGFS
++struct config_group *pci_ep_cfs_add_epc_group(const char *name);
++void pci_ep_cfs_remove_epc_group(struct config_group *group);
++struct config_group *pci_ep_cfs_add_epf_group(const char *name);
++void pci_ep_cfs_remove_epf_group(struct config_group *group);
++#else
++static inline struct config_group *pci_ep_cfs_add_epc_group(const char *name)
++{
++	return 0;
++}
++
++static inline void pci_ep_cfs_remove_epc_group(struct config_group *group)
++{
++}
++
++static inline struct config_group *pci_ep_cfs_add_epf_group(const char *name)
++{
++	return 0;
++}
++
++static inline void pci_ep_cfs_remove_epf_group(struct config_group *group)
++{
++}
++#endif
++#endif /* __LINUX_PCI_EP_CFS_H */
 -- 
-2.9.3
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
