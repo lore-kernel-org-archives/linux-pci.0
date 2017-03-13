@@ -1,128 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: helgaas@kernel.org, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
-Date: Mon, 13 Mar 2017 13:41:36 +0100
-Message-Id: <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <SRS0=bmI6=2W=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=bmI6=2W=free.fr=slash.tmp@kernel.org>
+To: linux-pci <linux-pci@vger.kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, David Laight
+ <david.laight@aculab.com>, Robin Murphy <robin.murphy@arm.com>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ netdev <netdev@vger.kernel.org>, Tim Harvey <tharvey@gateworks.com>,
+ Arnd Bergmann <arnd@arndb.de>
+From: Mason <slash.tmp@free.fr>
+Subject: Legacy features in PCI Express devices
+Message-ID: <ef5c9778-fbae-9f4f-ac2e-29b8597537a5@free.fr>
+Date: Mon, 13 Mar 2017 17:10:57 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+Hello,
 
-Try to resize BAR0 to let CPU access all of VRAM.
+There are two revisions of our PCI Express controller.
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
----
- drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
- drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 29 +++++++++++++++++++++++++++++
- drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 +++++---
- drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 +++++---
- 4 files changed, 40 insertions(+), 6 deletions(-)
+Rev 1 did not support the following features:
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-index 3b81ded..905ded9 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-@@ -1719,6 +1719,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct amdgpu_device *adev, struct ttm_tt *ttm,
- 				 struct ttm_mem_reg *mem);
- void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_mc *mc, u64 base);
- void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc);
-+void amdgpu_resize_bar0(struct amdgpu_device *adev);
- void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64 size);
- int amdgpu_ttm_init(struct amdgpu_device *adev);
- void amdgpu_ttm_fini(struct amdgpu_device *adev);
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-index 118f4e6..92955fe 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-@@ -692,6 +692,35 @@ void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc)
- 			mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end);
- }
- 
-+/**
-+ * amdgpu_resize_bar0 - try to resize BAR0
-+ *
-+ * @adev: amdgpu_device pointer
-+ *
-+ * Try to resize BAR0 to make all VRAM CPU accessible.
-+ */
-+void amdgpu_resize_bar0(struct amdgpu_device *adev)
-+{
-+	u32 size = max(ilog2(adev->mc.real_vram_size - 1) + 1, 20) - 20;
-+	int r;
-+
-+	r = pci_resize_resource(adev->pdev, 0, size);
-+
-+	if (r == -ENOTSUPP) {
-+		/* The hardware don't support the extension. */
-+		return;
-+
-+	} else if (r == -ENOSPC) {
-+		DRM_INFO("Not enoigh PCI address space for a large BAR.");
-+	} else if (r) {
-+		DRM_ERROR("Problem resizing BAR0 (%d).", r);
-+	}
-+
-+	/* Reinit the doorbell mapping, it is most likely moved as well */
-+	amdgpu_doorbell_fini(adev);
-+	BUG_ON(amdgpu_doorbell_init(adev));
-+}
-+
- /*
-  * GPU helpers function.
-  */
-diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
-index dc9b6d6..36a7aa5 100644
---- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
-+++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
-@@ -367,13 +367,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device *adev)
- 		break;
- 	}
- 	adev->mc.vram_width = numchan * chansize;
--	/* Could aper size report 0 ? */
--	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
--	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
- 	/* size in MB on si */
- 	adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
- 	adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
- 
-+	if (!(adev->flags & AMD_IS_APU))
-+		amdgpu_resize_bar0(adev);
-+	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
-+	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
-+
- #ifdef CONFIG_X86_64
- 	if (adev->flags & AMD_IS_APU) {
- 		adev->mc.aper_base = ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
-diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
-index c087b00..7761ad3 100644
---- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
-+++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
-@@ -459,13 +459,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device *adev)
- 		break;
- 	}
- 	adev->mc.vram_width = numchan * chansize;
--	/* Could aper size report 0 ? */
--	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
--	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
- 	/* size in MB on si */
- 	adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
- 	adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
- 
-+	if (!(adev->flags & AMD_IS_APU))
-+		amdgpu_resize_bar0(adev);
-+	adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
-+	adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
-+
- #ifdef CONFIG_X86_64
- 	if (adev->flags & AMD_IS_APU) {
- 		adev->mc.aper_base = ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
--- 
-2.7.4
+  1) legacy PCI interrupt delivery (INTx signals)
+  2) I/O address space
+
+Internally, someone stated that such missing support would prevent
+some PCIe cards from working with our controller.
+
+Are there really modern PCIe cards that require 1) and/or 2)
+to function?
+
+Can someone provide examples of such cards, so that I may test them
+on both revisions?
+
+I was told to check ath9k-based cards. Any other examples?
+
+Looking around, I came across this thread:
+http://lists.infradead.org/pipermail/linux-arm-kernel/2016-March/418254.html
+"i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity"
+
+IIUC, although some PCIe boards do support MSI, the driver might not
+put in the work to use that infrastructure, and instead reverts to
+legacy interrupts. (So it is a SW issue, in a sense.)
+
+Regards.
