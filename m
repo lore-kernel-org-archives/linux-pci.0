@@ -1,89 +1,123 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50682 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932945AbdC2XEr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Mar 2017 19:04:47 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: mayurkumar.patel@intel.com, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rajat Jain <rajatja@google.com>,
-        David Daney <david.daney@cavium.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Julia Lawall <Julia.Lawall@lip6.fr>,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH V6 4/5] PCI/ASPM: save power on values during bridge init
-Date: Wed, 29 Mar 2017 19:04:26 -0400
-Message-Id: <1490828667-30973-5-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1490828667-30973-1-git-send-email-okaya@codeaurora.org>
-References: <1490828667-30973-1-git-send-email-okaya@codeaurora.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:9525 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753226AbdCMO0E (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 13 Mar 2017 10:26:04 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v4 14/23] PCI: dwc: dra7xx: Workaround for errata id i870
+Date: Mon, 13 Mar 2017 19:52:50 +0530
+Message-ID: <20170313142259.25397-15-kishon@ti.com>
+In-Reply-To: <20170313142259.25397-1-kishon@ti.com>
+References: <20170313142259.25397-1-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Now that we added a hook to be called from device_add, save the
-default values from the HW registers early in the boot for further
-reuse during hot device add/remove operations.
+According to errata i870, access to the PCIe slave port
+that are not 32-bit aligned will result in incorrect mapping
+to TLP Address and Byte enable fields.
 
-Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Accessing non 32-bit aligned data causes incorrect data in the target
+buffer if memcpy is used. Implement the workaround for this
+errata here.
+
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/pcie/aspm.c | 22 ++++++++++++++++++----
- 1 file changed, 18 insertions(+), 4 deletions(-)
+ drivers/pci/dwc/pci-dra7xx.c | 53 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index e33f84b..a38602a 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -505,8 +505,10 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
- 	 */
- 	if (dwreg.support & upreg.support & PCIE_LINK_STATE_L0S)
- 		link->aspm_support |= ASPM_STATE_L0S;
--	if (dwreg.enabled & PCIE_LINK_STATE_L0S)
-+	if (dwreg.enabled & PCIE_LINK_STATE_L0S) {
- 		link->aspm_enabled |= ASPM_STATE_L0S_UP;
-+		link->aspm_default |= ASPM_STATE_L0S_UP;
-+	}
- 	if (upreg.enabled & PCIE_LINK_STATE_L0S)
- 		link->aspm_enabled |= ASPM_STATE_L0S_DW;
- 	link->latency_up.l0s = calc_l0s_latency(upreg.latency_encoding_l0s);
-@@ -542,9 +544,6 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
- 	if (link->aspm_support & ASPM_STATE_L1SS)
- 		aspm_calc_l1ss_info(link, &upreg, &dwreg);
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 35c18534469c..147d37a7fe58 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -26,6 +26,8 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/resource.h>
+ #include <linux/types.h>
++#include <linux/mfd/syscon.h>
++#include <linux/regmap.h>
  
--	/* Save default state */
--	link->aspm_default = link->aspm_enabled;
--
- 	/* Setup initial capable state. Will be updated later */
- 	link->aspm_capable = link->aspm_support;
- 	/*
-@@ -835,11 +834,26 @@ static int pci_aspm_init_downstream(struct pci_dev *pdev)
- static int pci_aspm_init_upstream(struct pci_dev *pdev)
- {
- 	struct pcie_link_state *link;
-+	struct aspm_register_info upreg;
+ #include "pcie-designware.h"
  
- 	link = alloc_pcie_link_state(pdev);
- 	if (!link)
- 		return -ENOMEM;
+@@ -528,6 +530,51 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+ 	{},
+ };
  
-+	pcie_get_aspm_reg(pdev, &upreg);
-+	if (upreg.enabled & PCIE_LINK_STATE_L0S)
-+		link->aspm_default |= ASPM_STATE_L0S_DW;
-+	if (upreg.enabled & PCIE_LINK_STATE_L1)
-+		link->aspm_default |= ASPM_STATE_L1;
-+	if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_ASPM_L1_1)
-+		link->aspm_default |= ASPM_STATE_L1_1;
-+	if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_ASPM_L1_2)
-+		link->aspm_default |= ASPM_STATE_L1_2;
-+	if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_PCIPM_L1_1)
-+		link->aspm_default |= ASPM_STATE_L1_1_PCIPM;
-+	if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_PCIPM_L1_2)
-+		link->aspm_default |= ASPM_STATE_L1_2_PCIPM;
++/*
++ * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
++ * @dra7xx: the dra7xx device where the workaround should be applied
++ *
++ * Access to the PCIe slave port that are not 32-bit aligned will result
++ * in incorrect mapping to TLP Address and Byte enable fields. Therefore,
++ * byte and half-word accesses are not possible to byte offset 0x1, 0x2, or
++ * 0x3.
++ *
++ * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
++ */
++static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
++{
++	int ret;
++	struct device_node *np = dev->of_node;
++	struct regmap *regmap;
++	unsigned int reg;
++	unsigned int field;
 +
- 	return 0;
- }
- 
++	regmap = syscon_regmap_lookup_by_phandle(np,
++						 "ti,syscon-unaligned-access");
++	if (IS_ERR(regmap)) {
++		dev_dbg(dev, "can't get ti,syscon-unaligned-access\n");
++		return -EINVAL;
++	}
++
++	if (of_property_read_u32_index(np, "ti,syscon-unaligned-access", 1,
++				       &reg)) {
++		dev_err(dev, "couldn't get legacy mode register offset\n");
++		return -EINVAL;
++	}
++
++	if (of_property_read_u32_index(np, "ti,syscon-unaligned-access", 2,
++				       &field)) {
++		dev_err(dev, "can't get bit field for setting legacy mode\n");
++		return -EINVAL;
++	}
++
++	ret = regmap_update_bits(regmap, reg, field, field);
++	if (ret)
++		dev_err(dev, "failed to enable unaligned access\n");
++
++	return ret;
++}
++
+ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ {
+ 	u32 reg;
+@@ -637,6 +684,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	case DW_PCIE_RC_TYPE:
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_RC);
++
+ 		ret = dra7xx_add_pcie_port(dra7xx, pdev);
+ 		if (ret < 0)
+ 			goto err_gpio;
+@@ -644,6 +692,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	case DW_PCIE_EP_TYPE:
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_EP);
++
++		ret = dra7xx_pcie_ep_unaligned_memaccess(dev);
++		if (ret)
++			goto err_gpio;
++
+ 		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
+ 		if (ret < 0)
+ 			goto err_gpio;
 -- 
-1.9.1
+2.11.0
