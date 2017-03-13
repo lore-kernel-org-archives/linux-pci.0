@@ -1,135 +1,101 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Message-ID: <1490191473.28249.9.camel@infradead.org>
-Subject: Re: [PATCH 17/17] arm64: Do not expose PCI mmap through procfs
-From: David Woodhouse <dwmw2@infradead.org>
-To: Sinan Kaya <okaya@codeaurora.org>, linux-pci@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Will Deacon <will.deacon@arm.com>
-In-Reply-To: <cd878fb7-86f1-50cc-d394-364cb8bde344@codeaurora.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-         <4281f8e01b9fc5628cbf4a5c77abd642801e23c7.1490188942.git.dwmw2@infradead.org>
-         <cd878fb7-86f1-50cc-d394-364cb8bde344@codeaurora.org>
-Content-Type: multipart/signed; micalg="sha-256"; protocol="application/x-pkcs7-signature"; boundary="=-SwbUbYHUBid5MyFFtUKJ"
-Date: Wed, 22 Mar 2017 14:04:33 +0000
-Mime-Version: 1.0
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
+        <rjw@rjwysocki.net>, <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <linux-acpi@vger.kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-serial@vger.kernel.org>,
+        <minyard@acm.org>, <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
+        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
+        <xuwei5@hisilicon.com>,
+        "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Subject: [PATCH V7 5/7] ACPI: Delay the enumeration on the devices whose  dependency has not met
+Date: Mon, 13 Mar 2017 10:42:41 +0800
+Message-ID: <1489372963-9000-6-git-send-email-yuanzhichang@hisilicon.com>
+In-Reply-To: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
+References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+In commit 40e7fcb1929(ACPI: Add _DEP support to fix battery issue on Asus
+T100TA), the '_DEP' was supported to solve the dependency of Asus battery. But
+this patch is specific to Asus battery device.
+In the real world, there are other devices which need the dependency to play the
+role on the enumeration order. For example, all the Hip06 LPC
+periperals(IPMI-BT, uart, etc) must be scanned after the LPC host driver
+finished the probing. So, it makes sense to add a checking whether the ACPI
+device meet all the dependencies during its enumeration slot, if not, the
+enumeration will be delayed till all dependency master finish their work.
 
---=-SwbUbYHUBid5MyFFtUKJ
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+This patch adds the dependency checking in ACPI enumeration, also the
+corresponding handling to retrigger the Hip06 LPC peripherals' scanning.
 
-On Wed, 2017-03-22 at 09:54 -0400, Sinan Kaya wrote:
-> On 3/22/2017 9:25 AM, David Woodhouse wrote:
-> >=20
-> > =C2=A0
-> > +#ifdef __aarch64__
-> > +/* ARM64 wants to be special and not expose this through /proc
-> > like everyone else */
-> > +#undef HAVE_PCI_MMAP
-> > +#endif
-> > +
-> Where is this ARM64 special requirement coming from?
+Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+---
+ drivers/acpi/battery.c |  3 ---
+ drivers/acpi/scan.c    |  3 +++
+ drivers/bus/hisi_lpc.c | 12 +++++++++++-
+ 3 files changed, 14 insertions(+), 4 deletions(-)
 
-The idea is that as a new platform, ARM64 shouldn't need to implement
-legacy userspace interfaces.
+diff --git a/drivers/acpi/battery.c b/drivers/acpi/battery.c
+index 4ef1e46..e8d1af1 100644
+--- a/drivers/acpi/battery.c
++++ b/drivers/acpi/battery.c
+@@ -1210,9 +1210,6 @@ static int acpi_battery_add(struct acpi_device *device)
+ 	if (!device)
+ 		return -EINVAL;
+ 
+-	if (device->dep_unmet)
+-		return -EPROBE_DEFER;
+-
+ 	battery = kzalloc(sizeof(struct acpi_battery), GFP_KERNEL);
+ 	if (!battery)
+ 		return -ENOMEM;
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 1926918..97721b1 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1843,6 +1843,9 @@ static void acpi_bus_attach(struct acpi_device *device)
+ 	if (device->handler)
+ 		goto ok;
+ 
++	if (device->dep_unmet)
++		return;
++
+ 	if (!device->flags.initialized) {
+ 		device->flags.power_manageable =
+ 			device->power.states[ACPI_STATE_D0].flags.valid;
+diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
+index 03cf19a..345ea12 100644
+--- a/drivers/bus/hisi_lpc.c
++++ b/drivers/bus/hisi_lpc.c
+@@ -516,8 +516,18 @@ static int hisilpc_probe(struct platform_device *pdev)
+ 
+ 	/*
+ 	 * It is time to start the children scannings....
++	 * For ACPI children, the corresponding devices will be created after
++	 * retriggering the ACPI scanning by removing the dependency blocking.
+ 	 */
+-	if (!has_acpi_companion(dev)) {
++	if (has_acpi_companion(dev)) {
++		struct acpi_device *adev;
++
++		adev = to_acpi_device_node(dev->fwnode);
++		if (!adev)
++			ret = -ENODEV;
++		else
++			acpi_walk_dep_device_list(adev->handle);
++	} else {
+ 		ret = of_platform_populate(dev->of_node, NULL, NULL, dev);
+ 		if (ret)
+ 			dev_err(dev, "OF: enumerate LPC bus fail(%d)\n", ret);
+-- 
+1.9.1
 
-http://lists.infradead.org/pipermail/linux-arm-kernel/2016-April/422571.htm=
-l
-
---=-SwbUbYHUBid5MyFFtUKJ
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
-
-MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCDzUw
-ggSvMIIDl6ADAgECAhEA4CPLFRKDU4mtYW56VGdrITANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQG
-EwJTRTEUMBIGA1UEChMLQWRkVHJ1c3QgQUIxJjAkBgNVBAsTHUFkZFRydXN0IEV4dGVybmFsIFRU
-UCBOZXR3b3JrMSIwIAYDVQQDExlBZGRUcnVzdCBFeHRlcm5hbCBDQSBSb290MB4XDTE0MTIyMjAw
-MDAwMFoXDTIwMDUzMDEwNDgzOFowgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1h
-bmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEw
-PwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBF
-bWFpbCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAImxDdp6UxlOcFIdvFamBia3
-uEngludRq/HwWhNJFaO0jBtgvHpRQqd5jKQi3xdhTpHVdiMKFNNKAn+2HQmAbqUEPdm6uxb+oYep
-LkNSQxZ8rzJQyKZPWukI2M+TJZx7iOgwZOak+FaA/SokFDMXmaxE5WmLo0YGS8Iz1OlAnwawsayT
-QLm1CJM6nCpToxDbPSBhPFUDjtlOdiUCISn6o3xxdk/u4V+B6ftUgNvDezVSt4TeIj0sMC0xf1m9
-UjewM2ktQ+v61qXxl3dnUYzZ7ifrvKUHOHaMpKk4/9+M9QOsSb7K93OZOg8yq5yVOhM9DkY6V3Rh
-UL7GQD/L5OKfoiECAwEAAaOCARcwggETMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1Qa
-MB0GA1UdDgQWBBSSYWuC4aKgqk/sZ/HCo/e0gADB7DAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/
-BAgwBgEB/wIBADAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEQYDVR0gBAowCDAGBgRV
-HSAAMEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9BZGRUcnVzdEV4
-dGVybmFsQ0FSb290LmNybDA1BggrBgEFBQcBAQQpMCcwJQYIKwYBBQUHMAGGGWh0dHA6Ly9vY3Nw
-LnVzZXJ0cnVzdC5jb20wDQYJKoZIhvcNAQELBQADggEBABsqbqxVwTqriMXY7c1V86prYSvACRAj
-mQ/FZmpvsfW0tXdeDwJhAN99Bf4Ss6SAgAD8+x1banICCkG8BbrBWNUmwurVTYT7/oKYz1gb4yJj
-nFL4uwU2q31Ypd6rO2Pl2tVz7+zg+3vio//wQiOcyraNTT7kSxgDsqgt1Ni7QkuQaYUQ26Y3NOh7
-4AEQpZzKOsefT4g0bopl0BqKu6ncyso20fT8wmQpNa/WsadxEdIDQ7GPPprsnjJT9HaSyoY0B7ks
-yuYcStiZDcGG4pCS+1pCaiMhEOllx/XVu37qjIUgAmLq0ToHLFnFmTPyOInltukWeh95FPZKEBom
-+nyK+5swggU9MIIEJaADAgECAhBqC1BYlVMtBFBN4igR/howMA0GCSqGSIb3DQEBCwUAMIGbMQsw
-CQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3Jk
-MRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xp
-ZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTYxMjIwMDAwMDAwWhcN
-MTcxMjIwMjM1OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRlYWQub3JnMIIBIjAN
-BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwbTrFaiGdvN2pThnR9q+4eaXB2wQZQNqhter5ZrJ
-pPO47e87bZ+f1tmYoh6+rB90G/XN24NErPRfvU4zVzNT9pCtCzSSVnBlZQBpaEYMKhcXo5PGKNsm
-An8BoGwNXjlxwbBNRaNO+ky0wNCaMNd1JLxEuvqg9J7rrcpHhWmnpXD5IKa8gv9GyVAJgOpiBOts
-p91sShc2kHvWJ5waPEWPCHDH9J+twGGKqKIIU7fdbURLUgUL1wlDSAHf/lgIAVCSj2H2HpoGqHpy
-HgOAClX9iRSLNa0Znj8HTaqfOwxXevsz1KkLFY+Ahm426GIEqdfkK2iT6Hhgc7tjNO3f8i5ALQID
-AQABo4IB8TCCAe0wHwYDVR0jBBgwFoAUkmFrguGioKpP7GfxwqP3tIAAwewwHQYDVR0OBBYEFILE
-dmHLtK6oxmFJZvBhTQhvqrS0MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1UdJQQZ
-MBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0gBD8wPTA7
-BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9D
-UFMwXQYDVR0fBFYwVDBSoFCgToZMaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPU0hBMjU2
-Q2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFpbENBLmNybDCBkAYIKwYBBQUHAQEEgYMw
-gYAwWAYIKwYBBQUHMAKGTGh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVu
-dEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9v
-Y3NwLmNvbW9kb2NhLmNvbTAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRlYWQub3JnMA0GCSqGSIb3
-DQEBCwUAA4IBAQA+AfvNhFwtapF5Lzjapgul3zYuEnMfR538Ya1vhP8wuOkcoJeT2gEFXzVO2WUu
-eWM0g0/DumnRB53htV/Qq/+vsL0i6a2+iOO7kHi5O7bZkgbdNv0t2lzonDUHi6LTa7NUj+tv+j6y
-hW+iNquC3ACP1dIZH8gJmicHblW63qRgp6wxhn315MLBeavi3uiSag2eeKFePiTIwJjN2UYq6kWg
-PL5G/Ycf9x/xN1XBTfJiURc0FsXhrA98VMWnt52C5Lo4txhGjzTI+IZg40b3YDs6E7mTYb5KKmbc
-QZA9priOFDdj1z5W9BdWhU6I/D0P9y8Z4Tr6+ZscMUVD0RqWy2LeMIIFPTCCBCWgAwIBAgIQagtQ
-WJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQsFADCBmzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy
-ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExp
-bWl0ZWQxQTA/BgNVBAMTOENPTU9ETyBTSEEtMjU2IENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
-U2VjdXJlIEVtYWlsIENBMB4XDTE2MTIyMDAwMDAwMFoXDTE3MTIyMDIzNTk1OVowJDEiMCAGCSqG
-SIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
-ggEBAMG06xWohnbzdqU4Z0favuHmlwdsEGUDaobXq+WayaTzuO3vO22fn9bZmKIevqwfdBv1zduD
-RKz0X71OM1czU/aQrQs0klZwZWUAaWhGDCoXF6OTxijbJgJ/AaBsDV45ccGwTUWjTvpMtMDQmjDX
-dSS8RLr6oPSe663KR4Vpp6Vw+SCmvIL/RslQCYDqYgTrbKfdbEoXNpB71iecGjxFjwhwx/SfrcBh
-iqiiCFO33W1ES1IFC9cJQ0gB3/5YCAFQko9h9h6aBqh6ch4DgApV/YkUizWtGZ4/B02qnzsMV3r7
-M9SpCxWPgIZuNuhiBKnX5Ctok+h4YHO7YzTt3/IuQC0CAwEAAaOCAfEwggHtMB8GA1UdIwQYMBaA
-FJJha4LhoqCqT+xn8cKj97SAAMHsMB0GA1UdDgQWBBSCxHZhy7SuqMZhSWbwYU0Ib6q0tDAOBgNV
-HQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGyMQED
-BQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYBBAGyMQECAQEBMCswKQYIKwYB
-BQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BTMF0GA1UdHwRWMFQwUqBQoE6GTGh0
-dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVudEF1dGhlbnRpY2F0aW9uYW5k
-U2VjdXJlRW1haWxDQS5jcmwwgZAGCCsGAQUFBwEBBIGDMIGAMFgGCCsGAQUFBzAChkxodHRwOi8v
-Y3J0LmNvbW9kb2NhLmNvbS9DT01PRE9TSEEyNTZDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3Vy
-ZUVtYWlsQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0R
-BBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEAPgH7zYRcLWqReS84
-2qYLpd82LhJzH0ed/GGtb4T/MLjpHKCXk9oBBV81TtllLnljNINPw7pp0Qed4bVf0Kv/r7C9Iumt
-vojju5B4uTu22ZIG3Tb9Ldpc6Jw1B4ui02uzVI/rb/o+soVvojargtwAj9XSGR/ICZonB25Vut6k
-YKesMYZ99eTCwXmr4t7okmoNnnihXj4kyMCYzdlGKupFoDy+Rv2HH/cf8TdVwU3yYlEXNBbF4awP
-fFTFp7edguS6OLcYRo80yPiGYONG92A7OhO5k2G+Sipm3EGQPaa4jhQ3Y9c+VvQXVoVOiPw9D/cv
-GeE6+vmbHDFFQ9Ealsti3jGCA9MwggPPAgEBMIGwMIGbMQswCQYDVQQGEwJHQjEbMBkGA1UECBMS
-R3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0Eg
-TGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFu
-ZCBTZWN1cmUgRW1haWwgQ0ECEGoLUFiVUy0EUE3iKBH+GjAwDQYJYIZIAWUDBAIBBQCgggHzMBgG
-CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MDMyMjE0MDQzM1owLwYJ
-KoZIhvcNAQkEMSIEIMfPgxuL3qaITGHyiFmO9pMnOsHAmTNir1R/ixfk78gTMIHBBgkrBgEEAYI3
-EAQxgbMwgbAwgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
-BgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01P
-RE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQ
-WJVTLQRQTeIoEf4aMDCBwwYLKoZIhvcNAQkQAgsxgbOggbAwgZsxCzAJBgNVBAYTAkdCMRswGQYD
-VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
-TyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRp
-b24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQWJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQEFAASC
-AQC1LYYgrabJC6saL0CAOqo+2g3ABBAHRIbmkvgU7UHjIg7WzzOXxJJKSa5MlFUiKDo6AI8OJaGL
-gSdZU77F0Ys1ToeTqpAYD8CDvStcgevLLwMz6d5BEepXsJWVuKrkHe58lL1Wsbs3XfTIqaDF/ieM
-Pj8YHOSl2XjcWWonhvAGzElZlylFVmCpnThHmftcsCjv6V/W4kxCFxqBqojY5wx617+HmALigY7S
-x2ezhbQvyzwbP1VYuqwC2bG/LHWeZeURoTqORmjT1jOMxHi94g975hgIDtkVUcRUl4dakVN20wtz
-0YhMmWI5v0VXStTVAgMSSa+DogPUI8HDXFIF2VOAAAAAAAAA
-
-
---=-SwbUbYHUBid5MyFFtUKJ--
