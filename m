@@ -1,57 +1,79 @@
-Return-Path: <SRS0=zG0X=3H=gmail.com=ddaney.cavm@kernel.org>
-Return-Path: <SRS0=zG0X=3H=gmail.com=ddaney.cavm@kernel.org>
-Subject: Re: [PATCH 5/5] PCI: remove pci_enable_msix
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20170327082936.6830-1-hch@lst.de>
- <20170327082936.6830-6-hch@lst.de>
- <83f97789-0817-7549-bfa9-1f8dcb0c26d9@gmail.com>
- <20170327171148.GB28815@lst.de>
- <1eaa46ad-9890-c738-3a85-6468161284ba@gmail.com>
- <20170328064148.GA20271@lst.de>
- <217ae0b0-1d0c-bde9-e3f1-c52cbd3bd112@gmail.com>
- <20170330225610.GA2496@bhelgaas-glaptop.roam.corp.google.com>
-Cc: Christoph Hellwig <hch@lst.de>, bhelgaas@google.com, davem@davemloft.net,
- netanel@annapurnalabs.com, jcliburn@gmail.com, chris.snook@gmail.com,
- sgoutham@cavium.com, rric@kernel.org, netdev@vger.kernel.org,
- linux-pci@vger.kernel.org
-From: David Daney <ddaney.cavm@gmail.com>
-Message-ID: <b44e6740-2896-ef1a-c0ba-466a1680f7e6@gmail.com>
-Date: Thu, 30 Mar 2017 16:00:32 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V4 0/3] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+Date: Mon, 13 Mar 2017 16:48:02 -0400
+Message-Id: <1489438085-2055-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
+ mayurkumar.patel@intel.com, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <20170330225610.GA2496@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/30/2017 03:56 PM, Bjorn Helgaas wrote:
-> On Tue, Mar 28, 2017 at 09:24:15AM -0700, David Daney wrote:
->> On 03/27/2017 11:41 PM, Christoph Hellwig wrote:
->>> On Mon, Mar 27, 2017 at 10:30:46AM -0700, David Daney wrote:
->>>>> Use pci_enable_msix_{exact,range} for now, as I told you before.
->>>>>
->>>>
->>>> That still results in twice as many MSI-X being provisioned than are needed.
->>>
->>> How so?  Except for the return value, a pci_enable_msix_exact call with the
->>> same arguments as your previous pci_enable_msix will work exactly the
->>> same.
->>>
->>
->> Sorry, I think it was my misunderstanding.  I didn't realize that we
->> had essentially renamed the function, but left the functionality
->> mostly unchanged.
->
-> Does this mean you're OK with this patch?
+y
+(POLICY_DEFAULT), current code is querying the enable/disable
+states from ASPM registers to determine the policy.
 
-Yes.  I have re-written my GPIO driver to use the newer functions, so I 
-withdraw my objections to the patch.
+For example, a BIOS could set the power saving state to performance
+and clear all ASPM control registers. A balanced ASPM policy could
+enable L0s and disable L1. A power conscious BIOS could enable both
+L0s and L1 to trade off latency and performance vs. power.
 
-Thanks,
-David Daney
+After hotplug removal, pcie_aspm_exit_link_state() function clears
+the ASPM registers. An insertion following hotplug removal reads
+incorrect policy as ASPM disabled even though ASPM was enabled
+during boot.
+
+This is caused by the fact that same function is used for reconfiguring
+ASPM regardless of the of the power on state.
+
+------------------------
+Changes from v3 (https://lkml.org/lkml/2017/3/8/670)
+------------------------
+- call pcie_aspm_init_link_state() for every device, maybe from
+pci_init_capabilities()
+
+- for bridges, have pcie_aspm_init_link_state() allocate a
+link_state, regardless of whether it currently has any children,
+and save the ASPM settings done by firmware
+
+- for endpoints, have pcie_aspm_init_link_state() do the actual ASPM
+setup of the link as it currently does
+
+- for endpoints, change pcie_aspm_exit_link_state() so it cleans up
+the device's own state and disables ASPM if necessary, but doesn't
+remove the parent's link_state
+
+- for bridges, change pcie_aspm_exit_link_state() so it frees the
+bridge's own link_state
+
+Sinan Kaya (3):
+  PCI/ASPM: divide ASPM capability init into pre and post init
+  PCI/ASPM: move part of ASPM initialization to pci_init_capabilities
+  PCI/ASPM: move link_state cleanup to bridge remove
+
+ drivers/pci/pcie/aspm.c | 175 +++++++++++++++++++++++++++++++++++-------------
+ drivers/pci/probe.c     |   3 +
+ include/linux/pci.h     |   6 ++
+ 3 files changed, 136 insertions(+), 48 deletions(-)
+
+-- 
+1.9.1
 
 
-> I know it may require some
-> work on out-of-tree drivers and so on, but if that work is possible
-> and you don't actually lose functionality, I'm OK with this patch.
->
-> Bjorn
->
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
