@@ -1,113 +1,149 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56268 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754074AbdCFRLv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Mar 2017 12:11:51 -0500
-Date: Mon, 6 Mar 2017 10:09:29 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-Cc: Manish Jaggi <mjaggi@caviumnetworks.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Tirumalesh Chalamarla <tchalamarla@cavium.com>,
-        "Richter, Robert" <Robert.Richter@caviumnetworks.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] PCI: Add cavium acs pci quirk
-Message-ID: <20170306100929.01d578a4@ul30vt.home>
-In-Reply-To: <CA+sq2CeV-YDkUViJVo9ioiYvAu0oxKJZxqgw8sDN9Lf7y4Gr-g@mail.gmail.com>
-References: <56ABC5AE.1050209@caviumnetworks.com>
-        <20170213214457.248084de@t450s.home>
-        <CA+sq2CeV-YDkUViJVo9ioiYvAu0oxKJZxqgw8sDN9Lf7y4Gr-g@mail.gmail.com>
+Received: from mail-by2nam01on0070.outbound.protection.outlook.com ([104.47.34.70]:50176
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752344AbdCMUJI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Mar 2017 16:09:08 -0400
+Subject: Re: [RFC PATCH v2 06/32] x86/pci: Use memremap when walking setup
+ data
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846759008.2349.8274808454274279039.stgit@brijesh-build-machine>
+ <20170303204209.GA31767@bhelgaas-glaptop.roam.corp.google.com>
+ <df526224-0a4b-abc6-6377-efbca77284b1@amd.com>
+ <20170307000349.GC5305@bhelgaas-glaptop.roam.corp.google.com>
+CC: Brijesh Singh <brijesh.singh@amd.com>, <simon.guinot@sequanux.org>,
+        <linux-efi@vger.kernel.org>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
+        <dyoung@redhat.com>, <jroedel@suse.de>, <keescook@chromium.org>,
+        <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Message-ID: <a0c3ebb9-37b4-3f47-86df-eac110c07032@amd.com>
+Date: Mon, 13 Mar 2017 15:08:52 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <20170307000349.GC5305@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 5 Mar 2017 12:37:31 +0530
-Sunil Kovvuri <sunil.kovvuri@gmail.com> wrote:
+On 3/6/2017 6:03 PM, Bjorn Helgaas wrote:
+> On Fri, Mar 03, 2017 at 03:15:34PM -0600, Tom Lendacky wrote:
+>> On 3/3/2017 2:42 PM, Bjorn Helgaas wrote:
+>>> On Thu, Mar 02, 2017 at 10:13:10AM -0500, Brijesh Singh wrote:
+>>>> From: Tom Lendacky <thomas.lendacky@amd.com>
+>>>>
+>>>> The use of ioremap will force the setup data to be mapped decrypted even
+>>>> though setup data is encrypted.  Switch to using memremap which will be
+>>>> able to perform the proper mapping.
+>>>
+>>> How should callers decide whether to use ioremap() or memremap()?
+>>>
+>>> memremap() existed before SME and SEV, and this code is used even if
+>>> SME and SEV aren't supported, so the rationale for this change should
+>>> not need the decryption argument.
+>>
+>> When SME or SEV is active an ioremap() will remove the encryption bit
+>> from the pagetable entry when it is mapped.  This allows MMIO, which
+>> doesn't support SME/SEV, to be performed successfully.  So my take is
+>> that ioremap() should be used for MMIO and memremap() for pages in RAM.
+>
+> OK, thanks.  The commit message should say something like "this is
+> RAM, not MMIO, so we should map it with memremap(), not ioremap()".
+> That's the part that determines whether the change is correct.
+>
+> You can mention the encryption part, too, but it's definitely
+> secondary because the change has to make sense on its own, without
+> SME/SEV.
+>
 
-> On Tue, Feb 14, 2017 at 10:14 AM, Alex Williamson
-> <alex.williamson@redhat.com> wrote:
-> > On Sat, 30 Jan 2016 01:33:58 +0530
-> > Manish Jaggi <mjaggi@caviumnetworks.com> wrote:
-> >  
-> >> Cavium devices matching this quirk do not perform
-> >> peer-to-peer with other functions, allowing masking out
-> >> these bits as if they were unimplemented in the ACS capability.
-> >>
-> >> Acked-by: Tirumalesh Chalamarla <tchalamarla@cavium.com>
-> >> Signed-off-by: Manish Jaggi <mjaggi@caviumnetworks.com>
-> >> ---
-> >>  drivers/pci/quirks.c | 15 +++++++++++++++
-> >>  1 file changed, 15 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> >> index 7e32730..a300fa6 100644
-> >> --- a/drivers/pci/quirks.c
-> >> +++ b/drivers/pci/quirks.c
-> >> @@ -3814,6 +3814,19 @@ static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
-> >>  #endif
-> >>  }
-> >>
-> >> +static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
-> >> +{
-> >> +     /*
-> >> +      * Cavium devices matching this quirk do not perform
-> >> +      * peer-to-peer with other functions, allowing masking out
-> >> +      * these bits as if they were unimplemented in the ACS capability.
-> >> +      */
-> >> +     acs_flags &= ~(PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
-> >> +                    PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
-> >> +
-> >> +     return acs_flags ? 0 : 1;
-> >> +}
-> >> +
-> >>  /*
-> >>   * Many Intel PCH root ports do provide ACS-like features to disable peer
-> >>   * transactions and validate bus numbers in requests, but do not provide an
-> >> @@ -3966,6 +3979,8 @@ static const struct pci_dev_acs_enabled {
-> >>       { PCI_VENDOR_ID_INTEL, PCI_ANY_ID, pci_quirk_intel_pch_acs },
-> >>       { 0x19a2, 0x710, pci_quirk_mf_endpoint_acs }, /* Emulex BE3-R */
-> >>       { 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
-> >> +     /* Cavium ThunderX */
-> >> +     { PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
-> >>       { 0 }
-> >>  };
-> >>  
-> >
-> > Apologies for not catching this, but what sort of crystal ball do you
-> > have that can predict not only current devices, but future devices will
-> > not support peer-to-peer features?  Is there an internal design
-> > guidelines reference specification for Cavium that we can realistically
-> > expect this to remain consistent, or is this just an attempt to never
-> > think about ACS again at the customer's peril?  What about the existing
-> > non-ThunderX products with Cavium vendor ID, does this really apply to
-> > those?  I would strongly suggest taking the device ID into account.
-> > See examples like the pci_quirk_intel_pch_acs quirk where the initial
-> > filter is PCI_ANY_ID, but specific device types and ranges of device
-> > IDs are identified by the function for evaluation.  This seems reckless
-> > to me and I'd advise that it be reverted.  Thanks,
-> >
-> > Alex  
-> 
-> Just a thought, even if Cavium considers to support ACS for future devices,
-> wouldn't it be better to add exception list inside the quirk on a need basis
-> rather than adding big list of devices that don't. Especially when currently
-> almost all Cavium PCI devices don't support ACS.
+Ok, that makes sense, will do.
 
-The same argument can be made the other way, which is the more
-concerning problem.  What if Cavium releases a device that does not
-support ACS nor has ACS equivalent isolation?  This quirk would assume
-isolation exists.  Now think about the compatibility problem of trying
-to negate this quirk for that device on any kernel that has shipped
-with this open-ended quirk.  What's the support situation if a user
-relies on that isolation that maybe doesn't exist?  Any solution that
-assumes unknown future devices have isolation is dangerous.  Perhaps
-it's justifiable if the company has strong internal design guidelines
-about this sort of thing, but even those get lost or change over time
-without necessarily evaluating all the implications.  IMO, the only
-workable solution is to white-list *only* the devices where we know ACS
-equivalent isolation is present.  We're still waiting on Cavium's
-patch to make that happen.  Thanks,
+> The following commits (from https://github.com/codomania/tip/branches)
+> all do basically the same thing so the changelogs (and summaries)
+> should all be basically the same:
+>
+>   cb0d0d1eb0a6 x86: Change early_ioremap to early_memremap for BOOT data
+>   91acb68b8333 x86/pci: Use memremap when walking setup data
+>   4f687503e23f x86: Access the setup data through sysfs decrypted
+>   e90246b8c229 x86: Access the setup data through debugfs decrypted
+>
+> I would collect them all together and move them to the beginning of
+> your series, since they don't depend on anything else.
 
-Alex
+I'll do that.
+
+>
+> Also, change "x86/pci: " to "x86/PCI" so it matches the previous
+> convention.
+
+Will do.
+
+Thanks,
+Tom
+
+>
+>>>> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+>>>> ---
+>>>> arch/x86/pci/common.c |    4 ++--
+>>>> 1 file changed, 2 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
+>>>> index a4fdfa7..0b06670 100644
+>>>> --- a/arch/x86/pci/common.c
+>>>> +++ b/arch/x86/pci/common.c
+>>>> @@ -691,7 +691,7 @@ int pcibios_add_device(struct pci_dev *dev)
+>>>>
+>>>> 	pa_data = boot_params.hdr.setup_data;
+>>>> 	while (pa_data) {
+>>>> -		data = ioremap(pa_data, sizeof(*rom));
+>>>> +		data = memremap(pa_data, sizeof(*rom), MEMREMAP_WB);
+>>>
+>>> I can't quite connect the dots here.  ioremap() on x86 would do
+>>> ioremap_nocache().  memremap(MEMREMAP_WB) would do arch_memremap_wb(),
+>>> which is ioremap_cache().  Is making a cacheable mapping the important
+>>> difference?
+>>
+>> The memremap(MEMREMAP_WB) will actually check to see if it can perform
+>> a __va(pa_data) in try_ram_remap() and then fallback to the
+>> arch_memremap_wb().  So it's actually the __va() vs the ioremap_cache()
+>> that is the difference.
+>>
+>> Thanks,
+>> Tom
+>>
+>>>
+>>>> 		if (!data)
+>>>> 			return -ENOMEM;
+>>>>
+>>>> @@ -710,7 +710,7 @@ int pcibios_add_device(struct pci_dev *dev)
+>>>> 			}
+>>>> 		}
+>>>> 		pa_data = data->next;
+>>>> -		iounmap(data);
+>>>> +		memunmap(data);
+>>>> 	}
+>>>> 	set_dma_domain_ops(dev);
+>>>> 	set_dev_domain_options(dev);
+>>>>
