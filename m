@@ -1,175 +1,148 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0068.outbound.protection.outlook.com ([104.47.40.68]:58496
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750895AbdCPCTj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Mar 2017 22:19:39 -0400
-From: "Zhang, Jerry" <Jerry.Zhang@amd.com>
-To: =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <deathsimple@vodafone.de>,
-        "Zhou, David(ChunMing)" <David1.Zhou@amd.com>,
-        Ayyappa Ch <ayyappa.ch.linux@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>,
-        "platform-driver-x86@vger.kernel.org"
-        <platform-driver-x86@vger.kernel.org>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>
-Subject: RE: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
-Date: Thu, 16 Mar 2017 02:19:15 +0000
-Message-ID: <DM5PR12MB18188AF745E7FB6B021E6600FF260@DM5PR12MB1818.namprd12.prod.outlook.com>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
- <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
- <CAPyr0yLWiGzU5ihFcj_NmA2Vk2R7GsKqo2LK8o3Eu+Df9m7vhw@mail.gmail.com>
- <6fac05e4-26ae-e959-9af6-cb68a04a1110@vodafone.de>
- <MWHPR1201MB0206CA2E6DAC3B83ACA52ADBB4270@MWHPR1201MB0206.namprd12.prod.outlook.com>
- <17c470c4-d406-b5ac-73d1-4dd5b83cfca8@vodafone.de>
-In-Reply-To: <17c470c4-d406-b5ac-73d1-4dd5b83cfca8@vodafone.de>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <kishon@ti.com>, <nsekhar@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>
+Subject: [PATCH v4 4/7] PCI: dwc: all: Modify dbi accessors to take dbi_base as argument
+Date: Mon, 13 Mar 2017 19:13:25 +0530
+Message-ID: <20170313134328.1588-5-kishon@ti.com>
+In-Reply-To: <20170313134328.1588-1-kishon@ti.com>
+References: <20170313134328.1588-1-kishon@ti.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBkcmktZGV2ZWwgW21haWx0bzpk
-cmktZGV2ZWwtYm91bmNlc0BsaXN0cy5mcmVlZGVza3RvcC5vcmddIE9uIEJlaGFsZiBPZg0KPiBD
-aHJpc3RpYW4gSz9uaWcNCj4gU2VudDogV2VkbmVzZGF5LCBNYXJjaCAxNSwgMjAxNyAxNzoyOQ0K
-PiBUbzogWmhvdSwgRGF2aWQoQ2h1bk1pbmcpOyBBeXlhcHBhIENoDQo+IENjOiBsaW51eC1wY2lA
-dmdlci5rZXJuZWwub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBhbWQtDQo+IGdm
-eEBsaXN0cy5mcmVlZGVza3RvcC5vcmc7IHBsYXRmb3JtLWRyaXZlci14ODZAdmdlci5rZXJuZWwu
-b3JnOw0KPiBoZWxnYWFzQGtlcm5lbC5vcmc7IGRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5v
-cmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCA0LzRdIGRybS9hbWRncHU6IHJlc2l6ZSBWUkFNIEJB
-UiBmb3IgQ1BVIGFjY2Vzcw0KPiANCj4gWWVzLCBleGFjdGx5IHRoYXQuDQoNCihJJ20gbm90IGZh
-bWlsaWFyIHdpdGggUENJIHRvbyBtdWNoLikNCklzIHRoZXJlIGFueSByZXN0cmljdCBmb3IgUENJ
-IGRldmljZT8NCkknbSBjb25jZXJuaW5nIGlmIGFueSBQQ0kgY291bGRuJ3Qgc3VwcG9ydCBpdCBv
-biBzb21lIG1vdGhlcmJvYXJkLg0KDQo+IA0KPiBDaHJpc3RpYW4uDQo+IA0KPiBBbSAxNS4wMy4y
-MDE3IHVtIDA5OjI1IHNjaHJpZWIgWmhvdSwgRGF2aWQoQ2h1bk1pbmcpOg0KPiA+IERvZXMgdGhh
-dCBtZWFucyB3ZSBkb24ndCBuZWVkIGludmlzaWJsZSB2cmFtIGxhdGVyPw0KPiA+DQo+ID4gRGF2
-aWQNCj4gPg0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gRnJvbTogZHJpLWRl
-dmVsIFttYWlsdG86ZHJpLWRldmVsLWJvdW5jZXNAbGlzdHMuZnJlZWRlc2t0b3Aub3JnXSBPbg0K
-PiA+IEJlaGFsZiBPZiBDaHJpc3RpYW4gSz9uaWcNCj4gPiBTZW50OiBXZWRuZXNkYXksIE1hcmNo
-IDE1LCAyMDE3IDM6MzggUE0NCj4gPiBUbzogQXl5YXBwYSBDaCA8YXl5YXBwYS5jaC5saW51eEBn
-bWFpbC5jb20+DQo+ID4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5l
-bEB2Z2VyLmtlcm5lbC5vcmc7DQo+ID4gYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmc7IHBs
-YXRmb3JtLWRyaXZlci14ODZAdmdlci5rZXJuZWwub3JnOw0KPiA+IGhlbGdhYXNAa2VybmVsLm9y
-ZzsgZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZw0KPiA+IFN1YmplY3Q6IFJlOiBbUEFU
-Q0ggNC80XSBkcm0vYW1kZ3B1OiByZXNpemUgVlJBTSBCQVIgZm9yIENQVSBhY2Nlc3MNCj4gPg0K
-PiA+IENhcml6em8gaXMgYW4gQVBVIGFuZCByZXNpemluZyBCQVJzIGlzbid0IG5lZWRlZCBub3Ig
-c3VwcG9ydGVkIHRoZXJlLg0KPiA+IFRoZSBDUFUgY2FuIGFjY2VzcyB0aGUgZnVsbCBzdG9sZW4g
-VlJBTSBkaXJlY3RseSBvbiB0aGF0IGhhcmR3YXJlLg0KPiA+DQo+ID4gQXMgZmFyIGFzIEkga25v
-dyBBU0lDcyB3aXRoIHN1cHBvcnQgZm9yIHRoaXMgYXJlIFRvbmdhLCBGaWppIGFuZCBhbGwgUG9s
-YXJpcyB2YXJpYW50cy4NCj4gPg0KPiA+IENocmlzdGlhbi4NCj4gPg0KPiA+IEFtIDE1LjAzLjIw
-MTcgdW0gMDg6MjMgc2NocmllYiBBeXlhcHBhIENoOg0KPiA+PiBJcyBpdCBwb3NzaWJsZSBvbiBD
-YXJyaXpvIGFzaWNzPyBPciBvbmx5IHN1cHBvcnRzIG9uIG5ld2VyIGFzaWNzPw0KPiA+Pg0KPiA+
-PiBPbiBNb24sIE1hciAxMywgMjAxNyBhdCA2OjExIFBNLCBDaHJpc3RpYW4gS8O2bmlnDQo+ID4+
-IDxkZWF0aHNpbXBsZUB2b2RhZm9uZS5kZT4gd3JvdGU6DQo+ID4+PiBGcm9tOiBDaHJpc3RpYW4g
-S8O2bmlnIDxjaHJpc3RpYW4ua29lbmlnQGFtZC5jb20+DQo+ID4+Pg0KPiA+Pj4gVHJ5IHRvIHJl
-c2l6ZSBCQVIwIHRvIGxldCBDUFUgYWNjZXNzIGFsbCBvZiBWUkFNLg0KPiA+Pj4NCj4gPj4+IFNp
-Z25lZC1vZmYtYnk6IENocmlzdGlhbiBLw7ZuaWcgPGNocmlzdGlhbi5rb2VuaWdAYW1kLmNvbT4N
-Cj4gPj4+IC0tLQ0KPiA+Pj4gICAgZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvYW1kZ3B1Lmgg
-ICAgICAgIHwgIDEgKw0KPiA+Pj4gICAgZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvYW1kZ3B1
-X2RldmljZS5jIHwgMjkNCj4gKysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCj4gPj4+ICAg
-IGRyaXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2dtY192N18wLmMgICAgICB8ICA4ICsrKysrLS0t
-DQo+ID4+PiAgICBkcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9nbWNfdjhfMC5jICAgICAgfCAg
-OCArKysrKy0tLQ0KPiA+Pj4gICAgNCBmaWxlcyBjaGFuZ2VkLCA0MCBpbnNlcnRpb25zKCspLCA2
-IGRlbGV0aW9ucygtKQ0KPiA+Pj4NCj4gPj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0v
-YW1kL2FtZGdwdS9hbWRncHUuaA0KPiA+Pj4gYi9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9h
-bWRncHUuaA0KPiA+Pj4gaW5kZXggM2I4MWRlZC4uOTA1ZGVkOSAxMDA2NDQNCj4gPj4+IC0tLSBh
-L2RyaXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2FtZGdwdS5oDQo+ID4+PiArKysgYi9kcml2ZXJz
-L2dwdS9kcm0vYW1kL2FtZGdwdS9hbWRncHUuaA0KPiA+Pj4gQEAgLTE3MTksNiArMTcxOSw3IEBA
-IHVpbnQ2NF90IGFtZGdwdV90dG1fdHRfcHRlX2ZsYWdzKHN0cnVjdA0KPiBhbWRncHVfZGV2aWNl
-ICphZGV2LCBzdHJ1Y3QgdHRtX3R0ICp0dG0sDQo+ID4+PiAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgIHN0cnVjdCB0dG1fbWVtX3JlZyAqbWVtKTsNCj4gPj4+ICAgIHZvaWQgYW1k
-Z3B1X3ZyYW1fbG9jYXRpb24oc3RydWN0IGFtZGdwdV9kZXZpY2UgKmFkZXYsIHN0cnVjdA0KPiBh
-bWRncHVfbWMgKm1jLCB1NjQgYmFzZSk7DQo+ID4+PiAgICB2b2lkIGFtZGdwdV9ndHRfbG9jYXRp
-b24oc3RydWN0IGFtZGdwdV9kZXZpY2UgKmFkZXYsIHN0cnVjdA0KPiA+Pj4gYW1kZ3B1X21jICpt
-Yyk7DQo+ID4+PiArdm9pZCBhbWRncHVfcmVzaXplX2JhcjAoc3RydWN0IGFtZGdwdV9kZXZpY2Ug
-KmFkZXYpOw0KPiA+Pj4gICAgdm9pZCBhbWRncHVfdHRtX3NldF9hY3RpdmVfdnJhbV9zaXplKHN0
-cnVjdCBhbWRncHVfZGV2aWNlICphZGV2LA0KPiB1NjQgc2l6ZSk7DQo+ID4+PiAgICBpbnQgYW1k
-Z3B1X3R0bV9pbml0KHN0cnVjdCBhbWRncHVfZGV2aWNlICphZGV2KTsNCj4gPj4+ICAgIHZvaWQg
-YW1kZ3B1X3R0bV9maW5pKHN0cnVjdCBhbWRncHVfZGV2aWNlICphZGV2KTsgZGlmZiAtLWdpdA0K
-PiA+Pj4gYS9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9hbWRncHVfZGV2aWNlLmMNCj4gPj4+
-IGIvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvYW1kZ3B1X2RldmljZS5jDQo+ID4+PiBpbmRl
-eCAxMThmNGU2Li45Mjk1NWZlIDEwMDY0NA0KPiA+Pj4gLS0tIGEvZHJpdmVycy9ncHUvZHJtL2Ft
-ZC9hbWRncHUvYW1kZ3B1X2RldmljZS5jDQo+ID4+PiArKysgYi9kcml2ZXJzL2dwdS9kcm0vYW1k
-L2FtZGdwdS9hbWRncHVfZGV2aWNlLmMNCj4gPj4+IEBAIC02OTIsNiArNjkyLDM1IEBAIHZvaWQg
-YW1kZ3B1X2d0dF9sb2NhdGlvbihzdHJ1Y3QgYW1kZ3B1X2RldmljZQ0KPiAqYWRldiwgc3RydWN0
-IGFtZGdwdV9tYyAqbWMpDQo+ID4+PiAgICAgICAgICAgICAgICAgICAgICAgICAgIG1jLT5ndHRf
-c2l6ZSA+PiAyMCwgbWMtPmd0dF9zdGFydCwgbWMtPmd0dF9lbmQpOw0KPiA+Pj4gICAgfQ0KPiA+
-Pj4NCj4gPj4+ICsvKioNCj4gPj4+ICsgKiBhbWRncHVfcmVzaXplX2JhcjAgLSB0cnkgdG8gcmVz
-aXplIEJBUjANCj4gPj4+ICsgKg0KPiA+Pj4gKyAqIEBhZGV2OiBhbWRncHVfZGV2aWNlIHBvaW50
-ZXINCj4gPj4+ICsgKg0KPiA+Pj4gKyAqIFRyeSB0byByZXNpemUgQkFSMCB0byBtYWtlIGFsbCBW
-UkFNIENQVSBhY2Nlc3NpYmxlLg0KPiA+Pj4gKyAqLw0KPiA+Pj4gK3ZvaWQgYW1kZ3B1X3Jlc2l6
-ZV9iYXIwKHN0cnVjdCBhbWRncHVfZGV2aWNlICphZGV2KSB7DQo+ID4+PiArICAgICAgIHUzMiBz
-aXplID0gbWF4KGlsb2cyKGFkZXYtPm1jLnJlYWxfdnJhbV9zaXplIC0gMSkgKyAxLCAyMCkgLSAy
-MDsNCj4gPj4+ICsgICAgICAgaW50IHI7DQo+ID4+PiArDQo+ID4+PiArICAgICAgIHIgPSBwY2lf
-cmVzaXplX3Jlc291cmNlKGFkZXYtPnBkZXYsIDAsIHNpemUpOw0KPiA+Pj4gKw0KPiA+Pj4gKyAg
-ICAgICBpZiAociA9PSAtRU5PVFNVUFApIHsNCj4gPj4+ICsgICAgICAgICAgICAgICAvKiBUaGUg
-aGFyZHdhcmUgZG9uJ3Qgc3VwcG9ydCB0aGUgZXh0ZW5zaW9uLiAqLw0KPiA+Pj4gKyAgICAgICAg
-ICAgICAgIHJldHVybjsNCj4gPj4+ICsNCj4gPj4+ICsgICAgICAgfSBlbHNlIGlmIChyID09IC1F
-Tk9TUEMpIHsNCj4gPj4+ICsgICAgICAgICAgICAgICBEUk1fSU5GTygiTm90IGVub2lnaCBQQ0kg
-YWRkcmVzcyBzcGFjZSBmb3IgYSBsYXJnZSBCQVIuIik7DQo+ID4+PiArICAgICAgIH0gZWxzZSBp
-ZiAocikgew0KPiA+Pj4gKyAgICAgICAgICAgICAgIERSTV9FUlJPUigiUHJvYmxlbSByZXNpemlu
-ZyBCQVIwICglZCkuIiwgcik7DQo+ID4+PiArICAgICAgIH0NCj4gPj4+ICsNCj4gPj4+ICsgICAg
-ICAgLyogUmVpbml0IHRoZSBkb29yYmVsbCBtYXBwaW5nLCBpdCBpcyBtb3N0IGxpa2VseSBtb3Zl
-ZCBhcyB3ZWxsICovDQo+ID4+PiArICAgICAgIGFtZGdwdV9kb29yYmVsbF9maW5pKGFkZXYpOw0K
-PiA+Pj4gKyAgICAgICBCVUdfT04oYW1kZ3B1X2Rvb3JiZWxsX2luaXQoYWRldikpOw0KPiA+Pj4g
-K30NCj4gPj4+ICsNCj4gPj4+ICAgIC8qDQo+ID4+PiAgICAgKiBHUFUgaGVscGVycyBmdW5jdGlv
-bi4NCj4gPj4+ICAgICAqLw0KPiA+Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvZ3B1L2RybS9hbWQv
-YW1kZ3B1L2dtY192N18wLmMNCj4gPj4+IGIvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvZ21j
-X3Y3XzAuYw0KPiA+Pj4gaW5kZXggZGM5YjZkNi4uMzZhN2FhNSAxMDA2NDQNCj4gPj4+IC0tLSBh
-L2RyaXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2dtY192N18wLmMNCj4gPj4+ICsrKyBiL2RyaXZl
-cnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2dtY192N18wLmMNCj4gPj4+IEBAIC0zNjcsMTMgKzM2Nywx
-NSBAQCBzdGF0aWMgaW50IGdtY192N18wX21jX2luaXQoc3RydWN0IGFtZGdwdV9kZXZpY2UNCj4g
-KmFkZXYpDQo+ID4+PiAgICAgICAgICAgICAgICAgICBicmVhazsNCj4gPj4+ICAgICAgICAgICB9
-DQo+ID4+PiAgICAgICAgICAgYWRldi0+bWMudnJhbV93aWR0aCA9IG51bWNoYW4gKiBjaGFuc2l6
-ZTsNCj4gPj4+IC0gICAgICAgLyogQ291bGQgYXBlciBzaXplIHJlcG9ydCAwID8gKi8NCj4gPj4+
-IC0gICAgICAgYWRldi0+bWMuYXBlcl9iYXNlID0gcGNpX3Jlc291cmNlX3N0YXJ0KGFkZXYtPnBk
-ZXYsIDApOw0KPiA+Pj4gLSAgICAgICBhZGV2LT5tYy5hcGVyX3NpemUgPSBwY2lfcmVzb3VyY2Vf
-bGVuKGFkZXYtPnBkZXYsIDApOw0KPiA+Pj4gICAgICAgICAgIC8qIHNpemUgaW4gTUIgb24gc2kg
-Ki8NCj4gPj4+ICAgICAgICAgICBhZGV2LT5tYy5tY192cmFtX3NpemUgPSBSUkVHMzIobW1DT05G
-SUdfTUVNU0laRSkgKiAxMDI0VUxMICoNCj4gMTAyNFVMTDsNCj4gPj4+ICAgICAgICAgICBhZGV2
-LT5tYy5yZWFsX3ZyYW1fc2l6ZSA9IFJSRUczMihtbUNPTkZJR19NRU1TSVpFKSAqDQo+ID4+PiAx
-MDI0VUxMDQo+ID4+PiAqIDEwMjRVTEw7DQo+ID4+Pg0KPiA+Pj4gKyAgICAgICBpZiAoIShhZGV2
-LT5mbGFncyAmIEFNRF9JU19BUFUpKQ0KPiA+Pj4gKyAgICAgICAgICAgICAgIGFtZGdwdV9yZXNp
-emVfYmFyMChhZGV2KTsNCj4gPj4+ICsgICAgICAgYWRldi0+bWMuYXBlcl9iYXNlID0gcGNpX3Jl
-c291cmNlX3N0YXJ0KGFkZXYtPnBkZXYsIDApOw0KPiA+Pj4gKyAgICAgICBhZGV2LT5tYy5hcGVy
-X3NpemUgPSBwY2lfcmVzb3VyY2VfbGVuKGFkZXYtPnBkZXYsIDApOw0KPiA+Pj4gKw0KPiA+Pj4g
-ICAgI2lmZGVmIENPTkZJR19YODZfNjQNCj4gPj4+ICAgICAgICAgICBpZiAoYWRldi0+ZmxhZ3Mg
-JiBBTURfSVNfQVBVKSB7DQo+ID4+PiAgICAgICAgICAgICAgICAgICBhZGV2LT5tYy5hcGVyX2Jh
-c2UgPQ0KPiA+Pj4gKCh1NjQpUlJFRzMyKG1tTUNfVk1fRkJfT0ZGU0VUKSkgPDwgMjI7IGRpZmYg
-LS1naXQNCj4gPj4+IGEvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvZ21jX3Y4XzAuYw0KPiA+
-Pj4gYi9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9nbWNfdjhfMC5jDQo+ID4+PiBpbmRleCBj
-MDg3YjAwLi43NzYxYWQzIDEwMDY0NA0KPiA+Pj4gLS0tIGEvZHJpdmVycy9ncHUvZHJtL2FtZC9h
-bWRncHUvZ21jX3Y4XzAuYw0KPiA+Pj4gKysrIGIvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUv
-Z21jX3Y4XzAuYw0KPiA+Pj4gQEAgLTQ1OSwxMyArNDU5LDE1IEBAIHN0YXRpYyBpbnQgZ21jX3Y4
-XzBfbWNfaW5pdChzdHJ1Y3QgYW1kZ3B1X2RldmljZQ0KPiAqYWRldikNCj4gPj4+ICAgICAgICAg
-ICAgICAgICAgIGJyZWFrOw0KPiA+Pj4gICAgICAgICAgIH0NCj4gPj4+ICAgICAgICAgICBhZGV2
-LT5tYy52cmFtX3dpZHRoID0gbnVtY2hhbiAqIGNoYW5zaXplOw0KPiA+Pj4gLSAgICAgICAvKiBD
-b3VsZCBhcGVyIHNpemUgcmVwb3J0IDAgPyAqLw0KPiA+Pj4gLSAgICAgICBhZGV2LT5tYy5hcGVy
-X2Jhc2UgPSBwY2lfcmVzb3VyY2Vfc3RhcnQoYWRldi0+cGRldiwgMCk7DQo+ID4+PiAtICAgICAg
-IGFkZXYtPm1jLmFwZXJfc2l6ZSA9IHBjaV9yZXNvdXJjZV9sZW4oYWRldi0+cGRldiwgMCk7DQo+
-ID4+PiAgICAgICAgICAgLyogc2l6ZSBpbiBNQiBvbiBzaSAqLw0KPiA+Pj4gICAgICAgICAgIGFk
-ZXYtPm1jLm1jX3ZyYW1fc2l6ZSA9IFJSRUczMihtbUNPTkZJR19NRU1TSVpFKSAqIDEwMjRVTEwg
-Kg0KPiAxMDI0VUxMOw0KPiA+Pj4gICAgICAgICAgIGFkZXYtPm1jLnJlYWxfdnJhbV9zaXplID0g
-UlJFRzMyKG1tQ09ORklHX01FTVNJWkUpICoNCj4gPj4+IDEwMjRVTEwNCj4gPj4+ICogMTAyNFVM
-TDsNCj4gPj4+DQo+ID4+PiArICAgICAgIGlmICghKGFkZXYtPmZsYWdzICYgQU1EX0lTX0FQVSkp
-DQo+ID4+PiArICAgICAgICAgICAgICAgYW1kZ3B1X3Jlc2l6ZV9iYXIwKGFkZXYpOw0KPiA+Pj4g
-KyAgICAgICBhZGV2LT5tYy5hcGVyX2Jhc2UgPSBwY2lfcmVzb3VyY2Vfc3RhcnQoYWRldi0+cGRl
-diwgMCk7DQo+ID4+PiArICAgICAgIGFkZXYtPm1jLmFwZXJfc2l6ZSA9IHBjaV9yZXNvdXJjZV9s
-ZW4oYWRldi0+cGRldiwgMCk7DQo+ID4+PiArDQo+ID4+PiAgICAjaWZkZWYgQ09ORklHX1g4Nl82
-NA0KPiA+Pj4gICAgICAgICAgIGlmIChhZGV2LT5mbGFncyAmIEFNRF9JU19BUFUpIHsNCj4gPj4+
-ICAgICAgICAgICAgICAgICAgIGFkZXYtPm1jLmFwZXJfYmFzZSA9DQo+ID4+PiAoKHU2NClSUkVH
-MzIobW1NQ19WTV9GQl9PRkZTRVQpKSA8PCAyMjsNCj4gPj4+IC0tDQo+ID4+PiAyLjcuNA0KPiA+
-Pj4NCj4gPj4+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-DQo+ID4+PiBkcmktZGV2ZWwgbWFpbGluZyBsaXN0DQo+ID4+PiBkcmktZGV2ZWxAbGlzdHMuZnJl
-ZWRlc2t0b3Aub3JnDQo+ID4+PiBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWlsbWFu
-L2xpc3RpbmZvL2RyaS1kZXZlbA0KPiA+DQo+ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX18NCj4gPiBkcmktZGV2ZWwgbWFpbGluZyBsaXN0DQo+ID4gZHJp
-LWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZw0KPiA+IGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0
-b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVsDQo+ID4gX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCj4gPiBhbWQtZ2Z4IG1haWxpbmcgbGlzdA0K
-PiA+IGFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnDQo+ID4gaHR0cHM6Ly9saXN0cy5mcmVl
-ZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9hbWQtZ2Z4DQo+IA0KPiANCj4gX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCj4gZHJpLWRldmVsIG1haWxp
-bmcgbGlzdA0KPiBkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnDQo+IGh0dHBzOi8vbGlz
-dHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVsDQo=
+dwc has 2 dbi address space labeled dbics and dbics2. The existing
+helper to access dbi address space can access only dbics. However
+dbics2 has to be accessed for programming the BAR registers in the
+case of EP mode. This is in preparation for adding EP mode support
+to dwc driver.
+
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ drivers/pci/dwc/pci-exynos.c      | 10 ++++++----
+ drivers/pci/dwc/pcie-designware.c | 13 +++++++------
+ drivers/pci/dwc/pcie-designware.h | 20 ++++++++++++++++----
+ 3 files changed, 29 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index 993b650ef275..a0d40f74b88d 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -521,23 +521,25 @@ static void exynos_pcie_enable_interrupts(struct exynos_pcie *ep)
+ 		exynos_pcie_msi_init(ep);
+ }
+ 
+-static u32 exynos_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
++static u32 exynos_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base,
++				 u32 reg)
+ {
+ 	struct exynos_pcie *ep = to_exynos_pcie(pci);
+ 	u32 val;
+ 
+ 	exynos_pcie_sideband_dbi_r_mode(ep, true);
+-	val = readl(pci->dbi_base + reg);
++	val = readl(base + reg);
+ 	exynos_pcie_sideband_dbi_r_mode(ep, false);
+ 	return val;
+ }
+ 
+-static void exynos_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
++static void exynos_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base,
++				   u32 reg, u32 val)
+ {
+ 	struct exynos_pcie *ep = to_exynos_pcie(pci);
+ 
+ 	exynos_pcie_sideband_dbi_w_mode(ep, true);
+-	writel(val, pci->dbi_base + reg);
++	writel(val, base + reg);
+ 	exynos_pcie_sideband_dbi_w_mode(ep, false);
+ }
+ 
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index 3eaf3ccdc118..ea403e2240cf 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -61,20 +61,21 @@ int dw_pcie_write(void __iomem *addr, int size, u32 val)
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
++u32 __dw_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg)
+ {
+ 	if (pci->ops->readl_dbi)
+-		return pci->ops->readl_dbi(pci, reg);
++		return pci->ops->readl_dbi(pci, base, reg);
+ 
+-	return readl(pci->dbi_base + reg);
++	return readl(base + reg);
+ }
+ 
+-void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
++void __dw_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
++			  u32 val)
+ {
+ 	if (pci->ops->writel_dbi)
+-		pci->ops->writel_dbi(pci, reg, val);
++		pci->ops->writel_dbi(pci, base, reg, val);
+ 	else
+-		writel(val, pci->dbi_base + reg);
++		writel(val, base + reg);
+ }
+ 
+ static u32 dw_pcie_readl_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 8f3dcb2b099b..e97fc4ce7d49 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -144,8 +144,9 @@ struct pcie_port {
+ 
+ struct dw_pcie_ops {
+ 	u64	(*cpu_addr_fixup)(u64 cpu_addr);
+-	u32	(*readl_dbi)(struct dw_pcie *pcie, u32 reg);
+-	void	(*writel_dbi)(struct dw_pcie *pcie, u32 reg, u32 val);
++	u32	(*readl_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg);
++	void	(*writel_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
++			      u32 val);
+ 	int	(*link_up)(struct dw_pcie *pcie);
+ };
+ 
+@@ -163,8 +164,9 @@ struct dw_pcie {
+ int dw_pcie_read(void __iomem *addr, int size, u32 *val);
+ int dw_pcie_write(void __iomem *addr, int size, u32 val);
+ 
+-u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg);
+-void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val);
++u32 __dw_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg);
++void __dw_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
++			  u32 val);
+ int dw_pcie_link_up(struct dw_pcie *pci);
+ int dw_pcie_wait_for_link(struct dw_pcie *pci);
+ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+@@ -172,6 +174,16 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+ 			       u32 size);
+ void dw_pcie_setup(struct dw_pcie *pci);
+ 
++static inline dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
++{
++	__dw_pcie_writel_dbi(pci, pci->dbi_base, reg, val);
++}
++
++static inline u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
++{
++	return  __dw_pcie_readl_dbi(pci, pci->dbi_base, reg);
++}
++
+ #ifdef CONFIG_PCIE_DW_HOST
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
+-- 
+2.11.0
