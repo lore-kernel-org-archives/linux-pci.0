@@ -1,18 +1,11 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V5 0/4] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
- <f062dc8f-df66-bfd8-a0d7-50ac1cadf975@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B2846675AEDC@IRSMSX101.ger.corp.intel.com>
- <c9820456-d9b1-cd97-533b-889905e27603@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <1f677feb-b561-1dd3-69ad-afd4049b6d59@codeaurora.org>
-Date: Tue, 28 Mar 2017 09:04:29 -0400
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v6 0/4] i.MX7 PCI support
+Date: Tue, 14 Mar 2017 08:18:23 -0700
+Message-Id: <20170314151827.31248-1-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <c9820456-d9b1-cd97-533b-889905e27603@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,37 +13,81 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, linux-kernel@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+ Fabio Estevam <fabio.estevam@nxp.com>, yurovsky@gmail.com,
+ linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/28/2017 8:52 AM, Sinan Kaya wrote:
-> On 3/28/2017 2:02 AM, Patel, Mayurkumar wrote:
->> Thanks for your patches. I am seeing kernel panic after applying
->> these patches (on top of latest kernel) each time during early boot in pci_aspm_init() (any hints already?) function.
->> Need to check if it's something related to my local setup or it's because of these changes.
->> For now I don't have more details why it crashes but I will dig in further and I will provide
->> you more data as soon as I have it.
->>
-> 
-> Interesting, I retested Qemu and I don't see an issue. 
-> Can you share your bootlog when you see the crash?
-> 
-Thinking more...
+Hello, everyone:
 
-Can you add this to the top of pci_aspm_init() and try again?
+This is a sixth iteration of the code that adds PCI-subsystem bits
+necessary for enabling PCI support on i.MX7.
 
-if (!pci_is_pcie(pdev))
-          return -EINVAL;
+Chagnes since v5:
+
+	- Collected ACKs from Lee and Rob
+
+Changes since v4 (can be found at [version4]):
+
+	- Dropped typo-fix patch (originally patch #1 of the
+          series). Bjorn, I am assuming that patch from v4 survived
+          and stayed in your tree, let me know if that is not true.
+
+	- Added patch with workaround to address speed change false
+          failures (I kept it as a separate patch to better document
+          exchange with NXP/Freescale that lead to that patch)
+
+	- Added patch to avoid speed change on links configured Gen1
+          only (Let me know if that is a terrible idea)
+
+	- Addressed section mismatch problem by moving call to
+          hook_fault_code to happend before driver registration.
+
+Changes since v3 (can be found at [version3]):
+	- Move all of the reset_control_assert's into imx6_pcie_assert_core_reset
+	- Documented required reset and power domain DT bindings
+
+Changes since v2 (can be found at [version2]):
+
+	- Collected Reviewed-by for patch #2 from Lucas
+	- Reset logic implementation moved out into a reset controller
+          driver (see [reset1])
+	- Removed unused leftover code
+
+Changes since v1 (can be found at [version1]):
+
+	- All GPC related code moved into a separate driver (see [gpc1])
+	- Removed GPIO probe deferral logging
+	- Fixed section mismatch warning
+	- Minor reformatting of fsl,imx6q-pcie.txt(as per Rob
+          Herring's request)
+
+[version5] https://lkml.org/lkml/2017/2/20/376
+[version4] https://lkml.org/lkml/2017/2/7/478
+[version3] https://lkml.org/lkml/2017/2/6/565
+[version2] https://lkml.org/lkml/2017/2/1/510
+[version1] https://lkml.org/lkml/2017/1/19/488
+[gpc1] https://lkml.org/lkml/2017/2/6/551
+[reset1] https://lkml.org/lkml/2017/2/6/554
+
+Andrey Smirnov (4):
+  PCI: imx6: Add code to support i.MX7D
+  PCI: imx6: Do not wait for speed change on i.MX7
+  PCI: imx6: Do not switch speed if Gen2 is disabled
+  PCI: imx6: Allow probe deferal by reset GPIO
+
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 +-
+ drivers/pci/host/pci-imx6.c                        | 199 +++++++++++++++------
+ include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
+ 3 files changed, 161 insertions(+), 55 deletions(-)
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.9.3
+
 
 _______________________________________________
 linux-arm-kernel mailing list
