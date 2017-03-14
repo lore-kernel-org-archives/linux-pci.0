@@ -1,12 +1,18 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
- Florian Fainelli <f.fainelli@gmail.com>, Rob Herring <robh@kernel.org>,
- devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 2/4 v4] PCI: add driver for Faraday Technology Host Bridge
-Date: Fri,  3 Mar 2017 09:44:07 +0100
-Message-Id: <20170303084407.17384-1-linus.walleij@linaro.org>
+Date: Tue, 14 Mar 2017 14:21:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V4 0/3] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+Message-ID: <20170314192138.GA26264@bhelgaas-glaptop.roam.corp.google.com>
+References: <1489438085-2055-1-git-send-email-okaya@codeaurora.org>
+ <20170313214616.GE8232@bhelgaas-glaptop.roam.corp.google.com>
+ <c6b78903-ea09-9719-7073-c679b0b64a05@codeaurora.org>
+ <20170313230855.GG8232@bhelgaas-glaptop.roam.corp.google.com>
+ <b44fa6b3-7db5-bea4-7f2e-7f880362d171@codeaurora.org>
+MIME-Version: 1.0
+In-Reply-To: <b44fa6b3-7db5-bea4-7f2e-7f880362d171@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -14,776 +20,98 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: openwrt-devel@openwrt.org, Feng-Hsin Chiang <john453@faraday-tech.com>,
- Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-pci@vger.kernel.org,
- Linus Walleij <linus.walleij@linaro.org>, Greentime Hu <green.hu@gmail.com>,
- Janos Laube <janos.dev@gmail.com>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, mayurkumar.patel@intel.com,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds a host bridge driver for the Faraday Technology
-FPPCI100 host bridge, used for Cortina Systems Gemini SoC
-(SL3516) PCI Host Bridge.
+On Mon, Mar 13, 2017 at 07:21:42PM -0400, Sinan Kaya wrote:
+> On 3/13/2017 7:08 PM, Bjorn Helgaas wrote:
+> > On Mon, Mar 13, 2017 at 06:05:55PM -0400, Sinan Kaya wrote:
+> >> On 3/13/2017 5:46 PM, Bjorn Helgaas wrote:
+> >>> What is this series based on?  Unless they depend on other in-flight
+> >>> patches, I apply patches to branches based on my "master" branch,
+> >>> which is typically -rc1 or -rc2 (it's currently v4.11-rc1).  These
+> >>> don't apply to either.
+> >>
+> >> It looks like I am on 4.10. I can rebase and post again. 
+> > 
+> > Rebasing would be good, but I can give you some comments on your v4,
+> > now that I can apply it and see what it looks like.
+> > 
+> 
+> Thanks, 
+> 
+> I'm mostly done with the rebase. I'll have to retest tomorrow morning and
+> then post.
+> 
+> I had to drop this
+> 
+>    - for endpoints, have pcie_aspm_init_link_state() do the actual ASPM
+>       setup of the link as it currently does.
+> 
+> during rebase.
+> 
+> The reason is that the clock configuration needs to switch to common clock
+> mode across all the devices before any ASPM latency is read/configured.
+> 
+> Common clock configuration seem to be trying to walk the device list.
+> 
+> Here is the untested version. It might not even compile.
+> I'll wait until I receive your comments.
 
-This code is inspired by the out-of-tree OpenWRT patch and
-then extensively rewritten for device tree and using the modern
-helpers to cut down and modernize the code to all new PCI
-frameworks. A driver exists in U-Boot as well.
+I had already started looking at v4, so these comments are based on
+that.  Your v4 is a great start and these are all general comments so
+I didn't try to match each one up with the code.
 
-Tested on the ITian Square One SQ201 NAS with the following
-result in the boot log (trimmed to relevant parts):
+  - Goal: retain BIOS ASPM config of bridge even if children are
+    removed and re-added.  Is there a bugzilla for this problem?
 
-OF: PCI: host bridge /soc/pci@50000000 ranges:
-OF: PCI:    IO 0x50000000..0x500fffff -> 0x00000000
-OF: PCI:   MEM 0x58000000..0x5fffffff -> 0x58000000
-ftpci100 50000000.pci: PCI host bridge to bus 0000:00
-pci_bus 0000:00: root bus resource [bus 00-ff]
-pci_bus 0000:00: root bus resource [io  0x0000-0xfffff]
-pci_bus 0000:00: root bus resource [mem 0x58000000-0x5fffffff]
-ftpci100 50000000.pci:
-  DMA MEM1 BASE: 0x0000000000000000 -> 0x0000000007ffffff config 00070000
-ftpci100 50000000.pci:
-  DMA MEM2 BASE: 0x0000000000000000 -> 0x0000000003ffffff config 00060000
-ftpci100 50000000.pci:
-  DMA MEM3 BASE: 0x0000000000000000 -> 0x0000000003ffffff config 00060000
-PCI: bus0: Fast back to back transfers disabled
-pci 0000:00:00.0: of_irq_parse_pci() failed with rc=-22
-pci 0000:00:0c.0: BAR 0: assigned [mem 0x58000000-0x58007fff]
-pci 0000:00:09.2: BAR 0: assigned [mem 0x58008000-0x580080ff]
-pci 0000:00:09.0: BAR 4: assigned [io  0x1000-0x101f]
-pci 0000:00:09.1: BAR 4: assigned [io  0x1020-0x103f]
-pci 0000:00:09.0: enabling device (0140 -> 0141)
-pci 0000:00:09.0: HCRESET not completed yet!
-pci 0000:00:09.1: enabling device (0140 -> 0141)
-pci 0000:00:09.1: HCRESET not completed yet!
-pci 0000:00:09.2: enabling device (0140 -> 0142)
-rt61pci 0000:00:0c.0: enabling device (0140 -> 0142)
-ieee80211 phy0: rt2x00_set_chip: Info - Chipset detected -
-   rt: 2561, rf: 0003, rev: 000c
-ehci_hcd: USB 2.0 'Enhanced' Host Controller (EHCI) Driver
-ehci-pci: EHCI PCI platform driver
-ehci-pci 0000:00:09.2: EHCI Host Controller
-ehci-pci 0000:00:09.2: new USB bus registered, assigned bus number 1
-ehci-pci 0000:00:09.2: irq 125, io mem 0x58008000
-ehci-pci 0000:00:09.2: USB 2.0 started, EHCI 1.00
-hub 1-0:1.0: USB hub found
-hub 1-0:1.0: 4 ports detected
-uhci_hcd: USB Universal Host Controller Interface driver
-uhci_hcd 0000:00:09.0: UHCI Host Controller
-uhci_hcd 0000:00:09.0: new USB bus registered, assigned bus number 2
-uhci_hcd 0000:00:09.0: HCRESET not completed yet!
-uhci_hcd 0000:00:09.0: irq 123, io base 0x00001000
-hub 2-0:1.0: USB hub found
-hub 2-0:1.0: config failed, hub doesn't have any ports! (err -19)
-uhci_hcd 0000:00:09.1: UHCI Host Controller
-uhci_hcd 0000:00:09.1: new USB bus registered, assigned bus number 3
-uhci_hcd 0000:00:09.1: HCRESET not completed yet!
-uhci_hcd 0000:00:09.1: irq 124, io base 0x00001020
-hub 3-0:1.0: USB hub found
-hub 3-0:1.0: config failed, hub doesn't have any ports! (err -19)
-scsi 0:0:0:0: Direct-Access     USB      Flash Disk       1.00 PQ: 0 ANSI: 2
-sd 0:0:0:0: [sda] 7900336 512-byte logical blocks: (4.04 GB/3.77 GiB)
-sd 0:0:0:0: [sda] Write Protect is off
-sd 0:0:0:0: [sda] No Caching mode page found
-sd 0:0:0:0: [sda] Assuming drive cache: write through
- sda: sda1 sda2 sda3
-sd 0:0:0:0: [sda] Attached SCSI removable disk
-ieee80211 phy0: rt2x00lib_request_firmware: Info -
-   Loading firmware file 'rt2561s.bin'
-ieee80211 phy0: rt2x00lib_request_firmware: Info -
-   Firmware detected - version: 0.8
-IPv6: ADDRCONF(NETDEV_UP): wlan0: link is not ready
+  - pci_aspm_init(): Fix function comment.  Called for every device we
+    enumerate.  Maybe split body into pci_aspm_init_upstream() (the
+    has_secondary_link part) and pci_aspm_init_downstream() (or maybe
+    these end up being similar enough that splitting doesn't make
+    sense).  I don't think we should need locking in either case
+    because this is a new device we're in the process of enumerating.
 
-$ lspci
-00:00.0 Class 0600: 159b:4321
-00:09.2 Class 0c03: 1106:3104
-00:09.0 Class 0c03: 1106:3038
-00:09.1 Class 0c03: 1106:3038
-00:0c.0 Class 0280: 1814:0301
+    - Upstream link partner:  Shouldn't need to check pdev->link_state
+      (should always be NULL for a brand-new device).  Should allocate
+      link_state and capture everything that doesn't depend on the
+      downstream link partner, i.e., all DEVCAP & LNKCAP info (this
+      includes the initial BIOS config you're after).
 
-cat /proc/interrupts
-           CPU0
-123:          0       PCI   0 Edge      uhci_hcd:usb2
-124:          0       PCI   1 Edge      uhci_hcd:usb3
-125:        159       PCI   2 Edge      ehci_hcd:usb1
-126:       1082       PCI   3 Edge      rt61pci
+    - Downstream link partner: (devices where dev->has_secondary_link
+      is not set).  Capture device-specific state, i.e., DEVCAP &
+      LNKCAP info, exit latencies and latency requirements.  The
+      sanity check/blacklist stuff only depends on the downstream link
+      partner and maybe could be computed and saved here, e.g., in a
+      new pdev->aspm_blacklist or pdev->link->blacklist.  
 
-cat /proc/iomem
-50000000-500000ff : /soc/pci@50000000
-58000000-5fffffff : Gemini PCI MEM
-  58000000-58007fff : 0000:00:0c.0
-    58000000-58007fff : 0000:00:0c.0
-  58008000-580080ff : 0000:00:09.2
-    58008000-580080ff : ehci_hcd
+      Probably should not *write* to any hardware configuration, e.g.,
+      common clock configuration, because some of that depends on all
+      siblings, and we haven't enumerated them all yet.  The hardware
+      configuration should probably be done in
+      pcie_aspm_init_link_state().
 
-The EHCI USB hub works fine, I can mount and manage
-files and the IRQs just keep ticking up. I can issue
-iwlist wlan0 scanning and see all the WLANs here, I don't have
-wpa_supplicant so have not tried connecting to them.
+  - pcie_aspm_init_link_state(): Called for bridges (upstream end of
+    link) after all children have been enumerated.  No longer needs to
+    check aspm_support_enabled or pdev->has_secondary_link or the VIA
+    quirk: pci_aspm_init() already checked that stuff, so we only need
+    to check pdev->link_state here.  Probably should do the common
+    clock config here instead of in pci_aspm_init().
 
-Cc: Janos Laube <janos.dev@gmail.com>
-Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
-Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>
-Cc: Feng-Hsin Chiang <john453@faraday-tech.com>
-Cc: Greentime Hu <green.hu@gmail.com>
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
----
-ChangeLog v3->v4:
-- Change pr_dbg() to pr_debug(). The former does not exist and
-  for some reason I first changed pr_info() to pr_dbg() and didn't
-  test-compile it before submitting, mea culpa.
-ChangeLog v2->v3:
-- Rewrite to use pci_alloc_host_bridge() and
-  pci_register_host_bridge()
-- Change compatible strings to "faraday,ftpci100" and
-  "faraday,ftpci100-dual"
-- Rename driver file to pci-ftpci100.c to reflect the name
-  of the actual Faraday IP core.
-- Make the driver depend on ARM again as not all archs use
-  setup-irq.c which contains pci_fixup_irqs() that the driver
-  is using.
-- Add "dma-ranges" property, after deciphering that some hardcoded
-  constants in the driver is really about this.
-ChangeLog v1->v2:
-- Rename the bridge and symbols to reflect Faraday technology
-  as this IP block is clearly a Faraday block and not from
-  Storlink/Storm/Cortina at all.
-- Support both the regular and "dual" versions of the bridge,
-  where the regular has a cascaded IRQ controller and the dual
-  does not.
-- Encode per-variant characteristics in a variant struct in
-  the .data field of the OF match.
-- Drop the pointless spinlock in the config space accessors.
-- Drop manipulation of pcibios_min_io and pcibios_min_mem
-- Get the IO range size from the device tree, and set up the
-  bridge properly according to this. Currently we only support
-  a 1MiB size IO range, but hey, it's at least dynamic and
-  logical.
+  - pcie_aspm_configure_common_clock(): I don't think you touched
+    this, but this might be a good opportunity to move the re-read
+    (pcie_get_aspm_reg() stuff) into this function so it doesn't
+    clutter the caller?  Could be a preliminary cleanup patch.
 
-This can be merged to the PCI tree whenever it is considered
-fine for inclusion.
-
-Andestech and Faraday guys: you are more likely than me to
-actually have documentation for this bridge. Please share with
-me if you can, especially the register defintions, because I
-want to set up IO and MEM windows properly from the device tree,
-not just rely on defaults. There are defines for these registers
-but no use or documentation.
----
- drivers/pci/host/Kconfig        |   6 +
- drivers/pci/host/Makefile       |   1 +
- drivers/pci/host/pci-ftpci100.c | 566 ++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 573 insertions(+)
- create mode 100644 drivers/pci/host/pci-ftpci100.c
-
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 898d2c48239c..a2555e35a393 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -60,6 +60,12 @@ config PCI_EXYNOS
- 	select PCIEPORTBUS
- 	select PCIE_DW
- 
-+config PCI_FTPCI100
-+	bool "Faraday Technology FTPCI100 PCI controller"
-+	depends on OF
-+	depends on ARM
-+	default ARCH_GEMINI
-+
- config PCI_IMX6
- 	bool "Freescale i.MX6 PCIe controller"
- 	depends on SOC_IMX6Q
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index bfe3179ae74c..39f20b43414d 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -2,6 +2,7 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
- obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
- obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
- obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
-+obj-$(CONFIG_PCI_FTPCI100) += pci-ftpci100.o
- obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
- obj-$(CONFIG_PCI_HYPERV) += pci-hyperv.o
- obj-$(CONFIG_PCI_MVEBU) += pci-mvebu.o
-diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-new file mode 100644
-index 000000000000..438a1e95ee1b
---- /dev/null
-+++ b/drivers/pci/host/pci-ftpci100.c
-@@ -0,0 +1,566 @@
-+/*
-+ * Support for Faraday Technology FTPC100 PCI Controller
-+ *
-+ * Copyright (C) 2017 Linus Walleij <linus.walleij@linaro.org>
-+ *
-+ * Based on the out-of-tree OpenWRT patch for Cortina Gemini:
-+ * Copyright (C) 2009 Janos Laube <janos.dev@gmail.com>
-+ * Copyright (C) 2009 Paulius Zaleckas <paulius.zaleckas@teltonika.lt>
-+ * Based on SL2312 PCI controller code
-+ * Storlink (C) 2003
-+ */
-+
-+#include <linux/init.h>
-+#include <linux/interrupt.h>
-+#include <linux/io.h>
-+#include <linux/kernel.h>
-+#include <linux/of_address.h>
-+#include <linux/of_device.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_pci.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/slab.h>
-+#include <linux/irqdomain.h>
-+#include <linux/irqchip/chained_irq.h>
-+#include <linux/bitops.h>
-+#include <linux/irq.h>
-+
-+/*
-+ * Special configuration registers directly in the first few words
-+ * in he I/O space.
-+ */
-+#define PCI_IOSIZE	0x00
-+#define PCI_PROT	0x04 /* AHB protection */
-+#define PCI_CTRL	0x08 /* PCI control signal */
-+#define PCI_SOFTRST	0x10 /* Soft reset counter and response error enable */
-+#define PCI_CONFIG	0x28 /* PCI configuration command register */
-+#define PCI_DATA	0x2C
-+
-+#define FARADAY_PCI_PMC			0x40 /* Power management control */
-+#define FARADAY_PCI_PMCSR		0x44 /* Power management status */
-+#define FARADAY_PCI_CTRL1		0x48 /* Control register 1 */
-+#define FARADAY_PCI_CTRL2		0x4C /* Control register 2 */
-+#define FARADAY_PCI_MEM1_BASE_SIZE	0x50 /* Memory base and size #1 */
-+#define FARADAY_PCI_MEM2_BASE_SIZE	0x54 /* Memory base and size #2 */
-+#define FARADAY_PCI_MEM3_BASE_SIZE	0x58 /* Memory base and size #3 */
-+
-+/* Bits 31..28 gives INTD..INTA status */
-+#define PCI_CTRL2_INTSTS_SHIFT		28
-+#define PCI_CTRL2_INTMASK_CMDERR	BIT(27)
-+#define PCI_CTRL2_INTMASK_PARERR	BIT(26)
-+/* Bits 25..22 masks INTD..INTA */
-+#define PCI_CTRL2_INTMASK_SHIFT		22
-+#define PCI_CTRL2_INTMASK_MABRT_RX	BIT(21)
-+#define PCI_CTRL2_INTMASK_TABRT_RX	BIT(20)
-+#define PCI_CTRL2_INTMASK_TABRT_TX	BIT(19)
-+#define PCI_CTRL2_INTMASK_RETRY4	BIT(18)
-+#define PCI_CTRL2_INTMASK_SERR_RX	BIT(17)
-+#define PCI_CTRL2_INTMASK_PERR_RX	BIT(16)
-+/* Bit 15 reserved */
-+#define PCI_CTRL2_MSTPRI_REQ6		BIT(14)
-+#define PCI_CTRL2_MSTPRI_REQ5		BIT(13)
-+#define PCI_CTRL2_MSTPRI_REQ4		BIT(12)
-+#define PCI_CTRL2_MSTPRI_REQ3		BIT(11)
-+#define PCI_CTRL2_MSTPRI_REQ2		BIT(10)
-+#define PCI_CTRL2_MSTPRI_REQ1		BIT(9)
-+#define PCI_CTRL2_MSTPRI_REQ0		BIT(8)
-+/* Bits 7..4 reserved */
-+/* Bits 3..0 TRDYW */
-+
-+/*
-+ * Memory configs:
-+ * Bit 31..20 defines the PCI side memory base
-+ * Bit 19..16 (4 bits) defines the size per below
-+ */
-+#define FARADAY_PCI_MEMBASE_MASK	0xfff00000
-+#define FARADAY_PCI_MEMSIZE_1MB		0x0
-+#define FARADAY_PCI_MEMSIZE_2MB		0x1
-+#define FARADAY_PCI_MEMSIZE_4MB		0x2
-+#define FARADAY_PCI_MEMSIZE_8MB		0x3
-+#define FARADAY_PCI_MEMSIZE_16MB	0x4
-+#define FARADAY_PCI_MEMSIZE_32MB	0x5
-+#define FARADAY_PCI_MEMSIZE_64MB	0x6
-+#define FARADAY_PCI_MEMSIZE_128MB	0x7
-+#define FARADAY_PCI_MEMSIZE_256MB	0x8
-+#define FARADAY_PCI_MEMSIZE_512MB	0x9
-+#define FARADAY_PCI_MEMSIZE_1GB		0xa
-+#define FARADAY_PCI_MEMSIZE_2GB		0xb
-+#define FARADAY_PCI_MEMSIZE_SHIFT	16
-+
-+/*
-+ * The DMA base is set to 0x0 for all memory segments, it reflects the
-+ * fact that the memory of the host system starts at 0x0.
-+ */
-+#define FARADAY_PCI_DMA_MEM1_BASE	0x00000000
-+#define FARADAY_PCI_DMA_MEM2_BASE	0x00000000
-+#define FARADAY_PCI_DMA_MEM3_BASE	0x00000000
-+
-+/* Defines for PCI configuration command register */
-+#define PCI_CONF_ENABLE		BIT(31)
-+#define PCI_CONF_WHERE(r)	((r) & 0xFC)
-+#define PCI_CONF_BUS(b)		(((b) & 0xFF) << 16)
-+#define PCI_CONF_DEVICE(d)	(((d) & 0x1F) << 11)
-+#define PCI_CONF_FUNCTION(f)	(((f) & 0x07) << 8)
-+
-+/**
-+ * struct faraday_pci_variant - encodes IP block differences
-+ * @cascaded_irq: this host has cascaded IRQs from an interrupt controller
-+ *	embedded in the host bridge.
-+ */
-+struct faraday_pci_variant {
-+	bool cascaded_irq;
-+};
-+
-+struct faraday_pci {
-+	struct device *dev;
-+	void __iomem *base;
-+	struct irq_domain *irqdomain;
-+	struct pci_bus *bus;
-+};
-+
-+static int faraday_res_to_memcfg(resource_size_t mem_base,
-+				 resource_size_t mem_size,
-+				 u32 *val)
-+{
-+	u32 outval;
-+
-+	switch (mem_size) {
-+	case SZ_1M:
-+		outval = FARADAY_PCI_MEMSIZE_1MB;
-+		break;
-+	case SZ_2M:
-+		outval = FARADAY_PCI_MEMSIZE_2MB;
-+		break;
-+	case SZ_4M:
-+		outval = FARADAY_PCI_MEMSIZE_4MB;
-+		break;
-+	case SZ_8M:
-+		outval = FARADAY_PCI_MEMSIZE_8MB;
-+		break;
-+	case SZ_16M:
-+		outval = FARADAY_PCI_MEMSIZE_16MB;
-+		break;
-+	case SZ_32M:
-+		outval = FARADAY_PCI_MEMSIZE_32MB;
-+		break;
-+	case SZ_64M:
-+		outval = FARADAY_PCI_MEMSIZE_64MB;
-+		break;
-+	case SZ_128M:
-+		outval = FARADAY_PCI_MEMSIZE_128MB;
-+		break;
-+	case SZ_256M:
-+		outval = FARADAY_PCI_MEMSIZE_256MB;
-+		break;
-+	case SZ_512M:
-+		outval = FARADAY_PCI_MEMSIZE_512MB;
-+		break;
-+	case SZ_1G:
-+		outval = FARADAY_PCI_MEMSIZE_1GB;
-+		break;
-+	case SZ_2G:
-+		outval = FARADAY_PCI_MEMSIZE_2GB;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+	outval <<= FARADAY_PCI_MEMSIZE_SHIFT;
-+
-+	/* This is probably not good */
-+	if (mem_base & ~(FARADAY_PCI_MEMBASE_MASK))
-+		pr_warn("truncated PCI memory base\n");
-+	/* Translate to bridge side address space */
-+	outval |= (mem_base & FARADAY_PCI_MEMBASE_MASK);
-+	pr_debug("Translated pci base @%08x, size %08x to config %08x\n",
-+		 mem_base, mem_size, outval);
-+
-+	*val = outval;
-+	return 0;
-+}
-+
-+static int faraday_pci_read_config(struct pci_bus *bus, unsigned int fn,
-+				  int config, int size, u32 *value)
-+{
-+	struct faraday_pci *p = bus->sysdata;
-+
-+	writel(PCI_CONF_BUS(bus->number) |
-+			PCI_CONF_DEVICE(PCI_SLOT(fn)) |
-+			PCI_CONF_FUNCTION(PCI_FUNC(fn)) |
-+			PCI_CONF_WHERE(config) |
-+			PCI_CONF_ENABLE,
-+			p->base + PCI_CONFIG);
-+
-+	*value = readl(p->base + PCI_DATA);
-+
-+	if (size == 1)
-+		*value = (*value >> (8 * (config & 3))) & 0xFF;
-+	else if (size == 2)
-+		*value = (*value >> (8 * (config & 3))) & 0xFFFF;
-+
-+	dev_dbg(&bus->dev,
-+		"[read]  slt: %.2d, fnc: %d, cnf: 0x%.2X, val (%d bytes): 0x%.8X\n",
-+		PCI_SLOT(fn), PCI_FUNC(fn), config, size, *value);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int faraday_pci_write_config(struct pci_bus *bus, unsigned int fn,
-+				   int config, int size, u32 value)
-+{
-+	struct faraday_pci *p = bus->sysdata;
-+	int ret = PCIBIOS_SUCCESSFUL;
-+
-+	dev_dbg(&bus->dev,
-+		"[write] slt: %.2d, fnc: %d, cnf: 0x%.2X, val (%d bytes): 0x%.8X\n",
-+		PCI_SLOT(fn), PCI_FUNC(fn), config, size, value);
-+
-+	writel(PCI_CONF_BUS(bus->number) |
-+			PCI_CONF_DEVICE(PCI_SLOT(fn)) |
-+			PCI_CONF_FUNCTION(PCI_FUNC(fn)) |
-+			PCI_CONF_WHERE(config) |
-+			PCI_CONF_ENABLE,
-+			p->base + PCI_CONFIG);
-+
-+	switch (size) {
-+	case 4:
-+		writel(value, p->base + PCI_DATA);
-+		break;
-+	case 2:
-+		writew(value, p->base + PCI_DATA + (config & 3));
-+		break;
-+	case 1:
-+		writeb(value, p->base + PCI_DATA + (config & 3));
-+		break;
-+	default:
-+		ret = PCIBIOS_BAD_REGISTER_NUMBER;
-+	}
-+
-+	return ret;
-+}
-+
-+static struct pci_ops faraday_pci_ops = {
-+	.read	= faraday_pci_read_config,
-+	.write	= faraday_pci_write_config,
-+};
-+
-+static void faraday_pci_ack_irq(struct irq_data *d)
-+{
-+	struct faraday_pci *p = irq_data_get_irq_chip_data(d);
-+	unsigned int reg;
-+
-+	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
-+	reg &= ~(0xF << PCI_CTRL2_INTSTS_SHIFT);
-+	reg |= BIT(irqd_to_hwirq(d) + PCI_CTRL2_INTSTS_SHIFT);
-+	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, reg);
-+}
-+
-+static void faraday_pci_mask_irq(struct irq_data *d)
-+{
-+	struct faraday_pci *p = irq_data_get_irq_chip_data(d);
-+	unsigned int reg;
-+
-+	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
-+	reg &= ~((0xF << PCI_CTRL2_INTSTS_SHIFT)
-+		 | BIT(irqd_to_hwirq(d) + PCI_CTRL2_INTMASK_SHIFT));
-+	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, reg);
-+}
-+
-+static void faraday_pci_unmask_irq(struct irq_data *d)
-+{
-+	struct faraday_pci *p = irq_data_get_irq_chip_data(d);
-+	unsigned int reg;
-+
-+	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
-+	reg &= ~(0xF << PCI_CTRL2_INTSTS_SHIFT);
-+	reg |= BIT(irqd_to_hwirq(d) + PCI_CTRL2_INTMASK_SHIFT);
-+	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, reg);
-+}
-+
-+static void faraday_pci_irq_handler(struct irq_desc *desc)
-+{
-+	struct faraday_pci *p = irq_desc_get_handler_data(desc);
-+	struct irq_chip *irqchip = irq_desc_get_chip(desc);
-+	unsigned int irq_stat, reg, i;
-+
-+	faraday_pci_read_config(p->bus, 0, FARADAY_PCI_CTRL2, 4, &reg);
-+	irq_stat = reg >> PCI_CTRL2_INTSTS_SHIFT;
-+
-+	chained_irq_enter(irqchip, desc);
-+
-+	for (i = 0; i < 4; i++) {
-+		if ((irq_stat & BIT(i)) == 0)
-+			continue;
-+		generic_handle_irq(irq_find_mapping(p->irqdomain, i));
-+	}
-+
-+	chained_irq_exit(irqchip, desc);
-+}
-+
-+static struct irq_chip faraday_pci_irq_chip = {
-+	.name = "PCI",
-+	.irq_ack = faraday_pci_ack_irq,
-+	.irq_mask = faraday_pci_mask_irq,
-+	.irq_unmask = faraday_pci_unmask_irq,
-+};
-+
-+static int faraday_pci_irq_map(struct irq_domain *domain, unsigned int irq,
-+			      irq_hw_number_t hwirq)
-+{
-+	irq_set_chip_and_handler(irq, &faraday_pci_irq_chip, handle_level_irq);
-+	irq_set_chip_data(irq, domain->host_data);
-+
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops faraday_pci_irqdomain_ops = {
-+	.map = faraday_pci_irq_map,
-+};
-+
-+static int faraday_pci_setup_cascaded_irq(struct faraday_pci *p)
-+{
-+	struct device_node *intc = of_get_next_child(p->dev->of_node, NULL);
-+	int irq;
-+	int i;
-+
-+	if (!intc) {
-+		dev_err(p->dev, "missing child interrupt-controller node\n");
-+		return -EINVAL;
-+	}
-+
-+	/* All PCI IRQs cascade off this one */
-+	irq = of_irq_get(intc, 0);
-+	if (!irq) {
-+		dev_err(p->dev, "failed to get parent IRQ\n");
-+		return -EINVAL;
-+	}
-+
-+	p->irqdomain = irq_domain_add_linear(intc, 4,
-+					     &faraday_pci_irqdomain_ops,
-+					     p);
-+	if (!p->irqdomain) {
-+		dev_err(p->dev, "failed to create Gemini PCI IRQ domain\n");
-+		return -EINVAL;
-+	}
-+
-+	irq_set_chained_handler_and_data(irq, faraday_pci_irq_handler, p);
-+
-+	for (i = 0; i < 4; i++)
-+		irq_create_mapping(p->irqdomain, i);
-+
-+	return 0;
-+}
-+
-+static int pci_dma_range_parser_init(struct of_pci_range_parser *parser,
-+				     struct device_node *node)
-+{
-+	const int na = 3, ns = 2;
-+	int rlen;
-+
-+	parser->node = node;
-+	parser->pna = of_n_addr_cells(node);
-+	parser->np = parser->pna + na + ns;
-+
-+	parser->range = of_get_property(node, "dma-ranges", &rlen);
-+	if (!parser->range)
-+		return -ENOENT;
-+	parser->end = parser->range + rlen / sizeof(__be32);
-+
-+	return 0;
-+}
-+
-+static int faraday_pci_parse_map_dma_ranges(struct faraday_pci *p,
-+					    struct device_node *np)
-+{
-+	struct of_pci_range range;
-+	struct of_pci_range_parser parser;
-+	struct device *dev = p->dev;
-+	u32 confreg[3] = {
-+		FARADAY_PCI_MEM1_BASE_SIZE,
-+		FARADAY_PCI_MEM2_BASE_SIZE,
-+		FARADAY_PCI_MEM3_BASE_SIZE,
-+	};
-+	int i = 0;
-+	u32 val;
-+
-+	if (pci_dma_range_parser_init(&parser, np)) {
-+		dev_err(dev, "missing dma-ranges property\n");
-+		return -EINVAL;
-+	}
-+
-+	/*
-+	 * Get the dma-ranges from the device tree
-+	 */
-+	for_each_of_pci_range(&parser, &range) {
-+		u64 end = range.pci_addr + range.size - 1;
-+		int ret;
-+
-+		ret = faraday_res_to_memcfg(range.pci_addr, range.size, &val);
-+		if (ret) {
-+			dev_err(dev,
-+				"DMA range %d: illegal MEM resource size\n", i);
-+			return -EINVAL;
-+		}
-+
-+		dev_info(dev, "DMA MEM%d BASE: 0x%016llx -> 0x%016llx config %08x\n",
-+			 i + 1, range.pci_addr, end, val);
-+		if (i <= 2) {
-+			faraday_pci_write_config(p->bus, 0, confreg[i],
-+						 4, val);
-+		} else {
-+			dev_err(dev, "ignore extraneous dma-range %d\n", i);
-+			break;
-+		}
-+
-+		i++;
-+	}
-+
-+	return 0;
-+}
-+
-+static int faraday_pci_probe(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	const struct faraday_pci_variant *variant =
-+		of_device_get_match_data(dev);
-+	struct resource *regs;
-+	resource_size_t io_base;
-+	struct resource_entry *win;
-+	struct faraday_pci *p;
-+	struct resource *mem;
-+	struct resource *io;
-+	struct pci_host_bridge *host;
-+	int ret;
-+	u32 val;
-+	LIST_HEAD(res);
-+
-+	host = pci_alloc_host_bridge(sizeof(*p));
-+	if (!host)
-+		return -ENOMEM;
-+
-+	host->dev.parent = dev;
-+	host->ops = &faraday_pci_ops;
-+	host->busnr = 0;
-+	host->msi = NULL;
-+	p = pci_host_bridge_priv(host);
-+	host->sysdata = p;
-+	p->dev = dev;
-+
-+	regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	p->base = devm_ioremap_resource(dev, regs);
-+	if (IS_ERR(p->base))
-+		return PTR_ERR(p->base);
-+
-+	ret = of_pci_get_host_bridge_resources(dev->of_node, 0, 0xff,
-+					       &res, &io_base);
-+	if (ret)
-+		return ret;
-+
-+	ret = devm_request_pci_bus_resources(dev, &res);
-+	if (ret)
-+		return ret;
-+
-+	/* Get the I/O and memory ranges from DT */
-+	resource_list_for_each_entry(win, &res) {
-+		switch (resource_type(win->res)) {
-+		case IORESOURCE_IO:
-+			io = win->res;
-+			io->name = "Gemini PCI I/O";
-+			if (!faraday_res_to_memcfg(io->start - win->offset,
-+						   resource_size(io),
-+						   &val)) {
-+				/* setup I/O space size */
-+				writel(val, p->base + PCI_IOSIZE);
-+			} else {
-+				dev_err(dev,
-+					"illegal IO mem size\n");
-+				return -EINVAL;
-+			}
-+			ret = pci_remap_iospace(io, io_base);
-+			if (ret) {
-+				dev_warn(dev, "error %d: failed to map resource %pR\n",
-+					 ret, io);
-+				continue;
-+			}
-+			break;
-+		case IORESOURCE_MEM:
-+			mem = win->res;
-+			mem->name = "Gemini PCI MEM";
-+			break;
-+		case IORESOURCE_BUS:
-+			break;
-+		default:
-+			break;
-+		}
-+	}
-+
-+	/* Setup hostbridge */
-+	val = readl(p->base + PCI_CTRL);
-+	val |= PCI_COMMAND_IO;
-+	val |= PCI_COMMAND_MEMORY;
-+	val |= PCI_COMMAND_MASTER;
-+	writel(val, p->base + PCI_CTRL);
-+
-+	list_splice_init(&res, &host->windows);
-+	ret = pci_register_host_bridge(host);
-+	if (ret) {
-+		dev_err(dev, "failed to register host: %d\n", ret);
-+		return ret;
-+	}
-+	p->bus = host->bus;
-+
-+	/* Mask and clear all interrupts */
-+	faraday_pci_write_config(p->bus, 0, FARADAY_PCI_CTRL2 + 2, 2, 0xF000);
-+	if (variant->cascaded_irq) {
-+		ret = faraday_pci_setup_cascaded_irq(p);
-+		if (ret) {
-+			dev_err(dev, "failed to setup cascaded IRQ\n");
-+			return ret;
-+		}
-+	}
-+
-+	ret = faraday_pci_parse_map_dma_ranges(p, dev->of_node);
-+	if (ret)
-+		return ret;
-+
-+	pci_scan_child_bus(p->bus);
-+	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
-+	pci_bus_assign_resources(p->bus);
-+	pci_bus_add_devices(p->bus);
-+	pci_free_resource_list(&res);
-+
-+	return 0;
-+}
-+
-+/*
-+ * We encode bridge variants here, we have at least two so it doesn't
-+ * hurt to have infrastructure to encompass future variants as well.
-+ */
-+const struct faraday_pci_variant faraday_regular = {
-+	.cascaded_irq = true,
-+};
-+
-+const struct faraday_pci_variant faraday_dual = {
-+	.cascaded_irq = false,
-+};
-+
-+static const struct of_device_id faraday_pci_of_match[] = {
-+	{
-+		.compatible = "faraday,ftpci100",
-+		.data = &faraday_regular,
-+	},
-+	{
-+		.compatible = "faraday,ftpci100-dual",
-+		.data = &faraday_dual,
-+	},
-+	{},
-+};
-+
-+static struct platform_driver faraday_pci_driver = {
-+	.driver = {
-+		.name = "ftpci100",
-+		.of_match_table = of_match_ptr(faraday_pci_of_match),
-+	},
-+	.probe  = faraday_pci_probe,
-+};
-+builtin_platform_driver(faraday_pci_driver);
--- 
-2.9.3
-
+    PCI_EXP_LNKSTA_SLC is HwInit, which means it's read-only and could
+    be captured at pci_aspm_init()-time.  Currently we only look at
+    SLC for the first child, but pci_aspm_init_upstream() could set a
+    link->downstream_slc bit, and pci_aspm_init_downstream() could
+    clear it if it found a device with SLC not set.
 
 _______________________________________________
 linux-arm-kernel mailing list
