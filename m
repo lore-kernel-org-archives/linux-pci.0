@@ -1,65 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:46106 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751630AbdC1QZk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Mar 2017 12:25:40 -0400
-From: "Keller, Jacob E" <jacob.e.keller@intel.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-CC: "Duyck, Alexander H" <alexander.h.duyck@intel.com>
-Subject: PCI VF driver with long delay in remove routine
-Date: Tue, 28 Mar 2017 16:24:36 +0000
-Message-ID: <02874ECE860811409154E81DA85FBB5857DEA2D0@ORSMSX115.amr.corp.intel.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=BnTf=2X=jessfraz.com=me@kernel.org>
+Return-Path: <SRS0=BnTf=2X=jessfraz.com=me@kernel.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170307190731.GD21358@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170211013758.3288-1-me@jessfraz.com> <20170211013758.3288-3-me@jessfraz.com>
+ <20170215203347.GA6981@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.20.1702152143520.3805@nanos> <20170216143509.GA22820@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.20.1702161536150.3543@nanos> <20170307190731.GD21358@bhelgaas-glaptop.roam.corp.google.com>
+From: Jessica Frazelle <me@jessfraz.com>
+Date: Tue, 14 Mar 2017 11:50:50 -0700
+Message-ID: <CAEk6tEwk6sjPSAVWQ3-4FBaTZB=2sqV_z960THe6yr4SMy3VkA@mail.gmail.com>
+Subject: Re: [PATCH v2 3/5] pci: set msi_domain_ops as __ro_after_init
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Thomas Gleixner <tglx@linutronix.de>, "K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Keith Busch <keith.busch@intel.com>,
+	"open list:Hyper-V CORE AND DRIVERS" <devel@linuxdriverproject.org>,
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
+	kernel-hardening@lists.openwall.com, Kees Cook <keescook@chromium.org>,
+	Marc Zyngier <marc.zyngier@arm.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQWxsLA0KDQpJJ3ZlIGJlZW4gaW52ZXN0aWdhdGluZyBzb21lIGRlbGF5cyBpbiB0aGUgaTQw
-ZSBhbmQgaTQwZXZmIGRyaXZlcnMsIGludm9sdmluZyBpbnRlcmFjdGluZyB3aXRoIGxhcmdlIG51
-bWJlcnMgb2YgVkYgZGV2aWNlcy4gU3BlY2lmaWNhbGx5IEkndmUgYmVlbiB0cnlpbmcgdG8gcmVt
-b3ZlIGxhcmdlIGRlbGF5cyB3aGljaCByZXN1bHQgZnJvbSBsb29waW5nIG92ZXIgbXVsdGlwbGUg
-VkZzIGluIHNlcXVlbmNlLCBzdWNoIGFzIHdoZW4gbG9hZGluZywgdW5sb2FkaW5nLCByZXNldHRp
-bmcsIGFuZCBvdGhlciBzaW1pbGFyIHByb2JsZW1zLg0KDQpPbmUgcGxhY2UgSSd2ZSBiZWVuIGlu
-dmVzdGlnYXRpbmcgaXMgdGhlIHNyaW92X2Rpc2FibGUoKSB3aGljaCBvY2N1cnMgd2hlbiByZW1v
-dmluZyBWRnMuIFRoaXMgZnVuY3Rpb24gaGFwcGVucyB0byBsb29wIG92ZXIgYWxsIG9mIHRoZSBW
-RnMgYW5kIHJlbW92ZSB0aGVtIGluIHNlcXVlbmNlLg0KDQpNeSBWRiBkcml2ZXIncyByZW1vdmUg
-cm91dGluZSBoYXMgYSBmZXcgbXNsZWVwKDUwKSBjYWxscyB3aGljaCBhcmUgYWRkZWQgaW4gb3Jk
-ZXIgdG8gZGVsYXkgcmVtb3ZpbmcgbWVtb3J5IHVudGlsIHNodXRkb3duIHByb2NlZHVyZXMgZmlu
-aXNoLiBJJ3ZlIGJlZW4gdG9sZCBieSBvdGhlciBkZXZlbG9wZXJzIHRoYXQgdGhlc2UgZGVsYXlz
-IGFyZSBuZWNlc3NhcnksIGFuZCBJIGNhbid0IHNpbXBseSByZW1vdmUgdGhlbS4NCg0KVGhlIHJl
-c3VsdCwgaXMgdGhhdCB3aGVuIHlvdSByZW1vdmUgdGhlIGk0MGUgUEYgZHJpdmVyLCBvciBkaXNh
-YmxlIGFsbCBWRnMsIGl0IGNhbiB0YWtlIGFuIGlub3JkaW5hdGUgYW1vdW50IG9mIHRpbWUgKHVw
-d2FyZHMgb2YgMTMgc2Vjb25kcykuDQoNCkluIG90aGVyIGNvZGUgbG9jYXRpb25zLCBJIHdhcyBh
-YmxlIHRvIGF2b2lkIHRoaXMgYnkgYW1vcnRpemluZyB0aGUgZmxvdyBzbyB0aGF0IEkgc3RhcnQg
-dGhlIHByb2Nlc3MgZm9yIGFsbCBWRnMsIHRoZW4gd2FpdCBvbmNlLCBhbmQgdGhlbiBmaW5pc2hp
-bmcgdGhlIHNodXRkb3duLiBJbiB0aGlzIGNhc2UsIEkgY2FuJ3QgZG8gdGhhdCBiZWNhdXNlIHRo
-ZSBjb2RlIGlzIHNwcmVhZCB0aHJvdWdob3V0IHRoZSBwY2kgaW92IGNvZGUgYW5kIHRoZSBWRiBk
-cml2ZXIgY29kZS4NCg0KSSdtIHdyaXRpbmcgdG8gYXNrIGlmIGFueW9uZSBoYXMgc29sdmVkIHNp
-bWlsYXIgaXNzdWVzIHdpdGggb3RoZXIgZHJpdmVycy4gSSd2ZSB0aG91Z2h0IG9mIGEgZmV3IHBv
-c3NpYmxlIHNvbHV0aW9uczoNCg0KMSkgY2hhbmdpbmcgdGhlIGNvZGUgaW4gc3Jpb3ZfZGlzYWJs
-ZSgpIHNvbWVob3cgc28gdGhhdCBpdCBjYW4gcmVtb3ZlIHRoZSBkcml2ZXJzIGluIHBhcmFsbGVs
-LiBPbmUgcG9zc2liaWxpdHkgaXMgdG8gdXNlIGEgd29ya3F1ZXVlLiBUaGlzIG9idmlvdXNseSBh
-ZGRzIGEgbG90IG9mIGNvbXBsZXhpdHkgdG8gdGhlIHJlbW92ZSByb3V0aW5lLg0KDQoyKSBzb21l
-IHNvcnQgb2YgMi1zdGFnZSByZW1vdmFsIHNldHVwIHdoZXJlIHdlIGNhbiBub3RpZnkgYSBWRiB0
-aGF0IGl0IHdpbGwgYmUgc2h1dHRpbmcgZG93biBzb29uLCBzbyB0aGF0IGl0IGNhbiBiZWdpbiB3
-aXRoIHRoZSBkZWxheSBzdHVmZiwgYW5kIHRoZW4gZmluaXNoIHNodXR0aW5nIGRvd24gYWZ0ZXJ3
-YXJkcy4NCg0KMykgbW9kaWZ5aW5nIHRoZSBkcml2ZXIgc28gdGhhdCBpdCBjYW4gdW5saW5rIGFu
-ZCBob2xkIHJlZmVyZW5jZXMgdG8gdGhlIG1lbW9yeSBpdCBuZWVkcyB0byBmcmVlLCBhbmQgdGhl
-biBjYW4gc2ltcGx5IGhhbmRsZSB0aGlzIHRhc2sgaW4gYSBzZXBhcmF0ZSB3b3JrcXVldWUgd2l0
-aCBhIHJlZmVyZW5jZSBjb3VudGVkIHN0cnVjdHVyZSBvZiBzb21lIHNvcnQuDQoNCkkndmUgaW1w
-bGVtZW50ZWQgKDEpIGJ1dCB0aGlzIHNlZW1zIGxpa2UgaXQgaXNuJ3QgYSBnb29kIHNvbHV0aW9u
-IGJlY2F1c2UgaXQgZml4ZXMgdGhlIHByb2JsZW0gb25seSBpbiBvbmUgcGxhY2UsIGFuZCBJIHRo
-aW5rIG9ubHkgaWYgdGhlIFZGcyBhcmUgb24gYmFyZSBtZXRhbCAobm90IHN1cmUgaG93IGl0IHdv
-cmtzIHdoZW4gVk1zIGFyZSB1c2VkKS4gSSd2ZSB0aG91Z2h0IGFib3V0ICgyKSBidXQgdGhpcyBz
-ZWVtcyBsaWtlIGl0IHdpbGwgbmVlZCBzb21lIGNvcmUgaW5mcmFzdHJ1Y3R1cmUgaW4gcGxhY2Us
-IGFuZCBJJ20gbm90IHN1cmUgaG93IHRoaXMgc2hvdWxkIGJlIGhhbmRsZWQuDQoNCkkgdGhpbmsg
-KDMpIG1pZ2h0IGJlIHRoZSBiZXN0IHJvdXRlLCBidXQgSSdtIHJlYWxseSBub3Qgc3VyZSB3aGF0
-IHNvcnQgb2YgZ3VhcmFudGVlcyB0aGUgcmVtb3ZlIHJvdXRpbmUgbmVlZHMgdG8gbWFrZS4gV2hh
-dCBtdXN0IGJlIGZ1bGx5IHNodXQgZG93biB3aGVuIHRoaXMgZnVuY3Rpb24gZXhpdHMgaWYgSSB3
-ZXJlIHVzaW5nIHNvbWUgc29ydCBvZiBkZWZlcnJlZCByZW1vdmUgd29yayB0YXNrPw0KDQpJIGZl
-ZWwgbGlrZSB0aGlzIGNhbid0IGJlIHNvbWV0aGluZyBubyBvbmUgZWxzZSBoYXMgdGhvdWdodCBh
-Ym91dCBiZWZvcmUsIGFuZCBJIGtub3cgdGhpcyBzb3J0IG9mIHRoaW5nIHdpbGwgb25seSBnZXQg
-d29zZSBhcyBuZXcgcGFydHMgaGF2ZSBtb3JlIGFuZCBtb3JlIGF2YWlsYWJsZSB2aXJ0dWFsIGZ1
-bmN0aW9ucy4gSW1hZ2luZSB0aGlzIGNhc2Ugd2hlbiBzb21lb25lIGhhcyBsb2FkZWQgYSBmZXcg
-aHVuZHJlZCBvciB0aG91c2FuZHMgb2YgVkZzIGFuZCBzdWRkZW5seSBpdCBzdGFydHMgdGFraW5n
-IG1vcmUgbGlrZSBtaW51dGVzIHRvIHNodXQgZG93bi4NCg0KVGhhbmtzLA0KSmFrZQ0KDQo=
+I can update the patch series, sorry haven't had much time to devote
+to this the past few weeks, but will update in the next day.
+
+On Tue, Mar 7, 2017 at 11:07 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Feb 16, 2017 at 03:38:05PM +0100, Thomas Gleixner wrote:
+>> On Thu, 16 Feb 2017, Bjorn Helgaas wrote:
+>> > On Wed, Feb 15, 2017 at 10:16:32PM +0100, Thomas Gleixner wrote:
+>> >
+>> > > I think I suggested to Jiang to do that 'update with default functions' to
+>> > >
+>> > > - avoid exporting the world and some more
+>> > >
+>> > > - have the flexibility to add new functions to the ops w/o updating a
+>> > >   gazillion of existing usage sites, which has saved us lots of chaising in
+>> > >   the last years
+>> > >
+>> > > - avoid the if (ops->ptr) ops->ptr(); else default_fn(); constructs all
+>> > >   over the place.
+>> > >
+>> > > I admit I did not think about the fact that this makes the structs non
+>> > > const.
+>> > >
+>> > > Mopping that up by exporting the default functions and setting all the
+>> > > function pointers is tedious and requires a full tree sweep when we add new
+>> > > stuff. There's also code shared between PCI/platform/DT based stuff, so
+>> > > that becomes interesting.
+>> >
+>> > It's legal to initialize a field multiple times, and the last one
+>> > takes precedence, so doing this might at least avoid the full tree
+>> > sweeps:
+>> >
+>> >   static struct msi_domain_ops vmd_msi_domain_ops = {
+>> >     MSI_DOMAIN_DEFAULT_OPS,
+>> >     .get_hwirq = vmd_get_hwirq,
+>> >   };
+>> >
+>> > The functions referenced by MSI_DOMAIN_DEFAULT_OPS would still have to
+>> > be exported, though.
+>>
+>> Hmm, that'd work. Though it will fall apart for those pieces where we share
+>> code across backends. But I did not yet go through all the places and check
+>> them.
+>>
+>> > > Doing the if (ops->ptr) ops->ptr() else default_fn(); dance should be
+>> > > simpler to pull off. There are not that many sites to look at, but then we
+>> > > have some of the GICv3 code using the domain ops out of core.
+>> > >
+>> > > For now doing the __ro_after_init is definitely the simplest and fastest
+>> > > solution to tighten these statically allocated structures.
+>> >
+>> > I'm OK with __ro_after_init, at least as an interim solution.
+>> >
+>> > I do think it would be good to audit all the uses of
+>> > MSI_FLAG_USE_DEF_DOM_OPS and MSI_FLAG_USE_DEF_CHIP_OPS, since they
+>> > seem to be the primary indicator of when the struct might be modified.
+>> > I suspect we could add __ro_after_init to more than just pci-hyperv.c,
+>> > vmd.c, and msi.c
+>>
+>> Agreed. I have it on my radar.
+>
+> This seems like a worthwhile change, so I don't want to just drop this
+> patch.  But if we're going to do something, I'd like to do it
+> everywhere that it makes sense, all at the same time.
+>
+> It looks like the v2 series was split up by subsystem, which is fine
+> with me.  I'll happily apply the PCI parts (or ack them, since it
+> might make sense to apply all of them via the same non-PCI tree).
+>
+> But I *would* like to include the following users of
+> MSI_FLAG_USE_DEF_DOM_OPS and MSI_FLAG_USE_DEF_CHIP_OPS at the same
+> time (or explain why __ro_after_init won't work for them):
+>
+>   pci-xgene-msi.c
+>   pcie-altera-msi.c
+>   pcie-iproc-msi.c
+>   pcie-xilinx-nwl.c
+>
+> Bjorn
+
+
+
+-- 
+
+
+Jessie Frazelle
+4096R / D4C4 DD60 0D66 F65A 8EFC  511E 18F3 685C 0022 BFF3
+pgp.mit.edu
