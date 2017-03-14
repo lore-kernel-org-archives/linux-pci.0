@@ -1,77 +1,112 @@
-Return-Path: <SRS0=RyBE=2T=gmail.com=arndbergmann@kernel.org>
-Return-Path: <SRS0=RyBE=2T=gmail.com=arndbergmann@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>
+CC: "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will.deacon@arm.com" <will.deacon@arm.com>,
+        "robh+dt@kernel.org" <robh+dt@kernel.org>,
+        "frowand.list@gmail.com" <frowand.list@gmail.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "rafael@kernel.org" <rafael@kernel.org>,
+        "mark.rutland@arm.com" <mark.rutland@arm.com>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        "minyard@acm.org" <minyard@acm.org>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        "zourongrong@gmail.com" <zourongrong@gmail.com>,
+        John Garry <john.garry@huawei.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>
+Subject: RE: [PATCH V7 5/7] ACPI: Delay the enumeration on the devices whose
+  dependency has not met
+Date: Tue, 14 Mar 2017 08:14:51 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E204822B1@FRAEML521-MBX.china.huawei.com>
+References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1489372963-9000-6-git-send-email-yuanzhichang@hisilicon.com>
+ <4600523.rWNiWKrYZC@aspire.rjw.lan>
+In-Reply-To: <4600523.rWNiWKrYZC@aspire.rjw.lan>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Sender: arndbergmann@gmail.com
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E2046D682@FRAEML521-MBX.china.huawei.com>
-References: <EE11001F9E5DDD47B7634E2F8A612F2E2046C6AC@FRAEML521-MBX.china.huawei.com>
- <20170309181134.GA15721@bhelgaas-glaptop.roam.corp.google.com>
- <CAK8P3a0iECAKBKG6zqXO5VaPze9OzxzSY+cBFHsM46xVAGhE1A@mail.gmail.com>
- <20170309223738.GE19517@bhelgaas-glaptop.roam.corp.google.com>
- <CAK8P3a3vQ+ZO3tcO41uTOVYQszXj-_x-mEFMkZmnE0A1efTxUw@mail.gmail.com> <EE11001F9E5DDD47B7634E2F8A612F2E2046D682@FRAEML521-MBX.china.huawei.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 10 Mar 2017 08:45:05 +0100
-Message-ID: <CAK8P3a1vpEqa89E9uEKGStRCdzge1au=WYEe9dkBHOo+YZUptQ@mail.gmail.com>
-Subject: Re: [QUESTION]: Same IO bus address in different _CRS methods
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Tomasz Nowicki <tn@semihalf.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	"agraf@suse.de" <agraf@suse.de>, Yuanzhichang <yuanzhichang@hisilicon.com>,
-	"xuwei (O)" <xuwei5@hisilicon.com>, John Garry <john.garry@huawei.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 10, 2017 at 1:25 AM, Gabriele Paoloni
-<gabriele.paoloni@huawei.com> wrote:
->> -----Original Message-----
->> From: arndbergmann@gmail.com [mailto:arndbergmann@gmail.com] On Behalf
->> Of Arnd Bergmann
->> Sent: 09 March 2017 22:50
->> To: Bjorn Helgaas
->> Cc: Gabriele Paoloni; Bjorn Helgaas; Tomasz Nowicki; Lorenzo Pieralisi;
->> agraf@suse.de; Yuanzhichang; xuwei (O); John Garry; linux-
->> pci@vger.kernel.org; linux-acpi@vger.kernel.org
->> Subject: Re: [QUESTION]: Same IO bus address in different _CRS methods
->> >> What is the expected way to deal with a device using an I/O resource
->> >> that is not a child of either PCI host bridge in this case (e.g. a
->> >> BMC behind a PCI-LPC bridge)? Is this only allowed to exist below
->> >> the device that provides the respective I/O space?
->> >
->> > That's a good question.  I'm not really familiar with PCI-LPC
->> bridges.
->> > I guess they're not PCI-to-PCI bridges and wouldn't have I/O windows
->> > like I'm used to?  What *do* they look like?
->>
->> They are like PCI-ISA bridges, connecting devices that use either
->> hardcoded I/O ports (uart, ipmi-kcs, ...) or ISAPNP.
->>
->> In the case that we are interested in specifically here, there is not
->> actually a PCI-LPC bridge, but a LPC host bridge that is independent
->> of PCI but has its own I/O space, and a number of child devices
->> attached
->> to that.
->
-> I think that for the case that we were discussing we needed to know
-> whether we could make the assumption to have unique IO bus addresses
-> in a whole ACPI table.
->
-> The idea for ACPI was to rework acpi_pci_root_remap_iospace and,
-> rather than using the PIO tokens retrieved by pci_register_io_range(),
-> remove the call to this function and use the bus addresses defined
-> in the _CRS method.
->
-> From what Bjorn said it seems that we have at least some cases where
-> these bus addresses are not unique; therefore in linux we need to generate
-> the PIO tokens dynamically.
->
-> If you guys agree on the conclusion above I will continue with the
-> rework of the HiSilicon LPC driver with the assumption that we need
-> dynamically assigned tokens also for ACPI.
+Hi Rafael
 
-Yes, unless Bjorn has some last concerns, I think this is all good
-and the only proper way to continue. Thanks for bearing with me
-through the detour that ended up in the same place we were in
-before...
+Many thanks for your review
 
-    Arnd
+> -----Original Message-----
+> From: Rafael J. Wysocki [mailto:rjw@rjwysocki.net]
+> Sent: 13 March 2017 21:25
+> To: Yuanzhichang
+> Cc: catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
+> frowand.list@gmail.com; bhelgaas@google.com; rafael@kernel.org;
+> mark.rutland@arm.com; arnd@arndb.de; linux-arm-
+> kernel@lists.infradead.org; linux-acpi@vger.kernel.org;
+> lorenzo.pieralisi@arm.com; benh@kernel.crashing.org; linux-
+> kernel@vger.kernel.org; Linuxarm; devicetree@vger.kernel.org; linux-
+> pci@vger.kernel.org; linux-serial@vger.kernel.org; minyard@acm.org;
+> liviu.dudau@arm.com; zourongrong@gmail.com; John Garry; Gabriele
+> Paoloni; zhichang.yuan02@gmail.com; kantyzc@163.com; xuwei (O)
+> Subject: Re: [PATCH V7 5/7] ACPI: Delay the enumeration on the devices
+> whose dependency has not met
+> 
+> On Monday, March 13, 2017 10:42:41 AM zhichang.yuan wrote:
+> > In commit 40e7fcb1929(ACPI: Add _DEP support to fix battery issue on
+> Asus
+> > T100TA), the '_DEP' was supported to solve the dependency of Asus
+> battery. But
+> > this patch is specific to Asus battery device.
+> > In the real world, there are other devices which need the dependency
+> to play the
+> > role on the enumeration order. For example, all the Hip06 LPC
+> > periperals(IPMI-BT, uart, etc) must be scanned after the LPC host
+> driver
+> > finished the probing. So, it makes sense to add a checking whether
+> the ACPI
+> > device meet all the dependencies during its enumeration slot, if not,
+> the
+> > enumeration will be delayed till all dependency master finish their
+> work.
+> >
+> > This patch adds the dependency checking in ACPI enumeration, also the
+> > corresponding handling to retrigger the Hip06 LPC peripherals'
+> scanning.
+> 
+> AFAICS, _DEP is generally abused in the wild and cannot be made
+> generic.  Sorry.
+
+Another option here would be to revert this patch and add a dependency
+check in the probe functions of the LPC possible children nodes (e.g. 
+in the IPMI driver:
+http://elixir.free-electrons.com/source/drivers/char/ipmi/ipmi_si_intf.c?v=4.10#L2683
+)  
+
+we could add 
+
+	if (device->dep_unmet)
+		return -EPROBE_DEFER;
+
+as we now have in acpi/battery.c...
+
+I think this should not make any difference for current shipped FW that has
+got no DEP method...
+
+What do you think?
+
+Many Thanks
+Gab
+
+> 
+> Thanks,
+> Rafael
+
