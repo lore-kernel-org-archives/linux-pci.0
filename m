@@ -1,122 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:56499 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751156AbdCQSuZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 17 Mar 2017 14:50:25 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Hans Verkuil <hans.verkuil@cisco.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Boris Brezillon <boris.brezillon@free-electrons.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Cyrille Pitchen <cyrille.pitchen@atmel.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        rtc-linux@googlegroups.com, linux-mtd@lists.infradead.org,
-        linux-media@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-gpio@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Fri, 17 Mar 2017 12:48:20 -0600
-Message-Id: <1489776503-3151-14-git-send-email-logang@deltatee.com>
-In-Reply-To: <1489776503-3151-1-git-send-email-logang@deltatee.com>
-References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v5 13/16] rapidio: utilize new cdev_device_add helper function
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v6 2/4] PCI: imx6: Do not wait for speed change on i.MX7
+Date: Tue, 14 Mar 2017 08:18:25 -0700
+Message-Id: <20170314151827.31248-3-andrew.smirnov@gmail.com>
+In-Reply-To: <20170314151827.31248-1-andrew.smirnov@gmail.com>
+References: <20170314151827.31248-1-andrew.smirnov@gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, linux-kernel@vger.kernel.org,
+ Fabio Estevam <fabio.estevam@nxp.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ yurovsky@gmail.com, linux-arm-kernel@lists.infradead.org,
+ Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This driver did not originally set kobj.parent so it likely had
-potential a use after free bug which this patch fixes.
-
-We convert from device_register to device_initialize/cdev_device_add.
-While we are at it we use put_device instead of kfree (as recommended
-by the device_initialize documentation). We also remove an unnecessary
-extra get_device from the code.
-
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
----
- drivers/rapidio/devices/rio_mport_cdev.c | 24 ++++++++----------------
- 1 file changed, 8 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/rapidio/devices/rio_mport_cdev.c b/drivers/rapidio/devices/rio_mport_cdev.c
-index 50b617a..5beb0c3 100644
---- a/drivers/rapidio/devices/rio_mport_cdev.c
-+++ b/drivers/rapidio/devices/rio_mport_cdev.c
-@@ -2444,31 +2444,25 @@ static struct mport_dev *mport_cdev_add(struct rio_mport *mport)
- 	mutex_init(&md->buf_mutex);
- 	mutex_init(&md->file_mutex);
- 	INIT_LIST_HEAD(&md->file_list);
--	cdev_init(&md->cdev, &mport_fops);
--	md->cdev.owner = THIS_MODULE;
--	ret = cdev_add(&md->cdev, MKDEV(MAJOR(dev_number), mport->id), 1);
--	if (ret < 0) {
--		kfree(md);
--		rmcd_error("Unable to register a device, err=%d", ret);
--		return NULL;
--	}
- 
--	md->dev.devt = md->cdev.dev;
-+	device_initialize(&md->dev);
-+	md->dev.devt = MKDEV(MAJOR(dev_number), mport->id);
- 	md->dev.class = dev_class;
- 	md->dev.parent = &mport->dev;
- 	md->dev.release = mport_device_release;
- 	dev_set_name(&md->dev, DEV_NAME "%d", mport->id);
- 	atomic_set(&md->active, 1);
- 
--	ret = device_register(&md->dev);
-+	cdev_init(&md->cdev, &mport_fops);
-+	md->cdev.owner = THIS_MODULE;
-+
-+	ret = cdev_device_add(&md->cdev, &md->dev);
- 	if (ret) {
- 		rmcd_error("Failed to register mport %d (err=%d)",
- 		       mport->id, ret);
- 		goto err_cdev;
- 	}
- 
--	get_device(&md->dev);
--
- 	INIT_LIST_HEAD(&md->doorbells);
- 	spin_lock_init(&md->db_lock);
- 	INIT_LIST_HEAD(&md->portwrites);
-@@ -2513,8 +2507,7 @@ static struct mport_dev *mport_cdev_add(struct rio_mport *mport)
- 	return md;
- 
- err_cdev:
--	cdev_del(&md->cdev);
--	kfree(md);
-+	put_device(&md->dev);
- 	return NULL;
- }
- 
-@@ -2578,7 +2571,7 @@ static void mport_cdev_remove(struct mport_dev *md)
- 	atomic_set(&md->active, 0);
- 	mport_cdev_terminate_dma(md);
- 	rio_del_mport_pw_handler(md->mport, md, rio_mport_pw_handler);
--	cdev_del(&(md->cdev));
-+	cdev_device_del(&md->cdev, &md->dev);
- 	mport_cdev_kill_fasync(md);
- 
- 	flush_workqueue(dma_wq);
-@@ -2603,7 +2596,6 @@ static void mport_cdev_remove(struct mport_dev *md)
- 
- 	rio_release_inb_dbell(md->mport, 0, 0x0fff);
- 
--	device_unregister(&md->dev);
- 	put_device(&md->dev);
- }
- 
--- 
-2.1.4
+QXMgY2FuIGJlIHNlZW4gZnJvbSBbMV06CgoiLi4udGhlIGRpZmZlcmVudCBiZWhhdmlvciBiZXR3
+ZWVuIGlNWDZRIFBDSWUgYW5kIGlNWDdEIFBDSWUgbWF5YmUKY2F1c2VkIGJ5IHRoZSBkaWZmZXJl
+bnQgY29udHJvbGxlciB2ZXJzaW9uLgoKUmVnYXJkaW5nIHRvIHRoZSBET0MgZGVzY3JpcHRpb24s
+IHRoZSBESVJFQ1RfU1BFRURfQ0hBTkdFIHNob3VsZCBiZQpjbGVhcmVkIGFmdGVyIHRoZSBzcGVl
+ZCBjaGFuZ2UgZnJvbSBHRU4xIHRvIEdFTjIuIFVuZm9ydHVuYXRlbHksIHdoZW4KR0VOMSBkZXZp
+Y2UgaXMgdXNlZCwgdGhlIGJlaGF2aW9yIGlzIG5vdCBkb2N1bWVudGVkLgoKU28sIElDIGRlc2ln
+biBndXlzIHJ1biB0aGUgc2ltdWxhdGlvbiBhbmQKZmluZCBvdXQgdGhlIGZvbGxvd2luZyBiZWhh
+dmlvcnM6CgogICAgIDEuIERJUkVDVF9TUEVFRF9DSEFOR0Ugd2lsbCBiZSBjbGVhcmVkIGluIDdE
+IGFmdGVyIHNwZWVkIGNoYW5nZQogICAgIAlmcm9tIEdFTjEgdG8gR0VOMi4gVGhpcyBtYXRjaGVz
+IGRvY+KAmXMgZGVzY3JpcHRpb24KCiAgICAgMi4gc2V0IE1BWCBsaW5rIHNwZWVkKFBDSUVfQ0FQ
+X1RBUkdFVF9MSU5LX1NQRUVEPTB4MDEpIGFzIEdFTjEgYW5kCiAgICAgCXJlLXJ1biB0aGUgc2lt
+dWxhdGlvbiwgRElSRUNUX1NQRUVEX0NIQU5HRSB3aWxsIG5vdCBiZSBjbGVhcmVkOwogICAgIAly
+ZW1haW4gYXMgMSwgdGhpcyBtYXRjaGVzIHlvdXIgcmVzdWx0LCBidXQgZnVuY3Rpb24gdGVzdCBp
+cwogICAgIAlwYXNzZWQsIHNvIHRoaXMgYml0IHNob3VsZCBub3QgYWZmZWN0IHRoZSBub3JtYWwg
+UENJZSBmdW5jdGlvbi4KLi4uIgoKaW14Nl9wY2llX3dhaXRfZm9yX3NwZWVkX2NoYW5nZSB3aWxs
+IHJlcG9ydCBmYWxzZSBmYWlsdXJlcyBmb3IgR2VuMSAtPgpHZW4xIHNwZWVkIHRyYW5zaXRpb24s
+IHNvIGF2b2lkIGRvaW5nIHRoYXQgY2hlY2sgYW5kIGp1c3QgcmVseSBvbgppbXg2X3BjaWVfd2Fp
+dF9mb3JfbGluayBvbmx5LgoKWzFdIGh0dHBzOi8vY29tbXVuaXR5Lm54cC5jb20vbWVzc2FnZS84
+Njc5NDMKCkNjOiB5dXJvdnNreUBnbWFpbC5jb20KQ2M6IEx1Y2FzIFN0YWNoIDxsLnN0YWNoQHBl
+bmd1dHJvbml4LmRlPgpDYzogQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4KQ2M6
+IEZhYmlvIEVzdGV2YW0gPGZhYmlvLmVzdGV2YW1AbnhwLmNvbT4KQ2M6IGxpbnV4LWFybS1rZXJu
+ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpDYzogbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZwpT
+aWduZWQtb2ZmLWJ5OiBBbmRyZXkgU21pcm5vdiA8YW5kcmV3LnNtaXJub3ZAZ21haWwuY29tPgot
+LS0KIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYyB8IDE5ICsrKysrKysrKysrKysrKy0tLS0K
+IDEgZmlsZSBjaGFuZ2VkLCAxNSBpbnNlcnRpb25zKCspLCA0IGRlbGV0aW9ucygtKQoKZGlmZiAt
+LWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNp
+LWlteDYuYwppbmRleCAyZjNmMzc1Li40NzNiYmRjIDEwMDY0NAotLS0gYS9kcml2ZXJzL3BjaS9o
+b3N0L3BjaS1pbXg2LmMKKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaW14Ni5jCkBAIC01Nzcs
+MTAgKzU3NywyMSBAQCBzdGF0aWMgaW50IGlteDZfcGNpZV9lc3RhYmxpc2hfbGluayhzdHJ1Y3Qg
+aW14Nl9wY2llICppbXg2X3BjaWUpCiAJdG1wIHw9IFBPUlRfTE9HSUNfU1BFRURfQ0hBTkdFOwog
+CWR3X3BjaWVfd3JpdGVsX3JjKHBwLCBQQ0lFX0xJTktfV0lEVEhfU1BFRURfQ09OVFJPTCwgdG1w
+KTsKIAotCXJldCA9IGlteDZfcGNpZV93YWl0X2Zvcl9zcGVlZF9jaGFuZ2UoaW14Nl9wY2llKTsK
+LQlpZiAocmV0KSB7Ci0JCWRldl9lcnIoZGV2LCAiRmFpbGVkIHRvIGJyaW5nIGxpbmsgdXAhXG4i
+KTsKLQkJZ290byBlcnJfcmVzZXRfcGh5OworCWlmIChpbXg2X3BjaWUtPnZhcmlhbnQgIT0gSU1Y
+N0QpIHsKKwkJLyoKKwkJICogT24gaS5NWDcsIERJUkVDVF9TUEVFRF9DSEFOR0UgYmVoYXZlcyBk
+aWZmZXJlbnRseQorCQkgKiBmcm9tIGkuTVg2IGZhbWlseSB3aGVuIG5vIGxpbmsgc3BlZWQgdHJh
+bnNpdGlvbgorCQkgKiBvY2N1cnMgYW5kIHdlIGdvIEdlbjEgLT4geWVwLCBHZW4xLiBUaGUgZGlm
+ZmVyZW5jZQorCQkgKiBpcyB0aGF0LCBpbiBzdWNoIGNhc2UsIGl0IHdpbGwgbm90IGJlIGNsZWFy
+ZWQgYnkgSFcKKwkJICogd2hpY2ggd2lsbCBjYXVzZSB0aGUgZm9sbG93aW5nIGNvZGUgdG8gcmVw
+b3J0IGZhbHNlCisJCSAqIGZhaWx1cmUuCisJCSAqLworCisJCXJldCA9IGlteDZfcGNpZV93YWl0
+X2Zvcl9zcGVlZF9jaGFuZ2UoaW14Nl9wY2llKTsKKwkJaWYgKHJldCkgeworCQkJZGV2X2Vycihk
+ZXYsICJGYWlsZWQgdG8gYnJpbmcgbGluayB1cCFcbiIpOworCQkJZ290byBlcnJfcmVzZXRfcGh5
+OworCQl9CiAJfQogCiAJLyogTWFrZSBzdXJlIGxpbmsgdHJhaW5pbmcgaXMgZmluaXNoZWQgYXMg
+d2VsbCEgKi8KLS0gCjIuOS4zCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5l
+bEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4v
+bGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
