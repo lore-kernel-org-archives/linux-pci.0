@@ -1,151 +1,92 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [RFC PATCH v2 30/32] kvm: svm: Add support for SEV DEBUG_ENCRYPT
- command
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:18:27 -0500
-Message-ID: <148846790758.2349.16768762953657853550.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 14 Mar 2017 15:17:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Stephen Boyd <stephen.boyd@linaro.org>
+Subject: Re: [PATCH] PCI: aardvark: Remove msi-controller dt node probing
+Message-ID: <20170314201755.GG26264@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170314190851.28203-1-stephen.boyd@linaro.org>
+ <20170314193005.GC26264@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170314193005.GC26264@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The command copies a plain text into guest memory and encrypts it using
-the VM encryption key. The command will be used for debug purposes
-(e.g setting breakpoint through gdbserver)
+On Tue, Mar 14, 2017 at 02:30:05PM -0500, Bjorn Helgaas wrote:
+> On Tue, Mar 14, 2017 at 12:08:51PM -0700, Stephen Boyd wrote:
+> > This code assigns variables that are never used. Remove them.
+> > 
+> > Reported-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> > Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> > Signed-off-by: Stephen Boyd <stephen.boyd@linaro.org>
+> 
+> I love removing unused code!  Applied to pci/host-aardvark for v4.12,
+> thanks!
 
-Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
----
- arch/x86/kvm/svm.c |   87 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 87 insertions(+)
+Actually, I applied Thomas' series [1], which does some additional
+cleanup and also removes this same code.  So I'll just drop this one
+since it's redundant.  Thanks again and sorry for my confusion.
 
-diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
-index ce8819a..64899ed 100644
---- a/arch/x86/kvm/svm.c
-+++ b/arch/x86/kvm/svm.c
-@@ -6058,6 +6058,89 @@ static int sev_dbg_decrypt(struct kvm *kvm, struct kvm_sev_cmd *argp)
- 	return ret;
- }
- 
-+static int sev_dbg_encrypt(struct kvm *kvm, struct kvm_sev_cmd *argp)
-+{
-+	void *data;
-+	int len, ret, d_off;
-+	struct page **inpages;
-+	struct kvm_sev_dbg debug;
-+	struct sev_data_dbg *encrypt;
-+	unsigned long src_addr, dst_addr, npages;
-+
-+	if (!sev_guest(kvm))
-+		return -ENOTTY;
-+
-+	if (copy_from_user(&debug, argp, sizeof(*argp)))
-+		return -EFAULT;
-+
-+	if (debug.length > PAGE_SIZE)
-+		return -EINVAL;
-+
-+	len = debug.length;
-+	src_addr = debug.src_addr;
-+	dst_addr = debug.dst_addr;
-+
-+	inpages = sev_pin_memory(dst_addr, PAGE_SIZE, &npages);
-+	if (!inpages)
-+		return -EFAULT;
-+
-+	encrypt = kzalloc(sizeof(*encrypt), GFP_KERNEL);
-+	if (!encrypt) {
-+		ret = -ENOMEM;
-+		goto err_1;
-+	}
-+
-+	data = (void *) get_zeroed_page(GFP_KERNEL);
-+	if (!data) {
-+		ret = -ENOMEM;
-+		goto err_2;
-+	}
-+
-+	if ((len & 15) || (dst_addr & 15)) {
-+		/* if destination address and length are not 16-byte
-+		 * aligned then:
-+		 * a) decrypt destination page into temporary buffer
-+		 * b) copy source data into temporary buffer at correct offset
-+		 * c) encrypt temporary buffer
-+		 */
-+		ret = __sev_dbg_decrypt_page(kvm, dst_addr, data, &argp->error);
-+		if (ret)
-+			goto err_3;
-+		d_off = dst_addr & (PAGE_SIZE - 1);
-+
-+		if (copy_from_user(data + d_off,
-+					(uint8_t *)debug.src_addr, len)) {
-+			ret = -EFAULT;
-+			goto err_3;
-+		}
-+
-+		encrypt->length = PAGE_SIZE;
-+		encrypt->src_addr = __psp_pa(data);
-+		encrypt->dst_addr =  __sev_page_pa(inpages[0]);
-+	} else {
-+		if (copy_from_user(data, (uint8_t *)debug.src_addr, len)) {
-+			ret = -EFAULT;
-+			goto err_3;
-+		}
-+
-+		d_off = dst_addr & (PAGE_SIZE - 1);
-+		encrypt->length = len;
-+		encrypt->src_addr = __psp_pa(data);
-+		encrypt->dst_addr = __sev_page_pa(inpages[0]);
-+		encrypt->dst_addr += d_off;
-+	}
-+
-+	encrypt->handle = sev_get_handle(kvm);
-+	ret = sev_issue_cmd(kvm, SEV_CMD_DBG_ENCRYPT, encrypt, &argp->error);
-+err_3:
-+	free_page((unsigned long)data);
-+err_2:
-+	kfree(encrypt);
-+err_1:
-+	sev_unpin_memory(inpages, npages);
-+	return ret;
-+}
-+
- static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
- {
- 	int r = -ENOTTY;
-@@ -6089,6 +6172,10 @@ static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
- 		r = sev_dbg_decrypt(kvm, &sev_cmd);
- 		break;
- 	}
-+	case KVM_SEV_DBG_ENCRYPT: {
-+		r = sev_dbg_encrypt(kvm, &sev_cmd);
-+		break;
-+	}
- 	default:
- 		break;
- 	}
+[1] https://patchwork.ozlabs.org/patch/733572/
+
+> > ---
+> >  drivers/pci/host/pci-aardvark.c | 8 --------
+> >  1 file changed, 8 deletions(-)
+> > 
+> > diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+> > index 4fce494271cc..56e1aead65fc 100644
+> > --- a/drivers/pci/host/pci-aardvark.c
+> > +++ b/drivers/pci/host/pci-aardvark.c
+> > @@ -917,8 +917,6 @@ static int advk_pcie_probe(struct platform_device *pdev)
+> >  	struct advk_pcie *pcie;
+> >  	struct resource *res;
+> >  	struct pci_bus *bus, *child;
+> > -	struct msi_controller *msi;
+> > -	struct device_node *msi_node;
+> >  	int ret, irq;
+> >  
+> >  	pcie = devm_kzalloc(dev, sizeof(struct advk_pcie), GFP_KERNEL);
+> > @@ -962,12 +960,6 @@ static int advk_pcie_probe(struct platform_device *pdev)
+> >  		return ret;
+> >  	}
+> >  
+> > -	msi_node = of_parse_phandle(dev->of_node, "msi-parent", 0);
+> > -	if (msi_node)
+> > -		msi = of_pci_find_msi_chip_by_node(msi_node);
+> > -	else
+> > -		msi = NULL;
+> > -
+> >  	bus = pci_scan_root_bus_msi(dev, 0, &advk_pcie_ops,
+> >  				    pcie, &pcie->resources, &pcie->msi);
+> >  	if (!bus) {
+> > -- 
+> > 2.10.0.297.gf6727b0
+> > 
+> > 
+> > _______________________________________________
+> > linux-arm-kernel mailing list
+> > linux-arm-kernel@lists.infradead.org
+> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
