@@ -1,44 +1,98 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH v2 09/22] PCI: xilinx: update PCI config space remap function
-Date: Mon, 27 Mar 2017 10:49:37 +0100
-Message-Id: <20170327094954.7162-10-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH V7 4/7] LPC: Support the device-tree LPC host on
+ Hip06/Hip07 (fwd)
+To: Julia Lawall <julia.lawall@lip6.fr>
+References: <alpine.DEB.2.20.1703140635090.3516@hadrien>
+CC: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rafael@kernel.org>, <mark.rutland@arm.com>,
+        <rjw@rjwysocki.net>, <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-acpi@vger.kernel.org>, <lorenzo.pieralisi@arm.com>,
+        <benh@kernel.crashing.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-serial@vger.kernel.org>,
+        <minyard@acm.org>, <liviu.dudau@arm.com>, <zourongrong@gmail.com>,
+        <john.garry@huawei.com>, <gabriele.paoloni@huawei.com>,
+        <zhichang.yuan02@gmail.com>, <kantyzc@163.com>,
+        <xuwei5@hisilicon.com>, <kbuild-all@01.org>
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Message-ID: <58C796B7.9060505@hisilicon.com>
+Date: Tue, 14 Mar 2017 15:07:35 +0800
+MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.20.1703140635090.3516@hadrien>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_ioremap_nopost* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+Hi, Julia,
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
----
- drivers/pci/host/pcie-xilinx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/host/pcie-xilinx.c b/drivers/pci/host/pcie-xilinx.c
-index 7f030f5..e96f4a7 100644
---- a/drivers/pci/host/pcie-xilinx.c
-+++ b/drivers/pci/host/pcie-xilinx.c
-@@ -606,7 +606,7 @@ static int xilinx_pcie_parse_dt(struct xilinx_pcie_port *port)
- 		return err;
- 	}
- 
--	port->reg_base = devm_ioremap_resource(dev, &regs);
-+	port->reg_base = devm_ioremap_nopost_resource(dev, &regs);
- 	if (IS_ERR(port->reg_base))
- 		return PTR_ERR(port->reg_base);
- 
--- 
-2.10.0
+On 2017/3/14 13:37, Julia Lawall wrote:
+> Line 460 looks suspicious.  Can tmprange be different than range but not
+> be an ERR_PTR?  If so, lpcdev->io_host will have an invalid value.
+> 
+
+Thanks for your pointing out!
+You are right!
+
+miss a line of 'return 0;' 
+
+if (tmprange != range) {
+    kfree(range);
+    if (IS_ERR(tmprange))
+        return -EFAULT;
+    return 0;
+}
+
+Thanks again!
+Zhichang 
+
+> julia
+> 
+> ---------- Forwarded message ----------
+> Date: Tue, 14 Mar 2017 13:12:05 +0800
+> From: kbuild test robot <fengguang.wu@intel.com>
+> To: kbuild@01.org
+> Cc: Julia Lawall <julia.lawall@lip6.fr>
+> Subject: Re: [PATCH V7 4/7] LPC: Support the device-tree LPC host on Hip06/Hip07
+> 
+> Hi zhichang.yuan,
+> 
+> [auto build test WARNING on linus/master]
+> [also build test WARNING on v4.11-rc2 next-20170310]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> 
+> url:    https://github.com/0day-ci/linux/commits/zhichang-yuan/LPC-legacy-ISA-I-O-support/20170314-114635
+> :::::: branch date: 85 minutes ago
+> :::::: commit date: 85 minutes ago
+> 
+>>> drivers/bus/hisi_lpc.c:465:19-24: ERROR: reference preceded by free on line 460
+> 
+> git remote add linux-review https://github.com/0day-ci/linux
+> git remote update linux-review
+> git checkout 4e05ad6c3274fa75c903c7809ef0b51329a31ab2
+> vim +465 drivers/bus/hisi_lpc.c
+> 
+> 4e05ad6c zhichang.yuan 2017-03-13  454  	range->flags = IO_HOST_INDIRECT;
+> 4e05ad6c zhichang.yuan 2017-03-13  455  	range->size = LPC_BUS_IO_SIZE;
+> 4e05ad6c zhichang.yuan 2017-03-13  456  	range->hw_start = LPC_MIN_BUS_RANGE;
+> 4e05ad6c zhichang.yuan 2017-03-13  457
+> 4e05ad6c zhichang.yuan 2017-03-13  458  	tmprange = register_libio_range(range);
+> 4e05ad6c zhichang.yuan 2017-03-13  459  	if (tmprange != range) {
+> 4e05ad6c zhichang.yuan 2017-03-13 @460  		kfree(range);
+> 4e05ad6c zhichang.yuan 2017-03-13  461  		if (IS_ERR(tmprange))
+> 4e05ad6c zhichang.yuan 2017-03-13  462  			return -EFAULT;
+> 4e05ad6c zhichang.yuan 2017-03-13  463  	}
+> 4e05ad6c zhichang.yuan 2017-03-13  464
+> 4e05ad6c zhichang.yuan 2017-03-13 @465  	lpcdev->io_host = range;
+> 4e05ad6c zhichang.yuan 2017-03-13  466
+> 4e05ad6c zhichang.yuan 2017-03-13  467  	return 0;
+> 4e05ad6c zhichang.yuan 2017-03-13  468  }
+> 
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> 
+> .
+> 
