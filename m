@@ -1,78 +1,79 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55680 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753623AbdCBA4u (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 1 Mar 2017 19:56:50 -0500
-Date: Wed, 1 Mar 2017 18:32:16 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 14 Mar 2017 14:30:05 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
-Message-ID: <20170302003216.GC13171@bhelgaas-glaptop.roam.corp.google.com>
-References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
- <20170228150920.GB12481@bhelgaas-glaptop.roam.corp.google.com>
- <d3d5567a-2147-43c5-d094-fb5345f02143@deltatee.com>
+To: Stephen Boyd <stephen.boyd@linaro.org>
+Subject: Re: [PATCH] PCI: aardvark: Remove msi-controller dt node probing
+Message-ID: <20170314193005.GC26264@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170314190851.28203-1-stephen.boyd@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <d3d5567a-2147-43c5-d094-fb5345f02143@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170314190851.28203-1-stephen.boyd@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 28, 2017 at 10:11:56AM -0700, Logan Gunthorpe wrote:
+On Tue, Mar 14, 2017 at 12:08:51PM -0700, Stephen Boyd wrote:
+> This code assigns variables that are never used. Remove them.
 > 
-> > This driver doesn't have anything to do with the PCI core, other than
-> > using the pci_register_driver() interface (just like all other drivers
-> > for PCI-connected devices), so drivers/pci doesn't really feel like
-> > the right place for it.  Putting it in drivers/pci leads to the sort
-> > of confusion you mentioned above ("To make this entirely clear ...").
-> > 
-> > Would drivers/perf or drivers/misc/switchtec/ be possible places for
-> > it?
+> Reported-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org>
+> Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+> Signed-off-by: Stephen Boyd <stephen.boyd@linaro.org>
+
+I love removing unused code!  Applied to pci/host-aardvark for v4.12,
+thanks!
+
+> ---
+>  drivers/pci/host/pci-aardvark.c | 8 --------
+>  1 file changed, 8 deletions(-)
 > 
-> I made a similar argument when we made the decision of where to put the
-> code. In the end, the device _is_ a PCI Switch and someone going through
-> menuconfig or the source tree would probably look there first.
+> diff --git a/drivers/pci/host/pci-aardvark.c b/drivers/pci/host/pci-aardvark.c
+> index 4fce494271cc..56e1aead65fc 100644
+> --- a/drivers/pci/host/pci-aardvark.c
+> +++ b/drivers/pci/host/pci-aardvark.c
+> @@ -917,8 +917,6 @@ static int advk_pcie_probe(struct platform_device *pdev)
+>  	struct advk_pcie *pcie;
+>  	struct resource *res;
+>  	struct pci_bus *bus, *child;
+> -	struct msi_controller *msi;
+> -	struct device_node *msi_node;
+>  	int ret, irq;
+>  
+>  	pcie = devm_kzalloc(dev, sizeof(struct advk_pcie), GFP_KERNEL);
+> @@ -962,12 +960,6 @@ static int advk_pcie_probe(struct platform_device *pdev)
+>  		return ret;
+>  	}
+>  
+> -	msi_node = of_parse_phandle(dev->of_node, "msi-parent", 0);
+> -	if (msi_node)
+> -		msi = of_pci_find_msi_chip_by_node(msi_node);
+> -	else
+> -		msi = NULL;
+> -
+>  	bus = pci_scan_root_bus_msi(dev, 0, &advk_pcie_ops,
+>  				    pcie, &pcie->resources, &pcie->msi);
+>  	if (!bus) {
+> -- 
+> 2.10.0.297.gf6727b0
 > 
-> As for drivers/perf, our device does a fair bit more than performance
-> counters so it doesn't seem like it really fits in there. drivers/misc
-> just seems like a dumping ground which we'd prefer not to contribute to.
-> We also considered drivers/char (seeing it exposes a char device), but
-> that also seems like a dumping ground with stuff that belongs and other
-> stuff that just ended up stuck between the cracks.
 > 
-> If you still feel strongly about this we can move it into misc, but I
-> think from an organizational perspective pci/switch makes a bit more sense.
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-It's not a perfect fit in drivers/pci because it's not bus
-infrastructure and I don't want to be the default maintainer of it,
-but I agree there's not really an alternative that's clearly better,
-so let's leave it where it is for now.
-
-> In any case, I also wish we could have had this discussion 3 months ago
-> when we posted the RFC and not when I have people pushing to get this
-> merged.
-
-You and me both!  I hope some of those same people are pushing to help
-avoid the tragedy of the commons by helping review other
-contributions.
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
