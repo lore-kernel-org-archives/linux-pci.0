@@ -1,84 +1,70 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:38432 "EHLO foss.arm.com"
+Received: from canardo.mork.no ([148.122.252.1]:53791 "EHLO canardo.mork.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753744AbdCTNVl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Mar 2017 09:21:41 -0400
-Date: Mon, 20 Mar 2017 13:21:32 +0000
-From: Will Deacon <will.deacon@arm.com>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: Jerin Jacob <jerin.jacob@caviumnetworks.com>,
-        lorenzo.pieralisi@arm.com, david.daney@cavium.com,
-        catalin.marinas@arm.com, Liviu.Dudau@arm.com, rrichter@cavium.com,
-        hanjun.guo@linaro.org, bhelgaas@google.com,
-        linux-arm-kernel@lists.infradead.org,
-        linux-pci <linux-pci@vger.kernel.org>, benh@kernel.crashing.org
-Subject: Re: [PATCH v2] arm64: pci: add support for pci_mmap_page_range
-Message-ID: <20170320132132.GN17263@arm.com>
-References: <1460581856-12380-1-git-send-email-jerin.jacob@caviumnetworks.com>
- <20160415130953.GI22906@arm.com>
- <1489666647.4195.238.camel@infradead.org>
+        id S1750785AbdCNIn6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Mar 2017 04:43:58 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: "Brown\, Aaron F" <aaron.f.brown@intel.com>
+Cc: Borislav Petkov <bp@alien8.de>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        "lkml\@pengaru.com" <lkml@pengaru.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        "vcaputo\@pengaru.com" <vcaputo@pengaru.com>,
+        "linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "intel-wired-lan\@lists.osuosl.org"
+        <intel-wired-lan@lists.osuosl.org>, khalidm <khalidm@cisco.com>,
+        "David Singleton" <davsingl@cisco.com>,
+        "Kirsher\, Jeffrey T" <jeffrey.t.kirsher@intel.com>
+Subject: Re: [BUG] 4.11.0-rc1 panic on shutdown X61s
+References: <20170312053723.GH802@shells.gnugeneration.com>
+        <20170312115703.GA18197@nazgul.tnic>
+        <20170312122621.GA2823@nazgul.tnic>
+        <CAHp75Ve7SWivf=TTuq-qA=iM20E==OmSZD2YAmt0LVJQg47Osg@mail.gmail.com>
+        <20170312222333.hm54nl2ul5iuixap@pd.tnic>
+        <87shmhjfap.fsf@miraculix.mork.no>
+        <309B89C4C689E141A5FF6A0C5FB2118B8C5B3F9B@ORSMSX101.amr.corp.intel.com>
+        <87varci7om.fsf@miraculix.mork.no>
+Date: Tue, 14 Mar 2017 09:40:24 +0100
+In-Reply-To: <87varci7om.fsf@miraculix.mork.no> (=?utf-8?Q?=22Bj=C3=B8rn?=
+ Mork"'s message of
+        "Tue, 14 Mar 2017 09:28:09 +0100")
+Message-ID: <87pohki747.fsf@miraculix.mork.no>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1489666647.4195.238.camel@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 16, 2017 at 12:17:27PM +0000, David Woodhouse wrote:
-> On Fri, 2016-04-15 at 14:09 +0100, Will Deacon wrote:
-> > 
-> > > +     if (write_combine)
-> > > +             vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
-> > > +     else
-> > > +             vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
-> > 
-> > For consistency with ioremap, this should be pgprot_device.
-> 
-> What's the difference?
+Bj=C3=B8rn Mork <bjorn@mork.no> writes:
+> "Brown, Aaron F" <aaron.f.brown@intel.com> writes:
+>>> From: Bj=C3=B8rn Mork [mailto:bjorn@mork.no]
+>>>
+>>> Already did that a week ago:
+>>> https://www.spinics.net/lists/netdev/msg423379.html
+>>>=20
+>>> Haven't heard anything back yet.  Wondering if they are waiting for
+>>> someone else to submit the pretty obvious revert?  Don't understand why
+>>> that should take more than a minute to figure out.  It's not like they
+>>> are testing these changes anyway...
+>>
+>> Believe it or not we actually do test these changes.
+>
+> Yes, I know you did. Sorry. I should stop throwing such comments around.
 
-The different between ioremap (which used pgprot_device) and a mapping
-created using pgprot_noncached is that the former allows for early
-acknowledgement of writes (e.g. at a bridge). See this recent series from
-Lorenzo that is also trying to clean this up:
+So I have made that mistake before, and never learn.  But the good thing
+about that is that it now rang a bell.  I once had suspend issues with a
+completely different Intel device on another Lenovo laptop, which turned
+out to be caused by the Lenovo firmware accessing the device while it is
+in D3: https://lkml.org/lkml/2015/3/2/183
 
-http://lkml.kernel.org/r/20170227151436.18698-1-lorenzo.pieralisi@arm.com
+I don't have a clue about how these things work so this might be
+completely unrelated.  Just thought I'd mention it as an example of how
+the Lenovo firmware can do unexpected things.
 
-> I note that VFIO is using pgprot_noncached() too, in vfio_pci_mmap() —
-> where it open-codes an entirely arch-agnostic version of
-> pci_mmap_page_range() all for itself. Should that be changed to
-> pgprot_device() too?
+>From the reports so far, it looks like the issue at hand affects most
+(all?)  Lenovo Thinkpads with an e1000e part.  If you haven't tried
+already, it might be interesting to see if you can reproduce it on a
+Thinkpad.
 
-I think so. At least, on arm64, pgprot_noncached is only really needed
-for PCI config space and "I don't know that this is, but I'm going to map
-it anyway" regions in /dev/mem.
 
-> Let me see if I can get this straight...
-> 
-> We have the legacy interface through /proc/bus/pci, where the user
-> passes a "user-visible" bus address not necessarily (on platforms with
-> HAVE_PCI_RESOURCE_TO_USER) a host physical address.
-> 
-> The arch-specific pci_mmap_page_range() exists to work around that
-> translation, on the two platforms which need it. It *also* has (on
-> about three platforms) support for a write-combining mapping.
-> 
-> The sysfs interface theough /sys/bus/pci/devices/*/resource* probably
-> doesn't need to use pci_mmap_page_range() at all, *except* for the
-> 'resourceX_wc' variant which has write-combining support.
-> 
-> How about we do the following (probably not in this order):
->  • Kill pci_mmap_page_range() entirely.
->  • Implement a generic version which has (arch-assisted) WC support
->    but no knowledge of the horrid pci_resource_to_user() mapping.
->  • Require pci_user_to_resource() to be provided by platforms with
->    HAVE_ARCH_PCI_RESOURCE_TO_USER, and call that from *generic* code,
->    for the legacy procfs interface, before invoking the generic
->    replacement for pci_mmap_page_range().
-> 
-> (Yes, we still need to support mmap of I/O resources on... is it only
-> powerpc? And there are a few inconsistencies, like powerpc forcing WC
-> even on the sysfs files that *don't* have _wc in their name, that
-> probably want to be cleaned up as we consolidate...)
 
-Happy to review patches :)
-
-Will
+Bj=C3=B8rn
