@@ -1,105 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Mark Rutland <mark.rutland@arm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: Bad DT binding (hisi-pcie-almost-ecam)
-Date: Mon, 13 Mar 2017 08:14:19 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E2047A8C1@FRAEML521-MBX.china.huawei.com>
-References: <20170310174045.GB24571@leverpostej>
-In-Reply-To: <20170310174045.GB24571@leverpostej>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=ZGzV=2X=ACULAB.COM=David.Laight@kernel.org>
+Return-Path: <SRS0=ZGzV=2X=ACULAB.COM=David.Laight@kernel.org>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Mason' <slash.tmp@free.fr>, Bjorn Helgaas <helgaas@kernel.org>
+CC: linux-pci <linux-pci@vger.kernel.org>, linux-usb
+	<linux-usb@vger.kernel.org>, Rob Herring <robh@kernel.org>, Arnd Bergmann
+	<arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Marc Zyngier
+	<marc.zyngier@arm.com>, Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+	Phuong Nguyen <phuong_nguyen@sigmadesigns.com>, Shawn Lin
+	<shawn.lin@rock-chips.com>, Robin Murphy <robin.murphy@arm.com>, Linux ARM
+	<linux-arm-kernel@lists.infradead.org>, Kevin Hilman <khilman@kernel.org>
+Subject: RE: Neophyte questions about PCIe
+Date: Tue, 14 Mar 2017 12:24:07 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DCFFB0737@AcuExch.aculab.com>
+References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
+ <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
+ <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
+ <9ba05c2c-57ef-b2c0-6a7c-457c392d98b5@free.fr>
+ <df517167-d692-38a8-9c8f-a1112c7f578d@free.fr>
+ <c0a353cb-aa1f-25db-eccd-7a1618e655b3@free.fr>
+ <20170313214024.GD8232@bhelgaas-glaptop.roam.corp.google.com>
+ <826d0a3f-753f-0330-5792-e11beb78d6bf@free.fr>
+ <063D6719AE5E284EB5DD2968C1650D6DCFFB0422@AcuExch.aculab.com>
+ <ba1c544d-e2d3-3bc5-c4a1-7072c00a108f@free.fr>
+In-Reply-To: <ba1c544d-e2d3-3bc5-c4a1-7072c00a108f@free.fr>
+Content-Type: text/plain; charset="iso-8859-15"
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mark
+From: Mason
+> Sent: 14 March 2017 12:06
+> On 14/03/2017 11:23, David Laight wrote:
+>=20
+> > Mason wrote:
+> >
+> >> I'd like to push support for this PCIe controller upstream.
+> >>
+> >> Is the code I posted on the right track?
+> >> Maybe I can post a RFC patch tomorrow?
+> >
+> > I think you need to resolve the problem of config space (and IO) cycles
+> > before the driver can be deemed usable.
+>=20
+> You're alluding to the (unfortunate) muxing of config and mem spaces
+> on my controller, where concurrent accesses by two different threads
+> would blow the system up.
+>=20
+> You've suggested sending IPIs in the config space accessor, in order
+> to prevent other CPUs from starting a mem access. But this doesn't
+> help if a mem access is already in flight, AFAIU.
+>=20
+> I fear there is nothing that can be done in SW, short of rewriting
+> drivers such that mem space accesses are handled by a driver-specific
+> call-back which could take care of all required locking.
+>=20
+> AFAICT, my only (reasonable) option is putting a big fat warning
+> in the code, and pray that concurrent accesses never happen.
+> (I'll test with a storage stress test on a USB3 drive.)
 
-> -----Original Message-----
-> From: Mark Rutland [mailto:mark.rutland@arm.com]
-> Sent: 10 March 2017 17:41
-> To: liudongdong (C); Bjorn Helgaas
-> Cc: Gabriele Paoloni; Wangzhou (B); devicetree@vger.kernel.org; linux-
-> pci@vger.kernel.org; linux-kernel@vger.kernel.org
-> Subject: Bad DT binding (hisi-pcie-almost-ecam)
-> 
-> I've just spotted commit:
-> 
->   a2ec1996098c7da0 ("PCI: hisi: Add DT almost-ECAM support for
-> Hip06/Hip07 host controllers")
-> 
-> ... which went in for v4.11-rc1.
-> 
-> I hadn't seen this until now, and as far as I can tell this never went
-> to the devicetree list.
+Since this is a host controller and you want to be able to use standard
+PCIe cards (with their standard drivers) you need to fix the hardware
+or do some kind of software workaround that is only in the config space
+code.
+You cannot assume than config space cycles won't happen at the same
+time as other accesses.
 
-Sorry about this, we'll be more careful next time
+While most driver accesses should use either the iowrite32() or writel()
+families of functions I'm pretty sure they don't have inter-cpu locking.
+(They might have annoying, excessive barriers.)
+But it is also legal for drivers to allow pcie memory space be mmapped
+directly into a processes address space.
+You have no control over the bus cycles that generates.
+This isn't common, but is done. We use it for bit-banging serial eeproms.
 
-> 
-> The commit adds the "hisilicon,pcie-almost-ecam", which goes against
-> the
-> usual DT conventions, and is non-sensical in that it describes the IP
-> based on what it isn't.
-> 
-> This binding shouldn't have gone in as-is, and we should fix it before
-> v4.11.
-> 
-> The binding states that this IP is found in Hip06 and Hip07. For these
-> cases we'd usually take the name of the first implementation, e.g.
-> something like "hisilicon,hip06-pcie", which can be used as a fallback
-> in the compatible list if reused in subsequent SoC generations.
-> 
-> I also see that "hisilicon,hip06-pcie" already exists, so I'm even more
-> suspicious.
-
-For Hip06 the IP is the same but in we have a different BIOS configuration
-that allows the controller be ECAM compliant for all the devices of the
-hierarchy except the RC.
-
-> 
-> What exactly is the "hisilicon,pcie-almost-ecam" binding trying to
-> describe? Is it a different IP also found on Hip06, or is it a new
-> binding for the same IP?
-
-The reason why we need this new BIOS is to support the recent PCIe quirks
-for the ACPI Root Port driver (commit 5b69b85ba1ddd36be01f5c57830b37a3c8256009
-"PCI/ACPI: Check for platform-specific MCFG quirks"). So using one BIOS we
-support both DT and ACPI.
-This is the reason why you see Hip-06 being already there...
-
-About the name to use here from what you suggest we should use
-"hisilicon,hip06-pcie-almost-ecam" and re-use it for hip07 SoC.
-To be honest I would prefer it either as it is now or to modify the
-driver as:
-
-diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
-index 52f1e3f..7527b4c 100644
---- a/drivers/pci/dwc/pcie-hisi.c
-+++ b/drivers/pci/dwc/pcie-hisi.c
-@@ -381,7 +381,11 @@ struct pci_ecam_ops hisi_pcie_platform_ops = {
-
-  static const struct of_device_id hisi_pcie_almost_ecam_of_match[] = {
-         {
--           .compatible = "hisilicon,pcie-almost-ecam",
-+         .compatible = "hisilicon,pcie-almost-ecam-hip06",
-+         .data           = (void *) &hisi_pcie_platform_ops,
-+ },
-+ {
-+         .compatible = "hisilicon,pcie-almost-ecam-hip07",
-                 .data       = (void *) &hisi_pcie_platform_ops,
-         },
-         {},
-
-What do you think?
-
-Many Thanks
-Gab
-
-
-> 
-> Thanks,
-> Mark.
+	David
