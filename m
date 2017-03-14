@@ -1,213 +1,83 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>, <robh+dt@kernel.org>,
- <frowand.list@gmail.com>, <bhelgaas@google.com>, <rafael@kernel.org>,
- <arnd@arndb.de>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH V8 3/6] OF: Add missing I/O range exception for indirect-IO
- devices
-Date: Thu, 30 Mar 2017 23:26:56 +0800
-Message-ID: <1490887619-61732-4-git-send-email-yuanzhichang@hisilicon.com>
-In-Reply-To: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
-References: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:60861 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753433AbdCNBUf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 13 Mar 2017 21:20:35 -0400
+From: "Brown, Aaron F" <aaron.f.brown@intel.com>
+To: =?utf-8?B?QmrDuHJuIE1vcms=?= <bjorn@mork.no>,
+        Borislav Petkov <bp@alien8.de>
+CC: Andy Shevchenko <andy.shevchenko@gmail.com>,
+        "lkml@pengaru.com" <lkml@pengaru.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        "vcaputo@pengaru.com" <vcaputo@pengaru.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+        khalidm <khalidm@cisco.com>,
+        "David Singleton" <davsingl@cisco.com>,
+        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
+Subject: RE: [BUG] 4.11.0-rc1 panic on shutdown X61s
+Date: Tue, 14 Mar 2017 01:20:27 +0000
+Message-ID: <309B89C4C689E141A5FF6A0C5FB2118B8C5B3F9B@ORSMSX101.amr.corp.intel.com>
+References: <20170312053723.GH802@shells.gnugeneration.com>
+        <20170312115703.GA18197@nazgul.tnic>    <20170312122621.GA2823@nazgul.tnic>
+        <CAHp75Ve7SWivf=TTuq-qA=iM20E==OmSZD2YAmt0LVJQg47Osg@mail.gmail.com>
+        <20170312222333.hm54nl2ul5iuixap@pd.tnic> <87shmhjfap.fsf@miraculix.mork.no>
+In-Reply-To: <87shmhjfap.fsf@miraculix.mork.no>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, devicetree@vger.kernel.org, lorenzo.pieralisi@arm.com,
- gabriele.paoloni@huawei.com, minyard@acm.org, benh@kernel.crashing.org,
- john.garry@huawei.com, linux-kernel@vger.kernel.org, xuwei5@hisilicon.com,
- linuxarm@huawei.com, "zhichang.yuan" <yuanzhichang@hisilicon.com>,
- linux-acpi@vger.kernel.org, zourongrong@gmail.com, linux-pci@vger.kernel.org,
- olof@lixom.net, zhichang.yuan02@gmail.com, kantyzc@163.com,
- brian.starkey@arm.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-There are some special ISA/LPC devices that work on a specific I/O range where
-it is not correct to specify a 'ranges' property in DTS parent node as cpu
-addresses translated from DTS node are only for memory space on some
-architectures, such as Arm64. Without the parent 'ranges' property, current
-of_translate_address() return an error.
-Here we add special handlings for this case.
-During the OF address translation, some checkings will be perfromed to
-identify whether the device node is registered as indirect-IO. If yes, the I/O
-translation will be done in a different way from that one of PCI MMIO.
-In this way, the I/O 'reg' property of the special ISA/LPC devices will be
-parsed correctly.
-
-Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>    #earlier draft
-Acked-by: Rob Herring <robh@kernel.org>
----
- drivers/of/address.c | 90 ++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 74 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 1693a6f..d8ca284 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -552,9 +552,14 @@ static int of_translate_one(struct device_node *parent, struct of_bus *bus,
-  * that translation is impossible (that is we are not dealing with a value
-  * that can be mapped to a cpu physical address). This is not really specified
-  * that way, but this is traditionally the way IBM at least do things
-+ *
-+ * Whenever the translation fails, the *host pointer will be set to the
-+ * device that had registered logical PIO mapping, and the return code is relative to
-+ * that node.
-  */
- static u64 __of_translate_address(struct device_node *dev,
--				  const __be32 *in_addr, const char *rprop)
-+				  const __be32 *in_addr, const char *rprop,
-+				  struct device_node **host)
- {
- 	struct device_node *parent = NULL;
- 	struct of_bus *bus, *pbus;
-@@ -567,6 +572,7 @@ static u64 __of_translate_address(struct device_node *dev,
- 	/* Increase refcount at current level */
- 	of_node_get(dev);
- 
-+	*host = NULL;
- 	/* Get parent & match bus type */
- 	parent = of_get_parent(dev);
- 	if (parent == NULL)
-@@ -587,6 +593,8 @@ static u64 __of_translate_address(struct device_node *dev,
- 
- 	/* Translate */
- 	for (;;) {
-+		struct logic_pio_hwaddr *iorange;
-+
- 		/* Switch to parent bus */
- 		of_node_put(dev);
- 		dev = parent;
-@@ -599,6 +607,19 @@ static u64 __of_translate_address(struct device_node *dev,
- 			break;
- 		}
- 
-+		/*
-+		 * For indirectIO device which has no ranges property, get
-+		 * the address from reg directly.
-+		 */
-+		iorange = find_io_range_by_fwnode(&dev->fwnode);
-+		if (iorange && (iorange->flags != PIO_CPU_MMIO)) {
-+			result = of_read_number(addr + 1, na - 1);
-+			pr_debug("indirectIO matched(%s) 0x%llx\n",
-+					of_node_full_name(dev), result);
-+			*host = of_node_get(dev);
-+			break;
-+		}
-+
- 		/* Get new parent bus and counts */
- 		pbus = of_match_bus(parent);
- 		pbus->count_cells(dev, &pna, &pns);
-@@ -631,13 +652,32 @@ static u64 __of_translate_address(struct device_node *dev,
- 
- u64 of_translate_address(struct device_node *dev, const __be32 *in_addr)
- {
--	return __of_translate_address(dev, in_addr, "ranges");
-+	struct device_node *host;
-+	u64 ret;
-+
-+	ret =  __of_translate_address(dev, in_addr, "ranges", &host);
-+	if (host) {
-+		of_node_put(host);
-+		return OF_BAD_ADDR;
-+	}
-+
-+	return ret;
- }
- EXPORT_SYMBOL(of_translate_address);
- 
- u64 of_translate_dma_address(struct device_node *dev, const __be32 *in_addr)
- {
--	return __of_translate_address(dev, in_addr, "dma-ranges");
-+	struct device_node *host;
-+	u64 ret;
-+
-+	ret = __of_translate_address(dev, in_addr, "dma-ranges", &host);
-+
-+	if (host) {
-+		of_node_put(host);
-+		return OF_BAD_ADDR;
-+	}
-+
-+	return ret;
- }
- EXPORT_SYMBOL(of_translate_dma_address);
- 
-@@ -679,29 +719,47 @@ const __be32 *of_get_address(struct device_node *dev, int index, u64 *size,
- }
- EXPORT_SYMBOL(of_get_address);
- 
-+static u64 of_translate_ioport(struct device_node *dev, const __be32 *in_addr)
-+{
-+	u64 taddr;
-+	unsigned long port;
-+	struct device_node *host;
-+
-+	taddr = __of_translate_address(dev, in_addr, "ranges", &host);
-+	if (host) {
-+		/* host specific port access */
-+		port = logic_pio_trans_hwaddr(&host->fwnode, taddr);
-+		of_node_put(host);
-+	} else {
-+		/* memory mapped I/O range */
-+		port = pci_address_to_pio(taddr);
-+	}
-+
-+	if (port == (unsigned long)-1)
-+		return OF_BAD_ADDR;
-+
-+	return port;
-+}
-+
- static int __of_address_to_resource(struct device_node *dev,
- 		const __be32 *addrp, u64 size, unsigned int flags,
- 		const char *name, struct resource *r)
- {
- 	u64 taddr;
- 
--	if ((flags & (IORESOURCE_IO | IORESOURCE_MEM)) == 0)
-+	if (flags & IORESOURCE_MEM)
-+		taddr = of_translate_address(dev, addrp);
-+	else if (flags & IORESOURCE_IO)
-+		taddr = of_translate_ioport(dev, addrp);
-+	else
- 		return -EINVAL;
--	taddr = of_translate_address(dev, addrp);
-+
- 	if (taddr == OF_BAD_ADDR)
- 		return -EINVAL;
- 	memset(r, 0, sizeof(struct resource));
--	if (flags & IORESOURCE_IO) {
--		unsigned long port;
--		port = pci_address_to_pio(taddr);
--		if (port == (unsigned long)-1)
--			return -EINVAL;
--		r->start = port;
--		r->end = port + size - 1;
--	} else {
--		r->start = taddr;
--		r->end = taddr + size - 1;
--	}
-+
-+	r->start = taddr;
-+	r->end = taddr + size - 1;
- 	r->flags = flags;
- 	r->name = name ? name : dev->full_name;
- 
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+PiBGcm9tOiBCasO4cm4gTW9yayBbbWFpbHRvOmJqb3JuQG1vcmsubm9dDQo+IFNlbnQ6IE1vbmRh
+eSwgTWFyY2ggMTMsIDIwMTcgOTo0NiBBTQ0KPiBUbzogQm9yaXNsYXYgUGV0a292IDxicEBhbGll
+bjguZGU+DQo+IENjOiBBbmR5IFNoZXZjaGVua28gPGFuZHkuc2hldmNoZW5rb0BnbWFpbC5jb20+
+OyBsa21sQHBlbmdhcnUuY29tOw0KPiBsaW51eC1rZXJuZWwgPGxpbnV4LWtlcm5lbEB2Z2VyLmtl
+cm5lbC5vcmc+OyB2Y2FwdXRvQHBlbmdhcnUuY29tOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVs
+Lm9yZzsgaW50ZWwtd2lyZWQtbGFuQGxpc3RzLm9zdW9zbC5vcmc7IGtoYWxpZG0NCj4gPGtoYWxp
+ZG1AY2lzY28uY29tPjsgRGF2aWQgU2luZ2xldG9uIDxkYXZzaW5nbEBjaXNjby5jb20+OyBCcm93
+biwgQWFyb24NCj4gRiA8YWFyb24uZi5icm93bkBpbnRlbC5jb20+OyBLaXJzaGVyLCBKZWZmcmV5
+IFQNCj4gPGplZmZyZXkudC5raXJzaGVyQGludGVsLmNvbT4NCj4gU3ViamVjdDogUmU6IFtCVUdd
+IDQuMTEuMC1yYzEgcGFuaWMgb24gc2h1dGRvd24gWDYxcw0KPiANCj4gQm9yaXNsYXYgUGV0a292
+IDxicEBhbGllbjguZGU+IHdyaXRlczoNCj4gPiBPbiBTdW4sIE1hciAxMiwgMjAxNyBhdCAwMzo1
+NTowOFBNICswMjAwLCBBbmR5IFNoZXZjaGVua28gd3JvdGU6DQo+ID4NCj4gPj4gVGhlIG9ubHkg
+Y2hhbmdlIHRoYXQgSU1ITyBtYXR0ZXJzIGhhcHBlbmVkIGJldHdlZW4gdjQuMTAgYW5kIHY0LjEx
+LQ0KPiByYzEgaXMgdGhpczoNCj4gPj4NCj4gPj4gQEAgLTYyNzYsOCArNjI3NCw4IEBAIHN0YXRp
+YyBpbnQgZTEwMDBlX3BtX2ZyZWV6ZShzdHJ1Y3QgZGV2aWNlICpkZXYpDQo+ID4+ICAgICAgICAg
+ICAgICAgICAvKiBRdWllc2NlIHRoZSBkZXZpY2Ugd2l0aG91dCByZXNldHRpbmcgdGhlIGhhcmR3
+YXJlICovDQo+ID4+ICAgICAgICAgICAgICAgICBlMTAwMGVfZG93bihhZGFwdGVyLCBmYWxzZSk7
+DQo+ID4+ICAgICAgICAgICAgICAgICBlMTAwMF9mcmVlX2lycShhZGFwdGVyKTsNCj4gPj4gKyAg
+ICAgICAgICAgICAgIGUxMDAwZV9yZXNldF9pbnRlcnJ1cHRfY2FwYWJpbGl0eShhZGFwdGVyKTsN
+Cj4gPj4gICAgICAgICB9DQo+ID4+IC0gICAgICAgZTEwMDBlX3Jlc2V0X2ludGVycnVwdF9jYXBh
+YmlsaXR5KGFkYXB0ZXIpOw0KPiA+Pg0KPiA+PiBTbywgaXQgYXBwYXJlbnRseSBtaXNzZXMgc29t
+ZXRoaW5nIGZvciB0aGUgb3RoZXIgY2FzZSwgbGlrZQ0KPiA+PiBwY2lfZGlzYWJsZV9tc2koKSBj
+YWxsIG9yIHNvLg0KPiA+DQo+ID4gV2VsbCwgbGVtbWUgYWRkIHRoZSBwZW9wbGUgZnJvbQ0KPiA+
+DQo+ID4gICA3ZTU0ZDlkMDYzZmEgKCJlMTAwMGU6IGRyaXZlciB0cnlpbmcgdG8gZnJlZSBhbHJl
+YWR5LWZyZWUgaXJxIikNCj4gPg0KPiA+IHRvIENDIHRoZW4uIDotKQ0KPiANCj4gQWxyZWFkeSBk
+aWQgdGhhdCBhIHdlZWsgYWdvOg0KPiBodHRwczovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9uZXRk
+ZXYvbXNnNDIzMzc5Lmh0bWwNCj4gDQo+IEhhdmVuJ3QgaGVhcmQgYW55dGhpbmcgYmFjayB5ZXQu
+ICBXb25kZXJpbmcgaWYgdGhleSBhcmUgd2FpdGluZyBmb3INCj4gc29tZW9uZSBlbHNlIHRvIHN1
+Ym1pdCB0aGUgcHJldHR5IG9idmlvdXMgcmV2ZXJ0PyAgRG9uJ3QgdW5kZXJzdGFuZCB3aHkNCj4g
+dGhhdCBzaG91bGQgdGFrZSBtb3JlIHRoYW4gYSBtaW51dGUgdG8gZmlndXJlIG91dC4gIEl0J3Mg
+bm90IGxpa2UgdGhleQ0KPiBhcmUgdGVzdGluZyB0aGVzZSBjaGFuZ2VzIGFueXdheS4uLg0KDQpC
+ZWxpZXZlIGl0IG9yIG5vdCB3ZSBhY3R1YWxseSBkbyB0ZXN0IHRoZXNlIGNoYW5nZXMuICBUaGlz
+IG9uZSB3YXMgdGVzdGVkIGJ5IG1lIGFuZCBJIGRpZCBub3QgaGF2ZSB0aGUgc2FtZSByZXN1bHRz
+IHlvdSBhbmQgdGhlIG90aGVyIHBlb3BsZSByZXBvcnRpbmcgdGhpcyB0cmFjZSBkaWQuICBJIG1h
+ZGUgaXQgYmFjayBpbiB0aGUgbGFiIHRvZGF5IGFuZCBoYXZlIHNwZW50IGEgZ29vZCBwYXJ0IG9m
+IHRoZSBkYXkgYXR0ZW1wdGluZyB0byByZXByb2R1Y2UgdGhpcyBidWcgd2l0aG91dCBzdWNjZXNz
+LiAgRnJlZXplIC8gcmVzdW1lIHdvcmtzIGZvciBtZSBvbiBhbGwgdGhlIHN5c3RlbXMgSSBoYXZl
+IHRyaWVkLCB3aGljaCBpbmNsdWRlcyBhIHNhbXBsaW5nIG9mIGFsbCB0aGUgY3VycmVudCBwYXJ0
+cyBhbmQgbWFueSBvbGRlciBvbmVzLiAgR2l2ZW4gdGhlcmUgYXJlIHNldmVyYWwgb3RoZXIgcmVw
+b3J0cyBvZiB0aGlzIGl0IGlzIG9idmlvdXNseSBhbiBpc3N1ZSBhbmQgSSB3b3VsZCBsaWtlIHRv
+IGJlIGFibGUgdG8gcmVwcm9kdWNlIGl0IGluIGNhc2UgYW5vdGhlciBwYXRjaCB0byByZXNvbHZl
+IHRoZSBpc3N1ZSB0aGlzIGF0dGVtcHRzIHRvIGZpeCBjb21lcyBiYWNrIGluIGFub3RoZXIgZm9y
+bS4gIFNvIEkgd2FudCB0byBrbm93IHdoYXQncyBkaWZmZXJlbnQgYmV0d2VlbiB0aGUgc3lzdGVt
+cyB0aGF0IGhpdCB0aGlzIGFuZCBteSBiYW5rIG9mIHN5c3RlbXMgdGhhdCBkb24ndC4NCg0KV2hh
+dCBleGFjdCBwYXJ0IChvciBwYXJ0cykgYXJlIHdlIGxvb2tpbmcgYXQgKGxzcGNpfGdyZXAgLWkg
+ZXRoKSB0aGF0IHRyaWdnZXIgdGhpcz8gIENvdWxkIGl0IGJlIGEgZGlmZmVyZW5jZSBpbiAuY29u
+ZmlnIGZpbGVzPyAgVGhlIHRyYWNlIHNheXMgaXQgaXMgZmFsbGluZyBiYWNrIHRvIGxlZ2FjeSBp
+bnRlcnJ1cHRzLCBkb2VzIHRoZSBzeXN0ZW0gY29udGludWUgdG8gd29yayBhbmQgZG9lcyB0aGUg
+bmV0d29yayBjb250aW51ZSB0byBmdW5jdGlvbiBpbiB0aGF0IG1vZGU/ICBJbiBjYXNlIGl0J3Mg
+cmVsYXRlZCB0byB1c2VyIHNwYWNlIHdoYXQgaXMgdGhlIGJhc2UgZGlzdHJvPyAgQW55IG90aGVy
+IGluZm9ybWF0aW9uIHlvdSB0aGluayBjYW4gaGVscCBtZSByZXByb2R1Y2UgdGhlIGlzc3VlIHdv
+dWxkIGJlIGFwcHJlY2lhdGVkLg0KDQpUaGFua3MsDQpBYXJvbg0KDQo+IA0KPiANCj4gQmrDuHJu
+DQo=
