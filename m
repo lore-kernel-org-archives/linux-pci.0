@@ -1,158 +1,88 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [Intel-wired-lan] [BUG] 4.11.0-rc1 panic on shutdown X61s
+To: "Brown, Aaron F" <aaron.f.brown@intel.com>,
+        =?UTF-8?Q?Bj=c3=b8rn_Mork?= <bjorn@mork.no>,
+        Borislav Petkov <bp@alien8.de>
+References: <20170312053723.GH802@shells.gnugeneration.com>
+ <20170312115703.GA18197@nazgul.tnic> <20170312122621.GA2823@nazgul.tnic>
+ <CAHp75Ve7SWivf=TTuq-qA=iM20E==OmSZD2YAmt0LVJQg47Osg@mail.gmail.com>
+ <20170312222333.hm54nl2ul5iuixap@pd.tnic> <87shmhjfap.fsf@miraculix.mork.no>
+ <309B89C4C689E141A5FF6A0C5FB2118B8C5B3F9B@ORSMSX101.amr.corp.intel.com>
+Cc: "vcaputo@pengaru.com" <vcaputo@pengaru.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        David Singleton <davsingl@cisco.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        khalidm <khalidm@cisco.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        "lkml@pengaru.com" <lkml@pengaru.com>,
+        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>
+From: "Neftin, Sasha" <sasha.neftin@intel.com>
+Message-ID: <985d8ca4-df0a-5eb7-6c43-d57b843cbd18@intel.com>
+Date: Tue, 14 Mar 2017 09:49:24 +0200
 MIME-Version: 1.0
-In-Reply-To: <1490123810-12383-1-git-send-email-ard.biesheuvel@linaro.org>
-References: <1490123810-12383-1-git-send-email-ard.biesheuvel@linaro.org>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Tue, 21 Mar 2017 19:18:30 +0000
-Message-ID: <CAKv+Gu98gMwK-mUmKGxffjHWC+fb0XpYtbUgfuEV0W0dSbQ4Dw@mail.gmail.com>
-Subject: Re: [PATCH v2] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-To: "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
- Heyi Guo <heyi.guo@linaro.org>, Peter Jones <pjones@redhat.com>,
- Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <309B89C4C689E141A5FF6A0C5FB2118B8C5B3F9B@ORSMSX101.amr.corp.intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21 March 2017 at 19:16, Ard Biesheuvel <ard.biesheuvel@linaro.org> wrote:
-> On UEFI systems, the PCI subsystem is enumerated by the firmware,
-> and if a graphical framebuffer is exposed by a PCI device, its base
-> address and size are exposed to the OS via the Graphics Output
-> Protocol (GOP).
+On 3/14/2017 03:20, Brown, Aaron F wrote:
+>> From: Bjørn Mork [mailto:bjorn@mork.no]
+>> Sent: Monday, March 13, 2017 9:46 AM
+>> To: Borislav Petkov <bp@alien8.de>
+>> Cc: Andy Shevchenko <andy.shevchenko@gmail.com>; lkml@pengaru.com;
+>> linux-kernel <linux-kernel@vger.kernel.org>; vcaputo@pengaru.com; linux-
+>> pci@vger.kernel.org; intel-wired-lan@lists.osuosl.org; khalidm
+>> <khalidm@cisco.com>; David Singleton <davsingl@cisco.com>; Brown, Aaron
+>> F <aaron.f.brown@intel.com>; Kirsher, Jeffrey T
+>> <jeffrey.t.kirsher@intel.com>
+>> Subject: Re: [BUG] 4.11.0-rc1 panic on shutdown X61s
+>>
+>> Borislav Petkov <bp@alien8.de> writes:
+>>> On Sun, Mar 12, 2017 at 03:55:08PM +0200, Andy Shevchenko wrote:
+>>>
+>>>> The only change that IMHO matters happened between v4.10 and v4.11-
+>> rc1 is this:
+>>>> @@ -6276,8 +6274,8 @@ static int e1000e_pm_freeze(struct device *dev)
+>>>>                  /* Quiesce the device without resetting the hardware */
+>>>>                  e1000e_down(adapter, false);
+>>>>                  e1000_free_irq(adapter);
+>>>> +               e1000e_reset_interrupt_capability(adapter);
+>>>>          }
+>>>> -       e1000e_reset_interrupt_capability(adapter);
+>>>>
+>>>> So, it apparently misses something for the other case, like
+>>>> pci_disable_msi() call or so.
+>>> Well, lemme add the people from
+>>>
+>>>    7e54d9d063fa ("e1000e: driver trying to free already-free irq")
+>>>
+>>> to CC then. :-)
+>> Already did that a week ago:
+>> https://www.spinics.net/lists/netdev/msg423379.html
+>>
+>> Haven't heard anything back yet.  Wondering if they are waiting for
+>> someone else to submit the pretty obvious revert?  Don't understand why
+>> that should take more than a minute to figure out.  It's not like they
+>> are testing these changes anyway...
+> Believe it or not we actually do test these changes.  This one was tested by me and I did not have the same results you and the other people reporting this trace did.  I made it back in the lab today and have spent a good part of the day attempting to reproduce this bug without success.  Freeze / resume works for me on all the systems I have tried, which includes a sampling of all the current parts and many older ones.  Given there are several other reports of this it is obviously an issue and I would like to be able to reproduce it in case another patch to resolve the issue this attempts to fix comes back in another form.  So I want to know what's different between the systems that hit this and my bank of systems that don't.
 >
-> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
-> scratch at boot. This may result in the GOP framebuffer address to
-> become stale, if the BAR covering the framebuffer is modified. This
-> will cause the framebuffer to become unresponsive, and may in some
-> cases result in unpredictable behavior if the range is reassigned to
-> another device.
+> What exact part (or parts) are we looking at (lspci|grep -i eth) that trigger this?  Could it be a difference in .config files?  The trace says it is falling back to legacy interrupts, does the system continue to work and does the network continue to function in that mode?  In case it's related to user space what is the base distro?  Any other information you think can help me reproduce the issue would be appreciated.
 >
-> So add a quirk to the EFI fb driver to find the BAR associated with
-> the GOP base address, and set the IORESOURCE_PCI_FIXED attribute so
-> that the PCI core will leave it alone.
+> Thanks,
+> Aaron
 >
+>>
+>> Bjørn
+> _______________________________________________
+> Intel-wired-lan mailing list
+> Intel-wired-lan@lists.osuosl.org
+> http://lists.osuosl.org/mailman/listinfo/intel-wired-lan
 
-This final paragraph is now out of date, and should be fixed. Apologies.
+Hello,
 
-> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-> ---
-> As it turns out, setting the IORESOURCE_PCI_FIXED flag is not sufficient
-> to make the PCI core leave the BARs alone, so instead, the BAR resource
-> is claimed in the quirk handler.
->
-> As suggested by Lorenzo, a check is added that the device has memory
-> decoding enabled, and if it doesn't, no attempt is made to use the
-> EFI framebuffer.
->
->  drivers/video/fbdev/efifb.c | 58 +++++++++++++++++++-
->  1 file changed, 57 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
-> index 8c4dc1e1f94f..eeeaf78c4a5b 100644
-> --- a/drivers/video/fbdev/efifb.c
-> +++ b/drivers/video/fbdev/efifb.c
-> @@ -10,6 +10,7 @@
->  #include <linux/efi.h>
->  #include <linux/errno.h>
->  #include <linux/fb.h>
-> +#include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/screen_info.h>
->  #include <video/vga.h>
-> @@ -143,6 +144,9 @@ static struct attribute *efifb_attrs[] = {
->  };
->  ATTRIBUTE_GROUPS(efifb);
->
-> +static bool pci_bar_found;     /* did we find a BAR matching the efifb base? */
-> +static bool pci_bar_disabled;  /* was it disabled? */
-> +
->  static int efifb_probe(struct platform_device *dev)
->  {
->         struct fb_info *info;
-> @@ -152,7 +156,7 @@ static int efifb_probe(struct platform_device *dev)
->         unsigned int size_total;
->         char *option = NULL;
->
-> -       if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
-> +       if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI || pci_bar_disabled)
->                 return -ENODEV;
->
->         if (fb_get_options("efifb", &option))
-> @@ -360,3 +364,55 @@ static struct platform_driver efifb_driver = {
->  };
->
->  builtin_platform_driver(efifb_driver);
-> +
-> +static void claim_efifb_bar(struct pci_dev *dev, int idx)
-> +{
-> +       u16 word;
-> +
-> +       pci_bar_found = true;
-> +
-> +       if (pci_claim_resource(dev, idx)) {
-> +               pci_bar_disabled = true;
-> +               dev_err(&dev->dev, "BAR %d: failed to claim efifb BAR\n", idx);
-> +               return;
-> +       }
-> +
-> +       pci_read_config_word(dev, PCI_COMMAND, &word);
-> +       if (!(word & PCI_COMMAND_MEMORY)) {
-> +               pci_bar_disabled = true;
-> +               dev_err(&dev->dev,
-> +                       "BAR %d: efifb BAR has memory decoding disabled!\n", idx);
-> +               return;
-> +       }
-> +
-> +       dev_info(&dev->dev, "BAR %d: claimed for efifb\n", idx);
-> +}
-> +
-> +static void efifb_fixup_resources(struct pci_dev *dev)
-> +{
-> +       u64 base = screen_info.lfb_base;
-> +       u64 size = screen_info.lfb_size;
-> +       int i;
-> +
-> +       if (pci_bar_found || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
-> +               return;
-> +
-> +       if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
-> +               base |= (u64)screen_info.ext_lfb_base << 32;
-> +
-> +       if (!base)
-> +               return;
-> +
-> +       for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
-> +               struct resource *res = &dev->resource[i];
-> +
-> +               if (!(res->flags & IORESOURCE_MEM))
-> +                       continue;
-> +
-> +               if (res->start <= base && res->end >= base + size - 1) {
-> +                       claim_efifb_bar(dev, i);
-> +                       break;
-> +               }
-> +       }
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, efifb_fixup_resources);
-> --
-> 2.7.4
->
+I suggest revert commit of this patch. We recommended do not apply this 
+change.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+
+Sasha
