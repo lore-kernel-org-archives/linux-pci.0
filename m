@@ -1,15 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 14 Mar 2017 15:15:24 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Subject: Re: [PATCH v3 0/3] pci: remove msi_controller registration API
+Message-ID: <20170314201524.GF26264@bhelgaas-glaptop.roam.corp.google.com>
+References: <1488292276-11106-1-git-send-email-thomas.petazzoni@free-electrons.com>
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqLtTiH7DhqKf_x7xy1KZYQyiOreK=M90HFr=8BDW9542w@mail.gmail.com>
-References: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
- <CAL_JsqLtTiH7DhqKf_x7xy1KZYQyiOreK=M90HFr=8BDW9542w@mail.gmail.com>
-From: Oza Oza <oza.oza@broadcom.com>
-Date: Tue, 28 Mar 2017 10:57:39 +0530
-Message-ID: <CAMSpPPdnQdWeyTsnESRFx52gtxQLxwfPQwQgDFSN=katfW7suA@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/3] of/pci: dma-ranges to account highest possible
- host bridge dma_mask
-To: Rob Herring <robh@kernel.org>
+In-Reply-To: <1488292276-11106-1-git-send-email-thomas.petazzoni@free-electrons.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,86 +15,67 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Joerg Roedel <joro@8bytes.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Linux IOMMU <iommu@lists.linux-foundation.org>,
- "bcm-kernel-feedback-list@broadcom.com"
- <bcm-kernel-feedback-list@broadcom.com>, Robin Murphy <robin.murphy@arm.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
+ Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>,
+ Pawel Moll <pawel.moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ Hanna Hawa <hannah@marvell.com>, Nadav Haklai <nadavh@marvell.com>,
+ Gregory Clement <gregory.clement@free-electrons.com>,
+ Rob Herring <robh+dt@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
+ Kumar Gala <galak@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 27, 2017 at 8:16 PM, Rob Herring <robh@kernel.org> wrote:
-> On Sat, Mar 25, 2017 at 12:31 AM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
->> it is possible that PCI device supports 64-bit DMA addressing,
->> and thus it's driver sets device's dma_mask to DMA_BIT_MASK(64),
->> however PCI host bridge may have limitations on the inbound
->> transaction addressing. As an example, consider NVME SSD device
->> connected to iproc-PCIe controller.
->>
->> Currently, the IOMMU DMA ops only considers PCI device dma_mask
->> when allocating an IOVA. This is particularly problematic on
->> ARM/ARM64 SOCs where the IOMMU (i.e. SMMU) translates IOVA to
->> PA for in-bound transactions only after PCI Host has forwarded
->> these transactions on SOC IO bus. This means on such ARM/ARM64
->> SOCs the IOVA of in-bound transactions has to honor the addressing
->> restrictions of the PCI Host.
->>
->> current pcie frmework and of framework integration assumes dma-ranges
->> in a way where memory-mapped devices define their dma-ranges.
->> dma-ranges: (child-bus-address, parent-bus-address, length).
->>
->> but iproc based SOCs and even Rcar based SOCs has PCI world dma-ranges.
->> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
->
-> If you implement a common function, then I expect to see other users
-> converted to use it. There's also PCI hosts in arch/powerpc that parse
-> dma-ranges.
+On Tue, Feb 28, 2017 at 03:31:13PM +0100, Thomas Petazzoni wrote:
+> Hello,
+> 
+> This small patch series aims at removing the small msi_controller
+> registration API implemented in drivers/of/of_pci.c.
+> 
+> In order to do so, it moves the last two users of this API to the
+> generic MSI support:
+> 
+>  - The pci-aardvark driver is moved to use the generic MSI
+>    support. This driver is both the provider of the MSI capability and
+>    the consumer of this capability.
+> 
+>  - The pci-mvebu driver is cleaned up from using the msi_controller
+>    registration API. This driver is only consuming MSI capabilies from
+>    another driver (irq-armada-370-xp) which was migrated to the
+>    generic MSI support some time ago. Therefore, this patch is simply
+>    removing dead code.
+> 
+> Finally, the last commit removed the now unused API.
+> 
+> Changes between v2 and v3 are described in each individual patch.
+> 
+> Thanks,
+> 
+> Thomas
+> 
+> Thomas Petazzoni (3):
+>   pci: pci-aardvark: move to MSI handling using generic MSI support
+>   pci: pci-mvebu: remove useless MSI enabling code
+>   of: pci: remove unused MSI controller helpers
+> 
+>  drivers/of/of_pci.c             |  45 -----------
+>  drivers/pci/host/pci-aardvark.c | 173 ++++++++++++++++------------------------
+>  drivers/pci/host/pci-mvebu.c    |  17 ----
+>  include/linux/of_pci.h          |  11 ---
+>  4 files changed, 67 insertions(+), 179 deletions(-)
 
-the common function should be similar to what
-of_pci_get_host_bridge_resources is doing right now.
-it parses ranges property right now.
+Applied to pci/msi for v4.12, thanks!
 
-the new function would look look following.
+I think Marc's ack on 1/30 applies to the first two, so I added it to them.
 
-of_pci_get_dma_ranges(struct device_node *dev, struct list_head *resources)
-where resources would return the dma-ranges.
+Oh, and I'll drop the other aardvark change that removes the same bits of
+unused "msi-parent" code from advk_pcie_probe().
 
-but right now if you see the patch, of_dma_configure calls the new
-function, which actually returns the largest possible size.
-so this new function has to be generic in a way where other PCI hosts
-can use it. but certainly iproc(Broadcom SOC) , rcar based SOCs can
-use it for sure.
-
-although having powerpc using it;  is a separate exercise, since I do
-not have any access to other PCI hosts such as powerpc. but we can
-workout with them on thsi forum if required.
-
-so overall, of_pci_get_dma_ranges has to serve following 2 purposes.
-
-1) it has to return largest possible size to of_dma_configure to
-generate largest possible dma_mask.
-
-2) it also has to return resources (dma-ranges) parsed, to the users.
-
-so to address above needs
-
-of_pci_get_dma_ranges(struct device_node *dev, struct list_head
-*resources, u64 *size)
-
-dev -> device node.
-resources -> dma-ranges in allocated list.
-size -> highest possible size to generate possible dma_mask for
-of_dma_configure.
-
-let em know how this sounds.
-
-Regards,
-Oza.
+Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
