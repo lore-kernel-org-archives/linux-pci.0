@@ -1,87 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:58578 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964908AbdCWPw7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 Mar 2017 11:52:59 -0400
-Subject: Re: Help: MSI DWC connecting with a MSIx Endpoint
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-References: <85bfa77f-6cd0-a669-c940-7fa7d9fb17a3@synopsys.com>
- <28a4e429-a2d2-8f28-e4fc-8eebae0b3367@arm.com>
- <4ade12d6-1887-4093-ee43-2101ca2986e0@synopsys.com>
- <9eec7e57-456e-fc98-91d9-bd5a32c347af@arm.com>
- <934e0800-a1df-2059-fc7e-def976572309@synopsys.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <51813e48-210e-55a5-c904-fbf4562f48fe@arm.com>
-Date: Thu, 23 Mar 2017 15:52:55 +0000
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v6 3/4] PCI: imx6: Do not switch speed if Gen2 is disabled
+Date: Tue, 14 Mar 2017 08:18:26 -0700
+Message-Id: <20170314151827.31248-4-andrew.smirnov@gmail.com>
+In-Reply-To: <20170314151827.31248-1-andrew.smirnov@gmail.com>
+References: <20170314151827.31248-1-andrew.smirnov@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, linux-kernel@vger.kernel.org,
+ Fabio Estevam <fabio.estevam@nxp.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ yurovsky@gmail.com, linux-arm-kernel@lists.infradead.org,
+ Lucas Stach <l.stach@pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <934e0800-a1df-2059-fc7e-def976572309@synopsys.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/03/17 15:22, Joao Pinto wrote:
-> Hi Mark,
-> 
-> Às 10:41 AM de 3/21/2017, Marc Zyngier escreveu:
->> On 21/03/17 10:27, Joao Pinto wrote:
->>>
->>> Hi Mark,
->>>
->>> Às 6:16 PM de 3/20/2017, Marc Zyngier escreveu:
->>>> Hi Joao,
->>>>
->>>> On 20/03/17 17:30, Joao Pinto wrote:
->>>>> Hi Mark,
->>>>>
->> A very simple example using the current API is pcie-altera-msi.c (some
->> others are much more intricate), and should give you a good picture of
->> how PCI/MSI, generic MSI and MSI controllers interact.
->>
->> Start with understanding how the various layers interact via their own
->> IRQ domains, and implement their own IRQ chip. Happy to answer questions
->> (I'm sure you'll have some).
->>
->> Thanks,
->>
->> 	M.
-> 
-> I have one quick question... What address should I configure in vector_phy?
-> is this needed in pcie-designware?
+Save a bit of time and avoid going through link speed change procedure
+in configuration where link max speed is limited to Gen1 in DT.
 
-You may be in a better place than me to answer that question! ;-)
+Cc: yurovsky@gmail.com
+Cc: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Fabio Estevam <fabio.estevam@nxp.com>
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
+Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+---
+ drivers/pci/host/pci-imx6.c | 52 ++++++++++++++++++++++-----------------------
+ 1 file changed, 26 insertions(+), 26 deletions(-)
 
-If I remember well, the Altera RC needs to be programmed with the
-address of the MSI doorbell so that it can detect the end-point writes
-to it, and it can be anything you want. In order not to waste any memory
-space, we use the base address of the RC.
-
-Both very nice and dead ugly, if you want my opinion.
-
-If we look at this:
-
-void dw_pcie_msi_init(struct pcie_port *pp)
-{
-        u64 msi_target;
-
-        pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
-        msi_target = virt_to_phys((void *)pp->msi_data);
-
-        /* program the msi_data */
-        dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
-                            (u32)(msi_target & 0xffffffff));
-        dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
-                            (u32)(msi_target >> 32 & 0xffffffff));
-}
-
-We can infer the Designware IP has a similar behaviour, except that it
-wastes a page of RAM for no obvious reason. It'd be good to know if the
-RC actually propagates the write to the memory. If it really does, then
-that's the only way to do it. If it doesn't, then the Altera method is
-much better...
-
-Hope this helps,
-
-	M.
+diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
+index 473bbdc..071251f3 100644
+--- a/drivers/pci/host/pci-imx6.c
++++ b/drivers/pci/host/pci-imx6.c
+@@ -565,40 +565,40 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+ 		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
+ 		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
+ 		dw_pcie_writel_rc(pp, PCIE_RC_LCR, tmp);
+-	} else {
+-		dev_info(dev, "Link: Gen2 disabled\n");
+-	}
+-
+-	/*
+-	 * Start Directed Speed Change so the best possible speed both link
+-	 * partners support can be negotiated.
+-	 */
+-	tmp = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
+-	tmp |= PORT_LOGIC_SPEED_CHANGE;
+-	dw_pcie_writel_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
+ 
+-	if (imx6_pcie->variant != IMX7D) {
+ 		/*
+-		 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
+-		 * from i.MX6 family when no link speed transition
+-		 * occurs and we go Gen1 -> yep, Gen1. The difference
+-		 * is that, in such case, it will not be cleared by HW
+-		 * which will cause the following code to report false
+-		 * failure.
++		 * Start Directed Speed Change so the best possible
++		 * speed both link partners support can be negotiated.
+ 		 */
++		tmp = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
++		tmp |= PORT_LOGIC_SPEED_CHANGE;
++		dw_pcie_writel_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
++
++		if (imx6_pcie->variant != IMX7D) {
++			/*
++			 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
++			 * from i.MX6 family when no link speed transition
++			 * occurs and we go Gen1 -> yep, Gen1. The difference
++			 * is that, in such case, it will not be cleared by HW
++			 * which will cause the following code to report false
++			 * failure.
++			 */
++
++			ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
++			if (ret) {
++				dev_err(dev, "Failed to bring link up!\n");
++				goto err_reset_phy;
++			}
++		}
+ 
+-		ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
++		/* Make sure link training is finished as well! */
++		ret = imx6_pcie_wait_for_link(imx6_pcie);
+ 		if (ret) {
+ 			dev_err(dev, "Failed to bring link up!\n");
+ 			goto err_reset_phy;
+ 		}
+-	}
+-
+-	/* Make sure link training is finished as well! */
+-	ret = imx6_pcie_wait_for_link(imx6_pcie);
+-	if (ret) {
+-		dev_err(dev, "Failed to bring link up!\n");
+-		goto err_reset_phy;
++	} else {
++		dev_info(dev, "Link: Gen2 disabled\n");
+ 	}
+ 
+ 	tmp = dw_pcie_readl_rc(pp, PCIE_RC_LCSR);
 -- 
-Jazz is not dead. It just smells funny...
+2.9.3
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
