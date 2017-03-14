@@ -1,190 +1,60 @@
-Return-Path: <SRS0=gVIC=2Y=gmail.com=ayyappa.ch.linux@kernel.org>
-Return-Path: <SRS0=gVIC=2Y=gmail.com=ayyappa.ch.linux@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 1/4] pci: Allow lockless access path to PCI mmconfig
+To: Andi Kleen <andi@firstfloor.org>, bhelgaas@google.com
+References: <20170302232104.10136-1-andi@firstfloor.org>
+Cc: x86@kernel.org, linux-pci@vger.kernel.org, eranian@google.com,
+        peterz@infradead.org, linux-kernel@vger.kernel.org,
+        Andi Kleen <ak@linux.intel.com>
+From: "H. Peter Anvin" <hpa@zytor.com>
+Message-ID: <0bb90a87-e03d-2b14-0e58-bd0f41bf84a9@zytor.com>
+Date: Tue, 14 Mar 2017 10:28:17 -0700
 MIME-Version: 1.0
-In-Reply-To: <6fac05e4-26ae-e959-9af6-cb68a04a1110@vodafone.de>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
- <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
- <CAPyr0yLWiGzU5ihFcj_NmA2Vk2R7GsKqo2LK8o3Eu+Df9m7vhw@mail.gmail.com> <6fac05e4-26ae-e959-9af6-cb68a04a1110@vodafone.de>
-From: Ayyappa Ch <ayyappa.ch.linux@gmail.com>
-Date: Wed, 15 Mar 2017 16:12:35 +0530
-Message-ID: <CAPyr0yL5a0vNnsThX1L0Zf_gjnCngPhD5hdetQjnvmajGhdmEQ@mail.gmail.com>
-Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: helgaas@kernel.org, linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, platform-driver-x86@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20170302232104.10136-1-andi@firstfloor.org>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It also needs any support from VBIOS side ? I mean PCIe large bar support?
+On 03/02/17 15:21, Andi Kleen wrote:
+> From: Andi Kleen <ak@linux.intel.com>
+> 
+> The Intel uncore driver can do a lot of PCI config accesses to read
+> performance counters. I had a situation on a 4S system where it
+> was spending 40+% of CPU time grabbing the pci_cfg_lock due to that.
+> 
+> For 64bit x86 with MMCONFIG there isn't really any reason to take
+> a lock. The access is directly mapped to an underlying MMIO area,
+> which can fully operate lockless.
+> 
+> Add a new flag that allows the PCI mid layer to skip the lock
+> and set it for the 64bit mmconfig code.
+> 
+> There's a small risk that someone relies on this lock for synchronization,
+> but I think that's unlikely because there isn't really any useful
+> synchronization at this individual operation level. Any useful
+> synchronization would likely need to protect at least a
+> read-modify-write or similar.  So I made it unconditional without opt-in.
+> 
+> Signed-off-by: Andi Kleen <ak@linux.intel.com>
+> ---
+>  arch/x86/pci/mmconfig_64.c |  1 +
+>  drivers/pci/access.c       | 14 ++++++++++----
+>  include/linux/pci.h        |  2 ++
+>  3 files changed, 13 insertions(+), 4 deletions(-)
+> 
+> diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
+> index bea52496aea6..8bf10f41e626 100644
+> --- a/arch/x86/pci/mmconfig_64.c
+> +++ b/arch/x86/pci/mmconfig_64.c
+> @@ -121,6 +121,7 @@ int __init pci_mmcfg_arch_init(void)
+>  		}
+>  
+>  	raw_pci_ext_ops = &pci_mmcfg;
+> +	pci_root_ops.ll_allowed = true;
+>  
 
-Thanks,
-Ayyappa.
+"ll_allowed" is pretty awful naming... you spend almost all the
+characters telling us nothing.  I spend several seconds trying to figure
+out what "ll" stood for, and without the context of the patch I'd have
+had to go a massive grep.  Just call it "lockless" or something.
 
-On Wed, Mar 15, 2017 at 1:07 PM, Christian K=C3=B6nig
-<deathsimple@vodafone.de> wrote:
-> Carizzo is an APU and resizing BARs isn't needed nor supported there. The
-> CPU can access the full stolen VRAM directly on that hardware.
->
-> As far as I know ASICs with support for this are Tonga, Fiji and all Pola=
-ris
-> variants.
->
-> Christian.
->
->
-> Am 15.03.2017 um 08:23 schrieb Ayyappa Ch:
->>
->> Is it possible on Carrizo asics? Or only supports on newer asics?
->>
->> On Mon, Mar 13, 2017 at 6:11 PM, Christian K=C3=B6nig
->> <deathsimple@vodafone.de> wrote:
->>>
->>> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->>>
->>> Try to resize BAR0 to let CPU access all of VRAM.
->>>
->>> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
->>> ---
->>>   drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
->>>   drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 29
->>> +++++++++++++++++++++++++++++
->>>   drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 +++++---
->>>   drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 +++++---
->>>   4 files changed, 40 insertions(+), 6 deletions(-)
->>>
->>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->>> b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->>> index 3b81ded..905ded9 100644
->>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->>> @@ -1719,6 +1719,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct
->>> amdgpu_device *adev, struct ttm_tt *ttm,
->>>                                   struct ttm_mem_reg *mem);
->>>   void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_m=
-c
->>> *mc, u64 base);
->>>   void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc
->>> *mc);
->>> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
->>>   void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64
->>> size);
->>>   int amdgpu_ttm_init(struct amdgpu_device *adev);
->>>   void amdgpu_ttm_fini(struct amdgpu_device *adev);
->>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->>> b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->>> index 118f4e6..92955fe 100644
->>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->>> @@ -692,6 +692,35 @@ void amdgpu_gtt_location(struct amdgpu_device *ade=
-v,
->>> struct amdgpu_mc *mc)
->>>                          mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end=
-);
->>>   }
->>>
->>> +/**
->>> + * amdgpu_resize_bar0 - try to resize BAR0
->>> + *
->>> + * @adev: amdgpu_device pointer
->>> + *
->>> + * Try to resize BAR0 to make all VRAM CPU accessible.
->>> + */
->>> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
->>> +{
->>> +       u32 size =3D max(ilog2(adev->mc.real_vram_size - 1) + 1, 20) - =
-20;
->>> +       int r;
->>> +
->>> +       r =3D pci_resize_resource(adev->pdev, 0, size);
->>> +
->>> +       if (r =3D=3D -ENOTSUPP) {
->>> +               /* The hardware don't support the extension. */
->>> +               return;
->>> +
->>> +       } else if (r =3D=3D -ENOSPC) {
->>> +               DRM_INFO("Not enoigh PCI address space for a large
->>> BAR.");
->>> +       } else if (r) {
->>> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
->>> +       }
->>> +
->>> +       /* Reinit the doorbell mapping, it is most likely moved as well
->>> */
->>> +       amdgpu_doorbell_fini(adev);
->>> +       BUG_ON(amdgpu_doorbell_init(adev));
->>> +}
->>> +
->>>   /*
->>>    * GPU helpers function.
->>>    */
->>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->>> b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->>> index dc9b6d6..36a7aa5 100644
->>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->>> @@ -367,13 +367,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device
->>> *adev)
->>>                  break;
->>>          }
->>>          adev->mc.vram_width =3D numchan * chansize;
->>> -       /* Could aper size report 0 ? */
->>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>>          /* size in MB on si */
->>>          adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL *
->>> 1024ULL;
->>>          adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL=
- *
->>> 1024ULL;
->>>
->>> +       if (!(adev->flags & AMD_IS_APU))
->>> +               amdgpu_resize_bar0(adev);
->>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>> +
->>>   #ifdef CONFIG_X86_64
->>>          if (adev->flags & AMD_IS_APU) {
->>>                  adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)=
-) <<
->>> 22;
->>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->>> b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->>> index c087b00..7761ad3 100644
->>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->>> @@ -459,13 +459,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device
->>> *adev)
->>>                  break;
->>>          }
->>>          adev->mc.vram_width =3D numchan * chansize;
->>> -       /* Could aper size report 0 ? */
->>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>>          /* size in MB on si */
->>>          adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL *
->>> 1024ULL;
->>>          adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL=
- *
->>> 1024ULL;
->>>
->>> +       if (!(adev->flags & AMD_IS_APU))
->>> +               amdgpu_resize_bar0(adev);
->>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>> +
->>>   #ifdef CONFIG_X86_64
->>>          if (adev->flags & AMD_IS_APU) {
->>>                  adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)=
-) <<
->>> 22;
->>> --
->>> 2.7.4
->>>
->>> _______________________________________________
->>> dri-devel mailing list
->>> dri-devel@lists.freedesktop.org
->>> https://lists.freedesktop.org/mailman/listinfo/dri-devel
->
->
->
+	-hpa
