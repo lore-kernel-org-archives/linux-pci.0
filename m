@@ -1,70 +1,39 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 13/17] mn10300: Use generic pci_mmap_resource_range()
-Date: Wed, 22 Mar 2017 13:25:27 +0000
-Message-Id: <fa831bd26dbaa1220f24a427c4ad959305942e0b.1490188942.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=ZGzV=2X=ACULAB.COM=David.Laight@kernel.org>
+Return-Path: <SRS0=ZGzV=2X=ACULAB.COM=David.Laight@kernel.org>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Mason' <slash.tmp@free.fr>, Bjorn Helgaas <helgaas@kernel.org>
+CC: linux-pci <linux-pci@vger.kernel.org>, linux-usb
+	<linux-usb@vger.kernel.org>, Rob Herring <robh@kernel.org>, Arnd Bergmann
+	<arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Marc Zyngier
+	<marc.zyngier@arm.com>, Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+	Phuong Nguyen <phuong_nguyen@sigmadesigns.com>, Shawn Lin
+	<shawn.lin@rock-chips.com>, Robin Murphy <robin.murphy@arm.com>, Linux ARM
+	<linux-arm-kernel@lists.infradead.org>, Kevin Hilman <khilman@kernel.org>
+Subject: RE: Neophyte questions about PCIe
+Date: Tue, 14 Mar 2017 10:23:53 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DCFFB0422@AcuExch.aculab.com>
+References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
+ <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
+ <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
+ <9ba05c2c-57ef-b2c0-6a7c-457c392d98b5@free.fr>
+ <df517167-d692-38a8-9c8f-a1112c7f578d@free.fr>
+ <c0a353cb-aa1f-25db-eccd-7a1618e655b3@free.fr>
+ <20170313214024.GD8232@bhelgaas-glaptop.roam.corp.google.com>
+ <826d0a3f-753f-0330-5792-e11beb78d6bf@free.fr>
+In-Reply-To: <826d0a3f-753f-0330-5792-e11beb78d6bf@free.fr>
+Content-Type: text/plain; charset="iso-8859-15"
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+From: Mason
+> Sent: 13 March 2017 21:58
+...
+> I'd like to push support for this PCIe controller upstream.
+>=20
+> Is the code I posted on the right track?
+> Maybe I can post a RFC patch tomorrow?
 
-This was setting vma->vm_flags |= VM_LOCKED. Not sure why...
+I think you need to resolve the problem of config space (and IO) cycles
+before the driver can be deemed usable.
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/mn10300/include/asm/pci.h          |  1 +
- arch/mn10300/unit-asb2305/pci-asb2305.c | 24 ------------------------
- 2 files changed, 1 insertion(+), 24 deletions(-)
-
-diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
-index 082b6de..d276549 100644
---- a/arch/mn10300/include/asm/pci.h
-+++ b/arch/mn10300/include/asm/pci.h
-@@ -74,6 +74,7 @@ static inline int pci_controller_num(struct pci_dev *dev)
- }
- 
- #define HAVE_PCI_MMAP
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE
- 
- #endif /* __KERNEL__ */
- 
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
-index 4abbbd5..e0f4617 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.c
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
-@@ -210,27 +210,3 @@ void __init pcibios_resource_survey(void)
- 	pcibios_allocate_resources(0);
- 	pcibios_allocate_resources(1);
- }
--
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	unsigned long prot;
--
--	/* Leave vm_pgoff as-is, the PCI space address is the physical
--	 * address on this platform.
--	 */
--	vma->vm_flags |= VM_LOCKED;
--
--	prot = pgprot_val(vma->vm_page_prot);
--	prot &= ~_PAGE_CACHE;
--	vma->vm_page_prot = __pgprot(prot);
--
--	/* Write-combine setting is ignored */
--	if (io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			       vma->vm_end - vma->vm_start,
--			       vma->vm_page_prot))
--		return -EAGAIN;
--
--	return 0;
--}
--- 
-2.9.3
+	David
