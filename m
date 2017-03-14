@@ -1,64 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44284 "EHLO mail.kernel.org"
+Received: from mga07.intel.com ([134.134.136.100]:61938 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751159AbdCWV5p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 Mar 2017 17:57:45 -0400
-Date: Thu, 23 Mar 2017 16:57:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
-        gwshan@linux.vnet.ibm.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-        mpe@ellerman.id.au, paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: Re: [PATCH v9 2/3] PCI: Add a macro to set default alignment for all
- PCI devices
-Message-ID: <20170323215741.GA9255@bhelgaas-glaptop.roam.corp.google.com>
-References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1487141106-2503-3-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20170323205342.GB23612@bhelgaas-glaptop.roam.corp.google.com>
+        id S1751188AbdCNRDH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 14 Mar 2017 13:03:07 -0400
+Date: Tue, 14 Mar 2017 10:02:55 -0700
+From: Andi Kleen <ak@linux.intel.com>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Andi Kleen <andi@firstfloor.org>, bhelgaas@google.com,
+        x86@kernel.org, linux-pci@vger.kernel.org, eranian@google.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/4] x86, pci: Add interface to force mmconfig
+Message-ID: <20170314170255.GH32070@tassilo.jf.intel.com>
+References: <20170302232104.10136-1-andi@firstfloor.org>
+ <20170302232104.10136-3-andi@firstfloor.org>
+ <alpine.DEB.2.20.1703141407090.3619@nanos>
+ <20170314154155.GG32070@tassilo.jf.intel.com>
+ <alpine.DEB.2.20.1703141713010.3619@nanos>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170323205342.GB23612@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <alpine.DEB.2.20.1703141713010.3619@nanos>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 23, 2017 at 03:53:42PM -0500, Bjorn Helgaas wrote:
-> Hi Yongji,
+> > Or define some quirk table just for this purpose?
 > 
-> On Wed, Feb 15, 2017 at 02:45:05PM +0800, Yongji Xie wrote:
-> > When vfio passthroughs a PCI device of which MMIO BARs are
-> > smaller than PAGE_SIZE, guest will not handle the mmio
-> > accesses to the BARs which leads to mmio emulations in host.
-> > 
-> > This is because vfio will not allow to passthrough one BAR's
-> > mmio page which may be shared with other BARs. Otherwise,
-> > there will be a backdoor that guest can use to access BARs
-> > of other guest.
+> Nope. It's about identifying the bus.
+
+PCI just has no good way to identify busses.
+
 > 
-> Please include a pointer to the VFIO code that enforces this.  It's
-> not obvious to me how it would do this.  This doesn't change the
-> *size* of the resource, only the alignment.  So if VFIO sees a BAR
-> like [mem 0x80000000-0x800000ff], it knows the BAR is aligned enough
-> that it *could* be the only thing on a page, but I don't know how it
-> could know that there will never be another BAR at 0x80000100.  Even
-> if there's no other BAR on that page *now*, it would have to know that
-> no hot-added device will ever be placed on that page.
+> The bus which contains the uncore devices:
+> 
+>  The Uncore devices reside on CPUBUSNO(1), which is the PCI bus assigned
+>  for the processor socket. The bus number is derived from the max bus range
+>  setting and the processor socket number.
 
-Never mind, I found it.  I updated the changelog like this; please
-correct anything I got wrong:
+I have had bad experiences with hard coding topology like this. These
+things tend to be very configurable by BIOS.
 
-    When VFIO passes through a PCI device to a guest, it does not
-    allow the guest to mmap BARs that are smaller than PAGE_SIZE
-    unless it can reserve the rest of the page (see
-    vfio_pci_probe_mmaps()).  This is because a page might contain
-    several small BARs for unrelated devices and a guest should not be
-    able to access all of them.
+> 
+> So there should be a way to detect that and it would be appreciated if you
+> could talk to your hardware folks what's the programmatic way to figure it
+> out. 
 
-    VFIO emulates guest accesses to non-mappable BARs, which is
-    functional but slow.  On systems with large page sizes, e.g.,
-    PowerNV with 64K pages, BARs are more likely to share a page and
-    performance is more likely to be a problem.
+There's likely some hidden register somewhere. But then it would be
 
-    Add a macro to set default alignment for all PCI devices.  An arch
-    can set this to PAGE_SIZE to force the PCI core to place memory
-    BARs on their own pages.
+check model number
+look for hidden register
+configure these busses
+
+and it will likely change often.
+
+Frankly I fail to see how such a thing is better than just using
+the device ID. Perhaps the driver is not the right place for it,
+but the ID seems to be.
+
+The other option is to simply make it unconditional. That would
+be even simpler, but it is a bit more risky. Hmm, I suppose may
+be worth trying to find out what Windows uses. If they get away
+with MMCONFIG everywhere we should be too.
+
+Or the third option would be to move the ops pointer into the 
+PCI device, so it's a per device setting. If people are ok with that
+I can look into it.
+
+> Maybe there is information in ACPI as well.
+
+I don't think ACPI has any concept of "internal SOC busses"
+
+-Andi
