@@ -1,70 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from nblzone-211-213.nblnetworks.fi ([83.145.211.213]:57762 "EHLO
-        hillosipuli.retiisi.org.uk" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751258AbdCGId1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Mar 2017 03:33:27 -0500
-Date: Tue, 7 Mar 2017 10:30:17 +0200
-From: Sakari Ailus <sakari.ailus@iki.fi>
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, netdev@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
-        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, peterz@infradead.org,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-Subject: Re: [PATCH 12/29] drivers, media: convert s2255_dev.num_channels
- from atomic_t to refcount_t
-Message-ID: <20170307083016.GG3220@valkosipuli.retiisi.org.uk>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-13-git-send-email-elena.reshetova@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1488810076-3754-13-git-send-email-elena.reshetova@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=zx5Q=2X=intel.com=adrian.hunter@kernel.org>
+Return-Path: <SRS0=zx5Q=2X=intel.com=adrian.hunter@kernel.org>
+From: Adrian Hunter <adrian.hunter@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+	linux-pm <linux-pm@vger.kernel.org>,
+	linux-acpi <linux-acpi@vger.kernel.org>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Lukas Wunner <lukas@wunner.de>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] PCI: For d3_delay and d3cold_delay, zero means zero
+Date: Tue, 14 Mar 2017 15:21:58 +0200
+Message-Id: <1489497718-4099-1-git-send-email-adrian.hunter@intel.com>
+In-Reply-To: <20170314130305.GH8232@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170314130305.GH8232@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Elena,
+msleep() still sleeps 1 jiffy even when told to sleep for zero
+milliseconds. That can end up being 1-2 milliseconds or more. In the cases
+of d3_delay and d3cold_delay, that unnecessarily increases suspend and/or
+resume latencies.
 
-On Mon, Mar 06, 2017 at 04:20:59PM +0200, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
-> 
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
-> ---
-...
-> @@ -1688,7 +1689,7 @@ static int s2255_probe_v4l(struct s2255_dev *dev)
->  				"failed to register video device!\n");
->  			break;
->  		}
-> -		atomic_inc(&dev->num_channels);
-> +		refcount_set(&dev->num_channels, 1);
+So, do not sleep at all for the respective cases of d3_delay is zero or
+d3cold_delay is zero.
 
-That's not right. The loop runs four iterations and the value after the
-loop should be indeed the number of channels.
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+---
+ drivers/pci/pci.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-atomic_t isn't really used for reference counting here, but storing out how
-many "channels" there are per hardware device, with maximum number of four
-(4). I'd leave this driver using atomic_t.
-
->  		v4l2_info(&dev->v4l2_dev, "V4L2 device registered as %s\n",
->  			  video_device_node_name(&vc->vdev));
->  
-
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02ffdb9..9779483f81fd 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -66,7 +66,8 @@ static void pci_dev_d3_sleep(struct pci_dev *dev)
+ 	if (delay < pci_pm_d3_delay)
+ 		delay = pci_pm_d3_delay;
+ 
+-	msleep(delay);
++	if (delay)
++		msleep(delay);
+ }
+ 
+ #ifdef CONFIG_PCI_DOMAINS
+@@ -827,7 +828,8 @@ static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
+ 		 * because have already delayed for the bridge.
+ 		 */
+ 		if (dev->runtime_d3cold) {
+-			msleep(dev->d3cold_delay);
++			if (dev->d3cold_delay)
++				msleep(dev->d3cold_delay);
+ 			/*
+ 			 * When powering on a bridge from D3cold, the
+ 			 * whole hierarchy may be powered on into
 -- 
-Kind regards,
-
-Sakari Ailus
-e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
+1.9.1
