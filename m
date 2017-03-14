@@ -1,97 +1,50 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: RE: [PATCH V9 00/11] IOMMU probe deferral support
-Date: Fri, 24 Mar 2017 15:09:49 +0000
-Message-ID: <5FC3163CFD30C246ABAA99954A238FA81750BC12@lhreml504-mbs>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <58D49845.9060407@hisilicon.com>
- <0ea8022b-a19b-335d-6cc6-81510196f891@codeaurora.org>
- <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
- <20170324144340.GA17560@red-moon>
-In-Reply-To: <20170324144340.GA17560@red-moon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:41932 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752229AbdCNNzz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Mar 2017 09:55:55 -0400
+Date: Tue, 14 Mar 2017 14:55:30 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Andi Kleen <andi@firstfloor.org>
+cc: bhelgaas@google.com, x86@kernel.org, linux-pci@vger.kernel.org,
+        eranian@google.com, Peter Zijlstra <peterz@infradead.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Andi Kleen <ak@linux.intel.com>
+Subject: Re: [PATCH 3/4] x86, pci: Add interface to force mmconfig
+In-Reply-To: <20170302232104.10136-3-andi@firstfloor.org>
+Message-ID: <alpine.DEB.2.20.1703141407090.3619@nanos>
+References: <20170302232104.10136-1-andi@firstfloor.org> <20170302232104.10136-3-andi@firstfloor.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Sricharan R <sricharan@codeaurora.org>, "joro@8bytes.org" <joro@8bytes.org>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "Wangzhou \(B\)" <wangzhou1@hisilicon.com>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "tn@semihalf.com" <tn@semihalf.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, 2 Mar 2017, Andi Kleen wrote:
+> +struct pci_ops pci_mmconfig_ops = {
+> +	.read = pci_mmconfig_read,
+> +	.write = pci_mmconfig_write,
+> +};
+> +
+> +/* Force all config accesses to go through mmconfig. */
+> +int pci_bus_force_mmconfig(struct pci_bus *bus)
+> +{
+> +	if (!raw_pci_ext_ops)
+> +		return -1;
 
+We have error defines. That aside, the weak version of this returns 0,
+i.e. success, but here you return fail. Consistency is overrated, right?
 
-> -----Original Message-----
-> From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
-> Sent: Friday, March 24, 2017 2:44 PM
-> To: Shameerali Kolothum Thodi
-> Cc: Sricharan R; Wangzhou (B); robin.murphy@arm.com;
-> will.deacon@arm.com; joro@8bytes.org; iommu@lists.linux-foundation.org;
-> linux-arm-kernel@lists.infradead.org; linux-arm-msm@vger.kernel.org;
-> m.szyprowski@samsung.com; bhelgaas@google.com; linux-
-> pci@vger.kernel.org; linux-acpi@vger.kernel.org; tn@semihalf.com;
-> hanjun.guo@linaro.org; okaya@codeaurora.org
-> Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
-> 
-> On Fri, Mar 24, 2017 at 09:27:51AM +0000, Shameerali Kolothum Thodi wrote:
-> 
-> [...]
-> 
-> > @@ -107,7 +107,7 @@ int of_dma_configure(struct device *dev, struct
-> device_node *np)
-> >   	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
-> >   	if (ret < 0) {
-> >   		dma_addr = offset = 0;
-> >  -		size = dev->coherent_dma_mask + 1;
-> >  +		size = max(dev->coherent_dma_mask, dev-
-> >coherent_dma_mask + 1);
-> >
-> > @@ -1386,7 +1387,8 @@ int acpi_dma_configure(struct device *dev, enum
-> dev_dma_attr attr)
-> >   	 * Assume dma valid range starts at 0 and covers the whole
-> >   	 * coherent_dma_mask.
-> >   	 */
-> >  -	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1,
-> iommu,
-> >  +	size = max(dev->coherent_dma_mask, dev->coherent_dma_mask +
-> 1);
-> 
-> size is not defined in acpi_dma_configure(), so there is something missing in
-> the diff above, just to make sure we are testing the same thing.
-> 
-> Mind posting kernel logs with and without patch above (fixed) for DT boot
-> and ACPI boot please.
+> +	bus->ops = &pci_mmconfig_ops;
 
-Sure. We will rerun the tests to create the logs again and share.
+What guarantees that raw_pci_ext_ops == pci_mmcfg? Nothing as far as I can
+tell. So that function name is nonsensical. It does not force anything.
 
-Also need to double check, v9 patches are applied correctly on top of our branch.
-If I remember correctly v7 was fine with DT(didn't test with ACPI). But then as 
-Shicharan said it had that size fix.
+And the way how this function is used is a horrible hack. It's called from
+a random driver at some random point in time.
+
+The proper solution is to identify the bus at the point where the bus is
+discovered and switch it to mmconfig if possible.
 
 Thanks,
-Shameer
-[...]
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+	tglx
