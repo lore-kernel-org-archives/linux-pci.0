@@ -1,118 +1,56 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] PCI: dwc: fix crash seen due to missing ops
-To: Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <jingoohan1@gmail.com>, <kishon@ti.com>
-References: <20170321144354.15452-1-niklass@axis.com>
- <ffb1d92b-a637-2ed9-51d3-6b9fbb790635@synopsys.com>
-CC: <linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <744bf393-4fd8-5e64-423f-f9a033d61106@axis.com>
-Date: Thu, 23 Mar 2017 08:40:25 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:43305 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750796AbdCNQlF (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Mar 2017 12:41:05 -0400
+Date: Tue, 14 Mar 2017 17:40:49 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Andi Kleen <ak@linux.intel.com>
+cc: Andi Kleen <andi@firstfloor.org>, bhelgaas@google.com,
+        x86@kernel.org, linux-pci@vger.kernel.org, eranian@google.com,
+        Peter Zijlstra <peterz@infradead.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/4] x86, pci: Add interface to force mmconfig
+In-Reply-To: <20170314154155.GG32070@tassilo.jf.intel.com>
+Message-ID: <alpine.DEB.2.20.1703141713010.3619@nanos>
+References: <20170302232104.10136-1-andi@firstfloor.org> <20170302232104.10136-3-andi@firstfloor.org> <alpine.DEB.2.20.1703141407090.3619@nanos> <20170314154155.GG32070@tassilo.jf.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <ffb1d92b-a637-2ed9-51d3-6b9fbb790635@synopsys.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/22/2017 04:47 PM, Joao Pinto wrote:
-> Hi Niklas,
->
-> Às 2:43 PM de 3/21/2017, Niklas Cassel escreveu:
->> From: Niklas Cassel <niklas.cassel@axis.com>
->>
->> Fix the following crash, seen in dwc/pcie-artpec6.
->>
->>   Unable to handle kernel NULL pointer dereference at virtual address 00000004
->>   pgd = c0204000
->>   [00000004] *pgd=00000000
->>   Internal error: Oops: 5 [#1] SMP ARM
->>   Modules linked in:
->>   CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.11.0-rc3-next-20170321 #1
->>   Hardware name: Axis ARTPEC-6 Platform
->>   task: db098000 task.stack: db096000
->>   PC is at dw_pcie_writel_dbi+0x2c/0xd0
->>   ...
->>
->> While at it, fix the same problem for pcie-designware-plat.
->>
->> Fixes: 442ec4c04d12 ("PCI: dwc: all: Split struct pcie_port into host-only and core structures")
->> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
->> ---
->>  drivers/pci/dwc/pcie-artpec6.c         | 4 ++++
->>  drivers/pci/dwc/pcie-designware-plat.c | 4 ++++
->>  2 files changed, 8 insertions(+)
->>
->> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
->> index fcd3ef845883..6d23683c0892 100644
->> --- a/drivers/pci/dwc/pcie-artpec6.c
->> +++ b/drivers/pci/dwc/pcie-artpec6.c
->> @@ -234,6 +234,9 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
->>  	return 0;
->>  }
->>  
->> +static const struct dw_pcie_ops dw_pcie_ops = {
->> +};
->> +
->>  static int artpec6_pcie_probe(struct platform_device *pdev)
->>  {
->>  	struct device *dev = &pdev->dev;
->> @@ -252,6 +255,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
->>  		return -ENOMEM;
->>  
->>  	pci->dev = dev;
->> +	pci->ops = &dw_pcie_ops;
->>  
->>  	artpec6_pcie->pci = pci;
->>  
->> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
->> index b6c832ba39dd..f20d494922ab 100644
->> --- a/drivers/pci/dwc/pcie-designware-plat.c
->> +++ b/drivers/pci/dwc/pcie-designware-plat.c
->> @@ -86,6 +86,9 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
->>  	return 0;
->>  }
->>  
->> +static const struct dw_pcie_ops dw_pcie_ops = {
->> +};
->> +
->>  static int dw_plat_pcie_probe(struct platform_device *pdev)
->>  {
->>  	struct device *dev = &pdev->dev;
->> @@ -103,6 +106,7 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
->>  		return -ENOMEM;
->>  
->>  	pci->dev = dev;
->> +	pci->ops = &dw_pcie_ops;
->>  
->>  	dw_plat_pcie->pci = pci;
->>  
->>
-> In the case of pcie-designware-plat you have the declaration of pci->ops:
-> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/tree/drivers/pci/dwc/pcie-designware-plat.c#n78
->
-> and in artpec6 in here:
-> https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git/tree/drivers/pci/dwc/pcie-artpec6.c#n226
->
-> Both declarations are made previously of calling dw_pcie_host_init(), so why do
-> you need this dummy ops in the probe function? I never had that necessity.
+On Tue, 14 Mar 2017, Andi Kleen wrote:
 
-Hello Joao
+> > And the way how this function is used is a horrible hack. It's called from
+> > a random driver at some random point in time.
+> > 
+> > The proper solution is to identify the bus at the point where the bus is
+> > discovered and switch it to mmconfig if possible.
+> 
+> But how would you know that it is safe?
+> AFAIK the only one who knows "this is an internal SOC device" is the driver.
 
-Since commit 442ec4c04d12, we now have two different ops,
-dw_pcie_ops (ops for dw_pcie) and dw_pcie_host_ops (ops for a pcie_port),
-note that they are different. The dw_pcie_ops is missing for pcie-artpec6
-and pcie-designware-plat (since we are using the generic link-up function).
+The driver handles a specific device, but you apply that tweak to the bus
+of which the device hangs off.
 
-Before commit 442ec4c04d12, dw_pcie_writel_dbi had dw_pcie_host_ops as
-parameter, after the commit it has dw_pcie_ops as parameter.
-It should crash on pcie-designware-plat as well, since there are other
-functions, like dw_pcie_link_up, that assumes that pci->ops != null.
+> Or are you saying it should be enabled unconditionally for everything?
 
-Another alternative to adding the dummy ops would be to add null checks
-for all uses off pci->ops in pcie-designware.c.
-I don't like the idea to sprinkle null checks everywhere pci->ops is used.
+No.
 
-One could add a null check in dw_pcie_host_init, but without a dummy ops
-we would still fail this check, so our drivers would still be non-functional
-in Linus's tree.
+> Or define some quirk table just for this purpose?
+
+Nope. It's about identifying the bus.
+
+The bus which contains the uncore devices:
+
+ The Uncore devices reside on CPUBUSNO(1), which is the PCI bus assigned
+ for the processor socket. The bus number is derived from the max bus range
+ setting and the processor socket number.
+
+So there should be a way to detect that and it would be appreciated if you
+could talk to your hardware folks what's the programmatic way to figure it
+out. Maybe there is information in ACPI as well.
+
+Thanks,
+
+	tglx
