@@ -1,17 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v3 17/23] misc: Add host side pci driver for pci test function
- device
-Date: Thu, 9 Mar 2017 13:27:28 +0530
-Message-ID: <1489046254-19919-18-git-send-email-kishon@ti.com>
-In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
-References: <1489046254-19919-1-git-send-email-kishon@ti.com>
+Date: Tue, 14 Mar 2017 12:27:31 +0800
+From: kbuild test robot <lkp@intel.com>
+To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Subject: Re: [PATCH V7 6/7] LIBIO: Support the dynamically logical PIO
+ registration of ACPI host I/O
+Message-ID: <201703141216.LokXDKIS%fengguang.wu@intel.com>
 MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="cNdxnHkX5QqsyA0e"
+In-Reply-To: <1489372963-9000-7-git-send-email-yuanzhichang@hisilicon.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,640 +16,243 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
+Cc: mark.rutland@arm.com, benh@kernel.crashing.org, gabriele.paoloni@huawei.com,
+ rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com,
+ linuxarm@huawei.com, frowand.list@gmail.com, lorenzo.pieralisi@arm.com,
+ arnd@arndb.de, xuwei5@hisilicon.com, linux-acpi@vger.kernel.org,
+ linux-serial@vger.kernel.org, catalin.marinas@arm.com,
+ devicetree@vger.kernel.org, minyard@acm.org, liviu.dudau@arm.com,
+ john.garry@huawei.com, robh+dt@kernel.org, bhelgaas@google.com,
+ kantyzc@163.com, zhichang.yuan02@gmail.com,
+ linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
+ linux-kernel@vger.kernel.org, "zhichang.yuan" <yuanzhichang@hisilicon.com>,
+ kbuild-all@01.org, zourongrong@gmail.com
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add PCI endpoint test driver that can verify base address
-register, legacy interrupt/MSI interrupt and read/write/copy
-buffers between host and device. The corresponding pci-epf-test
-function driver should be used on the EP side.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+--cNdxnHkX5QqsyA0e
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Hi zhichang.yuan,
+
+[auto build test ERROR on linus/master]
+[also build test ERROR on v4.11-rc2 next-20170310]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+
+url:    https://github.com/0day-ci/linux/commits/zhichang-yuan/LPC-legacy-ISA-I-O-support/20170314-114635
+config: i386-tinyconfig (attached as .config)
+compiler: gcc-6 (Debian 6.2.0-3) 6.2.0 20160901
+reproduce:
+        # save the attached .config to linux build tree
+        make ARCH=i386 
+
+All errors (new ones prefixed by >>):
+
+   In file included from arch/x86/boot/compressed/misc.h:24:0,
+                    from arch/x86/boot/compressed/cmdline.c:1:
+>> arch/x86/boot/compressed/../ctype.h:4:19: error: redefinition of 'isdigit'
+    static inline int isdigit(int ch)
+                      ^~~~~~~
+   In file included from include/acpi/platform/aclinux.h:82:0,
+                    from include/acpi/platform/acenv.h:186,
+                    from include/acpi/acpi.h:56,
+                    from include/linux/acpi.h:33,
+                    from include/linux/libio.h:23,
+                    from include/linux/io.h:27,
+                    from arch/x86/boot/compressed/misc.h:17,
+                    from arch/x86/boot/compressed/cmdline.c:1:
+   include/linux/ctype.h:25:19: note: previous definition of 'isdigit' was here
+    static inline int isdigit(int c)
+                      ^~~~~~~
+>> arch/x86/boot/compressed/../ctype.h:9:32: error: expected ')' before 'ch'
+    static inline int isxdigit(int ch)
+                                   ^
+   include/linux/ctype.h:20:50: note: in definition of macro '__ismask'
+    #define __ismask(x) (_ctype[(int)(unsigned char)(x)])
+                                                     ^
+   arch/x86/boot/compressed/../ctype.h:9:19: note: in expansion of macro 'isxdigit'
+    static inline int isxdigit(int ch)
+                      ^~~~~~~~
+   include/linux/ctype.h:20:52: error: expected expression before ']' token
+    #define __ismask(x) (_ctype[(int)(unsigned char)(x)])
+                                                       ^
+   include/linux/ctype.h:36:23: note: in expansion of macro '__ismask'
+    #define isxdigit(c) ((__ismask(c)&(_D|_X)) != 0)
+                          ^~~~~~~~
+   arch/x86/boot/compressed/../ctype.h:9:19: note: in expansion of macro 'isxdigit'
+    static inline int isxdigit(int ch)
+                      ^~~~~~~~
+   include/linux/ctype.h:36:44: error: expected ')' before '!=' token
+    #define isxdigit(c) ((__ismask(c)&(_D|_X)) != 0)
+                                               ^
+   arch/x86/boot/compressed/../ctype.h:9:19: note: in expansion of macro 'isxdigit'
+    static inline int isxdigit(int ch)
+                      ^~~~~~~~
+
+vim +/isdigit +4 arch/x86/boot/compressed/../ctype.h
+
+60b217a0 arch/x86/boot/ctype.h   Alexander Kuleshov 2015-01-03   1  #ifndef BOOT_CTYPE_H
+60b217a0 arch/x86/boot/ctype.h   Alexander Kuleshov 2015-01-03   2  #define BOOT_CTYPE_H
+f4ed2877 arch/x86/boot/isdigit.h Yinghai Lu         2010-08-02   3  
+f4ed2877 arch/x86/boot/isdigit.h Yinghai Lu         2010-08-02  @4  static inline int isdigit(int ch)
+f4ed2877 arch/x86/boot/isdigit.h Yinghai Lu         2010-08-02   5  {
+f4ed2877 arch/x86/boot/isdigit.h Yinghai Lu         2010-08-02   6  	return (ch >= '0') && (ch <= '9');
+f4ed2877 arch/x86/boot/isdigit.h Yinghai Lu         2010-08-02   7  }
+f4ed2877 arch/x86/boot/isdigit.h Yinghai Lu         2010-08-02   8  
+f4ed2877 arch/x86/boot/isdigit.h Yinghai Lu         2010-08-02  @9  static inline int isxdigit(int ch)
+f4ed2877 arch/x86/boot/isdigit.h Yinghai Lu         2010-08-02  10  {
+f4ed2877 arch/x86/boot/isdigit.h Yinghai Lu         2010-08-02  11  	if (isdigit(ch))
+f4ed2877 arch/x86/boot/isdigit.h Yinghai Lu         2010-08-02  12  		return true;
+
+:::::: The code at line 4 was first introduced by commit
+:::::: f4ed2877b16e8146427306aea8819adac5c88374 x86, setup: reorganize the early console setup
+
+:::::: TO: Yinghai Lu <yinghai@kernel.org>
+:::::: CC: H. Peter Anvin <hpa@linux.intel.com>
+
 ---
- drivers/misc/Kconfig             |    7 +
- drivers/misc/Makefile            |    1 +
- drivers/misc/pci_endpoint_test.c |  534 ++++++++++++++++++++++++++++++++++++++
- include/uapi/linux/Kbuild        |    1 +
- include/uapi/linux/pcitest.h     |   19 ++
- 5 files changed, 562 insertions(+)
- create mode 100644 drivers/misc/pci_endpoint_test.c
- create mode 100644 include/uapi/linux/pcitest.h
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index c290990..15ac29d 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -771,6 +771,13 @@ config PANEL_BOOT_MESSAGE
- 
- endif # PANEL
- 
-+config PCI_ENDPOINT_TEST
-+	depends on PCI || COMPILE_TEST
-+	tristate "PCI Endpoint Test driver"
-+	---help---
-+           Enable this configuration option to enable the host side test driver
-+           for PCI Endpoint.
-+
- source "drivers/misc/c2port/Kconfig"
- source "drivers/misc/eeprom/Kconfig"
- source "drivers/misc/cb710/Kconfig"
-diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index 7a3ea89..6e139cd 100644
---- a/drivers/misc/Makefile
-+++ b/drivers/misc/Makefile
-@@ -54,6 +54,7 @@ obj-$(CONFIG_ECHO)		+= echo/
- obj-$(CONFIG_VEXPRESS_SYSCFG)	+= vexpress-syscfg.o
- obj-$(CONFIG_CXL_BASE)		+= cxl/
- obj-$(CONFIG_PANEL)             += panel.o
-+obj-$(CONFIG_PCI_ENDPOINT_TEST)	+= pci_endpoint_test.o
- 
- lkdtm-$(CONFIG_LKDTM)		+= lkdtm_core.o
- lkdtm-$(CONFIG_LKDTM)		+= lkdtm_bugs.o
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-new file mode 100644
-index 0000000..5f4f8f8
---- /dev/null
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -0,0 +1,534 @@
-+/**
-+ * Host side test driver to test endpoint functionality
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <linux/crc32.h>
-+#include <linux/delay.h>
-+#include <linux/fs.h>
-+#include <linux/io.h>
-+#include <linux/interrupt.h>
-+#include <linux/irq.h>
-+#include <linux/miscdevice.h>
-+#include <linux/module.h>
-+#include <linux/mutex.h>
-+#include <linux/random.h>
-+#include <linux/slab.h>
-+#include <linux/pci.h>
-+#include <linux/pci_ids.h>
-+
-+#include <linux/pci_regs.h>
-+
-+#include <uapi/linux/pcitest.h>
-+
-+#define DRV_MODULE_NAME			"pci-endpoint-test"
-+
-+#define PCI_ENDPOINT_TEST_MAGIC		0x0
-+
-+#define PCI_ENDPOINT_TEST_COMMAND	0x4
-+#define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
-+#define COMMAND_RAISE_MSI_IRQ		BIT(1)
-+#define MSI_NUMBER_SHIFT		2
-+/* 6 bits for MSI number */
-+#define COMMAND_READ                    BIT(8)
-+#define COMMAND_WRITE                   BIT(9)
-+#define COMMAND_COPY                    BIT(10)
-+
-+#define PCI_ENDPOINT_TEST_STATUS	0x8
-+#define STATUS_READ_SUCCESS             BIT(0)
-+#define STATUS_READ_FAIL                BIT(1)
-+#define STATUS_WRITE_SUCCESS            BIT(2)
-+#define STATUS_WRITE_FAIL               BIT(3)
-+#define STATUS_COPY_SUCCESS             BIT(4)
-+#define STATUS_COPY_FAIL                BIT(5)
-+#define STATUS_IRQ_RAISED               BIT(6)
-+#define STATUS_SRC_ADDR_INVALID         BIT(7)
-+#define STATUS_DST_ADDR_INVALID         BIT(8)
-+
-+#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0xc
-+#define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
-+
-+#define PCI_ENDPOINT_TEST_LOWER_DST_ADDR	0x14
-+#define PCI_ENDPOINT_TEST_UPPER_DST_ADDR	0x18
-+
-+#define PCI_ENDPOINT_TEST_SIZE		0x1c
-+#define PCI_ENDPOINT_TEST_CHECKSUM	0x20
-+
-+static DEFINE_IDA(pci_endpoint_test_ida);
-+
-+#define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
-+					    miscdev)
-+enum pci_barno {
-+	BAR_0,
-+	BAR_1,
-+	BAR_2,
-+	BAR_3,
-+	BAR_4,
-+	BAR_5,
-+};
-+
-+struct pci_endpoint_test {
-+	struct pci_dev	*pdev;
-+	void __iomem	*base;
-+	void __iomem	*bar[6];
-+	struct completion irq_raised;
-+	int		last_irq;
-+	/* mutex to protect the ioctls */
-+	struct mutex	mutex;
-+	struct miscdevice miscdev;
-+};
-+
-+static int bar_size[] = { 4, 512, 1024, 16384, 131072, 1048576 };
-+
-+static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
-+					  u32 offset)
-+{
-+	return readl(test->base + offset);
-+}
-+
-+static inline void pci_endpoint_test_writel(struct pci_endpoint_test *test,
-+					    u32 offset, u32 value)
-+{
-+	writel(value, test->base + offset);
-+}
-+
-+static inline u32 pci_endpoint_test_bar_readl(struct pci_endpoint_test *test,
-+					      int bar, int offset)
-+{
-+	return readl(test->bar[bar] + offset);
-+}
-+
-+static inline void pci_endpoint_test_bar_writel(struct pci_endpoint_test *test,
-+						int bar, u32 offset, u32 value)
-+{
-+	writel(value, test->bar[bar] + offset);
-+}
-+
-+static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
-+{
-+	struct pci_endpoint_test *test = dev_id;
-+	u32 reg;
-+
-+	reg = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
-+	if (reg & STATUS_IRQ_RAISED) {
-+		test->last_irq = irq;
-+		complete(&test->irq_raised);
-+		reg &= ~STATUS_IRQ_RAISED;
-+	}
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_STATUS,
-+				 reg);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
-+				  enum pci_barno barno)
-+{
-+	int j;
-+	u32 val;
-+	int size;
-+
-+	if (!test->bar[barno])
-+		return false;
-+
-+	size = bar_size[barno];
-+
-+	for (j = 0; j < size; j += 4)
-+		pci_endpoint_test_bar_writel(test, barno, j, 0xA0A0A0A0);
-+
-+	for (j = 0; j < size; j += 4) {
-+		val = pci_endpoint_test_bar_readl(test, barno, j);
-+		if (val != 0xA0A0A0A0)
-+			return false;
-+	}
-+
-+	return true;
-+}
-+
-+static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
-+{
-+	u32 val;
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-+				 COMMAND_RAISE_LEGACY_IRQ);
-+	val = wait_for_completion_timeout(&test->irq_raised,
-+					  msecs_to_jiffies(1000));
-+	if (!val)
-+		return false;
-+
-+	return true;
-+}
-+
-+static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
-+				      u8 msi_num)
-+{
-+	u32 val;
-+	struct pci_dev *pdev = test->pdev;
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-+				 msi_num << MSI_NUMBER_SHIFT |
-+				 COMMAND_RAISE_MSI_IRQ);
-+	val = wait_for_completion_timeout(&test->irq_raised,
-+					  msecs_to_jiffies(1000));
-+	if (!val)
-+		return false;
-+
-+	if (test->last_irq - pdev->irq == msi_num - 1)
-+		return true;
-+
-+	return false;
-+}
-+
-+static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
-+{
-+	bool ret = false;
-+	void *src_addr;
-+	void *dst_addr;
-+	dma_addr_t src_phys_addr;
-+	dma_addr_t dst_phys_addr;
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+	u32 src_crc32;
-+	u32 dst_crc32;
-+
-+	src_addr = dma_alloc_coherent(dev, size, &src_phys_addr, GFP_KERNEL);
-+	if (!src_addr) {
-+		dev_err(dev, "failed to allocate source buffer\n");
-+		ret = false;
-+		goto err;
-+	}
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_SRC_ADDR,
-+				 lower_32_bits(src_phys_addr));
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_SRC_ADDR,
-+				 upper_32_bits(src_phys_addr));
-+
-+	get_random_bytes(src_addr, size);
-+	src_crc32 = crc32_le(~0, src_addr, size);
-+
-+	dst_addr = dma_alloc_coherent(dev, size, &dst_phys_addr, GFP_KERNEL);
-+	if (!dst_addr) {
-+		dev_err(dev, "failed to allocate destination address\n");
-+		ret = false;
-+		goto err_src_addr;
-+	}
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_DST_ADDR,
-+				 lower_32_bits(dst_phys_addr));
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_DST_ADDR,
-+				 upper_32_bits(dst_phys_addr));
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
-+				 size);
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-+				 1 << MSI_NUMBER_SHIFT | COMMAND_COPY);
-+
-+	wait_for_completion(&test->irq_raised);
-+
-+	dst_crc32 = crc32_le(~0, dst_addr, size);
-+	if (dst_crc32 == src_crc32)
-+		ret = true;
-+
-+	dma_free_coherent(dev, size, dst_addr, dst_phys_addr);
-+
-+err_src_addr:
-+	dma_free_coherent(dev, size, src_addr, src_phys_addr);
-+
-+err:
-+	return ret;
-+}
-+
-+static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
-+{
-+	bool ret = false;
-+	u32 reg;
-+	void *addr;
-+	dma_addr_t phys_addr;
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+	u32 crc32;
-+
-+	addr = dma_alloc_coherent(dev, size, &phys_addr, GFP_KERNEL);
-+	if (!addr) {
-+		dev_err(dev, "failed to allocate address\n");
-+		ret = false;
-+		goto err;
-+	}
-+
-+	get_random_bytes(addr, size);
-+
-+	crc32 = crc32_le(~0, addr, size);
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_CHECKSUM,
-+				 crc32);
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_SRC_ADDR,
-+				 lower_32_bits(phys_addr));
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_SRC_ADDR,
-+				 upper_32_bits(phys_addr));
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-+				 1 << MSI_NUMBER_SHIFT | COMMAND_READ);
-+
-+	wait_for_completion(&test->irq_raised);
-+
-+	reg = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
-+	if (reg & STATUS_READ_SUCCESS)
-+		ret = true;
-+
-+	dma_free_coherent(dev, size, addr, phys_addr);
-+
-+err:
-+	return ret;
-+}
-+
-+static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
-+{
-+	bool ret = false;
-+	void *addr;
-+	dma_addr_t phys_addr;
-+	struct pci_dev *pdev = test->pdev;
-+	struct device *dev = &pdev->dev;
-+	u32 crc32;
-+
-+	addr = dma_alloc_coherent(dev, size, &phys_addr, GFP_KERNEL);
-+	if (!addr) {
-+		dev_err(dev, "failed to allocate destination address\n");
-+		ret = false;
-+		goto err;
-+	}
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_DST_ADDR,
-+				 lower_32_bits(phys_addr));
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_DST_ADDR,
-+				 upper_32_bits(phys_addr));
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
-+
-+	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
-+				 1 << MSI_NUMBER_SHIFT | COMMAND_WRITE);
-+
-+	wait_for_completion(&test->irq_raised);
-+
-+	crc32 = crc32_le(~0, addr, size);
-+	if (crc32 == pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_CHECKSUM))
-+		ret = true;
-+
-+	dma_free_coherent(dev, size, addr, phys_addr);
-+err:
-+	return ret;
-+}
-+
-+static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
-+				    unsigned long arg)
-+{
-+	int ret = -EINVAL;
-+	enum pci_barno bar;
-+	struct pci_endpoint_test *test = to_endpoint_test(file->private_data);
-+
-+	mutex_lock(&test->mutex);
-+	switch (cmd) {
-+	case PCITEST_BAR:
-+		bar = arg;
-+		if (bar < 0 || bar > 5)
-+			goto ret;
-+		ret = pci_endpoint_test_bar(test, bar);
-+		break;
-+	case PCITEST_LEGACY_IRQ:
-+		ret = pci_endpoint_test_legacy_irq(test);
-+		break;
-+	case PCITEST_MSI:
-+		ret = pci_endpoint_test_msi_irq(test, arg);
-+		break;
-+	case PCITEST_WRITE:
-+		ret = pci_endpoint_test_write(test, arg);
-+		break;
-+	case PCITEST_READ:
-+		ret = pci_endpoint_test_read(test, arg);
-+		break;
-+	case PCITEST_COPY:
-+		ret = pci_endpoint_test_copy(test, arg);
-+		break;
-+	}
-+
-+ret:
-+	mutex_unlock(&test->mutex);
-+	return ret;
-+}
-+
-+static const struct file_operations pci_endpoint_test_fops = {
-+	.owner = THIS_MODULE,
-+	.unlocked_ioctl = pci_endpoint_test_ioctl,
-+};
-+
-+static int pci_endpoint_test_probe(struct pci_dev *pdev,
-+				   const struct pci_device_id *ent)
-+{
-+	int i;
-+	int err;
-+	int irq;
-+	int id;
-+	char name[20];
-+	enum pci_barno bar;
-+	void __iomem *base;
-+	struct device *dev = &pdev->dev;
-+	struct pci_endpoint_test *test;
-+	struct miscdevice *misc_device;
-+
-+	if (pci_is_bridge(pdev))
-+		return -ENODEV;
-+
-+	test = devm_kzalloc(dev, sizeof(*test), GFP_KERNEL);
-+	if (!test)
-+		return -ENOMEM;
-+
-+	test->pdev = pdev;
-+	init_completion(&test->irq_raised);
-+	mutex_init(&test->mutex);
-+
-+	err = pci_enable_device(pdev);
-+	if (err) {
-+		dev_err(dev, "Cannot enable PCI device\n");
-+		return err;
-+	}
-+
-+	err = pci_request_regions(pdev, DRV_MODULE_NAME);
-+	if (err) {
-+		dev_err(dev, "Cannot obtain PCI resources\n");
-+		goto err_disable_pdev;
-+	}
-+
-+	pci_set_master(pdev);
-+
-+	irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
-+	if (irq < 0)
-+		dev_err(dev, "failed to get MSI interrupts\n");
-+
-+	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
-+			       IRQF_SHARED, DRV_MODULE_NAME, test);
-+	if (err) {
-+		dev_err(dev, "failed to request irq\n");
-+		goto err_disable_msi;
-+	}
-+
-+	for (i = 1; i < irq; i++) {
-+		err = devm_request_irq(dev, pdev->irq + i,
-+				       pci_endpoint_test_irqhandler,
-+				       IRQF_SHARED, DRV_MODULE_NAME, test);
-+		if (err)
-+			dev_err(dev, "failed to request irq for MSI %d\n",
-+				i + 1);
-+	}
-+
-+	for (bar = BAR_0; bar <= BAR_5; bar++) {
-+		base = pci_ioremap_bar(pdev, bar);
-+		if (!base) {
-+			dev_err(dev, "failed to read BAR%d\n", bar);
-+			WARN_ON(bar == BAR_0);
-+		}
-+		test->bar[bar] = base;
-+	}
-+
-+	test->base = test->bar[0];
-+	if (!test->base) {
-+		dev_err(dev, "Cannot perform PCI test without BAR0\n");
-+		goto err_iounmap;
-+	}
-+
-+	pci_set_drvdata(pdev, test);
-+
-+	id = ida_simple_get(&pci_endpoint_test_ida, 0, 0, GFP_KERNEL);
-+	if (id < 0) {
-+		dev_err(dev, "unable to get id\n");
-+		goto err_iounmap;
-+	}
-+
-+	snprintf(name, sizeof(name), DRV_MODULE_NAME ".%d", id);
-+	misc_device = &test->miscdev;
-+	misc_device->minor = MISC_DYNAMIC_MINOR;
-+	misc_device->name = name;
-+	misc_device->fops = &pci_endpoint_test_fops,
-+
-+	err = misc_register(misc_device);
-+	if (err) {
-+		dev_err(dev, "failed to register device\n");
-+		goto err_ida_remove;
-+	}
-+
-+	return 0;
-+
-+err_ida_remove:
-+	ida_simple_remove(&pci_endpoint_test_ida, id);
-+
-+err_iounmap:
-+	for (bar = BAR_0; bar <= BAR_5; bar++) {
-+		if (test->bar[bar])
-+			pci_iounmap(pdev, test->bar[bar]);
-+	}
-+
-+err_disable_msi:
-+	pci_disable_msi(pdev);
-+	pci_release_regions(pdev);
-+
-+err_disable_pdev:
-+	pci_disable_device(pdev);
-+
-+	return err;
-+}
-+
-+static void pci_endpoint_test_remove(struct pci_dev *pdev)
-+{
-+	int id;
-+	enum pci_barno bar;
-+	struct pci_endpoint_test *test = pci_get_drvdata(pdev);
-+	struct miscdevice *misc_device = &test->miscdev;
-+
-+	if (sscanf(misc_device->name, DRV_MODULE_NAME ".%d", &id) != 1)
-+		return;
-+
-+	misc_deregister(&test->miscdev);
-+	ida_simple_remove(&pci_endpoint_test_ida, id);
-+	for (bar = BAR_0; bar <= BAR_5; bar++) {
-+		if (test->bar[bar])
-+			pci_iounmap(pdev, test->bar[bar]);
-+	}
-+	pci_disable_msi(pdev);
-+	pci_release_regions(pdev);
-+	pci_disable_device(pdev);
-+}
-+
-+static const struct pci_device_id pci_endpoint_test_tbl[] = {
-+	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
-+	{ }
-+};
-+MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
-+
-+static struct pci_driver pci_endpoint_test_driver = {
-+	.name		= DRV_MODULE_NAME,
-+	.id_table	= pci_endpoint_test_tbl,
-+	.probe		= pci_endpoint_test_probe,
-+	.remove		= pci_endpoint_test_remove,
-+};
-+module_pci_driver(pci_endpoint_test_driver);
-+
-+MODULE_DESCRIPTION("PCI ENDPOINT TEST HOST DRIVER");
-+MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
-+MODULE_LICENSE("GPL v2");
-diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
-index dd9820b..baee6db 100644
---- a/include/uapi/linux/Kbuild
-+++ b/include/uapi/linux/Kbuild
-@@ -333,6 +333,7 @@ header-y += parport.h
- header-y += patchkey.h
- header-y += pci.h
- header-y += pci_regs.h
-+header-y += pcitest.h
- header-y += perf_event.h
- header-y += personality.h
- header-y += pfkeyv2.h
-diff --git a/include/uapi/linux/pcitest.h b/include/uapi/linux/pcitest.h
-new file mode 100644
-index 0000000..a6aa10c
---- /dev/null
-+++ b/include/uapi/linux/pcitest.h
-@@ -0,0 +1,19 @@
-+/**
-+ * pcitest.h - PCI test uapi defines
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ */
-+
-+#ifndef __UAPI_LINUX_PCITEST_H
-+#define __UAPI_LINUX_PCITEST_H
-+
-+#define PCITEST_BAR		_IO('P', 0x1)
-+#define PCITEST_LEGACY_IRQ	_IO('P', 0x2)
-+#define PCITEST_MSI		_IOW('P', 0x3, int)
-+#define PCITEST_WRITE		_IOW('P', 0x4, unsigned long)
-+#define PCITEST_READ		_IOW('P', 0x5, unsigned long)
-+#define PCITEST_COPY		_IOW('P', 0x6, unsigned long)
-+
-+#endif /* __UAPI_LINUX_PCITEST_H */
--- 
-1.7.9.5
+--cNdxnHkX5QqsyA0e
+Content-Type: application/gzip
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
 
+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
+
+--cNdxnHkX5QqsyA0e
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 linux-arm-kernel mailing list
 linux-arm-kernel@lists.infradead.org
 http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+--cNdxnHkX5QqsyA0e--
