@@ -1,119 +1,72 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v6 3/4] PCI: imx6: Do not switch speed if Gen2 is disabled
-Date: Tue, 14 Mar 2017 08:18:26 -0700
-Message-Id: <20170314151827.31248-4-andrew.smirnov@gmail.com>
-In-Reply-To: <20170314151827.31248-1-andrew.smirnov@gmail.com>
-References: <20170314151827.31248-1-andrew.smirnov@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, linux-kernel@vger.kernel.org,
- Fabio Estevam <fabio.estevam@nxp.com>, Bjorn Helgaas <bhelgaas@google.com>,
- yurovsky@gmail.com, linux-arm-kernel@lists.infradead.org,
- Lucas Stach <l.stach@pengutronix.de>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 14 Mar 2017 06:37:20 +0100 (CET)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+cc: catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
+        frowand.list@gmail.com, bhelgaas@google.com, rafael@kernel.org,
+        mark.rutland@arm.com, rjw@rjwysocki.net, arnd@arndb.de,
+        linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
+        lorenzo.pieralisi@arm.com, benh@kernel.crashing.org,
+        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-serial@vger.kernel.org, minyard@acm.org, liviu.dudau@arm.com,
+        zourongrong@gmail.com, john.garry@huawei.com,
+        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
+        kantyzc@163.com, xuwei5@hisilicon.com,
+        "zhichang.yuan" <yuanzhichang@hisilicon.com>, kbuild-all@01.org
+Subject: Re: [PATCH V7 4/7] LPC: Support the device-tree LPC host on Hip06/Hip07
+ (fwd)
+Message-ID: <alpine.DEB.2.20.1703140635090.3516@hadrien>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save a bit of time and avoid going through link speed change procedure
-in configuration where link max speed is limited to Gen1 in DT.
+Line 460 looks suspicious.  Can tmprange be different than range but not
+be an ERR_PTR?  If so, lpcdev->io_host will have an invalid value.
 
-Cc: yurovsky@gmail.com
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+julia
+
+---------- Forwarded message ----------
+Date: Tue, 14 Mar 2017 13:12:05 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: kbuild@01.org
+Cc: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH V7 4/7] LPC: Support the device-tree LPC host on Hip06/Hip07
+
+Hi zhichang.yuan,
+
+[auto build test WARNING on linus/master]
+[also build test WARNING on v4.11-rc2 next-20170310]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+
+url:    https://github.com/0day-ci/linux/commits/zhichang-yuan/LPC-legacy-ISA-I-O-support/20170314-114635
+:::::: branch date: 85 minutes ago
+:::::: commit date: 85 minutes ago
+
+>> drivers/bus/hisi_lpc.c:465:19-24: ERROR: reference preceded by free on line 460
+
+git remote add linux-review https://github.com/0day-ci/linux
+git remote update linux-review
+git checkout 4e05ad6c3274fa75c903c7809ef0b51329a31ab2
+vim +465 drivers/bus/hisi_lpc.c
+
+4e05ad6c zhichang.yuan 2017-03-13  454  	range->flags = IO_HOST_INDIRECT;
+4e05ad6c zhichang.yuan 2017-03-13  455  	range->size = LPC_BUS_IO_SIZE;
+4e05ad6c zhichang.yuan 2017-03-13  456  	range->hw_start = LPC_MIN_BUS_RANGE;
+4e05ad6c zhichang.yuan 2017-03-13  457
+4e05ad6c zhichang.yuan 2017-03-13  458  	tmprange = register_libio_range(range);
+4e05ad6c zhichang.yuan 2017-03-13  459  	if (tmprange != range) {
+4e05ad6c zhichang.yuan 2017-03-13 @460  		kfree(range);
+4e05ad6c zhichang.yuan 2017-03-13  461  		if (IS_ERR(tmprange))
+4e05ad6c zhichang.yuan 2017-03-13  462  			return -EFAULT;
+4e05ad6c zhichang.yuan 2017-03-13  463  	}
+4e05ad6c zhichang.yuan 2017-03-13  464
+4e05ad6c zhichang.yuan 2017-03-13 @465  	lpcdev->io_host = range;
+4e05ad6c zhichang.yuan 2017-03-13  466
+4e05ad6c zhichang.yuan 2017-03-13  467  	return 0;
+4e05ad6c zhichang.yuan 2017-03-13  468  }
+
 ---
- drivers/pci/host/pci-imx6.c | 52 ++++++++++++++++++++++-----------------------
- 1 file changed, 26 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/pci/host/pci-imx6.c b/drivers/pci/host/pci-imx6.c
-index 473bbdc..071251f3 100644
---- a/drivers/pci/host/pci-imx6.c
-+++ b/drivers/pci/host/pci-imx6.c
-@@ -565,40 +565,40 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
- 		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
- 		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
- 		dw_pcie_writel_rc(pp, PCIE_RC_LCR, tmp);
--	} else {
--		dev_info(dev, "Link: Gen2 disabled\n");
--	}
--
--	/*
--	 * Start Directed Speed Change so the best possible speed both link
--	 * partners support can be negotiated.
--	 */
--	tmp = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
--	tmp |= PORT_LOGIC_SPEED_CHANGE;
--	dw_pcie_writel_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
- 
--	if (imx6_pcie->variant != IMX7D) {
- 		/*
--		 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
--		 * from i.MX6 family when no link speed transition
--		 * occurs and we go Gen1 -> yep, Gen1. The difference
--		 * is that, in such case, it will not be cleared by HW
--		 * which will cause the following code to report false
--		 * failure.
-+		 * Start Directed Speed Change so the best possible
-+		 * speed both link partners support can be negotiated.
- 		 */
-+		tmp = dw_pcie_readl_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+		tmp |= PORT_LOGIC_SPEED_CHANGE;
-+		dw_pcie_writel_rc(pp, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
-+
-+		if (imx6_pcie->variant != IMX7D) {
-+			/*
-+			 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
-+			 * from i.MX6 family when no link speed transition
-+			 * occurs and we go Gen1 -> yep, Gen1. The difference
-+			 * is that, in such case, it will not be cleared by HW
-+			 * which will cause the following code to report false
-+			 * failure.
-+			 */
-+
-+			ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
-+			if (ret) {
-+				dev_err(dev, "Failed to bring link up!\n");
-+				goto err_reset_phy;
-+			}
-+		}
- 
--		ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
-+		/* Make sure link training is finished as well! */
-+		ret = imx6_pcie_wait_for_link(imx6_pcie);
- 		if (ret) {
- 			dev_err(dev, "Failed to bring link up!\n");
- 			goto err_reset_phy;
- 		}
--	}
--
--	/* Make sure link training is finished as well! */
--	ret = imx6_pcie_wait_for_link(imx6_pcie);
--	if (ret) {
--		dev_err(dev, "Failed to bring link up!\n");
--		goto err_reset_phy;
-+	} else {
-+		dev_info(dev, "Link: Gen2 disabled\n");
- 	}
- 
- 	tmp = dw_pcie_readl_rc(pp, PCIE_RC_LCSR);
--- 
-2.9.3
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
