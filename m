@@ -1,64 +1,65 @@
-Return-Path: <SRS0=7EXQ=3A=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=7EXQ=3A=free.fr=slash.tmp@kernel.org>
-Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
-From: Mason <slash.tmp@free.fr>
-To: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
- Thomas Gleixner <tglx@linutronix.de>
-Cc: Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
- <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
- <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
-Message-ID: <9fffedd4-6292-b662-a588-a68fe7380af6@free.fr>
-Date: Fri, 24 Mar 2017 00:40:16 +0100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Tue, 14 Mar 2017 15:04:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Adrian Hunter <adrian.hunter@intel.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        linux-pm <linux-pm@vger.kernel.org>,
+        linux-acpi <linux-acpi@vger.kernel.org>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Lukas Wunner <lukas@wunner.de>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: Re: [PATCH] PCI: For d3_delay and d3cold_delay, zero means zero
+Message-ID: <20170314200411.GE26264@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170314130305.GH8232@bhelgaas-glaptop.roam.corp.google.com>
+ <1489497718-4099-1-git-send-email-adrian.hunter@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1489497718-4099-1-git-send-email-adrian.hunter@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/03/2017 18:03, Mason wrote:
-
-> The host bridge actually supports 256 MSIs.
+On Tue, Mar 14, 2017 at 03:21:58PM +0200, Adrian Hunter wrote:
+> msleep() still sleeps 1 jiffy even when told to sleep for zero
+> milliseconds. That can end up being 1-2 milliseconds or more. In the cases
+> of d3_delay and d3cold_delay, that unnecessarily increases suspend and/or
+> resume latencies.
 > 
-> IIUC, what you suggested on IRC is that I support 256 in the driver,
-> and only read the status for *enabled* MSIs.
+> So, do not sleep at all for the respective cases of d3_delay is zero or
+> d3cold_delay is zero.
 > 
-> Pseudo-code:
+> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+
+Applied with Rafael's ack to pci/pm for v4.12, thanks!
+
+> ---
+>  drivers/pci/pci.c | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
 > 
-> for every 32-bit blob in the enabled bitmap
->   if the value is non-zero
->     lookup the corresponding status reg
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 7904d02ffdb9..9779483f81fd 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -66,7 +66,8 @@ static void pci_dev_d3_sleep(struct pci_dev *dev)
+>  	if (delay < pci_pm_d3_delay)
+>  		delay = pci_pm_d3_delay;
+>  
+> -	msleep(delay);
+> +	if (delay)
+> +		msleep(delay);
+>  }
+>  
+>  #ifdef CONFIG_PCI_DOMAINS
+> @@ -827,7 +828,8 @@ static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
+>  		 * because have already delayed for the bridge.
+>  		 */
+>  		if (dev->runtime_d3cold) {
+> -			msleep(dev->d3cold_delay);
+> +			if (dev->d3cold_delay)
+> +				msleep(dev->d3cold_delay);
+>  			/*
+>  			 * When powering on a bridge from D3cold, the
+>  			 * whole hierarchy may be powered on into
+> -- 
+> 1.9.1
 > 
-> Problem is that a BITMAP is unsigned long (as you point out below).
-> So I'm not sure how to iterate 32-bits at a time over the BITMAP.
-
-Something along these lines:
-
-	DECLARE_BITMAP(enabled, 256);
-
-	unsigned int pos = 0;
-
-	while ((pos = find_next_bit(enabled, 256, pos)) < 256) {
-		int offset = (pos / 32) * 4;
-		u32 status = readl_relaxed(status + offset);
-		/* Handle each pos set in status */
-		pos = round_up(pos, 32);
-	}
-
-You mentioned a bug in my code (due to the platform endianness)
-when passing the result of readl_relaxed to the bitops routine...
-How is one supposed to iterate over status?
-
-I'm not yet seeing this endianness issue, since (status & BIT(i))
-provides the status of MSI_i, irrespective of endianness.
-
-Although I see that arch/arm/include/asm/bitops.h declares
-BE and LE variants... I'm confused.
-
-Regards.
