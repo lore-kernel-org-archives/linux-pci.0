@@ -1,231 +1,118 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [RFC PATCH v2 18/32] kvm: svm: Use the hardware provided GPA
- instead of page walk
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:16:05 -0500
-Message-ID: <148846776540.2349.3123530065053870721.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <58C8BD7D.7040207@hisilicon.com>
+References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
+ <CAK8P3a1f33ipk3Q8+wj9L6zP=ccn_AuhTfV0CC0+wAqrO-2beg@mail.gmail.com>
+ <58C8BD7D.7040207@hisilicon.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 15 Mar 2017 14:23:12 +0100
+Message-ID: <CAK8P3a3NJCndFJED4wDcvYndiJHbfTEHjTnPjBUQK6UguOswmg@mail.gmail.com>
+Subject: Re: [PATCH V7 0/7] LPC: legacy ISA I/O support
+To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Rafael Wysocki <rafael@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>, linuxarm@huawei.com,
+ Frank Rowand <frowand.list@gmail.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Wei Xu <xuwei5@hisilicon.com>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ linux-serial@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
+ devicetree@vger.kernel.org, Corey Minyard <minyard@acm.org>,
+ liviu.dudau@arm.com, John Garry <john.garry@huawei.com>,
+ Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ kantyzc@163.com, zhichang.yuan02@gmail.com,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>, rjw@rjwysocki.net,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Zou Rongrong <zourongrong@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tom Lendacky <thomas.lendacky@amd.com>
+On Wed, Mar 15, 2017 at 5:05 AM, zhichang.yuan
+<yuanzhichang@hisilicon.com> wrote:
+>> - I think the libio framework is more generic than it needs to be, but as
+>>   Alex really liked it this way and it was done like this based on his earlier
+>>   comments, I think that's ok.
+>>
+>> - after we went back and forth on the ACPI implementation, we concluded
+>>   that it is correct to do the same as on DT and completely abstract the
+>>   number space for I/O ports. No code should rely on a Linux port number
+>>   to have any particular relation to the physical address or the the address
+>>   on a PCI or LPC bus.
+> Thanks again for your helps in Linaro Connect!
+> I think we are heading for this direction, is it?
 
-When a guest causes a NPF which requires emulation, KVM sometimes walks
-the guest page tables to translate the GVA to a GPA. This is unnecessary
-most of the time on AMD hardware since the hardware provides the GPA in
-EXITINFO2.
+Yes, I think so.
 
-The only exception cases involve string operations involving rep or
-operations that use two memory locations. With rep, the GPA will only be
-the value of the initial NPF and with dual memory locations we won't know
-which memory address was translated into EXITINFO2.
+>> - I'm pretty sure the current implementation is broken for the ioport_map
+>>   function that tries to turn an IORESOURCE_IO number into a pointer.
+>>   Forcing CONFIG_GENERIC_IOMAP on would solve this, but also
+>>   make all MMIO operations slower, which we probably don't want.
+>>   It's probably enough to add a check in ioport_map() to see if the range
+>>   is mapped into a virtual address or not.
+>
+>
+> Yes, I think our LIBIO will break the ioport_map() at this moment.
+> I try to solve this issue. Could you help to check the following ideas?
+> I am not deeper understanding the whole I/O framework, the following maybe not correct:(
+>
+> ioport_map seems architecture-dependent. For our LIBIO, we don't want to replace the existing I/O
+> frameworks which support MMIO at this moment. Can we add these two revise to solve this issue?
+> 1) Make LIBIO only target for non GENERIC_IOMAP platforms
+>
+> config LIBIO
+>         bool "Generic logical IO management"
+>         depends on !GENERIC_IOMAP
 
-Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
-Reviewed-by: Borislav Petkov <bp@suse.de>
-Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
----
- arch/x86/include/asm/kvm_emulate.h |    1 +
- arch/x86/include/asm/kvm_host.h    |    3 ++
- arch/x86/kvm/emulate.c             |   20 +++++++++++++---
- arch/x86/kvm/svm.c                 |    2 ++
- arch/x86/kvm/x86.c                 |   45 ++++++++++++++++++++++++++++--------
- 5 files changed, 57 insertions(+), 14 deletions(-)
+I don't think there is even a problem with GENERIC_IOMAP: If both are
+set, passing a low number as a pointer will turn an ioread32() into an
+inl(), which is implemented by libio.
 
-diff --git a/arch/x86/include/asm/kvm_emulate.h b/arch/x86/include/asm/kvm_emulate.h
-index e9cd7be..3e8c287 100644
---- a/arch/x86/include/asm/kvm_emulate.h
-+++ b/arch/x86/include/asm/kvm_emulate.h
-@@ -441,5 +441,6 @@ int emulator_task_switch(struct x86_emulate_ctxt *ctxt,
- int emulate_int_real(struct x86_emulate_ctxt *ctxt, int irq);
- void emulator_invalidate_register_cache(struct x86_emulate_ctxt *ctxt);
- void emulator_writeback_register_cache(struct x86_emulate_ctxt *ctxt);
-+bool emulator_can_use_gpa(struct x86_emulate_ctxt *ctxt);
- 
- #endif /* _ASM_X86_KVM_X86_EMULATE_H */
-diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
-index 37326b5..bff1f15 100644
---- a/arch/x86/include/asm/kvm_host.h
-+++ b/arch/x86/include/asm/kvm_host.h
-@@ -668,6 +668,9 @@ struct kvm_vcpu_arch {
- 
- 	int pending_ioapic_eoi;
- 	int pending_external_vector;
-+
-+	/* GPA available (AMD only) */
-+	bool gpa_available;
- };
- 
- struct kvm_lpage_info {
-diff --git a/arch/x86/kvm/emulate.c b/arch/x86/kvm/emulate.c
-index cedbba0..45c7306 100644
---- a/arch/x86/kvm/emulate.c
-+++ b/arch/x86/kvm/emulate.c
-@@ -173,6 +173,7 @@
- #define NearBranch  ((u64)1 << 52)  /* Near branches */
- #define No16	    ((u64)1 << 53)  /* No 16 bit operand */
- #define IncSP       ((u64)1 << 54)  /* SP is incremented before ModRM calc */
-+#define TwoMemOp    ((u64)1 << 55)  /* Instruction has two memory operand */
- 
- #define DstXacc     (DstAccLo | SrcAccHi | SrcWrite)
- 
-@@ -4298,7 +4299,7 @@ static const struct opcode group1[] = {
- };
- 
- static const struct opcode group1A[] = {
--	I(DstMem | SrcNone | Mov | Stack | IncSP, em_pop), N, N, N, N, N, N, N,
-+	I(DstMem | SrcNone | Mov | Stack | IncSP | TwoMemOp, em_pop), N, N, N, N, N, N, N,
- };
- 
- static const struct opcode group2[] = {
-@@ -4336,7 +4337,7 @@ static const struct opcode group5[] = {
- 	I(SrcMemFAddr | ImplicitOps,		em_call_far),
- 	I(SrcMem | NearBranch,			em_jmp_abs),
- 	I(SrcMemFAddr | ImplicitOps,		em_jmp_far),
--	I(SrcMem | Stack,			em_push), D(Undefined),
-+	I(SrcMem | Stack | TwoMemOp,		em_push), D(Undefined),
- };
- 
- static const struct opcode group6[] = {
-@@ -4556,8 +4557,8 @@ static const struct opcode opcode_table[256] = {
- 	/* 0xA0 - 0xA7 */
- 	I2bv(DstAcc | SrcMem | Mov | MemAbs, em_mov),
- 	I2bv(DstMem | SrcAcc | Mov | MemAbs | PageTable, em_mov),
--	I2bv(SrcSI | DstDI | Mov | String, em_mov),
--	F2bv(SrcSI | DstDI | String | NoWrite, em_cmp_r),
-+	I2bv(SrcSI | DstDI | Mov | String | TwoMemOp, em_mov),
-+	F2bv(SrcSI | DstDI | String | NoWrite | TwoMemOp, em_cmp_r),
- 	/* 0xA8 - 0xAF */
- 	F2bv(DstAcc | SrcImm | NoWrite, em_test),
- 	I2bv(SrcAcc | DstDI | Mov | String, em_mov),
-@@ -5671,3 +5672,14 @@ void emulator_writeback_register_cache(struct x86_emulate_ctxt *ctxt)
- {
- 	writeback_registers(ctxt);
- }
-+
-+bool emulator_can_use_gpa(struct x86_emulate_ctxt *ctxt)
-+{
-+	if (ctxt->rep_prefix && (ctxt->d & String))
-+		return false;
-+
-+	if (ctxt->d & TwoMemOp)
-+		return false;
-+
-+	return true;
-+}
-diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
-index 36d61ff..b581499 100644
---- a/arch/x86/kvm/svm.c
-+++ b/arch/x86/kvm/svm.c
-@@ -4184,6 +4184,8 @@ static int handle_exit(struct kvm_vcpu *vcpu)
- 
- 	trace_kvm_exit(exit_code, vcpu, KVM_ISA_SVM);
- 
-+	vcpu->arch.gpa_available = (exit_code == SVM_EXIT_NPF);
-+
- 	if (!is_cr_intercept(svm, INTERCEPT_CR0_WRITE))
- 		vcpu->arch.cr0 = svm->vmcb->save.cr0;
- 	if (npt_enabled)
-diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
-index 9e6a593..2099df8 100644
---- a/arch/x86/kvm/x86.c
-+++ b/arch/x86/kvm/x86.c
-@@ -4465,6 +4465,21 @@ int kvm_write_guest_virt_system(struct x86_emulate_ctxt *ctxt,
- }
- EXPORT_SYMBOL_GPL(kvm_write_guest_virt_system);
- 
-+static int vcpu_is_mmio_gpa(struct kvm_vcpu *vcpu, unsigned long gva,
-+			    gpa_t gpa, bool write)
-+{
-+	/* For APIC access vmexit */
-+	if ((gpa & PAGE_MASK) == APIC_DEFAULT_PHYS_BASE)
-+		return 1;
-+
-+	if (vcpu_match_mmio_gpa(vcpu, gpa)) {
-+		trace_vcpu_match_mmio(gva, gpa, write, true);
-+		return 1;
-+	}
-+
-+	return 0;
-+}
-+
- static int vcpu_mmio_gva_to_gpa(struct kvm_vcpu *vcpu, unsigned long gva,
- 				gpa_t *gpa, struct x86_exception *exception,
- 				bool write)
-@@ -4491,16 +4506,7 @@ static int vcpu_mmio_gva_to_gpa(struct kvm_vcpu *vcpu, unsigned long gva,
- 	if (*gpa == UNMAPPED_GVA)
- 		return -1;
- 
--	/* For APIC access vmexit */
--	if ((*gpa & PAGE_MASK) == APIC_DEFAULT_PHYS_BASE)
--		return 1;
--
--	if (vcpu_match_mmio_gpa(vcpu, *gpa)) {
--		trace_vcpu_match_mmio(gva, *gpa, write, true);
--		return 1;
--	}
--
--	return 0;
-+	return vcpu_is_mmio_gpa(vcpu, gva, *gpa, write);
- }
- 
- int emulator_write_phys(struct kvm_vcpu *vcpu, gpa_t gpa,
-@@ -4597,6 +4603,22 @@ static int emulator_read_write_onepage(unsigned long addr, void *val,
- 	int handled, ret;
- 	bool write = ops->write;
- 	struct kvm_mmio_fragment *frag;
-+	struct x86_emulate_ctxt *ctxt = &vcpu->arch.emulate_ctxt;
-+
-+	/*
-+	 * If the exit was due to a NPF we may already have a GPA.
-+	 * If the GPA is present, use it to avoid the GVA to GPA table walk.
-+	 * Note, this cannot be used on string operations since string
-+	 * operation using rep will only have the initial GPA from the NPF
-+	 * occurred.
-+	 */
-+	if (vcpu->arch.gpa_available &&
-+	    emulator_can_use_gpa(ctxt) &&
-+	    vcpu_is_mmio_gpa(vcpu, addr, exception->address, write) &&
-+	    (addr & ~PAGE_MASK) == (exception->address & ~PAGE_MASK)) {
-+		gpa = exception->address;
-+		goto mmio;
-+	}
- 
- 	ret = vcpu_mmio_gva_to_gpa(vcpu, addr, &gpa, exception, write);
- 
-@@ -5613,6 +5635,9 @@ int x86_emulate_instruction(struct kvm_vcpu *vcpu,
- 	}
- 
- restart:
-+	/* Save the faulting GPA (cr2) in the address field */
-+	ctxt->exception.address = cr2;
-+
- 	r = x86_emulate_insn(ctxt);
- 
- 	if (r == EMULATION_INTERCEPTED)
+>         def_bool y if PCI && (ARC || MN10300 || UNICORE32 || SPARC || MICROBLAZE || S390 || AVR32 || CRIS || BLACKFIN || XTENSA || ARM64)
+
+I think most of these architectures just use their own inb/outb functions,
+and should not use libio at all.
+
+It's also possible that they use an older way of mapping I/O ports by calling
+ioremap() on the physical address and treating the pointer as a 32-bit
+I/O port number (relying on the PCI_IOBASE=0 default). Architectures doing
+that might have other issues with libio, and I wouldn't try converting those.
+
+> 2) Modify the ioport_map() defined in asm-generic/io.h
+> Add the checks to identify the input 'port' is MMIO, otherwise, return NULL;
+
+This seems fine.
+
+>> - We could simplify the lookup a bit by using the trick from arch/ia64
+>>   of using an array instead of linked list for walking the port numbers.
+>>   There, the upper bits of the port number refer to an address space
+>>   number while the lower bits refer to the bus address within that
+>>   address space. This should work just as well as the current
+>>   implementation but would be a little easier to understand. Maybe
+>>   Bjorn can comment on this too, as I think he was involved with the
+>>   ia64 implementation.
+>>
+> Yes, It will be more efficient.
+>
+> But the issue remained here is still how to coexist with the existing I/O frameworks.
+> I will continue to look into.
+
+Ok. Let's wait for Bjorn to reply on this idea before you spend too much time
+on this though.
+
+      Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
