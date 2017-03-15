@@ -1,122 +1,190 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RESEND PATCH v3 4/7] PCI: dwc: all: Modify dbi accessors to take
- dbi_base as argument
-To: Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas
- <bhelgaas@google.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>
-References: <1489041545-15730-1-git-send-email-kishon@ti.com>
- <1489041545-15730-5-git-send-email-kishon@ti.com>
- <4e13580d-2625-5eed-bcbc-2ffd7493b073@axis.com>
- <595fab62-fb7a-888a-f898-7b59030585f1@axis.com> <58C28FCC.4070100@ti.com>
- <d920d892-af48-b94f-6eb7-e9e0ff5d40c0@axis.com> <58C2A28C.60703@ti.com>
- <6d667068-81af-5ce4-3d94-c5aa987632a4@axis.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <58C62E5A.2050908@ti.com>
-Date: Mon, 13 Mar 2017 11:00:02 +0530
+Return-Path: <SRS0=gVIC=2Y=gmail.com=ayyappa.ch.linux@kernel.org>
+Return-Path: <SRS0=gVIC=2Y=gmail.com=ayyappa.ch.linux@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <6d667068-81af-5ce4-3d94-c5aa987632a4@axis.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
- Jesper Nilsson <jespern@axis.com>, Zhou Wang <wangzhou1@hisilicon.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <6fac05e4-26ae-e959-9af6-cb68a04a1110@vodafone.de>
+References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+ <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
+ <CAPyr0yLWiGzU5ihFcj_NmA2Vk2R7GsKqo2LK8o3Eu+Df9m7vhw@mail.gmail.com> <6fac05e4-26ae-e959-9af6-cb68a04a1110@vodafone.de>
+From: Ayyappa Ch <ayyappa.ch.linux@gmail.com>
+Date: Wed, 15 Mar 2017 16:12:35 +0530
+Message-ID: <CAPyr0yL5a0vNnsThX1L0Zf_gjnCngPhD5hdetQjnvmajGhdmEQ@mail.gmail.com>
+Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
+Cc: helgaas@kernel.org, linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org, platform-driver-x86@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Niklas,
+It also needs any support from VBIOS side ? I mean PCIe large bar support?
 
-On Friday 10 March 2017 09:17 PM, Niklas Cassel wrote:
-> 
-> 
-> On 03/10/2017 01:56 PM, Kishon Vijay Abraham I wrote:
->> Hi Niklas,
+Thanks,
+Ayyappa.
+
+On Wed, Mar 15, 2017 at 1:07 PM, Christian K=C3=B6nig
+<deathsimple@vodafone.de> wrote:
+> Carizzo is an APU and resizing BARs isn't needed nor supported there. The
+> CPU can access the full stolen VRAM directly on that hardware.
+>
+> As far as I know ASICs with support for this are Tonga, Fiji and all Pola=
+ris
+> variants.
+>
+> Christian.
+>
+>
+> Am 15.03.2017 um 08:23 schrieb Ayyappa Ch:
 >>
->> On Friday 10 March 2017 06:01 PM, Niklas Cassel wrote:
->>> On 03/10/2017 12:36 PM, Kishon Vijay Abraham I wrote:
->>>> Hi,
->>>>
->>>> On Thursday 09 March 2017 08:35 PM, Niklas Cassel wrote:
->>>>> On 03/09/2017 03:48 PM, Niklas Cassel wrote:
->>>>>> On 03/09/2017 07:39 AM, Kishon Vijay Abraham I wrote:
->>>>>>> dwc has 2 dbi address space labeled dbics and dbics2. The existing
->>>>>>> helper to access dbi address space can access only dbics. However
->>>>>>> dbics2 has to be accessed for programming the BAR registers in the
->>>>>>> case of EP mode. This is in preparation for adding EP mode support
->>>>>>> to dwc driver.
->>>>>> Hello Kishon
->>>>>>
->>>>>> I don't really like the idea of adding an extra argument to every existing read/write.
->>>>>> Will not a read/write using dbi2 be quite uncommon compared to a read/write
->>>>>> using dbi?
->>>>>>
->>>>>> How about something like this:
->>>>>>
->>>>>> void __dw_pcie_writel(struct dw_pcie *pci, void __iomem *base, u32 reg, u32 val)
->>>>>> {
->>>>>>     if (pci->ops->writel_dbi)
->>>>>>         pci->ops->writel_dbi(pci, base, reg, val);
->>>>>>     else
->>>>>>         writel(val, base + reg);
->>>>>> }
->>>>>>
->>>>>> #define dw_pcie_writel_dbi(pci, reg, val) __dw_pcie_writel(pci, pci->dbi_base, reg, val)
->>>>>> #define dw_pcie_writel_dbi2(pci, reg, val) __dw_pcie_writel(pci, pci->dbi_base2, reg, val)
->>>>> Perhaps make dw_pcie_writel_dbi2 a function rather than a define,
->>>>> so we can return an error if pci->dbi_base2 == NULL.
->>>> Should we return an error? We don't return error for dbi_base either. I think
->>>> it should be sufficient to return errors while populating dbi_base or
->>>> dbi_base2. Otherwise it's a bug and should result in abort. Joao?
->>> Sorry for previous empty email.
+>> Is it possible on Carrizo asics? Or only supports on newer asics?
+>>
+>> On Mon, Mar 13, 2017 at 6:11 PM, Christian K=C3=B6nig
+>> <deathsimple@vodafone.de> wrote:
 >>>
+>>> From: Christian K=C3=B6nig <christian.koenig@amd.com>
 >>>
->>> What I meant to write:
+>>> Try to resize BAR0 to let CPU access all of VRAM.
 >>>
->>> Right now we do error checking for dbi_base in platform specific code
->>> and in pcie-designware-host.c:dw_pcie_host_init.
->> it's been done in dw_pcie_host_init not as an error checking but since it's
->> *optional* for certain platforms to populate dbi_base (i.e where dbi_base is
->> mapped to configuration space), host_init takes care of assigning dbi_base to
->> configuration space address.
-> 
-> What I'm afraid of is that we might get a NULL ptr dereference
-> when using dw_pcie_writel_dbi2, if platform specific code has
-> not populated dbi_base2.
-> 
-> Having a NULL check in generic code is just a fail safe if some
-> platform specific code failed to NULL check.
-> 
-> The code in dw_pcie_host_init might have been written just
-> to populate dbi_base when dbi is mapped to config space,
-> but the end result is that if platform specific code did not
-> populate dbi_base (and did not populate pp->cfg),
-> we will return -ENOMEM.
-> Which means that we can never get a NULL ptr dereference
-> when using dw_pcie_writel_dbi.
-> 
-> It might be a good idea to have a NULL check in generic code,
-> just as a fail safe, also for dw_pcie_ep_init.
-> That way we know that we will not get a NULL ptr dereference
-> when using dw_pcie_writel_dbi2.
-
-All right, will add it then.
-
-Thanks
-Kishon
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>>> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
+>>> ---
+>>>   drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
+>>>   drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 29
+>>> +++++++++++++++++++++++++++++
+>>>   drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 +++++---
+>>>   drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 +++++---
+>>>   4 files changed, 40 insertions(+), 6 deletions(-)
+>>>
+>>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>>> b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>>> index 3b81ded..905ded9 100644
+>>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>>> @@ -1719,6 +1719,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct
+>>> amdgpu_device *adev, struct ttm_tt *ttm,
+>>>                                   struct ttm_mem_reg *mem);
+>>>   void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_m=
+c
+>>> *mc, u64 base);
+>>>   void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc
+>>> *mc);
+>>> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
+>>>   void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64
+>>> size);
+>>>   int amdgpu_ttm_init(struct amdgpu_device *adev);
+>>>   void amdgpu_ttm_fini(struct amdgpu_device *adev);
+>>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>>> b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>>> index 118f4e6..92955fe 100644
+>>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>>> @@ -692,6 +692,35 @@ void amdgpu_gtt_location(struct amdgpu_device *ade=
+v,
+>>> struct amdgpu_mc *mc)
+>>>                          mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end=
+);
+>>>   }
+>>>
+>>> +/**
+>>> + * amdgpu_resize_bar0 - try to resize BAR0
+>>> + *
+>>> + * @adev: amdgpu_device pointer
+>>> + *
+>>> + * Try to resize BAR0 to make all VRAM CPU accessible.
+>>> + */
+>>> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
+>>> +{
+>>> +       u32 size =3D max(ilog2(adev->mc.real_vram_size - 1) + 1, 20) - =
+20;
+>>> +       int r;
+>>> +
+>>> +       r =3D pci_resize_resource(adev->pdev, 0, size);
+>>> +
+>>> +       if (r =3D=3D -ENOTSUPP) {
+>>> +               /* The hardware don't support the extension. */
+>>> +               return;
+>>> +
+>>> +       } else if (r =3D=3D -ENOSPC) {
+>>> +               DRM_INFO("Not enoigh PCI address space for a large
+>>> BAR.");
+>>> +       } else if (r) {
+>>> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
+>>> +       }
+>>> +
+>>> +       /* Reinit the doorbell mapping, it is most likely moved as well
+>>> */
+>>> +       amdgpu_doorbell_fini(adev);
+>>> +       BUG_ON(amdgpu_doorbell_init(adev));
+>>> +}
+>>> +
+>>>   /*
+>>>    * GPU helpers function.
+>>>    */
+>>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>>> b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>>> index dc9b6d6..36a7aa5 100644
+>>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>>> @@ -367,13 +367,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device
+>>> *adev)
+>>>                  break;
+>>>          }
+>>>          adev->mc.vram_width =3D numchan * chansize;
+>>> -       /* Could aper size report 0 ? */
+>>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>>>          /* size in MB on si */
+>>>          adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL *
+>>> 1024ULL;
+>>>          adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL=
+ *
+>>> 1024ULL;
+>>>
+>>> +       if (!(adev->flags & AMD_IS_APU))
+>>> +               amdgpu_resize_bar0(adev);
+>>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>>> +
+>>>   #ifdef CONFIG_X86_64
+>>>          if (adev->flags & AMD_IS_APU) {
+>>>                  adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)=
+) <<
+>>> 22;
+>>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>>> b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>>> index c087b00..7761ad3 100644
+>>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>>> @@ -459,13 +459,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device
+>>> *adev)
+>>>                  break;
+>>>          }
+>>>          adev->mc.vram_width =3D numchan * chansize;
+>>> -       /* Could aper size report 0 ? */
+>>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>>>          /* size in MB on si */
+>>>          adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL *
+>>> 1024ULL;
+>>>          adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL=
+ *
+>>> 1024ULL;
+>>>
+>>> +       if (!(adev->flags & AMD_IS_APU))
+>>> +               amdgpu_resize_bar0(adev);
+>>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>>> +
+>>>   #ifdef CONFIG_X86_64
+>>>          if (adev->flags & AMD_IS_APU) {
+>>>                  adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)=
+) <<
+>>> 22;
+>>> --
+>>> 2.7.4
+>>>
+>>> _______________________________________________
+>>> dri-devel mailing list
+>>> dri-devel@lists.freedesktop.org
+>>> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+>
+>
+>
