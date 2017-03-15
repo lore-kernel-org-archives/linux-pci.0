@@ -1,61 +1,47 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V5 0/4] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-References: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
- <f062dc8f-df66-bfd8-a0d7-50ac1cadf975@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B2846675AEDC@IRSMSX101.ger.corp.intel.com>
- <c9820456-d9b1-cd97-533b-889905e27603@codeaurora.org>
- <1f677feb-b561-1dd3-69ad-afd4049b6d59@codeaurora.org>
- <f3e76f8d-16bb-8ec5-da9b-d62ca66dafd6@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B2846675D8C4@IRSMSX101.ger.corp.intel.com>
- <beb63ced-3e63-c09c-8c2c-5d5b0956d2fc@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B2846675D9B9@IRSMSX101.ger.corp.intel.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <b0327163-2500-1541-6c23-454e3f28b6ea@codeaurora.org>
-Date: Wed, 29 Mar 2017 16:36:04 -0400
+Return-Path: <SRS0=PtWr=2Y=ACULAB.COM=David.Laight@kernel.org>
+Return-Path: <SRS0=PtWr=2Y=ACULAB.COM=David.Laight@kernel.org>
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Mason' <slash.tmp@free.fr>, Bjorn Helgaas <helgaas@kernel.org>
+CC: linux-pci <linux-pci@vger.kernel.org>, Linux ARM
+	<linux-arm-kernel@lists.infradead.org>, Robin Murphy <robin.murphy@arm.com>,
+	Liviu Dudau <liviu.dudau@arm.com>, Lorenzo Pieralisi
+	<lorenzo.pieralisi@arm.com>, Thibaud Cornic
+	<thibaud_cornic@sigmadesigns.com>, Phuong Nguyen
+	<phuong_nguyen@sigmadesigns.com>
+Subject: RE: Enumerating an empty bus hangs the entire system
+Date: Wed, 15 Mar 2017 16:19:41 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DCFFB1ABE@AcuExch.aculab.com>
+References: <1eeea8ff-0840-a005-38b4-61f3c253cee1@free.fr>
+ <20170315160238.GB5073@bhelgaas-glaptop.roam.corp.google.com>
+ <135a0b18-caa3-d3c2-8ea5-6959e70e75ac@free.fr>
+In-Reply-To: <135a0b18-caa3-d3c2-8ea5-6959e70e75ac@free.fr>
+Content-Type: text/plain; charset="iso-8859-15"
 MIME-Version: 1.0
-In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B2846675D9B9@IRSMSX101.ger.corp.intel.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/29/2017 4:16 PM, Patel, Mayurkumar wrote:
-> Actually, I have taken same patches of yours which proposed and applied it correctly. Will try it with clean
-> build if that helps.
-> 
-> But what I could understand from following patch is https://patchwork.codeaurora.org/patch/207653/ 
-> 
-> We still have a flow of pci_aspm_init() -> alloc_pcie_link_state() -> pci_function_0()
-> Where I see the first Kernel NULL pointer crash while accessing pdev->subordinate in pci_function_0() function.
+From: Mason
+> Sent: 15 March 2017 16:14
+> On 15/03/2017 17:02, Bjorn Helgaas wrote:
+>=20
+> > If checking for link in your accessor is the best you can do, maybe
+> > that's all you can do.  I thought there was another driver that did
+> > that, but I can't find it now.  It doesn't seem perfectly safe to me,
+> > since the link could go down after you check for "link up" and before
+> > you actually issue the read.
+>=20
+> Are you thinking of some hotplug scenario?
+>=20
+> My system doesn't support hotplug, and I naively thought that the
+> link would be down if there is no card, and up shortly after reset
+> if there is a card.
 
-OK. It looks like somebody moved function_0 call around. I was looking at 4.11-rc1.
+Noise on the lines can be enough to take the link down.
 
-3bd7db63a841e8c5297bb18ad801df67d5e38ad2 (PCI/ASPM: Always set link->downstream to avoid NULL dereference on remove)
+We have some very annoying Dell x86 server chassis that generate an
+NMI when the PCIe link has any sort of error.
+The software can be 'hardened' to reads returning ~0u, doing anything
+useful in an NMI handler is almost impossible.
+They also won't boot is there is an error early on.
+Stops us doing a remove, reprogram fpga, rescan.
 
-I see the change in 4.11-rc3 now. 
-
-Let me see what's going on.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+	David
