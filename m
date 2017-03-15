@@ -1,81 +1,84 @@
-Return-Path: <SRS0=fKxC=2S=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=fKxC=2S=free.fr=slash.tmp@kernel.org>
-Subject: Re: Neophyte questions about PCIe
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
- linux-usb <linux-usb@vger.kernel.org>, Rob Herring <robh@kernel.org>,
- Arnd Bergmann <arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Marc Zyngier <marc.zyngier@arm.com>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- David Laight <david.laight@aculab.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Shawn Lin <shawn.lin@rock-chips.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
-Date: Fri, 10 Mar 2017 00:43:51 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+References: <1485793552-12614-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20170130211236.GW20550@bhelgaas-glaptop.roam.corp.google.com>
+ <20170131102830.GA13854@localhost.localdomain>
+ <20170131142525.GA9942@bhelgaas-glaptop.roam.corp.google.com>
+ <20170131145720.GA14231@localhost.localdomain>
+ <20170131203109.GA14127@bhelgaas-glaptop.roam.corp.google.com>
+ <20170201125325.GA15805@localhost.localdomain>
+ <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
+From: Jon Masters <jcm@jonmasters.org>
+Message-ID: <376ae1df-da85-e576-75d6-3ae2ab0f1b41@jonmasters.org>
+Date: Wed, 15 Mar 2017 07:14:38 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
+Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: David.Daney@cavium.com, tn@semihalf.com, linux-kernel@vger.kernel.org,
+ stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 08/03/2017 16:17, Bjorn Helgaas wrote:
-[snip excellent in-depth overview]
+Hi Bjorn, Vadim,
 
-I think I'm making progress, in that I now have a better
-idea of what I don't understand. So I'm able to ask
-(hopefully) less vague questions.
+Following up to this old thread...
 
-Take the USB3 PCIe adapter I've been testing with. At some
-point during init, the XHCI driver request some memory
-(via kmalloc?) in order to exchange data with the host, right?
+On 02/01/2017 10:18 AM, Bjorn Helgaas wrote:
+> On Wed, Feb 01, 2017 at 04:53:25AM -0800, Vadim Lomovtsev wrote:
 
-On my SoC, the RAM used by Linux lives at physical range
-[0x8000_0000, 0x8800_0000[ => 128 MB
+>>>> Because there is no such ACPI ID as "THRX0002" registered
+>>>> (http://www.uefi.org/acpi_id_list).
 
-How does the XHCI driver make the adapter aware of where
-it can scribble data? The XHCI driver has no notion that
-the device is behind a bus, does it?
+There is still no "THRX" prefix registered with UEFI as of this morning.
 
-At some point, the physical addresses must be converted
-to PCI bus addresses, right? Is it computed subtracting
-the offset defined in the DT?
+>>> To be pedantically correct, I think you want "THRX" registered.  Then
+>>> you can manage the "0002" part internally without registering each
+>>> individual device.
 
-Then suppose the USB3 card wants to write to an address
-in RAM. It sends a packet on the PCIe bus, targeting
-the PCI bus address of that RAM, right? Is this address
-supposed to be in BAR0 of the root complex? I guess not,
-since Bjorn said that it was unusual for a RC to have
-a BAR at all. So I'll hand-wave, and decree that, by some
-protocol magic, the packet arrives at the PCIe controller.
-And this controller knows to forward this write request
-over the memory bus. Does that look about right?
+The upstream Linux kernel contains a quirk matching entry that looks for
+"THRX". Therefore, you have already agreed (as of at least January) that
+this is the prefix that you will use in any firmware updates to support
+the latest upstream Linux kernel. Please register this prefix promptly.
 
-My problem is that, in the current implementation of the
-PCIe controller, the USB device that wants to write to
-memory is supposed to target BAR0 of the RC.
+>> Not sure if it would be registered that way, because (AFAIK)
+>> it expected to be string constructed from Vendor ID (not the Product ID) plus
+>> four hex digit manged internaly. So we suggest to change it to 177DXXXX
+>> which corresponds to Cavium PCI ID https://pci-ids.ucw.cz/pci.ids.
+>> It's also possible to use the 3-digit PNP ID, "CAV", to construct these
+>> _HID/_CID/_SUB values (http://www.uefi.org/pnp_id_list).
+> 
+> My point was that you only need to register the prefix ("CAV" or
+> "THRX") of the PNP or ACPI ID.  Then you manage the suffixes
+> internally.  You as long as you register "CAV" or "THRX", you can
+> assign and use "THRX0002" yourself without registering that
+> specifically.
+> 
+>> So the FW will be updated accordingly.
 
-Since my mem space is limited to 256 MB, then BAR0 is
-limited to 256 MB (or even 128 MB, since I also need
-to mapthe device's BAR into the same mem space).
+Indeed.
 
-So, if I understand correctly (which, at this point,
-is quite unlikely) PCIe will work correctly for me
-only if Linux manages 128 MB or less...
+The version Bjorn merged looks for "THRX". This is the version that you will
+use, and you will promptly register that prefix with UEFI and provide fixes
+for existing firmware to correctly use the solution that is upstream.
 
-How does it work on systems where the RC has no BAR?
-I suppose devices are able to access all of RAM...
-because the controller forwards everything? (This may
-be where an IOMMU comes handy?)
+Thanks,
 
-Is there a way to know, at run-time, where and how big
-Linux's dynamic memory pool is? Perhaps the memory pool
-itself remains smaller than 128 MB?
+Jon.
 
-I realize that I've asked a million questions. Feel free
-to ignore most of them, if you can help with just one,
-it would be a tremendous help already.
 
-Regards.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
