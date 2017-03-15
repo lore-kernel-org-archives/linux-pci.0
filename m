@@ -1,14 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: [PATCH v3 2/2] PCI: Add tango PCIe host bridge support
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
- Thomas Gleixner <tglx@linutronix.de>
-References: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
-Message-ID: <65114e62-7458-b6f7-327c-f07a5096a452@sigmadesigns.com>
-Date: Wed, 29 Mar 2017 13:34:45 +0200
+Date: Wed, 15 Mar 2017 16:23:22 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH v2 1/4] arm64: enable pci resource mapping using sysfs
+Message-ID: <20170315212322.GA31690@bhelgaas-glaptop.roam.corp.google.com>
+References: <1489610540.86622.19.camel@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
+In-Reply-To: <1489610540.86622.19.camel@infradead.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,262 +15,87 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: DT <devicetree@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Mason <slash.tmp@free.fr>,
- linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
- David Laight <david.laight@aculab.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Robin Murphy <robin.murphy@arm.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc: linux-arch@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This driver is used to work around HW bugs in the controller.
+[+cc linux-pci]
 
-Note: the controller does NOT support the following features.
+On Wed, Mar 15, 2017 at 08:42:20PM +0000, David Woodhouse wrote:
+> From: Brijesh Singh <brijess@amazon.com>
+> 
+> To support PCI resource mapping from userspace, pci_mmap_page_range()
+> must be implemented and HAVE_PCI_MMAP defined. This support was absent
+> for arm64.
+> 
+> [dwmw2: Add WC support]
+> Reviewed-by: Erik Quanstrom <quanstro@amazon.com>
+> Reviewed-by: Anthony Liguori <aliguori@amazon.com>
+> Signed-off-by: Brijesh Singh <brijess@amazon.com>
+> Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+> ---
+> v2: s/pgprot_uncached/pgprot_device/
+> 
+>  arch/arm64/include/asm/pci.h |  4 ++++
+>  arch/arm64/kernel/pci.c      | 19 +++++++++++++++++++
+>  2 files changed, 23 insertions(+)
+> 
+> diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+> index b9a7ba9..f73734f 100644
+> --- a/arch/arm64/include/asm/pci.h
+> +++ b/arch/arm64/include/asm/pci.h
+> @@ -37,5 +37,9 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+>  }
+>  #endif  /* CONFIG_PCI */
+>  
+> +#define HAVE_PCI_MMAP
+> +extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+> +			       enum pci_mmap_state mmap_state, int write_combine);
+> +
+>  #endif  /* __KERNEL__ */
+>  #endif  /* __ASM_PCI_H */
+> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+> index 4f0e3eb..9a87b2a 100644
+> --- a/arch/arm64/kernel/pci.c
+> +++ b/arch/arm64/kernel/pci.c
+> @@ -228,3 +228,22 @@ void pcibios_remove_bus(struct pci_bus *bus)
+>  }
+>  
+>  #endif
+> +
+> +int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+> +			enum pci_mmap_state mmap_state, int write_combine)
+> +{
+> +	if (mmap_state == pci_mmap_io)
+> +		return -EINVAL;
+> +
+> +	if (write_combine)
+> +		vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
+> +	else
+> +		vma->vm_page_prot = pgprot_device(vma->vm_page_prot);
+> +
+> +	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+> +			     vma->vm_end - vma->vm_start,
+> +			     vma->vm_page_prot))
+> +		return -EAGAIN;
+> +
+> +	return 0;
+> +}
+> -- 
+> dwmw2
 
-  Legacy PCI interrupts
-  IO space
 
-Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
----
- Documentation/devicetree/bindings/pci/tango-pcie.txt |  33 +++++++++
- drivers/pci/host/Kconfig                             |   7 ++
- drivers/pci/host/Makefile                            |   1 +
- drivers/pci/host/pcie-tango.c                        | 150 +++++++++++++++++++++++++++++++++++++++
- 4 files changed, 191 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/tango-pcie.txt b/Documentation/devicetree/bindings/pci/tango-pcie.txt
-new file mode 100644
-index 000000000000..f8e150ec41d8
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/tango-pcie.txt
-@@ -0,0 +1,33 @@
-+Sigma Designs Tango PCIe controller
-+
-+Required properties:
-+
-+- compatible: "sigma,smp8759-pcie"
-+- reg: address/size of PCI configuration space, and pcie_reg
-+- bus-range: defined by size of PCI configuration space
-+- device_type: "pci"
-+- #size-cells: <2>
-+- #address-cells: <3>
-+- #interrupt-cells: <1>
-+- ranges: translation from system to bus addresses
-+- interrupts: spec for misc interrupts and MSI
-+- msi-controller
-+
-+Example:
-+
-+	pcie@2e000 {
-+		compatible = "sigma,smp8759-pcie";
-+		reg = <0x50000000 SZ_64M>, <0x2e000 0x100>;
-+		bus-range = <0 63>;
-+		device_type = "pci";
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		#interrupt-cells = <1>;
-+		/* http://elinux.org/Device_Tree_Usage#PCI_Address_Translation */
-+			/* BUS_ADDRESS(3)  CPU_PHYSICAL(1)  SIZE(2) */
-+		ranges = <0x02000000 0x0 0x04000000  0x54000000  0x0 SZ_192M>;
-+		interrupts =
-+			<54 IRQ_TYPE_LEVEL_HIGH>, /* misc interrupts */
-+			<55 IRQ_TYPE_LEVEL_HIGH>; /* MSI */
-+		msi-controller;
-+	};
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d7e7c0a827c3..8a622578a760 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -285,6 +285,13 @@ config PCIE_ROCKCHIP
- 	  There is 1 internal PCIe port available to support GEN2 with
- 	  4 slots.
- 
-+config PCIE_TANGO
-+	tristate "Tango PCIe controller"
-+	depends on ARCH_TANGO && PCI_MSI && OF
-+	select PCI_HOST_COMMON
-+	help
-+	  Say Y here to enable PCIe controller support on Tango SoC.
-+
- config VMD
- 	depends on PCI_MSI && X86_64
- 	tristate "Intel Volume Management Device Driver"
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 084cb4983645..fc7ea90196f3 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -32,4 +32,5 @@ obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
- obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
- obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
- obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
-+obj-$(CONFIG_PCIE_TANGO) += pcie-tango.o
- obj-$(CONFIG_VMD) += vmd.o
-diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
-index e88850983a1d..dbc2663486b5 100644
---- a/drivers/pci/host/pcie-tango.c
-+++ b/drivers/pci/host/pcie-tango.c
-@@ -192,3 +192,153 @@ static int tango_msi_probe(struct platform_device *pdev, struct tango_pcie *pcie
- 
- 	return 0;
- }
-+
-+/*** HOST BRIDGE SUPPORT ***/
-+
-+static int smp8759_config_read(struct pci_bus *bus,
-+		unsigned int devfn, int where, int size, u32 *val)
-+{
-+	int ret;
-+	struct pci_config_window *cfg = bus->sysdata;
-+	struct tango_pcie *pcie = dev_get_drvdata(cfg->parent);
-+
-+	/*
-+	 * QUIRK #1
-+	 * Reads in configuration space outside devfn 0 return garbage.
-+	 */
-+	if (devfn != 0) {
-+		*val = ~0; /* Is this required even if we return an error? */
-+		return PCIBIOS_FUNC_NOT_SUPPORTED; /* Error seems appropriate */
-+	}
-+
-+	/*
-+	 * QUIRK #2
-+	 * The root complex advertizes a fake BAR, which is used to filter
-+	 * bus-to-system requests. Hide it from Linux.
-+	 */
-+	if (where == PCI_BASE_ADDRESS_0 && bus->number == 0) {
-+		*val = 0; /* 0 or ~0 to hide the BAR from Linux? */
-+		return PCIBIOS_SUCCESSFUL; /* Should we return error or success? */
-+	}
-+
-+	/*
-+	 * QUIRK #3
-+	 * Unfortunately, config and mem spaces are muxed.
-+	 * Linux does not support such a setting, since drivers are free
-+	 * to access mem space directly, at any time.
-+	 * Therefore, we can only PRAY that config and mem space accesses
-+	 * NEVER occur concurrently.
-+	 */
-+	writel_relaxed(1, pcie->mux);
-+	ret = pci_generic_config_read(bus, devfn, where, size, val);
-+	writel_relaxed(0, pcie->mux);
-+
-+	return ret;
-+}
-+
-+static int smp8759_config_write(struct pci_bus *bus,
-+		unsigned int devfn, int where, int size, u32 val)
-+{
-+	int ret;
-+	struct pci_config_window *cfg = bus->sysdata;
-+	struct tango_pcie *pcie = dev_get_drvdata(cfg->parent);
-+
-+	writel_relaxed(1, pcie->mux);
-+	ret = pci_generic_config_write(bus, devfn, where, size, val);
-+	writel_relaxed(0, pcie->mux);
-+
-+	return ret;
-+}
-+
-+static struct pci_ecam_ops smp8759_ecam_ops = {
-+	.bus_shift	= 20,
-+	.pci_ops	= {
-+		.map_bus	= pci_ecam_map_bus,
-+		.read		= smp8759_config_read,
-+		.write		= smp8759_config_write,
-+	}
-+};
-+
-+static const struct of_device_id tango_pcie_ids[] = {
-+	{ .compatible = "sigma,smp8759-pcie" },
-+	{ /* sentinel */ },
-+};
-+
-+static void smp8759_init(struct tango_pcie *pcie, void __iomem *base)
-+{
-+	pcie->mux		= base + 0x48;
-+	pcie->msi_status	= base + 0x80;
-+	pcie->msi_mask		= base + 0xa0;
-+	pcie->msi_doorbell	= 0xa0000000 + 0x2e07c;
-+}
-+
-+static int tango_pcie_probe(struct platform_device *pdev)
-+{
-+	int ret;
-+	void __iomem *base;
-+	struct resource *res;
-+	struct tango_pcie *pcie;
-+	struct device *dev = &pdev->dev;
-+
-+	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	platform_set_drvdata(pdev, pcie);
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	base = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(base))
-+		return PTR_ERR(base);
-+
-+	if (of_device_is_compatible(dev->of_node, "sigma,smp8759-pcie"))
-+		smp8759_init(pcie, base);
-+
-+	ret = tango_msi_probe(pdev, pcie);
-+	if (ret)
-+		return ret;
-+
-+	return pci_host_common_probe(pdev, &smp8759_ecam_ops);
-+}
-+
-+static int tango_pcie_remove(struct platform_device *pdev)
-+{
-+	return tango_msi_remove(pdev);
-+}
-+
-+static struct platform_driver tango_pcie_driver = {
-+	.probe	= tango_pcie_probe,
-+	.remove	= tango_pcie_remove,
-+	.driver	= {
-+		.name = KBUILD_MODNAME,
-+		.of_match_table = tango_pcie_ids,
-+	},
-+};
-+
-+module_platform_driver(tango_pcie_driver);
-+
-+#define VENDOR_SIGMA	0x1105
-+
-+/*
-+ * QUIRK #4
-+ * The root complex advertizes the wrong device class.
-+ * Header Type 1 is for PCI-to-PCI bridges.
-+ */
-+static void tango_fixup_class(struct pci_dev *dev)
-+{
-+	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
-+}
-+DECLARE_PCI_FIXUP_EARLY(VENDOR_SIGMA, PCI_ANY_ID, tango_fixup_class);
-+
-+/*
-+ * QUIRK #5
-+ * Only transfers within the root complex BAR are forwarded to the host.
-+ * By default, the DMA framework expects that
-+ * PCI address 0x8000_0000 maps to system address 0x8000_0000
-+ * which is where DRAM0 is mapped.
-+ */
-+static void tango_fixup_bar(struct pci_dev *dev)
-+{
-+        pci_write_config_dword(dev, PCI_BASE_ADDRESS_0, 0x80000000);
-+}
-+DECLARE_PCI_FIXUP_FINAL(VENDOR_SIGMA, PCI_ANY_ID, tango_fixup_bar);
--- 
-2.11.0
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
 
 _______________________________________________
 linux-arm-kernel mailing list
