@@ -1,43 +1,90 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Cc: catalin.marinas@arm.com, will.deacon@arm.com, robh+dt@kernel.org,
-        frowand.list@gmail.com, bhelgaas@google.com, rafael@kernel.org,
-        mark.rutland@arm.com, arnd@arndb.de,
-        linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org,
-        lorenzo.pieralisi@arm.com, benh@kernel.crashing.org,
-        linux-kernel@vger.kernel.org, linuxarm@huawei.com,
-        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-serial@vger.kernel.org, minyard@acm.org, liviu.dudau@arm.com,
-        zourongrong@gmail.com, john.garry@huawei.com,
-        gabriele.paoloni@huawei.com, zhichang.yuan02@gmail.com,
-        kantyzc@163.com, xuwei5@hisilicon.com
-Subject: Re: [PATCH V7 5/7] ACPI: Delay the enumeration on the devices whose  dependency has not met
-Date: Mon, 13 Mar 2017 22:24:34 +0100
-Message-ID: <4600523.rWNiWKrYZC@aspire.rjw.lan>
-In-Reply-To: <1489372963-9000-6-git-send-email-yuanzhichang@hisilicon.com>
-References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com> <1489372963-9000-6-git-send-email-yuanzhichang@hisilicon.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 15 Mar 2017 11:02:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mason <slash.tmp@free.fr>
+Subject: Re: Enumerating an empty bus hangs the entire system
+Message-ID: <20170315160238.GB5073@bhelgaas-glaptop.roam.corp.google.com>
+References: <1eeea8ff-0840-a005-38b4-61f3c253cee1@free.fr>
 MIME-Version: 1.0
+In-Reply-To: <1eeea8ff-0840-a005-38b4-61f3c253cee1@free.fr>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
-Sender: linux-acpi-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Monday, March 13, 2017 10:42:41 AM zhichang.yuan wrote:
-> In commit 40e7fcb1929(ACPI: Add _DEP support to fix battery issue on Asus
-> T100TA), the '_DEP' was supported to solve the dependency of Asus battery. But
-> this patch is specific to Asus battery device.
-> In the real world, there are other devices which need the dependency to play the
-> role on the enumeration order. For example, all the Hip06 LPC
-> periperals(IPMI-BT, uart, etc) must be scanned after the LPC host driver
-> finished the probing. So, it makes sense to add a checking whether the ACPI
-> device meet all the dependencies during its enumeration slot, if not, the
-> enumeration will be delayed till all dependency master finish their work.
+On Wed, Mar 15, 2017 at 04:25:44PM +0100, Mason wrote:
+> Hello,
 > 
-> This patch adds the dependency checking in ACPI enumeration, also the
-> corresponding handling to retrigger the Hip06 LPC peripherals' scanning.
+> My driver works reasonably well on revision 1 of the PCIe controller.
+> (For lax enough values of "reasonably well"...)
+> 
+> So I wanted to try it out on revision 2 of the controller.
+> 
+> Turns out the system hangs if I boot with no card inserted in the PCIe
+> slot. (This does not happen on revision 1.) If I log all config space
+> accesses, this is what I see:
+> 
+> ...
+> [    2.966402] tango_config_read: bus=0 devfn=0 where=128 size=2
+> [    2.972284] tango_config_read: bus=0 devfn=0 where=140 size=4
+> [    2.978167] tango_config_read: bus=0 devfn=0 where=146 size=2
+> [    2.984144] pci_bus 0000:01: busn_res: can not insert [bus 01-ff] under [bus 00-3f] (conflicts with (null) [bus 00-3f])
+> [    2.995105] tango_config_write: bus=0 devfn=0 where=24 size=4 val=0xff0100
+> [    3.002134] pci_bus 0000:01: scanning bus
+> [    3.006274] tango_config_read: bus=1 devfn=0 where=0 size=4
+> 
+> Basically, the PCI framework tries to read vendor and device IDs
+> of the non-existent device on bus 1, which hangs the system,
+> because the read never completes :-(
+> 
+> I had the same problem with the legacy driver for 3.4 but I was
+> hoping I would magically avoid it in a recent kernel.
+> 
+> The only work-around I see is: assuming the first access to a
+> bus will be to register 0, check the PHY for an active link
+> before sending an actual read request to register 0.
+> 
+> Is that reasonable?
+> 
+> Is it compliant for the PCIe controller to hang like that,
+> or should it handle some kind of time out?
+> 
+> Liviu suggested: "The PCIe controller probably generates (or propagates)
+> a bus abort that it should actually trap in HW.	Check if there is a SW
+> configurable way to recover that."
 
-AFAICS, _DEP is generally abused in the wild and cannot be made generic.  Sorry.
+I agree; generally the PCIe controller will timeout and report an
+error somehow.  On most systems the PCIe controller fabricates all
+ones read data (0xffffffff) to satisfy the CPU's read request.
 
-Thanks,
-Rafael
+I'm not enough of a hardware person to point you to a spec section
+that addresses this, but the Linux PCI core is definitely not prepared
+to deal with config requests that hang.
 
+If checking for link in your accessor is the best you can do, maybe
+that's all you can do.  I thought there was another driver that did
+that, but I can't find it now.  It doesn't seem perfectly safe to me,
+since the link could go down after you check for "link up" and before
+you actually issue the read.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
