@@ -1,39 +1,40 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:43788 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756233AbdCGVKP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Mar 2017 16:10:15 -0500
-Date: Tue, 7 Mar 2017 15:08:51 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] PCI/MSI: Only disable affinity settings if pre and post
- vector count is equal to max_vecs and not min_vecs
-Message-ID: <20170307210851.GA638@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170301233158.1035-1-himanshu.madhani@cavium.com>
- <20170301234904.GA22814@lst.de>
- <E66CD5F3-B14D-4CD5-AE66-624AC2A18B01@cavium.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E66CD5F3-B14D-4CD5-AE66-624AC2A18B01@cavium.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=p8WW=2Y=semihalf.com=tn@kernel.org>
+Return-Path: <SRS0=p8WW=2Y=semihalf.com=tn@kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	Lorenzo.Pieralisi@arm.com,
+	robert.richter@caviumnetworks.com,
+	ddaney@caviumnetworks.com,
+	Vadim.Lomovtsev@caviumnetworks.com,
+	rafael@kernel.org
+Cc: Sunil.Goutham@cavium.com,
+	geethasowjanya.akula@gmail.com,
+	linu.cherian@cavium.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH 0/2] ThunderX external PCI fixes for legacy&new ACPI firmware
+Date: Wed, 15 Mar 2017 08:49:13 +0100
+Message-Id: <1489564155-3881-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 07, 2017 at 07:00:20PM +0000, Madhani, Himanshu wrote:
-> Hi Bjorn, 
-> 	
-> Can we get this patch included in next branch. This patch has been reviewed by Christoph. 
+This patch series update ThunderX PEM driver to be able to boot with legacy
+and new ACPI firmware:
+1. New firmware uses registered Cavium harware ID "CAV", but kernel instead
+   uses "THRX". Fix kernel to use "CAV".
+2. Legacy firmware misses PEM quirks information so for this case kernel
+   should not assume anything from FW and figure out PEM resources on its own.
 
-No worries, it's still in patchwork
-(https://patchwork.ozlabs.org/project/linux-pci/list/) so I'll get to it
-soon.
+Fix this all together in the following branch:
+git@github.com:semihalf-nowicki-tomasz/linux.git (thunderx-pci-legacy-fw-v1)
 
-> On 3/1/17, 3:49 PM, "Christoph Hellwig" <hch@lst.de> wrote:
-> 
->     Looks good,
->     
->     Reviewed-by: Christoph Hellwig <hch@lst.de>
->     
-> 
+Tomasz Nowicki (2):
+  PCI: Use Cavium assigned hardware ID for ThunderX host controller
+  PCI: Add legacy firmware support for Cavium ThunderX host controller
+
+ drivers/pci/host/pci-thunder-pem.c | 58 ++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 55 insertions(+), 3 deletions(-)
+
+-- 
+2.7.4
