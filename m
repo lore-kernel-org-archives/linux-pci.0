@@ -1,105 +1,86 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 31 Mar 2017 00:17:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Ray Jui <rjui@broadcom.com>
-Subject: Re: [PATCH v2 3/5] PCI: rockchip: add remove() support
-Message-ID: <20170331051702.GA13240@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170310024617.67303-1-briannorris@chromium.org>
- <20170310024617.67303-3-briannorris@chromium.org>
- <20170324142541.GA25380@bhelgaas-glaptop.roam.corp.google.com>
- <20170324172218.GA119093@google.com>
- <20170330232825.GB3912@bhelgaas-glaptop.roam.corp.google.com>
- <20170331002608.GA72818@google.com>
+Return-Path: <SRS0=sW/k=2Y=linutronix.de=tglx@kernel.org>
+Return-Path: <SRS0=sW/k=2Y=linutronix.de=tglx@kernel.org>
+Date: Wed, 15 Mar 2017 11:00:22 +0100 (CET)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Andi Kleen <andi@firstfloor.org>, Andi Kleen <ak@linux.intel.com>,
+    bhelgaas@google.com, x86@kernel.org, linux-pci@vger.kernel.org,
+    eranian@google.com, Peter Zijlstra <peterz@infradead.org>,
+    LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/4] x86, pci: Add interface to force mmconfig
+In-Reply-To: <20170315025549.GA13191@bhelgaas-glaptop.roam.corp.google.com>
+Message-ID: <alpine.DEB.2.20.1703150954180.3554@nanos>
+References: <20170302232104.10136-1-andi@firstfloor.org> <20170302232104.10136-3-andi@firstfloor.org> <alpine.DEB.2.20.1703141407090.3619@nanos> <20170314154155.GG32070@tassilo.jf.intel.com> <alpine.DEB.2.20.1703141713010.3619@nanos>
+ <20170314170255.GH32070@tassilo.jf.intel.com> <alpine.DEB.2.20.1703141849170.3619@nanos> <20170314194720.GD26264@bhelgaas-glaptop.roam.corp.google.com> <20170315022414.GC14380@two.firstfloor.org>
+ <20170315025549.GA13191@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170331002608.GA72818@google.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 30, 2017 at 05:26:09PM -0700, Brian Norris wrote:
-> Hi Bjorn,
-> 
-> On Thu, Mar 30, 2017 at 06:28:25PM -0500, Bjorn Helgaas wrote:
-> > On Fri, Mar 24, 2017 at 10:22:19AM -0700, Brian Norris wrote:
-> > > On Fri, Mar 24, 2017 at 09:25:41AM -0500, Bjorn Helgaas wrote:
-> > > > These don't have .remove:
-> > > > 
-> > > >   imx6_pcie_driver
-> > > >   ls_pcie_driver
-> > > >   armada8k_pcie_driver
-> > > >   artpec6_pcie_driver
-> > > >   dw_plat_pcie_driver
-> > > >   hisi_pcie_driver
-> > > >   hisi_pcie_almost_ecam_driver
-> > > >   spear13xx_pcie_driver
-> > > >   gen_pci_driver
-> > > 
-> > > I think these are all technically broken.
+On Tue, 14 Mar 2017, Bjorn Helgaas wrote:
+> On Tue, Mar 14, 2017 at 07:24:14PM -0700, Andi Kleen wrote:
+> > > I agree that it should be fairly safe to do ECAM/MMCONFIG without
+> > > locking.  Can we handle the decision part by adding a "lockless" bit
+> > > to struct pci_ops?  Old ops don't mention that bit, so it will be
+> > > initialized to zero and we'll do locking as today.  ECAM/MMCONFIG ops
+> > > can set it and we can skip the locking.
 > > 
-> > Can we fix them all at the same time as you fix Rockchip?  Maybe we
-> > should have a series that adds ".suppress_bind_attrs = true" to all
-> > these drivers,
+> > That's what my other patch already did. 
 > 
-> Sure, I can do that.
+> Yes, your 1/4 patch does add the "ll_allowed" bit in struct pci_ops.
 > 
-> > including Rockchip.
+> What I was wondering, but didn't explain very well, was whether
+> instead of setting that bit at run-time in pci_mmcfg_arch_init(), we
+> could set it statically in the pci_ops definition, e.g.,
 > 
-> Huh? Why? So I can revert that in the next patch?
+>   static struct pci_ops ecam_ops = {
+>     .lockless = 1,
+>     .read = ecam_read,
+>     .write = ecam_write,
+>   };
 > 
-> > Then you could have this current 
-> > series to make Rockchip modular on top, if there's still value in it.
+> I think it would be easier to read if the lockless-ness were declared
+> right next to the accessors that need it (or don't need it).
 > 
-> I do see value in it. That's the whole reason I wrote this patchset.
-> It's useful for stressing out certain behaviors that will happen all the
-> time (i.e., boot-time initialization, from platform probe, to bus init,
-> to client/EP init), via repeated bind/unbind (or modprobe/rmmod). It's
-> much faster than reboot testing.
+> But it is a little confusing with all the different paths, at least on
+> x86, so maybe it wouldn't be quite that simple.
 
-I didn't phrase that very well.  There's certainly value in stressing
-the bind/unbind paths, but I thought the primary reason you wrote this
-was to fix the fact that you could crash the system like this:
+The pci_ops in x86 are a complete mess. We have
 
-  # echo f8000000.pcie > /sys/bus/platform/drivers/rockchip-pcie/unbind
-  # lspci
+struct pci_ops pci_root_ops = {
+        .read = pci_read,
+	.write = pci_write,
+};
 
->From my point of view, that's the issue that *has* to be fixed.
-Better test coverage is icing.
+That's the default and the r/w functions look like this:
 
-It sounds like several drivers have that same issue, and the simplest
-possible fix is to set .suppress_bind_attrs, so I suggested doing that 
-so it's easy to analyze the tree as a whole and say "these drivers
-all have the same problem, and all the fixes look the same."
+pci_read/write()
+{
+	if (domain == 0 && reg && raw_pci_ops)
+ 		return raw_pci_ops->read/write();
+	if (raw_pci_ext_ops)
+ 		return raw_pci_ext_ops->read/write();
+	return -EINVAL;
+}
 
-I guess if you'd rather skip that for Rockchip and apply a more
-complicated fix there, I could go along with that.  But I don't think
-it would hurt anything to set .suppress_bind_attrs, then remove it
-when you add module support.  The concepts of .suppress_bind_attrs and
-modularity are related, and doing this in a separate patch would make
-it a nice example to follow if somebody wants to make other drivers
-modular as well.
+raw_pci_ops and raw_pci_ext_ops are setup through an impenetrable maze of
+functions. Some of them overwrite pci_root_ops to something entirely
+different.
 
-> Personally, I'd rather just patch the other drivers, and you can wait
-> until I follow through on that promise before applying my existing work
-> for the Rockchip driver, if that's what you'd prefer.
+pci_root_ops is what is finally handed in to pci_scan_root_bus() as ops
+argument for any bus segment no matter which type it is.
 
-It's not so much a question of using the Rockchip change as a stick.
-I'm just thinking that it makes a more logical progression to fix the
-more important issue globally first.
+The locking aspect is interesting as well. The type0/1 functions are having
+their own internal locking. Oh, well.
 
-> > If we find a common problem, I'd like to fix it everywhere we know
-> > about so it doesn't get forgotten or copied to even more places.
-> 
-> Sure. But you only just pointed out how broken several drivers were; I
-> didn't really notice :)
+What we really want is to differentiate bus segments. That means a PCIe
+segment takes mmconfig ops and a PCI segment the type0/1 ops. That way we
+can do what you suggested above, i.e. marking the ecam/mmconfig ops as
+lockless.
 
-Yeah, you're right, I had in my head the idea that if we've identified
-the same problem in several drivers, we should fix them all, but I
-neglected to turn that into words.
+Sure that's more work than just whacking a sloppy quirk into the code, but
+the right thing to do.
 
-Bjorn
+Thanks,
+
+	tglx
