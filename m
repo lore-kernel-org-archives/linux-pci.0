@@ -1,74 +1,77 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 7 Mar 2017 11:07:59 -0800
-From: Shaohua Li <shli@kernel.org>
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, netdev@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
-        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, peterz@infradead.org,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-Subject: Re: [PATCH 10/29] drivers, md: convert stripe_head.count from
- atomic_t to refcount_t
-Message-ID: <20170307190759.jnrq66kfpkr4m7zl@kernel.org>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-11-git-send-email-elena.reshetova@intel.com>
+Date: Thu, 16 Mar 2017 16:09:57 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Tom Lendacky <thomas.lendacky@amd.com>
+Cc: Brijesh Singh <brijesh.singh@amd.com>,
+        Paolo Bonzini <pbonzini@redhat.com>, simon.guinot@sequanux.org,
+        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
+        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
+        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com, jroedel@suse.de,
+        keescook@chromium.org, arnd@arndb.de, toshi.kani@hpe.com,
+        mathieu.desnoyers@efficios.com, luto@kernel.org,
+        devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org,
+        akpm@linux-foundation.org, davem@davemloft.net
+Subject: Re: [RFC PATCH v2 12/32] x86: Add early boot support when running
+ with SEV active
+Message-ID: <20170316150957.dos6wp3pmhos4hkj@pd.tnic>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846768878.2349.15757532025749214650.stgit@brijesh-build-machine>
+ <20170309140748.tg67yo2jmc5ahck3@pd.tnic>
+ <5d62b16f-16ef-1bd7-1551-f0c4c43573f4@redhat.com>
+ <20170309162942.jwtb3l33632zhbaz@pd.tnic>
+ <1fe1e177-f588-fe5a-dc13-e9fde00e8958@amd.com>
+ <20170316101656.dcwgtn4qdtyp5hip@pd.tnic>
+ <b27126ee-aff0-ab11-706b-fc6d8d4901db@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1488810076-3754-11-git-send-email-elena.reshetova@intel.com>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <b27126ee-aff0-ab11-706b-fc6d8d4901db@amd.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 06, 2017 at 04:20:57PM +0200, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
-> 
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
-> ---
->  drivers/md/raid5-cache.c |  8 +++---
->  drivers/md/raid5.c       | 66 ++++++++++++++++++++++++------------------------
->  drivers/md/raid5.h       |  3 ++-
->  3 files changed, 39 insertions(+), 38 deletions(-)
-> 
-> diff --git a/drivers/md/raid5-cache.c b/drivers/md/raid5-cache.c
-> index 3f307be..6c05e12 100644
-> --- a/drivers/md/raid5-cache.c
-> +++ b/drivers/md/raid5-cache.c
+On Thu, Mar 16, 2017 at 09:28:58AM -0500, Tom Lendacky wrote:
+> Because there are differences between how SME and SEV behave
+> (instruction fetches are always decrypted under SEV, DMA to an
+> encrypted location is not supported under SEV, etc.) we need to
+> determine which mode we are in so that things can be setup properly
+> during boot. For example, if SEV is active the kernel will already
+> be encrypted and so we don't perform that step or the trampoline area
+> for bringing up an AP must be decrypted for SME but encrypted for SEV.
 
-snip
->  	       sh->check_state, sh->reconstruct_state);
->  
->  	analyse_stripe(sh, &s);
-> @@ -4924,7 +4924,7 @@ static void activate_bit_delay(struct r5conf *conf,
->  		struct stripe_head *sh = list_entry(head.next, struct stripe_head, lru);
->  		int hash;
->  		list_del_init(&sh->lru);
-> -		atomic_inc(&sh->count);
-> +		refcount_inc(&sh->count);
->  		hash = sh->hash_lock_index;
->  		__release_stripe(conf, sh, &temp_inactive_list[hash]);
->  	}
-> @@ -5240,7 +5240,7 @@ static struct stripe_head *__get_priority_stripe(struct r5conf *conf, int group)
->  		sh->group = NULL;
->  	}
->  	list_del_init(&sh->lru);
-> -	BUG_ON(atomic_inc_return(&sh->count) != 1);
-> +	BUG_ON(refcount_inc_not_zero(&sh->count));
+So with SEV enabled, it seems to me a guest doesn't know anything about
+encryption and can run as if SME is disabled. So sme_active() will be
+false. And then the kernel can bypass all that code dealing with SME.
 
-This changes the behavior. refcount_inc_not_zero doesn't inc if original value is 0
+So a guest should simply run like on baremetal with no SME, IMHO.
 
-Thanks,
-Shaohua
+But then there's that part: "instruction fetches are always decrypted
+under SEV". What does that mean exactly? And how much of that code can
+be reused so that
+
+* SME on baremetal
+* SEV on guest
+
+use the same logic?
+
+Having the larger SEV preparation part on the kvm host side is perfectly
+fine. But I'd like to keep kernel initialization paths clean.
+
+Thanks.
+
+-- 
+Regards/Gruss,
+    Boris.
+
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
