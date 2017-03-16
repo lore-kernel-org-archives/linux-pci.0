@@ -1,83 +1,211 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 14 Mar 2017 15:15:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Subject: Re: [PATCH v3 0/3] pci: remove msi_controller registration API
-Message-ID: <20170314201524.GF26264@bhelgaas-glaptop.roam.corp.google.com>
-References: <1488292276-11106-1-git-send-email-thomas.petazzoni@free-electrons.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49900 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751357AbdCPLG4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Mar 2017 07:06:56 -0400
+Subject: Re: [RFC PATCH v2 16/32] x86: kvm: Provide support to create Guest
+ and HV shared per-CPU variables
+To: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
+        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
+        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
+        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, bp@suse.de, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org,
+        akpm@linux-foundation.org, davem@davemloft.net
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846773666.2349.9492983018843773590.stgit@brijesh-build-machine>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Message-ID: <02c00224-6b4d-4256-ead0-854755d6d0ea@redhat.com>
+Date: Thu, 16 Mar 2017 12:06:44 +0100
 MIME-Version: 1.0
-In-Reply-To: <1488292276-11106-1-git-send-email-thomas.petazzoni@free-electrons.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, devicetree@vger.kernel.org,
- Yehuda Yitschak <yehuday@marvell.com>, Jason Cooper <jason@lakedaemon.net>,
- Pawel Moll <pawel.moll@arm.com>, Ian Campbell <ijc+devicetree@hellion.org.uk>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
- Hanna Hawa <hannah@marvell.com>, Nadav Haklai <nadavh@marvell.com>,
- Gregory Clement <gregory.clement@free-electrons.com>,
- Rob Herring <robh+dt@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
- Kumar Gala <galak@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org,
- Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <148846773666.2349.9492983018843773590.stgit@brijesh-build-machine>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Feb 28, 2017 at 03:31:13PM +0100, Thomas Petazzoni wrote:
-> Hello,
-> 
-> This small patch series aims at removing the small msi_controller
-> registration API implemented in drivers/of/of_pci.c.
-> 
-> In order to do so, it moves the last two users of this API to the
-> generic MSI support:
-> 
->  - The pci-aardvark driver is moved to use the generic MSI
->    support. This driver is both the provider of the MSI capability and
->    the consumer of this capability.
-> 
->  - The pci-mvebu driver is cleaned up from using the msi_controller
->    registration API. This driver is only consuming MSI capabilies from
->    another driver (irq-armada-370-xp) which was migrated to the
->    generic MSI support some time ago. Therefore, this patch is simply
->    removing dead code.
-> 
-> Finally, the last commit removed the now unused API.
-> 
-> Changes between v2 and v3 are described in each individual patch.
-> 
-> Thanks,
-> 
-> Thomas
-> 
-> Thomas Petazzoni (3):
->   pci: pci-aardvark: move to MSI handling using generic MSI support
->   pci: pci-mvebu: remove useless MSI enabling code
->   of: pci: remove unused MSI controller helpers
-> 
->  drivers/of/of_pci.c             |  45 -----------
->  drivers/pci/host/pci-aardvark.c | 173 ++++++++++++++++------------------------
->  drivers/pci/host/pci-mvebu.c    |  17 ----
->  include/linux/of_pci.h          |  11 ---
->  4 files changed, 67 insertions(+), 179 deletions(-)
 
-Applied to pci/msi for v4.12, thanks!
 
-I think Marc's ack on 1/30 applies to the first two, so I added it to them.
+On 02/03/2017 16:15, Brijesh Singh wrote:
+> Some KVM specific MSR's (steal-time, asyncpf, avic_eio) allocates per-CPU
+> variable at compile time and share its physical address with hypervisor.
+> It presents a challege when SEV is active in guest OS. When SEV is active,
+> guest memory is encrypted with guest key and hypervisor will no longer able
+> to modify the guest memory. When SEV is active, we need to clear the
+> encryption attribute of shared physical addresses so that both guest and
+> hypervisor can access the data.
+> 
+> To solve this problem, I have tried these three options:
+> 
+> 1) Convert the static per-CPU to dynamic per-CPU allocation. When SEV is
+> detected then clear the encryption attribute. But while doing so I found
+> that per-CPU dynamic allocator was not ready when kvm_guest_cpu_init was
+> called.
+> 
+> 2) Since the encryption attributes works on PAGE_SIZE hence add some extra
+> padding to 'struct kvm-steal-time' to make it PAGE_SIZE and then at runtime
+> clear the encryption attribute of the full PAGE. The downside of this was
+> now we need to modify structure which may break the compatibility.
+> 
+> 3) Define a new per-CPU section (.data..percpu.hv_shared) which will be
+> used to hold the compile time shared per-CPU variables. When SEV is
+> detected we map this section with encryption attribute cleared.
+> 
+> This patch implements #3. It introduces a new DEFINE_PER_CPU_HV_SHAHRED
+> macro to create a compile time per-CPU variable. When SEV is detected we
+> map the per-CPU variable as decrypted (i.e with encryption attribute cleared).
+> 
+> Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
 
-Oh, and I'll drop the other aardvark change that removes the same bits of
-unused "msi-parent" code from advk_pcie_probe().
+Looks good to me.
 
-Bjorn
+Paolo
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  arch/x86/kernel/kvm.c             |   43 +++++++++++++++++++++++++++++++------
+>  include/asm-generic/vmlinux.lds.h |    3 +++
+>  include/linux/percpu-defs.h       |    9 ++++++++
+>  3 files changed, 48 insertions(+), 7 deletions(-)
+> 
+> diff --git a/arch/x86/kernel/kvm.c b/arch/x86/kernel/kvm.c
+> index 099fcba..706a08e 100644
+> --- a/arch/x86/kernel/kvm.c
+> +++ b/arch/x86/kernel/kvm.c
+> @@ -75,8 +75,8 @@ static int parse_no_kvmclock_vsyscall(char *arg)
+>  
+>  early_param("no-kvmclock-vsyscall", parse_no_kvmclock_vsyscall);
+>  
+> -static DEFINE_PER_CPU(struct kvm_vcpu_pv_apf_data, apf_reason) __aligned(64);
+> -static DEFINE_PER_CPU(struct kvm_steal_time, steal_time) __aligned(64);
+> +static DEFINE_PER_CPU_HV_SHARED(struct kvm_vcpu_pv_apf_data, apf_reason) __aligned(64);
+> +static DEFINE_PER_CPU_HV_SHARED(struct kvm_steal_time, steal_time) __aligned(64);
+>  static int has_steal_clock = 0;
+>  
+>  /*
+> @@ -290,6 +290,22 @@ static void __init paravirt_ops_setup(void)
+>  #endif
+>  }
+>  
+> +static int kvm_map_percpu_hv_shared(void *addr, unsigned long size)
+> +{
+> +	/* When SEV is active, the percpu static variables initialized
+> +	 * in data section will contain the encrypted data so we first
+> +	 * need to decrypt it and then map it as decrypted.
+> +	 */
+> +	if (sev_active()) {
+> +		unsigned long pa = slow_virt_to_phys(addr);
+> +
+> +		sme_early_decrypt(pa, size);
+> +		return early_set_memory_decrypted(addr, size);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  static void kvm_register_steal_time(void)
+>  {
+>  	int cpu = smp_processor_id();
+> @@ -298,12 +314,17 @@ static void kvm_register_steal_time(void)
+>  	if (!has_steal_clock)
+>  		return;
+>  
+> +	if (kvm_map_percpu_hv_shared(st, sizeof(*st))) {
+> +		pr_err("kvm-stealtime: failed to map hv_shared percpu\n");
+> +		return;
+> +	}
+> +
+>  	wrmsrl(MSR_KVM_STEAL_TIME, (slow_virt_to_phys(st) | KVM_MSR_ENABLED));
+>  	pr_info("kvm-stealtime: cpu %d, msr %llx\n",
+>  		cpu, (unsigned long long) slow_virt_to_phys(st));
+>  }
+>  
+> -static DEFINE_PER_CPU(unsigned long, kvm_apic_eoi) = KVM_PV_EOI_DISABLED;
+> +static DEFINE_PER_CPU_HV_SHARED(unsigned long, kvm_apic_eoi) = KVM_PV_EOI_DISABLED;
+>  
+>  static notrace void kvm_guest_apic_eoi_write(u32 reg, u32 val)
+>  {
+> @@ -327,25 +348,33 @@ static void kvm_guest_cpu_init(void)
+>  	if (kvm_para_has_feature(KVM_FEATURE_ASYNC_PF) && kvmapf) {
+>  		u64 pa = slow_virt_to_phys(this_cpu_ptr(&apf_reason));
+>  
+> +		if (kvm_map_percpu_hv_shared(this_cpu_ptr(&apf_reason),
+> +					sizeof(struct kvm_vcpu_pv_apf_data)))
+> +			goto skip_asyncpf;
+>  #ifdef CONFIG_PREEMPT
+>  		pa |= KVM_ASYNC_PF_SEND_ALWAYS;
+>  #endif
+>  		wrmsrl(MSR_KVM_ASYNC_PF_EN, pa | KVM_ASYNC_PF_ENABLED);
+>  		__this_cpu_write(apf_reason.enabled, 1);
+> -		printk(KERN_INFO"KVM setup async PF for cpu %d\n",
+> -		       smp_processor_id());
+> +		printk(KERN_INFO"KVM setup async PF for cpu %d msr %llx\n",
+> +		       smp_processor_id(), pa);
+>  	}
+> -
+> +skip_asyncpf:
+>  	if (kvm_para_has_feature(KVM_FEATURE_PV_EOI)) {
+>  		unsigned long pa;
+>  		/* Size alignment is implied but just to make it explicit. */
+>  		BUILD_BUG_ON(__alignof__(kvm_apic_eoi) < 4);
+> +		if (kvm_map_percpu_hv_shared(this_cpu_ptr(&kvm_apic_eoi),
+> +					sizeof(unsigned long)))
+> +			goto skip_pv_eoi;
+>  		__this_cpu_write(kvm_apic_eoi, 0);
+>  		pa = slow_virt_to_phys(this_cpu_ptr(&kvm_apic_eoi))
+>  			| KVM_MSR_ENABLED;
+>  		wrmsrl(MSR_KVM_PV_EOI_EN, pa);
+> +		printk(KERN_INFO"KVM setup PV EOI for cpu %d msr %lx\n",
+> +		       smp_processor_id(), pa);
+>  	}
+> -
+> +skip_pv_eoi:
+>  	if (has_steal_clock)
+>  		kvm_register_steal_time();
+>  }
+> diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+> index 0968d13..8d29910 100644
+> --- a/include/asm-generic/vmlinux.lds.h
+> +++ b/include/asm-generic/vmlinux.lds.h
+> @@ -773,6 +773,9 @@
+>  	. = ALIGN(cacheline);						\
+>  	*(.data..percpu)						\
+>  	*(.data..percpu..shared_aligned)				\
+> +	. = ALIGN(PAGE_SIZE);						\
+> +	*(.data..percpu..hv_shared)					\
+> +	. = ALIGN(PAGE_SIZE);						\
+>  	VMLINUX_SYMBOL(__per_cpu_end) = .;
+>  
+>  /**
+> diff --git a/include/linux/percpu-defs.h b/include/linux/percpu-defs.h
+> index 8f16299..5af366e 100644
+> --- a/include/linux/percpu-defs.h
+> +++ b/include/linux/percpu-defs.h
+> @@ -172,6 +172,15 @@
+>  #define DEFINE_PER_CPU_READ_MOSTLY(type, name)				\
+>  	DEFINE_PER_CPU_SECTION(type, name, "..read_mostly")
+>  
+> +/* Declaration/definition used for per-CPU variables that must be shared
+> + * between hypervisor and guest OS.
+> + */
+> +#define DECLARE_PER_CPU_HV_SHARED(type, name)				\
+> +	DECLARE_PER_CPU_SECTION(type, name, "..hv_shared")
+> +
+> +#define DEFINE_PER_CPU_HV_SHARED(type, name)				\
+> +	DEFINE_PER_CPU_SECTION(type, name, "..hv_shared")
+> +
+>  /*
+>   * Intermodule exports for per-CPU variables.  sparse forgets about
+>   * address space across EXPORT_SYMBOL(), change EXPORT_SYMBOL() to
+> 
