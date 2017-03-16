@@ -1,58 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50188 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752656AbdC2XEf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Mar 2017 19:04:35 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: mayurkumar.patel@intel.com, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>
-Subject: [PATCH V6 0/5] PCI/ASPM: reconfigure ASPM following hotplug for POLICY_DEFAULT
-Date: Wed, 29 Mar 2017 19:04:22 -0400
-Message-Id: <1490828667-30973-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC PATCH v2 05/32] x86: Use encrypted access of BOOT related
+ data with SEV
+To: Borislav Petkov <bp@suse.de>, Brijesh Singh <brijesh.singh@amd.com>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846757895.2349.561582698953591240.stgit@brijesh-build-machine>
+ <20170307110925.zmo7gsflxhui4k7e@pd.tnic>
+CC: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <kvm@vger.kernel.org>, <rkrcmar@redhat.com>,
+        <matt@codeblueprint.co.uk>, <linux-pci@vger.kernel.org>,
+        <linus.walleij@linaro.org>, <gary.hook@amd.com>,
+        <linux-mm@kvack.org>, <paul.gortmaker@windriver.com>,
+        <hpa@zytor.com>, <cl@linux.com>, <dan.j.williams@intel.com>,
+        <aarcange@redhat.com>, <sfr@canb.auug.org.au>,
+        <andriy.shevchenko@linux.intel.com>, <herbert@gondor.apana.org.au>,
+        <bhe@redhat.com>, <xemul@parallels.com>, <joro@8bytes.org>,
+        <x86@kernel.org>, <peterz@infradead.org>, <piotr.luc@intel.com>,
+        <mingo@redhat.com>, <msalter@redhat.com>,
+        <ross.zwisler@linux.intel.com>, <dyoung@redhat.com>,
+        <jroedel@suse.de>, <keescook@chromium.org>, <arnd@arndb.de>,
+        <toshi.kani@hpe.com>, <mathieu.desnoyers@efficios.com>,
+        <luto@kernel.org>, <devel@linuxdriverproject.org>,
+        <bhelgaas@google.com>, <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Message-ID: <8715da04-2d25-d1f2-3082-f45750c4f2d9@amd.com>
+Date: Thu, 16 Mar 2017 14:03:58 -0500
+MIME-Version: 1.0
+In-Reply-To: <20170307110925.zmo7gsflxhui4k7e@pd.tnic>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When the operating system is booted with the default ASPM policy
-(POLICY_DEFAULT), current code is querying the enable/disable
-states from ASPM registers to determine the policy.
+On 3/7/2017 5:09 AM, Borislav Petkov wrote:
+> On Thu, Mar 02, 2017 at 10:12:59AM -0500, Brijesh Singh wrote:
+>> From: Tom Lendacky <thomas.lendacky@amd.com>
+>>
+>> When Secure Encrypted Virtualization (SEV) is active, BOOT data (such as
+>> EFI related data, setup data) is encrypted and needs to be accessed as
+>> such when mapped. Update the architecture override in early_memremap to
+>> keep the encryption attribute when mapping this data.
+>
+> This could also explain why persistent memory needs to be accessed
+> decrypted with SEV.
 
-For example, a BIOS could set the power saving state to performance
-and clear all ASPM control registers. A balanced ASPM policy could
-enable L0s and disable L1. A power conscious BIOS could enable both
-L0s and L1 to trade off latency and performance vs. power.
+I'll add some comments about why persistent memory needs to be accessed
+decrypted (because the encryption key changes across reboots) for both
+SME and SEV.
 
-After hotplug removal, pcie_aspm_exit_link_state() function clears
-the ASPM registers. An insertion following hotplug removal reads
-incorrect policy as ASPM disabled even though ASPM was enabled
-during boot.
+>
+> In general, what the difference in that aspect is in respect to SME. And
+> I'd write that in the comment over the function. And not say "E820 areas
+> are checked in making this determination." because that is visible but
+> say *why* we need to check those ranges and determine access depending
+> on their type.
 
-This is caused by the fact that same function is used for reconfiguring
-ASPM regardless of the power on state.
+Will do.
 
-------------------------
-Changes from v5 (https://www.spinics.net/lists/arm-kernel/msg571758.html)
-------------------------
-- rebase to 4.11-rc3
-- Split pci_aspm_init() body into pci_aspm_init_upstream()
-  and pci_aspm_init_downstream() for bridge and endpoint
-  specific code behavior.
-- Get rid of function0 function.
-  Detect downstream link in pci_aspm_init_upstream() instead
+Thanks,
+Tom
 
-Sinan Kaya (5):
-  PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
-  PCI/ASPM: split pci_aspm_init() into two
-  PCI/ASPM: add init hook to device_add
-  PCI/ASPM: save power on values during bridge init
-  PCI/ASPM: move link_state cleanup to bridge remove
-
- drivers/pci/pcie/aspm.c | 137 ++++++++++++++++++++++++++++++++----------------
- drivers/pci/probe.c     |   3 ++
- drivers/pci/remove.c    |   3 +-
- include/linux/pci.h     |   2 +
- 4 files changed, 98 insertions(+), 47 deletions(-)
-
--- 
-1.9.1
+>
