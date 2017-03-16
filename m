@@ -1,104 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 7 Mar 2017 13:07:31 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Jess Frazelle <me@jessfraz.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "open list:Hyper-V CORE AND DRIVERS" <devel@linuxdriverproject.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        kernel-hardening@lists.openwall.com,
-        Kees Cook <keescook@chromium.org>,
-        Marc Zyngier <marc.zyngier@arm.com>
-Subject: Re: [PATCH v2 3/5] pci: set msi_domain_ops as __ro_after_init
-Message-ID: <20170307190731.GD21358@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170211013758.3288-1-me@jessfraz.com>
- <20170211013758.3288-3-me@jessfraz.com>
- <20170215203347.GA6981@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.DEB.2.20.1702152143520.3805@nanos>
- <20170216143509.GA22820@bhelgaas-glaptop.roam.corp.google.com>
- <alpine.DEB.2.20.1702161536150.3543@nanos>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V7 5/7] ACPI: Delay the enumeration on the devices whose
+ dependency has not met
+To: Arnd Bergmann <arnd@arndb.de>, "zhichang.yuan" <yuanzhichang@hisilicon.com>
+References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1489372963-9000-6-git-send-email-yuanzhichang@hisilicon.com>
+ <4600523.rWNiWKrYZC@aspire.rjw.lan> <58C9F6C6.4090700@hisilicon.com>
+ <CAK8P3a2QZ_j9RQ0U=4MoAAcRcZyu0L5AiYM22QZkiRxh7Ca-iA@mail.gmail.com>
+From: "zhichang.yuan" <zhichang.yuan02@gmail.com>
+Message-ID: <592befcb-8b52-3a3a-323f-55566f61c7df@gmail.com>
+Date: Thu, 16 Mar 2017 22:56:52 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <alpine.DEB.2.20.1702161536150.3543@nanos>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAK8P3a2QZ_j9RQ0U=4MoAAcRcZyu0L5AiYM22QZkiRxh7Ca-iA@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Rafael Wysocki <rafael@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+ Will Deacon <will.deacon@arm.com>, linuxarm@huawei.com,
+ Frank Rowand <frowand.list@gmail.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Wei Xu <xuwei5@hisilicon.com>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ linux-serial@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
+ devicetree@vger.kernel.org, Corey Minyard <minyard@acm.org>,
+ liviu.dudau@arm.com, John Garry <john.garry@huawei.com>,
+ Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ kantyzc@163.com, Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Zou Rongrong <zourongrong@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 16, 2017 at 03:38:05PM +0100, Thomas Gleixner wrote:
-> On Thu, 16 Feb 2017, Bjorn Helgaas wrote:
-> > On Wed, Feb 15, 2017 at 10:16:32PM +0100, Thomas Gleixner wrote:
-> > 
-> > > I think I suggested to Jiang to do that 'update with default functions' to
-> > > 
-> > > - avoid exporting the world and some more
-> > > 
-> > > - have the flexibility to add new functions to the ops w/o updating a
-> > >   gazillion of existing usage sites, which has saved us lots of chaising in
-> > >   the last years
-> > > 
-> > > - avoid the if (ops->ptr) ops->ptr(); else default_fn(); constructs all
-> > >   over the place.
-> > > 
-> > > I admit I did not think about the fact that this makes the structs non
-> > > const.
-> > > 
-> > > Mopping that up by exporting the default functions and setting all the
-> > > function pointers is tedious and requires a full tree sweep when we add new
-> > > stuff. There's also code shared between PCI/platform/DT based stuff, so
-> > > that becomes interesting.
-> > 
-> > It's legal to initialize a field multiple times, and the last one
-> > takes precedence, so doing this might at least avoid the full tree
-> > sweeps:
-> > 
-> >   static struct msi_domain_ops vmd_msi_domain_ops = {
-> >     MSI_DOMAIN_DEFAULT_OPS,
-> >     .get_hwirq = vmd_get_hwirq,
-> >   };
-> > 
-> > The functions referenced by MSI_DOMAIN_DEFAULT_OPS would still have to
-> > be exported, though.
+Hi, Arnd,
+
+
+
+On 03/16/2017 06:13 PM, Arnd Bergmann wrote:
+> On Thu, Mar 16, 2017 at 3:21 AM, zhichang.yuan
+> <yuanzhichang@hisilicon.com> wrote:
+>> Hi, Rafael,
+>>
+>> Thanks for your review!
+>>
+>> On 2017/3/14 5:24, Rafael J. Wysocki wrote:
+>>> On Monday, March 13, 2017 10:42:41 AM zhichang.yuan wrote:
+>>>> In commit 40e7fcb1929(ACPI: Add _DEP support to fix battery issue on Asus
+>>>> T100TA), the '_DEP' was supported to solve the dependency of Asus battery. But
+>>>> this patch is specific to Asus battery device.
+>>>> In the real world, there are other devices which need the dependency to play the
+>>>> role on the enumeration order. For example, all the Hip06 LPC
+>>>> periperals(IPMI-BT, uart, etc) must be scanned after the LPC host driver
+>>>> finished the probing. So, it makes sense to add a checking whether the ACPI
+>>>> device meet all the dependencies during its enumeration slot, if not, the
+>>>> enumeration will be delayed till all dependency master finish their work.
+>>>>
+>>>> This patch adds the dependency checking in ACPI enumeration, also the
+>>>> corresponding handling to retrigger the Hip06 LPC peripherals' scanning.
+>>>
+>>> AFAICS, _DEP is generally abused in the wild and cannot be made generic.  Sorry.
+>>>
+>>
+>> From the ACPI specification, _DEP is for operation region accesses.
+>> You are right...
+>>
+>> How about we add a ACPI handler for our LPC bus?? Just like amba.
+>> In this way, we also can solve the issue about LPC enumeration order.
 > 
-> Hmm, that'd work. Though it will fall apart for those pieces where we share
-> code across backends. But I did not yet go through all the places and check
-> them.
+> As far as I can tell, PCI and LPC have exactly the same requirement here,
+> so whatever you end up doing for one should be used for the other as well.
 > 
-> > > Doing the if (ops->ptr) ops->ptr() else default_fn(); dance should be
-> > > simpler to pull off. There are not that many sites to look at, but then we
-> > > have some of the GICv3 code using the domain ops out of core.
-> > > 
-> > > For now doing the __ro_after_init is definitely the simplest and fastest
-> > > solution to tighten these statically allocated structures.
-> > 
-> > I'm OK with __ro_after_init, at least as an interim solution.
-> > 
-> > I do think it would be good to audit all the uses of
-> > MSI_FLAG_USE_DEF_DOM_OPS and MSI_FLAG_USE_DEF_CHIP_OPS, since they
-> > seem to be the primary indicator of when the struct might be modified.
-> > I suspect we could add __ro_after_init to more than just pci-hyperv.c,
-> > vmd.c, and msi.c
+
+Thanks for your remind!
+
+To some extend, our LPC is similar to PCI. We also need to setup the host
+resources before scanning the children. For PCI, there is an ACPI handler of
+pci_root_handler. Although our LPC is not so complicated and powerful as PCI(for
+example, LPC can't probe downside devices), I think, we can still make LPC host
+ready to work in its own ACPI handler callback....
+
+Cheers,
+Zhichang
+
+
+>       Arnd
 > 
-> Agreed. I have it on my radar.
 
-This seems like a worthwhile change, so I don't want to just drop this
-patch.  But if we're going to do something, I'd like to do it
-everywhere that it makes sense, all at the same time.
-
-It looks like the v2 series was split up by subsystem, which is fine
-with me.  I'll happily apply the PCI parts (or ack them, since it
-might make sense to apply all of them via the same non-PCI tree).
-
-But I *would* like to include the following users of
-MSI_FLAG_USE_DEF_DOM_OPS and MSI_FLAG_USE_DEF_CHIP_OPS at the same
-time (or explain why __ro_after_init won't work for them):
-
-  pci-xgene-msi.c
-  pcie-altera-msi.c
-  pcie-iproc-msi.c
-  pcie-xilinx-nwl.c
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
