@@ -1,67 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <nsekhar@ti.com>, <kishon@ti.com>, Keerthy <j-keerthy@ti.com>
-Subject: [RESEND PATCH v3 7/7] PCI: dwc: dra7xx: Push request_irq call to the bottom of probe
-Date: Thu, 9 Mar 2017 12:09:05 +0530
-Message-ID: <1489041545-15730-8-git-send-email-kishon@ti.com>
-In-Reply-To: <1489041545-15730-1-git-send-email-kishon@ti.com>
-References: <1489041545-15730-1-git-send-email-kishon@ti.com>
+Return-Path: <SRS0=f67S=2Z=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=f67S=2Z=free.fr=slash.tmp@kernel.org>
+Subject: Re: Legacy PCI interrupt support in PCIe host driver
+From: Mason <slash.tmp@free.fr>
+To: LKML <linux-kernel@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner
+ <tglx@linutronix.de>, Jason Cooper <jason@lakedaemon.net>,
+ linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Robin Murphy <robin.murphy@arm.com>, Liviu Dudau <liviu.dudau@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Uwe Kleine-Konig <u.kleine-koenig@pengutronix.de>,
+ Rob Herring <robh@kernel.org>
+References: <5612adb6-af5c-9fbf-e725-813ee7fe1b4b@free.fr>
+Message-ID: <8443b350-6aa6-75f8-af48-892c722fc2d9@free.fr>
+Date: Thu, 16 Mar 2017 18:33:09 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <5612adb6-af5c-9fbf-e725-813ee7fe1b4b@free.fr>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Keerthy <j-keerthy@ti.com>
+On 16/03/2017 16:40, Mason wrote:
 
-Currently devm_request_irq is being called before base, pci fields
-of dra7xx_pcie structure are populated. It is called even before
-pm_runtime_enable and pm_runtime_get_sync are called. This will
-lead to exceptions if in case an interrupt is triggered before
-the all of the above are done. Hence push the devm_request_irq
-call to the end of the probe.
+> Here is my current DT:
+> 
+> 		msi0: msi@2e080 {
+> 			compatible = "sigma,msi";
+> 			reg = <0x2e04c 0x40>;
+> 			interrupt-parent = <&irq0>;
+> 			interrupts = <55 IRQ_TYPE_LEVEL_HIGH>;
+> 			msi-controller;
+> 			num-vectors = <32>;
+> 		};
+> 
+> 		pcie@30000000 {
+> 			compatible = "sigma,smp8759-pcie";
+> 			reg = <0x30000000 SZ_4M>, <0x2e02c 4>;
+> 			device_type = "pci";
+> 			bus-range = <0 3>;
+> 			#size-cells = <2>;
+> 			#address-cells = <3>;
+> 			#interrupt-cells = <1>;
+> 			ranges = <0x02000000 0x0 0x00400000  0x30400000  0x0 SZ_60M>;
+> 			msi-parent = <&msi0>;
+> 			interrupt-parent = <&irq0>;
+> 			interrupts = <54 IRQ_TYPE_LEVEL_HIGH>;
+> 		};
+> 
+> 
+> I traced the action into pdev_fixup_irq()
+> which calls of_irq_parse_and_map_pci()
+> 
+> How do I tell Linux that
+> - All the legacy PCI interrupts are muxed to a single line
+> - And this line is routed to system interrupt 54
+> 
+> Ooooooh... Wait...
+> 
+> Is this what interrupt-map is used for?
+> 
+> http://elinux.org/Device_Tree_Usage#Advanced_Interrupt_Mapping
 
-Signed-off-by: Keerthy <j-keerthy@ti.com>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+I added this to my pcie@30000000 node:
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index c6fef0a..8c53233 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -410,13 +410,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 	}
- 
--	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
--			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
--	if (ret) {
--		dev_err(dev, "failed to request irq\n");
--		return ret;
--	}
--
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
- 	base = devm_ioremap_nocache(dev, res->start, resource_size(res));
- 	if (!base)
-@@ -478,6 +471,13 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	if (ret < 0)
- 		goto err_gpio;
- 
-+	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
-+			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
-+	if (ret) {
-+		dev_err(dev, "failed to request irq\n");
-+		goto err_gpio;
-+	}
-+
- 	return 0;
- 
- err_gpio:
--- 
-1.7.9.5
+	interrupt-map = <0 0 0 1 &irq0 54 IRQ_TYPE_LEVEL_HIGH>;
+
+to map INTA to system IRQ 54.
+
+And now it works much better :-)
+
+# cat /proc/interrupts 
+           CPU0       
+ 19:       1529     GIC-0  29 Edge      twd
+ 20:        125      irq0   1 Level     serial
+ 22:          0      irq0  54 Level     tutu, xhci-hcd:usb1
+
+About shared ISRs. Are they supposed to return IRQ_HANDLED
+if and only if they handled something?
+
+Will that stop the next ISR from being called?
+
+I guess if two interrupts fire at the same time, we'll
+just take two separate exceptions?
+
+Regards.
