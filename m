@@ -1,71 +1,98 @@
-Return-Path: <SRS0=cakr=3I=chromium.org=briannorris@kernel.org>
-Return-Path: <SRS0=cakr=3I=chromium.org=briannorris@kernel.org>
-Date: Thu, 30 Mar 2017 17:26:09 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Jeffy Chen <jeffy.chen@rock-chips.com>,
-	Wenrui Li <wenrui.li@rock-chips.com>, linux-pci@vger.kernel.org,
-	linux-rockchip@lists.infradead.org, Ray Jui <rjui@broadcom.com>
-Subject: Re: [PATCH v2 3/5] PCI: rockchip: add remove() support
-Message-ID: <20170331002608.GA72818@google.com>
-References: <20170310024617.67303-1-briannorris@chromium.org>
- <20170310024617.67303-3-briannorris@chromium.org>
- <20170324142541.GA25380@bhelgaas-glaptop.roam.corp.google.com>
- <20170324172218.GA119093@google.com>
- <20170330232825.GB3912@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC PATCH v2 12/32] x86: Add early boot support when running
+ with SEV active
+To: Borislav Petkov <bp@suse.de>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846768878.2349.15757532025749214650.stgit@brijesh-build-machine>
+ <20170309140748.tg67yo2jmc5ahck3@pd.tnic>
+ <5d62b16f-16ef-1bd7-1551-f0c4c43573f4@redhat.com>
+ <20170309162942.jwtb3l33632zhbaz@pd.tnic>
+ <1fe1e177-f588-fe5a-dc13-e9fde00e8958@amd.com>
+ <20170316101656.dcwgtn4qdtyp5hip@pd.tnic>
+ <b27126ee-aff0-ab11-706b-fc6d8d4901db@amd.com>
+ <20170316150957.dos6wp3pmhos4hkj@pd.tnic>
+CC: Brijesh Singh <brijesh.singh@amd.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <kvm@vger.kernel.org>, <rkrcmar@redhat.com>,
+        <matt@codeblueprint.co.uk>, <linux-pci@vger.kernel.org>,
+        <linus.walleij@linaro.org>, <gary.hook@amd.com>,
+        <linux-mm@kvack.org>, <paul.gortmaker@windriver.com>,
+        <hpa@zytor.com>, <cl@linux.com>, <dan.j.williams@intel.com>,
+        <aarcange@redhat.com>, <sfr@canb.auug.org.au>,
+        <andriy.shevchenko@linux.intel.com>, <herbert@gondor.apana.org.au>,
+        <bhe@redhat.com>, <xemul@parallels.com>, <joro@8bytes.org>,
+        <x86@kernel.org>, <peterz@infradead.org>, <piotr.luc@intel.com>,
+        <mingo@redhat.com>, <msalter@redhat.com>,
+        <ross.zwisler@linux.intel.com>, <dyoung@redhat.com>,
+        <jroedel@suse.de>, <keescook@chromium.org>, <arnd@arndb.de>,
+        <toshi.kani@hpe.com>, <mathieu.desnoyers@efficios.com>,
+        <luto@kernel.org>, <devel@linuxdriverproject.org>,
+        <bhelgaas@google.com>, <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <akpm@linux-foundation.org>, <davem@davemloft.net>
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Message-ID: <cb1693fc-6876-a448-f485-1a6c70aa6ff5@amd.com>
+Date: Thu, 16 Mar 2017 11:11:26 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170330232825.GB3912@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170316150957.dos6wp3pmhos4hkj@pd.tnic>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On 3/16/2017 10:09 AM, Borislav Petkov wrote:
+> On Thu, Mar 16, 2017 at 09:28:58AM -0500, Tom Lendacky wrote:
+>> Because there are differences between how SME and SEV behave
+>> (instruction fetches are always decrypted under SEV, DMA to an
+>> encrypted location is not supported under SEV, etc.) we need to
+>> determine which mode we are in so that things can be setup properly
+>> during boot. For example, if SEV is active the kernel will already
+>> be encrypted and so we don't perform that step or the trampoline area
+>> for bringing up an AP must be decrypted for SME but encrypted for SEV.
+>
+> So with SEV enabled, it seems to me a guest doesn't know anything about
+> encryption and can run as if SME is disabled. So sme_active() will be
+> false. And then the kernel can bypass all that code dealing with SME.
+>
+> So a guest should simply run like on baremetal with no SME, IMHO.
+>
 
-On Thu, Mar 30, 2017 at 06:28:25PM -0500, Bjorn Helgaas wrote:
-> On Fri, Mar 24, 2017 at 10:22:19AM -0700, Brian Norris wrote:
-> > On Fri, Mar 24, 2017 at 09:25:41AM -0500, Bjorn Helgaas wrote:
-> > > These don't have .remove:
-> > > 
-> > >   imx6_pcie_driver
-> > >   ls_pcie_driver
-> > >   armada8k_pcie_driver
-> > >   artpec6_pcie_driver
-> > >   dw_plat_pcie_driver
-> > >   hisi_pcie_driver
-> > >   hisi_pcie_almost_ecam_driver
-> > >   spear13xx_pcie_driver
-> > >   gen_pci_driver
-> > 
-> > I think these are all technically broken.
-> 
-> Can we fix them all at the same time as you fix Rockchip?  Maybe we
-> should have a series that adds ".suppress_bind_attrs = true" to all
-> these drivers,
+Not quite. The guest still needs to understand about the encryption mask
+so that it can protect memory by setting the encryption mask in the
+pagetable entries.  It can also decide when to share memory with the
+hypervisor by not setting the encryption mask in the pagetable entries.
 
-Sure, I can do that.
+> But then there's that part: "instruction fetches are always decrypted
+> under SEV". What does that mean exactly? And how much of that code can
 
-> including Rockchip.
+"Instruction fetches are always decrypted under SEV" means that,
+regardless of how a virtual address is mapped, encrypted or decrypted,
+if an instruction fetch is performed by the CPU from that address it
+will always be decrypted. This is to prevent the hypervisor from
+injecting executable code into the guest since it would have to be
+valid encrypted instructions.
 
-Huh? Why? So I can revert that in the next patch?
+> be reused so that
+>
+> * SME on baremetal
+> * SEV on guest
+>
+> use the same logic?
 
-> Then you could have this current 
-> series to make Rockchip modular on top, if there's still value in it.
+There are many areas that use the same logic, but there are certain
+situations where we need to check between SME vs SEV (e.g. DMA operation
+setup or decrypting the trampoline area) and act accordingly.
 
-I do see value in it. That's the whole reason I wrote this patchset.
-It's useful for stressing out certain behaviors that will happen all the
-time (i.e., boot-time initialization, from platform probe, to bus init,
-to client/EP init), via repeated bind/unbind (or modprobe/rmmod). It's
-much faster than reboot testing.
+Thanks,
+Tom
 
-Personally, I'd rather just patch the other drivers, and you can wait
-until I follow through on that promise before applying my existing work
-for the Rockchip driver, if that's what you'd prefer.
-
-> If we find a common problem, I'd like to fix it everywhere we know
-> about so it doesn't get forgotten or copied to even more places.
-
-Sure. But you only just pointed out how broken several drivers were; I
-didn't really notice :)
-
-Brian
+>
+> Having the larger SEV preparation part on the kvm host side is perfectly
+> fine. But I'd like to keep kernel initialization paths clean.
+>
+> Thanks.
+>
