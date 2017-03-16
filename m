@@ -1,128 +1,137 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v3 06/23] Documentation: PCI: Add specification for the *pci
- test* function device
-Date: Thu, 9 Mar 2017 13:27:17 +0530
-Message-ID: <1489046254-19919-7-git-send-email-kishon@ti.com>
-In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
-References: <1489046254-19919-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Thu, 16 Mar 2017 12:48:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Rui Wang <rui.y.wang@intel.com>
+Cc: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
+        bhelgaas@google.com, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        x86@kernel.org, fengguang.wu@intel.com, kbuild-all@01.org
+Subject: Re: [PATCH v2 2/2] x86/ioapic: Split IOAPIC hot-removal into two
+ steps
+Message-ID: <20170316174842.GC2021@bhelgaas-glaptop.roam.corp.google.com>
+References: <201702280904.A2EXAFMQ%fengguang.wu@intel.com>
+ <1488288869-31290-1-git-send-email-rui.y.wang@intel.com>
+ <1488288869-31290-3-git-send-email-rui.y.wang@intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1488288869-31290-3-git-send-email-rui.y.wang@intel.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add specification for the *pci test* virtual function device. The endpoint
-function driver and the host pci driver should be created based on this
-specification.
+On Tue, Feb 28, 2017 at 09:34:29PM +0800, Rui Wang wrote:
+> The hot-removal of IOAPIC is broken into two parts: the PCI part and
+> the ACPI part. The PCI part releases PCI resources before the PCI bus
+> is gone, and the ACPI part is moved to a stage later than the hot-removal
+> of the PCI root bus, so that the IOAPIC driver is able to hook the
+> pcibios_release_device() of every PCI device under the same parent root
+> bus, before the IOAPIC is hot-removed. This makes it possible for the
+> IOAPIC to free any IRQ resource previously unable to get freed.
+> 
+> v2: Fixed compiling error on i386 (missing stub of pci_ioapic_remove())
+> 
+> Signed-off-by: Rui Wang <rui.y.wang@intel.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/PCI/00-INDEX                       |    2 +
- Documentation/PCI/endpoint/pci-test-function.txt |   66 ++++++++++++++++++++++
- 2 files changed, 68 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/pci-test-function.txt
+Minor comments below, but
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index f84a23c..4e5a283 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -16,3 +16,5 @@ endpoint/pci-endpoint.txt
- 	- guide to add endpoint controller driver and endpoint function driver.
- endpoint/pci-endpoint-cfs.txt
- 	- guide to use configfs to configure the pci endpoint function.
-+endpoint/pci-test-function.txt
-+	- specification of *pci test* function device.
-diff --git a/Documentation/PCI/endpoint/pci-test-function.txt b/Documentation/PCI/endpoint/pci-test-function.txt
-new file mode 100644
-index 0000000..1324376
---- /dev/null
-+++ b/Documentation/PCI/endpoint/pci-test-function.txt
-@@ -0,0 +1,66 @@
-+				PCI TEST
-+		    Kishon Vijay Abraham I <kishon@ti.com>
-+
-+Traditionally PCI RC has always been validated by using standard
-+PCI cards like ethernet PCI cards or USB PCI cards or SATA PCI cards.
-+However with the addition of EP-core in linux kernel, it is possible
-+to configure a PCI controller that can operate in EP mode to work as
-+a test device.
-+
-+The PCI endpoint test device is a virtual device (defined in software)
-+used to test the endpoint functionality and serve as a sample driver
-+for other PCI endpoint devices (to use the EP framework).
-+
-+The PCI endpoint test device has the following registers:
-+
-+	1) PCI_ENDPOINT_TEST_MAGIC
-+	2) PCI_ENDPOINT_TEST_COMMAND
-+	3) PCI_ENDPOINT_TEST_STATUS
-+	4) PCI_ENDPOINT_TEST_SRC_ADDR
-+	5) PCI_ENDPOINT_TEST_DST_ADDR
-+	6) PCI_ENDPOINT_TEST_SIZE
-+	7) PCI_ENDPOINT_TEST_CHECKSUM
-+
-+*) PCI_ENDPOINT_TEST_MAGIC
-+
-+This register will be used to test BAR0. A known pattern will be written
-+and read back from MAGIC register to verify BAR0.
-+
-+*) PCI_ENDPOINT_TEST_COMMAND:
-+
-+This register will be used by the host driver to indicate the function
-+that the endpoint device must perform.
-+
-+Bitfield Description:
-+  Bit 0		: raise legacy irq
-+  Bit 1		: raise MSI irq
-+  Bit 2 - 7	: MSI interrupt number
-+  Bit 8		: read command (read data from RC buffer)
-+  Bit 9		: write command (write data to RC buffer)
-+  Bit 10	: copy command (copy data from one RC buffer to another
-+		  RC buffer)
-+
-+*) PCI_ENDPOINT_TEST_STATUS
-+
-+This register reflects the status of the PCI endpoint device.
-+
-+Bitfield Description:
-+  Bit 0		: read success
-+  Bit 1		: read fail
-+  Bit 2		: write success
-+  Bit 3		: write fail
-+  Bit 4		: copy success
-+  Bit 5		: copy fail
-+  Bit 6		: irq raised
-+  Bit 7		: source address is invalid
-+  Bit 8		: destination address is invalid
-+
-+*) PCI_ENDPOINT_TEST_SRC_ADDR
-+
-+This register contains the source address (RC buffer address) for the
-+COPY/READ command.
-+
-+*) PCI_ENDPOINT_TEST_DST_ADDR
-+
-+This register contains the destination address (RC buffer address) for
-+the COPY/WRITE command.
--- 
-1.7.9.5
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
+> ---
+>  drivers/acpi/internal.h |  2 ++
+>  drivers/acpi/ioapic.c   | 22 ++++++++++++++++------
+>  drivers/acpi/pci_root.c |  4 ++--
+>  3 files changed, 20 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
+> index 219b90b..f159001 100644
+> --- a/drivers/acpi/internal.h
+> +++ b/drivers/acpi/internal.h
+> @@ -41,8 +41,10 @@ static inline void acpi_amba_init(void) {}
+>  void acpi_container_init(void);
+>  void acpi_memory_hotplug_init(void);
+>  #ifdef	CONFIG_ACPI_HOTPLUG_IOAPIC
+> +void pci_ioapic_remove(struct acpi_pci_root *root);
+>  int acpi_ioapic_remove(struct acpi_pci_root *root);
+>  #else
+> +static inline void pci_ioapic_remove(struct acpi_pci_root *root) { return; }
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Superfluous "return;" here.
+
+>  static inline int acpi_ioapic_remove(struct acpi_pci_root *root) { return 0; }
+>  #endif
+>  #ifdef CONFIG_ACPI_DOCK
+> diff --git a/drivers/acpi/ioapic.c b/drivers/acpi/ioapic.c
+> index 6d7ce6e..1120dfd6 100644
+> --- a/drivers/acpi/ioapic.c
+> +++ b/drivers/acpi/ioapic.c
+> @@ -206,24 +206,34 @@ int acpi_ioapic_add(acpi_handle root_handle)
+>  	return ACPI_SUCCESS(status) && ACPI_SUCCESS(retval) ? 0 : -ENODEV;
+>  }
+>  
+> -int acpi_ioapic_remove(struct acpi_pci_root *root)
+> +void pci_ioapic_remove(struct acpi_pci_root *root)
+>  {
+> -	int retval = 0;
+>  	struct acpi_pci_ioapic *ioapic, *tmp;
+>  
+>  	mutex_lock(&ioapic_list_lock);
+>  	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
+
+I don't think it's necessary to use the "safe" iterator here, since
+you're not modifying ioapic_list in the loop any more.
+
+>  		if (root->device->handle != ioapic->root_handle)
+>  			continue;
+> -
+> -		if (acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base))
+> -			retval = -EBUSY;
+> -
+>  		if (ioapic->pdev) {
+>  			pci_release_region(ioapic->pdev, 0);
+>  			pci_disable_device(ioapic->pdev);
+>  			pci_dev_put(ioapic->pdev);
+>  		}
+> +	}
+> +	mutex_unlock(&ioapic_list_lock);
+> +}
+> +
+> +int acpi_ioapic_remove(struct acpi_pci_root *root)
+> +{
+> +	int retval = 0;
+> +	struct acpi_pci_ioapic *ioapic, *tmp;
+> +
+> +	mutex_lock(&ioapic_list_lock);
+> +	list_for_each_entry_safe(ioapic, tmp, &ioapic_list, list) {
+> +		if (root->device->handle != ioapic->root_handle)
+> +			continue;
+> +		if (acpi_unregister_ioapic(ioapic->handle, ioapic->gsi_base))
+> +			retval = -EBUSY;
+>  		if (ioapic->res.flags && ioapic->res.parent)
+>  			release_resource(&ioapic->res);
+>  		list_del(&ioapic->list);
+> diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+> index bf601d4..919be0a 100644
+> --- a/drivers/acpi/pci_root.c
+> +++ b/drivers/acpi/pci_root.c
+> @@ -648,12 +648,12 @@ static void acpi_pci_root_remove(struct acpi_device *device)
+>  
+>  	pci_stop_root_bus(root->bus);
+>  
+> -	WARN_ON(acpi_ioapic_remove(root));
+> -
+> +	pci_ioapic_remove(root);
+>  	device_set_run_wake(root->bus->bridge, false);
+>  	pci_acpi_remove_bus_pm_notifier(device);
+>  
+>  	pci_remove_root_bus(root->bus);
+> +	WARN_ON(acpi_ioapic_remove(root));
+
+You didn't change this, but my personal preference is not to call
+functions with side-effects inside a WARN_ON() or BUG_ON().  The
+acpi_ioapic_remove() call is essential here, and I think it gets
+obscured a bit by being inside WARN_ON().
+
+>  	dmar_device_remove(device->handle);
+>  
+> -- 
+> 1.8.3.1
+> 
