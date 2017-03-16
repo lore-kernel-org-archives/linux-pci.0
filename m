@@ -1,81 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 04/22] Documentation: PCI: Guide to use pci endpoint
- configfs
-To: Christoph Hellwig <hch@infradead.org>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
- <1487325042-28227-5-git-send-email-kishon@ti.com>
- <20170217171506.GB15276@infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <58BD36EF.9070804@ti.com>
-Date: Mon, 6 Mar 2017 15:46:15 +0530
+Return-Path: <SRS0=h4BL=2Z=firstfloor.org=andi@kernel.org>
+Return-Path: <SRS0=h4BL=2Z=firstfloor.org=andi@kernel.org>
+Date: Wed, 15 Mar 2017 17:02:48 -0700
+From: Andi Kleen <andi@firstfloor.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Andi Kleen <andi@firstfloor.org>,
+	Andi Kleen <ak@linux.intel.com>, bhelgaas@google.com,
+	x86@kernel.org, linux-pci@vger.kernel.org, eranian@google.com,
+	Peter Zijlstra <peterz@infradead.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 3/4] x86, pci: Add interface to force mmconfig
+Message-ID: <20170316000247.GD14380@two.firstfloor.org>
+References: <20170302232104.10136-3-andi@firstfloor.org>
+ <alpine.DEB.2.20.1703141407090.3619@nanos>
+ <20170314154155.GG32070@tassilo.jf.intel.com>
+ <alpine.DEB.2.20.1703141713010.3619@nanos>
+ <20170314170255.GH32070@tassilo.jf.intel.com>
+ <alpine.DEB.2.20.1703141849170.3619@nanos>
+ <20170314194720.GD26264@bhelgaas-glaptop.roam.corp.google.com>
+ <20170315022414.GC14380@two.firstfloor.org>
+ <20170315025549.GA13191@bhelgaas-glaptop.roam.corp.google.com>
+ <alpine.DEB.2.20.1703150954180.3554@nanos>
 MIME-Version: 1.0
-In-Reply-To: <20170217171506.GB15276@infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- linux-doc@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.20.1703150954180.3554@nanos>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+> pci_root_ops is what is finally handed in to pci_scan_root_bus() as ops
+> argument for any bus segment no matter which type it is.
 
-On Friday 17 February 2017 10:45 PM, Christoph Hellwig wrote:
-> I'm commenting on the configfs layout here instead of the patch with the
-> code as the issues are easier to explain that way.  I think the layout
-> is a bit confusing and could be cleaner by making use of pre-created
-> entries and symlinks.  Here is my suggestion:
-> 
-> /sys/kernel/config/pci_ep/functions/		
->     .. test/					# a directory for each function driver
->        ... user-specified-name1/
->        ... user-specified-name2
->     .. nvme/
->        ... user-specified-name42/		
-> 
-> Each directory under /sys/kernel/config/pci_ep/functions/ is owned
-> by a function drivers.  Under that function driver's directory you
-> can create a directory for each instance of a function driver.  The
-> configfs layout is controlled by the function driver.  E.g. your current
-> EPF fields would move into the test function driver, while the nvme
-> function would expose totally different fields.
-> 
-> 
-> /sys/kernel/config/pci_ep/controllers/
-> 	... dwc-0/
-> 	    ... function
-> 	... dwc-1/
-> 	    ... function
-> 	... vhost-0/
-> 	    ... function
-> 
-> 	Here you have a directory for each controller that can be bound
-> 	to a function.  The directories are pre-created for each
-> 	controller port that is EP capable.
-> 	Function is a symlink to the function instance above.
-> 	Additional parameters might also be present depending on the
-> 	EPC driver.
+mmconfig is only initialized after PCI is initialized
+(an ordering problem with ACPI). So it would require
+updating existing busses with likely interesting race
+conditions.
 
-I've changed the configfs entry according to your suggestion. However I've
-considered only the generic test function and a standard EP controller and
-implemented the configfs in a single file pci-ep-cfs.c. But I think this will
-get more complex as we add custom parameters for individual EPC, new functions
-etc..
+There are also other ordering problems in the PCI layer,
+that is one of the reason early and raw PCI accesses even exist.
 
-Thanks
-Kishon
+> 
+> The locking aspect is interesting as well. The type0/1 functions are having
+> their own internal locking. Oh, well.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Right it could set lockless too. The internal locking is still needed
+because there are other users too.
+
+> What we really want is to differentiate bus segments. That means a PCIe
+> segment takes mmconfig ops and a PCI segment the type0/1 ops. That way we
+> can do what you suggested above, i.e. marking the ecam/mmconfig ops as
+> lockless.
+
+There's no need to separate PCIe and PCI. mmconfig has nothing to do
+with that.
+
+> Sure that's more work than just whacking a sloppy quirk into the code, but
+> the right thing to do.
+
+Before proposing grandiose plans it would be better if you
+acquired some basic understanding of the constraints this
+code is operating under first.
+
+-Andi
