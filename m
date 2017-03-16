@@ -1,55 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC PATCH 21/30] iommu/arm-smmu-v3: Handle device faults from PRI
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-22-jean-philippe.brucker@arm.com>
- <8520D5D51A55D047800579B0941471982640F43C@XAP-PVEXMBX02.xlnx.xilinx.com>
-To: jean-philippe.brucker@arm.com, linux-pci-owner@vger.kernel.org,
- harba@qti.qualcomm.com, Will Deacon <will.deacon@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Sinan Kaya <okaya@qti.qualcomm.com>,
- lorenzo.pieralisi@arm.com, Catalin Marinas <catalin.marinas@arm.com>,
- Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Nate Watterson <nwatters@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
- linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
- kvm@vger.kernel.org
-From: valmiki <valmikibow@gmail.com>
-Message-ID: <0b3e3ddd-acc3-5ba7-639f-5c9192da57c3@gmail.com>
-Date: Sat, 25 Mar 2017 10:46:34 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:47258 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751037AbdCPUUN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Mar 2017 16:20:13 -0400
+Date: Thu, 16 Mar 2017 15:20:09 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Mason <jon.mason@broadcom.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        bcm-kernel-feedback-list@broadcom.com,
+        Jon Mason <jonmason@broadcom.com>
+Subject: Re: [PATCH] PCI: iproc: Add PCI_DOMAIN dependency to PCI Kconfig
+Message-ID: <20170316202009.GD9739@bhelgaas-glaptop.roam.corp.google.com>
+References: <1488383593-31666-1-git-send-email-jon.mason@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <8520D5D51A55D047800579B0941471982640F43C@XAP-PVEXMBX02.xlnx.xilinx.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1488383593-31666-1-git-send-email-jon.mason@broadcom.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> When we receive a PRI Page Request (PPR) from the SMMU, it contains a context identifier SID:SSID, an IOVA and the requested access flags.
->
-> Search the domain corresponding to SID:SSID, and call handle_mm_fault on its mm. If memory management is able to fix the fault, we ask the device to retry the access with a PRI_SUCCESS message. Otherwise send PRI_FAIL.
->
-Hi Jean,
+On Wed, Mar 01, 2017 at 10:53:13AM -0500, Jon Mason wrote:
+> From: Jon Mason <jonmason@broadcom.com>
+> 
+> 2+ PCI devices fail to be discovered due to each bus having the same
+> PCI domain.  This is because the domain defined in the device tree file
+> is not being added due to PCI_DOMAIN not being enabled.  So, every PCI
+> bus has a domain of zero.  When PCI_DOMAIN is selected by the Kconfig,
+> it picks-up the domain defined in the device tree file and everything
+> works as expected.
+> 
+> Since both PCIE_IPROC_PLATFORM and PCIE_IPROC_BCMA need PCI_DOMAIN,
+> moving it to PCIE_IPROC (so it can be automatically selected for both).
+> 
+> Signed-off-by: Jon Mason <jonmason@broadcom.com>
 
-I need some clarification. Page fault handling is already part of MMU. 
-When PRI requested page results in page fault, smmu is going to invoke 
-handle_mm_fault which is part of memory management unit ?
+Applied to pci/host-iproc for v4.12, thanks, Jon!
 
-If so this functionality is yet to be added in SMMU driver ?
-
-Because i haven't seen this API being called in your patches.
-
-Regards,
-Valmiki
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/pci/host/Kconfig | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
+> index 898d2c4..82496b6 100644
+> --- a/drivers/pci/host/Kconfig
+> +++ b/drivers/pci/host/Kconfig
+> @@ -165,6 +165,7 @@ config PCI_VERSATILE
+>  
+>  config PCIE_IPROC
+>  	tristate
+> +	select PCI_DOMAINS
+>  	help
+>  	  This enables the iProc PCIe core controller support for Broadcom's
+>  	  iProc family of SoCs. An appropriate bus interface driver needs
+> @@ -185,7 +186,6 @@ config PCIE_IPROC_BCMA
+>  	depends on ARM && (ARCH_BCM_IPROC || COMPILE_TEST)
+>  	select PCIE_IPROC
+>  	select BCMA
+> -	select PCI_DOMAINS
+>  	default ARCH_BCM_5301X
+>  	help
+>  	  Say Y here if you want to use the Broadcom iProc PCIe controller
+> -- 
+> 2.7.4
+> 
