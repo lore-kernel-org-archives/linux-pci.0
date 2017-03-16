@@ -1,71 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:36163 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751125AbdCQKrV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Mar 2017 06:47:21 -0400
-Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
- when spliting large pages
-To: Borislav Petkov <bp@suse.de>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
- <20170310110657.hophlog2juw5hpzz@pd.tnic>
- <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
- <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
- <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
- <20170317101737.icdois7sdmtutt6b@pd.tnic>
-Cc: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
-        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
-        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
-        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org
-From: Paolo Bonzini <pbonzini@redhat.com>
-Message-ID: <b6f9f46c-58c4-a19c-4955-2d07bd411443@redhat.com>
-Date: Fri, 17 Mar 2017 11:47:16 +0100
+Return-Path: <SRS0=zalM=2Z=gmail.com=ddaney.cavm@kernel.org>
+Return-Path: <SRS0=zalM=2Z=gmail.com=ddaney.cavm@kernel.org>
+Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
+To: Jon Masters <jcm@jonmasters.org>,
+ Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+References: <1485793552-12614-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20170130211236.GW20550@bhelgaas-glaptop.roam.corp.google.com>
+ <20170131102830.GA13854@localhost.localdomain>
+ <20170131142525.GA9942@bhelgaas-glaptop.roam.corp.google.com>
+ <20170131145720.GA14231@localhost.localdomain>
+ <20170131203109.GA14127@bhelgaas-glaptop.roam.corp.google.com>
+ <20170201125325.GA15805@localhost.localdomain>
+ <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
+ <376ae1df-da85-e576-75d6-3ae2ab0f1b41@jonmasters.org>
+ <20170315113323.GA28027@localhost.localdomain>
+ <251db823-591b-483b-9c55-13c911020fd1@jonmasters.org>
+Cc: David.Daney@cavium.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com,
+ Bjorn Helgaas <helgaas@kernel.org>, tn@semihalf.com, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+From: David Daney <ddaney.cavm@gmail.com>
+Message-ID: <48b93116-cc0f-e59d-8aa3-704052ad6759@gmail.com>
+Date: Thu, 16 Mar 2017 09:25:56 -0700
 MIME-Version: 1.0
-In-Reply-To: <20170317101737.icdois7sdmtutt6b@pd.tnic>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <251db823-591b-483b-9c55-13c911020fd1@jonmasters.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
+On 03/16/2017 07:32 AM, Jon Masters wrote:
+> Hi Vadim,
+>
+> Thanks for your followup and attention to this matter. More below.
+>
+> On 03/15/2017 07:33 AM, Vadim Lomovtsev wrote:
+>
+>>> The upstream Linux kernel contains a quirk matching entry that looks for
+>>> "THRX". Therefore, you have already agreed (as of at least January) that
+>>> this is the prefix that you will use in any firmware updates to support
+>>> the latest upstream Linux kernel. Please register this prefix promptly.
+>>
+>> And from what I know for now - we wont going to register this
+>> since we have already regsitered "CAV" prefix for that. And this was the part
+>> of our discussion also.
+>>
+>> We had a bit long review of proper implementation of legacy firmware support,
+>> so my apologise on that.
+>>
+>> Please take a look at link to the patchset posted by Tomasz.
+>> https://www.spinics.net/lists/arm-kernel/msg568741.html
+>
+> I'll let others comment on the suitability of taking that for upstream.
+>
+>>>>> So the FW will be updated accordingly.
+>>>
+>>> Indeed.
+>>
+>> Yes, it is now contains "CAVxxx" as _HID for device config object.
+>
+> Which is different from the version that was merged into upstream. That
+> should never have happened. It will never happen again. I have spent some
+> time over the past few days ensuring folks understand that I will not
+> allow a repeat of this to occur the next time around. We will have
+> platforms that are bulletproof and supported by upstream with any
+> errata fixes in a very carefully controlled manner. There will
+> under no circumstances ever be a situation like this again.
+
+We are still evaluating the merits of registering the values that 
+appeared in v4.10, and not changing them.  We should know more in a 
+couple of days.
 
 
-On 17/03/2017 11:17, Borislav Petkov wrote:
-> 
->> I also don't really like the patch as is (plus it fails modpost), but
->> IMO reusing __change_page_attr and __split_large_page is the right thing
->> to do.
-> 
-> Right, so teaching pageattr.c about memblock could theoretically come
-> around and bite us later when a page allocated with memblock gets freed
-> with free_page().
-
-Theoretically or practically?
-
-> And looking at this more, we have all this kernel pagetable preparation
-> code down the init_mem_mapping() call and the pagetable setup in
-> arch/x86/mm/init_{32,64}.c
-
-It only looks at the E820 map, doesn't it?  Why does it have to do
-anything with percpu memory areas?
-
-Paolo
-
-> And that code even does some basic page splitting. Oh and it uses
-> alloc_low_pages() which knows whether to do memblock reservation or the
-> common __get_free_pages() when slabs are up.
-> 
-> So what would be much cleaner, IMHO, is if one would reuse that code to
-> change init_mm.pgd mappings early without copying pageattr.c.
-> 
-> init_mem_mapping() gets called before kvm_guest_init() in setup_arch()
-> so the guest would simply fixup its pagetable right there.
+>
+>>> The version Bjorn merged looks for "THRX". This is the version that you will
+>>> use, and you will promptly register that prefix with UEFI and provide fixes
+>>> for existing firmware to correctly use the solution that is upstream.
+>>
+>> Cavium FW is updated accordingly to use already registered prefix.
+>> For existent FW legacy support is posted by Tomasz.
+>
+> I'm watching this to ensure it's cleaned up properly.
+>
+> Jon.
+>
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
