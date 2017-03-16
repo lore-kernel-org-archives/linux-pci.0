@@ -1,186 +1,109 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 3 Mar 2017 14:04:07 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Subject: Re: Using the generic host PCIe driver
-Message-ID: <20170303200407.GB30375@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170227164430.GB11162@bhelgaas-glaptop.roam.corp.google.com>
- <8643c952-e915-bcd1-390e-9d4001789872@free.fr>
- <20170227183534.GA12481@bhelgaas-glaptop.roam.corp.google.com>
- <347d4200-e089-60df-5f60-58d16efc7c4e@free.fr>
- <20170301161801.GB13171@bhelgaas-glaptop.roam.corp.google.com>
- <98ee3041-6a94-91af-b4bf-208aa02624ed@free.fr>
- <20170301215726.GA32286@bhelgaas-glaptop.roam.corp.google.com>
- <258cd6f3-ef17-6705-ff48-ae06f26778c2@free.fr>
- <20170303154628.GA21522@bhelgaas-glaptop.roam.corp.google.com>
- <8e1a0b5d-8dfb-4be1-a049-b16892a6c0d0@free.fr>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58550 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751130AbdCPKZc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Mar 2017 06:25:32 -0400
+Subject: Re: [RFC PATCH v2 23/32] kvm: introduce KVM_MEMORY_ENCRYPT_OP ioctl
+To: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
+        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
+        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
+        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, bp@suse.de, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org,
+        akpm@linux-foundation.org, davem@davemloft.net
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846783136.2349.9362218518503742320.stgit@brijesh-build-machine>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Message-ID: <61f23180-3e76-dc44-f71c-2e2d46b1d6a4@redhat.com>
+Date: Thu, 16 Mar 2017 11:25:15 +0100
 MIME-Version: 1.0
-In-Reply-To: <8e1a0b5d-8dfb-4be1-a049-b16892a6c0d0@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- David Daney <david.daney@cavium.com>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Will Deacon <will.deacon@arm.com>, Thierry Reding <treding@nvidia.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <148846783136.2349.9362218518503742320.stgit@brijesh-build-machine>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 03, 2017 at 06:18:02PM +0100, Mason wrote:
-> On 03/03/2017 16:46, Bjorn Helgaas wrote:
-> > On Fri, Mar 03, 2017 at 01:44:54PM +0100, Mason wrote:
-> >
-> >> For now, I have "hidden" the root's BAR0 from the system with:
-> >>
-> >> 	if (bus->number == 0 && where == PCI_BASE_ADDRESS_0) {
-> >> 		*val = 0;
-> >> 		return PCIBIOS_SUCCESSFUL;
-> >> 	}
-> > 
-> > I'm scratching my head about this a little.  Here's what your dmesg
-> > log contained originally:
-> > 
-> >   pci 0000:00:00.0: [1105:8758] type 01 class 0x048000
-> >   pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x00ffffff 64bit]
-> >   pci 0000:00:00.0: BAR 0: no space for [mem size 0x01000000 64bit]
-> >   pci 0000:00:00.0: BAR 0: failed to assign [mem size 0x01000000 64bit]
-> >   pci 0000:00:00.0: PCI bridge to [bus 01]
-> >   pcieport 0000:00:00.0: enabling device (0140 -> 0142)
-> > 
-> > This device is a bridge (a Root Port, per your lspci output).  With a
-> > BAR, which is legal but unusual.  We couldn't assign space for the
-> > BAR, which means we can't use whatever vendor-specific functionality
-> > it provides.
+
+
+On 02/03/2017 16:17, Brijesh Singh wrote:
+> If hardware supports encrypting then KVM_MEMORY_ENCRYPT_OP ioctl can
+> be used by qemu to issue platform specific memory encryption commands.
 > 
-> I had several chats with the HW designer. I'll try to explain, only as
-> far as I could understand ;-)
+> Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+> ---
+>  arch/x86/include/asm/kvm_host.h |    2 ++
+>  arch/x86/kvm/x86.c              |   12 ++++++++++++
+>  include/uapi/linux/kvm.h        |    2 ++
+>  3 files changed, 16 insertions(+)
 > 
-> We used to make devices, before implementing a root. Since at least
-> one BAR is required (?) for a device, it was decided to have one BAR
-> for the root, for symmetry.
-
-I'm not aware of a spec requirement for any BARs.  It's conceivable
-that one could build a device that only uses config space.  And of
-course, most bridges have windows but no BARs.  But that doesn't
-matter; the hardware is what it is and we have to deal with it.
-
-> In fact, I thought I could ignore that BAR, but it is apparently NOT
-> the case, as MSIs are supposed to be sent *within* the BAR of the root.
-
-I don't know much about this piece of the MSI puzzle, but maybe Marc
-can enlighten us.  If this Root Port is the target of MSIs and the
-Root Port turns them into some sort of interrupt on the CPU side, I
-can see how this might make sense.
-
-I think it's unusual for the PCI core to assign the MSI target using a
-BAR, though.  I think this means you'll have to implement your
-arch_setup_msi_irq() or .irq_compose_msi_msg() method such that it 
-looks up that BAR value, since you won't know it at build-time.
-
-> The weird twist is that the BAR advertizes a 64-bit memory zone,
-> but we will, in fact, map MMIO registers behind it. So all the
-> RAM Linux assigns to the area is wasted, IIUC.
-
-I'm not sure what this means.  You have this:
-
-> OF: PCI:   MEM 0x90000000..0x9fffffff -> 0x90000000
-> pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffffff]
-
-This [mem 0x90000000-0x9fffffff] host bridge window means there can't
-be RAM in that region.  CPU accesses to 0x90000000-0x9fffffff have to
-be claimed by the host bridge and forwarded to PCI.
-
-Linux doesn't "assign system RAM" anywhere; we just learn somehow
-where that RAM is.  Linux *does* assign BARs of PCI devices, and they
-have to be inside the host bridge windows(s).
-
-The BARs may contain registers, RAM, frame buffers, etc., that live
-on the PCI device.  It's totally up to the device what it is.
-
-> OF: PCI: host bridge /soc/pcie@50000000 ranges:
-> OF: PCI:   No bus range found for /soc/pcie@50000000, using [bus 00-ff]
-
-Tangent: the lack of a bus range is a defect in your DTS.
-
-> [    1.042737] pci_bus 0000:00: scanning bus
-> [    1.046895] pci 0000:00:00.0: [1105:0024] type 01 class 0x048000
-> [    1.053050] pci 0000:00:00.0: calling tango_pcie_fixup_class+0x0/0x10
-> [    1.059639] pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x00ffffff 64bit]
-> [    1.066583] pci 0000:00:00.0: calling pci_fixup_ide_bases+0x0/0x40
-> [    1.072929] pci 0000:00:00.0: supports D1 D2
-> [    1.077318] pci 0000:00:00.0: PME# supported from D0 D1 D2 D3hot
-> [    1.083452] pci 0000:00:00.0: PME# disabled
-> [    1.087901] pci_bus 0000:00: fixups for bus
-> [    1.092212] PCI: bus0: Fast back to back transfers disabled
-> [    1.097913] pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 0
-> [    1.104746] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> [    1.112893] pci 0000:00:00.0: scanning [bus 00-00] behind bridge, pass 1
-> [    1.119800] pci_bus 0000:01: scanning bus
-> [    1.123972] pci 0000:01:00.0: [1912:0014] type 00 class 0x0c0330
-> [    1.130144] pci 0000:01:00.0: reg 0x10: [mem 0x00000000-0x00001fff 64bit]
-> [    1.137147] pci 0000:01:00.0: calling pci_fixup_ide_bases+0x0/0x40
-> [    1.143577] pci 0000:01:00.0: PME# supported from D0 D3hot D3cold
-> [    1.149801] pci 0000:01:00.0: PME# disabled
-> [    1.154364] pci_bus 0000:01: fixups for bus
-> [    1.158671] PCI: bus1: Fast back to back transfers disabled
-> [    1.164368] pci_bus 0000:01: bus scan returning with max=01
-> [    1.170067] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
-> [    1.176814] pci_bus 0000:00: bus scan returning with max=01
-> [    1.182511] pci 0000:00:00.0: fixup irq: got 0
-> [    1.187072] pci 0000:00:00.0: assigning IRQ 00
-> [    1.191658] pci 0000:01:00.0: fixup irq: got 20
-> [    1.196307] pci 0000:01:00.0: assigning IRQ 20
-> [    1.200892] pci 0000:00:00.0: BAR 0: assigned [mem 0x90000000-0x90ffffff 64bit]
-> [    1.208344] pci 0000:00:00.0: BAR 8: assigned [mem 0x91000000-0x910fffff]
-> [    1.215267] pci 0000:01:00.0: BAR 0: assigned [mem 0x91000000-0x91001fff 64bit]
-> [    1.222726] pci 0000:00:00.0: PCI bridge to [bus 01]
-> [    1.227812] pci 0000:00:00.0:   bridge window [mem 0x91000000-0x910fffff]
-> [    1.234781] pcieport 0000:00:00.0: enabling device (0140 -> 0142)
-> [    1.241013] pcieport 0000:00:00.0: enabling bus mastering
-> [    1.246634] pci 0000:01:00.0: calling quirk_usb_early_handoff+0x0/0x790
-> [    1.253389] pci 0000:01:00.0: enabling device (0140 -> 0142)
-> [    1.275215] pci 0000:01:00.0: xHCI HW did not halt within 16000 usec status = 0xd2f4167e
+> diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
+> index bff1f15..62651ad 100644
+> --- a/arch/x86/include/asm/kvm_host.h
+> +++ b/arch/x86/include/asm/kvm_host.h
+> @@ -1033,6 +1033,8 @@ struct kvm_x86_ops {
+>  	void (*cancel_hv_timer)(struct kvm_vcpu *vcpu);
+>  
+>  	void (*setup_mce)(struct kvm_vcpu *vcpu);
+> +
+> +	int (*memory_encryption_op)(struct kvm *kvm, void __user *argp);
+>  };
+>  
+>  struct kvm_arch_async_pf {
+> diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
+> index 2099df8..6a737e9 100644
+> --- a/arch/x86/kvm/x86.c
+> +++ b/arch/x86/kvm/x86.c
+> @@ -3926,6 +3926,14 @@ static int kvm_vm_ioctl_enable_cap(struct kvm *kvm,
+>  	return r;
+>  }
+>  
+> +static int kvm_vm_ioctl_memory_encryption_op(struct kvm *kvm, void __user *argp)
+> +{
+> +	if (kvm_x86_ops->memory_encryption_op)
+> +		return kvm_x86_ops->memory_encryption_op(kvm, argp);
+> +
+> +	return -ENOTTY;
+> +}
+> +
+>  long kvm_arch_vm_ioctl(struct file *filp,
+>  		       unsigned int ioctl, unsigned long arg)
+>  {
+> @@ -4189,6 +4197,10 @@ long kvm_arch_vm_ioctl(struct file *filp,
+>  		r = kvm_vm_ioctl_enable_cap(kvm, &cap);
+>  		break;
+>  	}
+> +	case KVM_MEMORY_ENCRYPT_OP: {
+> +		r = kvm_vm_ioctl_memory_encryption_op(kvm, argp);
+> +		break;
+> +	}
+>  	default:
+>  		r = kvm_vm_ioctl_assigned_device(kvm, ioctl, arg);
+>  	}
+> diff --git a/include/uapi/linux/kvm.h b/include/uapi/linux/kvm.h
+> index cac48ed..fef7d83 100644
+> --- a/include/uapi/linux/kvm.h
+> +++ b/include/uapi/linux/kvm.h
+> @@ -1281,6 +1281,8 @@ struct kvm_s390_ucas_mapping {
+>  #define KVM_S390_GET_IRQ_STATE	  _IOW(KVMIO, 0xb6, struct kvm_s390_irq_state)
+>  /* Available with KVM_CAP_X86_SMM */
+>  #define KVM_SMI                   _IO(KVMIO,   0xb7)
+> +/* Memory Encryption Commands */
+> +#define KVM_MEMORY_ENCRYPT_OP	  _IOWR(KVMIO, 0xb8, unsigned long)
+>  
+>  #define KVM_DEV_ASSIGN_ENABLE_IOMMU	(1 << 0)
+>  #define KVM_DEV_ASSIGN_PCI_2_3		(1 << 1)
 > 
-> # /usr/sbin/lspci -v
-> 00:00.0 PCI bridge: Sigma Designs, Inc. Device 0024 (rev 01) (prog-if 00 [Normal decode])
->         Flags: bus master, fast devsel, latency 0
->         Memory at 90000000 (64-bit, non-prefetchable) [size=16M]
->         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
->         I/O behind bridge: 00000000-00000fff
 
-Something's wrong with this.  You have no I/O windows through the host
-bridge, which implies that you can't generic PCI I/O transactions, so
-this I/O window should be disabled.  This might be an lspci issue;
-what does "lspci -xxx" show?
-
->         Memory behind bridge: 91000000-910fffff
->         Prefetchable memory behind bridge: 00000000-000fffff
-
-This prefetchable memory window is bogus, too.  It should probably be
-disabled.  If the bridge doesn't support a prefetchable window, the
-base and limit should be hardwired to zero.  If it supports a window
-but it's disabled, the limit should be less than the base.  For
-example, on my system I see this for a bridge with the window
-disabled:
-
-  # setpci -s00:1c.0 PREF_MEMORY_BASE
-  fff1
-  # setpci -s00:1c.0 PREF_MEMORY_LIMIT
-  0001
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Reviewed-by: Paolo Bonzini <pbonzini@redhat.com>
