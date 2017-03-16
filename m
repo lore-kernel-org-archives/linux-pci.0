@@ -1,118 +1,101 @@
-Return-Path: <SRS0=AAFK=27=gmail.com=arndbergmann@kernel.org>
-Return-Path: <SRS0=AAFK=27=gmail.com=arndbergmann@kernel.org>
+Return-Path: <SRS0=f67S=2Z=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=f67S=2Z=free.fr=slash.tmp@kernel.org>
+To: LKML <linux-kernel@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner
+ <tglx@linutronix.de>, Jason Cooper <jason@lakedaemon.net>,
+ linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Robin Murphy <robin.murphy@arm.com>, Liviu Dudau <liviu.dudau@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Uwe Kleine-Konig <u.kleine-koenig@pengutronix.de>
+From: Mason <slash.tmp@free.fr>
+Subject: Legacy PCI interrupt support in PCIe host driver
+Message-ID: <5612adb6-af5c-9fbf-e725-813ee7fe1b4b@free.fr>
+Date: Thu, 16 Mar 2017 16:40:50 +0100
 MIME-Version: 1.0
-Sender: arndbergmann@gmail.com
-In-Reply-To: <20170322150403.GA4951@red-moon>
-References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
- <20170227151436.18698-4-lorenzo.pieralisi@arm.com> <20170316211243.GE9739@bhelgaas-glaptop.roam.corp.google.com>
- <20170322150403.GA4951@red-moon>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 22 Mar 2017 16:15:29 +0100
-Message-ID: <CAK8P3a15TCpmAdf-OFTwUP_6kCRAucoMwVST15qdDBe8kCw7qQ@mail.gmail.com>
-Subject: Re: [PATCH 03/20] asm-generic/io.h: add PCI config space remap interface
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-arch <linux-arch@vger.kernel.org>,
-	Will Deacon <will.deacon@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Russell King <linux@armlinux.org.uk>, Catalin Marinas <catalin.marinas@arm.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>, Jingoo Han <jingoohan1@gmail.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>, John Garry <john.garry@huawei.com>,
-	Tanmay Inamdar <tinamdar@apm.com>, Murali Karicheri <m-karicheri2@ti.com>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>, Ray Jui <rjui@broadcom.com>,
-	Wenrui Li <wenrui.li@rock-chips.com>, Shawn Lin <shawn.lin@rock-chips.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>, Jon Mason <jonmason@broadcom.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
-	Thierry Reding <thierry.reding@gmail.com>, Michal Simek <michal.simek@xilinx.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>, Zhou Wang <wangzhou1@hisilicon.com>,
-	Roy Zang <tie-fei.zang@freescale.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 22, 2017 at 4:04 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> Hi Bjorn, Arnd,
->
-> On Thu, Mar 16, 2017 at 04:12:43PM -0500, Bjorn Helgaas wrote:
->> [+cc Luis]
->>
->> On Mon, Feb 27, 2017 at 03:14:14PM +0000, Lorenzo Pieralisi wrote:
->> > The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
->> > Posting") mandate non-posted configuration transactions. As further
->> > highlighted in the PCIe specifications (4.0 - Rev0.3, "Ordering
->> > Considerations for the Enhanced Configuration Access Mechanism"),
->> > through ECAM and ECAM-derivative configuration mechanism, the memory
->> > mapped transactions from the host CPU into Configuration Requests on the
->> > PCI express fabric may create ordering problems for software because
->> > writes to memory address are typically posted transactions (unless the
->> > architecture can enforce through virtual address mapping non-posted
->> > write transactions behaviour) but writes to Configuration Space are not
->> > posted on the PCI express fabric.
->> >
->> > Current DT and ACPI host bridge controllers map PCI configuration space
->> > (ECAM and ECAM-derivative) into the virtual address space through
->> > ioremap() calls, that are non-cacheable device accesses on most
->> > architectures, but may provide "bufferable" or "posted" write semantics
->> > in architecture like eg ARM/ARM64 that allow ioremap'ed regions writes
->> > to be buffered in the bus connecting the host CPU to the PCI fabric;
->> > this behaviour, as underlined in the PCIe specifications, may trigger
->> > transactions ordering rules and must be prevented.
->> >
->> > Introduce a new generic and explicit API to create a memory
->> > mapping for ECAM and ECAM-derivative config space area that
->> > defaults to ioremap_nocache() (which should provide a sane default
->> > behaviour) but still allowing architectures on which ioremap_nocache()
->> > results in posted write transactions to override the function
->> > call with an arch specific implementation that complies with
->> > the PCI specifications for configuration transactions.
->> >
->> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> > Cc: Arnd Bergmann <arnd@arndb.de>
->> > Cc: Will Deacon <will.deacon@arm.com>
->> > Cc: Bjorn Helgaas <bhelgaas@google.com>
->> > Cc: Russell King <linux@armlinux.org.uk>
->> > Cc: Catalin Marinas <catalin.marinas@arm.com>
->> > ---
->> >  include/asm-generic/io.h | 9 +++++++++
->> >  1 file changed, 9 insertions(+)
->> >
->> > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
->> > index 7ef015e..52dda81 100644
->> > --- a/include/asm-generic/io.h
->> > +++ b/include/asm-generic/io.h
->> > @@ -915,6 +915,15 @@ extern void ioport_unmap(void __iomem *p);
->> >  #endif /* CONFIG_GENERIC_IOMAP */
->> >  #endif /* CONFIG_HAS_IOPORT_MAP */
->> >
->> > +#ifndef pci_remap_cfgspace
->> > +#define pci_remap_cfgspace pci_remap_cfgspace
->> > +static inline void __iomem *pci_remap_cfgspace(phys_addr_t offset,
->> > +                                          size_t size)
->> > +{
->> > +   return ioremap_nocache(offset, size);
->> > +}
->>
->> I'm fine with this conceptually, but I think it would make more sense
->> if the name weren't specific to PCI or config space, e.g.,
->> ioremap_nopost() or something.
->
-> I would like to respin shortly so I have to make a decision on the
-> interface, either:
->
-> (1) I keep it a PCI only interface (which means I can even move it to
->     include/linux/pci.h and arch*/include/asm/pci.h to override it)
->
-> or
->
-> (2) We add it as a generic ioremap_* interface (I am not sure though
->     that's really useful other than to map PCI config space, actually
->     the reasoning behind the naming was to limit its usage to PCI
->     config space mappings)
->
-> I take it as Bjorn is keener on (2), just running a final check before
-> putting v2 together to make progress.
+Hello,
 
-I'm fine with either way.
+I am writing code for my platform's PCI Express controller.
 
-       Arnd
+I am stuck at the legacy PCI interrupt handling.
+
+Interrupt requests are routed like this:
+
+Cortex A9 MP <-- GIC(v1?) <-- system_intc <-- PCIe_root_complex
+
+The PCIe root complex drives two interrupt signals to the system_intc
+
+1) system_intc 54 = non-MSI interrupts
+2) system_intc 55 = MSI interrupts
+
+I think the MSI handling mostly works (although it's 340 lines long,
+which seems excessive for such a common task; maybe the maintainers
+will spot lots of redundant code when I submit).
+
+As for non-MSI interrupts, there are 8 possible sources:
+
+  system_error
+  dma_read_ready
+  dma_write_ready
+  unsupported completion request
+  configuration request retry status
+  completer abort event
+  completion timeout event
+  legacy interrupt asserted (any of the 4 legacy interrupts)
+
+Basically, I need to deal with the first 7 interrupts "internally"
+in my PCIe root complex driver. But the last interrupt, I need to
+"forward" it to the proper ISR (e.g. XHCI ISR).
+
+For the "internal" handling, I think I need to register my own ISR
+with the IRQF_SHARED flag. Then other drivers will be able to
+register their ISR on the same interrupt line.
+
+But how do I tell the PCI core that it's supposed to use interrupt 54
+for legacy interrupts?
+
+Here is my current DT:
+
+		msi0: msi@2e080 {
+			compatible = "sigma,msi";
+			reg = <0x2e04c 0x40>;
+			interrupt-parent = <&irq0>;
+			interrupts = <55 IRQ_TYPE_LEVEL_HIGH>;
+			msi-controller;
+			num-vectors = <32>;
+		};
+
+		pcie@30000000 {
+			compatible = "sigma,smp8759-pcie";
+			reg = <0x30000000 SZ_4M>, <0x2e02c 4>;
+			device_type = "pci";
+			bus-range = <0 3>;
+			#size-cells = <2>;
+			#address-cells = <3>;
+			#interrupt-cells = <1>;
+			ranges = <0x02000000 0x0 0x00400000  0x30400000  0x0 SZ_60M>;
+			msi-parent = <&msi0>;
+			interrupt-parent = <&irq0>;
+			interrupts = <54 IRQ_TYPE_LEVEL_HIGH>;
+		};
+
+
+I traced the action into pdev_fixup_irq()
+which calls of_irq_parse_and_map_pci()
+
+How do I tell Linux that
+- All the legacy PCI interrupts are muxed to a single line
+- And this line is routed to system interrupt 54
+
+Ooooooh... Wait...
+
+Is this what interrupt-map is used for?
+
+http://elinux.org/Device_Tree_Usage#Advanced_Interrupt_Mapping
+
+Regards.
