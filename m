@@ -1,69 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 13 Mar 2017 13:55:04 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Subject: Re: Legacy features in PCI Express devices
-Message-ID: <20170313185504.GC8232@bhelgaas-glaptop.roam.corp.google.com>
-References: <ef5c9778-fbae-9f4f-ac2e-29b8597537a5@free.fr>
+Return-Path: <SRS0=zuZq=2Z=jonmasters.org=jcm@kernel.org>
+Return-Path: <SRS0=zuZq=2Z=jonmasters.org=jcm@kernel.org>
+To: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+References: <1485793552-12614-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
+ <20170130211236.GW20550@bhelgaas-glaptop.roam.corp.google.com>
+ <20170131102830.GA13854@localhost.localdomain>
+ <20170131142525.GA9942@bhelgaas-glaptop.roam.corp.google.com>
+ <20170131145720.GA14231@localhost.localdomain>
+ <20170131203109.GA14127@bhelgaas-glaptop.roam.corp.google.com>
+ <20170201125325.GA15805@localhost.localdomain>
+ <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
+ <376ae1df-da85-e576-75d6-3ae2ab0f1b41@jonmasters.org>
+ <20170315113323.GA28027@localhost.localdomain>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, David.Daney@cavium.com,
+ tn@semihalf.com, linux-kernel@vger.kernel.org,
+ stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
+From: Jon Masters <jcm@jonmasters.org>
+Message-ID: <251db823-591b-483b-9c55-13c911020fd1@jonmasters.org>
+Date: Thu, 16 Mar 2017 10:32:39 -0400
 MIME-Version: 1.0
-In-Reply-To: <ef5c9778-fbae-9f4f-ac2e-29b8597537a5@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- David Laight <david.laight@aculab.com>, netdev <netdev@vger.kernel.org>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Robin Murphy <robin.murphy@arm.com>, Tim Harvey <tharvey@gateworks.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170315113323.GA28027@localhost.localdomain>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 13, 2017 at 05:10:57PM +0100, Mason wrote:
-> Hello,
-> 
-> There are two revisions of our PCI Express controller.
-> 
-> Rev 1 did not support the following features:
-> 
->   1) legacy PCI interrupt delivery (INTx signals)
->   2) I/O address space
-> 
-> Internally, someone stated that such missing support would prevent
-> some PCIe cards from working with our controller.
-> 
-> Are there really modern PCIe cards that require 1) and/or 2)
-> to function?
+Hi Vadim,
 
->From a spec point of view, all endpoints, including Legacy, PCI
-Express, and Root Complex Integrated Endpoints, are "required to
-support MSI or MSI-X or both if an interrupt resource is requested"
-(PCIe r3.0, sec 1.3.2).
+Thanks for your followup and attention to this matter. More below.
 
-The same section says Legacy Endpoints are permitted to use I/O
-Requests, but PCI Express and Root Complex Integrated Endpoints are
-not.  There's a little wiggle room in the I/O BAR description; I would
-interpret it to mean the latter two varieties are permitted to have
-I/O BARs, but they must make the resources described by those BARs
-available via a memory BAR as well, so they can operate with I/O
-address space.
+On 03/15/2017 07:33 AM, Vadim Lomovtsev wrote:
 
-But that's only in theory; David has already given examples of devices
-that don't support MSI, and Greg hinted at new devices that might
-require I/O space.  I'm particularly curious about that last one,
-because there are several host bridges that don't support I/O space at
-all.
+>> The upstream Linux kernel contains a quirk matching entry that looks for
+>> "THRX". Therefore, you have already agreed (as of at least January) that
+>> this is the prefix that you will use in any firmware updates to support
+>> the latest upstream Linux kernel. Please register this prefix promptly.
+> 
+> And from what I know for now - we wont going to register this
+> since we have already regsitered "CAV" prefix for that. And this was the part
+> of our discussion also.
+> 
+> We had a bit long review of proper implementation of legacy firmware support,
+> so my apologise on that.
+> 
+> Please take a look at link to the patchset posted by Tomasz.
+> https://www.spinics.net/lists/arm-kernel/msg568741.html
 
-Bjorn
+I'll let others comment on the suitability of taking that for upstream.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>>>> So the FW will be updated accordingly.
+>>
+>> Indeed.
+> 
+> Yes, it is now contains "CAVxxx" as _HID for device config object.
+
+Which is different from the version that was merged into upstream. That
+should never have happened. It will never happen again. I have spent some
+time over the past few days ensuring folks understand that I will not
+allow a repeat of this to occur the next time around. We will have
+platforms that are bulletproof and supported by upstream with any
+errata fixes in a very carefully controlled manner. There will
+under no circumstances ever be a situation like this again.
+
+>> The version Bjorn merged looks for "THRX". This is the version that you will
+>> use, and you will promptly register that prefix with UEFI and provide fixes
+>> for existing firmware to correctly use the solution that is upstream.
+> 
+> Cavium FW is updated accordingly to use already registered prefix.
+> For existent FW legacy support is posted by Tomasz.
+
+I'm watching this to ensure it's cleaned up properly.
+
+Jon.
