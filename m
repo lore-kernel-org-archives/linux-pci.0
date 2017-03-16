@@ -1,250 +1,96 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH v2 32/32] x86: kvm: Pin the guest memory when SEV is
- active
-To: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
-        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
-        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
-        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, bp@suse.de, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org,
-        akpm@linux-foundation.org, davem@davemloft.net
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846793743.2349.8478208161427437950.stgit@brijesh-build-machine>
-From: Paolo Bonzini <pbonzini@redhat.com>
-Message-ID: <453770c9-f9d7-4806-dbae-d19876f2a22e@redhat.com>
-Date: Thu, 16 Mar 2017 11:38:32 +0100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+To: Arnd Bergmann <arnd@arndb.de>,
+        Yuanzhichang <yuanzhichang@hisilicon.com>
+CC: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rafael Wysocki <rafael@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Linuxarm <linuxarm@huawei.com>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
+        Corey Minyard <minyard@acm.org>,
+        "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+        Zou Rongrong <zourongrong@gmail.com>,
+        John Garry <john.garry@huawei.com>,
+        "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
+        "kantyzc@163.com" <kantyzc@163.com>,
+        "xuwei (O)" <xuwei5@hisilicon.com>
+Subject: RE: [PATCH V7 5/7] ACPI: Delay the enumeration on the devices whose
+ dependency has not met
+Date: Thu, 16 Mar 2017 16:13:41 +0000
+Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E20492A4C@FRAEML521-MBX.china.huawei.com>
+References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1489372963-9000-6-git-send-email-yuanzhichang@hisilicon.com>
+ <4600523.rWNiWKrYZC@aspire.rjw.lan> <58C9F6C6.4090700@hisilicon.com>
+ <CAK8P3a2QZ_j9RQ0U=4MoAAcRcZyu0L5AiYM22QZkiRxh7Ca-iA@mail.gmail.com>
+In-Reply-To: <CAK8P3a2QZ_j9RQ0U=4MoAAcRcZyu0L5AiYM22QZkiRxh7Ca-iA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <148846793743.2349.8478208161427437950.stgit@brijesh-build-machine>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 02/03/2017 16:18, Brijesh Singh wrote:
-> The SEV memory encryption engine uses a tweak such that two identical
-> plaintexts at different location will have a different ciphertexts.
-> So swapping or moving ciphertexts of two pages will not result in
-> plaintexts being swapped. Relocating (or migrating) a physical backing pages
-> for SEV guest will require some additional steps. The current SEV key
-> management spec [1] does not provide commands to swap or migrate (move)
-> ciphertexts. For now we pin the memory allocated for the SEV guest. In
-> future when SEV key management spec provides the commands to support the
-> page migration we can update the KVM code to remove the pinning logical
-> without making any changes into userspace (qemu).
-> 
-> The patch pins userspace memory when a new slot is created and unpin the
-> memory when slot is removed.
-> 
-> [1] http://support.amd.com/TechDocs/55766_SEV-KM%20API_Spec.pdf
-
-This is not enough, because memory can be hidden temporarily from the
-guest and remapped later.  Think of a PCI BAR that is backed by RAM, or
-also SMRAM.  The pinning must be kept even in that case.
-
-You need to add a pair of KVM_MEMORY_ENCRYPT_OPs (one that doesn't map
-to a PSP operation), such as KVM_REGISTER/UNREGISTER_ENCRYPTED_RAM.  In
-QEMU you can use a RAMBlockNotifier to invoke the ioctls.
-
-Paolo
-
-> Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
-> ---
->  arch/x86/include/asm/kvm_host.h |    6 +++
->  arch/x86/kvm/svm.c              |   93 +++++++++++++++++++++++++++++++++++++++
->  arch/x86/kvm/x86.c              |    3 +
->  3 files changed, 102 insertions(+)
-> 
-> diff --git a/arch/x86/include/asm/kvm_host.h b/arch/x86/include/asm/kvm_host.h
-> index fcc4710..9dc59f0 100644
-> --- a/arch/x86/include/asm/kvm_host.h
-> +++ b/arch/x86/include/asm/kvm_host.h
-> @@ -723,6 +723,7 @@ struct kvm_sev_info {
->  	unsigned int handle;	/* firmware handle */
->  	unsigned int asid;	/* asid for this guest */
->  	int sev_fd;		/* SEV device fd */
-> +	struct list_head pinned_memory_slot;
->  };
->  
->  struct kvm_arch {
-> @@ -1043,6 +1044,11 @@ struct kvm_x86_ops {
->  	void (*setup_mce)(struct kvm_vcpu *vcpu);
->  
->  	int (*memory_encryption_op)(struct kvm *kvm, void __user *argp);
-> +
-> +	void (*prepare_memory_region)(struct kvm *kvm,
-> +			struct kvm_memory_slot *memslot,
-> +			const struct kvm_userspace_memory_region *mem,
-> +			enum kvm_mr_change change);
->  };
->  
->  struct kvm_arch_async_pf {
-> diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
-> index 13996d6..ab973f9 100644
-> --- a/arch/x86/kvm/svm.c
-> +++ b/arch/x86/kvm/svm.c
-> @@ -498,12 +498,21 @@ static inline bool gif_set(struct vcpu_svm *svm)
->  }
->  
->  /* Secure Encrypted Virtualization */
-> +struct kvm_sev_pinned_memory_slot {
-> +	struct list_head list;
-> +	unsigned long npages;
-> +	struct page **pages;
-> +	unsigned long userspace_addr;
-> +	short id;
-> +};
-> +
->  static unsigned int max_sev_asid;
->  static unsigned long *sev_asid_bitmap;
->  static void sev_deactivate_handle(struct kvm *kvm);
->  static void sev_decommission_handle(struct kvm *kvm);
->  static int sev_asid_new(void);
->  static void sev_asid_free(int asid);
-> +static void sev_unpin_memory(struct page **pages, unsigned long npages);
->  #define __sev_page_pa(x) ((page_to_pfn(x) << PAGE_SHIFT) | sme_me_mask)
->  
->  static bool kvm_sev_enabled(void)
-> @@ -1544,9 +1553,25 @@ static inline int avic_free_vm_id(int id)
->  
->  static void sev_vm_destroy(struct kvm *kvm)
->  {
-> +	struct list_head *pos, *q;
-> +	struct kvm_sev_pinned_memory_slot *pinned_slot;
-> +	struct list_head *head = &kvm->arch.sev_info.pinned_memory_slot;
-> +
->  	if (!sev_guest(kvm))
->  		return;
->  
-> +	/* if guest memory is pinned then unpin it now */
-> +	if (!list_empty(head)) {
-> +		list_for_each_safe(pos, q, head) {
-> +			pinned_slot = list_entry(pos,
-> +				struct kvm_sev_pinned_memory_slot, list);
-> +			sev_unpin_memory(pinned_slot->pages,
-> +					pinned_slot->npages);
-> +			list_del(pos);
-> +			kfree(pinned_slot);
-> +		}
-> +	}
-> +
->  	/* release the firmware resources */
->  	sev_deactivate_handle(kvm);
->  	sev_decommission_handle(kvm);
-> @@ -5663,6 +5688,8 @@ static int sev_pre_start(struct kvm *kvm, int *asid)
->  		}
->  		*asid = ret;
->  		ret = 0;
-> +
-> +		INIT_LIST_HEAD(&kvm->arch.sev_info.pinned_memory_slot);
->  	}
->  
->  	return ret;
-> @@ -6189,6 +6216,71 @@ static int sev_launch_measure(struct kvm *kvm, struct kvm_sev_cmd *argp)
->  	return ret;
->  }
->  
-> +static struct kvm_sev_pinned_memory_slot *sev_find_pinned_memory_slot(
-> +		struct kvm *kvm, struct kvm_memory_slot *slot)
-> +{
-> +	struct kvm_sev_pinned_memory_slot *i;
-> +	struct list_head *head = &kvm->arch.sev_info.pinned_memory_slot;
-> +
-> +	list_for_each_entry(i, head, list) {
-> +		if (i->userspace_addr == slot->userspace_addr &&
-> +			i->id == slot->id)
-> +			return i;
-> +	}
-> +
-> +	return NULL;
-> +}
-> +
-> +static void amd_prepare_memory_region(struct kvm *kvm,
-> +				struct kvm_memory_slot *memslot,
-> +				const struct kvm_userspace_memory_region *mem,
-> +				enum kvm_mr_change change)
-> +{
-> +	struct kvm_sev_pinned_memory_slot *pinned_slot;
-> +	struct list_head *head = &kvm->arch.sev_info.pinned_memory_slot;
-> +
-> +	mutex_lock(&kvm->lock);
-> +
-> +	if (!sev_guest(kvm))
-> +		goto unlock;
-> +
-> +	if (change == KVM_MR_CREATE) {
-> +
-> +		if (!mem->memory_size)
-> +			goto unlock;
-> +
-> +		pinned_slot = kmalloc(sizeof(*pinned_slot), GFP_KERNEL);
-> +		if (pinned_slot == NULL)
-> +			goto unlock;
-> +
-> +		pinned_slot->pages = sev_pin_memory(mem->userspace_addr,
-> +				mem->memory_size, &pinned_slot->npages);
-> +		if (pinned_slot->pages == NULL) {
-> +			kfree(pinned_slot);
-> +			goto unlock;
-> +		}
-> +
-> +		sev_clflush_pages(pinned_slot->pages, pinned_slot->npages);
-> +
-> +		pinned_slot->id = memslot->id;
-> +		pinned_slot->userspace_addr = mem->userspace_addr;
-> +		list_add_tail(&pinned_slot->list, head);
-> +
-> +	} else if  (change == KVM_MR_DELETE) {
-> +
-> +		pinned_slot = sev_find_pinned_memory_slot(kvm, memslot);
-> +		if (!pinned_slot)
-> +			goto unlock;
-> +
-> +		sev_unpin_memory(pinned_slot->pages, pinned_slot->npages);
-> +		list_del(&pinned_slot->list);
-> +		kfree(pinned_slot);
-> +	}
-> +
-> +unlock:
-> +	mutex_unlock(&kvm->lock);
-> +}
-> +
->  static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
->  {
->  	int r = -ENOTTY;
-> @@ -6355,6 +6447,7 @@ static struct kvm_x86_ops svm_x86_ops __ro_after_init = {
->  	.update_pi_irte = svm_update_pi_irte,
->  
->  	.memory_encryption_op = amd_memory_encryption_cmd,
-> +	.prepare_memory_region = amd_prepare_memory_region,
->  };
->  
->  static int __init svm_init(void)
-> diff --git a/arch/x86/kvm/x86.c b/arch/x86/kvm/x86.c
-> index 6a737e9..e05069d 100644
-> --- a/arch/x86/kvm/x86.c
-> +++ b/arch/x86/kvm/x86.c
-> @@ -8195,6 +8195,9 @@ int kvm_arch_prepare_memory_region(struct kvm *kvm,
->  				const struct kvm_userspace_memory_region *mem,
->  				enum kvm_mr_change change)
->  {
-> +	if (kvm_x86_ops->prepare_memory_region)
-> +		kvm_x86_ops->prepare_memory_region(kvm, memslot, mem, change);
-> +
->  	return 0;
->  }
->  
-> 
+SGkgQXJuZA0KDQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGFybmRiZXJn
+bWFubkBnbWFpbC5jb20gW21haWx0bzphcm5kYmVyZ21hbm5AZ21haWwuY29tXSBPbiBCZWhhbGYN
+Cj4gT2YgQXJuZCBCZXJnbWFubg0KPiBTZW50OiAxNiBNYXJjaCAyMDE3IDEwOjEzDQo+IFRvOiBZ
+dWFuemhpY2hhbmcNCj4gQ2M6IFJhZmFlbCBKLiBXeXNvY2tpOyBDYXRhbGluIE1hcmluYXM7IFdp
+bGwgRGVhY29uOyBSb2IgSGVycmluZzsgRnJhbmsNCj4gUm93YW5kOyBCam9ybiBIZWxnYWFzOyBS
+YWZhZWwgV3lzb2NraTsgTWFyayBSdXRsYW5kOyBMaW51eCBBUk07IEFDUEkNCj4gRGV2ZWwgTWFs
+aW5nIExpc3Q7IExvcmVuem8gUGllcmFsaXNpOyBCZW5qYW1pbiBIZXJyZW5zY2htaWR0OyBMaW51
+eA0KPiBLZXJuZWwgTWFpbGluZyBMaXN0OyBMaW51eGFybTsgZGV2aWNldHJlZUB2Z2VyLmtlcm5l
+bC5vcmc7IGxpbnV4LXBjaTsNCj4gbGludXgtc2VyaWFsQHZnZXIua2VybmVsLm9yZzsgQ29yZXkg
+TWlueWFyZDsgbGl2aXUuZHVkYXVAYXJtLmNvbTsgWm91DQo+IFJvbmdyb25nOyBKb2huIEdhcnJ5
+OyBHYWJyaWVsZSBQYW9sb25pOyB6aGljaGFuZy55dWFuMDJAZ21haWwuY29tOw0KPiBrYW50eXpj
+QDE2My5jb207IHh1d2VpIChPKQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIFY3IDUvN10gQUNQSTog
+RGVsYXkgdGhlIGVudW1lcmF0aW9uIG9uIHRoZSBkZXZpY2VzDQo+IHdob3NlIGRlcGVuZGVuY3kg
+aGFzIG5vdCBtZXQNCj4gDQo+IE9uIFRodSwgTWFyIDE2LCAyMDE3IGF0IDM6MjEgQU0sIHpoaWNo
+YW5nLnl1YW4NCj4gPHl1YW56aGljaGFuZ0BoaXNpbGljb24uY29tPiB3cm90ZToNCj4gPiBIaSwg
+UmFmYWVsLA0KPiA+DQo+ID4gVGhhbmtzIGZvciB5b3VyIHJldmlldyENCj4gPg0KPiA+IE9uIDIw
+MTcvMy8xNCA1OjI0LCBSYWZhZWwgSi4gV3lzb2NraSB3cm90ZToNCj4gPj4gT24gTW9uZGF5LCBN
+YXJjaCAxMywgMjAxNyAxMDo0Mjo0MSBBTSB6aGljaGFuZy55dWFuIHdyb3RlOg0KPiA+Pj4gSW4g
+Y29tbWl0IDQwZTdmY2IxOTI5KEFDUEk6IEFkZCBfREVQIHN1cHBvcnQgdG8gZml4IGJhdHRlcnkg
+aXNzdWUNCj4gb24gQXN1cw0KPiA+Pj4gVDEwMFRBKSwgdGhlICdfREVQJyB3YXMgc3VwcG9ydGVk
+IHRvIHNvbHZlIHRoZSBkZXBlbmRlbmN5IG9mIEFzdXMNCj4gYmF0dGVyeS4gQnV0DQo+ID4+PiB0
+aGlzIHBhdGNoIGlzIHNwZWNpZmljIHRvIEFzdXMgYmF0dGVyeSBkZXZpY2UuDQo+ID4+PiBJbiB0
+aGUgcmVhbCB3b3JsZCwgdGhlcmUgYXJlIG90aGVyIGRldmljZXMgd2hpY2ggbmVlZCB0aGUNCj4g
+ZGVwZW5kZW5jeSB0byBwbGF5IHRoZQ0KPiA+Pj4gcm9sZSBvbiB0aGUgZW51bWVyYXRpb24gb3Jk
+ZXIuIEZvciBleGFtcGxlLCBhbGwgdGhlIEhpcDA2IExQQw0KPiA+Pj4gcGVyaXBlcmFscyhJUE1J
+LUJULCB1YXJ0LCBldGMpIG11c3QgYmUgc2Nhbm5lZCBhZnRlciB0aGUgTFBDIGhvc3QNCj4gZHJp
+dmVyDQo+ID4+PiBmaW5pc2hlZCB0aGUgcHJvYmluZy4gU28sIGl0IG1ha2VzIHNlbnNlIHRvIGFk
+ZCBhIGNoZWNraW5nIHdoZXRoZXINCj4gdGhlIEFDUEkNCj4gPj4+IGRldmljZSBtZWV0IGFsbCB0
+aGUgZGVwZW5kZW5jaWVzIGR1cmluZyBpdHMgZW51bWVyYXRpb24gc2xvdCwgaWYNCj4gbm90LCB0
+aGUNCj4gPj4+IGVudW1lcmF0aW9uIHdpbGwgYmUgZGVsYXllZCB0aWxsIGFsbCBkZXBlbmRlbmN5
+IG1hc3RlciBmaW5pc2ggdGhlaXINCj4gd29yay4NCj4gPj4+DQo+ID4+PiBUaGlzIHBhdGNoIGFk
+ZHMgdGhlIGRlcGVuZGVuY3kgY2hlY2tpbmcgaW4gQUNQSSBlbnVtZXJhdGlvbiwgYWxzbw0KPiB0
+aGUNCj4gPj4+IGNvcnJlc3BvbmRpbmcgaGFuZGxpbmcgdG8gcmV0cmlnZ2VyIHRoZSBIaXAwNiBM
+UEMgcGVyaXBoZXJhbHMnDQo+IHNjYW5uaW5nLg0KPiA+Pg0KPiA+PiBBRkFJQ1MsIF9ERVAgaXMg
+Z2VuZXJhbGx5IGFidXNlZCBpbiB0aGUgd2lsZCBhbmQgY2Fubm90IGJlIG1hZGUNCj4gZ2VuZXJp
+Yy4gIFNvcnJ5Lg0KPiA+Pg0KPiA+DQo+ID4gRnJvbSB0aGUgQUNQSSBzcGVjaWZpY2F0aW9uLCBf
+REVQIGlzIGZvciBvcGVyYXRpb24gcmVnaW9uIGFjY2Vzc2VzLg0KPiA+IFlvdSBhcmUgcmlnaHQu
+Li4NCj4gPg0KPiA+IEhvdyBhYm91dCB3ZSBhZGQgYSBBQ1BJIGhhbmRsZXIgZm9yIG91ciBMUEMg
+YnVzPz8gSnVzdCBsaWtlIGFtYmEuDQo+ID4gSW4gdGhpcyB3YXksIHdlIGFsc28gY2FuIHNvbHZl
+IHRoZSBpc3N1ZSBhYm91dCBMUEMgZW51bWVyYXRpb24gb3JkZXIuDQo+IA0KPiBBcyBmYXIgYXMg
+SSBjYW4gdGVsbCwgUENJIGFuZCBMUEMgaGF2ZSBleGFjdGx5IHRoZSBzYW1lIHJlcXVpcmVtZW50
+DQo+IGhlcmUsDQo+IHNvIHdoYXRldmVyIHlvdSBlbmQgdXAgZG9pbmcgZm9yIG9uZSBzaG91bGQg
+YmUgdXNlZCBmb3IgdGhlIG90aGVyIGFzDQo+IHdlbGwuDQoNCldlbGwgYXMgeW91IGtub3cgUENJ
+IGhhcyBnb3QgaGlzIG93biBoYW5kbGVyLCBpZGVudGlmaWVkIGJ5IGhpcyBvd24NCm5hbWVzcGFj
+ZSBpZCAiUE5QMEEwMyIuDQpOb3cgd2hlbiB5b3Ugc2F5ICJ5b3UgZW5kIHVwIGRvaW5nIGZvciBv
+bmUgc2hvdWxkIGJlIHVzZWQgZm9yIHRoZSBvdGhlciINCmFyZSB5b3Ugc2F5aW5nIHRoYXQgd2Ug
+c2hvdWxkIGludHJvZHVjZSBhIG5ldyBjbGFzcyBvZiBkZXZpY2VzPw0KaS5lLiBzaG91bGQgd2Ug
+aGF2ZSBhbiBBQ1BJIG5hbWVzcGFjZSBpZGVudGlmaWVyIGZvciBub24tUENJIElPIEhvc3QNCkNv
+bnRyb2xsZXJzPyAgDQoNCk90aGVyd2lzZSwgaWYgbXkgdW5kZXJzdGFuZGluZyBpcyBjb3JyZWN0
+LCBoYXZpbmcgYSBzcGVjaWZpYyBuZXcgQUNQSQ0KaGFuZGxlciBmb3IgSGlTaWxpY29uIExQQyB3
+b3VsZCBtZWFuIHRvIGFkZGluZyBhbm90aGVyIGZ1bmN0aW9uX2luaXQoKQ0KaW4gdGhlIGxpc3Qg
+b2YgYWNwaSBoYW5kbGVycyBpbml0cyBpbiBhY3BpX3NjYW5faW5pdCgpLg0KDQpCdXQgdGhlbiBl
+dmVyeSB2ZW5kb3Igd291bGQgZGVjbGFyZSBoaXMgb3duIG9uZS4uLmlzIHRoaXMgcmVhbGx5IGNv
+cnJlY3Q/DQoNCk1hbnkgVGhhbmtzDQpHYWINCg0KPiANCj4gICAgICAgQXJuZA0K
