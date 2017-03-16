@@ -1,274 +1,110 @@
-Return-Path: <SRS0=7EXQ=3A=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=7EXQ=3A=free.fr=slash.tmp@kernel.org>
-Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
-To: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
- Thomas Gleixner <tglx@linutronix.de>
-Cc: Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
- <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
-Date: Thu, 23 Mar 2017 18:03:57 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 16 Mar 2017 15:06:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Long Li <longli@microsoft.com>
+Cc: KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/2 v4] pci-hyperv: properly handle pci bus remove
+Message-ID: <20170316200658.GC9739@bhelgaas-glaptop.roam.corp.google.com>
+References: <BN3PR03MB22270F97B502941940E0E91ECE560@BN3PR03MB2227.namprd03.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BN3PR03MB22270F97B502941940E0E91ECE560@BN3PR03MB2227.namprd03.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/03/2017 15:22, Marc Zyngier wrote:
-
-> On 23/03/17 13:05, Mason wrote:
+On Tue, Feb 28, 2017 at 02:19:45AM +0000, Long Li wrote:
+> hv_pci_devices_present is called in hv_pci_remove when we remove a PCI
+> device from host (e.g. by disabling SRIOV on a device). In hv_pci_remove,
+> the bus is already removed before the call, so we don't need to rescan 
+> the bus in the workqueue scheduled from hv_pci_devices_present. By 
+> introducing status hv_pcibus_removed, we can avoid this situation.
 > 
->> +#define MSI_COUNT 32
+> Signed-off-by: Long Li <longli@microsoft.com>
+> Reported-by: Xiaofeng Wang <xiaofwan@redhat.com>
+> Acked-by: K. Y. Srinivasan <kys@microsoft.com>
+
+This didn't apply for me because saving it to a file resulted in some
+encoded file with "=3D" instead of "=".  I see that mutt is smart enough to
+deal with that in this reply, so there's probably a way for it to decode it
+when saving to a file, but I don't know it.
+
+I tried to apply it by hand, but the hunk in hv_pci_remove() doesn't match
+the context.  I think your patch is based on something previous to
+17978524a636 ("PCI: hv: Fix hv_pci_remove() for hot-remove").  Please
+refresh the patch so it applies to my "master" branch (currently
+v4.11-rc1).
+
+Also, the "default: break;" case below is redundant and can be removed.
+
+So I'll wait for your updated versions of both these patches.
+
+> ---
+>  drivers/pci/host/pci-hyperv.c | 20 +++++++++++++++++---
+>  1 file changed, 17 insertions(+), 3 deletions(-)
 > 
-> Is this something that is hardcoded? Unlikely to ever change?
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index a8deeca..4a37598 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -348,6 +348,7 @@ enum hv_pcibus_state {
+>  	hv_pcibus_init = 0,
+>  	hv_pcibus_probed,
+>  	hv_pcibus_installed,
+> +	hv_pcibus_removed,
+>  	hv_pcibus_maximum
+>  };
+>  
+> @@ -1481,13 +1482,24 @@ static void pci_devices_present_work(struct work_struct *work)
+>  		put_pcichild(hpdev, hv_pcidev_ref_initial);
+>  	}
+>  
+> -	/* Tell the core to rescan bus because there may have been changes. */
+> -	if (hbus->state == hv_pcibus_installed) {
+> +	switch (hbus->state) {
+> +	case hv_pcibus_installed:
+> +		/*
+> +		 * Tell the core to rescan bus
+> +		 * because there may have been changes.
+> +		 */
+>  		pci_lock_rescan_remove();
+>  		pci_scan_child_bus(hbus->pci_bus);
+>  		pci_unlock_rescan_remove();
+> -	} else {
+> +		break;
+> +
+> +	case hv_pcibus_init:
+> +	case hv_pcibus_probed:
+>  		survey_child_resources(hbus);
+> +		break;
+> +
+> +	default:
+> +		break;
 
-The host bridge actually supports 256 MSIs.
+^ This is redundant.
 
-IIUC, what you suggested on IRC is that I support 256 in the driver,
-and only read the status for *enabled* MSIs.
-
-Pseudo-code:
-
-for every 32-bit blob in the enabled bitmap
-  if the value is non-zero
-    lookup the corresponding status reg
-
-Problem is that a BITMAP is unsigned long (as you point out below).
-So I'm not sure how to iterate 32-bits at a time over the BITMAP.
-
-
-
-
->> +static void tango_msi_isr(struct irq_desc *desc)
->> +{
->> +	struct irq_chip *chip = irq_desc_get_chip(desc);
->> +	struct tango_pcie *pcie;
->> +	unsigned long status, virq;
->> +	int pos;
->> +
->> +	chained_irq_enter(chip, desc);
->> +	pcie = irq_desc_get_handler_data(desc);
->> +
->> +	status = readl_relaxed(pcie->msi_status);
-> 
-> Please use types that unambiguously match that of the MMIO accessor (u32
-> in this case). On a 64bit system, unsigned long is likely to be 64bit.
-> You can assign it to an unsigned long before calling the
-> for_each_set_bit operator.
-
-OK. I'm aware that unsigned long is 64 bits on sane 64b platforms,
-but since extending u32 to u64 would pad with zeros, I didn't expect
-this to be an issue. I will change the code. Note: I copied the
-code from the Altera driver.
-
->> +	writel_relaxed(status, pcie->msi_status); /* clear IRQs */
-> 
-> Why isn't this your irq_ack method instead of open-coding it?
-
-I based my driver on the Altera driver, and I did it like
-I thought they did. I will try fixing my code.
-
-
->> +	for_each_set_bit(pos, &status, MSI_COUNT) {
->> +		virq = irq_find_mapping(pcie->irq_domain, pos);
->> +		if (virq)
->> +			generic_handle_irq(virq);
->> +		else
->> +			pr_err("Unhandled MSI: %d\n", pos);
-> 
-> Please rate-limit this.
-
-I'll use pr_err_ratelimited
-
-
->> +static struct msi_domain_info msi_domain_info = {
->> +	.flags	= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS,
-> 
-> No support for MSI-X? Why?
-
-Good question.
-https://en.wikipedia.org/wiki/Message_Signaled_Interrupts#MSI-X
-My controller supports a single doorbell, and only 256 MSIs.
-I thought that meant it didn't support MSI-X.
-
-
->> +static int tango_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
->> +		unsigned int nr_irqs, void *args)
->> +{
->> +	struct tango_pcie *pcie = domain->host_data;
->> +	int pos, err = 0;
->> +	u32 mask;
->> +
->> +	if (nr_irqs != 1) /* When does that happen? */
->> +		return -EINVAL;
-> 
-> Only if the end-point wants to use Multi-MSI. You don't advertise
-> support for it, so it should never happen.
-
-Should I keep the test or remove it?
-
-
->> +	mutex_lock(&pcie->lock);
->> +
->> +	mask = readl_relaxed(pcie->msi_mask);
-> 
-> Do you really need to read this from the HW each time you allocate an
-> interrupt? That feels pretty crazy. You're much better off having an
-> in-memory bitmap that will make things more efficient, and avoid the
-> following bug...
-> 
->> +	pos = find_first_zero_bit(&mask, MSI_COUNT);
-> 
-> ... where using a u32 as a bitmap is a very bad idea (because not the
-> whole world is a 32bit, little endian platform).
-
-I understand your point. This ties in to the ISR discussion.
-
-
->> +	if (pos < MSI_COUNT)
->> +		writel(mask | BIT(pos), pcie->msi_mask);
-> 
-> And it would make a lot more sense to move this write (which should be
-> relaxed) to irq_unmask. Also, calling msi_mask for something that is an
-> enable register is a bit counter intuitive.
-
-I don't have as much experience as you.
-I just used the names in the HW documentation.
-I think it is the "mask" (as in bitmap) of enabled MSIs.
-I will change "mask" to "enable".
-
-Are you saying I should not use pci_msi_mask_irq and pci_msi_unmask_irq,
-but register custom implementations? I should still call these in my
-custom functions, right?
-
-
->> +	else
->> +		err = -ENOSPC;
->> +
->> +	mutex_unlock(&pcie->lock);
->> +
->> +	irq_domain_set_info(domain, virq, pos, &tango_msi_chip,
->> +			domain->host_data, handle_simple_irq, NULL, NULL);
-> 
-> And here, you're polluting the domain even if you failed to allocate the
-> interrupt.
-
-This bug is 100% mine. Will fix.
-
->> +
->> +	return err;
->> +}
->> +
->> +static void tango_irq_domain_free(struct irq_domain *domain,
->> +				   unsigned int virq, unsigned int nr_irqs)
->> +{
->> +	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
->> +	struct tango_pcie *pcie = irq_data_get_irq_chip_data(d);
->> +	int pos = d->hwirq;
->> +	u32 mask;
->> +
->> +	mutex_lock(&pcie->lock);
->> +
->> +	mask = readl(pcie->msi_mask);
->> +	writel(mask & ~BIT(pos), pcie->msi_mask);
-> 
-> Same as above, please move this to the irq_unmask method.
-
-This one should be irq_mask, no?
-
-Even If I move the MMIO write, it should be done under lock,
-I think. But I don't know in what context irq_unmask will
-be called.
-You said: not mutex, spinlock.
-
-
->> +static int tango_msi_remove(struct platform_device *pdev)
->> +{
->> +	struct tango_pcie *msi = platform_get_drvdata(pdev);
->> +
->> +	irq_set_chained_handler(msi->irq, NULL);
->> +	irq_set_handler_data(msi->irq, NULL);
->> +	/* irq_set_chained_handler_and_data(msi->irq, NULL, NULL); instead? */
-
-Can I call irq_set_chained_handler_and_data(msi->irq, NULL, NULL);
-instead of the two calls?
-
-
->> +	mutex_init(&pcie->lock);
->> +	writel(0, pcie->msi_mask);
->> +
->> +	/* Why is fwnode for this call? */
->> +	irq_dom = irq_domain_add_linear(NULL, MSI_COUNT, &msi_domain_ops, pcie);
-> 
-> Use irq_domain_create_linear, pass the same fwnode.
-
-Will change that.
-
-
->> +	if (!irq_dom) {
->> +		pr_err("Failed to create IRQ domain\n");
->> +		return -ENOMEM;
->> +	}
->> +
->> +	msi_dom = pci_msi_create_irq_domain(fwnode, &msi_domain_info, irq_dom);
->> +	if (!msi_dom) {
->> +		pr_err("Failed to create MSI domain\n");
->> +		irq_domain_remove(irq_dom);
->> +		return -ENOMEM;
->> +	}
->> +
->> +	virq = platform_get_irq(pdev, 1);
-> 
-> In the absence of a documented binding, it is hard to know if you're
-> doing the right thing.
-
-		pcie@50000000 {
-			compatible = "sigma,smp8759-pcie";
-			reg = <0x50000000 SZ_64M>, <0x2e000 0x100>;
-			device_type = "pci";
-			bus-range = <0 63>;
-			#size-cells = <2>;
-			#address-cells = <3>;
-			#interrupt-cells = <1>;
-			ranges = <0x02000000 0x0 0x04000000  0x54000000  0x0 SZ_192M>;
-			msi-controller;
-			/* 54 for misc interrupts, 55 for MSI */
-			interrupts = <54 IRQ_TYPE_LEVEL_HIGH>, <55 IRQ_TYPE_LEVEL_HIGH>;
-		};
-
-Note: I don't have an "interrupt-map" prop because rev1 doesn't support
-legacy PCI interrupts (INTx). But I see the PCI framework wrongly mapping
-intA to my system's interrupt #1, presumably because I am lacking an
-interrupt-map?
-
-Also I find the MSI interrupt number to be high:
-
-# cat /proc/interrupts 
-           CPU0       CPU1       
- 19:      21171       1074     GIC-0  29 Edge      twd
- 20:        116          0      irq0   1 Level     serial
- 26:          7          0       MSI   0 Edge      aerdrv
- 28:       3263          0       MSI 524288 Edge      xhci_hcd
-
-524288 is 0x80000. Was this offset chosen by the intc core?
-Or by my (lack of) DT?
-
->> +	if (virq <= 0) {
->> +		irq_domain_remove(msi_dom);
->> +		irq_domain_remove(irq_dom);
->> +		return -ENXIO;
-> 
-> Maybe add a message indicating what failed?
-
-Will do.
-
-Thanks again for the thorough review.
-
-Regards.
+>  	}
+>  
+>  	up(&hbus->enum_sem);
+> @@ -2163,6 +2175,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+>  	hbus = kzalloc(sizeof(*hbus), GFP_KERNEL);
+>  	if (!hbus)
+>  		return -ENOMEM;
+> +	hbus->state = hv_pcibus_init;
+>  
+>  	/*
+>  	 * The PCI bus "domain" is what is called "segment" in ACPI and
+> @@ -2305,6 +2318,7 @@ static int hv_pci_remove(struct hv_device *hdev)
+>  		pci_stop_root_bus(hbus->pci_bus);
+>  		pci_remove_root_bus(hbus->pci_bus);
+>  		pci_unlock_rescan_remove();
+> +		hbus->state = hv_pcibus_removed;
+>  	}
+>  
+>  	ret = hv_send_resources_released(hdev);
+> -- 
+> 1.8.5.6
