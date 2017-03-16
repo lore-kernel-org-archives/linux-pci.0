@@ -1,117 +1,244 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Bowers, AndrewX" <andrewx.bowers@intel.com>
-To: "lkml@pengaru.com" <lkml@pengaru.com>,
-        "Brown, Aaron F" <aaron.f.brown@intel.com>
-CC: "vcaputo@pengaru.com" <vcaputo@pengaru.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        David Singleton <davsingl@cisco.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        khalidm <khalidm@cisco.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        Borislav Petkov <bp@alien8.de>,
-        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-        =?iso-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>
-Subject: RE: [Intel-wired-lan] [BUG] 4.11.0-rc1 panic on shutdown X61s
-Date: Thu, 16 Mar 2017 20:13:40 +0000
-Message-ID: <26D9FDECA4FBDD4AADA65D8E2FC68A4A10402F44@ORSMSX101.amr.corp.intel.com>
-References: <20170312053723.GH802@shells.gnugeneration.com>
- <20170312115703.GA18197@nazgul.tnic> <20170312122621.GA2823@nazgul.tnic>
- <CAHp75Ve7SWivf=TTuq-qA=iM20E==OmSZD2YAmt0LVJQg47Osg@mail.gmail.com>
- <20170312222333.hm54nl2ul5iuixap@pd.tnic> <87shmhjfap.fsf@miraculix.mork.no>
- <309B89C4C689E141A5FF6A0C5FB2118B8C5B3F9B@ORSMSX101.amr.corp.intel.com>
- <20170314024033.GK802@shells.gnugeneration.com>
-In-Reply-To: <20170314024033.GK802@shells.gnugeneration.com>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <SRS0=PHxk=2Z=gmail.com=alexdeucher@kernel.org>
+Return-Path: <SRS0=PHxk=2Z=gmail.com=alexdeucher@kernel.org>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <DM5PR12MB18188AF745E7FB6B021E6600FF260@DM5PR12MB1818.namprd12.prod.outlook.com>
+References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+ <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
+ <CAPyr0yLWiGzU5ihFcj_NmA2Vk2R7GsKqo2LK8o3Eu+Df9m7vhw@mail.gmail.com>
+ <6fac05e4-26ae-e959-9af6-cb68a04a1110@vodafone.de> <MWHPR1201MB0206CA2E6DAC3B83ACA52ADBB4270@MWHPR1201MB0206.namprd12.prod.outlook.com>
+ <17c470c4-d406-b5ac-73d1-4dd5b83cfca8@vodafone.de> <DM5PR12MB18188AF745E7FB6B021E6600FF260@DM5PR12MB1818.namprd12.prod.outlook.com>
+From: Alex Deucher <alexdeucher@gmail.com>
+Date: Wed, 15 Mar 2017 22:25:08 -0400
+Message-ID: <CADnq5_NzFTWEB8NXT6LM9U=JfexpbZxQCyja1VqZv+NYMCmJwQ@mail.gmail.com>
+Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
+To: "Zhang, Jerry" <Jerry.Zhang@amd.com>
+Cc: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>,
+	"Zhou, David(ChunMing)" <David1.Zhou@amd.com>, Ayyappa Ch <ayyappa.ch.linux@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+	"platform-driver-x86@vger.kernel.org" <platform-driver-x86@vger.kernel.org>,
+	"helgaas@kernel.org" <helgaas@kernel.org>,
+	"amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Tested this on a Thinkpad T420i, after verifying it also has an e1000e NIC,=
- unable to  reproduce. Might be limited to that particular model/firmware v=
-ersion you're using, which I was not able to track down here although there=
- is another person I could ask, might be able to come up with one yet.
+On Wed, Mar 15, 2017 at 10:19 PM, Zhang, Jerry <Jerry.Zhang@amd.com> wrote:
+>> -----Original Message-----
+>> From: dri-devel [mailto:dri-devel-bounces@lists.freedesktop.org] On Beha=
+lf Of
+>> Christian K?nig
+>> Sent: Wednesday, March 15, 2017 17:29
+>> To: Zhou, David(ChunMing); Ayyappa Ch
+>> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; amd-
+>> gfx@lists.freedesktop.org; platform-driver-x86@vger.kernel.org;
+>> helgaas@kernel.org; dri-devel@lists.freedesktop.org
+>> Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
+>>
+>> Yes, exactly that.
+>
+> (I'm not familiar with PCI too much.)
+> Is there any restrict for PCI device?
+> I'm concerning if any PCI couldn't support it on some motherboard.
 
+It depends on the PCI root bridge.  This patch set only implements
+support for AMD root bridges.  Intel and other vendors would need
+similar code.
 
-> -----Original Message-----
-> From: Intel-wired-lan [mailto:intel-wired-lan-bounces@lists.osuosl.org] O=
-n
-> Behalf Of lkml@pengaru.com
-> Sent: Monday, March 13, 2017 7:41 PM
-> To: Brown, Aaron F <aaron.f.brown@intel.com>
-> Cc: vcaputo@pengaru.com; linux-pci@vger.kernel.org; David Singleton
-> <davsingl@cisco.com>; linux-kernel <linux-kernel@vger.kernel.org>;
-> khalidm <khalidm@cisco.com>; Andy Shevchenko
-> <andy.shevchenko@gmail.com>; Borislav Petkov <bp@alien8.de>; intel-
-> wired-lan@lists.osuosl.org; Bj=F8rn Mork <bjorn@mork.no>
-> Subject: Re: [Intel-wired-lan] [BUG] 4.11.0-rc1 panic on shutdown X61s
->=20
-> On Tue, Mar 14, 2017 at 01:20:27AM +0000, Brown, Aaron F wrote:
-> > > Borislav Petkov <bp@alien8.de> writes:
-> > > > On Sun, Mar 12, 2017 at 03:55:08PM +0200, Andy Shevchenko wrote:
-> > > >
-> > > >> The only change that IMHO matters happened between v4.10 and
-> > > >> v4.11-
-> > > rc1 is this:
-> > > >>
-> > > >> @@ -6276,8 +6274,8 @@ static int e1000e_pm_freeze(struct device
-> *dev)
-> > > >>                 /* Quiesce the device without resetting the hardwa=
-re */
-> > > >>                 e1000e_down(adapter, false);
-> > > >>                 e1000_free_irq(adapter);
-> > > >> +               e1000e_reset_interrupt_capability(adapter);
-> > > >>         }
-> > > >> -       e1000e_reset_interrupt_capability(adapter);
-> > > >>
-> > > >> So, it apparently misses something for the other case, like
-> > > >> pci_disable_msi() call or so.
-> > > >
-> > > > Well, lemme add the people from
-> > > >
-> > > >   7e54d9d063fa ("e1000e: driver trying to free already-free irq")
-> > > >
-> > > > to CC then. :-)
-> > >
-> > > Already did that a week ago:
-> > > https://www.spinics.net/lists/netdev/msg423379.html
-> > >
-> > > Haven't heard anything back yet.  Wondering if they are waiting for
-> > > someone else to submit the pretty obvious revert?  Don't understand
-> > > why that should take more than a minute to figure out.  It's not
-> > > like they are testing these changes anyway...
-> >
-> <snip>
-> >
-> > What exact part (or parts) are we looking at (lspci|grep -i eth) that t=
-rigger
-> this?  Could it be a difference in .config files?  The trace says it is f=
-alling back
-> to legacy interrupts, does the system continue to work and does the
-> network continue to function in that mode?  In case it's related to user =
-space
-> what is the base distro?  Any other information you think can help me
-> reproduce the issue would be appreciated.
-> >
->=20
-> Config attached, the machine is a Thinkpad X61s 1.8Ghz with no onboard
-> wireless devices (rtl8192cu usb wifi is used).
->=20
-> # lspci| grep -i eth
-> 00:19.0 Ethernet controller: Intel Corporation 82566MM Gigabit Network
-> Connection (rev 03)
->=20
-> Debian jessie amd64 is the distro.
->=20
-> I'll have to get back to you on if the e1000e continues functioning, the
-> machine continues to function until the shutdown panic.
->=20
-> There were however some occurrences of subsequent suspend/resume
-> cycles hanging the machine hard leaving the display off, which prompted m=
-e
-> to resume using
-> 4.10 before digging any further as it's my only system right now.
->=20
-> Will try get around to testing 4.11 with 7e54d9d063fa reverted soon.
->=20
-> Regards,
-> Vito Caputo
+Alex
+
+>
+>>
+>> Christian.
+>>
+>> Am 15.03.2017 um 09:25 schrieb Zhou, David(ChunMing):
+>> > Does that means we don't need invisible vram later?
+>> >
+>> > David
+>> >
+>> > -----Original Message-----
+>> > From: dri-devel [mailto:dri-devel-bounces@lists.freedesktop.org] On
+>> > Behalf Of Christian K?nig
+>> > Sent: Wednesday, March 15, 2017 3:38 PM
+>> > To: Ayyappa Ch <ayyappa.ch.linux@gmail.com>
+>> > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+>> > amd-gfx@lists.freedesktop.org; platform-driver-x86@vger.kernel.org;
+>> > helgaas@kernel.org; dri-devel@lists.freedesktop.org
+>> > Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
+>> >
+>> > Carizzo is an APU and resizing BARs isn't needed nor supported there.
+>> > The CPU can access the full stolen VRAM directly on that hardware.
+>> >
+>> > As far as I know ASICs with support for this are Tonga, Fiji and all P=
+olaris variants.
+>> >
+>> > Christian.
+>> >
+>> > Am 15.03.2017 um 08:23 schrieb Ayyappa Ch:
+>> >> Is it possible on Carrizo asics? Or only supports on newer asics?
+>> >>
+>> >> On Mon, Mar 13, 2017 at 6:11 PM, Christian K=C3=B6nig
+>> >> <deathsimple@vodafone.de> wrote:
+>> >>> From: Christian K=C3=B6nig <christian.koenig@amd.com>
+>> >>>
+>> >>> Try to resize BAR0 to let CPU access all of VRAM.
+>> >>>
+>> >>> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
+>> >>> ---
+>> >>>    drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
+>> >>>    drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 29
+>> +++++++++++++++++++++++++++++
+>> >>>    drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 +++++---
+>> >>>    drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 +++++---
+>> >>>    4 files changed, 40 insertions(+), 6 deletions(-)
+>> >>>
+>> >>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>> >>> b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>> >>> index 3b81ded..905ded9 100644
+>> >>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>> >>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>> >>> @@ -1719,6 +1719,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct
+>> amdgpu_device *adev, struct ttm_tt *ttm,
+>> >>>                                    struct ttm_mem_reg *mem);
+>> >>>    void amdgpu_vram_location(struct amdgpu_device *adev, struct
+>> amdgpu_mc *mc, u64 base);
+>> >>>    void amdgpu_gtt_location(struct amdgpu_device *adev, struct
+>> >>> amdgpu_mc *mc);
+>> >>> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
+>> >>>    void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev,
+>> u64 size);
+>> >>>    int amdgpu_ttm_init(struct amdgpu_device *adev);
+>> >>>    void amdgpu_ttm_fini(struct amdgpu_device *adev); diff --git
+>> >>> a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>> >>> b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>> >>> index 118f4e6..92955fe 100644
+>> >>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>> >>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>> >>> @@ -692,6 +692,35 @@ void amdgpu_gtt_location(struct amdgpu_device
+>> *adev, struct amdgpu_mc *mc)
+>> >>>                           mc->gtt_size >> 20, mc->gtt_start, mc->gtt=
+_end);
+>> >>>    }
+>> >>>
+>> >>> +/**
+>> >>> + * amdgpu_resize_bar0 - try to resize BAR0
+>> >>> + *
+>> >>> + * @adev: amdgpu_device pointer
+>> >>> + *
+>> >>> + * Try to resize BAR0 to make all VRAM CPU accessible.
+>> >>> + */
+>> >>> +void amdgpu_resize_bar0(struct amdgpu_device *adev) {
+>> >>> +       u32 size =3D max(ilog2(adev->mc.real_vram_size - 1) + 1, 20)=
+ - 20;
+>> >>> +       int r;
+>> >>> +
+>> >>> +       r =3D pci_resize_resource(adev->pdev, 0, size);
+>> >>> +
+>> >>> +       if (r =3D=3D -ENOTSUPP) {
+>> >>> +               /* The hardware don't support the extension. */
+>> >>> +               return;
+>> >>> +
+>> >>> +       } else if (r =3D=3D -ENOSPC) {
+>> >>> +               DRM_INFO("Not enoigh PCI address space for a large B=
+AR.");
+>> >>> +       } else if (r) {
+>> >>> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
+>> >>> +       }
+>> >>> +
+>> >>> +       /* Reinit the doorbell mapping, it is most likely moved as w=
+ell */
+>> >>> +       amdgpu_doorbell_fini(adev);
+>> >>> +       BUG_ON(amdgpu_doorbell_init(adev));
+>> >>> +}
+>> >>> +
+>> >>>    /*
+>> >>>     * GPU helpers function.
+>> >>>     */
+>> >>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>> >>> b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>> >>> index dc9b6d6..36a7aa5 100644
+>> >>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>> >>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>> >>> @@ -367,13 +367,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_devi=
+ce
+>> *adev)
+>> >>>                   break;
+>> >>>           }
+>> >>>           adev->mc.vram_width =3D numchan * chansize;
+>> >>> -       /* Could aper size report 0 ? */
+>> >>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>> >>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>> >>>           /* size in MB on si */
+>> >>>           adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024U=
+LL *
+>> 1024ULL;
+>> >>>           adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) *
+>> >>> 1024ULL
+>> >>> * 1024ULL;
+>> >>>
+>> >>> +       if (!(adev->flags & AMD_IS_APU))
+>> >>> +               amdgpu_resize_bar0(adev);
+>> >>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>> >>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>> >>> +
+>> >>>    #ifdef CONFIG_X86_64
+>> >>>           if (adev->flags & AMD_IS_APU) {
+>> >>>                   adev->mc.aper_base =3D
+>> >>> ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22; diff --git
+>> >>> a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>> >>> b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>> >>> index c087b00..7761ad3 100644
+>> >>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>> >>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>> >>> @@ -459,13 +459,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_devi=
+ce
+>> *adev)
+>> >>>                   break;
+>> >>>           }
+>> >>>           adev->mc.vram_width =3D numchan * chansize;
+>> >>> -       /* Could aper size report 0 ? */
+>> >>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>> >>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>> >>>           /* size in MB on si */
+>> >>>           adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024U=
+LL *
+>> 1024ULL;
+>> >>>           adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) *
+>> >>> 1024ULL
+>> >>> * 1024ULL;
+>> >>>
+>> >>> +       if (!(adev->flags & AMD_IS_APU))
+>> >>> +               amdgpu_resize_bar0(adev);
+>> >>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>> >>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>> >>> +
+>> >>>    #ifdef CONFIG_X86_64
+>> >>>           if (adev->flags & AMD_IS_APU) {
+>> >>>                   adev->mc.aper_base =3D
+>> >>> ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
+>> >>> --
+>> >>> 2.7.4
+>> >>>
+>> >>> _______________________________________________
+>> >>> dri-devel mailing list
+>> >>> dri-devel@lists.freedesktop.org
+>> >>> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+>> >
+>> > _______________________________________________
+>> > dri-devel mailing list
+>> > dri-devel@lists.freedesktop.org
+>> > https://lists.freedesktop.org/mailman/listinfo/dri-devel
+>> > _______________________________________________
+>> > amd-gfx mailing list
+>> > amd-gfx@lists.freedesktop.org
+>> > https://lists.freedesktop.org/mailman/listinfo/amd-gfx
+>>
+>>
+>> _______________________________________________
+>> dri-devel mailing list
+>> dri-devel@lists.freedesktop.org
+>> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+> _______________________________________________
+> amd-gfx mailing list
+> amd-gfx@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/amd-gfx
