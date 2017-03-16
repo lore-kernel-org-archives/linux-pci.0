@@ -1,53 +1,61 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:33688 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752468AbdCPM2W (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Mar 2017 08:28:22 -0400
+Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
+ when spliting large pages
+To: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
+        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
+        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
+        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, bp@suse.de, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org,
+        akpm@linux-foundation.org, davem@davemloft.net
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Message-ID: <55f528b7-da06-2506-2cd0-56b9493347f0@redhat.com>
+Date: Thu, 16 Mar 2017 13:28:01 +0100
 MIME-Version: 1.0
-In-Reply-To: <4281f8e01b9fc5628cbf4a5c77abd642801e23c7.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org> <4281f8e01b9fc5628cbf4a5c77abd642801e23c7.1490188942.git.dwmw2@infradead.org>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 24 Mar 2017 17:13:36 +0100
-Message-ID: <CAK8P3a3RtSCGfbtpJDF2d30rLagPMY=HnnjYpBe+k1UxKrXOig@mail.gmail.com>
-Subject: Re: [PATCH 17/17] arm64: Do not expose PCI mmap through procfs
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        linux-arch <linux-arch@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 22, 2017 at 2:25 PM, David Woodhouse <dwmw2@infradead.org> wrote:
-> From: David Woodhouse <dwmw@amazon.co.uk>
->
-> Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
-> ---
->  drivers/pci/proc.c | 5 +++++
->  1 file changed, 5 insertions(+)
->
-> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-> index 2d9cfa4..a940f4b 100644
-> --- a/drivers/pci/proc.c
-> +++ b/drivers/pci/proc.c
-> @@ -17,6 +17,11 @@
->
->  static int proc_initialized;   /* = 0 */
->
-> +#ifdef __aarch64__
-> +/* ARM64 wants to be special and not expose this through /proc like everyone else */
-> +#undef HAVE_PCI_MMAP
-> +#endif
 
-I'd still prefer this to be a whitelist of the existing architectures using PCI
-MMAP in procfs, there is really no reason for arm64 to be special, the
-one thing we want to control here is whether new architectures (including
-arm64) that have never had either the sysfs or the procfs interface
-should get one or both of them.
 
-As it seems that there are important use cases for the sysfs interface
-and your patch series will just make that work everywhere, I'd argue
-that we should just always provide the sysfs interface now, and use
-HAVE_PCI_MMAP only control the procfs interface.
+On 02/03/2017 16:15, Brijesh Singh wrote:
+> 
+>  __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
+> -		   struct page *base)
+> +		  pte_t *pbase, unsigned long new_pfn)
+>  {
+> -	pte_t *pbase = (pte_t *)page_address(base);
 
-That way, we turn on the sysfs interface on arc, arm64, frv and tile
-as well as any future architecture with PCI support, but leave
-the procfs support as opt-in.
+Just one comment and I'll reply to Boris, I think you can compute pbase 
+with pfn_to_kaddr, and avoid adding a new argument.
 
-       Arnd
+>  	 */
+> -	__set_pmd_pte(kpte, address, mk_pte(base, __pgprot(_KERNPG_TABLE)));
+> +	__set_pmd_pte(kpte, address,
+> +		native_make_pte((new_pfn << PAGE_SHIFT) + _KERNPG_TABLE));
+
+And this probably is better written as:
+
+	__set_pmd_pte(kpte, address, pfn_pte(new_pfn, __pgprot(_KERNPG_TABLE));
+
+Paolo
