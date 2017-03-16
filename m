@@ -1,99 +1,117 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 9 Mar 2017 20:29:19 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
-        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
-        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
-        gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
-        akpm@linux-foundation.org, davem@davemloft.net
-Subject: Re: [RFC PATCH v2 13/32] KVM: SVM: Enable SEV by setting the
- SEV_ENABLE CPU feature
-Message-ID: <20170309192919.lt3gfqeuhlsoylu7@pd.tnic>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846770159.2349.16863375000963463500.stgit@brijesh-build-machine>
+From: "Bowers, AndrewX" <andrewx.bowers@intel.com>
+To: "lkml@pengaru.com" <lkml@pengaru.com>,
+        "Brown, Aaron F" <aaron.f.brown@intel.com>
+CC: "vcaputo@pengaru.com" <vcaputo@pengaru.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        David Singleton <davsingl@cisco.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        khalidm <khalidm@cisco.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        Borislav Petkov <bp@alien8.de>,
+        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+        =?iso-8859-1?Q?Bj=F8rn_Mork?= <bjorn@mork.no>
+Subject: RE: [Intel-wired-lan] [BUG] 4.11.0-rc1 panic on shutdown X61s
+Date: Thu, 16 Mar 2017 20:13:40 +0000
+Message-ID: <26D9FDECA4FBDD4AADA65D8E2FC68A4A10402F44@ORSMSX101.amr.corp.intel.com>
+References: <20170312053723.GH802@shells.gnugeneration.com>
+ <20170312115703.GA18197@nazgul.tnic> <20170312122621.GA2823@nazgul.tnic>
+ <CAHp75Ve7SWivf=TTuq-qA=iM20E==OmSZD2YAmt0LVJQg47Osg@mail.gmail.com>
+ <20170312222333.hm54nl2ul5iuixap@pd.tnic> <87shmhjfap.fsf@miraculix.mork.no>
+ <309B89C4C689E141A5FF6A0C5FB2118B8C5B3F9B@ORSMSX101.amr.corp.intel.com>
+ <20170314024033.GK802@shells.gnugeneration.com>
+In-Reply-To: <20170314024033.GK802@shells.gnugeneration.com>
+Content-Type: text/plain; charset="iso-8859-1"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <148846770159.2349.16863375000963463500.stgit@brijesh-build-machine>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 02, 2017 at 10:15:01AM -0500, Brijesh Singh wrote:
-> From: Tom Lendacky <thomas.lendacky@amd.com>
-> 
-> Modify the SVM cpuid update function to indicate if Secure Encrypted
-> Virtualization (SEV) is active in the guest by setting the SEV KVM CPU
-> features bit. SEV is active if Secure Memory Encryption is enabled in
-> the host and the SEV_ENABLE bit of the VMCB is set.
-> 
-> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
-> ---
->  arch/x86/kvm/cpuid.c |    4 +++-
->  arch/x86/kvm/svm.c   |   18 ++++++++++++++++++
->  2 files changed, 21 insertions(+), 1 deletion(-)
-> 
-> diff --git a/arch/x86/kvm/cpuid.c b/arch/x86/kvm/cpuid.c
-> index 1639de8..e0c40a8 100644
-> --- a/arch/x86/kvm/cpuid.c
-> +++ b/arch/x86/kvm/cpuid.c
-> @@ -601,7 +601,7 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
->  		entry->edx = 0;
->  		break;
->  	case 0x80000000:
-> -		entry->eax = min(entry->eax, 0x8000001a);
-> +		entry->eax = min(entry->eax, 0x8000001f);
->  		break;
->  	case 0x80000001:
->  		entry->edx &= kvm_cpuid_8000_0001_edx_x86_features;
-> @@ -634,6 +634,8 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
->  		break;
->  	case 0x8000001d:
->  		break;
-> +	case 0x8000001f:
-> +		break;
+Tested this on a Thinkpad T420i, after verifying it also has an e1000e NIC,=
+ unable to  reproduce. Might be limited to that particular model/firmware v=
+ersion you're using, which I was not able to track down here although there=
+ is another person I could ask, might be able to come up with one yet.
 
-I guess those three case's can be unified:
 
-        case 0x8000001a:
-        case 0x8000001d:
-        case 0x8000001f:
-                break;
-
-...
-
-> +	sev_info = kvm_find_cpuid_entry(vcpu, 0x8000001f, 0);
-> +	if (!sev_info)
-> +		return;
-> +
-> +	if (ca->nested_ctl & SVM_NESTED_CTL_SEV_ENABLE) {
-> +		features->eax |= (1 << KVM_FEATURE_SEV);
-> +		cpuid(0x8000001f, &sev_info->eax, &sev_info->ebx,
-> +		      &sev_info->ecx, &sev_info->edx);
-> +	}
-
-Right, as already mentioned in the previous mail: can we communicate SEV
-status to the guest solely through the 0x8000001f leaf? Then we won't
-need KVM_FEATURE_SEV and this way we'll be hypervisor-agnostic, as Paolo
-suggested.
-
--- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+> -----Original Message-----
+> From: Intel-wired-lan [mailto:intel-wired-lan-bounces@lists.osuosl.org] O=
+n
+> Behalf Of lkml@pengaru.com
+> Sent: Monday, March 13, 2017 7:41 PM
+> To: Brown, Aaron F <aaron.f.brown@intel.com>
+> Cc: vcaputo@pengaru.com; linux-pci@vger.kernel.org; David Singleton
+> <davsingl@cisco.com>; linux-kernel <linux-kernel@vger.kernel.org>;
+> khalidm <khalidm@cisco.com>; Andy Shevchenko
+> <andy.shevchenko@gmail.com>; Borislav Petkov <bp@alien8.de>; intel-
+> wired-lan@lists.osuosl.org; Bj=F8rn Mork <bjorn@mork.no>
+> Subject: Re: [Intel-wired-lan] [BUG] 4.11.0-rc1 panic on shutdown X61s
+>=20
+> On Tue, Mar 14, 2017 at 01:20:27AM +0000, Brown, Aaron F wrote:
+> > > Borislav Petkov <bp@alien8.de> writes:
+> > > > On Sun, Mar 12, 2017 at 03:55:08PM +0200, Andy Shevchenko wrote:
+> > > >
+> > > >> The only change that IMHO matters happened between v4.10 and
+> > > >> v4.11-
+> > > rc1 is this:
+> > > >>
+> > > >> @@ -6276,8 +6274,8 @@ static int e1000e_pm_freeze(struct device
+> *dev)
+> > > >>                 /* Quiesce the device without resetting the hardwa=
+re */
+> > > >>                 e1000e_down(adapter, false);
+> > > >>                 e1000_free_irq(adapter);
+> > > >> +               e1000e_reset_interrupt_capability(adapter);
+> > > >>         }
+> > > >> -       e1000e_reset_interrupt_capability(adapter);
+> > > >>
+> > > >> So, it apparently misses something for the other case, like
+> > > >> pci_disable_msi() call or so.
+> > > >
+> > > > Well, lemme add the people from
+> > > >
+> > > >   7e54d9d063fa ("e1000e: driver trying to free already-free irq")
+> > > >
+> > > > to CC then. :-)
+> > >
+> > > Already did that a week ago:
+> > > https://www.spinics.net/lists/netdev/msg423379.html
+> > >
+> > > Haven't heard anything back yet.  Wondering if they are waiting for
+> > > someone else to submit the pretty obvious revert?  Don't understand
+> > > why that should take more than a minute to figure out.  It's not
+> > > like they are testing these changes anyway...
+> >
+> <snip>
+> >
+> > What exact part (or parts) are we looking at (lspci|grep -i eth) that t=
+rigger
+> this?  Could it be a difference in .config files?  The trace says it is f=
+alling back
+> to legacy interrupts, does the system continue to work and does the
+> network continue to function in that mode?  In case it's related to user =
+space
+> what is the base distro?  Any other information you think can help me
+> reproduce the issue would be appreciated.
+> >
+>=20
+> Config attached, the machine is a Thinkpad X61s 1.8Ghz with no onboard
+> wireless devices (rtl8192cu usb wifi is used).
+>=20
+> # lspci| grep -i eth
+> 00:19.0 Ethernet controller: Intel Corporation 82566MM Gigabit Network
+> Connection (rev 03)
+>=20
+> Debian jessie amd64 is the distro.
+>=20
+> I'll have to get back to you on if the e1000e continues functioning, the
+> machine continues to function until the shutdown panic.
+>=20
+> There were however some occurrences of subsequent suspend/resume
+> cycles hanging the machine hard leaving the display off, which prompted m=
+e
+> to resume using
+> 4.10 before digging any further as it's my only system right now.
+>=20
+> Will try get around to testing 4.11 with 7e54d9d063fa reverted soon.
+>=20
+> Regards,
+> Vito Caputo
