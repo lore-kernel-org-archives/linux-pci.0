@@ -1,86 +1,106 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:36744 "EHLO
-        mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936812AbdCJMQC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2017 07:16:02 -0500
+Received: from mx2.suse.de ([195.135.220.15]:39137 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752921AbdCPQ3j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 16 Mar 2017 12:29:39 -0400
+Date: Thu, 16 Mar 2017 17:29:23 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Tom Lendacky <thomas.lendacky@amd.com>
+Cc: Brijesh Singh <brijesh.singh@amd.com>,
+        Paolo Bonzini <pbonzini@redhat.com>, simon.guinot@sequanux.org,
+        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
+        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
+        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com, jroedel@suse.de,
+        keescook@chromium.org, arnd@arndb.de, toshi.kani@hpe.com,
+        mathieu.desnoyers@efficios.com, luto@kernel.org,
+        devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org,
+        akpm@linux-foundation.org, davem@davemloft.net
+Subject: Re: [RFC PATCH v2 12/32] x86: Add early boot support when running
+ with SEV active
+Message-ID: <20170316162923.m2qh4mhkxzg3lpme@pd.tnic>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846768878.2349.15757532025749214650.stgit@brijesh-build-machine>
+ <20170309140748.tg67yo2jmc5ahck3@pd.tnic>
+ <5d62b16f-16ef-1bd7-1551-f0c4c43573f4@redhat.com>
+ <20170309162942.jwtb3l33632zhbaz@pd.tnic>
+ <1fe1e177-f588-fe5a-dc13-e9fde00e8958@amd.com>
+ <20170316101656.dcwgtn4qdtyp5hip@pd.tnic>
+ <b27126ee-aff0-ab11-706b-fc6d8d4901db@amd.com>
+ <20170316150957.dos6wp3pmhos4hkj@pd.tnic>
+ <cb1693fc-6876-a448-f485-1a6c70aa6ff5@amd.com>
 MIME-Version: 1.0
-In-Reply-To: <20170310120725.GA24595@h08.hostsharing.net>
-References: <cover.1487938188.git.lukas@wunner.de> <20170309150347.a4k4w2sclox2365t@phenom.ffwll.local>
- <20170310120725.GA24595@h08.hostsharing.net>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Fri, 10 Mar 2017 14:15:45 +0200
-Message-ID: <CAHp75Vcg_1EjtVLeLSpoadAcFa_+1fkzHyU4m_rY9O1taQOAmA@mail.gmail.com>
-Subject: Re: [PATCH 0/5] Thunderbolt GPU fixes
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Daniel Vetter <daniel@ffwll.ch>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>,
-        dri-devel@lists.freedesktop.org,
-        Michael Jamet <michael.jamet@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        amd-gfx@lists.freedesktop.org,
-        Platform Driver <platform-driver-x86@vger.kernel.org>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Ben Skeggs <bskeggs@redhat.com>, nouveau@lists.freedesktop.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Christian Koenig <christian.koenig@amd.com>,
-        Peter Wu <peter@lekensteyn.nl>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <cb1693fc-6876-a448-f485-1a6c70aa6ff5@amd.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 10, 2017 at 2:07 PM, Lukas Wunner <lukas@wunner.de> wrote:
-> On Thu, Mar 09, 2017 at 04:03:47PM +0100, Daniel Vetter wrote:
->> On Fri, Feb 24, 2017 at 08:19:45PM +0100, Lukas Wunner wrote:
->> > Fix Thunderbolt-related issues in apple-gmux and vga_switcheroo:
->> >
->> > Patch [1/5] ("Recognize Thunderbolt devices") has already been subjected
->> > to a fair amount of scrutiny over at linux-pci@, I've submitted it 5 times
->> > total since May 2016.  With luck it may be in ack-able shape now.
->> >
->> > Patch [2/5] amends apple-gmux to handle combined DP/Thunderbolt ports
->> > properly on newer MacBook Pros.
->> >
->> > Patches [3/5] to [5/5] avoid registering external Thunderbolt GPUs with
->> > vga_switcheroo:  Dave Airlie designed vga_switcheroo to register GPUs
->> > unconditionally.  So if a desktop box has multiple GPUs, vga_switcheroo
->> > will see more than one discrete GPU but that's not a problem because on
->> > desktop boxes no handler is registered and thus vga_switcheroo_enable()
->> > is never called.  Hybrid graphics laptops on the other hand do register
->> > a handler, but are assumed to never register more than one discrete GPU.
->> > However once a Thunderbolt eGPU is attached to a hybrid graphics laptop,
->> > that assumption is no longer true and things go south when vga_switcheroo
->> > runtime suspends the external discrete GPU and then calls the handler to
->> > cut power to the internal discrete GPU.  The driver for the internal GPU
->> > will sit there puzzled and typically cause a lockup.
-> [snip]
->> > I've pushed the present series to GitHub in case anyone prefers reviewing
->> > it in a GUI:
->> > https://github.com/l1k/linux/commits/thunderbolt_gpu_v1
->>
->> For merging, should I smash this all into drm-misc? The only thing outside
->> is the apple-gmux driver ...
->
-> Merging through drm-misc would be lovely.  However I've prepared a v2 of
-> patch [1/5] to address Bjorn's comments (amended the commit message and a
-> code comment).  I'll respin the series this evening and include the acks
-> I've collected so far.
->
-> @Darren & Andy:
-> Please ack patch [5/5] of this series, barring any objections.
->
-> I'll move the apple-gmux patch to the end of the series, so merging that
-> one can be postponed until Darren and Andy find the time to look at it.
+On Thu, Mar 16, 2017 at 11:11:26AM -0500, Tom Lendacky wrote:
+> Not quite. The guest still needs to understand about the encryption mask
+> so that it can protect memory by setting the encryption mask in the
+> pagetable entries.  It can also decide when to share memory with the
+> hypervisor by not setting the encryption mask in the pagetable entries.
 
-Yeah, please resend. It's probably buried in the pile of deleted mails.
-Though I have still patchwork ticket.
+Ok, so the kernel - by that I mean both the baremetal and guest kernel -
+needs to know whether we're encrypting stuff. So it needs to know about
+SME.
 
-Okay, I have looked at it and I'm fine with the code. Hope this
-doesn't break anything.
+> "Instruction fetches are always decrypted under SEV" means that,
+> regardless of how a virtual address is mapped, encrypted or decrypted,
+> if an instruction fetch is performed by the CPU from that address it
+> will always be decrypted. This is to prevent the hypervisor from
+> injecting executable code into the guest since it would have to be
+> valid encrypted instructions.
 
-Acked-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Ok, so the guest needs to map its pages encrypted.
+
+Which reminds me, KSM might be a PITA to enable with SEV but that's a
+different story. :)
+
+> There are many areas that use the same logic, but there are certain
+> situations where we need to check between SME vs SEV (e.g. DMA operation
+> setup or decrypting the trampoline area) and act accordingly.
+
+Right, and I'd like to keep those areas where it differs at minimum and
+nicely cordoned off from the main paths.
+
+So looking back at the current patch in this subthread:
+
+we do check
+
+* CPUID 0x40000000
+* 8000_001F[EAX] for SME
+* 8000_001F[EBX][5:0] for the encryption bits.
+
+So how about we generate the following CPUID picture for the guest:
+
+CPUID_Fn8000001F_EAX = ...10b
+
+That is, SME bit is cleared, SEV is set. This will mean for the guest
+kernel that SEV is enabled and you can avoid yourself the 0x40000000
+leaf check and the additional KVM feature bit glue.
+
+10b configuration will be invalid for baremetal as - I'm assuming - you
+can't have SEV=1b with SME=0b. It will be a virt-only configuration and
+this way you can even avoid the hypervisor-specific detection but do
+that for all.
+
+Hmmm?
 
 -- 
-With Best Regards,
-Andy Shevchenko
+Regards/Gruss,
+    Boris.
+
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
