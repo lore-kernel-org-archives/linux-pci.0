@@ -1,48 +1,113 @@
-Return-Path: <SRS0=7var=2T=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=7var=2T=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V3] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1489005551-23598-1-git-send-email-okaya@codeaurora.org>
- <20170309222751.GD19517@bhelgaas-glaptop.roam.corp.google.com>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-arm-msm@vger.kernel.org, Mayurkumar Patel
- <mayurkumar.patel@intel.com>, open list <linux-kernel@vger.kernel.org>,
- linux-arm-kernel@lists.infradead.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <ec7ee607-60f3-7e1a-b1cd-8e4534ab98eb@codeaurora.org>
-Date: Fri, 10 Mar 2017 09:36:09 -0500
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Thu, 16 Mar 2017 16:12:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+        Arnd Bergmann <arnd@arndb.de>,
+        Will Deacon <will.deacon@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        John Garry <john.garry@huawei.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Ray Jui <rjui@broadcom.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Jon Mason <jonmason@broadcom.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 03/20] asm-generic/io.h: add PCI config space remap
+ interface
+Message-ID: <20170316211243.GE9739@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-4-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20170309222751.GD19517@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170227151436.18698-4-lorenzo.pieralisi@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+[+cc Luis]
 
-On 3/9/2017 5:27 PM, Bjorn Helgaas wrote:
-> How hard do you think it would be to rework this path slightly so we:
+On Mon, Feb 27, 2017 at 03:14:14PM +0000, Lorenzo Pieralisi wrote:
+> The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
+> Posting") mandate non-posted configuration transactions. As further
+> highlighted in the PCIe specifications (4.0 - Rev0.3, "Ordering
+> Considerations for the Enhanced Configuration Access Mechanism"),
+> through ECAM and ECAM-derivative configuration mechanism, the memory
+> mapped transactions from the host CPU into Configuration Requests on the
+> PCI express fabric may create ordering problems for software because
+> writes to memory address are typically posted transactions (unless the
+> architecture can enforce through virtual address mapping non-posted
+> write transactions behaviour) but writes to Configuration Space are not
+> posted on the PCI express fabric.
 > 
->   - call pcie_aspm_init_link_state() for every device, maybe from
->     pci_init_capabilities()
+> Current DT and ACPI host bridge controllers map PCI configuration space
+> (ECAM and ECAM-derivative) into the virtual address space through
+> ioremap() calls, that are non-cacheable device accesses on most
+> architectures, but may provide "bufferable" or "posted" write semantics
+> in architecture like eg ARM/ARM64 that allow ioremap'ed regions writes
+> to be buffered in the bus connecting the host CPU to the PCI fabric;
+> this behaviour, as underlined in the PCIe specifications, may trigger
+> transactions ordering rules and must be prevented.
 > 
->   - for bridges, have pcie_aspm_init_link_state() allocate a
->     link_state, regardless of whether it currently has any children,
->     and save the ASPM settings done by firmware
+> Introduce a new generic and explicit API to create a memory
+> mapping for ECAM and ECAM-derivative config space area that
+> defaults to ioremap_nocache() (which should provide a sane default
+> behaviour) but still allowing architectures on which ioremap_nocache()
+> results in posted write transactions to override the function
+> call with an arch specific implementation that complies with
+> the PCI specifications for configuration transactions.
 > 
->   - for endpoints, have pcie_aspm_init_link_state() do the actual ASPM
->     setup of the link as it currently does
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Will Deacon <will.deacon@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Russell King <linux@armlinux.org.uk>
+> Cc: Catalin Marinas <catalin.marinas@arm.com>
+> ---
+>  include/asm-generic/io.h | 9 +++++++++
+>  1 file changed, 9 insertions(+)
 > 
->   - for endpoints, change pcie_aspm_exit_link_state() so it cleans up
->     the device's own state and disables ASPM if necessary, but doesn't
->     remove the parent's link_state
-> 
->   - for bridges, change pcie_aspm_exit_link_state() so it frees the
->     bridge's own link_state
+> diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> index 7ef015e..52dda81 100644
+> --- a/include/asm-generic/io.h
+> +++ b/include/asm-generic/io.h
+> @@ -915,6 +915,15 @@ extern void ioport_unmap(void __iomem *p);
+>  #endif /* CONFIG_GENERIC_IOMAP */
+>  #endif /* CONFIG_HAS_IOPORT_MAP */
+>  
+> +#ifndef pci_remap_cfgspace
+> +#define pci_remap_cfgspace pci_remap_cfgspace
+> +static inline void __iomem *pci_remap_cfgspace(phys_addr_t offset,
+> +					       size_t size)
+> +{
+> +	return ioremap_nocache(offset, size);
+> +}
 
-Thanks for the feedback, Let me take a stab at this. 
-Sinan
+I'm fine with this conceptually, but I think it would make more sense
+if the name weren't specific to PCI or config space, e.g.,
+ioremap_nopost() or something.
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> +#endif
+> +
+>  #ifndef xlate_dev_kmem_ptr
+>  #define xlate_dev_kmem_ptr xlate_dev_kmem_ptr
+>  static inline void *xlate_dev_kmem_ptr(void *addr)
+> -- 
+> 2.10.0
+> 
