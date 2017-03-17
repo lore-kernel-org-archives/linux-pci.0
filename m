@@ -1,178 +1,145 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0050.outbound.protection.outlook.com ([104.47.41.50]:1516
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750787AbdCBQvW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Mar 2017 11:51:22 -0500
-Subject: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock when
- spliting large pages
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:15:15 -0500
-Message-ID: <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from ale.deltatee.com ([207.54.116.67]:56495 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751116AbdCQSuZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Mar 2017 14:50:25 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hans Verkuil <hans.verkuil@cisco.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Boris Brezillon <boris.brezillon@free-electrons.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Cyrille Pitchen <cyrille.pitchen@atmel.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        rtc-linux@googlegroups.com, linux-mtd@lists.infradead.org,
+        linux-media@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-gpio@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 17 Mar 2017 12:48:18 -0600
+Message-Id: <1489776503-3151-12-git-send-email-logang@deltatee.com>
+In-Reply-To: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 11/16] media: utilize new cdev_device_add helper function
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If kernel_maps_pages_in_pgd is called early in boot process to change the
-memory attributes then it fails to allocate memory when spliting large
-pages. The patch extends the cpa_data to provide the support to use
-memblock_alloc when slab allocator is not available.
+Replace the open coded registration of the cdev and dev with the
+new device_add_cdev() helper. The helper replaces a common pattern by
+taking the proper reference against the parent device and adding both
+the cdev and the device.
 
-The feature will be used in Secure Encrypted Virtualization (SEV) mode,
-where we may need to change the memory region attributes in early boot
-process.
-
-Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Acked-by: Hans Verkuil <hans.verkuil@cisco.com>
 ---
- arch/x86/mm/pageattr.c |   51 ++++++++++++++++++++++++++++++++++++++++--------
- 1 file changed, 42 insertions(+), 9 deletions(-)
+ drivers/media/cec/cec-core.c  | 16 ++++------------
+ drivers/media/media-devnode.c | 20 +++++---------------
+ 2 files changed, 9 insertions(+), 27 deletions(-)
 
-diff --git a/arch/x86/mm/pageattr.c b/arch/x86/mm/pageattr.c
-index 46cc89d..9e4ab3b 100644
---- a/arch/x86/mm/pageattr.c
-+++ b/arch/x86/mm/pageattr.c
-@@ -14,6 +14,7 @@
- #include <linux/gfp.h>
- #include <linux/pci.h>
- #include <linux/vmalloc.h>
-+#include <linux/memblock.h>
+diff --git a/drivers/media/cec/cec-core.c b/drivers/media/cec/cec-core.c
+index 37217e2..3163e03 100644
+--- a/drivers/media/cec/cec-core.c
++++ b/drivers/media/cec/cec-core.c
+@@ -137,24 +137,17 @@ static int __must_check cec_devnode_register(struct cec_devnode *devnode,
  
- #include <asm/e820/api.h>
- #include <asm/processor.h>
-@@ -37,6 +38,7 @@ struct cpa_data {
- 	int		flags;
- 	unsigned long	pfn;
- 	unsigned	force_split : 1;
-+	unsigned	force_memblock :1;
- 	int		curpage;
- 	struct page	**pages;
- };
-@@ -627,9 +629,8 @@ try_preserve_large_page(pte_t *kpte, unsigned long address,
+ 	/* Part 2: Initialize and register the character device */
+ 	cdev_init(&devnode->cdev, &cec_devnode_fops);
+-	devnode->cdev.kobj.parent = &devnode->dev.kobj;
+ 	devnode->cdev.owner = owner;
  
- static int
- __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
--		   struct page *base)
-+		  pte_t *pbase, unsigned long new_pfn)
- {
--	pte_t *pbase = (pte_t *)page_address(base);
- 	unsigned long ref_pfn, pfn, pfninc = 1;
- 	unsigned int i, level;
- 	pte_t *tmp;
-@@ -646,7 +647,7 @@ __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
- 		return 1;
+-	ret = cdev_add(&devnode->cdev, devnode->dev.devt, 1);
+-	if (ret < 0) {
+-		pr_err("%s: cdev_add failed\n", __func__);
++	ret = cdev_device_add(&devnode->cdev, &devnode->dev);
++	if (ret) {
++		pr_err("%s: cdev_device_add failed\n", __func__);
+ 		goto clr_bit;
  	}
  
--	paravirt_alloc_pte(&init_mm, page_to_pfn(base));
-+	paravirt_alloc_pte(&init_mm, new_pfn);
- 
- 	switch (level) {
- 	case PG_LEVEL_2M:
-@@ -707,7 +708,8 @@ __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
- 	 * pagetable protections, the actual ptes set above control the
- 	 * primary protection behavior:
- 	 */
--	__set_pmd_pte(kpte, address, mk_pte(base, __pgprot(_KERNPG_TABLE)));
-+	__set_pmd_pte(kpte, address,
-+		native_make_pte((new_pfn << PAGE_SHIFT) + _KERNPG_TABLE));
- 
- 	/*
- 	 * Intel Atom errata AAH41 workaround.
-@@ -723,21 +725,50 @@ __split_large_page(struct cpa_data *cpa, pte_t *kpte, unsigned long address,
+-	ret = device_add(&devnode->dev);
+-	if (ret)
+-		goto cdev_del;
+-
+ 	devnode->registered = true;
  	return 0;
+ 
+-cdev_del:
+-	cdev_del(&devnode->cdev);
+ clr_bit:
+ 	mutex_lock(&cec_devnode_lock);
+ 	clear_bit(devnode->minor, cec_devnode_nums);
+@@ -190,8 +183,7 @@ static void cec_devnode_unregister(struct cec_devnode *devnode)
+ 	devnode->unregistered = true;
+ 	mutex_unlock(&devnode->lock);
+ 
+-	device_del(&devnode->dev);
+-	cdev_del(&devnode->cdev);
++	cdev_device_del(&devnode->cdev, &devnode->dev);
+ 	put_device(&devnode->dev);
  }
  
-+static pte_t *try_alloc_pte(struct cpa_data *cpa, unsigned long *pfn)
-+{
-+	unsigned long phys;
-+	struct page *base;
-+
-+	if (cpa->force_memblock) {
-+		phys = memblock_alloc(PAGE_SIZE, PAGE_SIZE);
-+		if (!phys)
-+			return NULL;
-+		*pfn = phys >> PAGE_SHIFT;
-+		return (pte_t *)__va(phys);
-+	}
-+
-+	base = alloc_pages(GFP_KERNEL | __GFP_NOTRACK, 0);
-+	if (!base)
-+		return NULL;
-+	*pfn = page_to_pfn(base);
-+	return (pte_t *)page_address(base);
-+}
-+
-+static void try_free_pte(struct cpa_data *cpa, pte_t *pte)
-+{
-+	if (cpa->force_memblock)
-+		memblock_free(__pa(pte), PAGE_SIZE);
-+	else
-+		__free_page((struct page *)pte);
-+}
-+
- static int split_large_page(struct cpa_data *cpa, pte_t *kpte,
- 			    unsigned long address)
- {
--	struct page *base;
-+	pte_t *new_pte;
-+	unsigned long new_pfn;
+diff --git a/drivers/media/media-devnode.c b/drivers/media/media-devnode.c
+index ae46753..423248f 100644
+--- a/drivers/media/media-devnode.c
++++ b/drivers/media/media-devnode.c
+@@ -248,31 +248,22 @@ int __must_check media_devnode_register(struct media_device *mdev,
+ 	dev_set_name(&devnode->dev, "media%d", devnode->minor);
+ 	device_initialize(&devnode->dev);
  
- 	if (!debug_pagealloc_enabled())
- 		spin_unlock(&cpa_lock);
--	base = alloc_pages(GFP_KERNEL | __GFP_NOTRACK, 0);
-+	new_pte = try_alloc_pte(cpa, &new_pfn);
- 	if (!debug_pagealloc_enabled())
- 		spin_lock(&cpa_lock);
--	if (!base)
-+	if (!new_pte)
- 		return -ENOMEM;
+-	/* Part 2: Initialize and register the character device */
++	/* Part 2: Initialize the character device */
+ 	cdev_init(&devnode->cdev, &media_devnode_fops);
+ 	devnode->cdev.owner = owner;
+-	devnode->cdev.kobj.parent = &devnode->dev.kobj;
  
--	if (__split_large_page(cpa, kpte, address, base))
--		__free_page(base);
-+	if (__split_large_page(cpa, kpte, address, new_pte, new_pfn))
-+		try_free_pte(cpa, new_pte);
+-	ret = cdev_add(&devnode->cdev, MKDEV(MAJOR(media_dev_t), devnode->minor), 1);
++	/* Part 3: Add the media and char device */
++	ret = cdev_device_add(&devnode->cdev, &devnode->dev);
+ 	if (ret < 0) {
+-		pr_err("%s: cdev_add failed\n", __func__);
++		pr_err("%s: cdev_device_add failed\n", __func__);
+ 		goto cdev_add_error;
+ 	}
+ 
+-	/* Part 3: Add the media device */
+-	ret = device_add(&devnode->dev);
+-	if (ret < 0) {
+-		pr_err("%s: device_add failed\n", __func__);
+-		goto device_add_error;
+-	}
+-
+ 	/* Part 4: Activate this minor. The char device can now be used. */
+ 	set_bit(MEDIA_FLAG_REGISTERED, &devnode->flags);
  
  	return 0;
- }
-@@ -2035,6 +2066,7 @@ int kernel_map_pages_in_pgd(pgd_t *pgd, u64 pfn, unsigned long address,
- 			    unsigned numpages, unsigned long page_flags)
+ 
+-device_add_error:
+-	cdev_del(&devnode->cdev);
+ cdev_add_error:
+ 	mutex_lock(&media_devnode_lock);
+ 	clear_bit(devnode->minor, media_devnode_nums);
+@@ -298,9 +289,8 @@ void media_devnode_unregister(struct media_devnode *devnode)
  {
- 	int retval = -EINVAL;
-+	int use_memblock = !slab_is_available();
- 
- 	struct cpa_data cpa = {
- 		.vaddr = &address,
-@@ -2044,6 +2076,7 @@ int kernel_map_pages_in_pgd(pgd_t *pgd, u64 pfn, unsigned long address,
- 		.mask_set = __pgprot(0),
- 		.mask_clr = __pgprot(0),
- 		.flags = 0,
-+		.force_memblock = use_memblock,
- 	};
- 
- 	if (!(__supported_pte_mask & _PAGE_NX))
+ 	mutex_lock(&media_devnode_lock);
+ 	/* Delete the cdev on this minor as well */
+-	cdev_del(&devnode->cdev);
++	cdev_device_del(&devnode->cdev, &devnode->dev);
+ 	mutex_unlock(&media_devnode_lock);
+-	device_del(&devnode->dev);
+ 	devnode->media_dev = NULL;
+ 	put_device(&devnode->dev);
+ }
+-- 
+2.1.4
