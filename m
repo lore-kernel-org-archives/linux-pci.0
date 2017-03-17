@@ -1,148 +1,86 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: linux-arm-kernel@lists.infradead.org,
-	linux-efi@vger.kernel.org
-Subject: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-Date: Wed, 22 Mar 2017 15:30:29 +0000
-Message-Id: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: lorenzo.pieralisi@arm.com, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- matt@codeblueprint.co.uk, linux-pci@vger.kernel.org, heyi.guo@linaro.org,
- pjones@redhat.com, hanjun.guo@linaro.org, bhelgaas@google.com,
- yinghai@kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:51642 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751112AbdCQOpi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Mar 2017 10:45:38 -0400
+Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
+ when spliting large pages
+To: Borislav Petkov <bp@suse.de>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
+ <20170310110657.hophlog2juw5hpzz@pd.tnic>
+ <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
+ <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
+ <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
+ <20170317101737.icdois7sdmtutt6b@pd.tnic>
+ <b6f9f46c-58c4-a19c-4955-2d07bd411443@redhat.com>
+ <20170317105610.musvo4baokgssvye@pd.tnic>
+ <78c99889-f175-f60f-716b-34a62203418a@redhat.com>
+ <20170317113337.syvpat3c4s2l4nuz@pd.tnic>
+Cc: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
+        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
+        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
+        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org
+From: Paolo Bonzini <pbonzini@redhat.com>
+Message-ID: <b516a873-029a-b20a-3c43-d8bf4a200cb7@redhat.com>
+Date: Fri, 17 Mar 2017 15:45:26 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170317113337.syvpat3c4s2l4nuz@pd.tnic>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On UEFI systems, the PCI subsystem is enumerated by the firmware,
-and if a graphical framebuffer is exposed by a PCI device, its base
-address and size are exposed to the OS via the Graphics Output
-Protocol (GOP).
-
-On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
-scratch at boot. This may result in the GOP framebuffer address to
-become stale, if the BAR covering the framebuffer is modified. This
-will cause the framebuffer to become unresponsive, and may in some
-cases result in unpredictable behavior if the range is reassigned to
-another device.
-
-So add a quirk to the EFI fb driver to find the BAR associated with
-the GOP base address, and set the IORESOURCE_PCI_FIXED attribute so
-that the PCI core will leave it alone.
-
-Cc: Matt Fleming <matt@codeblueprint.co.uk>
-Cc: Peter Jones <pjones@redhat.com>
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
----
-v3: check device is enabled before attempting to claim the resource
-
- drivers/video/fbdev/efifb.c | 60 +++++++++++++++++++-
- 1 file changed, 59 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
-index 8c4dc1e1f94f..88f653864a01 100644
---- a/drivers/video/fbdev/efifb.c
-+++ b/drivers/video/fbdev/efifb.c
-@@ -10,6 +10,7 @@
- #include <linux/efi.h>
- #include <linux/errno.h>
- #include <linux/fb.h>
-+#include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/screen_info.h>
- #include <video/vga.h>
-@@ -143,6 +144,9 @@ static struct attribute *efifb_attrs[] = {
- };
- ATTRIBUTE_GROUPS(efifb);
- 
-+static bool pci_bar_found;	/* did we find a BAR matching the efifb base? */
-+static bool pci_dev_disabled;	/* was the device disabled? */
-+
- static int efifb_probe(struct platform_device *dev)
- {
- 	struct fb_info *info;
-@@ -152,7 +156,7 @@ static int efifb_probe(struct platform_device *dev)
- 	unsigned int size_total;
- 	char *option = NULL;
- 
--	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
-+	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI || pci_dev_disabled)
- 		return -ENODEV;
- 
- 	if (fb_get_options("efifb", &option))
-@@ -360,3 +364,57 @@ static struct platform_driver efifb_driver = {
- };
- 
- builtin_platform_driver(efifb_driver);
-+
-+static void claim_efifb_bar(struct pci_dev *dev, int idx)
-+{
-+	u16 word;
-+
-+	pci_bar_found = true;
-+
-+	pci_read_config_word(dev, PCI_COMMAND, &word);
-+	if (!(word & PCI_COMMAND_MEMORY)) {
-+		pci_dev_disabled = true;
-+		dev_err(&dev->dev,
-+			"BAR %d: assigned to efifb but device is disabled!\n",
-+			idx);
-+		return;
-+	}
-+
-+	if (pci_claim_resource(dev, idx)) {
-+		pci_dev_disabled = true;
-+		dev_err(&dev->dev,
-+			"BAR %d: failed to claim resource for efifb!\n", idx);
-+		return;
-+	}
-+
-+	dev_info(&dev->dev, "BAR %d: assigned to efifb\n", idx);
-+}
-+
-+static void efifb_fixup_resources(struct pci_dev *dev)
-+{
-+	u64 base = screen_info.lfb_base;
-+	u64 size = screen_info.lfb_size;
-+	int i;
-+
-+	if (pci_bar_found || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
-+		return;
-+
-+	if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
-+		base |= (u64)screen_info.ext_lfb_base << 32;
-+
-+	if (!base)
-+		return;
-+
-+	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
-+		struct resource *res = &dev->resource[i];
-+
-+		if (!(res->flags & IORESOURCE_MEM))
-+			continue;
-+
-+		if (res->start <= base && res->end >= base + size - 1) {
-+			claim_efifb_bar(dev, i);
-+			break;
-+		}
-+	}
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, efifb_fixup_resources);
--- 
-2.7.4
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+On 17/03/2017 12:33, Borislav Petkov wrote:
+> On Fri, Mar 17, 2017 at 12:03:31PM +0100, Paolo Bonzini wrote:
+> 
+>> If it is possible to do it in a fairly hypervisor-independent manner,
+>> I'm all for it.  That is, only by looking at AMD-specified CPUID leaves
+>> and at kernel ELF sections.
+> 
+> Not even that.
+> 
+> What that needs to be able to do is:
+> 
+> 	kvm_map_percpu_hv_shared(st, sizeof(*st)))
+> 
+> where st is the percpu steal time ptr:
+> 
+> 	struct kvm_steal_time *st = &per_cpu(steal_time, cpu);
+> 
+> Underneath, what it does basically is it clears the encryption mask from
+> the pte, see patch 16/32.
+
+Yes, and I'd like that to be done with a new data section rather than a
+special KVM hook.
+
+> And I keep talking about SEV-ES because this is going to expand on the
+> need of having a shared memory region which the hypervisor and the guest
+> needs to access, thus unencrypted. See
+> 
+> http://support.amd.com/TechDocs/Protecting%20VM%20Register%20State%20with%20SEV-ES.pdf
+> 
+> This is where you come in and say what would be the best approach there...
+
+I have no idea.  SEV-ES seems to be very hard to set up at the beginning
+of the kernel bootstrap.  There's all sorts of chicken and egg problems,
+as well as complicated handshakes between the firmware and the guest,
+and the way to do it also depends on the trust and threat models.
+
+A much simpler way is to just boot under a trusted hypervisor, do
+"modprobe sev-es" and save a snapshot of the guest.  Then you sign the
+snapshot and pass it to your cloud provider.
+
+Paolo
