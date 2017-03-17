@@ -1,67 +1,75 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from a2nlsmtp01-02.prod.iad2.secureserver.net ([198.71.225.36]:52334
-        "EHLO a2nlsmtp01-02.prod.iad2.secureserver.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751159AbdCWV7g (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Mar 2017 17:59:36 -0400
-From: Long Li <longli@exchange.microsoft.com>
-To: "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        devel@linuxdriverproject.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Cc: Long Li <longli@microsoft.com>
-Subject: [PATCH 2/2 v5] pci-hyperv: lock pci bus on device eject
-Date: Thu, 23 Mar 2017 14:58:32 -0700
-Message-Id: <1490306312-6417-1-git-send-email-longli@exchange.microsoft.com>
+Received: from mx2.suse.de ([195.135.220.15]:44870 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750898AbdCQLxu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Mar 2017 07:53:50 -0400
+Date: Fri, 17 Mar 2017 12:33:47 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
+        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
+        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
+        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org
+Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
+ when spliting large pages
+Message-ID: <20170317113337.syvpat3c4s2l4nuz@pd.tnic>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
+ <20170310110657.hophlog2juw5hpzz@pd.tnic>
+ <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
+ <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
+ <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
+ <20170317101737.icdois7sdmtutt6b@pd.tnic>
+ <b6f9f46c-58c4-a19c-4955-2d07bd411443@redhat.com>
+ <20170317105610.musvo4baokgssvye@pd.tnic>
+ <78c99889-f175-f60f-716b-34a62203418a@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <78c99889-f175-f60f-716b-34a62203418a@redhat.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Long Li <longli@microsoft.com>
+On Fri, Mar 17, 2017 at 12:03:31PM +0100, Paolo Bonzini wrote:
 
-A PCI_EJECT message can arrive at the same time we are calling
-pci_scan_child_bus in the workqueue for the previous PCI_BUS_RELATIONS
-message or in create_root_hv_pci_bus(), in this case we could potentially
-modify the bus from multiple places.
+> If it is possible to do it in a fairly hypervisor-independent manner,
+> I'm all for it.  That is, only by looking at AMD-specified CPUID leaves
+> and at kernel ELF sections.
 
-Properly lock the bus access.
+Not even that.
 
-Thanks Dexuan Cui <decui@microsoft.com> for pointing out the race condition
-in create_root_hv_pci_bus().
+What that needs to be able to do is:
 
-Signed-off-by: Long Li <longli@microsoft.com>
-Reported-by: Xiaofeng Wang <xiaofwan@redhat.com>
-Acked-by: K. Y. Srinivasan <kys@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c | 4 ++++
- 1 file changed, 4 insertions(+)
+	kvm_map_percpu_hv_shared(st, sizeof(*st)))
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 39fafda..a1b3c19 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -1209,9 +1209,11 @@ static int create_root_hv_pci_bus(struct hv_pcibus_device *hbus)
- 	hbus->pci_bus->msi = &hbus->msi_chip;
- 	hbus->pci_bus->msi->dev = &hbus->hdev->device;
- 
-+	pci_lock_rescan_remove();
- 	pci_scan_child_bus(hbus->pci_bus);
- 	pci_bus_assign_resources(hbus->pci_bus);
- 	pci_bus_add_devices(hbus->pci_bus);
-+	pci_unlock_rescan_remove();
- 	hbus->state = hv_pcibus_installed;
- 	return 0;
- }
-@@ -1612,8 +1614,10 @@ static void hv_eject_device_work(struct work_struct *work)
- 	pdev = pci_get_domain_bus_and_slot(hpdev->hbus->sysdata.domain, 0,
- 					   wslot);
- 	if (pdev) {
-+		pci_lock_rescan_remove();
- 		pci_stop_and_remove_bus_device(pdev);
- 		pci_dev_put(pdev);
-+		pci_unlock_rescan_remove();
- 	}
- 
- 	spin_lock_irqsave(&hpdev->hbus->device_list_lock, flags);
+where st is the percpu steal time ptr:
+
+	struct kvm_steal_time *st = &per_cpu(steal_time, cpu);
+
+Underneath, what it does basically is it clears the encryption mask from
+the pte, see patch 16/32.
+
+And I keep talking about SEV-ES because this is going to expand on the
+need of having a shared memory region which the hypervisor and the guest
+needs to access, thus unencrypted. See
+
+http://support.amd.com/TechDocs/Protecting%20VM%20Register%20State%20with%20SEV-ES.pdf
+
+This is where you come in and say what would be the best approach there...
+
 -- 
-2.7.4
+Regards/Gruss,
+    Boris.
+
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
