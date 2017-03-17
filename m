@@ -1,58 +1,143 @@
-Return-Path: <SRS0=zNZg=3G=semihalf.com=tn@kernel.org>
-Return-Path: <SRS0=zNZg=3G=semihalf.com=tn@kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	Lorenzo.Pieralisi@arm.com,
-	robert.richter@caviumnetworks.com,
-	ddaney@caviumnetworks.com,
-	Vadim.Lomovtsev@caviumnetworks.com,
-	rafael@kernel.org
-Cc: Sunil.Goutham@cavium.com,
-	geethasowjanya.akula@gmail.com,
-	linu.cherian@cavium.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH 1/1] PCI: Add MCFG quirk for 2nd node of Cavium ThunderX pass2.x host controller
-Date: Wed, 29 Mar 2017 14:16:13 +0200
-Message-Id: <1490789773-21506-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 17 Mar 2017 10:43:39 +0000
+From: Liviu Dudau <liviu@dudau.co.uk>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 02/20] PCI: fix pci_remap_iospace() remap attribute
+Message-ID: <20170317104339.GD24830@bart.dudau.co.uk>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-3-lorenzo.pieralisi@arm.com>
+ <20170316214844.GA17769@bhelgaas-glaptop.roam.corp.google.com>
+ <20170317003321.GB28800@wotan.suse.de>
+MIME-Version: 1.0
+In-Reply-To: <20170317003321.GB28800@wotan.suse.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ linux-arch@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Murali Karicheri <m-karicheri2@ti.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Arnd Bergmann <arnd@arndb.de>,
+ Jon Mason <jonmason@broadcom.com>, Will Deacon <will.deacon@arm.com>,
+ John Garry <john.garry@huawei.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
+ Ray Jui <rjui@broadcom.com>, Andy Lutomirski <luto@amacapital.net>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently SoCs pass2.x do not emulate EA headers for ACPI boot method at all.
-However, for pass2.x some devices (like EDAC) advertise incorrect base addresses
-in their BARs which results in driver probe failure during resource request.
-Since all problematic blocks are on 2nd NUMA node under domain 10 add necessary
-quirk entry to obtain BAR addresses correction using EA header emulation.
-
-Fixes: 44f22bd91e88 ("PCI: Add MCFG quirks for Cavium ThunderX pass2.x host controller")
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-CC: stable@vger.kernel.org	# v4.10+
----
- drivers/acpi/pci_mcfg.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
-index a6a4cea..a0a391e 100644
---- a/drivers/acpi/pci_mcfg.c
-+++ b/drivers/acpi/pci_mcfg.c
-@@ -90,13 +90,14 @@ static struct mcfg_fixup mcfg_quirks[] = {
- 	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x894057000000UL, node) },  \
- 	{ "CAVIUM", "THUNDERX", rev, 9 + (10 * (node)), MCFG_BUS_ANY,	    \
- 	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, node) }
-+#define THUNDER_ECAM_QUIRK(rev, seg)					\
-+	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,			\
-+	&pci_thunder_ecam_ops }
- 	/* SoC pass2.x */
- 	THUNDER_PEM_QUIRK(1, 0),
- 	THUNDER_PEM_QUIRK(1, 1),
-+	THUNDER_ECAM_QUIRK(1, 10),
- 
--#define THUNDER_ECAM_QUIRK(rev, seg)					\
--	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,			\
--	&pci_thunder_ecam_ops }
- 	/* SoC pass1.x */
- 	THUNDER_PEM_QUIRK(2, 0),	/* off-chip devices */
- 	THUNDER_PEM_QUIRK(2, 1),	/* off-chip devices */
--- 
-2.7.4
+T24gRnJpLCBNYXIgMTcsIDIwMTcgYXQgMDE6MzM6MjFBTSArMDEwMCwgTHVpcyBSLiBSb2RyaWd1
+ZXogd3JvdGU6Cj4gT24gVGh1LCBNYXIgMTYsIDIwMTcgYXQgMDQ6NDg6NDRQTSAtMDUwMCwgQmpv
+cm4gSGVsZ2FhcyB3cm90ZToKPiA+IFsrY2MgTHVpc10KPiA+IAo+ID4gT24gTW9uLCBGZWIgMjcs
+IDIwMTcgYXQgMDM6MTQ6MTNQTSArMDAwMCwgTG9yZW56byBQaWVyYWxpc2kgd3JvdGU6Cj4gPiA+
+IEFjY29yZGluZyB0byB0aGUgUENJIGxvY2FsIGJ1cyBzcGVjaWZpY2F0aW9ucyAoUmV2aXNpb24g
+My4wLCAzLjIuNSksCj4gPiA+IEkvTyBBZGRyZXNzIHNwYWNlIHRyYW5zYWN0aW9ucyBhcmUgbm9u
+LXBvc3RlZC4gT24gYXJjaGl0ZWN0dXJlcyB3aGVyZQo+ID4gPiBJL08gc3BhY2UgaXMgaW1wbGVt
+ZW50ZWQgdGhyb3VnaCBhIGNodW5rIG9mIG1lbW9yeSBtYXBwZWQgc3BhY2UgbWFwcGVkCj4gPiA+
+IHRvIFBDSSBhZGRyZXNzIHNwYWNlIChpZSBJQTY0L0FSTS9BUk02NCkgdGhlIG1lbW9yeSBtYXBw
+aW5nIGZvciB0aGUKPiA+ID4gcmVnaW9uIGJhY2tpbmcgSS9PIEFkZHJlc3MgU3BhY2UgdHJhbnNh
+Y3Rpb25zIGRldGVybWluZXMgdGhlIEkvTwo+ID4gPiB0cmFuc2FjdGlvbnMgYXR0cmlidXRlcyAo
+YmVmb3JlIHRoZSB0cmFuc2FjdGlvbnMgYWN0dWFsbHkgcmVhY2hlcyB0aGUKPiA+ID4gUENJIGJ1
+cyB3aGVyZSBpdCBpcyBoYW5kbGVkIGFjY29yZGluZyB0byB0aGUgUENJIHNwZWNpZmljYXRpb25z
+KS4KPiA+ID4gCj4gPiA+IEN1cnJlbnQgcGNpX3JlbWFwX2lvc3BhY2UoKSBpbnRlcmZhY2UsIHRo
+YXQgaXMgdXNlZCB0byBtYXAgdGhlIFBDSSBJL08KPiA+ID4gQWRkcmVzcyBTcGFjZSBpbnRvIHZp
+cnR1YWwgYWRkcmVzcyBzcGFjZSwgdXNlIHBncHJvdF9kZXZpY2UoKSBhcyBtZW1vcnkKPiA+ID4g
+YXR0cmlidXRlIGZvciB0aGUgdmlydHVhbCBhZGRyZXNzIG1hcHBpbmcsIHRoYXQgaW4gc29tZSBh
+cmNoaXRlY3R1cmVzCj4gPiA+IChpZSBBUk02NCkgcHJvdmlkZXMgbm9uLWNhY2hlYWJsZSBidXQg
+d3JpdGUgYnVmZmVyYWJsZSBtYXBwaW5ncyAoaWUKPiA+ID4gcG9zdGVkIHdyaXRlcyksIAo+IAo+
+IDxzYXJjYXNtPgo+IEdlZSB3aXosIEkgYW0gZ2xhZCB0aGlzIGlzIHNvIHdlbGwgZG9jdW1lbnRl
+ZC4KPiA8L3NhcmNhc20+Cj4gCj4gPiA+IHdoaWNoIGNsYXNoIHdpdGggdGhlIG5vbi1wb3N0ZWQg
+d3JpdGUgYmVoYXZpb3VyIGZvciBJL08KPiA+ID4gQWRkcmVzcyBTcGFjZSBtYW5kYXRlZCBieSB0
+aGUgUENJIHNwZWNpZmljYXRpb25zLgo+ID4gPiAKPiA+ID4gVXBkYXRlIHRoZSBwcm90IGlvcmVt
+YXBfcGFnZV9yYW5nZSgpIHBhcmFtZXRlciBpbiBwY2lfcmVtYXBfaW9zcGFjZSgpCj4gPiA+IHRv
+IHBncHJvdF9ub25jYWNoZWQgdG8gZW5zdXJlIHRoYXQgdGhlIHZpcnR1YWwgbWFwcGluZyBiYWNr
+aW5nCj4gPiA+IEkvTyBBZGRyZXNzIFNwYWNlIGd1YXJhbnRlZSBub24tcG9zdGVkIHdyaXRlIHRy
+YW5zYWN0aW9ucyBpc3N1ZWQKPiA+ID4gd2hlbiBhZGRyZXNzaW5nIEkvTyBBZGRyZXNzIFNwYWNl
+IHRocm91Z2ggdGhlIE1NSU8gbWFwcGluZy4KPiAKPiBIb3cgZGlkIHdlIGVuZCB1cCB3aXRoIHBn
+cHJvdF9kZXZpY2UoKSB0aGVuIGluIHRoZSBmaXJzdCBwbGFjZSBMaXZpdSBEdWRhdSBbMF0gPwo+
+IEkgYXNrIGZvciB0d28gcmVhc29uczoKCltyZXBseWluZyB1c2luZyBwZXJzb25hbCBlbWFpbCBh
+cyB0aGUgY29ycG9yYXRlIGVtYWlsIHN5c3RlbSBpcyB0YWtpbmcgaXRzIHN3ZWV0IHRpbWUKdG8g
+ZGVsaXZlciB0aGUgZW1haWwgdG8gbXkgaW5ib3hdCgpJJ3ZlIGFza2VkIHRoZSBwZW9wbGUgd2l0
+aCB0aGUgcmlnaHQga25vd2xlZGdlIGFib3V0IHRoZSBjb3JyZWN0IEFQSSB0byB1c2UgKEhpIENh
+dGFsaW4hKSwKYW5kIGR1cmluZyB0aGUgcmV2aWV3IGl0IGRpZCBub3QgdGhyb3cgYW55IHJlZCBm
+bGFncy4gSSBndWVzcywgZ2l2ZW4gQmpvcm4ncyBjb21tZW50LAp0aGF0IGV2ZXJ5b25lIGFzc3Vt
+ZWQgQUFyY2g2NCBpcyB0aGUgc2FtZSBhcyBhbGwgb3RoZXIgYXJjaGl0ZWN0dXJlcyBhbmQgcGdw
+cm90X2RldmljZQppcyBzeW5vbnltb3VzIHRvIHBncHJvdF9ub25jYWNoZWQuCgo+IAo+IGEpIHNo
+b3VsZCB3ZSB0aGVuIHVzZSBhIEZpeGVzIHRhZyBmb3IgdGhpcyBwYXRjaCA/CgpJJ20gbm90IGF3
+YXJlIG9mIGlzc3VlcyBiZWluZyByZXBvcnRlZCwgYnV0IExvcmVuem8gbWlnaHQgaGF2ZSBtb3Jl
+IGluZm8gb24gdGhpcy4KCj4gYikgaXQgZG9lcyBub3Qgc2VlbSBjbGVhciB3aGF0IHRoZSBzZW1h
+bnRpY3MgZm9yIHBncHJvdF9kZXZpY2UoKSBvciBldmVuCj4gICAgcGdwcm90X25vbmNhY2hlZCgp
+LiBDYW4geW91IGFkZCBzb21lID8KPiAKPiA4YjkyMWFjZmVmZmRiICgiUENJOiBBZGQgcGNpX3Jl
+bWFwX2lvc3BhY2UoKSB0byBtYXAgYnVzIEkvTyByZXNvdXJjZXMiKQo+IAo+IEFsc28gdGhpcyBw
+YXRjaCBjbGFpbXMgYXJjaHMgY2FuIG92ZXJyaWRlIHRoaXMgY2FsbCBhbG9uZSwgYXMgaXRzIF9f
+d2Vhay4KPiBTbyBpcyB0aGUgcmlnaHQgdGhpbmcgdG8gZG8gdG8gY2hhbmdlIHBjaV9yZW1hcF9p
+b3NwYWNlKCkgdG8gcGdwcm90X25vbmNhY2hlZCgpCj4gb3IgaXMgaXQgZm9yIGFyY2hzIHRvIGFk
+ZCB0aGVpciBvd24gcGNpX3JlbWFwX2lvc3BhY2UoKT8gSWYgc28gd2h5ID8gV2l0aG91dAo+IHBy
+b3BlciBzZW1hbnRpY3MgZGVmaW5lZCBmb3IgdGhlc2UgaGVscGVycyB0aGlzIGlzIGFsbCBmdXp6
+eS4KClRoYXQgd2FzIHRoZSBpbml0aWFsIGludGVudGlvbiwgdG8gbGV0IGFyY2hlcyAvIHBsYXRm
+b3JtcyBvdmVyd3JpdGUgdGhlIHdob2xlCnBjaV9yZW1hcF9pb3NwYWNlKCkuIEkgZ3Vlc3MgdGhl
+IHJlYWxpdHkgaXMgdGhhdCBubyBvbmUgbmVlZHMgdG8gb3ZlcndyaXRlIGl0IGV4Y2VwdApmb3Ig
+dGhlIEFBcmNoNjQgcXVpcmssIHNvIHByb2JhYmx5IGVhc2llciB0byByZW1vdmUgdGhlIF9fd2Vh
+ayBhbmQgZml4IHRoZSBhdHRyaWJ1dGVzIGZvciBhcm02NC4KCkJlc3QgcmVnYXJkcywKTGl2aXUK
+Cj4gCj4gPiA+IFNpZ25lZC1vZmYtYnk6IExvcmVuem8gUGllcmFsaXNpIDxsb3JlbnpvLnBpZXJh
+bGlzaUBhcm0uY29tPgo+ID4gPiBDYzogQXJuZCBCZXJnbWFubiA8YXJuZEBhcm5kYi5kZT4KPiA+
+ID4gQ2M6IFdpbGwgRGVhY29uIDx3aWxsLmRlYWNvbkBhcm0uY29tPgo+ID4gPiBDYzogQmpvcm4g
+SGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4KPiA+ID4gQ2M6IFJ1c3NlbGwgS2luZyA8bGlu
+dXhAYXJtbGludXgub3JnLnVrPgo+ID4gPiBDYzogQ2F0YWxpbiBNYXJpbmFzIDxjYXRhbGluLm1h
+cmluYXNAYXJtLmNvbT4KPiA+ID4gLS0tCj4gPiA+ICBkcml2ZXJzL3BjaS9wY2kuYyB8IDIgKy0K
+PiA+ID4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxldGlvbigtKQo+ID4g
+PiAKPiA+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3BjaS5jIGIvZHJpdmVycy9wY2kvcGNp
+LmMKPiA+ID4gaW5kZXggYmQ5ODY3NC4uYmZiM2M2ZSAxMDA2NDQKPiA+ID4gLS0tIGEvZHJpdmVy
+cy9wY2kvcGNpLmMKPiA+ID4gKysrIGIvZHJpdmVycy9wY2kvcGNpLmMKPiA+ID4gQEAgLTMzNzUs
+NyArMzM3NSw3IEBAIGludCBwY2lfcmVtYXBfaW9zcGFjZShjb25zdCBzdHJ1Y3QgcmVzb3VyY2Ug
+KnJlcywgcGh5c19hZGRyX3QgcGh5c19hZGRyKQo+ID4gPiAgCQlyZXR1cm4gLUVJTlZBTDsKPiA+
+ID4gIAo+ID4gPiAgCXJldHVybiBpb3JlbWFwX3BhZ2VfcmFuZ2UodmFkZHIsIHZhZGRyICsgcmVz
+b3VyY2Vfc2l6ZShyZXMpLCBwaHlzX2FkZHIsCj4gPiA+IC0JCQkJICBwZ3Byb3RfZGV2aWNlKFBB
+R0VfS0VSTkVMKSk7Cj4gPiA+ICsJCQkJICBwZ3Byb3Rfbm9uY2FjaGVkKFBBR0VfS0VSTkVMKSk7
+Cj4gPiAKPiA+IHBncHJvdF9kZXZpY2UoKSBpcyBlcXVpdmFsZW50IHRvIHBncHJvdF9ub25jYWNo
+ZWQoKSBvbiBhbGwgYXJjaGVzCj4gPiBleGNlcHQgQVJNNjQsIGFuZCBJIHRydXN0IHlvdSdyZSBk
+b2luZyB0aGUgcmlnaHQgdGhpbmcgb24gQVJNNjQsIHNvCj4gPiBJJ20gZmluZSB3aXRoIHRoaXMg
+ZnJvbSBhIFBDSSBwZXJzcGVjdGl2ZS4KPiA+IAo+ID4gSSBkbyBmaW5kIHRoaXMgcHV6emxpbmcg
+YmVjYXVzZSBJIG5haXZlbHkgZXhwZWN0ZWQgcGdwcm90X25vbmNhY2hlZCgpCj4gPiB0byBtYXRj
+aCB1cCB3aXRoIGlvcmVtYXBfbm9jYWNoZSgpLCBhbmQgYXBwYXJlbnRseSBpdCBkb2Vzbid0Lgo+
+ID4gCj4gPiBGb3IgZXhhbXBsZSwgQVJNNjQgaW9yZW1hcF9ub2NhY2hlKCkgdXNlcyBQUk9UX0RF
+VklDRV9uR25SRSwgd2hpY2gKPiA+IGRvZXNuJ3QgbWF0Y2ggdGhlIE1UX0RFVklDRV9uR25SbkUg
+aW4gcGdwcm90X25vbmNhY2hlZCgpLgo+ID4gCj4gPiBUaGUgcG9pbnQgb2YgdGhlc2UgcGF0Y2hl
+cyBpcyB0byB1c2Ugbm9uLXBvc3RlZCBtYXBwaW5ncy4gIEFwcGFyZW50bHkKPiA+IHlvdSBjYW4g
+ZG8gdGhhdCB3aXRoIHBncHJvdF9ub25jYWNoZWQoKSBoZXJlLCBidXQgaW9yZW1hcF9ub2NhY2hl
+KCkKPiA+IGlzbid0IGVub3VnaCBmb3IgdGhlIGNvbmZpZyBzcGFjZSBtYXBwaW5ncz8KPiAKPiBU
+aGlzIGlzIGZvciBpb3NwYWNlIGl0IHNlZW1zLCBzbyB0aGUgb3RoZXIgcGF0Y2ggSSB0aGluayB3
+YXMgZm9yCj4gY29uZmlnIHNwYWNlLgo+IAo+ICAgTHVpcwo+IAo+ID4gSSBzdXBwb3NlIHRoYXQn
+cyBhIGNvbnNlcXVlbmNlIG9mIHRoZSBwZ3Byb3Rfbm9uY2FjaGVkKCkgdnMKPiA+IGlvcmVtYXBf
+bm9jYWNoZSgpIG1pc21hdGNoLCBidXQgdGhpcyBpcyBhbGwgZXh0cmVtZWx5IGNvbmZ1c2luZy4K
+PiA+IAo+ID4gPiAgI2Vsc2UKPiA+ID4gIAkvKiB0aGlzIGFyY2hpdGVjdHVyZSBkb2VzIG5vdCBo
+YXZlIG1lbW9yeSBtYXBwZWQgSS9PIHNwYWNlLAo+ID4gPiAgCSAgIHNvIHRoaXMgZnVuY3Rpb24g
+c2hvdWxkIG5ldmVyIGJlIGNhbGxlZCAqLwo+ID4gPiAtLSAKPiA+ID4gMi4xMC4wCj4gPiA+IAo+
+ID4gPiAKPiA+ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KPiA+ID4gbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKPiA+ID4gbGludXgtYXJtLWtl
+cm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCj4gPiA+IGh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3Jn
+L21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo+ID4gCj4gCj4gLS0gCj4gTHVpcyBS
+b2RyaWd1ZXosIFNVU0UgTElOVVggR21iSAo+IE1heGZlbGRzdHJhc3NlIDU7IEQtOTA0MDkgTnVl
+cm5iZXJnCgotLSAKICAgXwogX3xffF8KICgnXycpCiAo4oqDICAp4oqDCiB8X3xffAoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5l
+bCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6
+Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
