@@ -1,83 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:46669 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934030AbdCVNdo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Mar 2017 09:33:44 -0400
-Date: Wed, 22 Mar 2017 14:33:39 +0100
-From: Jesper Nilsson <jesper.nilsson@axis.com>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 11/17] cris: Use generic pci_mmap_resource_range()
-Message-ID: <20170322133339.GA29118@axis.com>
-References: <cover.1490188942.git.dwmw2@infradead.org>
- <1e68573b4fe52b24d770a8582a7db59272862a52.1490188942.git.dwmw2@infradead.org>
+Received: from mx1.redhat.com ([209.132.183.28]:60164 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750926AbdCQLMc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Mar 2017 07:12:32 -0400
+Subject: Re: [RFC PATCH v2 29/32] kvm: svm: Add support for SEV DEBUG_DECRYPT
+ command
+To: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
+        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
+        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
+        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, bp@suse.de, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org,
+        akpm@linux-foundation.org, davem@davemloft.net
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846789744.2349.167641684941925238.stgit@brijesh-build-machine>
+ <4579cfdd-1797-8b47-8e00-254e3f6eb73f@redhat.com>
+ <d89ef60d-a97c-b712-fb0f-0242ebebb91a@amd.com>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Message-ID: <ca24bbc2-25cf-a5ca-cd39-5862036214bb@redhat.com>
+Date: Fri, 17 Mar 2017 12:09:42 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1e68573b4fe52b24d770a8582a7db59272862a52.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <d89ef60d-a97c-b712-fb0f-0242ebebb91a@amd.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 22, 2017 at 01:25:25PM +0000, David Woodhouse wrote:
-> From: David Woodhouse <dwmw@amazon.co.uk>
 
-Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
 
-> Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
-> ---
->  arch/cris/arch-v32/drivers/pci/bios.c | 23 -----------------------
->  arch/cris/include/asm/pci.h           |  1 +
->  2 files changed, 1 insertion(+), 23 deletions(-)
+On 16/03/2017 19:41, Brijesh Singh wrote:
+>>
+>> Please do add it, it doesn't seem very different from what you're doing
+>> in LAUNCH_UPDATE_DATA.  There's no need for a separate
+>> __sev_dbg_decrypt_page function, you can just pin/unpin here and do a
+>> per-page loop as in LAUNCH_UPDATE_DATA.
 > 
-> diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-> index a589686d..394c2a73 100644
-> --- a/arch/cris/arch-v32/drivers/pci/bios.c
-> +++ b/arch/cris/arch-v32/drivers/pci/bios.c
-> @@ -14,29 +14,6 @@ void pcibios_set_master(struct pci_dev *dev)
->  	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
->  }
->  
-> -int pci_mmap_page_range(struct pci_dev *dev, int bar,
-> -			struct vm_area_struct *vma,
-> -			enum pci_mmap_state mmap_state, int write_combine)
-> -{
-> -	unsigned long prot;
-> -
-> -	/* Leave vm_pgoff as-is, the PCI space address is the physical
-> -	 * address on this platform.
-> -	 */
-> -	prot = pgprot_val(vma->vm_page_prot);
-> -	vma->vm_page_prot = __pgprot(prot);
-> -
-> -	/* Write-combine setting is ignored, it is changed via the mtrr
-> -	 * interfaces on this platform.
-> -	 */
-> -	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
-> -			     vma->vm_end - vma->vm_start,
-> -			     vma->vm_page_prot))
-> -		return -EAGAIN;
-> -
-> -	return 0;
-> -}
-> -
->  resource_size_t
->  pcibios_align_resource(void *data, const struct resource *res,
->  		       resource_size_t size, resource_size_t align)
-> diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
-> index 65198cb..6e50533 100644
-> --- a/arch/cris/include/asm/pci.h
-> +++ b/arch/cris/include/asm/pci.h
-> @@ -42,6 +42,7 @@ struct pci_dev;
->  #define PCI_DMA_BUS_IS_PHYS	(1)
->  
->  #define HAVE_PCI_MMAP
-> +#define ARCH_GENERIC_PCI_MMAP_RESOURCE
->  
->  #endif /* __KERNEL__ */
->  
-> -- 
-> 2.9.3
+> I can certainly add support to handle crossing the page boundary cases.
+> Should we limit the size to prevent user passing arbitrary long length
+> and we end up looping inside the kernel? I was thinking to limit to a
+> PAGE_SIZE.
 
-/^JN - Jesper Nilsson
--- 
-               Jesper Nilsson -- jesper.nilsson@axis.com
+I guess it depends on how it's used.  PAGE_SIZE makes sense since you
+only know if a physical address is encrypted when you reach it from a
+visit of the page tables.
+
+Paolo
