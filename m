@@ -1,296 +1,124 @@
-Return-Path: <SRS0=CTSG=3A=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=CTSG=3A=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
-To: Mason <slash.tmp@free.fr>, Bjorn Helgaas <helgaas@kernel.org>,
- Thomas Gleixner <tglx@linutronix.de>
-References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
-Cc: Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
-Date: Thu, 23 Mar 2017 14:22:30 +0000
-MIME-Version: 1.0
-In-Reply-To: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
-Content-Type: text/plain; charset=iso-8859-15
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:56539 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751306AbdCQSu3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Mar 2017 14:50:29 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hans Verkuil <hans.verkuil@cisco.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Boris Brezillon <boris.brezillon@free-electrons.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Cyrille Pitchen <cyrille.pitchen@atmel.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        rtc-linux@googlegroups.com, linux-mtd@lists.infradead.org,
+        linux-media@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-gpio@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 17 Mar 2017 12:48:14 -0600
+Message-Id: <1489776503-3151-8-git-send-email-logang@deltatee.com>
+In-Reply-To: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 07/16] platform/chrome: cros_ec_dev - utilize new cdev_device_add helper function
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/03/17 13:05, Mason wrote:
-> I think this version is ready for review.
-> It has all the required bits and pieces.
-> I still have a few questions, embedded as comments in the code.
-> (Missing are ancillary changes to Kconfig, Makefile)
+Replace the open coded registration of the cdev and dev with the
+new device_add_cdev() helper. The helper replaces a common pattern by
+taking the proper reference against the parent device and adding both
+the cdev and the device.
 
-May I suggest that if you think that a patch is ready for review, it
-should really contain all the bits that make it an actual patch? That
-would include an actual commit log and all what is required to actually
-compile it. Not to mention a SoB.
+At the same time we cleanup the error path through device_probe
+function: we use put_device instead of kfree directly as recommended
+by the device_initialize documentation.
 
-We rely (at least I certainly do) on things like the kbuild robot
-picking up stuff from the list and giving it a go. Also, it makes it a
-much more efficient use of the reviewer time not to review the same
-thing twice...
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+---
+ drivers/platform/chrome/cros_ec_dev.c | 31 +++++++------------------------
+ 1 file changed, 7 insertions(+), 24 deletions(-)
 
-That being said:
-
-> ---
->  drivers/pci/host/pcie-tango.c | 350 ++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 350 insertions(+)
->  create mode 100644 drivers/pci/host/pcie-tango.c
-> 
-> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
-> new file mode 100644
-> index 000000000000..b2e6448aed2d
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-tango.c
-> @@ -0,0 +1,350 @@
-> +#include <linux/irqchip/chained_irq.h>
-> +#include <linux/irqdomain.h>
-> +#include <linux/pci-ecam.h>
-> +#include <linux/msi.h>
-> +
-> +#define MSI_COUNT 32
-
-Is this something that is hardcoded? Unlikely to ever change?
-
-> +
-> +struct tango_pcie {
-> +	void __iomem *mux;
-> +	void __iomem *msi_status;
-> +	void __iomem *msi_mask;
-> +	phys_addr_t msi_doorbell;
-> +	struct mutex lock; /* lock for updating msi_mask */
-> +	struct irq_domain *irq_domain;
-> +	struct irq_domain *msi_domain;
-> +	int irq;
-> +};
-> +
-> +/*** MSI CONTROLLER SUPPORT ***/
-> +
-> +static void tango_msi_isr(struct irq_desc *desc)
-> +{
-> +	struct irq_chip *chip = irq_desc_get_chip(desc);
-> +	struct tango_pcie *pcie;
-> +	unsigned long status, virq;
-> +	int pos;
-> +
-> +	chained_irq_enter(chip, desc);
-> +	pcie = irq_desc_get_handler_data(desc);
-> +
-> +	status = readl_relaxed(pcie->msi_status);
-
-Please use types that unambiguously match that of the MMIO accessor (u32
-in this case). On a 64bit system, unsigned long is likely to be 64bit.
-You can assign it to an unsigned long before calling the
-for_each_set_bit operator.
-
-> +	writel_relaxed(status, pcie->msi_status); /* clear IRQs */
-
-Why isn't this your irq_ack method instead of open-coding it?
-
-> +
-> +	for_each_set_bit(pos, &status, MSI_COUNT) {
-> +		virq = irq_find_mapping(pcie->irq_domain, pos);
-> +		if (virq)
-> +			generic_handle_irq(virq);
-> +		else
-> +			pr_err("Unhandled MSI: %d\n", pos);
-
-Please rate-limit this.
-
-> +	}
-> +
-> +	chained_irq_exit(chip, desc);
-> +}
-> +
-> +static struct irq_chip tango_msi_irq_chip = {
-> +	.name = "MSI",
-> +	.irq_mask = pci_msi_mask_irq,
-> +	.irq_unmask = pci_msi_unmask_irq,
-> +};
-> +
-> +static struct msi_domain_info msi_domain_info = {
-> +	.flags	= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS,
-
-No support for MSI-X? Why?
-
-> +	.chip	= &tango_msi_irq_chip,
-> +};
-> +
-> +static void tango_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-> +{
-> +	struct tango_pcie *pcie = irq_data_get_irq_chip_data(data);
-> +
-> +	msg->address_lo = lower_32_bits(pcie->msi_doorbell);
-> +	msg->address_hi = upper_32_bits(pcie->msi_doorbell);
-> +	msg->data = data->hwirq;
-> +}
-> +
-> +static int tango_set_affinity(struct irq_data *irq_data,
-> +		const struct cpumask *mask, bool force)
-> +{
-> +	 return -EINVAL;
-> +}
-> +
-> +static struct irq_chip tango_msi_chip = {
-> +	.name			= "MSI",
-> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
-> +	.irq_set_affinity	= tango_set_affinity,
-> +};
-> +
-> +static int tango_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
-> +		unsigned int nr_irqs, void *args)
-> +{
-> +	struct tango_pcie *pcie = domain->host_data;
-> +	int pos, err = 0;
-> +	u32 mask;
-> +
-> +	if (nr_irqs != 1) /* When does that happen? */
-> +		return -EINVAL;
-
-Only if the end-point wants to use Multi-MSI. You don't advertise
-support for it, so it should never happen.
-
-> +
-> +	mutex_lock(&pcie->lock);
-> +
-> +	mask = readl_relaxed(pcie->msi_mask);
-
-Do you really need to read this from the HW each time you allocate an
-interrupt? That feels pretty crazy. You're much better off having an
-in-memory bitmap that will make things more efficient, and avoid the
-following bug...
-
-> +	pos = find_first_zero_bit(&mask, MSI_COUNT);
-
-... where using a u32 as a bitmap is a very bad idea (because not the
-whole world is a 32bit, little endian platform).
-
-> +	if (pos < MSI_COUNT)
-> +		writel(mask | BIT(pos), pcie->msi_mask);
-
-And it would make a lot more sense to move this write (which should be
-relaxed) to irq_unmask. Also, calling msi_mask for something that is an
-enable register is a bit counter intuitive.
-
-> +	else
-> +		err = -ENOSPC;
-> +
-> +	mutex_unlock(&pcie->lock);
-> +
-> +	irq_domain_set_info(domain, virq, pos, &tango_msi_chip,
-> +			domain->host_data, handle_simple_irq, NULL, NULL);
-
-And here, you're polluting the domain even if you failed to allocate the
-interrupt.
-
-> +
-> +	return err;
-> +}
-> +
-> +static void tango_irq_domain_free(struct irq_domain *domain,
-> +				   unsigned int virq, unsigned int nr_irqs)
-> +{
-> +	struct irq_data *d = irq_domain_get_irq_data(domain, virq);
-> +	struct tango_pcie *pcie = irq_data_get_irq_chip_data(d);
-> +	int pos = d->hwirq;
-> +	u32 mask;
-> +
-> +	mutex_lock(&pcie->lock);
-> +
-> +	mask = readl(pcie->msi_mask);
-> +	writel(mask & ~BIT(pos), pcie->msi_mask);
-
-Same as above, please move this to the irq_unmask method.
-
-> +
-> +	mutex_unlock(&pcie->lock);
-> +}
-> +
-> +static const struct irq_domain_ops msi_domain_ops = {
-> +	.alloc	= tango_irq_domain_alloc,
-> +	.free	= tango_irq_domain_free,
-> +};
-> +
-> +static int tango_msi_remove(struct platform_device *pdev)
-> +{
-> +	struct tango_pcie *msi = platform_get_drvdata(pdev);
-> +
-> +	irq_set_chained_handler(msi->irq, NULL);
-> +	irq_set_handler_data(msi->irq, NULL);
-> +	/* irq_set_chained_handler_and_data(msi->irq, NULL, NULL); instead? */
-> +
-> +	irq_domain_remove(msi->msi_domain);
-> +	irq_domain_remove(msi->irq_domain);
-> +
-> +	return 0;
-> +}
-> +
-> +static int tango_msi_probe(struct platform_device *pdev, struct tango_pcie *pcie)
-> +{
-> +	int virq;
-> +	struct fwnode_handle *fwnode = of_node_to_fwnode(pdev->dev.of_node);
-> +	struct irq_domain *msi_dom, *irq_dom;
-> +
-> +	mutex_init(&pcie->lock);
-> +	writel(0, pcie->msi_mask);
-> +
-> +	/* Why is fwnode for this call? */
-> +	irq_dom = irq_domain_add_linear(NULL, MSI_COUNT, &msi_domain_ops, pcie);
-
-Use irq_domain_create_linear, pass the same fwnode.
-
-> +	if (!irq_dom) {
-> +		pr_err("Failed to create IRQ domain\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	msi_dom = pci_msi_create_irq_domain(fwnode, &msi_domain_info, irq_dom);
-> +	if (!msi_dom) {
-> +		pr_err("Failed to create MSI domain\n");
-> +		irq_domain_remove(irq_dom);
-> +		return -ENOMEM;
-> +	}
-> +
-> +	virq = platform_get_irq(pdev, 1);
-
-In the absence of a documented binding, it is hard to know if you're
-doing the right thing.
-
-> +	if (virq <= 0) {
-> +		irq_domain_remove(msi_dom);
-> +		irq_domain_remove(irq_dom);
-> +		return -ENXIO;
-
-Maybe add a message indicating what failed?
-
-> +	}
-> +
-> +	pcie->irq_domain = irq_dom;
-> +	pcie->msi_domain = msi_dom;
-> +	pcie->irq = virq;
-> +	irq_set_chained_handler_and_data(virq, tango_msi_isr, pcie);
-> +
-> +	return 0;
-> +}
-> +
-> +/*** HOST BRIDGE SUPPORT ***/
-
-[...]
-
-I don't know much about PCIe itself, hence stopping here.
-
-I'd like to see the MSI code as a separate patch, because it is pretty
-much standalone. And please write a DT binding document for the whole
-thing, because I end-up second guessing what you're trying to do...
-
-Thanks,
-
-	M.
+diff --git a/drivers/platform/chrome/cros_ec_dev.c b/drivers/platform/chrome/cros_ec_dev.c
+index 6f09da4..6aa120c 100644
+--- a/drivers/platform/chrome/cros_ec_dev.c
++++ b/drivers/platform/chrome/cros_ec_dev.c
+@@ -391,7 +391,6 @@ static int ec_device_probe(struct platform_device *pdev)
+ 	int retval = -ENOMEM;
+ 	struct device *dev = &pdev->dev;
+ 	struct cros_ec_platform *ec_platform = dev_get_platdata(dev);
+-	dev_t devno = MKDEV(ec_major, pdev->id);
+ 	struct cros_ec_dev *ec = kzalloc(sizeof(*ec), GFP_KERNEL);
+ 
+ 	if (!ec)
+@@ -407,23 +406,11 @@ static int ec_device_probe(struct platform_device *pdev)
+ 	cdev_init(&ec->cdev, &fops);
+ 
+ 	/*
+-	 * Add the character device
+-	 * Link cdev to the class device to be sure device is not used
+-	 * before unbinding it.
+-	 */
+-	ec->cdev.kobj.parent = &ec->class_dev.kobj;
+-	retval = cdev_add(&ec->cdev, devno, 1);
+-	if (retval) {
+-		dev_err(dev, ": failed to add character device\n");
+-		goto cdev_add_failed;
+-	}
+-
+-	/*
+ 	 * Add the class device
+ 	 * Link to the character device for creating the /dev entry
+ 	 * in devtmpfs.
+ 	 */
+-	ec->class_dev.devt = ec->cdev.dev;
++	ec->class_dev.devt = MKDEV(ec_major, pdev->id);
+ 	ec->class_dev.class = &cros_class;
+ 	ec->class_dev.parent = dev;
+ 	ec->class_dev.release = __remove;
+@@ -431,13 +418,13 @@ static int ec_device_probe(struct platform_device *pdev)
+ 	retval = dev_set_name(&ec->class_dev, "%s", ec_platform->ec_name);
+ 	if (retval) {
+ 		dev_err(dev, "dev_set_name failed => %d\n", retval);
+-		goto set_named_failed;
++		goto failed;
+ 	}
+ 
+-	retval = device_add(&ec->class_dev);
++	retval = cdev_device_add(&ec->cdev, &ec->class_dev);
+ 	if (retval) {
+-		dev_err(dev, "device_register failed => %d\n", retval);
+-		goto dev_reg_failed;
++		dev_err(dev, "cdev_device_add failed => %d\n", retval);
++		goto failed;
+ 	}
+ 
+ 	/* check whether this EC is a sensor hub. */
+@@ -446,12 +433,8 @@ static int ec_device_probe(struct platform_device *pdev)
+ 
+ 	return 0;
+ 
+-dev_reg_failed:
+-set_named_failed:
+-	dev_set_drvdata(dev, NULL);
+-	cdev_del(&ec->cdev);
+-cdev_add_failed:
+-	kfree(ec);
++failed:
++	put_device(&ec->class_dev);
+ 	return retval;
+ }
+ 
 -- 
-Jazz is not dead. It just smells funny...
+2.1.4
