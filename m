@@ -1,122 +1,91 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v8 4/4] PCI: imx6: Do not switch speed if Gen2 is disabled
-Date: Tue, 28 Mar 2017 08:42:52 -0700
-Message-Id: <20170328154252.6902-5-andrew.smirnov@gmail.com>
-In-Reply-To: <20170328154252.6902-1-andrew.smirnov@gmail.com>
-References: <20170328154252.6902-1-andrew.smirnov@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Dong Aisheng <dongas86@gmail.com>,
- Andrey Smirnov <andrew.smirnov@gmail.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
- yurovsky@gmail.com, linux-arm-kernel@lists.infradead.org,
- Lucas Stach <l.stach@pengutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:56506 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751180AbdCQSuZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Mar 2017 14:50:25 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hans Verkuil <hans.verkuil@cisco.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Boris Brezillon <boris.brezillon@free-electrons.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Cyrille Pitchen <cyrille.pitchen@atmel.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        rtc-linux@googlegroups.com, linux-mtd@lists.infradead.org,
+        linux-media@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-gpio@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 17 Mar 2017 12:48:17 -0600
+Message-Id: <1489776503-3151-11-git-send-email-logang@deltatee.com>
+In-Reply-To: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 10/16] iio:core: utilize new cdev_device_add helper function
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Save a bit of time and avoid going through link speed change procedure
-in configuration where link max speed is limited to Gen1 in DT.
+Replace the open coded registration of the cdev and dev with the
+new device_add_cdev() helper. The helper replaces a common pattern by
+taking the proper reference against the parent device and adding both
+the cdev and the device.
 
-Cc: yurovsky@gmail.com
-Cc: Lucas Stach <l.stach@pengutronix.de>
-Cc: Fabio Estevam <fabio.estevam@nxp.com>
-Cc: Dong Aisheng <dongas86@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Reviewed-by: Lucas Stach <l.stach@pengutronix.de>
-Signed-off-by: Andrey Smirnov <andrew.smirnov@gmail.com>
+In doing so we have to remove a guard statement from cdev_del,
+but this doesn't appear to be required in any way.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
 ---
- drivers/pci/dwc/pci-imx6.c | 52 +++++++++++++++++++++++-----------------------
- 1 file changed, 26 insertions(+), 26 deletions(-)
+ drivers/iio/industrialio-core.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index c731e41..9407c03 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -533,40 +533,40 @@ static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
- 		tmp &= ~PCIE_RC_LCR_MAX_LINK_SPEEDS_MASK;
- 		tmp |= PCIE_RC_LCR_MAX_LINK_SPEEDS_GEN2;
- 		dw_pcie_writel_dbi(pci, PCIE_RC_LCR, tmp);
--	} else {
--		dev_info(dev, "Link: Gen2 disabled\n");
--	}
--
--	/*
--	 * Start Directed Speed Change so the best possible speed both link
--	 * partners support can be negotiated.
--	 */
--	tmp = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
--	tmp |= PORT_LOGIC_SPEED_CHANGE;
--	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
+diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
+index d18ded4..26a03c6 100644
+--- a/drivers/iio/industrialio-core.c
++++ b/drivers/iio/industrialio-core.c
+@@ -1720,18 +1720,13 @@ int iio_device_register(struct iio_dev *indio_dev)
  
--	if (imx6_pcie->variant != IMX7D) {
- 		/*
--		 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
--		 * from i.MX6 family when no link speed transition
--		 * occurs and we go Gen1 -> yep, Gen1. The difference
--		 * is that, in such case, it will not be cleared by HW
--		 * which will cause the following code to report false
--		 * failure.
-+		 * Start Directed Speed Change so the best possible
-+		 * speed both link partners support can be negotiated.
- 		 */
-+		tmp = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+		tmp |= PORT_LOGIC_SPEED_CHANGE;
-+		dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
+ 	cdev_init(&indio_dev->chrdev, &iio_buffer_fileops);
+ 	indio_dev->chrdev.owner = indio_dev->info->driver_module;
+-	indio_dev->chrdev.kobj.parent = &indio_dev->dev.kobj;
+-	ret = cdev_add(&indio_dev->chrdev, indio_dev->dev.devt, 1);
+-	if (ret < 0)
+-		goto error_unreg_eventset;
+ 
+-	ret = device_add(&indio_dev->dev);
++	ret = cdev_device_add(&indio_dev->chrdev, &indio_dev->dev);
+ 	if (ret < 0)
+-		goto error_cdev_del;
++		goto error_unreg_eventset;
+ 
+ 	return 0;
+-error_cdev_del:
+-	cdev_del(&indio_dev->chrdev);
 +
-+		if (imx6_pcie->variant != IMX7D) {
-+			/*
-+			 * On i.MX7, DIRECT_SPEED_CHANGE behaves differently
-+			 * from i.MX6 family when no link speed transition
-+			 * occurs and we go Gen1 -> yep, Gen1. The difference
-+			 * is that, in such case, it will not be cleared by HW
-+			 * which will cause the following code to report false
-+			 * failure.
-+			 */
-+
-+			ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
-+			if (ret) {
-+				dev_err(dev, "Failed to bring link up!\n");
-+				goto err_reset_phy;
-+			}
-+		}
+ error_unreg_eventset:
+ 	iio_device_unregister_eventset(indio_dev);
+ error_free_sysfs:
+@@ -1752,10 +1747,8 @@ void iio_device_unregister(struct iio_dev *indio_dev)
+ {
+ 	mutex_lock(&indio_dev->info_exist_lock);
  
--		ret = imx6_pcie_wait_for_speed_change(imx6_pcie);
-+		/* Make sure link training is finished as well! */
-+		ret = imx6_pcie_wait_for_link(imx6_pcie);
- 		if (ret) {
- 			dev_err(dev, "Failed to bring link up!\n");
- 			goto err_reset_phy;
- 		}
--	}
--
--	/* Make sure link training is finished as well! */
--	ret = imx6_pcie_wait_for_link(imx6_pcie);
--	if (ret) {
--		dev_err(dev, "Failed to bring link up!\n");
--		goto err_reset_phy;
-+	} else {
-+		dev_info(dev, "Link: Gen2 disabled\n");
- 	}
+-	device_del(&indio_dev->dev);
++	cdev_device_del(&indio_dev->chrdev, &indio_dev->dev);
  
- 	tmp = dw_pcie_readl_dbi(pci, PCIE_RC_LCSR);
+-	if (indio_dev->chrdev.dev)
+-		cdev_del(&indio_dev->chrdev);
+ 	iio_device_unregister_debugfs(indio_dev);
+ 
+ 	iio_disable_all_buffers(indio_dev);
 -- 
-2.9.3
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.1.4
