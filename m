@@ -1,298 +1,163 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC PATCH v2 08/32] x86: Use PAGE_KERNEL protection for ioremap
+ of memory page
+To: Borislav Petkov <bp@suse.de>, Brijesh Singh <brijesh.singh@amd.com>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846761276.2349.4899767672892365544.stgit@brijesh-build-machine>
+ <20170307145954.l2fqy5s5h65wbtyz@pd.tnic>
+ <413f12e9-818a-745d-374b-3dbc439e972c@amd.com>
+ <0a7de265-1352-6327-ef3a-4287bfca732d@amd.com>
+CC: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
+        <kvm@vger.kernel.org>, <rkrcmar@redhat.com>,
+        <matt@codeblueprint.co.uk>, <linux-pci@vger.kernel.org>,
+        <linus.walleij@linaro.org>, <gary.hook@amd.com>,
+        <linux-mm@kvack.org>, <paul.gortmaker@windriver.com>,
+        <hpa@zytor.com>, <cl@linux.com>, <dan.j.williams@intel.com>,
+        <aarcange@redhat.com>, <sfr@canb.auug.org.au>,
+        <andriy.shevchenko@linux.intel.com>, <herbert@gondor.apana.org.au>,
+        <bhe@redhat.com>, <xemul@parallels.com>, <joro@8bytes.org>,
+        <x86@kernel.org>, <peterz@infradead.org>, <piotr.luc@intel.com>,
+        <mingo@redhat.com>, <msalter@redhat.com>,
+        <ross.zwisler@linux.intel.com>, <dyoung@redhat.com>,
+        <jroedel@suse.de>, <keescook@chromium.org>, <arnd@arndb.de>,
+        <toshi.kani@hpe.com>, <mathieu.desnoyers@efficios.com>,
+        <luto@kernel.org>, <devel@linuxdriverproject.org>,
+        <bhelgaas@google.com>, <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+From: Tom Lendacky <thomas.lendacky@amd.com>
+Message-ID: <bca182ee-a881-6290-9b94-fceabe20306f@amd.com>
+Date: Fri, 17 Mar 2017 09:55:55 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAMSpPPd7awDB_JL0_4pY9qiSXeLt3QzpSL95XogyE9h0kgyq_A@mail.gmail.com>
-References: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
- <CAL_JsqLtTiH7DhqKf_x7xy1KZYQyiOreK=M90HFr=8BDW9542w@mail.gmail.com>
- <CAMSpPPdnQdWeyTsnESRFx52gtxQLxwfPQwQgDFSN=katfW7suA@mail.gmail.com>
- <de6bfedf-62aa-98e4-dae5-7862ab3ba754@arm.com>
- <CAMSpPPd7awDB_JL0_4pY9qiSXeLt3QzpSL95XogyE9h0kgyq_A@mail.gmail.com>
-From: Oza Oza <oza.oza@broadcom.com>
-Date: Thu, 30 Mar 2017 08:56:25 +0530
-Message-ID: <CAMSpPPd1emStxAqF2jdxLk07qHPvAc8wTARMq+f101q1N4TQtQ@mail.gmail.com>
-Subject: Re: [RFC PATCH 1/3] of/pci: dma-ranges to account highest possible
- host bridge dma_mask
-To: Robin Murphy <robin.murphy@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Joerg Roedel <joro@8bytes.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Linux IOMMU <iommu@lists.linux-foundation.org>,
- "bcm-kernel-feedback-list@broadcom.com"
- <bcm-kernel-feedback-list@broadcom.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <0a7de265-1352-6327-ef3a-4287bfca732d@amd.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 29, 2017 at 10:13 AM, Oza Oza <oza.oza@broadcom.com> wrote:
-> On Tue, Mar 28, 2017 at 7:59 PM, Robin Murphy <robin.murphy@arm.com> wrote:
->> On 28/03/17 06:27, Oza Oza wrote:
->>> On Mon, Mar 27, 2017 at 8:16 PM, Rob Herring <robh@kernel.org> wrote:
->>>> On Sat, Mar 25, 2017 at 12:31 AM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
->>>>> it is possible that PCI device supports 64-bit DMA addressing,
->>>>> and thus it's driver sets device's dma_mask to DMA_BIT_MASK(64),
->>>>> however PCI host bridge may have limitations on the inbound
->>>>> transaction addressing. As an example, consider NVME SSD device
->>>>> connected to iproc-PCIe controller.
->>>>>
->>>>> Currently, the IOMMU DMA ops only considers PCI device dma_mask
->>>>> when allocating an IOVA. This is particularly problematic on
->>>>> ARM/ARM64 SOCs where the IOMMU (i.e. SMMU) translates IOVA to
->>>>> PA for in-bound transactions only after PCI Host has forwarded
->>>>> these transactions on SOC IO bus. This means on such ARM/ARM64
->>>>> SOCs the IOVA of in-bound transactions has to honor the addressing
->>>>> restrictions of the PCI Host.
->>>>>
->>>>> current pcie frmework and of framework integration assumes dma-ranges
->>>>> in a way where memory-mapped devices define their dma-ranges.
->>>>> dma-ranges: (child-bus-address, parent-bus-address, length).
->>>>>
->>>>> but iproc based SOCs and even Rcar based SOCs has PCI world dma-ranges.
->>>>> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
+On 3/17/2017 9:32 AM, Tom Lendacky wrote:
+> On 3/16/2017 3:04 PM, Tom Lendacky wrote:
+>> On 3/7/2017 8:59 AM, Borislav Petkov wrote:
+>>> On Thu, Mar 02, 2017 at 10:13:32AM -0500, Brijesh Singh wrote:
+>>>> From: Tom Lendacky <thomas.lendacky@amd.com>
 >>>>
->>>> If you implement a common function, then I expect to see other users
->>>> converted to use it. There's also PCI hosts in arch/powerpc that parse
->>>> dma-ranges.
+>>>> In order for memory pages to be properly mapped when SEV is active, we
+>>>> need to use the PAGE_KERNEL protection attribute as the base
+>>>> protection.
+>>>> This will insure that memory mapping of, e.g. ACPI tables, receives the
+>>>> proper mapping attributes.
+>>>>
+>>>> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+>>>> ---
 >>>
->>> the common function should be similar to what
->>> of_pci_get_host_bridge_resources is doing right now.
->>> it parses ranges property right now.
+>>>> diff --git a/arch/x86/mm/ioremap.c b/arch/x86/mm/ioremap.c
+>>>> index c400ab5..481c999 100644
+>>>> --- a/arch/x86/mm/ioremap.c
+>>>> +++ b/arch/x86/mm/ioremap.c
+>>>> @@ -151,7 +151,15 @@ static void __iomem
+>>>> *__ioremap_caller(resource_size_t phys_addr,
+>>>>                 pcm = new_pcm;
+>>>>         }
+>>>>
+>>>> +       /*
+>>>> +        * If the page being mapped is in memory and SEV is active then
+>>>> +        * make sure the memory encryption attribute is enabled in the
+>>>> +        * resulting mapping.
+>>>> +        */
+>>>>         prot = PAGE_KERNEL_IO;
+>>>> +       if (sev_active() && page_is_mem(pfn))
 >>>
->>> the new function would look look following.
+>>> Hmm, a resource tree walk per ioremap call. This could get expensive for
+>>> ioremap-heavy workloads.
 >>>
->>> of_pci_get_dma_ranges(struct device_node *dev, struct list_head *resources)
->>> where resources would return the dma-ranges.
+>>> __ioremap_caller() gets called here during boot 55 times so not a whole
+>>> lot but I wouldn't be surprised if there were some nasty use cases which
+>>> ioremap a lot.
 >>>
->>> but right now if you see the patch, of_dma_configure calls the new
->>> function, which actually returns the largest possible size.
->>> so this new function has to be generic in a way where other PCI hosts
->>> can use it. but certainly iproc(Broadcom SOC) , rcar based SOCs can
->>> use it for sure.
+>>> ...
 >>>
->>> although having powerpc using it;  is a separate exercise, since I do
->>> not have any access to other PCI hosts such as powerpc. but we can
->>> workout with them on thsi forum if required.
+>>>> diff --git a/kernel/resource.c b/kernel/resource.c
+>>>> index 9b5f044..db56ba3 100644
+>>>> --- a/kernel/resource.c
+>>>> +++ b/kernel/resource.c
+>>>> @@ -518,6 +518,46 @@ int __weak page_is_ram(unsigned long pfn)
+>>>>  }
+>>>>  EXPORT_SYMBOL_GPL(page_is_ram);
+>>>>
+>>>> +/*
+>>>> + * This function returns true if the target memory is marked as
+>>>> + * IORESOURCE_MEM and IORESOUCE_BUSY and described as other than
+>>>> + * IORES_DESC_NONE (e.g. IORES_DESC_ACPI_TABLES).
+>>>> + */
+>>>> +static int walk_mem_range(unsigned long start_pfn, unsigned long
+>>>> nr_pages)
+>>>> +{
+>>>> +    struct resource res;
+>>>> +    unsigned long pfn, end_pfn;
+>>>> +    u64 orig_end;
+>>>> +    int ret = -1;
+>>>> +
+>>>> +    res.start = (u64) start_pfn << PAGE_SHIFT;
+>>>> +    res.end = ((u64)(start_pfn + nr_pages) << PAGE_SHIFT) - 1;
+>>>> +    res.flags = IORESOURCE_MEM | IORESOURCE_BUSY;
+>>>> +    orig_end = res.end;
+>>>> +    while ((res.start < res.end) &&
+>>>> +        (find_next_iomem_res(&res, IORES_DESC_NONE, true) >= 0)) {
+>>>> +        pfn = (res.start + PAGE_SIZE - 1) >> PAGE_SHIFT;
+>>>> +        end_pfn = (res.end + 1) >> PAGE_SHIFT;
+>>>> +        if (end_pfn > pfn)
+>>>> +            ret = (res.desc != IORES_DESC_NONE) ? 1 : 0;
+>>>> +        if (ret)
+>>>> +            break;
+>>>> +        res.start = res.end + 1;
+>>>> +        res.end = orig_end;
+>>>> +    }
+>>>> +    return ret;
+>>>> +}
 >>>
->>> so overall, of_pci_get_dma_ranges has to serve following 2 purposes.
+>>> So the relevant difference between this one and walk_system_ram_range()
+>>> is this:
 >>>
->>> 1) it has to return largest possible size to of_dma_configure to
->>> generate largest possible dma_mask.
+>>> -            ret = (*func)(pfn, end_pfn - pfn, arg);
+>>> +            ret = (res.desc != IORES_DESC_NONE) ? 1 : 0;
 >>>
->>> 2) it also has to return resources (dma-ranges) parsed, to the users.
+>>> so it seems to me you can have your own *func() pointer which does that
+>>> IORES_DESC_NONE comparison. And then you can define your own workhorse
+>>> __walk_memory_range() which gets called by both walk_mem_range() and
+>>> walk_system_ram_range() instead of almost duplicating them.
 >>>
->>> so to address above needs
->>>
->>> of_pci_get_dma_ranges(struct device_node *dev, struct list_head
->>> *resources, u64 *size)
->>>
->>> dev -> device node.
->>> resources -> dma-ranges in allocated list.
->>> size -> highest possible size to generate possible dma_mask for
->>> of_dma_configure.
->>>
->>> let em know how this sounds.
+>>> And looking at walk_system_ram_res(), that one looks similar too except
+>>> the pfn computation. But AFAICT the pfn/end_pfn things are computed from
+>>> res.start and res.end so it looks to me like all those three functions
+>>> are crying for unification...
 >>
->> Note that the point of passing PCI host bridges into of_dma_configure()
->> in the first place was to avoid having some separate PCI-specific path
->> for DMA configuration. I worry that introducing bus-specific dma-ranges
->> parsing largely defeats that, since we end up with the worst of both
->> worlds; effectively-duplicated code, and/or a load of extra complexity
->> to then attempt to reconverge the divergent paths (there really
->> shouldn't be any need to allocate a list of anything). Given that
->> of_translate_dma_address() is already bus-agnostic, it hardly seems
->> justifiable for its caller not to be so as well, especially when it
->> mostly just comes down to getting the right #address-cells value.
->>
->> The patch below is actually enough to make typical cases work, but is
->> vile, so I'm not seriously considering it (hence I've not bothered
->> making IOMMU configuration handle all circumstances). What it has served
->> to do, though, is give me a clear idea of how to properly sort out the
->> not-quite-right device/parent assumptions between of_dma_configure() and
->> of_dma_get_range() rather than bodging around them any further - stay tuned.
->>
->> Robin.
->>
->> ----->8-----
->> From: Robin Murphy <robin.murphy@arm.com>
->> Subject: [PATCH] of/pci: Use child node for DMA configuration
->>
->> of_dma_configure() expects to be passed an OF node representing the
->> device being configured - for PCI devices we currently pass the node of
->> the appropriate host controller, which sort of works for inherited
->> properties which may appear at any level, like "dma-coherent", but falls
->> apart for properties which actually care about specific device-parent
->> relationships, like "dma-ranges".
->>
->> Solve this by attempting to find a suitable child node if the PCI
->> hierarchy is actually represented in DT, and if not then faking one up
->> as a last resort, to make all of DMA configuration work as expected.
->>
->> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
->> ---
->>  drivers/iommu/of_iommu.c |  3 ++-
->>  drivers/pci/of.c         | 24 ++++++++++++++++++++++++
->>  drivers/pci/probe.c      | 14 +++++++++++++-
->>  include/linux/pci.h      |  3 +++
->>  4 files changed, 42 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
->> index 2683e9fc0dcf..35c97b945c15 100644
->> --- a/drivers/iommu/of_iommu.c
->> +++ b/drivers/iommu/of_iommu.c
->> @@ -146,7 +146,8 @@ const struct iommu_ops *of_iommu_configure(struct
->> device *dev,
->>         int idx = 0;
->>
->>         if (dev_is_pci(dev))
->> -               return of_pci_iommu_configure(to_pci_dev(dev), master_np);
->> +               return of_pci_iommu_configure(to_pci_dev(dev),
->> +                                             of_get_next_parent(master_np));
->>
->>         /*
->>          * We don't currently walk up the tree looking for a parent IOMMU.
->> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
->> index e112da11630e..96eece1c423d 100644
->> --- a/drivers/pci/of.c
->> +++ b/drivers/pci/of.c
->> @@ -88,3 +88,27 @@ struct irq_domain
->> *pci_host_bridge_of_msi_domain(struct pci_bus *bus)
->>         return NULL;
->>  #endif
->>  }
->> +
->> +struct device_node *pci_dev_get_dma_of_node(struct pci_dev *dev)
->> +{
->> +       struct device_node *np;
->> +       struct pci_bus *bus = dev->bus;
->> +
->> +       /* Is the device itself actually described in the DT? */
->> +       np = of_node_get(dev->dev.of_node);
->> +       if (np)
->> +               return np;
->> +
->> +       /* Or is some intermediate bridge? That would do... */
->> +       for (bus = dev->bus; bus->parent; bus = bus->parent) {
->> +               np = of_node_get(bus->bridge->of_node);
->> +               if (np)
->> +                       return np;
->> +       }
->> +
->> +       /* Failing that, any child of the same host bridge? */
->> +       if (bus->bridge->parent)
->> +               np = of_get_next_child(bus->bridge->parent->of_node, NULL);
->> +
->> +       return np;
->> +}
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index dfc9a2794141..4f7ade64aa3e 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1906,7 +1906,19 @@ static void pci_dma_configure(struct pci_dev *dev)
->>
->>         if (IS_ENABLED(CONFIG_OF) &&
->>                 bridge->parent && bridge->parent->of_node) {
->> -                       of_dma_configure(&dev->dev, bridge->parent->of_node);
->> +               struct device_node *np, tmp = {0};
->> +
->> +               np = pci_dev_get_dma_of_node(dev);
->> +               if (!np) {
->> +                       np = &tmp;
->> +                       of_node_set_flag(np, OF_DETACHED);
->> +                       of_node_init(np);
->> +                       tmp.parent = bridge->parent->of_node;
->> +               }
->> +
->> +               of_dma_configure(&dev->dev, np);
->> +               if (np != &tmp)
->> +                       of_node_put(np);
->>         } else if (has_acpi_companion(bridge)) {
->>                 struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
->>                 enum dev_dma_attr attr = acpi_get_dma_attr(adev);
->> diff --git a/include/linux/pci.h b/include/linux/pci.h
->> index eb3da1a04e6c..94ecd1817f58 100644
->> --- a/include/linux/pci.h
->> +++ b/include/linux/pci.h
->> @@ -2086,6 +2086,7 @@ void pci_release_of_node(struct pci_dev *dev);
->>  void pci_set_bus_of_node(struct pci_bus *bus);
->>  void pci_release_bus_of_node(struct pci_bus *bus);
->>  struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus);
->> +struct device_node *pci_dev_get_dma_of_node(struct pci_dev *dev);
->>
->>  /* Arch may override this (weak) */
->>  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus);
->> @@ -2110,6 +2111,8 @@ static inline struct device_node *
->>  pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
->>  static inline struct irq_domain *
->>  pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
->> +static inline struct device_node *
->> +pci_dev_get_dma_of_node(struct pci_dev *dev) { return NULL; }
->>  #endif  /* CONFIG_OF */
->>
->>  #ifdef CONFIG_ACPI
->>
+>> I'll take a look at what it takes to consolidate these with a pre-patch.
+>> Then I'll add the new support.
 >
-> pci and memory mapped device world is different. of course if you talk
-> from iommu perspective, all the master are same for IOMMU
-> but the original intention of the patch is to try to solve 2 problems.
+> It looks pretty straight forward to combine walk_iomem_res_desc() and
+> walk_system_ram_res(). The walk_system_ram_range() function would fit
+> easily into this, also, except for the fact that the callback function
+> takes unsigned longs vs the u64s of the other functions.  Is it worth
+> modifying all of the callers of walk_system_ram_range() (which are only
+> about 8 locations) to change the callback functions to accept u64s in
+> order to consolidate the walk_system_ram_range() function, too?
+
+The more I dig, the more I find that the changes keep expanding. I'll
+leave walk_system_ram_range() out of the consolidation for now.
+
+Thanks,
+Tom
+
 >
-> 1) expose generic API for pci world clients to configure their
-> dma-ranges. right now there is none.
-> 2) same API can be used by IOMMU to derive dma_mask.
+> Thanks,
+> Tom
 >
-> the implementation tries to handle dma-ranges for both memory mapped
-> and pci devices, which I think is overkill.
-> besides we have different configuration of dma-ranges based on iommu
-> is enabled or not enabled.
->
->  #define PCIE_DMA_RANGES dma-ranges = <0x43000000 0x00 0x80000000 0x00
-> 0x80000000 0x00 0x80000000 \
->                                       0x43000000 0x08 0x00000000 0x08
-> 0x00000000 0x08 0x00000000 \
->                                       0x43000000 0x80 0x00000000 0x80
-> 0x00000000 0x40 0x00000000>;
->
->
-> the of_dma_get_range is written with respect to traditional memory
-> ranges, they were not meant for pci dma-ranges.
->
-> Regards,
-> Oza.
-
-
-Rob, gentle reminder on your viewpoint. my take on whole thing is as follows:
-
-1) of_dma_get_range is supposed to handle traditional dma-ranges
-(not pci one)
-
-2) we need separate function for pci users such as iproc or rcar SOCs
-to have their dma-ranges parsed,
-which can be extended later for e.g. pci flags have some meanings.
-
-besides of_dma_configure is written to pass only single out parameter
-(..., *dma_addr, *size)
-handling multiple ranges here, and passing only one range out is not desirable.
-
-also you would not like to handle pci flags in of_dma_get_range (the
-first portion of DT
-entry) in this function if required in future.
-
-this new function will be similar to of_pci_get_host_bridge_resources
-which I am writing/improving right now..
-
-Regards,
-Oza.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>>
+>> Thanks,
+>> Tom
+>>
+>>>
