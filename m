@@ -1,216 +1,140 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Hans Ulli Kroll <ulli.kroll@googlemail.com>,
- Florian Fainelli <f.fainelli@gmail.com>, Rob Herring <robh@kernel.org>,
- devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 1/4 v5] PCI: add DT bindings for Faraday Technology PCI Host
- Bridge
-Date: Sun, 12 Mar 2017 23:23:52 +0100
-Message-Id: <20170312222352.2413-1-linus.walleij@linaro.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: openwrt-devel@openwrt.org, Feng-Hsin Chiang <john453@faraday-tech.com>,
- Paulius Zaleckas <paulius.zaleckas@gmail.com>, linux-pci@vger.kernel.org,
- Linus Walleij <linus.walleij@linaro.org>, Greentime Hu <green.hu@gmail.com>,
- Janos Laube <janos.dev@gmail.com>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hans Verkuil <hans.verkuil@cisco.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Boris Brezillon <boris.brezillon@free-electrons.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Cyrille Pitchen <cyrille.pitchen@atmel.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        rtc-linux@googlegroups.com, linux-mtd@lists.infradead.org,
+        linux-media@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-gpio@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 17 Mar 2017 12:48:15 -0600
+Message-Id: <1489776503-3151-9-git-send-email-logang@deltatee.com>
+In-Reply-To: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 08/16] IB/ucm: utilize new cdev_device_add helper function
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds device tree bindings for the Faraday technology PCI
-Host Bridge. This IP is found in the Storlink/Storm/Cortina
-Gemini SoC platform.
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
 
-Cc: Janos Laube <janos.dev@gmail.com>
-Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
-Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>
-Cc: devicetree@vger.kernel.org
-Cc: Feng-Hsin Chiang <john453@faraday-tech.com>
-Cc: Greentime Hu <green.hu@gmail.com>
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+The use after free is not triggerable here because the cdev holds
+the module lock and the only device_unregister is only triggered by
+module unload, however make the change for consistency.
+
+To make this work the cdev_del needs to move out of the struct device
+release function.
+
+This cleans up the error path significantly and thus also fixes a minor
+bug where the devnum would not be released if cdev_add failed.
+
+Signed-off-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Leon Romanovsky <leonro@mellanox.com>
 ---
-ChangeLog v4->v5:
-- No changes, just resend as everything else is rebased onto
-  v4.11-rc1.
-ChangeLog v3->v4:
-- Add Rob's ACK
-ChangeLog v2->v3:
-- Reinstate the specific-to-generic bindings also specifying the
-  "cortina,gemini-pci" fixture for the Faraday block.
-- Set compatible to "faraday,ftpci100" and "faraday,ftpci100-dual"
-  this is clearly closer to or equal to what the IP blocks from
-  Faraday are actually named.
-- Add "dma-ranges" property, after deciphering that some hardcoded
-  constants in the driver is really about this.
-ChangeLog v1->v2:
-- Rename from Cortina prefixes to Faraday. This is clearly
-  a Faraday IP block.
-- Support both the version with cascaded interrupts and the
-  "dual" version with 1-to-1 mapped interrupts.
-- Change bus-range to <0x00 0xff>
-- Fix spelling mistake
-- Write a bit about swizzling interrupts on the interrupt
-  controller side
-- Reasonable swizzling in the interrupt mapping example
+ drivers/infiniband/core/ucm.c | 35 ++++++++++++++++++-----------------
+ 1 file changed, 18 insertions(+), 17 deletions(-)
 
-This can be merged to the PCI tree whenever it is considered
-fine for inclusion.
----
- .../devicetree/bindings/pci/faraday,ftpci100.txt   | 129 +++++++++++++++++++++
- 1 file changed, 129 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
-
-diff --git a/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt b/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
-new file mode 100644
-index 000000000000..35d4a979bb7b
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
-@@ -0,0 +1,129 @@
-+Faraday Technology FTPCI100 PCI Host Bridge
+diff --git a/drivers/infiniband/core/ucm.c b/drivers/infiniband/core/ucm.c
+index cc0d51f..d15efa4 100644
+--- a/drivers/infiniband/core/ucm.c
++++ b/drivers/infiniband/core/ucm.c
+@@ -1205,12 +1205,15 @@ static void ib_ucm_release_dev(struct device *dev)
+ 	struct ib_ucm_device *ucm_dev;
+ 
+ 	ucm_dev = container_of(dev, struct ib_ucm_device, dev);
+-	cdev_del(&ucm_dev->cdev);
++	kfree(ucm_dev);
++}
 +
-+This PCI bridge is found inside that Cortina Systems Gemini SoC platform and
-+is a generic IP block from Faraday Technology. It exists in two variants:
-+plain and dual PCI. The plain version embeds a cascading interrupt controller
-+into the host bridge. The dual version routes the interrupts to the host
-+chips interrupt controller.
++static void ib_ucm_free_dev(struct ib_ucm_device *ucm_dev)
++{
+ 	if (ucm_dev->devnum < IB_UCM_MAX_DEVICES)
+ 		clear_bit(ucm_dev->devnum, dev_map);
+ 	else
+ 		clear_bit(ucm_dev->devnum - IB_UCM_MAX_DEVICES, overflow_map);
+-	kfree(ucm_dev);
+ }
+ 
+ static const struct file_operations ucm_fops = {
+@@ -1266,7 +1269,9 @@ static void ib_ucm_add_one(struct ib_device *device)
+ 	if (!ucm_dev)
+ 		return;
+ 
++	device_initialize(&ucm_dev->dev);
+ 	ucm_dev->ib_dev = device;
++	ucm_dev->dev.release = ib_ucm_release_dev;
+ 
+ 	devnum = find_first_zero_bit(dev_map, IB_UCM_MAX_DEVICES);
+ 	if (devnum >= IB_UCM_MAX_DEVICES) {
+@@ -1286,16 +1291,14 @@ static void ib_ucm_add_one(struct ib_device *device)
+ 	cdev_init(&ucm_dev->cdev, &ucm_fops);
+ 	ucm_dev->cdev.owner = THIS_MODULE;
+ 	kobject_set_name(&ucm_dev->cdev.kobj, "ucm%d", ucm_dev->devnum);
+-	if (cdev_add(&ucm_dev->cdev, base, 1))
+-		goto err;
+ 
+ 	ucm_dev->dev.class = &cm_class;
+ 	ucm_dev->dev.parent = device->dev.parent;
+-	ucm_dev->dev.devt = ucm_dev->cdev.dev;
+-	ucm_dev->dev.release = ib_ucm_release_dev;
++	ucm_dev->dev.devt = base;
 +
-+The host controller appear on the PCI bus with vendor ID 0x159b (Faraday
-+Technology) and product ID 0x4321.
-+
-+Mandatory properties:
-+
-+- compatible: ranging from specific to generic, should be one of
-+  "cortina,gemini-pci", "faraday,ftpci100"
-+  "cortina,gemini-pci-dual", "faraday,ftpci100-dual"
-+  "faraday,ftpci100"
-+  "faraday,ftpci100-dual"
-+- reg: memory base and size for the host bridge
-+- #address-cells: set to <3>
-+- #size-cells: set to <2>
-+- #interrupt-cells: set to <1>
-+- bus-range: set to <0x00 0xff>
-+- device_type, set to "pci"
-+- ranges: see pci.txt
-+- interrupt-map-mask: see pci.txt
-+- interrupt-map: see pci.txt
-+- dma-ranges: three ranges for the inbound memory region. The ranges must
-+  be aligned to a 1MB boundary, and may be 1MB, 2MB, 4MB, 8MB, 16MB, 32MB, 64MB,
-+  128MB, 256MB, 512MB, 1GB or 2GB in size. The memory should be marked as
-+  pre-fetchable.
-+
-+Mandatory subnodes:
-+- For "faraday,ftpci100" a node representing the interrupt-controller inside the
-+  host bridge is mandatory. It has the following mandatory properties:
-+  - interrupt: see interrupt-controller/interrupts.txt
-+  - interrupt-parent: see interrupt-controller/interrupts.txt
-+  - interrupt-controller: see interrupt-controller/interrupts.txt
-+  - #address-cells: set to <0>
-+  - #interrupt-cells: set to <1>
-+
-+I/O space considerations:
-+
-+The plain variant has 128MiB of non-prefetchable memory space, whereas the
-+"dual" variant has 64MiB. Take this into account when describing the ranges.
-+
-+Interrupt map considerations:
-+
-+The "dual" variant will get INT A, B, C, D from the system interrupt controller
-+and should point to respective interrupt in that controller in its
-+interrupt-map.
-+
-+The code which is the only documentation of how the Faraday PCI (the non-dual
-+variant) interrupts assigns the default interrupt mapping/swizzling has
-+typically been like this, doing the swizzling on the interrupt controller side
-+rather than in the interconnect:
-+
-+interrupt-map-mask = <0xf800 0 0 7>;
-+interrupt-map =
-+	<0x4800 0 0 1 &pci_intc 0>, /* Slot 9 */
-+	<0x4800 0 0 2 &pci_intc 1>,
-+	<0x4800 0 0 3 &pci_intc 2>,
-+	<0x4800 0 0 4 &pci_intc 3>,
-+	<0x5000 0 0 1 &pci_intc 1>, /* Slot 10 */
-+	<0x5000 0 0 2 &pci_intc 2>,
-+	<0x5000 0 0 3 &pci_intc 3>,
-+	<0x5000 0 0 4 &pci_intc 0>,
-+	<0x5800 0 0 1 &pci_intc 2>, /* Slot 11 */
-+	<0x5800 0 0 2 &pci_intc 3>,
-+	<0x5800 0 0 3 &pci_intc 0>,
-+	<0x5800 0 0 4 &pci_intc 1>,
-+	<0x6000 0 0 1 &pci_intc 3>, /* Slot 12 */
-+	<0x6000 0 0 2 &pci_intc 0>,
-+	<0x6000 0 0 3 &pci_intc 1>,
-+	<0x6000 0 0 4 &pci_intc 2>;
-+
-+Example:
-+
-+pci@50000000 {
-+	compatible = "cortina,gemini-pci", "faraday,ftpci100";
-+	reg = <0x50000000 0x100>;
-+	interrupts = <8 IRQ_TYPE_LEVEL_HIGH>, /* PCI A */
-+			<26 IRQ_TYPE_LEVEL_HIGH>, /* PCI B */
-+			<27 IRQ_TYPE_LEVEL_HIGH>, /* PCI C */
-+			<28 IRQ_TYPE_LEVEL_HIGH>; /* PCI D */
-+	#address-cells = <3>;
-+	#size-cells = <2>;
-+	#interrupt-cells = <1>;
-+
-+	bus-range = <0x00 0xff>;
-+	ranges = /* 1MiB I/O space 0x50000000-0x500fffff */
-+		 <0x01000000 0 0          0x50000000 0 0x00100000>,
-+		 /* 128MiB non-prefetchable memory 0x58000000-0x5fffffff */
-+		 <0x02000000 0 0x58000000 0x58000000 0 0x08000000>;
-+
-+	/* DMA ranges */
-+	dma-ranges =
-+	/* 128MiB at 0x00000000-0x07ffffff */
-+	<0x02000000 0 0x00000000 0x00000000 0 0x08000000>,
-+	/* 64MiB at 0x00000000-0x03ffffff */
-+	<0x02000000 0 0x00000000 0x00000000 0 0x04000000>,
-+	/* 64MiB at 0x00000000-0x03ffffff */
-+	<0x02000000 0 0x00000000 0x00000000 0 0x04000000>;
-+
-+	interrupt-map-mask = <0xf800 0 0 7>;
-+	interrupt-map =
-+		<0x4800 0 0 1 &pci_intc 0>, /* Slot 9 */
-+		<0x4800 0 0 2 &pci_intc 1>,
-+		<0x4800 0 0 3 &pci_intc 2>,
-+		<0x4800 0 0 4 &pci_intc 3>,
-+		<0x5000 0 0 1 &pci_intc 1>, /* Slot 10 */
-+		<0x5000 0 0 2 &pci_intc 2>,
-+		<0x5000 0 0 3 &pci_intc 3>,
-+		<0x5000 0 0 4 &pci_intc 0>,
-+		<0x5800 0 0 1 &pci_intc 2>, /* Slot 11 */
-+		<0x5800 0 0 2 &pci_intc 3>,
-+		<0x5800 0 0 3 &pci_intc 0>,
-+		<0x5800 0 0 4 &pci_intc 1>,
-+		<0x6000 0 0 1 &pci_intc 3>, /* Slot 12 */
-+		<0x6000 0 0 2 &pci_intc 0>,
-+		<0x6000 0 0 3 &pci_intc 0>,
-+		<0x6000 0 0 4 &pci_intc 0>;
-+	pci_intc: interrupt-controller {
-+		interrupt-parent = <&intcon>;
-+		interrupt-controller;
-+		#address-cells = <0>;
-+		#interrupt-cells = <1>;
-+	};
-+};
+ 	dev_set_name(&ucm_dev->dev, "ucm%d", ucm_dev->devnum);
+-	if (device_register(&ucm_dev->dev))
+-		goto err_cdev;
++	if (cdev_device_add(&ucm_dev->cdev, &ucm_dev->dev))
++		goto err_devnum;
+ 
+ 	if (device_create_file(&ucm_dev->dev, &dev_attr_ibdev))
+ 		goto err_dev;
+@@ -1304,15 +1307,11 @@ static void ib_ucm_add_one(struct ib_device *device)
+ 	return;
+ 
+ err_dev:
+-	device_unregister(&ucm_dev->dev);
+-err_cdev:
+-	cdev_del(&ucm_dev->cdev);
+-	if (ucm_dev->devnum < IB_UCM_MAX_DEVICES)
+-		clear_bit(devnum, dev_map);
+-	else
+-		clear_bit(devnum, overflow_map);
++	cdev_device_del(&ucm_dev->cdev, &ucm_dev->dev);
++err_devnum:
++	ib_ucm_free_dev(ucm_dev);
+ err:
+-	kfree(ucm_dev);
++	put_device(&ucm_dev->dev);
+ 	return;
+ }
+ 
+@@ -1323,7 +1322,9 @@ static void ib_ucm_remove_one(struct ib_device *device, void *client_data)
+ 	if (!ucm_dev)
+ 		return;
+ 
+-	device_unregister(&ucm_dev->dev);
++	cdev_device_del(&ucm_dev->cdev, &ucm_dev->dev);
++	ib_ucm_free_dev(ucm_dev);
++	put_device(&ucm_dev->dev);
+ }
+ 
+ static CLASS_ATTR_STRING(abi_version, S_IRUGO,
 -- 
-2.9.3
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.1.4
