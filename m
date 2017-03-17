@@ -1,87 +1,163 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr50064.outbound.protection.outlook.com ([40.107.5.64]:18895
-        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753230AbdCTXh2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Mar 2017 19:37:28 -0400
-Subject: Re: [PATCH] pci/sriov: Add an option to probe VFs or not before
- enabling SR-IOV
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
- <20170320230706.GA12252@gwshan>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <saeedm@mellanox.com>,
-        Eli Cohen <eli@mellanox.com>
-From: Bodong Wang <bodong@mellanox.com>
-Message-ID: <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
-Date: Mon, 20 Mar 2017 18:34:23 -0500
+Return-Path: <SRS0=B/+H=22=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=B/+H=22=free.fr=slash.tmp@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>
+From: Mason <slash.tmp@free.fr>
+Subject: [RFC PATCH v0.001] PCI: Add support for tango PCIe controller
+Message-ID: <ab110ce2-8678-9b34-6bd1-6cfaaa7fea04@free.fr>
+Date: Fri, 17 Mar 2017 17:11:50 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170320230706.GA12252@gwshan>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/20/2017 6:07 PM, Gavin Shan wrote:
-> On Mon, Mar 20, 2017 at 05:14:34PM +0200, bodong@mellanox.com wrote:
->> From: Bodong Wang <bodong@mellanox.com>
->>
->> Sometimes it is not desirable to probe the virtual functions after
->> SRIOV is enabled. This can save host side resource usage by VF
->> instances which would be eventually probed to VMs.
->>
->> Added a new PCI sysfs interface "sriov_probe_vfs" to control that
-> >from PF, all current callers still retain the same functionality.
->> To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
->>
->> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
->>
->> Note that, the choice must be made before enabling VFs. The change
->> will not take effect if VFs are already enabled. Simply, one can set
->> sriov_numvfs to 0, choose whether to probe or not, and then resume
->> sriov_numvfs.
->>
-> Bodong, I'm not sure if there is a requirement to load driver for the
-> specified number of VFs? That indicates no driver will be loaded for
-> other VFs. If so, this interface might serve the purpose as well.
-Gavin, thanks for the review. That is indeed an interesting suggestion. 
-Theoretically,  we can change that probe_vfs from boolean to integer. 
-And use it as a counter to probe the first N VFs(if N < total_vfs).  
-Let's see if there are any objections.
->
->
-> +#ifdef CONFIG_PCI_IOV
-> +	if (!pci_dev->is_virtfn ||
-> +	    (pci_dev->is_virtfn && pci_dev->physfn->sriov->probe_vfs)) {
-> +#endif
-> +		error = __pci_device_probe(drv, pci_dev);
-> +		if (error) {
-> +			pcibios_free_irq(pci_dev);
-> +			pci_dev_put(pci_dev);
-> +		}
-> +#ifdef CONFIG_PCI_IOV
-> 	}
-> +#endif
->
-> I think it's reasonable to have a inline function for this check:
-It's doable, but what's the benefit?
->
-> #ifdef CONFIG_PCI_IOV
-> static inline bool pci_device_can_probe(struct pci_dev *pdev)
-> {
-> 	return (!pdev->is_virtfn || pdev->physfn->sriov->probe_vfs);
-should be return (!pdev->is_virtfn || (pci_dev->is_virtfn && 
-pci_dev->physfn->sriov->probe_vfs));
+This is version 0.001 pre-alpha.
 
-We want to probe that device if 1) it's a PF 2) it'a VF and probe_vfs is set
-> }
-> #else
-> static inline bool pci_device_can_probe(struct pci_dev *pdev)
-> {
-> 	return true;
-> }
-This function will be a waste if CONFIG_PCI_IOV is not defined.
-> #endif
+I have several questions embedded as comments in the code.
+Bjorn, can you tell me if something looks really wrong,
+or if this driver can be accepted in this shape?
 
-> Thanks,
-> Gavin
->
+Regards.
+---
+ drivers/pci/host/pcie-tango.c | 125 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 125 insertions(+)
+ create mode 100644 drivers/pci/host/pcie-tango.c
+
+diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
+new file mode 100644
+index 000000000000..9d7fed75fd1d
+--- /dev/null
++++ b/drivers/pci/host/pcie-tango.c
+@@ -0,0 +1,125 @@
++#include <linux/pci-ecam.h>
++
++#define VENDOR_SIGMA	0x1105
++
++/*
++ * How do I reach dev->driver_data in the config accessors?
++ */
++static void __iomem *mux;
++
++static int smp8759_config_read(struct pci_bus *bus,
++		unsigned int devfn, int where, int size, u32 *val)
++{
++	int ret;
++
++	/*
++	 * QUIRK #1
++	 * Reads in configuration space outside devfn 0 return garbage.
++	 */
++	if (devfn != 0) {
++		*val = 0xffffffff; /* ~0 means "nothing here" right? */
++		return PCIBIOS_SUCCESSFUL; /* Should we return error or success? */
++	}
++
++	/*
++	 * QUIRK #2
++	 * The root complex advertizes a fake BAR, which is used to filter
++	 * bus-to-cpu requests. Hide it from Linux.
++	 */
++	if (where == PCI_BASE_ADDRESS_0 && bus->number == 0) {
++		*val = 0; /* 0 or ~0 to hide the BAR from Linux? */
++		return PCIBIOS_SUCCESSFUL; /* Should we return error or success? */
++	}
++
++	/*
++	 * QUIRK #3
++	 * Unfortunately, config and mem spaces are muxed.
++	 * Linux does not support such a setting, since drivers are free
++	 * to access mem space directly, at any time.
++	 * Therefore, we can only PRAY that config and mem space accesses
++	 * NEVER occur concurrently.
++	 */
++	writel(1, mux);
++	ret = pci_generic_config_read(bus, devfn, where, size, val);
++	writel(0, mux);
++
++	return ret;
++}
++
++static int smp8759_config_write(struct pci_bus *bus,
++		unsigned int devfn, int where, int size, u32 val)
++{
++	int ret;
++
++	writel(1, mux);
++	ret = pci_generic_config_write(bus, devfn, where, size, val);
++	writel(0, mux);
++
++	return ret;
++}
++
++static struct pci_ecam_ops smp8759_ecam_ops = {
++	.bus_shift	= 20,
++	.pci_ops	= {
++		.map_bus	= pci_ecam_map_bus,
++		.read		= smp8759_config_read,
++		.write		= smp8759_config_write,
++	}
++};
++
++static const struct of_device_id tango_pcie_ids[] = {
++	{ .compatible = "sigma,smp8759-pcie" },
++	{ /* sentinel */ },
++};
++
++static int tango_pcie_probe(struct platform_device *pdev)
++{
++	void __iomem *base;
++	struct resource *res;
++
++	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
++	base = devm_ioremap_resource(&pdev->dev, res);
++	if (IS_ERR(base))
++		return PTR_ERR(base);
++
++	mux = base + 0x48;
++
++	return pci_host_common_probe(pdev, &smp8759_ecam_ops);
++}
++
++static struct platform_driver tango_pcie_driver = {
++	.probe = tango_pcie_probe,
++	.driver = {
++		.name = KBUILD_MODNAME,
++		.of_match_table = tango_pcie_ids,
++	},
++};
++
++/*
++ * This should probably be module_platform_driver ?
++ */
++builtin_platform_driver(tango_pcie_driver);
++
++/*
++ * QUIRK #4
++ * The root complex advertizes the wrong device class.
++ * Header Type 1 are handled by PCI-to-PCI bridges.
++ */
++static void tango_fixup_class(struct pci_dev *dev)
++{
++	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
++}
++DECLARE_PCI_FIXUP_EARLY(VENDOR_SIGMA, PCI_ANY_ID, tango_fixup_class);
++
++/*
++ * QUIRK #5
++ * Only transfers within the BAR are forwarded to the host.
++ * By default, the DMA framework expects that
++ * PCI address 0x8000_0000 -> CPU address 0x8000_0000
++ * which is where DRAM0 is mapped.
++ */
++static void tango_fixup_bar(struct pci_dev *dev)
++{
++        pci_write_config_dword(dev, PCI_BASE_ADDRESS_0, 0x80000000);
++}
++DECLARE_PCI_FIXUP_FINAL(VENDOR_SIGMA, PCI_ANY_ID, tango_fixup_bar);
+-- 
+2.10.0
