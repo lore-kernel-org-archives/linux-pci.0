@@ -1,170 +1,159 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <kishon@ti.com>, <nsekhar@ti.com>
-Subject: [PATCH v4 6/7] PCI: dwc: designware: Move _unroll configurations to a separate function
-Date: Mon, 13 Mar 2017 19:13:27 +0530
-Message-ID: <20170313134328.1588-7-kishon@ti.com>
-In-Reply-To: <20170313134328.1588-1-kishon@ti.com>
-References: <20170313134328.1588-1-kishon@ti.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hans Verkuil <hans.verkuil@cisco.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Boris Brezillon <boris.brezillon@free-electrons.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Cyrille Pitchen <cyrille.pitchen@atmel.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        rtc-linux@googlegroups.com, linux-mtd@lists.infradead.org,
+        linux-media@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-gpio@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 17 Mar 2017 12:48:21 -0600
+Message-Id: <1489776503-3151-15-git-send-email-logang@deltatee.com>
+In-Reply-To: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 14/16] rtc: utilize new cdev_device_add helper function
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-No functional change. Rename dw_pcie_writel_unroll/dw_pcie_readl_unroll
-to dw_pcie_writel_ob_unroll/dw_pcie_readl_ob_unroll respectively as these
-functions are used to perform only outbound configurations. Also move
-these _unroll configurations to a separate function.
+Mostly straightforward, but we had to remove the rtc_dev_add/del_device
+functions as they split up the cdev_add and the device_add.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Doing this also revealed that there was likely another subtle bug:
+seeing cdev_add was done after device_register, the cdev probably
+was not ready before device_add when the uevent occurs. This would
+race with userspace, if it tried to use the device directly after
+the uevent. This is fixed just by using the new helper function.
+
+Another weird thing is this driver would, in some error cases, call
+cdev_add() without calling cdev_init. This patchset corrects this
+by avoiding calling cdev_add if the devt is not set.
+
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Acked-by: Alexandre Belloni <alexandre.belloni@free-electrons.com>
 ---
- drivers/pci/dwc/pcie-designware.c | 97 +++++++++++++++++++++++----------------
- 1 file changed, 58 insertions(+), 39 deletions(-)
+ drivers/rtc/class.c    | 14 ++++++++++----
+ drivers/rtc/rtc-core.h | 10 ----------
+ drivers/rtc/rtc-dev.c  | 17 -----------------
+ 3 files changed, 10 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index 734acac1926d..54de468a745e 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -92,21 +92,56 @@ void __dw_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
- 		dev_err(pci->dev, "write DBI address failed\n");
- }
- 
--static u32 dw_pcie_readl_unroll(struct dw_pcie *pci, u32 index, u32 reg)
-+static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg)
- {
- 	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
- 
- 	return dw_pcie_readl_dbi(pci, offset + reg);
- }
- 
--static void dw_pcie_writel_unroll(struct dw_pcie *pci, u32 index, u32 reg,
--				  u32 val)
-+static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, u32 index, u32 reg,
-+				     u32 val)
- {
- 	u32 offset = PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
- 
- 	dw_pcie_writel_dbi(pci, offset + reg, val);
- }
- 
-+void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index, int type,
-+				      u64 cpu_addr, u64 pci_addr, u32 size)
-+{
-+	u32 retries, val;
-+
-+	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_LOWER_BASE,
-+				 lower_32_bits(cpu_addr));
-+	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_UPPER_BASE,
-+				 upper_32_bits(cpu_addr));
-+	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_LIMIT,
-+				 lower_32_bits(cpu_addr + size - 1));
-+	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_LOWER_TARGET,
-+				 lower_32_bits(pci_addr));
-+	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_UPPER_TARGET,
-+				 upper_32_bits(pci_addr));
-+	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL1,
-+				 type);
-+	dw_pcie_writel_ob_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL2,
-+				 PCIE_ATU_ENABLE);
-+
-+	/*
-+	 * Make sure ATU enable takes effect before any subsequent config
-+	 * and I/O accesses.
-+	 */
-+	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
-+		val = dw_pcie_readl_ob_unroll(pci, index,
-+					      PCIE_ATU_UNR_REGION_CTRL2);
-+		if (val & PCIE_ATU_ENABLE)
-+			return;
-+
-+		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+	}
-+	dev_err(pci->dev, "outbound iATU is not being enabled\n");
-+}
-+
- void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 			       u64 cpu_addr, u64 pci_addr, u32 size)
- {
-@@ -116,54 +151,38 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 		cpu_addr = pci->ops->cpu_addr_fixup(cpu_addr);
- 
- 	if (pci->iatu_unroll_enabled) {
--		dw_pcie_writel_unroll(pci, index, PCIE_ATU_UNR_LOWER_BASE,
--				      lower_32_bits(cpu_addr));
--		dw_pcie_writel_unroll(pci, index, PCIE_ATU_UNR_UPPER_BASE,
--				      upper_32_bits(cpu_addr));
--		dw_pcie_writel_unroll(pci, index, PCIE_ATU_UNR_LIMIT,
--				      lower_32_bits(cpu_addr + size - 1));
--		dw_pcie_writel_unroll(pci, index, PCIE_ATU_UNR_LOWER_TARGET,
--				      lower_32_bits(pci_addr));
--		dw_pcie_writel_unroll(pci, index, PCIE_ATU_UNR_UPPER_TARGET,
--				      upper_32_bits(pci_addr));
--		dw_pcie_writel_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL1,
--				      type);
--		dw_pcie_writel_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL2,
--				      PCIE_ATU_ENABLE);
--	} else {
--		dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT,
--				   PCIE_ATU_REGION_OUTBOUND | index);
--		dw_pcie_writel_dbi(pci, PCIE_ATU_LOWER_BASE,
--				   lower_32_bits(cpu_addr));
--		dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_BASE,
--				   upper_32_bits(cpu_addr));
--		dw_pcie_writel_dbi(pci, PCIE_ATU_LIMIT,
--				   lower_32_bits(cpu_addr + size - 1));
--		dw_pcie_writel_dbi(pci, PCIE_ATU_LOWER_TARGET,
--				   lower_32_bits(pci_addr));
--		dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_TARGET,
--				   upper_32_bits(pci_addr));
--		dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, type);
--		dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, PCIE_ATU_ENABLE);
-+		dw_pcie_prog_outbound_atu_unroll(pci, index, type, cpu_addr,
-+						 pci_addr, size);
-+		return;
+diff --git a/drivers/rtc/class.c b/drivers/rtc/class.c
+index 74fd974..5fb4398 100644
+--- a/drivers/rtc/class.c
++++ b/drivers/rtc/class.c
+@@ -195,6 +195,8 @@ struct rtc_device *rtc_device_register(const char *name, struct device *dev,
+ 		goto exit_ida;
  	}
  
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT,
-+			   PCIE_ATU_REGION_OUTBOUND | index);
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_LOWER_BASE,
-+			   lower_32_bits(cpu_addr));
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_BASE,
-+			   upper_32_bits(cpu_addr));
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_LIMIT,
-+			   lower_32_bits(cpu_addr + size - 1));
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_LOWER_TARGET,
-+			   lower_32_bits(pci_addr));
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_TARGET,
-+			   upper_32_bits(pci_addr));
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, type);
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, PCIE_ATU_ENABLE);
++	device_initialize(&rtc->dev);
 +
- 	/*
- 	 * Make sure ATU enable takes effect before any subsequent config
- 	 * and I/O accesses.
+ 	rtc->id = id;
+ 	rtc->ops = ops;
+ 	rtc->owner = owner;
+@@ -233,14 +235,19 @@ struct rtc_device *rtc_device_register(const char *name, struct device *dev,
+ 
+ 	rtc_dev_prepare(rtc);
+ 
+-	err = device_register(&rtc->dev);
++	err = cdev_device_add(&rtc->char_dev, &rtc->dev);
+ 	if (err) {
++		dev_warn(&rtc->dev, "%s: failed to add char device %d:%d\n",
++			 rtc->name, MAJOR(rtc->dev.devt), rtc->id);
++
+ 		/* This will free both memory and the ID */
+ 		put_device(&rtc->dev);
+ 		goto exit;
++	} else {
++		dev_dbg(&rtc->dev, "%s: dev (%d:%d)\n", rtc->name,
++			MAJOR(rtc->dev.devt), rtc->id);
+ 	}
+ 
+-	rtc_dev_add_device(rtc);
+ 	rtc_proc_add_device(rtc);
+ 
+ 	dev_info(dev, "rtc core: registered %s as %s\n",
+@@ -271,9 +278,8 @@ void rtc_device_unregister(struct rtc_device *rtc)
+ 	 * Remove innards of this RTC, then disable it, before
+ 	 * letting any rtc_class_open() users access it again
  	 */
- 	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
--		if (pci->iatu_unroll_enabled)
--			val = dw_pcie_readl_unroll(pci, index,
--						   PCIE_ATU_UNR_REGION_CTRL2);
--		else
--			val = dw_pcie_readl_dbi(pci, PCIE_ATU_CR2);
--
-+		val = dw_pcie_readl_dbi(pci, PCIE_ATU_CR2);
- 		if (val == PCIE_ATU_ENABLE)
- 			return;
+-	rtc_dev_del_device(rtc);
+ 	rtc_proc_del_device(rtc);
+-	device_del(&rtc->dev);
++	cdev_device_del(&rtc->char_dev, &rtc->dev);
+ 	rtc->ops = NULL;
+ 	mutex_unlock(&rtc->ops_lock);
+ 	put_device(&rtc->dev);
+diff --git a/drivers/rtc/rtc-core.h b/drivers/rtc/rtc-core.h
+index a098aea..7a4ed2f 100644
+--- a/drivers/rtc/rtc-core.h
++++ b/drivers/rtc/rtc-core.h
+@@ -3,8 +3,6 @@
+ extern void __init rtc_dev_init(void);
+ extern void __exit rtc_dev_exit(void);
+ extern void rtc_dev_prepare(struct rtc_device *rtc);
+-extern void rtc_dev_add_device(struct rtc_device *rtc);
+-extern void rtc_dev_del_device(struct rtc_device *rtc);
  
- 		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
- 	}
--	dev_err(pci->dev, "iATU is not being enabled\n");
-+	dev_err(pci->dev, "outbound iATU is not being enabled\n");
+ #else
+ 
+@@ -20,14 +18,6 @@ static inline void rtc_dev_prepare(struct rtc_device *rtc)
+ {
  }
  
- int dw_pcie_wait_for_link(struct dw_pcie *pci)
+-static inline void rtc_dev_add_device(struct rtc_device *rtc)
+-{
+-}
+-
+-static inline void rtc_dev_del_device(struct rtc_device *rtc)
+-{
+-}
+-
+ #endif
+ 
+ #ifdef CONFIG_RTC_INTF_PROC
+diff --git a/drivers/rtc/rtc-dev.c b/drivers/rtc/rtc-dev.c
+index 6dc8f29..e81a871 100644
+--- a/drivers/rtc/rtc-dev.c
++++ b/drivers/rtc/rtc-dev.c
+@@ -477,23 +477,6 @@ void rtc_dev_prepare(struct rtc_device *rtc)
+ 
+ 	cdev_init(&rtc->char_dev, &rtc_dev_fops);
+ 	rtc->char_dev.owner = rtc->owner;
+-	rtc->char_dev.kobj.parent = &rtc->dev.kobj;
+-}
+-
+-void rtc_dev_add_device(struct rtc_device *rtc)
+-{
+-	if (cdev_add(&rtc->char_dev, rtc->dev.devt, 1))
+-		dev_warn(&rtc->dev, "%s: failed to add char device %d:%d\n",
+-			rtc->name, MAJOR(rtc_devt), rtc->id);
+-	else
+-		dev_dbg(&rtc->dev, "%s: dev (%d:%d)\n", rtc->name,
+-			MAJOR(rtc_devt), rtc->id);
+-}
+-
+-void rtc_dev_del_device(struct rtc_device *rtc)
+-{
+-	if (rtc->dev.devt)
+-		cdev_del(&rtc->char_dev);
+ }
+ 
+ void __init rtc_dev_init(void)
 -- 
-2.11.0
+2.1.4
