@@ -1,11 +1,19 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45714 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751431AbdCPLEK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Mar 2017 07:04:10 -0400
-Subject: Re: [RFC PATCH v2 30/32] kvm: svm: Add support for SEV DEBUG_ENCRYPT
- command
-To: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:36163 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751125AbdCQKrV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Mar 2017 06:47:21 -0400
+Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
+ when spliting large pages
+To: Borislav Petkov <bp@suse.de>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
+ <20170310110657.hophlog2juw5hpzz@pd.tnic>
+ <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
+ <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
+ <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
+ <20170317101737.icdois7sdmtutt6b@pd.tnic>
+Cc: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
         linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
         matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
         linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
@@ -15,83 +23,49 @@ To: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
         herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
         joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
         piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, bp@suse.de, dyoung@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com,
         thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
         arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
         luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org,
-        akpm@linux-foundation.org, davem@davemloft.net
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846790758.2349.16768762953657853550.stgit@brijesh-build-machine>
+        tglx@linutronix.de, mchehab@kernel.org
 From: Paolo Bonzini <pbonzini@redhat.com>
-Message-ID: <05dbd756-e8e9-9384-2759-898e230a6909@redhat.com>
-Date: Thu, 16 Mar 2017 12:03:52 +0100
+Message-ID: <b6f9f46c-58c4-a19c-4955-2d07bd411443@redhat.com>
+Date: Fri, 17 Mar 2017 11:47:16 +0100
 MIME-Version: 1.0
-In-Reply-To: <148846790758.2349.16768762953657853550.stgit@brijesh-build-machine>
+In-Reply-To: <20170317101737.icdois7sdmtutt6b@pd.tnic>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On 02/03/2017 16:18, Brijesh Singh wrote:
-> +	data = (void *) get_zeroed_page(GFP_KERNEL);
+On 17/03/2017 11:17, Borislav Petkov wrote:
+> 
+>> I also don't really like the patch as is (plus it fails modpost), but
+>> IMO reusing __change_page_attr and __split_large_page is the right thing
+>> to do.
+> 
+> Right, so teaching pageattr.c about memblock could theoretically come
+> around and bite us later when a page allocated with memblock gets freed
+> with free_page().
 
-The page does not need to be zeroed, does it?
+Theoretically or practically?
 
-> +
-> +	if ((len & 15) || (dst_addr & 15)) {
-> +		/* if destination address and length are not 16-byte
-> +		 * aligned then:
-> +		 * a) decrypt destination page into temporary buffer
-> +		 * b) copy source data into temporary buffer at correct offset
-> +		 * c) encrypt temporary buffer
-> +		 */
-> +		ret = __sev_dbg_decrypt_page(kvm, dst_addr, data, &argp->error);
+> And looking at this more, we have all this kernel pagetable preparation
+> code down the init_mem_mapping() call and the pagetable setup in
+> arch/x86/mm/init_{32,64}.c
 
-Ah, I see now you're using this function here for read-modify-write.
-data is already pinned here, so even if you keep the function it makes
-sense to push pinning out of __sev_dbg_decrypt_page and into
-sev_dbg_decrypt.
-
-> +		if (ret)
-> +			goto err_3;
-> +		d_off = dst_addr & (PAGE_SIZE - 1);
-> +
-> +		if (copy_from_user(data + d_off,
-> +					(uint8_t *)debug.src_addr, len)) {
-> +			ret = -EFAULT;
-> +			goto err_3;
-> +		}
-> +
-> +		encrypt->length = PAGE_SIZE;
-
-Why decrypt/re-encrypt all the page instead of just the 16 byte area
-around the [dst_addr, dst_addr+len) range?
-
-> +		encrypt->src_addr = __psp_pa(data);
-> +		encrypt->dst_addr =  __sev_page_pa(inpages[0]);
-> +	} else {
-> +		if (copy_from_user(data, (uint8_t *)debug.src_addr, len)) {
-> +			ret = -EFAULT;
-> +			goto err_3;
-> +		}
-
-Do you need copy_from_user, or can you just pin/unpin memory as for
-DEBUG_DECRYPT?
+It only looks at the E820 map, doesn't it?  Why does it have to do
+anything with percpu memory areas?
 
 Paolo
 
-> +		d_off = dst_addr & (PAGE_SIZE - 1);
-> +		encrypt->length = len;
-> +		encrypt->src_addr = __psp_pa(data);
-> +		encrypt->dst_addr = __sev_page_pa(inpages[0]);
-> +		encrypt->dst_addr += d_off;
-> +	}
-> +
-> +	encrypt->handle = sev_get_handle(kvm);
-> +	ret = sev_issue_cmd(kvm, SEV_CMD_DBG_ENCRYPT, encrypt, &argp->error);
+> And that code even does some basic page splitting. Oh and it uses
+> alloc_low_pages() which knows whether to do memblock reservation or the
+> common __get_free_pages() when slabs are up.
+> 
+> So what would be much cleaner, IMHO, is if one would reuse that code to
+> change init_mm.pgd mappings early without copying pageattr.c.
+> 
+> init_mem_mapping() gets called before kvm_guest_init() in setup_arch()
+> so the guest would simply fixup its pagetable right there.
