@@ -1,47 +1,74 @@
-Return-Path: <SRS0=nj2g=3H=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=nj2g=3H=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v3 0/2] Tango PCIe controller support
-To: linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <1561c381-bfa7-6e4d-a016-8ad7293a60ce@free.fr>
-Date: Thu, 30 Mar 2017 22:56:58 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:35369 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751009AbdCQKeO (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Mar 2017 06:34:14 -0400
+Date: Fri, 17 Mar 2017 11:17:37 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
+        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
+        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
+        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedo.suse.de
+Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
+ when spliting large pages
+Message-ID: <20170317101737.icdois7sdmtutt6b@pd.tnic>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
+ <20170310110657.hophlog2juw5hpzz@pd.tnic>
+ <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
+ <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
+ <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29/03/2017 13:11, Marc Gonzalez wrote:
+On Thu, Mar 16, 2017 at 11:25:36PM +0100, Paolo Bonzini wrote:
+> The kvmclock memory is initially zero so there is no need for the
+> hypervisor to allocate anything; the point of these patches is just to
+> access the data in a natural way from Linux source code.
 
->   PCI: Add tango MSI controller support
->   PCI: Add tango PCIe host bridge support
+I realize that.
 
-I've run into an issue.
+> I also don't really like the patch as is (plus it fails modpost), but
+> IMO reusing __change_page_attr and __split_large_page is the right thing
+> to do.
 
-If I boot the system with earlyprintk enabled (as I've
-been doing throughout my dev), things work as expected.
+Right, so teaching pageattr.c about memblock could theoretically come
+around and bite us later when a page allocated with memblock gets freed
+with free_page().
 
-But if I boot with earlyprintk disabled, then the system
-does not "see" the PCIe board, because reading the vendor
-ID returns 0xffffffff.
+And looking at this more, we have all this kernel pagetable preparation
+code down the init_mem_mapping() call and the pagetable setup in
+arch/x86/mm/init_{32,64}.c
 
-What we think is happening, is that when earlyprintk is
-disabled, the system proceeds much faster through the
-various inits, and the PCIe init happens when PCIe
-link training has not completed yet.
+And that code even does some basic page splitting. Oh and it uses
+alloc_low_pages() which knows whether to do memblock reservation or the
+common __get_free_pages() when slabs are up.
 
-If that is the case, then it seems I would need to check
-the link state in my probe function.
+So what would be much cleaner, IMHO, is if one would reuse that code to
+change init_mm.pgd mappings early without copying pageattr.c.
 
-Or would there be some other solution I haven't thought
-about?
+init_mem_mapping() gets called before kvm_guest_init() in setup_arch()
+so the guest would simply fixup its pagetable right there.
 
-Regards.
+-- 
+Regards/Gruss,
+    Boris.
+
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
