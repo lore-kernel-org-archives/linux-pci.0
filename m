@@ -1,78 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v3 08/23] Documentation: PCI: Add binding documentation for
- pci-test endpoint function
-Date: Thu, 9 Mar 2017 13:27:19 +0530
-Message-ID: <1489046254-19919-9-git-send-email-kishon@ti.com>
-In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
-References: <1489046254-19919-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f51.google.com ([74.125.83.51]:34906 "EHLO
+        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751131AbdCQSXq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 17 Mar 2017 14:23:46 -0400
+Received: by mail-pg0-f51.google.com with SMTP id b129so47104308pgc.2
+        for <linux-pci@vger.kernel.org>; Fri, 17 Mar 2017 11:23:35 -0700 (PDT)
+Date: Fri, 17 Mar 2017 11:23:31 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH] PCI: rockchip: Mark SLC bit as well as CCC bit for RCg
+Message-ID: <20170317182331.GA36848@google.com>
+References: <1489735493-148838-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1489735493-148838-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add binding documentation for pci-test endpoint function that helps in
-adding and configuring pci-test endpoint function.
+Hi Shawn,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/PCI/00-INDEX                         |    2 ++
- .../PCI/endpoint/function/binding/pci-test.txt     |   17 +++++++++++++++++
- 2 files changed, 19 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.txt
+On Fri, Mar 17, 2017 at 03:24:53PM +0800, Shawn Lin wrote:
+> lspci traces CCC to see if the end-2-end supports common
+> clock, so the current code should work as we mark the CCC bit
+> of RC. However, ASPM code actually check SLC bit of RC and try to
+> compare it with the downstream components' SLC instead. So when
+> enabling ASPM, CCC will be cleared after failing to match SLC with
+> the corresponding bit of downstream components. On one hand, from the
+> code of pcie_aspm_configure_common_clock, we could find that what we
+> actually need to set is SLC. On the other hand, we should also guarantee
+> that CCC should be marked w/o supporting ASPM. This patch fixes this
+> issue.
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index 4e5a283..53717b7 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -18,3 +18,5 @@ endpoint/pci-endpoint-cfs.txt
- 	- guide to use configfs to configure the pci endpoint function.
- endpoint/pci-test-function.txt
- 	- specification of *pci test* function device.
-+endpoint/function/binding/
-+	- binding documentation for pci endpoint function
-diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-new file mode 100644
-index 0000000..02a6c94
---- /dev/null
-+++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
-@@ -0,0 +1,17 @@
-+PCI TEST ENDPOINT FUNCTION
-+
-+name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
-+
-+Configurable Fields:
-+vendorid	 : should be 0x104c
-+deviceid	 : should be 0xb500 for DRA74x and 0xb501 for DRA72x
-+revid		 : dont't care
-+progif_code	 : don't care
-+subclass_code	 : don't care
-+baseclass_code	 : should be 0xff
-+cache_line_size	 : don't care
-+subsys_vendor_id : don't care
-+subsys_id	 : don't care
-+interrupt_pin	 : Should be 1 - INTA, 2 - INTB, 3 - INTC, 4 -INTD
-+msi_interrupts	 : Should be 1 to 32 depending on the number of msi interrupts
-+		   to test
--- 
-1.7.9.5
+This matches my understanding of the code more or less.
 
+This fixes the Common Clock bit for me, with ASPM enabled on the Google
+Kevin board; and my EndPoint (Marvell 8997) even reports a lower ASPM
+L0s latency now. Nice! Thanks for the patch.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+Tested-by: Brian Norris <briannorris@chromium.org>
+
+Personally, I might even mark this as:
+
+Fixes: b8ab8e041cc0 ("PCI: rockchip: Mark RC as common clock architecture")
+
+Not that it necessarily deserves -stable, but it helps people browsing
+the logs, and wondering why the above commit doesn't seem to take effect
+:)
+
+> Cc: Brian Norris <briannorris@chromium.org>
+> Cc: jeffy.chen <jeffy.chen@rock-chips.com>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+> 
+>  drivers/pci/host/pcie-rockchip.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 26ddd35..7cd4d5c 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -596,7 +596,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  
+>  	/* Set RC's clock architecture as common clock */
+>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> -	status |= PCI_EXP_LNKCTL_CCC;
+> +	status |= (PCI_EXP_LNKCTL_CCC | PCI_EXP_LNKSTA_SLC << 16);
+>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>  
+>  	/* Enable Gen1 training */
+> -- 
+> 1.9.1
+> 
+> 
