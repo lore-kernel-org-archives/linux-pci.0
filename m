@@ -1,50 +1,97 @@
-Return-Path: <SRS0=zx5Q=2X=intel.com=adrian.hunter@kernel.org>
-Return-Path: <SRS0=zx5Q=2X=intel.com=adrian.hunter@kernel.org>
-From: Adrian Hunter <adrian.hunter@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-	linux-pm <linux-pm@vger.kernel.org>,
-	linux-acpi <linux-acpi@vger.kernel.org>,
-	"Rafael J. Wysocki" <rjw@rjwysocki.net>,
-	Lukas Wunner <lukas@wunner.de>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH] PCI: For d3_delay and d3cold_delay, zero means zero
-Date: Tue, 14 Mar 2017 11:44:56 +0200
-Message-Id: <1489484696-14093-1-git-send-email-adrian.hunter@intel.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hans Verkuil <hans.verkuil@cisco.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Boris Brezillon <boris.brezillon@free-electrons.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Cyrille Pitchen <cyrille.pitchen@atmel.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        rtc-linux@googlegroups.com, linux-mtd@lists.infradead.org,
+        linux-media@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-gpio@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 17 Mar 2017 12:48:12 -0600
+Message-Id: <1489776503-3151-6-git-send-email-logang@deltatee.com>
+In-Reply-To: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 05/16] gpiolib: utilize new cdev_device_add helper function
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Do not sleep at all for the respective cases of d3_delay is zero or
-d3cold_delay is zero.
+Replace the open coded registration of the cdev and dev with the
+new device_add_cdev() helper. The helper replaces a common pattern by
+taking the proper reference against the parent device and adding both
+the cdev and the device.
 
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 ---
- drivers/pci/pci.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/gpio/gpiolib.c | 23 ++++++++---------------
+ 1 file changed, 8 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02ffdb9..9779483f81fd 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -66,7 +66,8 @@ static void pci_dev_d3_sleep(struct pci_dev *dev)
- 	if (delay < pci_pm_d3_delay)
- 		delay = pci_pm_d3_delay;
+diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
+index 8b4d721..3ce2a27 100644
+--- a/drivers/gpio/gpiolib.c
++++ b/drivers/gpio/gpiolib.c
+@@ -1035,18 +1035,14 @@ static int gpiochip_setup_dev(struct gpio_device *gdev)
  
--	msleep(delay);
-+	if (delay)
-+		msleep(delay);
+ 	cdev_init(&gdev->chrdev, &gpio_fileops);
+ 	gdev->chrdev.owner = THIS_MODULE;
+-	gdev->chrdev.kobj.parent = &gdev->dev.kobj;
+ 	gdev->dev.devt = MKDEV(MAJOR(gpio_devt), gdev->id);
+-	status = cdev_add(&gdev->chrdev, gdev->dev.devt, 1);
+-	if (status < 0)
+-		chip_warn(gdev->chip, "failed to add char device %d:%d\n",
+-			  MAJOR(gpio_devt), gdev->id);
+-	else
+-		chip_dbg(gdev->chip, "added GPIO chardev (%d:%d)\n",
+-			 MAJOR(gpio_devt), gdev->id);
+-	status = device_add(&gdev->dev);
++
++	status = cdev_device_add(&gdev->chrdev, &gdev->dev);
+ 	if (status)
+-		goto err_remove_chardev;
++		return status;
++
++	chip_dbg(gdev->chip, "added GPIO chardev (%d:%d)\n",
++		 MAJOR(gpio_devt), gdev->id);
+ 
+ 	status = gpiochip_sysfs_register(gdev);
+ 	if (status)
+@@ -1061,9 +1057,7 @@ static int gpiochip_setup_dev(struct gpio_device *gdev)
+ 	return 0;
+ 
+ err_remove_device:
+-	device_del(&gdev->dev);
+-err_remove_chardev:
+-	cdev_del(&gdev->chrdev);
++	cdev_device_del(&gdev->chrdev, &gdev->dev);
+ 	return status;
  }
  
- #ifdef CONFIG_PCI_DOMAINS
-@@ -827,7 +828,8 @@ static void __pci_start_power_transition(struct pci_dev *dev, pci_power_t state)
- 		 * because have already delayed for the bridge.
- 		 */
- 		if (dev->runtime_d3cold) {
--			msleep(dev->d3cold_delay);
-+			if (dev->d3cold_delay)
-+				msleep(dev->d3cold_delay);
- 			/*
- 			 * When powering on a bridge from D3cold, the
- 			 * whole hierarchy may be powered on into
+@@ -1347,8 +1341,7 @@ void gpiochip_remove(struct gpio_chip *chip)
+ 	 * be removed, else it will be dangling until the last user is
+ 	 * gone.
+ 	 */
+-	cdev_del(&gdev->chrdev);
+-	device_del(&gdev->dev);
++	cdev_device_del(&gdev->chrdev, &gdev->dev);
+ 	put_device(&gdev->dev);
+ }
+ EXPORT_SYMBOL_GPL(gpiochip_remove);
 -- 
-1.9.1
+2.1.4
