@@ -1,118 +1,104 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 20 Mar 2017 11:06:36 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH 02/20] PCI: fix pci_remap_iospace() remap attribute
-Message-ID: <20170320160636.GB24572@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
- <20170227151436.18698-3-lorenzo.pieralisi@arm.com>
- <20170316214844.GA17769@bhelgaas-glaptop.roam.corp.google.com>
- <20170317003321.GB28800@wotan.suse.de>
-MIME-Version: 1.0
-In-Reply-To: <20170317003321.GB28800@wotan.suse.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
- Shawn Lin <shawn.lin@rock-chips.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
- Russell King <linux@armlinux.org.uk>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- linux-arch@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Murali Karicheri <m-karicheri2@ti.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Arnd Bergmann <arnd@arndb.de>,
- Jon Mason <jonmason@broadcom.com>, Will Deacon <will.deacon@arm.com>,
- John Garry <john.garry@huawei.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
- linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Ray Jui <rjui@broadcom.com>, Andy Lutomirski <luto@amacapital.net>,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:56516 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751248AbdCQSuZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 17 Mar 2017 14:50:25 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Hans Verkuil <hans.verkuil@cisco.com>,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Brian Norris <computersforpeace@gmail.com>,
+        Boris Brezillon <boris.brezillon@free-electrons.com>,
+        Marek Vasut <marek.vasut@gmail.com>,
+        Cyrille Pitchen <cyrille.pitchen@atmel.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        rtc-linux@googlegroups.com, linux-mtd@lists.infradead.org,
+        linux-media@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-gpio@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Fri, 17 Mar 2017 12:48:13 -0600
+Message-Id: <1489776503-3151-7-git-send-email-logang@deltatee.com>
+In-Reply-To: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
+Subject: [PATCH v5 06/16] tpm-chip: utilize new cdev_device_add helper function
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 17, 2017 at 01:33:21AM +0100, Luis R. Rodriguez wrote:
-> On Thu, Mar 16, 2017 at 04:48:44PM -0500, Bjorn Helgaas wrote:
-> > [+cc Luis]
-> > 
-> > On Mon, Feb 27, 2017 at 03:14:13PM +0000, Lorenzo Pieralisi wrote:
-> > > According to the PCI local bus specifications (Revision 3.0, 3.2.5),
-> > > I/O Address space transactions are non-posted. On architectures where
-> > > I/O space is implemented through a chunk of memory mapped space mapped
-> > > to PCI address space (ie IA64/ARM/ARM64) the memory mapping for the
-> > > region backing I/O Address Space transactions determines the I/O
-> > > transactions attributes (before the transactions actually reaches the
-> > > PCI bus where it is handled according to the PCI specifications).
-> > > 
-> > > Current pci_remap_iospace() interface, that is used to map the PCI I/O
-> > > Address Space into virtual address space, use pgprot_device() as memory
-> > > attribute for the virtual address mapping, that in some architectures
-> > > (ie ARM64) provides non-cacheable but write bufferable mappings (ie
-> > > posted writes), 
-> 
-> <sarcasm>
-> Gee wiz, I am glad this is so well documented.
-> </sarcasm>
+Replace the open coded registration of the cdev and dev with the
+new device_add_cdev() helper. The helper replaces a common pattern by
+taking the proper reference against the parent device and adding both
+the cdev and the device.
 
-I'm not sure this is actionable feedback.  The two paragraphs above
-seem clear and useful to me.  How would you like to see them improved?
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Reviewed-by: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
+---
+ drivers/char/tpm/tpm-chip.c | 19 +++----------------
+ 1 file changed, 3 insertions(+), 16 deletions(-)
 
-> > > ...
-> > > @@ -3375,7 +3375,7 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-> > >  		return -EINVAL;
-> > >  
-> > >  	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
-> > > -				  pgprot_device(PAGE_KERNEL));
-> > > +				  pgprot_noncached(PAGE_KERNEL));
-> > 
-> > ...
-> > I do find this puzzling because I naively expected pgprot_noncached()
-> > to match up with ioremap_nocache(), and apparently it doesn't.
-> > 
-> > For example, ARM64 ioremap_nocache() uses PROT_DEVICE_nGnRE, which
-> > doesn't match the MT_DEVICE_nGnRnE in pgprot_noncached().
-> > 
-> > The point of these patches is to use non-posted mappings.  Apparently
-> > you can do that with pgprot_noncached() here, but ioremap_nocache()
-> > isn't enough for the config space mappings?
-> 
-> This is for iospace it seems, so the other patch I think was for
-> config space.
-
-I understand that 02/20 is for PCI I/O port space and 03/20 is for PCI
-config space.  I'm confused because I thought we wanted the same
-non-posted mapping for both, but looks like they're different.
-
-Patch 02/20 uses ioremap_page_range(..., pgprot_noncached(PAGE_KERNEL))
-to map PCI I/O port space:
-
-  #define pgprot_noncached(prot) \
-          __pgprot_modify(prot, PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_DEVICE_nGnRnE) | PTE_PXN | PTE_UXN)
-
-Patch 03/20 uses ioremap_nocache() to map PCI config space:
-
-  #define ioremap_nocache(addr, size)     __ioremap((addr), (size), __pgprot(PROT_DEVICE_nGnRE))
-
-So the I/O port mapping uses MT_DEVICE_nGnRnE, while the config space
-mapping uses PROT_DEVICE_nGnRE, which looks different.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/char/tpm/tpm-chip.c b/drivers/char/tpm/tpm-chip.c
+index c406343..935f0e9 100644
+--- a/drivers/char/tpm/tpm-chip.c
++++ b/drivers/char/tpm/tpm-chip.c
+@@ -187,7 +187,6 @@ struct tpm_chip *tpm_chip_alloc(struct device *pdev,
+ 
+ 	cdev_init(&chip->cdev, &tpm_fops);
+ 	chip->cdev.owner = THIS_MODULE;
+-	chip->cdev.kobj.parent = &chip->dev.kobj;
+ 
+ 	return chip;
+ 
+@@ -230,27 +229,16 @@ static int tpm_add_char_device(struct tpm_chip *chip)
+ {
+ 	int rc;
+ 
+-	rc = cdev_add(&chip->cdev, chip->dev.devt, 1);
++	rc = cdev_device_add(&chip->cdev, &chip->dev);
+ 	if (rc) {
+ 		dev_err(&chip->dev,
+-			"unable to cdev_add() %s, major %d, minor %d, err=%d\n",
++			"unable to cdev_device_add() %s, major %d, minor %d, err=%d\n",
+ 			dev_name(&chip->dev), MAJOR(chip->dev.devt),
+ 			MINOR(chip->dev.devt), rc);
+ 
+ 		return rc;
+ 	}
+ 
+-	rc = device_add(&chip->dev);
+-	if (rc) {
+-		dev_err(&chip->dev,
+-			"unable to device_register() %s, major %d, minor %d, err=%d\n",
+-			dev_name(&chip->dev), MAJOR(chip->dev.devt),
+-			MINOR(chip->dev.devt), rc);
+-
+-		cdev_del(&chip->cdev);
+-		return rc;
+-	}
+-
+ 	/* Make the chip available. */
+ 	mutex_lock(&idr_lock);
+ 	idr_replace(&dev_nums_idr, chip, chip->dev_num);
+@@ -261,8 +249,7 @@ static int tpm_add_char_device(struct tpm_chip *chip)
+ 
+ static void tpm_del_char_device(struct tpm_chip *chip)
+ {
+-	cdev_del(&chip->cdev);
+-	device_del(&chip->dev);
++	cdev_device_del(&chip->cdev, &chip->dev);
+ 
+ 	/* Make the chip unavailable. */
+ 	mutex_lock(&idr_lock);
+-- 
+2.1.4
