@@ -1,93 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Elena Reshetova <elena.reshetova@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
-        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, peterz@infradead.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-Subject: [PATCH 07/29] drivers, md: convert dm_dev_internal.count from atomic_t to refcount_t
-Date: Mon,  6 Mar 2017 16:20:54 +0200
-Message-Id: <1488810076-3754-8-git-send-email-elena.reshetova@intel.com>
-In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:38129 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751641AbdCRQhT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 18 Mar 2017 12:37:19 -0400
+Date: Sat, 18 Mar 2017 17:37:06 +0100
+From: Borislav Petkov <bp@suse.de>
+To: Paolo Bonzini <pbonzini@redhat.com>
+Cc: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
+        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
+        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
+        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org
+Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
+ when spliting large pages
+Message-ID: <20170318163706.GB4231@nazgul.tnic>
+References: <20170310110657.hophlog2juw5hpzz@pd.tnic>
+ <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
+ <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
+ <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
+ <20170317101737.icdois7sdmtutt6b@pd.tnic>
+ <b6f9f46c-58c4-a19c-4955-2d07bd411443@redhat.com>
+ <20170317105610.musvo4baokgssvye@pd.tnic>
+ <78c99889-f175-f60f-716b-34a62203418a@redhat.com>
+ <20170317113337.syvpat3c4s2l4nuz@pd.tnic>
+ <b516a873-029a-b20a-3c43-d8bf4a200cb7@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <b516a873-029a-b20a-3c43-d8bf4a200cb7@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+On Fri, Mar 17, 2017 at 03:45:26PM +0100, Paolo Bonzini wrote:
+> Yes, and I'd like that to be done with a new data section rather than a
+> special KVM hook.
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- drivers/md/dm-table.c | 6 +++---
- drivers/md/dm.h       | 3 ++-
- 2 files changed, 5 insertions(+), 4 deletions(-)
+Can you give more details about how pls? Or is there already an example for that
+somewhere in the kvm code?
 
-diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-index 3ad16d9..d2e2741 100644
---- a/drivers/md/dm-table.c
-+++ b/drivers/md/dm-table.c
-@@ -416,15 +416,15 @@ int dm_get_device(struct dm_target *ti, const char *path, fmode_t mode,
- 			return r;
- 		}
- 
--		atomic_set(&dd->count, 0);
-+		refcount_set(&dd->count, 1);
- 		list_add(&dd->list, &t->devices);
- 
- 	} else if (dd->dm_dev->mode != (mode | dd->dm_dev->mode)) {
- 		r = upgrade_mode(dd, mode, t->md);
- 		if (r)
- 			return r;
-+		refcount_inc(&dd->count);
- 	}
--	atomic_inc(&dd->count);
- 
- 	*result = dd->dm_dev;
- 	return 0;
-@@ -478,7 +478,7 @@ void dm_put_device(struct dm_target *ti, struct dm_dev *d)
- 		       dm_device_name(ti->table->md), d->name);
- 		return;
- 	}
--	if (atomic_dec_and_test(&dd->count)) {
-+	if (refcount_dec_and_test(&dd->count)) {
- 		dm_put_table_device(ti->table->md, d);
- 		list_del(&dd->list);
- 		kfree(dd);
-diff --git a/drivers/md/dm.h b/drivers/md/dm.h
-index f298b01..63b8142 100644
---- a/drivers/md/dm.h
-+++ b/drivers/md/dm.h
-@@ -19,6 +19,7 @@
- #include <linux/hdreg.h>
- #include <linux/completion.h>
- #include <linux/kobject.h>
-+#include <linux/refcount.h>
- 
- #include "dm-stats.h"
- 
-@@ -38,7 +39,7 @@
-  */
- struct dm_dev_internal {
- 	struct list_head list;
--	atomic_t count;
-+	refcount_t count;
- 	struct dm_dev *dm_dev;
- };
- 
+> I have no idea.  SEV-ES seems to be very hard to set up at the beginning
+> of the kernel bootstrap.  There's all sorts of chicken and egg problems,
+> as well as complicated handshakes between the firmware and the guest,
+> and the way to do it also depends on the trust and threat models.
+> 
+> A much simpler way is to just boot under a trusted hypervisor, do
+> "modprobe sev-es" and save a snapshot of the guest.  Then you sign the
+> snapshot and pass it to your cloud provider.
+
+Right, especially the early trapping could be a pain. I don't think this
+is cast in stone yet, though...
+
+We'll see.
+
+Thanks.
+
 -- 
-2.7.4
+Regards/Gruss,
+    Boris.
+
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
