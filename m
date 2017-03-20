@@ -1,93 +1,208 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 6 Mar 2017 11:14:51 +0000
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: "Liu, Yi L" <yi.l.liu@intel.com>
-Subject: Re: [RFC PATCH 00/30] Add PCIe SVM support to ARM SMMUv3
-Message-ID: <20170306111451.GA28804@e106794-lin.localdomain>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <A2975661238FB949B60364EF0F2C2574390186B8@shsmsx102.ccr.corp.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36952 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932096AbdCTXIT (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2017 19:08:19 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2KN3qIC002166
+        for <linux-pci@vger.kernel.org>; Mon, 20 Mar 2017 19:08:08 -0400
+Received: from e23smtp09.au.ibm.com (e23smtp09.au.ibm.com [202.81.31.142])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 29af6evug9-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Mon, 20 Mar 2017 19:08:08 -0400
+Received: from localhost
+        by e23smtp09.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Tue, 21 Mar 2017 09:08:05 +1000
+Date: Tue, 21 Mar 2017 10:07:06 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: bodong@mellanox.com
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, saeedm@mellanox.com,
+        Eli Cohen <eli@mellanox.com>
+Subject: Re: [PATCH] pci/sriov: Add an option to probe VFs or not before
+ enabling SR-IOV
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
 MIME-Version: 1.0
-In-Reply-To: <A2975661238FB949B60364EF0F2C2574390186B8@shsmsx102.ccr.corp.intel.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Shanker Donthineni <shankerd@qti.qualcomm.com>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Sinan Kaya <okaya@qti.qualcomm.com>,
- Will Deacon <will.deacon@arm.com>, Harv Abdulhamid <harba@qti.qualcomm.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, David Woodhouse <dwmw2@infradead.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
+Message-Id: <20170320230706.GA12252@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Yi,
+On Mon, Mar 20, 2017 at 05:14:34PM +0200, bodong@mellanox.com wrote:
+>From: Bodong Wang <bodong@mellanox.com>
+>
+>Sometimes it is not desirable to probe the virtual functions after
+>SRIOV is enabled. This can save host side resource usage by VF
+>instances which would be eventually probed to VMs.
+>
+>Added a new PCI sysfs interface "sriov_probe_vfs" to control that
+>from PF, all current callers still retain the same functionality.
+>To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
+>
+>/sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+>
+>Note that, the choice must be made before enabling VFs. The change
+>will not take effect if VFs are already enabled. Simply, one can set
+>sriov_numvfs to 0, choose whether to probe or not, and then resume
+>sriov_numvfs.
+>
 
-On 06/03/17 08:20, Liu, Yi L wrote:
-> 
-> 
->> -----Original Message-----
->> From: iommu-bounces@lists.linux-foundation.org [mailto:iommu-
->> bounces@lists.linux-foundation.org] On Behalf Of Jean-Philippe Brucker
->> Sent: Tuesday, February 28, 2017 3:54 AM
->> Cc: Shanker Donthineni <shankerd@qti.qualcomm.com>; kvm@vger.kernel.org;
->> Catalin Marinas <catalin.marinas@arm.com>; Sinan Kaya
->> <okaya@qti.qualcomm.com>; Will Deacon <will.deacon@arm.com>;
->> iommu@lists.linux-foundation.org; Harv Abdulhamid <harba@qti.qualcomm.com>;
->> linux-pci@vger.kernel.org; Bjorn Helgaas <bhelgaas@google.com>; David
->> Woodhouse <dwmw2@infradead.org>; linux-arm-kernel@lists.infradead.org; Nate
->> Watterson <nwatters@qti.qualcomm.com>
->> Subject: [RFC PATCH 00/30] Add PCIe SVM support to ARM SMMUv3
->>
->> Hi,
->>
->> This series adds support for PCI ATS, PRI and PASID extensions to the
->> SMMUv3 driver. In systems that support it, it is now possible for some high-end
->> devices to perform DMA into process address spaces. Page tables are shared
->> between MMU and SMMU; page faults from devices are recoverable and handled by
->> the mm subsystem.
->>
->> We propose an extension to the IOMMU API that unifies existing SVM
->> implementations (AMD, Intel and ARM) in patches 22 and 24. Nothing is set in stone,
->> the goal is to start discussions and find an intersection between implementations.
->>
->> We also propose a VFIO interface in patches 29 and 30, that allows userspace device
->> drivers to make use of SVM. It would also serve as example implementation for
->> other device drivers.
->>
->> Overview of the patches:
->>
->> * 1 and 2 prepare the SMMUv3 structures for ATS,
->> * 3 to 5 enable ATS for devices that support it.
->> * 6 to 10 prepare the SMMUv3 structures for PASID and PRI. Patch 9,
->>   in particular, provides details on the structure requirements.
->> * 11 introduces an interface for sharing ASIDs on ARM64,
->> * 12 to 17 add more infrastructure for sharing page tables,
->> * 18 and 19 add minor helpers to PCI,
->> * 20 enables PASID in devices that support it,
-> 
-> Jean, supposedly, you will introduce a PASID management mechanism in
-> SMMU v3 driver. Here I have a question about PASID management on ARM.
-> Will there be a system wide PASID table? Or there is equivalent implementation.
+Bodong, I'm not sure if there is a requirement to load driver for the
+specified number of VFs? That indicates no driver will be loaded for
+other VFs. If so, this interface might serve the purpose as well.
 
-Yes the SMMUv3 driver allocates and manages PASIDs. In this series I
-implemented one PASID table for each device (for simplicity), but as
-explained in my reply on patch 22, I'd like to introduce a PASID table
-for each IOMMU domain in the next version.
+>Change-Id: I48e6db1e8c7b364bb371590e2b13b4d7ee87713c
+>Signed-off-by: Bodong Wang <bodong@mellanox.com>
+>Signed-off-by: Eli Cohen <eli@mellanox.com>
+>---
+> Documentation/PCI/pci-iov-howto.txt | 10 ++++++++++
+> drivers/pci/iov.c                   |  1 +
+> drivers/pci/pci-driver.c            | 15 +++++++++++----
+> drivers/pci/pci-sysfs.c             | 28 ++++++++++++++++++++++++++++
+> drivers/pci/pci.h                   |  1 +
+> 5 files changed, 51 insertions(+), 4 deletions(-)
+>
+>diff --git a/Documentation/PCI/pci-iov-howto.txt b/Documentation/PCI/pci-iov-howto.txt
+>index 2d91ae2..902a528 100644
+>--- a/Documentation/PCI/pci-iov-howto.txt
+>+++ b/Documentation/PCI/pci-iov-howto.txt
+>@@ -68,6 +68,16 @@ To disable SR-IOV capability:
+> 	echo  0 > \
+>         /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_numvfs
+>
+>+To enable probing VFs by a compatible driver on the host:
+>+Before enabling SR-IOV capabilities, do:
+>+	echo 1 > \
+>+        /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+>+
+>+To disable probing VFs by a compatible driver on the host:
+>+Before enabling SR-IOV capabilities, do:
+>+	echo  0 > \
+>+        /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+>+
+> 3.2 Usage example
+>
+> Following piece of code illustrates the usage of the SR-IOV API.
+>diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>index 2479ae8..70691de 100644
+>--- a/drivers/pci/iov.c
+>+++ b/drivers/pci/iov.c
+>@@ -450,6 +450,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+> 	iov->total_VFs = total;
+> 	iov->pgsz = pgsz;
+> 	iov->self = dev;
+>+	iov->probe_vfs = true;
+> 	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+> 	pci_read_config_byte(dev, pos + PCI_SRIOV_FUNC_LINK, &iov->link);
+> 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END)
+>diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>index afa7271..930552c 100644
+>--- a/drivers/pci/pci-driver.c
+>+++ b/drivers/pci/pci-driver.c
+>@@ -405,11 +405,18 @@ static int pci_device_probe(struct device *dev)
+> 		return error;
+>
+> 	pci_dev_get(pci_dev);
+>-	error = __pci_device_probe(drv, pci_dev);
+>-	if (error) {
+>-		pcibios_free_irq(pci_dev);
+>-		pci_dev_put(pci_dev);
+>+#ifdef CONFIG_PCI_IOV
+>+	if (!pci_dev->is_virtfn ||
+>+	    (pci_dev->is_virtfn && pci_dev->physfn->sriov->probe_vfs)) {
+>+#endif
+>+		error = __pci_device_probe(drv, pci_dev);
+>+		if (error) {
+>+			pcibios_free_irq(pci_dev);
+>+			pci_dev_put(pci_dev);
+>+		}
+>+#ifdef CONFIG_PCI_IOV
+> 	}
+>+#endif
+>
+
+I think it's reasonable to have a inline function for this check:
+
+#ifdef CONFIG_PCI_IOV
+static inline bool pci_device_can_probe(struct pci_dev *pdev)
+{
+	return (!pdev->is_virtfn || pdev->physfn->sriov->probe_vfs);
+}
+#else
+static inline bool pci_device_can_probe(struct pci_dev *pdev)
+{
+	return true;
+}
+#endif
+
+
+> 	return error;
+> }
+>diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>index 25d010d..1d5b89d 100644
+>--- a/drivers/pci/pci-sysfs.c
+>+++ b/drivers/pci/pci-sysfs.c
+>@@ -526,10 +526,37 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+> 	return count;
+> }
+>
+>+static ssize_t sriov_probe_vfs_show(struct device *dev,
+>+				    struct device_attribute *attr,
+>+				    char *buf)
+>+{
+>+	struct pci_dev *pdev = to_pci_dev(dev);
+>+
+>+	return sprintf(buf, "%u\n", pdev->sriov->probe_vfs);
+>+}
+>+
+>+static ssize_t sriov_probe_vfs_store(struct device *dev,
+>+				     struct device_attribute *attr,
+>+				     const char *buf, size_t count)
+>+{
+>+	struct pci_dev *pdev = to_pci_dev(dev);
+>+	bool probe_vfs;
+>+
+>+	if (kstrtobool(buf, &probe_vfs) < 0)
+>+		return -EINVAL;
+>+
+>+	pdev->sriov->probe_vfs = probe_vfs;
+>+
+>+	return count;
+>+}
+>+
+> static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
+> static struct device_attribute sriov_numvfs_attr =
+> 		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+> 		       sriov_numvfs_show, sriov_numvfs_store);
+>+static struct device_attribute sriov_probe_vfs_attr =
+>+		__ATTR(sriov_probe_vfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+>+		       sriov_probe_vfs_show, sriov_probe_vfs_store);
+> #endif /* CONFIG_PCI_IOV */
+>
+> static ssize_t driver_override_store(struct device *dev,
+>@@ -1549,6 +1576,7 @@ static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
+> static struct attribute *sriov_dev_attrs[] = {
+> 	&sriov_totalvfs_attr.attr,
+> 	&sriov_numvfs_attr.attr,
+>+	&sriov_probe_vfs_attr.attr,
+> 	NULL,
+> };
+>
+>diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>index 8dd38e6..a62c6bf 100644
+>--- a/drivers/pci/pci.h
+>+++ b/drivers/pci/pci.h
+>@@ -272,6 +272,7 @@ struct pci_sriov {
+> 	struct pci_dev *self;	/* this PF */
+> 	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
+> 	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+>+	bool probe_vfs;		/* probe VFs or not */
+> };
+>
+> #ifdef CONFIG_PCI_ATS
 
 Thanks,
-Jean-Philippe
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Gavin
