@@ -1,123 +1,87 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "sricharan" <sricharan@codeaurora.org>
-To: "'Robin Murphy'" <robin.murphy@arm.com>,
- "'Jean-Philippe Brucker'" <jean-philippe.brucker@arm.com>,
- <will.deacon@arm.com>, <joro@8bytes.org>, <lorenzo.pieralisi@arm.com>,
- <iommu@lists.linux-foundation.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-arm-msm@vger.kernel.org>, <m.szyprowski@samsung.com>,
- <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
- <linux-acpi@vger.kernel.org>, <tn@semihalf.com>, <hanjun.guo@linaro.org>,
- <okaya@codeaurora.org>
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
- <1486136933-20328-2-git-send-email-sricharan@codeaurora.org>
- <8701bfbe-e52e-0e26-2a71-f5f81684de70@arm.com>
- <76844d3e-ae7a-5113-1a76-18312e9f51ce@arm.com>
-In-Reply-To: <76844d3e-ae7a-5113-1a76-18312e9f51ce@arm.com>
-Subject: RE: [PATCH V8 01/11] iommu/of: Refactor of_iommu_configure() for
- error handling
-Date: Thu, 9 Mar 2017 15:22:47 +0530
-Message-ID: <1cba01d298ba$ee931000$cbb93000$@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr50064.outbound.protection.outlook.com ([40.107.5.64]:18895
+        "EHLO EUR03-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753230AbdCTXh2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 20 Mar 2017 19:37:28 -0400
+Subject: Re: [PATCH] pci/sriov: Add an option to probe VFs or not before
+ enabling SR-IOV
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
+ <20170320230706.GA12252@gwshan>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <saeedm@mellanox.com>,
+        Eli Cohen <eli@mellanox.com>
+From: Bodong Wang <bodong@mellanox.com>
+Message-ID: <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
+Date: Mon, 20 Mar 2017 18:34:23 -0500
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170320230706.GA12252@gwshan>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Robin,
-
->On 08/03/17 18:58, Jean-Philippe Brucker wrote:
->[...]
->>>  static const struct iommu_ops
->>> -*of_pci_iommu_configure(struct pci_dev *pdev, struct device_node
->>> *bridge_np)
->>> +*of_pci_iommu_init(struct pci_dev *pdev, struct device_node
->>> +*bridge_np)
->>>  {
->>>  	const struct iommu_ops *ops;
->>>  	struct of_phandle_args iommu_spec;
->>> +	int err;
->>>
->>>  	/*
->>>  	 * Start by tracing the RID alias down the PCI topology as @@
->>> -123,56 +146,56 @@ static int __get_pci_rid(struct pci_dev *pdev, u16
->alias, void *data)
->>>  	 * bus into the system beyond, and which IOMMU it ends up at.
->>>  	 */
->>>  	iommu_spec.np = NULL;
->>> -	if (of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
->>> -			   "iommu-map-mask", &iommu_spec.np,
->iommu_spec.args))
->>> -		return NULL;
->>> +	err = of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
->>> +			     "iommu-map-mask", &iommu_spec.np,
->>> +			     iommu_spec.args);
->>> +	if (err)
->>> +		return ERR_PTR(err);
+On 3/20/2017 6:07 PM, Gavin Shan wrote:
+> On Mon, Mar 20, 2017 at 05:14:34PM +0200, bodong@mellanox.com wrote:
+>> From: Bodong Wang <bodong@mellanox.com>
 >>
->> This change doesn't work with of_pci_map_rid when the PCI RC isn't
->> behind an IOMMU:
+>> Sometimes it is not desirable to probe the virtual functions after
+>> SRIOV is enabled. This can save host side resource usage by VF
+>> instances which would be eventually probed to VMs.
 >>
->>         map = of_get_property(np, map_name, &map_len);
->>         if (!map) {
->>                 if (target)
->>                         return -ENODEV;
->>                 /* Otherwise, no map implies no translation */
->>                 *id_out = rid;
->>                 return 0;
->>         }
+>> Added a new PCI sysfs interface "sriov_probe_vfs" to control that
+> >from PF, all current callers still retain the same functionality.
+>> To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
 >>
->> Previously with no iommu-map, we returned -ENODEV but it was discarded
->> by of_pci_iommu_configure. Now it is propagated and the whole device
->> probing fails. Instead, maybe of_pci_map_rid should always return 0 if
->> no iommu-map, and the caller should check if *target is still NULL?
->
->Ah yes, Tomasz had found breakages with the "mmu-masters" binding
->before, and I'd already pushed out a fixup for this one[1], but I forgot
-that
->that discussion was all off-list (out of diplomatic concern that the
-breakage
->might have been intentional - it wasn't, honest!)
->
->Now that rc1 is out I should re-do that branch with v8 of this series plus
-the
->fixups folded in, unless Sricharan beats me to it.
->
-
-Right, I had this one [1] as V9 which had all your fixes that we discussed
-offline as
-well.  I was about to post a V9 today on top of -rc1 today as well.
-
-[1] https://github.com/sricharanaz/iommu/tree/pd_v9
-
-Regards,
- Sricharan
-
-
->Thanks for the reminder,
->Robin.
->
->[1]:http://www.linux-arm.org/git?p=linux-
->rm.git;a=commitdiff;h=0049a34e523506813995c05766f5e2c16d616354
->
+>> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
 >>
->> Thanks,
->> Jean-Philippe
+>> Note that, the choice must be made before enabling VFs. The change
+>> will not take effect if VFs are already enabled. Simply, one can set
+>> sriov_numvfs to 0, choose whether to probe or not, and then resume
+>> sriov_numvfs.
+>>
+> Bodong, I'm not sure if there is a requirement to load driver for the
+> specified number of VFs? That indicates no driver will be loaded for
+> other VFs. If so, this interface might serve the purpose as well.
+Gavin, thanks for the review. That is indeed an interesting suggestion. 
+Theoretically,  we can change that probe_vfs from boolean to integer. 
+And use it as a counter to probe the first N VFs(if N < total_vfs).  
+Let's see if there are any objections.
 >
->--
->To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
->the body of a message to majordomo@vger.kernel.org More majordomo info
->at  http://vger.kernel.org/majordomo-info.html
+>
+> +#ifdef CONFIG_PCI_IOV
+> +	if (!pci_dev->is_virtfn ||
+> +	    (pci_dev->is_virtfn && pci_dev->physfn->sriov->probe_vfs)) {
+> +#endif
+> +		error = __pci_device_probe(drv, pci_dev);
+> +		if (error) {
+> +			pcibios_free_irq(pci_dev);
+> +			pci_dev_put(pci_dev);
+> +		}
+> +#ifdef CONFIG_PCI_IOV
+> 	}
+> +#endif
+>
+> I think it's reasonable to have a inline function for this check:
+It's doable, but what's the benefit?
+>
+> #ifdef CONFIG_PCI_IOV
+> static inline bool pci_device_can_probe(struct pci_dev *pdev)
+> {
+> 	return (!pdev->is_virtfn || pdev->physfn->sriov->probe_vfs);
+should be return (!pdev->is_virtfn || (pci_dev->is_virtfn && 
+pci_dev->physfn->sriov->probe_vfs));
 
+We want to probe that device if 1) it's a PF 2) it'a VF and probe_vfs is set
+> }
+> #else
+> static inline bool pci_device_can_probe(struct pci_dev *pdev)
+> {
+> 	return true;
+> }
+This function will be a waste if CONFIG_PCI_IOV is not defined.
+> #endif
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Thanks,
+> Gavin
+>
