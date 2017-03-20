@@ -1,50 +1,53 @@
-Return-Path: <SRS0=mSZn=2T=fb.com=prvs=424240a948=wzhang@kernel.org>
-Return-Path: <SRS0=mSZn=2T=fb.com=prvs=424240a948=wzhang@kernel.org>
-From: Wei Zhang <wzhang@fb.com>
-To: Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas <helgaas@kernel.org>
-CC: Keith Busch <keith.busch@intel.com>, Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas
-	<bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan
- Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew
- Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck
-	<linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi
-	<konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Kurt Schwemmer
-	<kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v7 0/4] New Microsemi PCI Switch Management Driver
-Date: Fri, 10 Mar 2017 00:21:49 +0000
-Message-ID: <48F91B98-32A0-43CB-9F03-A617242AEE55@fb.com>
-References: <1488497074-14186-1-git-send-email-logang@deltatee.com>
- <20170309195531.GB19517@bhelgaas-glaptop.roam.corp.google.com>
- <e01826a0-6c81-6bce-b633-5033da66f401@deltatee.com>
-In-Reply-To: <e01826a0-6c81-6bce-b633-5033da66f401@deltatee.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: [PATCH v2 2/4] asm-generic/io.h: Remove unused generic __ioremap()
+ definition
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        linux-kernel@vger.kernel.org
+Date: Mon, 20 Mar 2017 13:42:53 -0500
+Message-ID: <20170320184253.4858.12956.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170320182014.4858.22352.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170320182014.4858.22352.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VGhpcyBpcyBncmVhdCEgIFRoYW5rcyBCam9ybiBhbmQgTG9nYW4gZm9yIGdldHRpbmcgdGhpcyBk
-cml2ZXJzIHVwc3RyZWFtZWQhDQoNCi1XZWkNCg0KLS0NCndlaSB6aGFuZyB8IHNvZnR3YXJlIGVu
-Z2luZWVyIHwgZmFjZWJvb2sNCnd6aGFuZ0BmYi5jb20gfCAoNDA4KSA0NjAtNDgwMw0KDQpPbiAz
-LzkvMTcsIDExOjU2IEFNLCAiTG9nYW4gR3VudGhvcnBlIiA8bG9nYW5nQGRlbHRhdGVlLmNvbT4g
-d3JvdGU6DQoNCiAgICANCiAgICANCiAgICBPbiAwOS8wMy8xNyAxMjo1NSBQTSwgQmpvcm4gSGVs
-Z2FhcyB3cm90ZToNCiAgICA+IEFwcGxpZWQgdG8gcGNpL3N3aXRjaHRlYyBmb3IgdjQuMTIsIHRo
-YW5rcyENCiAgICANCiAgICBHcmVhdCEgVGhhbmtzIHNvIG11Y2ghDQogICAgDQogICAgTG9nYW4N
-CiAgICANCiAgICANCg0K
+Several arches use __ioremap() to help implement the generic ioremap(),
+ioremap_nocache(), and ioremap_wc() interfaces, but this usage is all
+inside the arch/ directory.
+
+The only __ioremap() uses outside arch/ are in the ZorroII RAM disk driver
+and some framebuffer drivers that are only buildable on m68k and powerpc,
+and they use the versions provided by those arches.
+
+There's no need for a generic version of __ioremap(), so remove it.
+
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+---
+ include/asm-generic/io.h |    9 ---------
+ 1 file changed, 9 deletions(-)
+
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index 978d2e27ce1d..e0a331a22346 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -843,15 +843,6 @@ static inline void __iomem *ioremap(phys_addr_t offset, size_t size)
+ }
+ #endif
+ 
+-#ifndef __ioremap
+-#define __ioremap __ioremap
+-static inline void __iomem *__ioremap(phys_addr_t offset, size_t size,
+-				      unsigned long flags)
+-{
+-	return ioremap(offset, size);
+-}
+-#endif
+-
+ #ifndef ioremap_nocache
+ #define ioremap_nocache ioremap_nocache
+ static inline void __iomem *ioremap_nocache(phys_addr_t offset, size_t size)
