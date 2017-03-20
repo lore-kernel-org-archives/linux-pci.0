@@ -1,440 +1,168 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rafael@kernel.org>, <arnd@arndb.de>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <mark.rutland@arm.com>, <brian.starkey@arm.com>, <olof@lixom.net>,
-        <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
-        <linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
-        <zourongrong@gmail.com>, <john.garry@huawei.com>,
-        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
-        <kantyzc@163.com>, <xuwei5@hisilicon.com>,
-        "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Subject: [PATCH V8 5/6] ACPI: Support the probing on the devices which apply  indirect-IO
-Date: Thu, 30 Mar 2017 23:26:58 +0800
-Message-ID: <1490887619-61732-6-git-send-email-yuanzhichang@hisilicon.com>
-In-Reply-To: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
-References: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-il-dmz.mellanox.com ([193.47.165.129]:53619 "EHLO
+        mellanox.co.il" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752990AbdCTPVv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2017 11:21:51 -0400
+From: bodong@mellanox.com
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        saeedm@mellanox.com, Bodong Wang <bodong@mellanox.com>,
+        Eli Cohen <eli@mellanox.com>
+Subject: [PATCH] pci/sriov: Add an option to probe VFs or not before enabling SR-IOV
+Date: Mon, 20 Mar 2017 17:14:34 +0200
+Message-Id: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On some platforms(such as Hip06/Hip07), the legacy ISA/LPC devices access I/O
-with some special host-local I/O ports known on x86. To access the I/O
-peripherals, an indirect-IO mechanism is introduced to mapped the host-local
-I/O to system logical/fake PIO similar the PCI MMIO on architectures where no
-separate I/O space exists. Just as PCI MMIO, the host I/O range should be
-registered before probing the downstream devices and set up the I/O mapping.
-But current ACPI bus probing doesn't support these indirect-IO hosts/devices.
+From: Bodong Wang <bodong@mellanox.com>
 
-This patch introdueces a new ACPI handler for this device category. Through the
-handler attach callback, the indirect-IO hosts I/O registration is done and
-all peripherals' I/O resources are translated into logic/fake PIO before
-starting the enumeration.
+Sometimes it is not desirable to probe the virtual functions after
+SRIOV is enabled. This can save host side resource usage by VF
+instances which would be eventually probed to VMs.
 
-Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Added a new PCI sysfs interface "sriov_probe_vfs" to control that
+from PF, all current callers still retain the same functionality.
+To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
+
+/sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+
+Note that, the choice must be made before enabling VFs. The change
+will not take effect if VFs are already enabled. Simply, one can set
+sriov_numvfs to 0, choose whether to probe or not, and then resume
+sriov_numvfs.
+
+Change-Id: I48e6db1e8c7b364bb371590e2b13b4d7ee87713c
+Signed-off-by: Bodong Wang <bodong@mellanox.com>
+Signed-off-by: Eli Cohen <eli@mellanox.com>
 ---
- drivers/acpi/Makefile          |   1 +
- drivers/acpi/acpi_indirectio.c | 344 +++++++++++++++++++++++++++++++++++++++++
- drivers/acpi/internal.h        |   5 +
- drivers/acpi/scan.c            |   1 +
- 4 files changed, 351 insertions(+)
- create mode 100644 drivers/acpi/acpi_indirectio.c
+ Documentation/PCI/pci-iov-howto.txt | 10 ++++++++++
+ drivers/pci/iov.c                   |  1 +
+ drivers/pci/pci-driver.c            | 15 +++++++++++----
+ drivers/pci/pci-sysfs.c             | 28 ++++++++++++++++++++++++++++
+ drivers/pci/pci.h                   |  1 +
+ 5 files changed, 51 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-index a391bbc..10e5f2b 100644
---- a/drivers/acpi/Makefile
-+++ b/drivers/acpi/Makefile
-@@ -57,6 +57,7 @@ acpi-$(CONFIG_ACPI_PROCFS_POWER) += cm_sbs.o
- acpi-y				+= acpi_lpat.o
- acpi-$(CONFIG_ACPI_GENERIC_GSI) += irq.o
- acpi-$(CONFIG_ACPI_WATCHDOG)	+= acpi_watchdog.o
-+acpi-$(CONFIG_INDIRECT_PIO)	+= acpi_indirectio.o
+diff --git a/Documentation/PCI/pci-iov-howto.txt b/Documentation/PCI/pci-iov-howto.txt
+index 2d91ae2..902a528 100644
+--- a/Documentation/PCI/pci-iov-howto.txt
++++ b/Documentation/PCI/pci-iov-howto.txt
+@@ -68,6 +68,16 @@ To disable SR-IOV capability:
+ 	echo  0 > \
+         /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_numvfs
  
- # These are (potentially) separate modules
++To enable probing VFs by a compatible driver on the host:
++Before enabling SR-IOV capabilities, do:
++	echo 1 > \
++        /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
++
++To disable probing VFs by a compatible driver on the host:
++Before enabling SR-IOV capabilities, do:
++	echo  0 > \
++        /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
++
+ 3.2 Usage example
  
-diff --git a/drivers/acpi/acpi_indirectio.c b/drivers/acpi/acpi_indirectio.c
-new file mode 100644
-index 0000000..c8c80b5
---- /dev/null
-+++ b/drivers/acpi/acpi_indirectio.c
-@@ -0,0 +1,344 @@
-+/*
-+ * ACPI support for indirect-IO bus.
-+ *
-+ * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
-+ * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 as
-+ * published by the Free Software Foundation.
-+ */
-+
-+#include <linux/acpi.h>
-+#include <linux/platform_device.h>
-+#include <linux/logic_pio.h>
-+
-+#include "internal.h"
-+
-+ACPI_MODULE_NAME("indirect IO");
-+
-+#define INDIRECT_IO_INFO(desc) ((unsigned long)&desc)
-+
-+struct lpc_private_data {
-+	resource_size_t io_size;
-+	resource_size_t io_start;
-+};
-+
-+struct indirectio_device_desc {
-+	void *pdata; /* device relevant info data */
-+	int (*pre_setup)(struct acpi_device *adev, void *pdata);
-+};
-+
-+static struct lpc_private_data lpc_data = {
-+	.io_size = LPC_BUS_IO_SIZE,
-+	.io_start = LPC_MIN_BUS_RANGE,
-+};
-+
-+static inline bool acpi_logicio_supported_resource(struct acpi_resource *res)
-+{
-+	switch (res->type) {
-+	case ACPI_RESOURCE_TYPE_ADDRESS32:
-+	case ACPI_RESOURCE_TYPE_ADDRESS64:
-+		return true;
-+	}
-+	return false;
-+}
-+
-+static acpi_status acpi_count_logiciores(struct acpi_resource *res,
-+					   void *data)
-+{
-+	int *res_cnt = data;
-+
-+	if (acpi_logicio_supported_resource(res) &&
-+		!acpi_dev_filter_resource_type(res, IORESOURCE_IO))
-+		(*res_cnt)++;
-+
-+	return AE_OK;
-+}
-+
-+static acpi_status acpi_read_one_logiciores(struct acpi_resource *res,
-+		void *data)
-+{
-+	struct acpi_resource **resource = data;
-+
-+	if (acpi_logicio_supported_resource(res) &&
-+		!acpi_dev_filter_resource_type(res, IORESOURCE_IO)) {
-+		memcpy((*resource), res, sizeof(struct acpi_resource));
-+		(*resource)->length = sizeof(struct acpi_resource);
-+		(*resource)->type = res->type;
-+		(*resource)++;
-+	}
-+
-+	return AE_OK;
-+}
-+
-+static acpi_status
-+acpi_build_logiciores_template(struct acpi_device *adev,
-+			struct acpi_buffer *buffer)
-+{
-+	acpi_handle handle = adev->handle;
-+	struct acpi_resource *resource;
-+	acpi_status status;
-+	int res_cnt = 0;
-+
-+	status = acpi_walk_resources(handle, METHOD_NAME__CRS,
-+				     acpi_count_logiciores, &res_cnt);
-+	if (ACPI_FAILURE(status) || !res_cnt) {
-+		dev_err(&adev->dev, "can't evaluate _CRS: %d\n", status);
-+		return -EINVAL;
-+	}
-+
-+	buffer->length = sizeof(struct acpi_resource) * (res_cnt + 1) + 1;
-+	buffer->pointer = kzalloc(buffer->length - 1, GFP_KERNEL);
-+	if (!buffer->pointer)
-+		return -ENOMEM;
-+
-+	resource = (struct acpi_resource *)buffer->pointer;
-+	status = acpi_walk_resources(handle, METHOD_NAME__CRS,
-+				     acpi_read_one_logiciores, &resource);
-+	if (ACPI_FAILURE(status)) {
-+		kfree(buffer->pointer);
-+		dev_err(&adev->dev, "can't evaluate _CRS: %d\n", status);
-+		return -EINVAL;
-+	}
-+
-+	resource->type = ACPI_RESOURCE_TYPE_END_TAG;
-+	resource->length = sizeof(struct acpi_resource);
-+
-+	return 0;
-+}
-+
-+static int acpi_translate_logiciores(struct acpi_device *adev,
-+		struct acpi_device *host, struct acpi_buffer *buffer)
-+{
-+	int res_cnt = (buffer->length - 1) / sizeof(struct acpi_resource) - 1;
-+	struct acpi_resource *resource = buffer->pointer;
-+	struct acpi_resource_address64 addr;
-+	unsigned long sys_port;
-+	struct device *dev = &adev->dev;
-+
-+	/* only one I/O resource now */
-+	if (res_cnt != 1) {
-+		dev_err(dev, "encode %d resources whose type is(%d)!\n",
-+			res_cnt, resource->type);
-+		return -EINVAL;
-+	}
-+
-+	if (ACPI_FAILURE(acpi_resource_to_address64(resource, &addr))) {
-+		dev_err(dev, "convert acpi resource(%d) as addr64 FAIL!\n",
-+			resource->type);
-+		return -EFAULT;
-+	}
-+
-+	/* For indirect-IO, addr length must be fixed. (>0, 0/1, 0/1)(0,0,0) */
-+	if (addr.min_address_fixed != addr.max_address_fixed) {
-+		dev_warn(dev, "variable I/O resource is invalid!\n");
-+		return -EINVAL;
-+	}
-+
-+	dev_info(dev, "CRS IO: len=0x%llx [0x%llx - 0x%llx]\n",
-+			addr.address.address_length, addr.address.minimum,
-+			addr.address.maximum);
-+	sys_port = logic_pio_trans_hwaddr(&host->fwnode, addr.address.minimum);
-+	if (sys_port == -1) {
-+		dev_err(dev, "translate bus-addr(0x%llx) fail!\n",
-+			addr.address.minimum);
-+		return -EFAULT;
-+	}
-+
-+	switch (resource->type) {
-+	case ACPI_RESOURCE_TYPE_ADDRESS32:
-+	{
-+		struct acpi_resource_address32 *out_res;
-+
-+		out_res = &resource->data.address32;
-+		if (!addr.address.address_length)
-+			addr.address.address_length = out_res->address.maximum -
-+				out_res->address.minimum + 1;
-+		out_res->address.minimum = sys_port;
-+		out_res->address.maximum = sys_port +
-+				addr.address.address_length - 1;
-+		out_res->address.address_length = addr.address.address_length;
-+
-+		dev_info(dev, "_SRS 32IO: [0x%x - 0x%x] len = 0x%x\n",
-+			out_res->address.minimum,
-+			out_res->address.maximum,
-+			out_res->address.address_length);
-+
-+		break;
-+	}
-+
-+	case ACPI_RESOURCE_TYPE_ADDRESS64:
-+	{
-+		struct acpi_resource_address64 *out_res;
-+
-+		out_res = &resource->data.address64;
-+		if (!addr.address.address_length)
-+			addr.address.address_length = out_res->address.maximum -
-+				out_res->address.minimum + 1;
-+		out_res->address.minimum = sys_port;
-+		out_res->address.maximum = sys_port +
-+				addr.address.address_length - 1;
-+		out_res->address.address_length = addr.address.address_length;
-+
-+		dev_info(dev, "_SRS 64IO: [0x%llx - 0x%llx] len = 0x%llx\n",
-+			out_res->address.minimum,
-+			out_res->address.maximum,
-+			out_res->address.address_length);
-+
-+		break;
-+	}
-+
-+	default:
-+		return -EINVAL;
-+
-+	}
-+
-+	return 0;
-+}
-+
-+/*
-+ * update/set the current I/O resource of the designated device node.
-+ * after this calling, the enumeration can be started as the I/O resource
-+ * had been translated to logicial I/O from bus-local I/O.
-+ *
-+ * @adev: the device node to be updated the I/O resource;
-+ * @host: the device node where 'adev' is attached, which can be not
-+ *	the parent of 'adev';
-+ *
-+ * return 0 when successful, negative is for failure.
-+ */
-+static int acpi_set_logicio_resource(struct device *child,
-+		struct device *hostdev)
-+{
-+	struct acpi_device *adev;
-+	struct acpi_device *host;
-+	struct acpi_buffer buffer;
-+	acpi_status status;
-+	int ret;
-+
-+	if (!child || !hostdev)
-+		return -EINVAL;
-+
-+	host = to_acpi_device(hostdev);
-+	adev = to_acpi_device(child);
-+
-+	/* check the device state */
-+	if (!adev->status.present) {
-+		dev_info(child, "ACPI: device is not present!\n");
-+		return 0;
-+	}
-+	/* whether the child had been enumerated? */
-+	if (acpi_device_enumerated(adev)) {
-+		dev_info(child, "ACPI: had been enumerated!\n");
-+		return 0;
-+	}
-+
-+	/* read the _CRS and convert as acpi_buffer */
-+	status = acpi_build_logiciores_template(adev, &buffer);
-+	if (ACPI_FAILURE(status)) {
-+		dev_warn(child, "Failure evaluating %s\n", METHOD_NAME__CRS);
-+		return -ENODEV;
-+	}
-+
-+	/* translate the I/O resources */
-+	ret = acpi_translate_logiciores(adev, host, &buffer);
-+	if (ret) {
-+		kfree(buffer.pointer);
-+		dev_err(child, "Translate I/O range FAIL!\n");
-+		return ret;
-+	}
-+
-+	/* set current resource... */
-+	status = acpi_set_current_resources(adev->handle, &buffer);
-+	kfree(buffer.pointer);
-+	if (ACPI_FAILURE(status)) {
-+		dev_err(child, "Error evaluating _SRS (0x%x)\n", status);
-+		ret = -EIO;
-+	}
-+
-+	return ret;
-+}
-+
-+static int lpc_host_io_setup(struct acpi_device *adev, void *pdata)
-+{
-+	struct logic_pio_hwaddr *range, *tmprange;
-+	struct lpc_private_data *lpc_private;
-+	struct acpi_device *child;
-+
-+	lpc_private = (struct lpc_private_data *)pdata;
-+	range = kzalloc(sizeof(*range), GFP_KERNEL);
-+	if (!range)
-+		return -ENOMEM;
-+	range->fwnode = &adev->fwnode;
-+	range->flags = PIO_INDIRECT;
-+	range->size = lpc_private->io_size;
-+	range->hw_start = lpc_private->io_start;
-+
-+	tmprange = logic_pio_register_range(range, 1);
-+	if (tmprange != range) {
-+		kfree(range);
-+		if (IS_ERR(tmprange))
-+			return -EFAULT;
-+	}
-+
-+	/* For hisilpc, only care about the sons of host. */
-+	list_for_each_entry(child, &adev->children, node) {
-+		int ret;
-+
-+		ret = acpi_set_logicio_resource(&child->dev, &adev->dev);
-+		if (ret) {
-+			dev_err(&child->dev, "set resource failed..\n");
-+			return ret;
-+		}
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct indirectio_device_desc lpc_host_desc = {
-+	.pdata = &lpc_data,
-+	.pre_setup = lpc_host_io_setup,
-+};
-+
-+/* All the host devices which apply indirect-IO can be listed here. */
-+static const struct acpi_device_id acpi_indirect_host_id[] = {
-+	{"HISI0191", INDIRECT_IO_INFO(lpc_host_desc)},
-+	{""},
-+};
-+
-+static int acpi_indirectio_attach(struct acpi_device *adev,
-+				const struct acpi_device_id *id)
-+{
-+	struct indirectio_device_desc *hostdata;
-+	struct platform_device *pdev;
-+	int ret;
-+
-+	hostdata = (struct indirectio_device_desc *)id->driver_data;
-+	if (!hostdata || !hostdata->pre_setup)
-+		return -EINVAL;
-+
-+	ret = hostdata->pre_setup(adev, hostdata->pdata);
-+	if (!ret) {
-+		pdev = acpi_create_platform_device(adev, NULL);
-+		if (IS_ERR_OR_NULL(pdev)) {
-+			dev_err(&adev->dev, "Create platform device for host FAIL!\n");
-+			return -EFAULT;
-+		}
-+		acpi_device_set_enumerated(adev);
-+		ret = 1;
-+	}
-+
-+	return ret;
-+}
-+
-+
-+static struct acpi_scan_handler acpi_indirect_handler = {
-+	.ids = acpi_indirect_host_id,
-+	.attach = acpi_indirectio_attach,
-+};
-+
-+void __init acpi_indirectio_scan_init(void)
-+{
-+	acpi_scan_add_handler(&acpi_indirect_handler);
-+}
-diff --git a/drivers/acpi/internal.h b/drivers/acpi/internal.h
-index f159001..b11412d 100644
---- a/drivers/acpi/internal.h
-+++ b/drivers/acpi/internal.h
-@@ -31,6 +31,11 @@
- void acpi_platform_init(void);
- void acpi_pnp_init(void);
- void acpi_int340x_thermal_init(void);
-+#ifdef CONFIG_INDIRECT_PIO
-+void acpi_indirectio_scan_init(void);
-+#else
-+static inline void acpi_indirectio_scan_init(void) {}
+ Following piece of code illustrates the usage of the SR-IOV API.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index 2479ae8..70691de 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -450,6 +450,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+ 	iov->total_VFs = total;
+ 	iov->pgsz = pgsz;
+ 	iov->self = dev;
++	iov->probe_vfs = true;
+ 	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+ 	pci_read_config_byte(dev, pos + PCI_SRIOV_FUNC_LINK, &iov->link);
+ 	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END)
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index afa7271..930552c 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -405,11 +405,18 @@ static int pci_device_probe(struct device *dev)
+ 		return error;
+ 
+ 	pci_dev_get(pci_dev);
+-	error = __pci_device_probe(drv, pci_dev);
+-	if (error) {
+-		pcibios_free_irq(pci_dev);
+-		pci_dev_put(pci_dev);
++#ifdef CONFIG_PCI_IOV
++	if (!pci_dev->is_virtfn ||
++	    (pci_dev->is_virtfn && pci_dev->physfn->sriov->probe_vfs)) {
 +#endif
- #ifdef CONFIG_ARM_AMBA
- void acpi_amba_init(void);
- #else
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 1926918..eda79ce 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -2033,6 +2033,7 @@ int __init acpi_scan_init(void)
- 	acpi_int340x_thermal_init();
- 	acpi_amba_init();
- 	acpi_watchdog_init();
-+	acpi_indirectio_scan_init();
++		error = __pci_device_probe(drv, pci_dev);
++		if (error) {
++			pcibios_free_irq(pci_dev);
++			pci_dev_put(pci_dev);
++		}
++#ifdef CONFIG_PCI_IOV
+ 	}
++#endif
  
- 	acpi_scan_add_handler(&generic_device_handler);
+ 	return error;
+ }
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 25d010d..1d5b89d 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -526,10 +526,37 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+ 	return count;
+ }
  
++static ssize_t sriov_probe_vfs_show(struct device *dev,
++				    struct device_attribute *attr,
++				    char *buf)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	return sprintf(buf, "%u\n", pdev->sriov->probe_vfs);
++}
++
++static ssize_t sriov_probe_vfs_store(struct device *dev,
++				     struct device_attribute *attr,
++				     const char *buf, size_t count)
++{
++	struct pci_dev *pdev = to_pci_dev(dev);
++	bool probe_vfs;
++
++	if (kstrtobool(buf, &probe_vfs) < 0)
++		return -EINVAL;
++
++	pdev->sriov->probe_vfs = probe_vfs;
++
++	return count;
++}
++
+ static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
+ static struct device_attribute sriov_numvfs_attr =
+ 		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+ 		       sriov_numvfs_show, sriov_numvfs_store);
++static struct device_attribute sriov_probe_vfs_attr =
++		__ATTR(sriov_probe_vfs, (S_IRUGO|S_IWUSR|S_IWGRP),
++		       sriov_probe_vfs_show, sriov_probe_vfs_store);
+ #endif /* CONFIG_PCI_IOV */
+ 
+ static ssize_t driver_override_store(struct device *dev,
+@@ -1549,6 +1576,7 @@ static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
+ static struct attribute *sriov_dev_attrs[] = {
+ 	&sriov_totalvfs_attr.attr,
+ 	&sriov_numvfs_attr.attr,
++	&sriov_probe_vfs_attr.attr,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 8dd38e6..a62c6bf 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -272,6 +272,7 @@ struct pci_sriov {
+ 	struct pci_dev *self;	/* this PF */
+ 	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
+ 	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
++	bool probe_vfs;		/* probe VFs or not */
+ };
+ 
+ #ifdef CONFIG_PCI_ATS
 -- 
-1.9.1
+1.8.3.1
