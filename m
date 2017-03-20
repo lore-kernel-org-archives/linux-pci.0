@@ -1,79 +1,120 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1490104240.2895.22.camel@pengutronix.de>
-Subject: Re: [PATCH v7 3/4] PCI: imx6: Do not wait for speed change on i.MX7
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Andrey Smirnov <andrew.smirnov@gmail.com>
-Date: Tue, 21 Mar 2017 14:50:40 +0100
-In-Reply-To: <20170321134203.26325-4-andrew.smirnov@gmail.com>
-References: <20170321134203.26325-1-andrew.smirnov@gmail.com>
- <20170321134203.26325-4-andrew.smirnov@gmail.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Dong Aisheng <dongas86@gmail.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org,
- yurovsky@gmail.com
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=5qTW=25=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=5qTW=25=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Mon, 20 Mar 2017 18:45:27 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	John Garry <john.garry@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 03/20] asm-generic/io.h: add PCI config space remap
+ interface
+Message-ID: <20170320184527.GA8332@red-moon>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-4-lorenzo.pieralisi@arm.com>
+ <20170316211243.GE9739@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170316211243.GE9739@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-QW0gRGllbnN0YWcsIGRlbiAyMS4wMy4yMDE3LCAwNjo0MiAtMDcwMCBzY2hyaWViIEFuZHJleSBT
-bWlybm92Ogo+IEFzIGNhbiBiZSBzZWVuIGZyb20gWzFdOgo+IAo+ICIuLi50aGUgZGlmZmVyZW50
-IGJlaGF2aW9yIGJldHdlZW4gaU1YNlEgUENJZSBhbmQgaU1YN0QgUENJZSBtYXliZQo+IGNhdXNl
-ZCBieSB0aGUgZGlmZmVyZW50IGNvbnRyb2xsZXIgdmVyc2lvbi4KPiAKPiBSZWdhcmRpbmcgdG8g
-dGhlIERPQyBkZXNjcmlwdGlvbiwgdGhlIERJUkVDVF9TUEVFRF9DSEFOR0Ugc2hvdWxkIGJlCj4g
-Y2xlYXJlZCBhZnRlciB0aGUgc3BlZWQgY2hhbmdlIGZyb20gR0VOMSB0byBHRU4yLiBVbmZvcnR1
-bmF0ZWx5LCB3aGVuCj4gR0VOMSBkZXZpY2UgaXMgdXNlZCwgdGhlIGJlaGF2aW9yIGlzIG5vdCBk
-b2N1bWVudGVkLgo+IAo+IFNvLCBJQyBkZXNpZ24gZ3V5cyBydW4gdGhlIHNpbXVsYXRpb24gYW5k
-Cj4gZmluZCBvdXQgdGhlIGZvbGxvd2luZyBiZWhhdmlvcnM6Cj4gCj4gICAgICAxLiBESVJFQ1Rf
-U1BFRURfQ0hBTkdFIHdpbGwgYmUgY2xlYXJlZCBpbiA3RCBhZnRlciBzcGVlZCBjaGFuZ2UKPiAg
-ICAgIAlmcm9tIEdFTjEgdG8gR0VOMi4gVGhpcyBtYXRjaGVzIGRvY+KAmXMgZGVzY3JpcHRpb24K
-PiAKPiAgICAgIDIuIHNldCBNQVggbGluayBzcGVlZChQQ0lFX0NBUF9UQVJHRVRfTElOS19TUEVF
-RD0weDAxKSBhcyBHRU4xIGFuZAo+ICAgICAgCXJlLXJ1biB0aGUgc2ltdWxhdGlvbiwgRElSRUNU
-X1NQRUVEX0NIQU5HRSB3aWxsIG5vdCBiZSBjbGVhcmVkOwo+ICAgICAgCXJlbWFpbiBhcyAxLCB0
-aGlzIG1hdGNoZXMgeW91ciByZXN1bHQsIGJ1dCBmdW5jdGlvbiB0ZXN0IGlzCj4gICAgICAJcGFz
-c2VkLCBzbyB0aGlzIGJpdCBzaG91bGQgbm90IGFmZmVjdCB0aGUgbm9ybWFsIFBDSWUgZnVuY3Rp
-b24uCj4gLi4uIgo+IAo+IGlteDZfcGNpZV93YWl0X2Zvcl9zcGVlZF9jaGFuZ2Ugd2lsbCByZXBv
-cnQgZmFsc2UgZmFpbHVyZXMgZm9yIEdlbjEgLT4KPiBHZW4xIHNwZWVkIHRyYW5zaXRpb24sIHNv
-IGF2b2lkIGRvaW5nIHRoYXQgY2hlY2sgYW5kIGp1c3QgcmVseSBvbgo+IGlteDZfcGNpZV93YWl0
-X2Zvcl9saW5rIG9ubHkuCj4gCj4gWzFdIGh0dHBzOi8vY29tbXVuaXR5Lm54cC5jb20vbWVzc2Fn
-ZS84Njc5NDMKPiAKPiBDYzogeXVyb3Zza3lAZ21haWwuY29tCj4gQ2M6IEx1Y2FzIFN0YWNoIDxs
-LnN0YWNoQHBlbmd1dHJvbml4LmRlPgo+IENjOiBCam9ybiBIZWxnYWFzIDxiaGVsZ2Fhc0Bnb29n
-bGUuY29tPgo+IENjOiBGYWJpbyBFc3RldmFtIDxmYWJpby5lc3RldmFtQG54cC5jb20+Cj4gQ2M6
-IERvbmcgQWlzaGVuZyA8ZG9uZ2FzODZAZ21haWwuY29tPgo+IENjOiBsaW51eC1hcm0ta2VybmVs
-QGxpc3RzLmluZnJhZGVhZC5vcmcKPiBDYzogbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZwo+
-IFNpZ25lZC1vZmYtYnk6IEFuZHJleSBTbWlybm92IDxhbmRyZXcuc21pcm5vdkBnbWFpbC5jb20+
-CgpSZXZpZXdlZC1ieTogTHVjYXMgU3RhY2ggPGwuc3RhY2hAcGVuZ3V0cm9uaXguZGU+Cgo+IC0t
-LQo+ICBkcml2ZXJzL3BjaS9kd2MvcGNpLWlteDYuYyB8IDE5ICsrKysrKysrKysrKysrKy0tLS0K
-PiAgMSBmaWxlIGNoYW5nZWQsIDE1IGluc2VydGlvbnMoKyksIDQgZGVsZXRpb25zKC0pCj4gCj4g
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2R3Yy9wY2ktaW14Ni5jIGIvZHJpdmVycy9wY2kvZHdj
-L3BjaS1pbXg2LmMKPiBpbmRleCA2NGRlOWJiLi5jNzMxZTQxIDEwMDY0NAo+IC0tLSBhL2RyaXZl
-cnMvcGNpL2R3Yy9wY2ktaW14Ni5jCj4gKysrIGIvZHJpdmVycy9wY2kvZHdjL3BjaS1pbXg2LmMK
-PiBAQCAtNTQ1LDEwICs1NDUsMjEgQEAgc3RhdGljIGludCBpbXg2X3BjaWVfZXN0YWJsaXNoX2xp
-bmsoc3RydWN0IGlteDZfcGNpZSAqaW14Nl9wY2llKQo+ICAJdG1wIHw9IFBPUlRfTE9HSUNfU1BF
-RURfQ0hBTkdFOwo+ICAJZHdfcGNpZV93cml0ZWxfZGJpKHBjaSwgUENJRV9MSU5LX1dJRFRIX1NQ
-RUVEX0NPTlRST0wsIHRtcCk7Cj4gIAo+IC0JcmV0ID0gaW14Nl9wY2llX3dhaXRfZm9yX3NwZWVk
-X2NoYW5nZShpbXg2X3BjaWUpOwo+IC0JaWYgKHJldCkgewo+IC0JCWRldl9lcnIoZGV2LCAiRmFp
-bGVkIHRvIGJyaW5nIGxpbmsgdXAhXG4iKTsKPiAtCQlnb3RvIGVycl9yZXNldF9waHk7Cj4gKwlp
-ZiAoaW14Nl9wY2llLT52YXJpYW50ICE9IElNWDdEKSB7Cj4gKwkJLyoKPiArCQkgKiBPbiBpLk1Y
-NywgRElSRUNUX1NQRUVEX0NIQU5HRSBiZWhhdmVzIGRpZmZlcmVudGx5Cj4gKwkJICogZnJvbSBp
-Lk1YNiBmYW1pbHkgd2hlbiBubyBsaW5rIHNwZWVkIHRyYW5zaXRpb24KPiArCQkgKiBvY2N1cnMg
-YW5kIHdlIGdvIEdlbjEgLT4geWVwLCBHZW4xLiBUaGUgZGlmZmVyZW5jZQo+ICsJCSAqIGlzIHRo
-YXQsIGluIHN1Y2ggY2FzZSwgaXQgd2lsbCBub3QgYmUgY2xlYXJlZCBieSBIVwo+ICsJCSAqIHdo
-aWNoIHdpbGwgY2F1c2UgdGhlIGZvbGxvd2luZyBjb2RlIHRvIHJlcG9ydCBmYWxzZQo+ICsJCSAq
-IGZhaWx1cmUuCj4gKwkJICovCj4gKwo+ICsJCXJldCA9IGlteDZfcGNpZV93YWl0X2Zvcl9zcGVl
-ZF9jaGFuZ2UoaW14Nl9wY2llKTsKPiArCQlpZiAocmV0KSB7Cj4gKwkJCWRldl9lcnIoZGV2LCAi
-RmFpbGVkIHRvIGJyaW5nIGxpbmsgdXAhXG4iKTsKPiArCQkJZ290byBlcnJfcmVzZXRfcGh5Owo+
-ICsJCX0KPiAgCX0KPiAgCj4gIAkvKiBNYWtlIHN1cmUgbGluayB0cmFpbmluZyBpcyBmaW5pc2hl
-ZCBhcyB3ZWxsISAqLwoKCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxp
-c3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0
-aW5mby9saW51eC1hcm0ta2VybmVsCg==
+On Thu, Mar 16, 2017 at 04:12:43PM -0500, Bjorn Helgaas wrote:
+> [+cc Luis]
+> 
+> On Mon, Feb 27, 2017 at 03:14:14PM +0000, Lorenzo Pieralisi wrote:
+> > The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
+> > Posting") mandate non-posted configuration transactions. As further
+> > highlighted in the PCIe specifications (4.0 - Rev0.3, "Ordering
+> > Considerations for the Enhanced Configuration Access Mechanism"),
+> > through ECAM and ECAM-derivative configuration mechanism, the memory
+> > mapped transactions from the host CPU into Configuration Requests on the
+> > PCI express fabric may create ordering problems for software because
+> > writes to memory address are typically posted transactions (unless the
+> > architecture can enforce through virtual address mapping non-posted
+> > write transactions behaviour) but writes to Configuration Space are not
+> > posted on the PCI express fabric.
+> > 
+> > Current DT and ACPI host bridge controllers map PCI configuration space
+> > (ECAM and ECAM-derivative) into the virtual address space through
+> > ioremap() calls, that are non-cacheable device accesses on most
+> > architectures, but may provide "bufferable" or "posted" write semantics
+> > in architecture like eg ARM/ARM64 that allow ioremap'ed regions writes
+> > to be buffered in the bus connecting the host CPU to the PCI fabric;
+> > this behaviour, as underlined in the PCIe specifications, may trigger
+> > transactions ordering rules and must be prevented.
+> > 
+> > Introduce a new generic and explicit API to create a memory
+> > mapping for ECAM and ECAM-derivative config space area that
+> > defaults to ioremap_nocache() (which should provide a sane default
+> > behaviour) but still allowing architectures on which ioremap_nocache()
+> > results in posted write transactions to override the function
+> > call with an arch specific implementation that complies with
+> > the PCI specifications for configuration transactions.
+> > 
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Will Deacon <will.deacon@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Russell King <linux@armlinux.org.uk>
+> > Cc: Catalin Marinas <catalin.marinas@arm.com>
+> > ---
+> >  include/asm-generic/io.h | 9 +++++++++
+> >  1 file changed, 9 insertions(+)
+> > 
+> > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> > index 7ef015e..52dda81 100644
+> > --- a/include/asm-generic/io.h
+> > +++ b/include/asm-generic/io.h
+> > @@ -915,6 +915,15 @@ extern void ioport_unmap(void __iomem *p);
+> >  #endif /* CONFIG_GENERIC_IOMAP */
+> >  #endif /* CONFIG_HAS_IOPORT_MAP */
+> >  
+> > +#ifndef pci_remap_cfgspace
+> > +#define pci_remap_cfgspace pci_remap_cfgspace
+> > +static inline void __iomem *pci_remap_cfgspace(phys_addr_t offset,
+> > +					       size_t size)
+> > +{
+> > +	return ioremap_nocache(offset, size);
+> > +}
+> 
+> I'm fine with this conceptually, but I think it would make more sense
+> if the name weren't specific to PCI or config space, e.g.,
+> ioremap_nopost() or something.
+
+I agree with you since there is not much PCI specific in the ioremap
+implementation we are introducing (and it may be used more by other
+subsystems too), I suspect it is all about finding a reasonable
+ioremap_ naming extension (ioremap_nowb() ?).
+
+On the other hand having an explicit pci_remap_cfgspace() interface
+would simplify preventing drivers to sneak into the kernel with the
+wrong ioremap API for config space (even though when all existing
+ones are converted new drivers would just be based on existing ones
+so it should be fine).
+
+Suggestions welcome.
+
+Thanks !
+Lorenzo
