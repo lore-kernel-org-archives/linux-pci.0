@@ -1,83 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v3 7/7] PCI: dwc: dra7xx: Push request_irq call to the bottom
- of probe
-Date: Wed, 8 Mar 2017 16:17:17 +0530
-Message-ID: <1488970037-17740-8-git-send-email-kishon@ti.com>
-In-Reply-To: <1488970037-17740-1-git-send-email-kishon@ti.com>
-References: <1488970037-17740-1-git-send-email-kishon@ti.com>
+Return-Path: <SRS0=CwFM=25=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=CwFM=25=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V4 0/3] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1489438085-2055-1-git-send-email-okaya@codeaurora.org>
+ <20170313214616.GE8232@bhelgaas-glaptop.roam.corp.google.com>
+ <c6b78903-ea09-9719-7073-c679b0b64a05@codeaurora.org>
+ <20170313230855.GG8232@bhelgaas-glaptop.roam.corp.google.com>
+ <b44fa6b3-7db5-bea4-7f2e-7f880362d171@codeaurora.org>
+ <20170314192138.GA26264@bhelgaas-glaptop.roam.corp.google.com>
+ <8fa282de-9896-0e2a-01cb-7146817268e6@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, mayurkumar.patel@intel.com,
+ linux-arm-kernel@lists.infradead.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5049bf09-6283-b617-2c21-acf56a1faab3@codeaurora.org>
+Date: Mon, 20 Mar 2017 13:43:52 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Keerthy <j-keerthy@ti.com>, nsekhar@ti.com,
- Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <8fa282de-9896-0e2a-01cb-7146817268e6@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Keerthy <j-keerthy@ti.com>
+Hi Bjorn,
 
-Currently devm_request_irq is being called before base, pci fields
-of dra7xx_pcie structure are populated. It is called even before
-pm_runtime_enable and pm_runtime_get_sync are called. This will
-lead to exceptions if in case an interrupt is triggered before
-the all of the above are done. Hence push the devm_request_irq
-call to the end of the probe.
+On 3/15/2017 10:33 AM, Sinan Kaya wrote:
+> On 3/14/2017 3:21 PM, Bjorn Helgaas wrote:
+>> On Mon, Mar 13, 2017 at 07:21:42PM -0400, Sinan Kaya wrote:
+>>> On 3/13/2017 7:08 PM, Bjorn Helgaas wrote:
+>>>> On Mon, Mar 13, 2017 at 06:05:55PM -0400, Sinan Kaya wrote:
+>>>>> On 3/13/2017 5:46 PM, Bjorn Helgaas wrote:
+>>>>>> What is this series based on?  Unless they depend on other in-flight
+>>>>>> patches, I apply patches to branches based on my "master" branch,
+>>>>>> which is typically -rc1 or -rc2 (it's currently v4.11-rc1).  These
+>>>>>> don't apply to either.
+>>>>>
+>>>>> It looks like I am on 4.10. I can rebase and post again. 
+>>>>
+>>>> Rebasing would be good, but I can give you some comments on your v4,
+>>>> now that I can apply it and see what it looks like.
+>>>>
+>>>
+>>> Thanks, 
+>>>
+>>> I'm mostly done with the rebase. I'll have to retest tomorrow morning and
+>>> then post.
+>>>
+>>> I had to drop this
+>>>
+>>>    - for endpoints, have pcie_aspm_init_link_state() do the actual ASPM
+>>>       setup of the link as it currently does.
+>>>
+>>> during rebase.
+>>>
+>>> The reason is that the clock configuration needs to switch to common clock
+>>> mode across all the devices before any ASPM latency is read/configured.
+>>>
+>>> Common clock configuration seem to be trying to walk the device list.
+>>>
+>>> Here is the untested version. It might not even compile.
+>>> I'll wait until I receive your comments.
+>>
+>> I had already started looking at v4, so these comments are based on
+>> that.  Your v4 is a great start and these are all general comments so
+>> I didn't try to match each one up with the code.
+>>
+>>   - Goal: retain BIOS ASPM config of bridge even if children are
+>>     removed and re-added.  Is there a bugzilla for this problem?
+> 
 
-Signed-off-by: Keerthy <j-keerthy@ti.com>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c |   14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Is there a common place to add code after the bus scan similar to pci_init_capabilities(). 
+I really don't like the ASPM call in the middle of scan function.
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index c6fef0a..8c53233 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -410,13 +410,6 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 		return -EINVAL;
- 	}
- 
--	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
--			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
--	if (ret) {
--		dev_err(dev, "failed to request irq\n");
--		return ret;
--	}
--
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ti_conf");
- 	base = devm_ioremap_nocache(dev, res->start, resource_size(res));
- 	if (!base)
-@@ -478,6 +471,13 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
- 	if (ret < 0)
- 		goto err_gpio;
- 
-+	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
-+			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
-+	if (ret) {
-+		dev_err(dev, "failed to request irq\n");
-+		goto err_gpio;
-+	}
-+
- 	return 0;
- 
- err_gpio:
+Sinan
+
 -- 
-1.7.9.5
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
