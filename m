@@ -1,78 +1,57 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 3/4] asm-generic/io.h: Simplify ioremap() comments
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        linux-kernel@vger.kernel.org
-Date: Mon, 20 Mar 2017 13:43:00 -0500
-Message-ID: <20170320184300.4858.47081.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170320182014.4858.22352.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170320182014.4858.22352.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=cEnS=25=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=cEnS=25=free.fr=slash.tmp@kernel.org>
+Subject: Re: [RFC PATCH v0.001] PCI: Add support for tango PCIe controller
+From: Mason <slash.tmp@free.fr>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>
+References: <ab110ce2-8678-9b34-6bd1-6cfaaa7fea04@free.fr>
+Message-ID: <09f95471-a7c1-033f-0037-ae004623cf82@free.fr>
+Date: Mon, 20 Mar 2017 15:14:38 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <ab110ce2-8678-9b34-6bd1-6cfaaa7fea04@free.fr>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-Simplify ioremap() comments to make it clear that arches with an MMU *must*
-implement ioremap() and iounmap(), and that the default implementations
-only apply to non-MMU arches.  It's obvious how to override the defaults;
-no need to educate people here.  Remove the ancient "struct page" comment
-that doesn't seem related to anything here.
+On 17/03/2017 17:11, Mason wrote:
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
----
- include/asm-generic/io.h |   24 +++++++-----------------
- 1 file changed, 7 insertions(+), 17 deletions(-)
+> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
+> new file mode 100644
+> index 000000000000..9d7fed75fd1d
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-tango.c
+> @@ -0,0 +1,125 @@
+> +#include <linux/pci-ecam.h>
+> +
+> +#define VENDOR_SIGMA	0x1105
+> +
+> +/*
+> + * How do I reach dev->driver_data in the config accessors?
+> + */
+> +static void __iomem *mux;
 
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index e0a331a22346..3f8a7e589071 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -780,8 +780,7 @@ static inline void pci_iounmap(struct pci_dev *dev, void __iomem *p)
- #endif /* CONFIG_GENERIC_IOMAP */
- 
- /*
-- * Change virtual addresses to physical addresses and vv.
-- * These are pretty trivial
-+ * Change virtual addresses to physical addresses and vice versa.
-  */
- #ifndef virt_to_phys
- #define virt_to_phys virt_to_phys
-@@ -802,18 +801,11 @@ static inline void *phys_to_virt(unsigned long address)
- /**
-  * DOC: ioremap() and ioremap_*() variants
-  *
-- * If you have an MMU your architecture is expected to have both ioremap()
-- * and iounmap() implemented otherwise the asm-generic helpers will provide a
-- * direct mapping.
-+ * If you have an MMU, your architecture must implement both ioremap() and
-+ * iounmap().
-  *
-- * There are ioremap_*() call variants, if you have no MMU we naturally will
-- * default to direct mapping for all of them, you can override these defaults.
-- * If you have an MMU you are highly encouraged to provide your own
-- * ioremap variant implementation as there currently is no safe architecture
-- * agnostic default. To avoid possible improper behaviour default asm-generic
-- * ioremap_*() variants all return NULL when an MMU is available. If you've
-- * defined your own ioremap_*() variant you must then declare your own
-- * ioremap_*() variant as defined to itself to avoid the default NULL return.
-+ * It must also implement variants such as ioremap_uc().  The default
-+ * implementation here returns failure (NULL) to avoid improper behavior.
-  */
- 
- #ifdef CONFIG_MMU
-@@ -829,10 +821,8 @@ static inline void __iomem *ioremap_uc(phys_addr_t offset, size_t size)
- #else /* !CONFIG_MMU */
- 
- /*
-- * Change "struct page" to physical address.
-- *
-- * This implementation is for the no-MMU case only... if you have an MMU
-- * you'll need to provide your own definitions.
-+ * If you don't have an MMU, the default implementations here provide
-+ * direct identity mapping.  You can override these if necessary.
-  */
- 
- #ifndef ioremap
+	struct pci_config_window *cfg = bus->sysdata;
+	dev_get_drvdata(cfg->parent);
+
+
+/*
+ * struct to hold the mappings of a config space window. This
+ * is expected to be used as sysdata for PCI controllers that
+ * use ECAM.
+ */
+struct pci_config_window {
+	struct resource			res;
+	struct resource			busr;
+	void				*priv;
+	struct pci_ecam_ops		*ops;
+	union {
+		void __iomem		*win;	/* 64-bit single mapping */
+		void __iomem		**winp; /* 32-bit per-bus mapping */
+	};
+	struct device			*parent;/* ECAM res was from this dev */
+};
