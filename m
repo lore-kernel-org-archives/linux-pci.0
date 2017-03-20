@@ -1,94 +1,61 @@
-Return-Path: <SRS0=ogIK=2T=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=ogIK=2T=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <helgaas@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Tomasz Nowicki <tn@semihalf.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        "agraf@suse.de"
-	<agraf@suse.de>,
-        Yuanzhichang <yuanzhichang@hisilicon.com>,
-        "xuwei (O)"
-	<xuwei5@hisilicon.com>,
-        John Garry <john.garry@huawei.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Subject: RE: [QUESTION]: Same IO bus address in different _CRS methods
-Date: Fri, 10 Mar 2017 00:25:03 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E2046D682@FRAEML521-MBX.china.huawei.com>
-References: <EE11001F9E5DDD47B7634E2F8A612F2E2046C6AC@FRAEML521-MBX.china.huawei.com>
- <20170309181134.GA15721@bhelgaas-glaptop.roam.corp.google.com>
- <CAK8P3a0iECAKBKG6zqXO5VaPze9OzxzSY+cBFHsM46xVAGhE1A@mail.gmail.com>
- <20170309223738.GE19517@bhelgaas-glaptop.roam.corp.google.com>
- <CAK8P3a3vQ+ZO3tcO41uTOVYQszXj-_x-mEFMkZmnE0A1efTxUw@mail.gmail.com>
-In-Reply-To: <CAK8P3a3vQ+ZO3tcO41uTOVYQszXj-_x-mEFMkZmnE0A1efTxUw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 20 Mar 2017 16:43:16 -0500
+From: Rob Herring <robh@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v4 15/23] dt-bindings: PCI: dra7xx: Add dt bindings to
+ enable unaligned access
+Message-ID: <20170320214316.yah5cvfdabiceywf@rob-hp-laptop>
+References: <20170313142259.25397-1-kishon@ti.com>
+ <20170313142259.25397-16-kishon@ti.com>
 MIME-Version: 1.0
+In-Reply-To: <20170313142259.25397-16-kishon@ti.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, hch@infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQXJuZCBhbmQgQmpvcm4NCg0KTWFueSB0aGFua3MgZm9yIHlvdXIgYW5zd2Vycw0KDQo+IC0t
-LS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IGFybmRiZXJnbWFubkBnbWFpbC5jb20g
-W21haWx0bzphcm5kYmVyZ21hbm5AZ21haWwuY29tXSBPbiBCZWhhbGYNCj4gT2YgQXJuZCBCZXJn
-bWFubg0KPiBTZW50OiAwOSBNYXJjaCAyMDE3IDIyOjUwDQo+IFRvOiBCam9ybiBIZWxnYWFzDQo+
-IENjOiBHYWJyaWVsZSBQYW9sb25pOyBCam9ybiBIZWxnYWFzOyBUb21hc3ogTm93aWNraTsgTG9y
-ZW56byBQaWVyYWxpc2k7DQo+IGFncmFmQHN1c2UuZGU7IFl1YW56aGljaGFuZzsgeHV3ZWkgKE8p
-OyBKb2huIEdhcnJ5OyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZzsgbGludXgtYWNwaUB2
-Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtRVUVTVElPTl06IFNhbWUgSU8gYnVzIGFk
-ZHJlc3MgaW4gZGlmZmVyZW50IF9DUlMgbWV0aG9kcw0KPiANCj4gT24gVGh1LCBNYXIgOSwgMjAx
-NyBhdCAxMTozNyBQTSwgQmpvcm4gSGVsZ2FhcyA8aGVsZ2Fhc0BrZXJuZWwub3JnPg0KPiB3cm90
-ZToNCj4gPiBPbiBUaHUsIE1hciAwOSwgMjAxNyBhdCAxMTowOToyNFBNICswMTAwLCBBcm5kIEJl
-cmdtYW5uIHdyb3RlOg0KPiA+PiBPbiBUaHUsIE1hciA5LCAyMDE3IGF0IDc6MTEgUE0sIEJqb3Ju
-IEhlbGdhYXMgPGhlbGdhYXNAa2VybmVsLm9yZz4NCj4gd3JvdGU6DQo+ID4+ID4gT24gVGh1LCBN
-YXIgMDksIDIwMTcgYXQgMDM6NDE6MDNQTSArMDAwMCwgR2FicmllbGUgUGFvbG9uaSB3cm90ZToN
-Cj4gPj4gPj4gSGkgQmpvcm4gYW5kIGFsbA0KPiA+PiA+Pg0KPiA+PiA+PiBJIGhhdmUgYSBxdWVz
-dGlvbiByZWdhcmRpbmcgYnVzIGFkZHJlc3NlcyBmb3IgSU8gcmVzb3VyY2VzIGluIHRoZQ0KPiA+
-PiA+PiBBQ1BJIHRhYmxlLg0KPiA+PiA+Pg0KPiA+PiA+PiBUaGUgcXVlc3Rpb24gaXMgaWYgZnJv
-bSBhbiBBQ1BJIHBlcnNwZWN0aXZlIGl0IGlzIGxlZ2FsIHRvIGhhdmUNCj4gdHdvDQo+ID4+ID4+
-IGVudHJpZXMgaW4gc2VwYXJhdGUgX0NSUyBtZXRob2RzIHVzaW5nIHRoZSBzYW1lIElPIGJ1cyBh
-ZGRyZXNzLg0KPiA+PiA+Pg0KPiA+PiA+PiBBcyBhbiBleGFtcGxlIHBsZWFzZSBzZWUgdGhlIGNv
-ZGUgYXQgdGhlIGJvdHRvbTogd2UgaGF2ZSB0aGUgc2FtZQ0KPiA+PiA+PiBidXMgYWRkcmVzcyBz
-dGFydGluZyBhdCAweDAgd2l0aCAob2J2aW91c2x5KSBkaWZmZXJlbnQgb2Zmc2V0cw0KPiA+PiA+
-PiBsZWFkaW5nIHRvIGRpZmZlcmVudCBDUFUgcGh5c2ljYWwgYWRkcmVzc2VzLiBJcyB0aGlzIGxl
-Z2FsPw0KPiA+PiA+DQo+ID4+ID4gWWVzLg0KPiA+PiA+DQo+ID4+ID4gVGhlc2UgYXJlIG9uIHNl
-cGFyYXRlIFBDSSBidXNlcyAoUENJMCBsZWFkcyB0byAwMDAwOjAwIGFuZCBQQ0kxDQo+IGxlYWRz
-DQo+ID4+ID4gdG8gMDAwMTplMCksIHNvIHRoZXJlIHNob3VsZCBiZSBubyBjb25mbGljdC4gIFRo
-b3NlIGFyZSBjb21wbGV0ZWx5DQo+ID4+ID4gaW5kZXBlbmRlbnQgUENJIGJ1c2VzLCBhbmQgdGhl
-aXIgYnVzIGFkZHJlc3Mgc3BhY2VzIGFyZSBhbHNvDQo+ID4+ID4gaW5kZXBlbmRlbnQuDQo+ID4+
-ID4NCj4gPj4gPiBZb3UgZG8gaGF2ZSB0byBtYWtlIHN1cmUgdGhlIENQVSBwaHlzaWNhbCBhZGRy
-ZXNzZXMgZG9uJ3QNCj4gY29uZmxpY3QsIG9mDQo+ID4+ID4gY291cnNlLg0KPiA+Pg0KPiA+PiBP
-ay4gTXkgcmVhZGluZyBvZiB0aGUgaWE2NCBjb2RlIHdhcyB0aGF0IGl0IHdvdWxkIHJlamVjdCB0
-aGlzIGFzDQo+IGJlaW5nDQo+ID4+IG92ZXJsYXBwaW5nIHJlc291cmNlcywgYnV0IEkgd2FzIHBy
-b2JhYmx5IG1pc3JlYWRpbmcgdGhlbi4NCj4gPg0KPiA+IEknbSBmYWlybHkgc3VyZSBpYTY0IHN1
-cHBvcnRlZCBtdWx0aXBsZSAwLTB4ZmZmZiBJL08gcG9ydCBzcGFjZXMgKGluDQo+IFBDSQ0KPiA+
-IEkvTyBzcGFjZSksIGJ1dCBJIGRvbid0IGhhdmUgZG1lc2cgbG9ncyBmcm9tIGFueSBvZiB0aG9z
-ZSBtYWNoaW5lcw0KPiBhbnkNCj4gPiBtb3JlLg0KPiANCj4gT2suIEkndmUgcmVhZCB0aGUgY29k
-ZSBhZ2FpbiBhbmQgeW91IGFyZSByaWdodDogaWE2NCBjaGVja3MgdGhhdCB0aGUNCj4gQ1BVIGFk
-ZHJlc3MgaXMgdW5pcXVlLCBub3QgdGhlIFBDSSBJL08gc3BhY2UgYWRkcmVzcy4NCj4gDQo+ID4+
-IFdoYXQgaXMgdGhlIGV4cGVjdGVkIHdheSB0byBkZWFsIHdpdGggYSBkZXZpY2UgdXNpbmcgYW4g
-SS9PIHJlc291cmNlDQo+ID4+IHRoYXQgaXMgbm90IGEgY2hpbGQgb2YgZWl0aGVyIFBDSSBob3N0
-IGJyaWRnZSBpbiB0aGlzIGNhc2UgKGUuZy4gYQ0KPiA+PiBCTUMgYmVoaW5kIGEgUENJLUxQQyBi
-cmlkZ2UpPyBJcyB0aGlzIG9ubHkgYWxsb3dlZCB0byBleGlzdCBiZWxvdw0KPiA+PiB0aGUgZGV2
-aWNlIHRoYXQgcHJvdmlkZXMgdGhlIHJlc3BlY3RpdmUgSS9PIHNwYWNlPw0KPiA+DQo+ID4gVGhh
-dCdzIGEgZ29vZCBxdWVzdGlvbi4gIEknbSBub3QgcmVhbGx5IGZhbWlsaWFyIHdpdGggUENJLUxQ
-Qw0KPiBicmlkZ2VzLg0KPiA+IEkgZ3Vlc3MgdGhleSdyZSBub3QgUENJLXRvLVBDSSBicmlkZ2Vz
-IGFuZCB3b3VsZG4ndCBoYXZlIEkvTyB3aW5kb3dzDQo+ID4gbGlrZSBJJ20gdXNlZCB0bz8gIFdo
-YXQgKmRvKiB0aGV5IGxvb2sgbGlrZT8NCj4gDQo+IFRoZXkgYXJlIGxpa2UgUENJLUlTQSBicmlk
-Z2VzLCBjb25uZWN0aW5nIGRldmljZXMgdGhhdCB1c2UgZWl0aGVyDQo+IGhhcmRjb2RlZCBJL08g
-cG9ydHMgKHVhcnQsIGlwbWkta2NzLCAuLi4pIG9yIElTQVBOUC4NCj4gDQo+IEluIHRoZSBjYXNl
-IHRoYXQgd2UgYXJlIGludGVyZXN0ZWQgaW4gc3BlY2lmaWNhbGx5IGhlcmUsIHRoZXJlIGlzIG5v
-dA0KPiBhY3R1YWxseSBhIFBDSS1MUEMgYnJpZGdlLCBidXQgYSBMUEMgaG9zdCBicmlkZ2UgdGhh
-dCBpcyBpbmRlcGVuZGVudA0KPiBvZiBQQ0kgYnV0IGhhcyBpdHMgb3duIEkvTyBzcGFjZSwgYW5k
-IGEgbnVtYmVyIG9mIGNoaWxkIGRldmljZXMNCj4gYXR0YWNoZWQNCj4gdG8gdGhhdC4NCg0KSSB0
-aGluayB0aGF0IGZvciB0aGUgY2FzZSB0aGF0IHdlIHdlcmUgZGlzY3Vzc2luZyB3ZSBuZWVkZWQg
-dG8ga25vdw0Kd2hldGhlciB3ZSBjb3VsZCBtYWtlIHRoZSBhc3N1bXB0aW9uIHRvIGhhdmUgdW5p
-cXVlIElPIGJ1cyBhZGRyZXNzZXMNCmluIGEgd2hvbGUgQUNQSSB0YWJsZS4NCg0KVGhlIGlkZWEg
-Zm9yIEFDUEkgd2FzIHRvIHJld29yayBhY3BpX3BjaV9yb290X3JlbWFwX2lvc3BhY2UgYW5kLCAN
-CnJhdGhlciB0aGFuIHVzaW5nIHRoZSBQSU8gdG9rZW5zIHJldHJpZXZlZCBieSBwY2lfcmVnaXN0
-ZXJfaW9fcmFuZ2UoKSwNCnJlbW92ZSB0aGUgY2FsbCB0byB0aGlzIGZ1bmN0aW9uIGFuZCB1c2Ug
-dGhlIGJ1cyBhZGRyZXNzZXMgZGVmaW5lZA0KaW4gdGhlIF9DUlMgbWV0aG9kLg0KDQpGcm9tIHdo
-YXQgQmpvcm4gc2FpZCBpdCBzZWVtcyB0aGF0IHdlIGhhdmUgYXQgbGVhc3Qgc29tZSBjYXNlcyB3
-aGVyZQ0KdGhlc2UgYnVzIGFkZHJlc3NlcyBhcmUgbm90IHVuaXF1ZTsgdGhlcmVmb3JlIGluIGxp
-bnV4IHdlIG5lZWQgdG8gZ2VuZXJhdGUNCnRoZSBQSU8gdG9rZW5zIGR5bmFtaWNhbGx5Lg0KDQpJ
-ZiB5b3UgZ3V5cyBhZ3JlZSBvbiB0aGUgY29uY2x1c2lvbiBhYm92ZSBJIHdpbGwgY29udGludWUg
-d2l0aCB0aGUNCnJld29yayBvZiB0aGUgSGlTaWxpY29uIExQQyBkcml2ZXIgd2l0aCB0aGUgYXNz
-dW1wdGlvbiB0aGF0IHdlIG5lZWQNCmR5bmFtaWNhbGx5IGFzc2lnbmVkIHRva2VucyBhbHNvIGZv
-ciBBQ1BJLg0KDQpBZ2FpbiBtYW55IHRoYW5rcw0KR2FiDQoNCj4gDQo+ICAgICAgIEFybmQNCg==
+On Mon, Mar 13, 2017 at 07:52:51PM +0530, Kishon Vijay Abraham I wrote:
+> Update device tree binding documentation of TI's dra7xx PCI
+> controller to include property for enabling unaligned mem access.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  Documentation/devicetree/bindings/pci/ti-pci.txt | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> index 190828a5f32a..b69dd7dbd29e 100644
+> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
+> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+> @@ -39,6 +39,11 @@ DEVICE MODE
+>   - interrupts : one interrupt entries must be specified for main interrupt.
+>   - num-ib-windows : number of inbound address translation windows
+>   - num-ob-windows : number of outbound address translation windows
+> + - ti,syscon-unaligned-access: phandle to the syscon dt node. The 1st argument
+> +			       should contain the register offset within syscon
+> +			       and the 2nd argument should contain the bit field
+> +			       for setting the bit to enable unaligned
+> +			       access.
+
+This should be setup by the firmware/bootloader or some platform code. 
+Why does the PCI host need to configure this?
+
+Rob
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
