@@ -1,48 +1,51 @@
-Return-Path: <SRS0=vRuP=3H=fb.com=prvs=5262d793f5=wzhang@kernel.org>
-Return-Path: <SRS0=vRuP=3H=fb.com=prvs=5262d793f5=wzhang@kernel.org>
-From: Wei Zhang <wzhang@fb.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Bjorn Helgaas
-	<bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Lukas
- Wunner <lukas@wunner.de>, Austin Bolen <Austin.Bolen@dell.com>,
-        Christoph
- Hellwig <hch@infradead.org>
-Subject: Re: [PATCHv6 0/5] Limiting PCI access
-Date: Thu, 30 Mar 2017 04:10:05 +0000
-Message-ID: <9E0B6B52-2641-43BF-8587-83D90CF760CD@fb.com>
-References: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
- <20170330035639.GA23926@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170330035639.GA23926@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Subject: [PATCH v2 1/4] asm-generic/io.h: Fix "IOMMU" typos
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        linux-kernel@vger.kernel.org
+Date: Mon, 20 Mar 2017 13:42:46 -0500
+Message-ID: <20170320184246.4858.15836.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170320182014.4858.22352.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170320182014.4858.22352.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VGhpcyBpcyBncmVhdCEgIFRoYW5rcyBCam9ybiBhbmQgS2VpdGghICAtV2VpDQoNCi0tDQp3ZWkg
-emhhbmcgfCBzb2Z0d2FyZSBlbmdpbmVlciB8IGZhY2Vib29rDQp3emhhbmdAZmIuY29tIHwgKDQw
-OCkgNDYwLTQ4MDMNCg0KT24gMy8yOS8xNywgODo1NiBQTSwgIkJqb3JuIEhlbGdhYXMiIDxoZWxn
-YWFzQGtlcm5lbC5vcmc+IHdyb3RlOg0KDQogICAgT24gVHVlLCBGZWIgMDcsIDIwMTcgYXQgMDI6
-MzI6MzJQTSAtMDUwMCwgS2VpdGggQnVzY2ggd3JvdGU6DQogICAgPiBUaGUgY29kZSBpcyBmdW5j
-dGlvbmFsbHkgZXF1aXZhbGVudCB0byB2NS4gSSd2ZSBmaXhlZCB0aGUgc3R5bGUNCiAgICA+IHBv
-aW50cyBtZW50aW9uZWQgaW4gcmV2aWV3IG9uIGxpbmUgd2FycHBpbmcsIGFkanVzdGVkIHRoZSBj
-aGFuZ2UgbG9nDQogICAgPiBvbiB0aGUgbXNpL21zaXggc2tpcHBhZ2UgdG8gbm90IGV4Y2x1ZGUg
-bWVudGlvbmluZyBtc2ksIGFuZCBhZGRlZCB0aGUNCiAgICA+IGFjY3VtdWxhdGVkIFJldmlld2Vk
-LWJ5J3MuDQogICAgPiANCiAgICA+IEtlaXRoIEJ1c2NoICg1KToNCiAgICA+ICAgcGNpOiBFeHBv
-cnQgcGNpIGRldmljZSBjb25maWcgYWNjZXNzb3JzDQogICAgPiAgIHBjaTogQWRkIGRldmljZSBk
-aXNjb25uZWN0ZWQgc3RhdGUNCiAgICA+ICAgcGNpOiBObyBjb25maWcgYWNjZXNzIGZvciBkaXNj
-b25uZWN0ZWQgZGV2aWNlcw0KICAgID4gICBwY2kvbXNpeDogU2tpcCBkaXNhYmxpbmcgZGlzY29u
-bmVjdGVkIGRldmljZXMNCiAgICA+ICAgcGNpOiBRdWljayByZXR1cm4gZm9yIHBjaV9kZXZpY2Vf
-aXNfcHJlc2VudA0KICAgID4gDQogICAgPiAgZHJpdmVycy9wY2kvYWNjZXNzLmMgICAgICAgICAg
-ICAgfCA1NiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQogICAgPiAg
-ZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfcGNpLmMgfCAgNiArKysrKw0KICAgID4gIGRyaXZl
-cnMvcGNpL21zaS5jICAgICAgICAgICAgICAgIHwgIDcgKysrKy0NCiAgICA+ICBkcml2ZXJzL3Bj
-aS9wY2kuYyAgICAgICAgICAgICAgICB8ICAyICsrDQogICAgPiAgZHJpdmVycy9wY2kvcGNpLmgg
-ICAgICAgICAgICAgICAgfCAxNCArKysrKysrKysrDQogICAgPiAgZHJpdmVycy9wY2kvcGNpZS9w
-Y2llLWRwYy5jICAgICAgfCAgNSArKysrDQogICAgPiAgaW5jbHVkZS9saW51eC9wY2kuaCAgICAg
-ICAgICAgICAgfCAzNCArKysrKystLS0tLS0tLS0tLS0tLS0tLS0NCiAgICA+ICA3IGZpbGVzIGNo
-YW5nZWQsIDk3IGluc2VydGlvbnMoKyksIDI3IGRlbGV0aW9ucygtKQ0KICAgIA0KICAgIEFwcGxp
-ZWQgdG8gcGNpL2VudW1lcmF0aW9uIGZvciB2NC4xMiB3aXRoDQogICAgDQogICAgICBUZXN0ZWQt
-Ynk6IEtyaXNobmEgRGh1bGlwYWxhIDxrcmlzaG5hZEBmYi5jb20+DQogICAgICBSZXZpZXdlZC1i
-eTogV2VpIFpoYW5nIDx3emhhbmdAZmIuY29tPg0KICAgIA0KICAgIFRoYW5rcyENCiAgICANCg0K
+The ioremap() block comment refers to "IOMMU" when it means "MMU".  Fix
+these typos to avoid confusion.
+
+Fixes: 8c7ea50c010b ("x86/mm, asm-generic: Add IOMMU ioremap_uc() variant default")
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+---
+ include/asm-generic/io.h |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index 7ef015eb3403..978d2e27ce1d 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -802,16 +802,16 @@ static inline void *phys_to_virt(unsigned long address)
+ /**
+  * DOC: ioremap() and ioremap_*() variants
+  *
+- * If you have an IOMMU your architecture is expected to have both ioremap()
++ * If you have an MMU your architecture is expected to have both ioremap()
+  * and iounmap() implemented otherwise the asm-generic helpers will provide a
+  * direct mapping.
+  *
+- * There are ioremap_*() call variants, if you have no IOMMU we naturally will
++ * There are ioremap_*() call variants, if you have no MMU we naturally will
+  * default to direct mapping for all of them, you can override these defaults.
+- * If you have an IOMMU you are highly encouraged to provide your own
++ * If you have an MMU you are highly encouraged to provide your own
+  * ioremap variant implementation as there currently is no safe architecture
+  * agnostic default. To avoid possible improper behaviour default asm-generic
+- * ioremap_*() variants all return NULL when an IOMMU is available. If you've
++ * ioremap_*() variants all return NULL when an MMU is available. If you've
+  * defined your own ioremap_*() variant you must then declare your own
+  * ioremap_*() variant as defined to itself to avoid the default NULL return.
+  */
