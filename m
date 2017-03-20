@@ -1,402 +1,138 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [RFC PATCH v2 25/32] kvm: svm: Add support for SEV LAUNCH_START
- command
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:17:35 -0500
-Message-ID: <148846785574.2349.2756610033917941226.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ot0-f194.google.com ([74.125.82.194]:34545 "EHLO
+        mail-ot0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754171AbdCTVsW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2017 17:48:22 -0400
+Date: Mon, 20 Mar 2017 16:48:19 -0500
+From: Rob Herring <robh@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        hch@infradead.org, nsekhar@ti.com
+Subject: Re: [PATCH v4 14/23] PCI: dwc: dra7xx: Workaround for errata id i870
+Message-ID: <20170320214819.5azzdbgncfemhujo@rob-hp-laptop>
+References: <20170313142259.25397-1-kishon@ti.com>
+ <20170313142259.25397-15-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170313142259.25397-15-kishon@ti.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The command is used to bootstrap SEV guest from unencrypted boot images.
-The command creates a new VM encryption key (VEK) using the guest owner's
-public DH certificates, and session data. The VEK will be used to encrypt
-the guest memory.
+On Mon, Mar 13, 2017 at 07:52:50PM +0530, Kishon Vijay Abraham I wrote:
+> According to errata i870, access to the PCIe slave port
+> that are not 32-bit aligned will result in incorrect mapping
+> to TLP Address and Byte enable fields.
+> 
+> Accessing non 32-bit aligned data causes incorrect data in the target
+> buffer if memcpy is used. Implement the workaround for this
+> errata here.
+> 
+> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+> ---
+>  drivers/pci/dwc/pci-dra7xx.c | 53 ++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 53 insertions(+)
+> 
+> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+> index 35c18534469c..147d37a7fe58 100644
+> --- a/drivers/pci/dwc/pci-dra7xx.c
+> +++ b/drivers/pci/dwc/pci-dra7xx.c
+> @@ -26,6 +26,8 @@
+>  #include <linux/pm_runtime.h>
+>  #include <linux/resource.h>
+>  #include <linux/types.h>
+> +#include <linux/mfd/syscon.h>
+> +#include <linux/regmap.h>
+>  
+>  #include "pcie-designware.h"
+>  
+> @@ -528,6 +530,51 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+>  	{},
+>  };
+>  
+> +/*
+> + * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
+> + * @dra7xx: the dra7xx device where the workaround should be applied
+> + *
+> + * Access to the PCIe slave port that are not 32-bit aligned will result
+> + * in incorrect mapping to TLP Address and Byte enable fields. Therefore,
+> + * byte and half-word accesses are not possible to byte offset 0x1, 0x2, or
+> + * 0x3.
+> + *
+> + * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
+> + */
+> +static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
+> +{
+> +	int ret;
+> +	struct device_node *np = dev->of_node;
+> +	struct regmap *regmap;
+> +	unsigned int reg;
+> +	unsigned int field;
+> +
+> +	regmap = syscon_regmap_lookup_by_phandle(np,
+> +						 "ti,syscon-unaligned-access");
+> +	if (IS_ERR(regmap)) {
+> +		dev_dbg(dev, "can't get ti,syscon-unaligned-access\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	if (of_property_read_u32_index(np, "ti,syscon-unaligned-access", 1,
+> +				       &reg)) {
+> +		dev_err(dev, "couldn't get legacy mode register offset\n");
+> +		return -EINVAL;
+> +	}
+> +
+> +	if (of_property_read_u32_index(np, "ti,syscon-unaligned-access", 2,
+> +				       &field)) {
+> +		dev_err(dev, "can't get bit field for setting legacy mode\n");
+> +		return -EINVAL;
+> +	}
 
-Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
----
- arch/x86/kvm/svm.c |  302 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 301 insertions(+), 1 deletion(-)
+If this remains, it's screaming for a helper function. 
+of_parse_phandle_with_args already exists, but maybe a syscon specific 
+function is in order.
 
-diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
-index fb63398..b5fa8c0 100644
---- a/arch/x86/kvm/svm.c
-+++ b/arch/x86/kvm/svm.c
-@@ -37,6 +37,7 @@
- #include <linux/amd-iommu.h>
- #include <linux/hashtable.h>
- #include <linux/psp-sev.h>
-+#include <linux/file.h>
- 
- #include <asm/apic.h>
- #include <asm/perf_event.h>
-@@ -497,6 +498,10 @@ static inline bool gif_set(struct vcpu_svm *svm)
- /* Secure Encrypted Virtualization */
- static unsigned int max_sev_asid;
- static unsigned long *sev_asid_bitmap;
-+static void sev_deactivate_handle(struct kvm *kvm);
-+static void sev_decommission_handle(struct kvm *kvm);
-+static int sev_asid_new(void);
-+static void sev_asid_free(int asid);
- 
- static bool kvm_sev_enabled(void)
- {
-@@ -1534,6 +1539,17 @@ static inline int avic_free_vm_id(int id)
- 	return 0;
- }
- 
-+static void sev_vm_destroy(struct kvm *kvm)
-+{
-+	if (!sev_guest(kvm))
-+		return;
-+
-+	/* release the firmware resources */
-+	sev_deactivate_handle(kvm);
-+	sev_decommission_handle(kvm);
-+	sev_asid_free(sev_get_asid(kvm));
-+}
-+
- static void avic_vm_destroy(struct kvm *kvm)
- {
- 	unsigned long flags;
-@@ -1551,6 +1567,12 @@ static void avic_vm_destroy(struct kvm *kvm)
- 	spin_unlock_irqrestore(&svm_vm_data_hash_lock, flags);
- }
- 
-+static void svm_vm_destroy(struct kvm *kvm)
-+{
-+	avic_vm_destroy(kvm);
-+	sev_vm_destroy(kvm);
-+}
-+
- static int avic_vm_init(struct kvm *kvm)
- {
- 	unsigned long flags;
-@@ -5502,6 +5524,282 @@ static inline void avic_post_state_restore(struct kvm_vcpu *vcpu)
- 	avic_handle_ldr_update(vcpu);
- }
- 
-+static int sev_asid_new(void)
-+{
-+	int pos;
-+
-+	if (!max_sev_asid)
-+		return -EINVAL;
-+
-+	pos = find_first_zero_bit(sev_asid_bitmap, max_sev_asid);
-+	if (pos >= max_sev_asid)
-+		return -EBUSY;
-+
-+	set_bit(pos, sev_asid_bitmap);
-+	return pos + 1;
-+}
-+
-+static void sev_asid_free(int asid)
-+{
-+	int cpu, pos;
-+	struct svm_cpu_data *sd;
-+
-+	pos = asid - 1;
-+	clear_bit(pos, sev_asid_bitmap);
-+
-+	for_each_possible_cpu(cpu) {
-+		sd = per_cpu(svm_data, cpu);
-+		sd->sev_vmcbs[pos] = NULL;
-+	}
-+}
-+
-+static int sev_issue_cmd(struct kvm *kvm, int id, void *data, int *error)
-+{
-+	int ret;
-+	struct fd f;
-+	int fd = sev_get_fd(kvm);
-+
-+	f = fdget(fd);
-+	if (!f.file)
-+		return -EBADF;
-+
-+	ret = sev_issue_cmd_external_user(f.file, id, data, 0, error);
-+	fdput(f);
-+
-+	return ret;
-+}
-+
-+static void sev_decommission_handle(struct kvm *kvm)
-+{
-+	int ret, error;
-+	struct sev_data_decommission *data;
-+
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		return;
-+
-+	data->handle = sev_get_handle(kvm);
-+	ret = sev_guest_decommission(data, &error);
-+	if (ret)
-+		pr_err("SEV: DECOMMISSION %d (%#x)\n", ret, error);
-+
-+	kfree(data);
-+}
-+
-+static void sev_deactivate_handle(struct kvm *kvm)
-+{
-+	int ret, error;
-+	struct sev_data_deactivate *data;
-+
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		return;
-+
-+	data->handle = sev_get_handle(kvm);
-+	ret = sev_guest_deactivate(data, &error);
-+	if (ret) {
-+		pr_err("SEV: DEACTIVATE %d (%#x)\n", ret, error);
-+		goto buffer_free;
-+	}
-+
-+	wbinvd_on_all_cpus();
-+
-+	ret = sev_guest_df_flush(&error);
-+	if (ret)
-+		pr_err("SEV: DF_FLUSH %d (%#x)\n", ret, error);
-+
-+buffer_free:
-+	kfree(data);
-+}
-+
-+static int sev_activate_asid(unsigned int handle, int asid, int *error)
-+{
-+	int ret;
-+	struct sev_data_activate *data;
-+
-+	wbinvd_on_all_cpus();
-+
-+	ret = sev_guest_df_flush(error);
-+	if (ret) {
-+		pr_err("SEV: DF_FLUSH %d (%#x)\n", ret, *error);
-+		return ret;
-+	}
-+
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		return -ENOMEM;
-+
-+	data->handle = handle;
-+	data->asid   = asid;
-+	ret = sev_guest_activate(data, error);
-+	if (ret)
-+		pr_err("SEV: ACTIVATE %d (%#x)\n", ret, *error);
-+
-+	kfree(data);
-+	return ret;
-+}
-+
-+static int sev_pre_start(struct kvm *kvm, int *asid)
-+{
-+	int ret;
-+
-+	/* If guest has active SEV handle then deactivate before creating the
-+	 * encryption context.
-+	 */
-+	if (sev_guest(kvm)) {
-+		sev_deactivate_handle(kvm);
-+		sev_decommission_handle(kvm);
-+		*asid = sev_get_asid(kvm);  /* reuse the asid */
-+		ret = 0;
-+	} else {
-+		/* Allocate new asid for this launch */
-+		ret = sev_asid_new();
-+		if (ret < 0) {
-+			pr_err("SEV: failed to get free asid\n");
-+			return ret;
-+		}
-+		*asid = ret;
-+		ret = 0;
-+	}
-+
-+	return ret;
-+}
-+
-+static int sev_post_start(struct kvm *kvm, int asid, int handle,
-+			int sev_fd, int *error)
-+{
-+	int ret;
-+
-+	/* activate asid */
-+	ret = sev_activate_asid(handle, asid, error);
-+	if (ret)
-+		return ret;
-+
-+	kvm->arch.sev_info.handle = handle;
-+	kvm->arch.sev_info.asid = asid;
-+	kvm->arch.sev_info.sev_fd = sev_fd;
-+
-+	return 0;
-+}
-+
-+static int sev_launch_start(struct kvm *kvm, struct kvm_sev_cmd *argp)
-+{
-+	int ret, asid = 0;
-+	void *dh_cert_addr = NULL;
-+	void *session_addr = NULL;
-+	struct kvm_sev_launch_start params;
-+	struct sev_data_launch_start *start;
-+	int *error = &argp->error;
-+	struct fd f;
-+
-+	f = fdget(argp->sev_fd);
-+	if (!f.file)
-+		return -EBADF;
-+
-+	/* Get parameter from the user */
-+	ret = -EFAULT;
-+	if (copy_from_user(&params, (void *)argp->data,
-+				sizeof(struct kvm_sev_launch_start)))
-+		goto err_1;
-+
-+	ret = -ENOMEM;
-+	start = kzalloc(sizeof(*start), GFP_KERNEL);
-+	if (!start)
-+		goto err_1;
-+
-+	ret = sev_pre_start(kvm, &asid);
-+	if (ret)
-+		goto err_2;
-+
-+	start->handle = params.handle;
-+	start->policy = params.policy;
-+
-+	/* Copy DH certificate from userspace */
-+	if (params.dh_cert_length && params.dh_cert_data) {
-+		dh_cert_addr = kmalloc(params.dh_cert_length, GFP_KERNEL);
-+		if (!dh_cert_addr) {
-+			ret = -EFAULT;
-+			goto err_3;
-+		}
-+		if (copy_from_user(dh_cert_addr, (void *)params.dh_cert_data,
-+				params.dh_cert_length)) {
-+			ret = -EFAULT;
-+			goto err_3;
-+		}
-+
-+		start->dh_cert_address = __psp_pa(dh_cert_addr);
-+		start->dh_cert_length = params.dh_cert_length;
-+	}
-+
-+	/* Copy session data from userspace */
-+	if (params.session_length && params.session_data) {
-+		session_addr = kmalloc(params.dh_cert_length, GFP_KERNEL);
-+		if (!session_addr) {
-+			ret = -EFAULT;
-+			goto err_3;
-+		}
-+		if (copy_from_user(session_addr, (void *)params.session_data,
-+				params.session_length)) {
-+			ret = -EFAULT;
-+			goto err_3;
-+		}
-+		start->session_data_address = __psp_pa(session_addr);
-+		start->session_data_length = params.session_length;
-+	}
-+
-+	/* launch start */
-+	ret = sev_issue_cmd_external_user(f.file, SEV_CMD_LAUNCH_START,
-+					  start, 0, error);
-+	if (ret) {
-+		pr_err("SEV: LAUNCH_START ret=%d (%#010x)\n", ret, *error);
-+		goto err_3;
-+	}
-+
-+	ret = sev_post_start(kvm, asid, start->handle, argp->sev_fd, error);
-+	if (ret)
-+		goto err_3;
-+
-+	params.handle = start->handle;
-+	if (copy_to_user((void *) argp->data, &params,
-+				sizeof(struct kvm_sev_launch_start)))
-+		ret = -EFAULT;
-+err_3:
-+	if (ret && asid) /* free asid if we have encountered error */
-+		sev_asid_free(asid);
-+	kfree(dh_cert_addr);
-+	kfree(session_addr);
-+err_2:
-+	kfree(start);
-+err_1:
-+	fdput(f);
-+	return ret;
-+}
-+
-+static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
-+{
-+	int r = -ENOTTY;
-+	struct kvm_sev_cmd sev_cmd;
-+
-+	if (copy_from_user(&sev_cmd, argp, sizeof(struct kvm_sev_cmd)))
-+		return -EFAULT;
-+
-+	mutex_lock(&kvm->lock);
-+
-+	switch (sev_cmd.id) {
-+	case KVM_SEV_LAUNCH_START: {
-+		r = sev_launch_start(kvm, &sev_cmd);
-+		break;
-+	}
-+	default:
-+		break;
-+	}
-+
-+	mutex_unlock(&kvm->lock);
-+	if (copy_to_user(argp, &sev_cmd, sizeof(struct kvm_sev_cmd)))
-+		r = -EFAULT;
-+	return r;
-+}
-+
- static struct kvm_x86_ops svm_x86_ops __ro_after_init = {
- 	.cpu_has_kvm_support = has_svm,
- 	.disabled_by_bios = is_disabled,
-@@ -5518,7 +5816,7 @@ static struct kvm_x86_ops svm_x86_ops __ro_after_init = {
- 	.vcpu_reset = svm_vcpu_reset,
- 
- 	.vm_init = avic_vm_init,
--	.vm_destroy = avic_vm_destroy,
-+	.vm_destroy = svm_vm_destroy,
- 
- 	.prepare_guest_switch = svm_prepare_guest_switch,
- 	.vcpu_load = svm_vcpu_load,
-@@ -5617,6 +5915,8 @@ static struct kvm_x86_ops svm_x86_ops __ro_after_init = {
- 	.pmu_ops = &amd_pmu_ops,
- 	.deliver_posted_interrupt = svm_deliver_avic_intr,
- 	.update_pi_irte = svm_update_pi_irte,
-+
-+	.memory_encryption_op = amd_memory_encryption_cmd,
- };
- 
- static int __init svm_init(void)
+> +
+> +	ret = regmap_update_bits(regmap, reg, field, field);
+> +	if (ret)
+> +		dev_err(dev, "failed to enable unaligned access\n");
+> +
+> +	return ret;
+> +}
+> +
+>  static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>  {
+>  	u32 reg;
+> @@ -637,6 +684,7 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>  	case DW_PCIE_RC_TYPE:
+>  		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+>  				   DEVICE_TYPE_RC);
+> +
+
+Unnecessary WS change.
+
+>  		ret = dra7xx_add_pcie_port(dra7xx, pdev);
+>  		if (ret < 0)
+>  			goto err_gpio;
+> @@ -644,6 +692,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+>  	case DW_PCIE_EP_TYPE:
+>  		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+>  				   DEVICE_TYPE_EP);
+> +
+> +		ret = dra7xx_pcie_ep_unaligned_memaccess(dev);
+> +		if (ret)
+> +			goto err_gpio;
+> +
+>  		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
+>  		if (ret < 0)
+>  			goto err_gpio;
+> -- 
+> 2.11.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
