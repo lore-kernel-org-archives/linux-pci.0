@@ -1,21 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-References: <1485793552-12614-1-git-send-email-Vadim.Lomovtsev@caviumnetworks.com>
- <20170130211236.GW20550@bhelgaas-glaptop.roam.corp.google.com>
- <20170131102830.GA13854@localhost.localdomain>
- <20170131142525.GA9942@bhelgaas-glaptop.roam.corp.google.com>
- <20170131145720.GA14231@localhost.localdomain>
- <20170131203109.GA14127@bhelgaas-glaptop.roam.corp.google.com>
- <20170201125325.GA15805@localhost.localdomain>
- <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
-From: Jon Masters <jcm@jonmasters.org>
-Message-ID: <376ae1df-da85-e576-75d6-3ae2ab0f1b41@jonmasters.org>
-Date: Wed, 15 Mar 2017 07:14:38 -0400
+Date: Mon, 20 Mar 2017 15:09:30 +0800
+From: Dong Aisheng <dongas86@gmail.com>
+To: Andrey Smirnov <andrew.smirnov@gmail.com>
+Subject: Re: [PATCH v6 0/4] i.MX7 PCI support
+Message-ID: <20170320070930.GB11325@b29396-OptiPlex-7040>
+References: <20170314151827.31248-1-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
-Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
+In-Reply-To: <20170314151827.31248-1-andrew.smirnov@gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -23,60 +15,63 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: David.Daney@cavium.com, tn@semihalf.com, linux-kernel@vger.kernel.org,
- stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com, linux-pci@vger.kernel.org,
- bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+ Fabio Estevam <fabio.estevam@nxp.com>, yurovsky@gmail.com,
+ linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn, Vadim,
-
-Following up to this old thread...
-
-On 02/01/2017 10:18 AM, Bjorn Helgaas wrote:
-> On Wed, Feb 01, 2017 at 04:53:25AM -0800, Vadim Lomovtsev wrote:
-
->>>> Because there is no such ACPI ID as "THRX0002" registered
->>>> (http://www.uefi.org/acpi_id_list).
-
-There is still no "THRX" prefix registered with UEFI as of this morning.
-
->>> To be pedantically correct, I think you want "THRX" registered.  Then
->>> you can manage the "0002" part internally without registering each
->>> individual device.
-
-The upstream Linux kernel contains a quirk matching entry that looks for
-"THRX". Therefore, you have already agreed (as of at least January) that
-this is the prefix that you will use in any firmware updates to support
-the latest upstream Linux kernel. Please register this prefix promptly.
-
->> Not sure if it would be registered that way, because (AFAIK)
->> it expected to be string constructed from Vendor ID (not the Product ID) plus
->> four hex digit manged internaly. So we suggest to change it to 177DXXXX
->> which corresponds to Cavium PCI ID https://pci-ids.ucw.cz/pci.ids.
->> It's also possible to use the 3-digit PNP ID, "CAV", to construct these
->> _HID/_CID/_SUB values (http://www.uefi.org/pnp_id_list).
+On Tue, Mar 14, 2017 at 08:18:23AM -0700, Andrey Smirnov wrote:
+> Hello, everyone:
 > 
-> My point was that you only need to register the prefix ("CAV" or
-> "THRX") of the PNP or ACPI ID.  Then you manage the suffixes
-> internally.  You as long as you register "CAV" or "THRX", you can
-> assign and use "THRX0002" yourself without registering that
-> specifically.
+> This is a sixth iteration of the code that adds PCI-subsystem bits
+> necessary for enabling PCI support on i.MX7.
 > 
->> So the FW will be updated accordingly.
 
-Indeed.
+....
 
-The version Bjorn merged looks for "THRX". This is the version that you will
-use, and you will promptly register that prefix with UEFI and provide fixes
-for existing firmware to correctly use the solution that is upstream.
+> Andrey Smirnov (4):
+>   PCI: imx6: Add code to support i.MX7D
+>   PCI: imx6: Do not wait for speed change on i.MX7
+>   PCI: imx6: Do not switch speed if Gen2 is disabled
+>   PCI: imx6: Allow probe deferal by reset GPIO
+> 
+>  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 +-
+>  drivers/pci/host/pci-imx6.c                        | 199 +++++++++++++++------
 
-Thanks,
+Can't apply and test it.
 
-Jon.
+The directory has been changed to drivers/pci/host/dwc/pci-imx6.c
+since the commit below:
+commit 950bf6388bc22c2749b8b66c501df1462639d6bd
+Author: Kishon Vijay Abraham I <kishon@ti.com>
+Date:   Fri Jan 6 18:22:48 2017 +0530
 
+    PCI: Move DesignWare IP support to new drivers/pci/dwc/ directory
+    
+    Group all the PCI drivers that use DesignWare core in dwc directory.
+    dwc IP is capable of operating in both host mode and device mode and
+    keeping it inside the *host* directory is misleading.
+    
+    Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+    Acked-by: Jingoo Han <jingoohan1@gmail.com>
+    Acked-By: Joao Pinto <jpinto@synopsys.com>
+
+Regards
+Dong Aisheng
+
+>  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
+>  3 files changed, 161 insertions(+), 55 deletions(-)
+> 
+
+
+> -- 
+> 2.9.3
+> 
 
 _______________________________________________
 linux-arm-kernel mailing list
