@@ -1,234 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53236 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932958AbdCITCY (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2017 14:02:24 -0500
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+Received: from foss.arm.com ([217.140.101.70]:38432 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753744AbdCTNVl (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 20 Mar 2017 09:21:41 -0400
+Date: Mon, 20 Mar 2017 13:21:32 +0000
+From: Will Deacon <will.deacon@arm.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Jerin Jacob <jerin.jacob@caviumnetworks.com>,
+        lorenzo.pieralisi@arm.com, david.daney@cavium.com,
+        catalin.marinas@arm.com, Liviu.Dudau@arm.com, rrichter@cavium.com,
+        hanjun.guo@linaro.org, bhelgaas@google.com,
         linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V9 10/11] iommu/arm-smmu: Clean up early-probing workarounds
-Date: Fri, 10 Mar 2017 00:31:00 +0530
-Message-Id: <1489086061-9356-11-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+        linux-pci <linux-pci@vger.kernel.org>, benh@kernel.crashing.org
+Subject: Re: [PATCH v2] arm64: pci: add support for pci_mmap_page_range
+Message-ID: <20170320132132.GN17263@arm.com>
+References: <1460581856-12380-1-git-send-email-jerin.jacob@caviumnetworks.com>
+ <20160415130953.GI22906@arm.com>
+ <1489666647.4195.238.camel@infradead.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1489666647.4195.238.camel@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Robin Murphy <robin.murphy@arm.com>
+On Thu, Mar 16, 2017 at 12:17:27PM +0000, David Woodhouse wrote:
+> On Fri, 2016-04-15 at 14:09 +0100, Will Deacon wrote:
+> > 
+> > > +     if (write_combine)
+> > > +             vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
+> > > +     else
+> > > +             vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+> > 
+> > For consistency with ioremap, this should be pgprot_device.
+> 
+> What's the difference?
 
-Now that the appropriate ordering is enforced via probe-deferral of
-masters in core code, rip it all out and bask in the simplicity.
+The different between ioremap (which used pgprot_device) and a mapping
+created using pgprot_noncached is that the former allows for early
+acknowledgement of writes (e.g. at a bridge). See this recent series from
+Lorenzo that is also trying to clean this up:
 
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Acked-by: Will Deacon <will.deacon@arm.com>
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
-[Sricharan: Rebased on top of ACPI IORT SMMU series]
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
----
- drivers/iommu/arm-smmu-v3.c |  46 +-----------------
- drivers/iommu/arm-smmu.c    | 110 +++++++++++++++++++-------------------------
- 2 files changed, 49 insertions(+), 107 deletions(-)
+http://lkml.kernel.org/r/20170227151436.18698-1-lorenzo.pieralisi@arm.com
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 5806a6a..9497800 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2761,51 +2761,9 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
- 	.probe	= arm_smmu_device_probe,
- 	.remove	= arm_smmu_device_remove,
- };
-+module_platform_driver(arm_smmu_driver);
- 
--static int __init arm_smmu_init(void)
--{
--	static bool registered;
--	int ret = 0;
--
--	if (!registered) {
--		ret = platform_driver_register(&arm_smmu_driver);
--		registered = !ret;
--	}
--	return ret;
--}
--
--static void __exit arm_smmu_exit(void)
--{
--	return platform_driver_unregister(&arm_smmu_driver);
--}
--
--subsys_initcall(arm_smmu_init);
--module_exit(arm_smmu_exit);
--
--static int __init arm_smmu_of_init(struct device_node *np)
--{
--	int ret = arm_smmu_init();
--
--	if (ret)
--		return ret;
--
--	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
--		return -ENODEV;
--
--	return 0;
--}
--IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
--
--#ifdef CONFIG_ACPI
--static int __init acpi_smmu_v3_init(struct acpi_table_header *table)
--{
--	if (iort_node_match(ACPI_IORT_NODE_SMMU_V3))
--		return arm_smmu_init();
--
--	return 0;
--}
--IORT_ACPI_DECLARE(arm_smmu_v3, ACPI_SIG_IORT, acpi_smmu_v3_init);
--#endif
-+IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", NULL);
- 
- MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
- MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
-diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-index abf6496..be53b02 100644
---- a/drivers/iommu/arm-smmu.c
-+++ b/drivers/iommu/arm-smmu.c
-@@ -2075,6 +2075,23 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev,
- 	return 0;
- }
- 
-+static void arm_smmu_bus_init(void)
-+{
-+	/* Oh, for a proper bus abstraction */
-+	if (!iommu_present(&platform_bus_type))
-+		bus_set_iommu(&platform_bus_type, &arm_smmu_ops);
-+#ifdef CONFIG_ARM_AMBA
-+	if (!iommu_present(&amba_bustype))
-+		bus_set_iommu(&amba_bustype, &arm_smmu_ops);
-+#endif
-+#ifdef CONFIG_PCI
-+	if (!iommu_present(&pci_bus_type)) {
-+		pci_request_acs();
-+		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
-+	}
-+#endif
-+}
-+
- static int arm_smmu_device_probe(struct platform_device *pdev)
- {
- 	struct resource *res;
-@@ -2180,21 +2197,30 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
- 	arm_smmu_device_reset(smmu);
- 	arm_smmu_test_smr_masks(smmu);
- 
--	/* Oh, for a proper bus abstraction */
--	if (!iommu_present(&platform_bus_type))
--		bus_set_iommu(&platform_bus_type, &arm_smmu_ops);
--#ifdef CONFIG_ARM_AMBA
--	if (!iommu_present(&amba_bustype))
--		bus_set_iommu(&amba_bustype, &arm_smmu_ops);
--#endif
--#ifdef CONFIG_PCI
--	if (!iommu_present(&pci_bus_type)) {
--		pci_request_acs();
--		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
--	}
--#endif
-+	/*
-+	 * For ACPI and generic DT bindings, an SMMU will be probed before
-+	 * any device which might need it, so we want the bus ops in place
-+	 * ready to handle default domain setup as soon as any SMMU exists.
-+	 */
-+	if (!using_legacy_binding)
-+		arm_smmu_bus_init();
-+
-+	return 0;
-+}
-+
-+/*
-+ * With the legacy DT binding in play, though, we have no guarantees about
-+ * probe order, but then we're also not doing default domains, so we can
-+ * delay setting bus ops until we're sure every possible SMMU is ready,
-+ * and that way ensure that no add_device() calls get missed.
-+ */
-+static int arm_smmu_legacy_bus_init(void)
-+{
-+	if (using_legacy_binding)
-+		arm_smmu_bus_init();
- 	return 0;
- }
-+device_initcall_sync(arm_smmu_legacy_bus_init);
- 
- static int arm_smmu_device_remove(struct platform_device *pdev)
- {
-@@ -2219,56 +2245,14 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
- 	.probe	= arm_smmu_device_probe,
- 	.remove	= arm_smmu_device_remove,
- };
--
--static int __init arm_smmu_init(void)
--{
--	static bool registered;
--	int ret = 0;
--
--	if (!registered) {
--		ret = platform_driver_register(&arm_smmu_driver);
--		registered = !ret;
--	}
--	return ret;
--}
--
--static void __exit arm_smmu_exit(void)
--{
--	return platform_driver_unregister(&arm_smmu_driver);
--}
--
--subsys_initcall(arm_smmu_init);
--module_exit(arm_smmu_exit);
--
--static int __init arm_smmu_of_init(struct device_node *np)
--{
--	int ret = arm_smmu_init();
--
--	if (ret)
--		return ret;
--
--	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
--		return -ENODEV;
--
--	return 0;
--}
--IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", arm_smmu_of_init);
--IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", arm_smmu_of_init);
--IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", arm_smmu_of_init);
--IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", arm_smmu_of_init);
--IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", arm_smmu_of_init);
--IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", arm_smmu_of_init);
--
--#ifdef CONFIG_ACPI
--static int __init arm_smmu_acpi_init(struct acpi_table_header *table)
--{
--	if (iort_node_match(ACPI_IORT_NODE_SMMU))
--		return arm_smmu_init();
--
--	return 0;
--}
--IORT_ACPI_DECLARE(arm_smmu, ACPI_SIG_IORT, arm_smmu_acpi_init);
--#endif
-+module_platform_driver(arm_smmu_driver);
-+
-+IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", NULL);
-+IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", NULL);
-+IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", NULL);
-+IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", NULL);
-+IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", NULL);
-+IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", NULL);
- 
- MODULE_DESCRIPTION("IOMMU API for ARM architected SMMU implementations");
- MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+> I note that VFIO is using pgprot_noncached() too, in vfio_pci_mmap() —
+> where it open-codes an entirely arch-agnostic version of
+> pci_mmap_page_range() all for itself. Should that be changed to
+> pgprot_device() too?
+
+I think so. At least, on arm64, pgprot_noncached is only really needed
+for PCI config space and "I don't know that this is, but I'm going to map
+it anyway" regions in /dev/mem.
+
+> Let me see if I can get this straight...
+> 
+> We have the legacy interface through /proc/bus/pci, where the user
+> passes a "user-visible" bus address not necessarily (on platforms with
+> HAVE_PCI_RESOURCE_TO_USER) a host physical address.
+> 
+> The arch-specific pci_mmap_page_range() exists to work around that
+> translation, on the two platforms which need it. It *also* has (on
+> about three platforms) support for a write-combining mapping.
+> 
+> The sysfs interface theough /sys/bus/pci/devices/*/resource* probably
+> doesn't need to use pci_mmap_page_range() at all, *except* for the
+> 'resourceX_wc' variant which has write-combining support.
+> 
+> How about we do the following (probably not in this order):
+>  • Kill pci_mmap_page_range() entirely.
+>  • Implement a generic version which has (arch-assisted) WC support
+>    but no knowledge of the horrid pci_resource_to_user() mapping.
+>  • Require pci_user_to_resource() to be provided by platforms with
+>    HAVE_ARCH_PCI_RESOURCE_TO_USER, and call that from *generic* code,
+>    for the legacy procfs interface, before invoking the generic
+>    replacement for pci_mmap_page_range().
+> 
+> (Yes, we still need to support mmap of I/O resources on... is it only
+> powerpc? And there are a few inconsistencies, like powerpc forcing WC
+> even on the sysfs files that *don't* have _wc in their name, that
+> probably want to be cleaned up as we consolidate...)
+
+Happy to review patches :)
+
+Will
