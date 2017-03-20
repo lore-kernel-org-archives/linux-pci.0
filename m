@@ -1,56 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51916 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751571AbdCaViu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 31 Mar 2017 17:38:50 -0400
-Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-2-git-send-email-logang@deltatee.com>
- <cb102386-0314-a3a3-ed44-b42debdf1512@codeaurora.org>
- <7158f2e8-2016-f398-e77f-0fcbe6cb41dd@deltatee.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <e6a74aeb-9f54-51c5-8ad9-3b6fb92c03b3@codeaurora.org>
-Date: Fri, 31 Mar 2017 17:38:46 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 20 Mar 2017 11:38:43 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH 02/20] PCI: fix pci_remap_iospace() remap attribute
+Message-ID: <20170320163843.GD24572@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-3-lorenzo.pieralisi@arm.com>
+ <20170316214844.GA17769@bhelgaas-glaptop.roam.corp.google.com>
+ <20170317003321.GB28800@wotan.suse.de>
+ <20170320160636.GB24572@bhelgaas-glaptop.roam.corp.google.com>
+ <20170320162627.GE7632@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <7158f2e8-2016-f398-e77f-0fcbe6cb41dd@deltatee.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170320162627.GE7632@red-moon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, Liviu Dudau <Liviu.Dudau@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, linux-arch@vger.kernel.org,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Michal Simek <michal.simek@xilinx.com>, Will Deacon <will.deacon@arm.com>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Murali Karicheri <m-karicheri2@ti.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, Arnd Bergmann <arnd@arndb.de>,
+ Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
+ John Garry <john.garry@huawei.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
+ Andy Lutomirski <luto@amacapital.net>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ "Luis R. Rodriguez" <mcgrof@kernel.org>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/31/2017 5:23 PM, Logan Gunthorpe wrote:
-> What exactly would you white/black list? It can't be the NIC or the
-> disk. If it's going to be a white/black list on the switch or root port
-> then you'd need essentially the same code to ensure they are all behind
-> the same switch or root port.
+On Mon, Mar 20, 2017 at 04:26:27PM +0000, Lorenzo Pieralisi wrote:
+> On Mon, Mar 20, 2017 at 11:06:36AM -0500, Bjorn Helgaas wrote:
+> 
+> [...]
+> 
+> > > > > @@ -3375,7 +3375,7 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+> > > > >  		return -EINVAL;
+> > > > >  
+> > > > >  	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
+> > > > > -				  pgprot_device(PAGE_KERNEL));
+> > > > > +				  pgprot_noncached(PAGE_KERNEL));
+> > > > 
+> > > > ...
+> > > > I do find this puzzling because I naively expected pgprot_noncached()
+> > > > to match up with ioremap_nocache(), and apparently it doesn't.
+> > > > 
+> > > > For example, ARM64 ioremap_nocache() uses PROT_DEVICE_nGnRE, which
+> > > > doesn't match the MT_DEVICE_nGnRnE in pgprot_noncached().
+> > > > 
+> > > > The point of these patches is to use non-posted mappings.  Apparently
+> > > > you can do that with pgprot_noncached() here, but ioremap_nocache()
+> > > > isn't enough for the config space mappings?
+> > > 
+> > > This is for iospace it seems, so the other patch I think was for
+> > > config space.
+> > 
+> > I understand that 02/20 is for PCI I/O port space and 03/20 is for PCI
+> > config space.  I'm confused because I thought we wanted the same
+> > non-posted mapping for both, but looks like they're different.
+> > 
+> > Patch 02/20 uses ioremap_page_range(..., pgprot_noncached(PAGE_KERNEL))
+> > to map PCI I/O port space:
+> > 
+> >   #define pgprot_noncached(prot) \
+> >           __pgprot_modify(prot, PTE_ATTRINDX_MASK, PTE_ATTRINDX(MT_DEVICE_nGnRnE) | PTE_PXN | PTE_UXN)
+> > 
+> > Patch 03/20 uses ioremap_nocache() to map PCI config space:
+> > 
+> >   #define ioremap_nocache(addr, size)     __ioremap((addr), (size), __pgprot(PROT_DEVICE_nGnRE))
+> > 
+> > So the I/O port mapping uses MT_DEVICE_nGnRnE, while the config space
+> > mapping uses PROT_DEVICE_nGnRE, which looks different.
+> 
+> On ARM64 (PATCH 4) and ARM (PATCH 5) we override pci_remap_cfgspace()
+> with implementations that provide non-posted writes bus attributes,
+> PATCH 3 is just there to provide a "safe" (well, I need input on that)
+> fall-back.
 
-What is so special about being connected to the same switch?
+Ah, thanks, that makes sense to me finally!  After patch 4,
+pci_remap_cfgspace() uses PROT_DEVICE_nGnRnE, which does look like the
+MT_DEVICE_nGnRnE used in the ioremap_page_range() path.
 
-Why don't we allow the feature by default and blacklist by the root ports
-that don't work with a quirk.
+I wonder if we can get rid of pgprot_device() altogether?  Patch 2
+removed the use in pci_remap_iospace(), and patch 18 removes the use
+in tegra_pcie_bus_alloc().
 
-I'm looking at this from portability perspective to be honest.
+Bjorn
 
-I'd rather see the feature enabled by default without any assumptions.
-Using it with a switch is just a use case that you happened to test.
-It can allow new architectures to use your code tomorrow.
-
-Sinan
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
