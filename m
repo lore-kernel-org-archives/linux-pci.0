@@ -1,167 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>, Arnd Bergmann
- <arnd@arndb.de>, Yuanzhichang <yuanzhichang@hisilicon.com>
-Subject: RE: [PATCH V7 5/7] ACPI: Delay the enumeration on the devices whose
- dependency has not met
-Date: Fri, 24 Mar 2017 00:23:55 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E204B678C@FRAEML521-MBX.china.huawei.com>
-References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
- <1489372963-9000-6-git-send-email-yuanzhichang@hisilicon.com>
- <4600523.rWNiWKrYZC@aspire.rjw.lan> <58C9F6C6.4090700@hisilicon.com>
- <CAK8P3a2QZ_j9RQ0U=4MoAAcRcZyu0L5AiYM22QZkiRxh7Ca-iA@mail.gmail.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E20492A4C@FRAEML521-MBX.china.huawei.com>
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E20492A4C@FRAEML521-MBX.china.huawei.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 21 Mar 2017 14:59:23 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Linux-Arch <linux-arch@vger.kernel.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
+Subject: Re: [PATCH v2 2/4] asm-generic/io.h: Remove unused generic
+ __ioremap() definition
+Message-ID: <20170321195923.GC5073@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170320182014.4858.22352.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170320184253.4858.12956.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMuHMdXzCPwijpHsvgHGDYRawF5paBxi4RNYPjxA8fRKOHQb0w@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, Rafael Wysocki <rafael@kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- Linuxarm <linuxarm@huawei.com>, Frank Rowand <frowand.list@gmail.com>, Lorenzo
- Pieralisi <lorenzo.pieralisi@arm.com>,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Corey Minyard <minyard@acm.org>, "liviu.dudau@arm.com" <liviu.dudau@arm.com>,
- "zhichang.yuan02@gmail.com" <zhichang.yuan02@gmail.com>,
- Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- "kantyzc@163.com" <kantyzc@163.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- linux-pci <linux-pci@vger.kernel.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Zou Rongrong <zourongrong@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <CAMuHMdXzCPwijpHsvgHGDYRawF5paBxi4RNYPjxA8fRKOHQb0w@mail.gmail.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Arnd
-
-> -----Original Message-----
-> From: linuxarm-bounces@huawei.com [mailto:linuxarm-bounces@huawei.com]
-> On Behalf Of Gabriele Paoloni
-> Sent: 16 March 2017 16:14
-> To: Arnd Bergmann; Yuanzhichang
-> Cc: Mark Rutland; Benjamin Herrenschmidt; Rafael Wysocki; linux-pci;
-> Will Deacon; Linuxarm; Frank Rowand; Lorenzo Pieralisi; ACPI Devel
-> Maling List; linux-serial@vger.kernel.org; Catalin Marinas;
-> devicetree@vger.kernel.org; Corey Minyard; liviu.dudau@arm.com; Rob
-> Herring; Bjorn Helgaas; kantyzc@163.com; zhichang.yuan02@gmail.com;
-> Linux ARM; Rafael J. Wysocki; Linux Kernel Mailing List; Zou Rongrong
-> Subject: RE: [PATCH V7 5/7] ACPI: Delay the enumeration on the devices
-> whose dependency has not met
+On Tue, Mar 21, 2017 at 11:37:11AM +0100, Geert Uytterhoeven wrote:
+> Hi Björn,
 > 
-> Hi Arnd
-> 
-> > -----Original Message-----
-> > From: arndbergmann@gmail.com [mailto:arndbergmann@gmail.com] On
-> Behalf
-> > Of Arnd Bergmann
-> > Sent: 16 March 2017 10:13
-> > To: Yuanzhichang
-> > Cc: Rafael J. Wysocki; Catalin Marinas; Will Deacon; Rob Herring;
-> Frank
-> > Rowand; Bjorn Helgaas; Rafael Wysocki; Mark Rutland; Linux ARM; ACPI
-> > Devel Maling List; Lorenzo Pieralisi; Benjamin Herrenschmidt; Linux
-> > Kernel Mailing List; Linuxarm; devicetree@vger.kernel.org; linux-pci;
-> > linux-serial@vger.kernel.org; Corey Minyard; liviu.dudau@arm.com; Zou
-> > Rongrong; John Garry; Gabriele Paoloni; zhichang.yuan02@gmail.com;
-> > kantyzc@163.com; xuwei (O)
-> > Subject: Re: [PATCH V7 5/7] ACPI: Delay the enumeration on the
-> devices
-> > whose dependency has not met
+> On Mon, Mar 20, 2017 at 7:42 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+> > Several arches use __ioremap() to help implement the generic ioremap(),
+> > ioremap_nocache(), and ioremap_wc() interfaces, but this usage is all
+> > inside the arch/ directory.
 > >
-> > On Thu, Mar 16, 2017 at 3:21 AM, zhichang.yuan
-> > <yuanzhichang@hisilicon.com> wrote:
-> > > Hi, Rafael,
-> > >
-> > > Thanks for your review!
-> > >
-> > > On 2017/3/14 5:24, Rafael J. Wysocki wrote:
-> > >> On Monday, March 13, 2017 10:42:41 AM zhichang.yuan wrote:
-> > >>> In commit 40e7fcb1929(ACPI: Add _DEP support to fix battery issue
-> > on Asus
-> > >>> T100TA), the '_DEP' was supported to solve the dependency of Asus
-> > battery. But
-> > >>> this patch is specific to Asus battery device.
-> > >>> In the real world, there are other devices which need the
-> > dependency to play the
-> > >>> role on the enumeration order. For example, all the Hip06 LPC
-> > >>> periperals(IPMI-BT, uart, etc) must be scanned after the LPC host
-> > driver
-> > >>> finished the probing. So, it makes sense to add a checking
-> whether
-> > the ACPI
-> > >>> device meet all the dependencies during its enumeration slot, if
-> > not, the
-> > >>> enumeration will be delayed till all dependency master finish
-> their
-> > work.
-> > >>>
-> > >>> This patch adds the dependency checking in ACPI enumeration, also
-> > the
-> > >>> corresponding handling to retrigger the Hip06 LPC peripherals'
-> > scanning.
-> > >>
-> > >> AFAICS, _DEP is generally abused in the wild and cannot be made
-> > generic.  Sorry.
-> > >>
-> > >
-> > > From the ACPI specification, _DEP is for operation region accesses.
-> > > You are right...
-> > >
-> > > How about we add a ACPI handler for our LPC bus?? Just like amba.
-> > > In this way, we also can solve the issue about LPC enumeration
-> order.
+> > The only __ioremap() uses outside arch/ are in the ZorroII RAM disk driver
+> > and some framebuffer drivers that are only buildable on m68k and powerpc,
+> > and they use the versions provided by those arches.
 > >
-> > As far as I can tell, PCI and LPC have exactly the same requirement
-> > here,
-> > so whatever you end up doing for one should be used for the other as
-> > well.
+> > There's no need for a generic version of __ioremap(), so remove it.
 > 
-> Well as you know PCI has got his own handler, identified by his own
-> namespace id "PNP0A03".
-> Now when you say "you end up doing for one should be used for the
-> other"
-> are you saying that we should introduce a new class of devices?
-> i.e. should we have an ACPI namespace identifier for non-PCI IO Host
-> Controllers?
+> These all predate the ioremap_*() variants, and can be converted to
+> either ioremap_nocache() or ioremap_wt().
 > 
-> Otherwise, if my understanding is correct, having a specific new ACPI
-> handler for HiSilicon LPC would mean to adding another function_init()
-> in the list of acpi handlers inits in acpi_scan_init().
+> However, PPC doesn't implement ioremap_wt() yet, so asm-generic will
+> fall back to the less-efficient nocache variant.
+> PPC does support __ioremap(..., _PAGE_WRITETHRU), so adding a wrapper
+> is trivial.
+
+Thanks, I'll try adding ioremap_wt() (at least for PPC32) and cleaning this
+up.
+
+> > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> > Reviewed-by: Arnd Bergmann <arnd@arndb.de>
 > 
-> But then every vendor would declare his own one...is this really
-> correct?
-
-Do you have any feedback on this?
-
-Otherwise I think that maybe we could consider moving back to the
-arch_initcall approach as proposed in V6:
-https://lkml.org/lkml/2017/1/24/28
-
-Thanks
-Gab
-
+> Regardless,
+> Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
 > 
-> Many Thanks
-> Gab
+> Gr{oetje,eeting}s,
 > 
-> >
-> >       Arnd
-> _______________________________________________
-> linuxarm mailing list
-> linuxarm@huawei.com
-> http://rnd-openeuler.huawei.com/mailman/listinfo/linuxarm
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>                         Geert
+> 
+> --
+> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+> 
+> In personal conversations with technical people, I call myself a hacker. But
+> when I'm talking to journalists I just say "programmer" or something like that.
+>                                 -- Linus Torvalds
