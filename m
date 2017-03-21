@@ -1,38 +1,90 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out6.electric.net ([192.162.217.189]:52121 "EHLO
-        smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752832AbdC0OHH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Mar 2017 10:07:07 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'Christoph Hellwig' <hch@lst.de>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "netanel@annapurnalabs.com" <netanel@annapurnalabs.com>,
-        "jcliburn@gmail.com" <jcliburn@gmail.com>,
-        "chris.snook@gmail.com" <chris.snook@gmail.com>,
-        "sgoutham@cavium.com" <sgoutham@cavium.com>,
-        "rric@kernel.org" <rric@kernel.org>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH 5/5] PCI: remove pci_enable_msix
-Date: Mon, 27 Mar 2017 14:06:45 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DCFFBAAD0@AcuExch.aculab.com>
-References: <20170327082936.6830-1-hch@lst.de>
- <20170327082936.6830-6-hch@lst.de>
-In-Reply-To: <20170327082936.6830-6-hch@lst.de>
-Content-Type: text/plain; charset="Windows-1252"
+Received: from office.codexdigital.com ([193.203.82.50]:52713 "EHLO
+        office.codexdigital.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757076AbdCURo7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Mar 2017 13:44:59 -0400
+From: Harry Mallon <Harry@codexdigital.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: PCIe native hotplug under root port with ACPI disable
+Date: Tue, 21 Mar 2017 17:29:44 +0000
+Message-ID: <5AA13D87-AEC8-49A6-A826-FF17A5EEB35D@codex.london>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christoph Hellwig
-> Sent: 27 March 2017 09:30
->
-> Unused now that all callers switched to pci_alloc_irq_vectors.
-
-Apart from all the 'out of tree' drivers that will need
-fixing and a conditional compile added.
-
-At least give us a couple of kernel versions to get it sorted.
-
-	David
+SGVsbG8gYWxsLA0KDQpJIGhhdmUgYSBQQ0llIHN3aXRjaCBhdHRhY2hlZCB0byBteSByb290IFBD
+SWUgZGV2aWNlLiBUaGUgc3dpdGNoIHN1cHBvcnRzIG5hdGl2ZSBob3RwbHVnLiBJIHRoZW4gdHJ5
+IHRvIGhvdHBsdWcgZGV2aWNlcyBpbnRvIHRoZSBkb3duc3RyZWFtIHBvcnRzIGFuZCBpdCBkb2Vz
+bid0IHdvcmsgd2l0aG91dCB0aGUga2VybmVsIGNvbW1hbmQgbGluZSAicGNpZV9wb3J0cz1uYXRp
+dmUiIHdoaWNoIGlnbm9yZXMgdGhlIEFDUEkgc2V0dXAgd2hlbiBhZGRpbmcgUENJZSBmZWF0dXJl
+cy4gV2l0aCAicGNpZV9wb3J0cz1uYXRpdmUiIGNvbW1hbmQgbGluZSBpbnRlcnJ1cHRzIGFyZSBj
+b3JyZWN0bHkgYXR0YWNoZWQgYW5kIGhvdHBsdWdnaW5nIHdvcmtzLg0KDQpUaGlzIGlzIHRoZSBs
+YXlvdXQ6DQpbSW50ZWwgTW90aGVyYm9hcmQgUENJZV0gLSBbUExYIFBDSWUgc3dpdGNoXSAtIFtI
+b3RwbHVnIGRldmljZXNdDQoNCkxpbnV4IGN1cnJlbnRseSBjaGVja3MgKHVzaW5nIEFDUEkgX09T
+QyBjb21tYW5kIG9uIFBDSTApIHdoZXRoZXIgdGhlIHJvb3QgYnJpZGdlIChJbnRlbCBtb3RoZXJi
+b2FyZCBkZXZpY2UpIHdpbGwgdHJhbnNmZXIgY29tbWFuZCBvZiBuYXRpdmUgaG90cGx1ZyB0byB0
+aGUgT1MuIFRoZSBIUCBCSU9TIHNldHMgdGhhdCBiaXQgdG8gMC4gSSBnZXQgdGhlIGZvbGxvd2lu
+ZyB0cmFjZSBpbiBkbWVzZzoNCg0Ka2VybmVsOiBhY3BpIFBOUDBBMDg6MDA6IF9PU0M6IE9TIHN1
+cHBvcnRzIFtFeHRlbmRlZENvbmZpZyBBU1BNIENsb2NrUE0gU2VnbWVudHMgTVNJXQ0Ka2VybmVs
+OiBhY3BpIFBOUDBBMDg6MDA6IF9PU0M6IHBsYXRmb3JtIGRvZXMgbm90IHN1cHBvcnQgW1BDSWVI
+b3RwbHVnIFBNRV0NCmtlcm5lbDogYWNwaSBQTlAwQTA4OjAwOiBfT1NDOiBPUyBub3cgY29udHJv
+bHMgW0FFUiBQQ0llQ2FwYWJpbGl0eV0NCg0KV2hlbiB0aGUgc3dpdGNoIGlzIGFkZGVkIHRoZSBr
+ZXJuZWwgY2xpbWJzIHRoZSB0cmVlIHRvIHRoZSByb290IHBvcnQgaW4gcGNpZV9wb3J0X2FjcGlf
+c2V0dXAgYW5kIGNoZWNrcyBpdCdzIGNhcGFiaWxpdGllcy4gVGhlcmVmb3JlIG5hdGl2ZSBob3Rw
+bHVnIGlzIGRpc2FibGVkIG9uIG15IHN3aXRjaCBiZWNhdXNlIHRoZSBfT1NDIGNvbW1hbmQgcmVm
+dXNlcyB0byBnaXZlIGxpbnV4IGNvbnRyb2wgb2YgaG90cGx1ZyBvbiB0aGUgcm9vdCBwb3J0Lg0K
+DQpEb2VzICJfT1NDIGFwcGxpZXMgdG8gdGhlIGVudGlyZSBoaWVyYXJjaHkgb3JpZ2luYXRlZCBi
+eSBhIFBDSSBIb3N0IEJyaWRnZSIgKFBDSSBmaXJtd2FyZSBzcGVjLCByZXYgMy4yLCBzZWMgNC41
+LjEsIHNlZSBBZGRlbmR1bSkgbWVhbiB0aGF0IEkgYW0gbm90IGFsbG93ZWQgdG8gdXNlIHRoZSBO
+YXRpdmUgaG90cGx1ZyBzeXN0ZW0gYWxsIHRoZSB3YXkgZG93biB0aGUgdHJlZT8gU2hvdWxkIEkg
+dHJ5IHRvIGdldCBob2xkIG9mIHRoZSBCSU9TIHZlbmRvciAoSFApIHRvIGZpbmQgb3V0IHdoeSBp
+dCByZWZ1c2VzIHRoZSB0cmFuc2Zlcj8NCg0KVGhhbmtzLA0KSGFycnkNCg0KQWRkZW5kdW06DQoN
+CkkgYXNrZWQgdGhpcyBlYXJsaWVyIG9uIElSQyBhbmQgQmpvcm4gbG9va2VkIHNvbWUgdGhpbmdz
+IHVwIGZvciBtZS4gSGVyZSB0aGV5IGFyZSBzbyB5b3UgZG9uJ3QgaGF2ZSB0byBsb29rIHRoZW0g
+dXAgdG9vOg0KDQpmcm9tIHRoZSBQQ0kgZmlybXdhcmUgc3BlYywgcmV2IDMuMiwgc2VjIDQuNS4x
+Og0KVGhlIHRoaXJkIERXT1JEIGluIHRoZSBfT1NDIENhcGFiaWxpdGllcyBCdWZmZXIgaXMgdGhl
+IENvbnRyb2wgRmllbGQuIEJpdHMgZGVmaW5lZCBpbiB0aGUgQ29udHJvbCBGaWVsZCBhcmUgdXNl
+ZCB0byBzdWJtaXQgcmVxdWVzdHMgYnkgdGhlIG9wZXJhdGluZyBzeXN0ZW0gZm9yIGNvbnRyb2wv
+aGFuZGxpbmcgb2YgdGhlIGFzc29jaWF0ZWQgZmVhdHVyZSwgdHlwaWNhbGx5IChidXQgbm90IGV4
+Y2x1ZGVkIHRvKSB0aG9zZSBmZWF0dXJlcyB0aGF0IHV0aWxpemUgbmF0aXZlIGludGVycnVwdHMg
+b3IgZXZlbnRzIGhhbmRsZWQgYnkgYW4gb3BlcmF0aW5nIHN5c3RlbS1sZXZlbCBkcml2ZXIuIElm
+IGFueSBiaXRzIGluIHRoZSBDb250cm9sIEZpZWxkIGFyZSByZXR1cm5lZCBjbGVhcmVkIChtYXNr
+ZWQgdG8gemVybykgYnkgdGhlIF9PU0MgY29udHJvbCBtZXRob2QsIHRoZSByZXNwZWN0aXZlIGZl
+YXR1cmUgaXMgZGVzaWduYXRlZCB1bnN1cHBvcnRlZCBieSB0aGUgcGxhdGZvcm0gYW5kIG11c3Qg
+bm90IGJlIGVuYWJsZWQgYnkgdGhlIG9wZXJhdGluZyBzeXN0ZW0uIFNvbWUgb2YgdGhlc2UgZmVh
+dHVyZXMgbWF5IGJlIGNvbnRyb2xsZWQgYnkgcGxhdGZvcm0gZmlybXdhcmUgcHJpb3IgdG8gb3Bl
+cmF0aW5nIHN5c3RlbSBib290IG9yIGR1cmluZyBydW50aW1lIGZvciBhIGxlZ2FjeSBvcGVyYXRp
+bmcgc3lzdGVtLCB3aGlsZSBvdGhlcnMgbWF5IGJlIGRpc2FibGVkL2lub3BlcmF0aXZlIHVudGls
+IG5hdGl2ZSBvcGVyYXRpbmcgc3lzdGVtIHN1cHBvcnQgaXMgYXZhaWxhYmxlLiBTeXN0ZW0gZmly
+bXdhcmUgbXVzdCBvbmx5IG1hc2sgYSBDb250cm9sIEZpZWxkIGJpdCB0byB6ZXJvIGlmIGl0IGhh
+cyBleHBsaWNpdCBrbm93bGVkZ2UgdGhhdCB0aGUgZmVhdHVyZSB3aWxsIG5vdCB3b3JrIHByb3Bl
+cmx5IHVuZGVyIG5hdGl2ZSBvcGVyYXRpbmcgc3lzdGVtIGNvbnRyb2wsIGR1ZSB0byBwbGF0Zm9y
+bSBlcnJhdGEgb3Igb3RoZXIgaW5jb21wYXRpYmlsaXRpZXMuDQoNClNpbmNlIF9PU0MgYXBwbGll
+cyB0byB0aGUgZW50aXJlIGhpZXJhcmNoeSBvcmlnaW5hdGVkIGJ5IGEgUENJIEhvc3QgQnJpZGdl
+LCBhbmQgc3lzdGVtIGZpcm13YXJlIGNhbm5vdCBnZW5lcmFsbHkgY29tcHJlaGVuZCB0aGUgZmVh
+dHVyZXMgYW5kIGNhcGFiaWxpdGllcyBvZiBhbGwgZGV2aWNlcyB0aGF0IG1heSBiZSBob3QtcGx1
+Z2dlZCBpbnRvIGEgc3lzdGVtLCBsYWNrIG9mIGV4cGxpY2l0IHN1cHBvcnQgb2YgYSBmZWF0dXJl
+IGluIHRoZSBzeXN0ZW0gZmlybXdhcmUgaXMgbm90IGEgcmVhc29uIHRvIG1hc2sgYSBDb250cm9s
+IEZpZWxkIGJpdCB0byB6ZXJvLiBGb3IgZXhhbXBsZSwgdW5sZXNzIHN5c3RlbSBmaXJtd2FyZSBo
+YXMga25vd2xlZGdlIHRoYXQgdGhlIHN5c3RlbSBjb250YWlucyBoYXJkd2FyZSB0aGF0IGRvZXMg
+bm90IHdvcmsgcHJvcGVybHkgd2l0aCBTdGFuZGFyZCBIb3QtUGx1ZyBDb250cm9sbGVyIChTSFBD
+KSBvciBQQ0kgRXhwcmVzcyBOYXRpdmUgSG90IFBsdWcgc29mdHdhcmUsIGl0IG11c3Qgc2V0IGJv
+dGggdGhlIFBDSSBFeHByZXNzIE5hdGl2ZSBIb3QgUGx1ZyBjb250cm9sIGFuZCBTSFBDIE5hdGl2
+ZSBIb3QgUGx1ZyBjb250cm9sIGJpdHMsIGV2ZW4gaWYgdGhlIHN5c3RlbSBkb2VzIG5vdCBleHBs
+aWNpdGx5IHN1cHBvcnQgaG90IHBsdWcuIEl0IGlzIHRoZSBvcGVyYXRpbmcgc3lzdGVt4oCZcyBy
+ZXNwb25zaWJpbGl0eSB0byBkZXRlcm1pbmUgd2hldGhlciBhIHNsb3QgaW4gdGhlIGhpZXJhcmNo
+eSBpcyBob3QgcGx1Z2dhYmxlIGJ5IGluY29tcGF0aWJsZSBlbmNvZGluZyBleGFtaW5pbmcgdGhl
+IHN0YXR1cyBvZiB0aGUgc2xvdHMgYmFzZWQgb24gdGhlIFBDSSBFeHByZXNzIEJhc2UgU3BlY2lm
+aWNhdGlvbiBhbmQgdGhlIFBDSSBTSFBDIFNwZWNpZmljYXRpb24uDQpGb3IgdGhlIGFib3ZlIHJl
+YXNvbiwgc3lzdGVtIGZpcm13YXJlIG11c3QgYWx3YXlzIGFzc3VtZSB0aGF0IFBDSS1YIGZlYXR1
+cmVzIGFyZSBzdXBwb3J0ZWQNCg0KUENJIEV4cHJlc3MgTmF0aXZlIEhvdCBQbHVnIGNvbnRyb2wN
+ClRoZSBvcGVyYXRpbmcgc3lzdGVtIHNldHMgdGhpcyBiaXQgdG8gMSB0byByZXF1ZXN0IGNvbnRy
+b2wgb3ZlciBQQ0kgRXhwcmVzcyBuYXRpdmUgaG90IHBsdWcuIElmIHRoZSBvcGVyYXRpbmcgc3lz
+dGVtIHN1Y2Nlc3NmdWxseSByZWNlaXZlcyBjb250cm9sIG9mIHRoaXMgZmVhdHVyZSwgaXQgbXVz
+dCB0cmFjayBhbmQgdXBkYXRlIHRoZSBzdGF0dXMgb2YgaG90IHBsdWcgc2xvdHMgYW5kIGhhbmRs
+ZSBob3QgcGx1ZyBldmVudHMgYXMgZGVzY3JpYmVkIGluIHRoZSBQQ0kgRXhwcmVzcyBCYXNlIFNw
+ZWNpZmljYXRpb24gKGluY2x1ZGluZyBkZXRlcm1pbmluZyB3aGV0aGVyIHRoZSBhc3NvY2lhdGVk
+IHNsb3Qocykgc3VwcG9ydCBob3QgcGx1ZykuDQoNCkhhcnJ5IE1hbGxvbg0KQ09ERVggfCBTb2Z0
+d2FyZSBFbmdpbmVlcg0KNjAgUG9sYW5kIFN0cmVldCB8IExvbmRvbiB8IEVuZ2xhbmQgfCBXMUYg
+N05UDQpFIGhhcnJ5QGNvZGV4ZGlnaXRhbC5jb20gfCBUICs0NCAyMDMgNzAwMCA5ODkNCg==
