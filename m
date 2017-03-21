@@ -1,17 +1,16 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: pcie-iproc: broken 2nd (& 3rd?) controller support by
- c3245a566400 ("PCI: iproc: Request host bridge window resources")
-To: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- Oza Oza <oza.oza@broadcom.com>, JD Zheng <jiandong.zheng@broadcom.com>,
- Andy Gospodarek <gospo@broadcom.com>
-References: <faab6b85-58e8-3e62-8763-56a94b13fba1@gmail.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <f40bbf2f-3ba9-3992-d417-6588085f3d62@gmail.com>
-Date: Thu, 9 Mar 2017 08:39:07 +0100
+Date: Tue, 21 Mar 2017 13:56:25 -0700
+From: jacob pan <jacob.jun.pan@intel.com>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [RFC PATCH 29/30] vfio: Add support for Shared Virtual Memory
+Message-ID: <20170321135625.0000229b@intel.com>
+In-Reply-To: <d12a4a91-1fae-2fee-6109-3e9a1b7f5abe@arm.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-30-jean-philippe.brucker@arm.com>
+ <A2975661238FB949B60364EF0F2C2574390206F0@shsmsx102.ccr.corp.intel.com>
+ <d12a4a91-1fae-2fee-6109-3e9a1b7f5abe@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <faab6b85-58e8-3e62-8763-56a94b13fba1@gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,149 +18,95 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-arm-kernel@lists.infradead.org, Felix Fietkau <nbd@nbd.name>
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Cc: "Lan,
+ Tianyu" <tianyu.lan@intel.com>, "Tian, Kevin" <kevin.tian@intel.com>, "Liu,
+ Yi L" <yi.l.liu@intel.com>, Shanker Donthineni <shankerd@qti.qualcomm.com>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Harv Abdulhamid <harba@qti.qualcomm.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ jacob.jun.pan@intel.com,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>, "Raj,
+ Ashok" <ashok.raj@intel.com>, David Woodhouse <dwmw2@infradead.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gMDMvMDgvMjAxNyAwMTo1NiBQTSwgUmFmYcWCIE1pxYJlY2tpIHdyb3RlOgo+IEkganVzdCB0
-cmllZCB1cGdyYWRpbmcgQkNNNTMwMVggZnJvbSA0LjQgdG8gNC45IGFuZCBub3RpY2VkIEkgZG9u
-J3Qgc2VlIGNhcmQKPiBjb25uZWN0ZWQgdG8gdGhlIDJuZCBjb250cm9sbGVyLgo+Cj4gWyAgICAy
-LjU5MzUzNF0gcGNpZV9pcHJvY19iY21hIGJjbWEwOjc6IFBDSSBob3N0IGJyaWRnZSB0byBidXMg
-MDAwMDowMAo+IFsgICAgMi41OTk3ODZdIHBjaV9idXMgMDAwMDowMDogcm9vdCBidXMgcmVzb3Vy
-Y2UgW21lbSAweDA4MDAwMDAwLTB4MGZmZmZmZmZdCj4gWyAgICAyLjYwNjY2M10gcGNpZV9pcHJv
-Y19iY21hIGJjbWEwOjc6IGxpbms6IFVQCj4gWyAgICAyLjYxMTMxNl0gUENJOiBidXMwOiBGYXN0
-IGJhY2sgdG8gYmFjayB0cmFuc2ZlcnMgZGlzYWJsZWQKPiBbICAgIDIuNjE2ODk5XSBwY2kgMDAw
-MDowMDowMC4wOiBicmlkZ2UgY29uZmlndXJhdGlvbiBpbnZhbGlkIChbYnVzIDAwLTAwXSksIHJl
-Y29uZmlndXJpbmcKPiBbICAgIDIuNjI1Mzk1XSBQQ0k6IGJ1czE6IEZhc3QgYmFjayB0byBiYWNr
-IHRyYW5zZmVycyBkaXNhYmxlZAo+IFsgICAgMi42MzEwMTFdIHBjaSAwMDAwOjAwOjAwLjA6IEJB
-UiA4OiBhc3NpZ25lZCBbbWVtIDB4MDgwMDAwMDAtMHgwODBmZmZmZl0KPiBbICAgIDIuNjM3Nzk1
-XSBwY2kgMDAwMDowMTowMC4wOiBCQVIgMDogYXNzaWduZWQgW21lbSAweDA4MDAwMDAwLTB4MDgw
-MDdmZmYgNjRiaXRdCj4gWyAgICAyLjY0NTA5MV0gcGNpIDAwMDA6MDA6MDAuMDogUENJIGJyaWRn
-ZSB0byBbYnVzIDAxXQo+IFsgICAgMi42NTAwNDJdIHBjaSAwMDAwOjAwOjAwLjA6ICAgYnJpZGdl
-IHdpbmRvdyBbbWVtIDB4MDgwMDAwMDAtMHgwODBmZmZmZl0KPgo+IFsgICAgMi42NTcxOTldIHBj
-aWVfaXByb2NfYmNtYSBiY21hMDo4OiByZXNvdXJjZSBjb2xsaXNpb246IFttZW0gMHg0MDAwMDAw
-MC0weDQ3ZmZmZmZmXSBjb25mbGljdHMgd2l0aCBQQ0llIE1FTSBzcGFjZSBbbWVtIDB4NDAwMDAw
-MDAtMHg0N2ZmZmZmZl0KPiBbICAgIDIuNjY5OTQ2XSBwY2llX2lwcm9jX2JjbWEgYmNtYTA6ODog
-UENJZSBjb250cm9sbGVyIHNldHVwIGZhaWxlZAo+IFsgICAgMi42NzYwMzJdIHBjaWVfaXByb2Nf
-YmNtYTogcHJvYmUgb2YgYmNtYTA6OCBmYWlsZWQgd2l0aCBlcnJvciAtMTYKPgo+Cj4gVGhpcyB1
-c2VkIHRvIHdvcmsgd2l0aCBvbGRlciBrZXJuZWxzIGJlY2F1c2UgdGhlcmUgd2Fzbid0IGFueSBj
-b2xsaXNpb24gY2hlY2s6Cj4KPiBbICAgIDIuNTg3MTE3XSBwY2llX2lwcm9jX2JjbWEgYmNtYTA6
-NzogUENJIGhvc3QgYnJpZGdlIHRvIGJ1cyAwMDAwOjAwCj4gWyAgICAyLjU5MzM3OF0gcGNpX2J1
-cyAwMDAwOjAwOiByb290IGJ1cyByZXNvdXJjZSBbbWVtIDB4MDgwMDAwMDAtMHgwZmZmZmZmZl0K
-PiBbICAgIDIuNjAwMjU2XSBwY2llX2lwcm9jX2JjbWEgYmNtYTA6NzogbGluazogVVAKPiBbICAg
-IDIuNjA0ODg4XSBQQ0k6IGJ1czA6IEZhc3QgYmFjayB0byBiYWNrIHRyYW5zZmVycyBkaXNhYmxl
-ZAo+IFsgICAgMi42MTA0NzRdIHBjaSAwMDAwOjAwOjAwLjA6IGJyaWRnZSBjb25maWd1cmF0aW9u
-IGludmFsaWQgKFtidXMgMDAtMDBdKSwgcmVjb25maWd1cmluZwo+IFsgICAgMi42MTg5NzNdIFBD
-STogYnVzMTogRmFzdCBiYWNrIHRvIGJhY2sgdHJhbnNmZXJzIGRpc2FibGVkCj4gWyAgICAyLjYy
-NDU5MV0gcGNpIDAwMDA6MDA6MDAuMDogQkFSIDg6IGFzc2lnbmVkIFttZW0gMHgwODAwMDAwMC0w
-eDA4MGZmZmZmXQo+IFsgICAgMi42MzEzODJdIHBjaSAwMDAwOjAxOjAwLjA6IEJBUiAwOiBhc3Np
-Z25lZCBbbWVtIDB4MDgwMDAwMDAtMHgwODAwN2ZmZiA2NGJpdF0KPiBbICAgIDIuNjM4Njg2XSBw
-Y2kgMDAwMDowMDowMC4wOiBQQ0kgYnJpZGdlIHRvIFtidXMgMDFdCj4gWyAgICAyLjY0MzYzM10g
-cGNpIDAwMDA6MDA6MDAuMDogICBicmlkZ2Ugd2luZG93IFttZW0gMHgwODAwMDAwMC0weDA4MGZm
-ZmZmXQo+Cj4gWyAgICAyLjc3NzExOF0gcGNpZV9pcHJvY19iY21hIGJjbWEwOjg6IFBDSSBob3N0
-IGJyaWRnZSB0byBidXMgMDAwMTowMAo+IFsgICAgMi43ODMzNjddIHBjaV9idXMgMDAwMTowMDog
-cm9vdCBidXMgcmVzb3VyY2UgW21lbSAweDQwMDAwMDAwLTB4NDdmZmZmZmZdCj4gWyAgICAyLjc5
-MDI0NV0gcGNpZV9pcHJvY19iY21hIGJjbWEwOjg6IGxpbms6IFVQCj4gWyAgICAyLjc5NDg2Ml0g
-UENJOiBidXMwOiBGYXN0IGJhY2sgdG8gYmFjayB0cmFuc2ZlcnMgZGlzYWJsZWQKPiBbICAgIDIu
-ODAwNDUyXSBwY2kgMDAwMTowMDowMC4wOiBicmlkZ2UgY29uZmlndXJhdGlvbiBpbnZhbGlkIChb
-YnVzIDAwLTAwXSksIHJlY29uZmlndXJpbmcKPiBbICAgIDIuODA4OTQ2XSBQQ0k6IGJ1czE6IEZh
-c3QgYmFjayB0byBiYWNrIHRyYW5zZmVycyBkaXNhYmxlZAo+IFsgICAgMi44MTQ1NThdIHBjaSAw
-MDAxOjAwOjAwLjA6IEJBUiA4OiBhc3NpZ25lZCBbbWVtIDB4NDAwMDAwMDAtMHg0MDBmZmZmZl0K
-PiBbICAgIDIuODIxMzUyXSBwY2kgMDAwMTowMTowMC4wOiBCQVIgMDogYXNzaWduZWQgW21lbSAw
-eDQwMDAwMDAwLTB4NDAwMDdmZmYgNjRiaXRdCj4gWyAgICAyLjgyODY1MF0gcGNpIDAwMDE6MDA6
-MDAuMDogUENJIGJyaWRnZSB0byBbYnVzIDAxXQo+IFsgICAgMi44MzM2MDBdIHBjaSAwMDAxOjAw
-OjAwLjA6ICAgYnJpZGdlIHdpbmRvdyBbbWVtIDB4NDAwMDAwMDAtMHg0MDBmZmZmZl0KPgo+Cj4g
-SSBndWVzcyB0aGUgY2hlY2sgaXMgT0sgYWZ0ZXIgYWxsIGFuZCB0aGUgcmVhbCBwcm9ibGVtIGlz
-IGlwcm9jIGRyaXZlciBhc3NpZ25pbmcKPiB0aGUgc2FtZSByZXNvdXJjZS4KPgo+IEJyb2FkY29t
-IHRlYW06IGNvdWxkIHlvdSB0YWtlIGEgbG9vayBhdCB0aGlzLCBwbGVhc2U/CgpJIGZvdW5kIGEg
-cmVhc29uIG9mIHRoaXMgY29uZmxpY3QgKGFuZCBwcm9iYWJseSByYW5kb20gY3Jhc2hlcyBJIHN0
-YXJ0ZWQKc2VlaW5nIHdpdGggNC45KS4gSSBiZWxpZXZlIHdlIGhhdmUgYSBtZW1vcnkgY29ycnVw
-dGlvbi4KClNvIHRoYXQgY29tbWl0IGMzMjQ1YTU2NjQwMCAoIlBDSTogaXByb2M6IFJlcXVlc3Qg
-aG9zdCBicmlkZ2Ugd2luZG93CnJlc291cmNlcyIpIGFkZHMgY2FsbCB0byB0aGUgZGV2bV9yZXF1
-ZXN0X3BjaV9idXNfcmVzb3VyY2VzIHBhc3NpbmcgInJlcyIKcG9pbnRlci4gVGhlIHByb2JsZW0g
-aXMgInJlcyIgcG9pbnRzIHRvIHRoZSAqbG9jYWwqIHZhcmlhYmxlIG9mCmlwcm9jX3BjaWVfYmNt
-YV9wcm9iZSBmdW5jdGlvbi4KQXMgc29vbiBhcyB0aGUgaXByb2NfcGNpZV9iY21hX3Byb2JlIGV4
-aXRzIHRoYXQgcmVzb3VyY2UgdmFyaWFibGUgaXMgbm90CmFjY2Vzc2libGUgYW55bW9yZSwgeWV0
-IGl0J3MgdXNlZCBhcyBhIGNoaWxkIGZvciAmaW9tZW1fcmVzb3VyY2UuIFRoaW5ncyBnbwpldmVu
-IHdvcnNlIG9uIGFub3RoZXIgaXByb2NfcGNpZV9iY21hX3Byb2JlIGNhbGwuIEl0cyBsb2NhbCB2
-YXJpYWJsZSByZXNfbWVtCmdldHMgdGhlIHNhbWUgbWVtb3J5IGFkZHJlc3MgYXMgdGhlIG9uZSBh
-bHJlYWR5IHVzZWQgZm9yICZpb21lbV9yZXNvdXJjZS4gV2UKbW9kaWZ5IGxvY2FsIHZhcmlhYmxl
-IG1vZGlmeWluZyBhbHJlYWR5LWFkZGVkIHJlc291cmNlIGF0IHRoZSBzYW1lIHRpbWUhCgpTbyB0
-aGlzIGlzIHdoZXJlIHRoaXMgd2hvbGUgY29uZmxpY3RzIGNvbWVzIGZyb20uIFdoYXQgaXMgc3Rv
-cmVkIGFzIHJlc291cmNlCmZvciBbbWVtIDB4MDgwMDAwMDAtMHgwZmZmZmZmZl0gcmFuZ2UgZ2V0
-cyBtb2RpZmllZCBhcyAibG9jYWwiIHZhcmlhYmxlIHRvIHRoZQpbbWVtIDB4NDAwMDAwMDAtMHg0
-N2ZmZmZmZl0gYW5kIHRoZW4gd2UgdHJ5IHRvIHJlLXJlcXVlc3QgdGhlIHNhbWUgcmVzb3VyY2Uu
-CgpJJ20gcGFzdGluZyBsb2cgJiBwYXRjaCB0aGF0IGFsbG93ZWQgbWUgdG8gZGVidWcgJiBub3Rp
-Y2UgdGhpcyBwcm9ibGVtIHNvIHlvdQpjYW4gY29uZmlybSBteSBvYnNlcnZhdGlvbnMuCgpbICAg
-IDIuNjE1MDU1XSByZXNvdXJjZTogW19fcmVxdWVzdF9yZXNvdXJjZV0gcm9vdDpbbWVtIDB4MDAw
-MDAwMDAtMHhmZmZmZmZmZl0KWyAgICAyLjYyMTk5NV0gcmVzb3VyY2U6IFtfX3JlcXVlc3RfcmVz
-b3VyY2VdICBuZXc6Yzc4MzliZTAgbmV3OlttZW0gMHgwODAwMDAwMC0weDBmZmZmZmZmXQpbICAg
-IDIuNjMwMDYwXSByZXNvdXJjZTogW19fcmVxdWVzdF9yZXNvdXJjZV0gIHRtcDpjN2ZmZWUwMCB0
-bXA6W21lbSAweDAwMDAwMDAwLTB4MDdmZmZmZmZdClsgICAgMi42MzgxMjJdIHJlc291cmNlOiBb
-X19yZXF1ZXN0X3Jlc291cmNlXSAgdG1wOmM3YWRmMTgwIHRtcDpbbWVtIDB4MTgwMDAzMDAtMHgx
-ODAwMDNmZl0KWyAgICAyLjc2NDk0MV0gcGNpZV9pcHJvY19iY21hIGJjbWEwOjc6IFBDSSBob3N0
-IGJyaWRnZSB0byBidXMgMDAwMDowMApbICAgIDIuNzcxMTk0XSBwY2lfYnVzIDAwMDA6MDA6IHJv
-b3QgYnVzIHJlc291cmNlIFttZW0gMHgwODAwMDAwMC0weDBmZmZmZmZmXQpbICAgIDIuNzc4MDY2
-XSBwY2llX2lwcm9jX2JjbWEgYmNtYTA6NzogbGluazogVVAKWyAgICAyLjc4MjY5M10gUENJOiBi
-dXMwOiBGYXN0IGJhY2sgdG8gYmFjayB0cmFuc2ZlcnMgZGlzYWJsZWQKWyAgICAyLjc4ODI2N10g
-cGNpIDAwMDA6MDA6MDAuMDogYnJpZGdlIGNvbmZpZ3VyYXRpb24gaW52YWxpZCAoW2J1cyAwMC0w
-MF0pLCByZWNvbmZpZ3VyaW5nClsgICAgMi43OTY3NjddIFBDSTogYnVzMTogRmFzdCBiYWNrIHRv
-IGJhY2sgdHJhbnNmZXJzIGRpc2FibGVkClsgICAgMi44MDIzNzVdIHJlc291cmNlOiBbX19yZXF1
-ZXN0X3Jlc291cmNlXSByb290OlttZW0gMHgwODAwMDAwMC0weDBmZmZmZmZmXQpbICAgIDIuODA5
-MzI0XSByZXNvdXJjZTogW19fcmVxdWVzdF9yZXNvdXJjZV0gIG5ldzpjN2IwOGU2NCBuZXc6W21l
-bSBzaXplIDB4MDAxMDAwMDBdClsgICAgMi44MTY4NjVdIHJlc291cmNlOiBbX19yZXF1ZXN0X3Jl
-c291cmNlXSAgdG1wOiAgKG51bGwpIHRtcDogIChudWxsKQpbICAgIDIuODIzMjgyXSBwY2kgMDAw
-MDowMDowMC4wOiBCQVIgODogYXNzaWduZWQgW21lbSAweDA4MDAwMDAwLTB4MDgwZmZmZmZdClsg
-ICAgMi44MzAwNDldIHJlc291cmNlOiBbX19yZXF1ZXN0X3Jlc291cmNlXSByb290OlttZW0gMHgw
-ODAwMDAwMC0weDA4MGZmZmZmXQpbICAgIDIuODM2OTg2XSByZXNvdXJjZTogW19fcmVxdWVzdF9y
-ZXNvdXJjZV0gIG5ldzpjN2IwOTE2NCBuZXc6W21lbSBzaXplIDB4MDAwMDgwMDAgNjRiaXRdClsg
-ICAgMi44NDUwNDddIHJlc291cmNlOiBbX19yZXF1ZXN0X3Jlc291cmNlXSAgdG1wOiAgKG51bGwp
-IHRtcDogIChudWxsKQpbICAgIDIuODUxNDY0XSBwY2kgMDAwMDowMTowMC4wOiBCQVIgMDogYXNz
-aWduZWQgW21lbSAweDA4MDAwMDAwLTB4MDgwMDdmZmYgNjRiaXRdClsgICAgMi44NTg3NThdIHBj
-aSAwMDAwOjAwOjAwLjA6IFBDSSBicmlkZ2UgdG8gW2J1cyAwMV0KWyAgICAyLjg2MzcwMF0gcGNp
-IDAwMDA6MDA6MDAuMDogICBicmlkZ2Ugd2luZG93IFttZW0gMHgwODAwMDAwMC0weDA4MGZmZmZm
-XQoKWyAgICAyLjg3MDgzNF0gcmVzb3VyY2U6IFtfX3JlcXVlc3RfcmVzb3VyY2VdIHJvb3Q6W21l
-bSAweDAwMDAwMDAwLTB4ZmZmZmZmZmZdClsgICAgMi44Nzc3OTFdIHJlc291cmNlOiBbX19yZXF1
-ZXN0X3Jlc291cmNlXSAgbmV3OmM3ODM5YmUwIG5ldzpbbWVtIDB4NDAwMDAwMDAtMHg0N2ZmZmZm
-Zl0KWyAgICAyLjg4NTg1NV0gcmVzb3VyY2U6IFtfX3JlcXVlc3RfcmVzb3VyY2VdICB0bXA6Yzdm
-ZmVlMDAgdG1wOlttZW0gMHgwMDAwMDAwMC0weDA3ZmZmZmZmXQpbICAgIDIuODkzOTExXSByZXNv
-dXJjZTogW19fcmVxdWVzdF9yZXNvdXJjZV0gIHRtcDpjNzgzOWJlMCB0bXA6W21lbSAweDQwMDAw
-MDAwLTB4NDdmZmZmZmZdClsgICAgMi45MDE5NzFdIHJlc291cmNlOiBbX19yZXF1ZXN0X3Jlc291
-cmNlXSBGb3VuZCBjb2xsaXNpb24gd2l0aCB0bXAKWyAgICAyLjkwODIyNV0gcGNpZV9pcHJvY19i
-Y21hIGJjbWEwOjg6IHJlc291cmNlIGNvbGxpc2lvbjogW21lbSAweDQwMDAwMDAwLTB4NDdmZmZm
-ZmZdIGNvbmZsaWN0cyB3aXRoIFBDSWUgTUVNIHNwYWNlIFttZW0gMHg0MDAwMDAwMC0weDQ3ZmZm
-ZmZmXQpbICAgIDIuOTIwOTUyXSBwY2llX2lwcm9jX2JjbWEgYmNtYTA6ODogUENJZSBjb250cm9s
-bGVyIHNldHVwIGZhaWxlZApbICAgIDIuOTI3MDM3XSBwY2llX2lwcm9jX2JjbWE6IHByb2JlIG9m
-IGJjbWEwOjggZmFpbGVkIHdpdGggZXJyb3IgLTE2CgpBcyB5b3UgY2FuIHNlZSwgZm9yIHRoZSBm
-aXJzdCBjb250cm9sbGVyIGZvbGxvd2luZyByZXNvdXJjZSBoYXMgYmVlbiByZXF1ZXN0ZWQ6CmM3
-ODM5YmUwIFttZW0gMHgwODAwMDAwMC0weDBmZmZmZmZmXQoKVGhlbiB3aGVuIHdlIHRyeSB0byBw
-cm9iZSBzZWNvbmQgY29udHJvbGxlciB0aGVyZSBhcmUgZm9sbG93aW5nIHJlc291cmNlcwphbHJl
-YWR5IGluIHVzZToKYzdmZmVlMDAgW21lbSAweDAwMDAwMDAwLTB4MDdmZmZmZmZdCmM3ODM5YmUw
-IFttZW0gMHg0MDAwMDAwMC0weDQ3ZmZmZmZmXQphbmQgd2UgdHJ5IHRvIHJlcXVlc3Q6CmM3ODM5
-YmUwIFttZW0gMHg0MDAwMDAwMC0weDQ3ZmZmZmZmXQoKCmRpZmYgLS1naXQgYS9rZXJuZWwvcmVz
-b3VyY2UuYyBiL2tlcm5lbC9yZXNvdXJjZS5jCmluZGV4IDliNWYwNDQuLmZhYjk0MDUgMTAwNjQ0
-Ci0tLSBhL2tlcm5lbC9yZXNvdXJjZS5jCisrKyBiL2tlcm5lbC9yZXNvdXJjZS5jCkBAIC0yMjAs
-NiArMjIwLDggQEAgc3RhdGljIHN0cnVjdCByZXNvdXJjZSAqIF9fcmVxdWVzdF9yZXNvdXJjZShz
-dHJ1Y3QgcmVzb3VyY2UgKnJvb3QsIHN0cnVjdCByZXNvdXIKICAJcmVzb3VyY2Vfc2l6ZV90IGVu
-ZCA9IG5ldy0+ZW5kOwogIAlzdHJ1Y3QgcmVzb3VyY2UgKnRtcCwgKipwOwoKKwlpZiAobmV3LT5m
-bGFncyAmIElPUkVTT1VSQ0VfTUVNKSBwcl9pbmZvKCJbJXNdIHJvb3Q6JXBSXG4iLCBfX2Z1bmNf
-Xywgcm9vdCk7CisJaWYgKG5ldy0+ZmxhZ3MgJiBJT1JFU09VUkNFX01FTSkgcHJfaW5mbygiWyVz
-XSAgbmV3OiVwIG5ldzolcFJcbiIsIF9fZnVuY19fLCBuZXcsIG5ldyk7CiAgCWlmIChlbmQgPCBz
-dGFydCkKICAJCXJldHVybiByb290OwogIAlpZiAoc3RhcnQgPCByb290LT5zdGFydCkKQEAgLTIy
-OSw2ICsyMzEsNyBAQCBzdGF0aWMgc3RydWN0IHJlc291cmNlICogX19yZXF1ZXN0X3Jlc291cmNl
-KHN0cnVjdCByZXNvdXJjZSAqcm9vdCwgc3RydWN0IHJlc291cgogIAlwID0gJnJvb3QtPmNoaWxk
-OwogIAlmb3IgKDs7KSB7CiAgCQl0bXAgPSAqcDsKKwkJaWYgKG5ldy0+ZmxhZ3MgJiBJT1JFU09V
-UkNFX01FTSkgcHJfaW5mbygiWyVzXSAgdG1wOiVwIHRtcDolcFJcbiIsIF9fZnVuY19fLCB0bXAs
-IHRtcCk7CiAgCQlpZiAoIXRtcCB8fCB0bXAtPnN0YXJ0ID4gZW5kKSB7CiAgCQkJbmV3LT5zaWJs
-aW5nID0gdG1wOwogIAkJCSpwID0gbmV3OwpAQCAtMjM4LDYgKzI0MSw3IEBAIHN0YXRpYyBzdHJ1
-Y3QgcmVzb3VyY2UgKiBfX3JlcXVlc3RfcmVzb3VyY2Uoc3RydWN0IHJlc291cmNlICpyb290LCBz
-dHJ1Y3QgcmVzb3VyCiAgCQlwID0gJnRtcC0+c2libGluZzsKICAJCWlmICh0bXAtPmVuZCA8IHN0
-YXJ0KQogIAkJCWNvbnRpbnVlOworCQlpZiAobmV3LT5mbGFncyAmIElPUkVTT1VSQ0VfTUVNKSBw
-cl9pbmZvKCJbJXNdIEZvdW5kIGNvbGxpc2lvbiB3aXRoIHRtcFxuIiwgX19mdW5jX18pOwogIAkJ
-cmV0dXJuIHRtcDsKICAJfQogIH0KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJu
-ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFu
-L2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+On Tue, 21 Mar 2017 19:37:56 +0000
+Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
+
+> > For invalidation, I've following info in in pseudo code.
+> > struct iommu_svm_tlb_invalidate_info
+> > {
+> >        __u32 inv_type;
+> > #define IOTLB_INV			(1 << 0)
+> > #define EXTENDED_IOTLB_INV		(1 << 1)
+> > #define DEVICE_IOTLB_INV		(1 << 2)
+> > #define EXTENDED_DEVICE_IOTLB_INV	(1 << 3)
+> > #define PASID_CACHE_INV		(1 << 4)
+> >        __u32 pasid;
+> >        __u64 addr;
+> >        __u64 size;
+> >        __u8 granularity;
+> > #define DEFAULT_INV_GRN        0
+> > #define PAGE_SELECTIVE_INV     (1 << 0)
+> > #define PASID_SELECVIVE_INV    (1 << 1)
+> >        __u64 flags;
+> > #define INVALIDATE_HINT_BIT    (1 << 0)
+> > #define GLOBAL_HINT_BIT        (1 << 1)
+> > #define DRAIN_READ_BIT         (1 << 2)
+> > #define DRAIN_WRITE_BIT        (1 << 3)
+> > #define DEVICE_TLB_GLOBAL_BIT  (1 << 4)
+> >        __u8 mip;
+> >        __u16 pfsid;
+> > };  
+> 
+> This would also benefit from being split into generic and
+> architectural parts. Former would be defined in VFIO, latter would be
+> in the IOMMU driver.
+> 
+> struct tlb_invalidate_info
+> {
+> 	__u8 granularity
+> #define DEFAULT_INV_GRN		0	/* What is default? */
+> #define PAGE_SELECTIVE_INV	(1 << 0)
+> #define PASID_SELECTIVE_INV	(1 << 1)
+> 	__u32 pasid;
+> 	__u64 addr;
+> 	__u64 size;
+> 
+> 	/* Since IOMMU format has already been validated for this
+> table, the IOMMU driver knows that the following structure is in a
+> 	   format it knows */
+> 	__u8 opaque[];
+> };
+> 
+> struct tlb_invalidate_info_intel
+> {
+> 	__u32 inv_type;
+> 	...
+> 	__u64 flags;
+> 	...
+> 	__u8 mip;
+> 	__u16 pfsid;
+> };
+
+I presume for Intel/arch specific part, the opaque data can simply be
+the descriptor itself. i.e. struct qi_desc. There is no need to
+generalize since it has already been validated to be architecture
+specific data.
+
+Arch specific IOMMU driver can take further action on the opaque data,
+e.g. replace guest DID with host DID based on other info passed down
+from the caller.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
