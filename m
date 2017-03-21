@@ -1,75 +1,117 @@
-Return-Path: <SRS0=Pck9=2K=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Pck9=2K=deltatee.com=logang@kernel.org>
-To: Keith Busch <keith.busch@intel.com>, Bjorn Helgaas <helgaas@kernel.org>
-References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
- <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
- <20170301222651.GA14852@localhost.localdomain>
-Cc: Myron Stowe <myron.stowe@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Jonathan Corbet <corbet@lwn.net>, "David S. Miller" <davem@davemloft.net>,
- Andrew Morton <akpm@linux-foundation.org>,
- Emil Velikov <emil.l.velikov@gmail.com>,
- Mauro Carvalho Chehab <mchehab@kernel.org>,
- Guenter Roeck <linux@roeck-us.net>,
- Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
- Linus Walleij <linus.walleij@linaro.org>,
- Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
- Stefan Berger <stefanb@linux.vnet.ibm.com>, Wei Zhang <wzhang@fb.com>,
- Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
- Stephen Bates <stephen.bates@microsemi.com>, linux-pci@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <84556478-c01c-0925-be75-13a61d4c8f4f@deltatee.com>
-Date: Wed, 1 Mar 2017 15:37:03 -0700
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Wed, 22 Mar 2017 10:46:36 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Bodong Wang <bodong@mellanox.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        saeedm@mellanox.com, Eli Cohen <eli@mellanox.com>
+Subject: Re: [PATCH] pci/sriov: Add an option to probe VFs or not before
+ enabling SR-IOV
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
+ <20170320230706.GA12252@gwshan>
+ <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
+ <20170320225708.6868676a@t450s.home>
+ <20170321054305.GA12230@gwshan>
+ <20170321000158.444991a3@t450s.home>
+ <20170321092518.GA19657@gwshan>
+ <20170321082329.4f408a9e@t450s.home>
 MIME-Version: 1.0
-In-Reply-To: <20170301222651.GA14852@localhost.localdomain>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170321082329.4f408a9e@t450s.home>
+Message-Id: <20170321234636.GA3972@gwshan>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Tue, Mar 21, 2017 at 08:23:29AM -0600, Alex Williamson wrote:
+>On Tue, 21 Mar 2017 20:25:18 +1100
+>Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> On Tue, Mar 21, 2017 at 12:01:58AM -0600, Alex Williamson wrote:
+>> >On Tue, 21 Mar 2017 16:43:05 +1100
+>> >Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:  
+>> >> On Mon, Mar 20, 2017 at 10:57:08PM -0600, Alex Williamson wrote:  
+>> >> >On Mon, 20 Mar 2017 18:34:23 -0500
+>> >> >Bodong Wang <bodong@mellanox.com> wrote:    
+>> >> 
+>> >> .../...
+>> >>   
+>> >> >> > Bodong, I'm not sure if there is a requirement to load driver for the
+>> >> >> > specified number of VFs? That indicates no driver will be loaded for
+>> >> >> > other VFs. If so, this interface might serve the purpose as well.      
+>> >> >> Gavin, thanks for the review. That is indeed an interesting suggestion. 
+>> >> >> Theoretically,  we can change that probe_vfs from boolean to integer. 
+>> >> >> And use it as a counter to probe the first N VFs(if N < total_vfs).  
+>> >> >> Let's see if there are any objections.    
+>> >> >
+>> >> >Is it just me or does this seem like a confusing user interface, ie. to
+>> >> >get binary on/off behavior a user now needs to 'cat total_vfs >
+>> >> >sriov_probe_vfs'.  It's not very intuitive, what's the use case for it?
+>> >> >    
+>> >> 
+>> >> After it's changed to integer, it accepts number. If users want to load
+>> >> driver for all VFs and don't want to check the maximal number of VFs,
+>> >> they can simply write 0xffffffff. So "on" and "off" are replaced with 0xffffffff
+>> >> and 0, but users has to press the keyboard more times though.
+>> >> 
+>> >> drivers/net/ethernet/mellanox/mlx4/main.c::probe_vfs_argc allows to specify
+>> >> the number of VFs with which we're going to bind drivers. Less time is needed
+>> >> to enable SRIOV capability. As I had in some development environment: assume
+>> >> PF supports 256 VFs and I'm going to enable all of them, but I only want to
+>> >> load driver for two of them, then test the data path on those two VFs. Besides,
+>> >> I can image the VF needn't a driver in host if it's going to be passed to guest. 
+>> >> Not sure how much sense it makes.  
+>> >
+>> >Yes, I understand what you're trying to do, but I still think it's
+>> >confusing for a user interface.  This also doesn't answer what's the
+>> >practical, typical user case you see where it's useful to probe some
+>> >VFs but not others.  The case listed is a development case where you
+>> >could just as easily disable all probing, then manually bind the first
+>> >two VFs to the host driver.  Which is the better design, impose a
+>> >confusing interface on all users to simplify an obscure development
+>> >environment or simplify the user interface and assume developers know
+>> >how to bind devices otherwise?  Thanks,
+>> >  
+>> 
+>> Yeah, your explanation is also fairly reasonable. The interface has
+>> been named as "probe_vfs" instead of "probe_vf" or "probe_vf_driver".
+>> So it seems it should accept number of VFs on which drivers are loaded.
+>> Besides, making this interface accept number corresponds to 3 possiblities:
+>> all, none and load drivers on part of available VFs. So more flexibility
+>> is gained.
+>> 
+>> User can theoritically have the use case as I had - passing through
+>> some of the VFs to guest: (A) All VFs are bound with drivers; (B) unbind
+>> the drivers for some of the VFs; (C) bind the VFs with vfio-pci; (D) passing
+>> through; (A) is overhead in this scenario. Some CPU cycles are saved if (A)
+>> is avoided.
+>
+>Huh?  I'm asking what the practical and typical use case is for this
+>and you're rehashing the name of the interface and giving me
+>theoretical examples.  Outside of your development environment, why
+>would a user every actually want to do this?
+>
 
+Frankly, I'm not sure how much sense it has as I mentioned from the
+beginning. I knew mlx4 driver supports it and it's why I asked.
 
-On 01/03/17 03:26 PM, Keith Busch wrote:
-> I think this is from using the managed device resource API to request the
-> irq actions. The scope of the resource used to be tied to the pci_dev's
-> dev, but now it's the new switchec class dev, which has a different
-> lifetime while open references exist, so it's not releasing the irq's.
+>If we want to talk about the ABI, I would suggest drawing from existing
+>ABIs.  We already have drivers_autoprobe as part of the standard sysfs
+>ABI, so if we want a binary switch, then sriov_drivers_autoprobe might
+>be a logical choice.  If you're concerned about this mythical overhead
+>of binding to one driver then another, then why not draw from the
+>driver_override interface to allow the user to specify the driver to
+>bind to, perhaps sriov_driver_override.  Then if the user wants to bind
+>all the devices to vfio-pci, they can do so easily.  I still fail to
+>see that probing some fixed number of the VFs and leaving the rest
+>unprobed has any practical value and I imagine bugs coming in because
+>users are confused why some of their VFs behave differently than
+>others.  Thanks,
+>
 
-The scope of the IRQ was originally tied to the pci_dev. Then in v4 I
-tied it to the switchtec device in order to try and keep using the pci
-device after unbind. This didn't work, so I switched it back to using
-the pci_dev. (This seems to be the way most drivers work anyway.)
+Ok. I tend to agree with you - the use case isn't practical. On the other
+hand, I think "sriov_driver_orverride" would be a good idea, but it's not
+too much related to this patch. Thank you for the explanation.
 
-
-> One thing about the BUG_ON that is confusing me is how it's getting
-> to free_msi_irq's BUG in v4 or v5. I don't see any part releasing the
-> allocated ones. Maybe the devres API is harder to use than having the
-> driver manage all the resources...
-
-free_msi_irqs seems to be called via pci_disable_device in pcim_release
-which devres will call during release of the PCI device and before all
-the references to the pci_dev are freed (I tried adding an extra
-get_device which gets put in the child devices release -- this didn't work):
-
- [ 1079.845616] Call Trace:
- [ 1079.845652]  ? pcim_release+0x35/0x96
- [ 1079.845691]  ? release_nodes+0x15b/0x17c
- [ 1079.845730]  ? device_release_driver_internal+0x12d/0x1cb
- [ 1079.845771]  ? unbind_store+0x59/0x89
- [ 1079.845809]  ? kernfs_fop_write+0xe7/0x129
- [ 1079.845847]  ? __vfs_write+0x1c/0xa2
- [ 1079.845885]  ? kmem_cache_alloc+0xc5/0x131
- [ 1079.845923]  ? fput+0xd/0x7d
- [ 1079.845958]  ? filp_close+0x5a/0x61
- [ 1079.845993]  ? vfs_write+0xa2/0xe4
- [ 1079.846028]  ? SyS_write+0x48/0x73
- [ 1079.846066]  ? entry_SYSCALL_64_fastpath+0x13/0x94
-
-v5 is correct because it registers the irqs against the pci_dev (with
-devm_request_irq) and thus they get freed in time as part of the devres
-unwind.
-
-Logan
+Thanks,
+Gavin
