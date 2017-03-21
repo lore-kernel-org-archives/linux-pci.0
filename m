@@ -1,193 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: helgaas@kernel.org, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 2/4] PCI: add functionality for resizing resources v2
-Date: Mon, 13 Mar 2017 13:41:34 +0100
-Message-Id: <1489408896-25039-3-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:45279 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1756171AbdCUJ0S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Mar 2017 05:26:18 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2L9NtLr121234
+        for <linux-pci@vger.kernel.org>; Tue, 21 Mar 2017 05:26:17 -0400
+Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 29aypscxa3-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Tue, 21 Mar 2017 05:26:17 -0400
+Received: from localhost
+        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Tue, 21 Mar 2017 19:26:14 +1000
+Date: Tue, 21 Mar 2017 20:25:18 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Bodong Wang <bodong@mellanox.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        saeedm@mellanox.com, Eli Cohen <eli@mellanox.com>
+Subject: Re: [PATCH] pci/sriov: Add an option to probe VFs or not before
+ enabling SR-IOV
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
+ <20170320230706.GA12252@gwshan>
+ <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
+ <20170320225708.6868676a@t450s.home>
+ <20170321054305.GA12230@gwshan>
+ <20170321000158.444991a3@t450s.home>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170321000158.444991a3@t450s.home>
+Message-Id: <20170321092518.GA19657@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+On Tue, Mar 21, 2017 at 12:01:58AM -0600, Alex Williamson wrote:
+>On Tue, 21 Mar 2017 16:43:05 +1100
+>Gavin Shan <gwshan@linux.vnet.ibm.com> wrote:
+>> On Mon, Mar 20, 2017 at 10:57:08PM -0600, Alex Williamson wrote:
+>> >On Mon, 20 Mar 2017 18:34:23 -0500
+>> >Bodong Wang <bodong@mellanox.com> wrote:  
+>> 
+>> .../...
+>> 
+>> >> > Bodong, I'm not sure if there is a requirement to load driver for the
+>> >> > specified number of VFs? That indicates no driver will be loaded for
+>> >> > other VFs. If so, this interface might serve the purpose as well.    
+>> >> Gavin, thanks for the review. That is indeed an interesting suggestion. 
+>> >> Theoretically,  we can change that probe_vfs from boolean to integer. 
+>> >> And use it as a counter to probe the first N VFs(if N < total_vfs).  
+>> >> Let's see if there are any objections.  
+>> >
+>> >Is it just me or does this seem like a confusing user interface, ie. to
+>> >get binary on/off behavior a user now needs to 'cat total_vfs >
+>> >sriov_probe_vfs'.  It's not very intuitive, what's the use case for it?
+>> >  
+>> 
+>> After it's changed to integer, it accepts number. If users want to load
+>> driver for all VFs and don't want to check the maximal number of VFs,
+>> they can simply write 0xffffffff. So "on" and "off" are replaced with 0xffffffff
+>> and 0, but users has to press the keyboard more times though.
+>> 
+>> drivers/net/ethernet/mellanox/mlx4/main.c::probe_vfs_argc allows to specify
+>> the number of VFs with which we're going to bind drivers. Less time is needed
+>> to enable SRIOV capability. As I had in some development environment: assume
+>> PF supports 256 VFs and I'm going to enable all of them, but I only want to
+>> load driver for two of them, then test the data path on those two VFs. Besides,
+>> I can image the VF needn't a driver in host if it's going to be passed to guest. 
+>> Not sure how much sense it makes.
+>
+>Yes, I understand what you're trying to do, but I still think it's
+>confusing for a user interface.  This also doesn't answer what's the
+>practical, typical user case you see where it's useful to probe some
+>VFs but not others.  The case listed is a development case where you
+>could just as easily disable all probing, then manually bind the first
+>two VFs to the host driver.  Which is the better design, impose a
+>confusing interface on all users to simplify an obscure development
+>environment or simplify the user interface and assume developers know
+>how to bind devices otherwise?  Thanks,
+>
 
-This allows device drivers to request resizing their BARs.
+Yeah, your explanation is also fairly reasonable. The interface has
+been named as "probe_vfs" instead of "probe_vf" or "probe_vf_driver".
+So it seems it should accept number of VFs on which drivers are loaded.
+Besides, making this interface accept number corresponds to 3 possiblities:
+all, none and load drivers on part of available VFs. So more flexibility
+is gained.
 
-The function only tries to reprogram the windows of the bridge directly above
-the requesting device and only the BAR of the same type (usually mem, 64bit,
-prefetchable). This is done to make sure not to disturb other drivers by
-changing the BARs of their devices.
+User can theoritically have the use case as I had - passing through
+some of the VFs to guest: (A) All VFs are bound with drivers; (B) unbind
+the drivers for some of the VFs; (C) bind the VFs with vfio-pci; (D) passing
+through; (A) is overhead in this scenario. Some CPU cycles are saved if (A)
+is avoided.
 
-If reprogramming the bridge BAR fails the old status is restored and -ENOSPC
-returned to the calling device driver.
-
-v2: rebase on changes in rbar support
-
-Signed-off-by: Christian König <christian.koenig@amd.com>
----
- drivers/pci/setup-bus.c | 61 +++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/setup-res.c | 51 +++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h     |  2 ++
- 3 files changed, 114 insertions(+)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f30ca75..cfab2c7 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -1923,6 +1923,67 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
- }
- EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
- 
-+int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
-+{
-+	const unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
-+		IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
-+
-+	struct resource saved;
-+	LIST_HEAD(add_list);
-+	LIST_HEAD(fail_head);
-+	struct pci_dev_resource *fail_res;
-+	unsigned i;
-+	int ret = 0;
-+
-+	/* Release all children from the matching bridge resource */
-+	for (i = PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END; ++i) {
-+		struct resource *res = &bridge->resource[i];
-+
-+		if ((res->flags & type_mask) != (type & type_mask))
-+			continue;
-+
-+		saved = *res;
-+		if (res->parent) {
-+			release_child_resources(res);
-+			release_resource(res);
-+		}
-+		res->start = 0;
-+		res->end = 0;
-+		break;
-+	}
-+
-+	if (i == PCI_BRIDGE_RESOURCE_END)
-+		return -ENOENT;
-+
-+	__pci_bus_size_bridges(bridge->subordinate, &add_list);
-+	__pci_bridge_assign_resources(bridge, &add_list, &fail_head);
-+	BUG_ON(!list_empty(&add_list));
-+
-+	/* restore size and flags */
-+	list_for_each_entry(fail_res, &fail_head, list) {
-+		struct resource *res = fail_res->res;
-+
-+		res->start = fail_res->start;
-+		res->end = fail_res->end;
-+		res->flags = fail_res->flags;
-+	}
-+
-+	/* Revert to the old configuration */
-+	if (!list_empty(&fail_head)) {
-+		struct resource *res = &bridge->resource[i];
-+
-+		res->start = saved.start;
-+		res->end = saved.end;
-+		res->flags = saved.flags;
-+
-+		pci_claim_resource(bridge, i);
-+		ret = -ENOSPC;
-+	}
-+
-+	free_list(&fail_head);
-+	return ret;
-+}
-+
- void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
- {
- 	struct pci_dev *dev;
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 9526e34..3bb1e29 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -363,6 +363,57 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
- 	return 0;
- }
- 
-+int pci_resize_resource(struct pci_dev *dev, int resno, int size)
-+{
-+	struct resource *res = dev->resource + resno;
-+	u32 sizes = pci_rbar_get_possible_sizes(dev, resno);
-+	int old = pci_rbar_get_current_size(dev, resno);
-+	u64 bytes = 1ULL << (size + 20);
-+	int ret = 0;
-+
-+	if (!sizes)
-+		return -ENOTSUPP;
-+
-+	if (!(sizes & (1 << size)))
-+		return -EINVAL;
-+
-+	if (old < 0)
-+		return old;
-+
-+	/* Make sure the resource isn't assigned before making it larger. */
-+	if (resource_size(res) < bytes && res->parent) {
-+		release_resource(res);
-+		res->end = resource_size(res) - 1;
-+		res->start = 0;
-+		if (resno < PCI_BRIDGE_RESOURCES)
-+			pci_update_resource(dev, resno);
-+	}
-+
-+	ret = pci_rbar_set_size(dev, resno, size);
-+	if (ret)
-+		goto error_reassign;
-+
-+	res->end = res->start + bytes - 1;
-+
-+	ret = pci_reassign_bridge_resources(dev->bus->self, res->flags);
-+	if (ret)
-+		goto error_resize;
-+
-+	pci_reenable_device(dev->bus->self);
-+	return 0;
-+
-+error_resize:
-+	pci_rbar_set_size(dev, resno, old);
-+	res->end = res->start + (1ULL << (old + 20)) - 1;
-+
-+error_reassign:
-+	pci_assign_unassigned_bus_resources(dev->bus);
-+	pci_setup_bridge(dev->bus);
-+	pci_reenable_device(dev->bus->self);
-+	return ret;
-+}
-+EXPORT_SYMBOL(pci_resize_resource);
-+
- int pci_enable_resources(struct pci_dev *dev, int mask)
- {
- 	u16 cmd, old_cmd;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 6954e50..8eaebb4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1055,6 +1055,7 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
- void pci_update_resource(struct pci_dev *dev, int resno);
- int __must_check pci_assign_resource(struct pci_dev *dev, int i);
- int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
-+int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
- int pci_select_bars(struct pci_dev *dev, unsigned long flags);
- bool pci_device_is_present(struct pci_dev *pdev);
- void pci_ignore_hotplug(struct pci_dev *dev);
-@@ -1135,6 +1136,7 @@ void pci_assign_unassigned_resources(void);
- void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
- void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
- void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
-+int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type);
- void pdev_enable_device(struct pci_dev *);
- int pci_enable_resources(struct pci_dev *, int mask);
- void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
--- 
-2.7.4
+Thanks,
+Gavin 
