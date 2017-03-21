@@ -1,96 +1,71 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RESEND PATCH v3 4/7] PCI: dwc: all: Modify dbi accessors to take
- dbi_base as argument
-To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-References: <1489041545-15730-1-git-send-email-kishon@ti.com>
- <1489041545-15730-5-git-send-email-kishon@ti.com>
- <4e13580d-2625-5eed-bcbc-2ffd7493b073@axis.com>
- <595fab62-fb7a-888a-f898-7b59030585f1@axis.com> <58C28FCC.4070100@ti.com>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <d920d892-af48-b94f-6eb7-e9e0ff5d40c0@axis.com>
-Date: Fri, 10 Mar 2017 13:31:27 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:46297 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751212AbdCUFoK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Mar 2017 01:44:10 -0400
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2L5i45H062795
+        for <linux-pci@vger.kernel.org>; Tue, 21 Mar 2017 01:44:08 -0400
+Received: from e23smtp02.au.ibm.com (e23smtp02.au.ibm.com [202.81.31.144])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 29afu7rn6x-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Tue, 21 Mar 2017 01:44:08 -0400
+Received: from localhost
+        by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Tue, 21 Mar 2017 15:44:05 +1000
+Date: Tue, 21 Mar 2017 16:43:05 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: Bodong Wang <bodong@mellanox.com>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        saeedm@mellanox.com, Eli Cohen <eli@mellanox.com>
+Subject: Re: [PATCH] pci/sriov: Add an option to probe VFs or not before
+ enabling SR-IOV
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
+ <20170320230706.GA12252@gwshan>
+ <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
+ <20170320225708.6868676a@t450s.home>
 MIME-Version: 1.0
-In-Reply-To: <58C28FCC.4070100@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
- Jesper Nilsson <jespern@axis.com>, Zhou Wang <wangzhou1@hisilicon.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170320225708.6868676a@t450s.home>
+Message-Id: <20170321054305.GA12230@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/10/2017 12:36 PM, Kishon Vijay Abraham I wrote:
-> Hi,
+On Mon, Mar 20, 2017 at 10:57:08PM -0600, Alex Williamson wrote:
+>On Mon, 20 Mar 2017 18:34:23 -0500
+>Bodong Wang <bodong@mellanox.com> wrote:
+
+.../...
+
+>> > Bodong, I'm not sure if there is a requirement to load driver for the
+>> > specified number of VFs? That indicates no driver will be loaded for
+>> > other VFs. If so, this interface might serve the purpose as well.  
+>> Gavin, thanks for the review. That is indeed an interesting suggestion. 
+>> Theoretically,  we can change that probe_vfs from boolean to integer. 
+>> And use it as a counter to probe the first N VFs(if N < total_vfs).  
+>> Let's see if there are any objections.
 >
-> On Thursday 09 March 2017 08:35 PM, Niklas Cassel wrote:
->>
->> On 03/09/2017 03:48 PM, Niklas Cassel wrote:
->>> On 03/09/2017 07:39 AM, Kishon Vijay Abraham I wrote:
->>>> dwc has 2 dbi address space labeled dbics and dbics2. The existing
->>>> helper to access dbi address space can access only dbics. However
->>>> dbics2 has to be accessed for programming the BAR registers in the
->>>> case of EP mode. This is in preparation for adding EP mode support
->>>> to dwc driver.
->>> Hello Kishon
->>>
->>> I don't really like the idea of adding an extra argument to every existing read/write.
->>> Will not a read/write using dbi2 be quite uncommon compared to a read/write
->>> using dbi?
->>>
->>> How about something like this:
->>>
->>> void __dw_pcie_writel(struct dw_pcie *pci, void __iomem *base, u32 reg, u32 val)
->>> {
->>>     if (pci->ops->writel_dbi)
->>>         pci->ops->writel_dbi(pci, base, reg, val);
->>>     else
->>>         writel(val, base + reg);
->>> }
->>>
->>> #define dw_pcie_writel_dbi(pci, reg, val) __dw_pcie_writel(pci, pci->dbi_base, reg, val)
->>> #define dw_pcie_writel_dbi2(pci, reg, val) __dw_pcie_writel(pci, pci->dbi_base2, reg, val)
->> Perhaps make dw_pcie_writel_dbi2 a function rather than a define,
->> so we can return an error if pci->dbi_base2 == NULL.
-> Should we return an error? We don't return error for dbi_base either. I think
-> it should be sufficient to return errors while populating dbi_base or
-> dbi_base2. Otherwise it's a bug and should result in abort. Joao?
-
-Sorry for previous empty email.
-
-
-What I meant to write:
-
-Right now we do error checking for dbi_base in platform specific code
-and in pcie-designware-host.c:dw_pcie_host_init.
-
-For dbi_base2, you've added error checking in platform specific code
-(pci-dra7xx.c), but I don't see any error checking in your patch proposal
-pcie-designware-ep.c:dw_pcie_ep_init.
-If you add error checking in dw_pcie_ep_init, then I agree,
-we don't need any error checking in dw_pcie_writel_dbi2.
-
-
-
+>Is it just me or does this seem like a confusing user interface, ie. to
+>get binary on/off behavior a user now needs to 'cat total_vfs >
+>sriov_probe_vfs'.  It's not very intuitive, what's the use case for it?
 >
-> Thanks
-> Kishon
 
+After it's changed to integer, it accepts number. If users want to load
+driver for all VFs and don't want to check the maximal number of VFs,
+they can simply write 0xffffffff. So "on" and "off" are replaced with 0xffffffff
+and 0, but users has to press the keyboard more times though.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+drivers/net/ethernet/mellanox/mlx4/main.c::probe_vfs_argc allows to specify
+the number of VFs with which we're going to bind drivers. Less time is needed
+to enable SRIOV capability. As I had in some development environment: assume
+PF supports 256 VFs and I'm going to enable all of them, but I only want to
+load driver for two of them, then test the data path on those two VFs. Besides,
+I can image the VF needn't a driver in host if it's going to be passed to guest. 
+Not sure how much sense it makes.
+
+Thanks,
+Gavin
