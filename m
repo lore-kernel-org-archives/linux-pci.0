@@ -1,46 +1,84 @@
-Return-Path: <SRS0=f67S=2Z=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=f67S=2Z=free.fr=slash.tmp@kernel.org>
-Subject: Re: Legacy PCI interrupt support in PCIe host driver
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Marc Zyngier <marc.zyngier@arm.com>, Jason Cooper <jason@lakedaemon.net>,
- linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Robin Murphy <robin.murphy@arm.com>, Liviu Dudau <liviu.dudau@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Uwe Kleine-Konig <u.kleine-koenig@pengutronix.de>,
- Rob Herring <robh@kernel.org>
-References: <5612adb6-af5c-9fbf-e725-813ee7fe1b4b@free.fr>
- <8443b350-6aa6-75f8-af48-892c722fc2d9@free.fr>
- <alpine.DEB.2.20.1703161843420.3586@nanos>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <4e54c5f9-7cc1-cfab-592d-a87795147020@free.fr>
-Date: Thu, 16 Mar 2017 20:13:15 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+        <Joao.Pinto@synopsys.com>, <kishon@ti.com>
+CC: <linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Niklas Cassel <niklass@axis.com>
+Subject: [PATCH] PCI: dwc: fix crash seen due to missing ops
+Date: Tue, 21 Mar 2017 15:43:54 +0100
+Message-ID: <20170321144354.15452-1-niklass@axis.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.20.1703161843420.3586@nanos>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 16/03/2017 18:47, Thomas Gleixner wrote:
-> On Thu, 16 Mar 2017, Mason wrote:
->> I guess if two interrupts fire at the same time, we'll just take two
->> separate exceptions?
-> 
-> Wrong guess. That might work with level interrupts, but with other types
-> nothing will raise another exception. Sharing interrupts on edge types is a
-> stupid idea, but hardware folks insist on implementing stupid ideas.
+From: Niklas Cassel <niklas.cassel@axis.com>
 
-When you say "That might work with level interrupts",
-what is "that" ?
+Fix the following crash, seen in dwc/pcie-artpec6.
 
-In my case,
+  Unable to handle kernel NULL pointer dereference at virtual address 00000004
+  pgd = c0204000
+  [00000004] *pgd=00000000
+  Internal error: Oops: 5 [#1] SMP ARM
+  Modules linked in:
+  CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.11.0-rc3-next-20170321 #1
+  Hardware name: Axis ARTPEC-6 Platform
+  task: db098000 task.stack: db096000
+  PC is at dw_pcie_writel_dbi+0x2c/0xd0
+  ...
 
-	interrupt-map = <0 0 0 1 &irq0 54 IRQ_TYPE_LEVEL_HIGH>;
-	interrupts = <54 IRQ_TYPE_LEVEL_HIGH>;
+While at it, fix the same problem for pcie-designware-plat.
 
-Both ISRs expect LEVEL_HIGH. In fact, doesn't request_irq
-return an error if the triggers are different?
+Fixes: 442ec4c04d12 ("PCI: dwc: all: Split struct pcie_port into host-only and core structures")
+Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+---
+ drivers/pci/dwc/pcie-artpec6.c         | 4 ++++
+ drivers/pci/dwc/pcie-designware-plat.c | 4 ++++
+ 2 files changed, 8 insertions(+)
 
-Regards.
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index fcd3ef845883..6d23683c0892 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -234,6 +234,9 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 	return 0;
+ }
+ 
++static const struct dw_pcie_ops dw_pcie_ops = {
++};
++
+ static int artpec6_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -252,6 +255,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	pci->dev = dev;
++	pci->ops = &dw_pcie_ops;
+ 
+ 	artpec6_pcie->pci = pci;
+ 
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index b6c832ba39dd..f20d494922ab 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -86,6 +86,9 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+ 	return 0;
+ }
+ 
++static const struct dw_pcie_ops dw_pcie_ops = {
++};
++
+ static int dw_plat_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -103,6 +106,7 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+ 		return -ENOMEM;
+ 
+ 	pci->dev = dev;
++	pci->ops = &dw_pcie_ops;
+ 
+ 	dw_plat_pcie->pci = pci;
+ 
+-- 
+2.11.0
