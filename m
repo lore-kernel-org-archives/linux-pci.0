@@ -1,88 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Elena Reshetova <elena.reshetova@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
-        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, peterz@infradead.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-Subject: [PATCH 06/29] drivers, md: convert dm_cache_metadata.ref_count from atomic_t to refcount_t
-Date: Mon,  6 Mar 2017 16:20:53 +0200
-Message-Id: <1488810076-3754-7-git-send-email-elena.reshetova@intel.com>
-In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 21 Mar 2017 15:26:36 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Subject: Re: [PATCH 05/20] ARM: implement pci_remap_cfgspace() interface
+Message-ID: <20170321152636.GA4799@red-moon>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-6-lorenzo.pieralisi@arm.com>
+ <20170320164354.GQ21222@n2100.armlinux.org.uk>
+MIME-Version: 1.0
+In-Reply-To: <20170320164354.GQ21222@n2100.armlinux.org.uk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ linux-arch@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Michal Simek <michal.simek@xilinx.com>, Jon Mason <jonmason@broadcom.com>,
+ Murali Karicheri <m-karicheri2@ti.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+Hi Russell,
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- drivers/md/dm-cache-metadata.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+On Mon, Mar 20, 2017 at 04:43:55PM +0000, Russell King - ARM Linux wrote:
+> On Mon, Feb 27, 2017 at 03:14:16PM +0000, Lorenzo Pieralisi wrote:
+> > The PCI bus specifications (rev 3.0, 3.2.5 "Transaction Ordering
+> > and Posting") define rules for PCI configuration space transactions
+> > ordering and posting, that state that configuration writes have to
+> > be non-posted transactions.
+> > 
+> > Current ioremap interface on ARM provides mapping functions that
+> > provide "bufferable" writes transactions (ie ioremap uses MT_DEVICE
+> > memory type) aka posted writes, so PCI host controller drivers have
+> > no arch interface to remap PCI configuration space with memory
+> > attributes that comply with the PCI specifications for configuration
+> > space.
+> > 
+> > Implement an ARM specific pci_remap_cfgspace() interface that allows to
+> > map PCI config memory regions with MT_UNCACHED memory type (ie strongly
+> > ordered - non-posted writes), providing a remap function that complies
+> > with PCI specifications for config space transactions.
+> 
+> Doesn't this have the side effect that configuration writes can bypass
+> writes to device memory if there isn't an intervening dsb?  (They
+> probably can do on some CPUs today anyway.)
 
-diff --git a/drivers/md/dm-cache-metadata.c b/drivers/md/dm-cache-metadata.c
-index e4c2c1a..6d26e71 100644
---- a/drivers/md/dm-cache-metadata.c
-+++ b/drivers/md/dm-cache-metadata.c
-@@ -13,6 +13,7 @@
- #include "persistent-data/dm-transaction-manager.h"
- 
- #include <linux/device-mapper.h>
-+#include <linux/refcount.h>
- 
- /*----------------------------------------------------------------*/
- 
-@@ -102,7 +103,7 @@ struct cache_disk_superblock {
- } __packed;
- 
- struct dm_cache_metadata {
--	atomic_t ref_count;
-+	refcount_t ref_count;
- 	struct list_head list;
- 
- 	unsigned version;
-@@ -756,7 +757,7 @@ static struct dm_cache_metadata *metadata_open(struct block_device *bdev,
- 	}
- 
- 	cmd->version = metadata_version;
--	atomic_set(&cmd->ref_count, 1);
-+	refcount_set(&cmd->ref_count, 1);
- 	init_rwsem(&cmd->root_lock);
- 	cmd->bdev = bdev;
- 	cmd->data_block_size = data_block_size;
-@@ -794,7 +795,7 @@ static struct dm_cache_metadata *lookup(struct block_device *bdev)
- 
- 	list_for_each_entry(cmd, &table, list)
- 		if (cmd->bdev == bdev) {
--			atomic_inc(&cmd->ref_count);
-+			refcount_inc(&cmd->ref_count);
- 			return cmd;
- 		}
- 
-@@ -865,7 +866,7 @@ struct dm_cache_metadata *dm_cache_metadata_open(struct block_device *bdev,
- 
- void dm_cache_metadata_close(struct dm_cache_metadata *cmd)
- {
--	if (atomic_dec_and_test(&cmd->ref_count)) {
-+	if (refcount_dec_and_test(&cmd->ref_count)) {
- 		mutex_lock(&table_lock);
- 		list_del(&cmd->list);
- 		mutex_unlock(&table_lock);
--- 
-2.7.4
+I assumed that in plain terms, the difference between MT_DEVICE and
+MT_UNCACHED is write posting (aka bufferable) behaviour (across CPU
+architecture versions) and that does not affect write ordering rules.
+
+You and Catalin have more insights into ARM 32-bit memory types so
+I definitely need your input here to be comprehensive and avoid
+pitfalls, let me know if you have some specific CPUs in mind on
+which this may trigger a regression.
+
+> So, in any case, this looks like an improvement:
+> 
+> Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
+
+Thank you !
+
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
