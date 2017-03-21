@@ -1,218 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:44307 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933428AbdC3WNY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Mar 2017 18:13:24 -0400
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu, 30 Mar 2017 16:12:37 -0600
-Message-Id: <1490911959-5146-7-git-send-email-logang@deltatee.com>
-In-Reply-To: <1490911959-5146-1-git-send-email-logang@deltatee.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
-Subject: [RFC 6/8] nvmet: Be careful about using iomem accesses when dealing with p2pmem
+Received: from mail-pg0-f46.google.com ([74.125.83.46]:33430 "EHLO
+        mail-pg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755228AbdCUC3U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2017 22:29:20 -0400
+Received: by mail-pg0-f46.google.com with SMTP id n190so86455430pga.0
+        for <linux-pci@vger.kernel.org>; Mon, 20 Mar 2017 19:28:52 -0700 (PDT)
+Date: Mon, 20 Mar 2017 19:21:28 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH] PCI: rockchip: don't leak the PCI resource list
+Message-ID: <20170321022127.GA68526@google.com>
+References: <20170320224936.28605-1-briannorris@chromium.org>
+ <108a73fe-f186-f9ef-81be-7941f3db9d7f@rock-chips.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <108a73fe-f186-f9ef-81be-7941f3db9d7f@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-p2pmem will always be iomem so if we ever access it, we should be using
-the correct methods to read and write to it.
+On Tue, Mar 21, 2017 at 09:25:16AM +0800, Shawn Lin wrote:
+> On 2017/3/21 6:49, Brian Norris wrote:
+> >This list is local to the probe() function. We should free it up in both
+> >the success case and the error case, but currently we're only freeing it
+> >in the error case (see commit f1d722b607d6 ("PCI: rockchip: Fix
+> >rockchip_pcie_probe() error path to free resource list")).
+> >
+> >Caught by kmemleak, when doing repeated bind/unbind tests.
+> >
+> 
+> It doesn't look natural to free it in probe, instead it looks more
+> like we should do the cleanup work when calling .remove
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Stephen Bates <sbates@raithlin.com>
-Signed-off-by: Steve Wise <swise@opengridcomputing.com>
----
- drivers/nvme/target/core.c        | 18 ++++++++++++++++--
- drivers/nvme/target/fabrics-cmd.c | 28 +++++++++++++++-------------
- drivers/nvme/target/nvmet.h       |  1 +
- drivers/nvme/target/rdma.c        | 13 ++++++-------
- 4 files changed, 38 insertions(+), 22 deletions(-)
+Hmm, I did write this one up pretty quickly, so I might have gotten it a
+bit wrong. It's not clear there's a *real* problem with this patch,
+since the bridge's window list doesn't actually get used much later, but
+I agree this isn't correct.
 
-diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
-index 798653b..a1524d5 100644
---- a/drivers/nvme/target/core.c
-+++ b/drivers/nvme/target/core.c
-@@ -45,15 +45,29 @@ static struct nvmet_subsys *nvmet_find_get_subsys(struct nvmet_port *port,
- u16 nvmet_copy_to_sgl(struct nvmet_req *req, off_t off, const void *buf,
- 		size_t len)
- {
--	if (sg_pcopy_from_buffer(req->sg, req->sg_cnt, buf, len, off) != len)
-+	bool iomem = req->p2pmem;
-+	size_t ret;
-+
-+	ret = sg_copy_buffer(req->sg, req->sg_cnt, (void *)buf, len, off,
-+			     false, iomem);
-+
-+	if (ret != len)
- 		return NVME_SC_SGL_INVALID_DATA | NVME_SC_DNR;
-+
- 	return 0;
- }
- 
- u16 nvmet_copy_from_sgl(struct nvmet_req *req, off_t off, void *buf, size_t len)
- {
--	if (sg_pcopy_to_buffer(req->sg, req->sg_cnt, buf, len, off) != len)
-+	bool iomem = req->p2pmem;
-+	size_t ret;
-+
-+	ret = sg_copy_buffer(req->sg, req->sg_cnt, buf, len, off, true,
-+			     iomem);
-+
-+	if (ret != len)
- 		return NVME_SC_SGL_INVALID_DATA | NVME_SC_DNR;
-+
- 	return 0;
- }
- 
-diff --git a/drivers/nvme/target/fabrics-cmd.c b/drivers/nvme/target/fabrics-cmd.c
-index 8bd022af..9d966f0 100644
---- a/drivers/nvme/target/fabrics-cmd.c
-+++ b/drivers/nvme/target/fabrics-cmd.c
-@@ -118,11 +118,13 @@ static u16 nvmet_install_queue(struct nvmet_ctrl *ctrl, struct nvmet_req *req)
- static void nvmet_execute_admin_connect(struct nvmet_req *req)
- {
- 	struct nvmf_connect_command *c = &req->cmd->connect;
--	struct nvmf_connect_data *d;
-+	struct nvmf_connect_data d;
- 	struct nvmet_ctrl *ctrl = NULL;
- 	u16 status = 0;
- 
--	d = kmap(sg_page(req->sg)) + req->sg->offset;
-+	status = nvmet_copy_from_sgl(req, 0, &d, sizeof(d));
-+	if (status)
-+		goto out;
- 
- 	/* zero out initial completion result, assign values as needed */
- 	req->rsp->result.u32 = 0;
-@@ -134,16 +136,16 @@ static void nvmet_execute_admin_connect(struct nvmet_req *req)
- 		goto out;
- 	}
- 
--	if (unlikely(d->cntlid != cpu_to_le16(0xffff))) {
-+	if (unlikely(d.cntlid != cpu_to_le16(0xffff))) {
- 		pr_warn("connect attempt for invalid controller ID %#x\n",
--			d->cntlid);
-+			d.cntlid);
- 		status = NVME_SC_CONNECT_INVALID_PARAM | NVME_SC_DNR;
- 		req->rsp->result.u32 = IPO_IATTR_CONNECT_DATA(cntlid);
- 		goto out;
- 	}
- 
--	status = nvmet_alloc_ctrl(d->subsysnqn, d->hostnqn, req,
--			le32_to_cpu(c->kato), &ctrl);
-+	status = nvmet_alloc_ctrl(d.subsysnqn, d.hostnqn, req,
-+				  le32_to_cpu(c->kato), &ctrl);
- 	if (status)
- 		goto out;
- 
-@@ -158,19 +160,20 @@ static void nvmet_execute_admin_connect(struct nvmet_req *req)
- 	req->rsp->result.u16 = cpu_to_le16(ctrl->cntlid);
- 
- out:
--	kunmap(sg_page(req->sg));
- 	nvmet_req_complete(req, status);
- }
- 
- static void nvmet_execute_io_connect(struct nvmet_req *req)
- {
- 	struct nvmf_connect_command *c = &req->cmd->connect;
--	struct nvmf_connect_data *d;
-+	struct nvmf_connect_data d;
- 	struct nvmet_ctrl *ctrl = NULL;
- 	u16 qid = le16_to_cpu(c->qid);
- 	u16 status = 0;
- 
--	d = kmap(sg_page(req->sg)) + req->sg->offset;
-+	status = nvmet_copy_from_sgl(req, 0, &d, sizeof(d));
-+	if (status)
-+		goto out;
- 
- 	/* zero out initial completion result, assign values as needed */
- 	req->rsp->result.u32 = 0;
-@@ -182,9 +185,9 @@ static void nvmet_execute_io_connect(struct nvmet_req *req)
- 		goto out;
- 	}
- 
--	status = nvmet_ctrl_find_get(d->subsysnqn, d->hostnqn,
--			le16_to_cpu(d->cntlid),
--			req, &ctrl);
-+	status = nvmet_ctrl_find_get(d.subsysnqn, d.hostnqn,
-+				     le16_to_cpu(d.cntlid),
-+				     req, &ctrl);
- 	if (status)
- 		goto out;
- 
-@@ -205,7 +208,6 @@ static void nvmet_execute_io_connect(struct nvmet_req *req)
- 	pr_info("adding queue %d to ctrl %d.\n", qid, ctrl->cntlid);
- 
- out:
--	kunmap(sg_page(req->sg));
- 	nvmet_req_complete(req, status);
- 	return;
- 
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index ab67175..ccd79ed 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -226,6 +226,7 @@ struct nvmet_req {
- 
- 	void (*execute)(struct nvmet_req *req);
- 	struct nvmet_fabrics_ops *ops;
-+	struct p2pmem_dev       *p2pmem;
- };
- 
- static inline void nvmet_set_status(struct nvmet_req *req, u16 status)
-diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-index 7fd4840..abab544 100644
---- a/drivers/nvme/target/rdma.c
-+++ b/drivers/nvme/target/rdma.c
-@@ -65,7 +65,6 @@ struct nvmet_rdma_rsp {
- 	struct rdma_rw_ctx	rw;
- 
- 	struct nvmet_req	req;
--	struct p2pmem_dev       *p2pmem;
- 
- 	u8			n_rdma;
- 	u32			flags;
-@@ -501,7 +500,7 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
- 
- 	if (rsp->req.sg != &rsp->cmd->inline_sg)
- 		nvmet_rdma_free_sgl(rsp->req.sg, rsp->req.sg_cnt,
--				    rsp->p2pmem);
-+				    rsp->req.p2pmem);
- 
- 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
- 		nvmet_rdma_process_wr_wait_list(queue);
-@@ -642,14 +641,14 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
- 	if (!len)
- 		return 0;
- 
--	rsp->p2pmem = rsp->queue->p2pmem;
-+	rsp->req.p2pmem = rsp->queue->p2pmem;
- 	status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
--			len, rsp->p2pmem);
-+				      len, rsp->req.p2pmem);
- 
--	if (status && rsp->p2pmem) {
--		rsp->p2pmem = NULL;
-+	if (status && rsp->req.p2pmem) {
-+		rsp->req.p2pmem = NULL;
- 		status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
--					      len, rsp->p2pmem);
-+					      len, rsp->req.p2pmem);
- 	}
- 
- 	if (status)
--- 
-2.1.4
+And actually, I think my patch is a red herring; the leak is still
+there. I notice that the resource list is actually freed in
+pci_release_host_bridge_dev() already anyway.
+
+> I didn't know if there is something that still use this resource
+> , for instance, hotplug? But I noticed it from Bjron's statement[1]
+> that "The struct resource for each host bridge window must live as long
+> as the host bridge itself". So I didn't free it when finishing probe.
+> I guess the proper fix is to do it in pci_remove_root_bus or somewhere
+> of the cleanup code if I undertand it correctly.
+
+That thread is talking about a different issue; in that driver, the
+'struct resource' is on the stack. That's not good. In our case, it's
+just the resource list head that's on the stack, which is fine. The
+relevant entries get spliced onto a longer-lived list in the end.
+
+But then, we have these to consider for leaks:
+
+(a) the 'resource_entry's allocated in
+of_pci_get_host_bridge_resources() (via pci_add_resource() and
+pci_add_resource_offset())
+
+(b) the 'resource's allocated in
+of_pci_get_host_bridge_resources(), to go with each of the
+'resource_entry's from (b)
+
+As noted above, I think (a) is actually taken care of (and so my current
+patch is not needed). The problem is only with (b). (I think?)
+
+I'll double check this all tomorrow.
+
+Brian
+
+> [1]: https://lkml.org/lkml/2017/2/8/802
+> 
+> >Signed-off-by: Brian Norris <briannorris@chromium.org>
+> >---
+> > drivers/pci/host/pcie-rockchip.c | 1 +
+> > 1 file changed, 1 insertion(+)
+> >
+> >diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> >index bd6df7254de4..8087a0698d65 100644
+> >--- a/drivers/pci/host/pcie-rockchip.c
+> >+++ b/drivers/pci/host/pcie-rockchip.c
+> >@@ -1396,6 +1396,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+> > 		goto err_free_res;
+> > 	}
+> > 	rockchip->root_bus = bus;
+> >+	pci_free_resource_list(&res);
+> >
+> > 	pci_bus_size_bridges(bus);
+> > 	pci_bus_assign_resources(bus);
+> >
+> 
