@@ -1,95 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:35865 "EHLO
-        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750718AbdCYMqg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Mar 2017 08:46:36 -0400
-Received: by mail-pf0-f193.google.com with SMTP id r137so2473084pfr.3
-        for <linux-pci@vger.kernel.org>; Sat, 25 Mar 2017 05:46:35 -0700 (PDT)
-From: Yongji Xie <elohimes@gmail.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
-        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
-        paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: Re: [PATCH v9 3/3] PCI: Don't extend device's size when using default alignment for all devices
-Date: Sat, 25 Mar 2017 20:46:32 +0800
-Message-Id: <1490445992-4102-1-git-send-email-elohimes@gmail.com>
-In-Reply-To: <20170323215558.GC23612@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1490080687.8236.102.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 24/29] drivers: convert iblock_req.pending from atomic_t
+ to refcount_t
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Elena Reshetova <elena.reshetova@intel.com>
+Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
+        xen-devel@lists.xenproject.org, netdev@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
+        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
+        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
+        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-usb@vger.kernel.org, peterz@infradead.org,
+        Hans Liljestrand <ishkamiel@gmail.com>,
+        Kees Cook <keescook@chromium.org>,
+        David Windsor <dwindsor@gmail.com>
+Date: Tue, 21 Mar 2017 00:18:07 -0700
+In-Reply-To: <1488810076-3754-25-git-send-email-elena.reshetova@intel.com>
+References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+         <1488810076-3754-25-git-send-email-elena.reshetova@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 23, 2017 at 04:55:58PM -0500, Bjorn Helgaas wrote:
->
-> On Wed, Feb 15, 2017 at 02:45:06PM +0800, Yongji Xie wrote:
->> Currently we reassign the alignment by extending resources' size in
->> pci_reassigndev_resource_alignment(). This could potentially break
->> some drivers when the driver uses the size to locate register
->> whose length is related to the size. Some examples as below:
->
-> I understand the motivation to stop changing the resource size.  That
-> makes good sense.
->
->> - misc\Hpilo.c:
->
-> This isn't Windows; please use regular Linux forward slashes here.
->
+Hi Elena,
 
-Will fix it.
+On Mon, 2017-03-06 at 16:21 +0200, Elena Reshetova wrote:
+> refcount_t type and corresponding API should be
+> used instead of atomic_t when the variable is used as
+> a reference counter. This allows to avoid accidental
+> refcounter overflows that might lead to use-after-free
+> situations.
+> 
+> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
+> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Signed-off-by: David Windsor <dwindsor@gmail.com>
+> ---
+>  drivers/target/target_core_iblock.c | 12 ++++++------
+>  drivers/target/target_core_iblock.h |  3 ++-
+>  2 files changed, 8 insertions(+), 7 deletions(-)
 
->> off = pci_resource_len(pdev, bar) - 0x2000;
->>
->> - net\ethernet\chelsio\cxgb4\cxgb4_uld.h:
->> (pci_resource_len((pdev), 2) - roundup_pow_of_two((vres)->ocq.size))
->>
->> - infiniband\hw\nes\Nes_hw.c:
->> num_pds = pci_resource_len(nesdev->pcidev, BAR_1) >> PAGE_SHIFT;
->>
->> This risk could be easily prevented before because we only had one way
->> (kernel parameter resource_alignment) to touch those codes. And even
->> some users may be happy to see the extended size.
->>
->> But now we define a default alignment for all devices which would also
->> touch those codes. It would be hard to prevent the risk in this case. So
->> this patch tries to use START_ALIGNMENT to identify the resource's
->> alignment without extending the size when the alignment reassigning is
->> caused by the default alignment.
->
-> But I don't understand the new START_ALIGNMENT case.
->
+After reading up on this thread, it looks like various subsystem
+maintainers are now picking these atomic_t -> refcount_t conversions..
 
-The START_ALIGNMENT case will be used when we have default alignment
-for PCI devices, which can identify the resource's alignment without
-extending the size. If we don't use START_ALIGNMENT for default alignment,
-resources' size would be extended by default, that means the system's 
-default action could potentially break drivers, it looks unreasonable.
+That said, applied to target-pending/for-next and will plan to include
+for v4.12-rc1 merge window.
 
->> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
->> ---
->> drivers/pci/pci.c |   34 ++++++++++++++++++++++++----------
->> 1 files changed, 24 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index 2622e9b..0017e5e 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -4958,7 +4958,8 @@ void pci_ignore_hotplug(struct pci_dev *dev)
->>  * RETURNS: Resource alignment if it is specified.
->>  *          Zero if it is not specified.
->
-> Since there's function doc, please update it to reflect the new
-> "resize" return parameter.
->
-
-Will do it.
-
-> What does "resize" mean?  I can't figure it out from your code.
-
-"resize" means we will update the resource'alignment by extending the 
-resource's size. This would happen when we use kernel parameter to identify 
-resource's alignment. If the resource's alignment is identified by the default 
-alignment function(macro) rather than kernel parameter, "resize" should be 
-false, which means we update the resource'alignment without extending the 
-resource's size.
-
-Thanks,
-Yongji
+Thanks!
