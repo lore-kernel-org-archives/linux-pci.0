@@ -1,265 +1,127 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 08/17] pci: Add BAR index argument to pci_mmap_page_range()
-Date: Wed, 22 Mar 2017 13:25:22 +0000
-Message-Id: <2560af53a449db8ccae0d1d7b3463fd8ec404bf6.1490188942.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
+To: Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Jon Masters <jcm@jonmasters.org>
+References: <20170131142525.GA9942@bhelgaas-glaptop.roam.corp.google.com>
+ <20170131145720.GA14231@localhost.localdomain>
+ <20170131203109.GA14127@bhelgaas-glaptop.roam.corp.google.com>
+ <20170201125325.GA15805@localhost.localdomain>
+ <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
+ <376ae1df-da85-e576-75d6-3ae2ab0f1b41@jonmasters.org>
+ <20170315113323.GA28027@localhost.localdomain>
+ <251db823-591b-483b-9c55-13c911020fd1@jonmasters.org>
+ <48b93116-cc0f-e59d-8aa3-704052ad6759@gmail.com>
+ <c3392131-9243-24d3-30b4-4d7e84019d6f@jonmasters.org>
+ <20170321134744.GA13150@bhelgaas-glaptop.roam.corp.google.com>
+ <b50b6a7f-30be-4206-4f38-2539ea936228@semihalf.com>
+From: David Daney <ddaney@caviumnetworks.com>
+Message-ID: <aad5796a-1af8-53e0-c5f3-cb7755519cd5@caviumnetworks.com>
+Date: Tue, 21 Mar 2017 07:56:05 -0700
+MIME-Version: 1.0
+In-Reply-To: <b50b6a7f-30be-4206-4f38-2539ea936228@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: David.Daney@cavium.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com,
+ David Daney <ddaney.cavm@gmail.com>,
+ Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+On 03/21/2017 07:17 AM, Tomasz Nowicki wrote:
+> Hi Bjorn,
+>
+> On 21.03.2017 14:47, Bjorn Helgaas wrote:
+>> On Tue, Mar 21, 2017 at 07:38:07AM -0400, Jon Masters wrote:
+>>> On 03/16/2017 12:25 PM, David Daney wrote:
+>>>> On 03/16/2017 07:32 AM, Jon Masters wrote:
+>>>
+>>>>>> Yes, it is now contains "CAVxxx" as _HID for device config object.
+>>>>>
+>>>>> Which is different from the version that was merged into upstream.
+>>>>> That
+>>>>> should never have happened. It will never happen again. I have
+>>>>> spent some
+>>>>> time over the past few days ensuring folks understand that I will not
+>>>>> allow a repeat of this to occur the next time around. We will have
+>>>>> platforms that are bulletproof and supported by upstream with any
+>>>>> errata fixes in a very carefully controlled manner. There will
+>>>>> under no circumstances ever be a situation like this again.
+>>>>
+>>>> We are still evaluating the merits of registering the values that
+>>>> appeared
+>>>> in v4.10, and not changing them.  We should know more in a couple of
+>>>> days.
+>>>
+>>> Thanks David. What was the verdict? (for the public record). If we
+>>> need to
+>>> get a change into upstream, let's get that teed up before 4.12 merge.
+>>>
+>>> And for other folks following along with this thread: I'm not just
+>>> picking
+>>> on Cavium here. I'll be doing the same with *every* ARM server SoC
+>>> company
+>>> as necessary over the coming months. We are going to have militantly
+>>> compliant standards adherence in this industry and every ARM server
+>>> SoC is
+>>> going to "just work" with an upstream Linux kernel with an ACPI enabled
+>>> platform. This will be so utterly clean and boring it'll be amazing.
+>>
+>> Thanks for keeping on top of this, Jon.  I agree, we should not be
+>> using unregistered vendor prefixes, e.g., the "THRX" added by
+>> 44f22bd91e88 ("PCI: Add MCFG quirks for Cavium ThunderX pass2.x host
+>> controller").  I'm sorry I merged that without doing the due
+>> diligence.
+>
+> Honestly, it is me who is responsible for this since I submitted the patch.
 
-In all cases we know which BAR it is. Passing it in means that arch code
-(or generic code; watch this space) won't have to go looking for it again.
+Yes.  After all this back and forth, Cavium has decided to deploy 
+firmware with "CAVxxx" as _HID.
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/arm/kernel/bios32.c                | 3 ++-
- arch/cris/arch-v32/drivers/pci/bios.c   | 3 ++-
- arch/ia64/pci/pci.c                     | 3 ++-
- arch/microblaze/pci/pci-common.c        | 2 +-
- arch/mips/pci/pci.c                     | 3 ++-
- arch/mn10300/unit-asb2305/pci-asb2305.c | 3 ++-
- arch/parisc/kernel/pci.c                | 3 ++-
- arch/powerpc/kernel/pci-common.c        | 3 ++-
- arch/sh/drivers/pci/pci.c               | 3 ++-
- arch/sparc/kernel/pci.c                 | 6 +++---
- arch/unicore32/kernel/pci.c             | 3 ++-
- arch/x86/pci/i386.c                     | 3 ++-
- arch/xtensa/kernel/pci.c                | 3 ++-
- drivers/pci/pci-sysfs.c                 | 2 +-
- drivers/pci/proc.c                      | 2 +-
- include/linux/pci.h                     | 3 ++-
- 16 files changed, 30 insertions(+), 18 deletions(-)
+The deciding factor was that the prefix is already registered and there 
+are probably fewer than 10 systems deployed with the experimental and 
+erroneous  "THRXxxx" value.  Neither option (switching the kernel to 
+"CAVxxx", or changing the firmware to use "THRXxxx") was without its 
+drawbacks.  There were valid arguments on either side.  In the end 
+internal momentum, among other factors, brought us to the conclusion 
+that using the "CAVxxx" as _HID, and trying to get Tomasz' patches 
+merged is what we will do. We fully realize that there may exists some 
+combinations of the Linux kernel and Cavium firmware (both officially 
+released, and experimental and unsupported) that don't result in 
+functional PCIe.
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 2f0e077..a4fc3f4 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -597,7 +597,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	return start;
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	if (mmap_state == pci_mmap_io)
-diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-index 212266a..a589686d 100644
---- a/arch/cris/arch-v32/drivers/pci/bios.c
-+++ b/arch/cris/arch-v32/drivers/pci/bios.c
-@@ -14,7 +14,8 @@ void pcibios_set_master(struct pci_dev *dev)
- 	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long prot;
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 8f6ac2f..053c688 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -419,7 +419,8 @@ pcibios_align_resource (void *data, const struct resource *res,
- }
- 
- int
--pci_mmap_page_range (struct pci_dev *dev, struct vm_area_struct *vma,
-+pci_mmap_page_range (struct pci_dev *dev, int bar,
-+		     struct vm_area_struct *vma,
- 		     enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long size = vma->vm_end - vma->vm_start;
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 13bc932..404fb38 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -278,7 +278,7 @@ pgprot_t pci_phys_mem_access_prot(struct file *file,
-  *
-  * Returns a negative error code on failure, zero on success.
-  */
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar, struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	resource_size_t offset =
-diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-index f6325fa..f189502 100644
---- a/arch/mips/pci/pci.c
-+++ b/arch/mips/pci/pci.c
-@@ -58,7 +58,8 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
- 	*end = rsrc->start + size;
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long prot;
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
-index b7ab837..4abbbd5 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.c
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
-@@ -211,7 +211,8 @@ void __init pcibios_resource_survey(void)
- 	pcibios_allocate_resources(1);
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long prot;
-diff --git a/arch/parisc/kernel/pci.c b/arch/parisc/kernel/pci.c
-index 0903c6a..6538775 100644
---- a/arch/parisc/kernel/pci.c
-+++ b/arch/parisc/kernel/pci.c
-@@ -228,7 +228,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- }
- 
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long prot;
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index ffda24a..6dda4a2 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -513,7 +513,8 @@ pgprot_t pci_phys_mem_access_prot(struct file *file,
-  *
-  * Returns a negative error code on failure, zero on success.
-  */
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	resource_size_t offset =
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index 84563e3..c8b36b7 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -269,7 +269,8 @@ void __ref pcibios_report_status(unsigned int status_mask, int warn)
- 	}
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	/*
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 015e55a..7eceaa1 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -862,9 +862,9 @@ static void __pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vm
-  *
-  * Returns a negative error code on failure, zero on success.
-  */
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state,
--			int write_combine)
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
-+			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	int ret;
- 
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index 62137d1..1b43885 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -357,7 +357,8 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return 0;
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long phys;
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 0a9f2ca..8ca5e5d 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -411,7 +411,8 @@ static const struct vm_operations_struct pci_mmap_ops = {
- 	.access = generic_access_phys,
- };
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long prot;
-diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-index c5944d3..6872646 100644
---- a/arch/xtensa/kernel/pci.c
-+++ b/arch/xtensa/kernel/pci.c
-@@ -362,7 +362,8 @@ __pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vma,
-  *
-  * Returns a negative error code on failure, zero on success.
-  */
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state,
- 			int write_combine)
- {
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 8a2d77b..063310a 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1041,7 +1041,7 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
- 	pci_resource_to_user(pdev, bar, res, &start, &end);
- 	vma->vm_pgoff += start >> PAGE_SHIFT;
- 	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
--	return pci_mmap_page_range(pdev, vma, mmap_type, write_combine);
-+	return pci_mmap_page_range(pdev, bar, vma, mmap_type, write_combine);
- }
- 
- static int pci_mmap_resource_uc(struct file *filp, struct kobject *kobj,
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index f387231..2d9cfa4 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -267,7 +267,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- 		else
- 			return -EINVAL;
- 	}
--	ret = pci_mmap_page_range(dev, vma,
-+	ret = pci_mmap_page_range(dev, i, vma,
- 				  fpriv->mmap_state, write_combine);
- 	if (ret < 0)
- 		return ret;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 9a94cb8..ebc86c1 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1630,7 +1630,8 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
-  * Architectures provide this function if they set HAVE_PCI_MMAP, and
-  * it accepts the 'write_combine' argument when arch_can_pci_mmap_wc()
-  * evaluates to nonzero. */
--int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *pdev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine);
- 
- #ifndef pci_root_bus_fwnode
--- 
-2.9.3
+I, personally, am sorry that this screw up happened in the first place. 
+Let's hope that everyone learned something from the experience.
+
+Thanks,
+David Daney
+
+
+>
+>>
+>> I suspect the resolution will be to register "THRX".  If that doesn't
+>> happen, I'll propose reverting 44f22bd91e88, not because I want to
+>> break things, but only because I'm not personally in a position to do
+>> anything smarter.  So please propose a better solution that fits
+>> within the ACPI _HID/_CID model :)
+>
+> I already submitted the patch to fix this. Please see:
+> https://patchwork.ozlabs.org/patch/739042/
+>
+> Thanks,
+> Tomasz
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
