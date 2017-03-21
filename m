@@ -1,65 +1,107 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40627 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932153AbdC2POj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Mar 2017 11:14:39 -0400
-Date: Wed, 29 Mar 2017 17:14:13 +0200
-From: Borislav Petkov <bp@suse.de>
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
-        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
-        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
-        gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
-        akpm@linux-foundation.org, davem@davemloft.net
-Subject: Re: [RFC PATCH v2 18/32] kvm: svm: Use the hardware provided GPA
- instead of page walk
-Message-ID: <20170329151413.l2on26mdyyskwqlu@pd.tnic>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846776540.2349.3123530065053870721.stgit@brijesh-build-machine>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:47396 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756343AbdCUKxL (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Mar 2017 06:53:11 -0400
+Subject: Re: Help: MSI DWC connecting with a MSIx Endpoint
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+References: <85bfa77f-6cd0-a669-c940-7fa7d9fb17a3@synopsys.com>
+ <28a4e429-a2d2-8f28-e4fc-8eebae0b3367@arm.com>
+ <4ade12d6-1887-4093-ee43-2101ca2986e0@synopsys.com>
+ <9eec7e57-456e-fc98-91d9-bd5a32c347af@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <1c752760-d5ca-9702-fe60-b8eeda627c7e@synopsys.com>
+Date: Tue, 21 Mar 2017 10:42:59 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <148846776540.2349.3123530065053870721.stgit@brijesh-build-machine>
+In-Reply-To: <9eec7e57-456e-fc98-91d9-bd5a32c347af@arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 02, 2017 at 10:16:05AM -0500, Brijesh Singh wrote:
-> From: Tom Lendacky <thomas.lendacky@amd.com>
+Às 10:41 AM de 3/21/2017, Marc Zyngier escreveu:
+> On 21/03/17 10:27, Joao Pinto wrote:
+>>
+>> Hi Mark,
+>>
+>> Às 6:16 PM de 3/20/2017, Marc Zyngier escreveu:
+>>> Hi Joao,
+>>>
+>>> On 20/03/17 17:30, Joao Pinto wrote:
+>>>> Hi Mark,
+>>>>
+>>>> I am facing a challenge in a setup I must bring up that is composed by a
+>>>> Synopsys Root Complex connected to a MSIx-only Endpoint from Mellanox.
+>>>> The endpoint probe fails because it is not capable of enabling msix.
+>>>>
+>>>> In order to get more info about it, I added some debug messages to the msix
+>>>> enable process and got the following:
+>>>>
+>>>> MSIX DBG[mlx5_enable_msix]: Num. EQs: 256
+>>>> MSIX DBG[mlx5_enable_msix]: Num. Vectors: 4
+>>>> MSIX DBG[mlx5_enable_msix]: Min. Num. Vectors: 4
+>>>> MSIX DBG[mlx5_enable_msix]: Num. Online CPUs: 1
+>>>> MSIX DBG[mlx5_enable_msix]: MLX5_EQ_VEC_COMP_BASE: 3
+>>>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 0
+>>>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 1
+>>>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 2
+>>>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 3
+>>>> MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range
+>>>> MSIX DBG[__pci_enable_msix_range]: Enabling MSIX [Nvec: 4, Affinity: 0]
+>>>> MSIX DBG[__pci_enable_msix]: NVec: 4
+>>>> MSIX DBG[__pci_enable_msix]: Num. Entries: 64
+>>>> MSIX DBG[__pci_enable_msix]: Checking invalid entries
+>>>> MSIX DBG[msix_capability_init]: Ensure MSI is disable
+>>>> MSIX DBG[msix_capability_init]: Getting MSIX Capability
+>>>> MSIX DBG[msix_capability_init]: Mapping MSIX Capability Region
+>>>> MSIX DBG[msix_capability_init]: Setup Entries
+>>>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 0
+>>>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 1
+>>>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 2
+>>>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 3
+>>>> MSIX DBG[msix_capability_init]: Setup IRQS
+>>>> MSIX DBG[pci_msi_setup_msi_irqs]: Inside!
+>>>> MSIX DBG[arch_setup_msi_irqs]: Inside!
+>>>> MSIX DBG[msix_capability_init]: Failed pci_msi_setup_msi_irqs
+>>>> MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range, result: -22
+>>>> mlx5_core 0000:01:00.0: enable msix failed
+>>>>
+>>>> The conclusion I came up was that the msix setup in the endpoint fails because
+>>>> in the pcie-designware-host.c we are rejecting msix as you can see here:
+>>>>
+>>>> /* MSI-X interrupts are not supported */
+>>>> if (type == PCI_CAP_ID_MSIX)
+>>>>         return -EINVAL;
+>>>>
+>>>> Did you ever came across this problem?
+>>>
+>>> I don't have access to any system using this IP, unfortunately. This
+>>> looks like an arbitrary limitation of the host controller driver, as
+>>> there isn't much difference between MSI and MSI-X at the MSI controller
+>>> level, other than the reduced number of interrupts.
+>>>
+>>> Unfortunately, this driver seems to rely on rather old APIs, and could
+>>> use some care and attention. I'm pretty sure that converting this driver
+>>> to the generic MSI API would solve this problem entirely, but I'm afraid
+>>> I don't have the bandwidth to do so.
+>>
+>> I volunteer to do it, no problem, but I will need some guidance and examples.
+>> Could you give me some hints to get started?
 > 
-> When a guest causes a NPF which requires emulation, KVM sometimes walks
-> the guest page tables to translate the GVA to a GPA. This is unnecessary
-> most of the time on AMD hardware since the hardware provides the GPA in
-> EXITINFO2.
+> A very simple example using the current API is pcie-altera-msi.c (some
+> others are much more intricate), and should give you a good picture of
+> how PCI/MSI, generic MSI and MSI controllers interact.
 > 
-> The only exception cases involve string operations involving rep or
-> operations that use two memory locations. With rep, the GPA will only be
-> the value of the initial NPF and with dual memory locations we won't know
-> which memory address was translated into EXITINFO2.
+> Start with understanding how the various layers interact via their own
+> IRQ domains, and implement their own IRQ chip. Happy to answer questions
+> (I'm sure you'll have some).
 > 
-> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
-> Reviewed-by: Borislav Petkov <bp@suse.de>
+> Thanks,
+> 
+> 	M.
+> 
 
-I think I already asked you to remove Revewed-by tags when you have to
-change an already reviewed patch in non-trivial manner. Why does this
-one still have my Reviewed-by tag?
+Thanks for the guidance Marc!
 
--- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+Joao
