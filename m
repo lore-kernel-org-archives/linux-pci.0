@@ -1,142 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
-To: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>,
- "Wangzhou (B)" <wangzhou1@hisilicon.com>,
- "robin.murphy@arm.com" <robin.murphy@arm.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "joro@8bytes.org" <joro@8bytes.org>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "tn@semihalf.com" <tn@semihalf.com>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <58D49845.9060407@hisilicon.com>
- <0ea8022b-a19b-335d-6cc6-81510196f891@codeaurora.org>
- <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
-From: Sricharan R <sricharan@codeaurora.org>
-Message-ID: <d9d33133-859a-0189-76c1-c3ec3abdaed6@codeaurora.org>
-Date: Fri, 24 Mar 2017 18:20:13 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36390 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1758390AbdCUXtJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Mar 2017 19:49:09 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2LNmjIa111625
+        for <linux-pci@vger.kernel.org>; Tue, 21 Mar 2017 19:49:07 -0400
+Received: from e23smtp02.au.ibm.com (e23smtp02.au.ibm.com [202.81.31.144])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 29b9vm24jg-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-pci@vger.kernel.org>; Tue, 21 Mar 2017 19:49:07 -0400
+Received: from localhost
+        by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
+        Wed, 22 Mar 2017 09:49:04 +1000
+Date: Wed, 22 Mar 2017 10:48:05 +1100
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Eli Cohen <eli@mellanox.com>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Bodong Wang <bodong@mellanox.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Saeed Mahameed <saeedm@mellanox.com>
+Subject: Re: [PATCH] pci/sriov: Add an option to probe VFs or not before
+ enabling SR-IOV
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
+ <20170320230706.GA12252@gwshan>
+ <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
+ <20170320225708.6868676a@t450s.home>
+ <20170321054305.GA12230@gwshan>
+ <20170321000158.444991a3@t450s.home>
+ <20170321092518.GA19657@gwshan>
+ <20170321082329.4f408a9e@t450s.home>
+ <VI1PR0501MB2798FFB6E0337AB860B5D2A8C53D0@VI1PR0501MB2798.eurprd05.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <VI1PR0501MB2798FFB6E0337AB860B5D2A8C53D0@VI1PR0501MB2798.eurprd05.prod.outlook.com>
+Message-Id: <20170321234805.GB3972@gwshan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shameer,
-
-
->>> [  414.700493] specified DMA range outside IOMMU capability
->> <-- error here
->>> [  414.700496] Failed to set up IOMMU for device 0002:81:10.0; retaining
->> platform DMA ops        <-- error here
->>
->> Looks like this triggers the start of the bug.
->> So the below check in iommu_dma_init_domain fails,
->>
->>          if (domain->geometry.force_aperture) {
->>                  if (base > domain->geometry.aperture_end ||
->>                      base + size <= domain->geometry.aperture_start) {
->>
->> and the rest goes out of sync after that. Can you print out the base,
->> aperture_start and end values to see why the check fails ?
+On Tue, Mar 21, 2017 at 02:34:46PM +0000, Eli Cohen wrote:
+>> If we want to talk about the ABI, I would suggest drawing from existing ABIs.  We already have
+>> drivers_autoprobe as part of the standard sysfs ABI, so if we want a binary switch, then 
+>>sriov_drivers_autoprobe might be a logical choice.  If you're concerned about this mythical overhead of > binding to one driver then another, then why not draw from the driver_override interface to allow the 
+>> user to specify the driver to bind to, perhaps sriov_driver_override.  Then if the user wants to bind all 
+>> the devices to vfio-pci, they can do so easily.  I still fail to see that probing some fixed number of the VFs 
+>> and leaving the rest unprobed has any practical value and I imagine bugs coming in because users are 
+>> confused why some of their VFs behave differently than others.  Thanks,
 >
-> dev_info(dev, "0x%llx 0x%llx, 0x%llx 0x%llx, 0x%llx 0x%llx\n", base, size, domain->geometry.aperture_start, domain->geometry.aperture_end, *dev->dma_mask, dev->coherent_dma_mask);
->
-> [  183.752100] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff, 0xffffffff 0xffffffff
-> .....
-> [  319.508037] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff, 0xffffffffffffffff 0xffffffffffffffff
->
-> Yes, size seems to be the problem here. When the VF  device gets attached to vfio-pci,
-> somehow the dev->coherent_dma_mask is set to 64 bits and size become zero.
->
-> @@ -107,7 +107,7 @@ int of_dma_configure(struct device *dev, struct device_node *np)
->   	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->   	if (ret < 0) {
->   		dma_addr = offset = 0;
->  -		size = ';
->  +		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+>I agree with Alex - the interface should better be binary - either probe VFs or not. The rest can be done with binding/unbinding VFs as necessary. The main goal is to refrain from automatically initializing virtual functions at the hypervisor if they were initially instantiated to assign then to guests.
 >
 
-But without this series, size is still set as
-dev->coherent_dma_mask + 1 , somehow not sure how it works
-fine in that case ?
+It's fairly reasonable. Thanks for confirm. I'll review v2.
 
-I remember i had this change in the V7 patchset, but later
-dropped it for the reason that this change is not relevant
-for this series, but should be there/sent to address the 64bit
-overflow separately.
-
-> @@ -1386,7 +1387,8 @@ int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
->   	 * Assume dma valid range starts at 0 and covers the whole
->   	 * coherent_dma_mask.
->   	 */
->  -	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
->  +	size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
->  +	arch_setup_dma_ops(dev, 0, size, iommu,
->   			   attr == DEV_DMA_COHERENT);
->
-> With the above fixes, DT boot works fine. But we still get the below crash on ACPI
->
->>> [  402.581445] kernel BUG at drivers/iommu/arm-smmu-v3.c:1064!
-
-Looks like this happens when the ste_live becomes true during
-the initial attach, but later without an detach,
-attach once again happens from vfio. Just thinking why the
-detach_dev is not happening only in ACPI case. Actually not
-having any of arm-smmuv3 or ACPI based setup in my place.
-Can i get some help by having some logs from the arm-smmv3
-driver ?
-
->>> [  402.587007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
->>> [  402.592479] Modules linked in: vfio_iommu_type1 vfio_pci irqbypass
->> vfio_virqfd vfio ixgbevf ixgb
->
->> The change that this series does is trying to add the dma/iommu ops to the
->> device after the iommu is actually probed.
->> So in your working case, does the device initially gets hooked to iommu_ops
->> and the above same check passes in working case ?
->
-> I believe so. Because didn't notice the "specified DMA range outside IOMMU capability"
-> in the working case.
-
-ok, as i said above not sure why the overflow does not affect without
-this series.
-
-Regards,
-  Sricharan
-
-
->
-> Thanks,
-> Shameer
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-
--- 
-"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a 
-member of Code Aurora Forum, hosted by The Linux Foundation
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Gavin
