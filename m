@@ -1,96 +1,52 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 18/17] x86: Use generic pci_mmap_resource_range()
-Date: Thu, 23 Mar 2017 14:29:34 +0000
-Message-Id: <7d3b0692a8c539b81b3feda8ad18503b49534c9e.1490279148.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 04/30] iommu/arm-smmu-v3: Add support for PCI ATS
+To: Sinan Kaya <okaya@codeaurora.org>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-5-jean-philippe.brucker@arm.com>
+ <c0f74140-f1f6-7c52-295a-5d4722017664@codeaurora.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <8abb07bc-5660-6071-528f-7a810ad778d0@arm.com>
+Date: Tue, 21 Mar 2017 19:38:29 +0000
+MIME-Version: 1.0
+In-Reply-To: <c0f74140-f1f6-7c52-295a-5d4722017664@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
+ David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+On 08/03/17 15:26, Sinan Kaya wrote:
+> On 2/27/2017 2:54 PM, Jean-Philippe Brucker wrote:
+>> +	ats_enabled = !arm_smmu_enable_ats(master);
+>> +
+> 
+> You should make ats_supported field in IORT table part of the decision
+> process for when to enable ATS.
+> 
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
-Actually it turns out this is fairly trivial for x86 too; it just looked
-more interesting at first glance. But pgprot_writecombine() and
-pgprot_device() will both do the right thing here, and allowing WC
-conditionally based on pat_enabled() is already working so we'll never
-get asked to do that when we don't want to.
+Agreed. I will also draft a proposal for adding the ATS property to PCI
+host controller DT bindings, it seems to be missing.
 
- arch/x86/include/asm/pci.h |  1 +
- arch/x86/pci/i386.c        | 48 ----------------------------------------------
- 2 files changed, 1 insertion(+), 48 deletions(-)
+Thanks,
+Jean-Philippe
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 734cc94..f513cc2 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -104,6 +104,7 @@ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
- 
- #define HAVE_PCI_MMAP
- #define arch_can_pci_mmap_wc()	pat_enabled()
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE
- 
- #ifdef CONFIG_PCI
- extern void early_quirks(void);
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 8ca5e5d..68499cf 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -406,51 +406,3 @@ void __init pcibios_resource_survey(void)
- 	 */
- 	ioapic_insert_resources();
- }
--
--static const struct vm_operations_struct pci_mmap_ops = {
--	.access = generic_access_phys,
--};
--
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	unsigned long prot;
--
--	/* I/O space cannot be accessed via normal processor loads and
--	 * stores on this platform.
--	 */
--	if (mmap_state == pci_mmap_io)
--		return -EINVAL;
--
--	prot = pgprot_val(vma->vm_page_prot);
--
--	/*
-- 	 * Return error if pat is not enabled and write_combine is requested.
-- 	 * Caller can followup with UC MINUS request and add a WC mtrr if there
-- 	 * is a free mtrr slot.
-- 	 */
--	if (!pat_enabled() && write_combine)
--		return -EINVAL;
--
--	if (pat_enabled() && write_combine)
--		prot |= cachemode2protval(_PAGE_CACHE_MODE_WC);
--	else if (pat_enabled() || boot_cpu_data.x86 > 3)
--		/*
--		 * ioremap() and ioremap_nocache() defaults to UC MINUS for now.
--		 * To avoid attribute conflicts, request UC MINUS here
--		 * as well.
--		 */
--		prot |= cachemode2protval(_PAGE_CACHE_MODE_UC_MINUS);
--
--	vma->vm_page_prot = __pgprot(prot);
--
--	if (io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			       vma->vm_end - vma->vm_start,
--			       vma->vm_page_prot))
--		return -EAGAIN;
--
--	vma->vm_ops = &pci_mmap_ops;
--
--	return 0;
--}
--- 
-2.9.3
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
