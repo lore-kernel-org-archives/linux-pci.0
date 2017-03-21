@@ -1,87 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54678 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932790AbdCITCu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 9 Mar 2017 14:02:50 -0500
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V9 11/11] ACPI/IORT: Remove linker section for IORT entries probing
-Date: Fri, 10 Mar 2017 00:31:01 +0530
-Message-Id: <1489086061-9356-12-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+Received: from lucky1.263xmail.com ([211.157.147.132]:55805 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755241AbdCUBZ0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2017 21:25:26 -0400
+Subject: Re: [PATCH] PCI: rockchip: don't leak the PCI resource list
+To: Brian Norris <briannorris@chromium.org>
+References: <20170320224936.28605-1-briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
+From: Shawn Lin <shawn.lin@rock-chips.com>
+Message-ID: <108a73fe-f186-f9ef-81be-7941f3db9d7f@rock-chips.com>
+Date: Tue, 21 Mar 2017 09:25:16 +0800
+MIME-Version: 1.0
+In-Reply-To: <20170320224936.28605-1-briannorris@chromium.org>
+Content-Type: text/plain; charset=gbk; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Hi Brian,
 
-The IORT linker section introduced by commit 34ceea275f62
-("ACPI/IORT: Introduce linker section for IORT entries probing")
-was needed to make sure SMMU drivers are registered (and therefore
-probed) in the kernel before devices using the SMMU have a chance
-to probe in turn.
+On 2017/3/21 6:49, Brian Norris wrote:
+> This list is local to the probe() function. We should free it up in both
+> the success case and the error case, but currently we're only freeing it
+> in the error case (see commit f1d722b607d6 ("PCI: rockchip: Fix
+> rockchip_pcie_probe() error path to free resource list")).
+>
+> Caught by kmemleak, when doing repeated bind/unbind tests.
+>
 
-Through the introduction of deferred IOMMU configuration the linker
-section based IORT probing infrastructure is not needed any longer, in
-that device/SMMU probe dependencies are managed through the probe
-deferral mechanism, making the IORT linker section infrastructure
-unused, so that it can be removed.
+It doesn't look natural to free it in probe, instead it looks more
+like we should do the cleanup work when calling .remove
 
-Remove the unused IORT linker section probing infrastructure
-from the kernel to complete the ACPI IORT IOMMU configure probe
-deferral mechanism implementation.
+I didn't know if there is something that still use this resource
+, for instance, hotplug? But I noticed it from Bjron's statement[1]
+that "The struct resource for each host bridge window must live as long
+as the host bridge itself". So I didn't free it when finishing probe.
+I guess the proper fix is to do it in pci_remove_root_bus or somewhere
+of the cleanup code if I undertand it correctly.
 
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Sricharan R <sricharan@codeaurora.org>
----
- drivers/acpi/arm64/iort.c         | 2 --
- include/asm-generic/vmlinux.lds.h | 1 -
- include/linux/acpi_iort.h         | 3 ---
- 3 files changed, 6 deletions(-)
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index a1000fb..36a9abf 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -992,6 +992,4 @@ void __init acpi_iort_init(void)
- 	}
- 
- 	iort_init_platform_devices();
--
--	acpi_probe_device_table(iort);
- }
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index 0968d13..9faa26c 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -566,7 +566,6 @@
- 	IRQCHIP_OF_MATCH_TABLE()					\
- 	ACPI_PROBE_TABLE(irqchip)					\
- 	ACPI_PROBE_TABLE(clksrc)					\
--	ACPI_PROBE_TABLE(iort)						\
- 	EARLYCON_TABLE()
- 
- #define INIT_TEXT							\
-diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
-index 77e0809..f167e1d04 100644
---- a/include/linux/acpi_iort.h
-+++ b/include/linux/acpi_iort.h
-@@ -52,7 +52,4 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
- { return NULL; }
- #endif
- 
--#define IORT_ACPI_DECLARE(name, table_id, fn)		\
--	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
--
- #endif /* __ACPI_IORT_H__ */
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+[1]: https://lkml.org/lkml/2017/2/8/802
+
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> ---
+>  drivers/pci/host/pcie-rockchip.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index bd6df7254de4..8087a0698d65 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -1396,6 +1396,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  		goto err_free_res;
+>  	}
+>  	rockchip->root_bus = bus;
+> +	pci_free_resource_list(&res);
+>
+>  	pci_bus_size_bridges(bus);
+>  	pci_bus_assign_resources(bus);
+>
