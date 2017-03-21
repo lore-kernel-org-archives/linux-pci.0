@@ -1,98 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH v2 12/32] x86: Add early boot support when running
- with SEV active
-To: Borislav Petkov <bp@suse.de>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846768878.2349.15757532025749214650.stgit@brijesh-build-machine>
- <20170309140748.tg67yo2jmc5ahck3@pd.tnic>
- <5d62b16f-16ef-1bd7-1551-f0c4c43573f4@redhat.com>
- <20170309162942.jwtb3l33632zhbaz@pd.tnic>
- <1fe1e177-f588-fe5a-dc13-e9fde00e8958@amd.com>
- <20170316101656.dcwgtn4qdtyp5hip@pd.tnic>
- <b27126ee-aff0-ab11-706b-fc6d8d4901db@amd.com>
- <20170316150957.dos6wp3pmhos4hkj@pd.tnic>
-CC: Brijesh Singh <brijesh.singh@amd.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <kvm@vger.kernel.org>, <rkrcmar@redhat.com>,
-        <matt@codeblueprint.co.uk>, <linux-pci@vger.kernel.org>,
-        <linus.walleij@linaro.org>, <gary.hook@amd.com>,
-        <linux-mm@kvack.org>, <paul.gortmaker@windriver.com>,
-        <hpa@zytor.com>, <cl@linux.com>, <dan.j.williams@intel.com>,
-        <aarcange@redhat.com>, <sfr@canb.auug.org.au>,
-        <andriy.shevchenko@linux.intel.com>, <herbert@gondor.apana.org.au>,
-        <bhe@redhat.com>, <xemul@parallels.com>, <joro@8bytes.org>,
-        <x86@kernel.org>, <peterz@infradead.org>, <piotr.luc@intel.com>,
-        <mingo@redhat.com>, <msalter@redhat.com>,
-        <ross.zwisler@linux.intel.com>, <dyoung@redhat.com>,
-        <jroedel@suse.de>, <keescook@chromium.org>, <arnd@arndb.de>,
-        <toshi.kani@hpe.com>, <mathieu.desnoyers@efficios.com>,
-        <luto@kernel.org>, <devel@linuxdriverproject.org>,
-        <bhelgaas@google.com>, <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <akpm@linux-foundation.org>, <davem@davemloft.net>
-From: Tom Lendacky <thomas.lendacky@amd.com>
-Message-ID: <cb1693fc-6876-a448-f485-1a6c70aa6ff5@amd.com>
-Date: Thu, 16 Mar 2017 11:11:26 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v7 0/4] i.MX7 PCI support
+Date: Tue, 21 Mar 2017 06:41:59 -0700
+Message-Id: <20170321134203.26325-1-andrew.smirnov@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170316150957.dos6wp3pmhos4hkj@pd.tnic>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Dong Aisheng <dongas86@gmail.com>,
+ Andrey Smirnov <andrew.smirnov@gmail.com>, linux-kernel@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+ Fabio Estevam <fabio.estevam@nxp.com>, yurovsky@gmail.com,
+ linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/16/2017 10:09 AM, Borislav Petkov wrote:
-> On Thu, Mar 16, 2017 at 09:28:58AM -0500, Tom Lendacky wrote:
->> Because there are differences between how SME and SEV behave
->> (instruction fetches are always decrypted under SEV, DMA to an
->> encrypted location is not supported under SEV, etc.) we need to
->> determine which mode we are in so that things can be setup properly
->> during boot. For example, if SEV is active the kernel will already
->> be encrypted and so we don't perform that step or the trampoline area
->> for bringing up an AP must be decrypted for SME but encrypted for SEV.
->
-> So with SEV enabled, it seems to me a guest doesn't know anything about
-> encryption and can run as if SME is disabled. So sme_active() will be
-> false. And then the kernel can bypass all that code dealing with SME.
->
-> So a guest should simply run like on baremetal with no SME, IMHO.
->
+Hello, everyone:
 
-Not quite. The guest still needs to understand about the encryption mask
-so that it can protect memory by setting the encryption mask in the
-pagetable entries.  It can also decide when to share memory with the
-hypervisor by not setting the encryption mask in the pagetable entries.
+This is a seventh iteration of the code that adds PCI-subsystem bits
+necessary for enabling PCI support on i.MX7.
 
-> But then there's that part: "instruction fetches are always decrypted
-> under SEV". What does that mean exactly? And how much of that code can
+NOTE: To test this patchset with real i.MX7 hardware, additional
+patches, that are being upstreamed via different trees, are needed. Full
+working tree is availible at:
 
-"Instruction fetches are always decrypted under SEV" means that,
-regardless of how a virtual address is mapped, encrypted or decrypted,
-if an instruction fetch is performed by the CPU from that address it
-will always be decrypted. This is to prevent the hypervisor from
-injecting executable code into the guest since it would have to be
-valid encrypted instructions.
+	https://github.com/ndreys/linux/tree/imx7d/pcie-support-v7
 
-> be reused so that
->
-> * SME on baremetal
-> * SEV on guest
->
-> use the same logic?
+Changes since v6 (can be found at [version6]):
 
-There are many areas that use the same logic, but there are certain
-situations where we need to check between SME vs SEV (e.g. DMA operation
-setup or decrypting the trampoline area) and act accordingly.
+	- Rebased against latest changes in 'next' of PCI subsystem
+          git tree
 
-Thanks,
-Tom
+Chagnes since v5 (can be found at [version5]):
 
->
-> Having the larger SEV preparation part on the kvm host side is perfectly
-> fine. But I'd like to keep kernel initialization paths clean.
->
-> Thanks.
->
+	- Collected ACKs from Lee and Rob
+
+Changes since v4 (can be found at [version4]):
+
+	- Dropped typo-fix patch (originally patch #1 of the
+          series).
+
+	- Added patch with workaround to address speed change false
+          failures (I kept it as a separate patch to better document
+          exchange with NXP/Freescale that lead to that patch)
+
+	- Added patch to avoid speed change on links configured Gen1
+          only (Let me know if that is a terrible idea)
+
+	- Addressed section mismatch problem by moving call to
+          hook_fault_code to happend before driver registration.
+
+Changes since v3 (can be found at [version3]):
+	- Move all of the reset_control_assert's into imx6_pcie_assert_core_reset
+	- Documented required reset and power domain DT bindings
+
+Changes since v2 (can be found at [version2]):
+
+	- Collected Reviewed-by for patch #2 from Lucas
+	- Reset logic implementation moved out into a reset controller
+          driver (see [reset1])
+	- Removed unused leftover code
+
+Changes since v1 (can be found at [version1]):
+
+	- All GPC related code moved into a separate driver (see [gpc1])
+	- Removed GPIO probe deferral logging
+	- Fixed section mismatch warning
+	- Minor reformatting of fsl,imx6q-pcie.txt(as per Rob
+          Herring's request)
+
+[version6] https://lkml.org/lkml/2017/3/14/584
+[version5] https://lkml.org/lkml/2017/2/20/376
+[version4] https://lkml.org/lkml/2017/2/7/478
+[version3] https://lkml.org/lkml/2017/2/6/565
+[version2] https://lkml.org/lkml/2017/2/1/510
+[version1] https://lkml.org/lkml/2017/1/19/488
+[gpc1] https://lkml.org/lkml/2017/2/6/551
+[reset1] https://lkml.org/lkml/2017/2/6/554
+
+Andrey Smirnov (4):
+  PCI: imx6: Add code to support i.MX7D
+  PCI: imx6: Allow probe deferal by reset GPIO
+  PCI: imx6: Do not wait for speed change on i.MX7
+  PCI: imx6: Do not switch speed if Gen2 is disabled
+
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 +-
+ drivers/pci/dwc/pci-imx6.c                         | 198 +++++++++++++++------
+ include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
+ 3 files changed, 160 insertions(+), 55 deletions(-)
+
+-- 
+2.9.3
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
