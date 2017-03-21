@@ -1,52 +1,101 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 21 Mar 2017 12:43:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Tomasz Nowicki <tn@semihalf.com>
-Subject: Re: [PATCH 0/2] ThunderX external PCI fixes for legacy&new ACPI
- firmware
-Message-ID: <20170321174325.GB13150@bhelgaas-glaptop.roam.corp.google.com>
-References: <1489564155-3881-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] pci/sriov: Add an option to probe VFs or not before
+ enabling SR-IOV
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
+ <20170320230706.GA12252@gwshan>
+ <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
+ <20170321002445.GA24862@gwshan>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <saeedm@mellanox.com>,
+        Eli Cohen <eli@mellanox.com>
+From: Bodong Wang <bodong@mellanox.com>
+Message-ID: <70e91a67-7d15-671f-bba3-de00dd51406d@mellanox.com>
+Date: Mon, 20 Mar 2017 22:38:43 -0500
 MIME-Version: 1.0
-In-Reply-To: <1489564155-3881-1-git-send-email-tn@semihalf.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo.Pieralisi@arm.com, Sunil.Goutham@cavium.com, rafael@kernel.org,
- linux-pci@vger.kernel.org, linu.cherian@cavium.com, ddaney@caviumnetworks.com,
- geethasowjanya.akula@gmail.com, linux-acpi@vger.kernel.org,
- robert.richter@caviumnetworks.com, Vadim.Lomovtsev@caviumnetworks.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170321002445.GA24862@gwshan>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 15, 2017 at 08:49:13AM +0100, Tomasz Nowicki wrote:
-> This patch series update ThunderX PEM driver to be able to boot with legacy
-> and new ACPI firmware:
-> 1. New firmware uses registered Cavium harware ID "CAV", but kernel instead
->    uses "THRX". Fix kernel to use "CAV".
-> 2. Legacy firmware misses PEM quirks information so for this case kernel
->    should not assume anything from FW and figure out PEM resources on its own.
-> 
-> Fix this all together in the following branch:
-> git@github.com:semihalf-nowicki-tomasz/linux.git (thunderx-pci-legacy-fw-v1)
-> 
-> Tomasz Nowicki (2):
->   PCI: Use Cavium assigned hardware ID for ThunderX host controller
->   PCI: Add legacy firmware support for Cavium ThunderX host controller
-> 
->  drivers/pci/host/pci-thunder-pem.c | 58 ++++++++++++++++++++++++++++++++++++--
->  1 file changed, 55 insertions(+), 3 deletions(-)
+On 3/20/2017 7:24 PM, Gavin Shan wrote:
+> On Mon, Mar 20, 2017 at 06:34:23PM -0500, Bodong Wang wrote:
+>> On 3/20/2017 6:07 PM, Gavin Shan wrote:
+>>> On Mon, Mar 20, 2017 at 05:14:34PM +0200, bodong@mellanox.com wrote:
+>>>> From: Bodong Wang <bodong@mellanox.com>
+>>>>
+>>>> Sometimes it is not desirable to probe the virtual functions after
+>>>> SRIOV is enabled. This can save host side resource usage by VF
+>>>> instances which would be eventually probed to VMs.
+>>>>
+>>>> Added a new PCI sysfs interface "sriov_probe_vfs" to control that
+>>> >from PF, all current callers still retain the same functionality.
+>>>> To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
+>>>>
+>>>> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+>>>>
+>>>> Note that, the choice must be made before enabling VFs. The change
+>>>> will not take effect if VFs are already enabled. Simply, one can set
+>>>> sriov_numvfs to 0, choose whether to probe or not, and then resume
+>>>> sriov_numvfs.
+>>>>
+>>> Bodong, I'm not sure if there is a requirement to load driver for the
+>>> specified number of VFs? That indicates no driver will be loaded for
+>>> other VFs. If so, this interface might serve the purpose as well.
+>> Gavin, thanks for the review. That is indeed an interesting suggestion.
+>> Theoretically,  we can change that probe_vfs from boolean to integer. And use
+>> it as a counter to probe the first N VFs(if N < total_vfs).  Let's see if
+>> there are any objections.
+> Ok.
+>
+>>> +#ifdef CONFIG_PCI_IOV
+>>> +	if (!pci_dev->is_virtfn ||
+>>> +	    (pci_dev->is_virtfn && pci_dev->physfn->sriov->probe_vfs)) {
+>>> +#endif
+>>> +		error = __pci_device_probe(drv, pci_dev);
+>>> +		if (error) {
+>>> +			pcibios_free_irq(pci_dev);
+>>> +			pci_dev_put(pci_dev);
+>>> +		}
+>>> +#ifdef CONFIG_PCI_IOV
+>>> 	}
+>>> +#endif
+>>>
+>>> I think it's reasonable to have a inline function for this check:
+>> It's doable, but what's the benefit?
+>>> #ifdef CONFIG_PCI_IOV
+>>> static inline bool pci_device_can_probe(struct pci_dev *pdev)
+>>> {
+>>> 	return (!pdev->is_virtfn || pdev->physfn->sriov->probe_vfs);
+>> should be return (!pdev->is_virtfn || (pci_dev->is_virtfn &&
+>> pci_dev->physfn->sriov->probe_vfs));
+>>
+>> We want to probe that device if 1) it's a PF 2) it'a VF and probe_vfs is set
+>>> }
+>>> #else
+>>> static inline bool pci_device_can_probe(struct pci_dev *pdev)
+>>> {
+>>> 	return true;
+>>> }
+>> This function will be a waste if CONFIG_PCI_IOV is not defined.
+>>> #endif
+> It makes the code a bit clean. Nope, the proposed conditional
+> expression is elaborate. Yeah, the purpose is exactly same as
+> you said: probe driver for non-VF or VFs that were allowed.
+>
+>       (!pdev->is_virtfn || pdev->physfn->sriov->probe_vfs);
+>
+> When pdev->is_virtfn is flase, "pdev->physfn->sriov->probe_vfs"
+> doesn't take effect. Otherwise, it means pdev->is_virtfn is true
+> indirectly and going to check "pdev->physfn->sriov->probe_vfs".
+> So it needn't check pdev->is_virtfn explicitly in later case,
+> but it isn't wrong :)
+>
+> Thanks,
+> Gavin
+>
+Make sense :) Will apply in V1.
 
-Applied with Robert's acks to pci/host-thunder for v4.12, thanks!
+Thanks,
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Bodong
