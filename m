@@ -1,33 +1,101 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:42334 "EHLO newverein.lst.de"
+Received: from foss.arm.com ([217.140.101.70]:50410 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751288AbdC0RUQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 27 Mar 2017 13:20:16 -0400
-Date: Mon, 27 Mar 2017 19:10:50 +0200
-From: 'Christoph Hellwig' <hch@lst.de>
-To: David Laight <David.Laight@ACULAB.COM>
-Cc: 'Christoph Hellwig' <hch@lst.de>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "netanel@annapurnalabs.com" <netanel@annapurnalabs.com>,
-        "jcliburn@gmail.com" <jcliburn@gmail.com>,
-        "chris.snook@gmail.com" <chris.snook@gmail.com>,
-        "sgoutham@cavium.com" <sgoutham@cavium.com>,
-        "rric@kernel.org" <rric@kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH 5/5] PCI: remove pci_enable_msix
-Message-ID: <20170327171050.GA28815@lst.de>
-References: <20170327082936.6830-1-hch@lst.de> <20170327082936.6830-6-hch@lst.de> <063D6719AE5E284EB5DD2968C1650D6DCFFBAAD0@AcuExch.aculab.com> <20170327145135.GA24857@lst.de> <063D6719AE5E284EB5DD2968C1650D6DCFFBAC3E@AcuExch.aculab.com>
+        id S1756546AbdCUKl6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 21 Mar 2017 06:41:58 -0400
+Subject: Re: Help: MSI DWC connecting with a MSIx Endpoint
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+References: <85bfa77f-6cd0-a669-c940-7fa7d9fb17a3@synopsys.com>
+ <28a4e429-a2d2-8f28-e4fc-8eebae0b3367@arm.com>
+ <4ade12d6-1887-4093-ee43-2101ca2986e0@synopsys.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <9eec7e57-456e-fc98-91d9-bd5a32c347af@arm.com>
+Date: Tue, 21 Mar 2017 10:41:55 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DCFFBAC3E@AcuExch.aculab.com>
+In-Reply-To: <4ade12d6-1887-4093-ee43-2101ca2986e0@synopsys.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 27, 2017 at 03:03:30PM +0000, David Laight wrote:
-> Indeed, but pci_enable_msix_range() only appeared in 3.14.
-> We have to support a wide range of kernels.
-> I think we've finally managed to get most of our customers off 2.6.18.
+On 21/03/17 10:27, Joao Pinto wrote:
+> 
+> Hi Mark,
+> 
+> Às 6:16 PM de 3/20/2017, Marc Zyngier escreveu:
+>> Hi Joao,
+>>
+>> On 20/03/17 17:30, Joao Pinto wrote:
+>>> Hi Mark,
+>>>
+>>> I am facing a challenge in a setup I must bring up that is composed by a
+>>> Synopsys Root Complex connected to a MSIx-only Endpoint from Mellanox.
+>>> The endpoint probe fails because it is not capable of enabling msix.
+>>>
+>>> In order to get more info about it, I added some debug messages to the msix
+>>> enable process and got the following:
+>>>
+>>> MSIX DBG[mlx5_enable_msix]: Num. EQs: 256
+>>> MSIX DBG[mlx5_enable_msix]: Num. Vectors: 4
+>>> MSIX DBG[mlx5_enable_msix]: Min. Num. Vectors: 4
+>>> MSIX DBG[mlx5_enable_msix]: Num. Online CPUs: 1
+>>> MSIX DBG[mlx5_enable_msix]: MLX5_EQ_VEC_COMP_BASE: 3
+>>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 0
+>>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 1
+>>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 2
+>>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 3
+>>> MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range
+>>> MSIX DBG[__pci_enable_msix_range]: Enabling MSIX [Nvec: 4, Affinity: 0]
+>>> MSIX DBG[__pci_enable_msix]: NVec: 4
+>>> MSIX DBG[__pci_enable_msix]: Num. Entries: 64
+>>> MSIX DBG[__pci_enable_msix]: Checking invalid entries
+>>> MSIX DBG[msix_capability_init]: Ensure MSI is disable
+>>> MSIX DBG[msix_capability_init]: Getting MSIX Capability
+>>> MSIX DBG[msix_capability_init]: Mapping MSIX Capability Region
+>>> MSIX DBG[msix_capability_init]: Setup Entries
+>>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 0
+>>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 1
+>>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 2
+>>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 3
+>>> MSIX DBG[msix_capability_init]: Setup IRQS
+>>> MSIX DBG[pci_msi_setup_msi_irqs]: Inside!
+>>> MSIX DBG[arch_setup_msi_irqs]: Inside!
+>>> MSIX DBG[msix_capability_init]: Failed pci_msi_setup_msi_irqs
+>>> MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range, result: -22
+>>> mlx5_core 0000:01:00.0: enable msix failed
+>>>
+>>> The conclusion I came up was that the msix setup in the endpoint fails because
+>>> in the pcie-designware-host.c we are rejecting msix as you can see here:
+>>>
+>>> /* MSI-X interrupts are not supported */
+>>> if (type == PCI_CAP_ID_MSIX)
+>>>         return -EINVAL;
+>>>
+>>> Did you ever came across this problem?
+>>
+>> I don't have access to any system using this IP, unfortunately. This
+>> looks like an arbitrary limitation of the host controller driver, as
+>> there isn't much difference between MSI and MSI-X at the MSI controller
+>> level, other than the reduced number of interrupts.
+>>
+>> Unfortunately, this driver seems to rely on rather old APIs, and could
+>> use some care and attention. I'm pretty sure that converting this driver
+>> to the generic MSI API would solve this problem entirely, but I'm afraid
+>> I don't have the bandwidth to do so.
+> 
+> I volunteer to do it, no problem, but I will need some guidance and examples.
+> Could you give me some hints to get started?
 
-That's your problem, not that of upstream kernel developers.
+A very simple example using the current API is pcie-altera-msi.c (some
+others are much more intricate), and should give you a good picture of
+how PCI/MSI, generic MSI and MSI controllers interact.
+
+Start with understanding how the various layers interact via their own
+IRQ domains, and implement their own IRQ chip. Happy to answer questions
+(I'm sure you'll have some).
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
