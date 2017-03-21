@@ -1,73 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:51426 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753586AbdCGAhM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Mar 2017 19:37:12 -0500
-Date: Mon, 6 Mar 2017 18:27:34 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jan =?iso-8859-1?Q?R=FCth?= <rueth@comsys.rwth-aachen.de>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] pci/aspm: Fix null pointer dereference during
- re-enumeration of PCI bus in pcie_aspm_init_link_state even though ASPM is
- off
-Message-ID: <20170307002734.GB21358@bhelgaas-glaptop.roam.corp.google.com>
-References: <8dd91424-b38c-4875-9752-9cc42a6f5701@comsys.rwth-aachen.de>
- <20170203173243.GB10291@bhelgaas-glaptop.roam.corp.google.com>
+Received: from smtprelay4.synopsys.com ([198.182.47.9]:46645 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755348AbdCUKhE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Mar 2017 06:37:04 -0400
+Subject: Re: Help: MSI DWC connecting with a MSIx Endpoint
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+References: <85bfa77f-6cd0-a669-c940-7fa7d9fb17a3@synopsys.com>
+ <28a4e429-a2d2-8f28-e4fc-8eebae0b3367@arm.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <4ade12d6-1887-4093-ee43-2101ca2986e0@synopsys.com>
+Date: Tue, 21 Mar 2017 10:27:40 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20170203173243.GB10291@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <28a4e429-a2d2-8f28-e4fc-8eebae0b3367@arm.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 03, 2017 at 11:32:43AM -0600, Bjorn Helgaas wrote:
-> On Tue, Jan 03, 2017 at 09:09:49AM +0100, Jan Rüth wrote:
-> > This patch fixes a null pointer dereference during PCI bus enumeration
-> > when ASPM is off. On an IBM x3850 8664 this bug causes the kernel to
-> > halt, this behavior did not appear in 3.10, so this is a regression.
-> > 
-> > pcie_aspm_sanity_check should only be called if ASPM is on.
-> > 
-> > Signed-off-by: Jan Rueth <rueth@comsys.rwth-aachen.de>
-> 
-> We have https://bugzilla.kernel.org/show_bug.cgi?id=187731 for this issue.
-> 
-> Per the dmesg attached there, you're booting with "pcie_aspm=off".
-> This patch fixes the NULL pointer dereference in that case, but I'm
-> concerned that we may still trip over it if you boot without
-> "pcie_aspm=off".
-> 
-> I want to make sure we fix both cases.  Can you please try a boot
-> with this patch but without "pcie_aspm=off"?
 
-Ping?  I'd like to get this patch merged but I want to make sure we
-fix the problem both with and without "pcie_aspm=off".
+Hi Mark,
 
-Is anybody in a position to test this on an IBM x3850 8664?
+Ã€s 6:16 PM de 3/20/2017, Marc Zyngier escreveu:
+> Hi Joao,
+> 
+> On 20/03/17 17:30, Joao Pinto wrote:
+>> Hi Mark,
+>>
+>> I am facing a challenge in a setup I must bring up that is composed by a
+>> Synopsys Root Complex connected to a MSIx-only Endpoint from Mellanox.
+>> The endpoint probe fails because it is not capable of enabling msix.
+>>
+>> In order to get more info about it, I added some debug messages to the msix
+>> enable process and got the following:
+>>
+>> MSIX DBG[mlx5_enable_msix]: Num. EQs: 256
+>> MSIX DBG[mlx5_enable_msix]: Num. Vectors: 4
+>> MSIX DBG[mlx5_enable_msix]: Min. Num. Vectors: 4
+>> MSIX DBG[mlx5_enable_msix]: Num. Online CPUs: 1
+>> MSIX DBG[mlx5_enable_msix]: MLX5_EQ_VEC_COMP_BASE: 3
+>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 0
+>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 1
+>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 2
+>> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 3
+>> MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range
+>> MSIX DBG[__pci_enable_msix_range]: Enabling MSIX [Nvec: 4, Affinity: 0]
+>> MSIX DBG[__pci_enable_msix]: NVec: 4
+>> MSIX DBG[__pci_enable_msix]: Num. Entries: 64
+>> MSIX DBG[__pci_enable_msix]: Checking invalid entries
+>> MSIX DBG[msix_capability_init]: Ensure MSI is disable
+>> MSIX DBG[msix_capability_init]: Getting MSIX Capability
+>> MSIX DBG[msix_capability_init]: Mapping MSIX Capability Region
+>> MSIX DBG[msix_capability_init]: Setup Entries
+>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 0
+>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 1
+>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 2
+>> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 3
+>> MSIX DBG[msix_capability_init]: Setup IRQS
+>> MSIX DBG[pci_msi_setup_msi_irqs]: Inside!
+>> MSIX DBG[arch_setup_msi_irqs]: Inside!
+>> MSIX DBG[msix_capability_init]: Failed pci_msi_setup_msi_irqs
+>> MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range, result: -22
+>> mlx5_core 0000:01:00.0: enable msix failed
+>>
+>> The conclusion I came up was that the msix setup in the endpoint fails because
+>> in the pcie-designware-host.c we are rejecting msix as you can see here:
+>>
+>> /* MSI-X interrupts are not supported */
+>> if (type == PCI_CAP_ID_MSIX)
+>>         return -EINVAL;
+>>
+>> Did you ever came across this problem?
+> 
+> I don't have access to any system using this IP, unfortunately. This
+> looks like an arbitrary limitation of the host controller driver, as
+> there isn't much difference between MSI and MSI-X at the MSI controller
+> level, other than the reduced number of interrupts.
+> 
+> Unfortunately, this driver seems to rely on rather old APIs, and could
+> use some care and attention. I'm pretty sure that converting this driver
+> to the generic MSI API would solve this problem entirely, but I'm afraid
+> I don't have the bandwidth to do so.
 
-> > ---
-> >  drivers/pci/pcie/aspm.c | +++--
-> >  1 file changed, 3 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> > index f981129..e758b56 100644
-> > --- a/drivers/pci/pcie/aspm.c
-> > +++ b/drivers/pci/pcie/aspm.c
-> > @@ -552,11 +552,12 @@ static struct pcie_link_state
-> > *alloc_pcie_link_state(struct pci_dev *pdev)
-> >  void pcie_aspm_init_link_state(struct pci_dev *pdev)
-> >  {
-> >         struct pcie_link_state *link;
-> > -       int blacklist = !!pcie_aspm_sanity_check(pdev);
-> > -
-> > +       int blacklist;
-> >         if (!aspm_support_enabled)
-> >                 return;
-> > 
-> > +       blacklist = !!pcie_aspm_sanity_check(pdev);
-> > +
-> >         if (pdev->link_state)
-> >                 return;
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-pci" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I volunteer to do it, no problem, but I will need some guidance and examples.
+Could you give me some hints to get started?
+
+> 
+> Thanks,
+> 
+> 	M.
+> 
+
+Thanks.
