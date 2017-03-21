@@ -1,70 +1,65 @@
-Return-Path: <SRS0=EDSp=2K=intel.com=keith.busch@kernel.org>
-Return-Path: <SRS0=EDSp=2K=intel.com=keith.busch@kernel.org>
-Date: Wed, 1 Mar 2017 17:26:51 -0500
-From: Keith Busch <keith.busch@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-	Myron Stowe <myron.stowe@gmail.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Jonathan Corbet <corbet@lwn.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Emil Velikov <emil.l.velikov@gmail.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-	Stefan Berger <stefanb@linux.vnet.ibm.com>,
-	Wei Zhang <wzhang@fb.com>,
-	Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-	Stephen Bates <stephen.bates@microsemi.com>,
-	linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
-Message-ID: <20170301222651.GA14852@localhost.localdomain>
-References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
- <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 21 Mar 2017 16:53:50 +0000
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH 05/20] ARM: implement pci_remap_cfgspace() interface
+Message-ID: <20170321165349.GB21222@n2100.armlinux.org.uk>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-6-lorenzo.pieralisi@arm.com>
+ <20170320164354.GQ21222@n2100.armlinux.org.uk>
+ <20170321152636.GA4799@red-moon>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170321152636.GA4799@red-moon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ linux-arch@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Michal Simek <michal.simek@xilinx.com>, Jon Mason <jonmason@broadcom.com>,
+ Murali Karicheri <m-karicheri2@ti.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 01, 2017 at 03:41:20PM -0600, Bjorn Helgaas wrote:
-> On Sat, Feb 25, 2017 at 11:53:13PM -0700, Logan Gunthorpe wrote:
-> > Changes since v4:
-> > 
-> > * Turns out pushing the pci release code into the device release
-> >   function didn't work as I would have liked. If you try to unbind the
-> >   device with an instance open, then you hit a kernel bug at
-> >   drivers/pci/msi.c:371. (This didn't occur in v3.)
-> 
-> This is in free_msi_irqs():
-> 
->   368    for_each_pci_msi_entry(entry, dev)
->   369            if (entry->irq)
->   370                    for (i = 0; i < entry->nvec_used; i++)
->   371                            BUG_ON(irq_has_action(entry->irq + i));
-> 
-> I don't think this is indicating a bug in the PCI core (although I do
-> think a BUG_ON() here is an excessive response).  I think it's an
-> indication that the driver didn't disconnect its ISR.  Without more
-> details of the failure it's hard to tell if the BUG_ON is a symptom of
-> a problem in the driver or what.
-> 
-> An "alive" flag feels racy, and I can't tell if it's really the best
-> way to deal with this, or if it's just avoiding the issue.  There must
-> be other drivers with the same cleanup issue -- do they handle it the
-> same way?
+On Tue, Mar 21, 2017 at 03:26:36PM +0000, Lorenzo Pieralisi wrote:
+> I assumed that in plain terms, the difference between MT_DEVICE and
+> MT_UNCACHED is write posting (aka bufferable) behaviour (across CPU
+> architecture versions) and that does not affect write ordering rules.
 
-I think this is from using the managed device resource API to request the
-irq actions. The scope of the resource used to be tied to the pci_dev's
-dev, but now it's the new switchec class dev, which has a different
-lifetime while open references exist, so it's not releasing the irq's.
+Having looked it up in the ARM ARM, I think we're fine.  Device and
+strongly ordered accesses are both ordered as one group, so can be
+thought of as the same.  The only difference is that Device can
+complete from the CPU's perspective before it hits the peripheral,
+whereas strongly ordered only completes once it's hit the peripheral.
 
-One thing about the BUG_ON that is confusing me is how it's getting
-to free_msi_irq's BUG in v4 or v5. I don't see any part releasing the
-allocated ones. Maybe the devres API is harder to use than having the
-driver manage all the resources...
+So this looks like exactly the right thing to do here.
+
+-- 
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
