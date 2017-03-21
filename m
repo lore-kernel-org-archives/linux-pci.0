@@ -1,82 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:41382 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752164AbdC0JD4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Mar 2017 05:03:56 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: bhelgaas@google.com, davem@davemloft.net,
-        netanel@annapurnalabs.com, jcliburn@gmail.com,
-        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org
-Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 5/5] PCI: remove pci_enable_msix
-Date: Mon, 27 Mar 2017 10:29:36 +0200
-Message-Id: <20170327082936.6830-6-hch@lst.de>
-In-Reply-To: <20170327082936.6830-1-hch@lst.de>
-References: <20170327082936.6830-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Cao jin <caoj.fnst@cn.fujitsu.com>
+To: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC: <linasvepstas@gmail.com>, <bhelgaas@google.com>, <corbet@lwn.net>
+Subject: [PATCH] pci-error-recovery: doc cleanup
+Date: Tue, 21 Mar 2017 21:24:18 +0800
+Message-ID: <1490102658-22768-1-git-send-email-caoj.fnst@cn.fujitsu.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Unused now that all callers switched to pci_alloc_irq_vectors.
+Include whitespace shooting; correction; typo fix; superfluous word
+dropping.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Cao jin <caoj.fnst@cn.fujitsu.com>
 ---
- drivers/pci/msi.c   | 21 ---------------------
- include/linux/pci.h |  4 ----
- 2 files changed, 25 deletions(-)
+This patch was sent in last December, which is not quite suitable at that time,
+because link reset is not clear. Now the section "Link Reset" has been cleaned,
+submit this patch again.
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d571bc330686..0042c365b29b 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -973,27 +973,6 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
- 	return msix_capability_init(dev, entries, nvec, affd);
- }
+ Documentation/PCI/pci-error-recovery.txt | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
+index da3b217..0b6bb3e 100644
+--- a/Documentation/PCI/pci-error-recovery.txt
++++ b/Documentation/PCI/pci-error-recovery.txt
+@@ -11,7 +11,7 @@
  
--/**
-- * pci_enable_msix - configure device's MSI-X capability structure
-- * @dev: pointer to the pci_dev data structure of MSI-X device function
-- * @entries: pointer to an array of MSI-X entries (optional)
-- * @nvec: number of MSI-X irqs requested for allocation by device driver
-- *
-- * Setup the MSI-X capability structure of device function with the number
-- * of requested irqs upon its software driver call to request for
-- * MSI-X mode enabled on its hardware device function. A return of zero
-- * indicates the successful configuration of MSI-X capability structure
-- * with new allocated MSI-X irqs. A return of < 0 indicates a failure.
-- * Or a return of > 0 indicates that driver request is exceeding the number
-- * of irqs or MSI-X vectors available. Driver should use the returned value to
-- * re-send its request.
-- **/
--int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
--{
--	return __pci_enable_msix(dev, entries, nvec, NULL);
--}
--EXPORT_SYMBOL(pci_enable_msix);
--
- void pci_msix_shutdown(struct pci_dev *dev)
- {
- 	struct msi_desc *entry;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index eb3da1a04e6c..82dec36845e6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1300,7 +1300,6 @@ int pci_msi_vec_count(struct pci_dev *dev);
- void pci_msi_shutdown(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
- int pci_msix_vec_count(struct pci_dev *dev);
--int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
- void pci_msix_shutdown(struct pci_dev *dev);
- void pci_disable_msix(struct pci_dev *dev);
- void pci_restore_msi_state(struct pci_dev *dev);
-@@ -1330,9 +1329,6 @@ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
- static inline void pci_msi_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msi(struct pci_dev *dev) { }
- static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
--static inline int pci_enable_msix(struct pci_dev *dev,
--				  struct msix_entry *entries, int nvec)
--{ return -ENOSYS; }
- static inline void pci_msix_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msix(struct pci_dev *dev) { }
- static inline void pci_restore_msi_state(struct pci_dev *dev) { }
+ Many PCI bus controllers are able to detect a variety of hardware
+ PCI errors on the bus, such as parity errors on the data and address
+-busses, as well as SERR and PERR errors.  Some of the more advanced
++buses, as well as SERR and PERR errors.  Some of the more advanced
+ chipsets are able to deal with these errors; these include PCI-E chipsets,
+ and the PCI-host bridges found on IBM Power4, Power5 and Power6-based
+ pSeries boxes. A typical action taken is to disconnect the affected device,
+@@ -173,7 +173,7 @@ is STEP 6 (Permanent Failure).
+ >>> a value of 0xff on read, and writes will be dropped. If more than
+ >>> EEH_MAX_FAILS I/O's are attempted to a frozen adapter, EEH
+ >>> assumes that the device driver has gone into an infinite loop
+->>> and prints an error to syslog.  A reboot is then required to 
++>>> and prints an error to syslog.  A reboot is then required to
+ >>> get the device working again.
+ 
+ STEP 2: MMIO Enabled
+@@ -231,14 +231,14 @@ proceeds to STEP 4 (Slot Reset)
+ STEP 3: Link Reset
+ ------------------
+ The platform resets the link.  This is a PCI-Express specific step
+-and is done whenever a non-fatal error has been detected that can be
++and is done whenever a fatal error has been detected that can be
+ "solved" by resetting the link.
+ 
+ STEP 4: Slot Reset
+ ------------------
+ 
+ In response to a return value of PCI_ERS_RESULT_NEED_RESET, the
+-the platform will perform a slot reset on the requesting PCI device(s). 
++the platform will perform a slot reset on the requesting PCI device(s).
+ The actual steps taken by a platform to perform a slot reset
+ will be platform-dependent. Upon completion of slot reset, the
+ platform will call the device slot_reset() callback.
+@@ -258,7 +258,7 @@ configuration registers to initialize to their default conditions.
+ 
+ For most PCI devices, a soft reset will be sufficient for recovery.
+ Optional fundamental reset is provided to support a limited number
+-of PCI Express PCI devices  for which a soft reset is not sufficient
++of PCI Express devices for which a soft reset is not sufficient
+ for recovery.
+ 
+ If the platform supports PCI hotplug, then the reset might be
+@@ -303,7 +303,7 @@ driver performs device init only from PCI function 0:
+ 		Same as above.
+ 
+ Drivers for PCI Express cards that require a fundamental reset must
+-set the needs_freset bit in the pci_dev structure in their probe function.  
++set the needs_freset bit in the pci_dev structure in their probe function.
+ For example, the QLogic qla2xxx driver sets the needs_freset bit for certain
+ PCI card types:
+ 
 -- 
-2.11.0
+2.1.0
