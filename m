@@ -1,122 +1,60 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V9 02/11] iommu/of: Prepare for deferred IOMMU configuration
-Date: Fri, 10 Mar 2017 00:30:52 +0530
-Message-Id: <1489086061-9356-3-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <31da6db5-be22-9e84-5e76-67c519bc0b34@codeaurora.org>
+References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
+ <20170322193111.GA8190@wunner.de>
+ <31da6db5-be22-9e84-5e76-67c519bc0b34@codeaurora.org>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Wed, 22 Mar 2017 19:41:45 +0000
+Message-ID: <CAKv+Gu8Uw-X3AR6aQYevPdRfcgPNnqL4O3sRoKxsZAiW29sbqg@mail.gmail.com>
+Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+To: Sinan Kaya <okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+ Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
+ Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
+ Lukas Wunner <lukas@wunner.de>, Hanjun Guo <hanjun.guo@linaro.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Yinghai Lu <yinghai@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Robin Murphy <robin.murphy@arm.com>
+On 22 March 2017 at 19:36, Sinan Kaya <okaya@codeaurora.org> wrote:
+> On 3/22/2017 3:31 PM, Lukas Wunner wrote:
+>> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
+>> scratch at boot. This may result in the GOP framebuffer address to
+>> become stale, if the BAR covering the framebuffer is modified.
+>
+> Does this code still work with the case where resources are not reassigned on ARM64?
+>
+> As far as I know, kernel honors resource assignments done by the UEFI BIOS if
+> they are correct. Kernel will reassign the resources only if something is wrong.
+>
 
-IOMMU configuration represents unchanging properties of the hardware,
-and as such should only need happen once in a device's lifetime, but
-the necessary interaction with the IOMMU device and driver complicates
-exactly when that point should be.
+No, the kernel always reassigns all BARs on arm64.
 
-Since the only reasonable tool available for handling the inter-device
-dependency is probe deferral, we need to prepare of_iommu_configure()
-to run later than it is currently called (i.e. at driver probe rather
-than device creation), to handle being retried, and to tell whether a
-not-yet present IOMMU should be waited for or skipped (by virtue of
-having declared a built-in driver or not).
+> Will this code break other platforms/architectures?
+>
 
-Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
----
- drivers/iommu/of_iommu.c | 43 ++++++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 42 insertions(+), 1 deletion(-)
+Which platforms/architectures are you referring to? EFIFB on a PCI
+device is currently broken on arm64. On x86, it works, given that BARs
+are usually not reassigned, and so the patch should be a no-op in that
+case (although I'd argue it is still an improvement to check whether
+the device that owns the BAR actually has memory decoding enabled
+before we attach the framebuffer driver to it)
 
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index 8f4e599..c8be889 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -96,6 +96,19 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
- }
- EXPORT_SYMBOL_GPL(of_get_dma_window);
- 
-+static bool of_iommu_driver_present(struct device_node *np)
-+{
-+	/*
-+	 * If the IOMMU still isn't ready by the time we reach init, assume
-+	 * it never will be. We don't want to defer indefinitely, nor attempt
-+	 * to dereference __iommu_of_table after it's been freed.
-+	 */
-+	if (system_state > SYSTEM_BOOTING)
-+		return false;
-+
-+	return of_match_node(&__iommu_of_table, np);
-+}
-+
- static const struct iommu_ops
- *of_iommu_xlate(struct device *dev, struct of_phandle_args *iommu_spec)
- {
-@@ -104,12 +117,20 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
- 	int err;
- 
- 	ops = iommu_ops_from_fwnode(fwnode);
--	if (!ops || !ops->of_xlate)
-+	if ((ops && !ops->of_xlate) ||
-+	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
- 		return NULL;
- 
- 	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
- 	if (err)
- 		return ERR_PTR(err);
-+	/*
-+	 * The otherwise-empty fwspec handily serves to indicate the specific
-+	 * IOMMU device we're waiting for, which will be useful if we ever get
-+	 * a proper probe-ordering dependency mechanism in future.
-+	 */
-+	if (!ops)
-+		return ERR_PTR(-EPROBE_DEFER);
- 
- 	err = ops->of_xlate(dev, iommu_spec);
- 	if (err)
-@@ -186,14 +207,34 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
- 					   struct device_node *master_np)
- {
- 	const struct iommu_ops *ops;
-+	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
- 
- 	if (!master_np)
- 		return NULL;
- 
-+	if (fwspec) {
-+		if (fwspec->ops)
-+			return fwspec->ops;
-+
-+		/* In the deferred case, start again from scratch */
-+		iommu_fwspec_free(dev);
-+	}
-+
- 	if (dev_is_pci(dev))
- 		ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
- 	else
- 		ops = of_platform_iommu_init(dev, master_np);
-+	/*
-+	 * If we have reason to believe the IOMMU driver missed the initial
-+	 * add_device callback for dev, replay it to get things in order.
-+	 */
-+	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
-+	    dev->bus && !dev->iommu_group) {
-+		int err = ops->add_device(dev);
-+
-+		if (err)
-+			ops = ERR_PTR(err);
-+	}
- 
- 	return IS_ERR(ops) ? NULL : ops;
- }
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
