@@ -1,100 +1,118 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:33077 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751303AbdC0RAG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Mar 2017 13:00:06 -0400
-Subject: Re: [PATCH 5/5] PCI: remove pci_enable_msix
-To: Christoph Hellwig <hch@lst.de>, bhelgaas@google.com,
-        davem@davemloft.net, netanel@annapurnalabs.com, jcliburn@gmail.com,
-        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org
-References: <20170327082936.6830-1-hch@lst.de>
- <20170327082936.6830-6-hch@lst.de>
-Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org
-From: David Daney <ddaney.cavm@gmail.com>
-Message-ID: <83f97789-0817-7549-bfa9-1f8dcb0c26d9@gmail.com>
-Date: Mon, 27 Mar 2017 09:59:35 -0700
+Return-Path: <SRS0=AAFK=27=gmail.com=arndbergmann@kernel.org>
+Return-Path: <SRS0=AAFK=27=gmail.com=arndbergmann@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170327082936.6830-6-hch@lst.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Sender: arndbergmann@gmail.com
+In-Reply-To: <20170322150403.GA4951@red-moon>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-4-lorenzo.pieralisi@arm.com> <20170316211243.GE9739@bhelgaas-glaptop.roam.corp.google.com>
+ <20170322150403.GA4951@red-moon>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 22 Mar 2017 16:15:29 +0100
+Message-ID: <CAK8P3a15TCpmAdf-OFTwUP_6kCRAucoMwVST15qdDBe8kCw7qQ@mail.gmail.com>
+Subject: Re: [PATCH 03/20] asm-generic/io.h: add PCI config space remap interface
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
+	Linux ARM <linux-arm-kernel@lists.infradead.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-arch <linux-arch@vger.kernel.org>,
+	Will Deacon <will.deacon@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@armlinux.org.uk>, Catalin Marinas <catalin.marinas@arm.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>, Jingoo Han <jingoohan1@gmail.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>, John Garry <john.garry@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>, Murali Karicheri <m-karicheri2@ti.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>, Ray Jui <rjui@broadcom.com>,
+	Wenrui Li <wenrui.li@rock-chips.com>, Shawn Lin <shawn.lin@rock-chips.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>, Jon Mason <jonmason@broadcom.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thierry Reding <thierry.reding@gmail.com>, Michal Simek <michal.simek@xilinx.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>, Zhou Wang <wangzhou1@hisilicon.com>,
+	Roy Zang <tie-fei.zang@freescale.com>, "Luis R. Rodriguez" <mcgrof@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/27/2017 01:29 AM, Christoph Hellwig wrote:
-> Unused now that all callers switched to pci_alloc_irq_vectors.
+On Wed, Mar 22, 2017 at 4:04 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> Hi Bjorn, Arnd,
 >
-
-And you are aware that the ThunderX GPIO driver that I am attempting to 
-merge uses this interface.
-
-If this patch gets merged, should I ask to revert it when the GPIO 
-driver goes in?
-
-You offer no solution for drivers that would benefit from using a sparse 
-sub set of the available MSI-X vectors.
-
-
-David Daney
-
-
-
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/pci/msi.c   | 21 ---------------------
->  include/linux/pci.h |  4 ----
->  2 files changed, 25 deletions(-)
+> On Thu, Mar 16, 2017 at 04:12:43PM -0500, Bjorn Helgaas wrote:
+>> [+cc Luis]
+>>
+>> On Mon, Feb 27, 2017 at 03:14:14PM +0000, Lorenzo Pieralisi wrote:
+>> > The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
+>> > Posting") mandate non-posted configuration transactions. As further
+>> > highlighted in the PCIe specifications (4.0 - Rev0.3, "Ordering
+>> > Considerations for the Enhanced Configuration Access Mechanism"),
+>> > through ECAM and ECAM-derivative configuration mechanism, the memory
+>> > mapped transactions from the host CPU into Configuration Requests on the
+>> > PCI express fabric may create ordering problems for software because
+>> > writes to memory address are typically posted transactions (unless the
+>> > architecture can enforce through virtual address mapping non-posted
+>> > write transactions behaviour) but writes to Configuration Space are not
+>> > posted on the PCI express fabric.
+>> >
+>> > Current DT and ACPI host bridge controllers map PCI configuration space
+>> > (ECAM and ECAM-derivative) into the virtual address space through
+>> > ioremap() calls, that are non-cacheable device accesses on most
+>> > architectures, but may provide "bufferable" or "posted" write semantics
+>> > in architecture like eg ARM/ARM64 that allow ioremap'ed regions writes
+>> > to be buffered in the bus connecting the host CPU to the PCI fabric;
+>> > this behaviour, as underlined in the PCIe specifications, may trigger
+>> > transactions ordering rules and must be prevented.
+>> >
+>> > Introduce a new generic and explicit API to create a memory
+>> > mapping for ECAM and ECAM-derivative config space area that
+>> > defaults to ioremap_nocache() (which should provide a sane default
+>> > behaviour) but still allowing architectures on which ioremap_nocache()
+>> > results in posted write transactions to override the function
+>> > call with an arch specific implementation that complies with
+>> > the PCI specifications for configuration transactions.
+>> >
+>> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> > Cc: Arnd Bergmann <arnd@arndb.de>
+>> > Cc: Will Deacon <will.deacon@arm.com>
+>> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> > Cc: Russell King <linux@armlinux.org.uk>
+>> > Cc: Catalin Marinas <catalin.marinas@arm.com>
+>> > ---
+>> >  include/asm-generic/io.h | 9 +++++++++
+>> >  1 file changed, 9 insertions(+)
+>> >
+>> > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+>> > index 7ef015e..52dda81 100644
+>> > --- a/include/asm-generic/io.h
+>> > +++ b/include/asm-generic/io.h
+>> > @@ -915,6 +915,15 @@ extern void ioport_unmap(void __iomem *p);
+>> >  #endif /* CONFIG_GENERIC_IOMAP */
+>> >  #endif /* CONFIG_HAS_IOPORT_MAP */
+>> >
+>> > +#ifndef pci_remap_cfgspace
+>> > +#define pci_remap_cfgspace pci_remap_cfgspace
+>> > +static inline void __iomem *pci_remap_cfgspace(phys_addr_t offset,
+>> > +                                          size_t size)
+>> > +{
+>> > +   return ioremap_nocache(offset, size);
+>> > +}
+>>
+>> I'm fine with this conceptually, but I think it would make more sense
+>> if the name weren't specific to PCI or config space, e.g.,
+>> ioremap_nopost() or something.
 >
-> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-> index d571bc330686..0042c365b29b 100644
-> --- a/drivers/pci/msi.c
-> +++ b/drivers/pci/msi.c
-> @@ -973,27 +973,6 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
->  	return msix_capability_init(dev, entries, nvec, affd);
->  }
+> I would like to respin shortly so I have to make a decision on the
+> interface, either:
 >
-> -/**
-> - * pci_enable_msix - configure device's MSI-X capability structure
-> - * @dev: pointer to the pci_dev data structure of MSI-X device function
-> - * @entries: pointer to an array of MSI-X entries (optional)
-> - * @nvec: number of MSI-X irqs requested for allocation by device driver
-> - *
-> - * Setup the MSI-X capability structure of device function with the number
-> - * of requested irqs upon its software driver call to request for
-> - * MSI-X mode enabled on its hardware device function. A return of zero
-> - * indicates the successful configuration of MSI-X capability structure
-> - * with new allocated MSI-X irqs. A return of < 0 indicates a failure.
-> - * Or a return of > 0 indicates that driver request is exceeding the number
-> - * of irqs or MSI-X vectors available. Driver should use the returned value to
-> - * re-send its request.
-> - **/
-> -int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
-> -{
-> -	return __pci_enable_msix(dev, entries, nvec, NULL);
-> -}
-> -EXPORT_SYMBOL(pci_enable_msix);
-> -
->  void pci_msix_shutdown(struct pci_dev *dev)
->  {
->  	struct msi_desc *entry;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index eb3da1a04e6c..82dec36845e6 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1300,7 +1300,6 @@ int pci_msi_vec_count(struct pci_dev *dev);
->  void pci_msi_shutdown(struct pci_dev *dev);
->  void pci_disable_msi(struct pci_dev *dev);
->  int pci_msix_vec_count(struct pci_dev *dev);
-> -int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
->  void pci_msix_shutdown(struct pci_dev *dev);
->  void pci_disable_msix(struct pci_dev *dev);
->  void pci_restore_msi_state(struct pci_dev *dev);
-> @@ -1330,9 +1329,6 @@ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
->  static inline void pci_msi_shutdown(struct pci_dev *dev) { }
->  static inline void pci_disable_msi(struct pci_dev *dev) { }
->  static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
-> -static inline int pci_enable_msix(struct pci_dev *dev,
-> -				  struct msix_entry *entries, int nvec)
-> -{ return -ENOSYS; }
->  static inline void pci_msix_shutdown(struct pci_dev *dev) { }
->  static inline void pci_disable_msix(struct pci_dev *dev) { }
->  static inline void pci_restore_msi_state(struct pci_dev *dev) { }
+> (1) I keep it a PCI only interface (which means I can even move it to
+>     include/linux/pci.h and arch*/include/asm/pci.h to override it)
 >
+> or
+>
+> (2) We add it as a generic ioremap_* interface (I am not sure though
+>     that's really useful other than to map PCI config space, actually
+>     the reasoning behind the naming was to limit its usage to PCI
+>     config space mappings)
+>
+> I take it as Bjorn is keener on (2), just running a final check before
+> putting v2 together to make progress.
+
+I'm fine with either way.
+
+       Arnd
