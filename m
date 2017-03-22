@@ -1,84 +1,85 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0051.outbound.protection.outlook.com ([104.47.36.51]:35936
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753496AbdC2HPr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Mar 2017 03:15:47 -0400
-From: "Nath, Arindam" <Arindam.Nath@amd.com>
-To: 'Joerg Roedel' <jroedel@suse.de>,
-        "Deucher, Alexander" <Alexander.Deucher@amd.com>
-CC: 'Joerg Roedel' <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>
-Subject: RE: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
-Date: Wed, 29 Mar 2017 07:15:42 +0000
-Message-ID: <MWHPR12MB15181A0AC24BC60C4579742D9C350@MWHPR12MB1518.namprd12.prod.outlook.com>
-References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
- <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328202844.GQ8329@suse.de>
- <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328205616.GR8329@suse.de>
- <BN6PR12MB165289163EA3548B59D0C1ACF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328222627.GS8329@suse.de>
-In-Reply-To: <20170328222627.GS8329@suse.de>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <704b8b8c-e607-29b3-e101-bbecd90073bb@codeaurora.org>
+References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
+ <20170322193111.GA8190@wunner.de>
+ <31da6db5-be22-9e84-5e76-67c519bc0b34@codeaurora.org>
+ <CAKv+Gu8Uw-X3AR6aQYevPdRfcgPNnqL4O3sRoKxsZAiW29sbqg@mail.gmail.com>
+ <704b8b8c-e607-29b3-e101-bbecd90073bb@codeaurora.org>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Wed, 22 Mar 2017 19:52:24 +0000
+Message-ID: <CAKv+Gu-3wAXLyogLxg3N=6vf6Ryz2cLXw01tZUR_E48ddVU22A@mail.gmail.com>
+Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+To: Sinan Kaya <okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+ Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
+ Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
+ Lukas Wunner <lukas@wunner.de>, Hanjun Guo <hanjun.guo@linaro.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Yinghai Lu <yinghai@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
->-----Original Message-----
->From: 'Joerg Roedel' [mailto:jroedel@suse.de]
->Sent: Wednesday, March 29, 2017 3:56 AM
->To: Deucher, Alexander
->Cc: 'Joerg Roedel'; Bjorn Helgaas; linux-pci@vger.kernel.org; linux-
->kernel@vger.kernel.org; Daniel Drake; Nath, Arindam
->Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+On 22 March 2017 at 19:49, Sinan Kaya <okaya@codeaurora.org> wrote:
+> On 3/22/2017 3:41 PM, Ard Biesheuvel wrote:
+>>> As far as I know, kernel honors resource assignments done by the UEFI BIOS if
+>>> they are correct. Kernel will reassign the resources only if something is wrong.
+>>>
+>> No, the kernel always reassigns all BARs on arm64.
 >
->On Tue, Mar 28, 2017 at 09:13:23PM +0000, Deucher, Alexander wrote:
->> If I understand Arindam's patch correctly, it only flushes TLB entries
->> for domains in the flush queue whereas the previous behavior was to
->> flush all domains.  If there was no TLB flush in the queue for that
->> domain, could flushing it cause a problem?
+> I think this is where the problem is.
 >
->No, that can't cause a problem. An io/tlb flush for the device is just a
->message that the device should invalidate its own tlb. The device can't
->know and doesn't need to know whether the page-tables it used to fill
->the tlb really changed.
+> I'm not seeing this happen on QDF2400 which supports ACPI + UEFI BIOS
+> combination only.
+>
+> I see that kernel honored the resources assigned by UEFI BIOS if I compare
+> the BAR addresses.
+>
 
-Joerg, as per my limited understanding of ATS, the ATC will respond to inva=
-lidation requests after making sure there are no in-flight DMA transactions=
- with the address requested by IOMMU to be invalidated. Now since the IOMMU=
- was sending invalidate command to GPU even though there was no explicit pa=
-ge unmapping request from the graphics subsystem, we _might_ end up in a si=
-tuation where the ATC takes longer than the invalidation timeout to respond=
- to IOMMU.
+Well, if you are using the standard MdeModulePkg PciHostBridgeDxe
+driver in UEFI, the logic is quite similar, and so you usually end up
+with the same resource assignments. But the kernel does recompute them
+from scratch, and ignores the existing configuration that is present
+in the BARs
 
-With the patch I provided, since only those domains who have actually reque=
-sted for unmapping pages have been added to the flush queue, we send TLB in=
-validation commands to only those specific domains. This avoids sending inv=
-alidation command to GPU ATC every single flush.
+> I see reassignment only when something is horribly broken. Then, there would
+> be a bridge configuration invalid message in the boot log to confirm this.
+>
+>>
+>>> Will this code break other platforms/architectures?
+>>>
+>> Which platforms/architectures are you referring to? EFIFB on a PCI
+>> device is currently broken on arm64.
+>
+> In general or on your particular platform?
+>
+>> On x86, it works, given that BARs
+>> are usually not reassigned, and so the patch should be a no-op in that
+>> case (although I'd argue it is still an improvement to check whether
+>> the device that owns the BAR actually has memory decoding enabled
+>> before we attach the framebuffer driver to it)
+>>
+>
+> I'm fine as long as it doesn't break anything. That's why, I'm asking.
+>
 
-I do agree that the Stoney might have some issue which causes it not to be =
-able complete the invalidation command in time since we are not observing t=
-he issue on CZ and other ASICs.
+If you have working EFIFB on your platform, it works by accident. This
+patch is needed to ensure that the BAR associated with the EFI
+framebuffer is left untouched.
 
-Thanks,
-Arindam
-
->
->As it looks, the problem we are seeing here is that we are sending a
->large amount of these requests to the GPU device, and wait for its
->completion every time. This shouldn't be a problem for ATS devices, but
->the GPU here seems to fail at some point and doesn't answer to the
->invalidation request anymore, causing the completion-wait loop timeouts.
->
->Arindam's patch makes the high flush-frequency less likely, but it can
->still happen, depending on how the GPU is used. So its the best to
->keep ATS disabled on the device as it doesn't work correctly and we risk
->running in the same problem again when we leave it enabled and just make
->the trigger less likely.
->
->
->	Joerg
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
