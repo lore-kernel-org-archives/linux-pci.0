@@ -1,18 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 23 Mar 2017 15:30:14 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [RFC PATCH 24/30] iommu: Specify PASID state when unbinding a task
-Message-ID: <20170323143014.GK7266@8bytes.org>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-25-jean-philippe.brucker@arm.com>
- <20170322154429.GE7266@8bytes.org>
- <e2bb4c67-9b61-01cf-cc17-68088cdc5e5b@arm.com>
- <20170322225320.GF7266@8bytes.org>
- <a093bc07-a345-a689-9d97-f15a306f922d@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <a093bc07-a345-a689-9d97-f15a306f922d@arm.com>
+In-Reply-To: <20170322113500.GA3940@red-moon>
+References: <1490123810-12383-1-git-send-email-ard.biesheuvel@linaro.org>
+ <20170322102939.GB3519@red-moon>
+ <35F65528-FC1F-4813-A0C6-641CF864212A@linaro.org>
+ <20170322113500.GA3940@red-moon>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Wed, 22 Mar 2017 12:39:57 +0000
+Message-ID: <CAKv+Gu-XJK8bJvPrjfHbFHsOmuJ96RRgdsg2E7vgC0HZDemyFg@mail.gmail.com>
+Subject: Re: [PATCH v2] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,63 +19,165 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Sinan Kaya <okaya@qti.qualcomm.com>,
- Will Deacon <will.deacon@arm.com>, iommu@lists.linux-foundation.org,
- Harv Abdulhamid <harba@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
- David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
+Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+ Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
+ Heyi Guo <heyi.guo@linaro.org>, Peter Jones <pjones@redhat.com>,
+ Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Yinghai Lu <yinghai@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 23, 2017 at 01:37:41PM +0000, Jean-Philippe Brucker wrote:
-> On 22/03/17 22:53, Joerg Roedel wrote:
-> > That can't happen, when the device driver does its job right. It has to
-> > shut down the context which causes the PPR requests for the PASID on the
-> > device. This includes stopping the context and waiting until all PPR
-> > requests it sent are processed.
-> 
-> By "processed", do you mean that they are committed to the IOMMU, or that
-> they came back with a PRG response?
+On 22 March 2017 at 11:35, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+> [+Yinghai]
+>
+> On Wed, Mar 22, 2017 at 11:08:48AM +0000, Ard Biesheuvel wrote:
+>>
+>> > On 22 Mar 2017, at 10:29, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+>> >
+>> >> On Tue, Mar 21, 2017 at 07:16:50PM +0000, Ard Biesheuvel wrote:
+>> >> On UEFI systems, the PCI subsystem is enumerated by the firmware,
+>> >> and if a graphical framebuffer is exposed by a PCI device, its base
+>> >> address and size are exposed to the OS via the Graphics Output
+>> >> Protocol (GOP).
+>> >>
+>> >> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
+>> >> scratch at boot. This may result in the GOP framebuffer address to
+>> >> become stale, if the BAR covering the framebuffer is modified. This
+>> >> will cause the framebuffer to become unresponsive, and may in some
+>> >> cases result in unpredictable behavior if the range is reassigned to
+>> >> another device.
+>> >>
+>> >> So add a quirk to the EFI fb driver to find the BAR associated with
+>> >> the GOP base address, and set the IORESOURCE_PCI_FIXED attribute so
+>> >> that the PCI core will leave it alone.
+>> >>
+>> >> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>> >> ---
+>> >> As it turns out, setting the IORESOURCE_PCI_FIXED flag is not sufficient
+>> >> to make the PCI core leave the BARs alone, so instead, the BAR resource
+>> >> is claimed in the quirk handler.
+>> >>
+>> >> As suggested by Lorenzo, a check is added that the device has memory
+>> >> decoding enabled, and if it doesn't, no attempt is made to use the
+>> >> EFI framebuffer.
+>> >>
+>> >> drivers/video/fbdev/efifb.c | 58 +++++++++++++++++++-
+>> >> 1 file changed, 57 insertions(+), 1 deletion(-)
+>> >>
+>> >> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+>> >> index 8c4dc1e1f94f..eeeaf78c4a5b 100644
+>> >> --- a/drivers/video/fbdev/efifb.c
+>> >> +++ b/drivers/video/fbdev/efifb.c
+>> >> @@ -10,6 +10,7 @@
+>> >> #include <linux/efi.h>
+>> >> #include <linux/errno.h>
+>> >> #include <linux/fb.h>
+>> >> +#include <linux/pci.h>
+>> >> #include <linux/platform_device.h>
+>> >> #include <linux/screen_info.h>
+>> >> #include <video/vga.h>
+>> >> @@ -143,6 +144,9 @@ static struct attribute *efifb_attrs[] = {
+>> >> };
+>> >> ATTRIBUTE_GROUPS(efifb);
+>> >>
+>> >> +static bool pci_bar_found;    /* did we find a BAR matching the efifb base? */
+>> >> +static bool pci_bar_disabled;    /* was it disabled? */
+>> >> +
+>> >> static int efifb_probe(struct platform_device *dev)
+>> >> {
+>> >>    struct fb_info *info;
+>> >> @@ -152,7 +156,7 @@ static int efifb_probe(struct platform_device *dev)
+>> >>    unsigned int size_total;
+>> >>    char *option = NULL;
+>> >>
+>> >> -    if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
+>> >> +    if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI || pci_bar_disabled)
+>> >>        return -ENODEV;
+>> >>
+>> >>    if (fb_get_options("efifb", &option))
+>> >> @@ -360,3 +364,55 @@ static struct platform_driver efifb_driver = {
+>> >> };
+>> >>
+>> >> builtin_platform_driver(efifb_driver);
+>> >> +
+>> >> +static void claim_efifb_bar(struct pci_dev *dev, int idx)
+>> >> +{
+>> >> +    u16 word;
+>> >> +
+>> >> +    pci_bar_found = true;
+>> >> +
+>> >> +    if (pci_claim_resource(dev, idx)) {
+>> >
+>> > I would not do that. If claiming the resource succeeds, it will become
+>> > immutable (ie it becomes part of the resource tree), if it is your FB
+>> > fine if it isn't this will mess things up since a) you won't be able to
+>> > claim the PCI resources for the real FB and b) you won't be able to
+>> > reallocate the PCI resources for the device we *think* is the FB but it
+>> > actually isn't (unless we force a realloc).
+>> >
+>> > So, I would carry out the check below first, if the device is enabled
+>> > we should flag its resource IORESOURCE_PCI_FIXED otherwise just do
+>> > nothing and let PCI core (through arch specific realloc policy) handle
+>> > it.
+>> >
+>>
+>> Well, it turned out that this does not actually work: the BAR is not
+>> reassigned, but the same range ends up being given to another device
+>> in some cases.
+>
+> Ok, that's because the PCI core just prevent assigning that resource
+> but it does not request it (ie insert it in the resource tree) which
+> is what you do when claiming it.
+>
 
-By processed I mean the device received a response to the request, or is
-at least no longer waiting for responses.
+Yes, that seems to be what is happening.
 
-> The driver might not be able to do the latter, since PCI defines two ways
-> of shutting down a context:
-> 
-> * Either wait for all PPR requests to come back with a PRG response,
-> * Or send a Stop Marker PPR request and forget about it.
+> I wonder how IORESOURCE_PCI_FIXED works on eg x86, I think it is time
+> to have a proper look into resources allocation code because there
+> are bits and pieces that are quite obscure to me.
+>
 
-Are you sure about the meaning of the stop-marker? Can you point me to
-where it is specified?
+I did a quick test with calling request_mem_region(), in which case we
+end up with something like
 
-I know about a different marker, which allows a device to issue several
-PPR requests and only get one response for all of them. The last request
-then has that marker set.
+10000000-3efeffff : PCI Bus 0000:00
+  10000000-101d4bff : efifb:pci
+  101d5000-101d5fff : 0000:00:01.0
+  101d6000-101d6fff : 0000:00:02.0
+  101d7000-101d7fff : 0000:00:04.0
+    101d7000-101d7fff : ehci_hcd
+  101d8000-101d8fff : 0000:00:05.0
+  101e0000-101effff : 0000:00:05.0
+  10200000-1023ffff : 0000:00:02.0
 
-But I am not aware (yet) of a marker with which the device says it no
-longer sends requests with this PASID.
+which works, because the region is no longer assigned to another BAR.
 
-> My intent with passing flags to unbind() was to handle the case where VFIO
-> is unable to tell us whether PPRs are still being issued by the device.
-> But the issue seems moot to me now that I have a better understanding, as
-> there will be a detach_dev/attach_dev sequence before we start rebinding
-> PASIDs, and we can simply reset the PRI interface there (I'm currently
-> doing that in add_device, but I should move it.)
+But I think claiming the resource via the PCI subsystem is probably
+more appropriate, because then we get
 
-VFIO should completly reset the device before it is re-used, so I don't
-think we run into problems there.
+10000000-3efeffff : PCI Bus 0000:00
+  10000000-10ffffff : 0000:00:05.0
+    10000000-101d4fff : efifb
+  11000000-1103ffff : 0000:00:02.0
+  11040000-1104ffff : 0000:00:05.0
+  11050000-11050fff : 0000:00:01.0
+  11051000-11051fff : 0000:00:02.0
+  11052000-11052fff : 0000:00:04.0
+    11052000-11052fff : ehci_hcd
+  11053000-11053fff : 0000:00:05.0
 
+(Note that efifb does not use the entire BAR resource)
 
+> I think I would reverse the order in which you carry out the BAR
+> reservation anyway (first check if the device is enabled second request
+> the resource ie claim it).
+>
 
-	Joerg
-
+I will spin a v3 with the check and the claim in reverse order. But I
+think we should keep the pci_claim() call.
 
 _______________________________________________
 linux-arm-kernel mailing list
