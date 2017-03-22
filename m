@@ -1,181 +1,120 @@
-Return-Path: <SRS0=9oiv=3B=semihalf.com=tn@kernel.org>
-Return-Path: <SRS0=9oiv=3B=semihalf.com=tn@kernel.org>
-Subject: Re: [PATCH 2/2] PCI: Add legacy firmware support for Cavium ThunderX
- host controller
-To: helgaas@kernel.org, Lorenzo.Pieralisi@arm.com,
- robert.richter@caviumnetworks.com, ddaney@caviumnetworks.com,
- Vadim.Lomovtsev@caviumnetworks.com, rafael@kernel.org
-References: <1489564155-3881-1-git-send-email-tn@semihalf.com>
- <1489564155-3881-3-git-send-email-tn@semihalf.com>
-Cc: Sunil.Goutham@cavium.com, geethasowjanya.akula@gmail.com,
- linu.cherian@cavium.com, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <bc7b66de-9070-1561-440e-ac12124fc268@semihalf.com>
-Date: Fri, 24 Mar 2017 16:55:20 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 22 Mar 2017 23:53:20 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [RFC PATCH 24/30] iommu: Specify PASID state when unbinding a task
+Message-ID: <20170322225320.GF7266@8bytes.org>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-25-jean-philippe.brucker@arm.com>
+ <20170322154429.GE7266@8bytes.org>
+ <e2bb4c67-9b61-01cf-cc17-68088cdc5e5b@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1489564155-3881-3-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <e2bb4c67-9b61-01cf-cc17-68088cdc5e5b@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Sinan Kaya <okaya@qti.qualcomm.com>,
+ Will Deacon <will.deacon@arm.com>, iommu@lists.linux-foundation.org,
+ Harv Abdulhamid <harba@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
+ David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 15.03.2017 08:49, Tomasz Nowicki wrote:
-> During early days of PCI quirks support ThunderX firmware did not provide
-> PNP0c02 node with PCI configuration space and PEM-specific register ranges.
-> This means that for legacy FW we are not reserving these resources and
-> cannot gather PEM-specific resources for further PEM initialization.
->
-> In order to support already deployed legacy FW calculate PEM-specific ranges
-> and provide resources reservation as fallback scenario into PEM driver when
-> we could not gather PEM reg base from ACPI tables.
->
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-> ---
->  drivers/pci/host/pci-thunder-pem.c | 56 ++++++++++++++++++++++++++++++++++++--
->  1 file changed, 54 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-> index e354010..e0aa194 100644
-> --- a/drivers/pci/host/pci-thunder-pem.c
-> +++ b/drivers/pci/host/pci-thunder-pem.c
-> @@ -14,6 +14,7 @@
->   * Copyright (C) 2015 - 2016 Cavium, Inc.
->   */
->
-> +#include <linux/bitfield.h>
->  #include <linux/kernel.h>
->  #include <linux/init.h>
->  #include <linux/of_address.h>
-> @@ -319,6 +320,50 @@ static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg,
->
->  #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
->
-> +#define PEM_RES_BASE		0x87e0c0000000UL
-> +#define PEM_NODE_MASK		GENMASK(45, 44)
-> +#define PEM_INDX_MASK		GENMASK(26, 24)
-> +#define PEM_MIN_DOM_IN_NODE	4
-> +#define PEM_MAX_DOM_IN_NODE	10
-> +
-> +static void thunder_pem_reserve_range(struct device *dev, int seg,
-> +				      struct resource *r)
-> +{
-> +	resource_size_t start = r->start, end = r->end;
-> +	struct resource *res;
-> +	const char *regionid;
-> +
-> +	regionid = kasprintf(GFP_KERNEL, "PEM RC:%d", seg);
-> +	if (!regionid)
-> +		return;
-> +
-> +	res = request_mem_region(start, end - start + 1, regionid);
-> +	if (res)
-> +		res->flags &= ~IORESOURCE_BUSY;
-> +	else
-> +		kfree(regionid);
-> +
-> +	dev_info(dev, "%pR %s reserved\n", r,
-> +		 res ? "has been" : "could not be");
-> +}
-> +
-> +static void thunder_pem_legacy_fw(struct acpi_pci_root *root,
-> +				 struct resource *res_pem)
-> +{
-> +	int node = acpi_get_node(root->device->handle);
-> +	int index;
-> +
-> +	if (node == NUMA_NO_NODE)
-> +		node = 0;
-> +
-> +	index = root->segment - PEM_MIN_DOM_IN_NODE;
-> +	index -= node * PEM_MAX_DOM_IN_NODE;
-> +	res_pem->start = PEM_RES_BASE | FIELD_PREP(PEM_NODE_MASK, node) |
-> +					FIELD_PREP(PEM_INDX_MASK, index);
-> +	res_pem->end = res_pem->start + SZ_16M - 1;
-> +	res_pem->flags = IORESOURCE_MEM;
-> +}
-> +
->  static int thunder_pem_acpi_init(struct pci_config_window *cfg)
->  {
->  	struct device *dev = cfg->parent;
-> @@ -332,9 +377,16 @@ static int thunder_pem_acpi_init(struct pci_config_window *cfg)
->  		return -ENOMEM;
->
->  	ret = acpi_get_rc_resources(dev, "CAVA02B", root->segment, res_pem);
-> +
-> +	/*
-> +	 * If we fail to gather resources it means that we run with old
-> +	 * FW where we need to calculate PEM-specific resources manually.
-> +	 */
->  	if (ret) {
-> -		dev_err(dev, "can't get rc base address\n");
-> -		return ret;
-> +		thunder_pem_legacy_fw(root, res_pem);
-> +		/* Reserve PEM specific resources and PCI configuration space */
-> +		thunder_pem_reserve_range(dev, root->segment, res_pem);
+On Wed, Mar 22, 2017 at 06:31:01PM +0000, Jean-Philippe Brucker wrote:
+> The problem might be too tied to the specifics of the SMMU. As implemented
+> in this series, the normal flow for a PPR with the SMMU is the following:
+> 
+> (1) PCI device issues a PPR for PASID 1
+> (2) The PPR is queued by the SMMU in the (hardware) PRI queue
+> (3) The SMMU driver receives an interrupt, dequeues the PPR and moves it
+>     to a software work queue.
+> (4) The PPR is finally handled and a PRI response is sent to the device.
+
+There are two ways a PASID could get shut down:
+
+	1) The device driver calls unbind()
+	2) The mm_struct bound to that PASID is going away
+
+Case 1) is the easy one, we can safely assume that the device driver did
+anything to stop new PPR requests from being created for that PASID. In
+this case we just shut down PPR processing by waiting until everything
+is handled and reply INVALID to any further PPR request before we remove
+the PASID from the per-device IOMMU data structures and flush caches.
+
+In case 2) we have more work to do. The mm_struct is going away
+(probably because the task segfaulted) and we can't assume that the
+device driver shut everything down already. But for this case we have
+the call-back into the device driver to tell it should clean everything
+up for that PASID and stop the device from creating further requests.
+
+After that call-back returns it is the same as in case 1), we drain the
+queue and deny any further request that comes in.
+
+> The case that worries me is if someone unbinds PASID 1 between (2) and
+> (3), while the PPR is still in the hardware queue, and immediately binds
+> it to a new address space.
+> 
+> Then (3) and (4) happen, the PPR is handled and the fault is for the new
+> address space. It's certainly undesirable, but I don't know if it could be
+> exploited. We don't kill the task for an unhandled fault at the moment,
+> simply report a failed PPR to the device, so I might be worrying for nothing.
+
+As I wrote above, when the device driver calls unbind() we should
+assume that the device does not sent any further requests with that
+PASID. If it does, we just answer with INVALID.
+
+> Having the caller tell us if PPRs might still be pending in the hardware
+> PRI queue ensures that the SMMU driver waits until it's entirely safe:
+> 
+> * If the device has no outstanding PPR, PASID can be reallocated
+> * If the device has outstanding PPRs, wait for a Stop Marker, or drain
+>   the PRI queue after a while (if the Stop Marker was lost in a PRI queue
+>   overflow).
+
+That can't happen, when the device driver does its job right. It has to
+shut down the context which causes the PPR requests for the PASID on the
+device. This includes stopping the context and waiting until all PPR
+requests it sent are processed.
+
+And the device driver has to do this either before it calls unbind() or
+in the call-back it provided. Only after this the PASID should be freed.
+
+> Draining the PRI queue is very costly, we need to block the PRI thread to
+> inspect the queue, risking an overflow. And with these PASID state flags
+> we avoid flushing any queue.
+
+There is a configurable maximum of PPR requests a device can have
+in-flight. If you take that into account when allocation the PPR queue
+for the SMMU, there can't be any overflows. The AMD driver allocates a
+queue for 512 entries and allows devices to have a maximum of 32
+outstanding requests.
+
+> But since the problem seems too centered around the SMMU, I might just
+> drop this patch along with the CLEAN/FLUSHED flags in my next version, and
+> go with the full-drain solution. After all, unbind should be a fairly rare
+> event.
+
+I don't think all this is SMMU specific, it is the same on all other
+IOMMUs that have the ATS/PRI/PASID features.
 
 
-Looks like I screwed up PEM resource size for reservation. We cannot 
-reserve full 16M here since devices will not able to request their 
-resources later on:
-pcieport 0004:1f:00.0: can't enable device: BAR 0 [mem 
-0x87e0c0f00000-0x87e0c0ffffff 64bit] not claimed
 
-SZ_64K is what we need to reserve.
+	Joerg
 
-Bjorn can you please apply below fix:
 
-@@ -327,21 +327,20 @@ static void thunder_pem_legacy_fw(struct 
-acpi_pci_root *root,
-  	int node = acpi_get_node(root->device->handle);
-  	int index;
-
-  	if (node == NUMA_NO_NODE)
-  		node = 0;
-
-  	index = root->segment - PEM_MIN_DOM_IN_NODE;
-  	index -= node * PEM_MAX_DOM_IN_NODE;
-  	res_pem->start = PEM_RES_BASE | FIELD_PREP(PEM_NODE_MASK, node) |
-  					FIELD_PREP(PEM_INDX_MASK, index);
--	res_pem->end = res_pem->start + SZ_16M - 1;
-  	res_pem->flags = IORESOURCE_MEM;
-  }
-
-  static int thunder_pem_acpi_init(struct pci_config_window *cfg)
-  {
-  	struct device *dev = cfg->parent;
-  	struct acpi_device *adev = to_acpi_device(dev);
-  	struct acpi_pci_root *root = acpi_driver_data(adev);
-  	struct resource *res_pem;
-  	int ret;
-@@ -351,22 +350,29 @@ static int thunder_pem_acpi_init(struct 
-pci_config_window *cfg)
-  		return -ENOMEM;
-
-  	ret = acpi_get_rc_resources(dev, "CAVA02B", root->segment, res_pem);
-
-  	/*
-  	 * If we fail to gather resources it means that we run with old
-  	 * FW where we need to calculate PEM-specific resources manually.
-  	 */
-  	if (ret) {
-  		thunder_pem_legacy_fw(root, res_pem);
--		/* Reserve PEM specific resources and PCI configuration space */
-+		/*
-+		 * Reserve 64K size PEM specific resources. The full 16M range
-+		 * size is required for thunder_pem_init() call.
-+		 */
-+		res_pem->end = res_pem->start + SZ_64K - 1;
-  		thunder_pem_reserve_range(dev, root->segment, res_pem);
-+		res_pem->end = res_pem->start + SZ_16M - 1;
-+
-+		/* and PCI configuration space */
-  		thunder_pem_reserve_range(dev, root->segment, &cfg->res);
-  	}
-
-  	return thunder_pem_init(dev, cfg, res_pem);
-  }
-
-My apology for not paying attention.
-
-Thanks,
-Tomasz
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
