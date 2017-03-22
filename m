@@ -1,158 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44098 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751159AbdCWV4D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 23 Mar 2017 17:56:03 -0400
-Date: Thu, 23 Mar 2017 16:55:58 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
-        gwshan@linux.vnet.ibm.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-        mpe@ellerman.id.au, paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: Re: [PATCH v9 3/3] PCI: Don't extend device's size when using
- default alignment for all devices
-Message-ID: <20170323215558.GC23612@bhelgaas-glaptop.roam.corp.google.com>
-References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1487141106-2503-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 22/30] iommu: Bind/unbind tasks to/from devices
+To: Joerg Roedel <joro@8bytes.org>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-23-jean-philippe.brucker@arm.com>
+ <1488534044.6234.14.camel@infradead.org>
+ <20170303183958.GA15146@e106794-lin.localdomain>
+ <20170322153610.GC7266@8bytes.org>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <426ce726-e4e3-ea7c-81ac-154ee40a2d79@arm.com>
+Date: Wed, 22 Mar 2017 18:30:56 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1487141106-2503-4-git-send-email-xyjxie@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170322153610.GC7266@8bytes.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Sinan Kaya <okaya@qti.qualcomm.com>,
+ Will Deacon <will.deacon@arm.com>, Robin Murphy <robin.murphy@arm.com>,
+ Harv Abdulhamid <harba@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>, iommu@lists.linux-foundation.org,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Feb 15, 2017 at 02:45:06PM +0800, Yongji Xie wrote:
-> Currently we reassign the alignment by extending resources' size in
-> pci_reassigndev_resource_alignment(). This could potentially break
-> some drivers when the driver uses the size to locate register
-> whose length is related to the size. Some examples as below:
+Hi Joerg,
 
-I understand the motivation to stop changing the resource size.  That
-makes good sense.
-
-> - misc\Hpilo.c:
-
-This isn't Windows; please use regular Linux forward slashes here.
-
-> off = pci_resource_len(pdev, bar) - 0x2000;
+On 22/03/17 15:36, Joerg Roedel wrote:
+> On Fri, Mar 03, 2017 at 06:39:58PM +0000, Jean-Philippe Brucker wrote:
+>> Yes, it would be nice to have a common PASID allocator. But I don't
+>> think that a system-wide PASID space is workable for us. At the moment
+>> systems might have a few identical devices all supporting 20 bits of
+>> PASID. But consider the case where one odd device can only handle four
+>> address spaces, and supports a maximum of two PASID bits. We'd quickly
+>> run out of PASIDs to hand to such devices, even though we could easily
+>> have one PASID space per endpoint (from a quick glance at the specs, I
+>> assume that both Intel and AMD IOMMUs offer one PASID table per RID.)
 > 
-> - net\ethernet\chelsio\cxgb4\cxgb4_uld.h:
-> (pci_resource_len((pdev), 2) - roundup_pow_of_two((vres)->ocq.size))
+> But that shouldn't be a problem if we allocate PASIDs top-down (meaning
+> starting from the biggest value supported by a given device), right?
 > 
-> - infiniband\hw\nes\Nes_hw.c:
-> num_pds = pci_resource_len(nesdev->pcidev, BAR_1) >> PAGE_SHIFT;
-> 
-> This risk could be easily prevented before because we only had one way
-> (kernel parameter resource_alignment) to touch those codes. And even
-> some users may be happy to see the extended size.
-> 
-> But now we define a default alignment for all devices which would also
-> touch those codes. It would be hard to prevent the risk in this case. So
-> this patch tries to use START_ALIGNMENT to identify the resource's
-> alignment without extending the size when the alignment reassigning is
-> caused by the default alignment.
+> Then we can satisfy the devices with 16 or 20 bit PASIDs and still have
+> the 2-bit PASIDs free for the devices that need it.
 
-But I don't understand the new START_ALIGNMENT case.
+But if there is more than 4 devices that only support 2 bit PASIDs, you
+still get a starvation that you wouldn't get with per-domain/device PASID
+allocator. Arguably I have no real-world example to back this up, we can
+probably expect vendors to always implement a sane amount of PASID bits.
+Unifying the API is certainly more important than imagining all the
+twisted configurations possible, and a PASID allocator with per-task
+top-down allocation seems to me like an acceptable compromise.
 
-> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
-> ---
->  drivers/pci/pci.c |   34 ++++++++++++++++++++++++----------
->  1 files changed, 24 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 2622e9b..0017e5e 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -4958,7 +4958,8 @@ void pci_ignore_hotplug(struct pci_dev *dev)
->   * RETURNS: Resource alignment if it is specified.
->   *          Zero if it is not specified.
+Thanks,
+Jean-Philippe
 
-Since there's function doc, please update it to reflect the new
-"resize" return parameter.
-
-What does "resize" mean?  I can't figure it out from your code.
-
->   */
-> -static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
-> +static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
-> +							bool *resize)
->  {
->  	int seg, bus, slot, func, align_order, count;
->  	unsigned short vendor, device, subsystem_vendor, subsystem_device;
-> @@ -5002,6 +5003,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->  				(!device || (device == dev->device)) &&
->  				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
->  				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
-> +				*resize = true;
->  				if (align_order == -1)
->  					align = PAGE_SIZE;
->  				else
-> @@ -5027,6 +5029,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
->  				bus == dev->bus->number &&
->  				slot == PCI_SLOT(dev->devfn) &&
->  				func == PCI_FUNC(dev->devfn)) {
-> +				*resize = true;
->  				if (align_order == -1)
->  					align = PAGE_SIZE;
->  				else
-> @@ -5059,6 +5062,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->  	struct resource *r;
->  	resource_size_t align, size;
->  	u16 command;
-> +	bool resize = false;
->  
->  	/*
->  	 * VF BARs are read-only zero according to SR-IOV spec r1.1, sec
-> @@ -5070,7 +5074,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->  		return;
->  
->  	/* check if specified PCI is target device to reassign */
-> -	align = pci_specified_resource_alignment(dev);
-> +	align = pci_specified_resource_alignment(dev, &resize);
->  	if (!align)
->  		return;
->  
-> @@ -5098,15 +5102,25 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
->  		}
->  
->  		size = resource_size(r);
-> -		if (size < align) {
-> -			size = align;
-> -			dev_info(&dev->dev,
-> -				"Rounding up size of resource #%d to %#llx.\n",
-> -				i, (unsigned long long)size);
-> +		if (resize) {
-> +			if (size < align) {
-> +				size = align;
-> +				dev_info(&dev->dev,
-> +					"Rounding up size of resource #%d to %#llx.\n",
-> +					i, (unsigned long long)size);
-> +			}
-> +			r->flags |= IORESOURCE_UNSET;
-> +			r->end = size - 1;
-> +			r->start = 0;
-> +		} else {
-> +			if (size < align) {
-> +				r->flags &= ~IORESOURCE_SIZEALIGN;
-> +				r->flags |= IORESOURCE_STARTALIGN |
-> +							IORESOURCE_UNSET;
-> +				r->start = align;
-> +				r->end = r->start + size - 1;
-
-If you have to have two blocks that fiddle with r->start, etc., they
-should at least be as similar as possible.  You should have this in
-both cases:
-
-  r->end = r->start + size - 1;
-
-> +			}
->  		}
-> -		r->flags |= IORESOURCE_UNSET;
-> -		r->end = size - 1;
-> -		r->start = 0;
->  	}
->  	/* Need to disable bridge's resource window,
->  	 * to enable the kernel to reassign new resource
-> -- 
-> 1.7.1
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
