@@ -1,77 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 28 Mar 2017 10:00:01 -0500
-From: Rob Herring <robh@kernel.org>
-To: Sricharan R <sricharan@codeaurora.org>
-Subject: Re: [V9, 07/11] iommu: of: Handle IOMMU lookup failure with deferred
- probing or error
-Message-ID: <20170328150001.j57jko6mx35npgp2@rob-hp-laptop>
-References: <1489086061-9356-8-git-send-email-sricharan@codeaurora.org>
+Return-Path: <SRS0=Rd9u=27=redhat.com=jcm@kernel.org>
+Return-Path: <SRS0=Rd9u=27=redhat.com=jcm@kernel.org>
+Subject: Re: [PATCH v3 0/2] Handle Cavium ThunderX2 PCI topology quirk
+To: Jayachandran C <jnair@caviumnetworks.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ Alex Williamson <alex.williamson@redhat.com>,
+ iommu@lists.linux-foundation.org
+References: <1490172671-2648-1-git-send-email-jnair@caviumnetworks.com>
+Cc: linux-arm-kernel@lists.infradead.org, Robin Murphy <robin.murphy@arm.com>
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <122d7df5-8fde-c6fb-a608-9091dd59e79b@redhat.com>
+Date: Wed, 22 Mar 2017 11:13:05 -0400
 MIME-Version: 1.0
-In-Reply-To: <1489086061-9356-8-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: lorenzo.pieralisi@arm.com, linux-arm-msm@vger.kernel.org, joro@8bytes.org,
- will.deacon@arm.com, robdclark@gmail.com, okaya@codeaurora.org,
- linux-acpi@vger.kernel.org, iommu@lists.linux-foundation.org,
- hanjun.guo@linaro.org, linux-pci@vger.kernel.org, bhelgaas@google.com,
- tn@semihalf.com, robin.murphy@arm.com, linux-arm-kernel@lists.infradead.org,
- m.szyprowski@samsung.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1490172671-2648-1-git-send-email-jnair@caviumnetworks.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 10, 2017 at 12:30:57AM +0530, Sricharan R wrote:
-> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+On 03/22/2017 04:51 AM, Jayachandran C wrote:
+> Hi Bjorn, Alex,
 > 
-> Failures to look up an IOMMU when parsing the DT iommus property need to
-> be handled separately from the .of_xlate() failures to support deferred
-> probing.
+> Here is v3 of the patchset to handle the PCIe topology quirk of
+> Cavium ThunderX2 (previously called Broadcom Vulcan).
 > 
-> The lack of a registered IOMMU can be caused by the lack of a driver for
-> the IOMMU, the IOMMU device probe not having been performed yet, having
-> been deferred, or having failed.
+> The earlier discussions on this can be seen at:
+> http://www.spinics.net/lists/linux-pci/msg51001.html
+> https://patchwork.ozlabs.org/patch/582633/ and
+> https://lists.linuxfoundation.org/pipermail/iommu/2016-June/017681.html
 > 
-> The first case occurs when the device tree describes the bus master and
-> IOMMU topology correctly but no device driver exists for the IOMMU yet
-> or the device driver has not been compiled in. Return NULL, the caller
-> will configure the device without an IOMMU.
+> The earlier discussion on this patchset had stalled with a suggestion
+> that it may be possible to fix up this quirk by handling the issue in
+> the function argument of pci_for_each_dma_alias(). But at that point
+> all the ACPI and OF code for SMMU and GIC was to merged, and we did not
+> have reasonable codebase to make the changes.
 > 
-> The second and third cases are handled by deferring the probe of the bus
-> master device which will eventually get reprobed after the IOMMU.
+> For 4.11, I tried to fix it in both the SMMU and the GIC ITS code based
+> on this suggestion, but after going thru the effort, that does not look
+> like the right approach. I have the code changes at:
+> https://github.com/jchandra-cavm/linux/commits/rid-xlate-fixup
+> if anyone want to look over the code.
 > 
-> The last case is currently handled by deferring the probe of the bus
-> master device as well. A mechanism to either configure the bus master
-> device without an IOMMU or to fail the bus master device probe depending
-> on whether the IOMMU is optional or mandatory would be a good
-> enhancement.
+> The problems with that approach is:
+>  - of the 14 uses of pci_for_each_dma_alias in the function in the kernel
+>    tree, I have to fixup 6 callers (which is all but one ofthe callers
+>    outside x86)
+>  - 4 of these can be reasonably handled (please see the github repo above),
+>    but the calls in drivers/irqchip/irq-gic-v3-its-pci-msi.c and
+>    drivers/iommu/iommu.c cannot be reasonably fixed up.
+>  - Even without the 2 above two changes I can get it to work for now.
+>    But pci_for_each_dma_alias does not work as expected on this platform
+>    and we have to be aware of that for all future uses of the function.
+>   
+> For now, I have ruled out that approach, and I have rebased the earlier
+> patch on to 4.11-rc and submitting again for review. The changes are:
 > 
-> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-> Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
-> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> ---
->  drivers/base/dma-mapping.c | 5 +++--
->  drivers/iommu/of_iommu.c   | 4 ++--
->  drivers/of/device.c        | 7 ++++++-
->  include/linux/of_device.h  | 9 ++++++---
->  4 files changed, 17 insertions(+), 8 deletions(-)
+> v2>v3:
+>  - changed device flag name from PCI_DEV_FLAGS_DMA_ALIAS_ROOT to
+>    PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT
+>  - updated commit message to make the quirk clearer.
+> 
+> Let me know your comments and suggestions.
 
-Maybe it is the same issue reported for VFIO, but virtio-pci is broken 
-with v8 of this series. Bisecting blames this commit which looks like it 
-hasn't changeed. 
+My opinion FWIW is that the quirk you have is one of the least intrusive
+ways of handling this. Generally in the case of ARM servers, we have a
+difference vs. x86 in that the latter usually have a magic RC at the
+top level that everything sits beneath (and then, presumably, Intel
+do some magic for multi-socket to fudge things over Q/UPI so that
+things look nice and boring to software). On ARM, we're typically
+dealing with third party RC IP that's disjoint from other parts of
+the SoC. We're certainly in the process of bolstering the specs to
+set some expectations and greater guidance around topologies that
+we would like to avoid, so I don't see this getting out of hand.
 
-Rob
+That's my $0.02.
 
-P.S. Doesn't look like you have copied the DT maintainers nor list for 
-the DT changes.
+Jon.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Computer Architect | Sent from my Fedora powered laptop
