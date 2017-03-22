@@ -1,42 +1,53 @@
-Return-Path: <SRS0=onno=3A=gmail.com=valmikibow@kernel.org>
-Return-Path: <SRS0=onno=3A=gmail.com=valmikibow@kernel.org>
-Subject: Re: Purpose of PCI address in ranges property
-To: Arnd Bergmann <arnd@arndb.de>
-References: <26e69b06-dde2-2ed5-0288-ee5d58676d7e@gmail.com>
- <CAK8P3a1gAFFjmxY70-YaX+woSJLPUN7Ss-gatgVKgG1uNxWc9A@mail.gmail.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
- Marc Zyngier <marc.zyngier@arm.com>
-From: valmiki <valmikibow@gmail.com>
-Message-ID: <dc0416ae-d28b-0d9a-cfbd-2bd98abc69d0@gmail.com>
-Date: Thu, 23 Mar 2017 08:29:25 +0530
-MIME-Version: 1.0
-In-Reply-To: <CAK8P3a1gAFFjmxY70-YaX+woSJLPUN7Ss-gatgVKgG1uNxWc9A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 02/17] pci: Fix another sanity check bug in /proc/pci mmap
+Date: Wed, 22 Mar 2017 13:25:16 +0000
+Message-Id: <ab313a676468ed1e372cd1a41cea57dad3860ca1.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 3/20/2017 3:15 AM, Arnd Bergmann wrote:
-> On Sun, Mar 19, 2017 at 3:14 PM, valmiki <valmikibow@gmail.com> wrote:
->> Hi,
->>
->> When ranges property is being parsed using of_pci_get_host_bridge_resources,
->> the pci address is being used for
->> calculating the offset for pci_add_resource_offset.
->>
->> What is this offset for ?
->>
->> So the cpu address is being used for programming memory base and limit
->> registers ?
->
-> Linux IORESOURCE_MEM resources are defined in terms of CPU addresses,
-> while PCI config space BAR registers are programmed with bus addresses.
-> These are often the same, but on some machines they are not, which results
-> in an offset that has to be used when accessing the BARs.
->
-Thanks Arnd. So mem base and limit registers of RP are programmed with 
-CPU addresses,
-and EP BARs are programmed with PCI bus addresses ?
-So when will this offset be used, only when RP assigns BAR's to RP ?
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-Regards,
-Valmiki
+Don't match MMIO maps with I/O BARs and vice versa.
+
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/proc.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index f82710a..62a0c3e 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -231,14 +231,20 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
+ {
+ 	struct pci_dev *dev = PDE_DATA(file_inode(file));
+ 	struct pci_filp_private *fpriv = file->private_data;
+-	int i, ret, write_combine;
++	int i, ret, write_combine, res_bit;
+ 
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+ 
++	if (fpriv->mmap_state == pci_mmap_io)
++		res_bit = IORESOURCE_IO;
++	else
++		res_bit = IORESOURCE_MEM;
++
+ 	/* Make sure the caller is mapping a real resource for this device */
+ 	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
+-		if (pci_mmap_fits(dev, i, vma,  PCI_MMAP_PROCFS))
++		if (dev->resource[i].flags & res_bit &&
++		    pci_mmap_fits(dev, i, vma,  PCI_MMAP_PROCFS))
+ 			break;
+ 	}
+ 
+-- 
+2.9.3
