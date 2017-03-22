@@ -1,148 +1,65 @@
-Return-Path: <SRS0=z6/A=2W=arm.com=robin.murphy@kernel.org>
-Return-Path: <SRS0=z6/A=2W=arm.com=robin.murphy@kernel.org>
-Subject: Re: Neophyte questions about PCIe
-To: Mason <slash.tmp@free.fr>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
- <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
- <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
- <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
- <4f37cc08-d4fd-b207-63d2-4ac038d2fcec@arm.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFE7C9B9@AcuExch.aculab.com>
- <504fdb97-f058-e1fb-0fe2-7f01c46db513@arm.com>
- <e31d5d71-cc90-86cf-d8cb-3367d42e1d41@free.fr>
-Cc: David Laight <david.laight@aculab.com>, Bjorn Helgaas
- <helgaas@kernel.org>, Rob Herring <robh@kernel.org>,
- Mark Rutland <mark.rutland@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- DT <devicetree@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <e3d1c2a5-fec0-960a-c904-22ce80582a81@arm.com>
-Date: Mon, 13 Mar 2017 11:56:54 +0000
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <e31d5d71-cc90-86cf-d8cb-3367d42e1d41@free.fr>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20170322193111.GA8190@wunner.de>
+References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
+ <20170322193111.GA8190@wunner.de>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Wed, 22 Mar 2017 19:32:43 +0000
+Message-ID: <CAKv+Gu_X-SEnz7h9J8boqqjOQGHQawwdSAq4haH-OGu8zdfNfA@mail.gmail.com>
+Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+To: Lukas Wunner <lukas@wunner.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
+ Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
+ "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+ Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Yinghai Lu <yinghai@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/03/17 10:59, Mason wrote:
-> On 10/03/2017 17:00, Robin Murphy wrote:
-> 
->> On 10/03/17 15:35, David Laight wrote:
+On 22 March 2017 at 19:31, Lukas Wunner <lukas@wunner.de> wrote:
+> On Wed, Mar 22, 2017 at 03:30:29PM +0000, Ard Biesheuvel wrote:
+>> On UEFI systems, the PCI subsystem is enumerated by the firmware,
+>> and if a graphical framebuffer is exposed by a PCI device, its base
+>> address and size are exposed to the OS via the Graphics Output
+>> Protocol (GOP).
 >>
->>> Robin Murphy wrote:
->>>
->>>> The appropriate DT property would be "dma-ranges", i.e.
->>>>
->>>> pci@... {
->>>> 	...
->>>> 	dma-ranges = <(PCI bus address) (CPU phys address) (size)>;
->>>> }
->>>
->>> Isn't that just saying which physical addresses the cpu can assign
->>> for buffers for those devices?
->>> There is also an offset between the 'cpu physical address' and the
->>> 'dma address'.
->>
->> That offset is inherent in what "dma-ranges" describes. Say (for ease of
->> calculation) that BAR0 has been put at a mem space address of 0x20000000
->> and maps the first 1GB of physical DRAM. That would give us:
->>
->> 	dma-ranges = <0x20000000 0x80000000 0x40000000>;
->>
->> Then a "virt = dma_alloc_coherent(..., &handle, ...)", borrowing the
->> numbers from earlier in the thread, would automatically end up with:
->>
->> 	virt == 0xd0855000;
->> 	handle == 0x2e07e000;
->>
->> (with the physical address of 0x8e07e000 in between being irrelevant to
->> the consuming driver)
->>
->> It is true that the device's DMA mask assignment is also part and parcel
->> of this, whereby we will limit what physical addresses the kernel
->> considers valid for DMA involving devices behind this range to the lower
->> 3GB (i.e. 0x80000000 + 0x40000000 - 1). With a bit of luck,
->> CONFIG_DMABOUNCE should do the rest of the job of working around that
->> where necessary.
-> 
-> AFAICT, the parser for the "dma-ranges" property is implemented
-> in of_dma_get_range() in drivers/of/address.c
-> 
-> http://lxr.free-electrons.com/source/drivers/of/address.c#L808
-> 
-> /**
->  * of_dma_get_range - Get DMA range info
->  * @np:		device node to get DMA range info
->  * @dma_addr:	pointer to store initial DMA address of DMA range
->  * @paddr:	pointer to store initial CPU address of DMA range
->  * @size:	pointer to store size of DMA range
->  *
->  * Look in bottom up direction for the first "dma-ranges" property
->  * and parse it.
->  *  dma-ranges format:
->  *	DMA addr (dma_addr)	: naddr cells
->  *	CPU addr (phys_addr_t)	: pna cells
->  *	size			: nsize cells
->  *
->  * It returns -ENODEV if "dma-ranges" property was not found
->  * for this device in DT.
->  */
-> 
-> I didn't find anything relevant in Documentation/devicetree/bindings
-> except Documentation/devicetree/bindings/iommu/iommu.txt but I'm not
-> sure this applies to my SoC.
-> 
-> It's not clear to me how ranges and dma-ranges interact...
-> Is it perhaps: ranges for cpu-to-bus, dma-ranges for bus-to-cpu?
+>> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
+>> scratch at boot. This may result in the GOP framebuffer address to
+>> become stale, if the BAR covering the framebuffer is modified. This
+>> will cause the framebuffer to become unresponsive, and may in some
+>> cases result in unpredictable behavior if the range is reassigned to
+>> another device.
+>
+> Hm, commit message seems to indicate the issue is restricted to arm64,
+> yet there's no IS_ENABLED(ARM64) to constrain the added code to that arch?
+>
 
-That's it exactly. FWIW the in-kernel description can be found in
-Documentation/devicetree/booting-without-of.txt, but the
-www.devicetree.org spec (which succeeds ePAPR) should be the
-authoritative reference now. Note that the property itself is fully
-capable of describing multiple discontiguous ranges which might look
-like the perfect solution to your multiple-DRAM-banks problem, but Linux
-can't actually cope with that at all :(
+True. I am eager to get some x86 coverage for this, since I would
+expect this not to do any harm. But I'm fine with making it ARM/arm64
+specific in the final version.
 
-Robin.
+>
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, efifb_fixup_resources);
+>
+> Maybe this can be constrained to PCI_BASE_CLASS_DISPLAY?
+>
 
-> ePAPR (Version 1.1 -- 08 April) provides a formal definition
-> 
-> 2.3.9 dma-ranges
-> 
-> Property: dma-ranges
-> 
-> Value type: <empty> or <prop-encoded-array> encoded as arbitrary number
-> of triplets of (child-bus-address, parent-bus-address, length).
-> 
-> Description:
-> 
-> The dma-ranges property is used to describe the direct memory access (DMA) structure of a
-> memory-mapped bus whose device tree parent can be accessed from DMA operations
-> originating from the bus. It provides a means of defining a mapping or translation between the
-> physical address space of the bus and the physical address space of the parent of the bus.
-> The format of the value of the dma-ranges property is an arbitrary number of triplets of
-> (child-bus-address, parent-bus-address, length). Each triplet specified describes a contiguous
-> DMA address range.
-> 
-> o The child-bus-address is a physical address within the child bus' address space. The
-> number of cells to represent the address depends on the bus and can be determined
-> from the #address-cells of this node (the node in which the dma-ranges property
-> appears).
-> 
-> o The parent-bus-address is a physical address within the parent bus' address space.
-> The number of cells to represent the parent address is bus dependent and can be
-> determined from the #address-cells property of the node that defines the parent's
-> address space.
-> 
-> o The length specifies the size of the range in the child's address space. The number of
-> cells to represent the size can be determined from the #size-cells of this node (the
-> node in which the dma-ranges property appears).
-> 
-> 
-> I'm still digging :-)
-> 
-> Regards.
-> 
+How does one do that with DECLARE_PCI_FIXUP_HEADER?
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
