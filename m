@@ -1,51 +1,82 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 1/4] asm-generic/io.h: Fix "IOMMU" typos
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Date: Mon, 20 Mar 2017 13:42:46 -0500
-Message-ID: <20170320184246.4858.15836.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170320182014.4858.22352.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170320182014.4858.22352.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Subject: [PATCH 00/17] PCI resource mmap cleanup
+Date: Wed, 22 Mar 2017 13:25:14 +0000
+Message-Id: <cover.1490188942.git.dwmw2@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The ioremap() block comment refers to "IOMMU" when it means "MMU".  Fix
-these typos to avoid confusion.
+This started out as a fairly trivial "add pci_mmap_page_range() for 
+ARM64" patch. But pci_mmap_page_range() is a vile interface, taking 
+"user visible" resource addresses converted with pci_resource_to_user() 
+on those platforms unlucky enough to use that... and even in the *sane* 
+sysfs-based mmap method, we convert through user addresses to call the
+platform-specific method.
 
-Fixes: 8c7ea50c010b ("x86/mm, asm-generic: Add IOMMU ioremap_uc() variant default")
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
----
- include/asm-generic/io.h |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+In most cases there's just no need for any of this crap. We can migrate
+most architectures to a generic implementation without much thought,
+and the few that aren't converted in this series can probably be added
+fairly easily too but need a little more arch-specific attention.
 
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index 7ef015eb3403..978d2e27ce1d 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -802,16 +802,16 @@ static inline void *phys_to_virt(unsigned long address)
- /**
-  * DOC: ioremap() and ioremap_*() variants
-  *
-- * If you have an IOMMU your architecture is expected to have both ioremap()
-+ * If you have an MMU your architecture is expected to have both ioremap()
-  * and iounmap() implemented otherwise the asm-generic helpers will provide a
-  * direct mapping.
-  *
-- * There are ioremap_*() call variants, if you have no IOMMU we naturally will
-+ * There are ioremap_*() call variants, if you have no MMU we naturally will
-  * default to direct mapping for all of them, you can override these defaults.
-- * If you have an IOMMU you are highly encouraged to provide your own
-+ * If you have an MMU you are highly encouraged to provide your own
-  * ioremap variant implementation as there currently is no safe architecture
-  * agnostic default. To avoid possible improper behaviour default asm-generic
-- * ioremap_*() variants all return NULL when an IOMMU is available. If you've
-+ * ioremap_*() variants all return NULL when an MMU is available. If you've
-  * defined your own ioremap_*() variant you must then declare your own
-  * ioremap_*() variant as defined to itself to avoid the default NULL return.
-  */
+Utterly untested for now; I'll do some testing while I deal with the
+inevitable bikeshedding.
+
+David Woodhouse (17):
+  pci: Fix pci_mmap_fits() for HAVE_PCI_RESOURCE_TO_USER platforms
+  pci: Fix another sanity check bug in /proc/pci mmap
+  pci: Only allow WC mmap on prefetchable resources
+  pci: Add arch_can_pci_mmap_wc() macro
+  pci: Move multiple declarations of pci_mmap_page_range() to <linux/pci.h>
+  pci: Add HAVE_PCI_MMAP_IO to architectures which can mmap() I/O space
+  pci: Use BAR index in sysfs attr->private instead of resource pointer
+  pci: Add BAR index argument to pci_mmap_page_range()
+  pci: Add pci_mmap_resource_range() and use it for ARM64
+  arm: Use generic pci_mmap_resource_range()
+  cris: Use generic pci_mmap_resource_range()
+  mips: Use generic pci_mmap_resource_range()
+  mn10300: Use generic pci_mmap_resource_range()
+  parisc: Use generic pci_mmap_resource_range()
+  sh: Use generic pci_mmap_resource_range()
+  unicore: Use generic pci_mmap_resource_range()
+  arm64: Do not expose PCI mmap through procfs
+
+ Documentation/filesystems/sysfs-pci.txt |  9 +++-
+ arch/arm/include/asm/pci.h              |  3 +-
+ arch/arm/kernel/bios32.c                | 19 -------
+ arch/arm64/include/asm/pci.h            |  3 ++
+ arch/cris/arch-v32/drivers/pci/bios.c   | 22 --------
+ arch/cris/include/asm/pci.h             |  4 +-
+ arch/ia64/include/asm/pci.h             |  4 +-
+ arch/ia64/pci/pci.c                     |  3 +-
+ arch/microblaze/include/asm/pci.h       |  6 +--
+ arch/microblaze/pci/pci-common.c        |  2 +-
+ arch/mips/include/asm/pci.h             |  5 +-
+ arch/mips/pci/pci.c                     | 24 ---------
+ arch/mn10300/include/asm/pci.h          |  4 +-
+ arch/mn10300/unit-asb2305/pci-asb2305.c | 23 ---------
+ arch/parisc/include/asm/pci.h           |  4 +-
+ arch/parisc/kernel/pci.c                | 28 ----------
+ arch/powerpc/include/asm/pci.h          |  9 ++--
+ arch/powerpc/kernel/pci-common.c        |  3 +-
+ arch/sh/drivers/pci/pci.c               | 21 --------
+ arch/sh/include/asm/pci.h               |  4 +-
+ arch/sparc/include/asm/pci_64.h         |  5 +-
+ arch/sparc/kernel/pci.c                 |  6 +--
+ arch/unicore32/include/asm/pci.h        |  3 +-
+ arch/unicore32/kernel/pci.c             | 23 ---------
+ arch/x86/include/asm/pci.h              |  6 +--
+ arch/x86/pci/i386.c                     |  3 +-
+ arch/xtensa/include/asm/pci.h           | 11 ++--
+ arch/xtensa/kernel/pci.c                |  5 +-
+ drivers/pci/Makefile                    |  2 +-
+ drivers/pci/mmap.c                      | 90 +++++++++++++++++++++++++++++++++
+ drivers/pci/pci-sysfs.c                 | 77 +++++++++++++---------------
+ drivers/pci/proc.c                      | 55 ++++++++++++++------
+ include/linux/pci.h                     | 19 +++++++
+ 33 files changed, 233 insertions(+), 272 deletions(-)
+ create mode 100644 drivers/pci/mmap.c
+
+-- 
+2.9.3
