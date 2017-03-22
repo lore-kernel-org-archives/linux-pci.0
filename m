@@ -1,101 +1,148 @@
-Return-Path: <SRS0=f67S=2Z=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=f67S=2Z=free.fr=slash.tmp@kernel.org>
-To: LKML <linux-kernel@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Cc: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner
- <tglx@linutronix.de>, Jason Cooper <jason@lakedaemon.net>,
- linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Robin Murphy <robin.murphy@arm.com>, Liviu Dudau <liviu.dudau@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Uwe Kleine-Konig <u.kleine-koenig@pengutronix.de>
-From: Mason <slash.tmp@free.fr>
-Subject: Legacy PCI interrupt support in PCIe host driver
-Message-ID: <5612adb6-af5c-9fbf-e725-813ee7fe1b4b@free.fr>
-Date: Thu, 16 Mar 2017 16:40:50 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-arm-kernel@lists.infradead.org,
+	linux-efi@vger.kernel.org
+Subject: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+Date: Wed, 22 Mar 2017 15:30:29 +0000
+Message-Id: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: lorenzo.pieralisi@arm.com, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ matt@codeblueprint.co.uk, linux-pci@vger.kernel.org, heyi.guo@linaro.org,
+ pjones@redhat.com, hanjun.guo@linaro.org, bhelgaas@google.com,
+ yinghai@kernel.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+On UEFI systems, the PCI subsystem is enumerated by the firmware,
+and if a graphical framebuffer is exposed by a PCI device, its base
+address and size are exposed to the OS via the Graphics Output
+Protocol (GOP).
 
-I am writing code for my platform's PCI Express controller.
+On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
+scratch at boot. This may result in the GOP framebuffer address to
+become stale, if the BAR covering the framebuffer is modified. This
+will cause the framebuffer to become unresponsive, and may in some
+cases result in unpredictable behavior if the range is reassigned to
+another device.
 
-I am stuck at the legacy PCI interrupt handling.
+So add a quirk to the EFI fb driver to find the BAR associated with
+the GOP base address, and set the IORESOURCE_PCI_FIXED attribute so
+that the PCI core will leave it alone.
 
-Interrupt requests are routed like this:
+Cc: Matt Fleming <matt@codeblueprint.co.uk>
+Cc: Peter Jones <pjones@redhat.com>
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+---
+v3: check device is enabled before attempting to claim the resource
 
-Cortex A9 MP <-- GIC(v1?) <-- system_intc <-- PCIe_root_complex
+ drivers/video/fbdev/efifb.c | 60 +++++++++++++++++++-
+ 1 file changed, 59 insertions(+), 1 deletion(-)
 
-The PCIe root complex drives two interrupt signals to the system_intc
+diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+index 8c4dc1e1f94f..88f653864a01 100644
+--- a/drivers/video/fbdev/efifb.c
++++ b/drivers/video/fbdev/efifb.c
+@@ -10,6 +10,7 @@
+ #include <linux/efi.h>
+ #include <linux/errno.h>
+ #include <linux/fb.h>
++#include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/screen_info.h>
+ #include <video/vga.h>
+@@ -143,6 +144,9 @@ static struct attribute *efifb_attrs[] = {
+ };
+ ATTRIBUTE_GROUPS(efifb);
+ 
++static bool pci_bar_found;	/* did we find a BAR matching the efifb base? */
++static bool pci_dev_disabled;	/* was the device disabled? */
++
+ static int efifb_probe(struct platform_device *dev)
+ {
+ 	struct fb_info *info;
+@@ -152,7 +156,7 @@ static int efifb_probe(struct platform_device *dev)
+ 	unsigned int size_total;
+ 	char *option = NULL;
+ 
+-	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
++	if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI || pci_dev_disabled)
+ 		return -ENODEV;
+ 
+ 	if (fb_get_options("efifb", &option))
+@@ -360,3 +364,57 @@ static struct platform_driver efifb_driver = {
+ };
+ 
+ builtin_platform_driver(efifb_driver);
++
++static void claim_efifb_bar(struct pci_dev *dev, int idx)
++{
++	u16 word;
++
++	pci_bar_found = true;
++
++	pci_read_config_word(dev, PCI_COMMAND, &word);
++	if (!(word & PCI_COMMAND_MEMORY)) {
++		pci_dev_disabled = true;
++		dev_err(&dev->dev,
++			"BAR %d: assigned to efifb but device is disabled!\n",
++			idx);
++		return;
++	}
++
++	if (pci_claim_resource(dev, idx)) {
++		pci_dev_disabled = true;
++		dev_err(&dev->dev,
++			"BAR %d: failed to claim resource for efifb!\n", idx);
++		return;
++	}
++
++	dev_info(&dev->dev, "BAR %d: assigned to efifb\n", idx);
++}
++
++static void efifb_fixup_resources(struct pci_dev *dev)
++{
++	u64 base = screen_info.lfb_base;
++	u64 size = screen_info.lfb_size;
++	int i;
++
++	if (pci_bar_found || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
++		return;
++
++	if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
++		base |= (u64)screen_info.ext_lfb_base << 32;
++
++	if (!base)
++		return;
++
++	for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
++		struct resource *res = &dev->resource[i];
++
++		if (!(res->flags & IORESOURCE_MEM))
++			continue;
++
++		if (res->start <= base && res->end >= base + size - 1) {
++			claim_efifb_bar(dev, i);
++			break;
++		}
++	}
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, efifb_fixup_resources);
+-- 
+2.7.4
 
-1) system_intc 54 = non-MSI interrupts
-2) system_intc 55 = MSI interrupts
 
-I think the MSI handling mostly works (although it's 340 lines long,
-which seems excessive for such a common task; maybe the maintainers
-will spot lots of redundant code when I submit).
-
-As for non-MSI interrupts, there are 8 possible sources:
-
-  system_error
-  dma_read_ready
-  dma_write_ready
-  unsupported completion request
-  configuration request retry status
-  completer abort event
-  completion timeout event
-  legacy interrupt asserted (any of the 4 legacy interrupts)
-
-Basically, I need to deal with the first 7 interrupts "internally"
-in my PCIe root complex driver. But the last interrupt, I need to
-"forward" it to the proper ISR (e.g. XHCI ISR).
-
-For the "internal" handling, I think I need to register my own ISR
-with the IRQF_SHARED flag. Then other drivers will be able to
-register their ISR on the same interrupt line.
-
-But how do I tell the PCI core that it's supposed to use interrupt 54
-for legacy interrupts?
-
-Here is my current DT:
-
-		msi0: msi@2e080 {
-			compatible = "sigma,msi";
-			reg = <0x2e04c 0x40>;
-			interrupt-parent = <&irq0>;
-			interrupts = <55 IRQ_TYPE_LEVEL_HIGH>;
-			msi-controller;
-			num-vectors = <32>;
-		};
-
-		pcie@30000000 {
-			compatible = "sigma,smp8759-pcie";
-			reg = <0x30000000 SZ_4M>, <0x2e02c 4>;
-			device_type = "pci";
-			bus-range = <0 3>;
-			#size-cells = <2>;
-			#address-cells = <3>;
-			#interrupt-cells = <1>;
-			ranges = <0x02000000 0x0 0x00400000  0x30400000  0x0 SZ_60M>;
-			msi-parent = <&msi0>;
-			interrupt-parent = <&irq0>;
-			interrupts = <54 IRQ_TYPE_LEVEL_HIGH>;
-		};
-
-
-I traced the action into pdev_fixup_irq()
-which calls of_irq_parse_and_map_pci()
-
-How do I tell Linux that
-- All the legacy PCI interrupts are muxed to a single line
-- And this line is routed to system interrupt 54
-
-Ooooooh... Wait...
-
-Is this what interrupt-map is used for?
-
-http://elinux.org/Device_Tree_Usage#Advanced_Interrupt_Mapping
-
-Regards.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
