@@ -1,77 +1,70 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [V9, 07/11] iommu: of: Handle IOMMU lookup failure with deferred
- probing or error
-To: Rob Herring <robh@kernel.org>,
-        Sricharan R <sricharan@codeaurora.org>
-References: <1489086061-9356-8-git-send-email-sricharan@codeaurora.org>
- <20170328150001.j57jko6mx35npgp2@rob-hp-laptop>
-Cc: will.deacon@arm.com, joro@8bytes.org, lorenzo.pieralisi@arm.com,
-        iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robdclark@gmail.com
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <3cb3f6ec-8f5f-6b93-1ea8-c3abc55d9555@arm.com>
-Date: Tue, 28 Mar 2017 16:11:29 +0100
-MIME-Version: 1.0
-In-Reply-To: <20170328150001.j57jko6mx35npgp2@rob-hp-laptop>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 11/17] cris: Use generic pci_mmap_resource_range()
+Date: Wed, 22 Mar 2017 13:25:25 +0000
+Message-Id: <1e68573b4fe52b24d770a8582a7db59272862a52.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 28/03/17 16:00, Rob Herring wrote:
-> On Fri, Mar 10, 2017 at 12:30:57AM +0530, Sricharan R wrote:
->> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
->>
->> Failures to look up an IOMMU when parsing the DT iommus property need to
->> be handled separately from the .of_xlate() failures to support deferred
->> probing.
->>
->> The lack of a registered IOMMU can be caused by the lack of a driver for
->> the IOMMU, the IOMMU device probe not having been performed yet, having
->> been deferred, or having failed.
->>
->> The first case occurs when the device tree describes the bus master and
->> IOMMU topology correctly but no device driver exists for the IOMMU yet
->> or the device driver has not been compiled in. Return NULL, the caller
->> will configure the device without an IOMMU.
->>
->> The second and third cases are handled by deferring the probe of the bus
->> master device which will eventually get reprobed after the IOMMU.
->>
->> The last case is currently handled by deferring the probe of the bus
->> master device as well. A mechanism to either configure the bus master
->> device without an IOMMU or to fail the bus master device probe depending
->> on whether the IOMMU is optional or mandatory would be a good
->> enhancement.
->>
->> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
->> Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
->> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> ---
->>  drivers/base/dma-mapping.c | 5 +++--
->>  drivers/iommu/of_iommu.c   | 4 ++--
->>  drivers/of/device.c        | 7 ++++++-
->>  include/linux/of_device.h  | 9 ++++++---
->>  4 files changed, 17 insertions(+), 8 deletions(-)
-> 
-> Maybe it is the same issue reported for VFIO, but virtio-pci is broken 
-> with v8 of this series. Bisecting blames this commit which looks like it 
-> hasn't changeed. 
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-v8 managed to break *all* PCI devices which didn't have an associated
-"iommu-map". The problem was actually in patch 2 (and is fixed in this
-version), but it only hit at this point once we start propagating the
-erroneous error code back to the driver probe.
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+---
+ arch/cris/arch-v32/drivers/pci/bios.c | 23 -----------------------
+ arch/cris/include/asm/pci.h           |  1 +
+ 2 files changed, 1 insertion(+), 23 deletions(-)
 
-Robin.
-
-> 
-> Rob
-> 
-> P.S. Doesn't look like you have copied the DT maintainers nor list for 
-> the DT changes.
-> 
-
+diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
+index a589686d..394c2a73 100644
+--- a/arch/cris/arch-v32/drivers/pci/bios.c
++++ b/arch/cris/arch-v32/drivers/pci/bios.c
+@@ -14,29 +14,6 @@ void pcibios_set_master(struct pci_dev *dev)
+ 	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, int bar,
+-			struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine)
+-{
+-	unsigned long prot;
+-
+-	/* Leave vm_pgoff as-is, the PCI space address is the physical
+-	 * address on this platform.
+-	 */
+-	prot = pgprot_val(vma->vm_page_prot);
+-	vma->vm_page_prot = __pgprot(prot);
+-
+-	/* Write-combine setting is ignored, it is changed via the mtrr
+-	 * interfaces on this platform.
+-	 */
+-	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+-			     vma->vm_end - vma->vm_start,
+-			     vma->vm_page_prot))
+-		return -EAGAIN;
+-
+-	return 0;
+-}
+-
+ resource_size_t
+ pcibios_align_resource(void *data, const struct resource *res,
+ 		       resource_size_t size, resource_size_t align)
+diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
+index 65198cb..6e50533 100644
+--- a/arch/cris/include/asm/pci.h
++++ b/arch/cris/include/asm/pci.h
+@@ -42,6 +42,7 @@ struct pci_dev;
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ 
+ #define HAVE_PCI_MMAP
++#define ARCH_GENERIC_PCI_MMAP_RESOURCE
+ 
+ #endif /* __KERNEL__ */
+ 
+-- 
+2.9.3
