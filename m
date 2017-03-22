@@ -1,96 +1,164 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Hans Verkuil <hans.verkuil@cisco.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Alexandre Belloni <alexandre.belloni@free-electrons.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Brian Norris <computersforpeace@gmail.com>,
-        Boris Brezillon <boris.brezillon@free-electrons.com>,
-        Marek Vasut <marek.vasut@gmail.com>,
-        Cyrille Pitchen <cyrille.pitchen@atmel.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        rtc-linux@googlegroups.com, linux-mtd@lists.infradead.org,
-        linux-media@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-gpio@vger.kernel.org,
-        linux-input@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Fri, 17 Mar 2017 12:48:16 -0600
-Message-Id: <1489776503-3151-10-git-send-email-logang@deltatee.com>
-In-Reply-To: <1489776503-3151-1-git-send-email-logang@deltatee.com>
-References: <1489776503-3151-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v5 09/16] infiniband: utilize the new cdev_set_parent function
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v5 4/7] PCI: dwc: all: Modify dbi accessors to take dbi_base
+ as argument
+Date: Wed, 22 Mar 2017 20:40:55 +0530
+Message-ID: <20170322151055.15947-1-kishon@ti.com>
+In-Reply-To: <20170313134328.1588-5-kishon@ti.com>
+References: <20170313134328.1588-5-kishon@ti.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This replaces the suspect looking cdev.kobj.parent lines with the
-equivalent cdev_set_parent function. This is a straightforward change
-that's largely cosmetic but it does push the kobj.parent ownership
-into char_dev.c where it belongs.
+dwc has 2 dbi address space labeled dbics and dbics2. The existing
+helper to access dbi address space can access only dbics. However
+dbics2 has to be accessed for programming the BAR registers in the
+case of EP mode. This is in preparation for adding EP mode support
+to dwc driver.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+Acked-by: Niklas Cassel <niklas.cassel@axis.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/infiniband/core/user_mad.c    | 4 ++--
- drivers/infiniband/core/uverbs_main.c | 2 +-
- drivers/infiniband/hw/hfi1/device.c   | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+Changes from v4:
+Add void as return type in dw_pcie_writel_dbi spotted by Niklas.
 
-diff --git a/drivers/infiniband/core/user_mad.c b/drivers/infiniband/core/user_mad.c
-index aca7ff7..25071b8 100644
---- a/drivers/infiniband/core/user_mad.c
-+++ b/drivers/infiniband/core/user_mad.c
-@@ -1183,7 +1183,7 @@ static int ib_umad_init_port(struct ib_device *device, int port_num,
+ drivers/pci/dwc/pci-exynos.c      | 10 ++++++----
+ drivers/pci/dwc/pcie-designware.c | 13 +++++++------
+ drivers/pci/dwc/pcie-designware.h | 20 ++++++++++++++++----
+ 3 files changed, 29 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/dwc/pci-exynos.c b/drivers/pci/dwc/pci-exynos.c
+index 993b650ef275..a0d40f74b88d 100644
+--- a/drivers/pci/dwc/pci-exynos.c
++++ b/drivers/pci/dwc/pci-exynos.c
+@@ -521,23 +521,25 @@ static void exynos_pcie_enable_interrupts(struct exynos_pcie *ep)
+ 		exynos_pcie_msi_init(ep);
+ }
  
- 	cdev_init(&port->cdev, &umad_fops);
- 	port->cdev.owner = THIS_MODULE;
--	port->cdev.kobj.parent = &umad_dev->kobj;
-+	cdev_set_parent(&port->cdev, &umad_dev->kobj);
- 	kobject_set_name(&port->cdev.kobj, "umad%d", port->dev_num);
- 	if (cdev_add(&port->cdev, base, 1))
- 		goto err_cdev;
-@@ -1202,7 +1202,7 @@ static int ib_umad_init_port(struct ib_device *device, int port_num,
- 	base += IB_UMAD_MAX_PORTS;
- 	cdev_init(&port->sm_cdev, &umad_sm_fops);
- 	port->sm_cdev.owner = THIS_MODULE;
--	port->sm_cdev.kobj.parent = &umad_dev->kobj;
-+	cdev_set_parent(&port->sm_cdev, &umad_dev->kobj);
- 	kobject_set_name(&port->sm_cdev.kobj, "issm%d", port->dev_num);
- 	if (cdev_add(&port->sm_cdev, base, 1))
- 		goto err_sm_cdev;
-diff --git a/drivers/infiniband/core/uverbs_main.c b/drivers/infiniband/core/uverbs_main.c
-index 35c788a..f02d7b9 100644
---- a/drivers/infiniband/core/uverbs_main.c
-+++ b/drivers/infiniband/core/uverbs_main.c
-@@ -1189,7 +1189,7 @@ static void ib_uverbs_add_one(struct ib_device *device)
- 	cdev_init(&uverbs_dev->cdev, NULL);
- 	uverbs_dev->cdev.owner = THIS_MODULE;
- 	uverbs_dev->cdev.ops = device->mmap ? &uverbs_mmap_fops : &uverbs_fops;
--	uverbs_dev->cdev.kobj.parent = &uverbs_dev->kobj;
-+	cdev_set_parent(&uverbs_dev->cdev, &uverbs_dev->kobj);
- 	kobject_set_name(&uverbs_dev->cdev.kobj, "uverbs%d", uverbs_dev->devnum);
- 	if (cdev_add(&uverbs_dev->cdev, base, 1))
- 		goto err_cdev;
-diff --git a/drivers/infiniband/hw/hfi1/device.c b/drivers/infiniband/hw/hfi1/device.c
-index bf64b5a..bbb6069 100644
---- a/drivers/infiniband/hw/hfi1/device.c
-+++ b/drivers/infiniband/hw/hfi1/device.c
-@@ -69,7 +69,7 @@ int hfi1_cdev_init(int minor, const char *name,
+-static u32 exynos_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
++static u32 exynos_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base,
++				 u32 reg)
+ {
+ 	struct exynos_pcie *ep = to_exynos_pcie(pci);
+ 	u32 val;
  
- 	cdev_init(cdev, fops);
- 	cdev->owner = THIS_MODULE;
--	cdev->kobj.parent = parent;
-+	cdev_set_parent(cdev, parent);
- 	kobject_set_name(&cdev->kobj, name);
+ 	exynos_pcie_sideband_dbi_r_mode(ep, true);
+-	val = readl(pci->dbi_base + reg);
++	val = readl(base + reg);
+ 	exynos_pcie_sideband_dbi_r_mode(ep, false);
+ 	return val;
+ }
  
- 	ret = cdev_add(cdev, dev, 1);
+-static void exynos_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
++static void exynos_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base,
++				   u32 reg, u32 val)
+ {
+ 	struct exynos_pcie *ep = to_exynos_pcie(pci);
+ 
+ 	exynos_pcie_sideband_dbi_w_mode(ep, true);
+-	writel(val, pci->dbi_base + reg);
++	writel(val, base + reg);
+ 	exynos_pcie_sideband_dbi_w_mode(ep, false);
+ }
+ 
+diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
+index 3eaf3ccdc118..ea403e2240cf 100644
+--- a/drivers/pci/dwc/pcie-designware.c
++++ b/drivers/pci/dwc/pcie-designware.c
+@@ -61,20 +61,21 @@ int dw_pcie_write(void __iomem *addr, int size, u32 val)
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+-u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
++u32 __dw_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg)
+ {
+ 	if (pci->ops->readl_dbi)
+-		return pci->ops->readl_dbi(pci, reg);
++		return pci->ops->readl_dbi(pci, base, reg);
+ 
+-	return readl(pci->dbi_base + reg);
++	return readl(base + reg);
+ }
+ 
+-void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
++void __dw_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
++			  u32 val)
+ {
+ 	if (pci->ops->writel_dbi)
+-		pci->ops->writel_dbi(pci, reg, val);
++		pci->ops->writel_dbi(pci, base, reg, val);
+ 	else
+-		writel(val, pci->dbi_base + reg);
++		writel(val, base + reg);
+ }
+ 
+ static u32 dw_pcie_readl_unroll(struct dw_pcie *pci, u32 index, u32 reg)
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 8f3dcb2b099b..09b334a12892 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -144,8 +144,9 @@ struct pcie_port {
+ 
+ struct dw_pcie_ops {
+ 	u64	(*cpu_addr_fixup)(u64 cpu_addr);
+-	u32	(*readl_dbi)(struct dw_pcie *pcie, u32 reg);
+-	void	(*writel_dbi)(struct dw_pcie *pcie, u32 reg, u32 val);
++	u32	(*readl_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg);
++	void	(*writel_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
++			      u32 val);
+ 	int	(*link_up)(struct dw_pcie *pcie);
+ };
+ 
+@@ -163,8 +164,9 @@ struct dw_pcie {
+ int dw_pcie_read(void __iomem *addr, int size, u32 *val);
+ int dw_pcie_write(void __iomem *addr, int size, u32 val);
+ 
+-u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg);
+-void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val);
++u32 __dw_pcie_readl_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg);
++void __dw_pcie_writel_dbi(struct dw_pcie *pci, void __iomem *base, u32 reg,
++			  u32 val);
+ int dw_pcie_link_up(struct dw_pcie *pci);
+ int dw_pcie_wait_for_link(struct dw_pcie *pci);
+ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+@@ -172,6 +174,16 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
+ 			       u32 size);
+ void dw_pcie_setup(struct dw_pcie *pci);
+ 
++static inline void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
++{
++	__dw_pcie_writel_dbi(pci, pci->dbi_base, reg, val);
++}
++
++static inline u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
++{
++	return  __dw_pcie_readl_dbi(pci, pci->dbi_base, reg);
++}
++
+ #ifdef CONFIG_PCIE_DW_HOST
+ irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
+ void dw_pcie_msi_init(struct pcie_port *pp);
 -- 
-2.1.4
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
