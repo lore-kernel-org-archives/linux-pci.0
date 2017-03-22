@@ -1,15 +1,19 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, "timur@codeaurora.org" <timur@codeaurora.org>
-Subject: RE: [PATCH V6 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-Date: Thu, 30 Mar 2017 13:07:47 +0000
-Message-ID: <92EBB4272BF81E4089A7126EC1E7B2846675E0C4@IRSMSX101.ger.corp.intel.com>
-References: <1490828667-30973-1-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1490828667-30973-1-git-send-email-okaya@codeaurora.org>
+Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
+ <20170322193111.GA8190@wunner.de>
+ <31da6db5-be22-9e84-5e76-67c519bc0b34@codeaurora.org>
+ <CAKv+Gu8Uw-X3AR6aQYevPdRfcgPNnqL4O3sRoKxsZAiW29sbqg@mail.gmail.com>
+ <704b8b8c-e607-29b3-e101-bbecd90073bb@codeaurora.org>
+ <CAKv+Gu-3wAXLyogLxg3N=6vf6Ryz2cLXw01tZUR_E48ddVU22A@mail.gmail.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <4ccb4d92-3830-3980-38c3-7085a3d97734@codeaurora.org>
+Date: Wed, 22 Mar 2017 15:57:56 -0400
 MIME-Version: 1.0
+In-Reply-To: <CAKv+Gu-3wAXLyogLxg3N=6vf6Ryz2cLXw01tZUR_E48ddVU22A@mail.gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,75 +21,78 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>
+Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+ Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
+ Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
+ Lukas Wunner <lukas@wunner.de>, Hanjun Guo <hanjun.guo@linaro.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Yinghai Lu <yinghai@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan
+On 3/22/2017 3:52 PM, Ard Biesheuvel wrote:
+> On 22 March 2017 at 19:49, Sinan Kaya <okaya@codeaurora.org> wrote:
+>> On 3/22/2017 3:41 PM, Ard Biesheuvel wrote:
+>>>> As far as I know, kernel honors resource assignments done by the UEFI BIOS if
+>>>> they are correct. Kernel will reassign the resources only if something is wrong.
+>>>>
+>>> No, the kernel always reassigns all BARs on arm64.
+>>
+>> I think this is where the problem is.
+>>
+>> I'm not seeing this happen on QDF2400 which supports ACPI + UEFI BIOS
+>> combination only.
+>>
+>> I see that kernel honored the resources assigned by UEFI BIOS if I compare
+>> the BAR addresses.
+>>
+> 
+> Well, if you are using the standard MdeModulePkg PciHostBridgeDxe
+> driver in UEFI, the logic is quite similar, and so you usually end up
+> with the same resource assignments. But the kernel does recompute them
+> from scratch, and ignores the existing configuration that is present
+> in the BARs
 
->
->When the operating system is booted with the default ASPM policy
->(POLICY_DEFAULT), current code is querying the enable/disable
->states from ASPM registers to determine the policy.
->
->For example, a BIOS could set the power saving state to performance
->and clear all ASPM control registers. A balanced ASPM policy could
->enable L0s and disable L1. A power conscious BIOS could enable both
->L0s and L1 to trade off latency and performance vs. power.
->
->After hotplug removal, pcie_aspm_exit_link_state() function clears
->the ASPM registers. An insertion following hotplug removal reads
->incorrect policy as ASPM disabled even though ASPM was enabled
->during boot.
->
->This is caused by the fact that same function is used for reconfiguring
->ASPM regardless of the power on state.
->
->------------------------
->Changes from v5 (https://www.spinics.net/lists/arm-kernel/msg571758.html)
->------------------------
->- rebase to 4.11-rc3
->- Split pci_aspm_init() body into pci_aspm_init_upstream()
->  and pci_aspm_init_downstream() for bridge and endpoint
->  specific code behavior.
->- Get rid of function0 function.
->  Detect downstream link in pci_aspm_init_upstream() instead
->
->Sinan Kaya (5):
->  PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
->  PCI/ASPM: split pci_aspm_init() into two
->  PCI/ASPM: add init hook to device_add
->  PCI/ASPM: save power on values during bridge init
->  PCI/ASPM: move link_state cleanup to bridge remove
->
+Yes, standard stuff in UEFI. OK. That may explain what I'm seeing.
 
-Thanks for quick patches. I can boot up now without any crash. I will test actual
-functionality by next week as I am out for this week.
+> 
+>> I see reassignment only when something is horribly broken. Then, there would
+>> be a bridge configuration invalid message in the boot log to confirm this.
+>>
+>>>
+>>>> Will this code break other platforms/architectures?
+>>>>
+>>> Which platforms/architectures are you referring to? EFIFB on a PCI
+>>> device is currently broken on arm64.
+>>
+>> In general or on your particular platform?
+>>
+>>> On x86, it works, given that BARs
+>>> are usually not reassigned, and so the patch should be a no-op in that
+>>> case (although I'd argue it is still an improvement to check whether
+>>> the device that owns the BAR actually has memory decoding enabled
+>>> before we attach the framebuffer driver to it)
+>>>
+>>
+>> I'm fine as long as it doesn't break anything. That's why, I'm asking.
+>>
+> 
+> If you have working EFIFB on your platform, it works by accident. This
+> patch is needed to ensure that the BAR associated with the EFI
+> framebuffer is left untouched.
+> 
 
+I never claimed that. I was just double checking your assumptions.
+I really don't like ARM64 specific PCI code in general. PCI doesn't care
+about CPU type. I hope to see this patch become part of common code.
 
-
-
-> drivers/pci/pcie/aspm.c | 137 ++++++++++++++++++++++++++++++++----------------
-> drivers/pci/probe.c     |   3 ++
-> drivers/pci/remove.c    |   3 +-
-> include/linux/pci.h     |   2 +
-> 4 files changed, 98 insertions(+), 47 deletions(-)
->
->--
->1.9.1
-
-Intel Deutschland GmbH
-Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-Tel: +49 89 99 8853-0, www.intel.de
-Managing Directors: Christin Eisenschmid, Christian Lamprechter
-Chairperson of the Supervisory Board: Nicole Lau
-Registered Office: Munich
-Commercial Register: Amtsgericht Muenchen HRB 186928
-
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
 _______________________________________________
 linux-arm-kernel mailing list
