@@ -1,92 +1,83 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V5 0/4] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-To: linux-pci@vger.kernel.org, mayurkumar.patel@intel.com
-References: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <f062dc8f-df66-bfd8-a0d7-50ac1cadf975@codeaurora.org>
-Date: Tue, 28 Mar 2017 00:37:31 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:46669 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934030AbdCVNdo (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Mar 2017 09:33:44 -0400
+Date: Wed, 22 Mar 2017 14:33:39 +0100
+From: Jesper Nilsson <jesper.nilsson@axis.com>
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 11/17] cris: Use generic pci_mmap_resource_range()
+Message-ID: <20170322133339.GA29118@axis.com>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+ <1e68573b4fe52b24d770a8582a7db59272862a52.1490188942.git.dwmw2@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arm-msm@vger.kernel.org, timur@codeaurora.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1e68573b4fe52b24d770a8582a7db59272862a52.1490188942.git.dwmw2@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mayurkumkar,
+On Wed, Mar 22, 2017 at 01:25:25PM +0000, David Woodhouse wrote:
+> From: David Woodhouse <dwmw@amazon.co.uk>
 
-On 3/25/2017 5:38 PM, Sinan Kaya wrote:
-> When the operating system is booted with the default ASPM policy
-> (POLICY_DEFAULT), current code is querying the enable/disable
-> states from ASPM registers to determine the policy.
-> 
-> For example, a BIOS could set the power saving state to performance
-> and clear all ASPM control registers. A balanced ASPM policy could
-> enable L0s and disable L1. A power conscious BIOS could enable both
-> L0s and L1 to trade off latency and performance vs. power.
-> 
-> After hotplug removal, pcie_aspm_exit_link_state() function clears
-> the ASPM registers. An insertion following hotplug removal reads
-> incorrect policy as ASPM disabled even though ASPM was enabled
-> during boot.
-> 
-> This is caused by the fact that same function is used for reconfiguring
-> ASPM regardless of the power on state.
-> 
-> ------------------------
-> Changes from v4 (http://www.spinics.net/lists/linux-pci/msg59245.html)
-> ------------------------
-> - pci_aspm_init(): Fix function comment.  Called for every device we
->   enumerate.
-> 	Upstream link partner:  Shouldn't need to check pdev->link_state
->         (should always be NULL for a brand-new device).
-> 
-> - pcie_aspm_init_link_state(): Called for bridges (upstream end of
->     link) after all children have been enumerated.  No longer needs to
->     check aspm_support_enabled or pdev->has_secondary_link or the VIA
->     quirk: pci_aspm_init() already checked that stuff, so we only need
->     to check pdev->link_state here.
-> 
-> - split the last patch into two
->   PCI/ASPM: move link_state cleanup to bridge remove
->   PCI/ASPM: save power on values during bridge init
-> 
-> - create bugzilla (https://bugzilla.kernel.org/show_bug.cgi?id=194895)
-> - add fixes tags
-> 
-> Sinan Kaya (4):
->   PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
->   PCI/ASPM: add init hook to device_add
->   PCI/ASPM: save power on values during bridge init
->   PCI/ASPM: move link_state cleanup to bridge remove
-> 
->  drivers/pci/pcie/aspm.c | 93 +++++++++++++++++++++++++++++++++----------------
->  drivers/pci/probe.c     |  3 ++
->  drivers/pci/remove.c    |  3 +-
->  include/linux/pci.h     |  2 ++
->  4 files changed, 69 insertions(+), 32 deletions(-)
-> 
+Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
 
-Can you test this on your system and provide your tested-by if all good?
+> Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+> ---
+>  arch/cris/arch-v32/drivers/pci/bios.c | 23 -----------------------
+>  arch/cris/include/asm/pci.h           |  1 +
+>  2 files changed, 1 insertion(+), 23 deletions(-)
+> 
+> diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
+> index a589686d..394c2a73 100644
+> --- a/arch/cris/arch-v32/drivers/pci/bios.c
+> +++ b/arch/cris/arch-v32/drivers/pci/bios.c
+> @@ -14,29 +14,6 @@ void pcibios_set_master(struct pci_dev *dev)
+>  	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
+>  }
+>  
+> -int pci_mmap_page_range(struct pci_dev *dev, int bar,
+> -			struct vm_area_struct *vma,
+> -			enum pci_mmap_state mmap_state, int write_combine)
+> -{
+> -	unsigned long prot;
+> -
+> -	/* Leave vm_pgoff as-is, the PCI space address is the physical
+> -	 * address on this platform.
+> -	 */
+> -	prot = pgprot_val(vma->vm_page_prot);
+> -	vma->vm_page_prot = __pgprot(prot);
+> -
+> -	/* Write-combine setting is ignored, it is changed via the mtrr
+> -	 * interfaces on this platform.
+> -	 */
+> -	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+> -			     vma->vm_end - vma->vm_start,
+> -			     vma->vm_page_prot))
+> -		return -EAGAIN;
+> -
+> -	return 0;
+> -}
+> -
+>  resource_size_t
+>  pcibios_align_resource(void *data, const struct resource *res,
+>  		       resource_size_t size, resource_size_t align)
+> diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
+> index 65198cb..6e50533 100644
+> --- a/arch/cris/include/asm/pci.h
+> +++ b/arch/cris/include/asm/pci.h
+> @@ -42,6 +42,7 @@ struct pci_dev;
+>  #define PCI_DMA_BUS_IS_PHYS	(1)
+>  
+>  #define HAVE_PCI_MMAP
+> +#define ARCH_GENERIC_PCI_MMAP_RESOURCE
+>  
+>  #endif /* __KERNEL__ */
+>  
+> -- 
+> 2.9.3
 
-Sinan
-
+/^JN - Jesper Nilsson
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+               Jesper Nilsson -- jesper.nilsson@axis.com
