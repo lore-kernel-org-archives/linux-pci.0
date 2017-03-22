@@ -1,54 +1,56 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60420 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932323AbdC3XNa (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Mar 2017 19:13:30 -0400
-Date: Thu, 30 Mar 2017 18:13:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Michael Ellerman <mpe@ellerman.id.au>,
-        Yongji Xie <xyjxie@linux.vnet.ibm.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
-        aik@ozlabs.ru, paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: Re: [PATCH v9 2/3] PCI: Add a macro to set default alignment for all
- PCI devices
-Message-ID: <20170330231326.GB2496@bhelgaas-glaptop.roam.corp.google.com>
-References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
- <1487141106-2503-3-git-send-email-xyjxie@linux.vnet.ibm.com>
- <20170323205342.GB23612@bhelgaas-glaptop.roam.corp.google.com>
- <8737dzf2gu.fsf@concordia.ellerman.id.au>
- <1490610350.3177.71.camel@kernel.crashing.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1490610350.3177.71.camel@kernel.crashing.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 01/17] pci: Fix pci_mmap_fits() for HAVE_PCI_RESOURCE_TO_USER platforms
+Date: Wed, 22 Mar 2017 13:25:15 +0000
+Message-Id: <931e096104d6e7e3b20ce9c2770a22ee0d2755e2.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 27, 2017 at 09:25:50PM +1100, Benjamin Herrenschmidt wrote:
-> On Mon, 2017-03-27 at 21:17 +1100, Michael Ellerman wrote:
-> > > If so, is it acceptable to force that kernel to user 64K alignment
-> > > even
-> > > when it's running on non-PowerNV systems?
-> > 
-> > Probably, but I'm not sure TBH. Benh will know, I'll try and get his
-> > attention.
-> 
-> Can we make the alignment PAGE_SIZE ? I think that should be ok as long
-> as it doesn't try to re-allocate BARs for devices that have already
-> been properly allocated by firmware (ie, PowerMac, if you mess around
-> with the MacIO chip on these, bad things will happen).
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-I think this *will* change BARs even if they've already been allocated
-by firmware, because it affects this path that is used for every
-device:
+In the PCI_MMAP_PROCFS case when the address being passed by the user
+is a 'user visible' resource address based on the bus window, and not
+the actual contents of the resource, that's what we need to be checking
+it against.
 
-  pci_device_add
-    pci_reassigndev_resource_alignment
-      pci_specified_resource_alignment
-        align = PCIBIOS_DEFAULT_ALIGNMENT
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/pci-sysfs.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-I'm looking for an update that fixes the minor comment issues and
-possibly addresses this PowerMac question.
-
-Bjorn
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 25d010d..7ac258f 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -985,15 +985,19 @@ void pci_remove_legacy_files(struct pci_bus *b)
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
+ 		  enum pci_mmap_api mmap_api)
+ {
+-	unsigned long nr, start, size, pci_start;
++	unsigned long nr, start, size;
++	resource_size_t pci_start = 0, pci_end;
+ 
+ 	if (pci_resource_len(pdev, resno) == 0)
+ 		return 0;
+ 	nr = vma_pages(vma);
+ 	start = vma->vm_pgoff;
+ 	size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+-	pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+-			pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
++	if (mmap_api == PCI_MMAP_PROCFS) {
++		pci_resource_to_user(pdev, resno, &pdev->resource[resno],
++				     &pci_start, &pci_end);
++		pci_start >>= PAGE_SHIFT;
++	}
+ 	if (start >= pci_start && start < pci_start + size &&
+ 			start + nr <= pci_start + size)
+ 		return 1;
+-- 
+2.9.3
