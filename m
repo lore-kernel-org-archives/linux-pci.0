@@ -1,110 +1,140 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=0URG=27=microsoft.com=longli@kernel.org>
+Return-Path: <SRS0=0URG=27=microsoft.com=longli@kernel.org>
+From: Long Li <longli@microsoft.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: KY Srinivasan <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, "devel@linuxdriverproject.org"
+	<devel@linuxdriverproject.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 1/2 v4] pci-hyperv: properly handle pci bus remove
+Date: Wed, 22 Mar 2017 23:34:07 +0000
+Message-ID: <CO2PR03MB2230B6B0B2C1F453E9C0B34DCE3C0@CO2PR03MB2230.namprd03.prod.outlook.com>
+References: <BN3PR03MB22270F97B502941940E0E91ECE560@BN3PR03MB2227.namprd03.prod.outlook.com>
+ <20170316200658.GC9739@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170316200658.GC9739@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Date: Thu, 02 Mar 2017 08:11:03 -0500
-From: okaya@codeaurora.org
-To: Jean-Philippe Brucker <Jean-Philippe.Brucker@arm.com>
-Subject: Re: [RFC PATCH 04/30] iommu/arm-smmu-v3: Add support for PCI ATS
-In-Reply-To: <20170302105153.GB15742@e106794-lin.localdomain>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-5-jean-philippe.brucker@arm.com>
- <5a7822f2-3991-aa51-169f-78ef49567feb@codeaurora.org>
- <20170302105153.GB15742@e106794-lin.localdomain>
-Message-ID: <e9a266680830b40907bfd5441200e4df@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Harb Abdulhamid <harba@codeaurora.org>,
- Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <Catalin.Marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Will Deacon <Will.Deacon@arm.com>, iommu@lists.linux-foundation.org,
- linux-pci-owner@vger.kernel.org, Alex Williamson <alex.williamson@redhat.com>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- Robin Murphy <Robin.Murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
- linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017-03-02 05:51, Jean-Philippe Brucker wrote:
-> Hi Sinan,
-> 
-> On 01/03/17 19:24, Sinan Kaya wrote:
->> On 2/27/2017 2:54 PM, Jean-Philippe Brucker wrote:
->>> /* Initialise command lazily */
->>> +		if (!cmd.opcode)
->>> +			arm_smmu_atc_invalidate_to_cmd(smmu, iova, size, &cmd);
->>> +
->>> +		spin_lock(&smmu_group->devices_lock);
->>> +
->>> +		list_for_each_entry(master, &smmu_group->devices, group_head)
->>> +			arm_smmu_atc_invalidate_master(master, &cmd);
->>> +
->>> +		/*
->>> +		 * TODO: ensure we do a sync whenever we have sent ats_queue_depth
->>> +		 * invalidations to the same device.
->>> +		 */
->>> +		arm_smmu_cmdq_issue_cmd(smmu, &sync_cmd);
->>> +
->> 
->> It is possible to observe ATS invalidation timeout up to 90 seconds 
->> according to PCIe
->> spec. How does the current code deal with this?
->> 
-> 
-> Currently we give up waiting for sync after 100us 
-> (ARM_SMMU_POLL_TIMEOUT_US).
-> A successful sync guarantees that all ATC invalidations since last sync
-> were successful, so in case of timeout we should resend all of them.
-> The delay itself isn't important at the moment, since we don't handle
-> invalidaton failure at all. It's fire and forget, and I haven't come up
-> with a complete solution yet.
-> 
-> The simplest error handling would be to retry invalidation after 90
-> seconds if the sync didn't complete. Then after a number of failed
-> attempts, maybe try to reset the device. Given that ats_invalidate is
-> generally called in irq-safe context, we would be blocking the CPU for
-> minutes at a time, which seems unwise. A proper solution would be to
-> postpone the unmap and return an error, although unmap errors are
-> usually ignored.
-> 
-> To avoid letting anyone remap something at that address until we're 
-> sure
-> the invalidation succeeded, we would need to repopulate the page tables
-> with the stale mapping, and add a delayed work that inspects the status
-> of the invalidation and tries again if it failed. If the invalidation
-> comes from the IOMMU core, we control the page tables and it should be
-> doable. If it comes from mm/ however, it's more complicated. MMU
-> notifiers only tell us that the mapping is going away, they don't
-> provide us with a way to hold on to them. Until all stale mappings have
-> been invalidated, we also need to hold on to the address space.
-> 
-> I think the problem is complex enough to deserve a series of its own,
-> once we confirm that it may happen in hardware and have a rough idea of
-> the timeout values encountered.
-
-Ok, fair enough. I think arm smmuv3 driver should follow the same design 
-pattern other iommu drivers are following to solve this issue as other 
-drivers are already handling this.
-
-Based on what I see, if there is a timeout happenibg; your sync 
-operation will not complete (consumer! = producer) until timeout 
-finishes.
 
 
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Thursday, March 16, 2017 1:07 PM
+> To: Long Li <longli@microsoft.com>
+> Cc: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
+> <haiyangz@microsoft.com>; Bjorn Helgaas <bhelgaas@google.com>;
+> devel@linuxdriverproject.org; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org
+> Subject: Re: [PATCH 1/2 v4] pci-hyperv: properly handle pci bus remove
+>=20
+> On Tue, Feb 28, 2017 at 02:19:45AM +0000, Long Li wrote:
+> > hv_pci_devices_present is called in hv_pci_remove when we remove a PCI
+> > device from host (e.g. by disabling SRIOV on a device). In
+> > hv_pci_remove, the bus is already removed before the call, so we don't
+> > need to rescan the bus in the workqueue scheduled from
+> > hv_pci_devices_present. By introducing status hv_pcibus_removed, we
+> can avoid this situation.
+> >
+> > Signed-off-by: Long Li <longli@microsoft.com>
+> > Reported-by: Xiaofeng Wang <xiaofwan@redhat.com>
+> > Acked-by: K. Y. Srinivasan <kys@microsoft.com>
+>=20
+> This didn't apply for me because saving it to a file resulted in some enc=
+oded
+> file with "=3D3D" instead of "=3D".  I see that mutt is smart enough to d=
+eal with
+> that in this reply, so there's probably a way for it to decode it when sa=
+ving to
+> a file, but I don't know it.
+>=20
+> I tried to apply it by hand, but the hunk in hv_pci_remove() doesn't matc=
+h
+> the context.  I think your patch is based on something previous to
+> 17978524a636 ("PCI: hv: Fix hv_pci_remove() for hot-remove").  Please
+> refresh the patch so it applies to my "master" branch (currently v4.11-rc=
+1).
+>=20
+> Also, the "default: break;" case below is redundant and can be removed.
+>=20
+> So I'll wait for your updated versions of both these patches.
+>=20
+> > ---
+> >  drivers/pci/host/pci-hyperv.c | 20 +++++++++++++++++---
+> >  1 file changed, 17 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/pci/host/pci-hyperv.c
+> > b/drivers/pci/host/pci-hyperv.c index a8deeca..4a37598 100644
+> > --- a/drivers/pci/host/pci-hyperv.c
+> > +++ b/drivers/pci/host/pci-hyperv.c
+> > @@ -348,6 +348,7 @@ enum hv_pcibus_state {
+> >  	hv_pcibus_init =3D 0,
+> >  	hv_pcibus_probed,
+> >  	hv_pcibus_installed,
+> > +	hv_pcibus_removed,
+> >  	hv_pcibus_maximum
+> >  };
+> >
+> > @@ -1481,13 +1482,24 @@ static void pci_devices_present_work(struct
+> work_struct *work)
+> >  		put_pcichild(hpdev, hv_pcidev_ref_initial);
+> >  	}
+> >
+> > -	/* Tell the core to rescan bus because there may have been changes.
+> */
+> > -	if (hbus->state =3D=3D hv_pcibus_installed) {
+> > +	switch (hbus->state) {
+> > +	case hv_pcibus_installed:
+> > +		/*
+> > +		 * Tell the core to rescan bus
+> > +		 * because there may have been changes.
+> > +		 */
+> >  		pci_lock_rescan_remove();
+> >  		pci_scan_child_bus(hbus->pci_bus);
+> >  		pci_unlock_rescan_remove();
+> > -	} else {
+> > +		break;
+> > +
+> > +	case hv_pcibus_init:
+> > +	case hv_pcibus_probed:
+> >  		survey_child_resources(hbus);
+> > +		break;
+> > +
+> > +	default:
+> > +		break;
+>=20
+> ^ This is redundant.
 
-> 
-> Thanks,
-> Jean-Philippe
+I found it still needs "default:break", or it will give a compiler warning:
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+drivers/pci/host/pci-hyperv.c: In function 'pci_devices_present_work':
+drivers/pci/host/pci-hyperv.c:1510:2: warning: enumeration value 'hv_pcibus=
+_removed' not handled in switch [-Wswitch]
+  switch(hbus->state) {
+  ^
+drivers/pci/host/pci-hyperv.c:1510:2: warning: enumeration value 'hv_pcibus=
+_maximum' not handled in switch [-Wswitch]
+
+>=20
+> >  	}
+> >
+> >  	up(&hbus->enum_sem);
+> > @@ -2163,6 +2175,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+> >  	hbus =3D kzalloc(sizeof(*hbus), GFP_KERNEL);
+> >  	if (!hbus)
+> >  		return -ENOMEM;
+> > +	hbus->state =3D hv_pcibus_init;
+> >
+> >  	/*
+> >  	 * The PCI bus "domain" is what is called "segment" in ACPI and @@
+> > -2305,6 +2318,7 @@ static int hv_pci_remove(struct hv_device *hdev)
+> >  		pci_stop_root_bus(hbus->pci_bus);
+> >  		pci_remove_root_bus(hbus->pci_bus);
+> >  		pci_unlock_rescan_remove();
+> > +		hbus->state =3D hv_pcibus_removed;
+> >  	}
+> >
+> >  	ret =3D hv_send_resources_released(hdev);
+> > --
+> > 1.8.5.6
