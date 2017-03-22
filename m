@@ -1,108 +1,125 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu, 30 Mar 2017 16:12:31 -0600
-Message-Id: <1490911959-5146-1-git-send-email-logang@deltatee.com>
-Subject: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=W+/T=27=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=W+/T=27=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Wed, 22 Mar 2017 15:04:03 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, arnd@arndb.de
+Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org,
+	Will Deacon <will.deacon@arm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	John Garry <john.garry@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH 03/20] asm-generic/io.h: add PCI config space remap
+ interface
+Message-ID: <20170322150403.GA4951@red-moon>
+References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
+ <20170227151436.18698-4-lorenzo.pieralisi@arm.com>
+ <20170316211243.GE9739@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170316211243.GE9739@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+Hi Bjorn, Arnd,
 
-As discussed at LSF/MM we'd like to present our work to enable
-copy offload support in NVMe fabrics RDMA targets. We'd appreciate
-some review and feedback from the community on our direction.
-This series is not intended to go upstream at this point.
+On Thu, Mar 16, 2017 at 04:12:43PM -0500, Bjorn Helgaas wrote:
+> [+cc Luis]
+> 
+> On Mon, Feb 27, 2017 at 03:14:14PM +0000, Lorenzo Pieralisi wrote:
+> > The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
+> > Posting") mandate non-posted configuration transactions. As further
+> > highlighted in the PCIe specifications (4.0 - Rev0.3, "Ordering
+> > Considerations for the Enhanced Configuration Access Mechanism"),
+> > through ECAM and ECAM-derivative configuration mechanism, the memory
+> > mapped transactions from the host CPU into Configuration Requests on the
+> > PCI express fabric may create ordering problems for software because
+> > writes to memory address are typically posted transactions (unless the
+> > architecture can enforce through virtual address mapping non-posted
+> > write transactions behaviour) but writes to Configuration Space are not
+> > posted on the PCI express fabric.
+> > 
+> > Current DT and ACPI host bridge controllers map PCI configuration space
+> > (ECAM and ECAM-derivative) into the virtual address space through
+> > ioremap() calls, that are non-cacheable device accesses on most
+> > architectures, but may provide "bufferable" or "posted" write semantics
+> > in architecture like eg ARM/ARM64 that allow ioremap'ed regions writes
+> > to be buffered in the bus connecting the host CPU to the PCI fabric;
+> > this behaviour, as underlined in the PCIe specifications, may trigger
+> > transactions ordering rules and must be prevented.
+> > 
+> > Introduce a new generic and explicit API to create a memory
+> > mapping for ECAM and ECAM-derivative config space area that
+> > defaults to ioremap_nocache() (which should provide a sane default
+> > behaviour) but still allowing architectures on which ioremap_nocache()
+> > results in posted write transactions to override the function
+> > call with an arch specific implementation that complies with
+> > the PCI specifications for configuration transactions.
+> > 
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Will Deacon <will.deacon@arm.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Russell King <linux@armlinux.org.uk>
+> > Cc: Catalin Marinas <catalin.marinas@arm.com>
+> > ---
+> >  include/asm-generic/io.h | 9 +++++++++
+> >  1 file changed, 9 insertions(+)
+> > 
+> > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> > index 7ef015e..52dda81 100644
+> > --- a/include/asm-generic/io.h
+> > +++ b/include/asm-generic/io.h
+> > @@ -915,6 +915,15 @@ extern void ioport_unmap(void __iomem *p);
+> >  #endif /* CONFIG_GENERIC_IOMAP */
+> >  #endif /* CONFIG_HAS_IOPORT_MAP */
+> >  
+> > +#ifndef pci_remap_cfgspace
+> > +#define pci_remap_cfgspace pci_remap_cfgspace
+> > +static inline void __iomem *pci_remap_cfgspace(phys_addr_t offset,
+> > +					       size_t size)
+> > +{
+> > +	return ioremap_nocache(offset, size);
+> > +}
+> 
+> I'm fine with this conceptually, but I think it would make more sense
+> if the name weren't specific to PCI or config space, e.g.,
+> ioremap_nopost() or something.
 
-The concept here is to use memory that's exposed on a PCI BAR as
-data buffers in the NVME target code such that data can be transferred
-from an RDMA NIC to the special memory and then directly to an NVMe
-device avoiding system memory entirely. The upside of this is better
-QoS for applications running on the CPU utilizing memory and lower
-PCI bandwidth required to the CPU (such that systems could be designed
-with fewer lanes connected to the CPU). However, presently, the trade-off
-is currently a reduction in overall throughput. (Largely due to hardware
-issues that would certainly improve in the future).
+I would like to respin shortly so I have to make a decision on the
+interface, either:
 
-Due to these trade-offs we've designed the system to only enable using
-the PCI memory in cases where the NIC, NVMe devices and memory are all
-behind the same PCI switch. This will mean many setups that could likely
-work well will not be supported so that we can be more confident it
-will work and not place any responsibility on the user to understand
-their topology. (We've chosen to go this route based on feedback we
-received at LSF).
+(1) I keep it a PCI only interface (which means I can even move it to
+    include/linux/pci.h and arch*/include/asm/pci.h to override it)
 
-In order to enable this functionality we introduce a new p2pmem device
-which can be instantiated by PCI drivers. The device will register some
-PCI memory as ZONE_DEVICE and provide an genalloc based allocator for
-users of these devices to get buffers. We give an example of enabling
-p2p memory with the cxgb4 driver, however currently these devices have
-some hardware issues that prevent their use so we will likely be
-dropping this patch in the future. Ideally, we'd want to enable this
-functionality with NVME CMB buffers, however we don't have any hardware
-with this feature at this time.
+or
 
-In nvmet-rdma, we attempt to get an appropriate p2pmem device at
-queue creation time and if a suitable one is found we will use it for
-all the (non-inlined) memory in the queue. An 'allow_p2pmem' configfs
-attribute is also created which is required to be set before any p2pmem
-is attempted.
+(2) We add it as a generic ioremap_* interface (I am not sure though
+    that's really useful other than to map PCI config space, actually
+    the reasoning behind the naming was to limit its usage to PCI
+    config space mappings)
 
-This patchset also includes a more controversial patch which provides an
-interface for userspace to obtain p2pmem buffers through an mmap call on
-a cdev. This enables userspace to fairly easily use p2pmem with RDMA and
-O_DIRECT interfaces. However, the user would be entirely responsible for
-knowing what their doing and inspecting sysfs to understand the pci
-topology and only using it in sane situations.
+I take it as Bjorn is keener on (2), just running a final check before
+putting v2 together to make progress.
 
-Thanks,
-
-Logan
-
-
-Logan Gunthorpe (6):
-  Introduce Peer-to-Peer memory (p2pmem) device
-  nvmet: Use p2pmem in nvme target
-  scatterlist: Modify SG copy functions to support io memory.
-  nvmet: Be careful about using iomem accesses when dealing with p2pmem
-  p2pmem: Support device removal
-  p2pmem: Added char device user interface
-
-Steve Wise (2):
-  cxgb4: setup pcie memory window 4 and create p2pmem region
-  p2pmem: Add debugfs "stats" file
-
- drivers/memory/Kconfig                          |   5 +
- drivers/memory/Makefile                         |   2 +
- drivers/memory/p2pmem.c                         | 697 ++++++++++++++++++++++++
- drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |   3 +
- drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |  97 +++-
- drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |   5 +
- drivers/nvme/target/configfs.c                  |  31 ++
- drivers/nvme/target/core.c                      |  18 +-
- drivers/nvme/target/fabrics-cmd.c               |  28 +-
- drivers/nvme/target/nvmet.h                     |   2 +
- drivers/nvme/target/rdma.c                      | 183 +++++--
- drivers/scsi/scsi_debug.c                       |   7 +-
- include/linux/p2pmem.h                          | 120 ++++
- include/linux/scatterlist.h                     |   7 +-
- lib/scatterlist.c                               |  64 ++-
- 15 files changed, 1189 insertions(+), 80 deletions(-)
- create mode 100644 drivers/memory/p2pmem.c
- create mode 100644 include/linux/p2pmem.h
-
---
-2.1.4
+Thanks !
+Lorenzo
