@@ -1,80 +1,110 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v2 01/22] PCI: remove __weak tag from pci_remap_iospace()
-Date: Mon, 27 Mar 2017 10:49:29 +0100
-Message-Id: <20170327094954.7162-2-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 07/17] pci: Use BAR index in sysfs attr->private instead of resource pointer
+Date: Wed, 22 Mar 2017 13:25:21 +0000
+Message-Id: <985f4e5c7356be06ecc26ba5aa2d5fcacce83d2d.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_remap_iospace() is marked as a weak symbol even though
-no architecture is currently overriding it; given that its
-implementation internals have already code paths that are
-arch specific (ie PCI_IOBASE and ioremap_page_range() attributes)
-there is no need to leave the weak symbol in the kernel since the
-same functionality can be achieved by customizing per-arch the
-corresponding functionality.
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-Remove the __weak symbol from pci_remap_iospace().
+We store the pointer, and then on *every* use of it we loop over the
+device's resources to find out the index. That's kind of silly.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
 ---
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pci-sysfs.c | 38 ++++++++++++++------------------------
+ 1 file changed, 14 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02..bd98674 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3363,7 +3363,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
-  *	Only architectures that have memory mapped IO functions defined
-  *	(and the PCI_IOBASE value defined) should call this function.
-  */
--int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-+int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 07cb2fc..8a2d77b 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1017,26 +1017,20 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 			     struct vm_area_struct *vma, int write_combine)
  {
- #if defined(PCI_IOBASE) && defined(CONFIG_MMU)
- 	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
+ 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+-	struct resource *res = attr->private;
++	int bar = (unsigned long)attr->private;
+ 	enum pci_mmap_state mmap_type;
+ 	resource_size_t start, end;
+-	int i;
+-
+-	for (i = 0; i < PCI_ROM_RESOURCE; i++)
+-		if (res == &pdev->resource[i])
+-			break;
+-	if (i >= PCI_ROM_RESOURCE)
+-		return -ENODEV;
++	struct resource *res = &pdev->resource[bar];
+ 
+ 	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+ 		return -EINVAL;
+ 
+-	if (!pci_mmap_fits(pdev, i, vma, PCI_MMAP_SYSFS)) {
++	if (!pci_mmap_fits(pdev, bar, vma, PCI_MMAP_SYSFS)) {
+ 		WARN(1, "process \"%s\" tried to map 0x%08lx bytes at page 0x%08lx on %s BAR %d (start 0x%16Lx, size 0x%16Lx)\n",
+ 			current->comm, vma->vm_end-vma->vm_start, vma->vm_pgoff,
+-			pci_name(pdev), i,
+-			(u64)pci_resource_start(pdev, i),
+-			(u64)pci_resource_len(pdev, i));
++			pci_name(pdev), bar,
++			(u64)pci_resource_start(pdev, bar),
++			(u64)pci_resource_len(pdev, bar));
+ 		return -EINVAL;
+ 	}
+ 
+@@ -1044,7 +1038,7 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 	 * from /proc/bus/pci/ which is a "user visible" value. If this is
+ 	 * different from the resource itself, arch will do necessary fixup.
+ 	 */
+-	pci_resource_to_user(pdev, i, res, &start, &end);
++	pci_resource_to_user(pdev, bar, res, &start, &end);
+ 	vma->vm_pgoff += start >> PAGE_SHIFT;
+ 	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
+ 	return pci_mmap_page_range(pdev, vma, mmap_type, write_combine);
+@@ -1069,22 +1063,18 @@ static ssize_t pci_resource_io(struct file *filp, struct kobject *kobj,
+ 			       loff_t off, size_t count, bool write)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+-	struct resource *res = attr->private;
++	int bar = (unsigned long)attr->private;
++	struct resource *res;
+ 	unsigned long port = off;
+-	int i;
+ 
+-	for (i = 0; i < PCI_ROM_RESOURCE; i++)
+-		if (res == &pdev->resource[i])
+-			break;
+-	if (i >= PCI_ROM_RESOURCE)
+-		return -ENODEV;
++	res = &pdev->resource[bar];
+ 
+-	port += pci_resource_start(pdev, i);
++	port += pci_resource_start(pdev, bar);
+ 
+-	if (port > pci_resource_end(pdev, i))
++	if (port > pci_resource_end(pdev, bar))
+ 		return 0;
+ 
+-	if (port + count - 1 > pci_resource_end(pdev, i))
++	if (port + count - 1 > pci_resource_end(pdev, bar))
+ 		return -EINVAL;
+ 
+ 	switch (count) {
+@@ -1187,7 +1177,7 @@ static int pci_create_attr(struct pci_dev *pdev, int num, int write_combine)
+ 	res_attr->attr.name = res_attr_name;
+ 	res_attr->attr.mode = S_IRUSR | S_IWUSR;
+ 	res_attr->size = pci_resource_len(pdev, num);
+-	res_attr->private = &pdev->resource[num];
++	res_attr->private = (void *)(unsigned long)num;
+ 	retval = sysfs_create_bin_file(&pdev->dev.kobj, res_attr);
+ 	if (retval)
+ 		kfree(res_attr);
 -- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.9.3
