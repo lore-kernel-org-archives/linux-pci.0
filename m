@@ -1,118 +1,265 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <58C8BD7D.7040207@hisilicon.com>
-References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
- <CAK8P3a1f33ipk3Q8+wj9L6zP=ccn_AuhTfV0CC0+wAqrO-2beg@mail.gmail.com>
- <58C8BD7D.7040207@hisilicon.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 15 Mar 2017 14:23:12 +0100
-Message-ID: <CAK8P3a3NJCndFJED4wDcvYndiJHbfTEHjTnPjBUQK6UguOswmg@mail.gmail.com>
-Subject: Re: [PATCH V7 0/7] LPC: legacy ISA I/O support
-To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Rafael Wysocki <rafael@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
- Will Deacon <will.deacon@arm.com>, linuxarm@huawei.com,
- Frank Rowand <frowand.list@gmail.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Wei Xu <xuwei5@hisilicon.com>,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- linux-serial@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
- devicetree@vger.kernel.org, Corey Minyard <minyard@acm.org>,
- liviu.dudau@arm.com, John Garry <john.garry@huawei.com>,
- Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- kantyzc@163.com, zhichang.yuan02@gmail.com,
- Linux ARM <linux-arm-kernel@lists.infradead.org>, rjw@rjwysocki.net,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Zou Rongrong <zourongrong@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 08/17] pci: Add BAR index argument to pci_mmap_page_range()
+Date: Wed, 22 Mar 2017 13:25:22 +0000
+Message-Id: <2560af53a449db8ccae0d1d7b3463fd8ec404bf6.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 15, 2017 at 5:05 AM, zhichang.yuan
-<yuanzhichang@hisilicon.com> wrote:
->> - I think the libio framework is more generic than it needs to be, but as
->>   Alex really liked it this way and it was done like this based on his earlier
->>   comments, I think that's ok.
->>
->> - after we went back and forth on the ACPI implementation, we concluded
->>   that it is correct to do the same as on DT and completely abstract the
->>   number space for I/O ports. No code should rely on a Linux port number
->>   to have any particular relation to the physical address or the the address
->>   on a PCI or LPC bus.
-> Thanks again for your helps in Linaro Connect!
-> I think we are heading for this direction, is it?
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-Yes, I think so.
+In all cases we know which BAR it is. Passing it in means that arch code
+(or generic code; watch this space) won't have to go looking for it again.
 
->> - I'm pretty sure the current implementation is broken for the ioport_map
->>   function that tries to turn an IORESOURCE_IO number into a pointer.
->>   Forcing CONFIG_GENERIC_IOMAP on would solve this, but also
->>   make all MMIO operations slower, which we probably don't want.
->>   It's probably enough to add a check in ioport_map() to see if the range
->>   is mapped into a virtual address or not.
->
->
-> Yes, I think our LIBIO will break the ioport_map() at this moment.
-> I try to solve this issue. Could you help to check the following ideas?
-> I am not deeper understanding the whole I/O framework, the following maybe not correct:(
->
-> ioport_map seems architecture-dependent. For our LIBIO, we don't want to replace the existing I/O
-> frameworks which support MMIO at this moment. Can we add these two revise to solve this issue?
-> 1) Make LIBIO only target for non GENERIC_IOMAP platforms
->
-> config LIBIO
->         bool "Generic logical IO management"
->         depends on !GENERIC_IOMAP
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+---
+ arch/arm/kernel/bios32.c                | 3 ++-
+ arch/cris/arch-v32/drivers/pci/bios.c   | 3 ++-
+ arch/ia64/pci/pci.c                     | 3 ++-
+ arch/microblaze/pci/pci-common.c        | 2 +-
+ arch/mips/pci/pci.c                     | 3 ++-
+ arch/mn10300/unit-asb2305/pci-asb2305.c | 3 ++-
+ arch/parisc/kernel/pci.c                | 3 ++-
+ arch/powerpc/kernel/pci-common.c        | 3 ++-
+ arch/sh/drivers/pci/pci.c               | 3 ++-
+ arch/sparc/kernel/pci.c                 | 6 +++---
+ arch/unicore32/kernel/pci.c             | 3 ++-
+ arch/x86/pci/i386.c                     | 3 ++-
+ arch/xtensa/kernel/pci.c                | 3 ++-
+ drivers/pci/pci-sysfs.c                 | 2 +-
+ drivers/pci/proc.c                      | 2 +-
+ include/linux/pci.h                     | 3 ++-
+ 16 files changed, 30 insertions(+), 18 deletions(-)
 
-I don't think there is even a problem with GENERIC_IOMAP: If both are
-set, passing a low number as a pointer will turn an ioread32() into an
-inl(), which is implemented by libio.
-
->         def_bool y if PCI && (ARC || MN10300 || UNICORE32 || SPARC || MICROBLAZE || S390 || AVR32 || CRIS || BLACKFIN || XTENSA || ARM64)
-
-I think most of these architectures just use their own inb/outb functions,
-and should not use libio at all.
-
-It's also possible that they use an older way of mapping I/O ports by calling
-ioremap() on the physical address and treating the pointer as a 32-bit
-I/O port number (relying on the PCI_IOBASE=0 default). Architectures doing
-that might have other issues with libio, and I wouldn't try converting those.
-
-> 2) Modify the ioport_map() defined in asm-generic/io.h
-> Add the checks to identify the input 'port' is MMIO, otherwise, return NULL;
-
-This seems fine.
-
->> - We could simplify the lookup a bit by using the trick from arch/ia64
->>   of using an array instead of linked list for walking the port numbers.
->>   There, the upper bits of the port number refer to an address space
->>   number while the lower bits refer to the bus address within that
->>   address space. This should work just as well as the current
->>   implementation but would be a little easier to understand. Maybe
->>   Bjorn can comment on this too, as I think he was involved with the
->>   ia64 implementation.
->>
-> Yes, It will be more efficient.
->
-> But the issue remained here is still how to coexist with the existing I/O frameworks.
-> I will continue to look into.
-
-Ok. Let's wait for Bjorn to reply on this idea before you spend too much time
-on this though.
-
-      Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index 2f0e077..a4fc3f4 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -597,7 +597,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	return start;
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, int bar,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	if (mmap_state == pci_mmap_io)
+diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
+index 212266a..a589686d 100644
+--- a/arch/cris/arch-v32/drivers/pci/bios.c
++++ b/arch/cris/arch-v32/drivers/pci/bios.c
+@@ -14,7 +14,8 @@ void pcibios_set_master(struct pci_dev *dev)
+ 	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, int bar,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long prot;
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 8f6ac2f..053c688 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -419,7 +419,8 @@ pcibios_align_resource (void *data, const struct resource *res,
+ }
+ 
+ int
+-pci_mmap_page_range (struct pci_dev *dev, struct vm_area_struct *vma,
++pci_mmap_page_range (struct pci_dev *dev, int bar,
++		     struct vm_area_struct *vma,
+ 		     enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long size = vma->vm_end - vma->vm_start;
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 13bc932..404fb38 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -278,7 +278,7 @@ pgprot_t pci_phys_mem_access_prot(struct file *file,
+  *
+  * Returns a negative error code on failure, zero on success.
+  */
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, int bar, struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	resource_size_t offset =
+diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
+index f6325fa..f189502 100644
+--- a/arch/mips/pci/pci.c
++++ b/arch/mips/pci/pci.c
+@@ -58,7 +58,8 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
+ 	*end = rsrc->start + size;
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, int bar,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long prot;
+diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
+index b7ab837..4abbbd5 100644
+--- a/arch/mn10300/unit-asb2305/pci-asb2305.c
++++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
+@@ -211,7 +211,8 @@ void __init pcibios_resource_survey(void)
+ 	pcibios_allocate_resources(1);
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, int bar,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long prot;
+diff --git a/arch/parisc/kernel/pci.c b/arch/parisc/kernel/pci.c
+index 0903c6a..6538775 100644
+--- a/arch/parisc/kernel/pci.c
++++ b/arch/parisc/kernel/pci.c
+@@ -228,7 +228,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ }
+ 
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, int bar,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long prot;
+diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+index ffda24a..6dda4a2 100644
+--- a/arch/powerpc/kernel/pci-common.c
++++ b/arch/powerpc/kernel/pci-common.c
+@@ -513,7 +513,8 @@ pgprot_t pci_phys_mem_access_prot(struct file *file,
+  *
+  * Returns a negative error code on failure, zero on success.
+  */
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, int bar,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	resource_size_t offset =
+diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+index 84563e3..c8b36b7 100644
+--- a/arch/sh/drivers/pci/pci.c
++++ b/arch/sh/drivers/pci/pci.c
+@@ -269,7 +269,8 @@ void __ref pcibios_report_status(unsigned int status_mask, int warn)
+ 	}
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, int bar,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	/*
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 015e55a..7eceaa1 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -862,9 +862,9 @@ static void __pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vm
+  *
+  * Returns a negative error code on failure, zero on success.
+  */
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state,
+-			int write_combine)
++int pci_mmap_page_range(struct pci_dev *dev, int bar,
++			struct vm_area_struct *vma,
++			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	int ret;
+ 
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index 62137d1..1b43885 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -357,7 +357,8 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return 0;
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, int bar,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long phys;
+diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
+index 0a9f2ca..8ca5e5d 100644
+--- a/arch/x86/pci/i386.c
++++ b/arch/x86/pci/i386.c
+@@ -411,7 +411,8 @@ static const struct vm_operations_struct pci_mmap_ops = {
+ 	.access = generic_access_phys,
+ };
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, int bar,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine)
+ {
+ 	unsigned long prot;
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index c5944d3..6872646 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -362,7 +362,8 @@ __pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vma,
+  *
+  * Returns a negative error code on failure, zero on success.
+  */
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *dev, int bar,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state,
+ 			int write_combine)
+ {
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 8a2d77b..063310a 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1041,7 +1041,7 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 	pci_resource_to_user(pdev, bar, res, &start, &end);
+ 	vma->vm_pgoff += start >> PAGE_SHIFT;
+ 	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
+-	return pci_mmap_page_range(pdev, vma, mmap_type, write_combine);
++	return pci_mmap_page_range(pdev, bar, vma, mmap_type, write_combine);
+ }
+ 
+ static int pci_mmap_resource_uc(struct file *filp, struct kobject *kobj,
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index f387231..2d9cfa4 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -267,7 +267,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
+ 		else
+ 			return -EINVAL;
+ 	}
+-	ret = pci_mmap_page_range(dev, vma,
++	ret = pci_mmap_page_range(dev, i, vma,
+ 				  fpriv->mmap_state, write_combine);
+ 	if (ret < 0)
+ 		return ret;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 9a94cb8..ebc86c1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1630,7 +1630,8 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+  * Architectures provide this function if they set HAVE_PCI_MMAP, and
+  * it accepts the 'write_combine' argument when arch_can_pci_mmap_wc()
+  * evaluates to nonzero. */
+-int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
++int pci_mmap_page_range(struct pci_dev *pdev, int bar,
++			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine);
+ 
+ #ifndef pci_root_bus_fwnode
+-- 
+2.9.3
