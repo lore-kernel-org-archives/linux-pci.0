@@ -1,167 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-doc@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v3 04/23] Documentation: PCI: Guide to use pci endpoint
- configfs
-Date: Thu, 9 Mar 2017 13:27:15 +0530
-Message-ID: <1489046254-19919-5-git-send-email-kishon@ti.com>
-In-Reply-To: <1489046254-19919-1-git-send-email-kishon@ti.com>
-References: <1489046254-19919-1-git-send-email-kishon@ti.com>
+Return-Path: <SRS0=hbEj=27=jonmasters.org=jcm@kernel.org>
+Return-Path: <SRS0=hbEj=27=jonmasters.org=jcm@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
+ <376ae1df-da85-e576-75d6-3ae2ab0f1b41@jonmasters.org>
+ <20170315113323.GA28027@localhost.localdomain>
+ <251db823-591b-483b-9c55-13c911020fd1@jonmasters.org>
+ <48b93116-cc0f-e59d-8aa3-704052ad6759@gmail.com>
+ <c3392131-9243-24d3-30b4-4d7e84019d6f@jonmasters.org>
+ <20170321134744.GA13150@bhelgaas-glaptop.roam.corp.google.com>
+ <b50b6a7f-30be-4206-4f38-2539ea936228@semihalf.com>
+ <aad5796a-1af8-53e0-c5f3-cb7755519cd5@caviumnetworks.com>
+ <de830a73-6f01-62af-b454-dc1588a209eb@jonmasters.org>
+ <20170322144820.GA16556@bhelgaas-glaptop.roam.corp.google.com>
+Cc: David Daney <ddaney@caviumnetworks.com>, Tomasz Nowicki
+ <tn@semihalf.com>, David Daney <ddaney.cavm@gmail.com>,
+ Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>,
+ David.Daney@cavium.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com,
+ bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
+From: Jon Masters <jcm@jonmasters.org>
+Message-ID: <51ba853c-f543-b21b-c25f-b56d77746f92@jonmasters.org>
+Date: Wed, 22 Mar 2017 12:25:39 -0400
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170322144820.GA16556@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
 List-ID: <linux-pci.vger.kernel.org>
 
-Add Documentation to help users use pci endpoint to configure
-pci endpoint function and to bind the endpoint function
-with endpoint controller.
+On 03/22/2017 10:48 AM, Bjorn Helgaas wrote:
+> On Wed, Mar 22, 2017 at 10:28:27AM -0400, Jon Masters wrote:
+>> On 03/21/2017 10:56 AM, David Daney wrote:
+> 
+>>> Yes.  After all this back and forth, Cavium has decided to deploy
+>>> firmware with "CAVxxx" as _HID.
+>>
+>> Great. How about a stable backport for Greg K-H? I want to make sure
+>> that everyone running "upstream" has a chance of booting.
+> 
+> The first patch, fee4d813850c ("PCI: Use Cavium assigned hardware ID for
+> ThunderX host controller"), has a stable tag already.
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- Documentation/PCI/00-INDEX                      |    2 +
- Documentation/PCI/endpoint/pci-endpoint-cfs.txt |  105 +++++++++++++++++++++++
- 2 files changed, 107 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+Thanks - I saw that after I mailed.
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index ba950b2..f84a23c 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -14,3 +14,5 @@ pcieaer-howto.txt
- 	- the PCI Express Advanced Error Reporting Driver Guide HOWTO
- endpoint/pci-endpoint.txt
- 	- guide to add endpoint controller driver and endpoint function driver.
-+endpoint/pci-endpoint-cfs.txt
-+	- guide to use configfs to configure the pci endpoint function.
-diff --git a/Documentation/PCI/endpoint/pci-endpoint-cfs.txt b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
-new file mode 100644
-index 0000000..8b2a828
---- /dev/null
-+++ b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
-@@ -0,0 +1,105 @@
-+                   CONFIGURING PCI ENDPOINT USING CONFIGFS
-+                    Kishon Vijay Abraham I <kishon@ti.com>
-+
-+The PCI Endpoint Core exposes configfs entry (pci_ep) in order to configure the
-+PCI endpoint function and in order to bind the endpoint function
-+with the endpoint controller. (For introducing other mechanisms to
-+configure the PCI Endpoint Function refer [1]).
-+
-+*) Mounting configfs
-+
-+The PCI Endpoint Core layer creates pci_ep directory in the mounted configfs
-+directory. configfs can be mounted using the following command.
-+
-+	mount -t configfs none /sys/kernel/config
-+
-+*) Directory Structure
-+
-+The pci_ep configfs has two directories at its root: controllers and
-+functions. Every EPC device present in the system will have an entry in
-+the *controllers* directory and and every EPF driver present in the system
-+will have an entry in the *functions* directory.
-+
-+/sys/kernel/config/pci_ep/
-+	.. controllers/
-+	.. functions/
-+
-+*) Creating EPF Device
-+
-+Every registered EPF driver will be listed in controllers directory. The
-+entries corresponding to EPF driver will be created by the EPF core.
-+
-+/sys/kernel/config/pci_ep/functions/
-+	.. <EPF Driver1>/
-+		... <EPF Device 11>/
-+		... <EPF Device 21>/
-+	.. <EPF Driver2>/
-+		... <EPF Device 12>/
-+		... <EPF Device 22>/
-+
-+In order to create a <EPF device> of the type probed by <EPF Driver>, the
-+user has to create a directory inside <EPF DriverN>.
-+
-+Every <EPF device> directory consists of the following entries that can be
-+used to configure the standard configuration header of the endpoint function.
-+(These entries are created by the framework when any new <EPF Device> is
-+created)
-+
-+	.. <EPF Driver1>/
-+		... <EPF Device 11>/
-+			... vendorid
-+			... deviceid
-+			... revid
-+			... progif_code
-+			... subclass_code
-+			... baseclass_code
-+			... cache_line_size
-+			... subsys_vendor_id
-+			... subsys_id
-+			... interrupt_pin
-+
-+*) EPC Device
-+
-+Every registered EPC device will be listed in controllers directory. The
-+entries corresponding to EPC device will be created by the EPC core.
-+
-+/sys/kernel/config/pci_ep/controllers/
-+	.. <EPC Device1>/
-+		... <Symlink EPF Device11>/
-+		... <Symlink EPF Device12>/
-+		... start
-+	.. <EPC Device2>/
-+		... <Symlink EPF Device21>/
-+		... <Symlink EPF Device22>/
-+		... start
-+
-+The <EPC Device> directory will have a list of symbolic links to
-+<EPF Device>. These symbolic links should be created by the user to
-+represent the functions present in the endpoint device.
-+
-+The <EPC Device> directory will also have a *start* field. Once
-+"1" is written to this field, the endpoint device will be ready to
-+establish the link with the host. This is usually done after
-+all the EPF devices are created and linked with the EPC device.
-+
-+
-+			 | controllers/
-+				| <Directory: EPC name>/
-+					| <Symbolic Link: Function>
-+					| start
-+			 | functions/
-+				| <Directory: EPF driver>/
-+					| <Directory: EPF device>/
-+						| vendorid
-+						| deviceid
-+						| revid
-+						| progif_code
-+						| subclass_code
-+						| baseclass_code
-+						| cache_line_size
-+						| subsys_vendor_id
-+						| subsys_id
-+						| interrupt_pin
-+						| function
-+
-+[1] -> Documentation/PCI/endpoint/pci-endpoint.txt
--- 
-1.7.9.5
+> The second, 1dc94a38af89 ("PCI: Add legacy firmware support for Cavium
+> ThunderX host controller"), does not, but I can easily add it if needed.
 
+I think that would be ideal. There is firmware out in the wild that
+has neither identifier in it (for example, a bunch of folks in the
+office bought platforms recently that don't boot upstream kernels).
+My guys are used to just taking an upstream kernel and using that,
+for development, and I have no intention of having the broader RH
+org do any different from what they would do with an x86 box ;)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Jon.
