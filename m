@@ -1,88 +1,46 @@
-Return-Path: <SRS0=nDpC=2T=arm.com=robin.murphy@kernel.org>
-Return-Path: <SRS0=nDpC=2T=arm.com=robin.murphy@kernel.org>
-Subject: Re: Neophyte questions about PCIe
-To: David Laight <David.Laight@ACULAB.COM>, Mason <slash.tmp@free.fr>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
- <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
- <1092d971-5d81-2da7-4b34-0a88637c0ec5@arm.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFE7C8BA@AcuExch.aculab.com>
- <c4712e19-863c-16b8-6920-5ad7dd178929@free.fr>
- <4f37cc08-d4fd-b207-63d2-4ac038d2fcec@arm.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFE7C9B9@AcuExch.aculab.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>,
- Arnd Bergmann <arnd@arndb.de>, Ard Biesheuvel <ard.biesheuvel@linaro.org>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- linux-usb <linux-usb@vger.kernel.org>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Shawn Lin <shawn.lin@rock-chips.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <504fdb97-f058-e1fb-0fe2-7f01c46db513@arm.com>
-Date: Fri, 10 Mar 2017 16:00:32 +0000
+Return-Path: <SRS0=Wdc/=27=sigmadesigns.com=Marc_Gonzalez@kernel.org>
+Return-Path: <SRS0=Wdc/=27=sigmadesigns.com=Marc_Gonzalez@kernel.org>
+Subject: Re: [PATCH] PCI: Pull struct pci_ops definition
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: linux-pci <linux-pci@vger.kernel.org>, Lorenzo Pieralisi
+	<lorenzo.pieralisi@arm.com>, Jayachandran C <jchandra@broadcom.com>, Arnd
+ Bergmann <arnd@arndb.de>
+References: <13b87220-8aab-3a80-1d74-8e31d2d59e20@sigmadesigns.com>
+Message-ID: <8c99b974-14f2-37cc-2753-0879348ba027@sigmadesigns.com>
+Date: Wed, 22 Mar 2017 11:18:11 +0100
 MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DCFE7C9B9@AcuExch.aculab.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <13b87220-8aab-3a80-1d74-8e31d2d59e20@sigmadesigns.com>
+Content-Type: text/plain; charset="ISO-8859-15"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 10/03/17 15:35, David Laight wrote:
-> From: Robin Murphy 
->> Sent: 10 March 2017 15:23
-> ...
->>>> So you have 128MB (max) of system memory that has cpu physical
->>>> addresses 0x80000000 upwards.
->>>> I'd expect it all to be accessible from any PCIe card at some PCIe
->>>> address, it might be at address 0, 0x80000000 or any other offset.
->>>>
->>>> I don't know which DT entry controls that offset.
->>>
->>> This is a crucial point, I think.
->>
->> The appropriate DT property would be "dma-ranges", i.e.
->>
->> pci@... {
->> 	...
->> 	dma-ranges = <(PCI bus address) (CPU phys address) (size)>;
->> }
+On 17/03/2017 15:53, Marc Gonzalez wrote:
+
+> struct pci_ecam_ops embeds a struct pci_ops. Explicitly request the
+> definition for struct pci_ops, otherwise gcc might complain:
 > 
-> Isn't that just saying which physical addresses the cpu can assign
-> for buffers for those devices?
-> There is also an offset between the 'cpu physical address' and the
-> 'dma address'.
-
-That offset is inherent in what "dma-ranges" describes. Say (for ease of
-calculation) that BAR0 has been put at a mem space address of 0x20000000
-and maps the first 1GB of physical DRAM. That would give us:
-
-	dma-ranges = <0x20000000 0x80000000 0x40000000>;
-
-Then a "virt = dma_alloc_coherent(..., &handle, ...)", borrowing the
-numbers from earlier in the thread, would automatically end up with:
-
-	virt == 0xd0855000;
-	handle == 0x2e07e000;
-
-(with the physical address of 0x8e07e000 in between being irrelevant to
-the consuming driver)
-
-It is true that the device's DMA mask assignment is also part and parcel
-of this, whereby we will limit what physical addresses the kernel
-considers valid for DMA involving devices behind this range to the lower
-3GB (i.e. 0x80000000 + 0x40000000 - 1). With a bit of luck,
-CONFIG_DMABOUNCE should do the rest of the job of working around that
-where necessary.
-
-Robin.
-
-> This might be implicit in the 'BAR0' base address register.
+> include/linux/pci-ecam.h:29:19: error: field 'pci_ops' has incomplete type
+> 
+> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> ---
+>  include/linux/pci-ecam.h | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+> index 7adad206b1f4..33c4750781a0 100644
+> --- a/include/linux/pci-ecam.h
+> +++ b/include/linux/pci-ecam.h
+> @@ -16,6 +16,7 @@
+>  #ifndef DRIVERS_PCI_ECAM_H
+>  #define DRIVERS_PCI_ECAM_H
 >  
->> The fun part is that that will only actually match the hardware once the
->> magic BAR has actually been programmed with (bus address), so you end up
->> with this part of your DT being more of a prophecy than a property :)
-> 
-> The BAR0 values could easily be programmed into the cpld/fpga - so
-> not need writing by the cpu at all.
-> 
-> 	David
-> 
+> +#include <linux/pci.h>
+>  #include <linux/kernel.h>
+>  #include <linux/platform_device.h>
+>  
+
+Hello Bjorn,
+
+Can you take this trivial patch?
+
+Regards.
