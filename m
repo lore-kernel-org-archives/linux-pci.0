@@ -1,60 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 1/4] pci: Allow lockless access path to PCI mmconfig
-To: Andi Kleen <andi@firstfloor.org>, bhelgaas@google.com
-References: <20170302232104.10136-1-andi@firstfloor.org>
-Cc: x86@kernel.org, linux-pci@vger.kernel.org, eranian@google.com,
-        peterz@infradead.org, linux-kernel@vger.kernel.org,
-        Andi Kleen <ak@linux.intel.com>
-From: "H. Peter Anvin" <hpa@zytor.com>
-Message-ID: <0bb90a87-e03d-2b14-0e58-bd0f41bf84a9@zytor.com>
-Date: Tue, 14 Mar 2017 10:28:17 -0700
-MIME-Version: 1.0
-In-Reply-To: <20170302232104.10136-1-andi@firstfloor.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from merlin.infradead.org ([205.233.59.134]:47286 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759809AbdCVNZd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Mar 2017 09:25:33 -0400
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 10/17] arm: Use generic pci_mmap_resource_range()
+Date: Wed, 22 Mar 2017 13:25:24 +0000
+Message-Id: <60f1a26d0f10bf8b6f1e88283ba1df1b3b1d0c0a.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/02/17 15:21, Andi Kleen wrote:
-> From: Andi Kleen <ak@linux.intel.com>
-> 
-> The Intel uncore driver can do a lot of PCI config accesses to read
-> performance counters. I had a situation on a 4S system where it
-> was spending 40+% of CPU time grabbing the pci_cfg_lock due to that.
-> 
-> For 64bit x86 with MMCONFIG there isn't really any reason to take
-> a lock. The access is directly mapped to an underlying MMIO area,
-> which can fully operate lockless.
-> 
-> Add a new flag that allows the PCI mid layer to skip the lock
-> and set it for the 64bit mmconfig code.
-> 
-> There's a small risk that someone relies on this lock for synchronization,
-> but I think that's unlikely because there isn't really any useful
-> synchronization at this individual operation level. Any useful
-> synchronization would likely need to protect at least a
-> read-modify-write or similar.  So I made it unconditional without opt-in.
-> 
-> Signed-off-by: Andi Kleen <ak@linux.intel.com>
-> ---
->  arch/x86/pci/mmconfig_64.c |  1 +
->  drivers/pci/access.c       | 14 ++++++++++----
->  include/linux/pci.h        |  2 ++
->  3 files changed, 13 insertions(+), 4 deletions(-)
-> 
-> diff --git a/arch/x86/pci/mmconfig_64.c b/arch/x86/pci/mmconfig_64.c
-> index bea52496aea6..8bf10f41e626 100644
-> --- a/arch/x86/pci/mmconfig_64.c
-> +++ b/arch/x86/pci/mmconfig_64.c
-> @@ -121,6 +121,7 @@ int __init pci_mmcfg_arch_init(void)
->  		}
->  
->  	raw_pci_ext_ops = &pci_mmcfg;
-> +	pci_root_ops.ll_allowed = true;
->  
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-"ll_allowed" is pretty awful naming... you spend almost all the
-characters telling us nothing.  I spend several seconds trying to figure
-out what "ll" stood for, and without the context of the patch I'd have
-had to go a massive grep.  Just call it "lockless" or something.
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+---
+ arch/arm/include/asm/pci.h |  1 +
+ arch/arm/kernel/bios32.c   | 20 --------------------
+ 2 files changed, 1 insertion(+), 20 deletions(-)
 
-	-hpa
+diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
+index 51118a0..396c92b 100644
+--- a/arch/arm/include/asm/pci.h
++++ b/arch/arm/include/asm/pci.h
+@@ -29,6 +29,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ #define PCI_DMA_BUS_IS_PHYS     (1)
+ 
+ #define HAVE_PCI_MMAP
++#define ARCH_GENERIC_PCI_MMAP_RESOURCE
+ 
+ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ {
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index a4fc3f4..b259956 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -597,26 +597,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	return start;
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, int bar,
+-			struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine)
+-{
+-	if (mmap_state == pci_mmap_io)
+-		return -EINVAL;
+-
+-	/*
+-	 * Mark this as IO
+-	 */
+-	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+-
+-	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+-			     vma->vm_end - vma->vm_start,
+-			     vma->vm_page_prot))
+-		return -EAGAIN;
+-
+-	return 0;
+-}
+-
+ void __init pci_map_io_early(unsigned long pfn)
+ {
+ 	struct map_desc pci_io_desc = {
+-- 
+2.9.3
