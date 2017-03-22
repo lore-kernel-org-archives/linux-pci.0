@@ -1,12 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V3] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-Date: Wed,  8 Mar 2017 15:39:11 -0500
-Message-Id: <1489005551-23598-1-git-send-email-okaya@codeaurora.org>
+Subject: Re: [PATCH v4 14/23] PCI: dwc: dra7xx: Workaround for errata id i870
+To: Rob Herring <robh@kernel.org>
+References: <20170313142259.25397-1-kishon@ti.com>
+ <20170313142259.25397-15-kishon@ti.com>
+ <20170320214819.5azzdbgncfemhujo@rob-hp-laptop>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <387a82a1-a534-efe1-e9eb-aa78809566a4@ti.com>
+Date: Wed, 22 Mar 2017 20:09:24 +0530
+MIME-Version: 1.0
+In-Reply-To: <20170320214819.5azzdbgncfemhujo@rob-hp-laptop>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -14,108 +17,97 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- Mayurkumar Patel <mayurkumar.patel@intel.com>,
- open list <linux-kernel@vger.kernel.org>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
+Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, hch@infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When the operating system is booted with the default ASPM policy
-(POLICY_DEFAULT), current code is querying the enable/disable
-states from ASPM registers to determine the policy.
 
-For example, a BIOS could set the power saving state to performance
-and clear all ASPM control registers. A balanced ASPM policy could
-enable L0s and disable L1. A power conscious BIOS could enable both
-L0s and L1 to trade off latency and performance vs. power.
 
-After hotplug removal, pcie_aspm_exit_link_state() function clears
-the ASPM registers. An insertion following hotplug removal reads
-incorrect policy as ASPM disabled even though ASPM was enabled
-during boot.
+On Tuesday 21 March 2017 03:18 AM, Rob Herring wrote:
+> On Mon, Mar 13, 2017 at 07:52:50PM +0530, Kishon Vijay Abraham I wrote:
+>> According to errata i870, access to the PCIe slave port
+>> that are not 32-bit aligned will result in incorrect mapping
+>> to TLP Address and Byte enable fields.
+>>
+>> Accessing non 32-bit aligned data causes incorrect data in the target
+>> buffer if memcpy is used. Implement the workaround for this
+>> errata here.
+>>
+>> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+>> ---
+>>  drivers/pci/dwc/pci-dra7xx.c | 53 ++++++++++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 53 insertions(+)
+>>
+>> diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+>> index 35c18534469c..147d37a7fe58 100644
+>> --- a/drivers/pci/dwc/pci-dra7xx.c
+>> +++ b/drivers/pci/dwc/pci-dra7xx.c
+>> @@ -26,6 +26,8 @@
+>>  #include <linux/pm_runtime.h>
+>>  #include <linux/resource.h>
+>>  #include <linux/types.h>
+>> +#include <linux/mfd/syscon.h>
+>> +#include <linux/regmap.h>
+>>  
+>>  #include "pcie-designware.h"
+>>  
+>> @@ -528,6 +530,51 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+>>  	{},
+>>  };
+>>  
+>> +/*
+>> + * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
+>> + * @dra7xx: the dra7xx device where the workaround should be applied
+>> + *
+>> + * Access to the PCIe slave port that are not 32-bit aligned will result
+>> + * in incorrect mapping to TLP Address and Byte enable fields. Therefore,
+>> + * byte and half-word accesses are not possible to byte offset 0x1, 0x2, or
+>> + * 0x3.
+>> + *
+>> + * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
+>> + */
+>> +static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
+>> +{
+>> +	int ret;
+>> +	struct device_node *np = dev->of_node;
+>> +	struct regmap *regmap;
+>> +	unsigned int reg;
+>> +	unsigned int field;
+>> +
+>> +	regmap = syscon_regmap_lookup_by_phandle(np,
+>> +						 "ti,syscon-unaligned-access");
+>> +	if (IS_ERR(regmap)) {
+>> +		dev_dbg(dev, "can't get ti,syscon-unaligned-access\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	if (of_property_read_u32_index(np, "ti,syscon-unaligned-access", 1,
+>> +				       &reg)) {
+>> +		dev_err(dev, "couldn't get legacy mode register offset\n");
+>> +		return -EINVAL;
+>> +	}
+>> +
+>> +	if (of_property_read_u32_index(np, "ti,syscon-unaligned-access", 2,
+>> +				       &field)) {
+>> +		dev_err(dev, "can't get bit field for setting legacy mode\n");
+>> +		return -EINVAL;
+>> +	}
+> 
+> If this remains, it's screaming for a helper function. 
+> of_parse_phandle_with_args already exists, but maybe a syscon specific 
+> function is in order.
 
-This is caused by the fact that same function is used for reconfiguring
-ASPM regardless of the of the power on state.
+hmm, I guess for now I can use of_parse_phandle_with_args. The number of args
+might vary for different platforms/scenarios?
 
-This patch builds some state info into pcie_aspm_cap_init() function.
-
-Adding a flag and a counter to the struct pci_dev to save the
-power up policy in the bridge during boot. ASPM enable counter is
-used as a switch to determine when to use saved value.
-
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-Signed-off-by: Mayurkumar Patel <mayurkumar.patel@intel.com>
----
- drivers/pci/pcie/aspm.c | 21 +++++++++++++++++----
- include/linux/pci.h     |  2 ++
- 2 files changed, 19 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 17ac1dc..63435b0 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -338,8 +338,9 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
- 	}
- }
- 
--static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
-+static void pcie_aspm_cap_init(struct pci_dev *pdev, int blacklist)
- {
-+	struct pcie_link_state *link = pdev->link_state;
- 	struct pci_dev *child, *parent = link->pdev;
- 	struct pci_bus *linkbus = parent->subordinate;
- 	struct aspm_register_info upreg, dwreg;
-@@ -397,8 +398,20 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
- 	link->latency_up.l1 = calc_l1_latency(upreg.latency_encoding_l1);
- 	link->latency_dw.l1 = calc_l1_latency(dwreg.latency_encoding_l1);
- 
--	/* Save default state */
--	link->aspm_default = link->aspm_enabled;
-+	/*
-+	 * Save default state from FW when enabling ASPM for the first time
-+	 * during boot by looking at the calculated link->aspm_enabled bits
-+	 * above and aspm_enable_cnt will be zero.
-+	 *
-+	 * If this path is getting called for the second/third time
-+	 * (aspm_enable_cnt will be non-zero). Assume that the current state
-+	 * of the ASPM registers may not necessarily match what FW asked us to
-+	 * do as in the case of hotplug insertion/removal.
-+	 */
-+	if (atomic_inc_return(&pdev->aspm_enable_cnt) == 1)
-+		pdev->aspm_default = link->aspm_default = link->aspm_enabled;
-+	else
-+		link->aspm_default = pdev->aspm_default;
- 
- 	/* Setup initial capable state. Will be updated later */
- 	link->aspm_capable = link->aspm_support;
-@@ -599,7 +612,7 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
- 	 * upstream links also because capable state of them can be
- 	 * update through pcie_aspm_cap_init().
- 	 */
--	pcie_aspm_cap_init(link, blacklist);
-+	pcie_aspm_cap_init(pdev, blacklist);
- 
- 	/* Setup initial Clock PM state */
- 	pcie_clkpm_cap_init(link, blacklist);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a12..aa7bd7e 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -321,6 +321,8 @@ struct pci_dev {
- 
- #ifdef CONFIG_PCIEASPM
- 	struct pcie_link_state	*link_state;	/* ASPM link state */
-+	unsigned int	aspm_default;		/* ASPM policy set by BIOS */
-+	atomic_t	aspm_enable_cnt;	/* ASPM policy initialization */
- #endif
- 
- 	pci_channel_state_t error_state;	/* current connectivity state */
--- 
-1.9.1
-
+Thanks
+Kishon
 
 _______________________________________________
 linux-arm-kernel mailing list
