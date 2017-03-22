@@ -1,135 +1,179 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:49730 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752051AbdCPRZI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Mar 2017 13:25:08 -0400
-Date: Thu, 16 Mar 2017 12:24:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Rui Wang <rui.y.wang@intel.com>
-Cc: tglx@linutronix.de, rjw@rjwysocki.net, tony.luck@intel.com,
-        bhelgaas@google.com, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        x86@kernel.org, fengguang.wu@intel.com, kbuild-all@01.org
-Subject: Re: [PATCH v2 1/2] x86/PCI: Implement pcibios_release_device to
- release IRQ from IOAPIC
-Message-ID: <20170316172432.GB2021@bhelgaas-glaptop.roam.corp.google.com>
-References: <201702280904.A2EXAFMQ%fengguang.wu@intel.com>
- <1488288869-31290-1-git-send-email-rui.y.wang@intel.com>
- <1488288869-31290-2-git-send-email-rui.y.wang@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1488288869-31290-2-git-send-email-rui.y.wang@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Mime-Version: 1.0 (1.0)
+Subject: Re: [PATCH v2] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+In-Reply-To: <20170322102939.GB3519@red-moon>
+Date: Wed, 22 Mar 2017 11:08:48 +0000
+Message-Id: <35F65528-FC1F-4813-A0C6-641CF864212A@linaro.org>
+References: <1490123810-12383-1-git-send-email-ard.biesheuvel@linaro.org>
+ <20170322102939.GB3519@red-moon>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-efi@vger.kernel.org, matt@codeblueprint.co.uk,
+ linux-pci@vger.kernel.org, heyi.guo@linaro.org, pjones@redhat.com,
+ hanjun.guo@linaro.org, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rui,
 
-On Tue, Feb 28, 2017 at 09:34:28PM +0800, Rui Wang wrote:
-> The revert of 991de2e59090 ("PCI, x86: Implement pcibios_alloc_irq()
-> and pcibios_free_irq()") causes a problem for IOAPIC hotplug. The
-> problem is that IRQs are allocated and freed in pci_enable_device()
-> and pci_disable_device(). But there are some drivers which don't call
-> pci_disable_device(), and they have good reasons not calling it, so
-
-Can you elaborate a little on what these drivers are and what the
-reasons for not calling pci_disable_device() are?  Without a pointer
-to details, this is just a teaser :)
-
-Maybe this has to do with the "there are too many odd BIOS and bridge
-setups" comment in pci_device_remove()?  If so, I think it's a bit of
-a stretch to say they have good reasons to not call it, because nobody
-knows what those reasons are.
-
-> if they're using IOAPIC their IRQs won't have a chance to be released
-> from the IOAPIC. When this happens IOAPIC hot-removal fails with a
-> kernel stack dump and an error message like this:
+> On 22 Mar 2017, at 10:29, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
 > 
-> [149335.697989] pin16 on IOAPIC2 is still in use.
-
-Are there any bug reports for this that we should reference?  Pointing
-to a bugzilla with more details would help avoid situations like the
-vague "odd BIOS and bridge setups" comment above.
-
-> It turns out that we can fix it in a different way without moving IRQ
-> allocation into pcibios_alloc_irq(), thus avoiding the regression of
-> 991de2e59090. We can keep the allocation and freeing of IRQs as is
-> within pci_enable_device()/pci_disable_device(), without breaking any
-> previous assumption of the rest of the system, keeping compatibility
-> with both the legacy and the modern drivers. We can accomplish this by
-> implementing the existing __weak hook of pcibios_release_device() thus
-> when a pci device is about to be deleted we get notified in the hook
-> and take the chance to release its IRQ, if any, from the IOAPIC.
-
-I'm not a huge fan of using the release method because it makes the
-code flow more obscure -- the release method is called semi-magically
-when a reference count goes to zero, and it's primarily a mechanism
-for dropping references and deallocating storage.
-
-That's not to say we *can't* do it in pcibios_release_device(); it's
-just that I'd prefer a more direct approach if we can find one.
-
-If I understand correctly, after 991de2e59090, we did the IRQ setup
-and teardown in the driver attach (pci_device_probe()) and remove
-(pci_device_remove()) path.  The problem with that approach was that
-we set up the IRQ for the device but not for any upstream bridges, so
-some drivers didn't get the interrupts they expected.
-
-After we reverted 991de2e59090 (with 6c777e8799a9), we now do IRQ
-setup and teardown in the pci_enable_device() and pci_disable_device()
-paths.  The pci_enable_device() path enables all upstream bridges and
-sets up their IRQs.  The problem with this approach is that some
-drivers don't call pci_disable_device() to teardown the IRQ, and a
-subsequent hotplug removal of the IOAPIC fails because an interrupt is
-still in use.
-
-I think it makes sense to set up the IRQ in pci_enable_device() rather
-than in pci_device_probe().  Doing it at probe-time is a little
-aggressive because some drivers may not need the IRQ at all.
-
-Could we do a hybrid, i.e., do the setup in pci_enable_device() and
-the teardown in pci_device_remove()?  I think it makes sense that if a
-driver has set up the IRQ, we should make sure it's torn down when we
-unbind the driver from the device (or possibly early, if the driver
-calls pci_disable_device()).
-
-> Besides implementing pcibios_release_device(), the hot-removal of
-> IOAPIC needs to be broken into two parts: the PCI part and the ACPI
-> part. The PCI part releases PCI resources before the PCI bus is gone,
-> and the ACPI part is moved to a stage later than the hot-removal of
-> the PCI root bus, so we have the chance to hook every PCI device's
-> pcibios_release_device(), before we remove the IOAPIC.
+>> On Tue, Mar 21, 2017 at 07:16:50PM +0000, Ard Biesheuvel wrote:
+>> On UEFI systems, the PCI subsystem is enumerated by the firmware,
+>> and if a graphical framebuffer is exposed by a PCI device, its base
+>> address and size are exposed to the OS via the Graphics Output
+>> Protocol (GOP).
+>> 
+>> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
+>> scratch at boot. This may result in the GOP framebuffer address to
+>> become stale, if the BAR covering the framebuffer is modified. This
+>> will cause the framebuffer to become unresponsive, and may in some
+>> cases result in unpredictable behavior if the range is reassigned to
+>> another device.
+>> 
+>> So add a quirk to the EFI fb driver to find the BAR associated with
+>> the GOP base address, and set the IORESOURCE_PCI_FIXED attribute so
+>> that the PCI core will leave it alone.
+>> 
+>> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+>> ---
+>> As it turns out, setting the IORESOURCE_PCI_FIXED flag is not sufficient
+>> to make the PCI core leave the BARs alone, so instead, the BAR resource
+>> is claimed in the quirk handler.
+>> 
+>> As suggested by Lorenzo, a check is added that the device has memory
+>> decoding enabled, and if it doesn't, no attempt is made to use the
+>> EFI framebuffer.
+>> 
+>> drivers/video/fbdev/efifb.c | 58 +++++++++++++++++++-
+>> 1 file changed, 57 insertions(+), 1 deletion(-)
+>> 
+>> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+>> index 8c4dc1e1f94f..eeeaf78c4a5b 100644
+>> --- a/drivers/video/fbdev/efifb.c
+>> +++ b/drivers/video/fbdev/efifb.c
+>> @@ -10,6 +10,7 @@
+>> #include <linux/efi.h>
+>> #include <linux/errno.h>
+>> #include <linux/fb.h>
+>> +#include <linux/pci.h>
+>> #include <linux/platform_device.h>
+>> #include <linux/screen_info.h>
+>> #include <video/vga.h>
+>> @@ -143,6 +144,9 @@ static struct attribute *efifb_attrs[] = {
+>> };
+>> ATTRIBUTE_GROUPS(efifb);
+>> 
+>> +static bool pci_bar_found;    /* did we find a BAR matching the efifb base? */
+>> +static bool pci_bar_disabled;    /* was it disabled? */
+>> +
+>> static int efifb_probe(struct platform_device *dev)
+>> {
+>>    struct fb_info *info;
+>> @@ -152,7 +156,7 @@ static int efifb_probe(struct platform_device *dev)
+>>    unsigned int size_total;
+>>    char *option = NULL;
+>> 
+>> -    if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
+>> +    if (screen_info.orig_video_isVGA != VIDEO_TYPE_EFI || pci_bar_disabled)
+>>        return -ENODEV;
+>> 
+>>    if (fb_get_options("efifb", &option))
+>> @@ -360,3 +364,55 @@ static struct platform_driver efifb_driver = {
+>> };
+>> 
+>> builtin_platform_driver(efifb_driver);
+>> +
+>> +static void claim_efifb_bar(struct pci_dev *dev, int idx)
+>> +{
+>> +    u16 word;
+>> +
+>> +    pci_bar_found = true;
+>> +
+>> +    if (pci_claim_resource(dev, idx)) {
 > 
-> This patch implements pcibios_release_device() on x86 to release any
-> IRQ not released by the driver, so that the IOAPIC can then be safely
-> hot-removed.
+> I would not do that. If claiming the resource succeeds, it will become
+> immutable (ie it becomes part of the resource tree), if it is your FB
+> fine if it isn't this will mess things up since a) you won't be able to
+> claim the PCI resources for the real FB and b) you won't be able to
+> reallocate the PCI resources for the device we *think* is the FB but it
+> actually isn't (unless we force a realloc).
 > 
-> v2: Fixed a typo (pcibios_release_device)
+> So, I would carry out the check below first, if the device is enabled
+> we should flag its resource IORESOURCE_PCI_FIXED otherwise just do
+> nothing and let PCI core (through arch specific realloc policy) handle
+> it.
 > 
-> Signed-off-by: Rui Wang <rui.y.wang@intel.com>
-> ---
->  arch/x86/pci/common.c | 9 +++++++++
->  1 file changed, 9 insertions(+)
+
+Well, it turned out that this does not actually work: the BAR is not reassigned, but the same range ends up being given to another device in some cases.
+
+
+> Side note: I *think* it should be fine to claim a resource twice
+> (ie in x86 the FB would have been claimed already by core x86 code),
+> just thought it is worth checking.
 > 
-> diff --git a/arch/x86/pci/common.c b/arch/x86/pci/common.c
-> index 0cb52ae..190e718 100644
-> --- a/arch/x86/pci/common.c
-> +++ b/arch/x86/pci/common.c
-> @@ -735,6 +735,15 @@ void pcibios_disable_device (struct pci_dev *dev)
->  		pcibios_disable_irq(dev);
->  }
->  
-> +#ifdef CONFIG_ACPI_HOTPLUG_IOAPIC
-> +void pcibios_release_device(struct pci_dev *dev)
-> +{
-> +	if (atomic_dec_return(&dev->enable_cnt) >= 0)
-> +		pcibios_disable_device(dev);
-> +
-> +}
-> +#endif
-> +
->  int pci_ext_cfg_avail(void)
->  {
->  	if (raw_pci_ext_ops)
-> -- 
-> 1.8.3.1
+> Lorenzo
 > 
+>> +        pci_bar_disabled = true;
+>> +        dev_err(&dev->dev, "BAR %d: failed to claim efifb BAR\n", idx);
+>> +        return;
+>> +    }
+>> +
+>> +    pci_read_config_word(dev, PCI_COMMAND, &word);
+>> +    if (!(word & PCI_COMMAND_MEMORY)) {
+>> +        pci_bar_disabled = true;
+>> +        dev_err(&dev->dev,
+>> +            "BAR %d: efifb BAR has memory decoding disabled!\n", idx);
+>> +        return;
+>> +    }
+>> +
+>> +    dev_info(&dev->dev, "BAR %d: claimed for efifb\n", idx);
+>> +}
+>> +
+>> +static void efifb_fixup_resources(struct pci_dev *dev)
+>> +{
+>> +    u64 base = screen_info.lfb_base;
+>> +    u64 size = screen_info.lfb_size;
+>> +    int i;
+>> +
+>> +    if (pci_bar_found || screen_info.orig_video_isVGA != VIDEO_TYPE_EFI)
+>> +        return;
+>> +
+>> +    if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
+>> +        base |= (u64)screen_info.ext_lfb_base << 32;
+>> +
+>> +    if (!base)
+>> +        return;
+>> +
+>> +    for (i = 0; i < PCI_STD_RESOURCE_END; i++) {
+>> +        struct resource *res = &dev->resource[i];
+>> +
+>> +        if (!(res->flags & IORESOURCE_MEM))
+>> +            continue;
+>> +
+>> +        if (res->start <= base && res->end >= base + size - 1) {
+>> +            claim_efifb_bar(dev, i);
+>> +            break;
+>> +        }
+>> +    }
+>> +}
+>> +DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, efifb_fixup_resources);
+>> -- 
+>> 2.7.4
+>> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
