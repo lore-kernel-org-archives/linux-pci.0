@@ -1,62 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:48387 "EHLO theia.8bytes.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751834AbdC1MRI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Mar 2017 08:17:08 -0400
-From: Joerg Roedel <joro@8bytes.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Joerg Roedel <jroedel@suse.de>,
-        Daniel Drake <drake@endlessm.com>,
-        Alexander Deucher <Alexander.Deucher@amd.com>
-Subject: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
-Date: Tue, 28 Mar 2017 14:16:44 +0200
-Message-Id: <1490703404-4944-1-git-send-email-joro@8bytes.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 22 Mar 2017 09:48:20 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jon Masters <jcm@jonmasters.org>
+Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
+Message-ID: <20170322144820.GA16556@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
+ <376ae1df-da85-e576-75d6-3ae2ab0f1b41@jonmasters.org>
+ <20170315113323.GA28027@localhost.localdomain>
+ <251db823-591b-483b-9c55-13c911020fd1@jonmasters.org>
+ <48b93116-cc0f-e59d-8aa3-704052ad6759@gmail.com>
+ <c3392131-9243-24d3-30b4-4d7e84019d6f@jonmasters.org>
+ <20170321134744.GA13150@bhelgaas-glaptop.roam.corp.google.com>
+ <b50b6a7f-30be-4206-4f38-2539ea936228@semihalf.com>
+ <aad5796a-1af8-53e0-c5f3-cb7755519cd5@caviumnetworks.com>
+ <de830a73-6f01-62af-b454-dc1588a209eb@jonmasters.org>
+MIME-Version: 1.0
+In-Reply-To: <de830a73-6f01-62af-b454-dc1588a209eb@jonmasters.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: David.Daney@cavium.com, Tomasz Nowicki <tn@semihalf.com>,
+ Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>,
+ David Daney <ddaney@caviumnetworks.com>, linux-kernel@vger.kernel.org,
+ stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com,
+ David Daney <ddaney.cavm@gmail.com>, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joerg Roedel <jroedel@suse.de>
+On Wed, Mar 22, 2017 at 10:28:27AM -0400, Jon Masters wrote:
+> On 03/21/2017 10:56 AM, David Daney wrote:
 
-ATS is broken on these devices. Under invalidation load, the
-GPU does not reply to invalidations anymore, causing
-Completion-wait loop timeouts on the AMD IOMMU driver side.
-Fix it by not enabling ATS on these devices.
+> > Yes.  After all this back and forth, Cavium has decided to deploy
+> > firmware with "CAVxxx" as _HID.
+> 
+> Great. How about a stable backport for Greg K-H? I want to make sure
+> that everyone running "upstream" has a chance of booting.
 
-Note that below mentioned commit is not broken, it just
-triggers the issue because it might cause invalidation
-storms on devices.
+The first patch, fee4d813850c ("PCI: Use Cavium assigned hardware ID for
+ThunderX host controller"), has a stable tag already.
 
-Fixes: b1516a14657a ('iommu/amd: Implement flush queue')
-Reported-by: Daniel Drake <drake@endlessm.com>
-Cc: Daniel Drake <drake@endlessm.com>
-Cc: Alexander Deucher <Alexander.Deucher@amd.com>
-Signed-off-by: Joerg Roedel <jroedel@suse.de>
----
- drivers/pci/ats.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+The second, 1dc94a38af89 ("PCI: Add legacy firmware support for Cavium
+ThunderX host controller"), does not, but I can easily add it if needed.
 
-diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-index eeb9fb2..711bdb2 100644
---- a/drivers/pci/ats.c
-+++ b/drivers/pci/ats.c
-@@ -17,10 +17,18 @@
- 
- #include "pci.h"
- 
-+static const struct pci_device_id broken_ats_tbl[] = {
-+	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x98e4) }, /* AMD Stoney GPU part */
-+	{ 0 }
-+};
-+
- void pci_ats_init(struct pci_dev *dev)
- {
- 	int pos;
- 
-+	if (pci_match_id(broken_ats_tbl, dev))
-+		return;
-+
- 	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
- 	if (!pos)
- 		return;
--- 
-1.9.1
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
