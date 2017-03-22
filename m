@@ -1,79 +1,70 @@
-Return-Path: <SRS0=nzUO=27=cavium.com=Jayachandran.Nair@kernel.org>
-Return-Path: <SRS0=nzUO=27=cavium.com=Jayachandran.Nair@kernel.org>
-From: Jayachandran C <jnair@caviumnetworks.com>
-To: Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci@vger.kernel.org,
-	Alex Williamson <alex.williamson@redhat.com>,
-	iommu@lists.linux-foundation.org
-Cc: Jayachandran C <jchandra@broadcom.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Jon Masters <jcm@redhat.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Jayachandran C <jnair@caviumnetworks.com>
-Subject: [PATCH v3 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-Date: Wed, 22 Mar 2017 08:51:11 +0000
-Message-Id: <1490172671-2648-3-git-send-email-jnair@caviumnetworks.com>
-In-Reply-To: <1490172671-2648-1-git-send-email-jnair@caviumnetworks.com>
-References: <1490172671-2648-1-git-send-email-jnair@caviumnetworks.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 13/17] mn10300: Use generic pci_mmap_resource_range()
+Date: Wed, 22 Mar 2017 13:25:27 +0000
+Message-Id: <fa831bd26dbaa1220f24a427c4ad959305942e0b.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jayachandran C <jchandra@broadcom.com>
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-The Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the PCI
-topology is slightly unusual. For a multi-node system, it looks like:
+This was setting vma->vm_flags |= VM_LOCKED. Not sure why...
 
-[node level PCI bridges - one per node]
-    [SoC PCI devices with MSI-X but no IOMMU]
-    [PCI-PCIe "glue" bridges - upto 14, one per real bridge below]
-        [PCIe real root ports associated with IOMMU and GICv3 ITS]
-            [External PCI devices connected to PCIe links]
-
-The top two levels of bridges should have introduced aliases since they
-are PCI and PCI/PCIe bridges, but in the case of ThunderX2 they do not.
-In the case of external PCIe devices, the "real" root ports are connected
-to the SMMU and the GIC ITS, so there is no aliases. The SoC PCI devices
-are directly connected to the GIC ITS and the bridges do not introduce
-an alias either.
-
-To handle this quirk, we mark the real PCIe root ports and node level
-PCIe bridges with the flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT.  With this,
-pci_for_each_dma_alias() works correctly for external PCIe devices and
-SoC PCI devices.
-
-For the current revision of Cavium ThunderX2, the VendorID and Device ID
-are from Broadcom Vulcan (14e4:90XX).
-
-Signed-off-by: Jayachandran C <jnair@caviumnetworks.com>
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
 ---
- drivers/pci/quirks.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ arch/mn10300/include/asm/pci.h          |  1 +
+ arch/mn10300/unit-asb2305/pci-asb2305.c | 24 ------------------------
+ 2 files changed, 1 insertion(+), 24 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6736836..564a84a 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3958,6 +3958,20 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2260, quirk_mic_x200_dma_alias);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2264, quirk_mic_x200_dma_alias);
+diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
+index 082b6de..d276549 100644
+--- a/arch/mn10300/include/asm/pci.h
++++ b/arch/mn10300/include/asm/pci.h
+@@ -74,6 +74,7 @@ static inline int pci_controller_num(struct pci_dev *dev)
+ }
  
- /*
-+ * The IOMMU and interrupt controller on Broadcom Vulcan/Cavium ThunderX2 are
-+ * associated not at the root bus, but at a bridge below. This quirk flag
-+ * will ensure that the aliases are identified correctly.
-+ */
-+static void quirk_bridge_cavm_thrx2_pcie_root(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags |= PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT;
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9000,
-+				quirk_bridge_cavm_thrx2_pcie_root);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9084,
-+				quirk_bridge_cavm_thrx2_pcie_root);
-+
-+/*
-  * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
-  * class code.  Fix it.
-  */
+ #define HAVE_PCI_MMAP
++#define ARCH_GENERIC_PCI_MMAP_RESOURCE
+ 
+ #endif /* __KERNEL__ */
+ 
+diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
+index 4abbbd5..e0f4617 100644
+--- a/arch/mn10300/unit-asb2305/pci-asb2305.c
++++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
+@@ -210,27 +210,3 @@ void __init pcibios_resource_survey(void)
+ 	pcibios_allocate_resources(0);
+ 	pcibios_allocate_resources(1);
+ }
+-
+-int pci_mmap_page_range(struct pci_dev *dev, int bar,
+-			struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine)
+-{
+-	unsigned long prot;
+-
+-	/* Leave vm_pgoff as-is, the PCI space address is the physical
+-	 * address on this platform.
+-	 */
+-	vma->vm_flags |= VM_LOCKED;
+-
+-	prot = pgprot_val(vma->vm_page_prot);
+-	prot &= ~_PAGE_CACHE;
+-	vma->vm_page_prot = __pgprot(prot);
+-
+-	/* Write-combine setting is ignored */
+-	if (io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+-			       vma->vm_end - vma->vm_start,
+-			       vma->vm_page_prot))
+-		return -EAGAIN;
+-
+-	return 0;
+-}
 -- 
-2.7.4
+2.9.3
