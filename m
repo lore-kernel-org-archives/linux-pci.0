@@ -1,221 +1,77 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RESEND PATCH v3 6/7] PCI: dwc: designware: Move _unroll
- configurations to a separate function
-To: Kishon Vijay Abraham I <kishon@ti.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-References: <1489041545-15730-1-git-send-email-kishon@ti.com>
- <1489041545-15730-7-git-send-email-kishon@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <e4cf80f5-08f3-5ebc-ef55-8d43f8e02104@synopsys.com>
-Date: Thu, 9 Mar 2017 12:25:05 +0000
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH] pci: dwc: hisi needs PCI_HOST_COMMON
+To: Arnd Bergmann <arnd@arndb.de>
+References: <20170321143229.3372903-1-arnd@arndb.de>
+ <001801d2a25a$9c742760$d55c7620$@gmail.com> <58D1EF1B.1080509@hisilicon.com>
+ <CAK8P3a0cuu6nnxNDstq8_QiE2D139k0zyTV13TeLzcT0uLha=Q@mail.gmail.com>
+CC: linux-pci <linux-pci@vger.kernel.org>, Kishon <kishon@ti.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        "Bjorn Helgaas" <bhelgaas@google.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+From: Zhou Wang <wangzhou1@hisilicon.com>
+Message-ID: <58D26D01.9050401@hisilicon.com>
+Date: Wed, 22 Mar 2017 20:24:33 +0800
 MIME-Version: 1.0
-In-Reply-To: <1489041545-15730-7-git-send-email-kishon@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: nsekhar@ti.com
-Content-Type: text/plain; charset="windows-1252"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAK8P3a0cuu6nnxNDstq8_QiE2D139k0zyTV13TeLzcT0uLha=Q@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-=C0s 6:39 AM de 3/9/2017, Kishon Vijay Abraham I escreveu:
-> No functional change. Rename dw_pcie_writel_unroll/dw_pcie_readl_unroll
-> to dw_pcie_writel_ob_unroll/dw_pcie_readl_ob_unroll respectively as these
-> functions are used to perform only outbound configurations. Also move
-> these _unroll configurations to a separate function.
-> =
+On 2017/3/22 16:00, Arnd Bergmann wrote:
+> On Mar 22, 2017 04:27, "Zhou Wang" <wangzhou1@hisilicon.com <mailto:wangzhou1@hisilicon.com>> wrote:
+> 
+>     On 2017/3/21 23:48, Jingoo Han wrote:
+>     > (+cc: Joao Pinto, Zhou Wang, Gabriele Paoloni)
+>     >
+>     > On Tuesday, March 21, 2017 10:32 AM, Arnd Bergmann wrote:
+>     >>
+>     >> Without PCI_HOST_COMMON support enabled, we get a link error:
+>     >>
+>     >> drivers/pci/dwc/built-in.o: In function `hisi_pcie_map_bus':
+>     >> pcie-hisi.c:(.text+0x8860): undefined reference to `pci_ecam_map_bus'
+>     >> drivers/pci/dwc/built-in.o: In function `hisi_pcie_almost_ecam_probe':
+>     >> pcie-hisi.c:(.text+0x88b4): undefined reference to `pci_host_common_probe'
+>     >>
+>     >> This adds an explicit 'select', as the other users have.
+> 
+>     Hi Arnd,
+> 
+>     I wonder if we should select PCI_HOST_GENERIC here, like:
+> 
+>     diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+>     index dfb8a69..b25dce4 100644
+>     --- a/drivers/pci/dwc/Kconfig
+>     +++ b/drivers/pci/dwc/Kconfig
+>     @@ -89,6 +89,7 @@ config PCI_HISI
+>             depends on PCI_MSI_IRQ_DOMAIN
+>             select PCIEPORTBUS
+>             select PCIE_DW_HOST
+>     +       select PCI_HOST_GENERIC
+>             help
+>               Say Y here if you want PCIe controller support on HiSilicon
+>               Hip05 and Hip06 SoCs
+> 
+> 
+> I don't know how that would be better. PCI_HOST_GENERIC is
+> a standalone driver for machines that don't need any special
+> handling (e.g. SBSA or KVM), while PCI_HOST_COMMON is
+> the infrastructure used by both PCI_HISI and PCI_HOST_GENERIC.
+> 
+> Selecting PCI_HOST_GENERIC would also work as we implicitly
+> get PCI_HOST_COMMON, but it would not be clear from reading
+> the Kconfig file what the purpose of doing that is.
 
-> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> ---
->  drivers/pci/dwc/pcie-designware.c |  112 ++++++++++++++++++++++---------=
-------
->  1 file changed, 67 insertions(+), 45 deletions(-)
-> =
+Yes, you are right. I just disabled PCI_HOST_GENERIC and enabled
+PCI_HOST_COMMON to test PCI hosts of HiSilicon and Thunder, a build error
+happened.
 
-> diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-des=
-ignware.c
-> index 557ee53..6657a84 100644
-> --- a/drivers/pci/dwc/pcie-designware.c
-> +++ b/drivers/pci/dwc/pcie-designware.c
-> @@ -92,22 +92,64 @@ void dw_pcie_write_dbi(struct dw_pcie *pci, void __io=
-mem *base, u32 reg,
->  		dev_err(pci->dev, "write DBI address failed\n");
->  }
->  =
+We can fix this by your PCI: generic: stop hiding pci_host_common_probe declaration.
+And select PCI_HOST_COMMON here.
 
-> -static u32 dw_pcie_readl_unroll(struct dw_pcie *pci, void __iomem *base,
-> -				u32 index, u32 reg)
-> +static u32 dw_pcie_readl_ob_unroll(struct dw_pcie *pci, void __iomem *ba=
-se,
-> +				   u32 index, u32 reg)
->  {
->  	u32 offset =3D PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
->  =
+Thanks for pointing this!
+Zhou.
 
->  	return dw_pcie_read_dbi(pci, base, offset + reg, 0x4);
->  }
->  =
-
-> -static void dw_pcie_writel_unroll(struct dw_pcie *pci, void __iomem *bas=
-e,
-> -				  u32 index, u32 reg, u32 val)
-> +static void dw_pcie_writel_ob_unroll(struct dw_pcie *pci, void __iomem *=
-base,
-> +				     u32 index, u32 reg, u32 val)
->  {
->  	u32 offset =3D PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(index);
->  =
-
->  	dw_pcie_write_dbi(pci, base, offset + reg, 0x4, val);
->  }
->  =
-
-> +void dw_pcie_prog_outbound_atu_unroll(struct dw_pcie *pci, int index, in=
-t type,
-> +				      u64 cpu_addr, u64 pci_addr, u32 size)
-> +{
-> +	u32 retries, val;
-> +	void __iomem *base =3D pci->dbi_base;
-> +
-> +	dw_pcie_writel_ob_unroll(pci, base, index,
-> +				 PCIE_ATU_UNR_LOWER_BASE,
-> +				 lower_32_bits(cpu_addr));
-> +	dw_pcie_writel_ob_unroll(pci, base, index,
-> +				 PCIE_ATU_UNR_UPPER_BASE,
-> +				 upper_32_bits(cpu_addr));
-> +	dw_pcie_writel_ob_unroll(pci, base, index, PCIE_ATU_UNR_LIMIT,
-> +				 lower_32_bits(cpu_addr + size - 1));
-> +	dw_pcie_writel_ob_unroll(pci, base, index,
-> +				 PCIE_ATU_UNR_LOWER_TARGET,
-> +				 lower_32_bits(pci_addr));
-> +	dw_pcie_writel_ob_unroll(pci, base, index,
-> +				 PCIE_ATU_UNR_UPPER_TARGET,
-> +				 upper_32_bits(pci_addr));
-> +	dw_pcie_writel_ob_unroll(pci, base, index,
-> +				 PCIE_ATU_UNR_REGION_CTRL1,
-> +				 type);
-> +	dw_pcie_writel_ob_unroll(pci, base, index,
-> +				 PCIE_ATU_UNR_REGION_CTRL2,
-> +				 PCIE_ATU_ENABLE);
-> +
-> +	/*
-> +	 * Make sure ATU enable takes effect before any subsequent config
-> +	 * and I/O accesses.
-> +	 */
-> +	for (retries =3D 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
-> +		val =3D dw_pcie_readl_ob_unroll(pci, base, index,
-> +					      PCIE_ATU_UNR_REGION_CTRL2);
-> +		if (val & PCIE_ATU_ENABLE)
-> +			return;
-> +
-> +		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-> +	}
-> +	dev_err(pci->dev, "outbound iATU is not being enabled\n");
-> +}
-> +
->  void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
->  			       u64 cpu_addr, u64 pci_addr, u32 size)
->  {
-> @@ -118,59 +160,39 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci,=
- int index, int type,
->  		cpu_addr =3D pci->ops->cpu_addr_fixup(cpu_addr);
->  =
-
->  	if (pci->iatu_unroll_enabled) {
-> -		dw_pcie_writel_unroll(pci, base, index, PCIE_ATU_UNR_LOWER_BASE,
-> -				      lower_32_bits(cpu_addr));
-> -		dw_pcie_writel_unroll(pci, base, index, PCIE_ATU_UNR_UPPER_BASE,
-> -				      upper_32_bits(cpu_addr));
-> -		dw_pcie_writel_unroll(pci, base, index, PCIE_ATU_UNR_LIMIT,
-> -				      lower_32_bits(cpu_addr + size - 1));
-> -		dw_pcie_writel_unroll(pci, base, index,
-> -				      PCIE_ATU_UNR_LOWER_TARGET,
-> -				      lower_32_bits(pci_addr));
-> -		dw_pcie_writel_unroll(pci, base, index,
-> -				      PCIE_ATU_UNR_UPPER_TARGET,
-> -				      upper_32_bits(pci_addr));
-> -		dw_pcie_writel_unroll(pci, base, index,
-> -				      PCIE_ATU_UNR_REGION_CTRL1,
-> -				      type);
-> -		dw_pcie_writel_unroll(pci, base, index,
-> -				      PCIE_ATU_UNR_REGION_CTRL2,
-> -				      PCIE_ATU_ENABLE);
-> -	} else {
-> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_VIEWPORT, 0x4,
-> -				  PCIE_ATU_REGION_OUTBOUND | index);
-> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_LOWER_BASE, 0x4,
-> -				  lower_32_bits(cpu_addr));
-> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_UPPER_BASE, 0x4,
-> -				  upper_32_bits(cpu_addr));
-> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_LIMIT, 0x4,
-> -				  lower_32_bits(cpu_addr + size - 1));
-> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_LOWER_TARGET, 0x4,
-> -				  lower_32_bits(pci_addr));
-> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_UPPER_TARGET, 0x4,
-> -				  upper_32_bits(pci_addr));
-> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_CR1, 0x4, type);
-> -		dw_pcie_write_dbi(pci, base, PCIE_ATU_CR2, 0x4,
-> -				  PCIE_ATU_ENABLE);
-> +		dw_pcie_prog_outbound_atu_unroll(pci, index, type, cpu_addr,
-> +						 pci_addr, size);
-> +		return;
->  	}
->  =
-
-> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_VIEWPORT, 0x4,
-> +			  PCIE_ATU_REGION_OUTBOUND | index);
-> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_LOWER_BASE, 0x4,
-> +			  lower_32_bits(cpu_addr));
-> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_UPPER_BASE, 0x4,
-> +			  upper_32_bits(cpu_addr));
-> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_LIMIT, 0x4,
-> +			  lower_32_bits(cpu_addr + size - 1));
-> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_LOWER_TARGET, 0x4,
-> +			  lower_32_bits(pci_addr));
-> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_UPPER_TARGET, 0x4,
-> +			  upper_32_bits(pci_addr));
-> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_CR1, 0x4, type);
-> +	dw_pcie_write_dbi(pci, base, PCIE_ATU_CR2, 0x4,
-> +			  PCIE_ATU_ENABLE);
-> +
->  	/*
->  	 * Make sure ATU enable takes effect before any subsequent config
->  	 * and I/O accesses.
->  	 */
->  	for (retries =3D 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
-> -		if (pci->iatu_unroll_enabled)
-> -			val =3D dw_pcie_readl_unroll(pci, base, index,
-> -						   PCIE_ATU_UNR_REGION_CTRL2);
-> -		else
-> -			val =3D dw_pcie_read_dbi(pci, base, PCIE_ATU_CR2, 0x4);
-> -
-> +		val =3D dw_pcie_read_dbi(pci, base, PCIE_ATU_CR2, 0x4);
->  		if (val =3D=3D PCIE_ATU_ENABLE)
->  			return;
->  =
-
->  		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
->  	}
-> -	dev_err(pci->dev, "iATU is not being enabled\n");
-> +	dev_err(pci->dev, "outbound iATU is not being enabled\n");
->  }
->  =
-
->  int dw_pcie_wait_for_link(struct dw_pcie *pci)
-> =
-
-
-Acked-By: Joao Pinto <jpinto@synopsys.com>
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+>       Arnd
