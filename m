@@ -1,75 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:36611 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934227AbdCJMHd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Mar 2017 07:07:33 -0500
-Date: Fri, 10 Mar 2017 13:07:25 +0100
-From: Lukas Wunner <lukas@wunner.de>
-To: Daniel Vetter <daniel@ffwll.ch>,
-        Darren Hart <dvhart@infradead.org>,
-        Andy Shevchenko <andy@infradead.org>
-Cc: dri-devel@lists.freedesktop.org,
-        Michael Jamet <michael.jamet@intel.com>,
-        linux-pci@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Ben Skeggs <bskeggs@redhat.com>, nouveau@lists.freedesktop.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Christian Koenig <christian.koenig@amd.com>,
-        Peter Wu <peter@lekensteyn.nl>
-Subject: Re: [PATCH 0/5] Thunderbolt GPU fixes
-Message-ID: <20170310120725.GA24595@h08.hostsharing.net>
-References: <cover.1487938188.git.lukas@wunner.de>
- <20170309150347.a4k4w2sclox2365t@phenom.ffwll.local>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170309150347.a4k4w2sclox2365t@phenom.ffwll.local>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-kernel@vger.kernel.org
+Cc: robh@kernel.org, toshi.kani@hpe.com, shawn.lin@rock-chips.com,
+        briannorris@chromium.org, dianders@chromium.org,
+        bhelgaas@google.com, dtor@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v2 1/2] PCI: return resource_entry in pci_add_resource helpers
+Date: Thu, 23 Mar 2017 16:12:34 +0800
+Message-Id: <1490256755-889-2-git-send-email-jeffy.chen@rock-chips.com>
+In-Reply-To: <1490256755-889-1-git-send-email-jeffy.chen@rock-chips.com>
+References: <1490256755-889-1-git-send-email-jeffy.chen@rock-chips.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 09, 2017 at 04:03:47PM +0100, Daniel Vetter wrote:
-> On Fri, Feb 24, 2017 at 08:19:45PM +0100, Lukas Wunner wrote:
-> > Fix Thunderbolt-related issues in apple-gmux and vga_switcheroo:
-> > 
-> > Patch [1/5] ("Recognize Thunderbolt devices") has already been subjected
-> > to a fair amount of scrutiny over at linux-pci@, I've submitted it 5 times
-> > total since May 2016.  With luck it may be in ack-able shape now.
-> > 
-> > Patch [2/5] amends apple-gmux to handle combined DP/Thunderbolt ports
-> > properly on newer MacBook Pros.
-> > 
-> > Patches [3/5] to [5/5] avoid registering external Thunderbolt GPUs with
-> > vga_switcheroo:  Dave Airlie designed vga_switcheroo to register GPUs
-> > unconditionally.  So if a desktop box has multiple GPUs, vga_switcheroo
-> > will see more than one discrete GPU but that's not a problem because on
-> > desktop boxes no handler is registered and thus vga_switcheroo_enable()
-> > is never called.  Hybrid graphics laptops on the other hand do register
-> > a handler, but are assumed to never register more than one discrete GPU.
-> > However once a Thunderbolt eGPU is attached to a hybrid graphics laptop,
-> > that assumption is no longer true and things go south when vga_switcheroo
-> > runtime suspends the external discrete GPU and then calls the handler to
-> > cut power to the internal discrete GPU.  The driver for the internal GPU
-> > will sit there puzzled and typically cause a lockup.
-[snip]
-> > I've pushed the present series to GitHub in case anyone prefers reviewing
-> > it in a GUI:
-> > https://github.com/l1k/linux/commits/thunderbolt_gpu_v1
-> 
-> For merging, should I smash this all into drm-misc? The only thing outside
-> is the apple-gmux driver ...
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-Merging through drm-misc would be lovely.  However I've prepared a v2 of
-patch [1/5] to address Bjorn's comments (amended the commit message and a
-code comment).  I'll respin the series this evening and include the acks
-I've collected so far.
+Changes in v2: None
 
-@Darren & Andy:
-Please ack patch [5/5] of this series, barring any objections.
+ drivers/pci/bus.c   | 13 ++++++++-----
+ include/linux/pci.h |  8 +++++---
+ 2 files changed, 13 insertions(+), 8 deletions(-)
 
-I'll move the apple-gmux patch to the end of the series, so merging that
-one can be postponed until Darren and Andy find the time to look at it.
-
-Thanks!
-
-Lukas
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index bc56cf1..36a1861 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -17,25 +17,28 @@
+ 
+ #include "pci.h"
+ 
+-void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+-			     resource_size_t offset)
++struct resource_entry *pci_add_resource_offset(struct list_head *resources,
++					       struct resource *res,
++					       resource_size_t offset)
+ {
+ 	struct resource_entry *entry;
+ 
+ 	entry = resource_list_create_entry(res, 0);
+ 	if (!entry) {
+ 		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
+-		return;
++		return NULL;
+ 	}
+ 
+ 	entry->offset = offset;
+ 	resource_list_add_tail(entry, resources);
++	return entry;
+ }
+ EXPORT_SYMBOL(pci_add_resource_offset);
+ 
+-void pci_add_resource(struct list_head *resources, struct resource *res)
++struct resource_entry *pci_add_resource(struct list_head *resources,
++					struct resource *res)
+ {
+-	pci_add_resource_offset(resources, res, 0);
++	return pci_add_resource_offset(resources, res, 0);
+ }
+ EXPORT_SYMBOL(pci_add_resource);
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eb3da1a..ab16abe 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1167,9 +1167,11 @@ void pci_release_selected_regions(struct pci_dev *, int);
+ /* drivers/pci/bus.c */
+ struct pci_bus *pci_bus_get(struct pci_bus *bus);
+ void pci_bus_put(struct pci_bus *bus);
+-void pci_add_resource(struct list_head *resources, struct resource *res);
+-void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+-			     resource_size_t offset);
++struct resource_entry *pci_add_resource(struct list_head *resources,
++					struct resource *res);
++struct resource_entry *pci_add_resource_offset(struct list_head *resources,
++					       struct resource *res,
++					       resource_size_t offset);
+ void pci_free_resource_list(struct list_head *resources);
+ void pci_bus_add_resource(struct pci_bus *bus, struct resource *res,
+ 			  unsigned int flags);
+-- 
+2.1.4
