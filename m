@@ -1,103 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:44284 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751159AbdCWV5p (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 Mar 2017 17:57:45 -0400
+Date: Thu, 23 Mar 2017 16:57:41 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
+        gwshan@linux.vnet.ibm.com, aik@ozlabs.ru, benh@kernel.crashing.org,
+        mpe@ellerman.id.au, paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: Re: [PATCH v9 2/3] PCI: Add a macro to set default alignment for all
+ PCI devices
+Message-ID: <20170323215741.GA9255@bhelgaas-glaptop.roam.corp.google.com>
+References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1487141106-2503-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <20170323205342.GB23612@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170323084819.GA23281@h08.hostsharing.net>
-References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170322193111.GA8190@wunner.de>
- <CAKv+Gu_X-SEnz7h9J8boqqjOQGHQawwdSAq4haH-OGu8zdfNfA@mail.gmail.com>
- <20170323084819.GA23281@h08.hostsharing.net>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Thu, 23 Mar 2017 09:04:03 +0000
-Message-ID: <CAKv+Gu93eJ-js3g7M6Jdm6XGMaWMswFmzBG2qNT4rn+3=1+EyA@mail.gmail.com>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-To: Lukas Wunner <lukas@wunner.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
- Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
- "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
- Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Yinghai Lu <yinghai@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170323205342.GB23612@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23 March 2017 at 08:48, Lukas Wunner <lukas@wunner.de> wrote:
-> On Wed, Mar 22, 2017 at 07:32:43PM +0000, Ard Biesheuvel wrote:
->> On 22 March 2017 at 19:31, Lukas Wunner <lukas@wunner.de> wrote:
->> > On Wed, Mar 22, 2017 at 03:30:29PM +0000, Ard Biesheuvel wrote:
->> >> On UEFI systems, the PCI subsystem is enumerated by the firmware,
->> >> and if a graphical framebuffer is exposed by a PCI device, its base
->> >> address and size are exposed to the OS via the Graphics Output
->> >> Protocol (GOP).
->> >>
->> >> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
->> >> scratch at boot. This may result in the GOP framebuffer address to
->> >> become stale, if the BAR covering the framebuffer is modified. This
->> >> will cause the framebuffer to become unresponsive, and may in some
->> >> cases result in unpredictable behavior if the range is reassigned to
->> >> another device.
->> >
->> > Hm, commit message seems to indicate the issue is restricted to arm64,
->> > yet there's no IS_ENABLED(ARM64) to constrain the added code to that arch?
->>
->> True. I am eager to get some x86 coverage for this, since I would
->> expect this not to do any harm. But I'm fine with making it ARM/arm64
->> specific in the final version.
->
-> I see.  IIUC, this is only a problem because pci_bus_assign_resources()
-> is called from arch/arm64/kernel/pci.c:pci_acpi_scan_root() (as well as
-> the host drivers) and x86 isn't affected because it doesn't do that.
->
+On Thu, Mar 23, 2017 at 03:53:42PM -0500, Bjorn Helgaas wrote:
+> Hi Yongji,
+> 
+> On Wed, Feb 15, 2017 at 02:45:05PM +0800, Yongji Xie wrote:
+> > When vfio passthroughs a PCI device of which MMIO BARs are
+> > smaller than PAGE_SIZE, guest will not handle the mmio
+> > accesses to the BARs which leads to mmio emulations in host.
+> > 
+> > This is because vfio will not allow to passthrough one BAR's
+> > mmio page which may be shared with other BARs. Otherwise,
+> > there will be a backdoor that guest can use to access BARs
+> > of other guest.
+> 
+> Please include a pointer to the VFIO code that enforces this.  It's
+> not obvious to me how it would do this.  This doesn't change the
+> *size* of the resource, only the alignment.  So if VFIO sees a BAR
+> like [mem 0x80000000-0x800000ff], it knows the BAR is aligned enough
+> that it *could* be the only thing on a page, but I don't know how it
+> could know that there will never be another BAR at 0x80000100.  Even
+> if there's no other BAR on that page *now*, it would have to know that
+> no hot-added device will ever be placed on that page.
 
-Correct. But on x86 (or rather, on a PC), you can be sure that UEFI
-(or the legacy PCI bios) performed the resource assignment already.
-One could argue that this is equally the case when running arm64 in
-ACPI mode, but in general, you cannot assume the presence of firmware
-on ARM/arm64 that has already taken care of this, and so the state of
-the BARs has to be presumed invalid.
+Never mind, I found it.  I updated the changelog like this; please
+correct anything I got wrong:
 
-> I have no opinion on executing the quirk on x86 as well, I was just
-> confused by the discrepancy between commit message and patch, but that
-> can easily be remedied with a copy+paste of what you replied to Sinan:
->
->        "On x86, it works, given that BARs are usually not reassigned,
->         and so the patch should be a no-op in that case, although it
->         should still be an improvement to check whether the device that
->         owns the BAR actually has memory decoding enabled before we
->         attach the framebuffer driver to it."
->
->
+    When VFIO passes through a PCI device to a guest, it does not
+    allow the guest to mmap BARs that are smaller than PAGE_SIZE
+    unless it can reserve the rest of the page (see
+    vfio_pci_probe_mmaps()).  This is because a page might contain
+    several small BARs for unrelated devices and a guest should not be
+    able to access all of them.
 
-OK, I will include that.
+    VFIO emulates guest accesses to non-mappable BARs, which is
+    functional but slow.  On systems with large page sizes, e.g.,
+    PowerNV with 64K pages, BARs are more likely to share a page and
+    performance is more likely to be a problem.
 
->> >> +DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, efifb_fixup_resources);
->> >
->> > Maybe this can be constrained to PCI_BASE_CLASS_DISPLAY?
->>
->> How does one do that with DECLARE_PCI_FIXUP_HEADER?
->
-> With DECLARE_PCI_FIXUP_CLASS_HEADER().
->
-
-Ah ok, thanks for pointing that out.
-
-I do wonder whether it makes sense to keep the code as is, so that we
-spot unexpected configurations, i.e., where the GOP points into a BAR
-that is unrelated to graphics. In this case, I think we should disable
-efifb rather than proceed without claiming any PCI resources (as we
-did without this patch)
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+    Add a macro to set default alignment for all PCI devices.  An arch
+    can set this to PAGE_SIZE to force the PCI core to place memory
+    BARs on their own pages.
