@@ -1,87 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37830 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751687AbdCMWqZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Mar 2017 18:46:25 -0400
-Date: Mon, 13 Mar 2017 17:46:20 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Cc: linux-pci <linux-pci@vger.kernel.org>,
-        linux-usb <linux-usb@vger.kernel.org>,
-        Rob Herring <robh@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-        Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Marc Zyngier <marc.zyngier@arm.com>,
-        Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
-        David Laight <david.laight@aculab.com>,
-        Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        Kevin Hilman <khilman@kernel.org>
-Subject: Re: Neophyte questions about PCIe
-Message-ID: <20170313224619.GF8232@bhelgaas-glaptop.roam.corp.google.com>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <20170308151724.GA20780@bhelgaas-glaptop.roam.corp.google.com>
- <f964ee05-db7f-c381-c91c-82897175da6d@free.fr>
- <9ba05c2c-57ef-b2c0-6a7c-457c392d98b5@free.fr>
- <df517167-d692-38a8-9c8f-a1112c7f578d@free.fr>
- <c0a353cb-aa1f-25db-eccd-7a1618e655b3@free.fr>
- <20170313214024.GD8232@bhelgaas-glaptop.roam.corp.google.com>
- <826d0a3f-753f-0330-5792-e11beb78d6bf@free.fr>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 23 Mar 2017 15:30:14 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Subject: Re: [RFC PATCH 24/30] iommu: Specify PASID state when unbinding a task
+Message-ID: <20170323143014.GK7266@8bytes.org>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-25-jean-philippe.brucker@arm.com>
+ <20170322154429.GE7266@8bytes.org>
+ <e2bb4c67-9b61-01cf-cc17-68088cdc5e5b@arm.com>
+ <20170322225320.GF7266@8bytes.org>
+ <a093bc07-a345-a689-9d97-f15a306f922d@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <826d0a3f-753f-0330-5792-e11beb78d6bf@free.fr>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <a093bc07-a345-a689-9d97-f15a306f922d@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Sinan Kaya <okaya@qti.qualcomm.com>,
+ Will Deacon <will.deacon@arm.com>, iommu@lists.linux-foundation.org,
+ Harv Abdulhamid <harba@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
+ David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 13, 2017 at 10:57:48PM +0100, Mason wrote:
-> On 13/03/2017 22:40, Bjorn Helgaas wrote:
+On Thu, Mar 23, 2017 at 01:37:41PM +0000, Jean-Philippe Brucker wrote:
+> On 22/03/17 22:53, Joerg Roedel wrote:
+> > That can't happen, when the device driver does its job right. It has to
+> > shut down the context which causes the PPR requests for the PASID on the
+> > device. This includes stopping the context and waiting until all PPR
+> > requests it sent are processed.
 > 
-> > On Sat, Mar 11, 2017 at 11:57:56AM +0100, Mason wrote:
-> >
-> >> On 10/03/2017 18:49, Mason wrote:
-> >> 
-> >>> static void tango_pcie_bar_quirk(struct pci_dev *dev)
-> >>> {
-> >>> 	struct pci_bus *bus = dev->bus;
-> >>>
-> >>> 	printk("%s: bus=%d devfn=%d\n", __func__, bus->number, dev->devfn);
-> >>>
-> >>>         pci_write_config_dword(dev, PCI_BASE_ADDRESS_0, 0x80000004);
-> >>> }
-> >>> DECLARE_PCI_FIXUP_FINAL(0x1105, PCI_ANY_ID, tango_pcie_bar_quirk);
-> >>
-> >> And this is where the elusive "black magic" happens.
-> >>
-> >> Is it "safe" to configure a BAR behind Linux's back?
-> > 
-> > No.  Linux maintains a struct resource for every BAR.  This quirk
-> > makes the BAR out of sync with the resource, so Linux no longer has an
-> > accurate idea of what bus address space is consumed and what is
-> > available.
-> 
-> Even when Linux is not able to map the BAR, since it's too
-> large to fit in the mem window?
+> By "processed", do you mean that they are committed to the IOMMU, or that
+> they came back with a PRG response?
 
-I don't think there's much point in advertising a BAR that isn't
-really a BAR and making assumptions about how Linux will handle it.
-So my answer remains "No, I don't think it's a good idea to change a
-BAR behind the back of the PCI core.  It might work now, but there's
-no guarantee it will keep working."
+By processed I mean the device received a response to the request, or is
+at least no longer waiting for responses.
 
-> > Normally a BAR is for mapping device registers into PCI bus address
-> > space.  If this BAR controls how the RC forwards PCI DMA transactions
-> > to RAM, then it's not really a BAR and you should prevent Linux from
-> > seeing it as a BAR.  You could do this by special-casing it in the
-> > config accessor so reads return 0 and writes are dropped.  Then you
-> > could write the register in your host bridge driver safely because the
-> > PCI core would think the BAR is not implemented.
+> The driver might not be able to do the latter, since PCI defines two ways
+> of shutting down a context:
 > 
-> In fact, that's what I used to do in a previous version :-)
-> 
-> I'd like to push support for this PCIe controller upstream.
-> 
-> Is the code I posted on the right track?
-> Maybe I can post a RFC patch tomorrow?
+> * Either wait for all PPR requests to come back with a PRG response,
+> * Or send a Stop Marker PPR request and forget about it.
 
-No need to ask before posting a patch :)
+Are you sure about the meaning of the stop-marker? Can you point me to
+where it is specified?
+
+I know about a different marker, which allows a device to issue several
+PPR requests and only get one response for all of them. The last request
+then has that marker set.
+
+But I am not aware (yet) of a marker with which the device says it no
+longer sends requests with this PASID.
+
+> My intent with passing flags to unbind() was to handle the case where VFIO
+> is unable to tell us whether PPRs are still being issued by the device.
+> But the issue seems moot to me now that I have a better understanding, as
+> there will be a detach_dev/attach_dev sequence before we start rebinding
+> PASIDs, and we can simply reset the PRI interface there (I'm currently
+> doing that in add_device, but I should move it.)
+
+VFIO should completly reset the device before it is re-used, so I don't
+think we run into problems there.
+
+
+
+	Joerg
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
