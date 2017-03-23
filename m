@@ -1,93 +1,87 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Elena Reshetova <elena.reshetova@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
-        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, peterz@infradead.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-Subject: [PATCH 02/29] drivers, firewire: convert fw_node.ref_count from atomic_t to refcount_t
-Date: Mon,  6 Mar 2017 16:20:49 +0200
-Message-Id: <1488810076-3754-3-git-send-email-elena.reshetova@intel.com>
-In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:58578 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964908AbdCWPw7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 Mar 2017 11:52:59 -0400
+Subject: Re: Help: MSI DWC connecting with a MSIx Endpoint
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+References: <85bfa77f-6cd0-a669-c940-7fa7d9fb17a3@synopsys.com>
+ <28a4e429-a2d2-8f28-e4fc-8eebae0b3367@arm.com>
+ <4ade12d6-1887-4093-ee43-2101ca2986e0@synopsys.com>
+ <9eec7e57-456e-fc98-91d9-bd5a32c347af@arm.com>
+ <934e0800-a1df-2059-fc7e-def976572309@synopsys.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <51813e48-210e-55a5-c904-fbf4562f48fe@arm.com>
+Date: Thu, 23 Mar 2017 15:52:55 +0000
+MIME-Version: 1.0
+In-Reply-To: <934e0800-a1df-2059-fc7e-def976572309@synopsys.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+On 23/03/17 15:22, Joao Pinto wrote:
+> Hi Mark,
+> 
+> Às 10:41 AM de 3/21/2017, Marc Zyngier escreveu:
+>> On 21/03/17 10:27, Joao Pinto wrote:
+>>>
+>>> Hi Mark,
+>>>
+>>> Às 6:16 PM de 3/20/2017, Marc Zyngier escreveu:
+>>>> Hi Joao,
+>>>>
+>>>> On 20/03/17 17:30, Joao Pinto wrote:
+>>>>> Hi Mark,
+>>>>>
+>> A very simple example using the current API is pcie-altera-msi.c (some
+>> others are much more intricate), and should give you a good picture of
+>> how PCI/MSI, generic MSI and MSI controllers interact.
+>>
+>> Start with understanding how the various layers interact via their own
+>> IRQ domains, and implement their own IRQ chip. Happy to answer questions
+>> (I'm sure you'll have some).
+>>
+>> Thanks,
+>>
+>> 	M.
+> 
+> I have one quick question... What address should I configure in vector_phy?
+> is this needed in pcie-designware?
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- drivers/firewire/core-topology.c | 2 +-
- drivers/firewire/core.h          | 8 ++++----
- 2 files changed, 5 insertions(+), 5 deletions(-)
+You may be in a better place than me to answer that question! ;-)
 
-diff --git a/drivers/firewire/core-topology.c b/drivers/firewire/core-topology.c
-index 0de8350..939d259 100644
---- a/drivers/firewire/core-topology.c
-+++ b/drivers/firewire/core-topology.c
-@@ -124,7 +124,7 @@ static struct fw_node *fw_node_create(u32 sid, int port_count, int color)
- 	node->initiated_reset = SELF_ID_PHY_INITIATOR(sid);
- 	node->port_count = port_count;
- 
--	atomic_set(&node->ref_count, 1);
-+	refcount_set(&node->ref_count, 1);
- 	INIT_LIST_HEAD(&node->link);
- 
- 	return node;
-diff --git a/drivers/firewire/core.h b/drivers/firewire/core.h
-index e1480ff6..c07962e 100644
---- a/drivers/firewire/core.h
-+++ b/drivers/firewire/core.h
-@@ -12,7 +12,7 @@
- #include <linux/slab.h>
- #include <linux/types.h>
- 
--#include <linux/atomic.h>
-+#include <linux/refcount.h>
- 
- struct device;
- struct fw_card;
-@@ -184,7 +184,7 @@ struct fw_node {
- 			 * local node to this node. */
- 	u8 max_depth:4;	/* Maximum depth to any leaf node */
- 	u8 max_hops:4;	/* Max hops in this sub tree */
--	atomic_t ref_count;
-+	refcount_t ref_count;
- 
- 	/* For serializing node topology into a list. */
- 	struct list_head link;
-@@ -197,14 +197,14 @@ struct fw_node {
- 
- static inline struct fw_node *fw_node_get(struct fw_node *node)
- {
--	atomic_inc(&node->ref_count);
-+	refcount_inc(&node->ref_count);
- 
- 	return node;
- }
- 
- static inline void fw_node_put(struct fw_node *node)
- {
--	if (atomic_dec_and_test(&node->ref_count))
-+	if (refcount_dec_and_test(&node->ref_count))
- 		kfree(node);
- }
- 
+If I remember well, the Altera RC needs to be programmed with the
+address of the MSI doorbell so that it can detect the end-point writes
+to it, and it can be anything you want. In order not to waste any memory
+space, we use the base address of the RC.
+
+Both very nice and dead ugly, if you want my opinion.
+
+If we look at this:
+
+void dw_pcie_msi_init(struct pcie_port *pp)
+{
+        u64 msi_target;
+
+        pp->msi_data = __get_free_pages(GFP_KERNEL, 0);
+        msi_target = virt_to_phys((void *)pp->msi_data);
+
+        /* program the msi_data */
+        dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_LO, 4,
+                            (u32)(msi_target & 0xffffffff));
+        dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+                            (u32)(msi_target >> 32 & 0xffffffff));
+}
+
+We can infer the Designware IP has a similar behaviour, except that it
+wastes a page of RAM for no obvious reason. It'd be good to know if the
+RC actually propagates the write to the memory. If it really does, then
+that's the only way to do it. If it doesn't, then the Altera method is
+much better...
+
+Hope this helps,
+
+	M.
 -- 
-2.7.4
+Jazz is not dead. It just smells funny...
