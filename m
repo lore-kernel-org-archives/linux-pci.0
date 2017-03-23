@@ -1,85 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47197 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751375AbdCIJcw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 Mar 2017 04:32:52 -0500
-Subject: Re: [PATCH 22/29] drivers, scsi: convert iscsi_task.refcount from
- atomic_t to refcount_t
-To: "Reshetova, Elena" <elena.reshetova@intel.com>,
-        Chris Leech <cleech@redhat.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-23-git-send-email-elena.reshetova@intel.com>
- <20170308184740.4gueok5csdkt7u62@straylight.hirudinean.org>
- <2236FBA76BA1254E88B949DDB74E612B41C569DC@IRSMSX102.ger.corp.intel.com>
- <5a1f7860-b650-9fe7-fafb-1f0c7cae00e7@suse.de>
- <2236FBA76BA1254E88B949DDB74E612B41C56ABF@IRSMSX102.ger.corp.intel.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux1394-devel@lists.sourceforge.net"
-        <linux1394-devel@lists.sourceforge.net>,
-        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-        "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
-        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Message-ID: <b1abd29e-5bce-59a4-a66d-d78310921545@suse.de>
-Date: Thu, 9 Mar 2017 10:32:03 +0100
+Return-Path: <SRS0=XsqR=3A=arm.com=mark.rutland@kernel.org>
+Return-Path: <SRS0=XsqR=3A=arm.com=mark.rutland@kernel.org>
+Date: Thu, 23 Mar 2017 16:37:10 +0000
+From: Mark Rutland <mark.rutland@arm.com>
+To: Dongdong Liu <liudongdong3@huawei.com>
+Cc: helgaas@kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, wangzhou1@hisilicon.com,
+	gabriele.paoloni@huawei.com, linuxarm@huawei.com
+Subject: Re: [PATCH] PCI: hisi: Fix DT binding (hisi-pcie-almost-ecam)
+Message-ID: <20170323163710.GK9287@leverpostej>
+References: <1490275097-39349-1-git-send-email-liudongdong3@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <2236FBA76BA1254E88B949DDB74E612B41C56ABF@IRSMSX102.ger.corp.intel.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1490275097-39349-1-git-send-email-liudongdong3@huawei.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/09/2017 10:26 AM, Reshetova, Elena wrote:
+On Thu, Mar 23, 2017 at 09:18:17PM +0800, Dongdong Liu wrote:
+> The "hisilicon,pcie-almost-ecam", which goes against the usual DT
+> conventions, and is non-sensical in that it describes the IP based on
+> what it isn't. Fix the DT binding with "hisilicon,hip06-pcie-ecam"
+> and "hisilicon,hip07-pcie-ecam".
 > 
->> On 03/09/2017 08:18 AM, Reshetova, Elena wrote:
->>>> On Mon, Mar 06, 2017 at 04:21:09PM +0200, Elena Reshetova wrote:
->>>>> refcount_t type and corresponding API should be
->>>>> used instead of atomic_t when the variable is used as
->>>>> a reference counter. This allows to avoid accidental
->>>>> refcounter overflows that might lead to use-after-free
->>>>> situations.
->>>>>
->>>>> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
->>>>> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
->>>>> Signed-off-by: Kees Cook <keescook@chromium.org>
->>>>> Signed-off-by: David Windsor <dwindsor@gmail.com>
->>>>
->>>> This looks OK to me.
->>>>
->>>> Acked-by: Chris Leech <cleech@redhat.com>
->>>
->>> Thank you for review! Do you have a tree that can take this change?
->>
->> Hi Elena,
->>
->> iscsi like fcoe should go via the SCSI tree.
+> Signed-off-by: Mark Rutland <mark.rutland@arm.com>
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+
+Thanks for sending this out.
+
+As it may not be obvious, this is a fixup for v4.11, and needs to go
+through ASAP so as to avoid a release with the broken binding.
+
+Thanks,
+Mark.
+
+> ---
+>  Documentation/devicetree/bindings/pci/hisilicon-pcie.txt | 10 ++++++++--
+>  drivers/pci/dwc/pcie-hisi.c                              |  6 +++++-
+>  2 files changed, 13 insertions(+), 3 deletions(-)
 > 
-> Thanks Johannes! Should I resend with "Acked-by" added in order for it to be picked up? 
-
-Yes I think this would be a good way to go.
-
-Byte,
-	Johannes
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> index b7fa3b9..a339dbb 100644
+> --- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> @@ -44,13 +44,19 @@ Hip05 Example (note that Hip06 is the same except compatible):
+>  	};
+>  
+>  HiSilicon Hip06/Hip07 PCIe host bridge DT (almost-ECAM) description.
+> +
+> +Some BIOSes place the host controller in a mode where it is ECAM
+> +compliant for all devices other than the root complex. In such cases,
+> +the host controller should be described as below.
+> +
+>  The properties and their meanings are identical to those described in
+>  host-generic-pci.txt except as listed below.
+>  
+>  Properties of the host controller node that differ from
+>  host-generic-pci.txt:
+>  
+> -- compatible     : Must be "hisilicon,pcie-almost-ecam"
+> +- compatible     : Must be "hisilicon,hip06-pcie-ecam", or
+> +		   "hisilicon,hip07-pcie-ecam"
+>  
+>  - reg            : Two entries: First the ECAM configuration space for any
+>  		   other bus underneath the root bus. Second, the base
+> @@ -59,7 +65,7 @@ host-generic-pci.txt:
+>  
+>  Example:
+>  	pcie0: pcie@a0090000 {
+> -		compatible = "hisilicon,pcie-almost-ecam";
+> +		compatible = "hisilicon,hip06-pcie-ecam";
+>  		reg = <0 0xb0000000 0 0x2000000>,  /*  ECAM configuration space */
+>  		      <0 0xa0090000 0 0x10000>; /* host bridge registers */
+>  		bus-range = <0  31>;
+> diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+> index fd66a31..cf9d6a9 100644
+> --- a/drivers/pci/dwc/pcie-hisi.c
+> +++ b/drivers/pci/dwc/pcie-hisi.c
+> @@ -380,9 +380,13 @@ struct pci_ecam_ops hisi_pcie_platform_ops = {
+>  
+>  static const struct of_device_id hisi_pcie_almost_ecam_of_match[] = {
+>  	{
+> -		.compatible = "hisilicon,pcie-almost-ecam",
+> +		.compatible =  "hisilicon,hip06-pcie-ecam",
+>  		.data	    = (void *) &hisi_pcie_platform_ops,
+>  	},
+> +	{
+> +		.compatible =  "hisilicon,hip07-pcie-ecam",
+> +		.data       = (void *) &hisi_pcie_platform_ops,
+> +	},
+>  	{},
+>  };
+>  
+> -- 
+> 1.9.1
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
