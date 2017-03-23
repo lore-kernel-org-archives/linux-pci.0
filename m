@@ -1,190 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34210 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750781AbdCISWM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 Mar 2017 13:22:12 -0500
-Date: Thu, 9 Mar 2017 12:22:05 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 23 Mar 2017 17:14:39 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Oza Oza <oza.oza@broadcom.com>,
-        JD Zheng <jiandong.zheng@broadcom.com>,
-        Andy Gospodarek <gospo@broadcom.com>,
-        linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-        linux-arm-kernel@lists.infradead.org, Felix Fietkau <nbd@nbd.name>
-Subject: Re: pcie-iproc: broken 2nd (& 3rd?) controller support by
- c3245a566400 ("PCI: iproc: Request host bridge window resources")
-Message-ID: <20170309182205.GB3685@bhelgaas-glaptop.roam.corp.google.com>
-References: <faab6b85-58e8-3e62-8763-56a94b13fba1@gmail.com>
- <f40bbf2f-3ba9-3992-d417-6588085f3d62@gmail.com>
+To: Jon Masters <jcm@jonmasters.org>
+Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
+Message-ID: <20170323221439.GA12069@bhelgaas-glaptop.roam.corp.google.com>
+References: <251db823-591b-483b-9c55-13c911020fd1@jonmasters.org>
+ <48b93116-cc0f-e59d-8aa3-704052ad6759@gmail.com>
+ <c3392131-9243-24d3-30b4-4d7e84019d6f@jonmasters.org>
+ <20170321134744.GA13150@bhelgaas-glaptop.roam.corp.google.com>
+ <b50b6a7f-30be-4206-4f38-2539ea936228@semihalf.com>
+ <aad5796a-1af8-53e0-c5f3-cb7755519cd5@caviumnetworks.com>
+ <de830a73-6f01-62af-b454-dc1588a209eb@jonmasters.org>
+ <20170322144820.GA16556@bhelgaas-glaptop.roam.corp.google.com>
+ <51ba853c-f543-b21b-c25f-b56d77746f92@jonmasters.org>
+ <20170322163359.GB24935@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <f40bbf2f-3ba9-3992-d417-6588085f3d62@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170322163359.GB24935@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: David.Daney@cavium.com, Tomasz Nowicki <tn@semihalf.com>,
+ linux-pci@vger.kernel.org, David Daney <ddaney@caviumnetworks.com>,
+ linux-kernel@vger.kernel.org, stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com,
+ David Daney <ddaney.cavm@gmail.com>,
+ Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>, bhelgaas@google.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 09, 2017 at 08:39:07AM +0100, Rafał Miłecki wrote:
-> On 03/08/2017 01:56 PM, Rafał Miłecki wrote:
-> >I just tried upgrading BCM5301X from 4.4 to 4.9 and noticed I don't see card
-> >connected to the 2nd controller.
-> >
-> > pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
-> > pci_bus 0000:00: root bus resource [mem 0x08000000-0x0fffffff]
-> > pcie_iproc_bcma bcma0:7: link: UP
-> > PCI: bus0: Fast back to back transfers disabled
-> > pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> > PCI: bus1: Fast back to back transfers disabled
-> > pci 0000:00:00.0: BAR 8: assigned [mem 0x08000000-0x080fffff]
-> > pci 0000:01:00.0: BAR 0: assigned [mem 0x08000000-0x08007fff 64bit]
-> > pci 0000:00:00.0: PCI bridge to [bus 01]
-> > pci 0000:00:00.0:   bridge window [mem 0x08000000-0x080fffff]
-> >
-> > pcie_iproc_bcma bcma0:8: resource collision: [mem 0x40000000-0x47ffffff] conflicts with PCIe MEM space [mem 0x40000000-0x47ffffff]
-> > pcie_iproc_bcma bcma0:8: PCIe controller setup failed
-> > pcie_iproc_bcma: probe of bcma0:8 failed with error -16
-> >
-> >
-> >This used to work with older kernels because there wasn't any collision check:
-> >
-> > pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
-> > pci_bus 0000:00: root bus resource [mem 0x08000000-0x0fffffff]
-> > pcie_iproc_bcma bcma0:7: link: UP
-> > PCI: bus0: Fast back to back transfers disabled
-> > pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> > PCI: bus1: Fast back to back transfers disabled
-> > pci 0000:00:00.0: BAR 8: assigned [mem 0x08000000-0x080fffff]
-> > pci 0000:01:00.0: BAR 0: assigned [mem 0x08000000-0x08007fff 64bit]
-> > pci 0000:00:00.0: PCI bridge to [bus 01]
-> > pci 0000:00:00.0:   bridge window [mem 0x08000000-0x080fffff]
-> >
-> > pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
-> > pci_bus 0001:00: root bus resource [mem 0x40000000-0x47ffffff]
-> > pcie_iproc_bcma bcma0:8: link: UP
-> > PCI: bus0: Fast back to back transfers disabled
-> > pci 0001:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-> > PCI: bus1: Fast back to back transfers disabled
-> > pci 0001:00:00.0: BAR 8: assigned [mem 0x40000000-0x400fffff]
-> > pci 0001:01:00.0: BAR 0: assigned [mem 0x40000000-0x40007fff 64bit]
-> > pci 0001:00:00.0: PCI bridge to [bus 01]
-> > pci 0001:00:00.0:   bridge window [mem 0x40000000-0x400fffff]
-> >
-> >
-> >I guess the check is OK after all and the real problem is iproc driver assigning
-> >the same resource.
-> >
-> >Broadcom team: could you take a look at this, please?
+On Wed, Mar 22, 2017 at 11:34:00AM -0500, Bjorn Helgaas wrote:
+> On Wed, Mar 22, 2017 at 12:25:39PM -0400, Jon Masters wrote:
+> > On 03/22/2017 10:48 AM, Bjorn Helgaas wrote:
+> > > On Wed, Mar 22, 2017 at 10:28:27AM -0400, Jon Masters wrote:
+> > >> On 03/21/2017 10:56 AM, David Daney wrote:
+> > > 
+> > >>> Yes.  After all this back and forth, Cavium has decided to deploy
+> > >>> firmware with "CAVxxx" as _HID.
+> > >>
+> > >> Great. How about a stable backport for Greg K-H? I want to make sure
+> > >> that everyone running "upstream" has a chance of booting.
+> > > 
+> > > The first patch, fee4d813850c ("PCI: Use Cavium assigned hardware ID for
+> > > ThunderX host controller"), has a stable tag already.
+> > 
+> > Thanks - I saw that after I mailed.
+> > 
+> > > The second, 1dc94a38af89 ("PCI: Add legacy firmware support for Cavium
+> > > ThunderX host controller"), does not, but I can easily add it if needed.
+> > 
+> > I think that would be ideal. There is firmware out in the wild that
+> > has neither identifier in it (for example, a bunch of folks in the
+> > office bought platforms recently that don't boot upstream kernels).
+> > My guys are used to just taking an upstream kernel and using that,
+> > for development, and I have no intention of having the broader RH
+> > org do any different from what they would do with an x86 box ;)
 > 
-> I found a reason of this conflict (and probably random crashes I started
-> seeing with 4.9). I believe we have a memory corruption.
+> I added the same stable tag (v4.10+) to the second patch.
 
-Yep, we're using a resource structure on the stack when we shouldn't.  Can
-you try the patch below?
+I moved these from pci/host-thunder (targeted for v4.12) to for-linus so we
+can get these in v4.11.
 
-diff --git a/drivers/pci/host/pcie-iproc-bcma.c b/drivers/pci/host/pcie-iproc-bcma.c
-index bd4c9ec25edc..8cebbbff1e72 100644
---- a/drivers/pci/host/pcie-iproc-bcma.c
-+++ b/drivers/pci/host/pcie-iproc-bcma.c
-@@ -44,8 +44,7 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
- {
- 	struct device *dev = &bdev->dev;
- 	struct iproc_pcie *pcie;
--	LIST_HEAD(res);
--	struct resource res_mem;
-+	LIST_HEAD(resources);
- 	int ret;
- 
- 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-@@ -63,22 +62,23 @@ static int iproc_pcie_bcma_probe(struct bcma_device *bdev)
- 
- 	pcie->base_addr = bdev->addr;
- 
--	res_mem.start = bdev->addr_s[0];
--	res_mem.end = bdev->addr_s[0] + SZ_128M - 1;
--	res_mem.name = "PCIe MEM space";
--	res_mem.flags = IORESOURCE_MEM;
--	pci_add_resource(&res, &res_mem);
-+	pcie->mem.start = bdev->addr_s[0];
-+	pcie->mem.end = bdev->addr_s[0] + SZ_128M - 1;
-+	pcie->mem.name = "PCIe MEM space";
-+	pcie->mem.flags = IORESOURCE_MEM;
-+	pci_add_resource(&resources, &pcie->mem);
- 
- 	pcie->map_irq = iproc_pcie_bcma_map_irq;
- 
--	ret = iproc_pcie_setup(pcie, &res);
-+	ret = iproc_pcie_setup(pcie, &resources);
- 	if (ret)
- 		dev_err(dev, "PCIe controller setup failed\n");
--
--	pci_free_resource_list(&res);
-+		pci_free_resource_list(&resources);
-+		return ret;
-+	}
- 
- 	bcma_set_drvdata(bdev, pcie);
--	return ret;
-+	return 0;
- }
- 
- static void iproc_pcie_bcma_remove(struct bcma_device *bdev)
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index f4909bb0b2ad..5f6361f27c69 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -51,7 +51,7 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- 	struct device_node *np = dev->of_node;
- 	struct resource reg;
- 	resource_size_t iobase = 0;
--	LIST_HEAD(res);
-+	LIST_HEAD(resources);
- 	int ret;
- 
- 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-@@ -96,10 +96,10 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- 		pcie->phy = NULL;
- 	}
- 
--	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &iobase);
-+	ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &resources,
-+					       &iobase);
- 	if (ret) {
--		dev_err(dev,
--			"unable to get PCI host bridge resources\n");
-+		dev_err(dev, "unable to get PCI host bridge resources\n");
- 		return ret;
- 	}
- 
-@@ -112,14 +112,15 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- 		pcie->map_irq = of_irq_parse_and_map_pci;
- 	}
- 
--	ret = iproc_pcie_setup(pcie, &res);
-+	ret = iproc_pcie_setup(pcie, &resources);
- 	if (ret)
- 		dev_err(dev, "PCIe controller setup failed\n");
--
--	pci_free_resource_list(&res);
-+		pci_free_resource_list(&resources);
-+		return ret;
-+	}
- 
- 	platform_set_drvdata(pdev, pcie);
--	return ret;
-+	return 0;
- }
- 
- static int iproc_pcie_pltfm_remove(struct platform_device *pdev)
-diff --git a/drivers/pci/host/pcie-iproc.h b/drivers/pci/host/pcie-iproc.h
-index 04fed8e907f1..0bbe2ea44f3e 100644
---- a/drivers/pci/host/pcie-iproc.h
-+++ b/drivers/pci/host/pcie-iproc.h
-@@ -90,6 +90,7 @@ struct iproc_pcie {
- #ifdef CONFIG_ARM
- 	struct pci_sys_data sysdata;
- #endif
-+	struct resource mem;
- 	struct pci_bus *root_bus;
- 	struct phy *phy;
- 	int (*map_irq)(const struct pci_dev *, u8, u8);
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
