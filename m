@@ -1,58 +1,59 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60188 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750797AbdCOCzy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Mar 2017 22:55:54 -0400
-Date: Tue, 14 Mar 2017 21:55:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Andi Kleen <ak@linux.intel.com>, bhelgaas@google.com,
-        x86@kernel.org, linux-pci@vger.kernel.org, eranian@google.com,
-        Peter Zijlstra <peterz@infradead.org>,
-        LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 3/4] x86, pci: Add interface to force mmconfig
-Message-ID: <20170315025549.GA13191@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170302232104.10136-1-andi@firstfloor.org>
- <20170302232104.10136-3-andi@firstfloor.org>
- <alpine.DEB.2.20.1703141407090.3619@nanos>
- <20170314154155.GG32070@tassilo.jf.intel.com>
- <alpine.DEB.2.20.1703141713010.3619@nanos>
- <20170314170255.GH32070@tassilo.jf.intel.com>
- <alpine.DEB.2.20.1703141849170.3619@nanos>
- <20170314194720.GD26264@bhelgaas-glaptop.roam.corp.google.com>
- <20170315022414.GC14380@two.firstfloor.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170315022414.GC14380@two.firstfloor.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=lH4S=3A=jonmasters.org=jcm@kernel.org>
+Return-Path: <SRS0=lH4S=3A=jonmasters.org=jcm@kernel.org>
+Content-Type: text/plain;
+	charset=us-ascii
+Mime-Version: 1.0 (1.0)
+From: Jon Masters <jcm@jonmasters.org>
+In-Reply-To: <20170323221439.GA12069@bhelgaas-glaptop.roam.corp.google.com>
+Date: Thu, 23 Mar 2017 18:16:48 -0400
+Cc: David.Daney@cavium.com, Tomasz Nowicki <tn@semihalf.com>,
+ Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>,
+ David Daney <ddaney@caviumnetworks.com>, linux-kernel@vger.kernel.org,
+ stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com,
+ David Daney <ddaney.cavm@gmail.com>, linux-pci@vger.kernel.org,
+ bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
+Message-Id: <CBED8A63-299D-4016-9575-75EBCA3D01CB@jonmasters.org>
+References: <251db823-591b-483b-9c55-13c911020fd1@jonmasters.org> <48b93116-cc0f-e59d-8aa3-704052ad6759@gmail.com> <c3392131-9243-24d3-30b4-4d7e84019d6f@jonmasters.org> <20170321134744.GA13150@bhelgaas-glaptop.roam.corp.google.com> <b50b6a7f-30be-4206-4f38-2539ea936228@semihalf.com> <aad5796a-1af8-53e0-c5f3-cb7755519cd5@caviumnetworks.com> <de830a73-6f01-62af-b454-dc1588a209eb@jonmasters.org> <20170322144820.GA16556@bhelgaas-glaptop.roam.corp.google.com> <51ba853c-f543-b21b-c25f-b56d77746f92@jonmasters.org> <20170322163359.GB24935@bhelgaas-glaptop.roam.corp.google.com> <20170323221439.GA12069@bhelgaas-glaptop.roam.corp.google.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 14, 2017 at 07:24:14PM -0700, Andi Kleen wrote:
-> > I agree that it should be fairly safe to do ECAM/MMCONFIG without
-> > locking.  Can we handle the decision part by adding a "lockless" bit
-> > to struct pci_ops?  Old ops don't mention that bit, so it will be
-> > initialized to zero and we'll do locking as today.  ECAM/MMCONFIG ops
-> > can set it and we can skip the locking.
+Thanks :) :) :)
+
+-- 
+Computer Architect | Sent from my 64-bit #ARM Powered phone
+
+> On Mar 23, 2017, at 18:14, Bjorn Helgaas <helgaas@kernel.org> wrote:
 > 
-> That's what my other patch already did. 
-
-Yes, your 1/4 patch does add the "ll_allowed" bit in struct pci_ops.
-
-What I was wondering, but didn't explain very well, was whether
-instead of setting that bit at run-time in pci_mmcfg_arch_init(), we
-could set it statically in the pci_ops definition, e.g.,
-
-  static struct pci_ops ecam_ops = {
-    .lockless = 1,
-    .read = ecam_read,
-    .write = ecam_write,
-  };
-
-I think it would be easier to read if the lockless-ness were declared
-right next to the accessors that need it (or don't need it).
-
-But it is a little confusing with all the different paths, at least on
-x86, so maybe it wouldn't be quite that simple.
-
-Bjorn
+>> On Wed, Mar 22, 2017 at 11:34:00AM -0500, Bjorn Helgaas wrote:
+>>> On Wed, Mar 22, 2017 at 12:25:39PM -0400, Jon Masters wrote:
+>>>> On 03/22/2017 10:48 AM, Bjorn Helgaas wrote:
+>>>>> On Wed, Mar 22, 2017 at 10:28:27AM -0400, Jon Masters wrote:
+>>>>> On 03/21/2017 10:56 AM, David Daney wrote:
+>>>> 
+>>>>>> Yes.  After all this back and forth, Cavium has decided to deploy
+>>>>>> firmware with "CAVxxx" as _HID.
+>>>>> 
+>>>>> Great. How about a stable backport for Greg K-H? I want to make sure
+>>>>> that everyone running "upstream" has a chance of booting.
+>>>> 
+>>>> The first patch, fee4d813850c ("PCI: Use Cavium assigned hardware ID for
+>>>> ThunderX host controller"), has a stable tag already.
+>>> 
+>>> Thanks - I saw that after I mailed.
+>>> 
+>>>> The second, 1dc94a38af89 ("PCI: Add legacy firmware support for Cavium
+>>>> ThunderX host controller"), does not, but I can easily add it if needed.
+>>> 
+>>> I think that would be ideal. There is firmware out in the wild that
+>>> has neither identifier in it (for example, a bunch of folks in the
+>>> office bought platforms recently that don't boot upstream kernels).
+>>> My guys are used to just taking an upstream kernel and using that,
+>>> for development, and I have no intention of having the broader RH
+>>> org do any different from what they would do with an x86 box ;)
+>> 
+>> I added the same stable tag (v4.10+) to the second patch.
+> 
+> I moved these from pci/host-thunder (targeted for v4.12) to for-linus so we
+> can get these in v4.11.
+> 
