@@ -1,70 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 11/29] drivers, media: convert cx88_core.refcount from
- atomic_t to refcount_t
-To: Elena Reshetova <elena.reshetova@intel.com>,
-        gregkh@linuxfoundation.org
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
-Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
-        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, peterz@infradead.org,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <c6987419-f708-9923-0f9f-87b715600045@cogentembedded.com>
-Date: Mon, 6 Mar 2017 19:26:23 +0300
+Return-Path: <SRS0=7EXQ=3A=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=7EXQ=3A=free.fr=slash.tmp@kernel.org>
+Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
+From: Mason <slash.tmp@free.fr>
+To: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Thomas Gleixner <tglx@linutronix.de>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
+ <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
+ <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
+Message-ID: <9fffedd4-6292-b662-a588-a68fe7380af6@free.fr>
+Date: Fri, 24 Mar 2017 00:40:16 +0100
 MIME-Version: 1.0
-In-Reply-To: <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello.
+On 23/03/2017 18:03, Mason wrote:
 
-On 03/06/2017 05:20 PM, Elena Reshetova wrote:
+> The host bridge actually supports 256 MSIs.
+> 
+> IIUC, what you suggested on IRC is that I support 256 in the driver,
+> and only read the status for *enabled* MSIs.
+> 
+> Pseudo-code:
+> 
+> for every 32-bit blob in the enabled bitmap
+>   if the value is non-zero
+>     lookup the corresponding status reg
+> 
+> Problem is that a BITMAP is unsigned long (as you point out below).
+> So I'm not sure how to iterate 32-bits at a time over the BITMAP.
 
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
->
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
-[...]
-> diff --git a/drivers/media/pci/cx88/cx88.h b/drivers/media/pci/cx88/cx88.h
-> index 115414c..16c1313 100644
-> --- a/drivers/media/pci/cx88/cx88.h
-> +++ b/drivers/media/pci/cx88/cx88.h
-> @@ -24,6 +24,7 @@
->  #include <linux/i2c-algo-bit.h>
->  #include <linux/videodev2.h>
->  #include <linux/kdev_t.h>
-> +#include <linux/refcount.h>
->
->  #include <media/v4l2-device.h>
->  #include <media/v4l2-fh.h>
-> @@ -339,7 +340,7 @@ struct cx8802_dev;
->
->  struct cx88_core {
->  	struct list_head           devlist;
-> -	atomic_t                   refcount;
-> +	refcount_t                   refcount;
+Something along these lines:
 
-    Could you please keep the name aligned with above and below?
+	DECLARE_BITMAP(enabled, 256);
 
->
->  	/* board name */
->  	int                        nr;
->
+	unsigned int pos = 0;
 
-MBR, Sergei
+	while ((pos = find_next_bit(enabled, 256, pos)) < 256) {
+		int offset = (pos / 32) * 4;
+		u32 status = readl_relaxed(status + offset);
+		/* Handle each pos set in status */
+		pos = round_up(pos, 32);
+	}
+
+You mentioned a bug in my code (due to the platform endianness)
+when passing the result of readl_relaxed to the bitops routine...
+How is one supposed to iterate over status?
+
+I'm not yet seeing this endianness issue, since (status & BIT(i))
+provides the status of MSI_i, irrespective of endianness.
+
+Although I see that arch/arm/include/asm/bitops.h declares
+BE and LE variants... I'm confused.
+
+Regards.
