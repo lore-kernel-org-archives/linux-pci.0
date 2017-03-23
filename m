@@ -1,83 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:60861 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753433AbdCNBUf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Mar 2017 21:20:35 -0400
-From: "Brown, Aaron F" <aaron.f.brown@intel.com>
-To: =?utf-8?B?QmrDuHJuIE1vcms=?= <bjorn@mork.no>,
-        Borislav Petkov <bp@alien8.de>
-CC: Andy Shevchenko <andy.shevchenko@gmail.com>,
-        "lkml@pengaru.com" <lkml@pengaru.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        "vcaputo@pengaru.com" <vcaputo@pengaru.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-        khalidm <khalidm@cisco.com>,
-        "David Singleton" <davsingl@cisco.com>,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
-Subject: RE: [BUG] 4.11.0-rc1 panic on shutdown X61s
-Date: Tue, 14 Mar 2017 01:20:27 +0000
-Message-ID: <309B89C4C689E141A5FF6A0C5FB2118B8C5B3F9B@ORSMSX101.amr.corp.intel.com>
-References: <20170312053723.GH802@shells.gnugeneration.com>
-        <20170312115703.GA18197@nazgul.tnic>    <20170312122621.GA2823@nazgul.tnic>
-        <CAHp75Ve7SWivf=TTuq-qA=iM20E==OmSZD2YAmt0LVJQg47Osg@mail.gmail.com>
-        <20170312222333.hm54nl2ul5iuixap@pd.tnic> <87shmhjfap.fsf@miraculix.mork.no>
-In-Reply-To: <87shmhjfap.fsf@miraculix.mork.no>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 23 Mar 2017 17:27:17 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v2 1/5] PCI: rockchip: fix sign issues for current limits
+Message-ID: <20170323222717.GD23612@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170310024617.67303-1-briannorris@chromium.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170310024617.67303-1-briannorris@chromium.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiBGcm9tOiBCasO4cm4gTW9yayBbbWFpbHRvOmJqb3JuQG1vcmsubm9dDQo+IFNlbnQ6IE1vbmRh
-eSwgTWFyY2ggMTMsIDIwMTcgOTo0NiBBTQ0KPiBUbzogQm9yaXNsYXYgUGV0a292IDxicEBhbGll
-bjguZGU+DQo+IENjOiBBbmR5IFNoZXZjaGVua28gPGFuZHkuc2hldmNoZW5rb0BnbWFpbC5jb20+
-OyBsa21sQHBlbmdhcnUuY29tOw0KPiBsaW51eC1rZXJuZWwgPGxpbnV4LWtlcm5lbEB2Z2VyLmtl
-cm5lbC5vcmc+OyB2Y2FwdXRvQHBlbmdhcnUuY29tOyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVs
-Lm9yZzsgaW50ZWwtd2lyZWQtbGFuQGxpc3RzLm9zdW9zbC5vcmc7IGtoYWxpZG0NCj4gPGtoYWxp
-ZG1AY2lzY28uY29tPjsgRGF2aWQgU2luZ2xldG9uIDxkYXZzaW5nbEBjaXNjby5jb20+OyBCcm93
-biwgQWFyb24NCj4gRiA8YWFyb24uZi5icm93bkBpbnRlbC5jb20+OyBLaXJzaGVyLCBKZWZmcmV5
-IFQNCj4gPGplZmZyZXkudC5raXJzaGVyQGludGVsLmNvbT4NCj4gU3ViamVjdDogUmU6IFtCVUdd
-IDQuMTEuMC1yYzEgcGFuaWMgb24gc2h1dGRvd24gWDYxcw0KPiANCj4gQm9yaXNsYXYgUGV0a292
-IDxicEBhbGllbjguZGU+IHdyaXRlczoNCj4gPiBPbiBTdW4sIE1hciAxMiwgMjAxNyBhdCAwMzo1
-NTowOFBNICswMjAwLCBBbmR5IFNoZXZjaGVua28gd3JvdGU6DQo+ID4NCj4gPj4gVGhlIG9ubHkg
-Y2hhbmdlIHRoYXQgSU1ITyBtYXR0ZXJzIGhhcHBlbmVkIGJldHdlZW4gdjQuMTAgYW5kIHY0LjEx
-LQ0KPiByYzEgaXMgdGhpczoNCj4gPj4NCj4gPj4gQEAgLTYyNzYsOCArNjI3NCw4IEBAIHN0YXRp
-YyBpbnQgZTEwMDBlX3BtX2ZyZWV6ZShzdHJ1Y3QgZGV2aWNlICpkZXYpDQo+ID4+ICAgICAgICAg
-ICAgICAgICAvKiBRdWllc2NlIHRoZSBkZXZpY2Ugd2l0aG91dCByZXNldHRpbmcgdGhlIGhhcmR3
-YXJlICovDQo+ID4+ICAgICAgICAgICAgICAgICBlMTAwMGVfZG93bihhZGFwdGVyLCBmYWxzZSk7
-DQo+ID4+ICAgICAgICAgICAgICAgICBlMTAwMF9mcmVlX2lycShhZGFwdGVyKTsNCj4gPj4gKyAg
-ICAgICAgICAgICAgIGUxMDAwZV9yZXNldF9pbnRlcnJ1cHRfY2FwYWJpbGl0eShhZGFwdGVyKTsN
-Cj4gPj4gICAgICAgICB9DQo+ID4+IC0gICAgICAgZTEwMDBlX3Jlc2V0X2ludGVycnVwdF9jYXBh
-YmlsaXR5KGFkYXB0ZXIpOw0KPiA+Pg0KPiA+PiBTbywgaXQgYXBwYXJlbnRseSBtaXNzZXMgc29t
-ZXRoaW5nIGZvciB0aGUgb3RoZXIgY2FzZSwgbGlrZQ0KPiA+PiBwY2lfZGlzYWJsZV9tc2koKSBj
-YWxsIG9yIHNvLg0KPiA+DQo+ID4gV2VsbCwgbGVtbWUgYWRkIHRoZSBwZW9wbGUgZnJvbQ0KPiA+
-DQo+ID4gICA3ZTU0ZDlkMDYzZmEgKCJlMTAwMGU6IGRyaXZlciB0cnlpbmcgdG8gZnJlZSBhbHJl
-YWR5LWZyZWUgaXJxIikNCj4gPg0KPiA+IHRvIENDIHRoZW4uIDotKQ0KPiANCj4gQWxyZWFkeSBk
-aWQgdGhhdCBhIHdlZWsgYWdvOg0KPiBodHRwczovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9uZXRk
-ZXYvbXNnNDIzMzc5Lmh0bWwNCj4gDQo+IEhhdmVuJ3QgaGVhcmQgYW55dGhpbmcgYmFjayB5ZXQu
-ICBXb25kZXJpbmcgaWYgdGhleSBhcmUgd2FpdGluZyBmb3INCj4gc29tZW9uZSBlbHNlIHRvIHN1
-Ym1pdCB0aGUgcHJldHR5IG9idmlvdXMgcmV2ZXJ0PyAgRG9uJ3QgdW5kZXJzdGFuZCB3aHkNCj4g
-dGhhdCBzaG91bGQgdGFrZSBtb3JlIHRoYW4gYSBtaW51dGUgdG8gZmlndXJlIG91dC4gIEl0J3Mg
-bm90IGxpa2UgdGhleQ0KPiBhcmUgdGVzdGluZyB0aGVzZSBjaGFuZ2VzIGFueXdheS4uLg0KDQpC
-ZWxpZXZlIGl0IG9yIG5vdCB3ZSBhY3R1YWxseSBkbyB0ZXN0IHRoZXNlIGNoYW5nZXMuICBUaGlz
-IG9uZSB3YXMgdGVzdGVkIGJ5IG1lIGFuZCBJIGRpZCBub3QgaGF2ZSB0aGUgc2FtZSByZXN1bHRz
-IHlvdSBhbmQgdGhlIG90aGVyIHBlb3BsZSByZXBvcnRpbmcgdGhpcyB0cmFjZSBkaWQuICBJIG1h
-ZGUgaXQgYmFjayBpbiB0aGUgbGFiIHRvZGF5IGFuZCBoYXZlIHNwZW50IGEgZ29vZCBwYXJ0IG9m
-IHRoZSBkYXkgYXR0ZW1wdGluZyB0byByZXByb2R1Y2UgdGhpcyBidWcgd2l0aG91dCBzdWNjZXNz
-LiAgRnJlZXplIC8gcmVzdW1lIHdvcmtzIGZvciBtZSBvbiBhbGwgdGhlIHN5c3RlbXMgSSBoYXZl
-IHRyaWVkLCB3aGljaCBpbmNsdWRlcyBhIHNhbXBsaW5nIG9mIGFsbCB0aGUgY3VycmVudCBwYXJ0
-cyBhbmQgbWFueSBvbGRlciBvbmVzLiAgR2l2ZW4gdGhlcmUgYXJlIHNldmVyYWwgb3RoZXIgcmVw
-b3J0cyBvZiB0aGlzIGl0IGlzIG9idmlvdXNseSBhbiBpc3N1ZSBhbmQgSSB3b3VsZCBsaWtlIHRv
-IGJlIGFibGUgdG8gcmVwcm9kdWNlIGl0IGluIGNhc2UgYW5vdGhlciBwYXRjaCB0byByZXNvbHZl
-IHRoZSBpc3N1ZSB0aGlzIGF0dGVtcHRzIHRvIGZpeCBjb21lcyBiYWNrIGluIGFub3RoZXIgZm9y
-bS4gIFNvIEkgd2FudCB0byBrbm93IHdoYXQncyBkaWZmZXJlbnQgYmV0d2VlbiB0aGUgc3lzdGVt
-cyB0aGF0IGhpdCB0aGlzIGFuZCBteSBiYW5rIG9mIHN5c3RlbXMgdGhhdCBkb24ndC4NCg0KV2hh
-dCBleGFjdCBwYXJ0IChvciBwYXJ0cykgYXJlIHdlIGxvb2tpbmcgYXQgKGxzcGNpfGdyZXAgLWkg
-ZXRoKSB0aGF0IHRyaWdnZXIgdGhpcz8gIENvdWxkIGl0IGJlIGEgZGlmZmVyZW5jZSBpbiAuY29u
-ZmlnIGZpbGVzPyAgVGhlIHRyYWNlIHNheXMgaXQgaXMgZmFsbGluZyBiYWNrIHRvIGxlZ2FjeSBp
-bnRlcnJ1cHRzLCBkb2VzIHRoZSBzeXN0ZW0gY29udGludWUgdG8gd29yayBhbmQgZG9lcyB0aGUg
-bmV0d29yayBjb250aW51ZSB0byBmdW5jdGlvbiBpbiB0aGF0IG1vZGU/ICBJbiBjYXNlIGl0J3Mg
-cmVsYXRlZCB0byB1c2VyIHNwYWNlIHdoYXQgaXMgdGhlIGJhc2UgZGlzdHJvPyAgQW55IG90aGVy
-IGluZm9ybWF0aW9uIHlvdSB0aGluayBjYW4gaGVscCBtZSByZXByb2R1Y2UgdGhlIGlzc3VlIHdv
-dWxkIGJlIGFwcHJlY2lhdGVkLg0KDQpUaGFua3MsDQpBYXJvbg0KDQo+IA0KPiANCj4gQmrDuHJu
-DQo=
+On Thu, Mar 09, 2017 at 06:46:13PM -0800, Brian Norris wrote:
+> The regulator framework can return negative error codes via
+> regulator_get_current_limit() for regulators that don't provide current
+> information. The subsequent check for postive values isn't very useful,
+> if the variable is unsigned.
+> 
+> Let's just match the signedness of the return value.
+> 
+> Prevents error messages like this, seen on Samsung Chromebook Plus:
+> 
+> [    1.069372] rockchip-pcie f8000000.pcie: invalid power supply
+> 
+> Fixes: 4816c4c7b82b ("PCI: rockchip: Provide captured slot power limit and scale")
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
+
+I applied the first two patches (this already has Shawn's ack and the
+second is trivially obvious) to pci/host-rockchip.  I'm not sure what the
+current state of the others is.
+
+I also applied the appended trivial indentation patch.
+
+> ---
+> v2: add Shawn's ack
+> ---
+>  drivers/pci/host/pcie-rockchip.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 26ddd3535272..d785f64ec03b 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -425,7 +425,8 @@ static struct pci_ops rockchip_pcie_ops = {
+>  
+>  static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
+>  {
+> -	u32 status, curr, scale, power;
+> +	int curr;
+> +	u32 status, scale, power;
+>  
+>  	if (IS_ERR(rockchip->vpcie3v3))
+>  		return;
+> -- 
+> 2.12.0.246.ga2ecc84866-goog
+> 
+
+commit 73edd2b180a18024605c599074596a9e22d745d6
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Thu Mar 23 17:21:26 2017 -0500
+
+    PCI: rockchip: Unindent rockchip_pcie_set_power_limit()
+    
+    If regulator_get_current_limit() returns 0 or error, return early so the
+    body of the function doesn't have to be indented as the body of an "if"
+    statement.  No functional change intended.
+    
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index d785f64ec03b..7f76ff6af0ba 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -438,24 +438,25 @@ static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
+ 	 * to the actual power supply.
+ 	 */
+ 	curr = regulator_get_current_limit(rockchip->vpcie3v3);
+-	if (curr > 0) {
+-		scale = 3; /* 0.001x */
+-		curr = curr / 1000; /* convert to mA */
+-		power = (curr * 3300) / 1000; /* milliwatt */
+-		while (power > PCIE_RC_CONFIG_DCR_CSPL_LIMIT) {
+-			if (!scale) {
+-				dev_warn(rockchip->dev, "invalid power supply\n");
+-				return;
+-			}
+-			scale--;
+-			power = power / 10;
+-		}
++	if (curr <= 0)
++		return;
+ 
+-		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_DCR);
+-		status |= (power << PCIE_RC_CONFIG_DCR_CSPL_SHIFT) |
+-			  (scale << PCIE_RC_CONFIG_DCR_CPLS_SHIFT);
+-		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCR);
++	scale = 3; /* 0.001x */
++	curr = curr / 1000; /* convert to mA */
++	power = (curr * 3300) / 1000; /* milliwatt */
++	while (power > PCIE_RC_CONFIG_DCR_CSPL_LIMIT) {
++		if (!scale) {
++			dev_warn(rockchip->dev, "invalid power supply\n");
++			return;
++		}
++		scale--;
++		power = power / 10;
+ 	}
++
++	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_DCR);
++	status |= (power << PCIE_RC_CONFIG_DCR_CSPL_SHIFT) |
++		  (scale << PCIE_RC_CONFIG_DCR_CPLS_SHIFT);
++	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCR);
+ }
+ 
+ /**
