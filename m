@@ -1,84 +1,210 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-kernel@vger.kernel.org
-Cc: robh@kernel.org, toshi.kani@hpe.com, shawn.lin@rock-chips.com,
-        briannorris@chromium.org, dianders@chromium.org,
-        bhelgaas@google.com, dtor@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v2 1/2] PCI: return resource_entry in pci_add_resource helpers
-Date: Thu, 23 Mar 2017 16:12:34 +0800
-Message-Id: <1490256755-889-2-git-send-email-jeffy.chen@rock-chips.com>
-In-Reply-To: <1490256755-889-1-git-send-email-jeffy.chen@rock-chips.com>
-References: <1490256755-889-1-git-send-email-jeffy.chen@rock-chips.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 23 Mar 2017 14:31:51 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+Message-ID: <20170323143151.GA21544@red-moon>
+References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
+ <20170322193111.GA8190@wunner.de>
+ <CAKv+Gu_X-SEnz7h9J8boqqjOQGHQawwdSAq4haH-OGu8zdfNfA@mail.gmail.com>
+ <20170323084819.GA23281@h08.hostsharing.net>
+ <CAKv+Gu93eJ-js3g7M6Jdm6XGMaWMswFmzBG2qNT4rn+3=1+EyA@mail.gmail.com>
+ <20170323105727.GA2441@red-moon>
+ <CAKv+Gu-J664KXaZR19nViq4o1n_x=P-trsZ0oNDiONuBpAcd7A@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAKv+Gu-J664KXaZR19nViq4o1n_x=P-trsZ0oNDiONuBpAcd7A@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+ Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
+ Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
+ Lukas Wunner <lukas@wunner.de>, Hanjun Guo <hanjun.guo@linaro.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Yinghai Lu <yinghai@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
----
+On Thu, Mar 23, 2017 at 12:25:48PM +0000, Ard Biesheuvel wrote:
+> On 23 March 2017 at 10:57, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+> > On Thu, Mar 23, 2017 at 09:04:03AM +0000, Ard Biesheuvel wrote:
+> >> On 23 March 2017 at 08:48, Lukas Wunner <lukas@wunner.de> wrote:
+> >> > On Wed, Mar 22, 2017 at 07:32:43PM +0000, Ard Biesheuvel wrote:
+> >> >> On 22 March 2017 at 19:31, Lukas Wunner <lukas@wunner.de> wrote:
+> >> >> > On Wed, Mar 22, 2017 at 03:30:29PM +0000, Ard Biesheuvel wrote:
+> >> >> >> On UEFI systems, the PCI subsystem is enumerated by the firmware,
+> >> >> >> and if a graphical framebuffer is exposed by a PCI device, its base
+> >> >> >> address and size are exposed to the OS via the Graphics Output
+> >> >> >> Protocol (GOP).
+> >> >> >>
+> >> >> >> On arm64 PCI systems, the entire PCI hierarchy is reconfigured from
+> >> >> >> scratch at boot. This may result in the GOP framebuffer address to
+> >> >> >> become stale, if the BAR covering the framebuffer is modified. This
+> >> >> >> will cause the framebuffer to become unresponsive, and may in some
+> >> >> >> cases result in unpredictable behavior if the range is reassigned to
+> >> >> >> another device.
+> >> >> >
+> >> >> > Hm, commit message seems to indicate the issue is restricted to arm64,
+> >> >> > yet there's no IS_ENABLED(ARM64) to constrain the added code to that arch?
+> >> >>
+> >> >> True. I am eager to get some x86 coverage for this, since I would
+> >> >> expect this not to do any harm. But I'm fine with making it ARM/arm64
+> >> >> specific in the final version.
+> >> >
+> >> > I see.  IIUC, this is only a problem because pci_bus_assign_resources()
+> >> > is called from arch/arm64/kernel/pci.c:pci_acpi_scan_root() (as well as
+> >> > the host drivers) and x86 isn't affected because it doesn't do that.
+> >> >
+> >>
+> >> Correct. But on x86 (or rather, on a PC), you can be sure that UEFI
+> >> (or the legacy PCI bios) performed the resource assignment already.
+> >> One could argue that this is equally the case when running arm64 in
+> >> ACPI mode, but in general, you cannot assume the presence of firmware
+> >> on ARM/arm64 that has already taken care of this, and so the state of
+> >> the BARs has to be presumed invalid.
+> >
+> > The story is a bit more convoluted than that owing to x86 (and other
+> > arches) legacy.
+> >
+> > x86 tries to claim all PCI resources (in two passes - first enabled
+> > devices, second disabled devices) and that predates ACPI/UEFI.
+> >
+> > Mind, x86 reassign resources that can't be claimed too, the only
+> > difference with ARM64 is that, for the better or the worse, we
+> > have decided not to claim the FW PCI set-up on ARM64 even if it
+> > is sane, we do not even try, it was a deliberate choice.
+> >
+> > This patch should be harmless on x86 since if the FB PCI BAR is set
+> > up sanely, claiming it again should be a nop (to be checked).
+> >
+> 
+> I have checked this with OVMF under QEMU. Claiming the resource early
+> like we do this in this patch does not result in any diagnostic output
+> or other symptoms that would suggest that anything unexpected occurs.
 
-Changes in v2: None
+There is something that I do not understand on how the resource
+claiming works on x86. IIUC on x86, resource claiming is done in:
 
- drivers/pci/bus.c   | 13 ++++++++-----
- include/linux/pci.h |  8 +++++---
- 2 files changed, 13 insertions(+), 8 deletions(-)
+arch/x86/pci/legacy.c
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index bc56cf1..36a1861 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -17,25 +17,28 @@
+pci_subsys_init()
+ -> pcibios_init()
+  -> pcibios_resource_survey()
+
+pci_subsys_init() is run in a subsys_initcall.
+
+Now, how do we ensure that resource claiming is carried out _after_
+the PCI root busses have been actually scanned ?
+
+The ACPI scan handler interface (so the interface to actually scan
+a PCI root bridge in ACPI) is initialized in acpi_init() (which
+is a subsys_initcall), how do we guarantee that is run before
+pci_subsys_init() ?
+
+x86 implements pcibios_resource_survey_bus(), but that's called only
+for hotplugged bridges (?):
+
+drivers/acpi/pci_root.c -> acpi_pci_root_add()
+
+>From the log below, I see two options:
+
+- x86 pcibios_resource_survey() is called before any root bus is added
+  (so it does precious little)
+- x86 pcibios_resource_survey() is called after root busses are added and
+  the PCI device fixup has been applied (and the additional claim in it
+  succeeds silently)
+
+I am certainly missing something here, I will grab an x86 box to add
+a couple of logs and see if my assumptions are correct, I would like
+to get to the bottom of this, I think that's important.
+
+Lorenzo
  
- #include "pci.h"
- 
--void pci_add_resource_offset(struct list_head *resources, struct resource *res,
--			     resource_size_t offset)
-+struct resource_entry *pci_add_resource_offset(struct list_head *resources,
-+					       struct resource *res,
-+					       resource_size_t offset)
- {
- 	struct resource_entry *entry;
- 
- 	entry = resource_list_create_entry(res, 0);
- 	if (!entry) {
- 		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
--		return;
-+		return NULL;
- 	}
- 
- 	entry->offset = offset;
- 	resource_list_add_tail(entry, resources);
-+	return entry;
- }
- EXPORT_SYMBOL(pci_add_resource_offset);
- 
--void pci_add_resource(struct list_head *resources, struct resource *res)
-+struct resource_entry *pci_add_resource(struct list_head *resources,
-+					struct resource *res)
- {
--	pci_add_resource_offset(resources, res, 0);
-+	return pci_add_resource_offset(resources, res, 0);
- }
- EXPORT_SYMBOL(pci_add_resource);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index eb3da1a..ab16abe 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1167,9 +1167,11 @@ void pci_release_selected_regions(struct pci_dev *, int);
- /* drivers/pci/bus.c */
- struct pci_bus *pci_bus_get(struct pci_bus *bus);
- void pci_bus_put(struct pci_bus *bus);
--void pci_add_resource(struct list_head *resources, struct resource *res);
--void pci_add_resource_offset(struct list_head *resources, struct resource *res,
--			     resource_size_t offset);
-+struct resource_entry *pci_add_resource(struct list_head *resources,
-+					struct resource *res);
-+struct resource_entry *pci_add_resource_offset(struct list_head *resources,
-+					       struct resource *res,
-+					       resource_size_t offset);
- void pci_free_resource_list(struct list_head *resources);
- void pci_bus_add_resource(struct pci_bus *bus, struct resource *res,
- 			  unsigned int flags);
--- 
-2.1.4
+> For the record: I applied the following hunk on top of the current
+> version of this patch
+> 
+> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+> index 88f653864a01..98b7c437a448 100644
+> --- a/drivers/video/fbdev/efifb.c
+> +++ b/drivers/video/fbdev/efifb.c
+> @@ -380,7 +380,10 @@ static void claim_efifb_bar(struct pci_dev *dev, int idx)
+>                 return;
+>         }
+> 
+> -       if (pci_claim_resource(dev, idx)) {
+> +       if (dev->resource[idx].parent != NULL) {
+> +               dev_info(&dev->dev, "BAR %d: resource already claimed\n", idx);
+> +               while (1) { asm ("hlt"); }
+> +       } else if (pci_claim_resource(dev, idx)) {
+>                 pci_dev_disabled = true;
+>                 dev_err(&dev->dev,
+>                         "BAR %d: failed to claim resource for efifb!\n", idx);
+> 
+> and got the following output in the kernel log related to BDF 0/2/0 and efifb
+> 
+> pci 0000:00:02.0: [1234:1111] type 00 class 0x030000
+> pci 0000:00:02.0: reg 0x10: [mem 0x80000000-0x80ffffff pref]
+> pci 0000:00:02.0: reg 0x18: [mem 0x81020000-0x81020fff]
+> pci 0000:00:02.0: reg 0x30: [mem 0xffff0000-0xffffffff pref]
+> pci 0000:00:02.0: BAR 0: assigned to efifb
+> pci 0000:00:02.0: can't claim BAR 6 [mem 0xffff0000-0xffffffff pref]:
+> no compatible bridge window
+> pci 0000:00:02.0: BAR 6: assigned [mem 0x08040000-0x0804ffff pref]
+> pci 0000:00:02.0: Video device with shadowed ROM at [mem 0x000c0000-0x000dffff]
+> efifb: probing for efifb
+> efifb: framebuffer at 0x80000000, using 1876k, total 1875k
+> efifb: mode is 800x600x32, linelength=3200, pages=1
+> efifb: scrolling: redraw
+> efifb: Truecolor: size=8:8:8:8, shift=24:16:8:0
+> 
+> whereas a kernel without this patch gives me
+> 
+> pci 0000:00:02.0: [1234:1111] type 00 class 0x030000
+> pci 0000:00:02.0: reg 0x10: [mem 0x80000000-0x80ffffff pref]
+> pci 0000:00:02.0: reg 0x18: [mem 0x81020000-0x81020fff]
+> pci 0000:00:02.0: reg 0x30: [mem 0xffff0000-0xffffffff pref]
+> pci 0000:00:02.0: can't claim BAR 6 [mem 0xffff0000-0xffffffff pref]:
+> no compatible bridge window
+> pci 0000:00:02.0: BAR 6: assigned [mem 0x08040000-0x0804ffff pref]
+> pci 0000:00:02.0: Video device with shadowed ROM at [mem 0x000c0000-0x000dffff]
+> efifb: probing for efifb
+> efifb: framebuffer at 0x80000000, using 1876k, total 1875k
+> efifb: mode is 800x600x32, linelength=3200, pages=1
+> efifb: scrolling: redraw
+> efifb: Truecolor: size=8:8:8:8, shift=24:16:8:0
+> 
+> /proc/iomem looks exactly the same.
+> 
+> So in summary, x86 does not seem to care.
+> 
+> Furthermore, I tested with this change, as suggested by Lukas
+> 
+> diff --git a/drivers/video/fbdev/efifb.c b/drivers/video/fbdev/efifb.c
+> index 88f653864a01..c72d84590343 100644
+> --- a/drivers/video/fbdev/efifb.c
+> +++ b/drivers/video/fbdev/efifb.c
+> @@ -417,4 +417,5 @@ static void efifb_fixup_resources(struct pci_dev *dev)
+>                 }
+>         }
+>  }
+> -DECLARE_PCI_FIXUP_HEADER(PCI_ANY_ID, PCI_ANY_ID, efifb_fixup_resources);
+> +DECLARE_PCI_FIXUP_CLASS_HEADER(PCI_ANY_ID, PCI_ANY_ID, PCI_BASE_CLASS_DISPLAY,
+> +                              16, efifb_fixup_resources);
+> 
+> 
+> which does appear to work fine, and thinking about it, I feel there is
+> only so much we can do to sanity check the efifb against the PCI setup
+> performed by the firmware, so I am inclined to fold this in.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
