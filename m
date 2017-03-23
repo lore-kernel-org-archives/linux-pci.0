@@ -1,73 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp-out4.electric.net ([192.162.216.186]:53871 "EHLO
-        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754641AbdC1JJb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Mar 2017 05:09:31 -0400
-From: David Laight <David.Laight@ACULAB.COM>
-To: 'David Daney' <ddaney.cavm@gmail.com>,
-        Christoph Hellwig <hch@lst.de>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "netanel@annapurnalabs.com" <netanel@annapurnalabs.com>,
-        "jcliburn@gmail.com" <jcliburn@gmail.com>,
-        "chris.snook@gmail.com" <chris.snook@gmail.com>,
-        "sgoutham@cavium.com" <sgoutham@cavium.com>,
-        "rric@kernel.org" <rric@kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: [PATCH 5/5] PCI: remove pci_enable_msix
-Date: Tue, 28 Mar 2017 09:07:28 +0000
-Message-ID: <063D6719AE5E284EB5DD2968C1650D6DCFFBE7F3@AcuExch.aculab.com>
-References: <20170327082936.6830-1-hch@lst.de>
- <20170327082936.6830-6-hch@lst.de>
- <83f97789-0817-7549-bfa9-1f8dcb0c26d9@gmail.com>
- <20170327171148.GB28815@lst.de>
- <1eaa46ad-9890-c738-3a85-6468161284ba@gmail.com>
-In-Reply-To: <1eaa46ad-9890-c738-3a85-6468161284ba@gmail.com>
-Content-Type: text/plain; charset="Windows-1252"
-MIME-Version: 1.0
+Received: from a2nlsmtp01-04.prod.iad2.secureserver.net ([198.71.225.38]:45144
+        "EHLO a2nlsmtp01-04.prod.iad2.secureserver.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751660AbdCWSte (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Mar 2017 14:49:34 -0400
+From: Long Li <longli@exchange.microsoft.com>
+To: linux-pci@vger.kernel.org, devel@linuxdriverproject.org
+Cc: Long Li <longli@microsoft.com>
+Subject: [Please ignore this is a test] pci-hyperv: properly handle pci bus remove
+Date: Thu, 23 Mar 2017 11:37:04 -0700
+Message-Id: <1490294224-3173-1-git-send-email-longli@exchange.microsoft.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Daney
-> Sent: 27 March 2017 18:31
-> On 03/27/2017 10:11 AM, Christoph Hellwig wrote:
-> > On Mon, Mar 27, 2017 at 09:59:35AM -0700, David Daney wrote:
-> >> On 03/27/2017 01:29 AM, Christoph Hellwig wrote:
-> >>> Unused now that all callers switched to pci_alloc_irq_vectors.
-> >>>
-> >>
-> >> And you are aware that the ThunderX GPIO driver that I am attempting to
-> >> merge uses this interface.
-> >>
-> >> If this patch gets merged, should I ask to revert it when the GPIO driver
-> >> goes in?
-> >
-> > No.  You should not use pci_enable_msix in your new driver as I told
-> > you before.
-> >
-> >> You offer no solution for drivers that would benefit from using a sparse
-> >> sub set of the available MSI-X vectors.
-> >
-> > Use pci_enable_msix_{exact,range} for now, as I told you before.
-> >
-> 
-> That still results in twice as many MSI-X being provisioned than are needed.
-> 
-> For drivers that use a contiguous range of MSI-X, your suggestion is
-> usable, but for others you are forcing resources to be wasted.  For what
-> end?
+From: Long Li <longli@microsoft.com>
 
-There are also drivers that only need some interrupts after a specific
-device is opened, and could free them when closed.
+hv_pci_devices_present is called in hv_pci_remove when we remove a PCI 
+device from host (e.g. by disabling SRIOV on a device). In hv_pci_remove,
+the bus is already removed before the call, so we don't need to rescan the 
+bus in the workqueue scheduled from hv_pci_devices_present. 
 
-This could even be network devices with lots of queues, or a driver
-realising that the workload is high and per-cpu interrupts make sense.
+By introducing status hv_pcibus_removed, we can avoid this situation.
 
-So any real change to the interface should allow drivers to allocate
-and free individual MSI-X vectors.
+Signed-off-by: Long Li <longli@microsoft.com>
+---
+ drivers/pci/host/pci-hyperv.c | 16 +++++++++++++---
+ 1 file changed, 13 insertions(+), 3 deletions(-)
 
-I remember a lot of discussions when pci_enable_msix_range() was added,
-but almost nothing about this change.
-
-	David
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index ada9856..8a92244 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -350,6 +350,7 @@ enum hv_pcibus_state {
+ 	hv_pcibus_init = 0,
+ 	hv_pcibus_probed,
+ 	hv_pcibus_installed,
++	hv_pcibus_removed,
+ 	hv_pcibus_maximum
+ };
+ 
+@@ -1504,12 +1505,19 @@ static void pci_devices_present_work(struct work_struct *work)
+ 		put_pcichild(hpdev, hv_pcidev_ref_initial);
+ 	}
+ 
+-	/* Tell the core to rescan bus because there may have been changes. */
+-	if (hbus->state == hv_pcibus_installed) {
++	switch(hbus->state) {
++	case hv_pcibus_installed:
++		/*
++		* Tell the core to rescan bus
++		* because there may have been changes.
++		*/
+ 		pci_lock_rescan_remove();
+ 		pci_scan_child_bus(hbus->pci_bus);
+ 		pci_unlock_rescan_remove();
+-	} else {
++		break;
++
++	case hv_pcibus_init:
++	case hv_pcibus_probed:
+ 		survey_child_resources(hbus);
+ 	}
+ 
+@@ -2185,6 +2193,7 @@ static int hv_pci_probe(struct hv_device *hdev,
+ 	hbus = kzalloc(sizeof(*hbus), GFP_KERNEL);
+ 	if (!hbus)
+ 		return -ENOMEM;
++	hbus->state = hv_pcibus_init;
+ 
+ 	/*
+ 	 * The PCI bus "domain" is what is called "segment" in ACPI and
+@@ -2348,6 +2357,7 @@ static int hv_pci_remove(struct hv_device *hdev)
+ 		pci_stop_root_bus(hbus->pci_bus);
+ 		pci_remove_root_bus(hbus->pci_bus);
+ 		pci_unlock_rescan_remove();
++		hbus->state = hv_pcibus_removed;
+ 	}
+ 
+ 	hv_pci_bus_exit(hdev);
+-- 
+2.7.4
