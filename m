@@ -1,112 +1,161 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0055.outbound.protection.outlook.com ([104.47.41.55]:22800
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752119AbdCPSUW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Mar 2017 14:20:22 -0400
-Subject: Re: [RFC PATCH v2 26/32] kvm: svm: Add support for SEV
- LAUNCH_UPDATE_DATA command
-To: Paolo Bonzini <pbonzini@redhat.com>, <simon.guinot@sequanux.org>,
-        <linux-efi@vger.kernel.org>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <akpm@linux-foundation.org>, <davem@davemloft.net>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846786714.2349.17724971671841396908.stgit@brijesh-build-machine>
- <14021d2a-2a94-a0c8-88db-acbc04b4daac@redhat.com>
-CC: <brijesh.singh@amd.com>
-From: Brijesh Singh <brijesh.singh@amd.com>
-Message-ID: <5fb4d24c-f070-cc22-7a47-fb55ba430011@amd.com>
-Date: Thu, 16 Mar 2017 13:20:06 -0500
+Received: from mail.kernel.org ([198.145.29.136]:35196 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932359AbdCWUyG (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 Mar 2017 16:54:06 -0400
+Date: Thu, 23 Mar 2017 15:53:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
+        gwshan@linux.vnet.ibm.com, aik@ozlabs.ru, benh@kernel.crashing.org,
+        mpe@ellerman.id.au, paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: Re: [PATCH v9 2/3] PCI: Add a macro to set default alignment for all
+ PCI devices
+Message-ID: <20170323205342.GB23612@bhelgaas-glaptop.roam.corp.google.com>
+References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1487141106-2503-3-git-send-email-xyjxie@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <14021d2a-2a94-a0c8-88db-acbc04b4daac@redhat.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1487141106-2503-3-git-send-email-xyjxie@linux.vnet.ibm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Yongji,
 
-On 03/16/2017 05:48 AM, Paolo Bonzini wrote:
->
->
-> On 02/03/2017 16:17, Brijesh Singh wrote:
->> +static struct page **sev_pin_memory(unsigned long uaddr, unsigned long ulen,
->> +				    unsigned long *n)
->> +{
->> +	struct page **pages;
->> +	int first, last;
->> +	unsigned long npages, pinned;
->> +
->> +	/* Get number of pages */
->> +	first = (uaddr & PAGE_MASK) >> PAGE_SHIFT;
->> +	last = ((uaddr + ulen - 1) & PAGE_MASK) >> PAGE_SHIFT;
->> +	npages = (last - first + 1);
->> +
->> +	pages = kzalloc(npages * sizeof(struct page *), GFP_KERNEL);
->> +	if (!pages)
->> +		return NULL;
->> +
->> +	/* pin the user virtual address */
->> +	down_read(&current->mm->mmap_sem);
->> +	pinned = get_user_pages_fast(uaddr, npages, 1, pages);
->> +	up_read(&current->mm->mmap_sem);
->
-> get_user_pages_fast, like get_user_pages_unlocked, must be called
-> without mmap_sem held.
+On Wed, Feb 15, 2017 at 02:45:05PM +0800, Yongji Xie wrote:
+> When vfio passthroughs a PCI device of which MMIO BARs are
+> smaller than PAGE_SIZE, guest will not handle the mmio
+> accesses to the BARs which leads to mmio emulations in host.
+> 
+> This is because vfio will not allow to passthrough one BAR's
+> mmio page which may be shared with other BARs. Otherwise,
+> there will be a backdoor that guest can use to access BARs
+> of other guest.
 
-Sure.
+Please include a pointer to the VFIO code that enforces this.  It's
+not obvious to me how it would do this.  This doesn't change the
+*size* of the resource, only the alignment.  So if VFIO sees a BAR
+like [mem 0x80000000-0x800000ff], it knows the BAR is aligned enough
+that it *could* be the only thing on a page, but I don't know how it
+could know that there will never be another BAR at 0x80000100.  Even
+if there's no other BAR on that page *now*, it would have to know that
+no hot-added device will ever be placed on that page.
 
->
->> +	if (pinned != npages) {
->> +		printk(KERN_ERR "SEV: failed to pin  %ld pages (got %ld)\n",
->> +				npages, pinned);
->> +		goto err;
->> +	}
->> +
->> +	*n = npages;
->> +	return pages;
->> +err:
->> +	if (pinned > 0)
->> +		release_pages(pages, pinned, 0);
->> +	kfree(pages);
->> +
->> +	return NULL;
->> +}
->>
->> +	/* the array of pages returned by get_user_pages() is a page-aligned
->> +	 * memory. Since the user buffer is probably not page-aligned, we need
->> +	 * to calculate the offset within a page for first update entry.
->> +	 */
->> +	offset = uaddr & (PAGE_SIZE - 1);
->> +	len = min_t(size_t, (PAGE_SIZE - offset), ulen);
->> +	ulen -= len;
->> +
->> +	/* update first page -
->> +	 * special care need to be taken for the first page because we might
->> +	 * be dealing with offset within the page
->> +	 */
->
-> No need to special case the first page; just set "offset = 0" inside the
-> loop after the first iteration.
->
+> This patch adds a macro to set default alignment for all
+> PCI devices. Then we could solve this issue on some platforms
+> which would easily hit this issue because of their 64K page
+> such as PowerNV platform by defining this macro as PAGE_SIZE.
+> 
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> ---
+>  arch/powerpc/include/asm/pci.h |    4 ++++
+>  drivers/pci/pci.c              |    3 +++
+>  2 files changed, 7 insertions(+), 0 deletions(-)
+> 
+> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+> index e9bd6cf..5e31bc2 100644
+> --- a/arch/powerpc/include/asm/pci.h
+> +++ b/arch/powerpc/include/asm/pci.h
+> @@ -28,6 +28,10 @@
+>  #define PCIBIOS_MIN_IO		0x1000
+>  #define PCIBIOS_MIN_MEM		0x10000000
+>  
+> +#ifdef CONFIG_PPC_POWERNV
+> +#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
+> +#endif
+> +
+>  struct pci_dev;
+>  
+>  /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index a881c0d..2622e9b 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4965,6 +4965,9 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+>  	resource_size_t align = 0;
+>  	char *p;
+>  
+> +#ifdef PCIBIOS_DEFAULT_ALIGNMENT
+> +	align = PCIBIOS_DEFAULT_ALIGNMENT;
+> +#endif
 
-Will do.
+I'd prefer to move this #ifdef out of the code path, as in the patch
+below.
 
--Brijesh
+I don't know how powerpc kernels are built: can you build a kernel
+that will run on PowerNV as well as on different powerpc systems?  If
+so, is it acceptable to force that kernel to user 64K alignment even
+when it's running on non-PowerNV systems?  Or do you need a function
+call here instead of a #define?
+
+>  	spin_lock(&resource_alignment_lock);
+>  	p = resource_alignment_param;
+>  	if (!*p)
+
+
+commit 60106ae302a264f9be15fa736dae2ea51140b988
+Author: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Date:   Wed Feb 15 14:45:05 2017 +0800
+
+    PCI: Add PCIBIOS_DEFAULT_ALIGNMENT for arch-specific alignment control
+    
+    When VFIO passes through a PCI device to a guest, it does not allow the
+    guest direct access to BARs that are smaller than PAGE_SIZE.  This is
+    because a page might contain several small BARs for unrelated devices and
+    a guest should not be able to access all of them.
+    
+    VFIO emulates guest accesses to these small BARs, which is functional but
+    slow.  On systems with large page sizes, e.g., PowerNV with 64K pages, BARs
+    are more likely to share a page and performance is more of a problem.
+    
+    Add a macro to set default alignment for all PCI devices.  An arch can set
+    this to PAGE_SIZE to prevent memory BARs from sharing a page.
+    
+    [bhelgaas: add default PCIBIOS_DEFAULT_ALIGNMENT definition, changelog]
+    Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 93eded8d3843..dc3c81ab4cc4 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -28,6 +28,10 @@
+ #define PCIBIOS_MIN_IO		0x1000
+ #define PCIBIOS_MIN_MEM		0x10000000
+ 
++#ifdef CONFIG_PPC_POWERNV
++#define PCIBIOS_DEFAULT_ALIGNMENT	PAGE_SIZE
++#endif
++
+ struct pci_dev;
+ 
+ /* Values for the `which' argument to sys_pciconfig_iobase syscall.  */
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02ffdb9..e9a079063fd0 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4962,7 +4962,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ {
+ 	int seg, bus, slot, func, align_order, count;
+ 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+-	resource_size_t align = 0;
++	resource_size_t align = PCIBIOS_DEFAULT_ALIGNMENT;
+ 	char *p;
+ 
+ 	spin_lock(&resource_alignment_lock);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eb3da1a04e6c..618beb5809d1 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1630,6 +1630,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ #define pci_root_bus_fwnode(bus)	NULL
+ #endif
+ 
++#ifndef PCIBIOS_DEFAULT_ALIGNMENT
++#define PCIBIOS_DEFAULT_ALIGNMENT	0
++#endif
++
+ /* these helpers provide future and backwards compatibility
+  * for accessing popular PCI BAR info */
+ #define pci_resource_start(dev, bar)	((dev)->resource[(bar)].start)
