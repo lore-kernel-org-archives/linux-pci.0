@@ -1,105 +1,158 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 08/22] PCI: dwc: designware: Add EP mode support
-To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
- <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han
- <jingoohan1@gmail.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
- <1487325042-28227-9-git-send-email-kishon@ti.com>
- <45e5288e-d11f-c855-af9b-692a42d878c6@synopsys.com> <58BE42B2.20305@ti.com>
- <02461be2-268d-485a-2bc4-3b148726d37d@synopsys.com>
- <aa9835a7-07f4-d042-d04a-b0d9cc0ea3de@synopsys.com> <58BFEC7D.3090608@ti.com>
- <35d539ba-956f-330e-c28d-b67c3d414578@synopsys.com> <58C00798.1030302@ti.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <650c53fc-482c-feab-faa3-c30689d3d128@synopsys.com>
-Date: Wed, 8 Mar 2017 15:32:03 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:44098 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751159AbdCWV4D (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 23 Mar 2017 17:56:03 -0400
+Date: Thu, 23 Mar 2017 16:55:58 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
+        gwshan@linux.vnet.ibm.com, aik@ozlabs.ru, benh@kernel.crashing.org,
+        mpe@ellerman.id.au, paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: Re: [PATCH v9 3/3] PCI: Don't extend device's size when using
+ default alignment for all devices
+Message-ID: <20170323215558.GC23612@bhelgaas-glaptop.roam.corp.google.com>
+References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+ <1487141106-2503-4-git-send-email-xyjxie@linux.vnet.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <58C00798.1030302@ti.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
- linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="windows-1252"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1487141106-2503-4-git-send-email-xyjxie@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-=C0s 1:31 PM de 3/8/2017, Kishon Vijay Abraham I escreveu:
-> Hi,
-> =
+On Wed, Feb 15, 2017 at 02:45:06PM +0800, Yongji Xie wrote:
+> Currently we reassign the alignment by extending resources' size in
+> pci_reassigndev_resource_alignment(). This could potentially break
+> some drivers when the driver uses the size to locate register
+> whose length is related to the size. Some examples as below:
 
-> On Wednesday 08 March 2017 05:07 PM, Joao Pinto wrote:
->> =C0s 11:35 AM de 3/8/2017, Kishon Vijay Abraham I escreveu:
->>> Hi,
->>>
->>> On Wednesday 08 March 2017 05:02 PM, Joao Pinto wrote:
->>>>
->>>> Hi Kishon,
->>>>
->>>>>> Can you provide PCIE_GET_ATU_INB_UNR_REG_OFFSET (similar to
->>>>>> PCIE_GET_ATU_OUTB_UNR_REG_OFFSET)?
->>>>>
->>>>> Yes of course, I will send you the definition soon.
->>>>
->>>> As promissed here is the definition for Inbound:
->>>>
->>>> +/* register address builder */
->>>> +#define PCIE_GET_ATU_INB_UNR_REG_ADDR(region, register)		\
->>>> +					((0x3 << 20) | (region << 9) |	\
->>>> +					(0x1 << 8) | (register << 2))
->>>
->>> Cool, thanks!
->>
->> No problem! If you have doubts, please let me know.
-> =
+I understand the motivation to stop changing the resource size.  That
+makes good sense.
 
-> Okay, so this looks slightly different than the outbound macro since it t=
-akes
-> the register argument. In the case of outbound PCIE_GET_ATU_OUTB_UNR_REG_=
-OFFSET
-> returns the offset which was used like
-> dw_pcie_write_dbi(pci, base, offset + reg, 0x4, val);
-> =
+> - misc\Hpilo.c:
 
-> How should the value from PCIE_GET_ATU_INB_UNR_REG_ADDR be used?
+This isn't Windows; please use regular Linux forward slashes here.
 
-My original way was this one:
+> off = pci_resource_len(pdev, bar) - 0x2000;
+> 
+> - net\ethernet\chelsio\cxgb4\cxgb4_uld.h:
+> (pci_resource_len((pdev), 2) - roundup_pow_of_two((vres)->ocq.size))
+> 
+> - infiniband\hw\nes\Nes_hw.c:
+> num_pds = pci_resource_len(nesdev->pcidev, BAR_1) >> PAGE_SHIFT;
+> 
+> This risk could be easily prevented before because we only had one way
+> (kernel parameter resource_alignment) to touch those codes. And even
+> some users may be happy to see the extended size.
+> 
+> But now we define a default alignment for all devices which would also
+> touch those codes. It would be hard to prevent the risk in this case. So
+> this patch tries to use START_ALIGNMENT to identify the resource's
+> alignment without extending the size when the alignment reassigning is
+> caused by the default alignment.
 
-+/* Register address builder */
-+#define PCIE_GET_ATU_OUTB_UNR_REG_ADDR(region, register)		\
-+					((0x3 << 20) | (region << 9) |	\
-+					(register << 2))
+But I don't understand the new START_ALIGNMENT case.
 
-Bjorn then converted to offset:
+> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+> ---
+>  drivers/pci/pci.c |   34 ++++++++++++++++++++++++----------
+>  1 files changed, 24 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 2622e9b..0017e5e 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -4958,7 +4958,8 @@ void pci_ignore_hotplug(struct pci_dev *dev)
+>   * RETURNS: Resource alignment if it is specified.
+>   *          Zero if it is not specified.
 
-#define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)  ((0x3 << 20) | (region <<=
- 9))
+Since there's function doc, please update it to reflect the new
+"resize" return parameter.
 
-and applied the <<2 shift to the ATU registers.
+What does "resize" mean?  I can't figure it out from your code.
 
-So you can use:
+>   */
+> -static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+> +static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
+> +							bool *resize)
+>  {
+>  	int seg, bus, slot, func, align_order, count;
+>  	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+> @@ -5002,6 +5003,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+>  				(!device || (device == dev->device)) &&
+>  				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
+>  				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
+> +				*resize = true;
+>  				if (align_order == -1)
+>  					align = PAGE_SIZE;
+>  				else
+> @@ -5027,6 +5029,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+>  				bus == dev->bus->number &&
+>  				slot == PCI_SLOT(dev->devfn) &&
+>  				func == PCI_FUNC(dev->devfn)) {
+> +				*resize = true;
+>  				if (align_order == -1)
+>  					align = PAGE_SIZE;
+>  				else
+> @@ -5059,6 +5062,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>  	struct resource *r;
+>  	resource_size_t align, size;
+>  	u16 command;
+> +	bool resize = false;
+>  
+>  	/*
+>  	 * VF BARs are read-only zero according to SR-IOV spec r1.1, sec
+> @@ -5070,7 +5074,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>  		return;
+>  
+>  	/* check if specified PCI is target device to reassign */
+> -	align = pci_specified_resource_alignment(dev);
+> +	align = pci_specified_resource_alignment(dev, &resize);
+>  	if (!align)
+>  		return;
+>  
+> @@ -5098,15 +5102,25 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+>  		}
+>  
+>  		size = resource_size(r);
+> -		if (size < align) {
+> -			size = align;
+> -			dev_info(&dev->dev,
+> -				"Rounding up size of resource #%d to %#llx.\n",
+> -				i, (unsigned long long)size);
+> +		if (resize) {
+> +			if (size < align) {
+> +				size = align;
+> +				dev_info(&dev->dev,
+> +					"Rounding up size of resource #%d to %#llx.\n",
+> +					i, (unsigned long long)size);
+> +			}
+> +			r->flags |= IORESOURCE_UNSET;
+> +			r->end = size - 1;
+> +			r->start = 0;
+> +		} else {
+> +			if (size < align) {
+> +				r->flags &= ~IORESOURCE_SIZEALIGN;
+> +				r->flags |= IORESOURCE_STARTALIGN |
+> +							IORESOURCE_UNSET;
+> +				r->start = align;
+> +				r->end = r->start + size - 1;
 
-#define PCIE_GET_ATU_INB_UNR_REG_ADDR(region, register)		\
-					((0x3 << 20) | (region << 9) |	\
-					(0x1 << 8)
+If you have to have two blocks that fiddle with r->start, etc., they
+should at least be as similar as possible.  You should have this in
+both cases:
 
-Thanks.
+  r->end = r->start + size - 1;
 
-> =
-
-> Thanks
-> Kishon
-> =
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> +			}
+>  		}
+> -		r->flags |= IORESOURCE_UNSET;
+> -		r->end = size - 1;
+> -		r->start = 0;
+>  	}
+>  	/* Need to disable bridge's resource window,
+>  	 * to enable the kernel to reassign new resource
+> -- 
+> 1.7.1
+> 
