@@ -1,16 +1,19 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v5 09/24] PCI: dwc: designware: Add EP mode support
-Date: Mon, 27 Mar 2017 15:15:05 +0530
-Message-ID: <20170327094520.3129-10-kishon@ti.com>
-In-Reply-To: <20170327094520.3129-1-kishon@ti.com>
-References: <20170327094520.3129-1-kishon@ti.com>
+Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
+To: Zhou Wang <wangzhou1@hisilicon.com>, robin.murphy@arm.com,
+ will.deacon@arm.com, joro@8bytes.org, lorenzo.pieralisi@arm.com,
+ iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+ bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <58D49845.9060407@hisilicon.com>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <0ea8022b-a19b-335d-6cc6-81510196f891@codeaurora.org>
+Date: Fri, 24 Mar 2017 12:39:50 +0530
 MIME-Version: 1.0
+In-Reply-To: <58D49845.9060407@hisilicon.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,717 +21,405 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
+Cc: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add endpoint mode support to designware driver. This uses the
-EP Core layer introduced recently to add endpoint mode support.
-*Any* function driver can now use this designware device
-in order to achieve the EP functionality.
+Hi Zhou,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/Kconfig              |   5 +
- drivers/pci/dwc/Makefile             |   1 +
- drivers/pci/dwc/pcie-designware-ep.c | 342 +++++++++++++++++++++++++++++++++++
- drivers/pci/dwc/pcie-designware.c    | 125 +++++++++++++
- drivers/pci/dwc/pcie-designware.h    | 105 +++++++++++
- 5 files changed, 578 insertions(+)
- create mode 100644 drivers/pci/dwc/pcie-designware-ep.c
+On 3/24/2017 9:23 AM, Zhou Wang wrote:
+> On 2017/3/10 3:00, Sricharan R wrote:
+>> This series calls the dma ops configuration for the devices
+>> at a generic place so that it works for all busses.
+>> The dma_configure_ops for a device is now called during
+>> the device_attach callback just before the probe of the
+>> bus/driver is called. Similarly dma_deconfigure is called during
+>> device/driver_detach path.
+>>
+>> pci_bus_add_devices    (platform/amba)(_device_create/driver_register)
+>>        |                         |
+>> pci_bus_add_device     (device_add/driver_register)
+>>        |                         |
+>> device_attach           device_initial_probe
+>>        |                         |
+>> __device_attach_driver    __device_attach_driver
+>>        |
+>> driver_probe_device
+>>        |
+>> really_probe
+>>        |
+>> dma_configure
+>>
+>> Similarly on the device/driver_unregister path __device_release_driver is
+>> called which inturn calls dma_deconfigure.
+>>
+>> Rebased the series against mainline 4.11-rc1. Applies and builds cleanly
+>> against mainline and linux-next. There is a conflict with patch#9
+>> against iommu-next, but that should go away eventually as iommu-next
+>> is rebased against 4.11-rc1.
+>>
+>> * Tested with platform and pci devices for probe deferral
+>>   and reprobe on arm64 based platform.
+>
+> Hi Sricharan,
+>
+> I applied this series on v4.11-rc1 to test PCIe pass through in HiSilicon
+> D05 board(with Intel 82599 networking card). It failed.
+>
+> After I used:
+>
+> echo vfio-pci > /sys/bus/pci/devices/0002:81:10.0/driver_override
+> echo 0002:81:10.0 > /sys/bus/pci/drivers/ixgbevf/unbind
+> echo 0002:81:10.0 > /sys/bus/pci/drivers_probe
+>
+> to bind vfio-pci driver to Intel 82599 networking card VF.
+>
+> I got log in host:
+> [...]
+> [  414.275818] ixgbevf: Intel(R) 10 Gigabit PCI Express Virtual Function Network Driver - version 3.2.2-k
+> [  414.275824] ixgbevf: Copyright (c) 2009 - 2015 Intel Corporation.
+> [  414.276647] ixgbe 0002:81:00.0 eth12: SR-IOV enabled with 1 VFs
+> [  414.342252] pcieport 0002:80:00.0: can't derive routing for PCI INT A
+> [  414.342255] ixgbe 0002:81:00.0: PCI INT A: no GSI
+> [  414.343348] ixgbe 0002:81:00.0: Multiqueue Enabled: Rx Queue count = 4, Tx Queue count = 4
+> [  414.448135] pci 0002:81:10.0: [8086:10ed] type 00 class 0x020000
+> [  414.448713] iommu: Adding device 0002:81:10.0 to group 4
+> [  414.449798] ixgbevf 0002:81:10.0: enabling device (0000 -> 0002)
+> [  414.451101] ixgbevf 0002:81:10.0: PF still in reset state.  Is the PF interface up?
+> [  414.451103] ixgbevf 0002:81:10.0: Assigning random MAC address
+> [  414.451414] ixgbevf 0002:81:10.0: be:30:8f:ed:f8:02
+> [  414.451417] ixgbevf 0002:81:10.0: MAC: 1
+> [  414.451418] ixgbevf 0002:81:10.0: Intel(R) 82599 Virtual Function
+> [  414.464271] VFIO - User Level meta-driver version: 0.3
+> [  414.570074] ixgbe 0002:81:00.0: registered PHC device on eth12
+> [  414.700493] specified DMA range outside IOMMU capability                                      <-- error here
+> [  414.700496] Failed to set up IOMMU for device 0002:81:10.0; retaining platform DMA ops        <-- error here
 
-diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-index dfb8a69afc28..00335c71404e 100644
---- a/drivers/pci/dwc/Kconfig
-+++ b/drivers/pci/dwc/Kconfig
-@@ -9,6 +9,11 @@ config PCIE_DW_HOST
- 	depends on PCI_MSI_IRQ_DOMAIN
-         select PCIE_DW
- 
-+config PCIE_DW_EP
-+	bool
-+	depends on PCI_ENDPOINT
-+	select PCIE_DW
-+
- config PCI_DRA7XX
- 	bool "TI DRA7xx PCIe controller"
- 	depends on PCI
-diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
-index a2df13c28798..b38425d36200 100644
---- a/drivers/pci/dwc/Makefile
-+++ b/drivers/pci/dwc/Makefile
-@@ -1,5 +1,6 @@
- obj-$(CONFIG_PCIE_DW) += pcie-designware.o
- obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
-+obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
- obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
- obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
- obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
-diff --git a/drivers/pci/dwc/pcie-designware-ep.c b/drivers/pci/dwc/pcie-designware-ep.c
-new file mode 100644
-index 000000000000..398406393f37
---- /dev/null
-+++ b/drivers/pci/dwc/pcie-designware-ep.c
-@@ -0,0 +1,342 @@
-+/**
-+ * Synopsys Designware PCIe Endpoint controller driver
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <linux/of.h>
-+
-+#include "pcie-designware.h"
-+#include <linux/pci-epc.h>
-+#include <linux/pci-epf.h>
-+
-+void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
-+{
-+	struct pci_epc *epc = ep->epc;
-+
-+	pci_epc_linkup(epc);
-+}
-+
-+static void dw_pcie_ep_reset_bar(struct dw_pcie *pci, enum pci_barno bar)
-+{
-+	u32 reg;
-+
-+	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
-+	dw_pcie_writel_dbi2(pci, reg, 0x0);
-+	dw_pcie_writel_dbi(pci, reg, 0x0);
-+}
-+
-+static int dw_pcie_ep_write_header(struct pci_epc *epc,
-+				   struct pci_epf_header *hdr)
-+{
-+	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	dw_pcie_writew_dbi(pci, PCI_VENDOR_ID, hdr->vendorid);
-+	dw_pcie_writew_dbi(pci, PCI_DEVICE_ID, hdr->deviceid);
-+	dw_pcie_writeb_dbi(pci, PCI_REVISION_ID, hdr->revid);
-+	dw_pcie_writeb_dbi(pci, PCI_CLASS_PROG, hdr->progif_code);
-+	dw_pcie_writew_dbi(pci, PCI_CLASS_DEVICE,
-+			   hdr->subclass_code | hdr->baseclass_code << 8);
-+	dw_pcie_writeb_dbi(pci, PCI_CACHE_LINE_SIZE,
-+			   hdr->cache_line_size);
-+	dw_pcie_writew_dbi(pci, PCI_SUBSYSTEM_VENDOR_ID,
-+			   hdr->subsys_vendor_id);
-+	dw_pcie_writew_dbi(pci, PCI_SUBSYSTEM_ID, hdr->subsys_id);
-+	dw_pcie_writeb_dbi(pci, PCI_INTERRUPT_PIN,
-+			   hdr->interrupt_pin);
-+
-+	return 0;
-+}
-+
-+static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, enum pci_barno bar,
-+				  dma_addr_t cpu_addr,
-+				  enum dw_pcie_as_type as_type)
-+{
-+	int ret;
-+	u32 free_win;
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	free_win = find_first_zero_bit(&ep->ib_window_map,
-+				       sizeof(ep->ib_window_map));
-+	if (free_win >= ep->num_ib_windows) {
-+		dev_err(pci->dev, "no free inbound window\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = dw_pcie_prog_inbound_atu(pci, free_win, bar, cpu_addr,
-+				       as_type);
-+	if (ret < 0) {
-+		dev_err(pci->dev, "Failed to program IB window\n");
-+		return ret;
-+	}
-+
-+	ep->bar_to_atu[bar] = free_win;
-+	set_bit(free_win, &ep->ib_window_map);
-+
-+	return 0;
-+}
-+
-+static int dw_pcie_ep_outbound_atu(struct dw_pcie_ep *ep, phys_addr_t phys_addr,
-+				   u64 pci_addr, size_t size)
-+{
-+	u32 free_win;
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	free_win = find_first_zero_bit(&ep->ob_window_map,
-+				       sizeof(ep->ob_window_map));
-+	if (free_win >= ep->num_ob_windows) {
-+		dev_err(pci->dev, "no free outbound window\n");
-+		return -EINVAL;
-+	}
-+
-+	dw_pcie_prog_outbound_atu(pci, free_win, PCIE_ATU_TYPE_MEM,
-+				  phys_addr, pci_addr, size);
-+
-+	set_bit(free_win, &ep->ob_window_map);
-+	ep->outbound_addr[free_win] = phys_addr;
-+
-+	return 0;
-+}
-+
-+static void dw_pcie_ep_clear_bar(struct pci_epc *epc, enum pci_barno bar)
-+{
-+	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	u32 atu_index = ep->bar_to_atu[bar];
-+
-+	dw_pcie_ep_reset_bar(pci, bar);
-+
-+	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_INBOUND);
-+	clear_bit(atu_index, &ep->ib_window_map);
-+}
-+
-+static int dw_pcie_ep_set_bar(struct pci_epc *epc, enum pci_barno bar,
-+			      dma_addr_t bar_phys, size_t size, int flags)
-+{
-+	int ret;
-+	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	enum dw_pcie_as_type as_type;
-+	u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
-+
-+	if (!(flags & PCI_BASE_ADDRESS_SPACE))
-+		as_type = DW_PCIE_AS_MEM;
-+	else
-+		as_type = DW_PCIE_AS_IO;
-+
-+	ret = dw_pcie_ep_inbound_atu(ep, bar, bar_phys, as_type);
-+	if (ret)
-+		return ret;
-+
-+	dw_pcie_writel_dbi2(pci, reg, size - 1);
-+	dw_pcie_writel_dbi(pci, reg, flags);
-+
-+	return 0;
-+}
-+
-+static int dw_pcie_find_index(struct dw_pcie_ep *ep, phys_addr_t addr,
-+			      u32 *atu_index)
-+{
-+	u32 index;
-+
-+	for (index = 0; index < ep->num_ob_windows; index++) {
-+		if (ep->outbound_addr[index] != addr)
-+			continue;
-+		*atu_index = index;
-+		return 0;
-+	}
-+
-+	return -EINVAL;
-+}
-+
-+static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, phys_addr_t addr)
-+{
-+	int ret;
-+	u32 atu_index;
-+	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	ret = dw_pcie_find_index(ep, addr, &atu_index);
-+	if (ret < 0)
-+		return;
-+
-+	dw_pcie_disable_atu(pci, atu_index, DW_PCIE_REGION_OUTBOUND);
-+	clear_bit(atu_index, &ep->ob_window_map);
-+}
-+
-+static int dw_pcie_ep_map_addr(struct pci_epc *epc, phys_addr_t addr,
-+			       u64 pci_addr, size_t size)
-+{
-+	int ret;
-+	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	ret = dw_pcie_ep_outbound_atu(ep, addr, pci_addr, size);
-+	if (ret) {
-+		dev_err(pci->dev, "failed to enable address\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int dw_pcie_ep_get_msi(struct pci_epc *epc)
-+{
-+	int val;
-+	u32 lower_addr;
-+	u32 upper_addr;
-+	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	val = dw_pcie_readb_dbi(pci, MSI_MESSAGE_CONTROL);
-+	val = (val & MSI_CAP_MME_MASK) >> MSI_CAP_MME_SHIFT;
-+
-+	lower_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_L32);
-+	upper_addr = dw_pcie_readl_dbi(pci, MSI_MESSAGE_ADDR_U32);
-+
-+	if (!(lower_addr || upper_addr))
-+		return -EINVAL;
-+
-+	return val;
-+}
-+
-+static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 encode_int)
-+{
-+	int val;
-+	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	val = (encode_int << MSI_CAP_MMC_SHIFT);
-+	dw_pcie_writew_dbi(pci, MSI_MESSAGE_CONTROL, val);
-+
-+	return 0;
-+}
-+
-+static int dw_pcie_ep_raise_irq(struct pci_epc *epc,
-+				enum pci_epc_irq_type type, u8 interrupt_num)
-+{
-+	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-+
-+	if (!ep->ops->raise_irq)
-+		return -EINVAL;
-+
-+	return ep->ops->raise_irq(ep, type, interrupt_num);
-+}
-+
-+static void dw_pcie_ep_stop(struct pci_epc *epc)
-+{
-+	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	if (!pci->ops->stop_link)
-+		return;
-+
-+	pci->ops->stop_link(pci);
-+}
-+
-+static int dw_pcie_ep_start(struct pci_epc *epc)
-+{
-+	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+
-+	if (!pci->ops->start_link)
-+		return -EINVAL;
-+
-+	return pci->ops->start_link(pci);
-+}
-+
-+static const struct pci_epc_ops epc_ops = {
-+	.write_header		= dw_pcie_ep_write_header,
-+	.set_bar		= dw_pcie_ep_set_bar,
-+	.clear_bar		= dw_pcie_ep_clear_bar,
-+	.map_addr		= dw_pcie_ep_map_addr,
-+	.unmap_addr		= dw_pcie_ep_unmap_addr,
-+	.set_msi		= dw_pcie_ep_set_msi,
-+	.get_msi		= dw_pcie_ep_get_msi,
-+	.raise_irq		= dw_pcie_ep_raise_irq,
-+	.start			= dw_pcie_ep_start,
-+	.stop			= dw_pcie_ep_stop,
-+};
-+
-+void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
-+{
-+	struct pci_epc *epc = ep->epc;
-+
-+	pci_epc_mem_exit(epc);
-+}
-+
-+int dw_pcie_ep_init(struct dw_pcie_ep *ep)
-+{
-+	int ret;
-+	void *addr;
-+	enum pci_barno bar;
-+	struct pci_epc *epc;
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	struct device *dev = pci->dev;
-+	struct device_node *np = dev->of_node;
-+
-+	if (!pci->dbi_base || !pci->dbi_base2) {
-+		dev_err(dev, "dbi_base/deb_base2 is not populated\n");
-+		return -EINVAL;
-+	}
-+
-+	ret = of_property_read_u32(np, "num-ib-windows", &ep->num_ib_windows);
-+	if (ret < 0) {
-+		dev_err(dev, "unable to read *num-ib-windows* property\n");
-+		return ret;
-+	}
-+
-+	ret = of_property_read_u32(np, "num-ob-windows", &ep->num_ob_windows);
-+	if (ret < 0) {
-+		dev_err(dev, "unable to read *num-ob-windows* property\n");
-+		return ret;
-+	}
-+
-+	addr = devm_kzalloc(dev, sizeof(phys_addr_t) * ep->num_ob_windows,
-+			    GFP_KERNEL);
-+	if (!addr)
-+		return -ENOMEM;
-+	ep->outbound_addr = addr;
-+
-+	for (bar = BAR_0; bar <= BAR_5; bar++)
-+		dw_pcie_ep_reset_bar(pci, bar);
-+
-+	if (ep->ops->ep_init)
-+		ep->ops->ep_init(ep);
-+
-+	epc = devm_pci_epc_create(dev, &epc_ops);
-+	if (IS_ERR(epc)) {
-+		dev_err(dev, "failed to create epc device\n");
-+		return PTR_ERR(epc);
-+	}
-+
-+	ret = of_property_read_u8(np, "max-functions", &epc->max_functions);
-+	if (ret < 0)
-+		epc->max_functions = 1;
-+
-+	ret = pci_epc_mem_init(epc, ep->phys_base, ep->addr_size);
-+	if (ret < 0) {
-+		dev_err(dev, "Failed to initialize address space\n");
-+		return ret;
-+	}
-+
-+	ep->epc = epc;
-+	epc_set_drvdata(epc, ep);
-+	dw_pcie_setup(pci);
-+
-+	return 0;
-+}
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index 54de468a745e..0e03af279259 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -185,6 +185,131 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- 	dev_err(pci->dev, "outbound iATU is not being enabled\n");
- }
- 
-+static u32 dw_pcie_readl_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg)
-+{
-+	u32 offset = PCIE_GET_ATU_INB_UNR_REG_OFFSET(index);
-+
-+	return dw_pcie_readl_dbi(pci, offset + reg);
-+}
-+
-+static void dw_pcie_writel_ib_unroll(struct dw_pcie *pci, u32 index, u32 reg,
-+				     u32 val)
-+{
-+	u32 offset = PCIE_GET_ATU_INB_UNR_REG_OFFSET(index);
-+
-+	dw_pcie_writel_dbi(pci, offset + reg, val);
-+}
-+
-+int dw_pcie_prog_inbound_atu_unroll(struct dw_pcie *pci, int index, int bar,
-+				    u64 cpu_addr, enum dw_pcie_as_type as_type)
-+{
-+	int type;
-+	u32 retries, val;
-+
-+	dw_pcie_writel_ib_unroll(pci, index, PCIE_ATU_UNR_LOWER_TARGET,
-+				 lower_32_bits(cpu_addr));
-+	dw_pcie_writel_ib_unroll(pci, index, PCIE_ATU_UNR_UPPER_TARGET,
-+				 upper_32_bits(cpu_addr));
-+
-+	switch (as_type) {
-+	case DW_PCIE_AS_MEM:
-+		type = PCIE_ATU_TYPE_MEM;
-+		break;
-+	case DW_PCIE_AS_IO:
-+		type = PCIE_ATU_TYPE_IO;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	dw_pcie_writel_ib_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL1, type);
-+	dw_pcie_writel_ib_unroll(pci, index, PCIE_ATU_UNR_REGION_CTRL2,
-+				 PCIE_ATU_ENABLE |
-+				 PCIE_ATU_BAR_MODE_ENABLE | (bar << 8));
-+
-+	/*
-+	 * Make sure ATU enable takes effect before any subsequent config
-+	 * and I/O accesses.
-+	 */
-+	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
-+		val = dw_pcie_readl_ib_unroll(pci, index,
-+					      PCIE_ATU_UNR_REGION_CTRL2);
-+		if (val & PCIE_ATU_ENABLE)
-+			return 0;
-+
-+		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+	}
-+	dev_err(pci->dev, "inbound iATU is not being enabled\n");
-+
-+	return -EBUSY;
-+}
-+
-+int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
-+			     u64 cpu_addr, enum dw_pcie_as_type as_type)
-+{
-+	int type;
-+	u32 retries, val;
-+
-+	if (pci->iatu_unroll_enabled)
-+		return dw_pcie_prog_inbound_atu_unroll(pci, index, bar,
-+						       cpu_addr, as_type);
-+
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT, PCIE_ATU_REGION_INBOUND |
-+			   index);
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_LOWER_TARGET, lower_32_bits(cpu_addr));
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_UPPER_TARGET, upper_32_bits(cpu_addr));
-+
-+	switch (as_type) {
-+	case DW_PCIE_AS_MEM:
-+		type = PCIE_ATU_TYPE_MEM;
-+		break;
-+	case DW_PCIE_AS_IO:
-+		type = PCIE_ATU_TYPE_IO;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_CR1, type);
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, PCIE_ATU_ENABLE
-+			   | PCIE_ATU_BAR_MODE_ENABLE | (bar << 8));
-+
-+	/*
-+	 * Make sure ATU enable takes effect before any subsequent config
-+	 * and I/O accesses.
-+	 */
-+	for (retries = 0; retries < LINK_WAIT_MAX_IATU_RETRIES; retries++) {
-+		val = dw_pcie_readl_dbi(pci, PCIE_ATU_CR2);
-+		if (val & PCIE_ATU_ENABLE)
-+			return 0;
-+
-+		usleep_range(LINK_WAIT_IATU_MIN, LINK_WAIT_IATU_MAX);
-+	}
-+	dev_err(pci->dev, "inbound iATU is not being enabled\n");
-+
-+	return -EBUSY;
-+}
-+
-+void dw_pcie_disable_atu(struct dw_pcie *pci, int index,
-+			 enum dw_pcie_region_type type)
-+{
-+	int region;
-+
-+	switch (type) {
-+	case DW_PCIE_REGION_INBOUND:
-+		region = PCIE_ATU_REGION_INBOUND;
-+		break;
-+	case DW_PCIE_REGION_OUTBOUND:
-+		region = PCIE_ATU_REGION_OUTBOUND;
-+		break;
-+	default:
-+		return;
-+	}
-+
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_VIEWPORT, region | index);
-+	dw_pcie_writel_dbi(pci, PCIE_ATU_CR2, ~PCIE_ATU_ENABLE);
-+}
-+
- int dw_pcie_wait_for_link(struct dw_pcie *pci)
- {
- 	int retries;
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index bfaf2b850a88..3cafba40abbc 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -18,6 +18,9 @@
- #include <linux/msi.h>
- #include <linux/pci.h>
- 
-+#include <linux/pci-epc.h>
-+#include <linux/pci-epf.h>
-+
- /* Parameters for the waiting for link up routine */
- #define LINK_WAIT_MAX_RETRIES		10
- #define LINK_WAIT_USLEEP_MIN		90000
-@@ -89,6 +92,16 @@
- #define PCIE_GET_ATU_OUTB_UNR_REG_OFFSET(region)	\
- 			((0x3 << 20) | ((region) << 9))
- 
-+#define PCIE_GET_ATU_INB_UNR_REG_OFFSET(region)				\
-+			((0x3 << 20) | ((region) << 9) | (0x1 << 8))
-+
-+#define MSI_MESSAGE_CONTROL		0x52
-+#define MSI_CAP_MMC_SHIFT		1
-+#define MSI_CAP_MME_SHIFT		4
-+#define MSI_CAP_MME_MASK		(7 << MSI_CAP_MME_SHIFT)
-+#define MSI_MESSAGE_ADDR_L32		0x54
-+#define MSI_MESSAGE_ADDR_U32		0x58
-+
- /*
-  * Maximum number of MSI IRQs can be 256 per controller. But keep
-  * it 32 as of now. Probably we will never need more than 32. If needed,
-@@ -99,6 +112,13 @@
- 
- struct pcie_port;
- struct dw_pcie;
-+struct dw_pcie_ep;
-+
-+enum dw_pcie_region_type {
-+	DW_PCIE_REGION_UNKNOWN,
-+	DW_PCIE_REGION_INBOUND,
-+	DW_PCIE_REGION_OUTBOUND,
-+};
- 
- struct dw_pcie_host_ops {
- 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
-@@ -142,6 +162,31 @@ struct pcie_port {
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
- };
- 
-+enum dw_pcie_as_type {
-+	DW_PCIE_AS_UNKNOWN,
-+	DW_PCIE_AS_MEM,
-+	DW_PCIE_AS_IO,
-+};
-+
-+struct dw_pcie_ep_ops {
-+	void	(*ep_init)(struct dw_pcie_ep *ep);
-+	int	(*raise_irq)(struct dw_pcie_ep *ep, enum pci_epc_irq_type type,
-+			     u8 interrupt_num);
-+};
-+
-+struct dw_pcie_ep {
-+	struct pci_epc		*epc;
-+	struct dw_pcie_ep_ops	*ops;
-+	phys_addr_t		phys_base;
-+	size_t			addr_size;
-+	u8			bar_to_atu[6];
-+	phys_addr_t		*outbound_addr;
-+	unsigned long		ib_window_map;
-+	unsigned long		ob_window_map;
-+	u32			num_ib_windows;
-+	u32			num_ob_windows;
-+};
-+
- struct dw_pcie_ops {
- 	u64	(*cpu_addr_fixup)(u64 cpu_addr);
- 	u32	(*read_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
-@@ -149,19 +194,26 @@ struct dw_pcie_ops {
- 	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
- 			     size_t size, u32 val);
- 	int	(*link_up)(struct dw_pcie *pcie);
-+	int	(*start_link)(struct dw_pcie *pcie);
-+	void	(*stop_link)(struct dw_pcie *pcie);
- };
- 
- struct dw_pcie {
- 	struct device		*dev;
- 	void __iomem		*dbi_base;
-+	void __iomem		*dbi_base2;
- 	u32			num_viewport;
- 	u8			iatu_unroll_enabled;
- 	struct pcie_port	pp;
-+	struct dw_pcie_ep	ep;
- 	const struct dw_pcie_ops *ops;
- };
- 
- #define to_dw_pcie_from_pp(port) container_of((port), struct dw_pcie, pp)
- 
-+#define to_dw_pcie_from_ep(endpoint)   \
-+		container_of((endpoint), struct dw_pcie, ep)
-+
- int dw_pcie_read(void __iomem *addr, int size, u32 *val);
- int dw_pcie_write(void __iomem *addr, int size, u32 val);
- 
-@@ -174,6 +226,10 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci);
- void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index,
- 			       int type, u64 cpu_addr, u64 pci_addr,
- 			       u32 size);
-+int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int bar,
-+			     u64 cpu_addr, enum dw_pcie_as_type as_type);
-+void dw_pcie_disable_atu(struct dw_pcie *pci, int index,
-+			 enum dw_pcie_region_type type);
- void dw_pcie_setup(struct dw_pcie *pci);
- 
- static inline void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
-@@ -186,6 +242,36 @@ static inline u32 dw_pcie_readl_dbi(struct dw_pcie *pci, u32 reg)
- 	return __dw_pcie_read_dbi(pci, pci->dbi_base, reg, 0x4);
- }
- 
-+static inline void dw_pcie_writew_dbi(struct dw_pcie *pci, u32 reg, u16 val)
-+{
-+	__dw_pcie_write_dbi(pci, pci->dbi_base, reg, 0x2, val);
-+}
-+
-+static inline u16 dw_pcie_readw_dbi(struct dw_pcie *pci, u32 reg)
-+{
-+	return __dw_pcie_read_dbi(pci, pci->dbi_base, reg, 0x2);
-+}
-+
-+static inline void dw_pcie_writeb_dbi(struct dw_pcie *pci, u32 reg, u8 val)
-+{
-+	__dw_pcie_write_dbi(pci, pci->dbi_base, reg, 0x1, val);
-+}
-+
-+static inline u8 dw_pcie_readb_dbi(struct dw_pcie *pci, u32 reg)
-+{
-+	return __dw_pcie_read_dbi(pci, pci->dbi_base, reg, 0x1);
-+}
-+
-+static inline void dw_pcie_writel_dbi2(struct dw_pcie *pci, u32 reg, u32 val)
-+{
-+	__dw_pcie_write_dbi(pci, pci->dbi_base2, reg, 0x4, val);
-+}
-+
-+static inline u32 dw_pcie_readl_dbi2(struct dw_pcie *pci, u32 reg)
-+{
-+	return __dw_pcie_read_dbi(pci, pci->dbi_base2, reg, 0x4);
-+}
-+
- #ifdef CONFIG_PCIE_DW_HOST
- irqreturn_t dw_handle_msi_irq(struct pcie_port *pp);
- void dw_pcie_msi_init(struct pcie_port *pp);
-@@ -210,4 +296,23 @@ static inline int dw_pcie_host_init(struct pcie_port *pp)
- 	return 0;
- }
- #endif
-+
-+#ifdef CONFIG_PCIE_DW_EP
-+void dw_pcie_ep_linkup(struct dw_pcie_ep *ep);
-+int dw_pcie_ep_init(struct dw_pcie_ep *ep);
-+void dw_pcie_ep_exit(struct dw_pcie_ep *ep);
-+#else
-+static inline void dw_pcie_ep_linkup(struct dw_pcie_ep *ep)
-+{
-+}
-+
-+static inline int dw_pcie_ep_init(struct dw_pcie_ep *ep)
-+{
-+	return 0;
-+}
-+
-+static inline void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
-+{
-+}
-+#endif
- #endif /* _PCIE_DESIGNWARE_H */
+Looks like this triggers the start of the bug.
+So the below check in iommu_dma_init_domain fails,
+
+         if (domain->geometry.force_aperture) {
+                 if (base > domain->geometry.aperture_end ||
+                     base + size <= domain->geometry.aperture_start) {
+
+and the rest goes out of sync after that. Can you print out the
+base, aperture_start and end values to see why the check fails ?
+
+The change that this series does is trying to add the
+dma/iommu ops to the device after the iommu is actually probed.
+So in your working case, does the device initially gets hooked
+to iommu_ops and the above same check passes in working case ?
+
+Regards,
+  Sricharan
+
+> [  414.748043] ixgbe 0002:81:00.0 eth12: detected SFP+: 5
+> [  414.922277] ixgbe 0002:81:00.0 eth12: NIC Link is Up 10 Gbps, Flow Control: RX/TX
+>
+> Then I tried to boot up VM using:
+>
+> qemu-system-aarch64 \
+> -machine virt,gic-version=3 \
+> -enable-kvm \
+> -cpu host \
+> -m 1024 \
+> -kernel ./Image_vm \
+> -initrd ./minifs.cpio.gz \
+> -nographic \
+> -net none -device vfio-pci,host=0002:81:10.0,id=net0
+>
+> I got this error:
+>
+> root@ubuntu:~/scripts# ./qemu_run.sh
+> [  402.581445] kernel BUG at drivers/iommu/arm-smmu-v3.c:1064!
+> [  402.587007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+> [  402.592479] Modules linked in: vfio_iommu_type1 vfio_pci irqbypass vfio_virqfd vfio ixgbevf ixgb                                                                                                            e mdio [last unloaded: vfio_iommu_type1]
+> [  402.604733] CPU: 26 PID: 4437 Comm: qemu-system-aar Not tainted 4.11.0-rc1-g4b62e7fa #21
+> [  402.612809] Hardware name: Huawei Taishan 2280 /D05, BIOS Hisilicon D05 UEFI 16.12 Release 02/22                                                                                                            /2017
+> [  402.622013] task: ffff8017e2161a00 task.stack: ffff8017e5a8c000
+> [  402.627926] PC is at arm_smmu_write_strtab_ent+0x1b4/0x1b8
+> [  402.633399] LR is at arm_smmu_install_ste_for_dev+0x9c/0xc0
+> [  402.638957] pc : [<ffff000008542b08>] lr : [<ffff000008542ba8>] pstate: 80000145
+> [  402.646338] sp : ffff8017e5a8fb50
+> [  402.649638] x29: ffff8017e5a8fb50 x28: ffff8013d3e4e468
+> [  402.654938] x27: ffff00000854240c x26: 0000ffffffffffff
+> [  402.660237] x25: ffff8013cd0b7100 x24: ffff8013e58fc018
+> [  402.665536] x23: ffff8013e58f8018 x22: 0000000000000018
+> [  402.670835] x21: 0000000000028180 x20: ffff8013e58f8018
+> [  402.676134] x19: 0000000000000001 x18: 0000000000783488
+> [  402.681434] x17: 0000ffff967caa50 x16: ffff000008207410
+> [  402.686733] x15: 0000000000782a54 x14: 0000ffff9670be14
+> [  402.692031] x13: 0000000000783060 x12: 0000000000000012
+> [  402.697330] x11: 0000000000000001 x10: 0000000000000900
+> [  402.702629] x9 : 00000000000000ff x8 : 0000000000000000
+> [  402.707928] x7 : ffff80003e040190 x6 : 000bdff385002ea1
+> [  402.713227] x5 : 0000000000000018 x4 : 0000000000000001
+> [  402.718526] x3 : ffff8013cd0b7108 x2 : ffff80003e6f6000
+> [  402.723824] x1 : ffff000008542ab0 x0 : ffff8013d3e4fe38
+> [  402.729123]
+> [  402.730602] Process qemu-system-aar (pid: 4437, stack limit = 0xffff8017e5a8c000)
+> [  402.738070] Stack: (0xffff8017e5a8fb50 to 0xffff8017e5a90000)
+> [  402.743802] fb40:                                   ffff8017e5a8fb90 ffff000008542ba8
+> [  402.751617] fb60: 0000000000000002 ffff8013cd0b7200 ffff8013cd0b7108 ffff8013e58f8140
+> [  402.759432] fb80: ffff8013e58f8018 ffff80003e6f6000 ffff8017e5a8fbd0 ffff000008543514
+> [  402.767247] fba0: ffff8013d3e4fe68 ffff8013cd0b7108 0000000000000000 ffff8013e68140a0
+> [  402.775063] fbc0: ffff8013d3e4fe08 ffff8013d3e4fe38 ffff8017e5a8fc80 ffff00000853a840
+> [  402.782878] fbe0: ffff8013e432df00 ffff8013d3e4fe68 ffff8013ccb28d48 ffff8013ccb28d00
+> [  402.790693] fc00: ffff8017e5f69a08 ffff8017e5f69a80 ffff00000096f380 ffff8017e5f69a18
+> [  402.798508] fc20: ffff8013ccb28d00 ffff8017e5f69a80 0000000000000000 0000000040201000
+> [  402.806323] fc40: 0000002c00000030 ffff0000089efae8 ffff8013e65b8410 00000017e59d8000
+> [  402.814138] fc60: 0000000000000000 0000000400803510 000000000004ff44 0000000000000000
+> [  402.821954] fc80: ffff8017e5a8fcb0 ffff00000853a8cc ffff8013ccb28d58 ffff8013d3e4fe68
+> [  402.829769] fca0: ffff8017e5f69b00 ffff0000009a93c0 ffff8017e5a8fce0 ffff0000009a7970
+> [  402.837584] fcc0: ffff8017e5f69b80 ffff8017e5f69a98 ffff8017e5a8fce0 ffff8013ccb28d00
+> [  402.845399] fce0: ffff8017e5a8fd90 ffff00000096c688 ffff8013d3e7f100 ffff8013ca9e9280
+> [  402.853214] fd00: ffff8017e5f69a00 0000000000000003 ffff8017e5f69a08 ffff8017e5f69a80
+> [  402.861029] fd20: ffff00000096f380 ffff8017e5f69a18 ffffffffffffffed ffff8017e2161a00
+> [  402.868844] fd40: ffff8017e5f69a08 0000000000000003 ffff00000096f380 ffff8017e5f69a18
+> [  402.876659] fd60: ffffffffffffffed 0000400000000010 ffff8017e5a8fd90 ffff000008e492d8
+> [  402.884475] fd80: 0000000000003b66 ffff8013ca9e9280 ffff8017e5a8fdf0 ffff000008206d28
+> [  402.892290] fda0: ffff8013d3e4fd00 0000000000000003 ffff8013d43a0318 0000000000000010
+> [  402.900105] fdc0: 0000000000003b66 0000000000000003 0000000000000123 000000000000001d
+> [  402.907920] fde0: ffff000008902000 0000000000000010 ffff8017e5a8fe80 ffff000008207494
+> [  402.915735] fe00: 0000000000000000 ffff8013d3e4fd01 ffff8013d3e4fd00 0000000000000010
+> [  402.923550] fe20: 0000000000003b66 ffff0000081f2594 ffff8017e5a8fe60 ffff000008212508
+> [  402.931365] fe40: ffff8017e5a8fe80 ffff000008207450 0000000000000000 ffff8013d3e4fd01
+> [  402.939180] fe60: ffff8013d3e4fd00 0000000000000010 0000000000003b66 ffff000008207434
+> [  402.946995] fe80: 0000000000000000 ffff000008082f30 0000000000000000 00008017f31b0000
+> [  402.954810] fea0: ffffffffffffffff 0000ffff967caa5c 0000000020000000 0000000000000015
+> [  402.962625] fec0: 0000000000000010 0000000000003b66 0000000000000003 0000000000000003
+> [  402.970440] fee0: 0000000000000000 0000000000000040 000000000000003f 0000000000000000
+> [  402.978255] ff00: 000000000000001d 0000000000000004 0000000000000000 0000ffffe6bbe7e0
+> [  402.986070] ff20: ffffffffffffffff 0000000000783060 0000ffff9670be14 0000000000782a54
+> [  402.993885] ff40: 0000000000a74630 0000ffff967caa50 0000000000783488 000000003151e080
+> [  403.001700] ff60: 0000ffffe6bbe86c 0000000000000004 0000000000af7000 0000000000b15000
+> [  403.009515] ff80: 0000000000af8450 0000000031222c50 0000000000000001 0000000031abb800
+> [  403.017331] ffa0: 0000000031de2650 0000ffffe6bbe7e0 00000000004b8468 0000ffffe6bbe7e0
+> [  403.025146] ffc0: 0000ffff967caa5c 0000000020000000 0000000000000010 000000000000001d
+> [  403.032961] ffe0: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+> [  403.040775] Call trace:
+> [  403.043208] Exception stack(0xffff8017e5a8f980 to 0xffff8017e5a8fab0)
+> [  403.049635] f980: 0000000000000001 0001000000000000 ffff8017e5a8fb50 ffff000008542b08
+> [  403.057450] f9a0: ffff000008e1b778 0000000000000001 ffff000008f1ebb8 00000000000006fc
+> [  403.065265] f9c0: 0000000000000000 000000000003e6fb 0000000400000123 000000000003e800
+> [  403.073080] f9e0: 0000000000000000 0000000000000000 ffff8017e5a8f9f0 ffff8017e5a8f9f0
+> [  403.080895] fa00: ffff8017e5a8fa50 ffff00000838feb0 ffff8013e58f8030 0000005d4ebe3be6
+> [  403.088711] fa20: ffff8013d3e4fe38 ffff000008542ab0 ffff80003e6f6000 ffff8013cd0b7108
+> [  403.096526] fa40: 0000000000000001 0000000000000018 000bdff385002ea1 ffff80003e040190
+> [  403.104341] fa60: 0000000000000000 00000000000000ff 0000000000000900 0000000000000001
+> [  403.112155] fa80: 0000000000000012 0000000000783060 0000ffff9670be14 0000000000782a54
+> [  403.119970] faa0: ffff000008207410 0000ffff967caa50
+> [  403.124835] [<ffff000008542b08>] arm_smmu_write_strtab_ent+0x1b4/0x1b8
+> [  403.131349] [<ffff000008542ba8>] arm_smmu_install_ste_for_dev+0x9c/0xc0
+> [  403.137950] [<ffff000008543514>] arm_smmu_attach_dev+0x1a4/0x2c0
+> [  403.143942] [<ffff00000853a840>] __iommu_attach_group+0x48/0xa8
+> [  403.149848] [<ffff00000853a8cc>] iommu_attach_group+0x2c/0x48
+> [  403.155584] [<ffff0000009a7970>] vfio_iommu_type1_attach_group+0x208/0x720 [vfio_iommu_type1]
+> [  403.164099] [<ffff00000096c688>] vfio_fops_unl_ioctl+0x188/0x2b8 [vfio]
+> [  403.170701] [<ffff000008206d28>] do_vfs_ioctl+0xb4/0x79c
+> [  403.175998] [<ffff000008207494>] SyS_ioctl+0x84/0x98
+> [  403.180950] [<ffff000008082f30>] el0_svc_naked+0x24/0x28
+> [  403.186249] Code: f9400860 b5fff9c0 17ffffd9 d4210000 (d4210000)
+> [  403.192351] ---[ end trace 0bda8b3549cfd903 ]---
+>
+> Dropping this series, 82599 VF can work well in QEMU.
+>
+> P.S.
+>
+> To avoid some hardware bugs, I temporarily commented/added some codes in v4.11-rc1:
+>
+> @@ -1104,8 +1104,8 @@ static void arm_smmu_write_strtab_ent(struct arm_smmu_device *smmu, u32 sid,
+>   	arm_smmu_sync_ste_for_sid(smmu, sid);
+>
+>   	/* It's likely that we'll want to use the new STE soon */
+>  -	if (!(smmu->options & ARM_SMMU_OPT_SKIP_PREFETCH))
+>  -		arm_smmu_cmdq_issue_cmd(smmu, &prefetch_cmd);
+>  +//	if (!(smmu->options & ARM_SMMU_OPT_SKIP_PREFETCH))
+>  +//		arm_smmu_cmdq_issue_cmd(smmu, &prefetch_cmd);
+>   }
+>
+>   static void arm_smmu_init_bypass_stes(u64 *strtab, unsigned int nent)
+>
+>
+>  @@ -664,7 +664,7 @@ static void its_irq_compose_msi_msg(struct irq_data *d, struct msi_msg *msg)
+>   	msg->address_hi		= upper_32_bits(addr);
+>   	msg->data		= its_get_event_id(d);
+>
+>  -	iommu_dma_map_msi_msg(d->irq, msg);
+>  +	//iommu_dma_map_msi_msg(d->irq, msg);
+>   }
+>
+>   static struct irq_chip its_irq_chip = {
+>
+> @@ -4179,6 +4179,14 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
+>   	return ret;
+>   }
+>
+>  +static int pci_quirk_hisi_rp_acs(struct pci_dev *dev, u16 acs_flags)
+>  +{
+>  +	u16 flags = (PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_SV);
+>  +	int ret = acs_flags & ~flags ? 0 : 1;
+>  +
+>  +	return ret;
+>  +}
+>  +
+>   /*
+>    * Sunrise Point PCH root ports implement ACS, but unfortunately as shown in
+>    * the datasheet (Intel 100 Series Chipset Family PCH Datasheet, Vol. 2,
+>  @@ -4345,6 +4353,8 @@ static const struct pci_dev_acs_enabled {
+>   	{ 0x10df, 0x720, pci_quirk_mf_endpoint_acs }, /* Emulex Skyhawk-R */
+>   	/* Cavium ThunderX */
+>   	{ PCI_VENDOR_ID_CAVIUM, PCI_ANY_ID, pci_quirk_cavium_acs },
+>  +	/* Hisilicon Hip05/Hip06 root ports */
+>  +	{ PCI_VENDOR_ID_HUAWEI,	0x1610, pci_quirk_hisi_rp_acs },
+>   	{ 0 }
+>   };
+>
+> If you have time, could you please take a look at this issue?
+>
+> Thanks,
+> Zhou
+>
+>>
+>> Previous post of this series [6].
+>>
+>>  [V9]
+>>      * Rebased on top of 4.11-rc1.
+>>
+>>      * Merged Robin's fixes for legacy binding issue,
+>>        pci devices with no iommu-map property.
+>>
+>>  [V8]
+>>      * Picked up all the acks and tested tags from Marek and
+>>        Hanjun for DT and ACPI patches respectively, since
+>>        no functional changes was done.
+>>
+>>      * Addressed Minor comments Sinan and Bjorn.
+>>
+>>      * Added Robin's fix for fixing the deferencing NULL for
+>>        of_iommu_table after init in patch #2.
+>>
+>>      * Rebased it on top of linux-next
+>>
+>>  [V7]
+>>      * Updated the subject and commit log for patch #6 as per
+>>        comments from Lorenzo. No functional changes.
+>>
+>>  [V6]
+>>      * Fixed a bug in dma_configure function pointed out by
+>>        Robin.
+>>      * Reordered the patches as per comments from Robin and
+>>        Lorenzo.
+>>      * Added Tags.
+>>
+>>  [V5]
+>>      * Reworked the pci configuration code hanging outside and
+>>        pushed it to dma_configure as in PATCH#5,6,7.
+>>        Also added a couple of patches that Lorenzo provided for
+>>        correcting the Probe deferring mechanism in case of
+>>        ACPI devices from here [5].
+>>
+>>  [V4]
+>>      * Took the reworked patches [2] from Robin's branch and
+>>        rebased on top of Lorenzo's ACPI IORT ARM support series [3].
+>>
+>>      * Added the patches for moving the dma ops configuration of
+>>        acpi based devices to probe time as well.
+>>  [V3]
+>>      * Removed the patch to split dma_masks/dma_ops configuration
+>>        separately based on review comments that both masks and ops are
+>>        required only during the device probe time.
+>>
+>>      * Reworked the series based on Generic DT bindings series.
+>>
+>>      * Added call to iommu's remove_device in the cleanup path for arm and
+>>        arm64.
+>>
+>>      * Removed the notifier trick in arm64 to handle early device
+>>        registration.
+>>
+>>      * Added reset of dma_ops in cleanup path for arm based on comments.
+>>
+>>      * Fixed the pci_iommu_configure path and tested with PCI device as
+>>        well.
+>>
+>>      * Fixed a bug to return the correct iommu_ops from patch 7 [4] in
+>>        last post.
+>>
+>>      * Fixed few other cosmetic comments.
+>>
+>>  [V2]
+>>      * Updated the Initial post to call dma_configure/deconfigure from
+>>        generic code
+>>
+>>      * Added iommu add_device callback from of_iommu_configure path
+>>
+>>  [V1]
+>>      * Initial post from Laurent Pinchart [1]
+>>
+>> [1] http://lists.linuxfoundation.org/pipermail/iommu/2015-May/013016.html
+>> [2] http://www.linux-arm.org/git?p=linux-rm.git;a=shortlog;h=refs/heads/iommu/defer
+>> [3] https://lkml.org/lkml/2016/11/21/141
+>> [4] https://www.mail-archive.com/iommu@xxxxxxxxxxxxxxxxxxxxxxxxxx/msg13940.html
+>> [5] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git iommu/probe-deferral
+>> [6] http://www.spinics.net/lists/linux-pci/msg57992.html
+>> [7] https://www.spinics.net/lists/arm-kernel/msg556209.html
+>>
+>> Laurent Pinchart (3):
+>>   of: dma: Move range size workaround to of_dma_get_range()
+>>   of: dma: Make of_dma_deconfigure() public
+>>   iommu: of: Handle IOMMU lookup failure with deferred probing or error
+>>
+>> Lorenzo Pieralisi (2):
+>>   ACPI/IORT: Add function to check SMMUs drivers presence
+>>   ACPI/IORT: Remove linker section for IORT entries probing
+>>
+>> Robin Murphy (3):
+>>   iommu/of: Refactor of_iommu_configure() for error handling
+>>   iommu/of: Prepare for deferred IOMMU configuration
+>>   iommu/arm-smmu: Clean up early-probing workarounds
+>>
+>> Sricharan R (3):
+>>   of/acpi: Configure dma operations at probe time for platform/amba/pci
+>>     bus devices
+>>   drivers: acpi: Handle IOMMU lookup failure with deferred probing or
+>>     error
+>>   arm64: dma-mapping: Remove the notifier trick to handle early setting
+>>     of dma_ops
+>>
+>>  arch/arm64/mm/dma-mapping.c       | 142 +++++---------------------------------
+>>  drivers/acpi/arm64/iort.c         |  40 ++++++++++-
+>>  drivers/acpi/glue.c               |   5 --
+>>  drivers/acpi/scan.c               |   7 +-
+>>  drivers/base/dd.c                 |   9 +++
+>>  drivers/base/dma-mapping.c        |  41 +++++++++++
+>>  drivers/iommu/arm-smmu-v3.c       |  46 +-----------
+>>  drivers/iommu/arm-smmu.c          | 110 +++++++++++++----------------
+>>  drivers/iommu/of_iommu.c          | 126 ++++++++++++++++++++++++---------
+>>  drivers/of/address.c              |  20 +++++-
+>>  drivers/of/device.c               |  34 ++++-----
+>>  drivers/of/platform.c             |  10 +--
+>>  drivers/pci/probe.c               |  28 --------
+>>  include/acpi/acpi_bus.h           |   2 +-
+>>  include/asm-generic/vmlinux.lds.h |   1 -
+>>  include/linux/acpi.h              |   7 +-
+>>  include/linux/acpi_iort.h         |   3 -
+>>  include/linux/dma-mapping.h       |   3 +
+>>  include/linux/of_device.h         |  10 ++-
+>>  19 files changed, 308 insertions(+), 336 deletions(-)
+>>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+
 -- 
-2.11.0
-
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a 
+member of Code Aurora Forum, hosted by The Linux Foundation
 
 _______________________________________________
 linux-arm-kernel mailing list
