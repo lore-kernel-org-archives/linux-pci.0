@@ -1,100 +1,83 @@
-Return-Path: <SRS0=ZTcB=3B=chromium.org=briannorris@kernel.org>
-Return-Path: <SRS0=ZTcB=3B=chromium.org=briannorris@kernel.org>
-Date: Fri, 24 Mar 2017 10:22:19 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Jeffy Chen <jeffy.chen@rock-chips.com>,
-	Wenrui Li <wenrui.li@rock-chips.com>, linux-pci@vger.kernel.org,
-	linux-rockchip@lists.infradead.org, Ray Jui <rjui@broadcom.com>
-Subject: Re: [PATCH v2 3/5] PCI: rockchip: add remove() support
-Message-ID: <20170324172218.GA119093@google.com>
-References: <20170310024617.67303-1-briannorris@chromium.org>
- <20170310024617.67303-3-briannorris@chromium.org>
- <20170324142541.GA25380@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=v3pA=3B=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=v3pA=3B=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
+To: Mason <slash.tmp@free.fr>, Bjorn Helgaas <helgaas@kernel.org>,
+ Thomas Gleixner <tglx@linutronix.de>
+References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
+ <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
+ <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
+ <9fffedd4-6292-b662-a588-a68fe7380af6@free.fr>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <6e847686-43c6-11e9-6782-dec0fe81a58e@arm.com>
+Date: Fri, 24 Mar 2017 18:22:17 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170324142541.GA25380@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <9fffedd4-6292-b662-a588-a68fe7380af6@free.fr>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On Fri, Mar 24, 2017 at 09:25:41AM -0500, Bjorn Helgaas wrote:
-> On Thu, Mar 09, 2017 at 06:46:15PM -0800, Brian Norris wrote:
-> > Currently, if we try to unbind the platform device, the remove will
-> > succeed, but the removal won't undo most of the registration, leaving
-> > partially-configured PCI devices in the system.
-> > 
-> > This allows, for example, a simple 'lspci' to crash the system, as it
-> > will try to touch the freed (via devm_*) driver structures.
-> > 
-> > So let's implement device remove().
+On 23/03/17 23:40, Mason wrote:
+> On 23/03/2017 18:03, Mason wrote:
 > 
-> How exactly do you reproduce this problem?
-
-On RK3399:
-
-  # echo f8000000.pcie > /sys/bus/platform/drivers/rockchip-pcie/unbind
-  # lspci
-
-> There are several other drivers that are superficially similar, e.g.,
-> they define a struct platform_driver without a .remove method.  Do
-> they all have this problem?  Some of them do set .suppress_bind_attrs
-> = true; is that relevant to this scenario?
-
-Yes, I think .suppress_bind_attrs would be enough to prevent this,
-according to my reading of the code and comments:
-
- * @suppress_bind_attrs: Disables bind/unbind via sysfs.
-
-> In fact, the only other callers of pci_remove_root_bus() are
-> iproc_pcie_remove(), hv_pci_remove(), and vmd_remove().
-
-Then iProc would suffer from the same memory leak in
-of_pci_get_host_bridge_resources() [1]. It *would* suffer from the same
-domain allocation issues in of_pci_bus_find_domain_nr() ->
-pci_get_new_domain_nr() [2], except that all iProc device trees (in
-mainline at least) use the 'linux,pci-domain' property to avoid it.
-
-HyperV and VMD drivers use ACPI, which uses neither
-pci_get_new_domain_nr() nor of_pci_get_host_bridge_resources().
-
-> These don't have .remove:
+>> The host bridge actually supports 256 MSIs.
+>>
+>> IIUC, what you suggested on IRC is that I support 256 in the driver,
+>> and only read the status for *enabled* MSIs.
+>>
+>> Pseudo-code:
+>>
+>> for every 32-bit blob in the enabled bitmap
+>>   if the value is non-zero
+>>     lookup the corresponding status reg
+>>
+>> Problem is that a BITMAP is unsigned long (as you point out below).
+>> So I'm not sure how to iterate 32-bits at a time over the BITMAP.
 > 
->   imx6_pcie_driver
->   ls_pcie_driver
->   armada8k_pcie_driver
->   artpec6_pcie_driver
->   dw_plat_pcie_driver
->   hisi_pcie_driver
->   hisi_pcie_almost_ecam_driver
->   spear13xx_pcie_driver
->   gen_pci_driver
-
-I think these are all technically broken.
-
-> These don't have .remove but do set .suppress_bind_attrs = true:
+> Something along these lines:
 > 
->   dra7xx_pcie_driver
->   qcom_pcie_driver
->   advk_pcie_driver
->   mvebu_pcie_driver
->   rcar_pci_driver
->   rcar_pcie_driver
->   tegra_pcie_driver
->   altera_pcie_driver
->   nwl_pcie_driver
->   xilinx_pcie_driver
+> 	DECLARE_BITMAP(enabled, 256);
+> 
+> 	unsigned int pos = 0;
+> 
+> 	while ((pos = find_next_bit(enabled, 256, pos)) < 256) {
+> 		int offset = (pos / 32) * 4;
+> 		u32 status = readl_relaxed(status + offset);
+> 		/* Handle each pos set in status */
+> 		pos = round_up(pos, 32);
+> 	}
 
-Those are fine then, I suppose.
+Something along those lines, yes.
 
-Brian
+> You mentioned a bug in my code (due to the platform endianness)
+> when passing the result of readl_relaxed to the bitops routine...
+> How is one supposed to iterate over status?
 
-[1] PCI: return resource_entry in pci_add_resource helpers
-    https://patchwork.kernel.org/patch/9642229/
-    of/pci: Fix memory leak in of_pci_get_host_bridge_resources
-    https://patchwork.kernel.org/patch/9642231/
+You cannot directly use a pointer to a u32 in any of the bitmap
+operations. You need to copy the value to an unsigned long, and apply
+the bitmap op on that.
 
-[2] PCI: use IDA to manage domain number if not getting it from DT
-    https://patchwork.kernel.org/patch/9638353/
+> I'm not yet seeing this endianness issue, since (status & BIT(i))
+> provides the status of MSI_i, irrespective of endianness.
+
+We discussed this over IRC, but I was referring to the above case and
+64bit BE platforms, which would not do what you expect.
+
+> Although I see that arch/arm/include/asm/bitops.h declares
+> BE and LE variants... I'm confused.
+
+Nothing in this code should be ARM specific. The kernel gives you the
+tools to write (mostly) architecture, endianness and word size agnostic
+code.
+
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
