@@ -1,133 +1,92 @@
-Return-Path: <SRS0=RbNJ=3F=semihalf.com=tn@kernel.org>
-Return-Path: <SRS0=RbNJ=3F=semihalf.com=tn@kernel.org>
-Subject: Re: [PATCH 2/2] PCI: Add legacy firmware support for Cavium ThunderX
- host controller
-To: helgaas@kernel.org
-References: <1489564155-3881-3-git-send-email-tn@semihalf.com>
- <1490728896-30520-1-git-send-email-tn@semihalf.com>
-Cc: Lorenzo.Pieralisi@arm.com, robert.richter@caviumnetworks.com,
- ddaney@caviumnetworks.com, Vadim.Lomovtsev@caviumnetworks.com,
- rafael@kernel.org, Sunil.Goutham@cavium.com, geethasowjanya.akula@gmail.com,
- linu.cherian@cavium.com, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <e3a051c4-6e32-919e-753b-e3ad93c134fb@semihalf.com>
-Date: Tue, 28 Mar 2017 21:28:51 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 24 Mar 2017 14:43:40 +0000
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
+Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
+Message-ID: <20170324144340.GA17560@red-moon>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <58D49845.9060407@hisilicon.com>
+ <0ea8022b-a19b-335d-6cc6-81510196f891@codeaurora.org>
+ <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
 MIME-Version: 1.0
-In-Reply-To: <1490728896-30520-1-git-send-email-tn@semihalf.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Sricharan R <sricharan@codeaurora.org>, "joro@8bytes.org" <joro@8bytes.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "Wangzhou \(B\)" <wangzhou1@hisilicon.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "tn@semihalf.com" <tn@semihalf.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Fri, Mar 24, 2017 at 09:27:51AM +0000, Shameerali Kolothum Thodi wrote:
 
-Here is a complete patch to avoid manual patching. Please have a look 
-and let me know if it is OK.
+[...]
+
+> @@ -107,7 +107,7 @@ int of_dma_configure(struct device *dev, struct device_node *np)
+>   	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>   	if (ret < 0) {
+>   		dma_addr = offset = 0;
+>  -		size = dev->coherent_dma_mask + 1;
+>  +		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+> 
+> @@ -1386,7 +1387,8 @@ int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+>   	 * Assume dma valid range starts at 0 and covers the whole
+>   	 * coherent_dma_mask.
+>   	 */
+>  -	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+>  +	size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+
+size is not defined in acpi_dma_configure(), so there is
+something missing in the diff above, just to make sure we are
+testing the same thing.
+
+Mind posting kernel logs with and without patch above (fixed) for
+DT boot and ACPI boot please.
 
 Thanks,
-Tomasz
+Lorenzo
 
-On 28.03.2017 21:21, Tomasz Nowicki wrote:
-> During early days of PCI quirks support ThunderX firmware did not provide
-> PNP0c02 node with PCI configuration space and PEM-specific register ranges.
-> This means that for legacy FW we are not reserving these resources and
-> cannot gather PEM-specific resources for further PEM initialization.
->
-> In order to support already deployed legacy FW calculate PEM-specific ranges
-> and provide resources reservation as fallback scenario into PEM driver when
-> we could not gather PEM reg base from ACPI tables.
->
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-> ---
->  drivers/pci/host/pci-thunder-pem.c | 62 ++++++++++++++++++++++++++++++++++++--
->  1 file changed, 60 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-> index e354010..cea5814 100644
-> --- a/drivers/pci/host/pci-thunder-pem.c
-> +++ b/drivers/pci/host/pci-thunder-pem.c
-> @@ -14,6 +14,7 @@
->   * Copyright (C) 2015 - 2016 Cavium, Inc.
->   */
->
-> +#include <linux/bitfield.h>
->  #include <linux/kernel.h>
->  #include <linux/init.h>
->  #include <linux/of_address.h>
-> @@ -319,6 +320,49 @@ static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg,
->
->  #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
->
-> +#define PEM_RES_BASE		0x87e0c0000000UL
-> +#define PEM_NODE_MASK		GENMASK(45, 44)
-> +#define PEM_INDX_MASK		GENMASK(26, 24)
-> +#define PEM_MIN_DOM_IN_NODE	4
-> +#define PEM_MAX_DOM_IN_NODE	10
-> +
-> +static void thunder_pem_reserve_range(struct device *dev, int seg,
-> +				      struct resource *r)
-> +{
-> +	resource_size_t start = r->start, end = r->end;
-> +	struct resource *res;
-> +	const char *regionid;
-> +
-> +	regionid = kasprintf(GFP_KERNEL, "PEM RC:%d", seg);
-> +	if (!regionid)
-> +		return;
-> +
-> +	res = request_mem_region(start, end - start + 1, regionid);
-> +	if (res)
-> +		res->flags &= ~IORESOURCE_BUSY;
-> +	else
-> +		kfree(regionid);
-> +
-> +	dev_info(dev, "%pR %s reserved\n", r,
-> +		 res ? "has been" : "could not be");
-> +}
-> +
-> +static void thunder_pem_legacy_fw(struct acpi_pci_root *root,
-> +				 struct resource *res_pem)
-> +{
-> +	int node = acpi_get_node(root->device->handle);
-> +	int index;
-> +
-> +	if (node == NUMA_NO_NODE)
-> +		node = 0;
-> +
-> +	index = root->segment - PEM_MIN_DOM_IN_NODE;
-> +	index -= node * PEM_MAX_DOM_IN_NODE;
-> +	res_pem->start = PEM_RES_BASE | FIELD_PREP(PEM_NODE_MASK, node) |
-> +					FIELD_PREP(PEM_INDX_MASK, index);
-> +	res_pem->flags = IORESOURCE_MEM;
-> +}
-> +
->  static int thunder_pem_acpi_init(struct pci_config_window *cfg)
->  {
->  	struct device *dev = cfg->parent;
-> @@ -332,9 +376,23 @@ static int thunder_pem_acpi_init(struct pci_config_window *cfg)
->  		return -ENOMEM;
->
->  	ret = acpi_get_rc_resources(dev, "CAVA02B", root->segment, res_pem);
-> +
-> +	/*
-> +	 * If we fail to gather resources it means that we run with old
-> +	 * FW where we need to calculate PEM-specific resources manually.
-> +	 */
->  	if (ret) {
-> -		dev_err(dev, "can't get rc base address\n");
-> -		return ret;
-> +		thunder_pem_legacy_fw(root, res_pem);
-> +		/*
-> +		 * Reserve 64K size PEM specific resources. The full 16M range
-> +		 * size is required for thunder_pem_init() call.
-> +		 */
-> +		res_pem->end = res_pem->start + SZ_64K - 1;
-> +		thunder_pem_reserve_range(dev, root->segment, res_pem);
-> +		res_pem->end = res_pem->start + SZ_16M - 1;
-> +
-> +		/* Reserve PCI configuration space as well. */
-> +		thunder_pem_reserve_range(dev, root->segment, &cfg->res);
->  	}
->
->  	return thunder_pem_init(dev, cfg, res_pem);
->
+>  +	arch_setup_dma_ops(dev, 0, size, iommu,
+>   			   attr == DEV_DMA_COHERENT);
+> 
+> With the above fixes, DT boot works fine. But we still get the below crash on ACPI
+> 
+> > > [  402.581445] kernel BUG at drivers/iommu/arm-smmu-v3.c:1064!
+> > > [  402.587007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+> > > [  402.592479] Modules linked in: vfio_iommu_type1 vfio_pci irqbypass
+> > vfio_virqfd vfio ixgbevf ixgb
+> 
+> > The change that this series does is trying to add the dma/iommu ops to the
+> > device after the iommu is actually probed.
+> > So in your working case, does the device initially gets hooked to iommu_ops
+> > and the above same check passes in working case ?
+> 
+> I believe so. Because didn't notice the "specified DMA range outside IOMMU capability"
+> in the working case.
+>  
+> Thanks,
+> Shameer
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
