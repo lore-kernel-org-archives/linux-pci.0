@@ -1,58 +1,153 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 7 Mar 2017 12:09:25 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
-        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
-        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
-        gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
-        akpm@linux-foundation.org, davem@davemloft.net
-Subject: Re: [RFC PATCH v2 05/32] x86: Use encrypted access of BOOT related
- data with SEV
-Message-ID: <20170307110925.zmo7gsflxhui4k7e@pd.tnic>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846757895.2349.561582698953591240.stgit@brijesh-build-machine>
+Date: Fri, 24 Mar 2017 09:25:41 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v2 3/5] PCI: rockchip: add remove() support
+Message-ID: <20170324142541.GA25380@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170310024617.67303-1-briannorris@chromium.org>
+ <20170310024617.67303-3-briannorris@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <148846757895.2349.561582698953591240.stgit@brijesh-build-machine>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170310024617.67303-3-briannorris@chromium.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 02, 2017 at 10:12:59AM -0500, Brijesh Singh wrote:
-> From: Tom Lendacky <thomas.lendacky@amd.com>
+On Thu, Mar 09, 2017 at 06:46:15PM -0800, Brian Norris wrote:
+> Currently, if we try to unbind the platform device, the remove will
+> succeed, but the removal won't undo most of the registration, leaving
+> partially-configured PCI devices in the system.
 > 
-> When Secure Encrypted Virtualization (SEV) is active, BOOT data (such as
-> EFI related data, setup data) is encrypted and needs to be accessed as
-> such when mapped. Update the architecture override in early_memremap to
-> keep the encryption attribute when mapping this data.
+> This allows, for example, a simple 'lspci' to crash the system, as it
+> will try to touch the freed (via devm_*) driver structures.
+> 
+> So let's implement device remove().
 
-This could also explain why persistent memory needs to be accessed
-decrypted with SEV.
+How exactly do you reproduce this problem?
 
-In general, what the difference in that aspect is in respect to SME. And
-I'd write that in the comment over the function. And not say "E820 areas
-are checked in making this determination." because that is visible but
-say *why* we need to check those ranges and determine access depending
-on their type.
+There are several other drivers that are superficially similar, e.g.,
+they define a struct platform_driver without a .remove method.  Do
+they all have this problem?  Some of them do set .suppress_bind_attrs
+= true; is that relevant to this scenario?
 
--- 
-Regards/Gruss,
-    Boris.
+In fact, the only other callers of pci_remove_root_bus() are
+iproc_pcie_remove(), hv_pci_remove(), and vmd_remove().
 
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+These don't have .remove:
+
+  imx6_pcie_driver
+  ls_pcie_driver
+  armada8k_pcie_driver
+  artpec6_pcie_driver
+  dw_plat_pcie_driver
+  hisi_pcie_driver
+  hisi_pcie_almost_ecam_driver
+  spear13xx_pcie_driver
+  gen_pci_driver
+
+These don't have .remove but do set .suppress_bind_attrs = true:
+
+  dra7xx_pcie_driver
+  qcom_pcie_driver
+  advk_pcie_driver
+  mvebu_pcie_driver
+  rcar_pci_driver
+  rcar_pcie_driver
+  tegra_pcie_driver
+  altera_pcie_driver
+  nwl_pcie_driver
+  xilinx_pcie_driver
+
+
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+> ---
+> v2:
+> * unmap IO space with pci_unmap_iospace()
+> * remove IRQ domain
+> ---
+>  drivers/pci/host/pcie-rockchip.c | 36 ++++++++++++++++++++++++++++++++++--
+>  1 file changed, 34 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 5d7b27b1e941..d2e5078ae331 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -223,9 +223,11 @@ struct rockchip_pcie {
+>  	int	link_gen;
+>  	struct	device *dev;
+>  	struct	irq_domain *irq_domain;
+> -	u32     io_size;
+>  	int     offset;
+> +	struct pci_bus *root_bus;
+> +	struct resource *io;
+>  	phys_addr_t io_bus_addr;
+> +	u32     io_size;
+>  	void    __iomem *msg_region;
+>  	u32     mem_size;
+>  	phys_addr_t msg_bus_addr;
+> @@ -1360,6 +1362,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  					 err, io);
+>  				continue;
+>  			}
+> +			rockchip->io = io;
+>  			break;
+>  		case IORESOURCE_MEM:
+>  			mem = win->res;
+> @@ -1391,6 +1394,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  		err = -ENOMEM;
+>  		goto err_free_res;
+>  	}
+> +	rockchip->root_bus = bus;
+>  
+>  	pci_bus_size_bridges(bus);
+>  	pci_bus_assign_resources(bus);
+> @@ -1421,6 +1425,34 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+>  	return err;
+>  }
+>  
+> +static int rockchip_pcie_remove(struct platform_device *pdev)
+> +{
+> +	struct device *dev = &pdev->dev;
+> +	struct rockchip_pcie *rockchip = dev_get_drvdata(dev);
+> +
+> +	pci_stop_root_bus(rockchip->root_bus);
+> +	pci_remove_root_bus(rockchip->root_bus);
+> +	pci_unmap_iospace(rockchip->io);
+> +	irq_domain_remove(rockchip->irq_domain);
+> +
+> +	phy_power_off(rockchip->phy);
+> +	phy_exit(rockchip->phy);
+> +
+> +	clk_disable_unprepare(rockchip->clk_pcie_pm);
+> +	clk_disable_unprepare(rockchip->hclk_pcie);
+> +	clk_disable_unprepare(rockchip->aclk_perf_pcie);
+> +	clk_disable_unprepare(rockchip->aclk_pcie);
+> +
+> +	if (!IS_ERR(rockchip->vpcie3v3))
+> +		regulator_disable(rockchip->vpcie3v3);
+> +	if (!IS_ERR(rockchip->vpcie1v8))
+> +		regulator_disable(rockchip->vpcie1v8);
+> +	if (!IS_ERR(rockchip->vpcie0v9))
+> +		regulator_disable(rockchip->vpcie0v9);
+> +
+> +	return 0;
+> +}
+> +
+>  static const struct dev_pm_ops rockchip_pcie_pm_ops = {
+>  	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(rockchip_pcie_suspend_noirq,
+>  				      rockchip_pcie_resume_noirq)
+> @@ -1438,6 +1470,6 @@ static struct platform_driver rockchip_pcie_driver = {
+>  		.pm = &rockchip_pcie_pm_ops,
+>  	},
+>  	.probe = rockchip_pcie_probe,
+> -
+> +	.remove = rockchip_pcie_remove,
+>  };
+>  builtin_platform_driver(rockchip_pcie_driver);
+> -- 
+> 2.12.0.246.ga2ecc84866-goog
+> 
