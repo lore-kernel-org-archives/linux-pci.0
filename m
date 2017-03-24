@@ -1,102 +1,73 @@
-Return-Path: <SRS0=sjoJ=2R=oracle.com=ethan.zhao@kernel.org>
-Return-Path: <SRS0=sjoJ=2R=oracle.com=ethan.zhao@kernel.org>
-Subject: Re: [PATCH] pci: Prevent VPD access for QLogic ISP2722
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1488182924-23334-1-git-send-email-ethan.zhao@oracle.com>
- <20170307202217.GG21358@bhelgaas-glaptop.roam.corp.google.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, ethan.kernel@gmail.com,
-        babu.moger@oracle.com
-From: Ethan Zhao <ethan.zhao@oracle.com>
-Message-ID: <58BF6A4B.6010103@oracle.com>
-Date: Wed, 8 Mar 2017 10:19:55 +0800
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 24 Mar 2017 10:28:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian =?iso-8859-1?Q?K=F6nig?= <deathsimple@vodafone.de>
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/4] PCI: add resizeable BAR infrastructure v3
+Message-ID: <20170324152853.GD25380@bhelgaas-glaptop.roam.corp.google.com>
+References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+ <1489408896-25039-2-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <20170307202217.GG21358@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1489408896-25039-2-git-send-email-deathsimple@vodafone.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Mar 13, 2017 at 01:41:33PM +0100, Christian König wrote:
+> From: Christian König <christian.koenig@amd.com>
+> 
+> Just the defines and helper functions to read the possible sizes of a BAR and
+> update it's size.
 
+s/it's/its/
 
-On 2017/3/8 4:22, Bjorn Helgaas wrote:
-> On Mon, Feb 27, 2017 at 05:08:44PM +0900, Ethan Zhao wrote:
->> QLogic ISP2722-based 16/32Gb Fibre Channel to PCIe Adapter has the VPD
->> access issue too, while read the common pci-sysfs access interface shown as
->>
->>   /sys/devices/pci0000:00/0000:00:03.2/0000:0b:00.0/vpd
->>
->> with simple 'cat' could cause system hang and panic:
->>
->> [   48.219586] Kernel panic - not syncing: An NMI occurred. Depending on your system
->>   the reason for the NMI is logged in any one of the following resources:
->> [   48.219586] 1. Integrated Management Log (IML)
->> [   48.219586] 2. OA Syslog
->> [   48.219586] 3. OA Forward Progress Log
->> [   48.219586] 4. iLO Event Log
->> [   48.352034] CPU: 0 PID: 15070 Comm: udevadm Not tainted 4.1.12
->> [   48.390989] Hardware name: HP ProLiant DL380 Gen9/ProLiant DL380 Gen9, BIOS P89 12/27/2015
->> [   48.431201]  0000000000000086 000000007f0cdf51 ffff880c4fa05d58 ffffffff817193de
->> [   48.467185]  ffffffffa00b42d8 0000000000000075 ffff880c4fa05dd8 ffffffff81714072
->> [   48.502631]  0000000000000008 ffff880c4fa05de8 ffff880c4fa05d88 000000007f0cdf51
->> [   48.538427] Call Trace:
->> [   48.549991]  <NMI>  [<ffffffff817193de>] dump_stack+0x63/0x81
->> [   48.577496]  [<ffffffff81714072>] panic+0xd0/0x20e
->> [   48.600598]  [<ffffffffa00b390d>] hpwdt_pretimeout+0xdd/0xe0 [hpwdt]
->> [   48.630913]  [<ffffffff81021fc9>] ? sched_clock+0x9/0x10
->> [   48.656286]  [<ffffffff8101c101>] nmi_handle+0x91/0x170
->> [   48.681362]  [<ffffffff8101c10c>] ? nmi_handle+0x9c/0x170
->> [   48.707383]  [<ffffffff8101c5fe>] io_check_error+0x1e/0xa0
->> [   48.733603]  [<ffffffff8101c719>] default_do_nmi+0x99/0x140
->> [   48.759570]  [<ffffffff8101c8b4>] do_nmi+0xf4/0x170
->> [   48.782977]  [<ffffffff817232c5>] end_repeat_nmi+0x1a/0x1e
->> [   48.809290]  [<ffffffff815d724b>] ? pci_conf1_read+0xeb/0x120
->> [   48.837782]  [<ffffffff815d724b>] ? pci_conf1_read+0xeb/0x120
->> [   48.865045]  [<ffffffff815d724b>] ? pci_conf1_read+0xeb/0x120
->> [   48.892877]  <<EOE>>  [<ffffffff815db4b3>] raw_pci_read+0x23/0x40
->> [   48.923060]  [<ffffffff815db4fc>] pci_read+0x2c/0x30
->> [   48.947340]  [<ffffffff8136f612>] pci_user_read_config_word+0x72/0x110
->> [   48.978937]  [<ffffffff8136f746>] pci_vpd_pci22_wait+0x96/0x130
->> [   49.007983]  [<ffffffff8136ff9b>] pci_vpd_pci22_read+0xdb/0x1a0
->> [   49.036370]  [<ffffffff8136ea30>] pci_read_vpd+0x20/0x30
->> [   49.062608]  [<ffffffff8137d590>] read_vpd_attr+0x30/0x40
->> [   49.088627]  [<ffffffff8128e037>] sysfs_kf_bin_read+0x47/0x70
->> [   49.116383]  [<ffffffff8128d24e>] kernfs_fop_read+0xae/0x180
->> [   49.143396]  [<ffffffff8120dd97>] __vfs_read+0x37/0x100
->> [   49.169059]  [<ffffffff812ba7e4>] ? security_file_permission+0x84/0xa0
->> [   49.200526]  [<ffffffff8120e366>] ? rw_verify_area+0x56/0xe0
->> [   49.227578]  [<ffffffff8120e476>] vfs_read+0x86/0x140
->> [   49.252842]  [<ffffffff8120f3f5>] SyS_read+0x55/0xd0
->> [   49.277378]  [<ffffffff81720f2e>] system_call_fastpath+0x12/0x71
->> [   50.349812] Shutting down cpus with NMI
->> [   50.368388] Kernel Offset: disabled
->> [   50.385327] drm_kms_helper: panic occurred, switching back to text console
->>
->> So blacklist the access to its VPD.
->>
->> Signed-off-by: Ethan Zhao <ethan.zhao@oracle.com>
-> Applied to for-linus for v4.11, thanks!
->
-> I added a stable tag for v4.6+ because quirk_blacklist_vpd() was added
-> by 7c20078a8197 ("PCI: Prevent VPD access for buggy devices"), which
-> appeared in v4.6.
-  Nice ! Thanks again.
+> See https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf.
 
-  Ethan
->> ---
->>   drivers/pci/quirks.c | 1 +
->>   1 file changed, 1 insertion(+)
->>
->> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
->> index 3a035e07..087a218 100644
->> --- a/drivers/pci/quirks.c
->> +++ b/drivers/pci/quirks.c
->> @@ -2173,6 +2173,7 @@ static void quirk_blacklist_vpd(struct pci_dev *dev)
->>   DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LSI_LOGIC, 0x005f, quirk_blacklist_vpd);
->>   DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATTANSIC, PCI_ANY_ID,
->>   		quirk_blacklist_vpd);
->> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_QLOGIC, 0x2261, quirk_blacklist_vpd);
->>   
->>   /*
->>    * For Broadcom 5706, 5708, 5709 rev. A nics, any read beyond the
->> -- 
->> 1.8.3.1
->>
+It's good to have the public ECN that anybody can read, but we should
+also have a reference to the full spec that incorporates it, e.g.,
+PCIe r3.1, sec 7.22.
+
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1946,6 +1946,9 @@ void pci_request_acs(void);
+>  bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+>  bool pci_acs_path_enabled(struct pci_dev *start,
+>  			  struct pci_dev *end, u16 acs_flags);
+> +u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar);
+> +int pci_rbar_get_current_size(struct pci_dev *pdev, int bar);
+> +int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
+
+These should be declared in drivers/pci/pci.h unless they're needed
+outside drivers/pci.  I hope they aren't needed outside, because
+they're not safe to use after the PCI core has claimed resources.
+
+>  #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
+>  #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index e5a2e68..6de29d6 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -932,9 +932,16 @@
+>  #define PCI_SATA_SIZEOF_LONG	16
+>  
+>  /* Resizable BARs */
+> +#define PCI_REBAR_CAP		4	/* capability register */
+> +#define  PCI_REBAR_CTRL_SIZES_MASK	(0xFFFFF << 4)	/* mask for sizes */
+> +#define  PCI_REBAR_CTRL_SIZES_SHIFT	4	/* shift for sizes */
+>  #define PCI_REBAR_CTRL		8	/* control register */
+> +#define  PCI_REBAR_CTRL_BAR_IDX_MASK	(7 << 0)	/* mask for bar index */
+> +#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT	0	/* shift for bar index */
+>  #define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # bars */
+>  #define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # bars */
+> +#define  PCI_REBAR_CTRL_BAR_SIZE_MASK	(0x1F << 8)	/* mask for bar size */
+> +#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT	8	/* shift for bar size */
+
+s/bar/BAR/ several places above
+
+>  /* Dynamic Power Allocation */
+>  #define PCI_DPA_CAP		4	/* capability register */
+> -- 
+> 2.7.4
+> 
