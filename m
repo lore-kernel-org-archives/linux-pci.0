@@ -1,47 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from terminus.zytor.com ([65.50.211.136]:41458 "EHLO mail.zytor.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751401AbdCNRfD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 14 Mar 2017 13:35:03 -0400
-Subject: Re: [PATCH 2/4] pci: Add generic pci_bus_force_mmconfig interface
-To: Andi Kleen <andi@firstfloor.org>, bhelgaas@google.com
-References: <20170302232104.10136-1-andi@firstfloor.org>
- <20170302232104.10136-2-andi@firstfloor.org>
-Cc: x86@kernel.org, linux-pci@vger.kernel.org, eranian@google.com,
-        peterz@infradead.org, linux-kernel@vger.kernel.org,
-        Andi Kleen <ak@linux.intel.com>
-From: "H. Peter Anvin" <hpa@zytor.com>
-Message-ID: <66023d09-aadb-981e-286b-e2c8316897ce@zytor.com>
-Date: Tue, 14 Mar 2017 10:34:14 -0700
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 24 Mar 2017 09:47:58 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: lkml@pengaru.com, "Bowers, AndrewX" <andrewx.bowers@intel.com>,
+        "Brown, Aaron F" <aaron.f.brown@intel.com>,
+        "vcaputo@pengaru.com" <vcaputo@pengaru.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        David Singleton <davsingl@cisco.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        khalidm <khalidm@cisco.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+        =?utf-8?B?QmrDuHJu?= Mork <bjorn@mork.no>
+Subject: Re: [Intel-wired-lan] [BUG] 4.11.0-rc1 panic on shutdown X61s
+Message-ID: <20170324084758.wg5yuf2c3mi46nhd@pd.tnic>
+References: <CAHp75Ve7SWivf=TTuq-qA=iM20E==OmSZD2YAmt0LVJQg47Osg@mail.gmail.com>
+ <20170312222333.hm54nl2ul5iuixap@pd.tnic>
+ <87shmhjfap.fsf@miraculix.mork.no>
+ <309B89C4C689E141A5FF6A0C5FB2118B8C5B3F9B@ORSMSX101.amr.corp.intel.com>
+ <20170314024033.GK802@shells.gnugeneration.com>
+ <26D9FDECA4FBDD4AADA65D8E2FC68A4A10402F44@ORSMSX101.amr.corp.intel.com>
+ <20170322020445.GD802@shells.gnugeneration.com>
+ <20170322021343.GE802@shells.gnugeneration.com>
+ <20170322190019.GB20697@nazgul.tnic>
+ <CAL3LdT6CbZkyngugiPCqhNvT02tsTWsWfMT4KH41hrAEE3evAQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170302232104.10136-2-andi@firstfloor.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAL3LdT6CbZkyngugiPCqhNvT02tsTWsWfMT4KH41hrAEE3evAQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/02/17 15:21, Andi Kleen wrote:
-> From: Andi Kleen <ak@linux.intel.com>
-> 
-> x86 traditionally used mmconfig only for extended config space accesses
-> with offsets larger than 256. For lower offsets it uses the classic
-> Type 1 IO port access. This is quite slow and also requires taking
-> a global spin lock to protect the Type 1 IO port mailbox.
-> 
-> IIRC (I added it originally) it was merely to be conservative;
-> I don't remember any actual cases where mmconfig did not work
-> after passing the other sanity checks. But most devices
-> don't use extended config space, so most devices were never
-> tested with MMCONFIG. Starting to use MMCONFIG everywhere
-> unconditionally seems somewhat risky as we never tested this
-> 
+On Thu, Mar 23, 2017 at 11:18:31PM -0700, Jeff Kirsher wrote:
+> I have sent a patch to revert this offending commit through David
+> Miller's net tree, sorry for the delay on this, I thought I had seen a
+> patch to revert the offending commit earlier which is why I did not
+> send this earlier.
 
-I would rather enable it by default, but having a command-line switch to
-disable it.  This seems a helluva lot saner than mucking with the entire
-PCI bus from an individual device driver.
+Thanks Jeff. If you need me to test the real fix just let me know.
 
-Also, it seems crazy to say we will take this penalty forever.  My
-opinion is we should enable it in the absence of evidence of
-malfunctions, but if we end up having problems we could put an ACPI date
-cutoff quirk in.
+-- 
+Regards/Gruss,
+    Boris.
 
-	-hpa
+Good mailing practices for 400: avoid top-posting and trim the reply.
