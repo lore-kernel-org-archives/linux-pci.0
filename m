@@ -1,44 +1,66 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37912 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754576AbdCGEHX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 6 Mar 2017 23:07:23 -0500
-Date: Mon, 6 Mar 2017 18:24:17 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: "Raj, Ashok" <ashok.raj@intel.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        linux-kernel@vger.kernel.org, Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH] pciehp: Fix race condition handling surprise link-down
-Message-ID: <20170307002417.GA21358@bhelgaas-glaptop.roam.corp.google.com>
-References: <1481317564-18045-1-git-send-email-ashok.raj@intel.com>
- <20170203025901.GA15080@bhelgaas-glaptop.roam.corp.google.com>
- <20170203060053.GA240323@otc-nc-03>
- <20170203165104.GC15080@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170203165104.GC15080@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=ccIc=3B=linuxonhyperv.com=kys@kernel.org>
+Return-Path: <SRS0=ccIc=3B=linuxonhyperv.com=kys@kernel.org>
+From: kys@exchange.microsoft.com
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org,
+	olaf@aepfle.de,
+	apw@canonical.com,
+	vkuznets@redhat.com,
+	jasowang@redhat.com,
+	leann.ogasawara@canonical.com,
+	marcelo.cerri@canonical.com,
+	sthemmin@microsoft.com
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 1/2] pci-hyperv: Fix a bug in specifying CPU affinity
+Date: Fri, 24 Mar 2017 11:07:21 -0700
+Message-Id: <1490378842-26950-2-git-send-email-kys@exchange.microsoft.com>
+In-Reply-To: <1490378800-26907-1-git-send-email-kys@exchange.microsoft.com>
+References: <1490378800-26907-1-git-send-email-kys@exchange.microsoft.com>
+Reply-To: kys@microsoft.com
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Feb 03, 2017 at 10:51:04AM -0600, Bjorn Helgaas wrote:
-> On Thu, Feb 02, 2017 at 10:00:53PM -0800, Raj, Ashok wrote:
-> > ...
-> > Just to summarize, we only queue the POWEROFF due to surprise link down
-> > and another POWERON due to link becoming back up. The transient link-down 
-> > events are coveniently ignored.
-> 
-> I'm leery about ignoring events, though it happens to be convenient in
-> this case.  I think we're ignoring them because we're running work
-> items simultaneously with other items, and I think that concurrency is
-> unnecessary complexity.
-> 
-> I think it would be safer to queue every event and process every event
-> serially.
+From: K. Y. Srinivasan <kys@microsoft.com>
 
-Hi Ashok,
+When we have 32 or more CPUs in the affinity mask, we should
+use a special constant to specify that to the host. Fix this issue.
 
-Just a ping to make sure we're not deadlocked.  I'm waiting for you,
-so I hope you're not also waiting for me :)  I'm not trying to rush you;
-I just don't want to drop this by mistake.
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/pci/host/pci-hyperv.c |   11 ++++++++---
+ 1 files changed, 8 insertions(+), 3 deletions(-)
 
-Bjorn
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index ada9856..32a16fb 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -72,6 +72,7 @@ enum {
+ 	PCI_PROTOCOL_VERSION_CURRENT = PCI_PROTOCOL_VERSION_1_1
+ };
+ 
++#define CPU_AFFINITY_ALL	-1ULL
+ #define PCI_CONFIG_MMIO_LENGTH	0x2000
+ #define CFG_PAGE_OFFSET 0x1000
+ #define CFG_PAGE_SIZE (PCI_CONFIG_MMIO_LENGTH - CFG_PAGE_OFFSET)
+@@ -897,9 +898,13 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ 	 * processors because Hyper-V only supports 64 in a guest.
+ 	 */
+ 	affinity = irq_data_get_affinity_mask(data);
+-	for_each_cpu_and(cpu, affinity, cpu_online_mask) {
+-		int_pkt->int_desc.cpu_mask |=
+-			(1ULL << vmbus_cpu_number_to_vp_number(cpu));
++	if (cpumask_weight(affinity) >= 32) {
++		int_pkt->int_desc.cpu_mask = CPU_AFFINITY_ALL;
++	} else {
++		for_each_cpu_and(cpu, affinity, cpu_online_mask) {
++			int_pkt->int_desc.cpu_mask |=
++				(1ULL << vmbus_cpu_number_to_vp_number(cpu));
++		}
+ 	}
+ 
+ 	ret = vmbus_sendpacket(hpdev->hbus->hdev->channel, int_pkt,
+-- 
+1.7.1
