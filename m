@@ -1,15 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 24 Mar 2017 10:38:05 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: [PATCH 2/4 v5] PCI: add driver for Faraday Technology Host Bridge
+Message-ID: <20170324153805.GA31729@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170312222403.2473-1-linus.walleij@linaro.org>
+ <20170324150753.GC25380@bhelgaas-glaptop.roam.corp.google.com>
+ <CACRpkdbkhui0iwJbOeD8uwurdWvOYdPKtRPQhSkg0atpAB174Q@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170302162931.tyngslqsr2axy5qx@rob-hp-laptop>
-References: <20170227190720.31409-1-linus.walleij@linaro.org>
- <20170227190720.31409-3-linus.walleij@linaro.org>
- <20170302162931.tyngslqsr2axy5qx@rob-hp-laptop>
-From: Linus Walleij <linus.walleij@linaro.org>
-Date: Fri, 3 Mar 2017 00:31:31 +0100
-Message-ID: <CACRpkdZ-9tZPNOnMvA7-Rudg7QPVs=N5SPBd+i59EFb4VjmSYA@mail.gmail.com>
-Subject: Re: [PATCH 3/4 v3] ARM: gemini: select MIGHT_HAVE_PCI
-To: Rob Herring <robh@kernel.org>
+In-Reply-To: <CACRpkdbkhui0iwJbOeD8uwurdWvOYdPKtRPQhSkg0atpAB174Q@mail.gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,68 +17,50 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: openwrt-devel@openwrt.org,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+Cc: openwrt-devel@openwrt.org, Rob Herring <robh@kernel.org>,
  Florian Fainelli <f.fainelli@gmail.com>,
- Feng-Hsin Chiang <john453@faraday-tech.com>,
- Paulius Zaleckas <paulius.zaleckas@gmail.com>,
+ Feng-Hsin Chiang <john453@faraday-tech.com>, Arnd Bergmann <arnd@arndb.de>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
  linux-pci <linux-pci@vger.kernel.org>,
  Hans Ulli Kroll <ulli.kroll@googlemail.com>, Greentime Hu <green.hu@gmail.com>,
  Bjorn Helgaas <bhelgaas@google.com>, Janos Laube <janos.dev@gmail.com>,
+ Paulius Zaleckas <paulius.zaleckas@gmail.com>,
  "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 2, 2017 at 5:29 PM, Rob Herring <robh@kernel.org> wrote:
-> On Mon, Feb 27, 2017 at 08:07:19PM +0100, Linus Walleij wrote:
->> As we have a PCI driver for the Gemini, we should select
->> MIGHT_HAVE_PCI.
->>
->> Cc: Janos Laube <janos.dev@gmail.com>
->> Cc: Paulius Zaleckas <paulius.zaleckas@gmail.com>
->> Cc: Hans Ulli Kroll <ulli.kroll@googlemail.com>
->> Cc: Florian Fainelli <f.fainelli@gmail.com>
->> Cc: Feng-Hsin Chiang <john453@faraday-tech.com>
->> Cc: Greentime Hu <green.hu@gmail.com>
->> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
->> ---
->> ChangeLog v1->v2->v3:
->> - No changes
->>
->> PCI maintainers: this is FYI only, I will funnel this to the ARM
->> SoC tree once we are done with the PCI driver.
->> ---
->>  arch/arm/mach-gemini/Kconfig | 1 +
->>  1 file changed, 1 insertion(+)
->>
->> diff --git a/arch/arm/mach-gemini/Kconfig b/arch/arm/mach-gemini/Kconfig
->> index a5ee5fbab796..21f89a4c16fe 100644
->> --- a/arch/arm/mach-gemini/Kconfig
->> +++ b/arch/arm/mach-gemini/Kconfig
->> @@ -6,6 +6,7 @@ menuconfig ARCH_GEMINI
->>       select FTTMR010_TIMER
->>       select GPIO_GEMINI
->>       select GPIOLIB
->> +     select MIGHT_HAVE_PCI
->
-> Doesn't Multi-platform do this for you?
+On Fri, Mar 24, 2017 at 04:14:43PM +0100, Linus Walleij wrote:
+> On Fri, Mar 24, 2017 at 4:07 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> 
+> > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Thanks!
+> 
+> > I don't know enough to review the DT patch, but you have Rob's ack
+> > already.
+> >
+> > Not sure how you want to merge these; if you want to feed the whole
+> > thing via ARM SoC, that's fine with me.  Otherwise, let me know if
+> > you'd like me to take anything.
+> 
+> It'd be perfect if you could merge patches 1+2 into the PCI tree,
+> there are no dependencies to the ARM tree.
+> 
+> > Noticed one trivial typo below.
+> >
+> >> + * Special configuration registers directly in the first few words
+> >> + * in he I/O space.
+> >
+> > s/he//
+> 
+> Can you fix it when applying or do you want me to resend it with
+> this fixed?
 
-Oh it does, I just missed that.
+I fixed it.
 
-> If not, IMO, we should do that
-> or kill this option. We don't do an option like this for I2C, SPI,
-> display, anything else (well, except GPIOLIB ;)).
-
-I killed ARCH_WANT_OPTIONAL_GPIOLIB at least
-that thing was really confusing.
-
-Maybe we should have MULTIPLATFORM select
-GPIOLIB too.
-
-Yours,
-Linus Walleij
+Applied 1 & 2 to pci/host-faraday for v4.12, thanks!
 
 _______________________________________________
 linux-arm-kernel mailing list
