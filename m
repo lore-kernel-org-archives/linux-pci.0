@@ -1,208 +1,184 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0048.outbound.protection.outlook.com ([104.47.32.48]:6479
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750788AbdCPClb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Mar 2017 22:41:31 -0400
-From: "Zhang, Jerry" <Jerry.Zhang@amd.com>
-To: Alex Deucher <alexdeucher@gmail.com>
-CC: =?utf-8?B?Q2hyaXN0aWFuIEvDtm5pZw==?= <deathsimple@vodafone.de>,
-        "Zhou, David(ChunMing)" <David1.Zhou@amd.com>,
-        Ayyappa Ch <ayyappa.ch.linux@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "platform-driver-x86@vger.kernel.org"
-        <platform-driver-x86@vger.kernel.org>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>
-Subject: RE: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
-Date: Thu, 16 Mar 2017 02:41:07 +0000
-Message-ID: <DM5PR12MB1818E21F5F5456B2041B3817FF260@DM5PR12MB1818.namprd12.prod.outlook.com>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
- <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
- <CAPyr0yLWiGzU5ihFcj_NmA2Vk2R7GsKqo2LK8o3Eu+Df9m7vhw@mail.gmail.com>
- <6fac05e4-26ae-e959-9af6-cb68a04a1110@vodafone.de>
- <MWHPR1201MB0206CA2E6DAC3B83ACA52ADBB4270@MWHPR1201MB0206.namprd12.prod.outlook.com>
- <17c470c4-d406-b5ac-73d1-4dd5b83cfca8@vodafone.de>
- <DM5PR12MB18188AF745E7FB6B021E6600FF260@DM5PR12MB1818.namprd12.prod.outlook.com>
- <CADnq5_NzFTWEB8NXT6LM9U=JfexpbZxQCyja1VqZv+NYMCmJwQ@mail.gmail.com>
-In-Reply-To: <CADnq5_NzFTWEB8NXT6LM9U=JfexpbZxQCyja1VqZv+NYMCmJwQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
+To: Sricharan R <sricharan@codeaurora.org>, "Wangzhou (B)"
+ <wangzhou1@hisilicon.com>, "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>, "joro@8bytes.org"
+ <joro@8bytes.org>, "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>, "linux-arm-msm@vger.kernel.org"
+ <linux-arm-msm@vger.kernel.org>, "m.szyprowski@samsung.com"
+ <m.szyprowski@samsung.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "tn@semihalf.com" <tn@semihalf.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>
+Subject: RE: [PATCH V9 00/11] IOMMU probe deferral support
+Date: Fri, 24 Mar 2017 09:27:51 +0000
+Message-ID: <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <58D49845.9060407@hisilicon.com>
+ <0ea8022b-a19b-335d-6cc6-81510196f891@codeaurora.org>
+In-Reply-To: <0ea8022b-a19b-335d-6cc6-81510196f891@codeaurora.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-VGhhbmtzIGZvciB5b3VyIGluZm8uDQpJIHNlZS4NCg0KUmVnYXJkcywNCkplcnJ5IChKdW53ZWkg
-WmhhbmcpDQoNCkxpbnV4IEJhc2UgR3JhcGhpY3MNClNSREMgU29mdHdhcmUgRGV2ZWxvcG1lbnQN
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCg0KDQo+IC0tLS0tT3JpZ2lu
-YWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEFsZXggRGV1Y2hlciBbbWFpbHRvOmFsZXhkZXVjaGVy
-QGdtYWlsLmNvbV0NCj4gU2VudDogVGh1cnNkYXksIE1hcmNoIDE2LCAyMDE3IDEwOjI1DQo+IFRv
-OiBaaGFuZywgSmVycnkNCj4gQ2M6IENocmlzdGlhbiBLw7ZuaWc7IFpob3UsIERhdmlkKENodW5N
-aW5nKTsgQXl5YXBwYSBDaDsgbGludXgtDQo+IHBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtl
-cm5lbEB2Z2VyLmtlcm5lbC5vcmc7IGRyaS0NCj4gZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3Jn
-OyBwbGF0Zm9ybS1kcml2ZXIteDg2QHZnZXIua2VybmVsLm9yZzsNCj4gaGVsZ2Fhc0BrZXJuZWwu
-b3JnOyBhbWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZw0KPiBTdWJqZWN0OiBSZTogW1BBVENI
-IDQvNF0gZHJtL2FtZGdwdTogcmVzaXplIFZSQU0gQkFSIGZvciBDUFUgYWNjZXNzDQo+IA0KPiBP
-biBXZWQsIE1hciAxNSwgMjAxNyBhdCAxMDoxOSBQTSwgWmhhbmcsIEplcnJ5IDxKZXJyeS5aaGFu
-Z0BhbWQuY29tPiB3cm90ZToNCj4gPj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gPj4g
-RnJvbTogZHJpLWRldmVsIFttYWlsdG86ZHJpLWRldmVsLWJvdW5jZXNAbGlzdHMuZnJlZWRlc2t0
-b3Aub3JnXSBPbg0KPiA+PiBCZWhhbGYgT2YgQ2hyaXN0aWFuIEs/bmlnDQo+ID4+IFNlbnQ6IFdl
-ZG5lc2RheSwgTWFyY2ggMTUsIDIwMTcgMTc6MjkNCj4gPj4gVG86IFpob3UsIERhdmlkKENodW5N
-aW5nKTsgQXl5YXBwYSBDaA0KPiA+PiBDYzogbGludXgtcGNpQHZnZXIua2VybmVsLm9yZzsgbGlu
-dXgta2VybmVsQHZnZXIua2VybmVsLm9yZzsgYW1kLQ0KPiA+PiBnZnhAbGlzdHMuZnJlZWRlc2t0
-b3Aub3JnOyBwbGF0Zm9ybS1kcml2ZXIteDg2QHZnZXIua2VybmVsLm9yZzsNCj4gPj4gaGVsZ2Fh
-c0BrZXJuZWwub3JnOyBkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3JnDQo+ID4+IFN1Ympl
-Y3Q6IFJlOiBbUEFUQ0ggNC80XSBkcm0vYW1kZ3B1OiByZXNpemUgVlJBTSBCQVIgZm9yIENQVSBh
-Y2Nlc3MNCj4gPj4NCj4gPj4gWWVzLCBleGFjdGx5IHRoYXQuDQo+ID4NCj4gPiAoSSdtIG5vdCBm
-YW1pbGlhciB3aXRoIFBDSSB0b28gbXVjaC4pDQo+ID4gSXMgdGhlcmUgYW55IHJlc3RyaWN0IGZv
-ciBQQ0kgZGV2aWNlPw0KPiA+IEknbSBjb25jZXJuaW5nIGlmIGFueSBQQ0kgY291bGRuJ3Qgc3Vw
-cG9ydCBpdCBvbiBzb21lIG1vdGhlcmJvYXJkLg0KPiANCj4gSXQgZGVwZW5kcyBvbiB0aGUgUENJ
-IHJvb3QgYnJpZGdlLiAgVGhpcyBwYXRjaCBzZXQgb25seSBpbXBsZW1lbnRzIHN1cHBvcnQgZm9y
-DQo+IEFNRCByb290IGJyaWRnZXMuICBJbnRlbCBhbmQgb3RoZXIgdmVuZG9ycyB3b3VsZCBuZWVk
-IHNpbWlsYXIgY29kZS4NCj4gDQo+IEFsZXgNCj4gDQo+ID4NCj4gPj4NCj4gPj4gQ2hyaXN0aWFu
-Lg0KPiA+Pg0KPiA+PiBBbSAxNS4wMy4yMDE3IHVtIDA5OjI1IHNjaHJpZWIgWmhvdSwgRGF2aWQo
-Q2h1bk1pbmcpOg0KPiA+PiA+IERvZXMgdGhhdCBtZWFucyB3ZSBkb24ndCBuZWVkIGludmlzaWJs
-ZSB2cmFtIGxhdGVyPw0KPiA+PiA+DQo+ID4+ID4gRGF2aWQNCj4gPj4gPg0KPiA+PiA+IC0tLS0t
-T3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4+ID4gRnJvbTogZHJpLWRldmVsIFttYWlsdG86ZHJp
-LWRldmVsLWJvdW5jZXNAbGlzdHMuZnJlZWRlc2t0b3Aub3JnXSBPbg0KPiA+PiA+IEJlaGFsZiBP
-ZiBDaHJpc3RpYW4gSz9uaWcNCj4gPj4gPiBTZW50OiBXZWRuZXNkYXksIE1hcmNoIDE1LCAyMDE3
-IDM6MzggUE0NCj4gPj4gPiBUbzogQXl5YXBwYSBDaCA8YXl5YXBwYS5jaC5saW51eEBnbWFpbC5j
-b20+DQo+ID4+ID4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2
-Z2VyLmtlcm5lbC5vcmc7DQo+ID4+ID4gYW1kLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmc7IHBs
-YXRmb3JtLWRyaXZlci14ODZAdmdlci5rZXJuZWwub3JnOw0KPiA+PiA+IGhlbGdhYXNAa2VybmVs
-Lm9yZzsgZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZw0KPiA+PiA+IFN1YmplY3Q6IFJl
-OiBbUEFUQ0ggNC80XSBkcm0vYW1kZ3B1OiByZXNpemUgVlJBTSBCQVIgZm9yIENQVSBhY2Nlc3MN
-Cj4gPj4gPg0KPiA+PiA+IENhcml6em8gaXMgYW4gQVBVIGFuZCByZXNpemluZyBCQVJzIGlzbid0
-IG5lZWRlZCBub3Igc3VwcG9ydGVkIHRoZXJlLg0KPiA+PiA+IFRoZSBDUFUgY2FuIGFjY2VzcyB0
-aGUgZnVsbCBzdG9sZW4gVlJBTSBkaXJlY3RseSBvbiB0aGF0IGhhcmR3YXJlLg0KPiA+PiA+DQo+
-ID4+ID4gQXMgZmFyIGFzIEkga25vdyBBU0lDcyB3aXRoIHN1cHBvcnQgZm9yIHRoaXMgYXJlIFRv
-bmdhLCBGaWppIGFuZCBhbGwgUG9sYXJpcw0KPiB2YXJpYW50cy4NCj4gPj4gPg0KPiA+PiA+IENo
-cmlzdGlhbi4NCj4gPj4gPg0KPiA+PiA+IEFtIDE1LjAzLjIwMTcgdW0gMDg6MjMgc2NocmllYiBB
-eXlhcHBhIENoOg0KPiA+PiA+PiBJcyBpdCBwb3NzaWJsZSBvbiBDYXJyaXpvIGFzaWNzPyBPciBv
-bmx5IHN1cHBvcnRzIG9uIG5ld2VyIGFzaWNzPw0KPiA+PiA+Pg0KPiA+PiA+PiBPbiBNb24sIE1h
-ciAxMywgMjAxNyBhdCA2OjExIFBNLCBDaHJpc3RpYW4gS8O2bmlnDQo+ID4+ID4+IDxkZWF0aHNp
-bXBsZUB2b2RhZm9uZS5kZT4gd3JvdGU6DQo+ID4+ID4+PiBGcm9tOiBDaHJpc3RpYW4gS8O2bmln
-IDxjaHJpc3RpYW4ua29lbmlnQGFtZC5jb20+DQo+ID4+ID4+Pg0KPiA+PiA+Pj4gVHJ5IHRvIHJl
-c2l6ZSBCQVIwIHRvIGxldCBDUFUgYWNjZXNzIGFsbCBvZiBWUkFNLg0KPiA+PiA+Pj4NCj4gPj4g
-Pj4+IFNpZ25lZC1vZmYtYnk6IENocmlzdGlhbiBLw7ZuaWcgPGNocmlzdGlhbi5rb2VuaWdAYW1k
-LmNvbT4NCj4gPj4gPj4+IC0tLQ0KPiA+PiA+Pj4gICAgZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRn
-cHUvYW1kZ3B1LmggICAgICAgIHwgIDEgKw0KPiA+PiA+Pj4gICAgZHJpdmVycy9ncHUvZHJtL2Ft
-ZC9hbWRncHUvYW1kZ3B1X2RldmljZS5jIHwgMjkNCj4gPj4gKysrKysrKysrKysrKysrKysrKysr
-KysrKysrKysNCj4gPj4gPj4+ICAgIGRyaXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2dtY192N18w
-LmMgICAgICB8ICA4ICsrKysrLS0tDQo+ID4+ID4+PiAgICBkcml2ZXJzL2dwdS9kcm0vYW1kL2Ft
-ZGdwdS9nbWNfdjhfMC5jICAgICAgfCAgOCArKysrKy0tLQ0KPiA+PiA+Pj4gICAgNCBmaWxlcyBj
-aGFuZ2VkLCA0MCBpbnNlcnRpb25zKCspLCA2IGRlbGV0aW9ucygtKQ0KPiA+PiA+Pj4NCj4gPj4g
-Pj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9hbWRncHUuaA0KPiA+
-PiA+Pj4gYi9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9hbWRncHUuaA0KPiA+PiA+Pj4gaW5k
-ZXggM2I4MWRlZC4uOTA1ZGVkOSAxMDA2NDQNCj4gPj4gPj4+IC0tLSBhL2RyaXZlcnMvZ3B1L2Ry
-bS9hbWQvYW1kZ3B1L2FtZGdwdS5oDQo+ID4+ID4+PiArKysgYi9kcml2ZXJzL2dwdS9kcm0vYW1k
-L2FtZGdwdS9hbWRncHUuaA0KPiA+PiA+Pj4gQEAgLTE3MTksNiArMTcxOSw3IEBAIHVpbnQ2NF90
-IGFtZGdwdV90dG1fdHRfcHRlX2ZsYWdzKHN0cnVjdA0KPiA+PiBhbWRncHVfZGV2aWNlICphZGV2
-LCBzdHJ1Y3QgdHRtX3R0ICp0dG0sDQo+ID4+ID4+PiAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgIHN0cnVjdCB0dG1fbWVtX3JlZyAqbWVtKTsNCj4gPj4gPj4+ICAgIHZvaWQgYW1k
-Z3B1X3ZyYW1fbG9jYXRpb24oc3RydWN0IGFtZGdwdV9kZXZpY2UgKmFkZXYsIHN0cnVjdA0KPiA+
-PiBhbWRncHVfbWMgKm1jLCB1NjQgYmFzZSk7DQo+ID4+ID4+PiAgICB2b2lkIGFtZGdwdV9ndHRf
-bG9jYXRpb24oc3RydWN0IGFtZGdwdV9kZXZpY2UgKmFkZXYsIHN0cnVjdA0KPiA+PiA+Pj4gYW1k
-Z3B1X21jICptYyk7DQo+ID4+ID4+PiArdm9pZCBhbWRncHVfcmVzaXplX2JhcjAoc3RydWN0IGFt
-ZGdwdV9kZXZpY2UgKmFkZXYpOw0KPiA+PiA+Pj4gICAgdm9pZCBhbWRncHVfdHRtX3NldF9hY3Rp
-dmVfdnJhbV9zaXplKHN0cnVjdCBhbWRncHVfZGV2aWNlDQo+ID4+ID4+PiAqYWRldiwNCj4gPj4g
-dTY0IHNpemUpOw0KPiA+PiA+Pj4gICAgaW50IGFtZGdwdV90dG1faW5pdChzdHJ1Y3QgYW1kZ3B1
-X2RldmljZSAqYWRldik7DQo+ID4+ID4+PiAgICB2b2lkIGFtZGdwdV90dG1fZmluaShzdHJ1Y3Qg
-YW1kZ3B1X2RldmljZSAqYWRldik7IGRpZmYgLS1naXQNCj4gPj4gPj4+IGEvZHJpdmVycy9ncHUv
-ZHJtL2FtZC9hbWRncHUvYW1kZ3B1X2RldmljZS5jDQo+ID4+ID4+PiBiL2RyaXZlcnMvZ3B1L2Ry
-bS9hbWQvYW1kZ3B1L2FtZGdwdV9kZXZpY2UuYw0KPiA+PiA+Pj4gaW5kZXggMTE4ZjRlNi4uOTI5
-NTVmZSAxMDA2NDQNCj4gPj4gPj4+IC0tLSBhL2RyaXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2Ft
-ZGdwdV9kZXZpY2UuYw0KPiA+PiA+Pj4gKysrIGIvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUv
-YW1kZ3B1X2RldmljZS5jDQo+ID4+ID4+PiBAQCAtNjkyLDYgKzY5MiwzNSBAQCB2b2lkIGFtZGdw
-dV9ndHRfbG9jYXRpb24oc3RydWN0DQo+ID4+ID4+PiBhbWRncHVfZGV2aWNlDQo+ID4+ICphZGV2
-LCBzdHJ1Y3QgYW1kZ3B1X21jICptYykNCj4gPj4gPj4+ICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgbWMtPmd0dF9zaXplID4+IDIwLCBtYy0+Z3R0X3N0YXJ0LCBtYy0+Z3R0X2VuZCk7DQo+ID4+
-ID4+PiAgICB9DQo+ID4+ID4+Pg0KPiA+PiA+Pj4gKy8qKg0KPiA+PiA+Pj4gKyAqIGFtZGdwdV9y
-ZXNpemVfYmFyMCAtIHRyeSB0byByZXNpemUgQkFSMA0KPiA+PiA+Pj4gKyAqDQo+ID4+ID4+PiAr
-ICogQGFkZXY6IGFtZGdwdV9kZXZpY2UgcG9pbnRlcg0KPiA+PiA+Pj4gKyAqDQo+ID4+ID4+PiAr
-ICogVHJ5IHRvIHJlc2l6ZSBCQVIwIHRvIG1ha2UgYWxsIFZSQU0gQ1BVIGFjY2Vzc2libGUuDQo+
-ID4+ID4+PiArICovDQo+ID4+ID4+PiArdm9pZCBhbWRncHVfcmVzaXplX2JhcjAoc3RydWN0IGFt
-ZGdwdV9kZXZpY2UgKmFkZXYpIHsNCj4gPj4gPj4+ICsgICAgICAgdTMyIHNpemUgPSBtYXgoaWxv
-ZzIoYWRldi0+bWMucmVhbF92cmFtX3NpemUgLSAxKSArIDEsIDIwKSAtIDIwOw0KPiA+PiA+Pj4g
-KyAgICAgICBpbnQgcjsNCj4gPj4gPj4+ICsNCj4gPj4gPj4+ICsgICAgICAgciA9IHBjaV9yZXNp
-emVfcmVzb3VyY2UoYWRldi0+cGRldiwgMCwgc2l6ZSk7DQo+ID4+ID4+PiArDQo+ID4+ID4+PiAr
-ICAgICAgIGlmIChyID09IC1FTk9UU1VQUCkgew0KPiA+PiA+Pj4gKyAgICAgICAgICAgICAgIC8q
-IFRoZSBoYXJkd2FyZSBkb24ndCBzdXBwb3J0IHRoZSBleHRlbnNpb24uICovDQo+ID4+ID4+PiAr
-ICAgICAgICAgICAgICAgcmV0dXJuOw0KPiA+PiA+Pj4gKw0KPiA+PiA+Pj4gKyAgICAgICB9IGVs
-c2UgaWYgKHIgPT0gLUVOT1NQQykgew0KPiA+PiA+Pj4gKyAgICAgICAgICAgICAgIERSTV9JTkZP
-KCJOb3QgZW5vaWdoIFBDSSBhZGRyZXNzIHNwYWNlIGZvciBhIGxhcmdlIEJBUi4iKTsNCj4gPj4g
-Pj4+ICsgICAgICAgfSBlbHNlIGlmIChyKSB7DQo+ID4+ID4+PiArICAgICAgICAgICAgICAgRFJN
-X0VSUk9SKCJQcm9ibGVtIHJlc2l6aW5nIEJBUjAgKCVkKS4iLCByKTsNCj4gPj4gPj4+ICsgICAg
-ICAgfQ0KPiA+PiA+Pj4gKw0KPiA+PiA+Pj4gKyAgICAgICAvKiBSZWluaXQgdGhlIGRvb3JiZWxs
-IG1hcHBpbmcsIGl0IGlzIG1vc3QgbGlrZWx5IG1vdmVkIGFzIHdlbGwgKi8NCj4gPj4gPj4+ICsg
-ICAgICAgYW1kZ3B1X2Rvb3JiZWxsX2ZpbmkoYWRldik7DQo+ID4+ID4+PiArICAgICAgIEJVR19P
-TihhbWRncHVfZG9vcmJlbGxfaW5pdChhZGV2KSk7DQo+ID4+ID4+PiArfQ0KPiA+PiA+Pj4gKw0K
-PiA+PiA+Pj4gICAgLyoNCj4gPj4gPj4+ICAgICAqIEdQVSBoZWxwZXJzIGZ1bmN0aW9uLg0KPiA+
-PiA+Pj4gICAgICovDQo+ID4+ID4+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJtL2FtZC9h
-bWRncHUvZ21jX3Y3XzAuYw0KPiA+PiA+Pj4gYi9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9n
-bWNfdjdfMC5jDQo+ID4+ID4+PiBpbmRleCBkYzliNmQ2Li4zNmE3YWE1IDEwMDY0NA0KPiA+PiA+
-Pj4gLS0tIGEvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvZ21jX3Y3XzAuYw0KPiA+PiA+Pj4g
-KysrIGIvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvZ21jX3Y3XzAuYw0KPiA+PiA+Pj4gQEAg
-LTM2NywxMyArMzY3LDE1IEBAIHN0YXRpYyBpbnQgZ21jX3Y3XzBfbWNfaW5pdChzdHJ1Y3QNCj4g
-Pj4gPj4+IGFtZGdwdV9kZXZpY2UNCj4gPj4gKmFkZXYpDQo+ID4+ID4+PiAgICAgICAgICAgICAg
-ICAgICBicmVhazsNCj4gPj4gPj4+ICAgICAgICAgICB9DQo+ID4+ID4+PiAgICAgICAgICAgYWRl
-di0+bWMudnJhbV93aWR0aCA9IG51bWNoYW4gKiBjaGFuc2l6ZTsNCj4gPj4gPj4+IC0gICAgICAg
-LyogQ291bGQgYXBlciBzaXplIHJlcG9ydCAwID8gKi8NCj4gPj4gPj4+IC0gICAgICAgYWRldi0+
-bWMuYXBlcl9iYXNlID0gcGNpX3Jlc291cmNlX3N0YXJ0KGFkZXYtPnBkZXYsIDApOw0KPiA+PiA+
-Pj4gLSAgICAgICBhZGV2LT5tYy5hcGVyX3NpemUgPSBwY2lfcmVzb3VyY2VfbGVuKGFkZXYtPnBk
-ZXYsIDApOw0KPiA+PiA+Pj4gICAgICAgICAgIC8qIHNpemUgaW4gTUIgb24gc2kgKi8NCj4gPj4g
-Pj4+ICAgICAgICAgICBhZGV2LT5tYy5tY192cmFtX3NpemUgPSBSUkVHMzIobW1DT05GSUdfTUVN
-U0laRSkgKg0KPiA+PiA+Pj4gMTAyNFVMTCAqDQo+ID4+IDEwMjRVTEw7DQo+ID4+ID4+PiAgICAg
-ICAgICAgYWRldi0+bWMucmVhbF92cmFtX3NpemUgPSBSUkVHMzIobW1DT05GSUdfTUVNU0laRSkg
-Kg0KPiA+PiA+Pj4gMTAyNFVMTA0KPiA+PiA+Pj4gKiAxMDI0VUxMOw0KPiA+PiA+Pj4NCj4gPj4g
-Pj4+ICsgICAgICAgaWYgKCEoYWRldi0+ZmxhZ3MgJiBBTURfSVNfQVBVKSkNCj4gPj4gPj4+ICsg
-ICAgICAgICAgICAgICBhbWRncHVfcmVzaXplX2JhcjAoYWRldik7DQo+ID4+ID4+PiArICAgICAg
-IGFkZXYtPm1jLmFwZXJfYmFzZSA9IHBjaV9yZXNvdXJjZV9zdGFydChhZGV2LT5wZGV2LCAwKTsN
-Cj4gPj4gPj4+ICsgICAgICAgYWRldi0+bWMuYXBlcl9zaXplID0gcGNpX3Jlc291cmNlX2xlbihh
-ZGV2LT5wZGV2LCAwKTsNCj4gPj4gPj4+ICsNCj4gPj4gPj4+ICAgICNpZmRlZiBDT05GSUdfWDg2
-XzY0DQo+ID4+ID4+PiAgICAgICAgICAgaWYgKGFkZXYtPmZsYWdzICYgQU1EX0lTX0FQVSkgew0K
-PiA+PiA+Pj4gICAgICAgICAgICAgICAgICAgYWRldi0+bWMuYXBlcl9iYXNlID0NCj4gPj4gPj4+
-ICgodTY0KVJSRUczMihtbU1DX1ZNX0ZCX09GRlNFVCkpIDw8IDIyOyBkaWZmIC0tZ2l0DQo+ID4+
-ID4+PiBhL2RyaXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2dtY192OF8wLmMNCj4gPj4gPj4+IGIv
-ZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvZ21jX3Y4XzAuYw0KPiA+PiA+Pj4gaW5kZXggYzA4
-N2IwMC4uNzc2MWFkMyAxMDA2NDQNCj4gPj4gPj4+IC0tLSBhL2RyaXZlcnMvZ3B1L2RybS9hbWQv
-YW1kZ3B1L2dtY192OF8wLmMNCj4gPj4gPj4+ICsrKyBiL2RyaXZlcnMvZ3B1L2RybS9hbWQvYW1k
-Z3B1L2dtY192OF8wLmMNCj4gPj4gPj4+IEBAIC00NTksMTMgKzQ1OSwxNSBAQCBzdGF0aWMgaW50
-IGdtY192OF8wX21jX2luaXQoc3RydWN0DQo+ID4+ID4+PiBhbWRncHVfZGV2aWNlDQo+ID4+ICph
-ZGV2KQ0KPiA+PiA+Pj4gICAgICAgICAgICAgICAgICAgYnJlYWs7DQo+ID4+ID4+PiAgICAgICAg
-ICAgfQ0KPiA+PiA+Pj4gICAgICAgICAgIGFkZXYtPm1jLnZyYW1fd2lkdGggPSBudW1jaGFuICog
-Y2hhbnNpemU7DQo+ID4+ID4+PiAtICAgICAgIC8qIENvdWxkIGFwZXIgc2l6ZSByZXBvcnQgMCA/
-ICovDQo+ID4+ID4+PiAtICAgICAgIGFkZXYtPm1jLmFwZXJfYmFzZSA9IHBjaV9yZXNvdXJjZV9z
-dGFydChhZGV2LT5wZGV2LCAwKTsNCj4gPj4gPj4+IC0gICAgICAgYWRldi0+bWMuYXBlcl9zaXpl
-ID0gcGNpX3Jlc291cmNlX2xlbihhZGV2LT5wZGV2LCAwKTsNCj4gPj4gPj4+ICAgICAgICAgICAv
-KiBzaXplIGluIE1CIG9uIHNpICovDQo+ID4+ID4+PiAgICAgICAgICAgYWRldi0+bWMubWNfdnJh
-bV9zaXplID0gUlJFRzMyKG1tQ09ORklHX01FTVNJWkUpICoNCj4gPj4gPj4+IDEwMjRVTEwgKg0K
-PiA+PiAxMDI0VUxMOw0KPiA+PiA+Pj4gICAgICAgICAgIGFkZXYtPm1jLnJlYWxfdnJhbV9zaXpl
-ID0gUlJFRzMyKG1tQ09ORklHX01FTVNJWkUpICoNCj4gPj4gPj4+IDEwMjRVTEwNCj4gPj4gPj4+
-ICogMTAyNFVMTDsNCj4gPj4gPj4+DQo+ID4+ID4+PiArICAgICAgIGlmICghKGFkZXYtPmZsYWdz
-ICYgQU1EX0lTX0FQVSkpDQo+ID4+ID4+PiArICAgICAgICAgICAgICAgYW1kZ3B1X3Jlc2l6ZV9i
-YXIwKGFkZXYpOw0KPiA+PiA+Pj4gKyAgICAgICBhZGV2LT5tYy5hcGVyX2Jhc2UgPSBwY2lfcmVz
-b3VyY2Vfc3RhcnQoYWRldi0+cGRldiwgMCk7DQo+ID4+ID4+PiArICAgICAgIGFkZXYtPm1jLmFw
-ZXJfc2l6ZSA9IHBjaV9yZXNvdXJjZV9sZW4oYWRldi0+cGRldiwgMCk7DQo+ID4+ID4+PiArDQo+
-ID4+ID4+PiAgICAjaWZkZWYgQ09ORklHX1g4Nl82NA0KPiA+PiA+Pj4gICAgICAgICAgIGlmIChh
-ZGV2LT5mbGFncyAmIEFNRF9JU19BUFUpIHsNCj4gPj4gPj4+ICAgICAgICAgICAgICAgICAgIGFk
-ZXYtPm1jLmFwZXJfYmFzZSA9DQo+ID4+ID4+PiAoKHU2NClSUkVHMzIobW1NQ19WTV9GQl9PRkZT
-RVQpKSA8PCAyMjsNCj4gPj4gPj4+IC0tDQo+ID4+ID4+PiAyLjcuNA0KPiA+PiA+Pj4NCj4gPj4g
-Pj4+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQo+ID4+
-ID4+PiBkcmktZGV2ZWwgbWFpbGluZyBsaXN0DQo+ID4+ID4+PiBkcmktZGV2ZWxAbGlzdHMuZnJl
-ZWRlc2t0b3Aub3JnDQo+ID4+ID4+PiBodHRwczovL2xpc3RzLmZyZWVkZXNrdG9wLm9yZy9tYWls
-bWFuL2xpc3RpbmZvL2RyaS1kZXZlbA0KPiA+PiA+DQo+ID4+ID4gX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCj4gPj4gPiBkcmktZGV2ZWwgbWFpbGluZyBs
-aXN0DQo+ID4+ID4gZHJpLWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZw0KPiA+PiA+IGh0dHBz
-Oi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJpLWRldmVsDQo+ID4+
-ID4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCj4gPj4g
-PiBhbWQtZ2Z4IG1haWxpbmcgbGlzdA0KPiA+PiA+IGFtZC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Au
-b3JnDQo+ID4+ID4gaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5m
-by9hbWQtZ2Z4DQo+ID4+DQo+ID4+DQo+ID4+IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fDQo+ID4+IGRyaS1kZXZlbCBtYWlsaW5nIGxpc3QNCj4gPj4gZHJp
-LWRldmVsQGxpc3RzLmZyZWVkZXNrdG9wLm9yZw0KPiA+PiBodHRwczovL2xpc3RzLmZyZWVkZXNr
-dG9wLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2RyaS1kZXZlbA0KPiA+IF9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQo+ID4gYW1kLWdmeCBtYWlsaW5nIGxpc3QN
-Cj4gPiBhbWQtZ2Z4QGxpc3RzLmZyZWVkZXNrdG9wLm9yZw0KPiA+IGh0dHBzOi8vbGlzdHMuZnJl
-ZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vYW1kLWdmeA0K
+Hi Sricharan,
+
+> -----Original Message-----
+> From: Sricharan R [mailto:sricharan@codeaurora.org]
+> Sent: Friday, March 24, 2017 7:10 AM
+> To: Wangzhou (B); robin.murphy@arm.com; will.deacon@arm.com;
+> joro@8bytes.org; lorenzo.pieralisi@arm.com; iommu@lists.linux-
+> foundation.org; linux-arm-kernel@lists.infradead.org; linux-arm-
+> msm@vger.kernel.org; m.szyprowski@samsung.com;
+> bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+> acpi@vger.kernel.org; tn@semihalf.com; hanjun.guo@linaro.org;
+> okaya@codeaurora.org
+> Cc: Shameerali Kolothum Thodi
+> Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
+> 
+> Hi Zhou,
+> 
+> On 3/24/2017 9:23 AM, Zhou Wang wrote:
+> > On 2017/3/10 3:00, Sricharan R wrote:
+> >> This series calls the dma ops configuration for the devices at a
+> >> generic place so that it works for all busses.
+> >> The dma_configure_ops for a device is now called during the
+> >> device_attach callback just before the probe of the bus/driver is
+> >> called. Similarly dma_deconfigure is called during
+> >> device/driver_detach path.
+> >>
+> >> pci_bus_add_devices    (platform/amba)(_device_create/driver_register)
+> >>        |                         |
+> >> pci_bus_add_device     (device_add/driver_register)
+> >>        |                         |
+> >> device_attach           device_initial_probe
+> >>        |                         |
+> >> __device_attach_driver    __device_attach_driver
+> >>        |
+> >> driver_probe_device
+> >>        |
+> >> really_probe
+> >>        |
+> >> dma_configure
+> >>
+> >> Similarly on the device/driver_unregister path
+> >> __device_release_driver is called which inturn calls dma_deconfigure.
+> >>
+> >> Rebased the series against mainline 4.11-rc1. Applies and builds
+> >> cleanly against mainline and linux-next. There is a conflict with
+> >> patch#9 against iommu-next, but that should go away eventually as
+> >> iommu-next is rebased against 4.11-rc1.
+> >>
+> >> * Tested with platform and pci devices for probe deferral
+> >>   and reprobe on arm64 based platform.
+> >
+> > Hi Sricharan,
+> >
+> > I applied this series on v4.11-rc1 to test PCIe pass through in
+> > HiSilicon
+> > D05 board(with Intel 82599 networking card). It failed.
+> >
+> > After I used:
+> >
+> > echo vfio-pci > /sys/bus/pci/devices/0002:81:10.0/driver_override
+> > echo 0002:81:10.0 > /sys/bus/pci/drivers/ixgbevf/unbind
+> > echo 0002:81:10.0 > /sys/bus/pci/drivers_probe
+> >
+> > to bind vfio-pci driver to Intel 82599 networking card VF.
+> >
+> > I got log in host:
+> > [...]
+> > [  414.275818] ixgbevf: Intel(R) 10 Gigabit PCI Express Virtual
+> > Function Network Driver - version 3.2.2-k [  414.275824] ixgbevf: Copyright
+> (c) 2009 - 2015 Intel Corporation.
+> > [  414.276647] ixgbe 0002:81:00.0 eth12: SR-IOV enabled with 1 VFs [
+> > 414.342252] pcieport 0002:80:00.0: can't derive routing for PCI INT A
+> > [  414.342255] ixgbe 0002:81:00.0: PCI INT A: no GSI [  414.343348]
+> > ixgbe 0002:81:00.0: Multiqueue Enabled: Rx Queue count = 4, Tx Queue
+> > count = 4 [  414.448135] pci 0002:81:10.0: [8086:10ed] type 00 class
+> > 0x020000 [  414.448713] iommu: Adding device 0002:81:10.0 to group 4 [
+> > 414.449798] ixgbevf 0002:81:10.0: enabling device (0000 -> 0002) [
+> > 414.451101] ixgbevf 0002:81:10.0: PF still in reset state.  Is the PF interface
+> up?
+> > [  414.451103] ixgbevf 0002:81:10.0: Assigning random MAC address [
+> > 414.451414] ixgbevf 0002:81:10.0: be:30:8f:ed:f8:02 [  414.451417]
+> > ixgbevf 0002:81:10.0: MAC: 1 [  414.451418] ixgbevf 0002:81:10.0:
+> > Intel(R) 82599 Virtual Function [  414.464271] VFIO - User Level
+> > meta-driver version: 0.3 [  414.570074] ixgbe 0002:81:00.0: registered
+> > PHC device on eth12
+> > [  414.700493] specified DMA range outside IOMMU capability
+> <-- error here
+> > [  414.700496] Failed to set up IOMMU for device 0002:81:10.0; retaining
+> platform DMA ops        <-- error here
+> 
+> Looks like this triggers the start of the bug.
+> So the below check in iommu_dma_init_domain fails,
+> 
+>          if (domain->geometry.force_aperture) {
+>                  if (base > domain->geometry.aperture_end ||
+>                      base + size <= domain->geometry.aperture_start) {
+> 
+> and the rest goes out of sync after that. Can you print out the base,
+> aperture_start and end values to see why the check fails ?
+
+dev_info(dev, "0x%llx 0x%llx, 0x%llx 0x%llx, 0x%llx 0x%llx\n", base, size, domain->geometry.aperture_start, domain->geometry.aperture_end, *dev->dma_mask, dev->coherent_dma_mask);
+
+[  183.752100] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff, 0xffffffff 0xffffffff
+.....
+[  319.508037] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff, 0xffffffffffffffff 0xffffffffffffffff
+
+Yes, size seems to be the problem here. When the VF  device gets attached to vfio-pci,
+somehow the dev->coherent_dma_mask is set to 64 bits and size become zero.
+
+@@ -107,7 +107,7 @@ int of_dma_configure(struct device *dev, struct device_node *np)
+  	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+  	if (ret < 0) {
+  		dma_addr = offset = 0;
+ -		size = dev->coherent_dma_mask + 1;
+ +		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+
+@@ -1386,7 +1387,8 @@ int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+  	 * Assume dma valid range starts at 0 and covers the whole
+  	 * coherent_dma_mask.
+  	 */
+ -	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+ +	size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+ +	arch_setup_dma_ops(dev, 0, size, iommu,
+  			   attr == DEV_DMA_COHERENT);
+
+With the above fixes, DT boot works fine. But we still get the below crash on ACPI
+
+> > [  402.581445] kernel BUG at drivers/iommu/arm-smmu-v3.c:1064!
+> > [  402.587007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+> > [  402.592479] Modules linked in: vfio_iommu_type1 vfio_pci irqbypass
+> vfio_virqfd vfio ixgbevf ixgb
+
+> The change that this series does is trying to add the dma/iommu ops to the
+> device after the iommu is actually probed.
+> So in your working case, does the device initially gets hooked to iommu_ops
+> and the above same check passes in working case ?
+
+I believe so. Because didn't notice the "specified DMA range outside IOMMU capability"
+in the working case.
+ 
+Thanks,
+Shameer
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
