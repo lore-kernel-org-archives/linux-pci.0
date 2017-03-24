@@ -1,64 +1,97 @@
-Return-Path: <SRS0=Ad0z=2W=intel.com=mayurkumar.patel@kernel.org>
-Return-Path: <SRS0=Ad0z=2W=intel.com=mayurkumar.patel@kernel.org>
-From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"timur@codeaurora.org" <timur@codeaurora.org>,
-	"linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>, open list
-	<linux-kernel@vger.kernel.org>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH V3] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-Date: Mon, 13 Mar 2017 08:49:30 +0000
-Message-ID: <92EBB4272BF81E4089A7126EC1E7B28466670D75@IRSMSX101.ger.corp.intel.com>
-References: <1489005551-23598-1-git-send-email-okaya@codeaurora.org>
- <20170309222751.GD19517@bhelgaas-glaptop.roam.corp.google.com>
- <ec7ee607-60f3-7e1a-b1cd-8e4534ab98eb@codeaurora.org>
-In-Reply-To: <ec7ee607-60f3-7e1a-b1cd-8e4534ab98eb@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: RE: [PATCH V9 00/11] IOMMU probe deferral support
+Date: Fri, 24 Mar 2017 15:09:49 +0000
+Message-ID: <5FC3163CFD30C246ABAA99954A238FA81750BC12@lhreml504-mbs>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <58D49845.9060407@hisilicon.com>
+ <0ea8022b-a19b-335d-6cc6-81510196f891@codeaurora.org>
+ <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
+ <20170324144340.GA17560@red-moon>
+In-Reply-To: <20170324144340.GA17560@red-moon>
 MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Sricharan R <sricharan@codeaurora.org>, "joro@8bytes.org" <joro@8bytes.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "Wangzhou \(B\)" <wangzhou1@hisilicon.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "tn@semihalf.com" <tn@semihalf.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
 
->
->Hi Bjorn,
->
->On 3/9/2017 5:27 PM, Bjorn Helgaas wrote:
->> How hard do you think it would be to rework this path slightly so we:
->>
->>   - call pcie_aspm_init_link_state() for every device, maybe from
->>     pci_init_capabilities()
->>
->>   - for bridges, have pcie_aspm_init_link_state() allocate a
->>     link_state, regardless of whether it currently has any children,
->>     and save the ASPM settings done by firmware
->>
->>   - for endpoints, have pcie_aspm_init_link_state() do the actual ASPM
->>     setup of the link as it currently does
->>
->>   - for endpoints, change pcie_aspm_exit_link_state() so it cleans up
->>     the device's own state and disables ASPM if necessary, but doesn't
->>     remove the parent's link_state
->>
->>   - for bridges, change pcie_aspm_exit_link_state() so it frees the
->>     bridge's own link_state
->
->Thanks for the feedback, Let me take a stab at this.
->Sinan
 
-Thanks Bjorn and Sinan. I will wait for new patch-sets from Sinan.
+> -----Original Message-----
+> From: Lorenzo Pieralisi [mailto:lorenzo.pieralisi@arm.com]
+> Sent: Friday, March 24, 2017 2:44 PM
+> To: Shameerali Kolothum Thodi
+> Cc: Sricharan R; Wangzhou (B); robin.murphy@arm.com;
+> will.deacon@arm.com; joro@8bytes.org; iommu@lists.linux-foundation.org;
+> linux-arm-kernel@lists.infradead.org; linux-arm-msm@vger.kernel.org;
+> m.szyprowski@samsung.com; bhelgaas@google.com; linux-
+> pci@vger.kernel.org; linux-acpi@vger.kernel.org; tn@semihalf.com;
+> hanjun.guo@linaro.org; okaya@codeaurora.org
+> Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
+> 
+> On Fri, Mar 24, 2017 at 09:27:51AM +0000, Shameerali Kolothum Thodi wrote:
+> 
+> [...]
+> 
+> > @@ -107,7 +107,7 @@ int of_dma_configure(struct device *dev, struct
+> device_node *np)
+> >   	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+> >   	if (ret < 0) {
+> >   		dma_addr = offset = 0;
+> >  -		size = dev->coherent_dma_mask + 1;
+> >  +		size = max(dev->coherent_dma_mask, dev-
+> >coherent_dma_mask + 1);
+> >
+> > @@ -1386,7 +1387,8 @@ int acpi_dma_configure(struct device *dev, enum
+> dev_dma_attr attr)
+> >   	 * Assume dma valid range starts at 0 and covers the whole
+> >   	 * coherent_dma_mask.
+> >   	 */
+> >  -	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1,
+> iommu,
+> >  +	size = max(dev->coherent_dma_mask, dev->coherent_dma_mask +
+> 1);
+> 
+> size is not defined in acpi_dma_configure(), so there is something missing in
+> the diff above, just to make sure we are testing the same thing.
+> 
+> Mind posting kernel logs with and without patch above (fixed) for DT boot
+> and ACPI boot please.
 
->
->--
->Sinan Kaya
->Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technol=
-ogies, Inc.
->Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux =
-Foundation Collaborative Project.
-Intel Deutschland GmbH
-Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-Tel: +49 89 99 8853-0, www.intel.de
-Managing Directors: Christin Eisenschmid, Christian Lamprechter
-Chairperson of the Supervisory Board: Nicole Lau
-Registered Office: Munich
-Commercial Register: Amtsgericht Muenchen HRB 186928
+Sure. We will rerun the tests to create the logs again and share.
+
+Also need to double check, v9 patches are applied correctly on top of our branch.
+If I remember correctly v7 was fine with DT(didn't test with ACPI). But then as 
+Shicharan said it had that size fix.
+
+Thanks,
+Shameer
+[...]
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
