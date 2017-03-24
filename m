@@ -1,52 +1,58 @@
-Return-Path: <SRS0=0EeQ=3I=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=0EeQ=3I=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v3 0/2] Tango PCIe controller support
-From: Mason <slash.tmp@free.fr>
-To: linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
- <1561c381-bfa7-6e4d-a016-8ad7293a60ce@free.fr>
-Message-ID: <88af8239-bef4-dfd5-2280-66104bee72e8@free.fr>
-Date: Sat, 1 Apr 2017 00:05:27 +0200
-MIME-Version: 1.0
-In-Reply-To: <1561c381-bfa7-6e4d-a016-8ad7293a60ce@free.fr>
-Content-Type: text/plain; charset=ISO-8859-15
+Return-Path: <SRS0=ccIc=3B=linuxonhyperv.com=kys@kernel.org>
+Return-Path: <SRS0=ccIc=3B=linuxonhyperv.com=kys@kernel.org>
+From: kys@exchange.microsoft.com
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	devel@linuxdriverproject.org,
+	olaf@aepfle.de,
+	apw@canonical.com,
+	vkuznets@redhat.com,
+	jasowang@redhat.com,
+	leann.ogasawara@canonical.com,
+	marcelo.cerri@canonical.com,
+	sthemmin@microsoft.com
+Cc: "K. Y. Srinivasan" <kys@microsoft.com>,
+	<stable@vger.kernel.org>
+Subject: [PATCH 1/2] PCI: hv: Fix a bug in specifying CPU affinity
+Date: Fri, 24 Mar 2017 11:07:20 -0700
+Message-Id: <1490378842-26950-1-git-send-email-kys@exchange.microsoft.com>
+In-Reply-To: <1490378800-26907-1-git-send-email-kys@exchange.microsoft.com>
+References: <1490378800-26907-1-git-send-email-kys@exchange.microsoft.com>
+Reply-To: kys@microsoft.com
 List-ID: <linux-pci.vger.kernel.org>
 
-On 30/03/2017 22:56, Mason wrote:
+From: K. Y. Srinivasan <kys@microsoft.com>
 
-> I've run into an issue.
-> 
-> If I boot the system with earlyprintk enabled (as I've
-> been doing throughout my dev), things work as expected.
-> 
-> But if I boot with earlyprintk disabled, then the system
-> does not "see" the PCIe board, because reading the vendor
-> ID returns 0xffffffff.
-> 
-> What we think is happening, is that when earlyprintk is
-> disabled, the system proceeds much faster through the
-> various inits, and the PCIe init happens when PCIe
-> link training has not completed yet.
-> 
-> If that is the case, then it seems I would need to check
-> the link state in my probe function.
+When we have 32 or more CPUs in the affinity mask, we should
+use a special constant to specify that to the host. Fix this issue.
 
-I determined empirically that link training takes around
-10-15 ms. Though I suppose this might depend on the
-specific PCIe board? (I'm only considering x1 link.)
+Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/pci/host/pci-hyperv.c |   10 +++++++---
+ 1 files changed, 7 insertions(+), 3 deletions(-)
 
-So I added an msleep(20); in the probe function, and in
-the config_read callback, I check the link status on the
-first read to the device.
-
-Should I msleep(40) to be safe?
-
-Regards.
+diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+index ada9856..2c2ea1e 100644
+--- a/drivers/pci/host/pci-hyperv.c
++++ b/drivers/pci/host/pci-hyperv.c
+@@ -897,9 +897,13 @@ static void hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ 	 * processors because Hyper-V only supports 64 in a guest.
+ 	 */
+ 	affinity = irq_data_get_affinity_mask(data);
+-	for_each_cpu_and(cpu, affinity, cpu_online_mask) {
+-		int_pkt->int_desc.cpu_mask |=
+-			(1ULL << vmbus_cpu_number_to_vp_number(cpu));
++	if (cpumask_weight(affinity) >= 32) {
++		int_pkt->int_desc.cpu_mask = -1ULL;
++	} else {
++		for_each_cpu_and(cpu, affinity, cpu_online_mask) {
++			int_pkt->int_desc.cpu_mask |=
++				(1ULL << vmbus_cpu_number_to_vp_number(cpu));
++		}
+ 	}
+ 
+ 	ret = vmbus_sendpacket(hpdev->hbus->hdev->channel, int_pkt,
+-- 
+1.7.1
