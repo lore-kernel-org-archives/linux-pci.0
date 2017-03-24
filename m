@@ -1,198 +1,181 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [GIT PULL] PCI: Support for configurable PCI endpoint 
-Date: Mon, 27 Mar 2017 15:14:56 +0530
-Message-ID: <20170327094520.3129-1-kishon@ti.com>
+Return-Path: <SRS0=9oiv=3B=semihalf.com=tn@kernel.org>
+Return-Path: <SRS0=9oiv=3B=semihalf.com=tn@kernel.org>
+Subject: Re: [PATCH 2/2] PCI: Add legacy firmware support for Cavium ThunderX
+ host controller
+To: helgaas@kernel.org, Lorenzo.Pieralisi@arm.com,
+ robert.richter@caviumnetworks.com, ddaney@caviumnetworks.com,
+ Vadim.Lomovtsev@caviumnetworks.com, rafael@kernel.org
+References: <1489564155-3881-1-git-send-email-tn@semihalf.com>
+ <1489564155-3881-3-git-send-email-tn@semihalf.com>
+Cc: Sunil.Goutham@cavium.com, geethasowjanya.akula@gmail.com,
+ linu.cherian@cavium.com, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-acpi@vger.kernel.org
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <bc7b66de-9070-1561-440e-ac12124fc268@semihalf.com>
+Date: Fri, 24 Mar 2017 16:55:20 +0100
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1489564155-3881-3-git-send-email-tn@semihalf.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-Please find the pull request for PCI endpoint support below. I've
-also included all the history here.
-
-Changes from v4:
-*) add #syscon-cells property and used of_parse_phandle_with_args
-   to perform a configuration in syscon module (as suggested by
-   Rob Herring)
-*) Remove unnecessary white space.
-
-Changes from v3:
-*) fixed a typo and adapted to https://lkml.org/lkml/2017/3/13/562.
-
-Changes from v2:
-*) changed the configfs structure as suggested by Christoph Hellwig. With
-   this change the framework creates configfs entry for EP function driver
-   and EP controller. Previously these entries have to be created by the
-   the user. (Haven't changed the epc core or epf core except for invoking
-   configfs APIs to create entries for EP function driver and EP controller.
-   That's mostly because the EP function device can still be created by
-   directly invoking the epf core API without using configfs).
-*) Now the user has to use configfs entry 'start' to start the link.
-   This was previously done by the function driver. However in the case of
-   multi function EP, the function driver shouldn't start the link.
-
-Changes from v1:
-*) The preparation patches for adding EP support is removed and is sent
-   separately
-*) Added device ID for DRA74x/DRA72x and used it instead of
-   using "PCI_ANY_ID"
-*) Added userguide for PCI endpoint test function
-
-Major Improvements from RFC:
- *) support multi-function devices (hw supported not virtual)
- *) Access host side buffers
- *) Raise MSI interrupts
- *) Add user space program to use the host side PCI driver
- *) Adapt all other users of designware to use the new design (only
-    compile tested. Since I have only dra7xx boards, the new design
-    has only been tested in dra7xx. I'd require the help of others
-    to test the platforms they have access to).
-
-This series has been developed over 4.11-rc1 + [1]
-[1] -> https://lkml.org/lkml/2017/3/13/562
-
-Let me know if this has to be re-based to some of your branch.
-
-Thanks
-Kishon
-
-The following changes since commit 623e87fec8ab7867fb51b3079196bd10718a60ce:
-
-  PCI: dwc: dra7xx: Push request_irq call to the bottom of probe (2017-03-22 20:35:30 +0530)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git tags/pci-endpoint-for-4.12
-
-for you to fetch changes up to e98bf80074be4654faae42fe0f5a622a776b6fdd:
-
-  ARM: DRA7: clockdomain: Change the CLKTRCTRL of CM_PCIE_CLKSTCTRL to SW_WKUP (2017-03-27 15:08:22 +0530)
-
-----------------------------------------------------------------
-pci: endpoint: for 4.12
-
- *) Add PCI endpoint core layer
- *) Modify designware and dra7xx driver to be configured in EP mode
- *) Add a PCI endpoint *test* function driver and corresponding host
-    driver
-
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-
-----------------------------------------------------------------
-Kishon Vijay Abraham I (24):
-      PCI: endpoint: Add EP core layer to enable EP controller and EP functions
-      Documentation: PCI: Guide to use PCI Endpoint Core Layer
-      PCI: endpoint: Introduce configfs entry for configuring EP functions
-      Documentation: PCI: Guide to use pci endpoint configfs
-      PCI: endpoint: Create configfs entry for EPC device and EPF driver
-      Documentation: PCI: Add specification for the *pci test* function device
-      PCI: endpoint: functions: Add an EP function to test PCI
-      Documentation: PCI: Add binding documentation for pci-test endpoint function
-      PCI: dwc: designware: Add EP mode support
-      dt-bindings: PCI: Add dt bindings for pci designware EP mode
-      PCI: dwc: dra7xx: Facilitate wrapper and msi interrupts to be enabled independently
-      PCI: dwc: dra7xx: Add EP mode support
-      dt-bindings: PCI: dra7xx: Add dt bindings for pci dra7xx EP mode
-      dt-bindings: mfd: syscon: Add documentation for #syscon-cells property
-      PCI: dwc: dra7xx: Workaround for errata id i870
-      dt-bindings: PCI: dra7xx: Add dt bindings to enable unaligned access
-      PCI: Add device IDs for DRA74x and DRA72x
-      misc: Add host side pci driver for pci test function device
-      Documentation: misc-devices: Add Documentation for pci-endpoint-test driver
-      tools: PCI: Add a userspace tool to test PCI endpoint
-      tools: PCI: Add sample test script to invoke pcitest
-      Documentation: PCI: Add userguide for PCI endpoint test function
-      MAINTAINERS: add PCI EP maintainer
-      ARM: DRA7: clockdomain: Change the CLKTRCTRL of CM_PCIE_CLKSTCTRL to SW_WKUP
-
- Documentation/PCI/00-INDEX                                |  10 +++
- Documentation/PCI/endpoint/function/binding/pci-test.txt  |  17 +++++
- Documentation/PCI/endpoint/pci-endpoint-cfs.txt           | 105 ++++++++++++++++++++++++++
- Documentation/PCI/endpoint/pci-endpoint.txt               | 215 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- Documentation/PCI/endpoint/pci-test-function.txt          |  66 ++++++++++++++++
- Documentation/PCI/endpoint/pci-test-howto.txt             | 179 +++++++++++++++++++++++++++++++++++++++++++
- Documentation/devicetree/bindings/mfd/syscon.txt          |   2 +
- Documentation/devicetree/bindings/pci/designware-pcie.txt |  26 +++++--
- Documentation/devicetree/bindings/pci/ti-pci.txt          |  42 +++++++++--
- Documentation/misc-devices/pci-endpoint-test.txt          |  35 +++++++++
- MAINTAINERS                                               |   9 +++
- arch/arm/mach-omap2/clockdomains7xx_data.c                |   2 +-
- drivers/Makefile                                          |   2 +
- drivers/misc/Kconfig                                      |   7 ++
- drivers/misc/Makefile                                     |   1 +
- drivers/misc/pci_endpoint_test.c                          | 534 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/Kconfig                                       |   1 +
- drivers/pci/dwc/Kconfig                                   |  36 ++++++++-
- drivers/pci/dwc/Makefile                                  |   5 +-
- drivers/pci/dwc/pci-dra7xx.c                              | 268 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----
- drivers/pci/dwc/pcie-designware-ep.c                      | 342 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/dwc/pcie-designware.c                         | 125 ++++++++++++++++++++++++++++++
- drivers/pci/dwc/pcie-designware.h                         | 112 +++++++++++++++++++++++++++
- drivers/pci/endpoint/Kconfig                              |  31 ++++++++
- drivers/pci/endpoint/Makefile                             |   7 ++
- drivers/pci/endpoint/functions/Kconfig                    |  12 +++
- drivers/pci/endpoint/functions/Makefile                   |   5 ++
- drivers/pci/endpoint/functions/pci-epf-test.c             | 510 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/endpoint/pci-ep-cfs.c                         | 509 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/endpoint/pci-epc-core.c                       | 579 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/endpoint/pci-epc-mem.c                        | 143 +++++++++++++++++++++++++++++++++++
- drivers/pci/endpoint/pci-epf-core.c                       | 351 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/mod_devicetable.h                           |  10 +++
- include/linux/pci-ep-cfs.h                                |  41 ++++++++++
- include/linux/pci-epc.h                                   | 144 +++++++++++++++++++++++++++++++++++
- include/linux/pci-epf.h                                   | 162 +++++++++++++++++++++++++++++++++++++++
- include/linux/pci_ids.h                                   |   2 +
- include/uapi/linux/Kbuild                                 |   1 +
- include/uapi/linux/pcitest.h                              |  19 +++++
- tools/pci/pcitest.c                                       | 186 +++++++++++++++++++++++++++++++++++++++++++++
- tools/pci/pcitest.sh                                      |  56 ++++++++++++++
- 41 files changed, 4869 insertions(+), 40 deletions(-)
- create mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.txt
- create mode 100644 Documentation/PCI/endpoint/pci-endpoint-cfs.txt
- create mode 100644 Documentation/PCI/endpoint/pci-endpoint.txt
- create mode 100644 Documentation/PCI/endpoint/pci-test-function.txt
- create mode 100644 Documentation/PCI/endpoint/pci-test-howto.txt
- create mode 100644 Documentation/misc-devices/pci-endpoint-test.txt
- create mode 100644 drivers/misc/pci_endpoint_test.c
- create mode 100644 drivers/pci/dwc/pcie-designware-ep.c
- create mode 100644 drivers/pci/endpoint/Kconfig
- create mode 100644 drivers/pci/endpoint/Makefile
- create mode 100644 drivers/pci/endpoint/functions/Kconfig
- create mode 100644 drivers/pci/endpoint/functions/Makefile
- create mode 100644 drivers/pci/endpoint/functions/pci-epf-test.c
- create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
- create mode 100644 drivers/pci/endpoint/pci-epc-core.c
- create mode 100644 drivers/pci/endpoint/pci-epc-mem.c
- create mode 100644 drivers/pci/endpoint/pci-epf-core.c
- create mode 100644 include/linux/pci-ep-cfs.h
- create mode 100644 include/linux/pci-epc.h
- create mode 100644 include/linux/pci-epf.h
- create mode 100644 include/uapi/linux/pcitest.h
- create mode 100644 tools/pci/pcitest.c
- create mode 100644 tools/pci/pcitest.sh
-
--- 
-2.11.0
+On 15.03.2017 08:49, Tomasz Nowicki wrote:
+> During early days of PCI quirks support ThunderX firmware did not provide
+> PNP0c02 node with PCI configuration space and PEM-specific register ranges.
+> This means that for legacy FW we are not reserving these resources and
+> cannot gather PEM-specific resources for further PEM initialization.
+>
+> In order to support already deployed legacy FW calculate PEM-specific ranges
+> and provide resources reservation as fallback scenario into PEM driver when
+> we could not gather PEM reg base from ACPI tables.
+>
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
+> ---
+>  drivers/pci/host/pci-thunder-pem.c | 56 ++++++++++++++++++++++++++++++++++++--
+>  1 file changed, 54 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+> index e354010..e0aa194 100644
+> --- a/drivers/pci/host/pci-thunder-pem.c
+> +++ b/drivers/pci/host/pci-thunder-pem.c
+> @@ -14,6 +14,7 @@
+>   * Copyright (C) 2015 - 2016 Cavium, Inc.
+>   */
+>
+> +#include <linux/bitfield.h>
+>  #include <linux/kernel.h>
+>  #include <linux/init.h>
+>  #include <linux/of_address.h>
+> @@ -319,6 +320,50 @@ static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg,
+>
+>  #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
+>
+> +#define PEM_RES_BASE		0x87e0c0000000UL
+> +#define PEM_NODE_MASK		GENMASK(45, 44)
+> +#define PEM_INDX_MASK		GENMASK(26, 24)
+> +#define PEM_MIN_DOM_IN_NODE	4
+> +#define PEM_MAX_DOM_IN_NODE	10
+> +
+> +static void thunder_pem_reserve_range(struct device *dev, int seg,
+> +				      struct resource *r)
+> +{
+> +	resource_size_t start = r->start, end = r->end;
+> +	struct resource *res;
+> +	const char *regionid;
+> +
+> +	regionid = kasprintf(GFP_KERNEL, "PEM RC:%d", seg);
+> +	if (!regionid)
+> +		return;
+> +
+> +	res = request_mem_region(start, end - start + 1, regionid);
+> +	if (res)
+> +		res->flags &= ~IORESOURCE_BUSY;
+> +	else
+> +		kfree(regionid);
+> +
+> +	dev_info(dev, "%pR %s reserved\n", r,
+> +		 res ? "has been" : "could not be");
+> +}
+> +
+> +static void thunder_pem_legacy_fw(struct acpi_pci_root *root,
+> +				 struct resource *res_pem)
+> +{
+> +	int node = acpi_get_node(root->device->handle);
+> +	int index;
+> +
+> +	if (node == NUMA_NO_NODE)
+> +		node = 0;
+> +
+> +	index = root->segment - PEM_MIN_DOM_IN_NODE;
+> +	index -= node * PEM_MAX_DOM_IN_NODE;
+> +	res_pem->start = PEM_RES_BASE | FIELD_PREP(PEM_NODE_MASK, node) |
+> +					FIELD_PREP(PEM_INDX_MASK, index);
+> +	res_pem->end = res_pem->start + SZ_16M - 1;
+> +	res_pem->flags = IORESOURCE_MEM;
+> +}
+> +
+>  static int thunder_pem_acpi_init(struct pci_config_window *cfg)
+>  {
+>  	struct device *dev = cfg->parent;
+> @@ -332,9 +377,16 @@ static int thunder_pem_acpi_init(struct pci_config_window *cfg)
+>  		return -ENOMEM;
+>
+>  	ret = acpi_get_rc_resources(dev, "CAVA02B", root->segment, res_pem);
+> +
+> +	/*
+> +	 * If we fail to gather resources it means that we run with old
+> +	 * FW where we need to calculate PEM-specific resources manually.
+> +	 */
+>  	if (ret) {
+> -		dev_err(dev, "can't get rc base address\n");
+> -		return ret;
+> +		thunder_pem_legacy_fw(root, res_pem);
+> +		/* Reserve PEM specific resources and PCI configuration space */
+> +		thunder_pem_reserve_range(dev, root->segment, res_pem);
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Looks like I screwed up PEM resource size for reservation. We cannot 
+reserve full 16M here since devices will not able to request their 
+resources later on:
+pcieport 0004:1f:00.0: can't enable device: BAR 0 [mem 
+0x87e0c0f00000-0x87e0c0ffffff 64bit] not claimed
+
+SZ_64K is what we need to reserve.
+
+Bjorn can you please apply below fix:
+
+@@ -327,21 +327,20 @@ static void thunder_pem_legacy_fw(struct 
+acpi_pci_root *root,
+  	int node = acpi_get_node(root->device->handle);
+  	int index;
+
+  	if (node == NUMA_NO_NODE)
+  		node = 0;
+
+  	index = root->segment - PEM_MIN_DOM_IN_NODE;
+  	index -= node * PEM_MAX_DOM_IN_NODE;
+  	res_pem->start = PEM_RES_BASE | FIELD_PREP(PEM_NODE_MASK, node) |
+  					FIELD_PREP(PEM_INDX_MASK, index);
+-	res_pem->end = res_pem->start + SZ_16M - 1;
+  	res_pem->flags = IORESOURCE_MEM;
+  }
+
+  static int thunder_pem_acpi_init(struct pci_config_window *cfg)
+  {
+  	struct device *dev = cfg->parent;
+  	struct acpi_device *adev = to_acpi_device(dev);
+  	struct acpi_pci_root *root = acpi_driver_data(adev);
+  	struct resource *res_pem;
+  	int ret;
+@@ -351,22 +350,29 @@ static int thunder_pem_acpi_init(struct 
+pci_config_window *cfg)
+  		return -ENOMEM;
+
+  	ret = acpi_get_rc_resources(dev, "CAVA02B", root->segment, res_pem);
+
+  	/*
+  	 * If we fail to gather resources it means that we run with old
+  	 * FW where we need to calculate PEM-specific resources manually.
+  	 */
+  	if (ret) {
+  		thunder_pem_legacy_fw(root, res_pem);
+-		/* Reserve PEM specific resources and PCI configuration space */
++		/*
++		 * Reserve 64K size PEM specific resources. The full 16M range
++		 * size is required for thunder_pem_init() call.
++		 */
++		res_pem->end = res_pem->start + SZ_64K - 1;
+  		thunder_pem_reserve_range(dev, root->segment, res_pem);
++		res_pem->end = res_pem->start + SZ_16M - 1;
++
++		/* and PCI configuration space */
+  		thunder_pem_reserve_range(dev, root->segment, &cfg->res);
+  	}
+
+  	return thunder_pem_init(dev, cfg, res_pem);
+  }
+
+My apology for not paying attention.
+
+Thanks,
+Tomasz
