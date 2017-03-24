@@ -1,128 +1,63 @@
-Return-Path: <SRS0=RbNJ=3F=semihalf.com=tn@kernel.org>
-Return-Path: <SRS0=RbNJ=3F=semihalf.com=tn@kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	Lorenzo.Pieralisi@arm.com,
-	robert.richter@caviumnetworks.com,
-	ddaney@caviumnetworks.com,
-	Vadim.Lomovtsev@caviumnetworks.com,
-	rafael@kernel.org
-Cc: Sunil.Goutham@cavium.com,
-	geethasowjanya.akula@gmail.com,
-	linu.cherian@cavium.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH 2/2] PCI: Add legacy firmware support for Cavium ThunderX host controller
-Date: Tue, 28 Mar 2017 21:21:36 +0200
-Message-Id: <1490728896-30520-1-git-send-email-tn@semihalf.com>
-In-Reply-To: <1489564155-3881-3-git-send-email-tn@semihalf.com>
-References: <1489564155-3881-3-git-send-email-tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from 8bytes.org ([81.169.241.247]:51244 "EHLO theia.8bytes.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935796AbdCXLAs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 24 Mar 2017 07:00:48 -0400
+Date: Fri, 24 Mar 2017 12:00:45 +0100
+From: Joerg Roedel <joro@8bytes.org>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Cc: Harv Abdulhamid <harba@qti.qualcomm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Shanker Donthineni <shankerd@qti.qualcomm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sinan Kaya <okaya@qti.qualcomm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Nate Watterson <nwatters@qti.qualcomm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+Subject: Re: [RFC PATCH 24/30] iommu: Specify PASID state when unbinding a
+ task
+Message-ID: <20170324110045.GM7266@8bytes.org>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-25-jean-philippe.brucker@arm.com>
+ <20170322154429.GE7266@8bytes.org>
+ <e2bb4c67-9b61-01cf-cc17-68088cdc5e5b@arm.com>
+ <20170322225320.GF7266@8bytes.org>
+ <a093bc07-a345-a689-9d97-f15a306f922d@arm.com>
+ <20170323143014.GK7266@8bytes.org>
+ <20170323145311.GA22972@e106794-lin.localdomain>
+ <20170323165218.GL7266@8bytes.org>
+ <9d318e88-11af-6dab-b30e-d6b5c02443fe@arm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <9d318e88-11af-6dab-b30e-d6b5c02443fe@arm.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-During early days of PCI quirks support ThunderX firmware did not provide
-PNP0c02 node with PCI configuration space and PEM-specific register ranges.
-This means that for legacy FW we are not reserving these resources and
-cannot gather PEM-specific resources for further PEM initialization.
+On Thu, Mar 23, 2017 at 05:03:46PM +0000, Jean-Philippe Brucker wrote:
+> On 23/03/17 16:52, Joerg Roedel wrote:
+> > Thanks for that, I have a closer look. Is that stopper packet visible to
+> > software (e.g. is an entry created in the queue)?
+> 
+> As far as I understand, it should be added to the queue like a normal PPR,
+> and software should check the R/W/L flags combination. For SMMU at least,
+> it is the same. The only difference is that when the PRI queue overflows,
+> the SMMU would discard a Stop Marker instead of sending an automated
+> response to the device (as it would do with others PPR that have the L
+> flag.) Software shouldn't send a response to a Stop Marker either.
 
-In order to support already deployed legacy FW calculate PEM-specific ranges
-and provide resources reservation as fallback scenario into PEM driver when
-we could not gather PEM reg base from ACPI tables.
+The document you posted is an addition to the spec, so we can't rely on
+a stop marker being sent by a device when it shuts down a context.
+Current AMD GPUs don't send one, afaik.
 
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-Signed-off-by: Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
----
- drivers/pci/host/pci-thunder-pem.c | 62 ++++++++++++++++++++++++++++++++++++--
- 1 file changed, 60 insertions(+), 2 deletions(-)
+I think the best we can do is shutting down processing for this PASID
+when and inform the device driver, when we receive a stop marker. An
+additional, optional call-back would do the job.
 
-diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-index e354010..cea5814 100644
---- a/drivers/pci/host/pci-thunder-pem.c
-+++ b/drivers/pci/host/pci-thunder-pem.c
-@@ -14,6 +14,7 @@
-  * Copyright (C) 2015 - 2016 Cavium, Inc.
-  */
- 
-+#include <linux/bitfield.h>
- #include <linux/kernel.h>
- #include <linux/init.h>
- #include <linux/of_address.h>
-@@ -319,6 +320,49 @@ static int thunder_pem_init(struct device *dev, struct pci_config_window *cfg,
- 
- #if defined(CONFIG_ACPI) && defined(CONFIG_PCI_QUIRKS)
- 
-+#define PEM_RES_BASE		0x87e0c0000000UL
-+#define PEM_NODE_MASK		GENMASK(45, 44)
-+#define PEM_INDX_MASK		GENMASK(26, 24)
-+#define PEM_MIN_DOM_IN_NODE	4
-+#define PEM_MAX_DOM_IN_NODE	10
-+
-+static void thunder_pem_reserve_range(struct device *dev, int seg,
-+				      struct resource *r)
-+{
-+	resource_size_t start = r->start, end = r->end;
-+	struct resource *res;
-+	const char *regionid;
-+
-+	regionid = kasprintf(GFP_KERNEL, "PEM RC:%d", seg);
-+	if (!regionid)
-+		return;
-+
-+	res = request_mem_region(start, end - start + 1, regionid);
-+	if (res)
-+		res->flags &= ~IORESOURCE_BUSY;
-+	else
-+		kfree(regionid);
-+
-+	dev_info(dev, "%pR %s reserved\n", r,
-+		 res ? "has been" : "could not be");
-+}
-+
-+static void thunder_pem_legacy_fw(struct acpi_pci_root *root,
-+				 struct resource *res_pem)
-+{
-+	int node = acpi_get_node(root->device->handle);
-+	int index;
-+
-+	if (node == NUMA_NO_NODE)
-+		node = 0;
-+
-+	index = root->segment - PEM_MIN_DOM_IN_NODE;
-+	index -= node * PEM_MAX_DOM_IN_NODE;
-+	res_pem->start = PEM_RES_BASE | FIELD_PREP(PEM_NODE_MASK, node) |
-+					FIELD_PREP(PEM_INDX_MASK, index);
-+	res_pem->flags = IORESOURCE_MEM;
-+}
-+
- static int thunder_pem_acpi_init(struct pci_config_window *cfg)
- {
- 	struct device *dev = cfg->parent;
-@@ -332,9 +376,23 @@ static int thunder_pem_acpi_init(struct pci_config_window *cfg)
- 		return -ENOMEM;
- 
- 	ret = acpi_get_rc_resources(dev, "CAVA02B", root->segment, res_pem);
-+
-+	/*
-+	 * If we fail to gather resources it means that we run with old
-+	 * FW where we need to calculate PEM-specific resources manually.
-+	 */
- 	if (ret) {
--		dev_err(dev, "can't get rc base address\n");
--		return ret;
-+		thunder_pem_legacy_fw(root, res_pem);
-+		/*
-+		 * Reserve 64K size PEM specific resources. The full 16M range
-+		 * size is required for thunder_pem_init() call.
-+		 */
-+		res_pem->end = res_pem->start + SZ_64K - 1;
-+		thunder_pem_reserve_range(dev, root->segment, res_pem);
-+		res_pem->end = res_pem->start + SZ_16M - 1;
-+
-+		/* Reserve PCI configuration space as well. */
-+		thunder_pem_reserve_range(dev, root->segment, &cfg->res);
- 	}
- 
- 	return thunder_pem_init(dev, cfg, res_pem);
--- 
-2.7.4
+
+
+	Joerg
