@@ -1,95 +1,142 @@
-Return-Path: <SRS0=Pck9=2K=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Pck9=2K=deltatee.com=logang@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1488091997-12843-1-git-send-email-logang@deltatee.com>
- <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
-Cc: Keith Busch <keith.busch@intel.com>, Myron Stowe <myron.stowe@gmail.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Geert Uytterhoeven <geert+renesas@glider.be>,
- Jonathan Corbet <corbet@lwn.net>, "David S. Miller" <davem@davemloft.net>,
- Andrew Morton <akpm@linux-foundation.org>,
- Emil Velikov <emil.l.velikov@gmail.com>,
- Mauro Carvalho Chehab <mchehab@kernel.org>,
- Guenter Roeck <linux@roeck-us.net>,
- Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
- Linus Walleij <linus.walleij@linaro.org>,
- Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
- Stefan Berger <stefanb@linux.vnet.ibm.com>, Wei Zhang <wzhang@fb.com>,
- Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
- Stephen Bates <stephen.bates@microsemi.com>, linux-pci@vger.kernel.org,
- linux-doc@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <4a867c32-ed29-bc98-c7cb-6315243e664a@deltatee.com>
-Date: Wed, 1 Mar 2017 15:24:27 -0700
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
+To: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>,
+ "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+ "robin.murphy@arm.com" <robin.murphy@arm.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "joro@8bytes.org" <joro@8bytes.org>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "tn@semihalf.com" <tn@semihalf.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <58D49845.9060407@hisilicon.com>
+ <0ea8022b-a19b-335d-6cc6-81510196f891@codeaurora.org>
+ <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <d9d33133-859a-0189-76c1-c3ec3abdaed6@codeaurora.org>
+Date: Fri, 24 Mar 2017 18:20:13 +0530
 MIME-Version: 1.0
-In-Reply-To: <20170301214120.GA30451@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH v5 0/4] New Microsemi PCI Switch Management Driver
+In-Reply-To: <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Shameer,
 
 
-On 01/03/17 02:41 PM, Bjorn Helgaas wrote:
-> I don't think this is indicating a bug in the PCI core (although I do
-> think a BUG_ON() here is an excessive response).  I think it's an
-> indication that the driver didn't disconnect its ISR.  Without more
-> details of the failure it's hard to tell if the BUG_ON is a symptom of
-> a problem in the driver or what.
+>>> [  414.700493] specified DMA range outside IOMMU capability
+>> <-- error here
+>>> [  414.700496] Failed to set up IOMMU for device 0002:81:10.0; retaining
+>> platform DMA ops        <-- error here
+>>
+>> Looks like this triggers the start of the bug.
+>> So the below check in iommu_dma_init_domain fails,
+>>
+>>          if (domain->geometry.force_aperture) {
+>>                  if (base > domain->geometry.aperture_end ||
+>>                      base + size <= domain->geometry.aperture_start) {
+>>
+>> and the rest goes out of sync after that. Can you print out the base,
+>> aperture_start and end values to see why the check fails ?
+>
+> dev_info(dev, "0x%llx 0x%llx, 0x%llx 0x%llx, 0x%llx 0x%llx\n", base, size, domain->geometry.aperture_start, domain->geometry.aperture_end, *dev->dma_mask, dev->coherent_dma_mask);
+>
+> [  183.752100] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff, 0xffffffff 0xffffffff
+> .....
+> [  319.508037] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff, 0xffffffffffffffff 0xffffffffffffffff
+>
+> Yes, size seems to be the problem here. When the VF  device gets attached to vfio-pci,
+> somehow the dev->coherent_dma_mask is set to 64 bits and size become zero.
+>
+> @@ -107,7 +107,7 @@ int of_dma_configure(struct device *dev, struct device_node *np)
+>   	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>   	if (ret < 0) {
+>   		dma_addr = offset = 0;
+>  -		size = ';
+>  +		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+>
 
-Yes, my assumption was that when you force an unbind on the PCI core,
-it's designed to stop using the PCI device right away even if there are
-users using it. Thus it becomes the drivers responsibility to handle
-this situation.
+But without this series, size is still set as
+dev->coherent_dma_mask + 1 , somehow not sure how it works
+fine in that case ?
 
-> An "alive" flag feels racy, and I can't tell if it's really the best
-> way to deal with this, or if it's just avoiding the issue.  There must
-> be other drivers with the same cleanup issue -- do they handle it the
-> same way?
+I remember i had this change in the V7 patchset, but later
+dropped it for the reason that this change is not relevant
+for this series, but should be there/sent to address the 64bit
+overflow separately.
 
-I haven't done a comprehensive search, but it's very common for people
-to use (and this is what I've adopted again in v5):
+> @@ -1386,7 +1387,8 @@ int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+>   	 * Assume dma valid range starts at 0 and covers the whole
+>   	 * coherent_dma_mask.
+>   	 */
+>  -	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+>  +	size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+>  +	arch_setup_dma_ops(dev, 0, size, iommu,
+>   			   attr == DEV_DMA_COHERENT);
+>
+> With the above fixes, DT boot works fine. But we still get the below crash on ACPI
+>
+>>> [  402.581445] kernel BUG at drivers/iommu/arm-smmu-v3.c:1064!
 
-devm_request_irq(&pdev->dev, ...)
+Looks like this happens when the ste_live becomes true during
+the initial attach, but later without an detach,
+attach once again happens from vfio. Just thinking why the
+detach_dev is not happening only in ACPI case. Actually not
+having any of arm-smmuv3 or ACPI based setup in my place.
+Can i get some help by having some logs from the arm-smmv3
+driver ?
 
-In this way, the IRQs are released with the pci_dev (or often platform)
-and thus the BUG_ON never hits. However, it means any user space program
-waiting on an IRQ (like via a cdev call) will hang unless handled with
-other means. Exactly what those means are seems driver specific and not
-always obvious. I wouldn't be surprised if a lot of drivers get this
-aspect wrong.
+>>> [  402.587007] Internal error: Oops - BUG: 0 [#1] PREEMPT SMP
+>>> [  402.592479] Modules linked in: vfio_iommu_type1 vfio_pci irqbypass
+>> vfio_virqfd vfio ixgbevf ixgb
+>
+>> The change that this series does is trying to add the dma/iommu ops to the
+>> device after the iommu is actually probed.
+>> So in your working case, does the device initially gets hooked to iommu_ops
+>> and the above same check passes in working case ?
+>
+> I believe so. Because didn't notice the "specified DMA range outside IOMMU capability"
+> in the working case.
 
-A couple examples I've looked at:
+ok, as i said above not sure why the overflow does not affect without
+this series.
 
-1) drivers/dax/dax.c uses an alive flag without any mutexes, atomics or
-anything. So I don't know if it's racy or perhaps correct for other reasons.
-
-2) drivers/char/hw_random has a drop_current_rng that looks like it
-could easily be racy with the get_current_rng in the userspace flow.
-
-3) A couple of drivers drivers/char/tpm doesn't seem to have any
-protection at all and appears like they would continue to use io
-operations even after the they may get unmapped because the char device
-persists.
-
-So I'm not sure where you'd find a driver that does it correctly and in
-a simpler way..
-
-Another thing: based on comments in [1], a lot of people don't seem to
-realize that cdev instances can persist long after cdev_del so it's
-probably very common for drivers to get this wrong.
-
-Logan
-
-[1] https://lists.01.org/pipermail/linux-nvdimm/2017-February/009001.html
+Regards,
+  Sricharan
 
 
+>
+> Thanks,
+> Shameer
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
 
->>   To solve this, we've moved the pci release code back into the
->>   unregister function and reintroduced an alive flag. This time,
->>   however, the alive flag is protected by mrpc_mutex and we're very
->>   careful about what happens to devices still in use (they should
->>   all be released through the timeout path and an ENODEV error
->>   returned to userspace; while new commands are blocked with the
->>   same error).
+-- 
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a 
+member of Code Aurora Forum, hosted by The Linux Foundation
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
