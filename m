@@ -1,93 +1,88 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Elena Reshetova <elena.reshetova@intel.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org,
-        netdev@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
-        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, peterz@infradead.org,
-        Elena Reshetova <elena.reshetova@intel.com>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-Subject: [PATCH 09/29] drivers, md: convert table_device.count from atomic_t to refcount_t
-Date: Mon,  6 Mar 2017 16:20:56 +0200
-Message-Id: <1488810076-3754-10-git-send-email-elena.reshetova@intel.com>
-In-Reply-To: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
+MIME-Version: 1.0
+In-Reply-To: <20170322190019.GB20697@nazgul.tnic>
+References: <20170312115703.GA18197@nazgul.tnic> <20170312122621.GA2823@nazgul.tnic>
+ <CAHp75Ve7SWivf=TTuq-qA=iM20E==OmSZD2YAmt0LVJQg47Osg@mail.gmail.com>
+ <20170312222333.hm54nl2ul5iuixap@pd.tnic> <87shmhjfap.fsf@miraculix.mork.no>
+ <309B89C4C689E141A5FF6A0C5FB2118B8C5B3F9B@ORSMSX101.amr.corp.intel.com>
+ <20170314024033.GK802@shells.gnugeneration.com> <26D9FDECA4FBDD4AADA65D8E2FC68A4A10402F44@ORSMSX101.amr.corp.intel.com>
+ <20170322020445.GD802@shells.gnugeneration.com> <20170322021343.GE802@shells.gnugeneration.com>
+ <20170322190019.GB20697@nazgul.tnic>
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Date: Thu, 23 Mar 2017 23:18:31 -0700
+Message-ID: <CAL3LdT6CbZkyngugiPCqhNvT02tsTWsWfMT4KH41hrAEE3evAQ@mail.gmail.com>
+Subject: Re: [Intel-wired-lan] [BUG] 4.11.0-rc1 panic on shutdown X61s
+To: Borislav Petkov <bp@alien8.de>
+Cc: lkml@pengaru.com, "Bowers, AndrewX" <andrewx.bowers@intel.com>,
+        "Brown, Aaron F" <aaron.f.brown@intel.com>,
+        "vcaputo@pengaru.com" <vcaputo@pengaru.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        David Singleton <davsingl@cisco.com>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        khalidm <khalidm@cisco.com>,
+        Andy Shevchenko <andy.shevchenko@gmail.com>,
+        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+        =?UTF-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-refcount_t type and corresponding API should be
-used instead of atomic_t when the variable is used as
-a reference counter. This allows to avoid accidental
-refcounter overflows that might lead to use-after-free
-situations.
+On Wed, Mar 22, 2017 at 12:00 PM, Borislav Petkov <bp@alien8.de> wrote:
+> (Readding Jeff Kirsher who got dropped from the CC-list at some point.)
+>
+> On Tue, Mar 21, 2017 at 07:13:43PM -0700, lkml@pengaru.com wrote:
+>> > This is still broken as of 4.11.0-rc3 FYI.
+>> >
+>> > Upon resume:
+>> > [   45.828344] ------------[ cut here ]------------
+>> > [   45.828352] WARNING: CPU: 0 PID: 807 at drivers/pci/msi.c:1052 __pci_enable_msi_range+0x39c/0x3f0
+>> > [   45.828355] CPU: 0 PID: 807 Comm: kworker/u4:29 Not tainted 4.11.0-rc3 #52
+>> > [   45.828356] Hardware name: LENOVO 7668CTO/7668CTO, BIOS 7NETC2WW (2.22 ) 03/22/2011
+>> > [   45.828360] Workqueue: events_unbound async_run_entry_fn
+>> > [   45.828362] Call Trace:
+>> > [   45.828366]  dump_stack+0x4d/0x72
+>> > [   45.828369]  __warn+0xc7/0xf0
+>> > [   45.828371]  warn_slowpath_null+0x18/0x20
+>> > [   45.828372]  __pci_enable_msi_range+0x39c/0x3f0
+>> > [   45.828375]  ? e1000e_get_phy_info_igp+0x1c/0xf0
+>> > [   45.828377]  pci_enable_msi+0x15/0x30
+>> > [   45.828379]  e1000e_set_interrupt_capability+0xe0/0x130
+>> > [   45.828381]  e1000e_pm_thaw+0x1d/0x50
+>> > [   45.828383]  e1000e_pm_resume+0x20/0x30
+>> > [   45.828386]  pci_pm_resume+0x5f/0x90
+>> > [   45.828389]  dpm_run_callback+0x44/0x170
+>> > [   45.828391]  ? pci_pm_thaw+0x90/0x90
+>> > [   45.828393]  device_resume+0xce/0x1e0
+>> > [   45.828395]  async_resume+0x18/0x40
+>> > [   45.828396]  async_run_entry_fn+0x32/0xe0
+>> > [   45.828399]  process_one_work+0x13b/0x3e0
+>> > [   45.828400]  worker_thread+0x64/0x4a0
+>> > [   45.828402]  kthread+0x10f/0x150
+>> > [   45.828404]  ? process_one_work+0x3e0/0x3e0
+>> > [   45.828406]  ? __kthread_create_on_node+0x150/0x150
+>> > [   45.828409]  ret_from_fork+0x29/0x40
+>> > [   45.828411] ---[ end trace 56fad2d83af13529 ]---
+>> > [   45.828469] e1000e 0000:00:19.0 eth3: Failed to initialize MSI interrupts.  Falling back to legacy interrupts.
+>> > [   45.835944] PM: resume of devices complete after 364.406 msecs
+>> > [   45.836001] usb 2-1:1.0: rebind failed: -517
+>> > [   45.836316] PM: Finishing wakeup.
+>> >
+>>
+>> I never reported back on the results of reverting 7e54d9d063fa, it seems to fix
+>> the problem on my machine as well.
+>
+> Right, so I think we should revert soonish. That is, if you guys don't
+> have a fix yet. You can always try again during the next merge window.
+> Right now, I'm not testing -rc kernels on this box because of this. I
+> can always blacklist the networking driver but what good is that box
+> then...
+>
 
-Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Signed-off-by: David Windsor <dwindsor@gmail.com>
----
- drivers/md/dm.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+I have sent a patch to revert this offending commit through David
+Miller's net tree, sorry for the delay on this, I thought I had seen a
+patch to revert the offending commit earlier which is why I did not
+send this earlier.
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 9f37d7f..cba91c3 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -21,6 +21,7 @@
- #include <linux/delay.h>
- #include <linux/wait.h>
- #include <linux/pr.h>
-+#include <linux/refcount.h>
- 
- #define DM_MSG_PREFIX "core"
- 
-@@ -96,7 +97,7 @@ struct dm_md_mempools {
- 
- struct table_device {
- 	struct list_head list;
--	atomic_t count;
-+	refcount_t count;
- 	struct dm_dev dm_dev;
- };
- 
-@@ -680,10 +681,11 @@ int dm_get_table_device(struct mapped_device *md, dev_t dev, fmode_t mode,
- 
- 		format_dev_t(td->dm_dev.name, dev);
- 
--		atomic_set(&td->count, 0);
-+		refcount_set(&td->count, 1);
- 		list_add(&td->list, &md->table_devices);
-+	} else {
-+		refcount_inc(&td->count);
- 	}
--	atomic_inc(&td->count);
- 	mutex_unlock(&md->table_devices_lock);
- 
- 	*result = &td->dm_dev;
-@@ -696,7 +698,7 @@ void dm_put_table_device(struct mapped_device *md, struct dm_dev *d)
- 	struct table_device *td = container_of(d, struct table_device, dm_dev);
- 
- 	mutex_lock(&md->table_devices_lock);
--	if (atomic_dec_and_test(&td->count)) {
-+	if (refcount_dec_and_test(&td->count)) {
- 		close_table_device(td, md);
- 		list_del(&td->list);
- 		kfree(td);
-@@ -713,7 +715,7 @@ static void free_table_devices(struct list_head *devices)
- 		struct table_device *td = list_entry(tmp, struct table_device, list);
- 
- 		DMWARN("dm_destroy: %s still exists with %d references",
--		       td->dm_dev.name, atomic_read(&td->count));
-+		       td->dm_dev.name, refcount_read(&td->count));
- 		kfree(td);
- 	}
- }
 -- 
-2.7.4
+Cheers,
+Jeff
