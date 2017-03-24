@@ -1,138 +1,103 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [RFC PATCH v2 29/32] kvm: svm: Add support for SEV DEBUG_DECRYPT
- command
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:18:17 -0500
-Message-ID: <148846789744.2349.167641684941925238.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <linux-arch-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAK8P3a3RtSCGfbtpJDF2d30rLagPMY=HnnjYpBe+k1UxKrXOig@mail.gmail.com>
+References: <cover.1490188942.git.dwmw2@infradead.org> <4281f8e01b9fc5628cbf4a5c77abd642801e23c7.1490188942.git.dwmw2@infradead.org>
+ <CAK8P3a3RtSCGfbtpJDF2d30rLagPMY=HnnjYpBe+k1UxKrXOig@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 24 Mar 2017 17:16:43 +0100
+Message-ID: <CAK8P3a0+os4sNzmPYvm-MrsdppZEg9VKhQ9ROJf9DumXCHgnhA@mail.gmail.com>
+Subject: Re: [PATCH 17/17] arm64: Do not expose PCI mmap through procfs
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        linux-arch <linux-arch@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The command is used to decrypt guest memory region for debug purposes.
+On Fri, Mar 24, 2017 at 5:13 PM, Arnd Bergmann <arnd@arndb.de> wrote:
+> On Wed, Mar 22, 2017 at 2:25 PM, David Woodhouse <dwmw2@infradead.org> wrote:
+>> From: David Woodhouse <dwmw@amazon.co.uk>
+>>
+>> Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+>> ---
+>>  drivers/pci/proc.c | 5 +++++
+>>  1 file changed, 5 insertions(+)
+>>
+>> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+>> index 2d9cfa4..a940f4b 100644
+>> --- a/drivers/pci/proc.c
+>> +++ b/drivers/pci/proc.c
+>> @@ -17,6 +17,11 @@
+>>
+>>  static int proc_initialized;   /* = 0 */
+>>
+>> +#ifdef __aarch64__
+>> +/* ARM64 wants to be special and not expose this through /proc like everyone else */
+>> +#undef HAVE_PCI_MMAP
+>> +#endif
+>
+> I'd still prefer this to be a whitelist of the existing architectures using PCI
+> MMAP in procfs, there is really no reason for arm64 to be special, the
+> one thing we want to control here is whether new architectures (including
+> arm64) that have never had either the sysfs or the procfs interface
+> should get one or both of them.
+>
+> As it seems that there are important use cases for the sysfs interface
+> and your patch series will just make that work everywhere, I'd argue
+> that we should just always provide the sysfs interface now, and use
+> HAVE_PCI_MMAP only control the procfs interface.
+>
+> That way, we turn on the sysfs interface on arc, arm64, frv and tile
+> as well as any future architecture with PCI support, but leave
+> the procfs support as opt-in.
 
-Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
----
- arch/x86/kvm/svm.c |   76 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 76 insertions(+)
+Something alone these lines, to replace your patch 17/17 and the
+one that turns on HAVE_PCI_MMAP for arm64.
 
-diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
-index 977aa22..ce8819a 100644
---- a/arch/x86/kvm/svm.c
-+++ b/arch/x86/kvm/svm.c
-@@ -5986,6 +5986,78 @@ static int sev_guest_status(struct kvm *kvm, struct kvm_sev_cmd *argp)
- 	return ret;
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 25d010d449a3..c517f1b724e0 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -980,8 +980,6 @@ void pci_remove_legacy_files(struct pci_bus *b)
  }
- 
-+static int __sev_dbg_decrypt_page(struct kvm *kvm, unsigned long src,
-+		void *dst, int *error)
-+{
-+	int ret;
-+	struct page **inpages;
-+	struct sev_data_dbg *data;
-+	unsigned long npages;
-+
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		return -ENOMEM;
-+
-+	inpages = sev_pin_memory(src, PAGE_SIZE, &npages);
-+	if (!inpages) {
-+		ret = -ENOMEM;
-+		goto err_1;
-+	}
-+
-+	data->handle = sev_get_handle(kvm);
-+	data->dst_addr = __psp_pa(dst);
-+	data->src_addr = __sev_page_pa(inpages[0]);
-+	data->length = PAGE_SIZE;
-+
-+	ret = sev_issue_cmd(kvm, SEV_CMD_DBG_DECRYPT, data, error);
-+	if (ret)
-+		printk(KERN_ERR "SEV: DEBUG_DECRYPT %d (%#010x)\n",
-+				ret, *error);
-+	sev_unpin_memory(inpages, npages);
-+err_1:
-+	kfree(data);
-+	return ret;
-+}
-+
-+static int sev_dbg_decrypt(struct kvm *kvm, struct kvm_sev_cmd *argp)
-+{
-+	void *data;
-+	int ret, offset, len;
-+	struct kvm_sev_dbg debug;
-+
-+	if (!sev_guest(kvm))
-+		return -ENOTTY;
-+
-+	if (copy_from_user(&debug, (void *)argp->data,
-+				sizeof(struct kvm_sev_dbg)))
-+		return -EFAULT;
-+	/*
-+	 * TODO: add support for decrypting length which crosses the
-+	 * page boundary.
-+	 */
-+	offset = debug.src_addr & (PAGE_SIZE - 1);
-+	if (offset + debug.length > PAGE_SIZE)
-+		return -EINVAL;
-+
-+	data = (void *) get_zeroed_page(GFP_KERNEL);
-+	if (!data)
-+		return -ENOMEM;
-+
-+	/* decrypt full page */
-+	ret = __sev_dbg_decrypt_page(kvm, debug.src_addr & PAGE_MASK,
-+			data, &argp->error);
-+	if (ret)
-+		goto err_1;
-+
-+	/* we have decrypted full page but copy request length */
-+	len = min_t(size_t, (PAGE_SIZE - offset), debug.length);
-+	if (copy_to_user((uint8_t *)debug.dst_addr, data + offset, len))
-+		ret = -EFAULT;
-+err_1:
-+	free_page((unsigned long)data);
-+	return ret;
-+}
-+
- static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
+ #endif /* HAVE_PCI_LEGACY */
+
+-#ifdef HAVE_PCI_MMAP
+-
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
+   enum pci_mmap_api mmap_api)
  {
- 	int r = -ENOTTY;
-@@ -6013,6 +6085,10 @@ static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
- 		r = sev_guest_status(kvm, &sev_cmd);
- 		break;
- 	}
-+	case KVM_SEV_DBG_DECRYPT: {
-+		r = sev_dbg_decrypt(kvm, &sev_cmd);
-+		break;
-+	}
- 	default:
- 		break;
- 	}
+@@ -1217,10 +1215,6 @@ static int pci_create_resource_files(struct
+pci_dev *pdev)
+  }
+  return 0;
+ }
+-#else /* !HAVE_PCI_MMAP */
+-int __weak pci_create_resource_files(struct pci_dev *dev) { return 0; }
+-void __weak pci_remove_resource_files(struct pci_dev *dev) { return; }
+-#endif /* HAVE_PCI_MMAP */
+
+ /**
+  * pci_write_rom - used to enable access to the PCI ROM display
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 8dd38e69d6f2..6c2a15d4ebf9 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -21,14 +21,12 @@ void pci_create_firmware_label_files(struct pci_dev *pdev);
+ void pci_remove_firmware_label_files(struct pci_dev *pdev);
+ #endif
+ void pci_cleanup_rom(struct pci_dev *dev);
+-#ifdef HAVE_PCI_MMAP
+ enum pci_mmap_api {
+  PCI_MMAP_SYSFS, /* mmap on /sys/bus/pci/devices/<BDF>/resource<N> */
+  PCI_MMAP_PROCFS /* mmap on /proc/bus/pci/<BDF> */
+ };
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
+   enum pci_mmap_api mmap_api);
+-#endif
+ int pci_probe_reset_function(struct pci_dev *dev);
+
+ /**
