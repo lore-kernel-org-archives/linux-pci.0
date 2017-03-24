@@ -1,95 +1,117 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 10 Mar 2017 11:47:40 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49760 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S936690AbdCXPr7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 24 Mar 2017 11:47:59 -0400
+Date: Fri, 24 Mar 2017 10:47:44 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Subject: Re: pcie-iproc: broken 2nd (& 3rd?) controller support by
- c3245a566400 ("PCI: iproc: Request host bridge window resources")
-Message-ID: <20170310174740.GF19517@bhelgaas-glaptop.roam.corp.google.com>
-References: <faab6b85-58e8-3e62-8763-56a94b13fba1@gmail.com>
- <f40bbf2f-3ba9-3992-d417-6588085f3d62@gmail.com>
- <20170309182205.GB3685@bhelgaas-glaptop.roam.corp.google.com>
- <04f747ef-0f39-33ec-0cea-2e9fb85d46e8@gmail.com>
+To: Christian =?iso-8859-1?Q?K=F6nig?= <deathsimple@vodafone.de>
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h
+ (Models 30h-3fh) Processors
+Message-ID: <20170324154744.GE25380@bhelgaas-glaptop.roam.corp.google.com>
+References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+ <1489408896-25039-4-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <04f747ef-0f39-33ec-0cea-2e9fb85d46e8@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: JD Zheng <jiandong.zheng@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- Ray Jui <rjui@broadcom.com>, Oza Oza <oza.oza@broadcom.com>,
- linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- bcm-kernel-feedback-list@broadcom.com, Andy Gospodarek <gospo@broadcom.com>,
- linux-arm-kernel@lists.infradead.org, Felix Fietkau <nbd@nbd.name>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1489408896-25039-4-git-send-email-deathsimple@vodafone.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gRnJpLCBNYXIgMTAsIDIwMTcgYXQgMDU6MDI6NDhQTSArMDEwMCwgUmFmYcWCIE1pxYJlY2tp
-IHdyb3RlOgo+IE9uIDAzLzA5LzIwMTcgMDc6MjIgUE0sIEJqb3JuIEhlbGdhYXMgd3JvdGU6Cj4g
-Pk9uIFRodSwgTWFyIDA5LCAyMDE3IGF0IDA4OjM5OjA3QU0gKzAxMDAsIFJhZmHFgiBNacWCZWNr
-aSB3cm90ZToKPiA+Pk9uIDAzLzA4LzIwMTcgMDE6NTYgUE0sIFJhZmHFgiBNacWCZWNraSB3cm90
-ZToKPiA+Pj5JIGp1c3QgdHJpZWQgdXBncmFkaW5nIEJDTTUzMDFYIGZyb20gNC40IHRvIDQuOSBh
-bmQgbm90aWNlZCBJIGRvbid0IHNlZSBjYXJkCj4gPj4+Y29ubmVjdGVkIHRvIHRoZSAybmQgY29u
-dHJvbGxlci4KPiA+Pj4KPiA+Pj5wY2llX2lwcm9jX2JjbWEgYmNtYTA6NzogUENJIGhvc3QgYnJp
-ZGdlIHRvIGJ1cyAwMDAwOjAwCj4gPj4+cGNpX2J1cyAwMDAwOjAwOiByb290IGJ1cyByZXNvdXJj
-ZSBbbWVtIDB4MDgwMDAwMDAtMHgwZmZmZmZmZl0KPiA+Pj5wY2llX2lwcm9jX2JjbWEgYmNtYTA6
-NzogbGluazogVVAKPiA+Pj5QQ0k6IGJ1czA6IEZhc3QgYmFjayB0byBiYWNrIHRyYW5zZmVycyBk
-aXNhYmxlZAo+ID4+PnBjaSAwMDAwOjAwOjAwLjA6IGJyaWRnZSBjb25maWd1cmF0aW9uIGludmFs
-aWQgKFtidXMgMDAtMDBdKSwgcmVjb25maWd1cmluZwo+ID4+PlBDSTogYnVzMTogRmFzdCBiYWNr
-IHRvIGJhY2sgdHJhbnNmZXJzIGRpc2FibGVkCj4gPj4+cGNpIDAwMDA6MDA6MDAuMDogQkFSIDg6
-IGFzc2lnbmVkIFttZW0gMHgwODAwMDAwMC0weDA4MGZmZmZmXQo+ID4+PnBjaSAwMDAwOjAxOjAw
-LjA6IEJBUiAwOiBhc3NpZ25lZCBbbWVtIDB4MDgwMDAwMDAtMHgwODAwN2ZmZiA2NGJpdF0KPiA+
-Pj5wY2kgMDAwMDowMDowMC4wOiBQQ0kgYnJpZGdlIHRvIFtidXMgMDFdCj4gPj4+cGNpIDAwMDA6
-MDA6MDAuMDogICBicmlkZ2Ugd2luZG93IFttZW0gMHgwODAwMDAwMC0weDA4MGZmZmZmXQo+ID4+
-Pgo+ID4+PnBjaWVfaXByb2NfYmNtYSBiY21hMDo4OiByZXNvdXJjZSBjb2xsaXNpb246IFttZW0g
-MHg0MDAwMDAwMC0weDQ3ZmZmZmZmXSBjb25mbGljdHMgd2l0aCBQQ0llIE1FTSBzcGFjZSBbbWVt
-IDB4NDAwMDAwMDAtMHg0N2ZmZmZmZl0KPiA+Pj5wY2llX2lwcm9jX2JjbWEgYmNtYTA6ODogUENJ
-ZSBjb250cm9sbGVyIHNldHVwIGZhaWxlZAo+ID4+PnBjaWVfaXByb2NfYmNtYTogcHJvYmUgb2Yg
-YmNtYTA6OCBmYWlsZWQgd2l0aCBlcnJvciAtMTYKPiA+Pj4KPiA+Pj4KPiA+Pj5UaGlzIHVzZWQg
-dG8gd29yayB3aXRoIG9sZGVyIGtlcm5lbHMgYmVjYXVzZSB0aGVyZSB3YXNuJ3QgYW55IGNvbGxp
-c2lvbiBjaGVjazoKPiA+Pj4KPiA+Pj5wY2llX2lwcm9jX2JjbWEgYmNtYTA6NzogUENJIGhvc3Qg
-YnJpZGdlIHRvIGJ1cyAwMDAwOjAwCj4gPj4+cGNpX2J1cyAwMDAwOjAwOiByb290IGJ1cyByZXNv
-dXJjZSBbbWVtIDB4MDgwMDAwMDAtMHgwZmZmZmZmZl0KPiA+Pj5wY2llX2lwcm9jX2JjbWEgYmNt
-YTA6NzogbGluazogVVAKPiA+Pj5QQ0k6IGJ1czA6IEZhc3QgYmFjayB0byBiYWNrIHRyYW5zZmVy
-cyBkaXNhYmxlZAo+ID4+PnBjaSAwMDAwOjAwOjAwLjA6IGJyaWRnZSBjb25maWd1cmF0aW9uIGlu
-dmFsaWQgKFtidXMgMDAtMDBdKSwgcmVjb25maWd1cmluZwo+ID4+PlBDSTogYnVzMTogRmFzdCBi
-YWNrIHRvIGJhY2sgdHJhbnNmZXJzIGRpc2FibGVkCj4gPj4+cGNpIDAwMDA6MDA6MDAuMDogQkFS
-IDg6IGFzc2lnbmVkIFttZW0gMHgwODAwMDAwMC0weDA4MGZmZmZmXQo+ID4+PnBjaSAwMDAwOjAx
-OjAwLjA6IEJBUiAwOiBhc3NpZ25lZCBbbWVtIDB4MDgwMDAwMDAtMHgwODAwN2ZmZiA2NGJpdF0K
-PiA+Pj5wY2kgMDAwMDowMDowMC4wOiBQQ0kgYnJpZGdlIHRvIFtidXMgMDFdCj4gPj4+cGNpIDAw
-MDA6MDA6MDAuMDogICBicmlkZ2Ugd2luZG93IFttZW0gMHgwODAwMDAwMC0weDA4MGZmZmZmXQo+
-ID4+Pgo+ID4+PnBjaWVfaXByb2NfYmNtYSBiY21hMDo4OiBQQ0kgaG9zdCBicmlkZ2UgdG8gYnVz
-IDAwMDE6MDAKPiA+Pj5wY2lfYnVzIDAwMDE6MDA6IHJvb3QgYnVzIHJlc291cmNlIFttZW0gMHg0
-MDAwMDAwMC0weDQ3ZmZmZmZmXQo+ID4+PnBjaWVfaXByb2NfYmNtYSBiY21hMDo4OiBsaW5rOiBV
-UAo+ID4+PlBDSTogYnVzMDogRmFzdCBiYWNrIHRvIGJhY2sgdHJhbnNmZXJzIGRpc2FibGVkCj4g
-Pj4+cGNpIDAwMDE6MDA6MDAuMDogYnJpZGdlIGNvbmZpZ3VyYXRpb24gaW52YWxpZCAoW2J1cyAw
-MC0wMF0pLCByZWNvbmZpZ3VyaW5nCj4gPj4+UENJOiBidXMxOiBGYXN0IGJhY2sgdG8gYmFjayB0
-cmFuc2ZlcnMgZGlzYWJsZWQKPiA+Pj5wY2kgMDAwMTowMDowMC4wOiBCQVIgODogYXNzaWduZWQg
-W21lbSAweDQwMDAwMDAwLTB4NDAwZmZmZmZdCj4gPj4+cGNpIDAwMDE6MDE6MDAuMDogQkFSIDA6
-IGFzc2lnbmVkIFttZW0gMHg0MDAwMDAwMC0weDQwMDA3ZmZmIDY0Yml0XQo+ID4+PnBjaSAwMDAx
-OjAwOjAwLjA6IFBDSSBicmlkZ2UgdG8gW2J1cyAwMV0KPiA+Pj5wY2kgMDAwMTowMDowMC4wOiAg
-IGJyaWRnZSB3aW5kb3cgW21lbSAweDQwMDAwMDAwLTB4NDAwZmZmZmZdCj4gPj4+Cj4gPj4+Cj4g
-Pj4+SSBndWVzcyB0aGUgY2hlY2sgaXMgT0sgYWZ0ZXIgYWxsIGFuZCB0aGUgcmVhbCBwcm9ibGVt
-IGlzIGlwcm9jIGRyaXZlciBhc3NpZ25pbmcKPiA+Pj50aGUgc2FtZSByZXNvdXJjZS4KPiA+Pj4K
-PiA+Pj5Ccm9hZGNvbSB0ZWFtOiBjb3VsZCB5b3UgdGFrZSBhIGxvb2sgYXQgdGhpcywgcGxlYXNl
-Pwo+ID4+Cj4gPj5JIGZvdW5kIGEgcmVhc29uIG9mIHRoaXMgY29uZmxpY3QgKGFuZCBwcm9iYWJs
-eSByYW5kb20gY3Jhc2hlcyBJIHN0YXJ0ZWQKPiA+PnNlZWluZyB3aXRoIDQuOSkuIEkgYmVsaWV2
-ZSB3ZSBoYXZlIGEgbWVtb3J5IGNvcnJ1cHRpb24uCj4gPgo+ID5ZZXAsIHdlJ3JlIHVzaW5nIGEg
-cmVzb3VyY2Ugc3RydWN0dXJlIG9uIHRoZSBzdGFjayB3aGVuIHdlIHNob3VsZG4ndC4gIENhbgo+
-ID55b3UgdHJ5IHRoZSBwYXRjaCBiZWxvdz8KPiAKPiBXb3JrcyBncmVhdCEgV2lsbCB5b3UgcHVz
-aCBpdCB3aXRoCj4gQ2M6IHN0YWJsZUB2Z2VyLmtlcm5lbC5vcmcgIyB2NC44Kwo+IHBsZWFzZT8K
-ClRoYW5rcyBmb3IgdGVzdGluZyB0aGlzLiAgSSBhcHBsaWVkIHRoZSBwYXRjaCAod2l0aCB0aGUg
-YnJhY2VzIGZpeCkgdG8KZm9yLWxpbnVzIGZvciB2NC4xMS4KCj4gPiguLi4pCj4gPiAJaWYgKHJl
-dCkKPiA+IAkJZGV2X2VycihkZXYsICJQQ0llIGNvbnRyb2xsZXIgc2V0dXAgZmFpbGVkXG4iKTsK
-PiA+LQo+ID4tCXBjaV9mcmVlX3Jlc291cmNlX2xpc3QoJnJlcyk7Cj4gPisJCXBjaV9mcmVlX3Jl
-c291cmNlX2xpc3QoJnJlc291cmNlcyk7Cj4gPisJCXJldHVybiByZXQ7Cj4gPisJfQo+IAo+IFdv
-cmtzIGdyZWF0LCBleGNlcHQgaXQgZG9lc24ndCBjb21waWxlIChicmFjZXMpIDspCgpfX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2VybmVs
-IG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDov
-L2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
+On Mon, Mar 13, 2017 at 01:41:35PM +0100, Christian König wrote:
+> From: Christian König <christian.koenig@amd.com>
+> 
+> Most BIOS don't enable this because of compatibility reasons.
+
+Can you give any more details here?  Without more hints, it's hard to
+know whether any of the compatibility reasons might apply to Linux as
+well.
+
+> Manually enable a 64bit BAR of 64GB size so that we have
+> enough room for PCI devices.
+
+>From the context, I'm guessing this is enabling a new 64GB window
+through the PCI host bridge?  That might be documented as a "BAR", but
+it's not anything the Linux PCI core would recognize as a BAR.
+
+I think the specs would envision this being done via an ACPI _SRS
+method on the PNP0A03 host bridge device.  That would be a more
+generic path that would work on any host bridge.  Did you explore that
+possibility?  I would prefer to avoid adding device-specific code if
+that's possible.
+
+> Signed-off-by: Christian König <christian.koenig@amd.com>
+> ---
+>  arch/x86/pci/fixup.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 53 insertions(+)
+> 
+> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+> index 6d52b94..bff5242 100644
+> --- a/arch/x86/pci/fixup.c
+> +++ b/arch/x86/pci/fixup.c
+> @@ -571,3 +571,56 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
+> +
+> +static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+> +{
+> +	const uint64_t size = 64ULL * 1024 * 1024 * 1024;
+> +	uint32_t base, limit, high;
+> +	struct resource *res;
+> +	unsigned i;
+> +	int r;
+> +
+> +	for (i = 0; i < 8; ++i) {
+> +
+> +		pci_read_config_dword(dev, 0x80 + i * 0x8, &base);
+> +		pci_read_config_dword(dev, 0x180 + i * 0x4, &high);
+> +
+> +		/* Is this slot free? */
+> +		if ((base & 0x3) == 0x0)
+> +			break;
+> +
+> +		base >>= 8;
+> +		base |= high << 24;
+> +
+> +		/* Abort if a slot already configures a 64bit BAR. */
+> +		if (base > 0x10000)
+> +			return;
+> +
+> +	}
+> +
+> +	if (i == 8)
+> +		return;
+> +
+> +	res = kzalloc(sizeof(*res), GFP_KERNEL);
+> +	res->flags = IORESOURCE_MEM | IORESOURCE_PREFETCH | IORESOURCE_MEM_64 |
+> +		IORESOURCE_WINDOW;
+> +	res->name = dev->bus->name;
+> +	r = allocate_resource(&iomem_resource, res, size, 0x100000000,
+> +			      0xfd00000000, size, NULL, NULL);
+> +	if (r) {
+> +		kfree(res);
+> +		return;
+> +	}
+> +
+> +	base = ((res->start >> 8) & 0xffffff00) | 0x3;
+> +	limit = ((res->end + 1) >> 8) & 0xffffff00;
+> +	high = ((res->start >> 40) & 0xff) |
+> +		((((res->end + 1) >> 40) & 0xff) << 16);
+> +
+> +	pci_write_config_dword(dev, 0x180 + i * 0x4, high);
+> +	pci_write_config_dword(dev, 0x84 + i * 0x8, limit);
+> +	pci_write_config_dword(dev, 0x80 + i * 0x8, base);
+> +
+> +	pci_bus_add_resource(dev->bus, res, 0);
+
+We would need some sort of printk here to explain how this new window
+magically appeared.
+
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
+> -- 
+> 2.7.4
+> 
