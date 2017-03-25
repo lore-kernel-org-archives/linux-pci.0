@@ -1,18 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 2 Mar 2017 14:24:06 -0500
-From: Tejun Heo <tj@kernel.org>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Subject: Re: [PATCH 07/20] PCI: implement Devres interface to map PCI config
- space
-Message-ID: <20170302192406.GA8519@wtj.duckdns.org>
-References: <20170227151436.18698-1-lorenzo.pieralisi@arm.com>
- <20170227151436.18698-8-lorenzo.pieralisi@arm.com>
- <CAHp75VfdE6_W+DxhejorLxra2JQDGF3cG0uBedyOohhmcLiKLg@mail.gmail.com>
- <20170302120546.GB17277@red-moon>
- <CAHp75VfoZTr5L3z5_SXW58W2Ate5nCWSzP8hAA051fVwizSjag@mail.gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CAHp75VfoZTr5L3z5_SXW58W2Ate5nCWSzP8hAA051fVwizSjag@mail.gmail.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V5 4/4] PCI/ASPM: move link_state cleanup to bridge remove
+Date: Sat, 25 Mar 2017 17:38:13 -0400
+Message-Id: <1490477893-9517-5-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
+References: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,71 +15,86 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Linux-Arch <linux-arch@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Jonathan Corbet <corbet@lwn.net>, Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
- Murali Karicheri <m-karicheri2@ti.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- linux-arm Mailing List <linux-arm-kernel@lists.infradead.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
+ linux-arm-msm@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+ linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ Julia Lawall <Julia.Lawall@lip6.fr>, Bjorn Helgaas <bhelgaas@google.com>,
+ Rajat Jain <rajatja@google.com>, linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello,
+For endpoints, change pcie_aspm_exit_link_state() so it cleans up
+the device's own state and disables ASPM if necessary, but doesn't
+remove the parent's link_state.
 
-On Thu, Mar 02, 2017 at 02:50:00PM +0200, Andy Shevchenko wrote:
-> > I thought about that and did not do it because here we are remapping
-> > resources that are _not_ PCI bus resources (ie it is not PCI BARs we
-> > are remapping), keeping the devm_* prefix would be more consistent
-> > to the typical device drivers remapping functions pattern (ie a
-> > typical PCI host controller driver would mix devm_ and pcim_ calls
-> > which is a bit hard to parse), that was my rationale.
-> >
-> > I am not too fussed about that either way, I am happy to update it to
-> > pcim_* though, it is Bjorn/Arnd's decision.
-> 
-> I would vote for pcim_*() variant.
+For bridges, change pcie_aspm_exit_link_state() so it frees the
+bridge's own link_state.
 
-Me too, for brevity.
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pcie/aspm.c | 20 +++++++++++++++-----
+ drivers/pci/remove.c    |  3 +--
+ 2 files changed, 16 insertions(+), 7 deletions(-)
 
-> >> 2. If you may notice there is no separate pcim_*map*() stuff, they are
-> >> dynamically adapting to the case.
-> >
-> > I do not understand what you mean here I would ask you to elaborate
-> > a bit more please so that I can do something about it.
-> 
-> Oh, sorry, there are two examples currently, i.e.
-> pci_enable_msi()/pci_enable_msix() and pci_request_region*() which has
-> no "m" in the name, but are managed on release by pcim_release().
-> Some developers consider this as a bad idea, but so far no patch has
-> been sent to introduce pcim_*() variants of those.
->
-> So, regarding to your stuff, I would stick with "pcim" prefix.
-
-Sounds good to me.
-
-Thanks.
-
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index f48bb29..db3fbd9 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -947,6 +947,21 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+ 	struct pci_dev *parent = pdev->bus->self;
+ 	struct pcie_link_state *link, *root, *parent_link;
+ 
++	if (pdev->has_secondary_link) {
++		link = pdev->link_state;
++		down_read(&pci_bus_sem);
++		mutex_lock(&aspm_lock);
++
++		list_del(&link->sibling);
++		list_del(&link->link);
++
++		/* Clock PM is for endpoint device */
++		free_link_state(link);
++		mutex_unlock(&aspm_lock);
++		up_read(&pci_bus_sem);
++		return;
++	}
++
+ 	if (!parent || !parent->link_state)
+ 		return;
+ 
+@@ -965,11 +980,6 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+ 
+ 	/* All functions are removed, so just disable ASPM for the link */
+ 	pcie_config_aspm_link(link, 0);
+-	list_del(&link->sibling);
+-	list_del(&link->link);
+-	/* Clock PM is for endpoint device */
+-	free_link_state(link);
+-
+ 	/* Recheck latencies and configure upstream links */
+ 	if (parent_link) {
+ 		pcie_update_aspm_capable(root);
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 73a03d3..7e14ebd 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -25,8 +25,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+ 		dev->is_added = 0;
+ 	}
+ 
+-	if (dev->bus->self)
+-		pcie_aspm_exit_link_state(dev);
++	pcie_aspm_exit_link_state(dev);
+ }
+ 
+ static void pci_destroy_dev(struct pci_dev *dev)
 -- 
-tejun
+1.9.1
+
 
 _______________________________________________
 linux-arm-kernel mailing list
