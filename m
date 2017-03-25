@@ -1,112 +1,69 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [RFC PATCH v2 13/32] KVM: SVM: Enable SEV by setting the SEV_ENABLE
- CPU feature
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:15:01 -0500
-Message-ID: <148846770159.2349.16863375000963463500.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Joerg Roedel <joro@8bytes.org>,
+	Robin Murphy <robin.murphy@arm.com>
+Subject: [RFC PATCH 3/3] of: fix node traversing in of_dma_get_range
+Date: Sat, 25 Mar 2017 11:01:33 +0530
+Message-Id: <1490419893-5073-3-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
+References: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
+ bcm-kernel-feedback-list@broadcom.com, Oza Pawandeep <oza.oza@broadcom.com>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tom Lendacky <thomas.lendacky@amd.com>
+it jumps to the parent node without examining the child node.
+also with that, it throws "no dma-ranges found for node"
+for pci dma-ranges.
 
-Modify the SVM cpuid update function to indicate if Secure Encrypted
-Virtualization (SEV) is active in the guest by setting the SEV KVM CPU
-features bit. SEV is active if Secure Memory Encryption is enabled in
-the host and the SEV_ENABLE bit of the VMCB is set.
+this patch fixes device node traversing for dma-ranges.
 
-Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
----
- arch/x86/kvm/cpuid.c |    4 +++-
- arch/x86/kvm/svm.c   |   18 ++++++++++++++++++
- 2 files changed, 21 insertions(+), 1 deletion(-)
+Reviewed-by: Anup Patel <anup.patel@broadcom.com>
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
 
-diff --git a/arch/x86/kvm/cpuid.c b/arch/x86/kvm/cpuid.c
-index 1639de8..e0c40a8 100644
---- a/arch/x86/kvm/cpuid.c
-+++ b/arch/x86/kvm/cpuid.c
-@@ -601,7 +601,7 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
- 		entry->edx = 0;
- 		break;
- 	case 0x80000000:
--		entry->eax = min(entry->eax, 0x8000001a);
-+		entry->eax = min(entry->eax, 0x8000001f);
- 		break;
- 	case 0x80000001:
- 		entry->edx &= kvm_cpuid_8000_0001_edx_x86_features;
-@@ -634,6 +634,8 @@ static inline int __do_cpuid_ent(struct kvm_cpuid_entry2 *entry, u32 function,
- 		break;
- 	case 0x8000001d:
- 		break;
-+	case 0x8000001f:
-+		break;
- 	/*Add support for Centaur's CPUID instruction*/
- 	case 0xC0000000:
- 		/*Just support up to 0xC0000004 now*/
-diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
-index 75b0645..36d61ff 100644
---- a/arch/x86/kvm/svm.c
-+++ b/arch/x86/kvm/svm.c
-@@ -46,6 +46,7 @@
- #include <asm/irq_remapping.h>
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 02b2903..3293d55 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -836,9 +836,6 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
+ 	while (1) {
+ 		naddr = of_n_addr_cells(node);
+ 		nsize = of_n_size_cells(node);
+-		node = of_get_next_parent(node);
+-		if (!node)
+-			break;
  
- #include <asm/virtext.h>
-+#include <asm/mem_encrypt.h>
- #include "trace.h"
+ 		ranges = of_get_property(node, "dma-ranges", &len);
  
- #define __ex(x) __kvm_handle_fault_on_reboot(x)
-@@ -5005,10 +5006,27 @@ static void svm_cpuid_update(struct kvm_vcpu *vcpu)
- {
- 	struct vcpu_svm *svm = to_svm(vcpu);
- 	struct kvm_cpuid_entry2 *entry;
-+	struct vmcb_control_area *ca = &svm->vmcb->control;
-+	struct kvm_cpuid_entry2 *features, *sev_info;
- 
- 	/* Update nrips enabled cache */
- 	svm->nrips_enabled = !!guest_cpuid_has_nrips(&svm->vcpu);
- 
-+	/* Check for Secure Encrypted Virtualization support */
-+	features = kvm_find_cpuid_entry(vcpu, KVM_CPUID_FEATURES, 0);
-+	if (!features)
-+		return;
+@@ -852,6 +849,10 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
+ 		 */
+ 		if (!ranges)
+ 			break;
 +
-+	sev_info = kvm_find_cpuid_entry(vcpu, 0x8000001f, 0);
-+	if (!sev_info)
-+		return;
-+
-+	if (ca->nested_ctl & SVM_NESTED_CTL_SEV_ENABLE) {
-+		features->eax |= (1 << KVM_FEATURE_SEV);
-+		cpuid(0x8000001f, &sev_info->eax, &sev_info->ebx,
-+		      &sev_info->ecx, &sev_info->edx);
-+	}
-+
- 	if (!kvm_vcpu_apicv_active(vcpu))
- 		return;
++		node = of_get_next_parent(node);
++		if (!node)
++			break;
+ 	}
  
+ 	if (!ranges) {
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
