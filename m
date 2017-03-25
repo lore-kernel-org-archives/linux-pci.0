@@ -1,44 +1,101 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Subject: [PATCH v2 0/4] ioremap() tidy-up
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>,
-        linux-kernel@vger.kernel.org
-Date: Mon, 20 Mar 2017 13:42:39 -0500
-Message-ID: <20170320182014.4858.22352.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V5 3/4] PCI/ASPM: save power on values during bridge init
+Date: Sat, 25 Mar 2017 17:38:12 -0400
+Message-Id: <1490477893-9517-4-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
+References: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
+ linux-arm-msm@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+ linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ Julia Lawall <Julia.Lawall@lip6.fr>, Bjorn Helgaas <bhelgaas@google.com>,
+ Rajat Jain <rajatja@google.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Fix some typos, remove unused code, simplify comments.
+Now that we added a hook to be called from device_add, save the
+default values from the HW registers early in the boot for further
+reuse during hot device add/remove operations.
 
-I added patch 4 to remove the default ioremap_uc() implementation on MMU
-systems.
-
-I hesitated about this because it basically reverts 8c7ea50c010b ("x86/mm,
-asm-generic: Add IOMMU ioremap_uc() variant default"), and I'm worried that
-I'm missing the real value of having that default implementation.  So this
-is just a proposal; if it makes no sense, I'll drop patch 4 again.
-
-As far as I can tell, having the default ioremap_uc() implementation means
-we can *build* drivers that use it, but those drivers won't actually work.
-It seems preferable to me to have those be build-time failures rather than
-run-time failures, but if I'm missing something, let me know.
-
-Change from v1 to v2:
-  - Add Arnd's Reviewed-by on patches 1-3.
-  - Add patch 4 to remove ioremap_uc() stub.
-
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
+ drivers/pci/pcie/aspm.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
-Bjorn Helgaas (4):
-      asm-generic/io.h: Fix "IOMMU" typos
-      asm-generic/io.h: Remove unused generic __ioremap() definition
-      asm-generic/io.h: Simplify ioremap() comments
-      asm-generic/io.h: Drop ioremap_uc() stub for systems with MMU
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index f5b1fa0..f48bb29 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -521,8 +521,10 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 	 */
+ 	if (dwreg.support & upreg.support & PCIE_LINK_STATE_L0S)
+ 		link->aspm_support |= ASPM_STATE_L0S;
+-	if (dwreg.enabled & PCIE_LINK_STATE_L0S)
++	if (dwreg.enabled & PCIE_LINK_STATE_L0S) {
+ 		link->aspm_enabled |= ASPM_STATE_L0S_UP;
++		link->aspm_default |= ASPM_STATE_L0S_UP;
++	}
+ 	if (upreg.enabled & PCIE_LINK_STATE_L0S)
+ 		link->aspm_enabled |= ASPM_STATE_L0S_DW;
+ 	link->latency_up.l0s = calc_l0s_latency(upreg.latency_encoding_l0s);
+@@ -558,9 +560,6 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 	if (link->aspm_support & ASPM_STATE_L1SS)
+ 		aspm_calc_l1ss_info(link, &upreg, &dwreg);
+ 
+-	/* Save default state */
+-	link->aspm_default = link->aspm_enabled;
+-
+ 	/* Setup initial capable state. Will be updated later */
+ 	link->aspm_capable = link->aspm_support;
+ 	/*
+@@ -835,6 +834,7 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ int pci_aspm_init(struct pci_dev *pdev)
+ {
+ 	struct pcie_link_state *link;
++	struct aspm_register_info upreg;
+ 
+ 	if (!aspm_support_enabled)
+ 		return 0;
+@@ -851,6 +851,20 @@ int pci_aspm_init(struct pci_dev *pdev)
+ 	if (!link)
+ 		return -ENOMEM;
+ 
++	pcie_get_aspm_reg(pdev, &upreg);
++	if (upreg.enabled & PCIE_LINK_STATE_L0S)
++		link->aspm_default |= ASPM_STATE_L0S_DW;
++	if (upreg.enabled & PCIE_LINK_STATE_L1)
++		link->aspm_default |= ASPM_STATE_L1;
++	if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_ASPM_L1_1)
++		link->aspm_default |= ASPM_STATE_L1_1;
++	if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_ASPM_L1_2)
++		link->aspm_default |= ASPM_STATE_L1_2;
++	if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_PCIPM_L1_1)
++		link->aspm_default |= ASPM_STATE_L1_1_PCIPM;
++	if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_PCIPM_L1_2)
++		link->aspm_default |= ASPM_STATE_L1_2_PCIPM;
++
+ 	return 0;
+ }
+ 
+-- 
+1.9.1
 
 
- include/asm-generic/io.h |   49 ++++++++--------------------------------------
- 1 file changed, 8 insertions(+), 41 deletions(-)
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
