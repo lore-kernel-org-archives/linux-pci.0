@@ -1,79 +1,95 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:47290 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759808AbdCVNZd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Mar 2017 09:25:33 -0400
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 14/17] parisc: Use generic pci_mmap_resource_range()
-Date: Wed, 22 Mar 2017 13:25:28 +0000
-Message-Id: <1e07d41a8fbb2824718c0432db8e06f39e4272e2.1490188942.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:35865 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750718AbdCYMqg (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 25 Mar 2017 08:46:36 -0400
+Received: by mail-pf0-f193.google.com with SMTP id r137so2473084pfr.3
+        for <linux-pci@vger.kernel.org>; Sat, 25 Mar 2017 05:46:35 -0700 (PDT)
+From: Yongji Xie <elohimes@gmail.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
+        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
+        paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: Re: [PATCH v9 3/3] PCI: Don't extend device's size when using default alignment for all devices
+Date: Sat, 25 Mar 2017 20:46:32 +0800
+Message-Id: <1490445992-4102-1-git-send-email-elohimes@gmail.com>
+In-Reply-To: <20170323215558.GC23612@bhelgaas-glaptop.roam.corp.google.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+On Thu, Mar 23, 2017 at 04:55:58PM -0500, Bjorn Helgaas wrote:
+>
+> On Wed, Feb 15, 2017 at 02:45:06PM +0800, Yongji Xie wrote:
+>> Currently we reassign the alignment by extending resources' size in
+>> pci_reassigndev_resource_alignment(). This could potentially break
+>> some drivers when the driver uses the size to locate register
+>> whose length is related to the size. Some examples as below:
+>
+> I understand the motivation to stop changing the resource size.  That
+> makes good sense.
+>
+>> - misc\Hpilo.c:
+>
+> This isn't Windows; please use regular Linux forward slashes here.
+>
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/parisc/include/asm/pci.h |  1 +
- arch/parisc/kernel/pci.c      | 29 -----------------------------
- 2 files changed, 1 insertion(+), 29 deletions(-)
+Will fix it.
 
-diff --git a/arch/parisc/include/asm/pci.h b/arch/parisc/include/asm/pci.h
-index bb9ea90..1de1a3f 100644
---- a/arch/parisc/include/asm/pci.h
-+++ b/arch/parisc/include/asm/pci.h
-@@ -200,5 +200,6 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- }
- 
- #define HAVE_PCI_MMAP
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE
- 
- #endif /* __ASM_PARISC_PCI_H */
-diff --git a/arch/parisc/kernel/pci.c b/arch/parisc/kernel/pci.c
-index 6538775..13ee356 100644
---- a/arch/parisc/kernel/pci.c
-+++ b/arch/parisc/kernel/pci.c
-@@ -227,35 +227,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	return start;
- }
- 
--
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	unsigned long prot;
--
--	/*
--	 * I/O space can be accessed via normal processor loads and stores on
--	 * this platform but for now we elect not to do this and portable
--	 * drivers should not do this anyway.
--	 */
--	if (mmap_state == pci_mmap_io)
--		return -EINVAL;
--
--	if (write_combine)
--		return -EINVAL;
--
--	/*
--	 * Ignore write-combine; for now only return uncached mappings.
--	 */
--	prot = pgprot_val(vma->vm_page_prot);
--	prot |= _PAGE_NO_CACHE;
--	vma->vm_page_prot = __pgprot(prot);
--
--	return remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--		vma->vm_end - vma->vm_start, vma->vm_page_prot);
--}
--
- /*
-  * A driver is enabling the device.  We make sure that all the appropriate
-  * bits are set to allow the device to operate as the driver is expecting.
--- 
-2.9.3
+>> off = pci_resource_len(pdev, bar) - 0x2000;
+>>
+>> - net\ethernet\chelsio\cxgb4\cxgb4_uld.h:
+>> (pci_resource_len((pdev), 2) - roundup_pow_of_two((vres)->ocq.size))
+>>
+>> - infiniband\hw\nes\Nes_hw.c:
+>> num_pds = pci_resource_len(nesdev->pcidev, BAR_1) >> PAGE_SHIFT;
+>>
+>> This risk could be easily prevented before because we only had one way
+>> (kernel parameter resource_alignment) to touch those codes. And even
+>> some users may be happy to see the extended size.
+>>
+>> But now we define a default alignment for all devices which would also
+>> touch those codes. It would be hard to prevent the risk in this case. So
+>> this patch tries to use START_ALIGNMENT to identify the resource's
+>> alignment without extending the size when the alignment reassigning is
+>> caused by the default alignment.
+>
+> But I don't understand the new START_ALIGNMENT case.
+>
+
+The START_ALIGNMENT case will be used when we have default alignment
+for PCI devices, which can identify the resource's alignment without
+extending the size. If we don't use START_ALIGNMENT for default alignment,
+resources' size would be extended by default, that means the system's 
+default action could potentially break drivers, it looks unreasonable.
+
+>> Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+>> ---
+>> drivers/pci/pci.c |   34 ++++++++++++++++++++++++----------
+>> 1 files changed, 24 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 2622e9b..0017e5e 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -4958,7 +4958,8 @@ void pci_ignore_hotplug(struct pci_dev *dev)
+>>  * RETURNS: Resource alignment if it is specified.
+>>  *          Zero if it is not specified.
+>
+> Since there's function doc, please update it to reflect the new
+> "resize" return parameter.
+>
+
+Will do it.
+
+> What does "resize" mean?  I can't figure it out from your code.
+
+"resize" means we will update the resource'alignment by extending the 
+resource's size. This would happen when we use kernel parameter to identify 
+resource's alignment. If the resource's alignment is identified by the default 
+alignment function(macro) rather than kernel parameter, "resize" should be 
+false, which means we update the resource'alignment without extending the 
+resource's size.
+
+Thanks,
+Yongji
