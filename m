@@ -1,63 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:51244 "EHLO theia.8bytes.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935796AbdCXLAs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 24 Mar 2017 07:00:48 -0400
-Date: Fri, 24 Mar 2017 12:00:45 +0100
-From: Joerg Roedel <joro@8bytes.org>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc: Harv Abdulhamid <harba@qti.qualcomm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Shanker Donthineni <shankerd@qti.qualcomm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sinan Kaya <okaya@qti.qualcomm.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Nate Watterson <nwatters@qti.qualcomm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
-Subject: Re: [RFC PATCH 24/30] iommu: Specify PASID state when unbinding a
- task
-Message-ID: <20170324110045.GM7266@8bytes.org>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-25-jean-philippe.brucker@arm.com>
- <20170322154429.GE7266@8bytes.org>
- <e2bb4c67-9b61-01cf-cc17-68088cdc5e5b@arm.com>
- <20170322225320.GF7266@8bytes.org>
- <a093bc07-a345-a689-9d97-f15a306f922d@arm.com>
- <20170323143014.GK7266@8bytes.org>
- <20170323145311.GA22972@e106794-lin.localdomain>
- <20170323165218.GL7266@8bytes.org>
- <9d318e88-11af-6dab-b30e-d6b5c02443fe@arm.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V5 2/4] PCI/ASPM: add init hook to device_add
+Date: Sat, 25 Mar 2017 17:38:11 -0400
+Message-Id: <1490477893-9517-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
+References: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
+ linux-arm-msm@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+ linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ Julia Lawall <Julia.Lawall@lip6.fr>, Bjorn Helgaas <bhelgaas@google.com>,
+ Rajat Jain <rajatja@google.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9d318e88-11af-6dab-b30e-d6b5c02443fe@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 23, 2017 at 05:03:46PM +0000, Jean-Philippe Brucker wrote:
-> On 23/03/17 16:52, Joerg Roedel wrote:
-> > Thanks for that, I have a closer look. Is that stopper packet visible to
-> > software (e.g. is an entry created in the queue)?
-> 
-> As far as I understand, it should be added to the queue like a normal PPR,
-> and software should check the R/W/L flags combination. For SMMU at least,
-> it is the same. The only difference is that when the PRI queue overflows,
-> the SMMU would discard a Stop Marker instead of sending an automated
-> response to the device (as it would do with others PPR that have the L
-> flag.) Software shouldn't send a response to a Stop Marker either.
+For bridges, have pcie_aspm_init_link_state() allocate a link_state,
+regardless of whether it currently has any children.
 
-The document you posted is an addition to the spec, so we can't rely on
-a stop marker being sent by a device when it shuts down a context.
-Current AMD GPUs don't send one, afaik.
+pcie_aspm_init_link_state(): Called for bridges (upstream end of
+link) after all children have been enumerated.  No longer needs to
+check aspm_support_enabled or pdev->has_secondary_link or the VIA
+quirk: pci_aspm_init() already checked that stuff, so we only need
+to check pdev->link_state here.
 
-I think the best we can do is shutting down processing for this PASID
-when and inform the device driver, when we receive a stop marker. An
-additional, optional call-back would do the job.
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pcie/aspm.c | 41 ++++++++++++++++++++---------------------
+ 1 file changed, 20 insertions(+), 21 deletions(-)
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 74fd7c5..f5b1fa0 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -834,6 +834,23 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+  */
+ int pci_aspm_init(struct pci_dev *pdev)
+ {
++	struct pcie_link_state *link;
++
++	if (!aspm_support_enabled)
++		return 0;
++
++	/* VIA has a strange chipset, root port is under a bridge */
++	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
++	    pdev->bus->self)
++		return 0;
++
++	if (!pdev->has_secondary_link)
++		return 0;
++
++	link = alloc_pcie_link_state(pdev);
++	if (!link)
++		return -ENOMEM;
++
+ 	return 0;
+ }
+ 
+@@ -847,33 +864,16 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 	struct pcie_link_state *link;
+ 	int blacklist = !!pcie_aspm_sanity_check(pdev);
+ 
+-	if (!aspm_support_enabled)
+-		return;
+-
+-	if (pdev->link_state)
+-		return;
+-
+-	/*
+-	 * We allocate pcie_link_state for the component on the upstream
+-	 * end of a Link, so there's nothing to do unless this device has a
+-	 * Link on its secondary side.
+-	 */
+-	if (!pdev->has_secondary_link)
+-		return;
+-
+-	/* VIA has a strange chipset, root port is under a bridge */
+-	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
+-	    pdev->bus->self)
++	if (!pdev->link_state)
+ 		return;
+ 
++	link = pdev->link_state;
+ 	down_read(&pci_bus_sem);
+ 	if (list_empty(&pdev->subordinate->devices))
+ 		goto out;
+ 
+ 	mutex_lock(&aspm_lock);
+-	link = alloc_pcie_link_state(pdev);
+-	if (!link)
+-		goto unlock;
++
+ 	/*
+ 	 * Setup initial ASPM state. Note that we need to configure
+ 	 * upstream links also because capable state of them can be
+@@ -898,7 +898,6 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 		pcie_set_clkpm(link, policy_to_clkpm_state(link));
+ 	}
+ 
+-unlock:
+ 	mutex_unlock(&aspm_lock);
+ out:
+ 	up_read(&pci_bus_sem);
+-- 
+1.9.1
 
 
-
-	Joerg
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
