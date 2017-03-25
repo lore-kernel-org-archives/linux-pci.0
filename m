@@ -1,138 +1,79 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 06/17] pci: Add HAVE_PCI_MMAP_IO to architectures which can mmap() I/O space
-Date: Wed, 22 Mar 2017 13:25:20 +0000
-Message-Id: <42237243c5aa180dd305769d06079d5842aeb32a.1490188942.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
-References: <cover.1490188942.git.dwmw2@infradead.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sat, 25 Mar 2017 12:58:59 +0000
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pci: mvebu: avoid changing the SCC bit in the link
+ status register
+Message-ID: <20170325125859.GM7909@n2100.armlinux.org.uk>
+References: <E1cTbUq-0008Gj-9u@rmk-PC.armlinux.org.uk>
+MIME-Version: 1.0
+In-Reply-To: <E1cTbUq-0008Gj-9u@rmk-PC.armlinux.org.uk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ linux-pci@vger.kernel.org, Jason Cooper <jason@lakedaemon.net>,
+ Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <uwe@kleine-koenig.org>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+Ping.  This _fix_ doesn't seem to have made it in.
 
-This is relatively esoteric, and knowing that we don't have it makes
-life easier in some cases rather than just an eventual -EINVAL from
-pci_mmap_page_range().
+On Tue, Jan 17, 2017 at 09:40:52PM +0000, Russell King wrote:
+> It seems on later Armada 38x, the slot clock configuration bit is not
+> read-only, but can be written.  This means that our RW1C protection
+> ends up clearing this bit when the link control register is written.
+> 
+> Adjust the mask so that we only avoid writing '1' bits to the RW1C
+> bits of this register (bits 15 and 14 of the link status) rather than
+> masking out all the status register bits.
+> 
+> Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
+> ---
+>  drivers/pci/host/pci-mvebu.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-mvebu.c b/drivers/pci/host/pci-mvebu.c
+> index 58f75c098b42..3ed4cb7501bd 100644
+> --- a/drivers/pci/host/pci-mvebu.c
+> +++ b/drivers/pci/host/pci-mvebu.c
+> @@ -827,10 +827,11 @@ static int mvebu_sw_pci_bridge_write(struct mvebu_pcie_port *port,
+>  		 * If the mask is 0xffff0000, then we only want to write
+>  		 * the link control register, rather than clearing the
+>  		 * RW1C bits in the link status register.  Mask out the
+> -		 * status register bits.
+> +		 * RW1C bits.
+>  		 */
+>  		if (mask == 0xffff0000)
+> -			value &= 0xffff;
+> +			value &= ~((PCI_EXP_LNKSTA_LABS |
+> +				    PCI_EXP_LNKSTA_LBMS) << 16);
+>  
+>  		mvebu_writel(port, value, PCIE_CAP_PCIEXP + PCI_EXP_LNKCTL);
+>  		break;
+> -- 
+> 2.7.4
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/microblaze/include/asm/pci.h |  3 ++-
- arch/powerpc/include/asm/pci.h    |  1 +
- arch/sparc/include/asm/pci_64.h   |  1 +
- arch/xtensa/include/asm/pci.h     |  1 +
- drivers/pci/pci-sysfs.c           | 14 +++++++++-----
- drivers/pci/proc.c                | 10 ++++++++--
- 6 files changed, 22 insertions(+), 8 deletions(-)
-
-diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
-index ab381d2..41f5986 100644
---- a/arch/microblaze/include/asm/pci.h
-+++ b/arch/microblaze/include/asm/pci.h
-@@ -48,7 +48,8 @@ extern int pci_proc_domain(struct pci_bus *bus);
- struct vm_area_struct;
- 
- /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
--#define HAVE_PCI_MMAP	1
-+#define HAVE_PCI_MMAP		1
-+#define HAVE_PCI_MMAP_IO	1
- 
- extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
- 			   size_t count);
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index 55887d1..849a7dd 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -80,6 +80,7 @@ struct vm_area_struct;
- 
- /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() and it does WC */
- #define HAVE_PCI_MMAP		1
-+#define HAVE_PCI_MMAP_IO	1
- #define arch_can_pci_mmap_wc()	1
- 
- extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
-diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
-index 516fda7..4fe2f05 100644
---- a/arch/sparc/include/asm/pci_64.h
-+++ b/arch/sparc/include/asm/pci_64.h
-@@ -42,6 +42,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
- /* Platform support for /proc/bus/pci/X/Y mmap()s. */
- 
- #define HAVE_PCI_MMAP
-+#define HAVE_PCI_MMAP_IO
- #define HAVE_ARCH_PCI_GET_UNMAPPED_AREA
- #define get_pci_unmapped_area get_fb_unmapped_area
- 
-diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
-index e594eee..e4c1b43e 100644
---- a/arch/xtensa/include/asm/pci.h
-+++ b/arch/xtensa/include/asm/pci.h
-@@ -48,6 +48,7 @@ struct pci_dev;
- 
- /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
- #define HAVE_PCI_MMAP		1
-+#define HAVE_PCI_MMAP_IO	1
- 
- /* This was wrapped in #if 0 since the first merge of xtensa support...
- #define arch_can_pci_mmap_wc()	1
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index cf2c7d8..07cb2fc 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1174,11 +1174,15 @@ static int pci_create_attr(struct pci_dev *pdev, int num, int write_combine)
- 	} else {
- 		pdev->res_attr[num] = res_attr;
- 		sprintf(res_attr_name, "resource%d", num);
--		res_attr->mmap = pci_mmap_resource_uc;
--	}
--	if (pci_resource_flags(pdev, num) & IORESOURCE_IO) {
--		res_attr->read = pci_read_resource_io;
--		res_attr->write = pci_write_resource_io;
-+		if (pci_resource_flags(pdev, num) & IORESOURCE_IO) {
-+			res_attr->read = pci_read_resource_io;
-+			res_attr->write = pci_write_resource_io;
-+#ifdef HAVE_PCI_MMAP_IO
-+			res_attr->mmap = pci_mmap_resource_uc;
-+#endif
-+		} else {
-+			res_attr->mmap = pci_mmap_resource_uc;
-+		}
- 	}
- 	res_attr->attr.name = res_attr_name;
- 	res_attr->attr.mode = S_IRUSR | S_IWUSR;
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index c49be71..f387231 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -200,11 +200,12 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
- 		ret = pci_domain_nr(dev->bus);
- 		break;
- 
--#ifdef HAVE_PCI_MMAP
-+#ifdef HAVE_PCI_MMAP_IO
- 	case PCIIOC_MMAP_IS_IO:
- 		fpriv->mmap_state = pci_mmap_io;
- 		break;
--
-+#endif
-+#ifdef HAVE_PCI_MMAP
- 	case PCIIOC_MMAP_IS_MEM:
- 		fpriv->mmap_state = pci_mmap_mem;
- 		break;
-@@ -239,6 +240,11 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- 	if (!capable(CAP_SYS_RAWIO))
- 		return -EPERM;
- 
-+#ifndef HAVE_PCI_MMAP_IO
-+	if (fpriv->mmap_state == pci_mmap_io)
-+		return -EINVAL;
-+#endif
-+
- 	if (fpriv->mmap_state == pci_mmap_io)
- 		res_bit = IORESOURCE_IO;
- 	else
 -- 
-2.9.3
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
