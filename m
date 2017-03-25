@@ -1,53 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49700 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933551AbdC3Nan (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Mar 2017 09:30:43 -0400
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: mayurkumar.patel@intel.com, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>
-Subject: [PATCH V7 0/5] PCI/ASPM: reconfigure ASPM following hotplug for POLICY_DEFAULT
-Date: Thu, 30 Mar 2017 09:30:31 -0400
-Message-Id: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 21/30] iommu/arm-smmu-v3: Handle device faults from PRI
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-22-jean-philippe.brucker@arm.com>
+ <8520D5D51A55D047800579B0941471982640F43C@XAP-PVEXMBX02.xlnx.xilinx.com>
+To: jean-philippe.brucker@arm.com, linux-pci-owner@vger.kernel.org,
+ harba@qti.qualcomm.com, Will Deacon <will.deacon@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Sinan Kaya <okaya@qti.qualcomm.com>,
+ lorenzo.pieralisi@arm.com, Catalin Marinas <catalin.marinas@arm.com>,
+ Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Nate Watterson <nwatters@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
+ linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+ kvm@vger.kernel.org
+From: valmiki <valmikibow@gmail.com>
+Message-ID: <0b3e3ddd-acc3-5ba7-639f-5c9192da57c3@gmail.com>
+Date: Sat, 25 Mar 2017 10:46:34 +0530
+MIME-Version: 1.0
+In-Reply-To: <8520D5D51A55D047800579B0941471982640F43C@XAP-PVEXMBX02.xlnx.xilinx.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When the operating system is booted with the default ASPM policy
-(POLICY_DEFAULT), current code is querying the enable/disable
-states from ASPM registers to determine the policy.
+> When we receive a PRI Page Request (PPR) from the SMMU, it contains a context identifier SID:SSID, an IOVA and the requested access flags.
+>
+> Search the domain corresponding to SID:SSID, and call handle_mm_fault on its mm. If memory management is able to fix the fault, we ask the device to retry the access with a PRI_SUCCESS message. Otherwise send PRI_FAIL.
+>
+Hi Jean,
 
-For example, a BIOS could set the power saving state to performance
-and clear all ASPM control registers. A balanced ASPM policy could
-enable L0s and disable L1. A power conscious BIOS could enable both
-L0s and L1 to trade off latency and performance vs. power.
+I need some clarification. Page fault handling is already part of MMU. 
+When PRI requested page results in page fault, smmu is going to invoke 
+handle_mm_fault which is part of memory management unit ?
 
-After hotplug removal, pcie_aspm_exit_link_state() function clears
-the ASPM registers. An insertion following hotplug removal reads
-incorrect policy as ASPM disabled even though ASPM was enabled
-during boot.
+If so this functionality is yet to be added in SMMU driver ?
 
-This is caused by the fact that same function is used for reconfiguring
-ASPM regardless of the power on state.
+Because i haven't seen this API being called in your patches.
 
-------------------------
-Changes from v6 (https://www.spinics.net/lists/arm-kernel/msg572876.html)
-------------------------
-- revert the accidental parent check in bridge remove
+Regards,
+Valmiki
 
-Sinan Kaya (5):
-  PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
-  PCI/ASPM: split pci_aspm_init() into two
-  PCI/ASPM: add init hook to device_add
-  PCI/ASPM: save power on values during bridge init
-  PCI/ASPM: move link_state cleanup to bridge remove
-
- drivers/pci/pcie/aspm.c | 137 ++++++++++++++++++++++++++++++++----------------
- drivers/pci/probe.c     |   3 ++
- drivers/pci/remove.c    |   3 +-
- include/linux/pci.h     |   2 +
- 4 files changed, 98 insertions(+), 47 deletions(-)
-
--- 
-1.9.1
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
