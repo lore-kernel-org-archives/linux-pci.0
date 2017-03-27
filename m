@@ -1,49 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1488958624.10589.10.camel@haakon3.risingtidesystems.com>
-Subject: Re: [PATCH 24/29] drivers: convert iblock_req.pending from atomic_t
- to refcount_t
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, netdev@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
-        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, peterz@infradead.org,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-Date: Tue, 07 Mar 2017 23:37:04 -0800
-In-Reply-To: <1488810076-3754-25-git-send-email-elena.reshetova@intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
-         <1488810076-3754-25-git-send-email-elena.reshetova@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 3/3] of: fix node traversing in of_dma_get_range
+To: Rob Herring <robh@kernel.org>, Oza Pawandeep <oza.oza@broadcom.com>
+References: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
+ <1490419893-5073-3-git-send-email-oza.oza@broadcom.com>
+ <CAL_Jsq+1f2pHEy7=2Q7xGYYJjuQk3rLHH4pPTKRVN4QTtSr4Kw@mail.gmail.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <3aec823d-d3c7-03d3-68f7-963d3649c184@arm.com>
+Date: Mon, 27 Mar 2017 15:45:05 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAL_Jsq+1f2pHEy7=2Q7xGYYJjuQk3rLHH4pPTKRVN4QTtSr4Kw@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Joerg Roedel <joro@8bytes.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Linux IOMMU <iommu@lists.linux-foundation.org>,
+ "bcm-kernel-feedback-list@broadcom.com"
+ <bcm-kernel-feedback-list@broadcom.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Elena,
+Hi Rob,
 
-On Mon, 2017-03-06 at 16:21 +0200, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
+On 27/03/17 15:34, Rob Herring wrote:
+> On Sat, Mar 25, 2017 at 12:31 AM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
+>> it jumps to the parent node without examining the child node.
+>> also with that, it throws "no dma-ranges found for node"
+>> for pci dma-ranges.
+>>
+>> this patch fixes device node traversing for dma-ranges.
 > 
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
-> ---
->  drivers/target/target_core_iblock.c | 12 ++++++------
->  drivers/target/target_core_iblock.h |  3 ++-
->  2 files changed, 8 insertions(+), 7 deletions(-)
+> What's the DT look like that doesn't work?
 
-For the target_core_iblock part:
+The problem is the bodge in pci_dma_configure() where we don't have an
+OF node for the actual device itself, so pass in the host bridge's OF
+node instead. This happens to work well enough for dma-coherent, but I
+don't think dma-ranges was even considered at the time.
 
-Acked-by: Nicholas Bellinger <nab@linux-iscsi.org>
+As it happens I'm currently halfway through writing an experiment
+wherein pci_dma_configure() creates a temporary child node for the
+of_dma_configure() call if no other suitable alternative (e.g. some
+intermediate bridge node) exists. How hard are you likely to NAK that
+approach? ;)
+
+> dma-ranges is supposed to be a bus property, not a device's property.
+> So looking at the parent is correct behavior generally.
+
+Indeed, this patch as-is will break currently correct DTs (because we
+won't find dma-ranges on the device, so will bail before even looking at
+the parent as we should).
+
+Robin.
+
+> 
+> Rob
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
