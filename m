@@ -1,14 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 30 Mar 2017 17:19:31 +0100
-From: Will Deacon <will.deacon@arm.com>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v2 05/22] ARM64: implement ioremap_nopost() interface
-Message-ID: <20170330161931.GA5623@arm.com>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
- <20170327094954.7162-6-lorenzo.pieralisi@arm.com>
+Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
+To: Marc Zyngier <marc.zyngier@arm.com>
+References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
+ <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
+ <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
+ <9fffedd4-6292-b662-a588-a68fe7380af6@free.fr>
+ <6e847686-43c6-11e9-6782-dec0fe81a58e@arm.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <9c65e647-8395-4467-53ca-c20ed374131b@free.fr>
+Date: Mon, 27 Mar 2017 16:35:56 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170327094954.7162-6-lorenzo.pieralisi@arm.com>
+In-Reply-To: <6e847686-43c6-11e9-6782-dec0fe81a58e@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,63 +19,34 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
- Shawn Lin <shawn.lin@rock-chips.com>, Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Murali Karicheri <m-karicheri2@ti.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Arnd Bergmann <arnd@arndb.de>,
- Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
- John Garry <john.garry@huawei.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
+ David Laight <david.laight@aculab.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 27, 2017 at 10:49:33AM +0100, Lorenzo Pieralisi wrote:
-> The PCI bus specifications (rev 3.0, 3.2.5 "Transaction Ordering
-> and Posting") defines rules for PCI configuration space transactions
-> ordering and posting, that state that configuration writes
-> are non-posted transactions.
-> 
-> This rule is reinforced by the ARM v8 architecture reference manual
-> (issue A.k, Early Write Acknowledgment) that explicitly recommends
-> that No Early Write Acknowledgment attribute should be used to map
-> PCI configuration (write) transactions.
-> 
-> Current ioremap interface on ARM64 implements mapping functions
-> where the Early Write Acknowledgment hint is enabled, so they
-> cannot be used to map PCI configuration space in a PCI specs
-> compliant way.
-> 
-> Implement an ARM64 specific ioremap_nopost() interface
-> that allows to map PCI config region with nGnRnE attributes, providing
-> a remap function that complies with PCI specifications and the ARMv8
-> architecture reference manual recommendations.
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Will Deacon <will.deacon@arm.com>
-> Cc: Catalin Marinas <catalin.marinas@arm.com>
-> ---
->  arch/arm64/include/asm/io.h | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
+On 24/03/2017 19:22, Marc Zyngier wrote:
 
-Acked-by: Will Deacon <will.deacon@arm.com>
+> You cannot directly use a pointer to a u32 in any of the bitmap
+> operations. You need to copy the value to an unsigned long, and
+> apply the bitmap op on that.
 
-Let me know if you need this taken via the arm64 tree.
+On my platform, find_first_zero_bit() resolves to
 
-Will
+  int _find_first_zero_bit_le(const void * p, unsigned size);
+
+If the underlying implementation actually expects an unsigned long
+pointer, should the function prototype be changed?
+
+Regards.
 
 _______________________________________________
 linux-arm-kernel mailing list
