@@ -1,240 +1,165 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
-To: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>,
- Sricharan R <sricharan@codeaurora.org>,
- "Wangzhou (B)" <wangzhou1@hisilicon.com>,
- "will.deacon@arm.com" <will.deacon@arm.com>,
- "joro@8bytes.org" <joro@8bytes.org>,
- "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "tn@semihalf.com" <tn@semihalf.com>,
- "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
- "okaya@codeaurora.org" <okaya@codeaurora.org>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <58D49845.9060407@hisilicon.com>
- <0ea8022b-a19b-335d-6cc6-81510196f891@codeaurora.org>
- <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
- <db3d68f8-713c-9ae2-7df9-324bc1b375b1@arm.com>
- <5FC3163CFD30C246ABAA99954A238FA81750CCC4@lhreml504-mbs>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <f67fb561-4238-6933-04f3-0f910f9232d1@arm.com>
-Date: Mon, 27 Mar 2017 17:18:15 +0100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Mon, 27 Mar 2017 14:25:35 +0100
+From: Juri Lelli <juri.lelli@arm.com>
+To: linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-rt-users@vger.kernel.org
+Cc: Peter Zijlstra <peterz@infradead.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Vincent Guittot <vincent.guittot@linaro.org>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Morten Rasmussen <morten.rasmussen@arm.com>,
+        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
+        Dietmar Eggemann <dietmar.eggemann@arm.com>,
+        Luca Abeni <luca.abeni@santannapisa.it>,
+        Tommaso Cucinotta <tommaso.cucinotta@sssup.it>,
+        Sudeep Holla <sudeep.holla@arm.com>, juri.lelli@arm.com,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Patrick Bellasi <patrick.bellasi@arm.com>,
+        Kevin Hilman <khilman@baylibre.com>,
+        Michael Turquette <mturquette@baylibre.com>,
+        Paolo Valente <paolo.valente@unimore.it>,
+        Claudio Scordino <claudio@evidence.eu.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Frederic Weisbecker <fweisbec@gmail.com>
+Subject: [ANNOUNCE] OSPM-summit is on next Monday
+Message-ID: <20170327132535.GJ10289@e106622-lin>
 MIME-Version: 1.0
-In-Reply-To: <5FC3163CFD30C246ABAA99954A238FA81750CCC4@lhreml504-mbs>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/03/17 16:58, Shameerali Kolothum Thodi wrote:
-> 
-> 
->> -----Original Message-----
->> From: Shameerali Kolothum Thodi
->> Sent: Monday, March 27, 2017 3:53 PM
->> To: 'Robin Murphy'; Sricharan R; Wangzhou (B); will.deacon@arm.com;
->> joro@8bytes.org; lorenzo.pieralisi@arm.com; iommu@lists.linux-
->> foundation.org; linux-arm-kernel@lists.infradead.org; linux-arm-
->> msm@vger.kernel.org; m.szyprowski@samsung.com;
->> bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
->> acpi@vger.kernel.org; tn@semihalf.com; hanjun.guo@linaro.org;
->> okaya@codeaurora.org
->> Subject: RE: [PATCH V9 00/11] IOMMU probe deferral support
->>
->>
->>> -----Original Message-----
->>> From: Robin Murphy [mailto:robin.murphy@arm.com]
->>> Sent: Friday, March 24, 2017 6:39 PM
->>> To: Shameerali Kolothum Thodi; Sricharan R; Wangzhou (B);
->>> will.deacon@arm.com; joro@8bytes.org; lorenzo.pieralisi@arm.com;
->>> iommu@lists.linux-foundation.org; linux-arm-kernel@lists.infradead.org;
->>> linux-arm-msm@vger.kernel.org; m.szyprowski@samsung.com;
->>> bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
->>> acpi@vger.kernel.org; tn@semihalf.com; hanjun.guo@linaro.org;
->>> okaya@codeaurora.org
->>> Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
->>>
->>> On 24/03/17 09:27, Shameerali Kolothum Thodi wrote:
->>>> Hi Sricharan,
->>>>
->>>>> -----Original Message-----
->>>>> From: Sricharan R [mailto:sricharan@codeaurora.org]
->> [...]
->>>>> Looks like this triggers the start of the bug.
->>>>> So the below check in iommu_dma_init_domain fails,
->>>>>
->>>>>          if (domain->geometry.force_aperture) {
->>>>>                  if (base > domain->geometry.aperture_end ||
->>>>>                      base + size <= domain->geometry.aperture_start) {
->>>>>
->>>>> and the rest goes out of sync after that. Can you print out the base,
->>>>> aperture_start and end values to see why the check fails ?
->>>>
->>>> dev_info(dev, "0x%llx 0x%llx, 0x%llx 0x%llx, 0x%llx 0x%llx\n", base, size,
->>> domain->geometry.aperture_start, domain->geometry.aperture_end,
->>> *dev->dma_mask, dev->coherent_dma_mask);
->>>>
->>>> [  183.752100] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff,
->>> 0xffffffff 0xffffffff
->>>> .....
->>>> [  319.508037] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff,
->>> 0xffffffffffffffff 0xffffffffffffffff
->>>>
->>>> Yes, size seems to be the problem here. When the VF  device gets
->> attached
->>> to vfio-pci,
->>>> somehow the dev->coherent_dma_mask is set to 64 bits and size
->> become
->>> zero.
->>>
->>> AFAICS, this is either down to patch 3 (which should apply on its own
->>> easily enough for testing), or patch 6, implying that somehow the
->>> vfio-pci device gets its DMA mask widened to 64 bits somewhere between
->>> very soon after after creation (where we originally called
->>> of_dma_configure()) and immediately before probe (where we now call
->> it).
->>>
->>> Either way I guess this is yet more motivation to write that "change the
->>> arch_setup_dma_ops() interface to take a mask instead of a size" patch...
->>
->> Just applying the patch 3 and binding the device into vfio-pci is fine. Please
->> find the
->> log below (with  dev_info debug added to iommu_dma_init_domain ).
->> ...
->> [  142.851906] iommu: Adding device 0000:81:10.0 to group 6
->> [  142.852063] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff,
->> 0xffffffff 0xffffffff   ---->dev_info()
->> [  142.852836] ixgbevf 0000:81:10.0: enabling device (0000 -> 0002)
->> [  142.852962] ixgbe 0000:81:00.0 eth0: VF Reset msg received from vf 0
->> [  142.853833] ixgbe 0000:81:00.0: VF 0 has no MAC address assigned, you
->> may have to assign one manually
->> [  142.863956] ixgbevf 0000:81:10.0: MAC address not assigned by
->> administrator.
->> [  142.863960] ixgbevf 0000:81:10.0: Assigning random MAC address
->> [  142.865689] ixgbevf 0000:81:10.0: da:9f:f8:1e:57:3a
->> [  142.865692] ixgbevf 0000:81:10.0: MAC: 1
->> [  142.865693] ixgbevf 0000:81:10.0: Intel(R) 82599 Virtual Function
->> [  142.939145] ixgbe 0000:81:00.0 eth0: NIC Link is Up 1 Gbps, Flow Control:
->> None
->> [  152.902894] nfs: server 172.18.45.166 not responding, still trying
->> [  188.980933] nfs: server 172.18.45.166 not responding, still trying
->> [  188.981298] nfs: server 172.18.45.166 OK
->> [  188.981593] nfs: server 172.18.45.166 OK
->> [  221.755626] VFIO - User Level meta-driver version: 0.3
->> ...
->>
->> Applied up to patch 6, and the issue appeared,
->>
->> [  145.212351] iommu: Adding device 0000:81:10.0 to group 5
->> [  145.212367] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff,
->> 0xffffffff 0xffffffff
->> [  145.213261] ixgbevf 0000:81:10.0: enabling device (0000 -> 0002)
->> [  145.213394] ixgbe 0000:81:00.0 eth0: VF Reset msg received from vf 0
->> [  145.214272] ixgbe 0000:81:00.0: VF 0 has no MAC address assigned, you
->> may have to assign one manually
->> [  145.224379] ixgbevf 0000:81:10.0: MAC address not assigned by
->> administrator.
->> [  145.224384] ixgbevf 0000:81:10.0: Assigning random MAC address
->> [  145.225941] ixgbevf 0000:81:10.0: 1a:85:06:48:a7:19
->> [  145.225944] ixgbevf 0000:81:10.0: MAC: 1
->> [  145.225946] ixgbevf 0000:81:10.0: Intel(R) 82599 Virtual Function
->> [  145.299961] ixgbe 0000:81:00.0 eth0: NIC Link is Up 1 Gbps, Flow Control:
->> None
->> [  154.947742] nfs: server 172.18.45.166 not responding, still trying
->> [  191.025780] nfs: server 172.18.45.166 not responding, still trying
->> [  191.026122] nfs: server 172.18.45.166 OK
->> [  191.026317] nfs: server 172.18.45.166 OK
->> [  263.706402] VFIO - User Level meta-driver version: 0.3
->> [  269.757613] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff, 0xffffffffffffffff
->> 0xffffffffffffffff
->> [  269.757617] specified DMA range outside IOMMU capability
->> [  269.757618] Failed to set up IOMMU for device 0000:81:10.0; retaining
->> platform DMA ops
->>
->>  From the logs its clear that  when ixgbevf driver originally probes and adds
->> the device
->>  to smmu  the dma mask is 32, but when it binds to vfio-pci, it becomes 64 bit.
-> 
-> Just to add to that, the mask is set to 64 bit in the ixgebvf driver probe[1]
+Hi,
 
-Aha, but of course it's still the same struct device getting bound to
-VFIO later, so whatever mask the first driver set is still in there when
-we go through of_dma_configure() the second time (and the fact that we
-go through more than once being the new behaviour). So yes, this is a
-legitimate problem and we really do need to be robust against size
-overflow. I reckon the below tweak of your fix is probably the way to
-go; cleaning up the arch_setup_dma_ops() interface can happen later.
+we are only a week away from the OSPM-summit!
 
-Robin.
+Pack your bags (or stay tuned for the live streaming).
 
------8<-----
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index 9933077df7b7..77d080bde52d 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct
-device_node *np)
- 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
- 	if (ret < 0) {
- 		dma_addr = offset = 0;
--		size = dev->coherent_dma_mask + 1;
-+		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
- 	} else {
- 		offset = PFN_DOWN(paddr - dma_addr);
+Don't forget to subscribe to the summit mailing list to receive updates by
+either following the instructions available at the following link
+http://groups.google.com/group/ospm-summit-2017/boxsubscribe?email=<your_email>
+or sending an email to ospm-summit-2017+subscribe@googlegroups.com
+
+Archives are available at https://groups.google.com/forum/#!forum/ospm-summit-2017
+
+More information about schedule and logistics follow.
+
+---
+
+Power Management and Scheduling in the Linux Kernel (OSPM-summit)
+April 3-4, 2017
+Scuola Superiore Sant'Anna (SSSA)
+Pisa, Italy
+http://retis.sssup.it/ospm-summit/
+
+---
+
+.:: FOCUS
+
+Power management and scheduling techniques to reduce energy consumption while
+meeting performance and latency requirements are receiving considerable
+attention from the Linux Kernel development community. 
+
+The Power Management and Scheduling in the Linux Kernel (OSPM-summit) summit
+aims at fostering further interest and discussion to happen.
+
+.:: SCHEDULE
+
+The summit is organized to cover two days of discussions and talks.
+
+What follows is a tentative schedule, subject to last minute changes.
+Find more info and real time updates on this shared document:
+https://docs.google.com/spreadsheets/d/1B-IsUIGitvRa7ZzppEAJBMgGpIgRAAnu_OhDAGYg6SQ/edit?usp=sharing
+
+Monday (2017-04-03)
+*******************
+09:00AM - 09:30AM	Welcome and Introduction (DAY 1)
+---
+09:30AM - 10:20AM	Tooling/LISA
+---
+10:20AM - 11:10AM	About The Need to Power Instrument The Linux Kernel
+---
+11:10AM - 11:20AM	Break
+---
+11:20AM - 12:10AM	What are the latest evolutions in PELT and what next
+---
+12:10AM - 01:00PM	PELT decay clamping/UTIL_EST
+---
+01:00PM - 02:30PM	Lunch
+---
+02:30PM - 03:20PM	EAS where we are
+---	
+03:20PM - 04:10PM	Energy model/Exotic topologies
+---					
+04:10PM - 04:20PM	Break
+---
+04:20PM - 05:10PM	Schedtune
+---					
+05:10PM - 06:00PM	SCHED_DEADLINE and reclaiming
 
 
------>8-----
+Tuesday (2017-04-04)
+********************
+09:00AM - 09:30AM	Welcome and Introduction (DAY 2)
+---
+09:30AM - 10:20AM	Discussion about possible improvements in the schedutil governor
+---
+10:20AM - 11:10AM	Schedutil for SCHED_DEADLINE
+---
+11:10AM - 11:20AM	Break
+---
+11:20AM - 12:10AM	Parameterizing CFS load balancing: nr_running/util/load
+---					
+12:10AM - 01:00PM	Tracepoints for PELT
+---
+01:00PM - 02:30PM	Lunch
+---			
+02:30PM - 03:20PM	IRQ prediction
+---		
+03:20PM - 04:10PM	I/O scheduling and power management with storage devices
+---					
+04:10PM - 04:20PM	Break
+---
+04:20PM - 05:10PM	SCHED_DEADLINE group scheduling
+---					
+05:10PM - 06:00PM	A Hierarchical Scheduling Model for Dynamic Soft-Realtime Systems
+---
+06:00PM - 06:30PM	Closing Remarks				
 
-> [  127.914001] ixgbe 0000:81:00.0 eth0: SR-IOV enabled with 1 VFs
-> [  127.914106] ixgbe 0000:81:00.0: removed PHC on eth0
-> [  128.125166] ixgbe 0000:81:00.0: Multiqueue Enabled: Rx Queue count = 4, Tx Queue count = 4
-> [  128.143857] ixgbe 0000:81:00.0: registered PHC device on eth0
-> [  128.314754] ixgbe 0000:81:00.0 eth0: detected SFP+: 11
-> [  128.357878] pci 0000:81:10.0: [8086:10ed] type 00 class 0x020000
-> [  128.358416] iommu: Adding device 0000:81:10.0 to group 5
-> [  128.358443] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff, 0xffffffff 0xffffffff
-> [  128.359326] ixgbevf 0000:81:10.0: enabling device (0000 -> 0002)
-> [  128.359333] Shameer: ixgbevf_probe, 64 bit			------------->mask set to 64 bit
-> [  128.359462] ixgbe 0000:81:00.0 eth0: VF Reset msg received from vf 0
-> [  128.360331] ixgbe 0000:81:00.0: VF 0 has no MAC address assigned, you may have to assign one manually
-> [  128.370470] ixgbevf 0000:81:10.0: MAC address not assigned by administrator.
-> [  128.370474] ixgbevf 0000:81:10.0: Assigning random MAC address
-> [  128.372172] ixgbevf 0000:81:10.0: ea:40:b9:e9:cb:04
-> [  128.372176] ixgbevf 0000:81:10.0: MAC: 1
-> [  128.372178] ixgbevf 0000:81:10.0: Intel(R) 82599 Virtual Function
-> [  128.445551] ixgbe 0000:81:00.0 eth0: NIC Link is Up 1 Gbps, Flow Control: None
-> [  138.089869] nfs: server 172.18.45.166 not responding, still trying
-> [  174.697868] nfs: server 172.18.45.166 not responding, still trying
-> [  174.698359] nfs: server 172.18.45.166 OK
-> [  174.698582] nfs: server 172.18.45.166 OK
-> [  465.942259] VFIO - User Level meta-driver version: 0.3
->  [  472.754074] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff, 0xffffffffffffffff 0xffffffffffffffff
-> [  472.754075] specified DMA range outside IOMMU capability
-> [  472.754077] Failed to set up IOMMU for device 0000:81:10.0; retaining platform DMA ops
-> 
-> 1. http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c#L3996
-> 
-> 
->  
-> 
+We are looking into setting up live streaming of the sessions. Details
+will be soon shared through the shared doc mentioned above and the
+event mailing list.
 
+List of attendees is also available in the doc and on the event website.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+.:: VENUE
+
+The workshop will take place at ReTiS Lab*, Scuola Superiore Sant'Anna, Pisa,
+Italy. Pisa is a small town, walking distance from the city center to the venue
+is 20 minutes, walking distance from the airport to the city center is 30
+minutes. More details are available from the summit web page:
+http://retis.sssup.it/ospm-summit/
+
+A map of the town with venue location, points of interest and
+transportation information is available at:
+https://drive.google.com/open?id=1ANKOXr2cuZkABXskDurgrGdl_js&usp=sharing
+
+Bus from Airport to city centre takes about 10 min and costs 1.20 euros
+(2 euros if bought on board). Large bills are usually not accepted.
+
+Taxi from Airport to city centre costs 10/15 euros. Credit cards are not
+accepted.
+
+.:: ORGANIZERS (in alphabetical order)
+
+Luca Abeni (SSSA)
+Patrick Bellasi (ARM)
+Tommaso Cucinotta (SSSA)
+Dietmar Eggemann (ARM)
+Sudeep Holla (ARM)
+Juri Lelli (ARM)
+Lorenzo Pieralisi (ARM)
+Morten Rasmussen (ARM)
