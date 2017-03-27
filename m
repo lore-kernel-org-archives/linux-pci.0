@@ -1,86 +1,67 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org, timur@codeaurora.org
-Cc: mayurkumar.patel@intel.com, linux-arm-msm@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rajat Jain <rajatja@google.com>,
-        David Daney <david.daney@cavium.com>,
-        Yinghai Lu <yinghai@kernel.org>, linux-kernel@vger.kernel.org
-Subject: [PATCH V6 5/5] PCI/ASPM: move link_state cleanup to bridge remove
-Date: Wed, 29 Mar 2017 19:04:27 -0400
-Message-Id: <1490828667-30973-6-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1490828667-30973-1-git-send-email-okaya@codeaurora.org>
-References: <1490828667-30973-1-git-send-email-okaya@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v2 18/22] PCI: xgene: update PCI config space remap function
+Date: Mon, 27 Mar 2017 10:49:46 +0100
+Message-Id: <20170327094954.7162-19-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, Tanmay Inamdar <tinamdar@apm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For endpoints, change pcie_aspm_exit_link_state() so it cleans up
-the device's own state and disables ASPM if necessary, but doesn't
-remove the parent's link_state.
+PCI configuration space should be mapped with a memory region type that
+generates on the CPU host bus non-posted write transations. Update the
+driver to use the devm_ioremap_nopost* interface to make sure the correct
+memory mappings for PCI configuration space are used.
 
-For bridges, change pcie_aspm_exit_link_state() so it frees the
-bridge's own link_state.
-
-Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tanmay Inamdar <tinamdar@apm.com>
 ---
- drivers/pci/pcie/aspm.c | 20 +++++++++++++++-----
- drivers/pci/remove.c    |  3 +--
- 2 files changed, 16 insertions(+), 7 deletions(-)
+ drivers/pci/host/pci-xgene.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index a38602a..37ca9b3 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -963,6 +963,21 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
- 	if (!parent || !parent->link_state)
- 		return;
- 
-+	if (pdev->has_secondary_link) {
-+		link = pdev->link_state;
-+		down_read(&pci_bus_sem);
-+		mutex_lock(&aspm_lock);
-+
-+		list_del(&link->sibling);
-+		list_del(&link->link);
-+
-+		/* Clock PM is for endpoint device */
-+		free_link_state(link);
-+		mutex_unlock(&aspm_lock);
-+		up_read(&pci_bus_sem);
-+		return;
-+	}
-+
- 	down_read(&pci_bus_sem);
- 	mutex_lock(&aspm_lock);
- 	/*
-@@ -978,11 +993,6 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
- 
- 	/* All functions are removed, so just disable ASPM for the link */
- 	pcie_config_aspm_link(link, 0);
--	list_del(&link->sibling);
--	list_del(&link->link);
--	/* Clock PM is for endpoint device */
--	free_link_state(link);
--
- 	/* Recheck latencies and configure upstream links */
- 	if (parent_link) {
- 		pcie_update_aspm_capable(root);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 73a03d3..7e14ebd 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -25,8 +25,7 @@ static void pci_stop_dev(struct pci_dev *dev)
- 		dev->is_added = 0;
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 1a61087..df8e13c 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -248,7 +248,7 @@ static int xgene_pcie_ecam_init(struct pci_config_window *cfg, u32 ipversion)
+ 		dev_err(dev, "can't get CSR resource\n");
+ 		return ret;
  	}
+-	port->csr_base = devm_ioremap_resource(dev, &csr);
++	port->csr_base = devm_ioremap_nopost_resource(dev, &csr);
+ 	if (IS_ERR(port->csr_base))
+ 		return PTR_ERR(port->csr_base);
  
--	if (dev->bus->self)
--		pcie_aspm_exit_link_state(dev);
-+	pcie_aspm_exit_link_state(dev);
- }
+@@ -359,7 +359,7 @@ static int xgene_pcie_map_reg(struct xgene_pcie_port *port,
+ 	struct resource *res;
  
- static void pci_destroy_dev(struct pci_dev *dev)
+ 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "csr");
+-	port->csr_base = devm_ioremap_resource(dev, res);
++	port->csr_base = devm_ioremap_nopost_resource(dev, res);
+ 	if (IS_ERR(port->csr_base))
+ 		return PTR_ERR(port->csr_base);
+ 
 -- 
-1.9.1
+2.10.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
