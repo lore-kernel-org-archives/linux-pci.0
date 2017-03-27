@@ -1,62 +1,128 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v2 14/22] PCI: iproc-platform: update PCI config space remap
- function
-Date: Mon, 27 Mar 2017 10:49:42 +0100
-Message-Id: <20170327094954.7162-15-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Jon Mason <jonmason@broadcom.com>, Ray Jui <rjui@broadcom.com>,
- linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <SRS0=m2ui=3E=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=m2ui=3E=free.fr=slash.tmp@kernel.org>
+Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
+To: Marc Zyngier <marc.zyngier@arm.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Thomas Gleixner <tglx@linutronix.de>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
+ <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
+ <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
+ <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
+Date: Mon, 27 Mar 2017 17:53:22 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_ioremap_nopost* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+On 24/03/2017 19:47, Marc Zyngier wrote:
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ray Jui <rjui@broadcom.com>
-Cc: Jon Mason <jonmason@broadcom.com>
----
- drivers/pci/host/pcie-iproc-platform.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> On 23/03/17 17:03, Mason wrote:
+>
+>> On 23/03/2017 15:22, Marc Zyngier wrote:
+>>
+>>> On 23/03/17 13:05, Mason wrote:
+>>>
+>>>> +	writel_relaxed(status, pcie->msi_status); /* clear IRQs */
+>>>
+>>> Why isn't this your irq_ack method instead of open-coding it?
+>>
+>> I based my driver on the Altera driver, and I did it like
+>> I thought they did. I will try fixing my code.
+> 
+> Doesn't make it right, unfortunately. I wish you would try to understand
+> the API first instead of copy-pasting things (including potential bugs).
 
-diff --git a/drivers/pci/host/pcie-iproc-platform.c b/drivers/pci/host/pcie-iproc-platform.c
-index f4909bb..b13d4a2 100644
---- a/drivers/pci/host/pcie-iproc-platform.c
-+++ b/drivers/pci/host/pcie-iproc-platform.c
-@@ -67,7 +67,8 @@ static int iproc_pcie_pltfm_probe(struct platform_device *pdev)
- 		return ret;
- 	}
- 
--	pcie->base = devm_ioremap(dev, reg.start, resource_size(&reg));
-+	pcie->base = devm_ioremap_nopost(dev, reg.start,
-+					 resource_size(&reg));
- 	if (!pcie->base) {
- 		dev_err(dev, "unable to map controller registers\n");
- 		return -ENOMEM;
--- 
-2.10.0
+So far, I have not been able to get the irqchip framework to
+call the irq_ack functions I registered.
+
+Should I pass a different handler than handle_simple_irq
+to irq_domain_set_info?
+
+	irq_domain_set_info(domain, virq, pos, &tango_msi_chip,
+		domain->host_data, handle_simple_irq, NULL, NULL);
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+When an MSI packet arrives at the MSI doorbell address, the controller
+reads the packet's data; this is the MSI number "num". It sets bit "num"
+to 1 in the status regs, and raises IRQ line 55 on the system intc.
+The IRQ signal remains high, until software clears it by writing 1
+in bit "num" of the status regs.
+
+Is this an edge interrupt or a level interrupt?
+
+I was told if the interrupt request is triggered by an event, then
+it is an edge interrupt. The reception of an MSI packet is an event.
+But the IRQ remains high, so this feels like a level high.
+I'm hopelessly confused :-(
+
+
+>>>> +	mutex_lock(&pcie->lock);
+>>>> +
+>>>> +	mask = readl_relaxed(pcie->msi_mask);
+>>>
+>>> Do you really need to read this from the HW each time you allocate an
+>>> interrupt? That feels pretty crazy. You're much better off having an
+>>> in-memory bitmap that will make things more efficient [...]
+
+I have one remaining issue with bitmaps.
+
+My HW regs are 32b. How do I grab e.g. bits 96-127?
+All I can think of is
+  u32 val = ((u32 *)bitmap)[3];
+
+Is this acceptable?
+
+mrutland mentioned bitmap_to_u32array() but IIUC it is used to
+copy an entire bitmap.
+
+
+>>>> +	if (pos < MSI_COUNT)
+>>>> +		writel(mask | BIT(pos), pcie->msi_mask);
+>>>
+>>> And it would make a lot more sense to move this write (which should be
+>>> relaxed) to irq_unmask. Also, calling msi_mask for something that is an
+>>> enable register is a bit counter intuitive.
+>>
+>> I don't have as much experience as you.
+>> I just used the names in the HW documentation.
+>> I think it is the "mask" (as in bitmap) of enabled MSIs.
+>> I will change "mask" to "enable".
+>>
+>> Are you saying I should not use pci_msi_mask_irq and pci_msi_unmask_irq,
+>> but register custom implementations? I should still call these in my
+>> custom functions, right?
+> 
+> You can call both in your own mask/unmask methods. They serve different
+> purpose (one is at the endpoint level, the other is at the MSI
+> controller level).
+
+So, if I understand correctly, I should check for an available MSIs
+using the in-memory bitmap in tango_irq_domain_alloc(), but I would
+defer actually enabling the MSI until irq_unmask?
+
+I think work on bitmap and on the underlying HW regs need to be
+protected under the same spinlock, correct?
+
+
+>> Note: I don't have an "interrupt-map" prop because rev1 doesn't support
+>> legacy PCI interrupts (INTx). But I see the PCI framework wrongly mapping
+>> intA to my system's interrupt #1, presumably because I am lacking an
+>> interrupt-map?
+> 
+> Probably. I don't think it is legal not to have an interrupt-map.
+
+My understanding is that the interrupt-map actually specifies how to
+map the legacy IRQs. My platform does not support legacy IRQs; maybe
+there is some binding to say that? Maybe this is more a question for
+the PCI folks.
+
+Regards.
