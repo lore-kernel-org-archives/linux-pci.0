@@ -1,117 +1,96 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: pcie-iproc: broken 2nd (& 3rd?) controller support by
- c3245a566400 ("PCI: iproc: Request host bridge window resources")
-To: Ray Jui <ray.jui@broadcom.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Ray Jui <rjui@broadcom.com>, Scott Branden <sbranden@broadcom.com>,
- Jon Mason <jonmason@broadcom.com>, Oza Oza <oza.oza@broadcom.com>,
- JD Zheng <jiandong.zheng@broadcom.com>, Andy Gospodarek <gospo@broadcom.com>
-References: <faab6b85-58e8-3e62-8763-56a94b13fba1@gmail.com>
- <88dc6a0e-8989-d09f-1f93-6673a31664c1@broadcom.com>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <4acf85df-d5d0-6a01-b331-3158d0233a0e@gmail.com>
-Date: Thu, 9 Mar 2017 00:28:47 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0128.outbound.protection.outlook.com ([104.47.32.128]:48288
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751526AbdC0SNe (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Mar 2017 14:13:34 -0400
+From: Long Li <longli@microsoft.com>
+To: KY Srinivasan <kys@microsoft.com>,
+        "helgaas@kernel.org" <helgaas@kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "leann.ogasawara@canonical.com" <leann.ogasawara@canonical.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        "Stephen Hemminger" <sthemmin@microsoft.com>
+CC: "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: RE: [PATCH 1/2] pci-hyperv: Fix a bug in specifying CPU affinity
+Date: Mon, 27 Mar 2017 18:13:30 +0000
+Message-ID: <BN3PR03MB2227C9E21CC131FDCB6B2CABCE330@BN3PR03MB2227.namprd03.prod.outlook.com>
+References: <1490378800-26907-1-git-send-email-kys@exchange.microsoft.com>
+ <1490378842-26950-2-git-send-email-kys@exchange.microsoft.com>
+In-Reply-To: <1490378842-26950-2-git-send-email-kys@exchange.microsoft.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <88dc6a0e-8989-d09f-1f93-6673a31664c1@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gMDMvMDgvMjAxNyAwNjoyMiBQTSwgUmF5IEp1aSB3cm90ZToKPiBPbiAzLzgvMjAxNyA0OjU2
-IEFNLCBSYWZhxYIgTWnFgmVja2kgd3JvdGU6Cj4+IEkganVzdCB0cmllZCB1cGdyYWRpbmcgQkNN
-NTMwMVggZnJvbSA0LjQgdG8gNC45IGFuZCBub3RpY2VkIEkgZG9uJ3Qgc2VlCj4+IGNhcmQKPj4g
-Y29ubmVjdGVkIHRvIHRoZSAybmQgY29udHJvbGxlci4KPj4KPj4gWyAgICAyLjU5MzUzNF0gcGNp
-ZV9pcHJvY19iY21hIGJjbWEwOjc6IFBDSSBob3N0IGJyaWRnZSB0byBidXMgMDAwMDowMAo+PiBb
-ICAgIDIuNTk5Nzg2XSBwY2lfYnVzIDAwMDA6MDA6IHJvb3QgYnVzIHJlc291cmNlIFttZW0KPj4g
-MHgwODAwMDAwMC0weDBmZmZmZmZmXQo+PiBbICAgIDIuNjA2NjYzXSBwY2llX2lwcm9jX2JjbWEg
-YmNtYTA6NzogbGluazogVVAKPj4gWyAgICAyLjYxMTMxNl0gUENJOiBidXMwOiBGYXN0IGJhY2sg
-dG8gYmFjayB0cmFuc2ZlcnMgZGlzYWJsZWQKPj4gWyAgICAyLjYxNjg5OV0gcGNpIDAwMDA6MDA6
-MDAuMDogYnJpZGdlIGNvbmZpZ3VyYXRpb24gaW52YWxpZCAoW2J1cwo+PiAwMC0wMF0pLCByZWNv
-bmZpZ3VyaW5nCj4+IFsgICAgMi42MjUzOTVdIFBDSTogYnVzMTogRmFzdCBiYWNrIHRvIGJhY2sg
-dHJhbnNmZXJzIGRpc2FibGVkCj4+IFsgICAgMi42MzEwMTFdIHBjaSAwMDAwOjAwOjAwLjA6IEJB
-UiA4OiBhc3NpZ25lZCBbbWVtCj4+IDB4MDgwMDAwMDAtMHgwODBmZmZmZl0KPj4gWyAgICAyLjYz
-Nzc5NV0gcGNpIDAwMDA6MDE6MDAuMDogQkFSIDA6IGFzc2lnbmVkIFttZW0KPj4gMHgwODAwMDAw
-MC0weDA4MDA3ZmZmIDY0Yml0XQo+PiBbICAgIDIuNjQ1MDkxXSBwY2kgMDAwMDowMDowMC4wOiBQ
-Q0kgYnJpZGdlIHRvIFtidXMgMDFdCj4+IFsgICAgMi42NTAwNDJdIHBjaSAwMDAwOjAwOjAwLjA6
-ICAgYnJpZGdlIHdpbmRvdyBbbWVtCj4+IDB4MDgwMDAwMDAtMHgwODBmZmZmZl0KPj4KPj4gWyAg
-ICAyLjY1NzE5OV0gcGNpZV9pcHJvY19iY21hIGJjbWEwOjg6IHJlc291cmNlIGNvbGxpc2lvbjog
-W21lbQo+PiAweDQwMDAwMDAwLTB4NDdmZmZmZmZdIGNvbmZsaWN0cyB3aXRoIFBDSWUgTUVNIHNw
-YWNlIFttZW0KPj4gMHg0MDAwMDAwMC0weDQ3ZmZmZmZmXQo+PiBbICAgIDIuNjY5OTQ2XSBwY2ll
-X2lwcm9jX2JjbWEgYmNtYTA6ODogUENJZSBjb250cm9sbGVyIHNldHVwIGZhaWxlZAo+PiBbICAg
-IDIuNjc2MDMyXSBwY2llX2lwcm9jX2JjbWE6IHByb2JlIG9mIGJjbWEwOjggZmFpbGVkIHdpdGgg
-ZXJyb3IgLTE2Cj4+Cj4KPiBXb3VsZCB5b3UgYmUgYWJsZSB0byBhZGQgc29tZSBkZWJ1Z2dpbmcg
-dHJhY2UgdG8gc2VlIHdoZW4gdGhlIHJlc291cmNlCj4gd2FzIGFsbG9jYXRlZCB0aGUgZmlyc3Qg
-dGltZSwgYW5kIHdoZW4gdGhlIHJlc291cmNlIHdhcyBhbGxvY2F0ZWQgdGhlCj4gc2Vjb25kIHRp
-bWUgYW5kIHRoZXJlZm9yZSByZXN1bHRzIGluIHRoZSBjb25mbGljdD8KPgo+IEluIGFkZGl0aW9u
-LCBJJ20gcHV6emxlZCB3aHkgdGhpcyByZXNvdXJjZSBjb25mbGljdCBpc3N1ZSBmb3IgQkNNQSBp
-cwo+IG5vdCBzZWVuIHdpdGggdGhlIGZpcnN0IGNvbnRyb2xsZXIgd2l0aCBvdXRib3VuZCBtZW1v
-cnkgaW4gdGhlIHJhbmdlIG9mCj4gMHgwODAwMDAwMCAtIDB4MGZmZmZmZmY/IE1heWJlIHRoYXQg
-cHJvdmlkZXMgYSB2YWx1YWJsZSBkYXRhIHBvaW50IGhlcmUuCgpUaGlzIGlzIGNsZWFybHkgYSBj
-b25mbGljdCBiZXR3ZWVuIGlwcm9jIG9uIDFzdCBjb250cm9sbGVyIGFuZCBpcHJvYyBvbiAybmQg
-Y29udHJvbGxlci4KCkkgYWRkZWQgZm9sbG93aW5nIGNvZGUgdG8gdGhlIHBjaWUtaXByb2MtYmNt
-YS5jOgppZiAoYmRldi0+Y29yZV91bml0ID09IDApIHsKCWRldl9pbmZvKGRldiwgIlslc10gYWJv
-cnRpbmdcbiIsIF9fZnVuY19fKTsKCXJldHVybiAtRU5PVFNVUFA7Cn0KCkFuZCBpdCByZXN1bHRl
-ZCBpbiAybmQgY29udHJvbGxlciAoYmNtYTA6OCkgd29ya2luZyBhZ2FpbjoKWyAgICAyLjQ3MjU2
-Ml0gcGNpZV9pcHJvY19iY21hIGJjbWEwOjc6IFtpcHJvY19wY2llX2JjbWFfcHJvYmVdIGFib3J0
-aW5nClsgICAgMi40NzkwMjddIHBjaWVfaXByb2NfYmNtYTogcHJvYmUgb2YgYmNtYTA6NyBmYWls
-ZWQgd2l0aCBlcnJvciAtNTI0ClsgICAgMi42MDc0MjVdIHBjaWVfaXByb2NfYmNtYSBiY21hMDo4
-OiBQQ0kgaG9zdCBicmlkZ2UgdG8gYnVzIDAwMDA6MDAKWyAgICAyLjYxMzY3OF0gcGNpX2J1cyAw
-MDAwOjAwOiByb290IGJ1cyByZXNvdXJjZSBbbWVtIDB4NDAwMDAwMDAtMHg0N2ZmZmZmZl0KWyAg
-ICAyLjYyMDU1N10gcGNpZV9pcHJvY19iY21hIGJjbWEwOjg6IGxpbms6IFVQClsgICAgMi42MjUy
-MDZdIFBDSTogYnVzMDogRmFzdCBiYWNrIHRvIGJhY2sgdHJhbnNmZXJzIGRpc2FibGVkClsgICAg
-Mi42MzA3ODldIHBjaSAwMDAwOjAwOjAwLjA6IGJyaWRnZSBjb25maWd1cmF0aW9uIGludmFsaWQg
-KFtidXMgMDAtMDBdKSwgcmVjb25maWd1cmluZwpbICAgIDIuNjM5MjYwXSBQQ0k6IGJ1czE6IEZh
-c3QgYmFjayB0byBiYWNrIHRyYW5zZmVycyBkaXNhYmxlZApbICAgIDIuNjQ0ODcxXSBwY2kgMDAw
-MDowMDowMC4wOiBCQVIgODogYXNzaWduZWQgW21lbSAweDQwMDAwMDAwLTB4NDAwZmZmZmZdClsg
-ICAgMi42NTE2NjVdIHBjaSAwMDAwOjAxOjAwLjA6IEJBUiAwOiBhc3NpZ25lZCBbbWVtIDB4NDAw
-MDAwMDAtMHg0MDAwN2ZmZiA2NGJpdF0KWyAgICAyLjY1ODk2Ml0gcGNpIDAwMDA6MDA6MDAuMDog
-UENJIGJyaWRnZSB0byBbYnVzIDAxXQpbICAgIDIuNjYzOTExXSBwY2kgMDAwMDowMDowMC4wOiAg
-IGJyaWRnZSB3aW5kb3cgW21lbSAweDQwMDAwMDAwLTB4NDAwZmZmZmZdCgpJJ20gbm90IGV4YWN0
-bHkgc3VyZSB3aGVyZSB0aGlzIGNvbmZsaWN0IGlzIGNvbWluZyBmcm9tLiBGb3IgZGVidWdnaW5n
-IHB1cnBvc2VzIEkgYWRkZWQ6CmRldl9pbmZvKGRldiwgIlslc10gcmVzX21lbTolcFJcbiIsIF9f
-ZnVuY19fLCAmcmVzX21lbSk7CgpXaGljaCByZXN1bHRlZCBpbjoKWyAgICAyLjQ3NDU1OF0gcGNp
-ZV9pcHJvY19iY21hIGJjbWEwOjc6IFtpcHJvY19wY2llX2JjbWFfcHJvYmVdIHJlc19tZW06W21l
-bSAweDA4MDAwMDAwLTB4MGZmZmZmZmZdClsgICAgMi41OTcyNDZdIHBjaWVfaXByb2NfYmNtYSBi
-Y21hMDo3OiBQQ0kgaG9zdCBicmlkZ2UgdG8gYnVzIDAwMDA6MDAKWyAgICAyLjYwMzUwMF0gcGNp
-X2J1cyAwMDAwOjAwOiByb290IGJ1cyByZXNvdXJjZSBbbWVtIDB4MDgwMDAwMDAtMHgwZmZmZmZm
-Zl0KWyAgICAyLjYxMDM4Ml0gcGNpZV9pcHJvY19iY21hIGJjbWEwOjc6IGxpbms6IFVQClsgICAg
-Mi42MTUwMzJdIFBDSTogYnVzMDogRmFzdCBiYWNrIHRvIGJhY2sgdHJhbnNmZXJzIGRpc2FibGVk
-ClsgICAgMi42MjA2MTldIHBjaSAwMDAwOjAwOjAwLjA6IGJyaWRnZSBjb25maWd1cmF0aW9uIGlu
-dmFsaWQgKFtidXMgMDAtMDBdKSwgcmVjb25maWd1cmluZwpbICAgIDIuNjI5MTMxXSBQQ0k6IGJ1
-czE6IEZhc3QgYmFjayB0byBiYWNrIHRyYW5zZmVycyBkaXNhYmxlZApbICAgIDIuNjM0NzQ1XSBw
-Y2kgMDAwMDowMDowMC4wOiBCQVIgODogYXNzaWduZWQgW21lbSAweDA4MDAwMDAwLTB4MDgwZmZm
-ZmZdClsgICAgMi42NDE1MzddIHBjaSAwMDAwOjAxOjAwLjA6IEJBUiAwOiBhc3NpZ25lZCBbbWVt
-IDB4MDgwMDAwMDAtMHgwODAwN2ZmZiA2NGJpdF0KWyAgICAyLjY0ODgzNV0gcGNpIDAwMDA6MDA6
-MDAuMDogUENJIGJyaWRnZSB0byBbYnVzIDAxXQpbICAgIDIuNjUzNzgzXSBwY2kgMDAwMDowMDow
-MC4wOiAgIGJyaWRnZSB3aW5kb3cgW21lbSAweDA4MDAwMDAwLTB4MDgwZmZmZmZdClsgICAgMi42
-NjA5NDddIHBjaWVfaXByb2NfYmNtYSBiY21hMDo4OiBbaXByb2NfcGNpZV9iY21hX3Byb2JlXSBy
-ZXNfbWVtOlttZW0gMHg0MDAwMDAwMC0weDQ3ZmZmZmZmXQpbICAgIDIuNjY5NzMyXSBwY2llX2lw
-cm9jX2JjbWEgYmNtYTA6ODogcmVzb3VyY2UgY29sbGlzaW9uOiBbbWVtIDB4NDAwMDAwMDAtMHg0
-N2ZmZmZmZl0gY29uZmxpY3RzIHdpdGggUENJZSBNRU0gc3BhY2UgW21lbSAweDQwMDAwMDAwLTB4
-NDdmZmZmZmZdClsgICAgMi42ODI0NzBdIHBjaWVfaXByb2NfYmNtYSBiY21hMDo4OiBQQ0llIGNv
-bnRyb2xsZXIgc2V0dXAgZmFpbGVkClsgICAgMi42ODg1NTldIHBjaWVfaXByb2NfYmNtYTogcHJv
-YmUgb2YgYmNtYTA6OCBmYWlsZWQgd2l0aCBlcnJvciAtMTYKClRoZXJlIHNob3VsZG4ndCBiZSBh
-bnkgY29uZmxpY3QgYmV0d2VlbiAweDA4MDAwMDAwLTB4MGZmZmZmZmYgYW5kIDB4NDAwMDAwMDAt
-MHg0N2ZmZmZmZiwgcmlnaHQ/CgpGb3IgYmNtYSB3ZSBkbyB0aGlzOgpyZXNfbWVtLnN0YXJ0ID0g
-YmRldi0+YWRkcl9zWzBdOwpyZXNfbWVtLmVuZCA9IGJkZXYtPmFkZHJfc1swXSArIFNaXzEyOE0g
-LSAxOwoKSW4gY2FzZSBvZiBCQ000NzA4IHRoZXJlIGFyZSBmb2xsb3dpbmcgYWRkcmVzc2VzOgpb
-ICAgIDIuMjg1NDMwXSBiY21hOiBidXMwOiBDb3JlIDcgZm91bmQ6IFBDSWUgR2VuIDIgKG1hbnVm
-IDB4NEJGLCBpZCAweDUwMSwgcmV2IDB4MDEsIGNsYXNzIDB4MCkJYWRkcjoweDE4MDEyMDAwIHdy
-YXA6MHgxODEwMTAwMCBhZGRyX3NbMF06MHgwODAwMDAwMCBhZGRyX3NbMV06MHgwMDAwMDAwMApb
-ICAgIDIuMzAwMzg0XSBiY21hOiBidXMwOiBDb3JlIDggZm91bmQ6IFBDSWUgR2VuIDIgKG1hbnVm
-IDB4NEJGLCBpZCAweDUwMSwgcmV2IDB4MDEsIGNsYXNzIDB4MCkJYWRkcjoweDE4MDEzMDAwIHdy
-YXA6MHgxODEwMjAwMCBhZGRyX3NbMF06MHg0MDAwMDAwMCBhZGRyX3NbMV06MHgwMDAwMDAwMAp3
-aGljaCBtYXRjaGVzIHdoYXQgd2Ugc2VlIGluIHRoZSBib290IGxvZy4KCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGlu
-ZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMu
-aW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+> -----Original Message-----
+> From: devel [mailto:driverdev-devel-bounces@linuxdriverproject.org] On
+> Behalf Of kys@exchange.microsoft.com
+> Sent: Friday, March 24, 2017 11:07 AM
+> To: helgaas@kernel.org; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; devel@linuxdriverproject.org; olaf@aepfle.de;
+> apw@canonical.com; vkuznets@redhat.com; jasowang@redhat.com;
+> leann.ogasawara@canonical.com; marcelo.cerri@canonical.com; Stephen
+> Hemminger <sthemmin@microsoft.com>
+> Cc: stable@vger.kernel.org
+> Subject: [PATCH 1/2] pci-hyperv: Fix a bug in specifying CPU affinity
+>=20
+> From: K. Y. Srinivasan <kys@microsoft.com>
+>=20
+> When we have 32 or more CPUs in the affinity mask, we should use a specia=
+l
+> constant to specify that to the host. Fix this issue.
+>=20
+> Signed-off-by: K. Y. Srinivasan <kys@microsoft.com>
+> Cc: <stable@vger.kernel.org>
+
+Reviewed-by: Long Li <longli@microsoft.com>
+
+> ---
+>  drivers/pci/host/pci-hyperv.c |   11 ++++++++---
+>  1 files changed, 8 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.=
+c
+> index ada9856..32a16fb 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -72,6 +72,7 @@ enum {
+>         PCI_PROTOCOL_VERSION_CURRENT =3D PCI_PROTOCOL_VERSION_1_1  };
+>=20
+> +#define CPU_AFFINITY_ALL       -1ULL
+>  #define PCI_CONFIG_MMIO_LENGTH 0x2000
+>  #define CFG_PAGE_OFFSET 0x1000
+>  #define CFG_PAGE_SIZE (PCI_CONFIG_MMIO_LENGTH -
+> CFG_PAGE_OFFSET) @@ -897,9 +898,13 @@ static void
+> hv_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>          * processors because Hyper-V only supports 64 in a guest.
+>          */
+>         affinity =3D irq_data_get_affinity_mask(data);
+> -       for_each_cpu_and(cpu, affinity, cpu_online_mask) {
+> -               int_pkt->int_desc.cpu_mask |=3D
+> -                       (1ULL << vmbus_cpu_number_to_vp_number(cpu));
+> +       if (cpumask_weight(affinity) >=3D 32) {
+> +               int_pkt->int_desc.cpu_mask =3D CPU_AFFINITY_ALL;
+> +       } else {
+> +               for_each_cpu_and(cpu, affinity, cpu_online_mask) {
+> +                       int_pkt->int_desc.cpu_mask |=3D
+> +                               (1ULL << vmbus_cpu_number_to_vp_number(cp=
+u));
+> +               }
+>         }
+>=20
+>         ret =3D vmbus_sendpacket(hpdev->hbus->hdev->channel, int_pkt,
+> --
+> 1.7.1
+>=20
+> _______________________________________________
+> devel mailing list
+> devel@linuxdriverproject.org
+> http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel
