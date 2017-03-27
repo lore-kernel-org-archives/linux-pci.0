@@ -1,135 +1,67 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0053.outbound.protection.outlook.com ([104.47.36.53]:43642
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751038AbdCBP3Y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Mar 2017 10:29:24 -0500
-Subject: [RFC PATCH v2 02/32] x86: Secure Encrypted Virtualization (SEV)
- support
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:12:20 -0500
-Message-ID: <148846754069.2349.4698319264278045964.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Received: from 8bytes.org ([81.169.241.247]:40083 "EHLO theia.8bytes.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752686AbdC0PdZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Mar 2017 11:33:25 -0400
+Date: Mon, 27 Mar 2017 17:33:12 +0200
+From: Joerg Roedel <joro@8bytes.org>
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Cc: Harv Abdulhamid <harba@qti.qualcomm.com>,
+        Will Deacon <will.deacon@arm.com>,
+        Shanker Donthineni <shankerd@qti.qualcomm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sinan Kaya <okaya@qti.qualcomm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Catalin Marinas <catalin.marinas@arm.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Nate Watterson <nwatters@qti.qualcomm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+        iommu@lists.linux-foundation.org, kvm@vger.kernel.org
+Subject: Re: [RFC PATCH 24/30] iommu: Specify PASID state when unbinding a
+ task
+Message-ID: <20170327153312.GP7266@8bytes.org>
+References: <20170322154429.GE7266@8bytes.org>
+ <e2bb4c67-9b61-01cf-cc17-68088cdc5e5b@arm.com>
+ <20170322225320.GF7266@8bytes.org>
+ <a093bc07-a345-a689-9d97-f15a306f922d@arm.com>
+ <20170323143014.GK7266@8bytes.org>
+ <20170323145311.GA22972@e106794-lin.localdomain>
+ <20170323165218.GL7266@8bytes.org>
+ <9d318e88-11af-6dab-b30e-d6b5c02443fe@arm.com>
+ <20170324110045.GM7266@8bytes.org>
+ <7386120a-2848-059f-4de0-7888a2698923@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <7386120a-2848-059f-4de0-7888a2698923@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tom Lendacky <thomas.lendacky@amd.com>
+On Fri, Mar 24, 2017 at 07:08:47PM +0000, Jean-Philippe Brucker wrote:
+> On 24/03/17 11:00, Joerg Roedel wrote:
+> > The document you posted is an addition to the spec, so we can't rely on
+> > a stop marker being sent by a device when it shuts down a context.
+> > Current AMD GPUs don't send one, afaik.
+> 
+> Fair enough, though on the SMMU side we still don't know which shutdown
+> model hardware vendors are more likely to choose. Devices could use the
+> stop marker and never wait for completion of PPRs. In that case context
+> shutdown would only have to make sure that PPRs are outside the PCI
+> network, return immediately and allow the device driver to call unbind().
 
-Provide support for Secure Encyrpted Virtualization (SEV). This initial
-support defines a flag that is used by the kernel to determine if it is
-running with SEV active.
+Yes, on a stop-marker we should immediatly remove the PASID from the
+IOMMU and inform the driver. It might call unbind or do something with
+the device.
 
-Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
----
- arch/x86/include/asm/mem_encrypt.h |   14 +++++++++++++-
- arch/x86/mm/mem_encrypt.c          |    3 +++
- include/linux/mem_encrypt.h        |    6 ++++++
- 3 files changed, 22 insertions(+), 1 deletion(-)
+> So to be on the safe side I think I will by default assume that PPRs are
+> in flight during unbind, and drain both software and hardware queue to
+> ensure we catch them all.
 
-diff --git a/arch/x86/include/asm/mem_encrypt.h b/arch/x86/include/asm/mem_encrypt.h
-index 1fd5426..9799835 100644
---- a/arch/x86/include/asm/mem_encrypt.h
-+++ b/arch/x86/include/asm/mem_encrypt.h
-@@ -20,10 +20,16 @@
- #ifdef CONFIG_AMD_MEM_ENCRYPT
- 
- extern unsigned long sme_me_mask;
-+extern unsigned int sev_enabled;
- 
- static inline bool sme_active(void)
- {
--	return (sme_me_mask) ? true : false;
-+	return (sme_me_mask && !sev_enabled) ? true : false;
-+}
-+
-+static inline bool sev_active(void)
-+{
-+	return (sme_me_mask && sev_enabled) ? true : false;
- }
- 
- static inline u64 sme_dma_mask(void)
-@@ -53,6 +59,7 @@ void swiotlb_set_mem_attributes(void *vaddr, unsigned long size);
- 
- #ifndef sme_me_mask
- #define sme_me_mask	0UL
-+#define sev_enabled	0
- 
- static inline bool sme_active(void)
- {
-@@ -64,6 +71,11 @@ static inline u64 sme_dma_mask(void)
- 	return 0ULL;
- }
- 
-+static inline bool sev_active(void)
-+{
-+	return false;
-+}
-+
- static inline int set_memory_encrypted(unsigned long vaddr, int numpages)
- {
- 	return 0;
-diff --git a/arch/x86/mm/mem_encrypt.c b/arch/x86/mm/mem_encrypt.c
-index c5062e1..090419b 100644
---- a/arch/x86/mm/mem_encrypt.c
-+++ b/arch/x86/mm/mem_encrypt.c
-@@ -34,6 +34,9 @@ void __init __early_pgtable_flush(void);
- unsigned long sme_me_mask __section(.data) = 0;
- EXPORT_SYMBOL_GPL(sme_me_mask);
- 
-+unsigned int sev_enabled __section(.data) = 0;
-+EXPORT_SYMBOL_GPL(sev_enabled);
-+
- /* Buffer used for early in-place encryption by BSP, no locking needed */
- static char sme_early_buffer[PAGE_SIZE] __aligned(PAGE_SIZE);
- 
-diff --git a/include/linux/mem_encrypt.h b/include/linux/mem_encrypt.h
-index 913cf80..4b47c73 100644
---- a/include/linux/mem_encrypt.h
-+++ b/include/linux/mem_encrypt.h
-@@ -23,6 +23,7 @@
- 
- #ifndef sme_me_mask
- #define sme_me_mask	0UL
-+#define sev_enabled	0
- 
- static inline bool sme_active(void)
- {
-@@ -34,6 +35,11 @@ static inline u64 sme_dma_mask(void)
- 	return 0ULL;
- }
- 
-+static inline bool sev_active(void)
-+{
-+	return false;
-+}
-+
- static inline int set_memory_encrypted(unsigned long vaddr, int numpages)
- {
- 	return 0;
+The AMD driver first removes the internal mapping of the PASID to its
+managing data-structures, so that any follow-on faults will get
+rejected.
+
+
+
+	Joerg
