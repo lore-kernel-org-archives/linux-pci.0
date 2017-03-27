@@ -1,16 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <58C9F6C6.4090700@hisilicon.com>
-References: <1489372963-9000-1-git-send-email-yuanzhichang@hisilicon.com>
- <1489372963-9000-6-git-send-email-yuanzhichang@hisilicon.com>
- <4600523.rWNiWKrYZC@aspire.rjw.lan> <58C9F6C6.4090700@hisilicon.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Thu, 16 Mar 2017 11:13:01 +0100
-Message-ID: <CAK8P3a2QZ_j9RQ0U=4MoAAcRcZyu0L5AiYM22QZkiRxh7Ca-iA@mail.gmail.com>
-Subject: Re: [PATCH V7 5/7] ACPI: Delay the enumeration on the devices whose
- dependency has not met
-To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+In-Reply-To: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
+References: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
+From: Rob Herring <robh@kernel.org>
+Date: Mon, 27 Mar 2017 09:46:21 -0500
+Message-ID: <CAL_JsqLtTiH7DhqKf_x7xy1KZYQyiOreK=M90HFr=8BDW9542w@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/3] of/pci: dma-ranges to account highest possible
+ host bridge dma_mask
+To: Oza Pawandeep <oza.oza@broadcom.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,62 +16,46 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Rafael Wysocki <rafael@kernel.org>, linux-pci <linux-pci@vger.kernel.org>,
- Will Deacon <will.deacon@arm.com>, linuxarm@huawei.com,
- Frank Rowand <frowand.list@gmail.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Wei Xu <xuwei5@hisilicon.com>,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- linux-serial@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
- devicetree@vger.kernel.org, Corey Minyard <minyard@acm.org>,
- liviu.dudau@arm.com, John Garry <john.garry@huawei.com>,
- Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- kantyzc@163.com, zhichang.yuan02@gmail.com,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Zou Rongrong <zourongrong@gmail.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Joerg Roedel <joro@8bytes.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Linux IOMMU <iommu@lists.linux-foundation.org>,
+ "bcm-kernel-feedback-list@broadcom.com"
+ <bcm-kernel-feedback-list@broadcom.com>, Robin Murphy <robin.murphy@arm.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 16, 2017 at 3:21 AM, zhichang.yuan
-<yuanzhichang@hisilicon.com> wrote:
-> Hi, Rafael,
+On Sat, Mar 25, 2017 at 12:31 AM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
+> it is possible that PCI device supports 64-bit DMA addressing,
+> and thus it's driver sets device's dma_mask to DMA_BIT_MASK(64),
+> however PCI host bridge may have limitations on the inbound
+> transaction addressing. As an example, consider NVME SSD device
+> connected to iproc-PCIe controller.
 >
-> Thanks for your review!
+> Currently, the IOMMU DMA ops only considers PCI device dma_mask
+> when allocating an IOVA. This is particularly problematic on
+> ARM/ARM64 SOCs where the IOMMU (i.e. SMMU) translates IOVA to
+> PA for in-bound transactions only after PCI Host has forwarded
+> these transactions on SOC IO bus. This means on such ARM/ARM64
+> SOCs the IOVA of in-bound transactions has to honor the addressing
+> restrictions of the PCI Host.
 >
-> On 2017/3/14 5:24, Rafael J. Wysocki wrote:
->> On Monday, March 13, 2017 10:42:41 AM zhichang.yuan wrote:
->>> In commit 40e7fcb1929(ACPI: Add _DEP support to fix battery issue on Asus
->>> T100TA), the '_DEP' was supported to solve the dependency of Asus battery. But
->>> this patch is specific to Asus battery device.
->>> In the real world, there are other devices which need the dependency to play the
->>> role on the enumeration order. For example, all the Hip06 LPC
->>> periperals(IPMI-BT, uart, etc) must be scanned after the LPC host driver
->>> finished the probing. So, it makes sense to add a checking whether the ACPI
->>> device meet all the dependencies during its enumeration slot, if not, the
->>> enumeration will be delayed till all dependency master finish their work.
->>>
->>> This patch adds the dependency checking in ACPI enumeration, also the
->>> corresponding handling to retrigger the Hip06 LPC peripherals' scanning.
->>
->> AFAICS, _DEP is generally abused in the wild and cannot be made generic.  Sorry.
->>
+> current pcie frmework and of framework integration assumes dma-ranges
+> in a way where memory-mapped devices define their dma-ranges.
+> dma-ranges: (child-bus-address, parent-bus-address, length).
 >
-> From the ACPI specification, _DEP is for operation region accesses.
-> You are right...
->
-> How about we add a ACPI handler for our LPC bus?? Just like amba.
-> In this way, we also can solve the issue about LPC enumeration order.
+> but iproc based SOCs and even Rcar based SOCs has PCI world dma-ranges.
+> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
 
-As far as I can tell, PCI and LPC have exactly the same requirement here,
-so whatever you end up doing for one should be used for the other as well.
+If you implement a common function, then I expect to see other users
+converted to use it. There's also PCI hosts in arch/powerpc that parse
+dma-ranges.
 
-      Arnd
+Rob
 
 _______________________________________________
 linux-arm-kernel mailing list
