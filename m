@@ -1,163 +1,158 @@
-Return-Path: <SRS0=ftyf=2N=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=ftyf=2N=free.fr=slash.tmp@kernel.org>
-Subject: Re: Using the generic host PCIe driver
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- David Daney <david.daney@cavium.com>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Will Deacon <will.deacon@arm.com>, Thierry Reding <treding@nvidia.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-References: <20170227164430.GB11162@bhelgaas-glaptop.roam.corp.google.com>
- <8643c952-e915-bcd1-390e-9d4001789872@free.fr>
- <20170227183534.GA12481@bhelgaas-glaptop.roam.corp.google.com>
- <347d4200-e089-60df-5f60-58d16efc7c4e@free.fr>
- <20170301161801.GB13171@bhelgaas-glaptop.roam.corp.google.com>
- <98ee3041-6a94-91af-b4bf-208aa02624ed@free.fr>
- <20170301215726.GA32286@bhelgaas-glaptop.roam.corp.google.com>
- <258cd6f3-ef17-6705-ff48-ae06f26778c2@free.fr>
- <20170303154628.GA21522@bhelgaas-glaptop.roam.corp.google.com>
- <8e1a0b5d-8dfb-4be1-a049-b16892a6c0d0@free.fr>
- <20170303200407.GB30375@bhelgaas-glaptop.roam.corp.google.com>
- <5c899946-4220-a63e-fe98-6a103200c2ad@free.fr>
- <CAKv+Gu-QxUYZcg4DPwuhhfqKCp4eJEWXCh43ZyvDe12=exEhWw@mail.gmail.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <8daa1f79-8fda-bef9-e216-3c15f53c4f32@free.fr>
-Date: Sat, 4 Mar 2017 11:56:26 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu-QxUYZcg4DPwuhhfqKCp4eJEWXCh43ZyvDe12=exEhWw@mail.gmail.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:45781 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752088AbdC0JEG (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Mar 2017 05:04:06 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: bhelgaas@google.com, davem@davemloft.net,
+        netanel@annapurnalabs.com, jcliburn@gmail.com,
+        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org
+Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 1/5] net: thunderx: switch to pci_alloc_irq_vectors
+Date: Mon, 27 Mar 2017 10:29:32 +0200
+Message-Id: <20170327082936.6830-2-hch@lst.de>
+In-Reply-To: <20170327082936.6830-1-hch@lst.de>
+References: <20170327082936.6830-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/03/2017 10:35, Ard Biesheuvel wrote:
-> On 3 March 2017 at 23:23, Mason <slash.tmp@free.fr> wrote:
->> On 03/03/2017 21:04, Bjorn Helgaas wrote:
->>> On Fri, Mar 03, 2017 at 06:18:02PM +0100, Mason wrote:
->>>> On 03/03/2017 16:46, Bjorn Helgaas wrote:
->>>>> On Fri, Mar 03, 2017 at 01:44:54PM +0100, Mason wrote:
->>>>>
->>>>>> For now, I have "hidden" the root's BAR0 from the system with:
->>>>>>
->>>>>>    if (bus->number == 0 && where == PCI_BASE_ADDRESS_0) {
->>>>>>            *val = 0;
->>>>>>            return PCIBIOS_SUCCESSFUL;
->>>>>>    }
->>>>>
->>>>> I'm scratching my head about this a little.  Here's what your dmesg
->>>>> log contained originally:
->>>>>
->>>>>   pci 0000:00:00.0: [1105:8758] type 01 class 0x048000
->>>>>   pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x00ffffff 64bit]
->>>>>   pci 0000:00:00.0: BAR 0: no space for [mem size 0x01000000 64bit]
->>>>>   pci 0000:00:00.0: BAR 0: failed to assign [mem size 0x01000000 64bit]
->>>>>   pci 0000:00:00.0: PCI bridge to [bus 01]
->>>>>   pcieport 0000:00:00.0: enabling device (0140 -> 0142)
->>>>>
->>>>> This device is a bridge (a Root Port, per your lspci output).  With a
->>>>> BAR, which is legal but unusual.  We couldn't assign space for the
->>>>> BAR, which means we can't use whatever vendor-specific functionality
->>>>> it provides.
->>>>
->>>> I had several chats with the HW designer. I'll try to explain, only as
->>>> far as I could understand ;-)
->>>>
->>>> We used to make devices, before implementing a root. Since at least
->>>> one BAR is required (?) for a device, it was decided to have one BAR
->>>> for the root, for symmetry.
->>>
->>> I'm not aware of a spec requirement for any BARs.  It's conceivable
->>> that one could build a device that only uses config space.  And of
->>> course, most bridges have windows but no BARs.  But that doesn't
->>> matter; the hardware is what it is and we have to deal with it.
->>
->> I appreciate the compassion. RMK considered the DMA HW too screwy
->> to bother supporting ;-)
->>
->>>> In fact, I thought I could ignore that BAR, but it is apparently NOT
->>>> the case, as MSIs are supposed to be sent *within* the BAR of the root.
->>>
->>> I don't know much about this piece of the MSI puzzle, but maybe Marc
->>> can enlighten us.  If this Root Port is the target of MSIs and the
->>> Root Port turns them into some sort of interrupt on the CPU side, I
->>> can see how this might make sense.
->>>
->>> I think it's unusual for the PCI core to assign the MSI target using a
->>> BAR, though.  I think this means you'll have to implement your
->>> arch_setup_msi_irq() or .irq_compose_msi_msg() method such that it
->>> looks up that BAR value, since you won't know it at build-time.
->>
->> I'll hack the Altera driver to fit my purpose.
->>
->>>> The weird twist is that the BAR advertizes a 64-bit memory zone,
->>>> but we will, in fact, map MMIO registers behind it. So all the
->>>> RAM Linux assigns to the area is wasted, IIUC.
->>>
->>> I'm not sure what this means.  You have this:
->>>
->>>> OF: PCI:   MEM 0x90000000..0x9fffffff -> 0x90000000
->>
->> This means I've put 256 MB of system RAM aside for PCIe devices.
->> This memory is no longer available for Linux "stuff".
->>
-> 
-> No it doesn't. It is a physical memory *range* that is assigned to the
-> PCI host bridge. Any memory accesses by the CPU to that window will be
-> forwarded to the PCI bus by the host bridge. From the kernel driver's
-> POV, this range is a given, but your host bridge h/w may involve some
-> configuration to make the host bridge 'listen' to this range. This is
-> h/w specific, and as Bjorn pointed out, usually configured by the
-> firmware so that the kernel driver does not require any knowledge of
-> those internals.
-> 
->>>> pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffffff]
->>
->> I suppose this is the PCI bus address. As we've discussed,
->> I used the identity to map bus <-> CPU addresses.
->>
-> 
-> Yes, that is fine
-> 
->>> This [mem 0x90000000-0x9fffffff] host bridge window means there can't
->>> be RAM in that region.  CPU accesses to 0x90000000-0x9fffffff have to
->>> be claimed by the host bridge and forwarded to PCI.
->>>
->>> Linux doesn't "assign system RAM" anywhere; we just learn somehow
->>> where that RAM is.  Linux *does* assign BARs of PCI devices, and they
->>> have to be inside the host bridge windows(s).
->>
->> I'm confused, I thought I had understood that part...
->> I thought the binding required me to specify (in the "ranges"
->> property) a non-prefetchable zone of system RAM, and this
->> memory is then "handed out" by Linux to different devices.
->> Or do I just need to specify some address range that's not
->> necessarily backed with actual RAM?
->>
-> 
-> Yes. Each PCI device advertises its need of memory windows via its
-> BARs, but the actual placement of those windows inside the host
-> bridge's memory range is configured dynamically, usually by the
-> firmware (on PCs) but on ARM/arm64 systems, this is done from scratch
-> by the kernel. The *purpose* of those memory windows is device
-> specific, but whatever is behind it lives on the PCI device. So this
-> is *not* system RAM.
+Remove the deprecated pci_enable_msix API in favour of it's successor.
 
-Hello Ard,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/net/ethernet/cavium/thunder/nic_main.c | 75 ++++++--------------------
+ 1 file changed, 15 insertions(+), 60 deletions(-)
 
-It appears I have misunderstood something fundamental.
-
-The binding for generic PCI support
-http://lxr.free-electrons.com/source/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-requires two address-type specs
-(please correct me if I'm wrong)
-1) in the "reg" prop, the address of the configuration space (CPU physical)
-2) in the "ranges" prop, at least a non-prefetchable area
-http://elinux.org/Device_Tree_Usage#PCI_Address_Translation
-
-In my 32-bit system, there are 2GB of RAM at [0x8000_0000,0x10000_0000[
-There are MMIO registers at [0, 16MB[ and also other stuff higher
-Suppose there is nothing mapped at [0x7000_0000, 0x8000_0000[
-
-Can I provide that range to the PCI subsystem?
-
-Regards.
+diff --git a/drivers/net/ethernet/cavium/thunder/nic_main.c b/drivers/net/ethernet/cavium/thunder/nic_main.c
+index 767234e2e8f9..205569db9093 100644
+--- a/drivers/net/ethernet/cavium/thunder/nic_main.c
++++ b/drivers/net/ethernet/cavium/thunder/nic_main.c
+@@ -65,10 +65,7 @@ struct nicpf {
+ 	bool			mbx_lock[MAX_NUM_VFS_SUPPORTED];
+ 
+ 	/* MSI-X */
+-	bool			msix_enabled;
+ 	u8			num_vec;
+-	struct msix_entry	*msix_entries;
+-	bool			irq_allocated[NIC_PF_MSIX_VECTORS];
+ 	char			irq_name[NIC_PF_MSIX_VECTORS][20];
+ };
+ 
+@@ -1088,7 +1085,7 @@ static irqreturn_t nic_mbx_intr_handler(int irq, void *nic_irq)
+ 	u64 intr;
+ 	u8  vf, vf_per_mbx_reg = 64;
+ 
+-	if (irq == nic->msix_entries[NIC_PF_INTR_ID_MBOX0].vector)
++	if (irq == pci_irq_vector(nic->pdev, NIC_PF_INTR_ID_MBOX0))
+ 		mbx = 0;
+ 	else
+ 		mbx = 1;
+@@ -1107,76 +1104,30 @@ static irqreturn_t nic_mbx_intr_handler(int irq, void *nic_irq)
+ 	return IRQ_HANDLED;
+ }
+ 
+-static int nic_enable_msix(struct nicpf *nic)
++static int nic_register_interrupts(struct nicpf *nic)
+ {
+ 	int i, ret;
+ 
+-	nic->num_vec = pci_msix_vec_count(nic->pdev);
+-
+-	nic->msix_entries = kmalloc_array(nic->num_vec,
+-					  sizeof(struct msix_entry),
+-					  GFP_KERNEL);
+-	if (!nic->msix_entries)
+-		return -ENOMEM;
+-
+-	for (i = 0; i < nic->num_vec; i++)
+-		nic->msix_entries[i].entry = i;
+-
+-	ret = pci_enable_msix(nic->pdev, nic->msix_entries, nic->num_vec);
+-	if (ret) {
++	/* Enable MSI-X */
++	ret = pci_alloc_irq_vectors(nic->pdev, nic->num_vec, nic->num_vec,
++			PCI_IRQ_MSIX);
++	if (ret < 0) {
+ 		dev_err(&nic->pdev->dev,
+ 			"Request for #%d msix vectors failed, returned %d\n",
+ 			   nic->num_vec, ret);
+-		kfree(nic->msix_entries);
+ 		return ret;
+ 	}
+ 
+-	nic->msix_enabled = 1;
+-	return 0;
+-}
+-
+-static void nic_disable_msix(struct nicpf *nic)
+-{
+-	if (nic->msix_enabled) {
+-		pci_disable_msix(nic->pdev);
+-		kfree(nic->msix_entries);
+-		nic->msix_enabled = 0;
+-		nic->num_vec = 0;
+-	}
+-}
+-
+-static void nic_free_all_interrupts(struct nicpf *nic)
+-{
+-	int irq;
+-
+-	for (irq = 0; irq < nic->num_vec; irq++) {
+-		if (nic->irq_allocated[irq])
+-			free_irq(nic->msix_entries[irq].vector, nic);
+-		nic->irq_allocated[irq] = false;
+-	}
+-}
+-
+-static int nic_register_interrupts(struct nicpf *nic)
+-{
+-	int i, ret;
+-
+-	/* Enable MSI-X */
+-	ret = nic_enable_msix(nic);
+-	if (ret)
+-		return ret;
+-
+ 	/* Register mailbox interrupt handler */
+ 	for (i = NIC_PF_INTR_ID_MBOX0; i < nic->num_vec; i++) {
+ 		sprintf(nic->irq_name[i],
+ 			"NICPF Mbox%d", (i - NIC_PF_INTR_ID_MBOX0));
+ 
+-		ret = request_irq(nic->msix_entries[i].vector,
++		ret = request_irq(pci_irq_vector(nic->pdev, i),
+ 				  nic_mbx_intr_handler, 0,
+ 				  nic->irq_name[i], nic);
+ 		if (ret)
+ 			goto fail;
+-
+-		nic->irq_allocated[i] = true;
+ 	}
+ 
+ 	/* Enable mailbox interrupt */
+@@ -1185,15 +1136,19 @@ static int nic_register_interrupts(struct nicpf *nic)
+ 
+ fail:
+ 	dev_err(&nic->pdev->dev, "Request irq failed\n");
+-	nic_free_all_interrupts(nic);
+-	nic_disable_msix(nic);
++	while (--i >= 0)
++		free_irq(pci_irq_vector(nic->pdev, i), nic);
++	pci_free_irq_vectors(nic->pdev);
+ 	return ret;
+ }
+ 
+ static void nic_unregister_interrupts(struct nicpf *nic)
+ {
+-	nic_free_all_interrupts(nic);
+-	nic_disable_msix(nic);
++	int i;
++
++	for (i = 0; i < nic->num_vec; i++)
++		free_irq(pci_irq_vector(nic->pdev, i), nic);
++	pci_free_irq_vectors(nic->pdev);
+ }
+ 
+ static int nic_num_sqs_en(struct nicpf *nic, int vf_en)
+-- 
+2.11.0
