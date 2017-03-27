@@ -1,78 +1,240 @@
-Return-Path: <SRS0=7RPg=26=semihalf.com=tn@kernel.org>
-Return-Path: <SRS0=7RPg=26=semihalf.com=tn@kernel.org>
-Subject: Re: [PATCH] PCI: ACPI: Fix ThunderX PEM initialization
-To: Bjorn Helgaas <helgaas@kernel.org>, Jon Masters <jcm@jonmasters.org>
-References: <20170131142525.GA9942@bhelgaas-glaptop.roam.corp.google.com>
- <20170131145720.GA14231@localhost.localdomain>
- <20170131203109.GA14127@bhelgaas-glaptop.roam.corp.google.com>
- <20170201125325.GA15805@localhost.localdomain>
- <20170201151807.GA15793@bhelgaas-glaptop.roam.corp.google.com>
- <376ae1df-da85-e576-75d6-3ae2ab0f1b41@jonmasters.org>
- <20170315113323.GA28027@localhost.localdomain>
- <251db823-591b-483b-9c55-13c911020fd1@jonmasters.org>
- <48b93116-cc0f-e59d-8aa3-704052ad6759@gmail.com>
- <c3392131-9243-24d3-30b4-4d7e84019d6f@jonmasters.org>
- <20170321134744.GA13150@bhelgaas-glaptop.roam.corp.google.com>
-Cc: David Daney <ddaney.cavm@gmail.com>,
- Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>,
- David.Daney@cavium.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, stemerkhanov@CAVIUMNETWORKS.onmicrosoft.com,
- bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <b50b6a7f-30be-4206-4f38-2539ea936228@semihalf.com>
-Date: Tue, 21 Mar 2017 15:17:17 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
+To: Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>,
+ Sricharan R <sricharan@codeaurora.org>,
+ "Wangzhou (B)" <wangzhou1@hisilicon.com>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "joro@8bytes.org" <joro@8bytes.org>,
+ "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "tn@semihalf.com" <tn@semihalf.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <58D49845.9060407@hisilicon.com>
+ <0ea8022b-a19b-335d-6cc6-81510196f891@codeaurora.org>
+ <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
+ <db3d68f8-713c-9ae2-7df9-324bc1b375b1@arm.com>
+ <5FC3163CFD30C246ABAA99954A238FA81750CCC4@lhreml504-mbs>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <f67fb561-4238-6933-04f3-0f910f9232d1@arm.com>
+Date: Mon, 27 Mar 2017 17:18:15 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170321134744.GA13150@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <5FC3163CFD30C246ABAA99954A238FA81750CCC4@lhreml504-mbs>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
-
-On 21.03.2017 14:47, Bjorn Helgaas wrote:
-> On Tue, Mar 21, 2017 at 07:38:07AM -0400, Jon Masters wrote:
->> On 03/16/2017 12:25 PM, David Daney wrote:
->>> On 03/16/2017 07:32 AM, Jon Masters wrote:
+On 27/03/17 16:58, Shameerali Kolothum Thodi wrote:
+> 
+> 
+>> -----Original Message-----
+>> From: Shameerali Kolothum Thodi
+>> Sent: Monday, March 27, 2017 3:53 PM
+>> To: 'Robin Murphy'; Sricharan R; Wangzhou (B); will.deacon@arm.com;
+>> joro@8bytes.org; lorenzo.pieralisi@arm.com; iommu@lists.linux-
+>> foundation.org; linux-arm-kernel@lists.infradead.org; linux-arm-
+>> msm@vger.kernel.org; m.szyprowski@samsung.com;
+>> bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+>> acpi@vger.kernel.org; tn@semihalf.com; hanjun.guo@linaro.org;
+>> okaya@codeaurora.org
+>> Subject: RE: [PATCH V9 00/11] IOMMU probe deferral support
 >>
->>>>> Yes, it is now contains "CAVxxx" as _HID for device config object.
->>>>
->>>> Which is different from the version that was merged into upstream. That
->>>> should never have happened. It will never happen again. I have spent some
->>>> time over the past few days ensuring folks understand that I will not
->>>> allow a repeat of this to occur the next time around. We will have
->>>> platforms that are bulletproof and supported by upstream with any
->>>> errata fixes in a very carefully controlled manner. There will
->>>> under no circumstances ever be a situation like this again.
+>>
+>>> -----Original Message-----
+>>> From: Robin Murphy [mailto:robin.murphy@arm.com]
+>>> Sent: Friday, March 24, 2017 6:39 PM
+>>> To: Shameerali Kolothum Thodi; Sricharan R; Wangzhou (B);
+>>> will.deacon@arm.com; joro@8bytes.org; lorenzo.pieralisi@arm.com;
+>>> iommu@lists.linux-foundation.org; linux-arm-kernel@lists.infradead.org;
+>>> linux-arm-msm@vger.kernel.org; m.szyprowski@samsung.com;
+>>> bhelgaas@google.com; linux-pci@vger.kernel.org; linux-
+>>> acpi@vger.kernel.org; tn@semihalf.com; hanjun.guo@linaro.org;
+>>> okaya@codeaurora.org
+>>> Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
 >>>
->>> We are still evaluating the merits of registering the values that appeared
->>> in v4.10, and not changing them.  We should know more in a couple of days.
+>>> On 24/03/17 09:27, Shameerali Kolothum Thodi wrote:
+>>>> Hi Sricharan,
+>>>>
+>>>>> -----Original Message-----
+>>>>> From: Sricharan R [mailto:sricharan@codeaurora.org]
+>> [...]
+>>>>> Looks like this triggers the start of the bug.
+>>>>> So the below check in iommu_dma_init_domain fails,
+>>>>>
+>>>>>          if (domain->geometry.force_aperture) {
+>>>>>                  if (base > domain->geometry.aperture_end ||
+>>>>>                      base + size <= domain->geometry.aperture_start) {
+>>>>>
+>>>>> and the rest goes out of sync after that. Can you print out the base,
+>>>>> aperture_start and end values to see why the check fails ?
+>>>>
+>>>> dev_info(dev, "0x%llx 0x%llx, 0x%llx 0x%llx, 0x%llx 0x%llx\n", base, size,
+>>> domain->geometry.aperture_start, domain->geometry.aperture_end,
+>>> *dev->dma_mask, dev->coherent_dma_mask);
+>>>>
+>>>> [  183.752100] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff,
+>>> 0xffffffff 0xffffffff
+>>>> .....
+>>>> [  319.508037] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff,
+>>> 0xffffffffffffffff 0xffffffffffffffff
+>>>>
+>>>> Yes, size seems to be the problem here. When the VF  device gets
+>> attached
+>>> to vfio-pci,
+>>>> somehow the dev->coherent_dma_mask is set to 64 bits and size
+>> become
+>>> zero.
+>>>
+>>> AFAICS, this is either down to patch 3 (which should apply on its own
+>>> easily enough for testing), or patch 6, implying that somehow the
+>>> vfio-pci device gets its DMA mask widened to 64 bits somewhere between
+>>> very soon after after creation (where we originally called
+>>> of_dma_configure()) and immediately before probe (where we now call
+>> it).
+>>>
+>>> Either way I guess this is yet more motivation to write that "change the
+>>> arch_setup_dma_ops() interface to take a mask instead of a size" patch...
 >>
->> Thanks David. What was the verdict? (for the public record). If we need to
->> get a change into upstream, let's get that teed up before 4.12 merge.
+>> Just applying the patch 3 and binding the device into vfio-pci is fine. Please
+>> find the
+>> log below (with  dev_info debug added to iommu_dma_init_domain ).
+>> ...
+>> [  142.851906] iommu: Adding device 0000:81:10.0 to group 6
+>> [  142.852063] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff,
+>> 0xffffffff 0xffffffff   ---->dev_info()
+>> [  142.852836] ixgbevf 0000:81:10.0: enabling device (0000 -> 0002)
+>> [  142.852962] ixgbe 0000:81:00.0 eth0: VF Reset msg received from vf 0
+>> [  142.853833] ixgbe 0000:81:00.0: VF 0 has no MAC address assigned, you
+>> may have to assign one manually
+>> [  142.863956] ixgbevf 0000:81:10.0: MAC address not assigned by
+>> administrator.
+>> [  142.863960] ixgbevf 0000:81:10.0: Assigning random MAC address
+>> [  142.865689] ixgbevf 0000:81:10.0: da:9f:f8:1e:57:3a
+>> [  142.865692] ixgbevf 0000:81:10.0: MAC: 1
+>> [  142.865693] ixgbevf 0000:81:10.0: Intel(R) 82599 Virtual Function
+>> [  142.939145] ixgbe 0000:81:00.0 eth0: NIC Link is Up 1 Gbps, Flow Control:
+>> None
+>> [  152.902894] nfs: server 172.18.45.166 not responding, still trying
+>> [  188.980933] nfs: server 172.18.45.166 not responding, still trying
+>> [  188.981298] nfs: server 172.18.45.166 OK
+>> [  188.981593] nfs: server 172.18.45.166 OK
+>> [  221.755626] VFIO - User Level meta-driver version: 0.3
+>> ...
 >>
->> And for other folks following along with this thread: I'm not just picking
->> on Cavium here. I'll be doing the same with *every* ARM server SoC company
->> as necessary over the coming months. We are going to have militantly
->> compliant standards adherence in this industry and every ARM server SoC is
->> going to "just work" with an upstream Linux kernel with an ACPI enabled
->> platform. This will be so utterly clean and boring it'll be amazing.
->
-> Thanks for keeping on top of this, Jon.  I agree, we should not be
-> using unregistered vendor prefixes, e.g., the "THRX" added by
-> 44f22bd91e88 ("PCI: Add MCFG quirks for Cavium ThunderX pass2.x host
-> controller").  I'm sorry I merged that without doing the due
-> diligence.
+>> Applied up to patch 6, and the issue appeared,
+>>
+>> [  145.212351] iommu: Adding device 0000:81:10.0 to group 5
+>> [  145.212367] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff,
+>> 0xffffffff 0xffffffff
+>> [  145.213261] ixgbevf 0000:81:10.0: enabling device (0000 -> 0002)
+>> [  145.213394] ixgbe 0000:81:00.0 eth0: VF Reset msg received from vf 0
+>> [  145.214272] ixgbe 0000:81:00.0: VF 0 has no MAC address assigned, you
+>> may have to assign one manually
+>> [  145.224379] ixgbevf 0000:81:10.0: MAC address not assigned by
+>> administrator.
+>> [  145.224384] ixgbevf 0000:81:10.0: Assigning random MAC address
+>> [  145.225941] ixgbevf 0000:81:10.0: 1a:85:06:48:a7:19
+>> [  145.225944] ixgbevf 0000:81:10.0: MAC: 1
+>> [  145.225946] ixgbevf 0000:81:10.0: Intel(R) 82599 Virtual Function
+>> [  145.299961] ixgbe 0000:81:00.0 eth0: NIC Link is Up 1 Gbps, Flow Control:
+>> None
+>> [  154.947742] nfs: server 172.18.45.166 not responding, still trying
+>> [  191.025780] nfs: server 172.18.45.166 not responding, still trying
+>> [  191.026122] nfs: server 172.18.45.166 OK
+>> [  191.026317] nfs: server 172.18.45.166 OK
+>> [  263.706402] VFIO - User Level meta-driver version: 0.3
+>> [  269.757613] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff, 0xffffffffffffffff
+>> 0xffffffffffffffff
+>> [  269.757617] specified DMA range outside IOMMU capability
+>> [  269.757618] Failed to set up IOMMU for device 0000:81:10.0; retaining
+>> platform DMA ops
+>>
+>>  From the logs its clear that  when ixgbevf driver originally probes and adds
+>> the device
+>>  to smmu  the dma mask is 32, but when it binds to vfio-pci, it becomes 64 bit.
+> 
+> Just to add to that, the mask is set to 64 bit in the ixgebvf driver probe[1]
 
-Honestly, it is me who is responsible for this since I submitted the patch.
+Aha, but of course it's still the same struct device getting bound to
+VFIO later, so whatever mask the first driver set is still in there when
+we go through of_dma_configure() the second time (and the fact that we
+go through more than once being the new behaviour). So yes, this is a
+legitimate problem and we really do need to be robust against size
+overflow. I reckon the below tweak of your fix is probably the way to
+go; cleaning up the arch_setup_dma_ops() interface can happen later.
 
->
-> I suspect the resolution will be to register "THRX".  If that doesn't
-> happen, I'll propose reverting 44f22bd91e88, not because I want to
-> break things, but only because I'm not personally in a position to do
-> anything smarter.  So please propose a better solution that fits
-> within the ACPI _HID/_CID model :)
+Robin.
 
-I already submitted the patch to fix this. Please see:
-https://patchwork.ozlabs.org/patch/739042/
+-----8<-----
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index 9933077df7b7..77d080bde52d 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct
+device_node *np)
+ 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+ 	if (ret < 0) {
+ 		dma_addr = offset = 0;
+-		size = dev->coherent_dma_mask + 1;
++		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+ 	} else {
+ 		offset = PFN_DOWN(paddr - dma_addr);
 
-Thanks,
-Tomasz
+
+----->8-----
+
+> [  127.914001] ixgbe 0000:81:00.0 eth0: SR-IOV enabled with 1 VFs
+> [  127.914106] ixgbe 0000:81:00.0: removed PHC on eth0
+> [  128.125166] ixgbe 0000:81:00.0: Multiqueue Enabled: Rx Queue count = 4, Tx Queue count = 4
+> [  128.143857] ixgbe 0000:81:00.0: registered PHC device on eth0
+> [  128.314754] ixgbe 0000:81:00.0 eth0: detected SFP+: 11
+> [  128.357878] pci 0000:81:10.0: [8086:10ed] type 00 class 0x020000
+> [  128.358416] iommu: Adding device 0000:81:10.0 to group 5
+> [  128.358443] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff, 0xffffffff 0xffffffff
+> [  128.359326] ixgbevf 0000:81:10.0: enabling device (0000 -> 0002)
+> [  128.359333] Shameer: ixgbevf_probe, 64 bit			------------->mask set to 64 bit
+> [  128.359462] ixgbe 0000:81:00.0 eth0: VF Reset msg received from vf 0
+> [  128.360331] ixgbe 0000:81:00.0: VF 0 has no MAC address assigned, you may have to assign one manually
+> [  128.370470] ixgbevf 0000:81:10.0: MAC address not assigned by administrator.
+> [  128.370474] ixgbevf 0000:81:10.0: Assigning random MAC address
+> [  128.372172] ixgbevf 0000:81:10.0: ea:40:b9:e9:cb:04
+> [  128.372176] ixgbevf 0000:81:10.0: MAC: 1
+> [  128.372178] ixgbevf 0000:81:10.0: Intel(R) 82599 Virtual Function
+> [  128.445551] ixgbe 0000:81:00.0 eth0: NIC Link is Up 1 Gbps, Flow Control: None
+> [  138.089869] nfs: server 172.18.45.166 not responding, still trying
+> [  174.697868] nfs: server 172.18.45.166 not responding, still trying
+> [  174.698359] nfs: server 172.18.45.166 OK
+> [  174.698582] nfs: server 172.18.45.166 OK
+> [  465.942259] VFIO - User Level meta-driver version: 0.3
+>  [  472.754074] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff, 0xffffffffffffffff 0xffffffffffffffff
+> [  472.754075] specified DMA range outside IOMMU capability
+> [  472.754077] Failed to set up IOMMU for device 0000:81:10.0; retaining platform DMA ops
+> 
+> 1. http://lxr.free-electrons.com/source/drivers/net/ethernet/intel/ixgbevf/ixgbevf_main.c#L3996
+> 
+> 
+>  
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
