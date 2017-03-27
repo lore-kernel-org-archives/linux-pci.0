@@ -1,51 +1,38 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jon Mason <jon.mason@broadcom.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        bcm-kernel-feedback-list@broadcom.com,
-        Jon Mason <jonmason@broadcom.com>
-Subject: [PATCH] PCI: iproc: Add PCI_DOMAIN dependency to PCI Kconfig
-Date: Wed,  1 Mar 2017 10:53:13 -0500
-Message-Id: <1488383593-31666-1-git-send-email-jon.mason@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=OWO5=3E=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=OWO5=3E=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1490610350.3177.71.camel@kernel.crashing.org>
+Subject: Re: [PATCH v9 2/3] PCI: Add a macro to set default alignment for
+ all PCI devices
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Michael Ellerman <mpe@ellerman.id.au>, Bjorn Helgaas
+ <helgaas@kernel.org>,
+        Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
+        gwshan@linux.vnet.ibm.com, aik@ozlabs.ru, paulus@samba.org,
+        zhong@linux.vnet.ibm.com
+Date: Mon, 27 Mar 2017 21:25:50 +1100
+In-Reply-To: <8737dzf2gu.fsf@concordia.ellerman.id.au>
+References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com>
+	 <1487141106-2503-3-git-send-email-xyjxie@linux.vnet.ibm.com>
+	 <20170323205342.GB23612@bhelgaas-glaptop.roam.corp.google.com>
+	 <8737dzf2gu.fsf@concordia.ellerman.id.au>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jon Mason <jonmason@broadcom.com>
+On Mon, 2017-03-27 at 21:17 +1100, Michael Ellerman wrote:
+> > If so, is it acceptable to force that kernel to user 64K alignment
+> > even
+> > when it's running on non-PowerNV systems?
+> 
+> Probably, but I'm not sure TBH. Benh will know, I'll try and get his
+> attention.
 
-2+ PCI devices fail to be discovered due to each bus having the same
-PCI domain.  This is because the domain defined in the device tree file
-is not being added due to PCI_DOMAIN not being enabled.  So, every PCI
-bus has a domain of zero.  When PCI_DOMAIN is selected by the Kconfig,
-it picks-up the domain defined in the device tree file and everything
-works as expected.
+Can we make the alignment PAGE_SIZE ? I think that should be ok as long
+as it doesn't try to re-allocate BARs for devices that have already
+been properly allocated by firmware (ie, PowerMac, if you mess around
+with the MacIO chip on these, bad things will happen).
 
-Since both PCIE_IPROC_PLATFORM and PCIE_IPROC_BCMA need PCI_DOMAIN,
-moving it to PCIE_IPROC (so it can be automatically selected for both).
-
-Signed-off-by: Jon Mason <jonmason@broadcom.com>
----
- drivers/pci/host/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 898d2c4..82496b6 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -165,6 +165,7 @@ config PCI_VERSATILE
- 
- config PCIE_IPROC
- 	tristate
-+	select PCI_DOMAINS
- 	help
- 	  This enables the iProc PCIe core controller support for Broadcom's
- 	  iProc family of SoCs. An appropriate bus interface driver needs
-@@ -185,7 +186,6 @@ config PCIE_IPROC_BCMA
- 	depends on ARM && (ARCH_BCM_IPROC || COMPILE_TEST)
- 	select PCIE_IPROC
- 	select BCMA
--	select PCI_DOMAINS
- 	default ARCH_BCM_5301X
- 	help
- 	  Say Y here if you want to use the Broadcom iProc PCIe controller
--- 
-2.7.4
+Cheers,
+Ben.
