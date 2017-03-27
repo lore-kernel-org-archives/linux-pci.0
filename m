@@ -1,14 +1,19 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 24 Mar 2017 12:44:08 +0000
-From: Jayachandran C <jnair@caviumnetworks.com>
-To: Jon Masters <jcm@redhat.com>
-Subject: Re: [PATCH v3 0/2] Handle Cavium ThunderX2 PCI topology quirk
-Message-ID: <20170324124327.GA2525@localhost>
-References: <1490172671-2648-1-git-send-email-jnair@caviumnetworks.com>
- <122d7df5-8fde-c6fb-a608-9091dd59e79b@redhat.com>
+Date: Mon, 27 Mar 2017 18:33:14 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Subject: Re: [PATCH V9 00/11] IOMMU probe deferral support
+Message-ID: <20170327173314.GA17035@red-moon>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <58D49845.9060407@hisilicon.com>
+ <0ea8022b-a19b-335d-6cc6-81510196f891@codeaurora.org>
+ <5FC3163CFD30C246ABAA99954A238FA81750B7CB@lhreml504-mbs>
+ <db3d68f8-713c-9ae2-7df9-324bc1b375b1@arm.com>
+ <5FC3163CFD30C246ABAA99954A238FA81750CCC4@lhreml504-mbs>
+ <f67fb561-4238-6933-04f3-0f910f9232d1@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <122d7df5-8fde-c6fb-a608-9091dd59e79b@redhat.com>
+In-Reply-To: <f67fb561-4238-6933-04f3-0f910f9232d1@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,91 +21,124 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
- Alex Williamson <alex.williamson@redhat.com>,
- Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- linux-arm-kernel@lists.infradead.org
+Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "joro@8bytes.org" <joro@8bytes.org>,
+ "will.deacon@arm.com" <will.deacon@arm.com>,
+ "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+ Shameerali Kolothum Thodi <shameerali.kolothum.thodi@huawei.com>,
+ "okaya@codeaurora.org" <okaya@codeaurora.org>,
+ "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+ "Wangzhou \(B\)" <wangzhou1@hisilicon.com>,
+ "hanjun.guo@linaro.org" <hanjun.guo@linaro.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "tn@semihalf.com" <tn@semihalf.com>, Sricharan R <sricharan@codeaurora.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 22, 2017 at 11:13:05AM -0400, Jon Masters wrote:
-> On 03/22/2017 04:51 AM, Jayachandran C wrote:
-> > Hi Bjorn, Alex,
+On Mon, Mar 27, 2017 at 05:18:15PM +0100, Robin Murphy wrote:
+
+[...]
+
+> >> [  145.212351] iommu: Adding device 0000:81:10.0 to group 5
+> >> [  145.212367] ixgbevf 0000:81:10.0: 0x0 0x100000000, 0x0 0xffffffffffff,
+> >> 0xffffffff 0xffffffff
+> >> [  145.213261] ixgbevf 0000:81:10.0: enabling device (0000 -> 0002)
+> >> [  145.213394] ixgbe 0000:81:00.0 eth0: VF Reset msg received from vf 0
+> >> [  145.214272] ixgbe 0000:81:00.0: VF 0 has no MAC address assigned, you
+> >> may have to assign one manually
+> >> [  145.224379] ixgbevf 0000:81:10.0: MAC address not assigned by
+> >> administrator.
+> >> [  145.224384] ixgbevf 0000:81:10.0: Assigning random MAC address
+> >> [  145.225941] ixgbevf 0000:81:10.0: 1a:85:06:48:a7:19
+> >> [  145.225944] ixgbevf 0000:81:10.0: MAC: 1
+> >> [  145.225946] ixgbevf 0000:81:10.0: Intel(R) 82599 Virtual Function
+> >> [  145.299961] ixgbe 0000:81:00.0 eth0: NIC Link is Up 1 Gbps, Flow Control:
+> >> None
+> >> [  154.947742] nfs: server 172.18.45.166 not responding, still trying
+> >> [  191.025780] nfs: server 172.18.45.166 not responding, still trying
+> >> [  191.026122] nfs: server 172.18.45.166 OK
+> >> [  191.026317] nfs: server 172.18.45.166 OK
+> >> [  263.706402] VFIO - User Level meta-driver version: 0.3
+> >> [  269.757613] vfio-pci 0000:81:10.0: 0x0 0x0, 0x0 0xffffffffffff, 0xffffffffffffffff
+> >> 0xffffffffffffffff
+> >> [  269.757617] specified DMA range outside IOMMU capability
+> >> [  269.757618] Failed to set up IOMMU for device 0000:81:10.0; retaining
+> >> platform DMA ops
+> >>
+> >>  From the logs its clear that  when ixgbevf driver originally probes and adds
+> >> the device
+> >>  to smmu  the dma mask is 32, but when it binds to vfio-pci, it becomes 64 bit.
 > > 
-> > Here is v3 of the patchset to handle the PCIe topology quirk of
-> > Cavium ThunderX2 (previously called Broadcom Vulcan).
-> > 
-> > The earlier discussions on this can be seen at:
-> > http://www.spinics.net/lists/linux-pci/msg51001.html
-> > https://patchwork.ozlabs.org/patch/582633/ and
-> > https://lists.linuxfoundation.org/pipermail/iommu/2016-June/017681.html
-> > 
-> > The earlier discussion on this patchset had stalled with a suggestion
-> > that it may be possible to fix up this quirk by handling the issue in
-> > the function argument of pci_for_each_dma_alias(). But at that point
-> > all the ACPI and OF code for SMMU and GIC was to merged, and we did not
-> > have reasonable codebase to make the changes.
-> > 
-> > For 4.11, I tried to fix it in both the SMMU and the GIC ITS code based
-> > on this suggestion, but after going thru the effort, that does not look
-> > like the right approach. I have the code changes at:
-> > https://github.com/jchandra-cavm/linux/commits/rid-xlate-fixup
-> > if anyone want to look over the code.
-> > 
-> > The problems with that approach is:
-> >  - of the 14 uses of pci_for_each_dma_alias in the function in the kernel
-> >    tree, I have to fixup 6 callers (which is all but one ofthe callers
-> >    outside x86)
-> >  - 4 of these can be reasonably handled (please see the github repo above),
-> >    but the calls in drivers/irqchip/irq-gic-v3-its-pci-msi.c and
-> >    drivers/iommu/iommu.c cannot be reasonably fixed up.
-> >  - Even without the 2 above two changes I can get it to work for now.
-> >    But pci_for_each_dma_alias does not work as expected on this platform
-> >    and we have to be aware of that for all future uses of the function.
-> >   
-> > For now, I have ruled out that approach, and I have rebased the earlier
-> > patch on to 4.11-rc and submitting again for review. The changes are:
-> > 
-> > v2>v3:
-> >  - changed device flag name from PCI_DEV_FLAGS_DMA_ALIAS_ROOT to
-> >    PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT
-> >  - updated commit message to make the quirk clearer.
-> > 
-> > Let me know your comments and suggestions.
+> > Just to add to that, the mask is set to 64 bit in the ixgebvf driver probe[1]
 > 
-> My opinion FWIW is that the quirk you have is one of the least intrusive
-> ways of handling this. Generally in the case of ARM servers, we have a
-> difference vs. x86 in that the latter usually have a magic RC at the
-> top level that everything sits beneath (and then, presumably, Intel
-> do some magic for multi-socket to fudge things over Q/UPI so that
-> things look nice and boring to software). On ARM, we're typically
-> dealing with third party RC IP that's disjoint from other parts of
-> the SoC. We're certainly in the process of bolstering the specs to
-> set some expectations and greater guidance around topologies that
-> we would like to avoid, so I don't see this getting out of hand.
-> 
+> Aha, but of course it's still the same struct device getting bound to
+> VFIO later, so whatever mask the first driver set is still in there when
+> we go through of_dma_configure() the second time (and the fact that we
+> go through more than once being the new behaviour). So yes, this is a
+> legitimate problem and we really do need to be robust against size
+> overflow. I reckon the below tweak of your fix is probably the way to
+> go; cleaning up the arch_setup_dma_ops() interface can happen later.
 
-The ACPI specification[1] and the device tree specification[2] have
-provisions for mapping RID ranges under an RC to different SMMUs with
-an offset to generate StreamIDs. This is also true for the mapping
-from RID to ITS and DeviceID. So having multiple SMMUs/ITSs for
-devices under the same RC is not really a quirk.
+Yes. On ACPI the additional issue is, given that we now call
+*_dma_configure multiple times, we end up adding the _same_ stream
+id to an existing fwspec ids array which triggers the SMMUv3 driver bug,
+because we try to configure the same id twice (it does not happen
+in DT since you have a check similar to the one I added below).
 
-It is also reasonable to have the traversal looking for aliases to
-stop at the point where the SMMU or ITS is attached. The quirk flag
-is only needed because the information on where the SMMU or ITS is
-attached is not available to the pci_for_each_dma_alias implementation.
-Usually this is not an issue, but unfortunately on ThunderX2, there
-are PCI and PCI/PCIe bridges above this point which causes the
-current code to calculate RIDs incorrectly.
+ACPI fix(es) below please let me know if it actually fixes the issues:
 
-Thanks,
-JC.
-
-[1] http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
-[2] https://www.kernel.org/doc/Documentation/devicetree/bindings/pci/pci-iommu.txt 
+-- >8 --
+diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+index 36a9abf..e7b1940 100644
+--- a/drivers/acpi/arm64/iort.c
++++ b/drivers/acpi/arm64/iort.c
+@@ -543,6 +543,14 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+ 	const struct iommu_ops *ops = NULL;
+ 	int ret = -ENODEV;
+ 	struct fwnode_handle *iort_fwnode;
++	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
++
++	/*
++	 * If we already translated the fwspec there
++	 * is nothing left to do, return the iommu_ops.
++	 */
++	if (fwspec && fwspec->ops)
++		return fwspec->ops;
+ 
+ 	if (node) {
+ 		iort_fwnode = iort_get_fwnode(node);
+diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
+index 823b005..2a513cc 100644
+--- a/drivers/acpi/scan.c
++++ b/drivers/acpi/scan.c
+@@ -1376,18 +1376,20 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
+ int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
+ {
+ 	const struct iommu_ops *iommu;
++	u64 size;
+ 
+ 	iort_set_dma_mask(dev);
+ 
+ 	iommu = iort_iommu_configure(dev);
+ 	if (IS_ERR(iommu))
+ 		return PTR_ERR(iommu);
++
++	size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+ 	/*
+ 	 * Assume dma valid range starts at 0 and covers the whole
+ 	 * coherent_dma_mask.
+ 	 */
+-	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
+-			   attr == DEV_DMA_COHERENT);
++	arch_setup_dma_ops(dev, 0, size, iommu, attr == DEV_DMA_COHERENT);
+ 
+ 	return 0;
+ }
 
 _______________________________________________
 linux-arm-kernel mailing list
