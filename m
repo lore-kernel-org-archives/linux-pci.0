@@ -1,74 +1,232 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([45.249.212.188]:4853 "EHLO
-        dggrg02-dlp.huawei.com" rhost-flags-OK-FAIL-OK-FAIL)
-        by vger.kernel.org with ESMTP id S933746AbdC3Ozs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Mar 2017 10:55:48 -0400
-From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
-        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
-        <bhelgaas@google.com>, <rafael@kernel.org>, <arnd@arndb.de>,
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:63025 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752568AbdC0Js3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Mar 2017 05:48:29 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>
-CC: <mark.rutland@arm.com>, <brian.starkey@arm.com>, <olof@lixom.net>,
-        <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
-        <linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
-        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
-        <zourongrong@gmail.com>, <john.garry@huawei.com>,
-        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
-        <kantyzc@163.com>, <xuwei5@hisilicon.com>,
-        "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Subject: [PATCH V8 6/6] LPC: Add the ACPI LPC support
-Date: Thu, 30 Mar 2017 23:26:59 +0800
-Message-ID: <1490887619-61732-7-git-send-email-yuanzhichang@hisilicon.com>
-In-Reply-To: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
-References: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v5 22/24] Documentation: PCI: Add userguide for PCI endpoint test function
+Date: Mon, 27 Mar 2017 15:15:18 +0530
+Message-ID: <20170327094520.3129-23-kishon@ti.com>
+In-Reply-To: <20170327094520.3129-1-kishon@ti.com>
+References: <20170327094520.3129-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Based on the provious patches, this patch supports the ACPI LPC host on
-Hip06/Hip07.
+Add documentation to help users use pci-epf-test function driver
+and pci_endpoint_test host driver for testing PCI.
 
-Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/bus/hisi_lpc.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ Documentation/PCI/00-INDEX                    |   2 +
+ Documentation/PCI/endpoint/pci-test-howto.txt | 179 ++++++++++++++++++++++++++
+ 2 files changed, 181 insertions(+)
+ create mode 100644 Documentation/PCI/endpoint/pci-test-howto.txt
 
-diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
-index 018ea37..ef62045 100644
---- a/drivers/bus/hisi_lpc.c
-+++ b/drivers/bus/hisi_lpc.c
-@@ -458,7 +458,9 @@ static int hisilpc_probe(struct platform_device *pdev)
- 	}
- 
- 	/* register the LPC host PIO resources */
--	if (!has_acpi_companion(dev)) {
-+	if (has_acpi_companion(dev)) {
-+		lpcdev->io_host = find_io_range_by_fwnode(dev->fwnode);
-+	} else {
- 		struct logic_pio_hwaddr *range, *tmprange;
- 
- 		range = kzalloc(sizeof(*range), GFP_KERNEL);
-@@ -526,10 +528,18 @@ static int hisilpc_probe(struct platform_device *pdev)
- 	{},
- };
- 
-+#ifdef CONFIG_ACPI
-+static const struct acpi_device_id hisilpc_acpi_match[] = {
-+	{"HISI0191", },
-+	{},
-+};
-+#endif
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index 53717b7fcdd4..fd533c79fa19 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -18,5 +18,7 @@ endpoint/pci-endpoint-cfs.txt
+ 	- guide to use configfs to configure the pci endpoint function.
+ endpoint/pci-test-function.txt
+ 	- specification of *pci test* function device.
++endpoint/pci-test-howto.txt
++	- userguide for PCI endpoint test function.
+ endpoint/function/binding/
+ 	- binding documentation for pci endpoint function
+diff --git a/Documentation/PCI/endpoint/pci-test-howto.txt b/Documentation/PCI/endpoint/pci-test-howto.txt
+new file mode 100644
+index 000000000000..730b70c73055
+--- /dev/null
++++ b/Documentation/PCI/endpoint/pci-test-howto.txt
+@@ -0,0 +1,179 @@
++			    PCI TEST USERGUIDE
++		    Kishon Vijay Abraham I <kishon@ti.com>
 +
- static struct platform_driver hisilpc_driver = {
- 	.driver = {
- 		.name           = "hisi_lpc",
- 		.of_match_table = hisilpc_of_match,
-+		.acpi_match_table = ACPI_PTR(hisilpc_acpi_match),
- 	},
- 	.probe = hisilpc_probe,
- };
++This document is a guide to help users use pci-epf-test function driver
++and pci_endpoint_test host driver for testing PCI. The list of steps to
++be followed in the host side and EP side is given below.
++
++1. Endpoint Device
++
++1.1 Endpoint Controller Devices
++
++To find the list of endpoint controller devices in the system:
++
++	# ls /sys/class/pci_epc/
++	  51000000.pcie_ep
++
++If PCI_ENDPOINT_CONFIGFS is enabled
++	# ls /sys/kernel/config/pci_ep/controllers
++	  51000000.pcie_ep
++
++1.2 Endpoint Function Drivers
++
++To find the list of endpoint function drivers in the system:
++
++	# ls /sys/bus/pci-epf/drivers
++	  pci_epf_test
++
++If PCI_ENDPOINT_CONFIGFS is enabled
++	# ls /sys/kernel/config/pci_ep/functions
++	  pci_epf_test
++
++1.3 Creating pci-epf-test Device
++
++PCI endpoint function device can be created using the configfs. To create
++pci-epf-test device, the following commands can be used
++
++	# mount -t configfs none /sys/kernel/config
++	# cd /sys/kernel/config/pci_ep/
++	# mkdir functions/pci_epf_test/func1
++
++The "mkdir func1" above creates the pci-epf-test function device that will
++be probed by pci_epf_test driver.
++
++The PCI endpoint framework populates the directory with the following
++configurable fields.
++
++	# ls functions/pci_epf_test/func1
++	  baseclass_code	interrupt_pin	revid		subsys_vendor_id
++	  cache_line_size	msi_interrupts	subclass_code	vendorid
++	  deviceid          	progif_code	subsys_id
++
++The pci endpoint function driver populates these entries with default values
++when the device is bound to the driver. The pci-epf-test driver populates
++vendorid with 0xffff and interrupt_pin with 0x0001
++
++	# cat functions/pci_epf_test/func1/vendorid
++	  0xffff
++	# cat functions/pci_epf_test/func1/interrupt_pin
++	  0x0001
++
++1.4 Configuring pci-epf-test Device
++
++The user can configure the pci-epf-test device using configfs entry. In order
++to change the vendorid and the number of MSI interrupts used by the function
++device, the following commands can be used.
++
++	# echo 0x104c > functions/pci_epf_test/func1/vendorid
++	# echo 0xb500 > functions/pci_epf_test/func1/deviceid
++	# echo 16 > functions/pci_epf_test/func1/msi_interrupts
++
++1.5 Binding pci-epf-test Device to EP Controller
++
++In order for the endpoint function device to be useful, it has to be bound to
++a PCI endpoint controller driver. Use the configfs to bind the function
++device to one of the controller driver present in the system.
++
++	# ln -s functions/pci_epf_test/func1 controllers/51000000.pcie_ep/
++
++Once the above step is completed, the PCI endpoint is ready to establish a link
++with the host.
++
++1.6 Start the Link
++
++In order for the endpoint device to establish a link with the host, the _start_
++field should be populated with '1'.
++
++	# echo 1 > controllers/51000000.pcie_ep/start
++
++2. RootComplex Device
++
++2.1 lspci Output
++
++Note that the devices listed here correspond to the value populated in 1.4 above
++
++	00:00.0 PCI bridge: Texas Instruments Device 8888 (rev 01)
++	01:00.0 Unassigned class [ff00]: Texas Instruments Device b500
++
++2.2 Using Endpoint Test function Device
++
++pcitest.sh added in tools/pci/ can be used to run all the default PCI endpoint
++tests. Before pcitest.sh can be used pcitest.c should be compiled using the
++following commands.
++
++	cd <kernel-dir>
++	make headers_install ARCH=arm
++	arm-linux-gnueabihf-gcc -Iusr/include tools/pci/pcitest.c -o pcitest
++	cp pcitest  <rootfs>/usr/sbin/
++	cp tools/pci/pcitest.sh <rootfs>
++
++2.2.1 pcitest.sh Output
++	# ./pcitest.sh
++	BAR tests
++
++	BAR0:           OKAY
++	BAR1:           OKAY
++	BAR2:           OKAY
++	BAR3:           OKAY
++	BAR4:           NOT OKAY
++	BAR5:           NOT OKAY
++
++	Interrupt tests
++
++	LEGACY IRQ:     NOT OKAY
++	MSI1:           OKAY
++	MSI2:           OKAY
++	MSI3:           OKAY
++	MSI4:           OKAY
++	MSI5:           OKAY
++	MSI6:           OKAY
++	MSI7:           OKAY
++	MSI8:           OKAY
++	MSI9:           OKAY
++	MSI10:          OKAY
++	MSI11:          OKAY
++	MSI12:          OKAY
++	MSI13:          OKAY
++	MSI14:          OKAY
++	MSI15:          OKAY
++	MSI16:          OKAY
++	MSI17:          NOT OKAY
++	MSI18:          NOT OKAY
++	MSI19:          NOT OKAY
++	MSI20:          NOT OKAY
++	MSI21:          NOT OKAY
++	MSI22:          NOT OKAY
++	MSI23:          NOT OKAY
++	MSI24:          NOT OKAY
++	MSI25:          NOT OKAY
++	MSI26:          NOT OKAY
++	MSI27:          NOT OKAY
++	MSI28:          NOT OKAY
++	MSI29:          NOT OKAY
++	MSI30:          NOT OKAY
++	MSI31:          NOT OKAY
++	MSI32:          NOT OKAY
++
++	Read Tests
++
++	READ (      1 bytes):           OKAY
++	READ (   1024 bytes):           OKAY
++	READ (   1025 bytes):           OKAY
++	READ (1024000 bytes):           OKAY
++	READ (1024001 bytes):           OKAY
++
++	Write Tests
++
++	WRITE (      1 bytes):          OKAY
++	WRITE (   1024 bytes):          OKAY
++	WRITE (   1025 bytes):          OKAY
++	WRITE (1024000 bytes):          OKAY
++	WRITE (1024001 bytes):          OKAY
++
++	Copy Tests
++
++	COPY (      1 bytes):           OKAY
++	COPY (   1024 bytes):           OKAY
++	COPY (   1025 bytes):           OKAY
++	COPY (1024000 bytes):           OKAY
++	COPY (1024001 bytes):           OKAY
 -- 
-1.9.1
+2.11.0
