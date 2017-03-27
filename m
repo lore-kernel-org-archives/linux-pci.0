@@ -1,199 +1,118 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: helgaas@kernel.org, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 1/4] PCI: add resizeable BAR infrastructure v3
-Date: Mon, 13 Mar 2017 13:41:33 +0100
-Message-Id: <1489408896-25039-2-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:61165 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752161AbdC0Jrk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Mar 2017 05:47:40 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v5 06/24] Documentation: PCI: Add specification for the *pci test* function device
+Date: Mon, 27 Mar 2017 15:15:02 +0530
+Message-ID: <20170327094520.3129-7-kishon@ti.com>
+In-Reply-To: <20170327094520.3129-1-kishon@ti.com>
+References: <20170327094520.3129-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+Add specification for the *pci test* virtual function device. The endpoint
+function driver and the host pci driver should be created based on this
+specification.
 
-Just the defines and helper functions to read the possible sizes of a BAR and
-update it's size.
-
-See https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf.
-
-This is useful for hardware with large local storage (mostly GFX) which only
-expose 256MB BARs initially to be compatible with 32bit systems.
-
-v2: provide read helper as well
-v3: improve function names, use unsigned values, add better comments.
-
-Signed-off-by: Christian König <christian.koenig@amd.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 ---
- drivers/pci/pci.c             | 115 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h           |   3 ++
- include/uapi/linux/pci_regs.h |   7 +++
- 3 files changed, 125 insertions(+)
+ Documentation/PCI/00-INDEX                       |  2 +
+ Documentation/PCI/endpoint/pci-test-function.txt | 66 ++++++++++++++++++++++++
+ 2 files changed, 68 insertions(+)
+ create mode 100644 Documentation/PCI/endpoint/pci-test-function.txt
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ba34907..c2d9f78 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2944,6 +2944,121 @@ bool pci_acs_path_enabled(struct pci_dev *start,
- }
- 
- /**
-+ * pci_rbar_get_possible_sizes - get possible sizes for BAR
-+ * @dev: PCI device
-+ * @bar: BAR to query
-+ *
-+ * Get the possible sizes of a resizeable BAR as bitmask defined in the spec
-+ * (bit 0=1MB, bit 19=512GB). Returns 0 if BAR isn't resizeable.
-+ */
-+u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar)
-+{
-+	unsigned pos, nbars;
-+	u32 ctrl, cap;
-+	unsigned i;
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index f84a23c7c74b..4e5a2832f4e7 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -16,3 +16,5 @@ endpoint/pci-endpoint.txt
+ 	- guide to add endpoint controller driver and endpoint function driver.
+ endpoint/pci-endpoint-cfs.txt
+ 	- guide to use configfs to configure the pci endpoint function.
++endpoint/pci-test-function.txt
++	- specification of *pci test* function device.
+diff --git a/Documentation/PCI/endpoint/pci-test-function.txt b/Documentation/PCI/endpoint/pci-test-function.txt
+new file mode 100644
+index 000000000000..1324376ec6a3
+--- /dev/null
++++ b/Documentation/PCI/endpoint/pci-test-function.txt
+@@ -0,0 +1,66 @@
++				PCI TEST
++		    Kishon Vijay Abraham I <kishon@ti.com>
 +
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
-+	if (!pos)
-+		return 0;
++Traditionally PCI RC has always been validated by using standard
++PCI cards like ethernet PCI cards or USB PCI cards or SATA PCI cards.
++However with the addition of EP-core in linux kernel, it is possible
++to configure a PCI controller that can operate in EP mode to work as
++a test device.
 +
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++The PCI endpoint test device is a virtual device (defined in software)
++used to test the endpoint functionality and serve as a sample driver
++for other PCI endpoint devices (to use the EP framework).
 +
-+	for (i = 0; i < nbars; ++i, pos += 8) {
-+		int bar_idx;
++The PCI endpoint test device has the following registers:
 +
-+		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
-+				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
-+		if (bar_idx != bar)
-+			continue;
++	1) PCI_ENDPOINT_TEST_MAGIC
++	2) PCI_ENDPOINT_TEST_COMMAND
++	3) PCI_ENDPOINT_TEST_STATUS
++	4) PCI_ENDPOINT_TEST_SRC_ADDR
++	5) PCI_ENDPOINT_TEST_DST_ADDR
++	6) PCI_ENDPOINT_TEST_SIZE
++	7) PCI_ENDPOINT_TEST_CHECKSUM
 +
-+		pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
-+		return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
-+			PCI_REBAR_CTRL_SIZES_SHIFT;
-+	}
++*) PCI_ENDPOINT_TEST_MAGIC
 +
-+	return 0;
-+}
++This register will be used to test BAR0. A known pattern will be written
++and read back from MAGIC register to verify BAR0.
 +
-+/**
-+ * pci_rbar_get_current_size - get the current size of a BAR
-+ * @dev: PCI device
-+ * @bar: BAR to set size to
-+ *
-+ * Read the size of a BAR from the resizeable BAR config.
-+ * Returns size if found or negativ error code.
-+ */
-+int pci_rbar_get_current_size(struct pci_dev *pdev, int bar)
-+{
-+	unsigned pos, nbars;
-+	u32 ctrl;
-+	unsigned i;
++*) PCI_ENDPOINT_TEST_COMMAND:
 +
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
-+	if (!pos)
-+		return -ENOTSUPP;
++This register will be used by the host driver to indicate the function
++that the endpoint device must perform.
 +
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++Bitfield Description:
++  Bit 0		: raise legacy irq
++  Bit 1		: raise MSI irq
++  Bit 2 - 7	: MSI interrupt number
++  Bit 8		: read command (read data from RC buffer)
++  Bit 9		: write command (write data to RC buffer)
++  Bit 10	: copy command (copy data from one RC buffer to another
++		  RC buffer)
 +
-+	for (i = 0; i < nbars; ++i, pos += 8) {
-+		int bar_idx;
++*) PCI_ENDPOINT_TEST_STATUS
 +
-+		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
-+				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
-+		if (bar_idx != bar)
-+			continue;
++This register reflects the status of the PCI endpoint device.
 +
-+		return (ctrl & PCI_REBAR_CTRL_BAR_SIZE_MASK) >>
-+			PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
-+	}
++Bitfield Description:
++  Bit 0		: read success
++  Bit 1		: read fail
++  Bit 2		: write success
++  Bit 3		: write fail
++  Bit 4		: copy success
++  Bit 5		: copy fail
++  Bit 6		: irq raised
++  Bit 7		: source address is invalid
++  Bit 8		: destination address is invalid
 +
-+	return -ENOENT;
-+}
++*) PCI_ENDPOINT_TEST_SRC_ADDR
 +
-+/**
-+ * pci_rbar_set_size - set a new size for a BAR
-+ * @dev: PCI device
-+ * @bar: BAR to set size to
-+ * @size: new size as defined in the spec (log2(size in bytes) - 20)
-+ *
-+ * Set the new size of a BAR as defined in the spec (0=1MB, 19=512GB).
-+ * Returns true if resizing was successful, false otherwise.
-+ */
-+int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
-+{
-+	unsigned pos, nbars;
-+	u32 ctrl;
-+	unsigned i;
++This register contains the source address (RC buffer address) for the
++COPY/READ command.
 +
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
-+	if (!pos)
-+		return -ENOTSUPP;
++*) PCI_ENDPOINT_TEST_DST_ADDR
 +
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
-+
-+	for (i = 0; i < nbars; ++i, pos += 8) {
-+		int bar_idx;
-+
-+		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
-+				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
-+		if (bar_idx != bar)
-+			continue;
-+
-+		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE_MASK;
-+		ctrl |= size << PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
-+		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
-+		return 0;
-+	}
-+
-+	return -ENOENT;
-+}
-+
-+/**
-  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
-  * @dev: the PCI device
-  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a38772a..6954e50 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1946,6 +1946,9 @@ void pci_request_acs(void);
- bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
- bool pci_acs_path_enabled(struct pci_dev *start,
- 			  struct pci_dev *end, u16 acs_flags);
-+u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar);
-+int pci_rbar_get_current_size(struct pci_dev *pdev, int bar);
-+int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
- 
- #define PCI_VPD_LRDT			0x80	/* Large Resource Data Type */
- #define PCI_VPD_LRDT_ID(x)		((x) | PCI_VPD_LRDT)
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index e5a2e68..6de29d6 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -932,9 +932,16 @@
- #define PCI_SATA_SIZEOF_LONG	16
- 
- /* Resizable BARs */
-+#define PCI_REBAR_CAP		4	/* capability register */
-+#define  PCI_REBAR_CTRL_SIZES_MASK	(0xFFFFF << 4)	/* mask for sizes */
-+#define  PCI_REBAR_CTRL_SIZES_SHIFT	4	/* shift for sizes */
- #define PCI_REBAR_CTRL		8	/* control register */
-+#define  PCI_REBAR_CTRL_BAR_IDX_MASK	(7 << 0)	/* mask for bar index */
-+#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT	0	/* shift for bar index */
- #define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # bars */
- #define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # bars */
-+#define  PCI_REBAR_CTRL_BAR_SIZE_MASK	(0x1F << 8)	/* mask for bar size */
-+#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT	8	/* shift for bar size */
- 
- /* Dynamic Power Allocation */
- #define PCI_DPA_CAP		4	/* capability register */
++This register contains the destination address (RC buffer address) for
++the COPY/WRITE command.
 -- 
-2.7.4
+2.11.0
