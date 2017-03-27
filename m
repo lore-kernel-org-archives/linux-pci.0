@@ -1,86 +1,59 @@
-Return-Path: <SRS0=sW/k=2Y=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=sW/k=2Y=linutronix.de=tglx@kernel.org>
-Date: Wed, 15 Mar 2017 11:00:22 +0100 (CET)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: Andi Kleen <andi@firstfloor.org>, Andi Kleen <ak@linux.intel.com>,
-    bhelgaas@google.com, x86@kernel.org, linux-pci@vger.kernel.org,
-    eranian@google.com, Peter Zijlstra <peterz@infradead.org>,
-    LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 3/4] x86, pci: Add interface to force mmconfig
-In-Reply-To: <20170315025549.GA13191@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.DEB.2.20.1703150954180.3554@nanos>
-References: <20170302232104.10136-1-andi@firstfloor.org> <20170302232104.10136-3-andi@firstfloor.org> <alpine.DEB.2.20.1703141407090.3619@nanos> <20170314154155.GG32070@tassilo.jf.intel.com> <alpine.DEB.2.20.1703141713010.3619@nanos>
- <20170314170255.GH32070@tassilo.jf.intel.com> <alpine.DEB.2.20.1703141849170.3619@nanos> <20170314194720.GD26264@bhelgaas-glaptop.roam.corp.google.com> <20170315022414.GC14380@two.firstfloor.org>
- <20170315025549.GA13191@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v2 21/22] PCI: keystone-dw: update PCI config space remap
+ function
+Date: Mon, 27 Mar 2017 10:49:49 +0100
+Message-Id: <20170327094954.7162-22-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, Murali Karicheri <m-karicheri2@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 14 Mar 2017, Bjorn Helgaas wrote:
-> On Tue, Mar 14, 2017 at 07:24:14PM -0700, Andi Kleen wrote:
-> > > I agree that it should be fairly safe to do ECAM/MMCONFIG without
-> > > locking.  Can we handle the decision part by adding a "lockless" bit
-> > > to struct pci_ops?  Old ops don't mention that bit, so it will be
-> > > initialized to zero and we'll do locking as today.  ECAM/MMCONFIG ops
-> > > can set it and we can skip the locking.
-> > 
-> > That's what my other patch already did. 
-> 
-> Yes, your 1/4 patch does add the "ll_allowed" bit in struct pci_ops.
-> 
-> What I was wondering, but didn't explain very well, was whether
-> instead of setting that bit at run-time in pci_mmcfg_arch_init(), we
-> could set it statically in the pci_ops definition, e.g.,
-> 
->   static struct pci_ops ecam_ops = {
->     .lockless = 1,
->     .read = ecam_read,
->     .write = ecam_write,
->   };
-> 
-> I think it would be easier to read if the lockless-ness were declared
-> right next to the accessors that need it (or don't need it).
-> 
-> But it is a little confusing with all the different paths, at least on
-> x86, so maybe it wouldn't be quite that simple.
+PCI configuration space should be mapped with a memory region type that
+generates on the CPU host bus non-posted write transations. Update the
+driver to use the devm_ioremap_nopost* interface to make sure the correct
+memory mappings for PCI configuration space are used.
 
-The pci_ops in x86 are a complete mess. We have
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>
+---
+ drivers/pci/dwc/pci-keystone-dw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-struct pci_ops pci_root_ops = {
-        .read = pci_read,
-	.write = pci_write,
-};
+diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
+index 6b396f6..cba65ca 100644
+--- a/drivers/pci/dwc/pci-keystone-dw.c
++++ b/drivers/pci/dwc/pci-keystone-dw.c
+@@ -543,7 +543,7 @@ int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
+ 
+ 	/* Index 0 is the config reg. space address */
+ 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+-	pci->dbi_base = devm_ioremap_resource(dev, res);
++	pci->dbi_base = devm_ioremap_nopost_resource(dev, res);
+ 	if (IS_ERR(pci->dbi_base))
+ 		return PTR_ERR(pci->dbi_base);
+ 
+-- 
+2.10.0
 
-That's the default and the r/w functions look like this:
 
-pci_read/write()
-{
-	if (domain == 0 && reg && raw_pci_ops)
- 		return raw_pci_ops->read/write();
-	if (raw_pci_ext_ops)
- 		return raw_pci_ext_ops->read/write();
-	return -EINVAL;
-}
-
-raw_pci_ops and raw_pci_ext_ops are setup through an impenetrable maze of
-functions. Some of them overwrite pci_root_ops to something entirely
-different.
-
-pci_root_ops is what is finally handed in to pci_scan_root_bus() as ops
-argument for any bus segment no matter which type it is.
-
-The locking aspect is interesting as well. The type0/1 functions are having
-their own internal locking. Oh, well.
-
-What we really want is to differentiate bus segments. That means a PCIe
-segment takes mmconfig ops and a PCI segment the type0/1 ops. That way we
-can do what you suggested above, i.e. marking the ecam/mmconfig ops as
-lockless.
-
-Sure that's more work than just whacking a sloppy quirk into the code, but
-the right thing to do.
-
-Thanks,
-
-	tglx
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
