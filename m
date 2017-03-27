@@ -1,60 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v5 08/24] Documentation: PCI: Add binding documentation for
+ pci-test endpoint function
+Date: Mon, 27 Mar 2017 15:15:04 +0530
+Message-ID: <20170327094520.3129-9-kishon@ti.com>
+In-Reply-To: <20170327094520.3129-1-kishon@ti.com>
+References: <20170327094520.3129-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E2047A8C1@FRAEML521-MBX.china.huawei.com>
-References: <20170310174045.GB24571@leverpostej> <EE11001F9E5DDD47B7634E2F8A612F2E2047A8C1@FRAEML521-MBX.china.huawei.com>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Mon, 13 Mar 2017 09:48:51 +0100
-Message-ID: <CAMuHMdWcs_X-T=0zSTB5R0s-f8uk3MbKNj4-62XMGDXb-jO1iQ@mail.gmail.com>
-Subject: Re: Bad DT binding (hisi-pcie-almost-ecam)
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Mark Rutland <mark.rutland@arm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 13, 2017 at 9:14 AM, Gabriele Paoloni
-<gabriele.paoloni@huawei.com> wrote:
-> About the name to use here from what you suggest we should use
-> "hisilicon,hip06-pcie-almost-ecam" and re-use it for hip07 SoC.
-> To be honest I would prefer it either as it is now or to modify the
-> driver as:
->
-> diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
-> index 52f1e3f..7527b4c 100644
-> --- a/drivers/pci/dwc/pcie-hisi.c
-> +++ b/drivers/pci/dwc/pcie-hisi.c
-> @@ -381,7 +381,11 @@ struct pci_ecam_ops hisi_pcie_platform_ops = {
->
->   static const struct of_device_id hisi_pcie_almost_ecam_of_match[] = {
->          {
-> -           .compatible = "hisilicon,pcie-almost-ecam",
-> +         .compatible = "hisilicon,pcie-almost-ecam-hip06",
+Add binding documentation for pci-test endpoint function that helps in
+adding and configuring pci-test endpoint function.
 
-Shouldn't that be "hisilicon,hip06-pcie-almost-ecam"?
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/PCI/00-INDEX                              |  2 ++
+ .../PCI/endpoint/function/binding/pci-test.txt          | 17 +++++++++++++++++
+ 2 files changed, 19 insertions(+)
+ create mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.txt
 
-> +         .data           = (void *) &hisi_pcie_platform_ops,
-> + },
-> + {
-> +         .compatible = "hisilicon,pcie-almost-ecam-hip07",
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index 4e5a2832f4e7..53717b7fcdd4 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -18,3 +18,5 @@ endpoint/pci-endpoint-cfs.txt
+ 	- guide to use configfs to configure the pci endpoint function.
+ endpoint/pci-test-function.txt
+ 	- specification of *pci test* function device.
++endpoint/function/binding/
++	- binding documentation for pci endpoint function
+diff --git a/Documentation/PCI/endpoint/function/binding/pci-test.txt b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+new file mode 100644
+index 000000000000..c44fc18d78cc
+--- /dev/null
++++ b/Documentation/PCI/endpoint/function/binding/pci-test.txt
+@@ -0,0 +1,17 @@
++PCI TEST ENDPOINT FUNCTION
++
++name: Should be "pci_epf_test" to bind to the pci_epf_test driver.
++
++Configurable Fields:
++vendorid	 : should be 0x104c
++deviceid	 : should be 0xb500 for DRA74x and 0xb501 for DRA72x
++revid		 : don't care
++progif_code	 : don't care
++subclass_code	 : don't care
++baseclass_code	 : should be 0xff
++cache_line_size	 : don't care
++subsys_vendor_id : don't care
++subsys_id	 : don't care
++interrupt_pin	 : Should be 1 - INTA, 2 - INTB, 3 - INTC, 4 -INTD
++msi_interrupts	 : Should be 1 to 32 depending on the number of msi interrupts
++		   to test
+-- 
+2.11.0
 
-Shouldn't that be "hisilicon,hip07-pcie-almost-ecam"?
 
->                  .data       = (void *) &hisi_pcie_platform_ops,
->          },
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
