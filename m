@@ -1,69 +1,100 @@
-Return-Path: <SRS0=R59S=3I=semihalf.com=tn@kernel.org>
-Return-Path: <SRS0=R59S=3I=semihalf.com=tn@kernel.org>
-From: Tomasz Nowicki <tn@semihalf.com>
-To: helgaas@kernel.org,
-	Lorenzo.Pieralisi@arm.com,
-	robert.richter@caviumnetworks.com,
-	ddaney@caviumnetworks.com,
-	Vadim.Lomovtsev@caviumnetworks.com,
-	rafael@kernel.org
-Cc: Sunil.Goutham@cavium.com,
-	geethasowjanya.akula@gmail.com,
-	linu.cherian@cavium.com,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-acpi@vger.kernel.org,
-	Tomasz Nowicki <tn@semihalf.com>
-Subject: [PATCH 1/1] PCI: Fix for PEM-specific resource reservation for legacy firmware case
-Date: Fri, 31 Mar 2017 17:06:44 +0200
-Message-Id: <1490972804-25830-1-git-send-email-tn@semihalf.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v2 05/22] ARM64: implement ioremap_nopost() interface
+Date: Mon, 27 Mar 2017 10:49:33 +0100
+Message-Id: <20170327094954.7162-6-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
+ Murali Karicheri <m-karicheri2@ti.com>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ "Luis R. Rodriguez" <mcgrof@kernel.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SZ_16M PEM resource size includes PEM-specific register and its children
-resources. Reservation of the whole SZ_16M range leads to child device
-driver failure when pcieport driver is requesting resources:
-pcieport 0004:1f:00.0: can't enable device: BAR 0 [mem 0x87e0c0f00000-0x87e0c0ffffff 64bit] not claimed
-So we cannot reserve full 16M here and instead we want to reserve
-PEM-specific register only which is SZ_64K.
+The PCI bus specifications (rev 3.0, 3.2.5 "Transaction Ordering
+and Posting") defines rules for PCI configuration space transactions
+ordering and posting, that state that configuration writes
+are non-posted transactions.
 
-At the end increase PEM resource to SZ_16M since this is what
-thunder_pem_init() call expects for proper initialization.
+This rule is reinforced by the ARM v8 architecture reference manual
+(issue A.k, Early Write Acknowledgment) that explicitly recommends
+that No Early Write Acknowledgment attribute should be used to map
+PCI configuration (write) transactions.
 
-Fixes: 9abb27c7594a ("PCI: thunder-pem: Add legacy firmware support for Cavium ThunderX host controller")
-Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-CC: stable@vger.kernel.org	# v4.10+
+Current ioremap interface on ARM64 implements mapping functions
+where the Early Write Acknowledgment hint is enabled, so they
+cannot be used to map PCI configuration space in a PCI specs
+compliant way.
+
+Implement an ARM64 specific ioremap_nopost() interface
+that allows to map PCI config region with nGnRnE attributes, providing
+a remap function that complies with PCI specifications and the ARMv8
+architecture reference manual recommendations.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
 ---
- drivers/pci/host/pci-thunder-pem.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ arch/arm64/include/asm/io.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-index b89c373..6e031b5 100644
---- a/drivers/pci/host/pci-thunder-pem.c
-+++ b/drivers/pci/host/pci-thunder-pem.c
-@@ -375,7 +375,6 @@ static void thunder_pem_legacy_fw(struct acpi_pci_root *root,
- 	index -= node * PEM_MAX_DOM_IN_NODE;
- 	res_pem->start = PEM_RES_BASE | FIELD_PREP(PEM_NODE_MASK, node) |
- 					FIELD_PREP(PEM_INDX_MASK, index);
--	res_pem->end = res_pem->start + SZ_16M - 1;
- 	res_pem->flags = IORESOURCE_MEM;
- }
+diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
+index 0c00c87..1a703e5 100644
+--- a/arch/arm64/include/asm/io.h
++++ b/arch/arm64/include/asm/io.h
+@@ -173,6 +173,18 @@ extern void __iomem *ioremap_cache(phys_addr_t phys_addr, size_t size);
+ #define iounmap				__iounmap
  
-@@ -399,8 +398,15 @@ static int thunder_pem_acpi_init(struct pci_config_window *cfg)
- 	 */
- 	if (ret) {
- 		thunder_pem_legacy_fw(root, res_pem);
--		/* Reserve PEM-specific resources and PCI configuration space */
-+		/*
-+		 * Reserve 64K size PEM specific resources. The full 16M range
-+		 * size is required for thunder_pem_init() call.
-+		 */
-+		res_pem->end = res_pem->start + SZ_64K - 1;
- 		thunder_pem_reserve_range(dev, root->segment, res_pem);
-+		res_pem->end = res_pem->start + SZ_16M - 1;
+ /*
++ * ioremap implementation providing non-posted writes (ie v8 no Early
++ * Write Acknowledgment) semantics.
++ *
++ * PCI specifications disallows posted write configuration transactions.
++ * Add an arch specific ioremap_post definition that is implemented
++ * through nGnRnE device memory attribute as recommended by the ARM v8
++ * Architecture reference manual Issue A.k B2.8.2 "Device memory" so
++ * that it can be used to map PCI config space memory areas.
++ */
++#define ioremap_nopost(addr, size) __ioremap((addr), (size), __pgprot(PROT_DEVICE_nGnRnE))
 +
-+		/* Reserve PCI configuration space as well. */
- 		thunder_pem_reserve_range(dev, root->segment, &cfg->res);
- 	}
- 
++/*
+  * io{read,write}{16,32,64}be() macros
+  */
+ #define ioread16be(p)		({ __u16 __v = be16_to_cpu((__force __be16)__raw_readw(p)); __iormb(); __v; })
 -- 
-2.7.4
+2.10.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
