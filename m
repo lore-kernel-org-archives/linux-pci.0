@@ -1,59 +1,39 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v2 17/22] PCI: armada8k: update PCI config space remap function
-Date: Mon, 27 Mar 2017 10:49:45 +0100
-Message-Id: <20170327094954.7162-18-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:42304 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751350AbdC0RMb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 27 Mar 2017 13:12:31 -0400
+Date: Mon, 27 Mar 2017 19:11:48 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: David Daney <ddaney.cavm@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, bhelgaas@google.com,
+        davem@davemloft.net, netanel@annapurnalabs.com, jcliburn@gmail.com,
+        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org,
+        netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 5/5] PCI: remove pci_enable_msix
+Message-ID: <20170327171148.GB28815@lst.de>
+References: <20170327082936.6830-1-hch@lst.de> <20170327082936.6830-6-hch@lst.de> <83f97789-0817-7549-bfa9-1f8dcb0c26d9@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <83f97789-0817-7549-bfa9-1f8dcb0c26d9@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_ioremap_nopost* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+On Mon, Mar 27, 2017 at 09:59:35AM -0700, David Daney wrote:
+> On 03/27/2017 01:29 AM, Christoph Hellwig wrote:
+>> Unused now that all callers switched to pci_alloc_irq_vectors.
+>>
+>
+> And you are aware that the ThunderX GPIO driver that I am attempting to 
+> merge uses this interface.
+>
+> If this patch gets merged, should I ask to revert it when the GPIO driver 
+> goes in?
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
----
- drivers/pci/dwc/pcie-armada8k.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+No.  You should not use pci_enable_msix in your new driver as I told
+you before.
 
-diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-index f110e3b..6bc7c7f 100644
---- a/drivers/pci/dwc/pcie-armada8k.c
-+++ b/drivers/pci/dwc/pcie-armada8k.c
-@@ -230,7 +230,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
- 
- 	/* Get the dw-pcie unit configuration/control registers base. */
- 	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
--	pci->dbi_base = devm_ioremap_resource(dev, base);
-+	pci->dbi_base = devm_ioremap_nopost_resource(dev, base);
- 	if (IS_ERR(pci->dbi_base)) {
- 		dev_err(dev, "couldn't remap regs base %p\n", base);
- 		ret = PTR_ERR(pci->dbi_base);
--- 
-2.10.0
+> You offer no solution for drivers that would benefit from using a sparse 
+> sub set of the available MSI-X vectors.
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Use pci_enable_msix_{exact,range} for now, as I told you before.
