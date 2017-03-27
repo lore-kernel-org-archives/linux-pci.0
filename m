@@ -1,91 +1,80 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: helgaas@kernel.org, linux-pci@vger.kernel.org,
-        dri-devel@lists.freedesktop.org,
-        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 30h-3fh) Processors
-Date: Mon, 13 Mar 2017 13:41:35 +0100
-Message-Id: <1489408896-25039-4-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <SRS0=qGEF=3E=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=qGEF=3E=arm.com=marc.zyngier@kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Mason <slash.tmp@free.fr>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,  Thomas Gleixner <tglx@linutronix.de>,  Robin Murphy <robin.murphy@arm.com>,  Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,  Liviu Dudau <liviu.dudau@arm.com>,  David Laight <david.laight@aculab.com>,  linux-pci <linux-pci@vger.kernel.org>,  Linux ARM <linux-arm-kernel@lists.infradead.org>,  Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,  Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,  LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
+In-Reply-To: <cc958b0c-b947-2b3f-9e4b-9216e0085e6e@free.fr> (Mason's message
+	of "Mon, 27 Mar 2017 21:44:08 +0200")
+References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
+	<e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
+	<310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
+	<012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
+	<0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
+	<4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
+	<cc958b0c-b947-2b3f-9e4b-9216e0085e6e@free.fr>
+Date: Mon, 27 Mar 2017 22:07:14 +0100
+Message-ID: <8637dyo2d9.fsf@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+On Mon, Mar 27 2017 at 08:44:08 PM, Mason <slash.tmp@free.fr> wrote:
+> On 27/03/2017 19:09, Marc Zyngier wrote:
+>
+>> On 27/03/17 16:53, Mason wrote:
+>> 
+>>> I have one remaining issue with bitmaps.
+>>>
+>>> My HW regs are 32b. How do I grab e.g. bits 96-127?
+>>> All I can think of is
+>>>   u32 val = ((u32 *)bitmap)[3];
+>>> 
+>>> Is this acceptable?
+>> 
+>> No.
+>> 
+>>> mrutland mentioned bitmap_to_u32array() but IIUC it is used to
+>>> copy an entire bitmap.
+>> 
+>> The real question is "Why do you need such a thing?".
+>
+> You told me to use an in-memory version of the "unmasked"
+> bitmap, yes? In that case, I need to be able to grab
+> a piece of said bitmap, to update the corresponding piece
+> of the HW bitmap.
+>
+> For example, assume the first 3 MSIs are unmasked,
+> in other words, unmasked = 0x7
+>
+> A new user comes along and wants to assign an MSI.
+> Scan "unmasked", found bit at pos 3.
+> Update "unmasked" to 0xf.
+> At some point, I need to write 0xf to some HW reg.
+> So I need to grab a piece of "unmasked" (bits 0-31 in my example)
+>
+>   pos = find_first_zero_bit(unmasked, COUNT);
+>   __set_bit(pos, unmasked);
+>   int reg_index = pos / 32;
+>   u32 val = ((u32 *)unmasked)[reg_index];
+>   writel_relaxed(val, pcie->enabled + reg_index * 4);
+>
+> Or did I miss something in your suggestion?
 
-Most BIOS don't enable this because of compatibility reasons.
+I don't know, I'm sightly taken aback by your question. Completely
+puzzled, actually. "Read Modify Write" is a fairly obvious construct.
 
-Manually enable a 64bit BAR of 64GB size so that we have
-enough room for PCI devices.
+     val = readl_relaxed(pcie->enabled + reg_index);
+     writel_relaxed(val | BIT(pos % 32), pcie->enabled + reg_index);
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
----
- arch/x86/pci/fixup.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
+I never realized this could be such a novel concept. Replace pos with
+hwirq, add a spinlock, and that's your irq_unmask.
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 6d52b94..bff5242 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -571,3 +571,56 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
-+
-+static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
-+{
-+	const uint64_t size = 64ULL * 1024 * 1024 * 1024;
-+	uint32_t base, limit, high;
-+	struct resource *res;
-+	unsigned i;
-+	int r;
-+
-+	for (i = 0; i < 8; ++i) {
-+
-+		pci_read_config_dword(dev, 0x80 + i * 0x8, &base);
-+		pci_read_config_dword(dev, 0x180 + i * 0x4, &high);
-+
-+		/* Is this slot free? */
-+		if ((base & 0x3) == 0x0)
-+			break;
-+
-+		base >>= 8;
-+		base |= high << 24;
-+
-+		/* Abort if a slot already configures a 64bit BAR. */
-+		if (base > 0x10000)
-+			return;
-+
-+	}
-+
-+	if (i == 8)
-+		return;
-+
-+	res = kzalloc(sizeof(*res), GFP_KERNEL);
-+	res->flags = IORESOURCE_MEM | IORESOURCE_PREFETCH | IORESOURCE_MEM_64 |
-+		IORESOURCE_WINDOW;
-+	res->name = dev->bus->name;
-+	r = allocate_resource(&iomem_resource, res, size, 0x100000000,
-+			      0xfd00000000, size, NULL, NULL);
-+	if (r) {
-+		kfree(res);
-+		return;
-+	}
-+
-+	base = ((res->start >> 8) & 0xffffff00) | 0x3;
-+	limit = ((res->end + 1) >> 8) & 0xffffff00;
-+	high = ((res->start >> 40) & 0xff) |
-+		((((res->end + 1) >> 40) & 0xff) << 16);
-+
-+	pci_write_config_dword(dev, 0x180 + i * 0x4, high);
-+	pci_write_config_dword(dev, 0x84 + i * 0x8, limit);
-+	pci_write_config_dword(dev, 0x80 + i * 0x8, base);
-+
-+	pci_bus_add_resource(dev->bus, res, 0);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
+My suggestion was to use a bitmap in order not to perform extra MMIO
+accesses on the fast path. It doesn't mean that you cannot read from the
+register under any circumstances. It just means that you don't do it
+when there are more efficient ways to do it.
+
+	M.
 -- 
-2.7.4
+Jazz is not dead. It just smells funny.
