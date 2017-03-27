@@ -1,122 +1,167 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:36644 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754620AbdCTPqv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Mar 2017 11:46:51 -0400
-Date: Mon, 20 Mar 2017 10:46:44 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, clsoto@us.ibm.com
-Subject: Re: [PATCH] PCI: Disable IOV before pcibios_sriov_disable()
-Message-ID: <20170320154644.GA24572@bhelgaas-glaptop.roam.corp.google.com>
-References: <1488154712-8354-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <20170307201529.GF21358@bhelgaas-glaptop.roam.corp.google.com>
- <20170309003432.GA27263@gwshan>
- <20170318001907.GA16291@gwshan>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v5 04/24] Documentation: PCI: Guide to use pci endpoint
+ configfs
+Date: Mon, 27 Mar 2017 15:15:00 +0530
+Message-ID: <20170327094520.3129-5-kishon@ti.com>
+In-Reply-To: <20170327094520.3129-1-kishon@ti.com>
+References: <20170327094520.3129-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170318001907.GA16291@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Mar 18, 2017 at 11:19:07AM +1100, Gavin Shan wrote:
-> On Thu, Mar 09, 2017 at 11:34:32AM +1100, Gavin Shan wrote:
-> >On Tue, Mar 07, 2017 at 02:15:29PM -0600, Bjorn Helgaas wrote:
-> >>On Mon, Feb 27, 2017 at 11:18:32AM +1100, Gavin Shan wrote:
-> >>> The PowerNV platform is the only user of pcibios_sriov_disable().
-> >>> The IOV BAR could be shifted by pci_iov_update_resource(). The
-> >>> warning message in the function is printed if the IOV capability
-> >>> is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
-> >>> 
-> >>>    pci_disable_sriov
-> >>>    sriov_disable
-> >>>    pnv_pci_sriov_disable
-> >>>    pnv_pci_vf_resource_shift
-> >>>    pci_update_resource
-> >>>    pci_iov_update_resource
-> >>> 
-> >>> This fixes the issue by disabling IOV capability before calling
-> >>> pcibios_sriov_disable(). With it, the disabling path matches with
-> >>> the enabling path: pcibios_sriov_enable() is called before the
-> >>> IOV capability is enabled.
-> >>
-> >>I'm vaguely uncomfortable about this path:
-> >>
-> >>  pci_disable_sriov
-> >>    sriov_disable
-> >>      pcibios_sriov_disable           # powerpc version
-> >>	pnv_pci_sriov_disable
-> >>	  pnv_pci_vf_resource_shift
-> >>	    res = &dev->resource[i + PCI_IOV_RESOURCES]
-> >>	    res->start += size * offset
-> >>	    pci_update_resource
-> >>	      pci_iov_update_resource
-> >>	  pnv_pci_vf_release_m64
-> >>
-> >>1) "res" is already in the resource tree, so we shouldn't be changing
-> >>   its start address, because that may make the tree inconsistent,
-> >>   e.g., the resource may no longer be completely contained in its
-> >>   parent, it may conflict with a sibling, etc.
-> >>
-> >>2) If we update "res->start", shouldn't we update "res->end"
-> >>   correspondingly?
-> >>
-> >>It seems like it'd be better if we didn't update the device resources
-> >>in the enable/disable paths.  If we could do the resource adjustments
-> >>earlier, somewhere before we give the device to a driver, it seems
-> >>like it would avoid these issues.
-> >>
-> >>We might have talked about these questions in the past, so I apologize
-> >>if you've already explained this.  If that's the case, maybe we just
-> >>need some comments in the code to help the next confused reader.
-> >>
-> >
-> >Bjorn, thanks for review. I agree it's not perfect. We discussed this long
-> >time ago as I can remember. Let me try to make it a bit more clear: In our
-> >PHB hardware, there are 16 MMIO BARs. Each of them can be shared by 256 PEs
-> >(A) and owned exclusively by one PE (B). When VF BAR size is small enough,
-> >we take (A). Otherwise, we have to take (B). Only when taking (A), we need
-> >expand/move/shrink the IOV BAR. So lets stick to (A) for discussion here.
-> >
-> >Under (A), PF's IOV BAR size is extended to ((256 * (VF BAR size)) when the
-> >PF is probed. Then the @res, which corresponds to the IOV BAR, is assigned
-> >and put into the resource tree during resource sizing and assignment stage.
-> >The IOV capability is going to be enabled by PF's driver or sysfs entry, it
-> >calls into pnv_pci_sriov_enable() where number of contigous PEs (equal to
-> >number of VFs to be enabled) are allocated. We shift the IOV BAR base according
-> >to the starting PE number of the allocated block. Afterewards, the IOV BAR
-> >is restored when the IOV capability is disabled. So it's all about the PE.
-> >The IOV BAR's end address isn't touched, we needn't update @res->end when
-> >restoring the IOV BAR.
-> >
-> >In order to avoid moving IOV BAR base address, I need know the the PEs
-> >for the VFs before resourcd sizing and assignment stage. It means I need
-> >to reserve PEs in advance, which isn't nice because we never enable the
-> >VFs. In that case, the PEs are wasted.
-> >
-> >Yeah, it's nice to have add some comments in pnv_pci_vf_resource_shift()
-> >where pci_update_resource() is called. I will post another patch to
-> >linux-ppcdev and you'll be copied. If you agree, I think you can merge
-> >this patch as none of the concerns are too much related.
-> >
-> 
-> Sorry, Bjorn, ping! Please let me know if there are more concerns you have.
+Add Documentation to help users use pci endpoint to configure
+pci endpoint function and to bind the endpoint function
+with endpoint controller.
 
-I think we had a misunderstanding -- you mentioned adding some
-comments and wrote "I will post another patch", and I *thought* you
-meant you were going to post another version of *this* patch with some
-updated comments.  So I've been waiting for that updated patch.  But I
-think you've been waiting for me to merge *this* patch as-is.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+---
+ Documentation/PCI/00-INDEX                      |   2 +
+ Documentation/PCI/endpoint/pci-endpoint-cfs.txt | 105 ++++++++++++++++++++++++
+ 2 files changed, 107 insertions(+)
+ create mode 100644 Documentation/PCI/endpoint/pci-endpoint-cfs.txt
 
-To avoid having this discussion a third time in the future, I think
-you should add some comments at the point where you update the
-resource.  Updating a resource after it's in the resource tree is
-clearly dangerous, so we need some explanation of why it's sort of OK
-in this particular case.
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index ba950b296bd8..f84a23c7c74b 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -14,3 +14,5 @@ pcieaer-howto.txt
+ 	- the PCI Express Advanced Error Reporting Driver Guide HOWTO
+ endpoint/pci-endpoint.txt
+ 	- guide to add endpoint controller driver and endpoint function driver.
++endpoint/pci-endpoint-cfs.txt
++	- guide to use configfs to configure the pci endpoint function.
+diff --git a/Documentation/PCI/endpoint/pci-endpoint-cfs.txt b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+new file mode 100644
+index 000000000000..8b2a8280b131
+--- /dev/null
++++ b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+@@ -0,0 +1,105 @@
++                   CONFIGURING PCI ENDPOINT USING CONFIGFS
++                    Kishon Vijay Abraham I <kishon@ti.com>
++
++The PCI Endpoint Core exposes configfs entry (pci_ep) in order to configure the
++PCI endpoint function and in order to bind the endpoint function
++with the endpoint controller. (For introducing other mechanisms to
++configure the PCI Endpoint Function refer [1]).
++
++*) Mounting configfs
++
++The PCI Endpoint Core layer creates pci_ep directory in the mounted configfs
++directory. configfs can be mounted using the following command.
++
++	mount -t configfs none /sys/kernel/config
++
++*) Directory Structure
++
++The pci_ep configfs has two directories at its root: controllers and
++functions. Every EPC device present in the system will have an entry in
++the *controllers* directory and and every EPF driver present in the system
++will have an entry in the *functions* directory.
++
++/sys/kernel/config/pci_ep/
++	.. controllers/
++	.. functions/
++
++*) Creating EPF Device
++
++Every registered EPF driver will be listed in controllers directory. The
++entries corresponding to EPF driver will be created by the EPF core.
++
++/sys/kernel/config/pci_ep/functions/
++	.. <EPF Driver1>/
++		... <EPF Device 11>/
++		... <EPF Device 21>/
++	.. <EPF Driver2>/
++		... <EPF Device 12>/
++		... <EPF Device 22>/
++
++In order to create a <EPF device> of the type probed by <EPF Driver>, the
++user has to create a directory inside <EPF DriverN>.
++
++Every <EPF device> directory consists of the following entries that can be
++used to configure the standard configuration header of the endpoint function.
++(These entries are created by the framework when any new <EPF Device> is
++created)
++
++	.. <EPF Driver1>/
++		... <EPF Device 11>/
++			... vendorid
++			... deviceid
++			... revid
++			... progif_code
++			... subclass_code
++			... baseclass_code
++			... cache_line_size
++			... subsys_vendor_id
++			... subsys_id
++			... interrupt_pin
++
++*) EPC Device
++
++Every registered EPC device will be listed in controllers directory. The
++entries corresponding to EPC device will be created by the EPC core.
++
++/sys/kernel/config/pci_ep/controllers/
++	.. <EPC Device1>/
++		... <Symlink EPF Device11>/
++		... <Symlink EPF Device12>/
++		... start
++	.. <EPC Device2>/
++		... <Symlink EPF Device21>/
++		... <Symlink EPF Device22>/
++		... start
++
++The <EPC Device> directory will have a list of symbolic links to
++<EPF Device>. These symbolic links should be created by the user to
++represent the functions present in the endpoint device.
++
++The <EPC Device> directory will also have a *start* field. Once
++"1" is written to this field, the endpoint device will be ready to
++establish the link with the host. This is usually done after
++all the EPF devices are created and linked with the EPC device.
++
++
++			 | controllers/
++				| <Directory: EPC name>/
++					| <Symbolic Link: Function>
++					| start
++			 | functions/
++				| <Directory: EPF driver>/
++					| <Directory: EPF device>/
++						| vendorid
++						| deviceid
++						| revid
++						| progif_code
++						| subclass_code
++						| baseclass_code
++						| cache_line_size
++						| subsys_vendor_id
++						| subsys_id
++						| interrupt_pin
++						| function
++
++[1] -> Documentation/PCI/endpoint/pci-endpoint.txt
+-- 
+2.11.0
 
-If you can write a comment and dig up a URL to our previous
-discussion, I'd like to incorporate that into *this* patch before I
-merge it.  The sooner we can document this, the less work it will be
-in the future.
 
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
