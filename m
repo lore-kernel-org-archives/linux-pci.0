@@ -1,45 +1,119 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 7 Mar 2017 10:22:50 +0200
-From: Sakari Ailus <sakari.ailus@iki.fi>
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, netdev@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
-        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, peterz@infradead.org,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-Subject: Re: [PATCH 11/29] drivers, media: convert cx88_core.refcount from
- atomic_t to refcount_t
-Message-ID: <20170307082250.GF3220@valkosipuli.retiisi.org.uk>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
+Subject: Re: [RFC PATCH v2 15/32] x86: Add support for changing memory
+ encryption attribute in early boot
+To: Borislav Petkov <bp@suse.de>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846772794.2349.1396854638510933455.stgit@brijesh-build-machine>
+ <20170324171257.lgvqcdqec3nla5nb@pd.tnic>
+CC: <brijesh.singh@amd.com>, <simon.guinot@sequanux.org>,
+        <linux-efi@vger.kernel.org>, <kvm@vger.kernel.org>,
+        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
+        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
+        <gary.hook@amd.com>, <linux-mm@kvack.org>,
+        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
+        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
+        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
+        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
+        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
+        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
+        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>,
+        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
+        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
+        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
+        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
+        <tglx@linutronix.de>, <mchehab@kernel.org>,
+        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
+        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
+        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
+        <mcgrof@kernel.org>, <mst@redhat.com>,
+        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
+        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
+        <davem@davemloft.net>
+From: Brijesh Singh <brijesh.singh@amd.com>
+Message-ID: <f8c57c98-4d42-4bfe-f05f-37c607a81a42@amd.com>
+Date: Mon, 27 Mar 2017 10:07:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1488810076-3754-12-git-send-email-elena.reshetova@intel.com>
+In-Reply-To: <20170324171257.lgvqcdqec3nla5nb@pd.tnic>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 06, 2017 at 04:20:58PM +0200, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
-> 
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
+Hi Boris,
 
-Acked-by: Sakari Ailus <sakari.ailus@linux.intel.com>
+On 03/24/2017 12:12 PM, Borislav Petkov wrote:
+>>  }
+>>
+>> +static inline int __init early_set_memory_decrypted(void *addr,
+>> +						    unsigned long size)
+>> +{
+>> +	return 1;
+> 	^^^^^^^^
+>
+> return 1 when !CONFIG_AMD_MEM_ENCRYPT ?
+>
+> The non-early variants return 0.
+>
 
--- 
-Sakari Ailus
-e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
+I will fix it and use the same return value.
+
+>> +}
+>> +
+>> +static inline int __init early_set_memory_encrypted(void *addr,
+>> +						    unsigned long size)
+>> +{
+>> +	return 1;
+>> +}
+>> +
+>>  #define __sme_pa		__pa
+
+>> +	unsigned long pfn, npages;
+>> +	unsigned long addr = (unsigned long)vaddr & PAGE_MASK;
+>> +
+>> +	/* We are going to change the physical page attribute from C=1 to C=0.
+>> +	 * Flush the caches to ensure that all the data with C=1 is flushed to
+>> +	 * memory. Any caching of the vaddr after function returns will
+>> +	 * use C=0.
+>> +	 */
+>
+> Kernel comments style is:
+>
+> 	/*
+> 	 * A sentence ending with a full-stop.
+> 	 * Another sentence. ...
+> 	 * More sentences. ...
+> 	 */
+>
+
+I will update to use kernel comment style.
+
+
+>> +	clflush_cache_range(vaddr, size);
+>> +
+>> +	npages = PAGE_ALIGN(size) >> PAGE_SHIFT;
+>> +	pfn = slow_virt_to_phys((void *)addr) >> PAGE_SHIFT;
+>> +
+>> +	return kernel_map_pages_in_pgd(init_mm.pgd, pfn, addr, npages,
+>> +					flags & ~sme_me_mask);
+>> +
+>> +}
+>> +
+>> +int __init early_set_memory_decrypted(void *vaddr, unsigned long size)
+>> +{
+>> +	unsigned long flags = get_pte_flags((unsigned long)vaddr);
+>
+> So this does lookup_address()...
+>
+>> +	return early_set_memory_enc_dec(vaddr, size, flags & ~sme_me_mask);
+>
+> ... and this does it too in slow_virt_to_phys(). So you do it twice per
+> vaddr.
+>
+> So why don't you define a __slow_virt_to_phys() helper - notice
+> the "__" - which returns flags in its second parameter and which
+> slow_virt_to_phys() calls with a NULL second parameter in the other
+> cases?
+>
+
+I will look into creating a helper function. thanks
+
+-Brijesh
