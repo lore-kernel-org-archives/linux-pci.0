@@ -1,130 +1,227 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0054.outbound.protection.outlook.com ([104.47.36.54]:6496
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754898AbdC3Vr3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Mar 2017 17:47:29 -0400
-From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+Return-Path: <SRS0=PiGp=3F=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=PiGp=3F=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Tue, 28 Mar 2017 15:50:03 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: RE: Having problems resetting a PCI device
-Date: Thu, 30 Mar 2017 21:47:24 +0000
-Message-ID: <DM2PR12MB00789B23757BB1324777DA3BFE340@DM2PR12MB0078.namprd12.prod.outlook.com>
-References: <DM2PR12MB00780139E84F5B961AD4AB6CFE350@DM2PR12MB0078.namprd12.prod.outlook.com>
- <20170329205446.GB31007@bhelgaas-glaptop.roam.corp.google.com>
- <DM2PR12MB00789662208FE959FCBD7AD6FE350@DM2PR12MB0078.namprd12.prod.outlook.com>
- <20170330214219.GB28207@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170330214219.GB28207@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Jonathan Corbet <corbet@lwn.net>,
+	Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	John Garry <john.garry@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH v2 08/22] lib: implement Devres ioremap_nopost() interface
+Message-ID: <20170328145003.GB18046@red-moon>
+References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+ <20170327094954.7162-9-lorenzo.pieralisi@arm.com>
+ <20170328014129.GJ25380@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170328014129.GJ25380@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Mar 27, 2017 at 08:41:29PM -0500, Bjorn Helgaas wrote:
+> On Mon, Mar 27, 2017 at 10:49:36AM +0100, Lorenzo Pieralisi wrote:
+> > The introduction of the ioremap_nopost() interface allows
+> > kernel drivers to map memory through a dedicated kernel
+> > interface providing non-posted writes semantics.
+> > 
+> > Introduce two new functions in the Devres kernel layer and Devres
+> > documentation:
+> > 
+> > - devm_ioremap_nopost()
+> > - devm_ioremap_nopost_resource()
+> > 
+> > so that drivers can make use of devm_* interface to map memory
+> > regions requiring non-posted writes memory attributes.
+> > 
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Jonathan Corbet <corbet@lwn.net>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: Tejun Heo <tj@kernel.org>
+> > ---
+> >  Documentation/driver-model/devres.txt |  3 ++
+> >  include/linux/device.h                |  2 +
+> >  include/linux/io.h                    |  2 +
+> >  lib/devres.c                          | 78 +++++++++++++++++++++++++++++++++++
+> >  4 files changed, 85 insertions(+)
+> > 
+> > diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
+> > index bf34d5b..9991a66 100644
+> > --- a/Documentation/driver-model/devres.txt
+> > +++ b/Documentation/driver-model/devres.txt
+> > @@ -294,7 +294,10 @@ IOMAP
+> >    devm_ioremap()
+> >    devm_ioremap_nocache()
+> >    devm_ioremap_wc()
+> > +  devm_ioremap_nopost()
+> >    devm_ioremap_resource() : checks resource, requests memory region, ioremaps
+> > +  devm_ioremap_nopost_resource() : do devm_ioremap_resource() with nopost
+> > +				   memory attributes
+> >    devm_iounmap()
+> >    pcim_iomap()
+> >    pcim_iomap_regions()	: do request_region() and iomap() on multiple BARs
+> > diff --git a/include/linux/device.h b/include/linux/device.h
+> > index 9ef518a..1dce865 100644
+> > --- a/include/linux/device.h
+> > +++ b/include/linux/device.h
+> > @@ -689,6 +689,8 @@ extern unsigned long devm_get_free_pages(struct device *dev,
+> >  extern void devm_free_pages(struct device *dev, unsigned long addr);
+> >  
+> >  void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res);
+> > +void __iomem *devm_ioremap_nopost_resource(struct device *dev,
+> > +					   struct resource *res);
+> >  
+> >  /* allows to add/remove a custom action to devres stack */
+> >  int devm_add_action(struct device *dev, void (*action)(void *), void *data);
+> > diff --git a/include/linux/io.h b/include/linux/io.h
+> > index 82ef36e..e34d799 100644
+> > --- a/include/linux/io.h
+> > +++ b/include/linux/io.h
+> > @@ -79,6 +79,8 @@ void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
+> >  				   resource_size_t size);
+> >  void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
+> >  				   resource_size_t size);
+> > +void __iomem *devm_ioremap_nopost(struct device *dev, resource_size_t offset,
+> > +				   resource_size_t size);
+> >  void devm_iounmap(struct device *dev, void __iomem *addr);
+> >  int check_signature(const volatile void __iomem *io_addr,
+> >  			const unsigned char *signature, int length);
+> > diff --git a/lib/devres.c b/lib/devres.c
+> > index cb1464c..4e05660 100644
+> > --- a/lib/devres.c
+> > +++ b/lib/devres.c
+> > @@ -100,6 +100,34 @@ void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
+> >  EXPORT_SYMBOL(devm_ioremap_wc);
+> >  
+> >  /**
+> > + * devm_ioremap_nopost - Managed ioremap_nopost()
+> > + * @dev: Generic device to remap IO address for
+> > + * @offset: BUS offset to map
+> 
+> I know this comment was just copied from other devm_ioremap*()
+> interfaces, but I think it's slightly misleading to call this the "BUS
+> offset".  That suggests this is a bus address, but it is not.  Maybe
+> it should be "resource address" or similar?
+> 
+> I propose a separate patch to update the existing comments, followed
+> by this patch to add this new one.
 
+I agree with you, maybe Tejun has more context on why that parameter
+is called BUS offset ? Anyway, I can easily do what you suggest above,
+just asking Tejun if there is something I am missing.
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Thursday, March 30, 2017 5:42 PM
-> To: Zytaruk, Kelly
-> Cc: linux-pci@vger.kernel.org; Alex Williamson
-> Subject: Re: Having problems resetting a PCI device
->=20
-> On Wed, Mar 29, 2017 at 09:41:48PM +0000, Zytaruk, Kelly wrote:
-> >
-> >
-> > > -----Original Message-----
-> > > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > > Sent: Wednesday, March 29, 2017 4:55 PM
-> > > To: Zytaruk, Kelly
-> > > Cc: linux-pci@vger.kernel.org; Alex Williamson
-> > > Subject: Re: Having problems resetting a PCI device
-> > >
-> > > Hi Kelly,
-> > >
-> > > On Wed, Mar 29, 2017 at 08:03:33PM +0000, Zytaruk, Kelly wrote:
-> > > > I have a PCI device that is sitting behind a bridge.
-> > > >
-> > > > Under certain reproducible circumstances the PCI device will
-> > > > become inactive. Reading the PCI config space returns all 0xFFFFFFF=
-F.
-> > > >
-> > > > The bridge appears to still be functional. Reading the status from
-> > > > the bridge I see a Fatal Error due to a Surprise Down event.
-> > >
-> > > Just to be specific, is this the "Surprise Down Error" in the AER
-> > > uncorrectable error status register?  "lspci -vv" probably decodes al=
-l that for
-> you.
-> > >
-> > > > I am trying to figure out how to bring the device back online.
-> > > >
-> > > > I tried toggling the secondary bus reset bit of the Bridge Control
-> > > > Register but it doesn't appear to make any difference. I still see
-> > > > 0xFFFFFFFF in the device config space.
-> > >
-> > > Are you calling pci_reset_function() or doing this by hand?
-> > > pci_reset_function() tries several different strategies, one of
-> > > which is toggling the secondary bus reset bit.
-> >
-> > I just read the documentation for the call and this could be a problem
-> > "The PCI device must be responsive  to PCI config space in order to use=
- this
-> function."
-> >
-> > In my case reading PCI config space returns all 0xFFFFFFFF
->=20
-> I think Surprise Down means the link is down, so you won't be able to rea=
-ch the
-> device at all until it gets reset.
->=20
-> But the secondary bus reset is done by the switch port immediately upstre=
-am
-> from the device, so that should still work.  If the device still doesn't =
-work after
-> doing a secondary bus reset, maybe there's a device defect related to res=
-et.
->=20
-> That port (a Root Port or Switch Downstream Port) is probably where the
-> Surprise Down error was logged.  If you have CONFIG_PCIEAER turned on, I
-> think the kernel should log some stuff in dmesg, hopefully including the =
-error
-> type and something that identifies the link.  Do you see any of that?
+Tejun ?
 
-I am not seeing anything in dmesg log
+Thanks !
+Lorenzo
 
->=20
-> If you don't have CONFIG_PCIEAER turned on, you should be able to use lsp=
-ci to
-> look at what's logged in the AER capability.  Unfortunately, lspci doesn'=
-t know
-> how to decode everything, but you can use "lspci -xxxx" to look at it and=
- decode
-> things manually.
->=20
-> > > > I provided a pci_error_handler but the error_detected() function
-> > > > is not getting called.
-> > >
-> > > Do you have CONFIG_PCIEAER turned on?  I would naively expect AER to
-> > > log something and call your error_detected() function if this error
-> > > occurs (but I haven't looked at the code for a long time).
->=20
->=20
-> > > > Given that these two methods are not helping me out what other
-> > > > choices do I have to either reset the PCI device or hot-plug the
-> > > > device from a kernel driver. Or some other method of bring the devi=
-ce back
-> to life.
->=20
-> You should be able to "echo 1 > /sys/bus/pci/devices/.../remove" to hot-u=
-nplug
-> the device, then "echo 1 > /sys/bus/pci/rescan" to rediscover it.
-
-I tried "echo 1 >remove" after the hang and it hung the Hypervisor.  The Xe=
-n log should a fault followed by a reboot about 5 second later.
-
-I don't recall the exact message but the last entry on the stack had someth=
-ing to with restoring msi interrupts just before the reboot.
-
->=20
-> Bjorn
+> 
+> > + * @size: Size of map
+> > + *
+> > + * Managed ioremap_nopost().  Map is automatically unmapped on driver detach.
+> > + */
+> > +void __iomem *devm_ioremap_nopost(struct device *dev, resource_size_t offset,
+> > +			      resource_size_t size)
+> > +{
+> > +	void __iomem **ptr, *addr;
+> > +
+> > +	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
+> > +	if (!ptr)
+> > +		return NULL;
+> > +
+> > +	addr = ioremap_nopost(offset, size);
+> > +	if (addr) {
+> > +		*ptr = addr;
+> > +		devres_add(dev, ptr);
+> > +	} else
+> > +		devres_free(ptr);
+> > +
+> > +	return addr;
+> > +}
+> > +EXPORT_SYMBOL(devm_ioremap_nopost);
+> > +
+> > +/**
+> >   * devm_iounmap - Managed iounmap()
+> >   * @dev: Generic device to unmap for
+> >   * @addr: Address to unmap
+> > @@ -163,6 +191,56 @@ void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res)
+> >  }
+> >  EXPORT_SYMBOL(devm_ioremap_resource);
+> >  
+> > +/**
+> > + * devm_ioremap_nopost_resource() - devm_ioremap_resource() nopost version
+> > + * @dev: generic device to handle the resource for
+> > + * @res: resource to be handled
+> > + *
+> > + * Checks that a resource is a valid memory region, requests the memory
+> > + * region and ioremaps it with ioremap_nopost() interface.
+> > + * All operations are managed and will be undone on driver detach.
+> > + *
+> > + * Returns a pointer to the remapped memory or an ERR_PTR() encoded error code
+> > + * on failure. Usage example:
+> > + *
+> > + *	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+> > + *	base = devm_ioremap_nopost_resource(&pdev->dev, res);
+> > + *	if (IS_ERR(base))
+> > + *		return PTR_ERR(base);
+> > + */
+> > +void __iomem *devm_ioremap_nopost_resource(struct device *dev,
+> > +					   struct resource *res)
+> > +{
+> > +	resource_size_t size;
+> > +	const char *name;
+> > +	void __iomem *dest_ptr;
+> > +
+> > +	BUG_ON(!dev);
+> > +
+> > +	if (!res || resource_type(res) != IORESOURCE_MEM) {
+> > +		dev_err(dev, "invalid resource\n");
+> > +		return IOMEM_ERR_PTR(-EINVAL);
+> > +	}
+> > +
+> > +	size = resource_size(res);
+> > +	name = res->name ?: dev_name(dev);
+> > +
+> > +	if (!devm_request_mem_region(dev, res->start, size, name)) {
+> > +		dev_err(dev, "can't request region for resource %pR\n", res);
+> > +		return IOMEM_ERR_PTR(-EBUSY);
+> > +	}
+> > +
+> > +	dest_ptr = devm_ioremap_nopost(dev, res->start, size);
+> > +	if (!dest_ptr) {
+> > +		dev_err(dev, "ioremap failed for resource %pR\n", res);
+> > +		devm_release_mem_region(dev, res->start, size);
+> > +		dest_ptr = IOMEM_ERR_PTR(-ENOMEM);
+> > +	}
+> > +
+> > +	return dest_ptr;
+> > +}
+> > +EXPORT_SYMBOL(devm_ioremap_nopost_resource);
+> > +
+> >  #ifdef CONFIG_HAS_IOPORT_MAP
+> >  /*
+> >   * Generic iomap devres
+> > -- 
+> > 2.10.0
+> > 
