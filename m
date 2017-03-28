@@ -1,65 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38590 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932762AbdC2UU3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 29 Mar 2017 16:20:29 -0400
-Date: Wed, 29 Mar 2017 15:20:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ludwig Petrosyan <ludwig.petrosyan@desy.de>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: PCIe hotplug
-Message-ID: <20170329202025.GA31007@bhelgaas-glaptop.roam.corp.google.com>
-References: <9dcf544b-33c5-60fb-48ca-3f34ecabf3b3@desy.de>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:33654 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751294AbdC1QYh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Mar 2017 12:24:37 -0400
+Subject: Re: [PATCH 5/5] PCI: remove pci_enable_msix
+To: Christoph Hellwig <hch@lst.de>
+References: <20170327082936.6830-1-hch@lst.de>
+ <20170327082936.6830-6-hch@lst.de>
+ <83f97789-0817-7549-bfa9-1f8dcb0c26d9@gmail.com>
+ <20170327171148.GB28815@lst.de>
+ <1eaa46ad-9890-c738-3a85-6468161284ba@gmail.com>
+ <20170328064148.GA20271@lst.de>
+Cc: bhelgaas@google.com, davem@davemloft.net,
+        netanel@annapurnalabs.com, jcliburn@gmail.com,
+        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org,
+        netdev@vger.kernel.org, linux-pci@vger.kernel.org
+From: David Daney <ddaney.cavm@gmail.com>
+Message-ID: <217ae0b0-1d0c-bde9-e3f1-c52cbd3bd112@gmail.com>
+Date: Tue, 28 Mar 2017 09:24:15 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <9dcf544b-33c5-60fb-48ca-3f34ecabf3b3@desy.de>
+In-Reply-To: <20170328064148.GA20271@lst.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Ludwig,
+On 03/27/2017 11:41 PM, Christoph Hellwig wrote:
+> On Mon, Mar 27, 2017 at 10:30:46AM -0700, David Daney wrote:
+>>> Use pci_enable_msix_{exact,range} for now, as I told you before.
+>>>
+>>
+>> That still results in twice as many MSI-X being provisioned than are needed.
+>
+> How so?  Except for the return value, a pci_enable_msix_exact call with the
+> same arguments as your previous pci_enable_msix will work exactly the
+> same.
+>
 
-On Wed, Mar 29, 2017 at 03:34:47PM +0200, Ludwig Petrosyan wrote:
-> Dear Linux PCI support team
-> 
-> I need help !
-> 
-> We are using MTCA crate system with the Ubuntu Linux for an
-> accelerator control system.
-> 
-> The hotplug is very important for us, as most the crates are
-> installed in the tunnel.
-> 
-> For a long time the PCIe hotplug works fine, we use the following
-> boot parameters:
-> 
-> "noacpi noapic clock=tsc acpi=off apic=off pciehp.pciehp_force=1
-> pciehp.pciehp_debug=1 pcie_ports=native"
-> 
-> After some point (seems after upgrading to kernel 3.x.x) we got
-> problems (main problem is: the memories not remapped,
-> 
-> I mean: if I have some endpoint after removing and inserting back
-> the memories are not remapped,
-> 
-> I know that I could not add new endpoint in running system, but it
-> has to be possible to remove and insert back existing endpoint).
-> 
-> Now I am mixed out: what to use PCIe native hotplug or ACPI ..., I
-> could not find any documentation about using PCIe hotplug
-> 
-> and how to configure.
-
-Sounds like a possible regression, since it worked in an older kernel
-but doesn't work any more.
-
-Can you collect complete dmesg logs from the newest working kernel and
-the oldest broken kernel, along with "lspci -vv" output (as root), and
-open a report at https://bugzilla.kernel.org in the drivers/pci
-component?  Please attach the logs instead of pasting them inline.
-
-I'm slightly concerned about all the boot parameters because you're
-turning off ACPI support in Linux, and there's some possibility of 
-a conflict between ACPI hotplug support in the BIOS and the PCIe
-native hotplug you're probably using now.
-
-Bjorn
+Sorry, I think it was my misunderstanding.  I didn't realize that we had 
+essentially renamed the function, but left the functionality mostly 
+unchanged.
