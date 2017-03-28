@@ -1,42 +1,87 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:56892 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751722AbdCCUd1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 3 Mar 2017 15:33:27 -0500
-Date: Fri, 3 Mar 2017 14:33:23 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
-        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
-        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
-        gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, bp@suse.de, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
-        akpm@linux-foundation.org, davem@davemloft.net
-Subject: Re: [RFC PATCH v2 00/32] x86: Secure Encrypted Virtualization (AMD)
-Message-ID: <20170303203323.GA5305@bhelgaas-glaptop.roam.corp.google.com>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Received: from mail-bn3nam01on0084.outbound.protection.outlook.com ([104.47.33.84]:49440
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752358AbdC1US3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Mar 2017 16:18:29 -0400
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: 'Joerg Roedel' <joro@8bytes.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Joerg Roedel <jroedel@suse.de>,
+        Daniel Drake <drake@endlessm.com>,
+        "Nath, Arindam" <Arindam.Nath@amd.com>
+Subject: RE: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+Date: Tue, 28 Mar 2017 20:18:26 +0000
+Message-ID: <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
+In-Reply-To: <1490703404-4944-1-git-send-email-joro@8bytes.org>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 02, 2017 at 10:12:01AM -0500, Brijesh Singh wrote:
-> This RFC series provides support for AMD's new Secure Encrypted Virtualization
-> (SEV) feature. This RFC is build upon Secure Memory Encryption (SME) RFCv4 [1].
+> -----Original Message-----
+> From: Joerg Roedel [mailto:joro@8bytes.org]
+> Sent: Tuesday, March 28, 2017 8:17 AM
+> To: Bjorn Helgaas
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Joerg Roedel=
+;
+> Daniel Drake; Deucher, Alexander
+> Subject: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+>=20
+> From: Joerg Roedel <jroedel@suse.de>
+>=20
+> ATS is broken on these devices. Under invalidation load, the
+> GPU does not reply to invalidations anymore, causing
+> Completion-wait loop timeouts on the AMD IOMMU driver side.
+> Fix it by not enabling ATS on these devices.
+>=20
+> Note that below mentioned commit is not broken, it just
+> triggers the issue because it might cause invalidation
+> storms on devices.
+>=20
+> Fixes: b1516a14657a ('iommu/amd: Implement flush queue')
+> Reported-by: Daniel Drake <drake@endlessm.com>
+> Cc: Daniel Drake <drake@endlessm.com>
+> Cc: Alexander Deucher <Alexander.Deucher@amd.com>
+> Signed-off-by: Joerg Roedel <jroedel@suse.de>
 
-What kernel version is this series based on?
+Did you see Arindam's patch from yesterday[1]?  Not sure which is the prope=
+r fix, maybe both?
+
+Alex
+
+[1] - https://lists.freedesktop.org/archives/amd-gfx/2017-March/006862.html
+
+> ---
+>  drivers/pci/ats.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+>=20
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index eeb9fb2..711bdb2 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -17,10 +17,18 @@
+>=20
+>  #include "pci.h"
+>=20
+> +static const struct pci_device_id broken_ats_tbl[] =3D {
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x98e4) }, /* AMD Stoney GPU
+> part */
+> +	{ 0 }
+> +};
+> +
+>  void pci_ats_init(struct pci_dev *dev)
+>  {
+>  	int pos;
+>=20
+> +	if (pci_match_id(broken_ats_tbl, dev))
+> +		return;
+> +
+>  	pos =3D pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
+>  	if (!pos)
+>  		return;
+> --
+> 1.9.1
