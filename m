@@ -1,227 +1,104 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [RFC PATCH v2 26/32] kvm: svm: Add support for SEV
- LAUNCH_UPDATE_DATA command
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:17:47 -0500
-Message-ID: <148846786714.2349.17724971671841396908.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAL_JsqLtTiH7DhqKf_x7xy1KZYQyiOreK=M90HFr=8BDW9542w@mail.gmail.com>
+References: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
+ <CAL_JsqLtTiH7DhqKf_x7xy1KZYQyiOreK=M90HFr=8BDW9542w@mail.gmail.com>
+From: Oza Oza <oza.oza@broadcom.com>
+Date: Tue, 28 Mar 2017 10:57:39 +0530
+Message-ID: <CAMSpPPdnQdWeyTsnESRFx52gtxQLxwfPQwQgDFSN=katfW7suA@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/3] of/pci: dma-ranges to account highest possible
+ host bridge dma_mask
+To: Rob Herring <robh@kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Joerg Roedel <joro@8bytes.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Linux IOMMU <iommu@lists.linux-foundation.org>,
+ "bcm-kernel-feedback-list@broadcom.com"
+ <bcm-kernel-feedback-list@broadcom.com>, Robin Murphy <robin.murphy@arm.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The command is used for encrypting the guest memory region using the VM
-encryption key (VEK) created from LAUNCH_START.
+On Mon, Mar 27, 2017 at 8:16 PM, Rob Herring <robh@kernel.org> wrote:
+> On Sat, Mar 25, 2017 at 12:31 AM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
+>> it is possible that PCI device supports 64-bit DMA addressing,
+>> and thus it's driver sets device's dma_mask to DMA_BIT_MASK(64),
+>> however PCI host bridge may have limitations on the inbound
+>> transaction addressing. As an example, consider NVME SSD device
+>> connected to iproc-PCIe controller.
+>>
+>> Currently, the IOMMU DMA ops only considers PCI device dma_mask
+>> when allocating an IOVA. This is particularly problematic on
+>> ARM/ARM64 SOCs where the IOMMU (i.e. SMMU) translates IOVA to
+>> PA for in-bound transactions only after PCI Host has forwarded
+>> these transactions on SOC IO bus. This means on such ARM/ARM64
+>> SOCs the IOVA of in-bound transactions has to honor the addressing
+>> restrictions of the PCI Host.
+>>
+>> current pcie frmework and of framework integration assumes dma-ranges
+>> in a way where memory-mapped devices define their dma-ranges.
+>> dma-ranges: (child-bus-address, parent-bus-address, length).
+>>
+>> but iproc based SOCs and even Rcar based SOCs has PCI world dma-ranges.
+>> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
+>
+> If you implement a common function, then I expect to see other users
+> converted to use it. There's also PCI hosts in arch/powerpc that parse
+> dma-ranges.
 
-Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
----
- arch/x86/kvm/svm.c |  150 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 150 insertions(+)
+the common function should be similar to what
+of_pci_get_host_bridge_resources is doing right now.
+it parses ranges property right now.
 
-diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
-index b5fa8c0..62c2b22 100644
---- a/arch/x86/kvm/svm.c
-+++ b/arch/x86/kvm/svm.c
-@@ -38,6 +38,8 @@
- #include <linux/hashtable.h>
- #include <linux/psp-sev.h>
- #include <linux/file.h>
-+#include <linux/pagemap.h>
-+#include <linux/swap.h>
- 
- #include <asm/apic.h>
- #include <asm/perf_event.h>
-@@ -502,6 +504,7 @@ static void sev_deactivate_handle(struct kvm *kvm);
- static void sev_decommission_handle(struct kvm *kvm);
- static int sev_asid_new(void);
- static void sev_asid_free(int asid);
-+#define __sev_page_pa(x) ((page_to_pfn(x) << PAGE_SHIFT) | sme_me_mask)
- 
- static bool kvm_sev_enabled(void)
- {
-@@ -5775,6 +5778,149 @@ static int sev_launch_start(struct kvm *kvm, struct kvm_sev_cmd *argp)
- 	return ret;
- }
- 
-+static struct page **sev_pin_memory(unsigned long uaddr, unsigned long ulen,
-+				    unsigned long *n)
-+{
-+	struct page **pages;
-+	int first, last;
-+	unsigned long npages, pinned;
-+
-+	/* Get number of pages */
-+	first = (uaddr & PAGE_MASK) >> PAGE_SHIFT;
-+	last = ((uaddr + ulen - 1) & PAGE_MASK) >> PAGE_SHIFT;
-+	npages = (last - first + 1);
-+
-+	pages = kzalloc(npages * sizeof(struct page *), GFP_KERNEL);
-+	if (!pages)
-+		return NULL;
-+
-+	/* pin the user virtual address */
-+	down_read(&current->mm->mmap_sem);
-+	pinned = get_user_pages_fast(uaddr, npages, 1, pages);
-+	up_read(&current->mm->mmap_sem);
-+	if (pinned != npages) {
-+		printk(KERN_ERR "SEV: failed to pin  %ld pages (got %ld)\n",
-+				npages, pinned);
-+		goto err;
-+	}
-+
-+	*n = npages;
-+	return pages;
-+err:
-+	if (pinned > 0)
-+		release_pages(pages, pinned, 0);
-+	kfree(pages);
-+
-+	return NULL;
-+}
-+
-+static void sev_unpin_memory(struct page **pages, unsigned long npages)
-+{
-+	release_pages(pages, npages, 0);
-+	kfree(pages);
-+}
-+
-+static void sev_clflush_pages(struct page *pages[], int num_pages)
-+{
-+	unsigned long i;
-+	uint8_t *page_virtual;
-+
-+	if (num_pages == 0 || pages == NULL)
-+		return;
-+
-+	for (i = 0; i < num_pages; i++) {
-+		page_virtual = kmap_atomic(pages[i]);
-+		clflush_cache_range(page_virtual, PAGE_SIZE);
-+		kunmap_atomic(page_virtual);
-+	}
-+}
-+
-+static int sev_launch_update_data(struct kvm *kvm, struct kvm_sev_cmd *argp)
-+{
-+	struct page **inpages;
-+	unsigned long uaddr, ulen;
-+	int i, len, ret, offset;
-+	unsigned long nr_pages;
-+	struct kvm_sev_launch_update_data params;
-+	struct sev_data_launch_update_data *data;
-+
-+	if (!sev_guest(kvm))
-+		return -EINVAL;
-+
-+	/* Get the parameters from the user */
-+	ret = -EFAULT;
-+	if (copy_from_user(&params, (void *)argp->data,
-+			sizeof(struct kvm_sev_launch_update_data)))
-+		goto err_1;
-+
-+	uaddr = params.address;
-+	ulen = params.length;
-+
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data) {
-+		ret = -ENOMEM;
-+		goto err_1;
-+	}
-+
-+	/* pin user pages */
-+	inpages = sev_pin_memory(params.address, params.length, &nr_pages);
-+	if (!inpages) {
-+		ret = -ENOMEM;
-+		goto err_2;
-+	}
-+
-+	/* invalidate the cache line for these pages to ensure that DRAM
-+	 * has recent content before calling the SEV commands to perform
-+	 * the encryption.
-+	 */
-+	sev_clflush_pages(inpages, nr_pages);
-+
-+	/* the array of pages returned by get_user_pages() is a page-aligned
-+	 * memory. Since the user buffer is probably not page-aligned, we need
-+	 * to calculate the offset within a page for first update entry.
-+	 */
-+	offset = uaddr & (PAGE_SIZE - 1);
-+	len = min_t(size_t, (PAGE_SIZE - offset), ulen);
-+	ulen -= len;
-+
-+	/* update first page -
-+	 * special care need to be taken for the first page because we might
-+	 * be dealing with offset within the page
-+	 */
-+	data->handle = sev_get_handle(kvm);
-+	data->length = len;
-+	data->address = __sev_page_pa(inpages[0]) + offset;
-+	ret = sev_issue_cmd(kvm, SEV_CMD_LAUNCH_UPDATE_DATA,
-+			data, &argp->error);
-+	if (ret)
-+		goto err_3;
-+
-+	/* update remaining pages */
-+	for (i = 1; i < nr_pages; i++) {
-+
-+		len = min_t(size_t, PAGE_SIZE, ulen);
-+		ulen -= len;
-+		data->length = len;
-+		data->address = __sev_page_pa(inpages[i]);
-+		ret = sev_issue_cmd(kvm, SEV_CMD_LAUNCH_UPDATE_DATA,
-+					data, &argp->error);
-+		if (ret)
-+			goto err_3;
-+	}
-+
-+	/* mark pages dirty */
-+	for (i = 0; i < nr_pages; i++) {
-+		set_page_dirty_lock(inpages[i]);
-+		mark_page_accessed(inpages[i]);
-+	}
-+err_3:
-+	sev_unpin_memory(inpages, nr_pages);
-+err_2:
-+	kfree(data);
-+err_1:
-+	return ret;
-+}
-+
- static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
- {
- 	int r = -ENOTTY;
-@@ -5790,6 +5936,10 @@ static int amd_memory_encryption_cmd(struct kvm *kvm, void __user *argp)
- 		r = sev_launch_start(kvm, &sev_cmd);
- 		break;
- 	}
-+	case KVM_SEV_LAUNCH_UPDATE_DATA: {
-+		r = sev_launch_update_data(kvm, &sev_cmd);
-+		break;
-+	}
- 	default:
- 		break;
- 	}
+the new function would look look following.
+
+of_pci_get_dma_ranges(struct device_node *dev, struct list_head *resources)
+where resources would return the dma-ranges.
+
+but right now if you see the patch, of_dma_configure calls the new
+function, which actually returns the largest possible size.
+so this new function has to be generic in a way where other PCI hosts
+can use it. but certainly iproc(Broadcom SOC) , rcar based SOCs can
+use it for sure.
+
+although having powerpc using it;  is a separate exercise, since I do
+not have any access to other PCI hosts such as powerpc. but we can
+workout with them on thsi forum if required.
+
+so overall, of_pci_get_dma_ranges has to serve following 2 purposes.
+
+1) it has to return largest possible size to of_dma_configure to
+generate largest possible dma_mask.
+
+2) it also has to return resources (dma-ranges) parsed, to the users.
+
+so to address above needs
+
+of_pci_get_dma_ranges(struct device_node *dev, struct list_head
+*resources, u64 *size)
+
+dev -> device node.
+resources -> dma-ranges in allocated list.
+size -> highest possible size to generate possible dma_mask for
+of_dma_configure.
+
+let em know how this sounds.
+
+Regards,
+Oza.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
