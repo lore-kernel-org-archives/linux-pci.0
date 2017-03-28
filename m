@@ -1,283 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Oza Oza <oza.oza@broadcom.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:55863 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932139AbdC1U2R (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Mar 2017 16:28:17 -0400
+Date: Tue, 28 Mar 2017 22:28:44 +0200
+From: Joerg Roedel <jroedel@suse.de>
+To: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+Cc: 'Joerg Roedel' <joro@8bytes.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Daniel Drake <drake@endlessm.com>,
+        "Nath, Arindam" <Arindam.Nath@amd.com>
+Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+Message-ID: <20170328202844.GQ8329@suse.de>
+References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
+ <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
 MIME-Version: 1.0
-Date: Mon, 20 Mar 2017 14:27:51 +0530
-Message-ID: <6c34297b77de0fc7fc4b44b17749cfd2@mail.gmail.com>
-Subject: [RFC PATCH] iommu/dma/pci: account pci host bridge dma_mask for IOVA
- allocation
-To: Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>,
- linux-pci@vger.kernel.org
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, iommu@lists.linux-foundation.org,
- bcm-kernel-feedback-list@broadcom.com, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-+  linux-pci
+On Tue, Mar 28, 2017 at 08:18:26PM +0000, Deucher, Alexander wrote:
+> > -----Original Message-----
+> > From: Joerg Roedel [mailto:joro@8bytes.org]
+> > Sent: Tuesday, March 28, 2017 8:17 AM
+> > To: Bjorn Helgaas
+> > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Joerg Roedel;
+> > Daniel Drake; Deucher, Alexander
+> > Subject: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+> > 
+> > From: Joerg Roedel <jroedel@suse.de>
+> > 
+> > ATS is broken on these devices. Under invalidation load, the
+> > GPU does not reply to invalidations anymore, causing
+> > Completion-wait loop timeouts on the AMD IOMMU driver side.
+> > Fix it by not enabling ATS on these devices.
+> > 
+> > Note that below mentioned commit is not broken, it just
+> > triggers the issue because it might cause invalidation
+> > storms on devices.
+> > 
+> > Fixes: b1516a14657a ('iommu/amd: Implement flush queue')
+> > Reported-by: Daniel Drake <drake@endlessm.com>
+> > Cc: Daniel Drake <drake@endlessm.com>
+> > Cc: Alexander Deucher <Alexander.Deucher@amd.com>
+> > Signed-off-by: Joerg Roedel <jroedel@suse.de>
+> 
+> Did you see Arindam's patch from yesterday[1]?  Not sure which is the proper fix, maybe both?
 
-Regards,
-Oza.
+Arindam's patch makes sense on its own, but not as a fix for this issue.
+It lowers the invalidation load on the GPU, but there are still ways to
+trigger a high invalidation rate on the device. So it might hide the
+issue, but not fix it.
 
------Original Message-----
-From: Oza Pawandeep [mailto:oza.oza@broadcom.com]
-Sent: Friday, March 17, 2017 11:41 AM
-To: Joerg Roedel; Robin Murphy
-Cc: iommu@lists.linux-foundation.org; linux-kernel@vger.kernel.org;
-linux-arm-kernel@lists.infradead.org; devicetree@vger.kernel.org;
-bcm-kernel-feedback-list@broadcom.com; Oza Pawandeep
-Subject: [RFC PATCH] iommu/dma: account pci host bridge dma_mask for IOVA
-allocation
+We need to disable ATS on the device if it doesn't work reliably.
 
-It is possible that PCI device supports 64-bit DMA addressing, and thus
-it's driver sets device's dma_mask to DMA_BIT_MASK(64), however PCI host
-bridge may have limitations on the inbound transaction addressing. As an
-example, consider NVME SSD device connected to iproc-PCIe controller.
 
-Currently, the IOMMU DMA ops only considers PCI device dma_mask when
-allocating an IOVA. This is particularly problematic on
-ARM/ARM64 SOCs where the IOMMU (i.e. SMMU) translates IOVA to PA for
-in-bound transactions only after PCI Host has forwarded these transactions
-on SOC IO bus. This means on such ARM/ARM64 SOCs the IOVA of in-bound
-transactions has to honor the addressing restrictions of the PCI Host.
 
-this patch is inspired by
-http://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1306545.html
-http://www.spinics.net/lists/arm-kernel/msg566947.html
-
-but above inspiraiton solves the half of the problem.
-the rest of the problem is descrbied below, what we face on iproc based
-SOCs.
-
-current pcie frmework and of framework integration assumes dma-ranges in a
-way where memory-mapped devices define their dma-ranges.
-dma-ranges: (child-bus-address, parent-bus-address, length).
-
-but iproc based SOCs and even Rcar based SOCs has PCI world dma-ranges.
-dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
-
-of_dma_configure is specifically witten to take care of memory mapped
-devices.
-but no implementation exists for pci to take care of pcie based memory
-ranges.
-in fact pci world doesnt seem to define standard dma-ranges since there is
-an absense of the same, the dma_mask used to remain 32bit because of
-0 size return (parsed by of_dma_configure())
-
-this patch also implements of_pci_get_dma_ranges to cater to pci world
-dma-ranges.
-so then the returned size get best possible (largest) dma_mask.
-for e.g.
-dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>; we should get
-dev->coherent_dma_mask=0x7fffffffff.
-
-conclusion: there are following problems
-1) linux pci and iommu framework integration has glitches with respect to
-dma-ranges
-2) pci linux framework look very uncertain about dma-ranges, rather
-binding is not defined
-   the way it is defined for memory mapped devices.
-   rcar and iproc based SOCs use their custom one dma-ranges
-   (rather can be standard)
-3) even if in case of default parser of_dma_get_ranges,:
-   it throws and erro"
-   "no dma-ranges found for node"
-   because of the bug which exists.
-   following lines should be moved to the end of while(1)
-	839                 node = of_get_next_parent(node);
-	840                 if (!node)
-	841                         break;
-
-Reviewed-by: Anup Patel <anup.patel@broadcom.com>
-Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig index
-8c7c244..20cfff7 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -217,6 +217,9 @@ config NEED_DMA_MAP_STATE  config NEED_SG_DMA_LENGTH
- 	def_bool y
-
-+config ARCH_HAS_DMA_SET_COHERENT_MASK
-+	def_bool y
-+
- config SMP
- 	def_bool y
-
-diff --git a/arch/arm64/include/asm/device.h
-b/arch/arm64/include/asm/device.h index 73d5bab..64b4dc3 100644
---- a/arch/arm64/include/asm/device.h
-+++ b/arch/arm64/include/asm/device.h
-@@ -20,6 +20,7 @@ struct dev_archdata {
- #ifdef CONFIG_IOMMU_API
- 	void *iommu;			/* private IOMMU data */
- #endif
-+	u64 parent_dma_mask;
- 	bool dma_coherent;
- };
-
-diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
-index 81cdb2e..5845ecd 100644
---- a/arch/arm64/mm/dma-mapping.c
-+++ b/arch/arm64/mm/dma-mapping.c
-@@ -564,6 +564,7 @@ static void flush_page(struct device *dev, const void
-*virt, phys_addr_t phys)
- 	__dma_flush_area(virt, PAGE_SIZE);
- }
-
-+
- static void *__iommu_alloc_attrs(struct device *dev, size_t size,
- 				 dma_addr_t *handle, gfp_t gfp,
- 				 unsigned long attrs)
-@@ -795,6 +796,20 @@ static void __iommu_unmap_sg_attrs(struct device
-*dev,
- 	iommu_dma_unmap_sg(dev, sgl, nelems, dir, attrs);  }
-
-+static int __iommu_set_dma_mask(struct device *dev, u64 mask) {
-+	/* device is not DMA capable */
-+	if (!dev->dma_mask)
-+		return -EIO;
-+
-+	if (mask > dev->archdata.parent_dma_mask)
-+		mask = dev->archdata.parent_dma_mask;
-+
-+	*dev->dma_mask = mask;
-+
-+	return 0;
-+}
-+
- static const struct dma_map_ops iommu_dma_ops = {
- 	.alloc = __iommu_alloc_attrs,
- 	.free = __iommu_free_attrs,
-@@ -811,8 +826,21 @@ static void __iommu_unmap_sg_attrs(struct device
-*dev,
- 	.map_resource = iommu_dma_map_resource,
- 	.unmap_resource = iommu_dma_unmap_resource,
- 	.mapping_error = iommu_dma_mapping_error,
-+	.set_dma_mask = __iommu_set_dma_mask,
- };
-
-+int dma_set_coherent_mask(struct device *dev, u64 mask) {
-+	if (get_dma_ops(dev) == &iommu_dma_ops &&
-+	    mask > dev->archdata.parent_dma_mask)
-+		mask = dev->archdata.parent_dma_mask;
-+
-+	dev->coherent_dma_mask = mask;
-+	return 0;
-+}
-+EXPORT_SYMBOL(dma_set_coherent_mask);
-+
-+
- /*
-  * TODO: Right now __iommu_setup_dma_ops() gets called too early to do
-  * everything it needs to - the device is only partially created and the
-@@ -975,6 +1003,8 @@ void arch_setup_dma_ops(struct device *dev, u64
-dma_base, u64 size,
- 	if (!dev->dma_ops)
- 		dev->dma_ops = &swiotlb_dma_ops;
-
-+	dev->archdata.parent_dma_mask = size - 1;
-+
- 	dev->archdata.dma_coherent = coherent;
- 	__iommu_setup_dma_ops(dev, dma_base, size, iommu);  } diff --git
-a/drivers/of/of_pci.c b/drivers/of/of_pci.c index 0ee42c3..5804717 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -283,6 +283,51 @@ int of_pci_get_host_bridge_resources(struct
-device_node *dev,
- 	return err;
- }
- EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-+
-+int of_pci_get_dma_ranges(struct device_node *np, u64 *dma_addr, u64
-+*paddr, u64 *size) {
-+	struct device_node *node = of_node_get(np);
-+	int rlen, naddr, nsize, pna;
-+	int ret = 0;
-+	const int na = 3, ns = 2;
-+	struct of_pci_range_parser parser;
-+	struct of_pci_range range;
-+
-+	if (!node)
-+		return -EINVAL;
-+
-+	parser.node = node;
-+	parser.pna = of_n_addr_cells(node);
-+	parser.np = parser.pna + na + ns;
-+
-+	parser.range = of_get_property(node, "dma-ranges", &rlen);
-+
-+	if (!parser.range) {
-+		pr_debug("pcie device has no dma-ranges defined for
-node(%s)\n", np->full_name);
-+		ret = -ENODEV;
-+		goto out;
-+	}
-+
-+	parser.end = parser.range + rlen / sizeof(__be32);
-+
-+	/* how do we take care of multiple dma windows ?. */
-+	for_each_of_pci_range(&parser, &range) {
-+		*dma_addr = range.pci_addr;
-+		*size = range.size;
-+		*paddr = range.cpu_addr;
-+	}
-+
-+	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
-+		 *dma_addr, *paddr, *size);
-+		 *dma_addr = range.pci_addr;
-+		 *size = range.size;
-+
-+out:
-+	of_node_put(node);
-+	return ret;
-+
-+}
-+EXPORT_SYMBOL_GPL(of_pci_get_dma_ranges);
- #endif /* CONFIG_OF_ADDRESS */
-
- #ifdef CONFIG_PCI_MSI
-diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h index
-0e0974e..907ace0 100644
---- a/include/linux/of_pci.h
-+++ b/include/linux/of_pci.h
-@@ -76,6 +76,7 @@ static inline void of_pci_check_probe_only(void) { }
-int of_pci_get_host_bridge_resources(struct device_node *dev,
- 			unsigned char busno, unsigned char bus_max,
- 			struct list_head *resources, resource_size_t
-*io_base);
-+int of_pci_get_dma_ranges(struct device_node *np, u64 *dma_addr, u64
-+*paddr, u64 *size);
- #else
- static inline int of_pci_get_host_bridge_resources(struct device_node
-*dev,
- 			unsigned char busno, unsigned char bus_max, @@
--83,6 +84,11 @@ static inline int of_pci_get_host_bridge_resources(struct
-device_node *dev,  {
- 	return -EINVAL;
- }
-+
-+static inline int of_pci_get_dma_ranges(struct device_node *np, u64
-+*dma_addr, u64 *paddr, u64 *size) {
-+	return -EINVAL;
-+}
- #endif
-
- #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
---
-1.9.1
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+	Joerg
