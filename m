@@ -1,129 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:47542 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751521AbdCMKoq (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 13 Mar 2017 06:44:46 -0400
-Date: Mon, 13 Mar 2017 10:44:28 +0000
-From: Mark Rutland <mark.rutland@arm.com>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: "liudongdong (C)" <liudongdong3@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Wangzhou (B)" <wangzhou1@hisilicon.com>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: Bad DT binding (hisi-pcie-almost-ecam)
-Message-ID: <20170313104356.GA23239@leverpostej>
-References: <20170310174045.GB24571@leverpostej>
- <EE11001F9E5DDD47B7634E2F8A612F2E2047A8C1@FRAEML521-MBX.china.huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <EE11001F9E5DDD47B7634E2F8A612F2E2047A8C1@FRAEML521-MBX.china.huawei.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <3aec823d-d3c7-03d3-68f7-963d3649c184@arm.com>
+References: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
+ <1490419893-5073-3-git-send-email-oza.oza@broadcom.com>
+ <CAL_Jsq+1f2pHEy7=2Q7xGYYJjuQk3rLHH4pPTKRVN4QTtSr4Kw@mail.gmail.com>
+ <3aec823d-d3c7-03d3-68f7-963d3649c184@arm.com>
+From: Oza Oza <oza.oza@broadcom.com>
+Date: Tue, 28 Mar 2017 10:20:12 +0530
+Message-ID: <CAMSpPPfkm=vbbNFnatqEgtUJ8m-fn7OvNKk_PPCCywwoq0vFWg@mail.gmail.com>
+Subject: Re: [RFC PATCH 3/3] of: fix node traversing in of_dma_get_range
+To: Robin Murphy <robin.murphy@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Joerg Roedel <joro@8bytes.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Linux IOMMU <iommu@lists.linux-foundation.org>,
+ "bcm-kernel-feedback-list@broadcom.com"
+ <bcm-kernel-feedback-list@broadcom.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+please find my comments inline.
 
-On Mon, Mar 13, 2017 at 08:14:19AM +0000, Gabriele Paoloni wrote:
-> > -----Original Message-----
-> > From: Mark Rutland [mailto:mark.rutland@arm.com]
+On Mon, Mar 27, 2017 at 8:15 PM, Robin Murphy <robin.murphy@arm.com> wrote:
+> Hi Rob,
+>
+> On 27/03/17 15:34, Rob Herring wrote:
+>> On Sat, Mar 25, 2017 at 12:31 AM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
+>>> it jumps to the parent node without examining the child node.
+>>> also with that, it throws "no dma-ranges found for node"
+>>> for pci dma-ranges.
+>>>
+>>> this patch fixes device node traversing for dma-ranges.
+>>
+>> What's the DT look like that doesn't work?
+>
+> The problem is the bodge in pci_dma_configure() where we don't have an
+> OF node for the actual device itself, so pass in the host bridge's OF
+> node instead. This happens to work well enough for dma-coherent, but I
+> don't think dma-ranges was even considered at the time.
+>
+> As it happens I'm currently halfway through writing an experiment
+> wherein pci_dma_configure() creates a temporary child node for the
+> of_dma_configure() call if no other suitable alternative (e.g. some
+> intermediate bridge node) exists. How hard are you likely to NAK that
+> approach? ;)
+>
+>> dma-ranges is supposed to be a bus property, not a device's property.
+>> So looking at the parent is correct behavior generally.
+>
+> Indeed, this patch as-is will break currently correct DTs (because we
+> won't find dma-ranges on the device, so will bail before even looking at
+> the parent as we should).
 
-> > The commit adds the "hisilicon,pcie-almost-ecam", which goes against
-> > the
-> > usual DT conventions, and is non-sensical in that it describes the IP
-> > based on what it isn't.
-> > 
-> > This binding shouldn't have gone in as-is, and we should fix it before
-> > v4.11.
-> > 
-> > The binding states that this IP is found in Hip06 and Hip07. For these
-> > cases we'd usually take the name of the first implementation, e.g.
-> > something like "hisilicon,hip06-pcie", which can be used as a fallback
-> > in the compatible list if reused in subsequent SoC generations.
-> > 
-> > I also see that "hisilicon,hip06-pcie" already exists, so I'm even more
-> > suspicious.
-> 
-> For Hip06 the IP is the same but in we have a different BIOS configuration
-> that allows the controller be ECAM compliant for all the devices of the
-> hierarchy except the RC.
-> 
-> > What exactly is the "hisilicon,pcie-almost-ecam" binding trying to
-> > describe? Is it a different IP also found on Hip06, or is it a new
-> > binding for the same IP?
-> 
-> The reason why we need this new BIOS is to support the recent PCIe quirks
-> for the ACPI Root Port driver (commit 5b69b85ba1ddd36be01f5c57830b37a3c8256009
-> "PCI/ACPI: Check for platform-specific MCFG quirks"). So using one BIOS we
-> support both DT and ACPI.
-> This is the reason why you see Hip-06 being already there...
+current parsing of dma-ranges assume that dma-ranges always to be
+found in parent node.
 
-Ok. Thanks for clarifying that.
+based on that, my thinking is following:
+couple of options
 
-What I think we should do is:
+1)
+instead while(1)  some meaningful condition such as while(!node)
+the following bail out is not required.
+      if (!ranges)
+           break;
 
-a) Update the binding document to clarify when these strings are used.
+2)
+have check based on dt-property to distinguish between pci and handle
+dma-ranges root bridge
 
-b) Use an SoC prefix in the string. I'm happy to have both hip06 and hip07
-   strings.
+but again these changes do not solve the entire problem for choosing
+right dma_mask.
+neither it actually correctly address root bridge pci dma-ranges.
 
-c) Drop the "almost", since we don't use that elsewhere. (e.g. for
-   cavium,pci-host-thunder-ecam"
+and hence I have written
+https://lkml.org/lkml/2017/3/27/540
 
-Would you be happy with the below?
+my final take is: this function does not need to change, let it parse
+memory mapped dma-ranges as it is doing.
 
-Thanks,
-Mark.
+I am more inclined to have generic pci dma-ranges and parsing.
+which following already addresses.
+https://lkml.org/lkml/2017/3/27/540
 
----->8----
-diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-index b7fa3b9..535426d 100644
---- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
-@@ -44,13 +44,19 @@ Hip05 Example (note that Hip06 is the same except compatible):
-        };
- 
- HiSilicon Hip06/Hip07 PCIe host bridge DT (almost-ECAM) description.
-+
-+Some BIOSes place the host controller in a mode where it is ECAM compliant for
-+all devices other than the root complex. In such cases, the host controller
-+should be described as below.
-+
- The properties and their meanings are identical to those described in
- host-generic-pci.txt except as listed below.
- 
- Properties of the host controller node that differ from
- host-generic-pci.txt:
- 
--- compatible     : Must be "hisilicon,pcie-almost-ecam"
-+- compatible     : Must be "hisilicon,hip06-pcie-ecam", or
-+                   "hisilicon,hip07-pcie-ecam"
- 
- - reg            : Two entries: First the ECAM configuration space for any
-                   other bus underneath the root bus. Second, the base
-@@ -59,7 +65,7 @@ host-generic-pci.txt:
- 
- Example:
-        pcie0: pcie@a0090000 {
--               compatible = "hisilicon,pcie-almost-ecam";
-+               compatible = "hisilicon,hip06-pcie-ecam";
-                reg = <0 0xb0000000 0 0x2000000>,  /*  ECAM configuration space */
-                      <0 0xa0090000 0 0x10000>; /* host bridge registers */
-                bus-range = <0  31>;
-diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
-index fd66a31..bd5b1b4 100644
---- a/drivers/pci/dwc/pcie-hisi.c
-+++ b/drivers/pci/dwc/pcie-hisi.c
-@@ -380,7 +380,11 @@ struct pci_ecam_ops hisi_pcie_platform_ops = {
- 
- static const struct of_device_id hisi_pcie_almost_ecam_of_match[] = {
-        {
--               .compatible = "hisilicon,pcie-almost-ecam",
-+               .compatible = "hisilicon,hip06-pcie-ecam",
-+               .data       = (void *) &hisi_pcie_platform_ops,
-+       },
-+       {
-+               .compatible = "hisilicon,hip07-pcie-ecam",
-                .data       = (void *) &hisi_pcie_platform_ops,
-        },
-        {},
+Regards,
+Oza.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
