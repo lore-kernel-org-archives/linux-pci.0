@@ -1,51 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.135]:41008 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753075AbdCTJno (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 20 Mar 2017 05:43:44 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Andrey Smirnov <andrew.smirnov@gmail.com>
 To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] PCI: rockchip: set RC's RCB to 128 bytes
-Date: Mon, 20 Mar 2017 17:39:40 +0800
-Message-Id: <1490002780-67737-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Subject: [PATCH v8 0/4] i.MX7 PCI support
+Date: Tue, 28 Mar 2017 08:42:48 -0700
+Message-Id: <20170328154252.6902-1-andrew.smirnov@gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Dong Aisheng <dongas86@gmail.com>,
+ Andrey Smirnov <andrew.smirnov@gmail.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+ Fabio Estevam <fabio.estevam@nxp.com>, yurovsky@gmail.com,
+ linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Read Completion Boundary could be 64 bytes or 128 bytes
-for rockchip RC. The reset value of RCB is zero which means
-it doesn't support RCB to be 128 bytes, however it does support
-that. When setting the RCB to 128 bytes, we see some significant
-improvment for testing NVMe with libaio. So this patch will set
-RC's RCB to 128 bytes.
+Hello, everyone:
 
-Cc: Brian Norris <briannorris@chromium.org>
-Cc: Jeffy Chen <jeffy.chen@rock-chips.com>
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+This is a eightth iteration of the code that adds PCI-subsystem bits
+necessary for enabling PCI support on i.MX7.
 
- drivers/pci/host/pcie-rockchip.c | 5 +++++
- 1 file changed, 5 insertions(+)
+NOTE: To test this patchset with real i.MX7 hardware, additional
+patches, that are being upstreamed via different trees, are needed. Full
+working tree is availible at:
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 26ddd35..8bcd417 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -599,6 +599,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
- 	status |= PCI_EXP_LNKCTL_CCC;
- 	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
- 
-+	/* Set RC's RCB to 128 */
-+	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
-+	status |= PCI_EXP_LNKCTL_RCB;
-+	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
-+
- 	/* Enable Gen1 training */
- 	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
- 			    PCIE_CLIENT_CONFIG);
+	https://github.com/ndreys/linux/tree/imx7d/pcie-support-v8
+
+Changes since v7 (can be found at [version7]):
+
+	- Collected Reviewed-by for the whole series from Lucas
+
+Changes since v6 (can be found at [version6]):
+
+	- Rebased against latest changes in 'next' of PCI subsystem
+          git tree
+
+Chagnes since v5 (can be found at [version5]):
+
+	- Collected ACKs from Lee and Rob
+
+Changes since v4 (can be found at [version4]):
+
+	- Dropped typo-fix patch (originally patch #1 of the
+          series).
+
+	- Added patch with workaround to address speed change false
+          failures (I kept it as a separate patch to better document
+          exchange with NXP/Freescale that lead to that patch)
+
+	- Added patch to avoid speed change on links configured Gen1
+          only (Let me know if that is a terrible idea)
+
+	- Addressed section mismatch problem by moving call to
+          hook_fault_code to happend before driver registration.
+
+Changes since v3 (can be found at [version3]):
+	- Move all of the reset_control_assert's into imx6_pcie_assert_core_reset
+	- Documented required reset and power domain DT bindings
+
+Changes since v2 (can be found at [version2]):
+
+	- Collected Reviewed-by for patch #2 from Lucas
+	- Reset logic implementation moved out into a reset controller
+          driver (see [reset1])
+	- Removed unused leftover code
+
+Changes since v1 (can be found at [version1]):
+
+	- All GPC related code moved into a separate driver (see [gpc1])
+	- Removed GPIO probe deferral logging
+	- Fixed section mismatch warning
+	- Minor reformatting of fsl,imx6q-pcie.txt(as per Rob
+          Herring's request)
+
+[version7] https://lkml.org/lkml/2017/3/21/331
+[version6] https://lkml.org/lkml/2017/3/14/584
+[version5] https://lkml.org/lkml/2017/2/20/376
+[version4] https://lkml.org/lkml/2017/2/7/478
+[version3] https://lkml.org/lkml/2017/2/6/565
+[version2] https://lkml.org/lkml/2017/2/1/510
+[version1] https://lkml.org/lkml/2017/1/19/488
+[gpc1] https://lkml.org/lkml/2017/2/6/551
+[reset1] https://lkml.org/lkml/2017/2/6/554
+
+Andrey Smirnov (4):
+  PCI: imx6: Add code to support i.MX7D
+  PCI: imx6: Allow probe deferal by reset GPIO
+  PCI: imx6: Do not wait for speed change on i.MX7
+  PCI: imx6: Do not switch speed if Gen2 is disabled
+
+ .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 +-
+ drivers/pci/dwc/pci-imx6.c                         | 198 +++++++++++++++------
+ include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
+ 3 files changed, 160 insertions(+), 55 deletions(-)
+
 -- 
-1.9.1
+2.9.3
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
