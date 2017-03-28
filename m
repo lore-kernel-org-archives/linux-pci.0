@@ -1,70 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:32104 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750824AbdCGH6j (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 7 Mar 2017 02:58:39 -0500
-From: "Reshetova, Elena" <elena.reshetova@intel.com>
-To: Johannes Thumshirn <jthumshirn@suse.de>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux1394-devel@lists.sourceforge.net"
-        <linux1394-devel@lists.sourceforge.net>,
-        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-        "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "open-iscsi@googlegroups.com" <open-iscsi@googlegroups.com>,
-        "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-serial@vger.kernel.org" <linux-serial@vger.kernel.org>,
-        "linux-usb@vger.kernel.org" <linux-usb@vger.kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-Subject: RE: [PATCH 21/29] drivers, s390: convert fc_fcp_pkt.ref_cnt from
- atomic_t to refcount_t
-Date: Tue, 7 Mar 2017 07:50:16 +0000
-Message-ID: <2236FBA76BA1254E88B949DDB74E612B41C556BD@IRSMSX102.ger.corp.intel.com>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-22-git-send-email-elena.reshetova@intel.com>
- <536a58ba-8896-5639-cab9-bd2f13bed325@suse.de>
-In-Reply-To: <536a58ba-8896-5639-cab9-bd2f13bed325@suse.de>
-Content-Type: text/plain; charset="iso-8859-1"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [V9, 07/11] iommu: of: Handle IOMMU lookup failure with deferred
+ probing or error
+To: Rob Herring <robh@kernel.org>
+References: <1489086061-9356-8-git-send-email-sricharan@codeaurora.org>
+ <20170328150001.j57jko6mx35npgp2@rob-hp-laptop>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <7312ddb8-3d6e-0665-9e7e-1a39c6fb597b@codeaurora.org>
+Date: Tue, 28 Mar 2017 21:36:30 +0530
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170328150001.j57jko6mx35npgp2@rob-hp-laptop>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: lorenzo.pieralisi@arm.com, linux-arm-msm@vger.kernel.org, joro@8bytes.org,
+ will.deacon@arm.com, iommu@lists.linux-foundation.org, okaya@codeaurora.org,
+ linux-acpi@vger.kernel.org, robdclark@gmail.com, hanjun.guo@linaro.org,
+ linux-pci@vger.kernel.org, bhelgaas@google.com, tn@semihalf.com,
+ robin.murphy@arm.com, linux-arm-kernel@lists.infradead.org,
+ m.szyprowski@samsung.com
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On 03/06/2017 03:21 PM, Elena Reshetova wrote:
-> > refcount_t type and corresponding API should be
-> > used instead of atomic_t when the variable is used as
-> > a reference counter. This allows to avoid accidental
-> > refcounter overflows that might lead to use-after-free
-> > situations.
-> 
-> The subject is wrong, should be something like "scsi: libfc convert
-> fc_fcp_pkt.ref_cnt from atomic_t to refcount_t" but not s390.
+Hi,
 
-Very sorry about this: the error in the subject got from the time when I was trying to break the bigger drivers patch set into per-variable part and trying to automate the process too much :(
-I will fix it in the end version!
+On 3/28/2017 8:30 PM, Rob Herring wrote:
+> On Fri, Mar 10, 2017 at 12:30:57AM +0530, Sricharan R wrote:
+>> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+>>
+>> Failures to look up an IOMMU when parsing the DT iommus property need to
+>> be handled separately from the .of_xlate() failures to support deferred
+>> probing.
+>>
+>> The lack of a registered IOMMU can be caused by the lack of a driver for
+>> the IOMMU, the IOMMU device probe not having been performed yet, having
+>> been deferred, or having failed.
+>>
+>> The first case occurs when the device tree describes the bus master and
+>> IOMMU topology correctly but no device driver exists for the IOMMU yet
+>> or the device driver has not been compiled in. Return NULL, the caller
+>> will configure the device without an IOMMU.
+>>
+>> The second and third cases are handled by deferring the probe of the bus
+>> master device which will eventually get reprobed after the IOMMU.
+>>
+>> The last case is currently handled by deferring the probe of the bus
+>> master device as well. A mechanism to either configure the bus master
+>> device without an IOMMU or to fail the bus master device probe depending
+>> on whether the IOMMU is optional or mandatory would be a good
+>> enhancement.
+>>
+>> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+>> Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
+>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>> ---
+>>  drivers/base/dma-mapping.c | 5 +++--
+>>  drivers/iommu/of_iommu.c   | 4 ++--
+>>  drivers/of/device.c        | 7 ++++++-
+>>  include/linux/of_device.h  | 9 ++++++---
+>>  4 files changed, 17 insertions(+), 8 deletions(-)
+>
+> Maybe it is the same issue reported for VFIO, but virtio-pci is broken
+> with v8 of this series. Bisecting blames this commit which looks like it
+> hasn't changeed.
 
-Best Regards,
-Elena
+Ya, as Robin mentioned it was broken at patch #2 and
+comes out after this patch. I am going to repost this series with
+couple of more fixes added as well.
 
-> 
-> Other than that
-> Acked-by: Johannes Thumshirn <jth@kernel.org>
-> 
-> --
-> Johannes Thumshirn                                          Storage
-> jthumshirn@suse.de                                +49 911 74053 689
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-> GF: Felix Imendörffer, Jane Smithard, Graham Norton
-> HRB 21284 (AG Nürnberg)
-> Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+>
+> Rob
+>
+> P.S. Doesn't look like you have copied the DT maintainers nor list for
+> the DT changes.
+
+Ha, really sorry about that. will add it.
+
+Regards,
+  Sricharan
+
+-- 
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a 
+member of Code Aurora Forum, hosted by The Linux Foundation
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
