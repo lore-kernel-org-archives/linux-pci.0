@@ -1,78 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v3 2/7] PCI: dwc: dra7xx: Populate cpu_addr_fixup ops
-Date: Wed, 8 Mar 2017 16:17:12 +0530
-Message-ID: <1488970037-17740-3-git-send-email-kishon@ti.com>
-In-Reply-To: <1488970037-17740-1-git-send-email-kishon@ti.com>
-References: <1488970037-17740-1-git-send-email-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp-out4.electric.net ([192.162.216.186]:53871 "EHLO
+        smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754641AbdC1JJb (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 28 Mar 2017 05:09:31 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'David Daney' <ddaney.cavm@gmail.com>,
+        Christoph Hellwig <hch@lst.de>
+CC: "bhelgaas@google.com" <bhelgaas@google.com>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "netanel@annapurnalabs.com" <netanel@annapurnalabs.com>,
+        "jcliburn@gmail.com" <jcliburn@gmail.com>,
+        "chris.snook@gmail.com" <chris.snook@gmail.com>,
+        "sgoutham@cavium.com" <sgoutham@cavium.com>,
+        "rric@kernel.org" <rric@kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: [PATCH 5/5] PCI: remove pci_enable_msix
+Date: Tue, 28 Mar 2017 09:07:28 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6DCFFBE7F3@AcuExch.aculab.com>
+References: <20170327082936.6830-1-hch@lst.de>
+ <20170327082936.6830-6-hch@lst.de>
+ <83f97789-0817-7549-bfa9-1f8dcb0c26d9@gmail.com>
+ <20170327171148.GB28815@lst.de>
+ <1eaa46ad-9890-c738-3a85-6468161284ba@gmail.com>
+In-Reply-To: <1eaa46ad-9890-c738-3a85-6468161284ba@gmail.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: nsekhar@ti.com, Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Populate cpu_addr_fixup ops to extract the least 28 bits of the
-corresponding cpu address.
+From: David Daney
+> Sent: 27 March 2017 18:31
+> On 03/27/2017 10:11 AM, Christoph Hellwig wrote:
+> > On Mon, Mar 27, 2017 at 09:59:35AM -0700, David Daney wrote:
+> >> On 03/27/2017 01:29 AM, Christoph Hellwig wrote:
+> >>> Unused now that all callers switched to pci_alloc_irq_vectors.
+> >>>
+> >>
+> >> And you are aware that the ThunderX GPIO driver that I am attempting to
+> >> merge uses this interface.
+> >>
+> >> If this patch gets merged, should I ask to revert it when the GPIO driver
+> >> goes in?
+> >
+> > No.  You should not use pci_enable_msix in your new driver as I told
+> > you before.
+> >
+> >> You offer no solution for drivers that would benefit from using a sparse
+> >> sub set of the available MSI-X vectors.
+> >
+> > Use pci_enable_msix_{exact,range} for now, as I told you before.
+> >
+> 
+> That still results in twice as many MSI-X being provisioned than are needed.
+> 
+> For drivers that use a contiguous range of MSI-X, your suggestion is
+> usable, but for others you are forcing resources to be wasted.  For what
+> end?
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pci-dra7xx.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+There are also drivers that only need some interrupts after a specific
+device is opened, and could free them when closed.
 
-diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
-index 0984baf..07c45ec 100644
---- a/drivers/pci/dwc/pci-dra7xx.c
-+++ b/drivers/pci/dwc/pci-dra7xx.c
-@@ -88,6 +88,11 @@ static inline void dra7xx_pcie_writel(struct dra7xx_pcie *pcie, u32 offset,
- 	writel(value, pcie->base + offset);
- }
- 
-+static u64 dra7xx_pcie_cpu_addr_fixup(u64 pci_addr)
-+{
-+	return pci_addr & DRA7XX_CPU_TO_BUS_ADDR;
-+}
-+
- static int dra7xx_pcie_link_up(struct dw_pcie *pci)
- {
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
-@@ -152,11 +157,6 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
- 
--	pp->io_base &= DRA7XX_CPU_TO_BUS_ADDR;
--	pp->mem_base &= DRA7XX_CPU_TO_BUS_ADDR;
--	pp->cfg0_base &= DRA7XX_CPU_TO_BUS_ADDR;
--	pp->cfg1_base &= DRA7XX_CPU_TO_BUS_ADDR;
--
- 	dw_pcie_setup_rc(pp);
- 
- 	dra7xx_pcie_establish_link(dra7xx);
-@@ -329,6 +329,7 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
- }
- 
- static const struct dw_pcie_ops dw_pcie_ops = {
-+	.cpu_addr_fixup = dra7xx_pcie_cpu_addr_fixup,
- 	.link_up = dra7xx_pcie_link_up,
- };
- 
--- 
-1.7.9.5
+This could even be network devices with lots of queues, or a driver
+realising that the workload is high and per-cpu interrupts make sense.
 
+So any real change to the interface should allow drivers to allocate
+and free individual MSI-X vectors.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I remember a lot of discussions when pci_enable_msix_range() was added,
+but almost nothing about this change.
+
+	David
