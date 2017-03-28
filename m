@@ -1,58 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Arnd Bergmann'" <arnd@arndb.de>,
-        "'Bjorn Helgaas'" <bhelgaas@google.com>,
-        "'Kishon Vijay Abraham I'" <kishon@ti.com>
-Cc: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "'Joao Pinto'" <Joao.Pinto@synopsys.com>,
-        "'Zhou Wang'" <wangzhou1@hisilicon.com>,
-        "'Gabriele Paoloni'" <gabriele.paoloni@huawei.com>
-References: <20170321143229.3372903-1-arnd@arndb.de>
-In-Reply-To: <20170321143229.3372903-1-arnd@arndb.de>
-Subject: Re: [PATCH] pci: dwc: hisi needs PCI_HOST_COMMON
-Date: Tue, 21 Mar 2017 11:48:37 -0400
-Message-ID: <001801d2a25a$9c742760$d55c7620$@gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V5 0/4] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <1490477893-9517-1-git-send-email-okaya@codeaurora.org>
+ <f062dc8f-df66-bfd8-a0d7-50ac1cadf975@codeaurora.org>
+ <92EBB4272BF81E4089A7126EC1E7B2846675AEDC@IRSMSX101.ger.corp.intel.com>
+ <c9820456-d9b1-cd97-533b-889905e27603@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <1f677feb-b561-1dd3-69ad-afd4049b6d59@codeaurora.org>
+Date: Tue, 28 Mar 2017 09:04:29 -0400
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <c9820456-d9b1-cd97-533b-889905e27603@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "timur@codeaurora.org" <timur@codeaurora.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(+cc: Joao Pinto, Zhou Wang, Gabriele Paoloni)
+On 3/28/2017 8:52 AM, Sinan Kaya wrote:
+> On 3/28/2017 2:02 AM, Patel, Mayurkumar wrote:
+>> Thanks for your patches. I am seeing kernel panic after applying
+>> these patches (on top of latest kernel) each time during early boot in pci_aspm_init() (any hints already?) function.
+>> Need to check if it's something related to my local setup or it's because of these changes.
+>> For now I don't have more details why it crashes but I will dig in further and I will provide
+>> you more data as soon as I have it.
+>>
+> 
+> Interesting, I retested Qemu and I don't see an issue. 
+> Can you share your bootlog when you see the crash?
+> 
+Thinking more...
 
-On Tuesday, March 21, 2017 10:32 AM, Arnd Bergmann wrote:
-> 
-> Without PCI_HOST_COMMON support enabled, we get a link error:
-> 
-> drivers/pci/dwc/built-in.o: In function `hisi_pcie_map_bus':
-> pcie-hisi.c:(.text+0x8860): undefined reference to `pci_ecam_map_bus'
-> drivers/pci/dwc/built-in.o: In function `hisi_pcie_almost_ecam_probe':
-> pcie-hisi.c:(.text+0x88b4): undefined reference to `pci_host_common_probe'
-> 
-> This adds an explicit 'select', as the other users have.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Can you add this to the top of pci_aspm_init() and try again?
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
+if (!pci_is_pcie(pdev))
+          return -EINVAL;
 
-Best regards,
-Jingoo Han
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
-> ---
->  drivers/pci/dwc/Kconfig | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
-> index dfb8a69afc28..d2d2ba5b8a68 100644
-> --- a/drivers/pci/dwc/Kconfig
-> +++ b/drivers/pci/dwc/Kconfig
-> @@ -89,6 +89,7 @@ config PCI_HISI
->  	depends on PCI_MSI_IRQ_DOMAIN
->  	select PCIEPORTBUS
->  	select PCIE_DW_HOST
-> +	select PCI_HOST_COMMON
->  	help
->  	  Say Y here if you want PCIe controller support on HiSilicon
->  	  Hip05 and Hip06 SoCs
-> --
-> 2.9.0
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
