@@ -1,51 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay2.synopsys.com ([198.182.60.111]:52156 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933890AbdCWPXT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Mar 2017 11:23:19 -0400
-Subject: Re: Help: MSI DWC connecting with a MSIx Endpoint
-To: Marc Zyngier <marc.zyngier@arm.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <85bfa77f-6cd0-a669-c940-7fa7d9fb17a3@synopsys.com>
- <28a4e429-a2d2-8f28-e4fc-8eebae0b3367@arm.com>
- <4ade12d6-1887-4093-ee43-2101ca2986e0@synopsys.com>
- <9eec7e57-456e-fc98-91d9-bd5a32c347af@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>, <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <934e0800-a1df-2059-fc7e-def976572309@synopsys.com>
-Date: Thu, 23 Mar 2017 15:22:18 +0000
+Received: from mail-by2nam01on0080.outbound.protection.outlook.com ([104.47.34.80]:64384
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754328AbdC1UhH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 28 Mar 2017 16:37:07 -0400
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: 'Joerg Roedel' <jroedel@suse.de>
+CC: 'Joerg Roedel' <joro@8bytes.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Daniel Drake <drake@endlessm.com>,
+        "Nath, Arindam" <Arindam.Nath@amd.com>
+Subject: RE: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+Date: Tue, 28 Mar 2017 20:37:01 +0000
+Message-ID: <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
+ <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+ <20170328202844.GQ8329@suse.de>
+In-Reply-To: <20170328202844.GQ8329@suse.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <9eec7e57-456e-fc98-91d9-bd5a32c347af@arm.com>
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mark,
+> -----Original Message-----
+> From: Joerg Roedel [mailto:jroedel@suse.de]
+> Sent: Tuesday, March 28, 2017 4:29 PM
+> To: Deucher, Alexander
+> Cc: 'Joerg Roedel'; Bjorn Helgaas; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Daniel Drake; Nath, Arindam
+> Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+>=20
+> On Tue, Mar 28, 2017 at 08:18:26PM +0000, Deucher, Alexander wrote:
+> > > -----Original Message-----
+> > > From: Joerg Roedel [mailto:joro@8bytes.org]
+> > > Sent: Tuesday, March 28, 2017 8:17 AM
+> > > To: Bjorn Helgaas
+> > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Joerg
+> Roedel;
+> > > Daniel Drake; Deucher, Alexander
+> > > Subject: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+> > >
+> > > From: Joerg Roedel <jroedel@suse.de>
+> > >
+> > > ATS is broken on these devices. Under invalidation load, the
+> > > GPU does not reply to invalidations anymore, causing
+> > > Completion-wait loop timeouts on the AMD IOMMU driver side.
+> > > Fix it by not enabling ATS on these devices.
+> > >
+> > > Note that below mentioned commit is not broken, it just
+> > > triggers the issue because it might cause invalidation
+> > > storms on devices.
+> > >
+> > > Fixes: b1516a14657a ('iommu/amd: Implement flush queue')
+> > > Reported-by: Daniel Drake <drake@endlessm.com>
+> > > Cc: Daniel Drake <drake@endlessm.com>
+> > > Cc: Alexander Deucher <Alexander.Deucher@amd.com>
+> > > Signed-off-by: Joerg Roedel <jroedel@suse.de>
+> >
+> > Did you see Arindam's patch from yesterday[1]?  Not sure which is the
+> proper fix, maybe both?
+>=20
+> Arindam's patch makes sense on its own, but not as a fix for this issue.
+> It lowers the invalidation load on the GPU, but there are still ways to
+> trigger a high invalidation rate on the device. So it might hide the
+> issue, but not fix it.
+>=20
+> We need to disable ATS on the device if it doesn't work reliably.
 
-Às 10:41 AM de 3/21/2017, Marc Zyngier escreveu:
-> On 21/03/17 10:27, Joao Pinto wrote:
->>
->> Hi Mark,
->>
->> Às 6:16 PM de 3/20/2017, Marc Zyngier escreveu:
->>> Hi Joao,
->>>
->>> On 20/03/17 17:30, Joao Pinto wrote:
->>>> Hi Mark,
->>>>
-> A very simple example using the current API is pcie-altera-msi.c (some
-> others are much more intricate), and should give you a good picture of
-> how PCI/MSI, generic MSI and MSI controllers interact.
-> 
-> Start with understanding how the various layers interact via their own
-> IRQ domains, and implement their own IRQ chip. Happy to answer questions
-> (I'm sure you'll have some).
-> 
-> Thanks,
-> 
-> 	M.
+The question is, could the problem stem from flushing an entity that didn't=
+ request it, or should that not matter?  I guess it shouldn't matter otherw=
+ise we'd see this on other platforms like Carrizo as well.
 
-I have one quick question... What address should I configure in vector_phy?
-is this needed in pcie-designware?
-
-Thanks
+Alex
