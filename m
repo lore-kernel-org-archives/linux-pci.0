@@ -1,98 +1,34 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH v2 19/32] crypto: ccp: Introduce the AMD Secure
- Processor device
-To: Mark Rutland <mark.rutland@arm.com>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846777589.2349.11698765767451886038.stgit@brijesh-build-machine>
- <20170302173936.GC11970@leverpostej>
-CC: <brijesh.singh@amd.com>, <simon.guinot@sequanux.org>,
-        <linux-efi@vger.kernel.org>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-From: Brijesh Singh <brijesh.singh@amd.com>
-Message-ID: <0db0055f-9208-524f-74aa-674894ee90d3@amd.com>
-Date: Thu, 2 Mar 2017 13:11:04 -0600
+Date: Tue, 28 Mar 2017 22:56:16 +0200
+From: 'Joerg Roedel' <jroedel@suse.de>
+To: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+Cc: 'Joerg Roedel' <joro@8bytes.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Daniel Drake <drake@endlessm.com>,
+        "Nath, Arindam" <Arindam.Nath@amd.com>
+Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+Message-ID: <20170328205616.GR8329@suse.de>
+References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
+ <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+ <20170328202844.GQ8329@suse.de>
+ <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <20170302173936.GC11970@leverpostej>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mark,
+On Tue, Mar 28, 2017 at 08:37:01PM +0000, Deucher, Alexander wrote:
+> The question is, could the problem stem from flushing an entity that
+> didn't request it, or should that not matter?  I guess it shouldn't
+> matter otherwise we'd see this on other platforms like Carrizo as
+> well.
 
-On 03/02/2017 11:39 AM, Mark Rutland wrote:
-> On Thu, Mar 02, 2017 at 10:16:15AM -0500, Brijesh Singh wrote:
->> The CCP device is part of the AMD Secure Processor. In order to expand the
->> usage of the AMD Secure Processor, create a framework that allows functional
->> components of the AMD Secure Processor to be initialized and handled
->> appropriately.
->>
->> Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
->> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
->> ---
->>  drivers/crypto/Kconfig           |   10 +
->>  drivers/crypto/ccp/Kconfig       |   43 +++--
->>  drivers/crypto/ccp/Makefile      |    8 -
->>  drivers/crypto/ccp/ccp-dev-v3.c  |   86 +++++-----
->>  drivers/crypto/ccp/ccp-dev-v5.c  |   73 ++++-----
->>  drivers/crypto/ccp/ccp-dev.c     |  137 +++++++++-------
->>  drivers/crypto/ccp/ccp-dev.h     |   35 ----
->>  drivers/crypto/ccp/sp-dev.c      |  308 ++++++++++++++++++++++++++++++++++++
->>  drivers/crypto/ccp/sp-dev.h      |  140 ++++++++++++++++
->>  drivers/crypto/ccp/sp-pci.c      |  324 ++++++++++++++++++++++++++++++++++++++
->>  drivers/crypto/ccp/sp-platform.c |  268 +++++++++++++++++++++++++++++++
->>  include/linux/ccp.h              |    3
->>  12 files changed, 1240 insertions(+), 195 deletions(-)
->>  create mode 100644 drivers/crypto/ccp/sp-dev.c
->>  create mode 100644 drivers/crypto/ccp/sp-dev.h
->>  create mode 100644 drivers/crypto/ccp/sp-pci.c
->>  create mode 100644 drivers/crypto/ccp/sp-platform.c
->
->> diff --git a/drivers/crypto/ccp/Makefile b/drivers/crypto/ccp/Makefile
->> index 346ceb8..8127e18 100644
->> --- a/drivers/crypto/ccp/Makefile
->> +++ b/drivers/crypto/ccp/Makefile
->> @@ -1,11 +1,11 @@
->> -obj-$(CONFIG_CRYPTO_DEV_CCP_DD) += ccp.o
->> -ccp-objs := ccp-dev.o \
->> +obj-$(CONFIG_CRYPTO_DEV_SP_DD) += ccp.o
->> +ccp-objs := sp-dev.o sp-platform.o
->> +ccp-$(CONFIG_PCI) += sp-pci.o
->> +ccp-$(CONFIG_CRYPTO_DEV_CCP) += ccp-dev.o \
->>  	    ccp-ops.o \
->>  	    ccp-dev-v3.o \
->>  	    ccp-dev-v5.o \
->> -	    ccp-platform.o \
->>  	    ccp-dmaengine.o
->
-> It looks like ccp-platform.c has morphed into sp-platform.c (judging by
-> the compatible string and general shape of the code), and the original
-> ccp-platform.c is no longer built.
->
-> Shouldn't ccp-platform.c be deleted by this patch?
->
+What do you mean by "didn't request it"? The IOMMU driver only sends
+io/tlb invalidations to devices it enabled ATS on.
 
-Good catch. Both ccp-platform.c and ccp-pci.c should have been deleted 
-by this patch. I missed deleting it, will fix in next rev.
 
-~ Brijesh
+
+	Joerg
