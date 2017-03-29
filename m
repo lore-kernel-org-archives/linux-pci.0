@@ -1,47 +1,58 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 6 Mar 2017 21:54:50 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
-        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
-        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
-        gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
-        akpm@linux-foundation.org, davem@davemloft.net
-Subject: Re: [RFC PATCH v2 01/32] x86: Add the Secure Encrypted
- Virtualization CPU feature
-Message-ID: <20170306205450.3lukpeknj2grrych@pd.tnic>
-References: <20170304101113.k6ontjjbljanm6tv@pd.tnic>
- <148882363019.12034.4647462304803229954.stgit@brijesh-build-machine>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <148882363019.12034.4647462304803229954.stgit@brijesh-build-machine>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=zNZg=3G=semihalf.com=tn@kernel.org>
+Return-Path: <SRS0=zNZg=3G=semihalf.com=tn@kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	Lorenzo.Pieralisi@arm.com,
+	robert.richter@caviumnetworks.com,
+	ddaney@caviumnetworks.com,
+	Vadim.Lomovtsev@caviumnetworks.com,
+	rafael@kernel.org
+Cc: Sunil.Goutham@cavium.com,
+	geethasowjanya.akula@gmail.com,
+	linu.cherian@cavium.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH 1/1] PCI: Add MCFG quirk for 2nd node of Cavium ThunderX pass2.x host controller
+Date: Wed, 29 Mar 2017 14:16:13 +0200
+Message-Id: <1490789773-21506-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 06, 2017 at 01:11:03PM -0500, Brijesh Singh wrote:
-> Sending it through stg mail to avoid line wrapping. Please let me know if something
-> is still messed up. I have tried applying it and it seems to apply okay.
+Currently SoCs pass2.x do not emulate EA headers for ACPI boot method at all.
+However, for pass2.x some devices (like EDAC) advertise incorrect base addresses
+in their BARs which results in driver probe failure during resource request.
+Since all problematic blocks are on 2nd NUMA node under domain 10 add necessary
+quirk entry to obtain BAR addresses correction using EA header emulation.
 
-Yep, thanks.
+Fixes: 44f22bd91e88 ("PCI: Add MCFG quirks for Cavium ThunderX pass2.x host controller")
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+CC: stable@vger.kernel.org	# v4.10+
+---
+ drivers/acpi/pci_mcfg.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+index a6a4cea..a0a391e 100644
+--- a/drivers/acpi/pci_mcfg.c
++++ b/drivers/acpi/pci_mcfg.c
+@@ -90,13 +90,14 @@ static struct mcfg_fixup mcfg_quirks[] = {
+ 	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x894057000000UL, node) },  \
+ 	{ "CAVIUM", "THUNDERX", rev, 9 + (10 * (node)), MCFG_BUS_ANY,	    \
+ 	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, node) }
++#define THUNDER_ECAM_QUIRK(rev, seg)					\
++	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,			\
++	&pci_thunder_ecam_ops }
+ 	/* SoC pass2.x */
+ 	THUNDER_PEM_QUIRK(1, 0),
+ 	THUNDER_PEM_QUIRK(1, 1),
++	THUNDER_ECAM_QUIRK(1, 10),
+ 
+-#define THUNDER_ECAM_QUIRK(rev, seg)					\
+-	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,			\
+-	&pci_thunder_ecam_ops }
+ 	/* SoC pass1.x */
+ 	THUNDER_PEM_QUIRK(2, 0),	/* off-chip devices */
+ 	THUNDER_PEM_QUIRK(2, 1),	/* off-chip devices */
 -- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+2.7.4
