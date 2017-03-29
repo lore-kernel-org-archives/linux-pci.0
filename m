@@ -1,93 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0061.outbound.protection.outlook.com ([104.47.40.61]:54886
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752105AbdCBPUZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Mar 2017 10:20:25 -0500
-Subject: [RFC PATCH v2 11/32] x86: Unroll string I/O when SEV is active
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:14:35 -0500
-Message-ID: <148846767530.2349.3396612151893482609.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <SRS0=7U76=3G=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=7U76=3G=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH v3 1/2] PCI: Add tango MSI controller support
+To: Marc Zyngier <marc.zyngier@arm.com>,
+ Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, Thomas Gleixner <tglx@linutronix.de>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>, DT <devicetree@vger.kernel.org>
+References: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
+ <f37d7b55-e065-72aa-e690-13dd4718a9ce@sigmadesigns.com>
+ <a12a79fd-94f9-5aa4-5aa0-5dccb6c5d615@arm.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <0541e62a-c87a-2e69-a7d1-28f886ad04c2@free.fr>
+Date: Wed, 29 Mar 2017 15:16:59 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <a12a79fd-94f9-5aa4-5aa0-5dccb6c5d615@arm.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tom Lendacky <thomas.lendacky@amd.com>
+On 29/03/2017 14:29, Marc Zyngier wrote:
 
-Secure Encrypted Virtualization (SEV) does not support string I/O, so
-unroll the string I/O operation into a loop operating on one element at
-a time.
+> On 29/03/17 12:29, Marc Gonzalez wrote:
+>
+>> The MSI controller in Tango supports 256 message-signaled interrupts,
+>> and a single doorbell address.
+>>
+>> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+>> ---
+>> Changes since v0.2
+>> - Support 256 MSIs instead of only 32
+>> - Use spinlock_t instead of struct mutex
+>> - Add MSI_FLAG_PCI_MSIX flag
+>>
+>> IRQs are acked in tango_msi_isr because handle_simple_irq leaves
+>> ack, clear, mask and unmask up to the driver. For the same reason,
+>> interrupt enable mask is updated from tango_irq_domain_alloc/free.
+> 
+> I've asked you to move this to individual methods. You've decided not
+> to, and that's your call. But I now wonder why I'm even bothering to
+> review this, as you've so far just wasted my time.
 
-Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
----
- arch/x86/include/asm/io.h |   26 ++++++++++++++++++++++----
- 1 file changed, 22 insertions(+), 4 deletions(-)
+I misunderstood what you wrote. When you pointed out the comment at
+the top of handle_simple_irq (which I mentioned in my above blurb)
+I took that to mean that I had to follow those instructions.
 
-diff --git a/arch/x86/include/asm/io.h b/arch/x86/include/asm/io.h
-index 833f7cc..b596114 100644
---- a/arch/x86/include/asm/io.h
-+++ b/arch/x86/include/asm/io.h
-@@ -327,14 +327,32 @@ static inline unsigned type in##bwl##_p(int port)			\
- 									\
- static inline void outs##bwl(int port, const void *addr, unsigned long count) \
- {									\
--	asm volatile("rep; outs" #bwl					\
--		     : "+S"(addr), "+c"(count) : "d"(port));		\
-+	if (sev_active()) {						\
-+		unsigned type *value = (unsigned type *)addr;		\
-+		while (count) {						\
-+			out##bwl(*value, port);				\
-+			value++;					\
-+			count--;					\
-+		}							\
-+	} else {							\
-+		asm volatile("rep; outs" #bwl				\
-+			     : "+S"(addr), "+c"(count) : "d"(port));	\
-+	}								\
- }									\
- 									\
- static inline void ins##bwl(int port, void *addr, unsigned long count)	\
- {									\
--	asm volatile("rep; ins" #bwl					\
--		     : "+D"(addr), "+c"(count) : "d"(port));		\
-+	if (sev_active()) {						\
-+		unsigned type *value = (unsigned type *)addr;		\
-+		while (count) {						\
-+			*value = in##bwl(port);				\
-+			value++;					\
-+			count--;					\
-+		}							\
-+	} else {							\
-+		asm volatile("rep; ins" #bwl				\
-+			     : "+D"(addr), "+c"(count) : "d"(port));	\
-+	}								\
- }
- 
- BUILDIO(b, b, char)
+Judging by what you wrote below, I must replace handle_simple_irq
+with handle_edge_irq, which will call the irq_chip callbacks.
+
+But I don't understand how to get my pcie pointer back in irq_ack
+or irq_unmask, or the relevant msi. Can you throw me a clue?
+
+>> +static struct irq_chip tango_msi_irq_chip = {
+>> +	.name = "MSI",
+>> +	.irq_mask = pci_msi_mask_irq,
+>> +	.irq_unmask = pci_msi_unmask_irq,
+> 
+> How do you make that work if the PCI device doesn't support per-MSI masking?
+
+It seems you're saying this code is broken. Is it functional
+in the Altera driver, and I did something to break it?
+
+>> +static int find_free_msi(struct irq_domain *dom, unsigned int virq)
+>> +{
+>> +	u32 val;
+>> +	struct tango_pcie *pcie = dom->host_data;
+>> +	unsigned int offset, pos;
+>> +
+>> +	pos = find_first_zero_bit(pcie->bitmap, MSI_MAX);
+>> +	if (pos >= MSI_MAX)
+>> +		return -ENOSPC;
+>> +
+>> +	offset = (pos / 32) * 4;
+>> +	val = readl_relaxed(pcie->msi_mask + offset);
+>> +	writel_relaxed(val | BIT(pos % 32), pcie->msi_mask + offset);
+> 
+> Great. I'm now in a position where I can take an interrupt (because of
+> the broken locking that doesn't disable interrupts), but the bitmap
+> doesn't indicate it yet. With a bit of luck, I'll never make any forward
+> progress.
+
+Is this the Yoda way to say:
+"Hey moron, use spin_lock_irqsave instead of spin_lock"?
+
+>> +	irq_domain_set_info(dom, virq, pos, &tango_msi_chip,
+>> +			dom->host_data, handle_simple_irq, NULL, NULL);
+> 
+> I've told you a number of times that PCI MSIs are edge triggered...
+
+I will register handle_edge_irq.
+
+> So there is not much progress from the previous version. It is just
+> broken in a different ways, and ignores most of the work that is already
+> done in the irqchip core.
+
+I wish nothing more than to be able to use as much infrastructure
+as possible, in order to write as little code as possible.
+
+Regards.
