@@ -1,68 +1,64 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: mayurkumar.patel@intel.com, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v2 16/22] PCI: designware: update PCI config space remap function
-Date: Mon, 27 Mar 2017 10:49:44 +0100
-Message-Id: <20170327094954.7162-17-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+        Rajat Jain <rajatja@google.com>,
+        Julia Lawall <Julia.Lawall@lip6.fr>,
+        David Daney <david.daney@cavium.com>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH V6 2/5] PCI/ASPM: split pci_aspm_init() into two
+Date: Wed, 29 Mar 2017 19:04:24 -0400
+Message-Id: <1490828667-30973-3-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1490828667-30973-1-git-send-email-okaya@codeaurora.org>
+References: <1490828667-30973-1-git-send-email-okaya@codeaurora.org>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_ioremap_nopost* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+Split pci_aspm_init() body into pci_aspm_init_upstream()
+and pci_aspm_init_downstream() for bridge and endpoint
+specific code behavior.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
 ---
- drivers/pci/dwc/pcie-designware-host.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/pci/pcie/aspm.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 5ba3349..d2dd228 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -338,8 +338,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	}
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index dc36717..a80d64b 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -826,6 +826,16 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ 	return link;
+ }
  
- 	if (!pci->dbi_base) {
--		pci->dbi_base = devm_ioremap(dev, pp->cfg->start,
--					resource_size(pp->cfg));
-+		pci->dbi_base = devm_ioremap_nopost(dev, pp->cfg->start,
-+						    resource_size(pp->cfg));
- 		if (!pci->dbi_base) {
- 			dev_err(dev, "error with ioremap\n");
- 			ret = -ENOMEM;
-@@ -350,8 +350,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	pp->mem_base = pp->mem->start;
++static int pci_aspm_init_downstream(struct pci_dev *pdev)
++{
++	return 0;
++}
++
++static int pci_aspm_init_upstream(struct pci_dev *pdev)
++{
++	return 0;
++}
++
+ /*
+  * pci_aspm_init: Initiate PCI express link state.
+  * It is called from device_add for every single pci device.
+@@ -833,7 +843,10 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+  */
+ int pci_aspm_init(struct pci_dev *pdev)
+ {
+-	return 0;
++	if (!pdev->has_secondary_link)
++		return pci_aspm_init_downstream(pdev);
++
++	return pci_aspm_init_upstream(pdev);
+ }
  
- 	if (!pp->va_cfg0_base) {
--		pp->va_cfg0_base = devm_ioremap(dev, pp->cfg0_base,
--						pp->cfg0_size);
-+		pp->va_cfg0_base = devm_ioremap_nopost(dev, pp->cfg0_base,
-+						       pp->cfg0_size);
- 		if (!pp->va_cfg0_base) {
- 			dev_err(dev, "error with ioremap in function\n");
- 			ret = -ENOMEM;
-@@ -360,8 +360,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	}
- 
- 	if (!pp->va_cfg1_base) {
--		pp->va_cfg1_base = devm_ioremap(dev, pp->cfg1_base,
--						pp->cfg1_size);
-+		pp->va_cfg1_base = devm_ioremap_nopost(dev, pp->cfg1_base,
-+						       pp->cfg1_size);
- 		if (!pp->va_cfg1_base) {
- 			dev_err(dev, "error with ioremap\n");
- 			ret = -ENOMEM;
+ /*
 -- 
-2.10.0
+1.9.1
