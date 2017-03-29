@@ -1,76 +1,38 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v3 1/7] PCI: dwc: designware: Add new *ops* for cpu addr fixup
-Date: Wed, 8 Mar 2017 16:17:11 +0530
-Message-ID: <1488970037-17740-2-git-send-email-kishon@ti.com>
-In-Reply-To: <1488970037-17740-1-git-send-email-kishon@ti.com>
-References: <1488970037-17740-1-git-send-email-kishon@ti.com>
+Return-Path: <SRS0=1MX4=3G=sigmadesigns.com=Marc_Gonzalez@kernel.org>
+Return-Path: <SRS0=1MX4=3G=sigmadesigns.com=Marc_Gonzalez@kernel.org>
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Subject: [PATCH v3 0/2] Tango PCIe controller support
+To: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+CC: Robin Murphy <robin.murphy@arm.com>, Lorenzo Pieralisi
+	<lorenzo.pieralisi@arm.com>, Liviu Dudau <liviu.dudau@arm.com>, David Laight
+	<david.laight@aculab.com>, linux-pci <linux-pci@vger.kernel.org>, Linux ARM
+	<linux-arm-kernel@lists.infradead.org>, Thibaud Cornic
+	<thibaud_cornic@sigmadesigns.com>, Phuong Nguyen
+	<phuong_nguyen@sigmadesigns.com>, LKML <linux-kernel@vger.kernel.org>, DT
+	<devicetree@vger.kernel.org>, Mason <slash.tmp@free.fr>
+Message-ID: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
+Date: Wed, 29 Mar 2017 13:11:57 +0200
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: nsekhar@ti.com, Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="ISO-8859-15"
 List-ID: <linux-pci.vger.kernel.org>
 
-Some platforms (like dra7xx) require only the least 28 bits of the
-corresponding 32 bit CPU address to be programmed in the address
-translation unit. This modified address is stored in io_base/mem_base/
-cfg0_base/cfg1_base in dra7xx_pcie_host_init. While this is okay for
-host mode where the address range is fixed, device mode requires
-different addresses to be programmed based on the host buffer address.
-Add a new ops to get the least 28 bits of the corresponding 32 bit
-CPU address and invoke it before programming the address translation
-unit.
+Hello,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
----
- drivers/pci/dwc/pcie-designware.c |    3 +++
- drivers/pci/dwc/pcie-designware.h |    1 +
- 2 files changed, 4 insertions(+)
+The patch is split in two parts, to ease review of two orthogonal
+parts (MSI controller vs host bridge)
 
-diff --git a/drivers/pci/dwc/pcie-designware.c b/drivers/pci/dwc/pcie-designware.c
-index 7e1fb7d..14ee7a3 100644
---- a/drivers/pci/dwc/pcie-designware.c
-+++ b/drivers/pci/dwc/pcie-designware.c
-@@ -97,6 +97,9 @@ void dw_pcie_prog_outbound_atu(struct dw_pcie *pci, int index, int type,
- {
- 	u32 retries, val;
- 
-+	if (pp->ops->cpu_addr_fixup)
-+		cpu_addr = pp->ops->cpu_addr_fixup(cpu_addr);
-+
- 	if (pci->iatu_unroll_enabled) {
- 		dw_pcie_writel_unroll(pci, index, PCIE_ATU_UNR_LOWER_BASE,
- 				      lower_32_bits(cpu_addr));
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index cd3b871..8f3dcb2 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -143,6 +143,7 @@ struct pcie_port {
- };
- 
- struct dw_pcie_ops {
-+	u64	(*cpu_addr_fixup)(u64 cpu_addr);
- 	u32	(*readl_dbi)(struct dw_pcie *pcie, u32 reg);
- 	void	(*writel_dbi)(struct dw_pcie *pcie, u32 reg, u32 val);
- 	int	(*link_up)(struct dw_pcie *pcie);
+Marc Gonzalez (2):
+  PCI: Add tango MSI controller support
+  PCI: Add tango PCIe host bridge support
+
+ Documentation/devicetree/bindings/pci/tango-pcie.txt |  34 ++++
+ drivers/pci/host/Kconfig                             |   7 +
+ drivers/pci/host/Makefile                            |   1 +
+ drivers/pci/host/pcie-tango.c                        | 344 +++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 386 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/tango-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-tango.c
+
 -- 
-1.7.9.5
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
