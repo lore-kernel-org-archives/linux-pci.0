@@ -1,71 +1,39 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38129 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751641AbdCRQhT (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 18 Mar 2017 12:37:19 -0400
-Date: Sat, 18 Mar 2017 17:37:06 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
-        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
-        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
-        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org
-Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
- when spliting large pages
-Message-ID: <20170318163706.GB4231@nazgul.tnic>
-References: <20170310110657.hophlog2juw5hpzz@pd.tnic>
- <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
- <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
- <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
- <20170317101737.icdois7sdmtutt6b@pd.tnic>
- <b6f9f46c-58c4-a19c-4955-2d07bd411443@redhat.com>
- <20170317105610.musvo4baokgssvye@pd.tnic>
- <78c99889-f175-f60f-716b-34a62203418a@redhat.com>
- <20170317113337.syvpat3c4s2l4nuz@pd.tnic>
- <b516a873-029a-b20a-3c43-d8bf4a200cb7@redhat.com>
+Return-Path: <SRS0=US7a=3G=amd.com=Kelly.Zytaruk@kernel.org>
+Return-Path: <SRS0=US7a=3G=amd.com=Kelly.Zytaruk@kernel.org>
+From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Alex Williamson
+	<alex.williamson@redhat.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Having problems resetting a PCI device
+Date: Wed, 29 Mar 2017 20:03:33 +0000
+Message-ID: <DM2PR12MB00780139E84F5B961AD4AB6CFE350@DM2PR12MB0078.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <b516a873-029a-b20a-3c43-d8bf4a200cb7@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 17, 2017 at 03:45:26PM +0100, Paolo Bonzini wrote:
-> Yes, and I'd like that to be done with a new data section rather than a
-> special KVM hook.
+I have a PCI device that is sitting behind a bridge.=20
 
-Can you give more details about how pls? Or is there already an example for that
-somewhere in the kvm code?
+Under certain reproducible circumstances the PCI device will become inactiv=
+e. Reading the PCI config space returns all 0xFFFFFFFF.
 
-> I have no idea.  SEV-ES seems to be very hard to set up at the beginning
-> of the kernel bootstrap.  There's all sorts of chicken and egg problems,
-> as well as complicated handshakes between the firmware and the guest,
-> and the way to do it also depends on the trust and threat models.
-> 
-> A much simpler way is to just boot under a trusted hypervisor, do
-> "modprobe sev-es" and save a snapshot of the guest.  Then you sign the
-> snapshot and pass it to your cloud provider.
+The bridge appears to still be functional. Reading the status from the brid=
+ge I see a Fatal Error due to a Surprise Down event.
 
-Right, especially the early trapping could be a pain. I don't think this
-is cast in stone yet, though...
+I am trying to figure out how to bring the device back online.
 
-We'll see.
+I tried toggling the secondary bus reset bit of the Bridge Control Register=
+ but it doesn't appear to make any difference. I still see 0xFFFFFFFF in th=
+e device config space.
 
-Thanks.
+I provided a pci_error_handler but the error_detected() function is not get=
+ting called.
 
--- 
-Regards/Gruss,
-    Boris.
+Given that these two methods are not helping me out what other choices do I=
+ have to either reset the PCI device or hot-plug the device from a kernel d=
+river. Or some other method of bring the device back to life.
 
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+Note that I am running Linux 4.8 in dom0 on Xen (if that makes a difference=
+).
+
+Thanks,
+Kelly
