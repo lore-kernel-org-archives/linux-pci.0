@@ -1,141 +1,280 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [RFC PATCH v2 09/32] x86: Change early_ioremap to early_memremap
- for BOOT data
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:13:53 -0500
-Message-ID: <148846763334.2349.9327692408737971533.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+Return-Path: <SRS0=WlYQ=3G=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=WlYQ=3G=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [PATCH v3 1/2] PCI: Add tango MSI controller support
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, Thomas Gleixner <tglx@linutronix.de>
+References: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
+ <f37d7b55-e065-72aa-e690-13dd4718a9ce@sigmadesigns.com>
+Cc: Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>, DT <devicetree@vger.kernel.org>,
+ Mason <slash.tmp@free.fr>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <a12a79fd-94f9-5aa4-5aa0-5dccb6c5d615@arm.com>
+Date: Wed, 29 Mar 2017 13:29:04 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <f37d7b55-e065-72aa-e690-13dd4718a9ce@sigmadesigns.com>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tom Lendacky <thomas.lendacky@amd.com>
+On 29/03/17 12:29, Marc Gonzalez wrote:
+> The MSI controller in Tango supports 256 message-signaled interrupts,
+> and a single doorbell address.
+> 
+> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> ---
+> Changes since v0.2
+> - Support 256 MSIs instead of only 32
+> - Use spinlock_t instead of struct mutex
+> - Add MSI_FLAG_PCI_MSIX flag
+> 
+> IRQs are acked in tango_msi_isr because handle_simple_irq leaves
+> ack, clear, mask and unmask up to the driver. For the same reason,
+> interrupt enable mask is updated from tango_irq_domain_alloc/free.
 
-In order to map BOOT data with the proper encryption bit, the
-early_ioremap() function calls are changed to early_memremap() calls.
-This allows the proper access for both SME and SEV.
+I've asked you to move this to individual methods. You've decided not
+to, and that's your call. But I now wonder why I'm even bothering to
+review this, as you've so far just wasted my time.
 
-Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
----
- arch/x86/kernel/acpi/boot.c |    4 ++--
- arch/x86/kernel/mpparse.c   |   10 +++++-----
- drivers/sfi/sfi_core.c      |    6 +++---
- 3 files changed, 10 insertions(+), 10 deletions(-)
+Anyway...
 
-diff --git a/arch/x86/kernel/acpi/boot.c b/arch/x86/kernel/acpi/boot.c
-index 35174c6..468c25a 100644
---- a/arch/x86/kernel/acpi/boot.c
-+++ b/arch/x86/kernel/acpi/boot.c
-@@ -124,7 +124,7 @@ char *__init __acpi_map_table(unsigned long phys, unsigned long size)
- 	if (!phys || !size)
- 		return NULL;
- 
--	return early_ioremap(phys, size);
-+	return early_memremap(phys, size);
- }
- 
- void __init __acpi_unmap_table(char *map, unsigned long size)
-@@ -132,7 +132,7 @@ void __init __acpi_unmap_table(char *map, unsigned long size)
- 	if (!map || !size)
- 		return;
- 
--	early_iounmap(map, size);
-+	early_memunmap(map, size);
- }
- 
- #ifdef CONFIG_X86_LOCAL_APIC
-diff --git a/arch/x86/kernel/mpparse.c b/arch/x86/kernel/mpparse.c
-index 0d904d7..fd37f39 100644
---- a/arch/x86/kernel/mpparse.c
-+++ b/arch/x86/kernel/mpparse.c
-@@ -436,9 +436,9 @@ static unsigned long __init get_mpc_size(unsigned long physptr)
- 	struct mpc_table *mpc;
- 	unsigned long size;
- 
--	mpc = early_ioremap(physptr, PAGE_SIZE);
-+	mpc = early_memremap(physptr, PAGE_SIZE);
- 	size = mpc->length;
--	early_iounmap(mpc, PAGE_SIZE);
-+	early_memunmap(mpc, PAGE_SIZE);
- 	apic_printk(APIC_VERBOSE, "  mpc: %lx-%lx\n", physptr, physptr + size);
- 
- 	return size;
-@@ -450,7 +450,7 @@ static int __init check_physptr(struct mpf_intel *mpf, unsigned int early)
- 	unsigned long size;
- 
- 	size = get_mpc_size(mpf->physptr);
--	mpc = early_ioremap(mpf->physptr, size);
-+	mpc = early_memremap(mpf->physptr, size);
- 	/*
- 	 * Read the physical hardware table.  Anything here will
- 	 * override the defaults.
-@@ -461,10 +461,10 @@ static int __init check_physptr(struct mpf_intel *mpf, unsigned int early)
- #endif
- 		pr_err("BIOS bug, MP table errors detected!...\n");
- 		pr_cont("... disabling SMP support. (tell your hw vendor)\n");
--		early_iounmap(mpc, size);
-+		early_memunmap(mpc, size);
- 		return -1;
- 	}
--	early_iounmap(mpc, size);
-+	early_memunmap(mpc, size);
- 
- 	if (early)
- 		return -1;
-diff --git a/drivers/sfi/sfi_core.c b/drivers/sfi/sfi_core.c
-index 296db7a..d00ae3f 100644
---- a/drivers/sfi/sfi_core.c
-+++ b/drivers/sfi/sfi_core.c
-@@ -92,7 +92,7 @@ static struct sfi_table_simple *syst_va __read_mostly;
- static u32 sfi_use_ioremap __read_mostly;
- 
- /*
-- * sfi_un/map_memory calls early_ioremap/iounmap which is a __init function
-+ * sfi_un/map_memory calls early_memremap/memunmap which is a __init function
-  * and introduces section mismatch. So use __ref to make it calm.
-  */
- static void __iomem * __ref sfi_map_memory(u64 phys, u32 size)
-@@ -103,7 +103,7 @@ static void __iomem * __ref sfi_map_memory(u64 phys, u32 size)
- 	if (sfi_use_ioremap)
- 		return ioremap_cache(phys, size);
- 	else
--		return early_ioremap(phys, size);
-+		return early_memremap(phys, size);
- }
- 
- static void __ref sfi_unmap_memory(void __iomem *virt, u32 size)
-@@ -114,7 +114,7 @@ static void __ref sfi_unmap_memory(void __iomem *virt, u32 size)
- 	if (sfi_use_ioremap)
- 		iounmap(virt);
- 	else
--		early_iounmap(virt, size);
-+		early_memunmap(virt, size);
- }
- 
- static void sfi_print_table_header(unsigned long long pa,
+> ---
+>  drivers/pci/host/pcie-tango.c | 194 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  1 file changed, 194 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
+> new file mode 100644
+> index 000000000000..e88850983a1d
+> --- /dev/null
+> +++ b/drivers/pci/host/pcie-tango.c
+> @@ -0,0 +1,194 @@
+> +#include <linux/module.h>
+> +#include <linux/irqchip/chained_irq.h>
+> +#include <linux/irqdomain.h>
+> +#include <linux/pci-ecam.h>
+
+How is that include relevant to this patch?
+
+> +#include <linux/msi.h>
+> +
+> +#define MSI_MAX 256
+> +
+> +struct tango_pcie {
+> +	DECLARE_BITMAP(bitmap, MSI_MAX);
+> +	spinlock_t lock;
+> +	void __iomem *mux;
+> +	void __iomem *msi_status;
+> +	void __iomem *msi_mask;
+> +	phys_addr_t msi_doorbell;
+> +	struct irq_domain *irq_domain;
+> +	struct irq_domain *msi_domain;
+> +	int irq;
+> +};
+> +
+> +/*** MSI CONTROLLER SUPPORT ***/
+> +
+> +static void dispatch(struct tango_pcie *pcie, unsigned long status, int base)
+> +{
+> +	unsigned int pos, virq;
+> +
+> +	for_each_set_bit(pos, &status, 32) {
+> +		virq = irq_find_mapping(pcie->irq_domain, base + pos);
+> +		generic_handle_irq(virq);
+> +	}
+> +}
+> +
+> +static void tango_msi_isr(struct irq_desc *desc)
+> +{
+> +	u32 status;
+> +	struct irq_chip *chip = irq_desc_get_chip(desc);
+> +	struct tango_pcie *pcie = irq_desc_get_handler_data(desc);
+> +	unsigned int base, offset, pos = 0;
+> +
+> +	chained_irq_enter(chip, desc);
+> +
+> +	while ((pos = find_next_bit(pcie->bitmap, MSI_MAX, pos)) < MSI_MAX) {
+> +		base = round_down(pos, 32);
+> +		offset = (pos / 32) * 4;
+> +		status = readl_relaxed(pcie->msi_status + offset);
+> +		writel_relaxed(status, pcie->msi_status + offset);
+> +		dispatch(pcie, status, base);
+> +		pos = base + 32;
+> +	}
+> +
+> +	chained_irq_exit(chip, desc);
+> +}
+> +
+> +static struct irq_chip tango_msi_irq_chip = {
+> +	.name = "MSI",
+> +	.irq_mask = pci_msi_mask_irq,
+> +	.irq_unmask = pci_msi_unmask_irq,
+
+How do you make that work if the PCI device doesn't support per-MSI masking?
+
+> +};
+> +
+> +#define USE_DEF_OPS (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS)
+
+How is that useful?
+
+> +
+> +static struct msi_domain_info msi_domain_info = {
+> +	.flags	= USE_DEF_OPS | MSI_FLAG_PCI_MSIX,
+> +	.chip	= &tango_msi_irq_chip,
+> +};
+> +
+> +static void tango_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+> +{
+> +	struct tango_pcie *pcie = irq_data_get_irq_chip_data(data);
+> +
+> +	msg->address_lo = lower_32_bits(pcie->msi_doorbell);
+> +	msg->address_hi = upper_32_bits(pcie->msi_doorbell);
+> +	msg->data = data->hwirq;
+> +}
+> +
+> +static int tango_set_affinity(struct irq_data *irq_data,
+> +		const struct cpumask *mask, bool force)
+> +{
+> +	 return -EINVAL;
+> +}
+> +
+> +static struct irq_chip tango_msi_chip = {
+> +	.name			= "MSI",
+> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
+> +	.irq_set_affinity	= tango_set_affinity,
+> +};
+> +
+> +static int find_free_msi(struct irq_domain *dom, unsigned int virq)
+> +{
+> +	u32 val;
+> +	struct tango_pcie *pcie = dom->host_data;
+> +	unsigned int offset, pos;
+> +
+> +	pos = find_first_zero_bit(pcie->bitmap, MSI_MAX);
+> +	if (pos >= MSI_MAX)
+> +		return -ENOSPC;
+> +
+> +	offset = (pos / 32) * 4;
+> +	val = readl_relaxed(pcie->msi_mask + offset);
+> +	writel_relaxed(val | BIT(pos % 32), pcie->msi_mask + offset);
+
+Great. I'm now in a position where I can take an interrupt (because of
+the broken locking that doesn't disable interrupts), but the bitmap
+doesn't indicate it yet. With a bit of luck, I'll never make any forward
+progress.
+
+> +	__set_bit(pos, pcie->bitmap);
+> +
+> +	irq_domain_set_info(dom, virq, pos, &tango_msi_chip,
+> +			dom->host_data, handle_simple_irq, NULL, NULL);
+
+I've told you a number of times that PCI MSIs are edge triggered...
+
+> +
+> +	return 0;
+> +}
+> +
+> +static int tango_irq_domain_alloc(struct irq_domain *dom,
+> +		unsigned int virq, unsigned int nr_irqs, void *args)
+> +{
+> +	int err;
+> +	struct tango_pcie *pcie = dom->host_data;
+> +
+> +	spin_lock(&pcie->lock);
+> +	err = find_free_msi(dom, virq);
+> +	spin_unlock(&pcie->lock);
+> +
+> +	return err;
+> +}
+> +
+> +static void tango_irq_domain_free(struct irq_domain *dom,
+> +		unsigned int virq, unsigned int nr_irqs)
+> +{
+> +	u32 val;
+> +	struct irq_data *d = irq_domain_get_irq_data(dom, virq);
+> +	struct tango_pcie *pcie = irq_data_get_irq_chip_data(d);
+> +	unsigned int offset, pos = d->hwirq;
+> +
+> +	spin_lock(&pcie->lock);
+> +
+> +	offset = (pos / 32) * 4;
+> +	val = readl_relaxed(pcie->msi_mask + offset);
+> +	writel_relaxed(val & ~BIT(pos % 32), pcie->msi_mask + offset);
+> +	__clear_bit(pos, pcie->bitmap);
+> +
+> +	spin_unlock(&pcie->lock);
+> +}
+> +
+> +static const struct irq_domain_ops msi_dom_ops = {
+> +	.alloc	= tango_irq_domain_alloc,
+> +	.free	= tango_irq_domain_free,
+> +};
+> +
+> +static int tango_msi_remove(struct platform_device *pdev)
+> +{
+> +	struct tango_pcie *msi = platform_get_drvdata(pdev);
+
+Be consistent in your naming. It's called pcie everywhere else.
+
+> +
+> +	irq_set_chained_handler_and_data(msi->irq, NULL, NULL);
+> +	irq_domain_remove(msi->msi_domain);
+> +	irq_domain_remove(msi->irq_domain);
+> +
+> +	return 0;
+> +}
+> +
+> +static int tango_msi_probe(struct platform_device *pdev, struct tango_pcie *pcie)
+> +{
+> +	int i, virq;
+> +	struct fwnode_handle *fwnode = of_node_to_fwnode(pdev->dev.of_node);
+> +	struct irq_domain *msi_dom, *irq_dom;
+> +
+> +	spin_lock_init(&pcie->lock);
+> +
+> +	for (i = 0; i < MSI_MAX / 32; ++i)
+> +		writel_relaxed(0, pcie->msi_mask + i * 4);
+> +
+> +	irq_dom = irq_domain_create_linear(fwnode, MSI_MAX, &msi_dom_ops, pcie);
+> +	if (!irq_dom) {
+> +		pr_err("Failed to create IRQ domain\n");
+> +		return -ENOMEM;
+> +	}
+> +
+> +	msi_dom = pci_msi_create_irq_domain(fwnode, &msi_domain_info, irq_dom);
+> +	if (!msi_dom) {
+> +		pr_err("Failed to create MSI domain\n");
+> +		irq_domain_remove(irq_dom);
+> +		return -ENOMEM;
+> +	}
+> +
+> +	virq = platform_get_irq(pdev, 1);
+> +	if (virq <= 0) {
+> +		pr_err("Failed to map IRQ\n");
+> +		irq_domain_remove(msi_dom);
+> +		irq_domain_remove(irq_dom);
+> +		return -ENXIO;
+> +	}
+> +
+> +	pcie->irq_domain = irq_dom;
+> +	pcie->msi_domain = msi_dom;
+> +	pcie->irq = virq;
+> +	irq_set_chained_handler_and_data(virq, tango_msi_isr, pcie);
+> +
+> +	return 0;
+> +}
+> 
+
+So there is not much progress from the previous version. It is just
+broken in a different ways, and ignores most of the work that is already
+done in the irqchip core. I can only repeat what I've said in my
+previous review.
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
