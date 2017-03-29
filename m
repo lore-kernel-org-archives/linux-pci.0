@@ -1,45 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.134]:34010 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753120AbdCWIpv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 23 Mar 2017 04:45:51 -0400
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] PCI: slightly reword the log for bus numbering
-Date: Thu, 23 Mar 2017 16:42:05 +0800
-Message-Id: <1490258525-80319-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from mail-sn1nam01on0061.outbound.protection.outlook.com ([104.47.32.61]:43712
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752175AbdC2QVM (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 29 Mar 2017 12:21:12 -0400
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: 'Joerg Roedel' <jroedel@suse.de>
+CC: 'Joerg Roedel' <joro@8bytes.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Daniel Drake <drake@endlessm.com>,
+        "Nath, Arindam" <Arindam.Nath@amd.com>
+Subject: RE: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+Date: Wed, 29 Mar 2017 16:21:08 +0000
+Message-ID: <BN6PR12MB1652773FC29C98A899FD5689F7350@BN6PR12MB1652.namprd12.prod.outlook.com>
+References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
+ <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+ <20170328202844.GQ8329@suse.de>
+ <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+ <20170328205616.GR8329@suse.de>
+ <BN6PR12MB165289163EA3548B59D0C1ACF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+ <20170328222627.GS8329@suse.de>
+In-Reply-To: <20170328222627.GS8329@suse.de>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I was confused by the log that bridge configuration is invalid.
-It seems like that the RC driver do some silly configurations
-before sacnning the tree. But actually it was just trying to
-figure out if the hierarchy behind the bridge had been configured
-by BIOS. The log should better reflect the fact and don't mislead
-folks.
+> -----Original Message-----
+> From: 'Joerg Roedel' [mailto:jroedel@suse.de]
+> Sent: Tuesday, March 28, 2017 6:26 PM
+> To: Deucher, Alexander
+> Cc: 'Joerg Roedel'; Bjorn Helgaas; linux-pci@vger.kernel.org; linux-
+> kernel@vger.kernel.org; Daniel Drake; Nath, Arindam
+> Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+>=20
+> On Tue, Mar 28, 2017 at 09:13:23PM +0000, Deucher, Alexander wrote:
+> > If I understand Arindam's patch correctly, it only flushes TLB entries
+> > for domains in the flush queue whereas the previous behavior was to
+> > flush all domains.  If there was no TLB flush in the queue for that
+> > domain, could flushing it cause a problem?
+>=20
+> No, that can't cause a problem. An io/tlb flush for the device is just a
+> message that the device should invalidate its own tlb. The device can't
+> know and doesn't need to know whether the page-tables it used to fill
+> the tlb really changed.
+>=20
+> As it looks, the problem we are seeing here is that we are sending a
+> large amount of these requests to the GPU device, and wait for its
+> completion every time. This shouldn't be a problem for ATS devices, but
+> the GPU here seems to fail at some point and doesn't answer to the
+> invalidation request anymore, causing the completion-wait loop timeouts.
+>=20
+> Arindam's patch makes the high flush-frequency less likely, but it can
+> still happen, depending on how the GPU is used. So its the best to
+> keep ATS disabled on the device as it doesn't work correctly and we risk
+> running in the same problem again when we leave it enabled and just make
+> the trigger less likely.
 
-pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]),
-reconfiguring
-
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
-
- drivers/pci/probe.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 3abc942..957d7c4 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -975,7 +975,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
- 	if (!pass &&
- 	    (primary != bus->number || secondary <= bus->number ||
- 	     secondary > subordinate)) {
--		dev_info(&dev->dev, "bridge configuration invalid ([bus %02x-%02x]), reconfiguring\n",
-+		dev_info(&dev->dev, "bridge hasn't been configured by BIOS ([bus %02x-%02x]), reconfiguring\n",
- 			 secondary, subordinate);
- 		broken = 1;
- 	}
--- 
-1.9.1
+Thanks for clarifying.  The patch is:
+Acked-by: Alex Deucher <alexander.deucher@amd.com>
