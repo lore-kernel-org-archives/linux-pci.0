@@ -1,80 +1,132 @@
-Return-Path: <SRS0=z6/A=2W=arm.com=robin.murphy@kernel.org>
-Return-Path: <SRS0=z6/A=2W=arm.com=robin.murphy@kernel.org>
-Subject: Re: Legacy features in PCI Express devices
-To: Mason <slash.tmp@free.fr>, linux-pci <linux-pci@vger.kernel.org>
-References: <ef5c9778-fbae-9f4f-ac2e-29b8597537a5@free.fr>
- <96b57ba5-641d-46c8-6ba0-cee2c0613a6f@arm.com>
- <58fb1386-fa94-dde3-b361-597f9486fa41@free.fr>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, David Laight
- <david.laight@aculab.com>, Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- netdev <netdev@vger.kernel.org>, Tim Harvey <tharvey@gateworks.com>,
- Arnd Bergmann <arnd@arndb.de>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <2d8365c0-f46e-981f-beba-1331bd00b707@arm.com>
-Date: Mon, 13 Mar 2017 17:55:46 +0000
+Return-Path: <SRS0=US7a=3G=amd.com=Kelly.Zytaruk@kernel.org>
+Return-Path: <SRS0=US7a=3G=amd.com=Kelly.Zytaruk@kernel.org>
+From: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
+To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Alex Williamson
+	<alex.williamson@redhat.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Having problems resetting a PCI device
+Date: Wed, 29 Mar 2017 19:57:40 +0000
+Message-ID: <DM2PR12MB0078B2FAB74BDC51429F7BBFFE350@DM2PR12MB0078.namprd12.prod.outlook.com>
+Content-Type: multipart/alternative;
+	boundary="_000_DM2PR12MB0078B2FAB74BDC51429F7BBFFE350DM2PR12MB0078namp_"
 MIME-Version: 1.0
-In-Reply-To: <58fb1386-fa94-dde3-b361-597f9486fa41@free.fr>
-Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/03/17 17:39, Mason wrote:
-> On 13/03/2017 18:12, Robin Murphy wrote:
-> 
->> On 13/03/17 16:10, Mason wrote:
->>
->>> There are two revisions of our PCI Express controller.
->>>
->>> Rev 1 did not support the following features:
->>>
->>>   1) legacy PCI interrupt delivery (INTx signals)
->>>   2) I/O address space
->>>
->>> Internally, someone stated that such missing support would prevent
->>> some PCIe cards from working with our controller.
->>>
->>> Are there really modern PCIe cards that require 1) and/or 2)
->>> to function?
->>>
->>> Can someone provide examples of such cards, so that I may test them
->>> on both revisions?
->>>
->>> I was told to check ath9k-based cards. Any other examples?
->>>
->>> Looking around, I came across this thread:
->>> http://lists.infradead.org/pipermail/linux-arm-kernel/2016-March/418254.html
->>> "i.MX6 PCIe: Fix imx6_pcie_deassert_core_reset() polarity"
->>>
->>> IIUC, although some PCIe boards do support MSI, the driver might not
->>> put in the work to use that infrastructure, and instead reverts to
->>> legacy interrupts. (So it is a SW issue, in a sense.)
->>
->> Secondary to that category is endpoints which nominally support MSI, but
->> in a way which is unreliable or otherwise broken. My experience shows
->> that the Silicon Image SiI 3132 (as integrated on ARM Juno boards, but
->> seemingly also relatively common on 'generic' 2-port SATA cards) falls
->> into that category - using the command-line parameter to force MSIs
->> instead of legacy interrupts leads to the the machine barely reaching
->> userspace before something goes horribly wrong:
-> 
-> Do drivers typically support *both* MSI and INTx?
+--_000_DM2PR12MB0078B2FAB74BDC51429F7BBFFE350DM2PR12MB0078namp_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-I'm not sure about "typically", but it certainly happens. For example,
-the Intel e1000e NIC driver is one I know of which can fall back from
-MSI-X to MSI to legacy dynamically.
+I have a PCI device that is sitting behind a bridge.
 
-> Specifically, would the xhci driver support both?
+Under certain reproducible circumstances the PCI device will become inactiv=
+e. Reading the PCI config space returns all 0xFFFFFFFF.
 
-Line 415 of xhci.c would appear to imply so.
+The bridge appears to still be functional. Reading the status from the brid=
+ge I see a Fatal Error due to a Surprise Down event.
 
-> If I remove MSI support from my kernel, I might be able to test
-> legacy interrupt support that way, right?
+I am trying to figure out how to bring the device back online.
 
-Indeed, disabling CONFIG_PCI_MSI should leave drivers with no other choice.
+I tried toggling the secondary bus reset bit of the Bridge Control Register=
+ but it doesn't appear to make any difference. I still see 0xFFFFFFFF in th=
+e device config space.
 
-Robin.
+I provided a pci_error_handler but the error_detected() function is not get=
+ting called.
 
-> 
-> Regards.
-> 
+Given that these two methods are not helping me out what other choices do I=
+ have to either reset the PCI device or hot-plug the device from a kernel d=
+river. Or some other method of bring the device back to life.
+
+Note that I am running Linux 4.8 in dom0 on Xen (if that makes a difference=
+).
+
+Thanks,
+Kelly
+
+--_000_DM2PR12MB0078B2FAB74BDC51429F7BBFFE350DM2PR12MB0078namp_
+Content-Type: text/html; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-micr=
+osoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:word" =
+xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D"http:=
+//www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Dus-ascii"=
+>
+<meta name=3D"Generator" content=3D"Microsoft Word 15 (filtered medium)">
+<style><!--
+/* Font Definitions */
+@font-face
+	{font-family:"Cambria Math";
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
+@font-face
+	{font-family:Calibri;
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+/* Style Definitions */
+p.MsoNormal, li.MsoNormal, div.MsoNormal
+	{margin:0in;
+	margin-bottom:.0001pt;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+a:link, span.MsoHyperlink
+	{mso-style-priority:99;
+	color:#0563C1;
+	text-decoration:underline;}
+a:visited, span.MsoHyperlinkFollowed
+	{mso-style-priority:99;
+	color:#954F72;
+	text-decoration:underline;}
+span.EmailStyle17
+	{mso-style-type:personal-compose;
+	font-family:"Calibri","sans-serif";
+	color:windowtext;}
+.MsoChpDefault
+	{mso-style-type:export-only;
+	font-family:"Calibri","sans-serif";}
+@page WordSection1
+	{size:8.5in 11.0in;
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.WordSection1
+	{page:WordSection1;}
+--></style><!--[if gte mso 9]><xml>
+<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026" />
+</xml><![endif]--><!--[if gte mso 9]><xml>
+<o:shapelayout v:ext=3D"edit">
+<o:idmap v:ext=3D"edit" data=3D"1" />
+</o:shapelayout></xml><![endif]-->
+</head>
+<body lang=3D"EN-US" link=3D"#0563C1" vlink=3D"#954F72">
+<div class=3D"WordSection1">
+<p class=3D"MsoNormal">I have a PCI device that is sitting behind a bridge.=
+ <br>
+<br>
+Under certain reproducible circumstances the PCI device will become inactiv=
+e. Reading the PCI config space returns all 0xFFFFFFFF.<br>
+<br>
+The bridge appears to still be functional. Reading the status from the brid=
+ge I see a Fatal Error due to a Surprise Down event.<br>
+<br>
+I am trying to figure out how to bring the device back online.<br>
+<br>
+I tried toggling the secondary bus reset bit of the Bridge Control Register=
+ but it doesn't appear to make any difference. I still see 0xFFFFFFFF in th=
+e device config space.<br>
+<br>
+I provided a pci_error_handler but the error_detected() function is not get=
+ting called.<br>
+<br>
+Given that these two methods are not helping me out what other choices do I=
+ have to either reset the PCI device or hot-plug the device from a kernel d=
+river. Or some other method of bring the device back to life.<br>
+<br>
+Note that I am running Linux 4.8 in dom0 on Xen (if that makes a difference=
+).<br>
+<br>
+Thanks,<br>
+Kelly<o:p></o:p></p>
+</div>
+</body>
+</html>
+
+--_000_DM2PR12MB0078B2FAB74BDC51429F7BBFFE350DM2PR12MB0078namp_--
