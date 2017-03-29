@@ -1,88 +1,117 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [GIT PULL] PCI: Support for configurable PCI endpoint
+To: Niklas Cassel <niklas.cassel@axis.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+References: <20170327094520.3129-1-kishon@ti.com>
+ <0cfe5acf-332c-00c9-e5d5-1403c4e80ebe@axis.com>
+ <99ae043b-35fd-0723-c8a7-e2625a862c6d@ti.com>
+CC: <hch@infradead.org>, <nsekhar@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <6868a887-a270-96d6-0600-af2a1af383a8@ti.com>
+Date: Wed, 29 Mar 2017 18:06:14 +0530
 MIME-Version: 1.0
-In-Reply-To: <20170322190019.GB20697@nazgul.tnic>
-References: <20170312115703.GA18197@nazgul.tnic> <20170312122621.GA2823@nazgul.tnic>
- <CAHp75Ve7SWivf=TTuq-qA=iM20E==OmSZD2YAmt0LVJQg47Osg@mail.gmail.com>
- <20170312222333.hm54nl2ul5iuixap@pd.tnic> <87shmhjfap.fsf@miraculix.mork.no>
- <309B89C4C689E141A5FF6A0C5FB2118B8C5B3F9B@ORSMSX101.amr.corp.intel.com>
- <20170314024033.GK802@shells.gnugeneration.com> <26D9FDECA4FBDD4AADA65D8E2FC68A4A10402F44@ORSMSX101.amr.corp.intel.com>
- <20170322020445.GD802@shells.gnugeneration.com> <20170322021343.GE802@shells.gnugeneration.com>
- <20170322190019.GB20697@nazgul.tnic>
-From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Date: Thu, 23 Mar 2017 23:18:31 -0700
-Message-ID: <CAL3LdT6CbZkyngugiPCqhNvT02tsTWsWfMT4KH41hrAEE3evAQ@mail.gmail.com>
-Subject: Re: [Intel-wired-lan] [BUG] 4.11.0-rc1 panic on shutdown X61s
-To: Borislav Petkov <bp@alien8.de>
-Cc: lkml@pengaru.com, "Bowers, AndrewX" <andrewx.bowers@intel.com>,
-        "Brown, Aaron F" <aaron.f.brown@intel.com>,
-        "vcaputo@pengaru.com" <vcaputo@pengaru.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        David Singleton <davsingl@cisco.com>,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        khalidm <khalidm@cisco.com>,
-        Andy Shevchenko <andy.shevchenko@gmail.com>,
-        "intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
-        =?UTF-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <99ae043b-35fd-0723-c8a7-e2625a862c6d@ti.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 22, 2017 at 12:00 PM, Borislav Petkov <bp@alien8.de> wrote:
-> (Readding Jeff Kirsher who got dropped from the CC-list at some point.)
->
-> On Tue, Mar 21, 2017 at 07:13:43PM -0700, lkml@pengaru.com wrote:
->> > This is still broken as of 4.11.0-rc3 FYI.
->> >
->> > Upon resume:
->> > [   45.828344] ------------[ cut here ]------------
->> > [   45.828352] WARNING: CPU: 0 PID: 807 at drivers/pci/msi.c:1052 __pci_enable_msi_range+0x39c/0x3f0
->> > [   45.828355] CPU: 0 PID: 807 Comm: kworker/u4:29 Not tainted 4.11.0-rc3 #52
->> > [   45.828356] Hardware name: LENOVO 7668CTO/7668CTO, BIOS 7NETC2WW (2.22 ) 03/22/2011
->> > [   45.828360] Workqueue: events_unbound async_run_entry_fn
->> > [   45.828362] Call Trace:
->> > [   45.828366]  dump_stack+0x4d/0x72
->> > [   45.828369]  __warn+0xc7/0xf0
->> > [   45.828371]  warn_slowpath_null+0x18/0x20
->> > [   45.828372]  __pci_enable_msi_range+0x39c/0x3f0
->> > [   45.828375]  ? e1000e_get_phy_info_igp+0x1c/0xf0
->> > [   45.828377]  pci_enable_msi+0x15/0x30
->> > [   45.828379]  e1000e_set_interrupt_capability+0xe0/0x130
->> > [   45.828381]  e1000e_pm_thaw+0x1d/0x50
->> > [   45.828383]  e1000e_pm_resume+0x20/0x30
->> > [   45.828386]  pci_pm_resume+0x5f/0x90
->> > [   45.828389]  dpm_run_callback+0x44/0x170
->> > [   45.828391]  ? pci_pm_thaw+0x90/0x90
->> > [   45.828393]  device_resume+0xce/0x1e0
->> > [   45.828395]  async_resume+0x18/0x40
->> > [   45.828396]  async_run_entry_fn+0x32/0xe0
->> > [   45.828399]  process_one_work+0x13b/0x3e0
->> > [   45.828400]  worker_thread+0x64/0x4a0
->> > [   45.828402]  kthread+0x10f/0x150
->> > [   45.828404]  ? process_one_work+0x3e0/0x3e0
->> > [   45.828406]  ? __kthread_create_on_node+0x150/0x150
->> > [   45.828409]  ret_from_fork+0x29/0x40
->> > [   45.828411] ---[ end trace 56fad2d83af13529 ]---
->> > [   45.828469] e1000e 0000:00:19.0 eth3: Failed to initialize MSI interrupts.  Falling back to legacy interrupts.
->> > [   45.835944] PM: resume of devices complete after 364.406 msecs
->> > [   45.836001] usb 2-1:1.0: rebind failed: -517
->> > [   45.836316] PM: Finishing wakeup.
->> >
+Hi,
+
+On Wednesday 29 March 2017 05:40 PM, Kishon Vijay Abraham I wrote:
+> Hi Niklas,
+> 
+> On Wednesday 29 March 2017 05:12 PM, Niklas Cassel wrote:
+>> On 03/27/2017 11:44 AM, Kishon Vijay Abraham I wrote:
+>>> Hi Bjorn,
+>>>
+>>> Please find the pull request for PCI endpoint support below. I've
+>>> also included all the history here.
+>>>
+>>> Changes from v4:
+>>> *) add #syscon-cells property and used of_parse_phandle_with_args
+>>>    to perform a configuration in syscon module (as suggested by
+>>>    Rob Herring)
+>>> *) Remove unnecessary white space.
+>>>
+>>> Changes from v3:
+>>> *) fixed a typo and adapted to https://lkml.org/lkml/2017/3/13/562.
+>>>
+>>> Changes from v2:
+>>> *) changed the configfs structure as suggested by Christoph Hellwig. With
+>>>    this change the framework creates configfs entry for EP function driver
+>>>    and EP controller. Previously these entries have to be created by the
+>>>    the user. (Haven't changed the epc core or epf core except for invoking
+>>>    configfs APIs to create entries for EP function driver and EP controller.
+>>>    That's mostly because the EP function device can still be created by
+>>>    directly invoking the epf core API without using configfs).
+>>> *) Now the user has to use configfs entry 'start' to start the link.
+>>>    This was previously done by the function driver. However in the case of
+>>>    multi function EP, the function driver shouldn't start the link.
+>>>
+>>> Changes from v1:
+>>> *) The preparation patches for adding EP support is removed and is sent
+>>>    separately
+>>> *) Added device ID for DRA74x/DRA72x and used it instead of
+>>>    using "PCI_ANY_ID"
+>>> *) Added userguide for PCI endpoint test function
+>>>
+>>> Major Improvements from RFC:
+>>>  *) support multi-function devices (hw supported not virtual)
+>>>  *) Access host side buffers
+>>>  *) Raise MSI interrupts
+>>>  *) Add user space program to use the host side PCI driver
+>>>  *) Adapt all other users of designware to use the new design (only
+>>>     compile tested. Since I have only dra7xx boards, the new design
+>>>     has only been tested in dra7xx. I'd require the help of others
+>>>     to test the platforms they have access to).
+>>>
+>>> This series has been developed over 4.11-rc1 + [1]
+>>> [1] -> https://lkml.org/lkml/2017/3/13/562
+>>>
+>>> Let me know if this has to be re-based to some of your branch.
+>>>
+>>> Thanks
+>>> Kishon
+>>>
+>>> The following changes since commit 623e87fec8ab7867fb51b3079196bd10718a60ce:
+>>>
+>>>   PCI: dwc: dra7xx: Push request_irq call to the bottom of probe (2017-03-22 20:35:30 +0530)
+>>>
+>>> are available in the git repository at:
+>>>
+>>>   git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git tags/pci-endpoint-for-4.12
+>>>
+>>> for you to fetch changes up to e98bf80074be4654faae42fe0f5a622a776b6fdd:
+>>>
+>>>   ARM: DRA7: clockdomain: Change the CLKTRCTRL of CM_PCIE_CLKSTCTRL to SW_WKUP (2017-03-27 15:08:22 +0530)
+>>>
+>>> ----------------------------------------------------------------
 >>
->> I never reported back on the results of reverting 7e54d9d063fa, it seems to fix
->> the problem on my machine as well.
->
-> Right, so I think we should revert soonish. That is, if you guys don't
-> have a fix yet. You can always try again during the next merge window.
-> Right now, I'm not testing -rc kernels on this box because of this. I
-> can always blacklist the networking driver but what good is that box
-> then...
->
+>> FWIW:
+>> I've tested Kishon's tag pci-endpoint-for-4.12
+>> and PCIe on artpec6 SoC is still working fine.
+> 
+> Thanks for testing it.
+>>
+>> I also included the DRA7xx PCIe driver in my
+>> kernel so that pcie-designware-ep.c gets built.
+>>
+>> My only worry is that the code in pcie-designware-ep.c
+>> is not compile tested if DRA7xx is not selected
+>> (as it is the only driver using PCIE_DW_EP at
+>> the moment).
+> 
+> yeah, we should plan to include COMPILE_TEST in all pci drivers but I guess
+> there is some problem with non-ARM builds [1]. As Bjorn mentioned in the
+> thread, we could add #ifdef ARM and then include COMPILE_TEST.
 
-I have sent a patch to revert this offending commit through David
-Miller's net tree, sorry for the delay on this, I thought I had seen a
-patch to revert the offending commit earlier which is why I did not
-send this earlier.
+I think I misunderstood your concern. yeah, there is no direct way to compile
+pcie-designware-ep.c without selecting DRA7xx.
 
--- 
-Cheers,
-Jeff
+Thanks
+Kishon
