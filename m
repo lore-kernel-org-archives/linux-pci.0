@@ -1,63 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 08/22] PCI: dwc: designware: Add EP mode support
-To: Kishon Vijay Abraham I <kishon@ti.com>, Joao Pinto
- <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han
- <jingoohan1@gmail.com>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
- <1487325042-28227-9-git-send-email-kishon@ti.com>
- <45e5288e-d11f-c855-af9b-692a42d878c6@synopsys.com> <58BE42B2.20305@ti.com>
- <02461be2-268d-485a-2bc4-3b148726d37d@synopsys.com>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <aa9835a7-07f4-d042-d04a-b0d9cc0ea3de@synopsys.com>
-Date: Wed, 8 Mar 2017 11:32:58 +0000
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:40627 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932153AbdC2POj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 29 Mar 2017 11:14:39 -0400
+Date: Wed, 29 Mar 2017 17:14:13 +0200
+From: Borislav Petkov <bp@suse.de>
+To: Brijesh Singh <brijesh.singh@amd.com>
+Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
+        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
+        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
+        gary.hook@amd.com, linux-mm@kvack.org,
+        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
+        dan.j.williams@intel.com, aarcange@redhat.com,
+        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
+        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
+        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
+        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
+        ross.zwisler@linux.intel.com, dyoung@redhat.com,
+        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
+        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
+        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
+        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
+        labbott@fedoraproject.org, tony.luck@intel.com,
+        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
+        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
+        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
+        akpm@linux-foundation.org, davem@davemloft.net
+Subject: Re: [RFC PATCH v2 18/32] kvm: svm: Use the hardware provided GPA
+ instead of page walk
+Message-ID: <20170329151413.l2on26mdyyskwqlu@pd.tnic>
+References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+ <148846776540.2349.3123530065053870721.stgit@brijesh-build-machine>
 MIME-Version: 1.0
-In-Reply-To: <02461be2-268d-485a-2bc4-3b148726d37d@synopsys.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-doc@vger.kernel.org,
- linux-pci@vger.kernel.org, nsekhar@ti.com, linux-kernel@vger.kernel.org,
- linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <148846776540.2349.3123530065053870721.stgit@brijesh-build-machine>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-Hi Kishon,
-
->> Can you provide PCIE_GET_ATU_INB_UNR_REG_OFFSET (similar to
->> PCIE_GET_ATU_OUTB_UNR_REG_OFFSET)?
+On Thu, Mar 02, 2017 at 10:16:05AM -0500, Brijesh Singh wrote:
+> From: Tom Lendacky <thomas.lendacky@amd.com>
 > 
-> Yes of course, I will send you the definition soon.
-
-As promissed here is the definition for Inbound:
-
-+/* register address builder */
-+#define PCIE_GET_ATU_INB_UNR_REG_ADDR(region, register)		\
-+					((0x3 << 20) | (region << 9) |	\
-+					(0x1 << 8) | (register << 2))
-
-Thanks,
-Joao
-
+> When a guest causes a NPF which requires emulation, KVM sometimes walks
+> the guest page tables to translate the GVA to a GPA. This is unnecessary
+> most of the time on AMD hardware since the hardware provides the GPA in
+> EXITINFO2.
 > 
-> Thanks,
-> Joao
+> The only exception cases involve string operations involving rep or
+> operations that use two memory locations. With rep, the GPA will only be
+> the value of the initial NPF and with dual memory locations we won't know
+> which memory address was translated into EXITINFO2.
 > 
->>
->> Thanks
->> Kishon
->>
-> 
+> Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
+> Reviewed-by: Borislav Petkov <bp@suse.de>
 
+I think I already asked you to remove Revewed-by tags when you have to
+change an already reviewed patch in non-trivial manner. Why does this
+one still have my Reviewed-by tag?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+Regards/Gruss,
+    Boris.
+
+SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
+-- 
