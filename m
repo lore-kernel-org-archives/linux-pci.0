@@ -1,158 +1,240 @@
-Return-Path: <SRS0=gVIC=2Y=gmail.com=ayyappa.ch.linux@kernel.org>
-Return-Path: <SRS0=gVIC=2Y=gmail.com=ayyappa.ch.linux@kernel.org>
+Return-Path: <SRS0=1MX4=3G=sigmadesigns.com=Marc_Gonzalez@kernel.org>
+Return-Path: <SRS0=1MX4=3G=sigmadesigns.com=Marc_Gonzalez@kernel.org>
+Subject: [PATCH v3 1/2] PCI: Add tango MSI controller support
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>
+CC: Robin Murphy <robin.murphy@arm.com>, Lorenzo Pieralisi
+	<lorenzo.pieralisi@arm.com>, Liviu Dudau <liviu.dudau@arm.com>, David Laight
+	<david.laight@aculab.com>, linux-pci <linux-pci@vger.kernel.org>, Linux ARM
+	<linux-arm-kernel@lists.infradead.org>, Thibaud Cornic
+	<thibaud_cornic@sigmadesigns.com>, Phuong Nguyen
+	<phuong_nguyen@sigmadesigns.com>, LKML <linux-kernel@vger.kernel.org>, DT
+	<devicetree@vger.kernel.org>, Mason <slash.tmp@free.fr>
+References: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
+Message-ID: <f37d7b55-e065-72aa-e690-13dd4718a9ce@sigmadesigns.com>
+Date: Wed, 29 Mar 2017 13:29:03 +0200
 MIME-Version: 1.0
-In-Reply-To: <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de> <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
-From: Ayyappa Ch <ayyappa.ch.linux@gmail.com>
-Date: Wed, 15 Mar 2017 12:53:46 +0530
-Message-ID: <CAPyr0yLWiGzU5ihFcj_NmA2Vk2R7GsKqo2LK8o3Eu+Df9m7vhw@mail.gmail.com>
-Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: helgaas@kernel.org, linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org, platform-driver-x86@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
+Content-Type: text/plain; charset="ISO-8859-15"
 List-ID: <linux-pci.vger.kernel.org>
 
-Is it possible on Carrizo asics? Or only supports on newer asics?
+The MSI controller in Tango supports 256 message-signaled interrupts,
+and a single doorbell address.
 
-On Mon, Mar 13, 2017 at 6:11 PM, Christian K=C3=B6nig
-<deathsimple@vodafone.de> wrote:
-> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->
-> Try to resize BAR0 to let CPU access all of VRAM.
->
-> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
-> ---
->  drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
->  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 29 ++++++++++++++++++++++++=
-+++++
->  drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 +++++---
->  drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 +++++---
->  4 files changed, 40 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/am=
-dgpu/amdgpu.h
-> index 3b81ded..905ded9 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
-> @@ -1719,6 +1719,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct amdgpu_devi=
-ce *adev, struct ttm_tt *ttm,
->                                  struct ttm_mem_reg *mem);
->  void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_mc *=
-mc, u64 base);
->  void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *m=
-c);
-> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
->  void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64 siz=
-e);
->  int amdgpu_ttm_init(struct amdgpu_device *adev);
->  void amdgpu_ttm_fini(struct amdgpu_device *adev);
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm=
-/amd/amdgpu/amdgpu_device.c
-> index 118f4e6..92955fe 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> @@ -692,6 +692,35 @@ void amdgpu_gtt_location(struct amdgpu_device *adev,=
- struct amdgpu_mc *mc)
->                         mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end);
->  }
->
-> +/**
-> + * amdgpu_resize_bar0 - try to resize BAR0
-> + *
-> + * @adev: amdgpu_device pointer
-> + *
-> + * Try to resize BAR0 to make all VRAM CPU accessible.
-> + */
-> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
-> +{
-> +       u32 size =3D max(ilog2(adev->mc.real_vram_size - 1) + 1, 20) - 20=
-;
-> +       int r;
-> +
-> +       r =3D pci_resize_resource(adev->pdev, 0, size);
-> +
-> +       if (r =3D=3D -ENOTSUPP) {
-> +               /* The hardware don't support the extension. */
-> +               return;
-> +
-> +       } else if (r =3D=3D -ENOSPC) {
-> +               DRM_INFO("Not enoigh PCI address space for a large BAR.")=
-;
-> +       } else if (r) {
-> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
-> +       }
-> +
-> +       /* Reinit the doorbell mapping, it is most likely moved as well *=
-/
-> +       amdgpu_doorbell_fini(adev);
-> +       BUG_ON(amdgpu_doorbell_init(adev));
-> +}
-> +
->  /*
->   * GPU helpers function.
->   */
-> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c b/drivers/gpu/drm/amd/=
-amdgpu/gmc_v7_0.c
-> index dc9b6d6..36a7aa5 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
-> @@ -367,13 +367,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device *a=
-dev)
->                 break;
->         }
->         adev->mc.vram_width =3D numchan * chansize;
-> -       /* Could aper size report 0 ? */
-> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->         /* size in MB on si */
->         adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 10=
-24ULL;
->         adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * =
-1024ULL;
->
-> +       if (!(adev->flags & AMD_IS_APU))
-> +               amdgpu_resize_bar0(adev);
-> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
-> +
->  #ifdef CONFIG_X86_64
->         if (adev->flags & AMD_IS_APU) {
->                 adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)) <=
-< 22;
-> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c b/drivers/gpu/drm/amd/=
-amdgpu/gmc_v8_0.c
-> index c087b00..7761ad3 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
-> @@ -459,13 +459,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device *a=
-dev)
->                 break;
->         }
->         adev->mc.vram_width =3D numchan * chansize;
-> -       /* Could aper size report 0 ? */
-> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->         /* size in MB on si */
->         adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 10=
-24ULL;
->         adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * =
-1024ULL;
->
-> +       if (!(adev->flags & AMD_IS_APU))
-> +               amdgpu_resize_bar0(adev);
-> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
-> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
-> +
->  #ifdef CONFIG_X86_64
->         if (adev->flags & AMD_IS_APU) {
->                 adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)) <=
-< 22;
-> --
-> 2.7.4
->
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+---
+Changes since v0.2
+- Support 256 MSIs instead of only 32
+- Use spinlock_t instead of struct mutex
+- Add MSI_FLAG_PCI_MSIX flag
+
+IRQs are acked in tango_msi_isr because handle_simple_irq leaves
+ack, clear, mask and unmask up to the driver. For the same reason,
+interrupt enable mask is updated from tango_irq_domain_alloc/free.
+---
+ drivers/pci/host/pcie-tango.c | 194 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 194 insertions(+)
+
+diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
+new file mode 100644
+index 000000000000..e88850983a1d
+--- /dev/null
++++ b/drivers/pci/host/pcie-tango.c
+@@ -0,0 +1,194 @@
++#include <linux/module.h>
++#include <linux/irqchip/chained_irq.h>
++#include <linux/irqdomain.h>
++#include <linux/pci-ecam.h>
++#include <linux/msi.h>
++
++#define MSI_MAX 256
++
++struct tango_pcie {
++	DECLARE_BITMAP(bitmap, MSI_MAX);
++	spinlock_t lock;
++	void __iomem *mux;
++	void __iomem *msi_status;
++	void __iomem *msi_mask;
++	phys_addr_t msi_doorbell;
++	struct irq_domain *irq_domain;
++	struct irq_domain *msi_domain;
++	int irq;
++};
++
++/*** MSI CONTROLLER SUPPORT ***/
++
++static void dispatch(struct tango_pcie *pcie, unsigned long status, int base)
++{
++	unsigned int pos, virq;
++
++	for_each_set_bit(pos, &status, 32) {
++		virq = irq_find_mapping(pcie->irq_domain, base + pos);
++		generic_handle_irq(virq);
++	}
++}
++
++static void tango_msi_isr(struct irq_desc *desc)
++{
++	u32 status;
++	struct irq_chip *chip = irq_desc_get_chip(desc);
++	struct tango_pcie *pcie = irq_desc_get_handler_data(desc);
++	unsigned int base, offset, pos = 0;
++
++	chained_irq_enter(chip, desc);
++
++	while ((pos = find_next_bit(pcie->bitmap, MSI_MAX, pos)) < MSI_MAX) {
++		base = round_down(pos, 32);
++		offset = (pos / 32) * 4;
++		status = readl_relaxed(pcie->msi_status + offset);
++		writel_relaxed(status, pcie->msi_status + offset);
++		dispatch(pcie, status, base);
++		pos = base + 32;
++	}
++
++	chained_irq_exit(chip, desc);
++}
++
++static struct irq_chip tango_msi_irq_chip = {
++	.name = "MSI",
++	.irq_mask = pci_msi_mask_irq,
++	.irq_unmask = pci_msi_unmask_irq,
++};
++
++#define USE_DEF_OPS (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS)
++
++static struct msi_domain_info msi_domain_info = {
++	.flags	= USE_DEF_OPS | MSI_FLAG_PCI_MSIX,
++	.chip	= &tango_msi_irq_chip,
++};
++
++static void tango_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
++{
++	struct tango_pcie *pcie = irq_data_get_irq_chip_data(data);
++
++	msg->address_lo = lower_32_bits(pcie->msi_doorbell);
++	msg->address_hi = upper_32_bits(pcie->msi_doorbell);
++	msg->data = data->hwirq;
++}
++
++static int tango_set_affinity(struct irq_data *irq_data,
++		const struct cpumask *mask, bool force)
++{
++	 return -EINVAL;
++}
++
++static struct irq_chip tango_msi_chip = {
++	.name			= "MSI",
++	.irq_compose_msi_msg	= tango_compose_msi_msg,
++	.irq_set_affinity	= tango_set_affinity,
++};
++
++static int find_free_msi(struct irq_domain *dom, unsigned int virq)
++{
++	u32 val;
++	struct tango_pcie *pcie = dom->host_data;
++	unsigned int offset, pos;
++
++	pos = find_first_zero_bit(pcie->bitmap, MSI_MAX);
++	if (pos >= MSI_MAX)
++		return -ENOSPC;
++
++	offset = (pos / 32) * 4;
++	val = readl_relaxed(pcie->msi_mask + offset);
++	writel_relaxed(val | BIT(pos % 32), pcie->msi_mask + offset);
++	__set_bit(pos, pcie->bitmap);
++
++	irq_domain_set_info(dom, virq, pos, &tango_msi_chip,
++			dom->host_data, handle_simple_irq, NULL, NULL);
++
++	return 0;
++}
++
++static int tango_irq_domain_alloc(struct irq_domain *dom,
++		unsigned int virq, unsigned int nr_irqs, void *args)
++{
++	int err;
++	struct tango_pcie *pcie = dom->host_data;
++
++	spin_lock(&pcie->lock);
++	err = find_free_msi(dom, virq);
++	spin_unlock(&pcie->lock);
++
++	return err;
++}
++
++static void tango_irq_domain_free(struct irq_domain *dom,
++		unsigned int virq, unsigned int nr_irqs)
++{
++	u32 val;
++	struct irq_data *d = irq_domain_get_irq_data(dom, virq);
++	struct tango_pcie *pcie = irq_data_get_irq_chip_data(d);
++	unsigned int offset, pos = d->hwirq;
++
++	spin_lock(&pcie->lock);
++
++	offset = (pos / 32) * 4;
++	val = readl_relaxed(pcie->msi_mask + offset);
++	writel_relaxed(val & ~BIT(pos % 32), pcie->msi_mask + offset);
++	__clear_bit(pos, pcie->bitmap);
++
++	spin_unlock(&pcie->lock);
++}
++
++static const struct irq_domain_ops msi_dom_ops = {
++	.alloc	= tango_irq_domain_alloc,
++	.free	= tango_irq_domain_free,
++};
++
++static int tango_msi_remove(struct platform_device *pdev)
++{
++	struct tango_pcie *msi = platform_get_drvdata(pdev);
++
++	irq_set_chained_handler_and_data(msi->irq, NULL, NULL);
++	irq_domain_remove(msi->msi_domain);
++	irq_domain_remove(msi->irq_domain);
++
++	return 0;
++}
++
++static int tango_msi_probe(struct platform_device *pdev, struct tango_pcie *pcie)
++{
++	int i, virq;
++	struct fwnode_handle *fwnode = of_node_to_fwnode(pdev->dev.of_node);
++	struct irq_domain *msi_dom, *irq_dom;
++
++	spin_lock_init(&pcie->lock);
++
++	for (i = 0; i < MSI_MAX / 32; ++i)
++		writel_relaxed(0, pcie->msi_mask + i * 4);
++
++	irq_dom = irq_domain_create_linear(fwnode, MSI_MAX, &msi_dom_ops, pcie);
++	if (!irq_dom) {
++		pr_err("Failed to create IRQ domain\n");
++		return -ENOMEM;
++	}
++
++	msi_dom = pci_msi_create_irq_domain(fwnode, &msi_domain_info, irq_dom);
++	if (!msi_dom) {
++		pr_err("Failed to create MSI domain\n");
++		irq_domain_remove(irq_dom);
++		return -ENOMEM;
++	}
++
++	virq = platform_get_irq(pdev, 1);
++	if (virq <= 0) {
++		pr_err("Failed to map IRQ\n");
++		irq_domain_remove(msi_dom);
++		irq_domain_remove(irq_dom);
++		return -ENXIO;
++	}
++
++	pcie->irq_domain = irq_dom;
++	pcie->msi_domain = msi_dom;
++	pcie->irq = virq;
++	irq_set_chained_handler_and_data(virq, tango_msi_isr, pcie);
++
++	return 0;
++}
+-- 
+2.11.0
