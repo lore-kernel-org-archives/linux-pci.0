@@ -1,165 +1,130 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Mon, 27 Mar 2017 14:25:35 +0100
-From: Juri Lelli <juri.lelli@arm.com>
-To: linux-pm@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-rt-users@vger.kernel.org
-Cc: Peter Zijlstra <peterz@infradead.org>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Vincent Guittot <vincent.guittot@linaro.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Morten Rasmussen <morten.rasmussen@arm.com>,
-        Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>,
-        Dietmar Eggemann <dietmar.eggemann@arm.com>,
-        Luca Abeni <luca.abeni@santannapisa.it>,
-        Tommaso Cucinotta <tommaso.cucinotta@sssup.it>,
-        Sudeep Holla <sudeep.holla@arm.com>, juri.lelli@arm.com,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Patrick Bellasi <patrick.bellasi@arm.com>,
-        Kevin Hilman <khilman@baylibre.com>,
-        Michael Turquette <mturquette@baylibre.com>,
-        Paolo Valente <paolo.valente@unimore.it>,
-        Claudio Scordino <claudio@evidence.eu.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Daniel Lezcano <daniel.lezcano@linaro.org>,
-        Frederic Weisbecker <fweisbec@gmail.com>
-Subject: [ANNOUNCE] OSPM-summit is on next Monday
-Message-ID: <20170327132535.GJ10289@e106622-lin>
+Return-Path: <SRS0=q2b8=3G=arm.com=robin.murphy@kernel.org>
+Return-Path: <SRS0=q2b8=3G=arm.com=robin.murphy@kernel.org>
+Subject: Re: [PATCH v3 2/2] PCI: Add tango PCIe host bridge support
+To: Mason <slash.tmp@free.fr>
+References: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
+ <65114e62-7458-b6f7-327c-f07a5096a452@sigmadesigns.com>
+ <01516ad9-e187-4bac-7c65-a7a90c576ce2@arm.com>
+ <96da696c-141a-3e8d-1fb7-2c024a295f58@free.fr>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
+ Thomas Gleixner <tglx@linutronix.de>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>, DT <devicetree@vger.kernel.org>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <84a8b26d-7d24-df29-3959-45fce880916d@arm.com>
+Date: Wed, 29 Mar 2017 15:33:44 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <96da696c-141a-3e8d-1fb7-2c024a295f58@free.fr>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 29/03/17 13:53, Mason wrote:
+> On 29/03/2017 14:19, Robin Murphy wrote:
+> 
+>> On 29/03/17 12:34, Marc Gonzalez wrote:
+>>
+>>> +	/*
+>>> +	 * QUIRK #3
+>>> +	 * Unfortunately, config and mem spaces are muxed.
+>>> +	 * Linux does not support such a setting, since drivers are free
+>>> +	 * to access mem space directly, at any time.
+>>> +	 * Therefore, we can only PRAY that config and mem space accesses
+>>> +	 * NEVER occur concurrently.
+>>> +	 */
+>>
+>> What about David's suggestion of using an IPI for safe mutual exclusion?
+> 
+> I was left with the impression that this wouldn't solve the problem.
+> If a mem space access is "in flight" on core0 when core1 starts a
+> config space access, an IPI will not prevent breakage.
+> 
+> Did I misunderstand?
+> 
+> For my education, what is the API to send an IPI?
+> And the API to handle an IPI?
 
-we are only a week away from the OSPM-summit!
+There are a few ways you could implement some custom cross-call,
+although in this case I think stop_machine() would probably be the most
+appropriate candidate. However, you're right that in general it may not
+actually help enough to be worthwhile - a DSB SY would ensure that
+in-flight transactions have at least been observed by the CPUs and any
+other coherent masters, but for any writes with a memory type allowing
+early acknowledgement (i.e. a Normal or Device mapping of a BAR) that
+doesn't necessarily correlate with them having reached their ultimate
+destination. For a PCI destination in particular, I think the normal way
+to ensure all posted writes have completed would be to read from config
+space; ah...
 
-Pack your bags (or stay tuned for the live streaming).
+>>> +	if (of_device_is_compatible(dev->of_node, "sigma,smp8759-pcie"))
+>>> +		smp8759_init(pcie, base);
+>>
+>> ...then retrieve it with of_device_get_match_data() here. No need to
+>> reinvent the wheel (or have to worry about the ordering of multiple
+>> compatibles once rev. n+1 comes around).
+> 
+> I actually asked about this on IRC. The consensus was "use what
+> best fits your use case". I need to do some processing based on
+> the revision, so I thought
+> 
+>   if (chip_x)
+> 	do_chip_x_init()
+> 
+> was a good way to express my intent. Did I misunderstand?
 
-Don't forget to subscribe to the summit mailing list to receive updates by
-either following the instructions available at the following link
-http://groups.google.com/group/ospm-summit-2017/boxsubscribe?email=<your_email>
-or sending an email to ospm-summit-2017+subscribe@googlegroups.com
+No, I'm in no way disputing that; what I'm pointing out is that you
+already have an explicitly provided way to associate a value of "chip_x"
+with a given compatible string - see other callers of
+of_device_get_match_data() for inspiration. I don't have much of an
+opinion as to whether it's an enum, a static structure of offsets and
+callbacks, or you embrace the nasal demons and just wedge the init
+function pointer in there directly (this'll never run on
+IA-64/M68k/etc., right? :P). The point is that not only is it cleaner
+and scales better as the driver grows, it stops you having to worry at
+all about setting this trap for yourself:
 
-Archives are available at https://groups.google.com/forum/#!forum/ospm-summit-2017
+	compatible = "rev3-with-extra-fun", "rev3";
+	...
 
-More information about schedule and logistics follow.
+	if (of_device_is_compatible(dev, "rev3"))
+		boring_init_without_extra_fun();	/* :( */
 
----
+because once you've made your code robust against that, you'll realise
+that what you've done is wasted your time open-coding a creaky
+approximation of of_match_device().
 
-Power Management and Scheduling in the Linux Kernel (OSPM-summit)
-April 3-4, 2017
-Scuola Superiore Sant'Anna (SSSA)
-Pisa, Italy
-http://retis.sssup.it/ospm-summit/
+Robin.
 
----
-
-.:: FOCUS
-
-Power management and scheduling techniques to reduce energy consumption while
-meeting performance and latency requirements are receiving considerable
-attention from the Linux Kernel development community. 
-
-The Power Management and Scheduling in the Linux Kernel (OSPM-summit) summit
-aims at fostering further interest and discussion to happen.
-
-.:: SCHEDULE
-
-The summit is organized to cover two days of discussions and talks.
-
-What follows is a tentative schedule, subject to last minute changes.
-Find more info and real time updates on this shared document:
-https://docs.google.com/spreadsheets/d/1B-IsUIGitvRa7ZzppEAJBMgGpIgRAAnu_OhDAGYg6SQ/edit?usp=sharing
-
-Monday (2017-04-03)
-*******************
-09:00AM - 09:30AM	Welcome and Introduction (DAY 1)
----
-09:30AM - 10:20AM	Tooling/LISA
----
-10:20AM - 11:10AM	About The Need to Power Instrument The Linux Kernel
----
-11:10AM - 11:20AM	Break
----
-11:20AM - 12:10AM	What are the latest evolutions in PELT and what next
----
-12:10AM - 01:00PM	PELT decay clamping/UTIL_EST
----
-01:00PM - 02:30PM	Lunch
----
-02:30PM - 03:20PM	EAS where we are
----	
-03:20PM - 04:10PM	Energy model/Exotic topologies
----					
-04:10PM - 04:20PM	Break
----
-04:20PM - 05:10PM	Schedtune
----					
-05:10PM - 06:00PM	SCHED_DEADLINE and reclaiming
-
-
-Tuesday (2017-04-04)
-********************
-09:00AM - 09:30AM	Welcome and Introduction (DAY 2)
----
-09:30AM - 10:20AM	Discussion about possible improvements in the schedutil governor
----
-10:20AM - 11:10AM	Schedutil for SCHED_DEADLINE
----
-11:10AM - 11:20AM	Break
----
-11:20AM - 12:10AM	Parameterizing CFS load balancing: nr_running/util/load
----					
-12:10AM - 01:00PM	Tracepoints for PELT
----
-01:00PM - 02:30PM	Lunch
----			
-02:30PM - 03:20PM	IRQ prediction
----		
-03:20PM - 04:10PM	I/O scheduling and power management with storage devices
----					
-04:10PM - 04:20PM	Break
----
-04:20PM - 05:10PM	SCHED_DEADLINE group scheduling
----					
-05:10PM - 06:00PM	A Hierarchical Scheduling Model for Dynamic Soft-Realtime Systems
----
-06:00PM - 06:30PM	Closing Remarks				
-
-We are looking into setting up live streaming of the sessions. Details
-will be soon shared through the shared doc mentioned above and the
-event mailing list.
-
-List of attendees is also available in the doc and on the event website.
-
-.:: VENUE
-
-The workshop will take place at ReTiS Lab*, Scuola Superiore Sant'Anna, Pisa,
-Italy. Pisa is a small town, walking distance from the city center to the venue
-is 20 minutes, walking distance from the airport to the city center is 30
-minutes. More details are available from the summit web page:
-http://retis.sssup.it/ospm-summit/
-
-A map of the town with venue location, points of interest and
-transportation information is available at:
-https://drive.google.com/open?id=1ANKOXr2cuZkABXskDurgrGdl_js&usp=sharing
-
-Bus from Airport to city centre takes about 10 min and costs 1.20 euros
-(2 euros if bought on board). Large bills are usually not accepted.
-
-Taxi from Airport to city centre costs 10/15 euros. Credit cards are not
-accepted.
-
-.:: ORGANIZERS (in alphabetical order)
-
-Luca Abeni (SSSA)
-Patrick Bellasi (ARM)
-Tommaso Cucinotta (SSSA)
-Dietmar Eggemann (ARM)
-Sudeep Holla (ARM)
-Juri Lelli (ARM)
-Lorenzo Pieralisi (ARM)
-Morten Rasmussen (ARM)
+> For example, the init function for rev2 currently looks like this:
+> 
+> static void rev2_init(struct tango_pcie *pcie, void __iomem *base)
+> {
+> 	void __iomem *misc_irq	= base + 0x40;
+> 	void __iomem *doorbell	= base + 0x8c;
+> 
+> 	pcie->mux		= base + 0x2c;
+> 	pcie->msi_status	= base + 0x4c;
+> 	pcie->msi_mask		= base + 0x6c;
+> 	pcie->msi_doorbell	= 0x80000000;
+> 
+> 	writel(lower_32_bits(pcie->msi_doorbell), doorbell + 0);
+> 	writel(upper_32_bits(pcie->msi_doorbell), doorbell + 4);
+> 
+> 	/* Enable legacy PCI interrupts */
+> 	writel(BIT(15), misc_irq);
+> 	writel(0xf << 4, misc_irq + 4);
+> }
+> 
+>>> +#define VENDOR_SIGMA	0x1105
+>>
+>> Should this not be in include/linux/pci_ids.h?
+> 
+> Doh! Very likely. Thanks.
+> 
+> Regards.
+> 
