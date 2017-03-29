@@ -1,60 +1,101 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54156 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755014AbdC3WA2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 30 Mar 2017 18:00:28 -0400
-Date: Thu, 30 Mar 2017 17:00:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>,
-        Robert Richter <rrichter@cavium.com>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Scott Branden <sbranden@broadcom.com>,
-        Jon Mason <jonmason@broadcom.com>
-Subject: [GIT PULL] PCI fixes for v4.11
-Message-ID: <20170330220025.GA31318@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V6 1/5] PCI/ASPM: introduce pci_aspm_init() and add to
+ pci_init_capabilities()
+Date: Wed, 29 Mar 2017 19:04:23 -0400
+Message-Id: <1490828667-30973-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1490828667-30973-1-git-send-email-okaya@codeaurora.org>
+References: <1490828667-30973-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
+ linux-arm-msm@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+ linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ Julia Lawall <Julia.Lawall@lip6.fr>, Bjorn Helgaas <bhelgaas@google.com>,
+ Rajat Jain <rajatja@google.com>, Yinghai Lu <yinghai@kernel.org>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI fixes:
+We need a callback from pci_init_capabilities function for every
+single new PCI device that is currently being added.
 
-  - fix iProc memory corruption
+pci_aspm_init() will be used to save the power on state of the HW.
 
-  - fix ThunderX usage of unregistered PNP/ACPI ID
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pcie/aspm.c | 10 ++++++++++
+ drivers/pci/probe.c     |  3 +++
+ include/linux/pci.h     |  2 ++
+ 3 files changed, 15 insertions(+)
 
-  - fix ThunderX resource reservation on early firmware
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 1dfa10c..dc36717 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -827,6 +827,16 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ }
+ 
+ /*
++ * pci_aspm_init: Initiate PCI express link state.
++ * It is called from device_add for every single pci device.
++ * @pdev: all pci devices
++ */
++int pci_aspm_init(struct pci_dev *pdev)
++{
++	return 0;
++}
++
++/*
+  * pcie_aspm_init_link_state: Initiate PCI express link state.
+  * It is called after the pcie and its children devices are scanned.
+  * @pdev: the root port or switch downstream port
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index dfc9a27..1e19364 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1847,6 +1847,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 
+ 	/* Advanced Error Reporting */
+ 	pci_aer_init(dev);
++
++	/* Active State Power Management */
++	pci_aspm_init(dev);
+ }
+ 
+ /*
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eb3da1a..8828dd7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1396,8 +1396,10 @@ static inline int pci_irq_get_node(struct pci_dev *pdev, int vec)
+ 
+ #ifdef CONFIG_PCIEASPM
+ bool pcie_aspm_support_enabled(void);
++int pci_aspm_init(struct pci_dev *pdev);
+ #else
+ static inline bool pcie_aspm_support_enabled(void) { return false; }
++static inline int pci_aspm_init(struct pci_dev *pdev) { return -ENODEV; }
+ #endif
+ 
+ #ifdef CONFIG_PCIEAER
+-- 
+1.9.1
 
 
-The following changes since commit 3bd7db63a841e8c5297bb18ad801df67d5e38ad2:
-
-  PCI/ASPM: Always set link->downstream to avoid NULL dereference on remove (2017-03-07 14:23:30 -0600)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci-v4.11-fixes-3
-
-for you to fetch changes up to 9abb27c7594a62bbf6385e20b7f5a90b4eceae2f:
-
-  PCI: thunder-pem: Add legacy firmware support for Cavium ThunderX host controller (2017-03-23 17:11:26 -0500)
-
-----------------------------------------------------------------
-pci-v4.11-fixes-3
-
-----------------------------------------------------------------
-Bjorn Helgaas (1):
-      PCI: iproc: Save host bridge window resource in struct iproc_pcie
-
-Tomasz Nowicki (2):
-      PCI: thunder-pem: Use Cavium assigned hardware ID for ThunderX host controller
-      PCI: thunder-pem: Add legacy firmware support for Cavium ThunderX host controller
-
- drivers/pci/host/pci-thunder-pem.c     | 58 ++++++++++++++++++++++++++++++++--
- drivers/pci/host/pcie-iproc-bcma.c     | 24 +++++++-------
- drivers/pci/host/pcie-iproc-platform.c | 19 +++++------
- drivers/pci/host/pcie-iproc.h          |  1 +
- 4 files changed, 78 insertions(+), 24 deletions(-)
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
