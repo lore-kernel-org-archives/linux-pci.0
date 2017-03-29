@@ -1,101 +1,84 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0088.outbound.protection.outlook.com ([104.47.41.88]:61888
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0051.outbound.protection.outlook.com ([104.47.36.51]:35936
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753553AbdCBPwK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Mar 2017 10:52:10 -0500
-Subject: [RFC PATCH v2 03/32] KVM: SVM: prepare for new bit definition in
- nested_ctl
-From: Brijesh Singh <brijesh.singh@amd.com>
-To: <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <brijesh.singh@amd.com>, <kvm@vger.kernel.org>,
-        <rkrcmar@redhat.com>, <matt@codeblueprint.co.uk>,
-        <linux-pci@vger.kernel.org>, <linus.walleij@linaro.org>,
-        <gary.hook@amd.com>, <linux-mm@kvack.org>,
-        <paul.gortmaker@windriver.com>, <hpa@zytor.com>, <cl@linux.com>,
-        <dan.j.williams@intel.com>, <aarcange@redhat.com>,
-        <sfr@canb.auug.org.au>, <andriy.shevchenko@linux.intel.com>,
-        <herbert@gondor.apana.org.au>, <bhe@redhat.com>,
-        <xemul@parallels.com>, <joro@8bytes.org>, <x86@kernel.org>,
-        <peterz@infradead.org>, <piotr.luc@intel.com>, <mingo@redhat.com>,
-        <msalter@redhat.com>, <ross.zwisler@linux.intel.com>, <bp@suse.de>,
-        <dyoung@redhat.com>, <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedoraproject.org>,
-        <tony.luck@intel.com>, <alexandre.bounine@idt.com>,
-        <kuleshovmail@gmail.com>, <linux-kernel@vger.kernel.org>,
-        <mcgrof@kernel.org>, <mst@redhat.com>,
-        <linux-crypto@vger.kernel.org>, <tj@kernel.org>,
-        <pbonzini@redhat.com>, <akpm@linux-foundation.org>,
-        <davem@davemloft.net>
-Date: Thu, 2 Mar 2017 10:12:37 -0500
-Message-ID: <148846755776.2349.6707914627128907579.stgit@brijesh-build-machine>
-In-Reply-To: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
+        id S1753496AbdC2HPr (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 29 Mar 2017 03:15:47 -0400
+From: "Nath, Arindam" <Arindam.Nath@amd.com>
+To: 'Joerg Roedel' <jroedel@suse.de>,
+        "Deucher, Alexander" <Alexander.Deucher@amd.com>
+CC: 'Joerg Roedel' <joro@8bytes.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Daniel Drake <drake@endlessm.com>
+Subject: RE: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+Date: Wed, 29 Mar 2017 07:15:42 +0000
+Message-ID: <MWHPR12MB15181A0AC24BC60C4579742D9C350@MWHPR12MB1518.namprd12.prod.outlook.com>
+References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
+ <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+ <20170328202844.GQ8329@suse.de>
+ <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+ <20170328205616.GR8329@suse.de>
+ <BN6PR12MB165289163EA3548B59D0C1ACF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
+ <20170328222627.GS8329@suse.de>
+In-Reply-To: <20170328222627.GS8329@suse.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Tom Lendacky <thomas.lendacky@amd.com>
+>-----Original Message-----
+>From: 'Joerg Roedel' [mailto:jroedel@suse.de]
+>Sent: Wednesday, March 29, 2017 3:56 AM
+>To: Deucher, Alexander
+>Cc: 'Joerg Roedel'; Bjorn Helgaas; linux-pci@vger.kernel.org; linux-
+>kernel@vger.kernel.org; Daniel Drake; Nath, Arindam
+>Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+>
+>On Tue, Mar 28, 2017 at 09:13:23PM +0000, Deucher, Alexander wrote:
+>> If I understand Arindam's patch correctly, it only flushes TLB entries
+>> for domains in the flush queue whereas the previous behavior was to
+>> flush all domains.  If there was no TLB flush in the queue for that
+>> domain, could flushing it cause a problem?
+>
+>No, that can't cause a problem. An io/tlb flush for the device is just a
+>message that the device should invalidate its own tlb. The device can't
+>know and doesn't need to know whether the page-tables it used to fill
+>the tlb really changed.
 
-Currently the nested_ctl variable in the vmcb_control_area structure is
-used to indicate nested paging support. The nested paging support field
-is actually defined as bit 0 of the field. In order to support a new
-feature flag the usage of the nested_ctl and nested paging support must
-be converted to operate on a single bit.
+Joerg, as per my limited understanding of ATS, the ATC will respond to inva=
+lidation requests after making sure there are no in-flight DMA transactions=
+ with the address requested by IOMMU to be invalidated. Now since the IOMMU=
+ was sending invalidate command to GPU even though there was no explicit pa=
+ge unmapping request from the graphics subsystem, we _might_ end up in a si=
+tuation where the ATC takes longer than the invalidation timeout to respond=
+ to IOMMU.
 
-Signed-off-by: Tom Lendacky <thomas.lendacky@amd.com>
----
- arch/x86/include/asm/svm.h |    2 ++
- arch/x86/kvm/svm.c         |    7 ++++---
- 2 files changed, 6 insertions(+), 3 deletions(-)
+With the patch I provided, since only those domains who have actually reque=
+sted for unmapping pages have been added to the flush queue, we send TLB in=
+validation commands to only those specific domains. This avoids sending inv=
+alidation command to GPU ATC every single flush.
 
-diff --git a/arch/x86/include/asm/svm.h b/arch/x86/include/asm/svm.h
-index 14824fc..2aca535 100644
---- a/arch/x86/include/asm/svm.h
-+++ b/arch/x86/include/asm/svm.h
-@@ -136,6 +136,8 @@ struct __attribute__ ((__packed__)) vmcb_control_area {
- #define SVM_VM_CR_SVM_LOCK_MASK 0x0008ULL
- #define SVM_VM_CR_SVM_DIS_MASK  0x0010ULL
- 
-+#define SVM_NESTED_CTL_NP_ENABLE	BIT(0)
-+
- struct __attribute__ ((__packed__)) vmcb_seg {
- 	u16 selector;
- 	u16 attrib;
-diff --git a/arch/x86/kvm/svm.c b/arch/x86/kvm/svm.c
-index 08a4d3a..75b0645 100644
---- a/arch/x86/kvm/svm.c
-+++ b/arch/x86/kvm/svm.c
-@@ -1246,7 +1246,7 @@ static void init_vmcb(struct vcpu_svm *svm)
- 
- 	if (npt_enabled) {
- 		/* Setup VMCB for Nested Paging */
--		control->nested_ctl = 1;
-+		control->nested_ctl |= SVM_NESTED_CTL_NP_ENABLE;
- 		clr_intercept(svm, INTERCEPT_INVLPG);
- 		clr_exception_intercept(svm, PF_VECTOR);
- 		clr_cr_intercept(svm, INTERCEPT_CR3_READ);
-@@ -2840,7 +2840,8 @@ static bool nested_vmcb_checks(struct vmcb *vmcb)
- 	if (vmcb->control.asid == 0)
- 		return false;
- 
--	if (vmcb->control.nested_ctl && !npt_enabled)
-+	if ((vmcb->control.nested_ctl & SVM_NESTED_CTL_NP_ENABLE) &&
-+	    !npt_enabled)
- 		return false;
- 
- 	return true;
-@@ -2915,7 +2916,7 @@ static bool nested_svm_vmrun(struct vcpu_svm *svm)
- 	else
- 		svm->vcpu.arch.hflags &= ~HF_HIF_MASK;
- 
--	if (nested_vmcb->control.nested_ctl) {
-+	if (nested_vmcb->control.nested_ctl & SVM_NESTED_CTL_NP_ENABLE) {
- 		kvm_mmu_unload(&svm->vcpu);
- 		svm->nested.nested_cr3 = nested_vmcb->control.nested_cr3;
- 		nested_svm_init_mmu_context(&svm->vcpu);
+I do agree that the Stoney might have some issue which causes it not to be =
+able complete the invalidation command in time since we are not observing t=
+he issue on CZ and other ASICs.
+
+Thanks,
+Arindam
+
+>
+>As it looks, the problem we are seeing here is that we are sending a
+>large amount of these requests to the GPU device, and wait for its
+>completion every time. This shouldn't be a problem for ATS devices, but
+>the GPU here seems to fail at some point and doesn't answer to the
+>invalidation request anymore, causing the completion-wait loop timeouts.
+>
+>Arindam's patch makes the high flush-frequency less likely, but it can
+>still happen, depending on how the GPU is used. So its the best to
+>keep ATS disabled on the device as it doesn't work correctly and we risk
+>running in the same problem again when we leave it enabled and just make
+>the trigger less likely.
+>
+>
+>	Joerg
