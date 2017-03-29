@@ -1,187 +1,263 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38259 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965925AbdCXRNY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 24 Mar 2017 13:13:24 -0400
-Date: Fri, 24 Mar 2017 18:12:57 +0100
-From: Borislav Petkov <bp@suse.de>
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
-        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
-        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
-        gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org, pbonzini@redhat.com,
-        akpm@linux-foundation.org, davem@davemloft.net
-Subject: Re: [RFC PATCH v2 15/32] x86: Add support for changing memory
- encryption attribute in early boot
-Message-ID: <20170324171257.lgvqcdqec3nla5nb@pd.tnic>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846772794.2349.1396854638510933455.stgit@brijesh-build-machine>
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:34778 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752196AbdC2Enn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 29 Mar 2017 00:43:43 -0400
+Received: by mail-pf0-f179.google.com with SMTP id p189so1788009pfp.1
+        for <linux-pci@vger.kernel.org>; Tue, 28 Mar 2017 21:43:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <148846772794.2349.1396854638510933455.stgit@brijesh-build-machine>
+In-Reply-To: <de6bfedf-62aa-98e4-dae5-7862ab3ba754@arm.com>
+References: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
+ <CAL_JsqLtTiH7DhqKf_x7xy1KZYQyiOreK=M90HFr=8BDW9542w@mail.gmail.com>
+ <CAMSpPPdnQdWeyTsnESRFx52gtxQLxwfPQwQgDFSN=katfW7suA@mail.gmail.com> <de6bfedf-62aa-98e4-dae5-7862ab3ba754@arm.com>
+From: Oza Oza <oza.oza@broadcom.com>
+Date: Wed, 29 Mar 2017 10:13:31 +0530
+Message-ID: <CAMSpPPd7awDB_JL0_4pY9qiSXeLt3QzpSL95XogyE9h0kgyq_A@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/3] of/pci: dma-ranges to account highest possible
+ host bridge dma_mask
+To: Robin Murphy <robin.murphy@arm.com>
+Cc: Rob Herring <robh@kernel.org>, Joerg Roedel <joro@8bytes.org>,
+        Linux IOMMU <iommu@lists.linux-foundation.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+        <linux-arm-kernel@lists.infradead.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "bcm-kernel-feedback-list@broadcom.com"
+        <bcm-kernel-feedback-list@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 02, 2017 at 10:15:28AM -0500, Brijesh Singh wrote:
-> Some KVM-specific custom MSRs shares the guest physical address with
-> hypervisor. When SEV is active, the shared physical address must be mapped
-> with encryption attribute cleared so that both hypervsior and guest can
-> access the data.
-> 
-> Add APIs to change memory encryption attribute in early boot code.
-> 
-> Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
+On Tue, Mar 28, 2017 at 7:59 PM, Robin Murphy <robin.murphy@arm.com> wrote:
+> On 28/03/17 06:27, Oza Oza wrote:
+>> On Mon, Mar 27, 2017 at 8:16 PM, Rob Herring <robh@kernel.org> wrote:
+>>> On Sat, Mar 25, 2017 at 12:31 AM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
+>>>> it is possible that PCI device supports 64-bit DMA addressing,
+>>>> and thus it's driver sets device's dma_mask to DMA_BIT_MASK(64),
+>>>> however PCI host bridge may have limitations on the inbound
+>>>> transaction addressing. As an example, consider NVME SSD device
+>>>> connected to iproc-PCIe controller.
+>>>>
+>>>> Currently, the IOMMU DMA ops only considers PCI device dma_mask
+>>>> when allocating an IOVA. This is particularly problematic on
+>>>> ARM/ARM64 SOCs where the IOMMU (i.e. SMMU) translates IOVA to
+>>>> PA for in-bound transactions only after PCI Host has forwarded
+>>>> these transactions on SOC IO bus. This means on such ARM/ARM64
+>>>> SOCs the IOVA of in-bound transactions has to honor the addressing
+>>>> restrictions of the PCI Host.
+>>>>
+>>>> current pcie frmework and of framework integration assumes dma-ranges
+>>>> in a way where memory-mapped devices define their dma-ranges.
+>>>> dma-ranges: (child-bus-address, parent-bus-address, length).
+>>>>
+>>>> but iproc based SOCs and even Rcar based SOCs has PCI world dma-ranges.
+>>>> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
+>>>
+>>> If you implement a common function, then I expect to see other users
+>>> converted to use it. There's also PCI hosts in arch/powerpc that parse
+>>> dma-ranges.
+>>
+>> the common function should be similar to what
+>> of_pci_get_host_bridge_resources is doing right now.
+>> it parses ranges property right now.
+>>
+>> the new function would look look following.
+>>
+>> of_pci_get_dma_ranges(struct device_node *dev, struct list_head *resources)
+>> where resources would return the dma-ranges.
+>>
+>> but right now if you see the patch, of_dma_configure calls the new
+>> function, which actually returns the largest possible size.
+>> so this new function has to be generic in a way where other PCI hosts
+>> can use it. but certainly iproc(Broadcom SOC) , rcar based SOCs can
+>> use it for sure.
+>>
+>> although having powerpc using it;  is a separate exercise, since I do
+>> not have any access to other PCI hosts such as powerpc. but we can
+>> workout with them on thsi forum if required.
+>>
+>> so overall, of_pci_get_dma_ranges has to serve following 2 purposes.
+>>
+>> 1) it has to return largest possible size to of_dma_configure to
+>> generate largest possible dma_mask.
+>>
+>> 2) it also has to return resources (dma-ranges) parsed, to the users.
+>>
+>> so to address above needs
+>>
+>> of_pci_get_dma_ranges(struct device_node *dev, struct list_head
+>> *resources, u64 *size)
+>>
+>> dev -> device node.
+>> resources -> dma-ranges in allocated list.
+>> size -> highest possible size to generate possible dma_mask for
+>> of_dma_configure.
+>>
+>> let em know how this sounds.
+>
+> Note that the point of passing PCI host bridges into of_dma_configure()
+> in the first place was to avoid having some separate PCI-specific path
+> for DMA configuration. I worry that introducing bus-specific dma-ranges
+> parsing largely defeats that, since we end up with the worst of both
+> worlds; effectively-duplicated code, and/or a load of extra complexity
+> to then attempt to reconverge the divergent paths (there really
+> shouldn't be any need to allocate a list of anything). Given that
+> of_translate_dma_address() is already bus-agnostic, it hardly seems
+> justifiable for its caller not to be so as well, especially when it
+> mostly just comes down to getting the right #address-cells value.
+>
+> The patch below is actually enough to make typical cases work, but is
+> vile, so I'm not seriously considering it (hence I've not bothered
+> making IOMMU configuration handle all circumstances). What it has served
+> to do, though, is give me a clear idea of how to properly sort out the
+> not-quite-right device/parent assumptions between of_dma_configure() and
+> of_dma_get_range() rather than bodging around them any further - stay tuned.
+>
+> Robin.
+>
+> ----->8-----
+> From: Robin Murphy <robin.murphy@arm.com>
+> Subject: [PATCH] of/pci: Use child node for DMA configuration
+>
+> of_dma_configure() expects to be passed an OF node representing the
+> device being configured - for PCI devices we currently pass the node of
+> the appropriate host controller, which sort of works for inherited
+> properties which may appear at any level, like "dma-coherent", but falls
+> apart for properties which actually care about specific device-parent
+> relationships, like "dma-ranges".
+>
+> Solve this by attempting to find a suitable child node if the PCI
+> hierarchy is actually represented in DT, and if not then faking one up
+> as a last resort, to make all of DMA configuration work as expected.
+>
+> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
 > ---
->  arch/x86/include/asm/mem_encrypt.h |   15 +++++++++
->  arch/x86/mm/mem_encrypt.c          |   63 ++++++++++++++++++++++++++++++++++++
->  2 files changed, 78 insertions(+)
-> 
-> diff --git a/arch/x86/include/asm/mem_encrypt.h b/arch/x86/include/asm/mem_encrypt.h
-> index 9799835..95bbe4c 100644
-> --- a/arch/x86/include/asm/mem_encrypt.h
-> +++ b/arch/x86/include/asm/mem_encrypt.h
-> @@ -47,6 +47,9 @@ void __init sme_unmap_bootdata(char *real_mode_data);
->  
->  void __init sme_early_init(void);
->  
-> +int __init early_set_memory_decrypted(void *addr, unsigned long size);
-> +int __init early_set_memory_encrypted(void *addr, unsigned long size);
-> +
->  /* Architecture __weak replacement functions */
->  void __init mem_encrypt_init(void);
->  
-> @@ -110,6 +113,18 @@ static inline void __init sme_early_init(void)
->  {
+>  drivers/iommu/of_iommu.c |  3 ++-
+>  drivers/pci/of.c         | 24 ++++++++++++++++++++++++
+>  drivers/pci/probe.c      | 14 +++++++++++++-
+>  include/linux/pci.h      |  3 +++
+>  4 files changed, 42 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index 2683e9fc0dcf..35c97b945c15 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -146,7 +146,8 @@ const struct iommu_ops *of_iommu_configure(struct
+> device *dev,
+>         int idx = 0;
+>
+>         if (dev_is_pci(dev))
+> -               return of_pci_iommu_configure(to_pci_dev(dev), master_np);
+> +               return of_pci_iommu_configure(to_pci_dev(dev),
+> +                                             of_get_next_parent(master_np));
+>
+>         /*
+>          * We don't currently walk up the tree looking for a parent IOMMU.
+> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+> index e112da11630e..96eece1c423d 100644
+> --- a/drivers/pci/of.c
+> +++ b/drivers/pci/of.c
+> @@ -88,3 +88,27 @@ struct irq_domain
+> *pci_host_bridge_of_msi_domain(struct pci_bus *bus)
+>         return NULL;
+>  #endif
 >  }
->  
-> +static inline int __init early_set_memory_decrypted(void *addr,
-> +						    unsigned long size)
+> +
+> +struct device_node *pci_dev_get_dma_of_node(struct pci_dev *dev)
 > +{
-> +	return 1;
-	^^^^^^^^
-
-return 1 when !CONFIG_AMD_MEM_ENCRYPT ?
-
-The non-early variants return 0.
-
+> +       struct device_node *np;
+> +       struct pci_bus *bus = dev->bus;
+> +
+> +       /* Is the device itself actually described in the DT? */
+> +       np = of_node_get(dev->dev.of_node);
+> +       if (np)
+> +               return np;
+> +
+> +       /* Or is some intermediate bridge? That would do... */
+> +       for (bus = dev->bus; bus->parent; bus = bus->parent) {
+> +               np = of_node_get(bus->bridge->of_node);
+> +               if (np)
+> +                       return np;
+> +       }
+> +
+> +       /* Failing that, any child of the same host bridge? */
+> +       if (bus->bridge->parent)
+> +               np = of_get_next_child(bus->bridge->parent->of_node, NULL);
+> +
+> +       return np;
 > +}
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index dfc9a2794141..4f7ade64aa3e 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -1906,7 +1906,19 @@ static void pci_dma_configure(struct pci_dev *dev)
+>
+>         if (IS_ENABLED(CONFIG_OF) &&
+>                 bridge->parent && bridge->parent->of_node) {
+> -                       of_dma_configure(&dev->dev, bridge->parent->of_node);
+> +               struct device_node *np, tmp = {0};
 > +
-> +static inline int __init early_set_memory_encrypted(void *addr,
-> +						    unsigned long size)
-> +{
-> +	return 1;
-> +}
+> +               np = pci_dev_get_dma_of_node(dev);
+> +               if (!np) {
+> +                       np = &tmp;
+> +                       of_node_set_flag(np, OF_DETACHED);
+> +                       of_node_init(np);
+> +                       tmp.parent = bridge->parent->of_node;
+> +               }
 > +
->  #define __sme_pa		__pa
->  #define __sme_pa_nodebug	__pa_nodebug
->  
-> diff --git a/arch/x86/mm/mem_encrypt.c b/arch/x86/mm/mem_encrypt.c
-> index 7df5f4c..567e0d8 100644
-> --- a/arch/x86/mm/mem_encrypt.c
-> +++ b/arch/x86/mm/mem_encrypt.c
-> @@ -15,6 +15,7 @@
->  #include <linux/mm.h>
->  #include <linux/dma-mapping.h>
->  #include <linux/swiotlb.h>
-> +#include <linux/mem_encrypt.h>
->  
->  #include <asm/tlbflush.h>
->  #include <asm/fixmap.h>
-> @@ -258,6 +259,68 @@ static void sme_free(struct device *dev, size_t size, void *vaddr,
->  	swiotlb_free_coherent(dev, size, vaddr, dma_handle);
->  }
->  
-> +static unsigned long __init get_pte_flags(unsigned long address)
-> +{
-> +	int level;
-> +	pte_t *pte;
-> +	unsigned long flags = _KERNPG_TABLE_NOENC | _PAGE_ENC;
-> +
-> +	pte = lookup_address(address, &level);
-> +	if (!pte)
-> +		return flags;
-> +
-> +	switch (level) {
-> +	case PG_LEVEL_4K:
-> +		flags = pte_flags(*pte);
-> +		break;
-> +	case PG_LEVEL_2M:
-> +		flags = pmd_flags(*(pmd_t *)pte);
-> +		break;
-> +	case PG_LEVEL_1G:
-> +		flags = pud_flags(*(pud_t *)pte);
-> +		break;
-> +	default:
-> +		break;
-> +	}
-> +
-> +	return flags;
-> +}
-> +
-> +int __init early_set_memory_enc_dec(void *vaddr, unsigned long size,
-> +				    unsigned long flags)
-> +{
-> +	unsigned long pfn, npages;
-> +	unsigned long addr = (unsigned long)vaddr & PAGE_MASK;
-> +
-> +	/* We are going to change the physical page attribute from C=1 to C=0.
-> +	 * Flush the caches to ensure that all the data with C=1 is flushed to
-> +	 * memory. Any caching of the vaddr after function returns will
-> +	 * use C=0.
-> +	 */
+> +               of_dma_configure(&dev->dev, np);
+> +               if (np != &tmp)
+> +                       of_node_put(np);
+>         } else if (has_acpi_companion(bridge)) {
+>                 struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
+>                 enum dev_dma_attr attr = acpi_get_dma_attr(adev);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index eb3da1a04e6c..94ecd1817f58 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -2086,6 +2086,7 @@ void pci_release_of_node(struct pci_dev *dev);
+>  void pci_set_bus_of_node(struct pci_bus *bus);
+>  void pci_release_bus_of_node(struct pci_bus *bus);
+>  struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus);
+> +struct device_node *pci_dev_get_dma_of_node(struct pci_dev *dev);
+>
+>  /* Arch may override this (weak) */
+>  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus);
+> @@ -2110,6 +2111,8 @@ static inline struct device_node *
+>  pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
+>  static inline struct irq_domain *
+>  pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
+> +static inline struct device_node *
+> +pci_dev_get_dma_of_node(struct pci_dev *dev) { return NULL; }
+>  #endif  /* CONFIG_OF */
+>
+>  #ifdef CONFIG_ACPI
+>
 
-Kernel comments style is:
+pci and memory mapped device world is different. of course if you talk
+from iommu perspective, all the master are same for IOMMU
+but the original intention of the patch is to try to solve 2 problems.
 
-	/*
-	 * A sentence ending with a full-stop.
-	 * Another sentence. ...
-	 * More sentences. ...
-	 */
+1) expose generic API for pci world clients to configure their
+dma-ranges. right now there is none.
+2) same API can be used by IOMMU to derive dma_mask.
 
-> +	clflush_cache_range(vaddr, size);
-> +
-> +	npages = PAGE_ALIGN(size) >> PAGE_SHIFT;
-> +	pfn = slow_virt_to_phys((void *)addr) >> PAGE_SHIFT;
-> +
-> +	return kernel_map_pages_in_pgd(init_mm.pgd, pfn, addr, npages,
-> +					flags & ~sme_me_mask);
-> +
-> +}
-> +
-> +int __init early_set_memory_decrypted(void *vaddr, unsigned long size)
-> +{
-> +	unsigned long flags = get_pte_flags((unsigned long)vaddr);
+the implementation tries to handle dma-ranges for both memory mapped
+and pci devices, which I think is overkill.
+besides we have different configuration of dma-ranges based on iommu
+is enabled or not enabled.
 
-So this does lookup_address()...
+ #define PCIE_DMA_RANGES dma-ranges = <0x43000000 0x00 0x80000000 0x00
+0x80000000 0x00 0x80000000 \
+                                      0x43000000 0x08 0x00000000 0x08
+0x00000000 0x08 0x00000000 \
+                                      0x43000000 0x80 0x00000000 0x80
+0x00000000 0x40 0x00000000>;
 
-> +	return early_set_memory_enc_dec(vaddr, size, flags & ~sme_me_mask);
 
-... and this does it too in slow_virt_to_phys(). So you do it twice per
-vaddr.
+the of_dma_get_range is written with respect to traditional memory
+ranges, they were not meant for pci dma-ranges.
 
-So why don't you define a __slow_virt_to_phys() helper - notice
-the "__" - which returns flags in its second parameter and which
-slow_virt_to_phys() calls with a NULL second parameter in the other
-cases?
-
--- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+Regards,
+Oza.
