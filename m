@@ -1,112 +1,262 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 21 Mar 2017 13:56:25 -0700
-From: jacob pan <jacob.jun.pan@intel.com>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Subject: Re: [RFC PATCH 29/30] vfio: Add support for Shared Virtual Memory
-Message-ID: <20170321135625.0000229b@intel.com>
-In-Reply-To: <d12a4a91-1fae-2fee-6109-3e9a1b7f5abe@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-30-jean-philippe.brucker@arm.com>
- <A2975661238FB949B60364EF0F2C2574390206F0@shsmsx102.ccr.corp.intel.com>
- <d12a4a91-1fae-2fee-6109-3e9a1b7f5abe@arm.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "Lan,
- Tianyu" <tianyu.lan@intel.com>, "Tian, Kevin" <kevin.tian@intel.com>, "Liu,
- Yi L" <yi.l.liu@intel.com>, Shanker Donthineni <shankerd@qti.qualcomm.com>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Harv Abdulhamid <harba@qti.qualcomm.com>,
- "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
- jacob.jun.pan@intel.com,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>, "Raj,
- Ashok" <ashok.raj@intel.com>, David Woodhouse <dwmw2@infradead.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:48462 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934867AbdC3ULt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Mar 2017 16:11:49 -0400
+From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+To: Linux Media Mailing List <linux-media@vger.kernel.org>,
+        Linux Doc Mailing List <linux-doc@vger.kernel.org>
+Cc: Mauro Carvalho Chehab <mchehab@s-opensource.com>,
+        Mauro Carvalho Chehab <mchehab@infradead.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Russell King <linux@armlinux.org.uk>,
+        James Morris <james.l.morris@oracle.com>,
+        "Serge E. Hallyn" <serge@hallyn.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Jan Kara <jack@suse.cz>, Johannes Weiner <hannes@cmpxchg.org>,
+        "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
+        Ross Zwisler <ross.zwisler@linux.intel.com>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Mel Gorman <mgorman@techsingularity.net>,
+        Michal Hocko <mhocko@suse.com>,
+        Hillf Danton <hillf.zj@alibaba-inc.com>,
+        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
+        zijun_hu <zijun_hu@htc.com>,
+        Chris Wilson <chris@chris-wilson.co.uk>,
+        Andrey Ryabinin <aryabinin@virtuozzo.com>,
+        linux-block@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-clk@vger.kernel.org, linux-mm@kvack.org,
+        linux-security-module@vger.kernel.org
+Subject: [PATCH 9/9] kernel-api.rst: fix a series of errors when parsing C files
+Date: Thu, 30 Mar 2017 17:11:36 -0300
+Message-Id: <5c39bc852b201759de4cf901f7e9ad04715285d9.1490904090.git.mchehab@s-opensource.com>
+In-Reply-To: <cover.1490904090.git.mchehab@s-opensource.com>
+References: <cover.1490904090.git.mchehab@s-opensource.com>
+In-Reply-To: <cover.1490904090.git.mchehab@s-opensource.com>
+References: <cover.1490904090.git.mchehab@s-opensource.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 21 Mar 2017 19:37:56 +0000
-Jean-Philippe Brucker <jean-philippe.brucker@arm.com> wrote:
+./lib/string.c:134: WARNING: Inline emphasis start-string without end-string.
+./mm/filemap.c:522: WARNING: Inline interpreted text or phrase reference start-string without end-string.
+./mm/filemap.c:1283: ERROR: Unexpected indentation.
+./mm/filemap.c:3003: WARNING: Inline interpreted text or phrase reference start-string without end-string.
+./mm/vmalloc.c:1544: WARNING: Inline emphasis start-string without end-string.
+./mm/page_alloc.c:4245: ERROR: Unexpected indentation.
+./ipc/util.c:676: ERROR: Unexpected indentation.
+./drivers/pci/irq.c:35: WARNING: Block quote ends without a blank line; unexpected unindent.
+./security/security.c:109: ERROR: Unexpected indentation.
+./security/security.c:110: WARNING: Definition list ends without a blank line; unexpected unindent.
+./block/genhd.c:275: WARNING: Inline strong start-string without end-string.
+./block/genhd.c:283: WARNING: Inline strong start-string without end-string.
+./include/linux/clk.h:134: WARNING: Inline emphasis start-string without end-string.
+./include/linux/clk.h:134: WARNING: Inline emphasis start-string without end-string.
+./ipc/util.c:477: ERROR: Unknown target name: "s".
 
-> > For invalidation, I've following info in in pseudo code.
-> > struct iommu_svm_tlb_invalidate_info
-> > {
-> >        __u32 inv_type;
-> > #define IOTLB_INV			(1 << 0)
-> > #define EXTENDED_IOTLB_INV		(1 << 1)
-> > #define DEVICE_IOTLB_INV		(1 << 2)
-> > #define EXTENDED_DEVICE_IOTLB_INV	(1 << 3)
-> > #define PASID_CACHE_INV		(1 << 4)
-> >        __u32 pasid;
-> >        __u64 addr;
-> >        __u64 size;
-> >        __u8 granularity;
-> > #define DEFAULT_INV_GRN        0
-> > #define PAGE_SELECTIVE_INV     (1 << 0)
-> > #define PASID_SELECVIVE_INV    (1 << 1)
-> >        __u64 flags;
-> > #define INVALIDATE_HINT_BIT    (1 << 0)
-> > #define GLOBAL_HINT_BIT        (1 << 1)
-> > #define DRAIN_READ_BIT         (1 << 2)
-> > #define DRAIN_WRITE_BIT        (1 << 3)
-> > #define DEVICE_TLB_GLOBAL_BIT  (1 << 4)
-> >        __u8 mip;
-> >        __u16 pfsid;
-> > };  
-> 
-> This would also benefit from being split into generic and
-> architectural parts. Former would be defined in VFIO, latter would be
-> in the IOMMU driver.
-> 
-> struct tlb_invalidate_info
-> {
-> 	__u8 granularity
-> #define DEFAULT_INV_GRN		0	/* What is default? */
-> #define PAGE_SELECTIVE_INV	(1 << 0)
-> #define PASID_SELECTIVE_INV	(1 << 1)
-> 	__u32 pasid;
-> 	__u64 addr;
-> 	__u64 size;
-> 
-> 	/* Since IOMMU format has already been validated for this
-> table, the IOMMU driver knows that the following structure is in a
-> 	   format it knows */
-> 	__u8 opaque[];
-> };
-> 
-> struct tlb_invalidate_info_intel
-> {
-> 	__u32 inv_type;
-> 	...
-> 	__u64 flags;
-> 	...
-> 	__u8 mip;
-> 	__u16 pfsid;
-> };
+Signed-off-by: Mauro Carvalho Chehab <mchehab@s-opensource.com>
+---
+ block/genhd.c       |  7 ++++---
+ drivers/pci/irq.c   |  2 +-
+ include/linux/clk.h |  4 ++--
+ ipc/util.c          | 12 +++++++-----
+ lib/string.c        |  2 +-
+ mm/filemap.c        | 18 ++++++++++--------
+ mm/page_alloc.c     |  3 ++-
+ mm/vmalloc.c        |  2 +-
+ security/security.c | 12 ++++++++----
+ 9 files changed, 36 insertions(+), 26 deletions(-)
 
-I presume for Intel/arch specific part, the opaque data can simply be
-the descriptor itself. i.e. struct qi_desc. There is no need to
-generalize since it has already been validated to be architecture
-specific data.
-
-Arch specific IOMMU driver can take further action on the opaque data,
-e.g. replace guest DID with host DID based on other info passed down
-from the caller.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/block/genhd.c b/block/genhd.c
+index b26a5ea115d0..a53bfd19a0ec 100644
+--- a/block/genhd.c
++++ b/block/genhd.c
+@@ -271,16 +271,17 @@ void blkdev_show(struct seq_file *seqf, off_t offset)
+ /**
+  * register_blkdev - register a new block device
+  *
+- * @major: the requested major device number [1..255]. If @major=0, try to
++ * @major: the requested major device number [1..255]. If @major = 0, try to
+  *         allocate any unused major number.
+  * @name: the name of the new block device as a zero terminated string
+  *
+  * The @name must be unique within the system.
+  *
+- * The return value depends on the @major input parameter.
++ * The return value depends on the @major input parameter:
++ *
+  *  - if a major device number was requested in range [1..255] then the
+  *    function returns zero on success, or a negative error code
+- *  - if any unused major number was requested with @major=0 parameter
++ *  - if any unused major number was requested with @major = 0 parameter
+  *    then the return value is the allocated major number in range
+  *    [1..255] or a negative error code otherwise
+  */
+diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
+index 6684f153ab57..f9f2a0324ecc 100644
+--- a/drivers/pci/irq.c
++++ b/drivers/pci/irq.c
+@@ -31,7 +31,7 @@ static void pci_note_irq_problem(struct pci_dev *pdev, const char *reason)
+  * driver).
+  *
+  * Returns:
+- *  a suggestion for fixing it (although the driver is not required to
++ * a suggestion for fixing it (although the driver is not required to
+  * act on this).
+  */
+ enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *pdev)
+diff --git a/include/linux/clk.h b/include/linux/clk.h
+index e9d36b3e49de..024cd07870d0 100644
+--- a/include/linux/clk.h
++++ b/include/linux/clk.h
+@@ -132,8 +132,8 @@ int clk_get_phase(struct clk *clk);
+  * @q: clk compared against p
+  *
+  * Returns true if the two struct clk pointers both point to the same hardware
+- * clock node. Put differently, returns true if struct clk *p and struct clk *q
+- * share the same struct clk_core object.
++ * clock node. Put differently, returns true if @p and @q
++ * share the same &struct clk_core object.
+  *
+  * Returns false otherwise. Note that two NULL clks are treated as matching.
+  */
+diff --git a/ipc/util.c b/ipc/util.c
+index 798cad18dd87..3459a16a9df9 100644
+--- a/ipc/util.c
++++ b/ipc/util.c
+@@ -474,7 +474,7 @@ void ipc_rcu_free(struct rcu_head *head)
+  * Check user, group, other permissions for access
+  * to ipc resources. return 0 if allowed
+  *
+- * @flag will most probably be 0 or S_...UGO from <linux/stat.h>
++ * @flag will most probably be 0 or ``S_...UGO`` from <linux/stat.h>
+  */
+ int ipcperms(struct ipc_namespace *ns, struct kern_ipc_perm *ipcp, short flag)
+ {
+@@ -672,10 +672,12 @@ int ipc_update_perm(struct ipc64_perm *in, struct kern_ipc_perm *out)
+  *
+  * This function does some common audit and permissions check for some IPC_XXX
+  * cmd and is called from semctl_down, shmctl_down and msgctl_down.
+- * It must be called without any lock held and
+- *  - retrieves the ipc with the given id in the given table.
+- *  - performs some audit and permission check, depending on the given cmd
+- *  - returns a pointer to the ipc object or otherwise, the corresponding error.
++ * It must be called without any lock held and:
++ *
++ *   - retrieves the ipc with the given id in the given table.
++ *   - performs some audit and permission check, depending on the given cmd
++ *   - returns a pointer to the ipc object or otherwise, the corresponding
++ *     error.
+  *
+  * Call holding the both the rwsem and the rcu read lock.
+  */
+diff --git a/lib/string.c b/lib/string.c
+index ed83562a53ae..b5c9a1168d3a 100644
+--- a/lib/string.c
++++ b/lib/string.c
+@@ -131,7 +131,7 @@ EXPORT_SYMBOL(strncpy);
+  * @src: Where to copy the string from
+  * @size: size of destination buffer
+  *
+- * Compatible with *BSD: the result is always a valid
++ * Compatible with ``*BSD``: the result is always a valid
+  * NUL-terminated string that fits in the buffer (unless,
+  * of course, the buffer size is zero). It does not pad
+  * out the result like strncpy() does.
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 1694623a6289..c5808b7a5fb1 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -519,7 +519,7 @@ EXPORT_SYMBOL(filemap_write_and_wait);
+  *
+  * Write out and wait upon file offsets lstart->lend, inclusive.
+  *
+- * Note that `lend' is inclusive (describes the last byte to be written) so
++ * Note that @lend is inclusive (describes the last byte to be written) so
+  * that this function can be used to write to the very end-of-file (end = -1).
+  */
+ int filemap_write_and_wait_range(struct address_space *mapping,
+@@ -1277,12 +1277,14 @@ EXPORT_SYMBOL(find_lock_entry);
+  *
+  * PCG flags modify how the page is returned.
+  *
+- * FGP_ACCESSED: the page will be marked accessed
+- * FGP_LOCK: Page is return locked
+- * FGP_CREAT: If page is not present then a new page is allocated using
+- *		@gfp_mask and added to the page cache and the VM's LRU
+- *		list. The page is returned locked and with an increased
+- *		refcount. Otherwise, %NULL is returned.
++ * @fgp_flags can be:
++ *
++ * - FGP_ACCESSED: the page will be marked accessed
++ * - FGP_LOCK: Page is return locked
++ * - FGP_CREAT: If page is not present then a new page is allocated using
++ *   @gfp_mask and added to the page cache and the VM's LRU
++ *   list. The page is returned locked and with an increased
++ *   refcount. Otherwise, NULL is returned.
+  *
+  * If FGP_LOCK or FGP_CREAT are specified then the function may sleep even
+  * if the GFP flags specified for FGP_CREAT are atomic.
+@@ -3001,7 +3003,7 @@ EXPORT_SYMBOL(generic_file_write_iter);
+  * @gfp_mask: memory allocation flags (and I/O mode)
+  *
+  * The address_space is to try to release any data against the page
+- * (presumably at page->private).  If the release was successful, return `1'.
++ * (presumably at page->private).  If the release was successful, return '1'.
+  * Otherwise return zero.
+  *
+  * This may also be called if PG_fscache is set on a page, indicating that the
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index eaa64d2ffdc5..c1b68edaf106 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -4242,7 +4242,8 @@ EXPORT_SYMBOL(free_pages_exact);
+  * nr_free_zone_pages() counts the number of counts pages which are beyond the
+  * high watermark within all zones at or below a given zone index.  For each
+  * zone, the number of pages is calculated as:
+- *     managed_pages - high_pages
++ *
++ *     nr_free_zone_pages = managed_pages - high_pages
+  */
+ static unsigned long nr_free_zone_pages(int offset)
+ {
+diff --git a/mm/vmalloc.c b/mm/vmalloc.c
+index b4024d688f38..c24db06f15c4 100644
+--- a/mm/vmalloc.c
++++ b/mm/vmalloc.c
+@@ -1540,7 +1540,7 @@ void vfree_atomic(const void *addr)
+  *	have CONFIG_ARCH_HAVE_NMI_SAFE_CMPXCHG, but making the calling
+  *	conventions for vfree() arch-depenedent would be a really bad idea)
+  *
+- *	NOTE: assumes that the object at *addr has a size >= sizeof(llist_node)
++ *	NOTE: assumes that the object at @addr has a size >= sizeof(llist_node)
+  */
+ void vfree(const void *addr)
+ {
+diff --git a/security/security.c b/security/security.c
+index d0e07f269b2d..23555c5504f6 100644
+--- a/security/security.c
++++ b/security/security.c
+@@ -103,10 +103,14 @@ static int lsm_append(char *new, char **result)
+  * to avoid security registration races. This method may also be used
+  * to check if your LSM is currently loaded during kernel initialization.
+  *
+- * Return true if:
+- *	-The passed LSM is the one chosen by user at boot time,
+- *	-or the passed LSM is configured as the default and the user did not
+- *	 choose an alternate LSM at boot time.
++ * Returns:
++ *
++ * true if:
++ *
++ * - The passed LSM is the one chosen by user at boot time,
++ * - or the passed LSM is configured as the default and the user did not
++ *   choose an alternate LSM at boot time.
++ *
+  * Otherwise, return false.
+  */
+ int __init security_module_enable(const char *module)
+-- 
+2.9.3
