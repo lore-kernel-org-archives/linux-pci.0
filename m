@@ -1,155 +1,95 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33056 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751593AbdCCVLp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 3 Mar 2017 16:11:45 -0500
-Date: Fri, 3 Mar 2017 15:11:40 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Shanker Donthineni <shankerd@qti.qualcomm.com>,
-        kvm@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Sinan Kaya <okaya@qti.qualcomm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        iommu@lists.linux-foundation.org,
-        Harv Abdulhamid <harba@qti.qualcomm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        linux-arm-kernel@lists.infradead.org,
-        Nate Watterson <nwatters@qti.qualcomm.com>
-Subject: Re: [RFC PATCH 18/30] PCI: Make "PRG Response PASID Required"
- handling common
-Message-ID: <20170303211140.GC31767@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-19-jean-philippe.brucker@arm.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] ACPI / scan: Prefer devices without _HID/_CID for _ADR matching
+Date: Thu, 30 Mar 2017 22:56:36 +0200
+Message-ID: <1816647.tOAZ7v3nRx@aspire.rjw.lan>
+In-Reply-To: <651067e1-e87f-6dba-0b99-c158655d2086@redhat.com>
+References: <20161225102148.7706-1-hdegoede@redhat.com> <2022116.4lq1KAmrJA@aspire.rjw.lan> <651067e1-e87f-6dba-0b99-c158655d2086@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170227195441.5170-19-jean-philippe.brucker@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Feb 27, 2017 at 07:54:29PM +0000, Jean-Philippe Brucker wrote:
-> The PASID ECN to the PCIe spec added a bit in the PRI status register that
-> allows a Function to declare whether a PRG Response should contain the
-> PASID prefix or not.
+On Sunday, January 01, 2017 09:30:06 PM Hans de Goede wrote:
+> Hi,
 > 
-> Move the helper that accesses it from amd_iommu into the PCI subsystem,
-> renaming it to something more consistent with the spec, and introducing
-> another obscure acronym to make it all fit.
-
-Maybe mention the acronym itelf and spell it out here?
-
-> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
->  drivers/iommu/amd_iommu.c     | 19 +------------------
->  drivers/pci/ats.c             | 17 +++++++++++++++++
->  include/linux/pci-ats.h       |  8 ++++++++
->  include/uapi/linux/pci_regs.h |  1 +
->  4 files changed, 27 insertions(+), 18 deletions(-)
+> On 30-12-16 02:27, Rafael J. Wysocki wrote:
+> > From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >
+> > The way acpi_find_child_device() works currently is that, if there
+> > are two (or more) devices with the same _ADR value in the same
+> > namespace scope (which is not specifically allowed by the spec and
+> > the OS behavior in that case is not defined), the first one of them
+> > found to be present (with the help of _STA) will be returned.
+> >
+> > This covers the majority of cases, but is not sufficient if some of
+> > the devices in question have a _HID (or _CID) returning some valid
+> > ACPI/PNP device IDs (which is disallowed by the spec) and the
+> > ASL writers' expectation appears to be that the OS will match
+> > devices without a valid ACPI/PNP device ID against a given bus
+> > address first.
+> >
+> > To cover this special case as well, modify find_child_checks()
+> > to prefer devices without ACPI/PNP device IDs over devices that
+> > have them.
+> >
+> > Suggested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > ---
+> >
+> > I'm not actually sure if this is sufficient to fix the original 80860F14 uid "2"
+> > sd-controller problem on CherryTrail.  Hans, can you please check?
 > 
-> diff --git a/drivers/iommu/amd_iommu.c b/drivers/iommu/amd_iommu.c
-> index 98940d1392cb..c5c598bf4ba3 100644
-> --- a/drivers/iommu/amd_iommu.c
-> +++ b/drivers/iommu/amd_iommu.c
-> @@ -2024,23 +2024,6 @@ static int pdev_iommuv2_enable(struct pci_dev *pdev)
->  	return ret;
->  }
->  
-> -/* FIXME: Move this to PCI code */
-> -#define PCI_PRI_TLP_OFF		(1 << 15)
-> -
-> -static bool pci_pri_tlp_required(struct pci_dev *pdev)
-> -{
-> -	u16 status;
-> -	int pos;
-> -
-> -	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
-> -	if (!pos)
-> -		return false;
-> -
-> -	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
-> -
-> -	return (status & PCI_PRI_TLP_OFF) ? true : false;
-> -}
-> -
->  /*
->   * If a device is not yet associated with a domain, this function
->   * assigns it visible for the hardware
-> @@ -2069,7 +2052,7 @@ static int attach_device(struct device *dev,
->  
->  			dev_data->ats.enabled = true;
->  			dev_data->ats.qdep    = pci_ats_queue_depth(pdev);
-> -			dev_data->pri_tlp     = pci_pri_tlp_required(pdev);
-> +			dev_data->pri_tlp     = pci_prg_resp_requires_prefix(pdev);
->  		}
->  	} else if (amd_iommu_iotlb_sup &&
->  		   pci_enable_ats(pdev, PAGE_SHIFT) == 0) {
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index eeb9fb2b47aa..331376e9bb8b 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -334,3 +334,20 @@ int pci_max_pasids(struct pci_dev *pdev)
->  }
->  EXPORT_SYMBOL_GPL(pci_max_pasids);
->  #endif /* CONFIG_PCI_PASID */
-> +
-> +#if defined(CONFIG_PCI_PASID) && defined(CONFIG_PCI_PRI)
-> +bool pci_prg_resp_requires_prefix(struct pci_dev *pdev)
-> +{
-> +	u16 status;
-> +	int pos;
-> +
-> +	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
-> +	if (!pos)
-> +		return false;
-> +
-> +	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
-> +
-> +	return !!(status & PCI_PRI_STATUS_PRPR);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_prg_resp_requires_prefix);
-> +#endif /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
-> diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
-> index 57e0b8250947..e21bcacbe80c 100644
-> --- a/include/linux/pci-ats.h
-> +++ b/include/linux/pci-ats.h
-> @@ -57,5 +57,13 @@ static inline int pci_max_pasids(struct pci_dev *pdev)
->  
->  #endif /* CONFIG_PCI_PASID */
->  
-> +#if defined(CONFIG_PCI_PASID) && defined(CONFIG_PCI_PRI)
-> +bool pci_prg_resp_requires_prefix(struct pci_dev *pdev);
-> +#else
-> +static inline bool pci_prg_resp_requires_prefix(struct pci_dev *pdev)
-> +{
-> +	return false;
-> +}
-> +#endif /* CONFIG_PCI_PASID && CONFIG_PCI_PRI */
->  
->  #endif /* LINUX_PCI_ATS_H*/
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 634c9c44ed6c..bae815876be6 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -864,6 +864,7 @@
->  #define  PCI_PRI_STATUS_RF	0x001	/* Response Failure */
->  #define  PCI_PRI_STATUS_UPRGI	0x002	/* Unexpected PRG index */
->  #define  PCI_PRI_STATUS_STOPPED	0x100	/* PRI Stopped */
-> +#define  PCI_PRI_STATUS_PRPR	0x8000	/* PRG Response requires PASID prefix */
->  #define PCI_PRI_MAX_REQ		0x08	/* PRI max reqs supported */
->  #define PCI_PRI_ALLOC_REQ	0x0c	/* PRI max reqs allowed */
->  #define PCI_EXT_CAP_PRI_SIZEOF	16
-> -- 
-> 2.11.0
+> Ok, just booted a kernel with this patch replacing my own attempt
+> at fixing this, and the kernel still sees and initializes the
+> mmc controller in question correctly with this patch:
 > 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Tested-by: Hans de Goede <hdegoede@redhat.com>
+
+Unfortunately, this breaks discrete graphics enumeration in
+
+https://bugzilla.kernel.org/show_bug.cgi?id=194889
+
+so can you please check if the patch below doesn't break the platform fixed by
+the above?
+
+Thanks,
+Rafael
+
+
+---
+ drivers/acpi/glue.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+Index: linux-pm/drivers/acpi/glue.c
+===================================================================
+--- linux-pm.orig/drivers/acpi/glue.c
++++ linux-pm/drivers/acpi/glue.c
+@@ -99,13 +99,13 @@ static int find_child_checks(struct acpi
+ 		return -ENODEV;
+ 
+ 	/*
+-	 * If the device has a _HID (or _CID) returning a valid ACPI/PNP
+-	 * device ID, it is better to make it look less attractive here, so that
+-	 * the other device with the same _ADR value (that may not have a valid
+-	 * device ID) can be matched going forward.  [This means a second spec
+-	 * violation in a row, so whatever we do here is best effort anyway.]
++	 * If the device has a _HID returning a valid ACPI/PNP device ID, it is
++	 * better to make it look less attractive here, so that the other device
++	 * with the same _ADR value (that may not have a valid device ID) can be
++	 * matched going forward.  [This means a second spec violation in a row,
++	 * so whatever we do here is best effort anyway.]
+ 	 */
+-	return sta_present && list_empty(&adev->pnp.ids) ?
++	return sta_present && !adev->pnp.type.platform_id ?
+ 			FIND_CHILD_MAX_SCORE : FIND_CHILD_MIN_SCORE;
+ }
+ 
+
