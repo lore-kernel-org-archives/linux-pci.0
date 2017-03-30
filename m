@@ -1,108 +1,63 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 7 Mar 2017 10:50:05 +0200
-From: Sakari Ailus <sakari.ailus@iki.fi>
-To: Elena Reshetova <elena.reshetova@intel.com>
-Cc: gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
-        xen-devel@lists.xenproject.org, netdev@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-media@vger.kernel.org, devel@linuxdriverproject.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org,
-        open-iscsi@googlegroups.com, devel@driverdev.osuosl.org,
-        target-devel@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-usb@vger.kernel.org, peterz@infradead.org,
-        Hans Liljestrand <ishkamiel@gmail.com>,
-        Kees Cook <keescook@chromium.org>,
-        David Windsor <dwindsor@gmail.com>
-Subject: Re: [PATCH 13/29] drivers, media: convert
- vb2_vmarea_handler.refcount from atomic_t to refcount_t
-Message-ID: <20170307085005.GH3220@valkosipuli.retiisi.org.uk>
-References: <1488810076-3754-1-git-send-email-elena.reshetova@intel.com>
- <1488810076-3754-14-git-send-email-elena.reshetova@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 30 Mar 2017 11:05:32 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+Message-ID: <20170330100524.GA22801@red-moon>
+References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
+ <20170322193111.GA8190@wunner.de>
+ <CAKv+Gu_X-SEnz7h9J8boqqjOQGHQawwdSAq4haH-OGu8zdfNfA@mail.gmail.com>
+ <20170323084819.GA23281@h08.hostsharing.net>
+ <CAKv+Gu93eJ-js3g7M6Jdm6XGMaWMswFmzBG2qNT4rn+3=1+EyA@mail.gmail.com>
+ <20170323105727.GA2441@red-moon>
+ <466dcd2b-a781-2fe7-6ef0-5a3767c793e0@codeaurora.org>
+ <CAKv+Gu9LbwpnJNi1OL25MWvYPxEOfKRHcs2jA2121BPaQWPzow@mail.gmail.com>
+ <27f50de3-721e-e8ec-00c8-b7a9d3cff0d6@codeaurora.org>
+ <CAKv+Gu-qRg8-YRCairppKrEfeLcW+OwVF8qZHp7vxXJA_AwPOw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1488810076-3754-14-git-send-email-elena.reshetova@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAKv+Gu-qRg8-YRCairppKrEfeLcW+OwVF8qZHp7vxXJA_AwPOw@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+ Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
+ Peter Jones <pjones@redhat.com>, Sinan Kaya <okaya@codeaurora.org>,
+ Heyi Guo <heyi.guo@linaro.org>, Lukas Wunner <lukas@wunner.de>,
+ Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Yinghai Lu <yinghai@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Elena,
+On Thu, Mar 30, 2017 at 09:46:39AM +0100, Ard Biesheuvel wrote:
 
-On Mon, Mar 06, 2017 at 04:21:00PM +0200, Elena Reshetova wrote:
-> refcount_t type and corresponding API should be
-> used instead of atomic_t when the variable is used as
-> a reference counter. This allows to avoid accidental
-> refcounter overflows that might lead to use-after-free
-> situations.
+[...]
+
+> > I'm asking why we don't fix the actual problem in PCIe ARM64 adaptation instead
+> > of working around it by quirks.
+> >
+> > I don't see any reason why ACPI ARM64 should carry the burden of legacy systems.
+> >
+> > Legacy only applies to DT based systems.
+> >
 > 
-> Signed-off-by: Elena Reshetova <elena.reshetova@intel.com>
-> Signed-off-by: Hans Liljestrand <ishkamiel@gmail.com>
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Signed-off-by: David Windsor <dwindsor@gmail.com>
-> ---
->  drivers/media/v4l2-core/videobuf2-memops.c | 6 +++---
->  include/media/videobuf2-memops.h           | 3 ++-
->  2 files changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/media/v4l2-core/videobuf2-memops.c b/drivers/media/v4l2-core/videobuf2-memops.c
-> index 1cd322e..4bb8424 100644
-> --- a/drivers/media/v4l2-core/videobuf2-memops.c
-> +++ b/drivers/media/v4l2-core/videobuf2-memops.c
-> @@ -96,10 +96,10 @@ static void vb2_common_vm_open(struct vm_area_struct *vma)
->  	struct vb2_vmarea_handler *h = vma->vm_private_data;
->  
->  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
-> -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
-> +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
->  	       vma->vm_end);
->  
-> -	atomic_inc(h->refcount);
-> +	refcount_inc(h->refcount);
->  }
->  
->  /**
-> @@ -114,7 +114,7 @@ static void vb2_common_vm_close(struct vm_area_struct *vma)
->  	struct vb2_vmarea_handler *h = vma->vm_private_data;
->  
->  	pr_debug("%s: %p, refcount: %d, vma: %08lx-%08lx\n",
-> -	       __func__, h, atomic_read(h->refcount), vma->vm_start,
-> +	       __func__, h, refcount_read(h->refcount), vma->vm_start,
->  	       vma->vm_end);
->  
->  	h->put(h->arg);
-> diff --git a/include/media/videobuf2-memops.h b/include/media/videobuf2-memops.h
-> index 36565c7a..a6ed091 100644
-> --- a/include/media/videobuf2-memops.h
-> +++ b/include/media/videobuf2-memops.h
-> @@ -16,6 +16,7 @@
->  
->  #include <media/videobuf2-v4l2.h>
->  #include <linux/mm.h>
-> +#include <linux/refcount.h>
->  
->  /**
->   * struct vb2_vmarea_handler - common vma refcount tracking handler
-> @@ -25,7 +26,7 @@
->   * @arg:	argument for @put callback
->   */
->  struct vb2_vmarea_handler {
-> -	atomic_t		*refcount;
-> +	refcount_t		*refcount;
+> I fully agree with this point: ACPI implies firmware, and so we should
+> be able to rely on firmware to have initialized the PCIe subsystem by
+> the time the kernel gets to access it.
 
-This is a pointer to refcount, not refcount itself. The refcount is part of
-a memory type specific struct, the types that you change in the following
-three patches. I guess it would still compile and work as separate patches
-but you'd sure get warnings at least.
+https://lkml.org/lkml/2016/3/3/458
 
-How about merging this and the three following patches that change the memop
-refcount types?
+Lorenzo
 
->  	void			(*put)(void *arg);
->  	void			*arg;
->  };
-
--- 
-Kind regards,
-
-Sakari Ailus
-e-mail: sakari.ailus@iki.fi	XMPP: sailus@retiisi.org.uk
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
