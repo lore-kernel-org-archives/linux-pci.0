@@ -1,92 +1,108 @@
-Return-Path: <SRS0=h9nn=2R=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=h9nn=2R=free.fr=slash.tmp@kernel.org>
-Subject: Re: Neophyte questions about PCIe
-From: Mason <slash.tmp@free.fr>
-To: linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>, Arnd Bergmann
- <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
- David Laight <david.laight@aculab.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Marc Zyngier <marc.zyngier@arm.com>, Shawn Lin <shawn.lin@rock-chips.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
-Message-ID: <0cd311b9-b621-432d-f95f-fafc5016bce0@free.fr>
-Date: Wed, 8 Mar 2017 14:39:09 +0100
-MIME-Version: 1.0
-In-Reply-To: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
-Content-Type: text/plain; charset=ISO-8859-15
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 30 Mar 2017 16:12:31 -0600
+Message-Id: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+Subject: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 07/03/2017 23:45, Mason wrote:
+Hello,
 
-> 3) What happens if a device requires more than 256 MB of
-> mem space? (Is that common? What kind of device? GPUs?)
-> Our controller supports a remapping "facility" to add an
-> offset to the bus address. Is such a feature supported
-> by Linux at all?  The problem is that this creates
-> another race condition, as setting the offset register
-> before an access may occur concurrently on two cores.
-> Perhaps 256 MB is plenty on a 32-bit embedded device?
+As discussed at LSF/MM we'd like to present our work to enable
+copy offload support in NVMe fabrics RDMA targets. We'd appreciate
+some review and feedback from the community on our direction.
+This series is not intended to go upstream at this point.
 
-I was told that Linux does not support this kind of "dynamic remapping",
-because access to PCI memory region is not handled through a call-back;
-the driver just calls readl/writel directly on the pointer.
+The concept here is to use memory that's exposed on a PCI BAR as
+data buffers in the NVME target code such that data can be transferred
+from an RDMA NIC to the special memory and then directly to an NVMe
+device avoiding system memory entirely. The upside of this is better
+QoS for applications running on the CPU utilizing memory and lower
+PCI bandwidth required to the CPU (such that systems could be designed
+with fewer lanes connected to the CPU). However, presently, the trade-off
+is currently a reduction in overall throughput. (Largely due to hardware
+issues that would certainly improve in the future).
 
-"We expect that any device we map into the address space is reachable
-through static page table entries set up by ioremap() or pci_iomap()."
+Due to these trade-offs we've designed the system to only enable using
+the PCI memory in cases where the NIC, NVMe devices and memory are all
+behind the same PCI switch. This will mean many setups that could likely
+work well will not be supported so that we can be more confident it
+will work and not place any responsibility on the user to understand
+their topology. (We've chosen to go this route based on feedback we
+received at LSF).
+
+In order to enable this functionality we introduce a new p2pmem device
+which can be instantiated by PCI drivers. The device will register some
+PCI memory as ZONE_DEVICE and provide an genalloc based allocator for
+users of these devices to get buffers. We give an example of enabling
+p2p memory with the cxgb4 driver, however currently these devices have
+some hardware issues that prevent their use so we will likely be
+dropping this patch in the future. Ideally, we'd want to enable this
+functionality with NVME CMB buffers, however we don't have any hardware
+with this feature at this time.
+
+In nvmet-rdma, we attempt to get an appropriate p2pmem device at
+queue creation time and if a suitable one is found we will use it for
+all the (non-inlined) memory in the queue. An 'allow_p2pmem' configfs
+attribute is also created which is required to be set before any p2pmem
+is attempted.
+
+This patchset also includes a more controversial patch which provides an
+interface for userspace to obtain p2pmem buffers through an mmap call on
+a cdev. This enables userspace to fairly easily use p2pmem with RDMA and
+O_DIRECT interfaces. However, the user would be entirely responsible for
+knowing what their doing and inspecting sysfs to understand the pci
+topology and only using it in sane situations.
+
+Thanks,
+
+Logan
 
 
-On a related subject, I asked about the max size of I/O space.
+Logan Gunthorpe (6):
+  Introduce Peer-to-Peer memory (p2pmem) device
+  nvmet: Use p2pmem in nvme target
+  scatterlist: Modify SG copy functions to support io memory.
+  nvmet: Be careful about using iomem accesses when dealing with p2pmem
+  p2pmem: Support device removal
+  p2pmem: Added char device user interface
 
-/**
- *	pci_remap_iospace - Remap the memory mapped I/O space
- *	@res: Resource describing the I/O space
- *	@phys_addr: physical address of range to be mapped
- *
- *	Remap the memory mapped I/O space described by the @res
- *	and the CPU physical address @phys_addr into virtual address space.
- *	Only architectures that have memory mapped IO functions defined
- *	(and the PCI_IOBASE value defined) should call this function.
- */
-int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-{
-#if defined(PCI_IOBASE) && defined(CONFIG_MMU)
-	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
+Steve Wise (2):
+  cxgb4: setup pcie memory window 4 and create p2pmem region
+  p2pmem: Add debugfs "stats" file
 
-	if (!(res->flags & IORESOURCE_IO))
-		return -EINVAL;
+ drivers/memory/Kconfig                          |   5 +
+ drivers/memory/Makefile                         |   2 +
+ drivers/memory/p2pmem.c                         | 697 ++++++++++++++++++++++++
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4.h      |   3 +
+ drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c |  97 +++-
+ drivers/net/ethernet/chelsio/cxgb4/t4_regs.h    |   5 +
+ drivers/nvme/target/configfs.c                  |  31 ++
+ drivers/nvme/target/core.c                      |  18 +-
+ drivers/nvme/target/fabrics-cmd.c               |  28 +-
+ drivers/nvme/target/nvmet.h                     |   2 +
+ drivers/nvme/target/rdma.c                      | 183 +++++--
+ drivers/scsi/scsi_debug.c                       |   7 +-
+ include/linux/p2pmem.h                          | 120 ++++
+ include/linux/scatterlist.h                     |   7 +-
+ lib/scatterlist.c                               |  64 ++-
+ 15 files changed, 1189 insertions(+), 80 deletions(-)
+ create mode 100644 drivers/memory/p2pmem.c
+ create mode 100644 include/linux/p2pmem.h
 
-	if (res->end > IO_SPACE_LIMIT)
-		return -EINVAL;
-
-	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
-				  pgprot_device(PAGE_KERNEL));
-#else
-	/* this architecture does not have memory mapped I/O space,
-	   so this function should never be called */
-	WARN_ONCE(1, "This architecture does not support memory mapped I/O\n");
-	return -ENODEV;
-#endif
-}
-
-/* PCI fixed i/o mapping */
-#define PCI_IO_VIRT_BASE	0xfee00000
-#define PCI_IOBASE		((void __iomem *)PCI_IO_VIRT_BASE)
-
-http://lxr.free-electrons.com/source/arch/arm/include/asm/io.h?v=4.9#L188
-
-#ifdef CONFIG_NEED_MACH_IO_H
-#include <mach/io.h>
-#elif defined(CONFIG_PCI)
-#define IO_SPACE_LIMIT	((resource_size_t)0xfffff)
-#define __io(a)		__typesafe_io(PCI_IO_VIRT_BASE + ((a) & IO_SPACE_LIMIT))
-#else
-#define __io(a)		__typesafe_io((a) & IO_SPACE_LIMIT)
-#endif
-
-So the default seems to be 1 MB on arm32. But the platform seems allowed
-to define a larger or a smaller space.
-
-Regards.
+--
+2.1.4
