@@ -1,83 +1,176 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v3 0/7] PCI: dwc: miscellaneous fixes and cleanups
-Date: Wed, 8 Mar 2017 16:17:10 +0530
-Message-ID: <1488970037-17740-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: nsekhar@ti.com, Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50076 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933062AbdC3NbH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Mar 2017 09:31:07 -0400
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: mayurkumar.patel@intel.com, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rajat Jain <rajatja@google.com>,
+        Yinghai Lu <yinghai@kernel.org>,
+        David Daney <david.daney@cavium.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Julia Lawall <Julia.Lawall@lip6.fr>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH V7 3/5] PCI/ASPM: add init hook to device_add
+Date: Thu, 30 Mar 2017 09:30:34 -0400
+Message-Id: <1490880636-30542-4-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
+References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This should be the final set of cleanups/fixes before endpoint
-support can be merged.
+For bridges, have pcie_aspm_init_link_state() allocate a link_state,
+regardless of whether it currently has any children.
 
-Keerthy's patch is a general fix in dra7xx driver and is not
-directly related to endpoint mode.
+pcie_aspm_init_link_state(): Called for bridges (upstream end of
+link) after all children have been enumerated.  No longer needs to
+check aspm_support_enabled or pdev->has_secondary_link or the VIA
+quirk: pci_aspm_init() already checked that stuff, so we only need
+to check pdev->link_state here.
 
-This v1 of this series was previously sent with a different
-cover letter $subject [1]
+Now that we are calling alloc_pcie_link_state() from pci_aspm_init()
+, get rid of pci_function_0 function and detect downstream link in
+pci_aspm_init_upstream() instead when the function number is 0.
 
-Changes from v2:
-*) Kconfig changes that was spilled into a patch is removed.
-*) In addition to renaming _unroll() to _ob_unroll(), all the
-   _unroll configurations is also moved a separate function.
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pcie/aspm.c | 72 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 36 insertions(+), 36 deletions(-)
 
-Changes from v1:
-*) included a patch to rename _unroll() to _ob_unroll() as
-   similar thing has to be done for inbound window in the case
-   of EP mode.
-*) used 'size_t' instead of 'int' for specifying the size
-   in read_dbi/write_dbi function arguments.
-*) Populate cpu_addr_fixup ops for artpec6 as suggested by
-   Niklas
-
-This series is based on 4.11-rc1
-
-[1] -> https://lkml.org/lkml/2017/2/16/270
-
-Keerthy (1):
-  PCI: dwc: dra7xx: Push request_irq call to the bottom of probe
-
-Kishon Vijay Abraham I (6):
-  PCI: dwc: designware: Add new *ops* for cpu addr fixup
-  PCI: dwc: dra7xx: Populate cpu_addr_fixup ops
-  PCI: dwc: artpec6: Populate cpu_addr_fixup ops
-  PCI: dwc: all: Modify dbi accessors to take dbi_base as argument
-  PCI: dwc: all: Modify dbi accessors to access data of 4/2/1  bytes
-  PCI: dwc: designware: Move _unroll configurations to a separate
-    function
-
- drivers/pci/dwc/pci-dra7xx.c           |   35 +++----
- drivers/pci/dwc/pci-exynos.c           |   14 +--
- drivers/pci/dwc/pci-imx6.c             |   62 +++++++------
- drivers/pci/dwc/pci-keystone-dw.c      |   16 ++--
- drivers/pci/dwc/pcie-armada8k.c        |   39 ++++----
- drivers/pci/dwc/pcie-artpec6.c         |   22 +++--
- drivers/pci/dwc/pcie-designware-host.c |   20 ++--
- drivers/pci/dwc/pcie-designware.c      |  156 +++++++++++++++++++++-----------
- drivers/pci/dwc/pcie-designware.h      |   13 ++-
- drivers/pci/dwc/pcie-hisi.c            |   17 ++--
- 10 files changed, 241 insertions(+), 153 deletions(-)
-
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index a80d64b..e33f84b 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -422,20 +422,6 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
+ 	}
+ }
+ 
+-/*
+- * The L1 PM substate capability is only implemented in function 0 in a
+- * multi function device.
+- */
+-static struct pci_dev *pci_function_0(struct pci_bus *linkbus)
+-{
+-	struct pci_dev *child;
+-
+-	list_for_each_entry(child, &linkbus->devices, bus_list)
+-		if (PCI_FUNC(child->devfn) == 0)
+-			return child;
+-	return NULL;
+-}
+-
+ /* Calculate L1.2 PM substate timing parameters */
+ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
+ 				struct aspm_register_info *upreg,
+@@ -798,7 +784,6 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ 	INIT_LIST_HEAD(&link->children);
+ 	INIT_LIST_HEAD(&link->link);
+ 	link->pdev = pdev;
+-	link->downstream = pci_function_0(pdev->subordinate);
+ 
+ 	/*
+ 	 * Root Ports and PCI/PCI-X to PCIe Bridges are roots of PCIe
+@@ -828,11 +813,33 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ 
+ static int pci_aspm_init_downstream(struct pci_dev *pdev)
+ {
++	struct pcie_link_state *link;
++	struct pci_dev *parent;
++
++	/*
++	 * The L1 PM substate capability is only implemented in function 0 in a
++	 * multi function device.
++	 */
++	if (PCI_FUNC(pdev->devfn) != 0)
++		return -EINVAL;
++
++	parent = pdev->bus->self;
++	if (!parent)
++		return -EINVAL;
++
++	link = parent->link_state;
++	link->downstream = pdev;
+ 	return 0;
+ }
+ 
+ static int pci_aspm_init_upstream(struct pci_dev *pdev)
+ {
++	struct pcie_link_state *link;
++
++	link = alloc_pcie_link_state(pdev);
++	if (!link)
++		return -ENOMEM;
++
+ 	return 0;
+ }
+ 
+@@ -843,6 +850,17 @@ static int pci_aspm_init_upstream(struct pci_dev *pdev)
+  */
+ int pci_aspm_init(struct pci_dev *pdev)
+ {
++	if (!aspm_support_enabled)
++		return 0;
++
++	if (!pci_is_pcie(pdev))
++		return -EINVAL;
++
++	/* VIA has a strange chipset, root port is under a bridge */
++	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
++	    pdev->bus->self)
++		return 0;
++
+ 	if (!pdev->has_secondary_link)
+ 		return pci_aspm_init_downstream(pdev);
+ 
+@@ -859,33 +877,16 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 	struct pcie_link_state *link;
+ 	int blacklist = !!pcie_aspm_sanity_check(pdev);
+ 
+-	if (!aspm_support_enabled)
+-		return;
+-
+-	if (pdev->link_state)
+-		return;
+-
+-	/*
+-	 * We allocate pcie_link_state for the component on the upstream
+-	 * end of a Link, so there's nothing to do unless this device has a
+-	 * Link on its secondary side.
+-	 */
+-	if (!pdev->has_secondary_link)
+-		return;
+-
+-	/* VIA has a strange chipset, root port is under a bridge */
+-	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
+-	    pdev->bus->self)
++	if (!pdev->link_state)
+ 		return;
+ 
++	link = pdev->link_state;
+ 	down_read(&pci_bus_sem);
+ 	if (list_empty(&pdev->subordinate->devices))
+ 		goto out;
+ 
+ 	mutex_lock(&aspm_lock);
+-	link = alloc_pcie_link_state(pdev);
+-	if (!link)
+-		goto unlock;
++
+ 	/*
+ 	 * Setup initial ASPM state. Note that we need to configure
+ 	 * upstream links also because capable state of them can be
+@@ -910,7 +911,6 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 		pcie_set_clkpm(link, policy_to_clkpm_state(link));
+ 	}
+ 
+-unlock:
+ 	mutex_unlock(&aspm_lock);
+ out:
+ 	up_read(&pci_bus_sem);
 -- 
-1.7.9.5
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.9.1
