@@ -1,78 +1,92 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
- <linux-samsung-soc@vger.kernel.org>, <linux-arm-kernel@axis.com>
-Subject: [PATCH v2 0/7] PCI: dwc: miscellaneous fixes and cleanups
-Date: Tue, 7 Mar 2017 15:22:45 +0530
-Message-ID: <1488880372-7390-1-git-send-email-kishon@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: nsekhar@ti.com, Kishon Vijay Abraham I <kishon@ti.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:50408 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933062AbdC3NbD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Mar 2017 09:31:03 -0400
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+Cc: mayurkumar.patel@intel.com, linux-arm-msm@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Sinan Kaya <okaya@codeaurora.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Rajat Jain <rajatja@google.com>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Julia Lawall <Julia.Lawall@lip6.fr>,
+        David Daney <david.daney@cavium.com>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH V7 5/5] PCI/ASPM: move link_state cleanup to bridge remove
+Date: Thu, 30 Mar 2017 09:30:36 -0400
+Message-Id: <1490880636-30542-6-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
+References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This should be the final set of cleanups/fixes before endpoint
-support can be merged.
+For endpoints, change pcie_aspm_exit_link_state() so it cleans up
+the device's own state and disables ASPM if necessary, but doesn't
+remove the parent's link_state.
 
-Keerthy's patch is a general fix in dra7xx driver and is not
-directly related to endpoint mode.
+For bridges, change pcie_aspm_exit_link_state() so it frees the
+bridge's own link_state.
 
-This series was previously sent with a different cover letter
-$subject [1]
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pcie/aspm.c | 20 +++++++++++++++-----
+ drivers/pci/remove.c    |  3 +--
+ 2 files changed, 16 insertions(+), 7 deletions(-)
 
-Changes from v1:
-*) included a patch to rename _unroll() to _ob_unroll() as
-   similar thing has to be done for inbound window in the case
-   of EP mode.
-*) used 'size_t' instead of 'int' for specifying the size
-   in read_dbi/write_dbi function arguments.
-*) Populate cpu_addr_fixup ops for artpec6 as suggested by
-   Niklas
-
-This series is based on 4.11-rc1
-
-[1] -> https://lkml.org/lkml/2017/2/16/270
-
-Keerthy (1):
-  PCI: dwc: dra7xx: Push request_irq call to the bottom of probe
-
-Kishon Vijay Abraham I (6):
-  PCI: dwc: designware: Add new *ops* for cpu addr fixup
-  PCI: dwc: dra7xx: Populate cpu_addr_fixup ops
-  PCI: dwc: artpec6: Populate cpu_addr_fixup ops
-  PCI: dwc: all: Modify dbi accessors to take dbi_base as argument
-  PCI: dwc: all: Modify dbi accessors to access data of 4/2/1  bytes
-  PCI: dwc: designware: Modify _unroll() to _ob_unroll()
-
- drivers/pci/dwc/Kconfig                |   18 ++---
- drivers/pci/dwc/pci-dra7xx.c           |   35 +++++----
- drivers/pci/dwc/pci-exynos.c           |   14 ++--
- drivers/pci/dwc/pci-imx6.c             |   62 +++++++++-------
- drivers/pci/dwc/pci-keystone-dw.c      |   16 ++--
- drivers/pci/dwc/pcie-armada8k.c        |   39 +++++-----
- drivers/pci/dwc/pcie-artpec6.c         |   22 ++++--
- drivers/pci/dwc/pcie-designware-host.c |   20 ++---
- drivers/pci/dwc/pcie-designware.c      |  127 ++++++++++++++++++++------------
- drivers/pci/dwc/pcie-designware.h      |   13 +++-
- drivers/pci/dwc/pcie-hisi.c            |   17 +++--
- 11 files changed, 226 insertions(+), 157 deletions(-)
-
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index a38602a..e6fd297 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -960,6 +960,21 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+ 	struct pci_dev *parent = pdev->bus->self;
+ 	struct pcie_link_state *link, *root, *parent_link;
+ 
++	if (pdev->has_secondary_link) {
++		link = pdev->link_state;
++		down_read(&pci_bus_sem);
++		mutex_lock(&aspm_lock);
++
++		list_del(&link->sibling);
++		list_del(&link->link);
++
++		/* Clock PM is for endpoint device */
++		free_link_state(link);
++		mutex_unlock(&aspm_lock);
++		up_read(&pci_bus_sem);
++		return;
++	}
++
+ 	if (!parent || !parent->link_state)
+ 		return;
+ 
+@@ -978,11 +993,6 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
+ 
+ 	/* All functions are removed, so just disable ASPM for the link */
+ 	pcie_config_aspm_link(link, 0);
+-	list_del(&link->sibling);
+-	list_del(&link->link);
+-	/* Clock PM is for endpoint device */
+-	free_link_state(link);
+-
+ 	/* Recheck latencies and configure upstream links */
+ 	if (parent_link) {
+ 		pcie_update_aspm_capable(root);
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index 73a03d3..7e14ebd 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -25,8 +25,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+ 		dev->is_added = 0;
+ 	}
+ 
+-	if (dev->bus->self)
+-		pcie_aspm_exit_link_state(dev);
++	pcie_aspm_exit_link_state(dev);
+ }
+ 
+ static void pci_destroy_dev(struct pci_dev *dev)
 -- 
-1.7.9.5
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.9.1
