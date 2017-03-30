@@ -1,166 +1,294 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC PATCH 24/30] iommu: Specify PASID state when unbinding a task
-To: Joerg Roedel <joro@8bytes.org>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-25-jean-philippe.brucker@arm.com>
- <20170322154429.GE7266@8bytes.org>
- <e2bb4c67-9b61-01cf-cc17-68088cdc5e5b@arm.com>
- <20170322225320.GF7266@8bytes.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <a093bc07-a345-a689-9d97-f15a306f922d@arm.com>
-Date: Thu, 23 Mar 2017 13:37:41 +0000
-MIME-Version: 1.0
-In-Reply-To: <20170322225320.GF7266@8bytes.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Sinan Kaya <okaya@qti.qualcomm.com>,
- Will Deacon <will.deacon@arm.com>, iommu@lists.linux-foundation.org,
- Harv Abdulhamid <harba@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Robin Murphy <robin.murphy@arm.com>,
- David Woodhouse <dwmw2@infradead.org>, linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 30 Mar 2017 16:12:34 -0600
+Message-Id: <1490911959-5146-4-git-send-email-logang@deltatee.com>
+In-Reply-To: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+Subject: [RFC 3/8] nvmet: Use p2pmem in nvme target
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 22/03/17 22:53, Joerg Roedel wrote:
-> On Wed, Mar 22, 2017 at 06:31:01PM +0000, Jean-Philippe Brucker wrote:
->> The problem might be too tied to the specifics of the SMMU. As implemented
->> in this series, the normal flow for a PPR with the SMMU is the following:
->>
->> (1) PCI device issues a PPR for PASID 1
->> (2) The PPR is queued by the SMMU in the (hardware) PRI queue
->> (3) The SMMU driver receives an interrupt, dequeues the PPR and moves it
->>     to a software work queue.
->> (4) The PPR is finally handled and a PRI response is sent to the device.
-> 
-> There are two ways a PASID could get shut down:
-> 
-> 	1) The device driver calls unbind()
-> 	2) The mm_struct bound to that PASID is going away
-> 
-> Case 1) is the easy one, we can safely assume that the device driver did
-> anything to stop new PPR requests from being created for that PASID. In
-> this case we just shut down PPR processing by waiting until everything
-> is handled and reply INVALID to any further PPR request before we remove
-> the PASID from the per-device IOMMU data structures and flush caches.
-> 
-> In case 2) we have more work to do. The mm_struct is going away
-> (probably because the task segfaulted) and we can't assume that the
-> device driver shut everything down already. But for this case we have
-> the call-back into the device driver to tell it should clean everything
-> up for that PASID and stop the device from creating further requests.
-> 
-> After that call-back returns it is the same as in case 1), we drain the
-> queue and deny any further request that comes in.
+We create a configfs attribute in each nvme-fabrics target port to
+enable p2p memory use. When enabled, the port will only then use the
+p2p memory if a p2p memory device can be found which is behind the
+same switch as the RDMA port and all the block devices in use. If
+the user enabled it an no devices are found, then the system will
+silently fall back on using regular memory.
 
-I agree on the semantics (I didn't implement case 2) here but I will have
-to in the next version.)
+If appropriate, that port will allocate memory for the RDMA buffers
+for queues from the p2pmem device falling back to system memory should
+anything fail.
 
->> The case that worries me is if someone unbinds PASID 1 between (2) and
->> (3), while the PPR is still in the hardware queue, and immediately binds
->> it to a new address space.
->>
->> Then (3) and (4) happen, the PPR is handled and the fault is for the new
->> address space. It's certainly undesirable, but I don't know if it could be
->> exploited. We don't kill the task for an unhandled fault at the moment,
->> simply report a failed PPR to the device, so I might be worrying for nothing.
-> 
-> As I wrote above, when the device driver calls unbind() we should
-> assume that the device does not sent any further requests with that
-> PASID. If it does, we just answer with INVALID.
-> 
->> Having the caller tell us if PPRs might still be pending in the hardware
->> PRI queue ensures that the SMMU driver waits until it's entirely safe:
->>
->> * If the device has no outstanding PPR, PASID can be reallocated
->> * If the device has outstanding PPRs, wait for a Stop Marker, or drain
->>   the PRI queue after a while (if the Stop Marker was lost in a PRI queue
->>   overflow).
-> 
-> That can't happen, when the device driver does its job right. It has to
-> shut down the context which causes the PPR requests for the PASID on the
-> device. This includes stopping the context and waiting until all PPR
-> requests it sent are processed.
+Ideally, we'd want to use an NVME CMB buffer as p2p memory. This would
+save an extra PCI transfer as the NVME card could just take the data
+out of it's own memory. However, at this time, cards with CMB buffers
+don't seem to be available.
 
-By "processed", do you mean that they are committed to the IOMMU, or that
-they came back with a PRG response?
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Stephen Bates <sbates@raithlin.com>
+Signed-off-by: Steve Wise <swise@opengridcomputing.com>
+---
+ drivers/nvme/target/configfs.c | 31 +++++++++++++++
+ drivers/nvme/target/nvmet.h    |  1 +
+ drivers/nvme/target/rdma.c     | 90 ++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 114 insertions(+), 8 deletions(-)
 
-The driver might not be able to do the latter, since PCI defines two ways
-of shutting down a context:
-
-* Either wait for all PPR requests to come back with a PRG response,
-* Or send a Stop Marker PPR request and forget about it.
-
-The second one is problematic, all the device says is "I've stopped
-sending requests, some might still be in flight, but a Stop Marker ends
-the flow".
-
-Without having the device driver tell us which of the two models the
-device is implementing, draining the hardware queue is our best bet to
-ensure that no request is pending.
-
-In any case, this is a property of the device, and passing flags to
-unbind() as I suggested is probably excessive. The IOMMU driver could
-store that info somewhere and use it whenever it has to unbind(), as an
-indication of the minimum amount of work required to clean the context.
-Without this hint the default should be to drain both queues.
-
-My intent with passing flags to unbind() was to handle the case where VFIO
-is unable to tell us whether PPRs are still being issued by the device.
-But the issue seems moot to me now that I have a better understanding, as
-there will be a detach_dev/attach_dev sequence before we start rebinding
-PASIDs, and we can simply reset the PRI interface there (I'm currently
-doing that in add_device, but I should move it.)
-
-> And the device driver has to do this either before it calls unbind() or
-> in the call-back it provided. Only after this the PASID should be freed.
->
->> Draining the PRI queue is very costly, we need to block the PRI thread to
->> inspect the queue, risking an overflow. And with these PASID state flags
->> we avoid flushing any queue.
-> 
-> There is a configurable maximum of PPR requests a device can have
-> in-flight. If you take that into account when allocation the PPR queue
-> for the SMMU, there can't be any overflows. The AMD driver allocates a
-> queue for 512 entries and allows devices to have a maximum of 32
-> outstanding requests.
-
-Yes, the SMMU specification also tells that over-committing the PPR queue
-is a programming error. I wonder how well it scales with hot-plugging of
-devices however. At the time when we start allocating PPR credits, we
-might not be sure that the number of devices with a PRI will be limited to
-16. So even if overflow is a programming error, I'm not comfortable with
-ruling it out just yet.
-
-Thanks,
-Jean-Philippe
-
->> But since the problem seems too centered around the SMMU, I might just
->> drop this patch along with the CLEAN/FLUSHED flags in my next version, and
->> go with the full-drain solution. After all, unbind should be a fairly rare
->> event.
-> 
-> I don't think all this is SMMU specific, it is the same on all other
-> IOMMUs that have the ATS/PRI/PASID features.
-> 
-> 
-> 
-> 	Joerg
-> 
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/nvme/target/configfs.c b/drivers/nvme/target/configfs.c
+index be8c800..e61a7f4 100644
+--- a/drivers/nvme/target/configfs.c
++++ b/drivers/nvme/target/configfs.c
+@@ -777,12 +777,43 @@ static void nvmet_port_release(struct config_item *item)
+ 	kfree(port);
+ }
+ 
++#ifdef CONFIG_P2PMEM
++static ssize_t nvmet_allow_p2pmem_show(struct config_item *item, char *page)
++{
++	return sprintf(page, "%d\n", to_nvmet_port(item)->allow_p2pmem);
++}
++
++static ssize_t nvmet_allow_p2pmem_store(struct config_item *item,
++					const char *page, size_t count)
++{
++	struct nvmet_port *port = to_nvmet_port(item);
++	bool allow;
++	int ret;
++
++	ret = strtobool(page, &allow);
++	if (ret)
++		return ret;
++
++	down_write(&nvmet_config_sem);
++	port->allow_p2pmem = allow;
++	up_write(&nvmet_config_sem);
++
++	return count;
++}
++CONFIGFS_ATTR(nvmet_, allow_p2pmem);
++#endif
++
+ static struct configfs_attribute *nvmet_port_attrs[] = {
+ 	&nvmet_attr_addr_adrfam,
+ 	&nvmet_attr_addr_treq,
+ 	&nvmet_attr_addr_traddr,
+ 	&nvmet_attr_addr_trsvcid,
+ 	&nvmet_attr_addr_trtype,
++
++	#ifdef CONFIG_P2PMEM
++	&nvmet_attr_allow_p2pmem,
++	#endif
++
+ 	NULL,
+ };
+ 
+diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
+index f7ff15f..ab67175 100644
+--- a/drivers/nvme/target/nvmet.h
++++ b/drivers/nvme/target/nvmet.h
+@@ -95,6 +95,7 @@ struct nvmet_port {
+ 	struct list_head		referrals;
+ 	void				*priv;
+ 	bool				enabled;
++	bool				allow_p2pmem;
+ };
+ 
+ static inline struct nvmet_port *to_nvmet_port(struct config_item *item)
+diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
+index ecc4fe8..7fd4840 100644
+--- a/drivers/nvme/target/rdma.c
++++ b/drivers/nvme/target/rdma.c
+@@ -23,6 +23,7 @@
+ #include <linux/string.h>
+ #include <linux/wait.h>
+ #include <linux/inet.h>
++#include <linux/p2pmem.h>
+ #include <asm/unaligned.h>
+ 
+ #include <rdma/ib_verbs.h>
+@@ -64,6 +65,7 @@ struct nvmet_rdma_rsp {
+ 	struct rdma_rw_ctx	rw;
+ 
+ 	struct nvmet_req	req;
++	struct p2pmem_dev       *p2pmem;
+ 
+ 	u8			n_rdma;
+ 	u32			flags;
+@@ -107,6 +109,8 @@ struct nvmet_rdma_queue {
+ 	int			send_queue_size;
+ 
+ 	struct list_head	queue_list;
++
++	struct p2pmem_dev	*p2pmem;
+ };
+ 
+ struct nvmet_rdma_device {
+@@ -185,7 +189,8 @@ nvmet_rdma_put_rsp(struct nvmet_rdma_rsp *rsp)
+ 	spin_unlock_irqrestore(&rsp->queue->rsps_lock, flags);
+ }
+ 
+-static void nvmet_rdma_free_sgl(struct scatterlist *sgl, unsigned int nents)
++static void nvmet_rdma_free_sgl(struct scatterlist *sgl, unsigned int nents,
++				struct p2pmem_dev *p2pmem)
+ {
+ 	struct scatterlist *sg;
+ 	int count;
+@@ -193,13 +198,17 @@ static void nvmet_rdma_free_sgl(struct scatterlist *sgl, unsigned int nents)
+ 	if (!sgl || !nents)
+ 		return;
+ 
+-	for_each_sg(sgl, sg, nents, count)
+-		__free_page(sg_page(sg));
++	for_each_sg(sgl, sg, nents, count) {
++		if (p2pmem)
++			p2pmem_free_page(p2pmem, sg_page(sg));
++		else
++			__free_page(sg_page(sg));
++	}
+ 	kfree(sgl);
+ }
+ 
+ static int nvmet_rdma_alloc_sgl(struct scatterlist **sgl, unsigned int *nents,
+-		u32 length)
++		u32 length, struct p2pmem_dev *p2pmem)
+ {
+ 	struct scatterlist *sg;
+ 	struct page *page;
+@@ -216,7 +225,11 @@ static int nvmet_rdma_alloc_sgl(struct scatterlist **sgl, unsigned int *nents,
+ 	while (length) {
+ 		u32 page_len = min_t(u32, length, PAGE_SIZE);
+ 
+-		page = alloc_page(GFP_KERNEL);
++		if (p2pmem)
++			page = p2pmem_alloc_page(p2pmem);
++		else
++			page = alloc_page(GFP_KERNEL);
++
+ 		if (!page)
+ 			goto out_free_pages;
+ 
+@@ -231,7 +244,10 @@ static int nvmet_rdma_alloc_sgl(struct scatterlist **sgl, unsigned int *nents,
+ out_free_pages:
+ 	while (i > 0) {
+ 		i--;
+-		__free_page(sg_page(&sg[i]));
++		if (p2pmem)
++			p2pmem_free_page(p2pmem, sg_page(&sg[i]));
++		else
++			__free_page(sg_page(&sg[i]));
+ 	}
+ 	kfree(sg);
+ out:
+@@ -484,7 +500,8 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
+ 	}
+ 
+ 	if (rsp->req.sg != &rsp->cmd->inline_sg)
+-		nvmet_rdma_free_sgl(rsp->req.sg, rsp->req.sg_cnt);
++		nvmet_rdma_free_sgl(rsp->req.sg, rsp->req.sg_cnt,
++				    rsp->p2pmem);
+ 
+ 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
+ 		nvmet_rdma_process_wr_wait_list(queue);
+@@ -625,8 +642,16 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
+ 	if (!len)
+ 		return 0;
+ 
++	rsp->p2pmem = rsp->queue->p2pmem;
+ 	status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
+-			len);
++			len, rsp->p2pmem);
++
++	if (status && rsp->p2pmem) {
++		rsp->p2pmem = NULL;
++		status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
++					      len, rsp->p2pmem);
++	}
++
+ 	if (status)
+ 		return status;
+ 
+@@ -984,6 +1009,7 @@ static void nvmet_rdma_free_queue(struct nvmet_rdma_queue *queue)
+ 				!queue->host_qid);
+ 	}
+ 	nvmet_rdma_free_rsps(queue);
++	p2pmem_put(queue->p2pmem);
+ 	ida_simple_remove(&nvmet_rdma_queue_ida, queue->idx);
+ 	kfree(queue);
+ }
+@@ -1179,6 +1205,52 @@ static int nvmet_rdma_cm_accept(struct rdma_cm_id *cm_id,
+ 	return ret;
+ }
+ 
++/*
++ * If allow_p2pmem is set, we will try to use P2P memory for our
++ * sgl lists. This requires the p2pmem device to be compatible with
++ * the backing device for every namespace this device will support.
++ * If not, we fall back on using system memory.
++ */
++static void nvmet_rdma_queue_setup_p2pmem(struct nvmet_rdma_queue *queue)
++{
++	struct device **dma_devs;
++	struct nvmet_ns *ns;
++	int ndevs = 1;
++	int i = 0;
++	struct nvmet_subsys_link *s;
++
++	if (!queue->port->allow_p2pmem)
++		return;
++
++	list_for_each_entry(s, &queue->port->subsystems, entry) {
++		list_for_each_entry_rcu(ns, &s->subsys->namespaces, dev_link) {
++			ndevs++;
++		}
++	}
++
++	dma_devs = kmalloc((ndevs + 1) * sizeof(*dma_devs), GFP_KERNEL);
++	if (!dma_devs)
++		return;
++
++	dma_devs[i++] = &queue->dev->device->dev;
++
++	list_for_each_entry(s, &queue->port->subsystems, entry) {
++		list_for_each_entry_rcu(ns, &s->subsys->namespaces, dev_link) {
++			dma_devs[i++] = disk_to_dev(ns->bdev->bd_disk);
++		}
++	}
++
++	dma_devs[i++] = NULL;
++
++	queue->p2pmem = p2pmem_find_compat(dma_devs);
++
++	if (queue->p2pmem)
++		pr_debug("using %s for rdma nvme target queue",
++			 dev_name(&queue->p2pmem->dev));
++
++	kfree(dma_devs);
++}
++
+ static int nvmet_rdma_queue_connect(struct rdma_cm_id *cm_id,
+ 		struct rdma_cm_event *event)
+ {
+@@ -1199,6 +1271,8 @@ static int nvmet_rdma_queue_connect(struct rdma_cm_id *cm_id,
+ 	}
+ 	queue->port = cm_id->context;
+ 
++	nvmet_rdma_queue_setup_p2pmem(queue);
++
+ 	ret = nvmet_rdma_cm_accept(cm_id, queue, &event->param.conn);
+ 	if (ret)
+ 		goto release_queue;
+-- 
+2.1.4
