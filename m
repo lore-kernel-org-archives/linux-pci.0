@@ -1,297 +1,298 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  2 Mar 2017 16:07:46 -0700
-Message-Id: <1488496067-2763-4-git-send-email-logang@deltatee.com>
-In-Reply-To: <1488496067-2763-1-git-send-email-logang@deltatee.com>
-References: <1488496067-2763-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v6 3/4] switchtec: Add sysfs attributes to the Switchtec driver
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <CAMSpPPd7awDB_JL0_4pY9qiSXeLt3QzpSL95XogyE9h0kgyq_A@mail.gmail.com>
+References: <1490419893-5073-1-git-send-email-oza.oza@broadcom.com>
+ <CAL_JsqLtTiH7DhqKf_x7xy1KZYQyiOreK=M90HFr=8BDW9542w@mail.gmail.com>
+ <CAMSpPPdnQdWeyTsnESRFx52gtxQLxwfPQwQgDFSN=katfW7suA@mail.gmail.com>
+ <de6bfedf-62aa-98e4-dae5-7862ab3ba754@arm.com>
+ <CAMSpPPd7awDB_JL0_4pY9qiSXeLt3QzpSL95XogyE9h0kgyq_A@mail.gmail.com>
+From: Oza Oza <oza.oza@broadcom.com>
+Date: Thu, 30 Mar 2017 08:56:25 +0530
+Message-ID: <CAMSpPPd1emStxAqF2jdxLk07qHPvAc8wTARMq+f101q1N4TQtQ@mail.gmail.com>
+Subject: Re: [RFC PATCH 1/3] of/pci: dma-ranges to account highest possible
+ host bridge dma_mask
+To: Robin Murphy <robin.murphy@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Rob Herring <robh@kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Joerg Roedel <joro@8bytes.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Linux IOMMU <iommu@lists.linux-foundation.org>,
+ "bcm-kernel-feedback-list@broadcom.com"
+ <bcm-kernel-feedback-list@broadcom.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adds a few read-only sysfs attributes which provide
-some device information that is exposed from the devices. Primarily
-component and device names and versions. These are documented in
-Documentation/ABI/testing/sysfs-class-switchtec.
+On Wed, Mar 29, 2017 at 10:13 AM, Oza Oza <oza.oza@broadcom.com> wrote:
+> On Tue, Mar 28, 2017 at 7:59 PM, Robin Murphy <robin.murphy@arm.com> wrote:
+>> On 28/03/17 06:27, Oza Oza wrote:
+>>> On Mon, Mar 27, 2017 at 8:16 PM, Rob Herring <robh@kernel.org> wrote:
+>>>> On Sat, Mar 25, 2017 at 12:31 AM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
+>>>>> it is possible that PCI device supports 64-bit DMA addressing,
+>>>>> and thus it's driver sets device's dma_mask to DMA_BIT_MASK(64),
+>>>>> however PCI host bridge may have limitations on the inbound
+>>>>> transaction addressing. As an example, consider NVME SSD device
+>>>>> connected to iproc-PCIe controller.
+>>>>>
+>>>>> Currently, the IOMMU DMA ops only considers PCI device dma_mask
+>>>>> when allocating an IOVA. This is particularly problematic on
+>>>>> ARM/ARM64 SOCs where the IOMMU (i.e. SMMU) translates IOVA to
+>>>>> PA for in-bound transactions only after PCI Host has forwarded
+>>>>> these transactions on SOC IO bus. This means on such ARM/ARM64
+>>>>> SOCs the IOVA of in-bound transactions has to honor the addressing
+>>>>> restrictions of the PCI Host.
+>>>>>
+>>>>> current pcie frmework and of framework integration assumes dma-ranges
+>>>>> in a way where memory-mapped devices define their dma-ranges.
+>>>>> dma-ranges: (child-bus-address, parent-bus-address, length).
+>>>>>
+>>>>> but iproc based SOCs and even Rcar based SOCs has PCI world dma-ranges.
+>>>>> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
+>>>>
+>>>> If you implement a common function, then I expect to see other users
+>>>> converted to use it. There's also PCI hosts in arch/powerpc that parse
+>>>> dma-ranges.
+>>>
+>>> the common function should be similar to what
+>>> of_pci_get_host_bridge_resources is doing right now.
+>>> it parses ranges property right now.
+>>>
+>>> the new function would look look following.
+>>>
+>>> of_pci_get_dma_ranges(struct device_node *dev, struct list_head *resources)
+>>> where resources would return the dma-ranges.
+>>>
+>>> but right now if you see the patch, of_dma_configure calls the new
+>>> function, which actually returns the largest possible size.
+>>> so this new function has to be generic in a way where other PCI hosts
+>>> can use it. but certainly iproc(Broadcom SOC) , rcar based SOCs can
+>>> use it for sure.
+>>>
+>>> although having powerpc using it;  is a separate exercise, since I do
+>>> not have any access to other PCI hosts such as powerpc. but we can
+>>> workout with them on thsi forum if required.
+>>>
+>>> so overall, of_pci_get_dma_ranges has to serve following 2 purposes.
+>>>
+>>> 1) it has to return largest possible size to of_dma_configure to
+>>> generate largest possible dma_mask.
+>>>
+>>> 2) it also has to return resources (dma-ranges) parsed, to the users.
+>>>
+>>> so to address above needs
+>>>
+>>> of_pci_get_dma_ranges(struct device_node *dev, struct list_head
+>>> *resources, u64 *size)
+>>>
+>>> dev -> device node.
+>>> resources -> dma-ranges in allocated list.
+>>> size -> highest possible size to generate possible dma_mask for
+>>> of_dma_configure.
+>>>
+>>> let em know how this sounds.
+>>
+>> Note that the point of passing PCI host bridges into of_dma_configure()
+>> in the first place was to avoid having some separate PCI-specific path
+>> for DMA configuration. I worry that introducing bus-specific dma-ranges
+>> parsing largely defeats that, since we end up with the worst of both
+>> worlds; effectively-duplicated code, and/or a load of extra complexity
+>> to then attempt to reconverge the divergent paths (there really
+>> shouldn't be any need to allocate a list of anything). Given that
+>> of_translate_dma_address() is already bus-agnostic, it hardly seems
+>> justifiable for its caller not to be so as well, especially when it
+>> mostly just comes down to getting the right #address-cells value.
+>>
+>> The patch below is actually enough to make typical cases work, but is
+>> vile, so I'm not seriously considering it (hence I've not bothered
+>> making IOMMU configuration handle all circumstances). What it has served
+>> to do, though, is give me a clear idea of how to properly sort out the
+>> not-quite-right device/parent assumptions between of_dma_configure() and
+>> of_dma_get_range() rather than bodging around them any further - stay tuned.
+>>
+>> Robin.
+>>
+>> ----->8-----
+>> From: Robin Murphy <robin.murphy@arm.com>
+>> Subject: [PATCH] of/pci: Use child node for DMA configuration
+>>
+>> of_dma_configure() expects to be passed an OF node representing the
+>> device being configured - for PCI devices we currently pass the node of
+>> the appropriate host controller, which sort of works for inherited
+>> properties which may appear at any level, like "dma-coherent", but falls
+>> apart for properties which actually care about specific device-parent
+>> relationships, like "dma-ranges".
+>>
+>> Solve this by attempting to find a suitable child node if the PCI
+>> hierarchy is actually represented in DT, and if not then faking one up
+>> as a last resort, to make all of DMA configuration work as expected.
+>>
+>> Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+>> ---
+>>  drivers/iommu/of_iommu.c |  3 ++-
+>>  drivers/pci/of.c         | 24 ++++++++++++++++++++++++
+>>  drivers/pci/probe.c      | 14 +++++++++++++-
+>>  include/linux/pci.h      |  3 +++
+>>  4 files changed, 42 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+>> index 2683e9fc0dcf..35c97b945c15 100644
+>> --- a/drivers/iommu/of_iommu.c
+>> +++ b/drivers/iommu/of_iommu.c
+>> @@ -146,7 +146,8 @@ const struct iommu_ops *of_iommu_configure(struct
+>> device *dev,
+>>         int idx = 0;
+>>
+>>         if (dev_is_pci(dev))
+>> -               return of_pci_iommu_configure(to_pci_dev(dev), master_np);
+>> +               return of_pci_iommu_configure(to_pci_dev(dev),
+>> +                                             of_get_next_parent(master_np));
+>>
+>>         /*
+>>          * We don't currently walk up the tree looking for a parent IOMMU.
+>> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+>> index e112da11630e..96eece1c423d 100644
+>> --- a/drivers/pci/of.c
+>> +++ b/drivers/pci/of.c
+>> @@ -88,3 +88,27 @@ struct irq_domain
+>> *pci_host_bridge_of_msi_domain(struct pci_bus *bus)
+>>         return NULL;
+>>  #endif
+>>  }
+>> +
+>> +struct device_node *pci_dev_get_dma_of_node(struct pci_dev *dev)
+>> +{
+>> +       struct device_node *np;
+>> +       struct pci_bus *bus = dev->bus;
+>> +
+>> +       /* Is the device itself actually described in the DT? */
+>> +       np = of_node_get(dev->dev.of_node);
+>> +       if (np)
+>> +               return np;
+>> +
+>> +       /* Or is some intermediate bridge? That would do... */
+>> +       for (bus = dev->bus; bus->parent; bus = bus->parent) {
+>> +               np = of_node_get(bus->bridge->of_node);
+>> +               if (np)
+>> +                       return np;
+>> +       }
+>> +
+>> +       /* Failing that, any child of the same host bridge? */
+>> +       if (bus->bridge->parent)
+>> +               np = of_get_next_child(bus->bridge->parent->of_node, NULL);
+>> +
+>> +       return np;
+>> +}
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index dfc9a2794141..4f7ade64aa3e 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -1906,7 +1906,19 @@ static void pci_dma_configure(struct pci_dev *dev)
+>>
+>>         if (IS_ENABLED(CONFIG_OF) &&
+>>                 bridge->parent && bridge->parent->of_node) {
+>> -                       of_dma_configure(&dev->dev, bridge->parent->of_node);
+>> +               struct device_node *np, tmp = {0};
+>> +
+>> +               np = pci_dev_get_dma_of_node(dev);
+>> +               if (!np) {
+>> +                       np = &tmp;
+>> +                       of_node_set_flag(np, OF_DETACHED);
+>> +                       of_node_init(np);
+>> +                       tmp.parent = bridge->parent->of_node;
+>> +               }
+>> +
+>> +               of_dma_configure(&dev->dev, np);
+>> +               if (np != &tmp)
+>> +                       of_node_put(np);
+>>         } else if (has_acpi_companion(bridge)) {
+>>                 struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
+>>                 enum dev_dma_attr attr = acpi_get_dma_attr(adev);
+>> diff --git a/include/linux/pci.h b/include/linux/pci.h
+>> index eb3da1a04e6c..94ecd1817f58 100644
+>> --- a/include/linux/pci.h
+>> +++ b/include/linux/pci.h
+>> @@ -2086,6 +2086,7 @@ void pci_release_of_node(struct pci_dev *dev);
+>>  void pci_set_bus_of_node(struct pci_bus *bus);
+>>  void pci_release_bus_of_node(struct pci_bus *bus);
+>>  struct irq_domain *pci_host_bridge_of_msi_domain(struct pci_bus *bus);
+>> +struct device_node *pci_dev_get_dma_of_node(struct pci_dev *dev);
+>>
+>>  /* Arch may override this (weak) */
+>>  struct device_node *pcibios_get_phb_of_node(struct pci_bus *bus);
+>> @@ -2110,6 +2111,8 @@ static inline struct device_node *
+>>  pci_device_to_OF_node(const struct pci_dev *pdev) { return NULL; }
+>>  static inline struct irq_domain *
+>>  pci_host_bridge_of_msi_domain(struct pci_bus *bus) { return NULL; }
+>> +static inline struct device_node *
+>> +pci_dev_get_dma_of_node(struct pci_dev *dev) { return NULL; }
+>>  #endif  /* CONFIG_OF */
+>>
+>>  #ifdef CONFIG_ACPI
+>>
+>
+> pci and memory mapped device world is different. of course if you talk
+> from iommu perspective, all the master are same for IOMMU
+> but the original intention of the patch is to try to solve 2 problems.
+>
+> 1) expose generic API for pci world clients to configure their
+> dma-ranges. right now there is none.
+> 2) same API can be used by IOMMU to derive dma_mask.
+>
+> the implementation tries to handle dma-ranges for both memory mapped
+> and pci devices, which I think is overkill.
+> besides we have different configuration of dma-ranges based on iommu
+> is enabled or not enabled.
+>
+>  #define PCIE_DMA_RANGES dma-ranges = <0x43000000 0x00 0x80000000 0x00
+> 0x80000000 0x00 0x80000000 \
+>                                       0x43000000 0x08 0x00000000 0x08
+> 0x00000000 0x08 0x00000000 \
+>                                       0x43000000 0x80 0x00000000 0x80
+> 0x00000000 0x40 0x00000000>;
+>
+>
+> the of_dma_get_range is written with respect to traditional memory
+> ranges, they were not meant for pci dma-ranges.
+>
+> Regards,
+> Oza.
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
-Tested-by: Krishna Dhulipala <krishnad@fb.com>
-Reviewed-by: Wei Zhang <wzhang@fb.com>
-Reviewed-by: Jens Axboe <axboe@fb.com>
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
----
- Documentation/ABI/testing/sysfs-class-switchtec |  96 ++++++++++++++++++++
- MAINTAINERS                                     |   1 +
- drivers/pci/switch/switchtec.c                  | 113 ++++++++++++++++++++++++
- 3 files changed, 210 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-class-switchtec
 
-diff --git a/Documentation/ABI/testing/sysfs-class-switchtec b/Documentation/ABI/testing/sysfs-class-switchtec
-new file mode 100644
-index 0000000..48cb4c1
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-class-switchtec
-@@ -0,0 +1,96 @@
-+switchtec - Microsemi Switchtec PCI Switch Management Endpoint
-+
-+For details on this subsystem look at Documentation/switchtec.txt.
-+
-+What: 		/sys/class/switchtec
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	The switchtec class subsystem folder.
-+		Each registered switchtec driver is represented by a switchtecX
-+		subfolder (X being an integer >= 0).
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/component_id
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Component identifier as stored in the hardware (eg. PM8543)
-+		(read only)
-+Values: 	arbitrary string.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/component_revision
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Component revision stored in the hardware (read only)
-+Values: 	integer.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/component_vendor
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Component vendor as stored in the hardware (eg. MICROSEM)
-+		(read only)
-+Values: 	arbitrary string.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/device_version
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Device version as stored in the hardware (read only)
-+Values: 	integer.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/fw_version
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Currently running firmware version (read only)
-+Values: 	integer (in hexadecimal).
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/partition
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Partition number for this device in the switch (read only)
-+Values: 	integer.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/partition_count
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Total number of partitions in the switch (read only)
-+Values: 	integer.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/product_id
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Product identifier as stored in the hardware (eg. PSX 48XG3)
-+		(read only)
-+Values: 	arbitrary string.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/product_revision
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Product revision stored in the hardware (eg. RevB)
-+		(read only)
-+Values: 	arbitrary string.
-+
-+
-+What:		/sys/class/switchtec/switchtec[0-9]+/product_vendor
-+Date:		05-Jan-2017
-+KernelVersion:	v4.11
-+Contact:	Logan Gunthorpe <logang@deltatee.com>
-+Description:	Product vendor as stored in the hardware (eg. MICROSEM)
-+		(read only)
-+Values: 	arbitrary string.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index aa702b0..6fed938 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9513,6 +9513,7 @@ M:	Logan Gunthorpe <logang@deltatee.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
- F:	Documentation/switchtec.txt
-+F:	Documentation/ABI/testing/sysfs-class-switchtec
- F:	drivers/pci/switch/switchtec*
- 
- PCI DRIVER FOR NVIDIA TEGRA
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 2993c0c..ab08aa4 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -486,6 +486,118 @@ static void mrpc_timeout_work(struct work_struct *work)
- 	mutex_unlock(&stdev->mrpc_mutex);
- }
- 
-+static ssize_t device_version_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	u32 ver;
-+
-+	ver = ioread32(&stdev->mmio_sys_info->device_version);
-+
-+	return sprintf(buf, "%x\n", ver);
-+}
-+static DEVICE_ATTR_RO(device_version);
-+
-+static ssize_t fw_version_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	u32 ver;
-+
-+	ver = ioread32(&stdev->mmio_sys_info->firmware_version);
-+
-+	return sprintf(buf, "%08x\n", ver);
-+}
-+static DEVICE_ATTR_RO(fw_version);
-+
-+static ssize_t io_string_show(char *buf, void __iomem *attr, size_t len)
-+{
-+	int i;
-+
-+	memcpy_fromio(buf, attr, len);
-+	buf[len] = '\n';
-+	buf[len + 1] = 0;
-+
-+	for (i = len - 1; i > 0; i--) {
-+		if (buf[i] != ' ')
-+			break;
-+		buf[i] = '\n';
-+		buf[i + 1] = 0;
-+	}
-+
-+	return strlen(buf);
-+}
-+
-+#define DEVICE_ATTR_SYS_INFO_STR(field) \
-+static ssize_t field ## _show(struct device *dev, \
-+	struct device_attribute *attr, char *buf) \
-+{ \
-+	struct switchtec_dev *stdev = to_stdev(dev); \
-+	return io_string_show(buf, &stdev->mmio_sys_info->field, \
-+			    sizeof(stdev->mmio_sys_info->field)); \
-+} \
-+\
-+static DEVICE_ATTR_RO(field)
-+
-+DEVICE_ATTR_SYS_INFO_STR(vendor_id);
-+DEVICE_ATTR_SYS_INFO_STR(product_id);
-+DEVICE_ATTR_SYS_INFO_STR(product_revision);
-+DEVICE_ATTR_SYS_INFO_STR(component_vendor);
-+
-+static ssize_t component_id_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	int id = ioread16(&stdev->mmio_sys_info->component_id);
-+
-+	return sprintf(buf, "PM%04X\n", id);
-+}
-+static DEVICE_ATTR_RO(component_id);
-+
-+static ssize_t component_revision_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+	int rev = ioread8(&stdev->mmio_sys_info->component_revision);
-+
-+	return sprintf(buf, "%d\n", rev);
-+}
-+static DEVICE_ATTR_RO(component_revision);
-+
-+static ssize_t partition_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+
-+	return sprintf(buf, "%d\n", stdev->partition);
-+}
-+static DEVICE_ATTR_RO(partition);
-+
-+static ssize_t partition_count_show(struct device *dev,
-+	struct device_attribute *attr, char *buf)
-+{
-+	struct switchtec_dev *stdev = to_stdev(dev);
-+
-+	return sprintf(buf, "%d\n", stdev->partition_count);
-+}
-+static DEVICE_ATTR_RO(partition_count);
-+
-+static struct attribute *switchtec_device_attrs[] = {
-+	&dev_attr_device_version.attr,
-+	&dev_attr_fw_version.attr,
-+	&dev_attr_vendor_id.attr,
-+	&dev_attr_product_id.attr,
-+	&dev_attr_product_revision.attr,
-+	&dev_attr_component_vendor.attr,
-+	&dev_attr_component_id.attr,
-+	&dev_attr_component_revision.attr,
-+	&dev_attr_partition.attr,
-+	&dev_attr_partition_count.attr,
-+	NULL,
-+};
-+
-+ATTRIBUTE_GROUPS(switchtec_device);
-+
- static int switchtec_dev_open(struct inode *inode, struct file *filp)
- {
- 	struct switchtec_dev *stdev;
-@@ -734,6 +846,7 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
- 	device_initialize(dev);
- 	dev->class = switchtec_class;
- 	dev->parent = &pdev->dev;
-+	dev->groups = switchtec_device_groups;
- 	dev->release = stdev_release;
- 
- 	minor = ida_simple_get(&switchtec_minor_ida, 0, 0,
--- 
-2.1.4
+Rob, gentle reminder on your viewpoint. my take on whole thing is as follows:
+
+1) of_dma_get_range is supposed to handle traditional dma-ranges
+(not pci one)
+
+2) we need separate function for pci users such as iproc or rcar SOCs
+to have their dma-ranges parsed,
+which can be extended later for e.g. pci flags have some meanings.
+
+besides of_dma_configure is written to pass only single out parameter
+(..., *dma_addr, *size)
+handling multiple ranges here, and passing only one range out is not desirable.
+
+also you would not like to handle pci flags in of_dma_get_range (the
+first portion of DT
+entry) in this function if required in future.
+
+this new function will be similar to of_pci_get_host_bridge_resources
+which I am writing/improving right now..
+
+Regards,
+Oza.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
