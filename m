@@ -1,57 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:33279 "EHLO
-        mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751632AbdCVFtN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 22 Mar 2017 01:49:13 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 30 Mar 2017 11:47:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
+ interface
+Message-ID: <20170330164732.GA8437@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+ <20170327094954.7162-3-lorenzo.pieralisi@arm.com>
+ <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
+ <20170328144543.GA18046@red-moon>
 MIME-Version: 1.0
-Reply-To: linasvepstas@gmail.com
-In-Reply-To: <1490102658-22768-1-git-send-email-caoj.fnst@cn.fujitsu.com>
-References: <1490102658-22768-1-git-send-email-caoj.fnst@cn.fujitsu.com>
-From: Linas Vepstas <linasvepstas@gmail.com>
-Date: Wed, 22 Mar 2017 13:48:51 +0800
-Message-ID: <CAHrUA34WX1sqEWJiuiy8yN2B1NHjDzj5UQ2A=0Nsdad1cVNjDw@mail.gmail.com>
-Subject: Re: [PATCH] pci-error-recovery: doc cleanup
-To: Cao jin <caoj.fnst@cn.fujitsu.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        linux-doc@vger.kernel.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170328144543.GA18046@red-moon>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "Luis R. Rodriguez" <mcgrof@kernel.org>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
+ Murali Karicheri <m-karicheri2@ti.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Haavard Skinnemoen <hskinnemoen@gmail.com>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Thomas Gleixner <tglx@linutronix.de>,
+ Ingo Molnar <mingo@redhat.com>, linux-arm-kernel@lists.infradead.org,
+ Richard Henderson <rth@twiddle.net>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Tony Luck <tony.luck@intel.com>, Jingoo Han <jingoohan1@gmail.com>,
+ linux-kernel@vger.kernel.org, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On Tue, Mar 28, 2017 at 03:45:43PM +0100, Lorenzo Pieralisi wrote:
+> On Mon, Mar 27, 2017 at 08:41:10PM -0500, Bjorn Helgaas wrote:
+> > On Mon, Mar 27, 2017 at 10:49:30AM +0100, Lorenzo Pieralisi wrote:
 
-On Tue, Mar 21, 2017 at 9:24 PM, Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
-> Include whitespace shooting; correction; typo fix; superfluous word
-> dropping.
+> > >  #define ioremap_uc ioremap_uc
+> > > +#define ioremap_nopost ioremap_nocache
+> > 
+> > These are all the same as the default from asm-generic.h.  Do we really
+> > need these definitions in alpha, avr32, frv, ia64, x86?
+> 
+> Those arches do not include asm-generic.h (I suppose for a good reason)
 
->
-> diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
-> index da3b217..0b6bb3e 100644
-> --- a/Documentation/PCI/pci-error-recovery.txt
-> +++ b/Documentation/PCI/pci-error-recovery.txt
->
-> @@ -231,14 +231,14 @@ proceeds to STEP 4 (Slot Reset)
->  STEP 3: Link Reset
->  ------------------
->  The platform resets the link.  This is a PCI-Express specific step
-> -and is done whenever a non-fatal error has been detected that can be
-> +and is done whenever a fatal error has been detected that can be
->  "solved" by resetting the link.
+OK, that explains it.  I'm not at all sure there's a good reason for
+those arches not using asm-generic.h, but I haven't looked at the code
+to see.
 
-First: I thought I saw a patch a few months ago that proposed removing
-the link rest step.  I don't know if the patch was accepted or not.
+> but a definition is needed anyway if we want code using ioremap_nopost()
+> to be unconditional. This is one way of doing it, there are others not
+> sure they are any better, I am open to suggestions.
 
-If link resets are still supported, then they can only fix NON-fatal errors:
-basically, one resets the link, and only the link; one does NOT reset
-either the device driver, nor the device state. The idea is that after a link
-reset, communications with the device can immediately resume right
-where it left off. (this can be hard in practice, if the driver/firmware doesn't
-know what it was doing when the error occurred.  this might be why no one
-implements it.)  Anyway, the whole point of a link reset is that it is
-explicitly
-a non-fatal error.
-
---linas
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
