@@ -1,78 +1,131 @@
-Return-Path: <SRS0=Rd9u=27=redhat.com=jcm@kernel.org>
-Return-Path: <SRS0=Rd9u=27=redhat.com=jcm@kernel.org>
-Subject: Re: [PATCH v3 0/2] Handle Cavium ThunderX2 PCI topology quirk
-To: Jayachandran C <jnair@caviumnetworks.com>,
- Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org
-References: <1490172671-2648-1-git-send-email-jnair@caviumnetworks.com>
-Cc: linux-arm-kernel@lists.infradead.org, Robin Murphy <robin.murphy@arm.com>
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <122d7df5-8fde-c6fb-a608-9091dd59e79b@redhat.com>
-Date: Wed, 22 Mar 2017 11:13:05 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1490172671-2648-1-git-send-email-jnair@caviumnetworks.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <27f50de3-721e-e8ec-00c8-b7a9d3cff0d6@codeaurora.org>
+References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
+ <20170322193111.GA8190@wunner.de>
+ <CAKv+Gu_X-SEnz7h9J8boqqjOQGHQawwdSAq4haH-OGu8zdfNfA@mail.gmail.com>
+ <20170323084819.GA23281@h08.hostsharing.net>
+ <CAKv+Gu93eJ-js3g7M6Jdm6XGMaWMswFmzBG2qNT4rn+3=1+EyA@mail.gmail.com>
+ <20170323105727.GA2441@red-moon>
+ <466dcd2b-a781-2fe7-6ef0-5a3767c793e0@codeaurora.org>
+ <CAKv+Gu9LbwpnJNi1OL25MWvYPxEOfKRHcs2jA2121BPaQWPzow@mail.gmail.com>
+ <27f50de3-721e-e8ec-00c8-b7a9d3cff0d6@codeaurora.org>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Thu, 30 Mar 2017 09:46:39 +0100
+Message-ID: <CAKv+Gu-qRg8-YRCairppKrEfeLcW+OwVF8qZHp7vxXJA_AwPOw@mail.gmail.com>
+Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+To: Sinan Kaya <okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+ Lukas Wunner <lukas@wunner.de>, Matt Fleming <matt@codeblueprint.co.uk>,
+ linux-pci <linux-pci@vger.kernel.org>, Peter Jones <pjones@redhat.com>,
+ Heyi Guo <heyi.guo@linaro.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Yinghai Lu <yinghai@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/22/2017 04:51 AM, Jayachandran C wrote:
-> Hi Bjorn, Alex,
-> 
-> Here is v3 of the patchset to handle the PCIe topology quirk of
-> Cavium ThunderX2 (previously called Broadcom Vulcan).
-> 
-> The earlier discussions on this can be seen at:
-> http://www.spinics.net/lists/linux-pci/msg51001.html
-> https://patchwork.ozlabs.org/patch/582633/ and
-> https://lists.linuxfoundation.org/pipermail/iommu/2016-June/017681.html
-> 
-> The earlier discussion on this patchset had stalled with a suggestion
-> that it may be possible to fix up this quirk by handling the issue in
-> the function argument of pci_for_each_dma_alias(). But at that point
-> all the ACPI and OF code for SMMU and GIC was to merged, and we did not
-> have reasonable codebase to make the changes.
-> 
-> For 4.11, I tried to fix it in both the SMMU and the GIC ITS code based
-> on this suggestion, but after going thru the effort, that does not look
-> like the right approach. I have the code changes at:
-> https://github.com/jchandra-cavm/linux/commits/rid-xlate-fixup
-> if anyone want to look over the code.
-> 
-> The problems with that approach is:
->  - of the 14 uses of pci_for_each_dma_alias in the function in the kernel
->    tree, I have to fixup 6 callers (which is all but one ofthe callers
->    outside x86)
->  - 4 of these can be reasonably handled (please see the github repo above),
->    but the calls in drivers/irqchip/irq-gic-v3-its-pci-msi.c and
->    drivers/iommu/iommu.c cannot be reasonably fixed up.
->  - Even without the 2 above two changes I can get it to work for now.
->    But pci_for_each_dma_alias does not work as expected on this platform
->    and we have to be aware of that for all future uses of the function.
->   
-> For now, I have ruled out that approach, and I have rebased the earlier
-> patch on to 4.11-rc and submitting again for review. The changes are:
-> 
-> v2>v3:
->  - changed device flag name from PCI_DEV_FLAGS_DMA_ALIAS_ROOT to
->    PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT
->  - updated commit message to make the quirk clearer.
-> 
-> Let me know your comments and suggestions.
+On 28 March 2017 at 22:49, Sinan Kaya <okaya@codeaurora.org> wrote:
+> On 3/28/2017 5:39 PM, Ard Biesheuvel wrote:
+>> On 28 March 2017 at 22:27, Sinan Kaya <okaya@codeaurora.org> wrote:
+>>> Hi Lorenzo,
+>>>
+>>> On 3/23/2017 6:57 AM, Lorenzo Pieralisi wrote:
+>>>>> Correct. But on x86 (or rather, on a PC), you can be sure that UEFI
+>>>>> (or the legacy PCI bios) performed the resource assignment already.
+>>>>> One could argue that this is equally the case when running arm64 in
+>>>>> ACPI mode, but in general, you cannot assume the presence of firmware
+>>>>> on ARM/arm64 that has already taken care of this, and so the state of
+>>>>> the BARs has to be presumed invalid.
+>>>> The story is a bit more convoluted than that owing to x86 (and other
+>>>> arches) legacy.
+>>>>
+>>>> x86 tries to claim all PCI resources (in two passes - first enabled
+>>>> devices, second disabled devices) and that predates ACPI/UEFI.
+>>>>
+>>>> Mind, x86 reassign resources that can't be claimed too, the only
+>>>> difference with ARM64 is that, for the better or the worse, we
+>>>> have decided not to claim the FW PCI set-up on ARM64 even if it
+>>>> is sane, we do not even try, it was a deliberate choice.
+>>>>
+>>>> This patch should be harmless on x86 since if the FB PCI BAR is set
+>>>> up sanely, claiming it again should be a nop (to be checked).
+>>>>
+>>>> For all the talk about PCI being arch agnostic as I said manifold
+>>>> times before, that's just theory. In practice different arches
+>>>> treat PCI FW set-up differently, it would be ideal to make them
+>>>> uniform but legacy is huge and there is a massive risk of triggering
+>>>> regressions, it is no mean feat (if achievable at all).
+>>>
+>>> Can we explore having a uniform behavior across ALL ACPI bases systems
+>>> by trying to reuse the resources assigned by firmware first and reassign
+>>> them only if something is wrong?
+>>>
+>>> There are protocols like hotplug reservation in UEFI. It looks like Linux
+>>> is not honoring any of these protocols by being too smart.
+>>>
+>>
+>> Could you be more specific? Which protocol do you mean exactly, and
+>> how does not reusing resources interfere with it?
+>>
+>
+> Let's assume for the moment that if ARM64 adaptation of PCIE reused the firmware
+> assigned BAR addresses, would you still have this problem that you are trying to
+> fix by a quirk?
+>
 
-My opinion FWIW is that the quirk you have is one of the least intrusive
-ways of handling this. Generally in the case of ARM servers, we have a
-difference vs. x86 in that the latter usually have a magic RC at the
-top level that everything sits beneath (and then, presumably, Intel
-do some magic for multi-socket to fudge things over Q/UPI so that
-things look nice and boring to software). On ARM, we're typically
-dealing with third party RC IP that's disjoint from other parts of
-the SoC. We're certainly in the process of bolstering the specs to
-set some expectations and greater guidance around topologies that
-we would like to avoid, so I don't see this getting out of hand.
+Probably not. Although I should point out that the same issue exists
+on DT systems, and so we will need this patch regardless.
 
-That's my $0.02.
+> The protocol that I was looking at specifically is called hotplug reservation
+> protocol.
+>
+> http://www.intel.com/content/www/us/en/architecture-and-technology/unified-extensible-firmware-interface/efi-hot-plug-pci-initialization-protocol-specification.html
+>
+> The idea is to pad the PCIe bridge window by some amount in UEFI. You boot the
+> system without any cards present. when you do to hotplug, OS uses the range
+> reserved by the BIOS for inserting the new card.
+>
+> what I see is that the bridge windows get overridden by the OS.
+>
+> I'm asking why we don't fix the actual problem in PCIe ARM64 adaptation instead
+> of working around it by quirks.
+>
+> I don't see any reason why ACPI ARM64 should carry the burden of legacy systems.
+>
+> Legacy only applies to DT based systems.
+>
 
-Jon.
+I fully agree with this point: ACPI implies firmware, and so we should
+be able to rely on firmware to have initialized the PCIe subsystem by
+the time the kernel gets to access it.
 
--- 
-Computer Architect | Sent from my Fedora powered laptop
+> If there is still a legacy problem in ACPI ARM64, generic Linux code deals with
+> this using some DMI/SMBIOS and setting a time bomb like products after this date
+> shall follow the new behavior.
+>
+> We are not in a very hardened position when it comes to changes for ACPI based
+> systems.
+>
+> Sinan
+>
+> --
+> Sinan Kaya
+> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
