@@ -1,83 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:43874 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755504AbdCTSQh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 20 Mar 2017 14:16:37 -0400
-Subject: Re: Help: MSI DWC connecting with a MSIx Endpoint
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-References: <85bfa77f-6cd0-a669-c940-7fa7d9fb17a3@synopsys.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <28a4e429-a2d2-8f28-e4fc-8eebae0b3367@arm.com>
-Date: Mon, 20 Mar 2017 18:16:34 +0000
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V6 5/5] PCI/ASPM: move link_state cleanup to bridge remove
+To: linux-pci@vger.kernel.org, timur@codeaurora.org
+References: <1490828667-30973-1-git-send-email-okaya@codeaurora.org>
+ <1490828667-30973-6-git-send-email-okaya@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <c9bbde75-c976-4f7d-8c31-167f6d173994@codeaurora.org>
+Date: Thu, 30 Mar 2017 09:25:11 -0400
 MIME-Version: 1.0
-In-Reply-To: <85bfa77f-6cd0-a669-c940-7fa7d9fb17a3@synopsys.com>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1490828667-30973-6-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
+ linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Rajat Jain <rajatja@google.com>,
+ Yinghai Lu <yinghai@kernel.org>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joao,
+On 3/29/2017 7:04 PM, Sinan Kaya wrote:
+>  	if (!parent || !parent->link_state)
+>  		return;
+>  
+> +	if (pdev->has_secondary_link) {
+> +		link = pdev->link_state;
 
-On 20/03/17 17:30, Joao Pinto wrote:
-> Hi Mark,
-> 
-> I am facing a challenge in a setup I must bring up that is composed by a
-> Synopsys Root Complex connected to a MSIx-only Endpoint from Mellanox.
-> The endpoint probe fails because it is not capable of enabling msix.
-> 
-> In order to get more info about it, I added some debug messages to the msix
-> enable process and got the following:
-> 
-> MSIX DBG[mlx5_enable_msix]: Num. EQs: 256
-> MSIX DBG[mlx5_enable_msix]: Num. Vectors: 4
-> MSIX DBG[mlx5_enable_msix]: Min. Num. Vectors: 4
-> MSIX DBG[mlx5_enable_msix]: Num. Online CPUs: 1
-> MSIX DBG[mlx5_enable_msix]: MLX5_EQ_VEC_COMP_BASE: 3
-> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 0
-> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 1
-> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 2
-> MSIX DBG[mlx5_enable_msix]: Filling msix array... entry = 3
-> MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range
-> MSIX DBG[__pci_enable_msix_range]: Enabling MSIX [Nvec: 4, Affinity: 0]
-> MSIX DBG[__pci_enable_msix]: NVec: 4
-> MSIX DBG[__pci_enable_msix]: Num. Entries: 64
-> MSIX DBG[__pci_enable_msix]: Checking invalid entries
-> MSIX DBG[msix_capability_init]: Ensure MSI is disable
-> MSIX DBG[msix_capability_init]: Getting MSIX Capability
-> MSIX DBG[msix_capability_init]: Mapping MSIX Capability Region
-> MSIX DBG[msix_capability_init]: Setup Entries
-> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 0
-> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 1
-> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 2
-> MSIX DBG[msix_setup_entries]: Configuring MSIX entry 3
-> MSIX DBG[msix_capability_init]: Setup IRQS
-> MSIX DBG[pci_msi_setup_msi_irqs]: Inside!
-> MSIX DBG[arch_setup_msi_irqs]: Inside!
-> MSIX DBG[msix_capability_init]: Failed pci_msi_setup_msi_irqs
-> MSIX DBG[mlx5_enable_msix]: Enabling PCI MSIX Range, result: -22
-> mlx5_core 0000:01:00.0: enable msix failed
-> 
-> The conclusion I came up was that the msix setup in the endpoint fails because
-> in the pcie-designware-host.c we are rejecting msix as you can see here:
-> 
-> /* MSI-X interrupts are not supported */
-> if (type == PCI_CAP_ID_MSIX)
->         return -EINVAL;
-> 
-> Did you ever came across this problem?
+I think I accidentally moved the parent check above this code
+and broke the case where you can actually remove the root port.
 
-I don't have access to any system using this IP, unfortunately. This
-looks like an arbitrary limitation of the host controller driver, as
-there isn't much difference between MSI and MSI-X at the MSI controller
-level, other than the reduced number of interrupts.
+I'll post v7 with reverting this change.
 
-Unfortunately, this driver seems to rely on rather old APIs, and could
-use some care and attention. I'm pretty sure that converting this driver
-to the generic MSI API would solve this problem entirely, but I'm afraid
-I don't have the bandwidth to do so.
-
-Thanks,
-
-	M.
 -- 
-Jazz is not dead. It just smells funny...
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
