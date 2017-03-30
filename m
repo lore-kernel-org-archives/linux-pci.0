@@ -1,87 +1,57 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RESEND PATCH v3 5/7] PCI: dwc: all: Modify dbi accessors to
- access data of 4/2/1 bytes
-To: Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas
- <bhelgaas@google.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, <linux-pci@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-omap@vger.kernel.org>,
- <linux-arm-kernel@lists.infradead.org>
-References: <1489041545-15730-1-git-send-email-kishon@ti.com>
- <1489041545-15730-6-git-send-email-kishon@ti.com>
- <a56e462d-83ee-194f-1f9f-3f4c339cad46@axis.com>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <58C29648.5020708@ti.com>
-Date: Fri, 10 Mar 2017 17:34:24 +0530
+Return-Path: <SRS0=zG0X=3H=gmail.com=ddaney.cavm@kernel.org>
+Return-Path: <SRS0=zG0X=3H=gmail.com=ddaney.cavm@kernel.org>
+Subject: Re: [PATCH 5/5] PCI: remove pci_enable_msix
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20170327082936.6830-1-hch@lst.de>
+ <20170327082936.6830-6-hch@lst.de>
+ <83f97789-0817-7549-bfa9-1f8dcb0c26d9@gmail.com>
+ <20170327171148.GB28815@lst.de>
+ <1eaa46ad-9890-c738-3a85-6468161284ba@gmail.com>
+ <20170328064148.GA20271@lst.de>
+ <217ae0b0-1d0c-bde9-e3f1-c52cbd3bd112@gmail.com>
+ <20170330225610.GA2496@bhelgaas-glaptop.roam.corp.google.com>
+Cc: Christoph Hellwig <hch@lst.de>, bhelgaas@google.com, davem@davemloft.net,
+ netanel@annapurnalabs.com, jcliburn@gmail.com, chris.snook@gmail.com,
+ sgoutham@cavium.com, rric@kernel.org, netdev@vger.kernel.org,
+ linux-pci@vger.kernel.org
+From: David Daney <ddaney.cavm@gmail.com>
+Message-ID: <b44e6740-2896-ef1a-c0ba-466a1680f7e6@gmail.com>
+Date: Thu, 30 Mar 2017 16:00:32 -0700
 MIME-Version: 1.0
-In-Reply-To: <a56e462d-83ee-194f-1f9f-3f4c339cad46@axis.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Richard Zhu <hongxing.zhu@nxp.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
- Jesper Nilsson <jespern@axis.com>, Zhou Wang <wangzhou1@hisilicon.com>,
- Murali Karicheri <m-karicheri2@ti.com>, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170330225610.GA2496@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+On 03/30/2017 03:56 PM, Bjorn Helgaas wrote:
+> On Tue, Mar 28, 2017 at 09:24:15AM -0700, David Daney wrote:
+>> On 03/27/2017 11:41 PM, Christoph Hellwig wrote:
+>>> On Mon, Mar 27, 2017 at 10:30:46AM -0700, David Daney wrote:
+>>>>> Use pci_enable_msix_{exact,range} for now, as I told you before.
+>>>>>
+>>>>
+>>>> That still results in twice as many MSI-X being provisioned than are needed.
+>>>
+>>> How so?  Except for the return value, a pci_enable_msix_exact call with the
+>>> same arguments as your previous pci_enable_msix will work exactly the
+>>> same.
+>>>
+>>
+>> Sorry, I think it was my misunderstanding.  I didn't realize that we
+>> had essentially renamed the function, but left the functionality
+>> mostly unchanged.
+>
+> Does this mean you're OK with this patch?
 
-On Thursday 09 March 2017 08:18 PM, Niklas Cassel wrote:
-> On 03/09/2017 07:39 AM, Kishon Vijay Abraham I wrote:
->> Previously dbi accessors can be used to access data of size 4
->> bytes. But there might be situations (like accessing
->> MSI_MESSAGE_CONTROL in order to set/get the number of required
->> MSI interrupts in EP mode) where dbi accessors must
->> be used to access data of size 2. This is in preparation for
->> adding endpoint mode support to designware driver.
-> 
-> Hello Kishon
-> 
-> I don't really like the idea of adding an extra argument to every existing read/write.
-> Will not a read/write of length != 32 be quite uncommon compared to
-> a read/write of length == 32?
-> 
-> How about adding some defines to pcie-designware.h:
-> 
-> #define dw_pcie_writel_dbi(pci, base, reg, val) dw_pcie_write_dbi(pci, base, reg, 0x4, val)
-> #define dw_pcie_readl_dbi(pci, base, reg) dw_pcie_read_dbi(pci, base, reg, 0x4)
-> 
-> That way we don't have to change every existing read/write.
-> 
-> 
-> 
-> Is there a reason why we can't just do:
-> 
-> vial = dw_pcie_readl_dbi(pci, base, MSI_MESSAGE_CONTROL);
+Yes.  I have re-written my GPIO driver to use the newer functions, so I 
+withdraw my objections to the patch.
 
-MSI_MESSAGE_CONTROL is 0x52 (MSI capability offset + 2). I'm not sure if we can
-do a readl that crosses the alignment boundary in all platforms. The other
-option is to readl from "MSI capability offset + 0" and extract the last 16
-bits. I felt this is more clear since we are interested only in the
-MSI_MESSAGE_CONTROL.
+Thanks,
+David Daney
 
-> <shifting+masking the bits we need to get/set>
-> dw_pcie_writel_dbi(pci, base, MSI_MESSAGE_CONTROL, val);
-> 
-> Or are we going to be doing read/writes of length != 32 so often that
-> you think that it's cleaner to have this abstraction?
 
-it's used mainly for accessing configuration space header fields. Even the pci
-core uses *pci_read_config_word* for accessing such fields.
-
-Thanks
-Kishon
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> I know it may require some
+> work on out-of-tree drivers and so on, but if that work is possible
+> and you don't actually lose functionality, I'm OK with this patch.
+>
+> Bjorn
+>
