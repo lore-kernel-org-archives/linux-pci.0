@@ -1,47 +1,74 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-eopbgr00067.outbound.protection.outlook.com ([40.107.0.67]:41504
-        "EHLO EUR02-AM5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753919AbdCIJ1g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 9 Mar 2017 04:27:36 -0500
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: Kishon Vijay Abraham I <kishon@ti.com>,
-        Primoz Fiser <primoz.fiser@norik.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: RE: Quick question on PCI EP framework
-Date: Thu, 9 Mar 2017 09:11:59 +0000
-Message-ID: <AM5PR0402MB2850F8EB13CE89B7C97C70A78C210@AM5PR0402MB2850.eurprd04.prod.outlook.com>
-References: <bc702b72-bf0f-d894-6408-40f4e721057e@norik.com>
- <58C115ED.9040305@ti.com>
-In-Reply-To: <58C115ED.9040305@ti.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from szxga02-in.huawei.com ([45.249.212.188]:4853 "EHLO
+        dggrg02-dlp.huawei.com" rhost-flags-OK-FAIL-OK-FAIL)
+        by vger.kernel.org with ESMTP id S933746AbdC3Ozs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Mar 2017 10:55:48 -0400
+From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+To: <catalin.marinas@arm.com>, <will.deacon@arm.com>,
+        <robh+dt@kernel.org>, <frowand.list@gmail.com>,
+        <bhelgaas@google.com>, <rafael@kernel.org>, <arnd@arndb.de>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <mark.rutland@arm.com>, <brian.starkey@arm.com>, <olof@lixom.net>,
+        <lorenzo.pieralisi@arm.com>, <benh@kernel.crashing.org>,
+        <linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
+        <linuxarm@huawei.com>, <devicetree@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <minyard@acm.org>,
+        <zourongrong@gmail.com>, <john.garry@huawei.com>,
+        <gabriele.paoloni@huawei.com>, <zhichang.yuan02@gmail.com>,
+        <kantyzc@163.com>, <xuwei5@hisilicon.com>,
+        "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Subject: [PATCH V8 6/6] LPC: Add the ACPI LPC support
+Date: Thu, 30 Mar 2017 23:26:59 +0800
+Message-ID: <1490887619-61732-7-git-send-email-yuanzhichang@hisilicon.com>
+In-Reply-To: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
+References: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQo+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+IEZyb206IEtpc2hvbiBWaWpheSBBYnJh
-aGFtIEkgW21haWx0bzpraXNob25AdGkuY29tXQ0KPiBTZW50OiBUaHVyc2RheSwgTWFyY2ggMDks
-IDIwMTcgNDo0NCBQTQ0KPiBUbzogUHJpbW96IEZpc2VyIDxwcmltb3ouZmlzZXJAbm9yaWsuY29t
-PjsgUmljaGFyZCBaaHUNCj4gPGhvbmd4aW5nLnpodUBueHAuY29tPjsgTHVjYXMgU3RhY2ggPGwu
-c3RhY2hAcGVuZ3V0cm9uaXguZGU+OyBsaW51eC0NCj4gcGNpQHZnZXIua2VybmVsLm9yZw0KPiBT
-dWJqZWN0OiBSZTogUXVpY2sgcXVlc3Rpb24gb24gUENJIEVQIGZyYW1ld29yaw0KPiANCj4gK1Jp
-Y2hhcmQgWmh1LCBMdWNhcyBTdGFjaCwgbGludXgtcGNpDQo+IA0KPiBIaSBQcmltb3osDQo+IA0K
-PiBPbiBUaHVyc2RheSAwOSBNYXJjaCAyMDE3IDAxOjQ4IFBNLCBQcmltb3ogRmlzZXIgd3JvdGU6
-DQo+ID4gSGVsbG8gS2lzaG9uLA0KPiA+DQo+ID4gSSBoYXZlIGEgcXVpY2sgcXVlc3Rpb24gb24g
-bmV3bHkgcmVsZWFzZWQgUENJIEVQIGZyYW1ld29yayBieSB5b3UhDQo+ID4NCj4gPiBGaXJzdCBv
-ZiBhbGwsIHRoYW5rIHlvdSBmb3IgcHJvdmlkaW5nIHN1Y2ggYSBjb21wcmVoZW5zaXZlIGZyYW1l
-d29yay4NCj4gPg0KPiA+IEFuZCBoZXJlIGlzIG15IHF1ZXN0aW9uLCBpcyBpLk1YNlEgd2l0aCBk
-ZXNpZ253YXJlIFBDSWUgSVAgY2FwYWJsZSBvZg0KPiA+IHByb3ZpZGluZyBFUCBmdW5jdGlvbmFs
-aXR5IHRocm91Z2ggeW91ciBmcmFtZXdvcms/IERvIHdlIG5lZWQgc3BlY2lmaWMgSVANCj4gY29y
-ZSB2ZXJzaW9uPw0KPiANCj4gSSdtIG5vdCBzdXJlIG9mIHRoZSBleGFjdCB2ZXJzaW9uIHVzZWQg
-aW4gaS5NWDZRLiBSaWNoYXJkIFpodSBvciBMdWNhcyBTdGFjaA0KPiB3aG8gbWFpbnRhaW4gdGhl
-IFBDSSBkcml2ZXIgbWlnaHQgaGF2ZSB0aGF0IGluZm9ybWF0aW9uLg0KPiA+DQo+ID4gSWYgeWVz
-LCB3ZSBwcm9iYWJseSBuZWVkIHRvIHBvcnQgc3R1ZmYgZnJvbSBkcmE3eHggcmlnaHQ/DQo+IA0K
-PiBZZXMsIEkgdGhpbmsgc29tZSBwb3J0aW5nIHdpbGwgYmUgcmVxdWlyZWQgKGRlc2lnbndhcmUg
-Y29yZSBkcml2ZXIgYWxyZWFkeQ0KPiBzdXBwb3J0cyBFUCBtb2RlIG9ubHkgdGhlIGkuTVhRIHNw
-ZWNpZmljIHBhcnQgaGF2ZSB0byBiZSBtb2RpZmllZCkuDQo+IA0KPiBUaGFua3MNCj4gS2lzaG9u
-DQoNCkhpIEtpc2hvbjoNClRoYW5rcyBmb3IgeW91ciBpbmZvcm1hdGlvbi4NCmlNWDZRIFBDSWUg
-aGFzIHRoZSBFUCBmdW5jdGlvbiwgYW5kIGl0J3MgZGVzaWdud2FyZSBJUCB2ZXJzaW9uIGlzIDMu
-ODAuDQoNCkJlc3QgUmVnYXJkcw0KaG9uZ3hpbmcgemh1DQpMaW51eCBCU1AgdGVhbQ0KT2ZmaWNl
-OiA4Ni0yMS0yODkzNzE4OQ0KRW1haWw6IGhvbmd4aW5nLnpodUBueHAuY29tDQoNCg==
+Based on the provious patches, this patch supports the ACPI LPC host on
+Hip06/Hip07.
+
+Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ drivers/bus/hisi_lpc.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/bus/hisi_lpc.c b/drivers/bus/hisi_lpc.c
+index 018ea37..ef62045 100644
+--- a/drivers/bus/hisi_lpc.c
++++ b/drivers/bus/hisi_lpc.c
+@@ -458,7 +458,9 @@ static int hisilpc_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	/* register the LPC host PIO resources */
+-	if (!has_acpi_companion(dev)) {
++	if (has_acpi_companion(dev)) {
++		lpcdev->io_host = find_io_range_by_fwnode(dev->fwnode);
++	} else {
+ 		struct logic_pio_hwaddr *range, *tmprange;
+ 
+ 		range = kzalloc(sizeof(*range), GFP_KERNEL);
+@@ -526,10 +528,18 @@ static int hisilpc_probe(struct platform_device *pdev)
+ 	{},
+ };
+ 
++#ifdef CONFIG_ACPI
++static const struct acpi_device_id hisilpc_acpi_match[] = {
++	{"HISI0191", },
++	{},
++};
++#endif
++
+ static struct platform_driver hisilpc_driver = {
+ 	.driver = {
+ 		.name           = "hisi_lpc",
+ 		.of_match_table = hisilpc_of_match,
++		.acpi_match_table = ACPI_PTR(hisilpc_acpi_match),
+ 	},
+ 	.probe = hisilpc_probe,
+ };
+-- 
+1.9.1
