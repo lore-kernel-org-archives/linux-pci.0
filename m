@@ -1,71 +1,218 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:46297 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751212AbdCUFoK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 21 Mar 2017 01:44:10 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v2L5i45H062795
-        for <linux-pci@vger.kernel.org>; Tue, 21 Mar 2017 01:44:08 -0400
-Received: from e23smtp02.au.ibm.com (e23smtp02.au.ibm.com [202.81.31.144])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 29afu7rn6x-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-pci@vger.kernel.org>; Tue, 21 Mar 2017 01:44:08 -0400
-Received: from localhost
-        by e23smtp02.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-pci@vger.kernel.org> from <gwshan@linux.vnet.ibm.com>;
-        Tue, 21 Mar 2017 15:44:05 +1000
-Date: Tue, 21 Mar 2017 16:43:05 +1100
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Bodong Wang <bodong@mellanox.com>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>, bhelgaas@google.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        saeedm@mellanox.com, Eli Cohen <eli@mellanox.com>
-Subject: Re: [PATCH] pci/sriov: Add an option to probe VFs or not before
- enabling SR-IOV
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1490022874-54718-1-git-send-email-bodong@mellanox.com>
- <20170320230706.GA12252@gwshan>
- <7bfcfdcd-e0a8-f1e9-f112-fa35fdb845d7@mellanox.com>
- <20170320225708.6868676a@t450s.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170320225708.6868676a@t450s.home>
-Message-Id: <20170321054305.GA12230@gwshan>
+Received: from ale.deltatee.com ([207.54.116.67]:44307 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933428AbdC3WNY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Mar 2017 18:13:24 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 30 Mar 2017 16:12:37 -0600
+Message-Id: <1490911959-5146-7-git-send-email-logang@deltatee.com>
+In-Reply-To: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+Subject: [RFC 6/8] nvmet: Be careful about using iomem accesses when dealing with p2pmem
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 20, 2017 at 10:57:08PM -0600, Alex Williamson wrote:
->On Mon, 20 Mar 2017 18:34:23 -0500
->Bodong Wang <bodong@mellanox.com> wrote:
+p2pmem will always be iomem so if we ever access it, we should be using
+the correct methods to read and write to it.
 
-.../...
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Stephen Bates <sbates@raithlin.com>
+Signed-off-by: Steve Wise <swise@opengridcomputing.com>
+---
+ drivers/nvme/target/core.c        | 18 ++++++++++++++++--
+ drivers/nvme/target/fabrics-cmd.c | 28 +++++++++++++++-------------
+ drivers/nvme/target/nvmet.h       |  1 +
+ drivers/nvme/target/rdma.c        | 13 ++++++-------
+ 4 files changed, 38 insertions(+), 22 deletions(-)
 
->> > Bodong, I'm not sure if there is a requirement to load driver for the
->> > specified number of VFs? That indicates no driver will be loaded for
->> > other VFs. If so, this interface might serve the purpose as well.  
->> Gavin, thanks for the review. That is indeed an interesting suggestion. 
->> Theoretically,  we can change that probe_vfs from boolean to integer. 
->> And use it as a counter to probe the first N VFs(if N < total_vfs).  
->> Let's see if there are any objections.
->
->Is it just me or does this seem like a confusing user interface, ie. to
->get binary on/off behavior a user now needs to 'cat total_vfs >
->sriov_probe_vfs'.  It's not very intuitive, what's the use case for it?
->
-
-After it's changed to integer, it accepts number. If users want to load
-driver for all VFs and don't want to check the maximal number of VFs,
-they can simply write 0xffffffff. So "on" and "off" are replaced with 0xffffffff
-and 0, but users has to press the keyboard more times though.
-
-drivers/net/ethernet/mellanox/mlx4/main.c::probe_vfs_argc allows to specify
-the number of VFs with which we're going to bind drivers. Less time is needed
-to enable SRIOV capability. As I had in some development environment: assume
-PF supports 256 VFs and I'm going to enable all of them, but I only want to
-load driver for two of them, then test the data path on those two VFs. Besides,
-I can image the VF needn't a driver in host if it's going to be passed to guest. 
-Not sure how much sense it makes.
-
-Thanks,
-Gavin
+diff --git a/drivers/nvme/target/core.c b/drivers/nvme/target/core.c
+index 798653b..a1524d5 100644
+--- a/drivers/nvme/target/core.c
++++ b/drivers/nvme/target/core.c
+@@ -45,15 +45,29 @@ static struct nvmet_subsys *nvmet_find_get_subsys(struct nvmet_port *port,
+ u16 nvmet_copy_to_sgl(struct nvmet_req *req, off_t off, const void *buf,
+ 		size_t len)
+ {
+-	if (sg_pcopy_from_buffer(req->sg, req->sg_cnt, buf, len, off) != len)
++	bool iomem = req->p2pmem;
++	size_t ret;
++
++	ret = sg_copy_buffer(req->sg, req->sg_cnt, (void *)buf, len, off,
++			     false, iomem);
++
++	if (ret != len)
+ 		return NVME_SC_SGL_INVALID_DATA | NVME_SC_DNR;
++
+ 	return 0;
+ }
+ 
+ u16 nvmet_copy_from_sgl(struct nvmet_req *req, off_t off, void *buf, size_t len)
+ {
+-	if (sg_pcopy_to_buffer(req->sg, req->sg_cnt, buf, len, off) != len)
++	bool iomem = req->p2pmem;
++	size_t ret;
++
++	ret = sg_copy_buffer(req->sg, req->sg_cnt, buf, len, off, true,
++			     iomem);
++
++	if (ret != len)
+ 		return NVME_SC_SGL_INVALID_DATA | NVME_SC_DNR;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/nvme/target/fabrics-cmd.c b/drivers/nvme/target/fabrics-cmd.c
+index 8bd022af..9d966f0 100644
+--- a/drivers/nvme/target/fabrics-cmd.c
++++ b/drivers/nvme/target/fabrics-cmd.c
+@@ -118,11 +118,13 @@ static u16 nvmet_install_queue(struct nvmet_ctrl *ctrl, struct nvmet_req *req)
+ static void nvmet_execute_admin_connect(struct nvmet_req *req)
+ {
+ 	struct nvmf_connect_command *c = &req->cmd->connect;
+-	struct nvmf_connect_data *d;
++	struct nvmf_connect_data d;
+ 	struct nvmet_ctrl *ctrl = NULL;
+ 	u16 status = 0;
+ 
+-	d = kmap(sg_page(req->sg)) + req->sg->offset;
++	status = nvmet_copy_from_sgl(req, 0, &d, sizeof(d));
++	if (status)
++		goto out;
+ 
+ 	/* zero out initial completion result, assign values as needed */
+ 	req->rsp->result.u32 = 0;
+@@ -134,16 +136,16 @@ static void nvmet_execute_admin_connect(struct nvmet_req *req)
+ 		goto out;
+ 	}
+ 
+-	if (unlikely(d->cntlid != cpu_to_le16(0xffff))) {
++	if (unlikely(d.cntlid != cpu_to_le16(0xffff))) {
+ 		pr_warn("connect attempt for invalid controller ID %#x\n",
+-			d->cntlid);
++			d.cntlid);
+ 		status = NVME_SC_CONNECT_INVALID_PARAM | NVME_SC_DNR;
+ 		req->rsp->result.u32 = IPO_IATTR_CONNECT_DATA(cntlid);
+ 		goto out;
+ 	}
+ 
+-	status = nvmet_alloc_ctrl(d->subsysnqn, d->hostnqn, req,
+-			le32_to_cpu(c->kato), &ctrl);
++	status = nvmet_alloc_ctrl(d.subsysnqn, d.hostnqn, req,
++				  le32_to_cpu(c->kato), &ctrl);
+ 	if (status)
+ 		goto out;
+ 
+@@ -158,19 +160,20 @@ static void nvmet_execute_admin_connect(struct nvmet_req *req)
+ 	req->rsp->result.u16 = cpu_to_le16(ctrl->cntlid);
+ 
+ out:
+-	kunmap(sg_page(req->sg));
+ 	nvmet_req_complete(req, status);
+ }
+ 
+ static void nvmet_execute_io_connect(struct nvmet_req *req)
+ {
+ 	struct nvmf_connect_command *c = &req->cmd->connect;
+-	struct nvmf_connect_data *d;
++	struct nvmf_connect_data d;
+ 	struct nvmet_ctrl *ctrl = NULL;
+ 	u16 qid = le16_to_cpu(c->qid);
+ 	u16 status = 0;
+ 
+-	d = kmap(sg_page(req->sg)) + req->sg->offset;
++	status = nvmet_copy_from_sgl(req, 0, &d, sizeof(d));
++	if (status)
++		goto out;
+ 
+ 	/* zero out initial completion result, assign values as needed */
+ 	req->rsp->result.u32 = 0;
+@@ -182,9 +185,9 @@ static void nvmet_execute_io_connect(struct nvmet_req *req)
+ 		goto out;
+ 	}
+ 
+-	status = nvmet_ctrl_find_get(d->subsysnqn, d->hostnqn,
+-			le16_to_cpu(d->cntlid),
+-			req, &ctrl);
++	status = nvmet_ctrl_find_get(d.subsysnqn, d.hostnqn,
++				     le16_to_cpu(d.cntlid),
++				     req, &ctrl);
+ 	if (status)
+ 		goto out;
+ 
+@@ -205,7 +208,6 @@ static void nvmet_execute_io_connect(struct nvmet_req *req)
+ 	pr_info("adding queue %d to ctrl %d.\n", qid, ctrl->cntlid);
+ 
+ out:
+-	kunmap(sg_page(req->sg));
+ 	nvmet_req_complete(req, status);
+ 	return;
+ 
+diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
+index ab67175..ccd79ed 100644
+--- a/drivers/nvme/target/nvmet.h
++++ b/drivers/nvme/target/nvmet.h
+@@ -226,6 +226,7 @@ struct nvmet_req {
+ 
+ 	void (*execute)(struct nvmet_req *req);
+ 	struct nvmet_fabrics_ops *ops;
++	struct p2pmem_dev       *p2pmem;
+ };
+ 
+ static inline void nvmet_set_status(struct nvmet_req *req, u16 status)
+diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
+index 7fd4840..abab544 100644
+--- a/drivers/nvme/target/rdma.c
++++ b/drivers/nvme/target/rdma.c
+@@ -65,7 +65,6 @@ struct nvmet_rdma_rsp {
+ 	struct rdma_rw_ctx	rw;
+ 
+ 	struct nvmet_req	req;
+-	struct p2pmem_dev       *p2pmem;
+ 
+ 	u8			n_rdma;
+ 	u32			flags;
+@@ -501,7 +500,7 @@ static void nvmet_rdma_release_rsp(struct nvmet_rdma_rsp *rsp)
+ 
+ 	if (rsp->req.sg != &rsp->cmd->inline_sg)
+ 		nvmet_rdma_free_sgl(rsp->req.sg, rsp->req.sg_cnt,
+-				    rsp->p2pmem);
++				    rsp->req.p2pmem);
+ 
+ 	if (unlikely(!list_empty_careful(&queue->rsp_wr_wait_list)))
+ 		nvmet_rdma_process_wr_wait_list(queue);
+@@ -642,14 +641,14 @@ static u16 nvmet_rdma_map_sgl_keyed(struct nvmet_rdma_rsp *rsp,
+ 	if (!len)
+ 		return 0;
+ 
+-	rsp->p2pmem = rsp->queue->p2pmem;
++	rsp->req.p2pmem = rsp->queue->p2pmem;
+ 	status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
+-			len, rsp->p2pmem);
++				      len, rsp->req.p2pmem);
+ 
+-	if (status && rsp->p2pmem) {
+-		rsp->p2pmem = NULL;
++	if (status && rsp->req.p2pmem) {
++		rsp->req.p2pmem = NULL;
+ 		status = nvmet_rdma_alloc_sgl(&rsp->req.sg, &rsp->req.sg_cnt,
+-					      len, rsp->p2pmem);
++					      len, rsp->req.p2pmem);
+ 	}
+ 
+ 	if (status)
+-- 
+2.1.4
