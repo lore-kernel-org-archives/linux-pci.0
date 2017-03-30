@@ -1,175 +1,80 @@
-Return-Path: <SRS0=eIvo=2N=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=eIvo=2N=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <8daa1f79-8fda-bef9-e216-3c15f53c4f32@free.fr>
-References: <20170227164430.GB11162@bhelgaas-glaptop.roam.corp.google.com>
- <8643c952-e915-bcd1-390e-9d4001789872@free.fr> <20170227183534.GA12481@bhelgaas-glaptop.roam.corp.google.com>
- <347d4200-e089-60df-5f60-58d16efc7c4e@free.fr> <20170301161801.GB13171@bhelgaas-glaptop.roam.corp.google.com>
- <98ee3041-6a94-91af-b4bf-208aa02624ed@free.fr> <20170301215726.GA32286@bhelgaas-glaptop.roam.corp.google.com>
- <258cd6f3-ef17-6705-ff48-ae06f26778c2@free.fr> <20170303154628.GA21522@bhelgaas-glaptop.roam.corp.google.com>
- <8e1a0b5d-8dfb-4be1-a049-b16892a6c0d0@free.fr> <20170303200407.GB30375@bhelgaas-glaptop.roam.corp.google.com>
- <5c899946-4220-a63e-fe98-6a103200c2ad@free.fr> <CAKv+Gu-QxUYZcg4DPwuhhfqKCp4eJEWXCh43ZyvDe12=exEhWw@mail.gmail.com>
- <8daa1f79-8fda-bef9-e216-3c15f53c4f32@free.fr>
+In-Reply-To: <CAKv+Gu-ff98HrPK3f+E8soGJUXaaMxPLs2AuJ+rvXd0HWX-jXw@mail.gmail.com>
+References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
+ <20170322193111.GA8190@wunner.de>
+ <CAKv+Gu_X-SEnz7h9J8boqqjOQGHQawwdSAq4haH-OGu8zdfNfA@mail.gmail.com>
+ <20170323084819.GA23281@h08.hostsharing.net>
+ <CAKv+Gu93eJ-js3g7M6Jdm6XGMaWMswFmzBG2qNT4rn+3=1+EyA@mail.gmail.com>
+ <20170323105727.GA2441@red-moon>
+ <466dcd2b-a781-2fe7-6ef0-5a3767c793e0@codeaurora.org>
+ <CAKv+Gu9LbwpnJNi1OL25MWvYPxEOfKRHcs2jA2121BPaQWPzow@mail.gmail.com>
+ <27f50de3-721e-e8ec-00c8-b7a9d3cff0d6@codeaurora.org>
+ <CAKv+Gu-qRg8-YRCairppKrEfeLcW+OwVF8qZHp7vxXJA_AwPOw@mail.gmail.com>
+ <20170330100524.GA22801@red-moon>
+ <CAKv+Gu-ff98HrPK3f+E8soGJUXaaMxPLs2AuJ+rvXd0HWX-jXw@mail.gmail.com>
 From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Sat, 4 Mar 2017 11:45:48 +0000
-Message-ID: <CAKv+Gu_fLKvruKy2Aoa95ThPAJ2XDJVUCjeuAWaRwpifsn_A_w@mail.gmail.com>
-Subject: Re: Using the generic host PCIe driver
-To: Mason <slash.tmp@free.fr>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh@kernel.org>,
-	Phuong Nguyen <phuong_nguyen@sigmadesigns.com>, David Daney <david.daney@cavium.com>,
-	Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
-	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>, Will Deacon <will.deacon@arm.com>,
-	Thierry Reding <treding@nvidia.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Date: Thu, 30 Mar 2017 14:38:26 +0100
+Message-ID: <CAKv+Gu8YjySTDMgsrtGqEPMOtVhHc8gvTHZ4C5Ga8OTYdC9R3A@mail.gmail.com>
+Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Bjorn Helgaas <bhelgaas@google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+ Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
+ Peter Jones <pjones@redhat.com>, Sinan Kaya <okaya@codeaurora.org>,
+ Heyi Guo <heyi.guo@linaro.org>, Lukas Wunner <lukas@wunner.de>,
+ Hanjun Guo <hanjun.guo@linaro.org>, Yinghai Lu <yinghai@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4 March 2017 at 10:56, Mason <slash.tmp@free.fr> wrote:
-> On 04/03/2017 10:35, Ard Biesheuvel wrote:
->> On 3 March 2017 at 23:23, Mason <slash.tmp@free.fr> wrote:
->>> On 03/03/2017 21:04, Bjorn Helgaas wrote:
->>>> On Fri, Mar 03, 2017 at 06:18:02PM +0100, Mason wrote:
->>>>> On 03/03/2017 16:46, Bjorn Helgaas wrote:
->>>>>> On Fri, Mar 03, 2017 at 01:44:54PM +0100, Mason wrote:
->>>>>>
->>>>>>> For now, I have "hidden" the root's BAR0 from the system with:
->>>>>>>
->>>>>>>    if (bus->number == 0 && where == PCI_BASE_ADDRESS_0) {
->>>>>>>            *val = 0;
->>>>>>>            return PCIBIOS_SUCCESSFUL;
->>>>>>>    }
->>>>>>
->>>>>> I'm scratching my head about this a little.  Here's what your dmesg
->>>>>> log contained originally:
->>>>>>
->>>>>>   pci 0000:00:00.0: [1105:8758] type 01 class 0x048000
->>>>>>   pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x00ffffff 64bit]
->>>>>>   pci 0000:00:00.0: BAR 0: no space for [mem size 0x01000000 64bit]
->>>>>>   pci 0000:00:00.0: BAR 0: failed to assign [mem size 0x01000000 64bit]
->>>>>>   pci 0000:00:00.0: PCI bridge to [bus 01]
->>>>>>   pcieport 0000:00:00.0: enabling device (0140 -> 0142)
->>>>>>
->>>>>> This device is a bridge (a Root Port, per your lspci output).  With a
->>>>>> BAR, which is legal but unusual.  We couldn't assign space for the
->>>>>> BAR, which means we can't use whatever vendor-specific functionality
->>>>>> it provides.
->>>>>
->>>>> I had several chats with the HW designer. I'll try to explain, only as
->>>>> far as I could understand ;-)
->>>>>
->>>>> We used to make devices, before implementing a root. Since at least
->>>>> one BAR is required (?) for a device, it was decided to have one BAR
->>>>> for the root, for symmetry.
->>>>
->>>> I'm not aware of a spec requirement for any BARs.  It's conceivable
->>>> that one could build a device that only uses config space.  And of
->>>> course, most bridges have windows but no BARs.  But that doesn't
->>>> matter; the hardware is what it is and we have to deal with it.
->>>
->>> I appreciate the compassion. RMK considered the DMA HW too screwy
->>> to bother supporting ;-)
->>>
->>>>> In fact, I thought I could ignore that BAR, but it is apparently NOT
->>>>> the case, as MSIs are supposed to be sent *within* the BAR of the root.
->>>>
->>>> I don't know much about this piece of the MSI puzzle, but maybe Marc
->>>> can enlighten us.  If this Root Port is the target of MSIs and the
->>>> Root Port turns them into some sort of interrupt on the CPU side, I
->>>> can see how this might make sense.
->>>>
->>>> I think it's unusual for the PCI core to assign the MSI target using a
->>>> BAR, though.  I think this means you'll have to implement your
->>>> arch_setup_msi_irq() or .irq_compose_msi_msg() method such that it
->>>> looks up that BAR value, since you won't know it at build-time.
->>>
->>> I'll hack the Altera driver to fit my purpose.
->>>
->>>>> The weird twist is that the BAR advertizes a 64-bit memory zone,
->>>>> but we will, in fact, map MMIO registers behind it. So all the
->>>>> RAM Linux assigns to the area is wasted, IIUC.
->>>>
->>>> I'm not sure what this means.  You have this:
->>>>
->>>>> OF: PCI:   MEM 0x90000000..0x9fffffff -> 0x90000000
->>>
->>> This means I've put 256 MB of system RAM aside for PCIe devices.
->>> This memory is no longer available for Linux "stuff".
->>>
+On 30 March 2017 at 11:09, Ard Biesheuvel <ard.biesheuvel@linaro.org> wrote:
+> On 30 March 2017 at 11:05, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+>> On Thu, Mar 30, 2017 at 09:46:39AM +0100, Ard Biesheuvel wrote:
 >>
->> No it doesn't. It is a physical memory *range* that is assigned to the
->> PCI host bridge. Any memory accesses by the CPU to that window will be
->> forwarded to the PCI bus by the host bridge. From the kernel driver's
->> POV, this range is a given, but your host bridge h/w may involve some
->> configuration to make the host bridge 'listen' to this range. This is
->> h/w specific, and as Bjorn pointed out, usually configured by the
->> firmware so that the kernel driver does not require any knowledge of
->> those internals.
+>> [...]
 >>
->>>>> pci_bus 0000:00: root bus resource [mem 0x90000000-0x9fffffff]
+>>> > I'm asking why we don't fix the actual problem in PCIe ARM64 adaptation instead
+>>> > of working around it by quirks.
+>>> >
+>>> > I don't see any reason why ACPI ARM64 should carry the burden of legacy systems.
+>>> >
+>>> > Legacy only applies to DT based systems.
+>>> >
 >>>
->>> I suppose this is the PCI bus address. As we've discussed,
->>> I used the identity to map bus <-> CPU addresses.
->>>
+>>> I fully agree with this point: ACPI implies firmware, and so we should
+>>> be able to rely on firmware to have initialized the PCIe subsystem by
+>>> the time the kernel gets to access it.
 >>
->> Yes, that is fine
+>> https://lkml.org/lkml/2016/3/3/458
 >>
->>>> This [mem 0x90000000-0x9fffffff] host bridge window means there can't
->>>> be RAM in that region.  CPU accesses to 0x90000000-0x9fffffff have to
->>>> be claimed by the host bridge and forwarded to PCI.
->>>>
->>>> Linux doesn't "assign system RAM" anywhere; we just learn somehow
->>>> where that RAM is.  Linux *does* assign BARs of PCI devices, and they
->>>> have to be inside the host bridge windows(s).
->>>
->>> I'm confused, I thought I had understood that part...
->>> I thought the binding required me to specify (in the "ranges"
->>> property) a non-prefetchable zone of system RAM, and this
->>> memory is then "handed out" by Linux to different devices.
->>> Or do I just need to specify some address range that's not
->>> necessarily backed with actual RAM?
->>>
->>
->> Yes. Each PCI device advertises its need of memory windows via its
->> BARs, but the actual placement of those windows inside the host
->> bridge's memory range is configured dynamically, usually by the
->> firmware (on PCs) but on ARM/arm64 systems, this is done from scratch
->> by the kernel. The *purpose* of those memory windows is device
->> specific, but whatever is behind it lives on the PCI device. So this
->> is *not* system RAM.
 >
-> Hello Ard,
->
-> It appears I have misunderstood something fundamental.
->
-> The binding for generic PCI support
-> http://lxr.free-electrons.com/source/Documentation/devicetree/bindings/pci/host-generic-pci.txt
-> requires two address-type specs
-> (please correct me if I'm wrong)
-> 1) in the "reg" prop, the address of the configuration space (CPU physical)
-> 2) in the "ranges" prop, at least a non-prefetchable area
-> http://elinux.org/Device_Tree_Usage#PCI_Address_Translation
->
-> In my 32-bit system, there are 2GB of RAM at [0x8000_0000,0x10000_0000[
-> There are MMIO registers at [0, 16MB[ and also other stuff higher
-> Suppose there is nothing mapped at [0x7000_0000, 0x8000_0000[
->
-> Can I provide that range to the PCI subsystem?
+> I don't think the fact that at least one system existed over a year
+> ago whose UEFI assigned resources incorrectly should prevent us from
+> being normative in this case.
 
-Well, it obviously needs to be a range that is not otherwise occupied.
-But it is SoC specific where the forwarded MEM region(s) are, and
-whether they are configurable or not. IOW, you can ask *us* all you
-want about these details, but only the H/W designer can answer this
-for you.
+In any case, given that EFIFB is enabled by default on some distros,
+and the fact that DT boot is affected as well, I should get this patch
+in to prevent serious potential issues that could arise when someone
+with a graphical UEFI stack updates to such a new kernel.
 
-The DT node that describes the host bridge should simply describe
-which MMIO regions are used by the device. This is no different from
-any other MMO peripheral.
+So I think we are in agreement that this is needed on both ARM and
+arm64, since their PCI configuration is usually not preserved. The
+open question is whether there is any harm in enabling it for x86 as
+well.
 
-As for the bus ranges: this also depends on the h/w, as far as i know,
-and has a direct relation with the size of the PCI configuration space
-(1 MB per bus for ECAM iirc?) On 32-bit systems, supporting that many
-buses may be costly in terms of 32-bit addressable space, given that
-the PCIe config space is typically below 4 GB. But it all depends on
-the h/w implementation.
-
--- 
-Ard.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
