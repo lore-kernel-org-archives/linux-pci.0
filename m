@@ -1,52 +1,48 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35462 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751288AbdC0Ray (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 27 Mar 2017 13:30:54 -0400
-Subject: Re: [PATCH 5/5] PCI: remove pci_enable_msix
-To: Christoph Hellwig <hch@lst.de>
-References: <20170327082936.6830-1-hch@lst.de>
- <20170327082936.6830-6-hch@lst.de>
- <83f97789-0817-7549-bfa9-1f8dcb0c26d9@gmail.com>
- <20170327171148.GB28815@lst.de>
-Cc: bhelgaas@google.com, davem@davemloft.net,
-        netanel@annapurnalabs.com, jcliburn@gmail.com,
-        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org,
-        netdev@vger.kernel.org, linux-pci@vger.kernel.org
-From: David Daney <ddaney.cavm@gmail.com>
-Message-ID: <1eaa46ad-9890-c738-3a85-6468161284ba@gmail.com>
-Date: Mon, 27 Mar 2017 10:30:46 -0700
+Return-Path: <SRS0=vRuP=3H=fb.com=prvs=5262d793f5=wzhang@kernel.org>
+Return-Path: <SRS0=vRuP=3H=fb.com=prvs=5262d793f5=wzhang@kernel.org>
+From: Wei Zhang <wzhang@fb.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Keith Busch <keith.busch@intel.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas
+	<bhelgaas@google.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Lukas
+ Wunner <lukas@wunner.de>, Austin Bolen <Austin.Bolen@dell.com>,
+        Christoph
+ Hellwig <hch@infradead.org>
+Subject: Re: [PATCHv6 0/5] Limiting PCI access
+Date: Thu, 30 Mar 2017 04:10:05 +0000
+Message-ID: <9E0B6B52-2641-43BF-8587-83D90CF760CD@fb.com>
+References: <1486495957-26177-1-git-send-email-keith.busch@intel.com>
+ <20170330035639.GA23926@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170330035639.GA23926@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <20170327171148.GB28815@lst.de>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/27/2017 10:11 AM, Christoph Hellwig wrote:
-> On Mon, Mar 27, 2017 at 09:59:35AM -0700, David Daney wrote:
->> On 03/27/2017 01:29 AM, Christoph Hellwig wrote:
->>> Unused now that all callers switched to pci_alloc_irq_vectors.
->>>
->>
->> And you are aware that the ThunderX GPIO driver that I am attempting to
->> merge uses this interface.
->>
->> If this patch gets merged, should I ask to revert it when the GPIO driver
->> goes in?
->
-> No.  You should not use pci_enable_msix in your new driver as I told
-> you before.
->
->> You offer no solution for drivers that would benefit from using a sparse
->> sub set of the available MSI-X vectors.
->
-> Use pci_enable_msix_{exact,range} for now, as I told you before.
->
-
-That still results in twice as many MSI-X being provisioned than are needed.
-
-For drivers that use a contiguous range of MSI-X, your suggestion is 
-usable, but for others you are forcing resources to be wasted.  For what 
-end?
-
-David Daney
+VGhpcyBpcyBncmVhdCEgIFRoYW5rcyBCam9ybiBhbmQgS2VpdGghICAtV2VpDQoNCi0tDQp3ZWkg
+emhhbmcgfCBzb2Z0d2FyZSBlbmdpbmVlciB8IGZhY2Vib29rDQp3emhhbmdAZmIuY29tIHwgKDQw
+OCkgNDYwLTQ4MDMNCg0KT24gMy8yOS8xNywgODo1NiBQTSwgIkJqb3JuIEhlbGdhYXMiIDxoZWxn
+YWFzQGtlcm5lbC5vcmc+IHdyb3RlOg0KDQogICAgT24gVHVlLCBGZWIgMDcsIDIwMTcgYXQgMDI6
+MzI6MzJQTSAtMDUwMCwgS2VpdGggQnVzY2ggd3JvdGU6DQogICAgPiBUaGUgY29kZSBpcyBmdW5j
+dGlvbmFsbHkgZXF1aXZhbGVudCB0byB2NS4gSSd2ZSBmaXhlZCB0aGUgc3R5bGUNCiAgICA+IHBv
+aW50cyBtZW50aW9uZWQgaW4gcmV2aWV3IG9uIGxpbmUgd2FycHBpbmcsIGFkanVzdGVkIHRoZSBj
+aGFuZ2UgbG9nDQogICAgPiBvbiB0aGUgbXNpL21zaXggc2tpcHBhZ2UgdG8gbm90IGV4Y2x1ZGUg
+bWVudGlvbmluZyBtc2ksIGFuZCBhZGRlZCB0aGUNCiAgICA+IGFjY3VtdWxhdGVkIFJldmlld2Vk
+LWJ5J3MuDQogICAgPiANCiAgICA+IEtlaXRoIEJ1c2NoICg1KToNCiAgICA+ICAgcGNpOiBFeHBv
+cnQgcGNpIGRldmljZSBjb25maWcgYWNjZXNzb3JzDQogICAgPiAgIHBjaTogQWRkIGRldmljZSBk
+aXNjb25uZWN0ZWQgc3RhdGUNCiAgICA+ICAgcGNpOiBObyBjb25maWcgYWNjZXNzIGZvciBkaXNj
+b25uZWN0ZWQgZGV2aWNlcw0KICAgID4gICBwY2kvbXNpeDogU2tpcCBkaXNhYmxpbmcgZGlzY29u
+bmVjdGVkIGRldmljZXMNCiAgICA+ICAgcGNpOiBRdWljayByZXR1cm4gZm9yIHBjaV9kZXZpY2Vf
+aXNfcHJlc2VudA0KICAgID4gDQogICAgPiAgZHJpdmVycy9wY2kvYWNjZXNzLmMgICAgICAgICAg
+ICAgfCA1NiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrDQogICAgPiAg
+ZHJpdmVycy9wY2kvaG90cGx1Zy9wY2llaHBfcGNpLmMgfCAgNiArKysrKw0KICAgID4gIGRyaXZl
+cnMvcGNpL21zaS5jICAgICAgICAgICAgICAgIHwgIDcgKysrKy0NCiAgICA+ICBkcml2ZXJzL3Bj
+aS9wY2kuYyAgICAgICAgICAgICAgICB8ICAyICsrDQogICAgPiAgZHJpdmVycy9wY2kvcGNpLmgg
+ICAgICAgICAgICAgICAgfCAxNCArKysrKysrKysrDQogICAgPiAgZHJpdmVycy9wY2kvcGNpZS9w
+Y2llLWRwYy5jICAgICAgfCAgNSArKysrDQogICAgPiAgaW5jbHVkZS9saW51eC9wY2kuaCAgICAg
+ICAgICAgICAgfCAzNCArKysrKystLS0tLS0tLS0tLS0tLS0tLS0NCiAgICA+ICA3IGZpbGVzIGNo
+YW5nZWQsIDk3IGluc2VydGlvbnMoKyksIDI3IGRlbGV0aW9ucygtKQ0KICAgIA0KICAgIEFwcGxp
+ZWQgdG8gcGNpL2VudW1lcmF0aW9uIGZvciB2NC4xMiB3aXRoDQogICAgDQogICAgICBUZXN0ZWQt
+Ynk6IEtyaXNobmEgRGh1bGlwYWxhIDxrcmlzaG5hZEBmYi5jb20+DQogICAgICBSZXZpZXdlZC1i
+eTogV2VpIFpoYW5nIDx3emhhbmdAZmIuY29tPg0KICAgIA0KICAgIFRoYW5rcyENCiAgICANCg0K
