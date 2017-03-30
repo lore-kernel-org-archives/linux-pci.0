@@ -1,16 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 14/22] dt-bindings: PCI: dra7xx: Add dt bindings to
- enable legacy mode
-To: Rob Herring <robh@kernel.org>
-References: <1487325042-28227-1-git-send-email-kishon@ti.com>
- <1487325042-28227-15-git-send-email-kishon@ti.com>
- <20170227164054.xcubjpaf2qx3pxol@rob-hp-laptop>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Message-ID: <58BD3235.8000300@ti.com>
-Date: Mon, 6 Mar 2017 15:26:05 +0530
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+Subject: Re: [PATCH V8 5/6] ACPI: Support the probing on the devices which
+ apply indirect-IO
+Date: Thu, 30 Mar 2017 22:31:10 +0200
+Message-ID: <1908501.jAQQKvjW4f@aspire.rjw.lan>
+In-Reply-To: <1490887619-61732-6-git-send-email-yuanzhichang@hisilicon.com>
+References: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1490887619-61732-6-git-send-email-yuanzhichang@hisilicon.com>
 MIME-Version: 1.0
-In-Reply-To: <20170227164054.xcubjpaf2qx3pxol@rob-hp-laptop>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,48 +17,39 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
- linux-doc@vger.kernel.org, Jingoo Han <jingoohan1@gmail.com>, nsekhar@ti.com,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
+Cc: mark.rutland@arm.com, benh@kernel.crashing.org, gabriele.paoloni@huawei.com,
+ rafael@kernel.org, linux-pci@vger.kernel.org, will.deacon@arm.com,
+ linuxarm@huawei.com, frowand.list@gmail.com, lorenzo.pieralisi@arm.com,
+ arnd@arndb.de, xuwei5@hisilicon.com, linux-acpi@vger.kernel.org,
+ catalin.marinas@arm.com, devicetree@vger.kernel.org, minyard@acm.org,
+ john.garry@huawei.com, zourongrong@gmail.com, robh+dt@kernel.org,
+ bhelgaas@google.com, kantyzc@163.com, zhichang.yuan02@gmail.com,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+ olof@lixom.net, brian.starkey@arm.com
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Monday 27 February 2017 10:10 PM, Rob Herring wrote:
-> On Fri, Feb 17, 2017 at 03:20:34PM +0530, Kishon Vijay Abraham I wrote:
->> Update device tree binding documentation of TI's dra7xx PCI
->> controller to include property for enabling legacy mode.
->>
->> Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
->> ---
->>  Documentation/devicetree/bindings/pci/ti-pci.txt |    4 ++++
->>  1 file changed, 4 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
->> index 190828a..72ebe2b 100644
->> --- a/Documentation/devicetree/bindings/pci/ti-pci.txt
->> +++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
->> @@ -39,6 +39,10 @@ DEVICE MODE
->>   - interrupts : one interrupt entries must be specified for main interrupt.
->>   - num-ib-windows : number of inbound address translation windows
->>   - num-ob-windows : number of outbound address translation windows
->> + - syscon-legacy-mode: phandle to the syscon dt node. The 1st argument should
->> +		       contain the register offset within syscon and the 2nd
->> +		       argument should contain the bit field for setting the
->> +		       legacy mode
+On Thursday, March 30, 2017 11:26:58 PM zhichang.yuan wrote:
+> On some platforms(such as Hip06/Hip07), the legacy ISA/LPC devices access I/O
+> with some special host-local I/O ports known on x86. To access the I/O
+> peripherals, an indirect-IO mechanism is introduced to mapped the host-local
+> I/O to system logical/fake PIO similar the PCI MMIO on architectures where no
+> separate I/O space exists. Just as PCI MMIO, the host I/O range should be
+> registered before probing the downstream devices and set up the I/O mapping.
+> But current ACPI bus probing doesn't support these indirect-IO hosts/devices.
 > 
-> Vendor prefix needed and what does "legacy mode" mean? Perhaps name this 
-> around what the mode is/does, not that it is legacy.
+> This patch introdueces a new ACPI handler for this device category. Through the
+> handler attach callback, the indirect-IO hosts I/O registration is done and
+> all peripherals' I/O resources are translated into logic/fake PIO before
+> starting the enumeration.
 
-sure, will fix that.
+Can you explain to me briefly what exactly this code is expected to be doing?
 
-Thanks
-Kishon
+Thanks,
+Rafael
+
 
 _______________________________________________
 linux-arm-kernel mailing list
