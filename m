@@ -1,118 +1,209 @@
-Return-Path: <SRS0=YAYN=2T=gmail.com=zajec5@kernel.org>
-Return-Path: <SRS0=YAYN=2T=gmail.com=zajec5@kernel.org>
-Subject: Re: pcie-iproc: broken 2nd (& 3rd?) controller support by
- c3245a566400 ("PCI: iproc: Request host bridge window resources")
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <faab6b85-58e8-3e62-8763-56a94b13fba1@gmail.com>
- <f40bbf2f-3ba9-3992-d417-6588085f3d62@gmail.com>
- <20170309182205.GB3685@bhelgaas-glaptop.roam.corp.google.com>
- <04f747ef-0f39-33ec-0cea-2e9fb85d46e8@gmail.com>
- <20170310174740.GF19517@bhelgaas-glaptop.roam.corp.google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Ray Jui <rjui@broadcom.com>,
- Scott Branden <sbranden@broadcom.com>, Jon Mason <jonmason@broadcom.com>,
- Oza Oza <oza.oza@broadcom.com>, JD Zheng <jiandong.zheng@broadcom.com>,
- Andy Gospodarek <gospo@broadcom.com>, linux-pci@vger.kernel.org,
- bcm-kernel-feedback-list@broadcom.com, linux-arm-kernel@lists.infradead.org,
- Felix Fietkau <nbd@nbd.name>
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-Message-ID: <cc0acebf-12d4-83cd-0e1b-1aac0056aaee@gmail.com>
-Date: Fri, 10 Mar 2017 22:11:28 +0100
-MIME-Version: 1.0
-In-Reply-To: <20170310174740.GF19517@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:44303 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750903AbdC3WNX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Mar 2017 18:13:23 -0400
+From: Logan Gunthorpe <logang@deltatee.com>
+To: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
+        Logan Gunthorpe <logang@deltatee.com>
+Date: Thu, 30 Mar 2017 16:12:36 -0600
+Message-Id: <1490911959-5146-6-git-send-email-logang@deltatee.com>
+In-Reply-To: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+Subject: [RFC 5/8] scatterlist: Modify SG copy functions to support io memory.
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/10/2017 06:47 PM, Bjorn Helgaas wrote:
-> On Fri, Mar 10, 2017 at 05:02:48PM +0100, Rafał Miłecki wrote:
->> On 03/09/2017 07:22 PM, Bjorn Helgaas wrote:
->>> On Thu, Mar 09, 2017 at 08:39:07AM +0100, Rafał Miłecki wrote:
->>>> On 03/08/2017 01:56 PM, Rafał Miłecki wrote:
->>>>> I just tried upgrading BCM5301X from 4.4 to 4.9 and noticed I don't see card
->>>>> connected to the 2nd controller.
->>>>>
->>>>> pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
->>>>> pci_bus 0000:00: root bus resource [mem 0x08000000-0x0fffffff]
->>>>> pcie_iproc_bcma bcma0:7: link: UP
->>>>> PCI: bus0: Fast back to back transfers disabled
->>>>> pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
->>>>> PCI: bus1: Fast back to back transfers disabled
->>>>> pci 0000:00:00.0: BAR 8: assigned [mem 0x08000000-0x080fffff]
->>>>> pci 0000:01:00.0: BAR 0: assigned [mem 0x08000000-0x08007fff 64bit]
->>>>> pci 0000:00:00.0: PCI bridge to [bus 01]
->>>>> pci 0000:00:00.0:   bridge window [mem 0x08000000-0x080fffff]
->>>>>
->>>>> pcie_iproc_bcma bcma0:8: resource collision: [mem 0x40000000-0x47ffffff] conflicts with PCIe MEM space [mem 0x40000000-0x47ffffff]
->>>>> pcie_iproc_bcma bcma0:8: PCIe controller setup failed
->>>>> pcie_iproc_bcma: probe of bcma0:8 failed with error -16
->>>>>
->>>>>
->>>>> This used to work with older kernels because there wasn't any collision check:
->>>>>
->>>>> pcie_iproc_bcma bcma0:7: PCI host bridge to bus 0000:00
->>>>> pci_bus 0000:00: root bus resource [mem 0x08000000-0x0fffffff]
->>>>> pcie_iproc_bcma bcma0:7: link: UP
->>>>> PCI: bus0: Fast back to back transfers disabled
->>>>> pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
->>>>> PCI: bus1: Fast back to back transfers disabled
->>>>> pci 0000:00:00.0: BAR 8: assigned [mem 0x08000000-0x080fffff]
->>>>> pci 0000:01:00.0: BAR 0: assigned [mem 0x08000000-0x08007fff 64bit]
->>>>> pci 0000:00:00.0: PCI bridge to [bus 01]
->>>>> pci 0000:00:00.0:   bridge window [mem 0x08000000-0x080fffff]
->>>>>
->>>>> pcie_iproc_bcma bcma0:8: PCI host bridge to bus 0001:00
->>>>> pci_bus 0001:00: root bus resource [mem 0x40000000-0x47ffffff]
->>>>> pcie_iproc_bcma bcma0:8: link: UP
->>>>> PCI: bus0: Fast back to back transfers disabled
->>>>> pci 0001:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
->>>>> PCI: bus1: Fast back to back transfers disabled
->>>>> pci 0001:00:00.0: BAR 8: assigned [mem 0x40000000-0x400fffff]
->>>>> pci 0001:01:00.0: BAR 0: assigned [mem 0x40000000-0x40007fff 64bit]
->>>>> pci 0001:00:00.0: PCI bridge to [bus 01]
->>>>> pci 0001:00:00.0:   bridge window [mem 0x40000000-0x400fffff]
->>>>>
->>>>>
->>>>> I guess the check is OK after all and the real problem is iproc driver assigning
->>>>> the same resource.
->>>>>
->>>>> Broadcom team: could you take a look at this, please?
->>>>
->>>> I found a reason of this conflict (and probably random crashes I started
->>>> seeing with 4.9). I believe we have a memory corruption.
->>>
->>> Yep, we're using a resource structure on the stack when we shouldn't.  Can
->>> you try the patch below?
->>
->> Works great! Will you push it with
->> Cc: stable@vger.kernel.org # v4.8+
->> please?
->
-> Thanks for testing this.  I applied the patch (with the braces fix) to
-> for-linus for v4.11.
+Now that we are using p2pmem SG buffers we occasionally have to copy
+to and from this memory. For this, we add an iomem flag to
+sg_copy_buffer for copying with iomemcpy. We also add the sg_iocopy_
+variants to use this more easily.
 
-Thanks!
+Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Stephen Bates <sbates@raithlin.com>
+Signed-off-by: Steve Wise <swise@opengridcomputing.com>
+---
+ drivers/scsi/scsi_debug.c   |  7 ++---
+ include/linux/scatterlist.h |  7 ++++-
+ lib/scatterlist.c           | 64 ++++++++++++++++++++++++++++++++++++++-------
+ 3 files changed, 65 insertions(+), 13 deletions(-)
 
-Btw. this is how it looks now (all good it seems):
-
-root@LEDE:/# cat /proc/iomem
-00000000-07ffffff : System RAM
-   00008000-0043cfff : Kernel code
-   00476000-004d95df : Kernel data
-08000000-0fffffff : PCIe MEM space
-   08000000-085fffff : PCI Bus 0000:01
-     08000000-083fffff : 0000:01:00.0
-     08400000-08407fff : 0000:01:00.0
-18000300-180003ff : serial
-18003000-18003fff : ccb-mii
-1800c000-1800cfff : dmu
-18021000-18021fff : /axi@18000000/usb2@21000/ehci@21000
-18022000-18022fff : /axi@18000000/usb2@21000/ohci@22000
-18023000-18023fff : /axi@18000000/usb3@23000/xhci@23000
-18028000-180285ff : nand
-18028f00-18028f1f : iproc-ext
-18105000-18105fff : dmp
-1811a408-1811aa07 : iproc-idm
-40000000-47ffffff : PCIe MEM space
-   40000000-405fffff : PCI Bus 0001:01
-     40000000-403fffff : 0001:01:00.0
-     40400000-40407fff : 0001:01:00.0
-88000000-8fffffff : System RAM
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 17249c3..70c0d9f 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1309,7 +1309,7 @@ static int resp_inquiry(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
+ 		int lu_id_num, port_group_id, target_dev_id, len;
+ 		char lu_id_str[6];
+ 		int host_no = devip->sdbg_host->shost->host_no;
+-		
++
+ 		port_group_id = (((host_no + 1) & 0x7f) << 8) +
+ 		    (devip->channel & 0x7f);
+ 		if (sdebug_vpd_use_hostno == 0)
+@@ -2381,14 +2381,15 @@ static int do_device_access(struct scsi_cmnd *scmd, u64 lba, u32 num,
+ 
+ 	ret = sg_copy_buffer(sdb->table.sgl, sdb->table.nents,
+ 		   fake_storep + (block * sdebug_sector_size),
+-		   (num - rest) * sdebug_sector_size, 0, do_write);
++		   (num - rest) * sdebug_sector_size, 0, do_write, false);
+ 	if (ret != (num - rest) * sdebug_sector_size)
+ 		return ret;
+ 
+ 	if (rest) {
+ 		ret += sg_copy_buffer(sdb->table.sgl, sdb->table.nents,
+ 			    fake_storep, rest * sdebug_sector_size,
+-			    (num - rest) * sdebug_sector_size, do_write);
++			    (num - rest) * sdebug_sector_size, do_write,
++				      false);
+ 	}
+ 
+ 	return ret;
+diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+index cb3c8fe..030b92b 100644
+--- a/include/linux/scatterlist.h
++++ b/include/linux/scatterlist.h
+@@ -267,7 +267,7 @@ int sg_alloc_table_from_pages(struct sg_table *sgt,
+ 	gfp_t gfp_mask);
+ 
+ size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents, void *buf,
+-		      size_t buflen, off_t skip, bool to_buffer);
++		      size_t buflen, off_t skip, bool to_buffer, bool iomem);
+ 
+ size_t sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			   const void *buf, size_t buflen);
+@@ -279,6 +279,11 @@ size_t sg_pcopy_from_buffer(struct scatterlist *sgl, unsigned int nents,
+ size_t sg_pcopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			  void *buf, size_t buflen, off_t skip);
+ 
++size_t sg_iocopy_from_buffer(struct scatterlist *sgl, unsigned int nents,
++			     const void *buf, size_t buflen);
++size_t sg_iocopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
++			   void *buf, size_t buflen);
++
+ /*
+  * Maximum number of entries that will be allocated in one piece, if
+  * a list larger than this is required then chaining will be utilized.
+diff --git a/lib/scatterlist.c b/lib/scatterlist.c
+index c6cf822..22abd94 100644
+--- a/lib/scatterlist.c
++++ b/lib/scatterlist.c
+@@ -647,7 +647,7 @@ EXPORT_SYMBOL(sg_miter_stop);
+  *
+  **/
+ size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents, void *buf,
+-		      size_t buflen, off_t skip, bool to_buffer)
++		      size_t buflen, off_t skip, bool to_buffer, bool iomem)
+ {
+ 	unsigned int offset = 0;
+ 	struct sg_mapping_iter miter;
+@@ -668,10 +668,17 @@ size_t sg_copy_buffer(struct scatterlist *sgl, unsigned int nents, void *buf,
+ 
+ 		len = min(miter.length, buflen - offset);
+ 
+-		if (to_buffer)
+-			memcpy(buf + offset, miter.addr, len);
+-		else
+-			memcpy(miter.addr, buf + offset, len);
++		if (iomem) {
++			if (to_buffer)
++				memcpy_fromio(buf + offset,  miter.addr, len);
++			else
++				memcpy_toio(miter.addr, buf + offset, len);
++		} else {
++			if (to_buffer)
++				memcpy(buf + offset, miter.addr, len);
++			else
++				memcpy(miter.addr, buf + offset, len);
++		}
+ 
+ 		offset += len;
+ 	}
+@@ -695,7 +702,8 @@ EXPORT_SYMBOL(sg_copy_buffer);
+ size_t sg_copy_from_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			   const void *buf, size_t buflen)
+ {
+-	return sg_copy_buffer(sgl, nents, (void *)buf, buflen, 0, false);
++	return sg_copy_buffer(sgl, nents, (void *)buf, buflen, 0, false,
++			      false);
+ }
+ EXPORT_SYMBOL(sg_copy_from_buffer);
+ 
+@@ -712,7 +720,7 @@ EXPORT_SYMBOL(sg_copy_from_buffer);
+ size_t sg_copy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			 void *buf, size_t buflen)
+ {
+-	return sg_copy_buffer(sgl, nents, buf, buflen, 0, true);
++	return sg_copy_buffer(sgl, nents, buf, buflen, 0, true, false);
+ }
+ EXPORT_SYMBOL(sg_copy_to_buffer);
+ 
+@@ -730,7 +738,8 @@ EXPORT_SYMBOL(sg_copy_to_buffer);
+ size_t sg_pcopy_from_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			    const void *buf, size_t buflen, off_t skip)
+ {
+-	return sg_copy_buffer(sgl, nents, (void *)buf, buflen, skip, false);
++	return sg_copy_buffer(sgl, nents, (void *)buf, buflen, skip, false,
++			      false);
+ }
+ EXPORT_SYMBOL(sg_pcopy_from_buffer);
+ 
+@@ -748,6 +757,43 @@ EXPORT_SYMBOL(sg_pcopy_from_buffer);
+ size_t sg_pcopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
+ 			  void *buf, size_t buflen, off_t skip)
+ {
+-	return sg_copy_buffer(sgl, nents, buf, buflen, skip, true);
++	return sg_copy_buffer(sgl, nents, buf, buflen, skip, true, false);
+ }
+ EXPORT_SYMBOL(sg_pcopy_to_buffer);
++
++/**
++ * sg_iocopy_from_buffer - Copy from a linear buffer to an SG list containing
++ *	IO memory.
++ * @sgl:		 The SG list
++ * @nents:		 Number of SG entries
++ * @buf:		 Where to copy from
++ * @buflen:		 The number of bytes to copy
++ *
++ * Returns the number of copied bytes.
++ *
++ **/
++size_t sg_iocopy_from_buffer(struct scatterlist *sgl, unsigned int nents,
++			     const void *buf, size_t buflen)
++{
++	return sg_copy_buffer(sgl, nents, (void *)buf, buflen, 0, false,
++			      true);
++}
++EXPORT_SYMBOL(sg_iocopy_from_buffer);
++
++/**
++ * sg_iocopy_to_buffer - Copy from an SG list containing IO memory
++ *	to a linear buffer
++ * @sgl:		 The SG list
++ * @nents:		 Number of SG entries
++ * @buf:		 Where to copy to
++ * @buflen:		 The number of bytes to copy
++ *
++ * Returns the number of copied bytes.
++ *
++ **/
++size_t sg_iocopy_to_buffer(struct scatterlist *sgl, unsigned int nents,
++			   void *buf, size_t buflen)
++{
++	return sg_copy_buffer(sgl, nents, buf, buflen, 0, true, true);
++}
++EXPORT_SYMBOL(sg_iocopy_to_buffer);
+-- 
+2.1.4
