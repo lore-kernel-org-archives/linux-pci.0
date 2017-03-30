@@ -1,63 +1,121 @@
-Return-Path: <SRS0=wqlW=2W=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=wqlW=2W=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60896 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932323AbdC3XVZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 30 Mar 2017 19:21:25 -0400
+Date: Thu, 30 Mar 2017 18:21:20 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, hch@lst.de
+Subject: Re: [PATCH] PCI/MSI: Only disable affinity settings if pre and post
+ vector count is equal to max_vecs and not min_vecs
+Message-ID: <20170330232120.GC2496@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170301233158.1035-1-himanshu.madhani@cavium.com>
+ <20170323172928.GA23612@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de> <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Mon, 13 Mar 2017 18:51:08 +0200
-Message-ID: <CAHp75VcSD+edusfZF8KWvCqoywPwJXdO_=9-RZdDpMF5dKtocQ@mail.gmail.com>
-Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: helgaas@kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
-	Platform Driver <platform-driver-x86@vger.kernel.org>, amd-gfx@lists.freedesktop.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170323172928.GA23612@bhelgaas-glaptop.roam.corp.google.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 13, 2017 at 2:41 PM, Christian K=C3=B6nig
-<deathsimple@vodafone.de> wrote:
-> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->
-> Try to resize BAR0 to let CPU access all of VRAM.
+On Thu, Mar 23, 2017 at 12:29:28PM -0500, Bjorn Helgaas wrote:
+> On Wed, Mar 01, 2017 at 03:31:58PM -0800, Himanshu Madhani wrote:
+> > From: Michael Hernandez <michael.hernandez@cavium.com>
+> > 
+> > min_vecs is the minimum amount of vectors needed to operate in MSI-X mode
+> > which may just include the vectors that don't need affinity.
+> > 
+> > Disabling affinity settings causes the qla2xxx driver scsi_add_host
+> > to fail when blk_mq is enabled as the blk_mq_pci_map_queues expects
+> > affinity masks on each vector.
+> > 
+> > v2 --> v3
+> > o fixed code as per review comments.
+> > 
+> > v1 --> v2
+> > 
+> > o Moved the check from pci_alloc_irq_vectors_affinity() to
+> >   __pci_enable_{msi|msix}_range()
+> > 
+> > Fixes: dfef358 ("PCI/MSI: Don't apply affinity if there aren't enough vectors left")
+> > Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
+> > Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+> > Cc: Christoph Hellwig <hch@lst.de>
+> > Cc: stable@vger.kernel.org
+> > ---
+> >  drivers/pci/msi.c |   25 ++++++++++++++++++-------
+> >  1 files changed, 18 insertions(+), 7 deletions(-)
+> > 
+> > diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> > index 7f73bac..46c0cdd 100644
+> > --- a/drivers/pci/msi.c
+> > +++ b/drivers/pci/msi.c
+> > @@ -1091,6 +1091,15 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+> >  
+> >  	for (;;) {
+> >  		if (affd) {
+> > +			/*
+> > +			 * If there aren't any vectors left after applying the
+> > +			 * pre/post vectors don't bother with assigning
+> > +			 * affinity.
+> > +			 */
+> > +			if (affd->pre_vectors + affd->post_vectors == nvec)
+> > +				affd = NULL;
+> > +		}
+> 
+> I don't really like this because affd->pre_vectors and
+> affd->post_vectors are not PCI MSI concepts.  I think they really
+> belong in irq/affinity.c, e.g., maybe this could be checked in
+> irq_create_affinity_masks().
+> 
+> If that could be done, we wouldn't have to duplicate the checks here
+> for both MSI and MSI-X.
+> 
+> I raised a similar question earlier:
+> http://lkml.kernel.org/r/20170202173659.GD21267@bhelgaas-glaptop.roam.corp.google.com
 
-> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
-> +{
-> +       u32 size =3D max(ilog2(adev->mc.real_vram_size - 1) + 1, 20) - 20=
-;
-> +       int r;
-> +
-> +       r =3D pci_resize_resource(adev->pdev, 0, size);
+I want to make progress on this, but that means a little conversation
+here.  Maybe we want to merge this patch as-is, but I'd like to hear
+the reasons why it wouldn't really work to move the checks to
+irq/affinity.c.
 
-> +
+For now I'll mark it as "changes requested" in patchwork, which means
+it will fall off my to-do list until it's reposted.
 
-Redundant.
-
-> +       if (r =3D=3D -ENOTSUPP) {
-> +               /* The hardware don't support the extension. */
-> +               return;
-
-> +
-
-Ditto.
-
-> +       } else if (r =3D=3D -ENOSPC) {
-
-Useless use of else. And thus of curly braces.
-
-> +               DRM_INFO("Not enoigh PCI address space for a large BAR.")=
-;
-> +       } else if (r) {
-> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
-> +       }
-> +
-> +       /* Reinit the doorbell mapping, it is most likely moved as well *=
-/
-> +       amdgpu_doorbell_fini(adev);
-
-> +       BUG_ON(amdgpu_doorbell_init(adev));
-
-Comment why it's used here.
---=20
-With Best Regards,
-Andy Shevchenko
+> > +		if (affd) {
+> >  			nvec = irq_calc_affinity_vectors(nvec, affd);
+> >  			if (nvec < minvec)
+> >  				return -ENOSPC;
+> > @@ -1138,6 +1147,15 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+> >  
+> >  	for (;;) {
+> >  		if (affd) {
+> > +			/*
+> > +			 * If there aren't any vectors left after applying the
+> > +			 * pre/post vectors don't bother with assigning
+> > +			 * affinity.
+> > +			 */
+> > +			if (affd->pre_vectors + affd->post_vectors == nvec)
+> > +				affd = NULL;
+> > +		}
+> > +		if (affd) {
+> >  			nvec = irq_calc_affinity_vectors(nvec, affd);
+> >  			if (nvec < minvec)
+> >  				return -ENOSPC;
+> > @@ -1209,13 +1227,6 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+> >  
+> >  		if (affd->pre_vectors + affd->post_vectors > min_vecs)
+> >  			return -EINVAL;
+> > -
+> > -		/*
+> > -		 * If there aren't any vectors left after applying the pre/post
+> > -		 * vectors don't bother with assigning affinity.
+> > -		 */
+> > -		if (affd->pre_vectors + affd->post_vectors == min_vecs)
+> > -			affd = NULL;
+> >  	} else {
+> >  		if (WARN_ON(affd))
+> >  			affd = NULL;
+> > -- 
+> > 1.7.1
+> > 
