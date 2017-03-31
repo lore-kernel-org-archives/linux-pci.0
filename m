@@ -1,92 +1,111 @@
-Return-Path: <SRS0=h9nn=2R=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=h9nn=2R=free.fr=slash.tmp@kernel.org>
-Subject: Re: Neophyte questions about PCIe
-To: David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Cc: Ard Biesheuvel <ard.biesheuvel@linaro.org>, Arnd Bergmann
- <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Marc Zyngier <marc.zyngier@arm.com>, Shawn Lin <shawn.lin@rock-chips.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <ced6a4bf-c94a-c116-1e94-52a8d675d132@free.fr>
- <063D6719AE5E284EB5DD2968C1650D6DCFE7A70A@AcuExch.aculab.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <b735b894-4c6c-5eb0-524e-dccee648d0f8@free.fr>
-Date: Wed, 8 Mar 2017 15:17:51 +0100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH] ACPI / scan: Prefer devices without _HID/_CID for _ADR
+ matching
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+References: <20161225102148.7706-1-hdegoede@redhat.com>
+ <2022116.4lq1KAmrJA@aspire.rjw.lan>
+ <651067e1-e87f-6dba-0b99-c158655d2086@redhat.com>
+ <1816647.tOAZ7v3nRx@aspire.rjw.lan>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+From: Hans de Goede <hdegoede@redhat.com>
+Message-ID: <b9150482-cfc7-7737-923a-665d8b4ba9fe@redhat.com>
+Date: Fri, 31 Mar 2017 12:39:35 +0200
 MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6DCFE7A70A@AcuExch.aculab.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <1816647.tOAZ7v3nRx@aspire.rjw.lan>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello David,
+Hi,
 
-On 08/03/2017 14:54, David Laight wrote:
-
-> Mason wrote:
+On 30-03-17 22:56, Rafael J. Wysocki wrote:
+> On Sunday, January 01, 2017 09:30:06 PM Hans de Goede wrote:
+>> Hi,
+>>
+>> On 30-12-16 02:27, Rafael J. Wysocki wrote:
+>>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>>
+>>> The way acpi_find_child_device() works currently is that, if there
+>>> are two (or more) devices with the same _ADR value in the same
+>>> namespace scope (which is not specifically allowed by the spec and
+>>> the OS behavior in that case is not defined), the first one of them
+>>> found to be present (with the help of _STA) will be returned.
+>>>
+>>> This covers the majority of cases, but is not sufficient if some of
+>>> the devices in question have a _HID (or _CID) returning some valid
+>>> ACPI/PNP device IDs (which is disallowed by the spec) and the
+>>> ASL writers' expectation appears to be that the OS will match
+>>> devices without a valid ACPI/PNP device ID against a given bus
+>>> address first.
+>>>
+>>> To cover this special case as well, modify find_child_checks()
+>>> to prefer devices without ACPI/PNP device IDs over devices that
+>>> have them.
+>>>
+>>> Suggested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+>>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+>>> ---
+>>>
+>>> I'm not actually sure if this is sufficient to fix the original 80860F14 uid "2"
+>>> sd-controller problem on CherryTrail.  Hans, can you please check?
+>>
+>> Ok, just booted a kernel with this patch replacing my own attempt
+>> at fixing this, and the kernel still sees and initializes the
+>> mmc controller in question correctly with this patch:
+>>
+>> Tested-by: Hans de Goede <hdegoede@redhat.com>
 >
->> 2) On my platform, there are two revisions of the PCIe controller.
->> Rev1 muxes config and mem inside a 256 MB window, and doesn't support
->> I/O space.
->> Rev2 muxes all 3 spaces inside a 256 MB window.
-> 
-> Don't think config space fits.
-> With the 'obvious' mapping the 'bus number' is in the top
-> 8 bits of the address.
+> Unfortunately, this breaks discrete graphics enumeration in
+>
+> https://bugzilla.kernel.org/show_bug.cgi?id=194889
+>
+> so can you please check if the patch below doesn't break the platform fixed by
+> the above?
 
-https://www.kernel.org/doc/Documentation/devicetree/bindings/pci/host-generic-pci.txt
+I've just tried this and this patch does not regress the platform fixed
+by the original commit.
 
-	cfg_offset(bus, device, function, register) =
-		bus << 20 | device << 15 | function << 12 | register
+Regards,
 
-8 bits for bus, 5 bits for device, 3 bits for function, 12 bits for reg offset
-1 MB per bus, 256 buses max => 256 MB max
-
-Supporting "only" 64 buses is good enough, I believe.
+Hans
 
 
->> 3) What happens if a device requires more than 256 MB of
->> mem space? (Is that common? What kind of device? GPUs?)
->> Our controller supports a remapping "facility" to add an
->> offset to the bus address. Is such a feature supported
->> by Linux at all?  The problem is that this creates
->> another race condition, as setting the offset register
->> before an access may occur concurrently on two cores.
->> Perhaps 256 MB is plenty on a 32-bit embedded device?
-> 
-> GPUs tend to have their own paging scheme.
-> So don't need humongous windows.
-> I'm not sure how much space is really needed.
-> 32bit x86 reserve the top 1GB of physical address for PCI(e).
-
-I'm hoping 128 MB mem is enough. The two cards I have that are correctly
-detected request 8 KB. (I have other cards that are not enumerated at all...
-No idea why at the moment.)
-
-
->> 4) The HW dev is considering the following fix.
->> Instead of muxing the address spaces, provide smaller
->> exclusive spaces. For example
->> [0x5000_0000, 0x5400_0000] for config (64MB)
->> [0x5400_0000, 0x5800_0000] for I/O (64MB)
->> [0x5800_0000, 0x6000_0000] for mem (128MB)
-> 
-> You almost certainly don't need more than 64k of IO.
-
-Good to know.
-
-
-> Config space isn't dense, you (probably) need 25 bits to get a 2nd bus number.
-> Even 256MB constrains you to 16 bus numbers.
-
-Unless I got the math wrong, it's 20 bits (1 MB) per bus.
-So 64 MB allows 64 buses.
-
-> Is this an ARM cpu inside an altera (now intel) fpga??
-> There is a nasty bug in their PCIe to avalon bridge logic (fixed in quartus 16.1).
-
-The PCIe controller is from PLDA, and it's embedded in a SoC
-where the CPU is a multi-core ARM Cortex A9 MP.
-
-Regards.
+>
+> Thanks,
+> Rafael
+>
+>
+> ---
+>  drivers/acpi/glue.c |   12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+>
+> Index: linux-pm/drivers/acpi/glue.c
+> ===================================================================
+> --- linux-pm.orig/drivers/acpi/glue.c
+> +++ linux-pm/drivers/acpi/glue.c
+> @@ -99,13 +99,13 @@ static int find_child_checks(struct acpi
+>  		return -ENODEV;
+>
+>  	/*
+> -	 * If the device has a _HID (or _CID) returning a valid ACPI/PNP
+> -	 * device ID, it is better to make it look less attractive here, so that
+> -	 * the other device with the same _ADR value (that may not have a valid
+> -	 * device ID) can be matched going forward.  [This means a second spec
+> -	 * violation in a row, so whatever we do here is best effort anyway.]
+> +	 * If the device has a _HID returning a valid ACPI/PNP device ID, it is
+> +	 * better to make it look less attractive here, so that the other device
+> +	 * with the same _ADR value (that may not have a valid device ID) can be
+> +	 * matched going forward.  [This means a second spec violation in a row,
+> +	 * so whatever we do here is best effort anyway.]
+>  	 */
+> -	return sta_present && list_empty(&adev->pnp.ids) ?
+> +	return sta_present && !adev->pnp.type.platform_id ?
+>  			FIND_CHILD_MAX_SCORE : FIND_CHILD_MIN_SCORE;
+>  }
+>
+>
