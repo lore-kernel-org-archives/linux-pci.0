@@ -1,125 +1,105 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:33131 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751332AbdCCALQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 2 Mar 2017 19:11:16 -0500
-From: Logan Gunthorpe <logang@deltatee.com>
-To: Keith Busch <keith.busch@intel.com>,
-        Myron Stowe <myron.stowe@gmail.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "David S. Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Emil Velikov <emil.l.velikov@gmail.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        Ryusuke Konishi <konishi.ryusuke@lab.ntt.co.jp>,
-        Stefan Berger <stefanb@linux.vnet.ibm.com>,
-        Wei Zhang <wzhang@fb.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-        Stephen Bates <stephen.bates@microsemi.com>,
-        linux-pci@vger.kernel.org, linux-doc@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
-        Logan Gunthorpe <logang@deltatee.com>
-Date: Thu,  2 Mar 2017 16:07:45 -0700
-Message-Id: <1488496067-2763-3-git-send-email-logang@deltatee.com>
-In-Reply-To: <1488496067-2763-1-git-send-email-logang@deltatee.com>
-References: <1488496067-2763-1-git-send-email-logang@deltatee.com>
-Subject: [PATCH v6 2/4] switchtec: Add user interface documentation
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=cakr=3I=chromium.org=briannorris@kernel.org>
+Return-Path: <SRS0=cakr=3I=chromium.org=briannorris@kernel.org>
+Date: Fri, 31 Mar 2017 09:40:16 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Jeffy Chen <jeffy.chen@rock-chips.com>,
+	Wenrui Li <wenrui.li@rock-chips.com>, linux-pci@vger.kernel.org,
+	linux-rockchip@lists.infradead.org, Ray Jui <rjui@broadcom.com>
+Subject: Re: [PATCH v2 3/5] PCI: rockchip: add remove() support
+Message-ID: <20170331164015.GB146301@google.com>
+References: <20170310024617.67303-1-briannorris@chromium.org>
+ <20170310024617.67303-3-briannorris@chromium.org>
+ <20170324142541.GA25380@bhelgaas-glaptop.roam.corp.google.com>
+ <20170324172218.GA119093@google.com>
+ <20170330232825.GB3912@bhelgaas-glaptop.roam.corp.google.com>
+ <20170331002608.GA72818@google.com>
+ <20170331051702.GA13240@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170331051702.GA13240@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-This adds standard documentation for the sysfs switchtec attributes and
-a RST formatted text file which documents the char device interface.
-Jonathan Corbet has indicated he will move this to a new user-space
-developer documentation book once it's created.
+Hi Bjorn,
 
-Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
-Signed-off-by: Stephen Bates <stephen.bates@microsemi.com>
-Tested-by: Krishna Dhulipala <krishnad@fb.com>
-Reviewed-by: Wei Zhang <wzhang@fb.com>
-Reviewed-by: Jens Axboe <axboe@fb.com>
----
- Documentation/switchtec.txt | 53 +++++++++++++++++++++++++++++++++++++++++++++
- MAINTAINERS                 |  1 +
- 2 files changed, 54 insertions(+)
- create mode 100644 Documentation/switchtec.txt
+On Fri, Mar 31, 2017 at 12:17:02AM -0500, Bjorn Helgaas wrote:
+> On Thu, Mar 30, 2017 at 05:26:09PM -0700, Brian Norris wrote:
+> > On Thu, Mar 30, 2017 at 06:28:25PM -0500, Bjorn Helgaas wrote:
+> > > Can we fix them all at the same time as you fix Rockchip?  Maybe we
+> > > should have a series that adds ".suppress_bind_attrs = true" to all
+> > > these drivers,
+> > 
+> > Sure, I can do that.
+> > 
+> > > including Rockchip.
+> > 
+> > Huh? Why? So I can revert that in the next patch?
+> > 
+> > > Then you could have this current 
+> > > series to make Rockchip modular on top, if there's still value in it.
+> > 
+> > I do see value in it. That's the whole reason I wrote this patchset.
+> > It's useful for stressing out certain behaviors that will happen all the
+> > time (i.e., boot-time initialization, from platform probe, to bus init,
+> > to client/EP init), via repeated bind/unbind (or modprobe/rmmod). It's
+> > much faster than reboot testing.
+> 
+> I didn't phrase that very well.  There's certainly value in stressing
+> the bind/unbind paths, but I thought the primary reason you wrote this
+> was to fix the fact that you could crash the system like this:
+> 
+>   # echo f8000000.pcie > /sys/bus/platform/drivers/rockchip-pcie/unbind
+>   # lspci
 
-diff --git a/Documentation/switchtec.txt b/Documentation/switchtec.txt
-new file mode 100644
-index 0000000..4bced4c
---- /dev/null
-+++ b/Documentation/switchtec.txt
-@@ -0,0 +1,53 @@
-+========================
-+Linux Switchtec Support
-+========================
-+
-+Microsemi's "Switchtec" line of PCI switch devices is already
-+supported by the kernel with standard PCI switch drivers. However, the
-+Switchtec device advertises a special management endpoint which
-+enables some additional functionality. This includes:
-+
-+* Packet and Byte Counters
-+* Firmware Upgrades
-+* Event and Error logs
-+* Querying port link status
-+* Custom user firmware commands
-+
-+The switchtec kernel module implements this functionality.
-+
-+
-+Interface
-+=========
-+
-+The primary means of communicating with the Switchtec management firmware is
-+through the Memory-mapped Remote Procedure Call (MRPC) interface.
-+Commands are submitted to the interface with a 4-byte command
-+identifier and up to 1KB of command specific data. The firmware will
-+respond with a 4 bytes return code and up to 1KB of command specific
-+data. The interface only processes a single command at a time.
-+
-+
-+Userspace Interface
-+===================
-+
-+The MRPC interface will be exposed to userspace through a simple char
-+device: /dev/switchtec#, one for each management endpoint in the system.
-+
-+The char device has the following semantics:
-+
-+* A write must consist of at least 4 bytes and no more than 1028 bytes.
-+  The first four bytes will be interpreted as the command to run and
-+  the remainder will be used as the input data. A write will send the
-+  command to the firmware to begin processing.
-+
-+* Each write must be followed by exactly one read. Any double write will
-+  produce an error and any read that doesn't follow a write will
-+  produce an error.
-+
-+* A read will block until the firmware completes the command and return
-+  the four bytes of status plus up to 1024 bytes of output data. (The
-+  length will be specified by the size parameter of the read call --
-+  reading less than 4 bytes will produce an error.
-+
-+* The poll call will also be supported for userspace applications that
-+  need to do other things while waiting for the command to complete.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index a57686f..aa702b0 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -9512,6 +9512,7 @@ M:	Stephen Bates <stephen.bates@microsemi.com>
- M:	Logan Gunthorpe <logang@deltatee.com>
- L:	linux-pci@vger.kernel.org
- S:	Maintained
-+F:	Documentation/switchtec.txt
- F:	drivers/pci/switch/switchtec*
- 
- PCI DRIVER FOR NVIDIA TEGRA
--- 
-2.1.4
+Well, they're kinda two sides of the same coin; I was wanting to test
+the bind path, and when I tried this, I noticed that I could trivially
+crash the system. The crash seemed like a more important thing to
+document (because otherwise, it just looks like I'm adding a feature).
+
+> From my point of view, that's the issue that *has* to be fixed.
+> Better test coverage is icing.
+
+I didn't really view messing with /sys/.../unbind as a big issue,
+outside of development and testing (there's a lot of damage a malicious
+actor can do with unconstrained access to /sys/), so I guess I didn't
+put that aspect as super-high priority. If you'd like to prioritize
+that, then I'm OK with that.
+
+> It sounds like several drivers have that same issue, and the simplest
+> possible fix is to set .suppress_bind_attrs, so I suggested doing that 
+> so it's easy to analyze the tree as a whole and say "these drivers
+> all have the same problem, and all the fixes look the same."
+
+Sure, that is the simplest approach.
+
+> I guess if you'd rather skip that for Rockchip and apply a more
+> complicated fix there, I could go along with that.  But I don't think
+> it would hurt anything to set .suppress_bind_attrs, then remove it
+> when you add module support.  The concepts of .suppress_bind_attrs and
+> modularity are related, and doing this in a separate patch would make
+> it a nice example to follow if somebody wants to make other drivers
+> modular as well.
+
+I'll leave that up to you, and I can resubmit things if desired. As you
+have since noticed, I already sent a patch to add .suppress_bind_attrs
+to all the other drivers. If you'd like, feel free to add
+pcie-rockchip.c into that mix, it's not hard -- or I can redo it myself.
+Then I can modify and resend (or you can do the trivial modification
+required to) the current patch set.
+
+Just let me know.
+
+> > Personally, I'd rather just patch the other drivers, and you can wait
+> > until I follow through on that promise before applying my existing work
+> > for the Rockchip driver, if that's what you'd prefer.
+> 
+> It's not so much a question of using the Rockchip change as a stick.
+> I'm just thinking that it makes a more logical progression to fix the
+> more important issue globally first.
+
+Sure, I can grok that. Just let me know if you want any more action from
+me.
+
+Brian
