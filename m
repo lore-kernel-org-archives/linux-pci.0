@@ -1,76 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <SRS0=0EeQ=3I=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=0EeQ=3I=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH v3 0/2] Tango PCIe controller support
+From: Mason <slash.tmp@free.fr>
+To: linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+References: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
+ <1561c381-bfa7-6e4d-a016-8ad7293a60ce@free.fr>
+Message-ID: <88af8239-bef4-dfd5-2280-66104bee72e8@free.fr>
+Date: Sat, 1 Apr 2017 00:05:27 +0200
 MIME-Version: 1.0
-In-Reply-To: <58DDFCBE.1030705@hisilicon.com>
-References: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
- <1490887619-61732-6-git-send-email-yuanzhichang@hisilicon.com>
- <1908501.jAQQKvjW4f@aspire.rjw.lan> <58DDFCBE.1030705@hisilicon.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Sat, 1 Apr 2017 01:02:32 +0200
-Message-ID: <CAJZ5v0gZdghH7jjd-zMmqXNkuvVVVSPDHfBrJXx5OXR2NE0KgA@mail.gmail.com>
-Subject: Re: [PATCH V8 5/6] ACPI: Support the probing on the devices which
- apply indirect-IO
-To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Will Deacon <will.deacon@arm.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Brian Starkey <brian.starkey@arm.com>,
-        Olof Johansson <olof@lixom.net>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        linuxarm@huawei.com,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Corey Minyard <minyard@acm.org>,
-        Zou Rongrong <zourongrong@gmail.com>,
-        John Garry <john.garry@huawei.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        zhichang.yuan02@gmail.com, kantyzc@163.com, xuwei5@hisilicon.com
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1561c381-bfa7-6e4d-a016-8ad7293a60ce@free.fr>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 31, 2017 at 8:52 AM, zhichang.yuan
-<yuanzhichang@hisilicon.com> wrote:
-> Hi, Rafael,
->
-> Thanks for reviewing this!
->
-> On 2017/3/31 4:31, Rafael J. Wysocki wrote:
->> On Thursday, March 30, 2017 11:26:58 PM zhichang.yuan wrote:
->>> On some platforms(such as Hip06/Hip07), the legacy ISA/LPC devices access I/O
->>> with some special host-local I/O ports known on x86. To access the I/O
->>> peripherals, an indirect-IO mechanism is introduced to mapped the host-local
->>> I/O to system logical/fake PIO similar the PCI MMIO on architectures where no
->>> separate I/O space exists. Just as PCI MMIO, the host I/O range should be
->>> registered before probing the downstream devices and set up the I/O mapping.
->>> But current ACPI bus probing doesn't support these indirect-IO hosts/devices.
->>>
->>> This patch introdueces a new ACPI handler for this device category. Through the
->>> handler attach callback, the indirect-IO hosts I/O registration is done and
->>> all peripherals' I/O resources are translated into logic/fake PIO before
->>> starting the enumeration.
->>
->> Can you explain to me briefly what exactly this code is expected to be doing?
->
-> As you know currently for ARM architecture IO space is memory mapped and
-> is only used by pci devices. The port number is dynamically allocated
-> converting the device IO address into a PIO token: i.e.
-> http://lxr.free-electrons.com/source/drivers/acpi/pci_root.c#L745
-> This patch is meant to support a new class of IO host controller
-> that are not PCI based and that still require to have the IO addresses
-> be translated in the same PIO token space as the PCI controller
+On 30/03/2017 22:56, Mason wrote:
 
-IOW, this is ARM-specific, right?
+> I've run into an issue.
+> 
+> If I boot the system with earlyprintk enabled (as I've
+> been doing throughout my dev), things work as expected.
+> 
+> But if I boot with earlyprintk disabled, then the system
+> does not "see" the PCIe board, because reading the vendor
+> ID returns 0xffffffff.
+> 
+> What we think is happening, is that when earlyprintk is
+> disabled, the system proceeds much faster through the
+> various inits, and the PCIe init happens when PCIe
+> link training has not completed yet.
+> 
+> If that is the case, then it seems I would need to check
+> the link state in my probe function.
 
-Thanks,
-Rafael
+I determined empirically that link training takes around
+10-15 ms. Though I suppose this might depend on the
+specific PCIe board? (I'm only considering x1 link.)
+
+So I added an msleep(20); in the probe function, and in
+the config_read callback, I check the link status on the
+first read to the device.
+
+Should I msleep(40) to be safe?
+
+Regards.
