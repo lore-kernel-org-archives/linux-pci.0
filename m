@@ -1,94 +1,244 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 3 Mar 2017 09:46:28 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Subject: Re: Using the generic host PCIe driver
-Message-ID: <20170303154628.GA21522@bhelgaas-glaptop.roam.corp.google.com>
-References: <8d4e5d8a-7683-0180-324c-0ffd1a9a641a@free.fr>
- <20170227164430.GB11162@bhelgaas-glaptop.roam.corp.google.com>
- <8643c952-e915-bcd1-390e-9d4001789872@free.fr>
- <20170227183534.GA12481@bhelgaas-glaptop.roam.corp.google.com>
- <347d4200-e089-60df-5f60-58d16efc7c4e@free.fr>
- <20170301161801.GB13171@bhelgaas-glaptop.roam.corp.google.com>
- <98ee3041-6a94-91af-b4bf-208aa02624ed@free.fr>
- <20170301215726.GA32286@bhelgaas-glaptop.roam.corp.google.com>
- <258cd6f3-ef17-6705-ff48-ae06f26778c2@free.fr>
-MIME-Version: 1.0
-In-Reply-To: <258cd6f3-ef17-6705-ff48-ae06f26778c2@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- David Daney <david.daney@cavium.com>, Marc Zyngier <marc.zyngier@arm.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Will Deacon <will.deacon@arm.com>, Thierry Reding <treding@nvidia.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f42.google.com ([74.125.83.42]:32992 "EHLO
+        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934584AbdCaBNc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 30 Mar 2017 21:13:32 -0400
+Received: by mail-pg0-f42.google.com with SMTP id x125so54960441pgb.0
+        for <linux-pci@vger.kernel.org>; Thu, 30 Mar 2017 18:13:31 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Will Deacon <will.deacon@arm.com>,
+        David Daney <david.daney@cavium.com>,
+        Rob Herring <robh@kernel.org>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [PATCH] PCI: don't allow unbinding host controllers that aren't prepared
+Date: Thu, 30 Mar 2017 18:12:03 -0700
+Message-Id: <20170331011203.41505-1-briannorris@chromium.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 03, 2017 at 01:44:54PM +0100, Mason wrote:
-> For now, I have "hidden" the root's BAR0 from the system with:
-> 
-> 	if (bus->number == 0 && where == PCI_BASE_ADDRESS_0) {
-> 		*val = 0;
-> 		return PCIBIOS_SUCCESSFUL;
-> 	}
+Many PCI host controller drivers aren't prepared to have their devices
+unbound from them forcefully (e.g., through /sys/.../<driver>/unbind),
+as they don't provide any driver .remove callback, where they'd detach
+the root bus, release resources, etc. Keeping the driver built in (i.e.,
+not a loadable module) is not enough; and providing no .remove callback
+just means we don't do any teardown.
 
-I'm scratching my head about this a little.  Here's what your dmesg
-log contained originally:
+To rule out the possibility of unbinding a device via sysfs, we need to
+set the ".suppress_bind_attrs" field.
 
-  pci 0000:00:00.0: [1105:8758] type 01 class 0x048000
-  pci 0000:00:00.0: reg 0x10: [mem 0x00000000-0x00ffffff 64bit]
-  pci 0000:00:00.0: BAR 0: no space for [mem size 0x01000000 64bit]
-  pci 0000:00:00.0: BAR 0: failed to assign [mem size 0x01000000 64bit]
-  pci 0000:00:00.0: PCI bridge to [bus 01]
-  pcieport 0000:00:00.0: enabling device (0140 -> 0142)
+I found the suspect drivers via the following search:
 
-This device is a bridge (a Root Port, per your lspci output).  With a
-BAR, which is legal but unusual.  We couldn't assign space for the
-BAR, which means we can't use whatever vendor-specific functionality
-it provides.
+  git grep -l platform_driver $(git grep -L -e '\.remove' -e suppress_bind_attrs drivers/pci/)
 
-What's puzzling me is that pcieport was able to enable the device and
-turn on PCI_COMMAND_MEMORY (the 0x2 bit).  It seems like this should
-have failed because pci_enable_resources() checks to see that all the
-BARs have been assigned.
+Then I inspected them to ensure that
+(a) they set up a PCI bus in their probe() and
+(b) they don't have a remove() callback for undoing the setup
 
-Since this is a bridge, we really *have* to turn on PCI_COMMAND_MEMORY
-in order for the bridge to forward memory transactions to its
-secondary bus (bus 01).  But we can't safely enable PCI_COMMAND_MEMORY
-unless all its memory BARs are assigned.
+I excluded drivers/pci/host/pcie-rockchip.c, because I've implemented
+remove() support elsewhere [1].
 
-So it's not safe to hide BAR0 from the PCI core.  That makes Linux
-think the BAR doesn't exist, but of course it still exists in the
-hardware itself, and it will respond at whatever address it happens to
-contain.  In this case, that address happens to be zero, and the host
-bridge does not advertise a window that maps to bus address zero, so
-you probably won't see a conflict right away, but it's a latent issue
-that may come back to bite you some day.
+[1] https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1349576.html
+    [PATCH v2 3/5] PCI: rockchip: add remove() support
 
-The easiest fix would be for you to increase the host bridge memory
-window size.  It's currently [mem 0xa0000000-0xa03fffff], which is
-only 4MB, which is *tiny*.  You need 16MB just to contain the bridge
-BAR, plus at least 8K for the USB controller.
+Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+Not tested, other than to compile a few of these.
 
-If you can't make space for a bigger window, it's possible the Root
-Port has some device-specific way to disable BAR0 in hardware, e.g.,
-some register your firmware or an early Linux quirk could write.  That
-would be much safer than enabling an unassigned BAR.
+ drivers/pci/dwc/pci-imx6.c             | 1 +
+ drivers/pci/dwc/pci-layerscape.c       | 1 +
+ drivers/pci/dwc/pcie-armada8k.c        | 1 +
+ drivers/pci/dwc/pcie-artpec6.c         | 1 +
+ drivers/pci/dwc/pcie-designware-plat.c | 1 +
+ drivers/pci/dwc/pcie-hisi.c            | 2 ++
+ drivers/pci/dwc/pcie-spear13xx.c       | 1 +
+ drivers/pci/host/pci-ftpci100.c        | 1 +
+ drivers/pci/host/pci-host-generic.c    | 1 +
+ drivers/pci/host/pci-thunder-ecam.c    | 1 +
+ drivers/pci/host/pci-thunder-pem.c     | 1 +
+ drivers/pci/host/pci-versatile.c       | 1 +
+ drivers/pci/host/pci-xgene.c           | 1 +
+ 13 files changed, 14 insertions(+)
 
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+index 801e46cd266d..f85a063e9964 100644
+--- a/drivers/pci/dwc/pci-imx6.c
++++ b/drivers/pci/dwc/pci-imx6.c
+@@ -725,6 +725,7 @@ static struct platform_driver imx6_pcie_driver = {
+ 	.driver = {
+ 		.name	= "imx6q-pcie",
+ 		.of_match_table = imx6_pcie_of_match,
++		.suppress_bind_attrs = true,
+ 	},
+ 	.shutdown = imx6_pcie_shutdown,
+ };
+diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+index c32e392a0ae6..880f345bff43 100644
+--- a/drivers/pci/dwc/pci-layerscape.c
++++ b/drivers/pci/dwc/pci-layerscape.c
+@@ -305,6 +305,7 @@ static struct platform_driver ls_pcie_driver = {
+ 	.driver = {
+ 		.name = "layerscape-pcie",
+ 		.of_match_table = ls_pcie_of_match,
++		.suppress_bind_attrs = true,
+ 	},
+ };
+ builtin_platform_driver_probe(ls_pcie_driver, ls_pcie_probe);
+diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
+index f110e3b24a26..9d8f7e4db5df 100644
+--- a/drivers/pci/dwc/pcie-armada8k.c
++++ b/drivers/pci/dwc/pcie-armada8k.c
+@@ -262,6 +262,7 @@ static struct platform_driver armada8k_pcie_driver = {
+ 	.driver = {
+ 		.name	= "armada8k-pcie",
+ 		.of_match_table = of_match_ptr(armada8k_pcie_of_match),
++		.suppress_bind_attrs = true,
+ 	},
+ };
+ builtin_platform_driver(armada8k_pcie_driver);
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index fcd3ef845883..7a86d4b4dcc1 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -290,6 +290,7 @@ static struct platform_driver artpec6_pcie_driver = {
+ 	.driver = {
+ 		.name	= "artpec6-pcie",
+ 		.of_match_table = artpec6_pcie_of_match,
++		.suppress_bind_attrs = true,
+ 	},
+ };
+ builtin_platform_driver(artpec6_pcie_driver);
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index b6c832ba39dd..bdb75a5758ae 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -129,6 +129,7 @@ static struct platform_driver dw_plat_pcie_driver = {
+ 	.driver = {
+ 		.name	= "dw-pcie",
+ 		.of_match_table = dw_plat_pcie_of_match,
++		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = dw_plat_pcie_probe,
+ };
+diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+index fd66a3199db7..088ed5e4e46b 100644
+--- a/drivers/pci/dwc/pcie-hisi.c
++++ b/drivers/pci/dwc/pcie-hisi.c
+@@ -334,6 +334,7 @@ static struct platform_driver hisi_pcie_driver = {
+ 	.driver = {
+ 		   .name = "hisi-pcie",
+ 		   .of_match_table = hisi_pcie_of_match,
++		   .suppress_bind_attrs = true,
+ 	},
+ };
+ builtin_platform_driver(hisi_pcie_driver);
+@@ -391,6 +392,7 @@ static struct platform_driver hisi_pcie_almost_ecam_driver = {
+ 	.driver = {
+ 		   .name = "hisi-pcie-almost-ecam",
+ 		   .of_match_table = hisi_pcie_almost_ecam_of_match,
++		   .suppress_bind_attrs = true,
+ 	},
+ };
+ builtin_platform_driver(hisi_pcie_almost_ecam_driver);
+diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
+index eaa4ea8e2ea4..0d117499da0d 100644
+--- a/drivers/pci/dwc/pcie-spear13xx.c
++++ b/drivers/pci/dwc/pcie-spear13xx.c
+@@ -308,6 +308,7 @@ static struct platform_driver spear13xx_pcie_driver = {
+ 	.driver = {
+ 		.name	= "spear-pcie",
+ 		.of_match_table = of_match_ptr(spear13xx_pcie_of_match),
++		.suppress_bind_attrs = true,
+ 	},
+ };
+ 
+diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+index 4ae5418a1aad..9d2713707a91 100644
+--- a/drivers/pci/host/pci-ftpci100.c
++++ b/drivers/pci/host/pci-ftpci100.c
+@@ -556,6 +556,7 @@ static struct platform_driver faraday_pci_driver = {
+ 	.driver = {
+ 		.name = "ftpci100",
+ 		.of_match_table = of_match_ptr(faraday_pci_of_match),
++		.suppress_bind_attrs = true,
+ 	},
+ 	.probe  = faraday_pci_probe,
+ };
+diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+index c05ea9d72f69..7d709a7e0aa8 100644
+--- a/drivers/pci/host/pci-host-generic.c
++++ b/drivers/pci/host/pci-host-generic.c
+@@ -60,6 +60,7 @@ static struct platform_driver gen_pci_driver = {
+ 	.driver = {
+ 		.name = "pci-host-generic",
+ 		.of_match_table = gen_pci_of_match,
++		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = gen_pci_probe,
+ };
+diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
+index 3f54a43bbbea..fc0ca03f280e 100644
+--- a/drivers/pci/host/pci-thunder-ecam.c
++++ b/drivers/pci/host/pci-thunder-ecam.c
+@@ -373,6 +373,7 @@ static struct platform_driver thunder_ecam_driver = {
+ 	.driver = {
+ 		.name = KBUILD_MODNAME,
+ 		.of_match_table = thunder_ecam_of_match,
++		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = thunder_ecam_probe,
+ };
+diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+index 52b5bdccf5f0..4260b0765949 100644
+--- a/drivers/pci/host/pci-thunder-pem.c
++++ b/drivers/pci/host/pci-thunder-pem.c
+@@ -416,6 +416,7 @@ static struct platform_driver thunder_pem_driver = {
+ 	.driver = {
+ 		.name = KBUILD_MODNAME,
+ 		.of_match_table = thunder_pem_of_match,
++		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = thunder_pem_probe,
+ };
+diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
+index 5ebee7d37ff5..5a5b84227eb6 100644
+--- a/drivers/pci/host/pci-versatile.c
++++ b/drivers/pci/host/pci-versatile.c
+@@ -221,6 +221,7 @@ static struct platform_driver versatile_pci_driver = {
+ 	.driver = {
+ 		.name = "versatile-pci",
+ 		.of_match_table = versatile_pci_of_match,
++		.suppress_bind_attrs = true,
+ 	},
+ 	.probe = versatile_pci_probe,
+ };
+diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+index 1a6108788f6f..517bea33809f 100644
+--- a/drivers/pci/host/pci-xgene.c
++++ b/drivers/pci/host/pci-xgene.c
+@@ -697,6 +697,7 @@ static struct platform_driver xgene_pcie_driver = {
+ 	.driver = {
+ 		   .name = "xgene-pcie",
+ 		   .of_match_table = of_match_ptr(xgene_pcie_match_table),
++		   .suppress_bind_attrs = true,
+ 	},
+ 	.probe = xgene_pcie_probe_bridge,
+ };
+-- 
+2.12.2.564.g063fe858b8-goog
