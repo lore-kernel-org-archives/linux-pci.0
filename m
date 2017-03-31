@@ -1,149 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0073.outbound.protection.outlook.com ([104.47.34.73]:39384
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751286AbdCOQI3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 15 Mar 2017 12:08:29 -0400
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: =?utf-8?B?J0NocmlzdGlhbiBLw7ZuaWcn?= <deathsimple@vodafone.de>,
-        Ayyappa Ch <ayyappa.ch.linux@gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>,
-        "platform-driver-x86@vger.kernel.org"
-        <platform-driver-x86@vger.kernel.org>,
-        "helgaas@kernel.org" <helgaas@kernel.org>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>
-Subject: RE: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access
-Date: Wed, 15 Mar 2017 16:08:27 +0000
-Message-ID: <CY4PR12MB1653F2A8F24CCA42FD5C977BF7270@CY4PR12MB1653.namprd12.prod.outlook.com>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
- <1489408896-25039-5-git-send-email-deathsimple@vodafone.de>
- <CAPyr0yLWiGzU5ihFcj_NmA2Vk2R7GsKqo2LK8o3Eu+Df9m7vhw@mail.gmail.com>
- <6fac05e4-26ae-e959-9af6-cb68a04a1110@vodafone.de>
-In-Reply-To: <6fac05e4-26ae-e959-9af6-cb68a04a1110@vodafone.de>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Hans de Goede <hdegoede@redhat.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Linux PCI <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH] ACPI / scan: Prefer devices without _HID/_CID for _ADR matching
+Date: Fri, 31 Mar 2017 23:23:43 +0200
+Message-ID: <9569337.hBepXicPcZ@aspire.rjw.lan>
+In-Reply-To: <b9150482-cfc7-7737-923a-665d8b4ba9fe@redhat.com>
+References: <20161225102148.7706-1-hdegoede@redhat.com> <1816647.tOAZ7v3nRx@aspire.rjw.lan> <b9150482-cfc7-7737-923a-665d8b4ba9fe@redhat.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBhbWQtZ2Z4IFttYWlsdG86YW1k
-LWdmeC1ib3VuY2VzQGxpc3RzLmZyZWVkZXNrdG9wLm9yZ10gT24gQmVoYWxmDQo+IE9mIENocmlz
-dGlhbiBLw7ZuaWcNCj4gU2VudDogV2VkbmVzZGF5LCBNYXJjaCAxNSwgMjAxNyAzOjM4IEFNDQo+
-IFRvOiBBeXlhcHBhIENoDQo+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBsaW51eC1r
-ZXJuZWxAdmdlci5rZXJuZWwub3JnOyBhbWQtDQo+IGdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmc7
-IHBsYXRmb3JtLWRyaXZlci14ODZAdmdlci5rZXJuZWwub3JnOw0KPiBoZWxnYWFzQGtlcm5lbC5v
-cmc7IGRyaS1kZXZlbEBsaXN0cy5mcmVlZGVza3RvcC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRD
-SCA0LzRdIGRybS9hbWRncHU6IHJlc2l6ZSBWUkFNIEJBUiBmb3IgQ1BVIGFjY2Vzcw0KPiANCj4g
-Q2FyaXp6byBpcyBhbiBBUFUgYW5kIHJlc2l6aW5nIEJBUnMgaXNuJ3QgbmVlZGVkIG5vciBzdXBw
-b3J0ZWQgdGhlcmUuDQo+IFRoZSBDUFUgY2FuIGFjY2VzcyB0aGUgZnVsbCBzdG9sZW4gVlJBTSBk
-aXJlY3RseSBvbiB0aGF0IGhhcmR3YXJlLg0KPiANCj4gQXMgZmFyIGFzIEkga25vdyBBU0lDcyB3
-aXRoIHN1cHBvcnQgZm9yIHRoaXMgYXJlIFRvbmdhLCBGaWppIGFuZCBhbGwNCj4gUG9sYXJpcyB2
-YXJpYW50cy4NCg0KSSB0aGluayByZXNpemFibGUgQkFScyBhcmUgc3VwcG9ydGVkIGFzIGZhciBi
-YWNrIGFzIGV2ZXJncmVlbiBvciBOSS4NCg0KQWxleA0KDQo+IA0KPiBDaHJpc3RpYW4uDQo+IA0K
-PiBBbSAxNS4wMy4yMDE3IHVtIDA4OjIzIHNjaHJpZWIgQXl5YXBwYSBDaDoNCj4gPiBJcyBpdCBw
-b3NzaWJsZSBvbiBDYXJyaXpvIGFzaWNzPyBPciBvbmx5IHN1cHBvcnRzIG9uIG5ld2VyIGFzaWNz
-Pw0KPiA+DQo+ID4gT24gTW9uLCBNYXIgMTMsIDIwMTcgYXQgNjoxMSBQTSwgQ2hyaXN0aWFuIEvD
-tm5pZw0KPiA+IDxkZWF0aHNpbXBsZUB2b2RhZm9uZS5kZT4gd3JvdGU6DQo+ID4+IEZyb206IENo
-cmlzdGlhbiBLw7ZuaWcgPGNocmlzdGlhbi5rb2VuaWdAYW1kLmNvbT4NCj4gPj4NCj4gPj4gVHJ5
-IHRvIHJlc2l6ZSBCQVIwIHRvIGxldCBDUFUgYWNjZXNzIGFsbCBvZiBWUkFNLg0KPiA+Pg0KPiA+
-PiBTaWduZWQtb2ZmLWJ5OiBDaHJpc3RpYW4gS8O2bmlnIDxjaHJpc3RpYW4ua29lbmlnQGFtZC5j
-b20+DQo+ID4+IC0tLQ0KPiA+PiAgIGRyaXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2FtZGdwdS5o
-ICAgICAgICB8ICAxICsNCj4gPj4gICBkcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9hbWRncHVf
-ZGV2aWNlLmMgfCAyOQ0KPiArKysrKysrKysrKysrKysrKysrKysrKysrKysrKw0KPiA+PiAgIGRy
-aXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2dtY192N18wLmMgICAgICB8ICA4ICsrKysrLS0tDQo+
-ID4+ICAgZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvZ21jX3Y4XzAuYyAgICAgIHwgIDggKysr
-KystLS0NCj4gPj4gICA0IGZpbGVzIGNoYW5nZWQsIDQwIGluc2VydGlvbnMoKyksIDYgZGVsZXRp
-b25zKC0pDQo+ID4+DQo+ID4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdw
-dS9hbWRncHUuaA0KPiBiL2RyaXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2FtZGdwdS5oDQo+ID4+
-IGluZGV4IDNiODFkZWQuLjkwNWRlZDkgMTAwNjQ0DQo+ID4+IC0tLSBhL2RyaXZlcnMvZ3B1L2Ry
-bS9hbWQvYW1kZ3B1L2FtZGdwdS5oDQo+ID4+ICsrKyBiL2RyaXZlcnMvZ3B1L2RybS9hbWQvYW1k
-Z3B1L2FtZGdwdS5oDQo+ID4+IEBAIC0xNzE5LDYgKzE3MTksNyBAQCB1aW50NjRfdCBhbWRncHVf
-dHRtX3R0X3B0ZV9mbGFncyhzdHJ1Y3QNCj4gYW1kZ3B1X2RldmljZSAqYWRldiwgc3RydWN0IHR0
-bV90dCAqdHRtLA0KPiA+PiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgc3RydWN0
-IHR0bV9tZW1fcmVnICptZW0pOw0KPiA+PiAgIHZvaWQgYW1kZ3B1X3ZyYW1fbG9jYXRpb24oc3Ry
-dWN0IGFtZGdwdV9kZXZpY2UgKmFkZXYsIHN0cnVjdA0KPiBhbWRncHVfbWMgKm1jLCB1NjQgYmFz
-ZSk7DQo+ID4+ICAgdm9pZCBhbWRncHVfZ3R0X2xvY2F0aW9uKHN0cnVjdCBhbWRncHVfZGV2aWNl
-ICphZGV2LCBzdHJ1Y3QNCj4gYW1kZ3B1X21jICptYyk7DQo+ID4+ICt2b2lkIGFtZGdwdV9yZXNp
-emVfYmFyMChzdHJ1Y3QgYW1kZ3B1X2RldmljZSAqYWRldik7DQo+ID4+ICAgdm9pZCBhbWRncHVf
-dHRtX3NldF9hY3RpdmVfdnJhbV9zaXplKHN0cnVjdCBhbWRncHVfZGV2aWNlICphZGV2LA0KPiB1
-NjQgc2l6ZSk7DQo+ID4+ICAgaW50IGFtZGdwdV90dG1faW5pdChzdHJ1Y3QgYW1kZ3B1X2Rldmlj
-ZSAqYWRldik7DQo+ID4+ICAgdm9pZCBhbWRncHVfdHRtX2Zpbmkoc3RydWN0IGFtZGdwdV9kZXZp
-Y2UgKmFkZXYpOw0KPiA+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUv
-YW1kZ3B1X2RldmljZS5jDQo+IGIvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvYW1kZ3B1X2Rl
-dmljZS5jDQo+ID4+IGluZGV4IDExOGY0ZTYuLjkyOTU1ZmUgMTAwNjQ0DQo+ID4+IC0tLSBhL2Ry
-aXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2FtZGdwdV9kZXZpY2UuYw0KPiA+PiArKysgYi9kcml2
-ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9hbWRncHVfZGV2aWNlLmMNCj4gPj4gQEAgLTY5Miw2ICs2
-OTIsMzUgQEAgdm9pZCBhbWRncHVfZ3R0X2xvY2F0aW9uKHN0cnVjdCBhbWRncHVfZGV2aWNlDQo+
-ICphZGV2LCBzdHJ1Y3QgYW1kZ3B1X21jICptYykNCj4gPj4gICAgICAgICAgICAgICAgICAgICAg
-ICAgIG1jLT5ndHRfc2l6ZSA+PiAyMCwgbWMtPmd0dF9zdGFydCwgbWMtPmd0dF9lbmQpOw0KPiA+
-PiAgIH0NCj4gPj4NCj4gPj4gKy8qKg0KPiA+PiArICogYW1kZ3B1X3Jlc2l6ZV9iYXIwIC0gdHJ5
-IHRvIHJlc2l6ZSBCQVIwDQo+ID4+ICsgKg0KPiA+PiArICogQGFkZXY6IGFtZGdwdV9kZXZpY2Ug
-cG9pbnRlcg0KPiA+PiArICoNCj4gPj4gKyAqIFRyeSB0byByZXNpemUgQkFSMCB0byBtYWtlIGFs
-bCBWUkFNIENQVSBhY2Nlc3NpYmxlLg0KPiA+PiArICovDQo+ID4+ICt2b2lkIGFtZGdwdV9yZXNp
-emVfYmFyMChzdHJ1Y3QgYW1kZ3B1X2RldmljZSAqYWRldikNCj4gPj4gK3sNCj4gPj4gKyAgICAg
-ICB1MzIgc2l6ZSA9IG1heChpbG9nMihhZGV2LT5tYy5yZWFsX3ZyYW1fc2l6ZSAtIDEpICsgMSwg
-MjApIC0gMjA7DQo+ID4+ICsgICAgICAgaW50IHI7DQo+ID4+ICsNCj4gPj4gKyAgICAgICByID0g
-cGNpX3Jlc2l6ZV9yZXNvdXJjZShhZGV2LT5wZGV2LCAwLCBzaXplKTsNCj4gPj4gKw0KPiA+PiAr
-ICAgICAgIGlmIChyID09IC1FTk9UU1VQUCkgew0KPiA+PiArICAgICAgICAgICAgICAgLyogVGhl
-IGhhcmR3YXJlIGRvbid0IHN1cHBvcnQgdGhlIGV4dGVuc2lvbi4gKi8NCj4gPj4gKyAgICAgICAg
-ICAgICAgIHJldHVybjsNCj4gPj4gKw0KPiA+PiArICAgICAgIH0gZWxzZSBpZiAociA9PSAtRU5P
-U1BDKSB7DQo+ID4+ICsgICAgICAgICAgICAgICBEUk1fSU5GTygiTm90IGVub2lnaCBQQ0kgYWRk
-cmVzcyBzcGFjZSBmb3IgYSBsYXJnZSBCQVIuIik7DQo+ID4+ICsgICAgICAgfSBlbHNlIGlmIChy
-KSB7DQo+ID4+ICsgICAgICAgICAgICAgICBEUk1fRVJST1IoIlByb2JsZW0gcmVzaXppbmcgQkFS
-MCAoJWQpLiIsIHIpOw0KPiA+PiArICAgICAgIH0NCj4gPj4gKw0KPiA+PiArICAgICAgIC8qIFJl
-aW5pdCB0aGUgZG9vcmJlbGwgbWFwcGluZywgaXQgaXMgbW9zdCBsaWtlbHkgbW92ZWQgYXMgd2Vs
-bCAqLw0KPiA+PiArICAgICAgIGFtZGdwdV9kb29yYmVsbF9maW5pKGFkZXYpOw0KPiA+PiArICAg
-ICAgIEJVR19PTihhbWRncHVfZG9vcmJlbGxfaW5pdChhZGV2KSk7DQo+ID4+ICt9DQo+ID4+ICsN
-Cj4gPj4gICAvKg0KPiA+PiAgICAqIEdQVSBoZWxwZXJzIGZ1bmN0aW9uLg0KPiA+PiAgICAqLw0K
-PiA+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRncHUvZ21jX3Y3XzAuYw0K
-PiBiL2RyaXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2dtY192N18wLmMNCj4gPj4gaW5kZXggZGM5
-YjZkNi4uMzZhN2FhNSAxMDA2NDQNCj4gPj4gLS0tIGEvZHJpdmVycy9ncHUvZHJtL2FtZC9hbWRn
-cHUvZ21jX3Y3XzAuYw0KPiA+PiArKysgYi9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9nbWNf
-djdfMC5jDQo+ID4+IEBAIC0zNjcsMTMgKzM2NywxNSBAQCBzdGF0aWMgaW50IGdtY192N18wX21j
-X2luaXQoc3RydWN0DQo+IGFtZGdwdV9kZXZpY2UgKmFkZXYpDQo+ID4+ICAgICAgICAgICAgICAg
-ICAgYnJlYWs7DQo+ID4+ICAgICAgICAgIH0NCj4gPj4gICAgICAgICAgYWRldi0+bWMudnJhbV93
-aWR0aCA9IG51bWNoYW4gKiBjaGFuc2l6ZTsNCj4gPj4gLSAgICAgICAvKiBDb3VsZCBhcGVyIHNp
-emUgcmVwb3J0IDAgPyAqLw0KPiA+PiAtICAgICAgIGFkZXYtPm1jLmFwZXJfYmFzZSA9IHBjaV9y
-ZXNvdXJjZV9zdGFydChhZGV2LT5wZGV2LCAwKTsNCj4gPj4gLSAgICAgICBhZGV2LT5tYy5hcGVy
-X3NpemUgPSBwY2lfcmVzb3VyY2VfbGVuKGFkZXYtPnBkZXYsIDApOw0KPiA+PiAgICAgICAgICAv
-KiBzaXplIGluIE1CIG9uIHNpICovDQo+ID4+ICAgICAgICAgIGFkZXYtPm1jLm1jX3ZyYW1fc2l6
-ZSA9IFJSRUczMihtbUNPTkZJR19NRU1TSVpFKSAqDQo+IDEwMjRVTEwgKiAxMDI0VUxMOw0KPiA+
-PiAgICAgICAgICBhZGV2LT5tYy5yZWFsX3ZyYW1fc2l6ZSA9IFJSRUczMihtbUNPTkZJR19NRU1T
-SVpFKSAqDQo+IDEwMjRVTEwgKiAxMDI0VUxMOw0KPiA+Pg0KPiA+PiArICAgICAgIGlmICghKGFk
-ZXYtPmZsYWdzICYgQU1EX0lTX0FQVSkpDQo+ID4+ICsgICAgICAgICAgICAgICBhbWRncHVfcmVz
-aXplX2JhcjAoYWRldik7DQo+ID4+ICsgICAgICAgYWRldi0+bWMuYXBlcl9iYXNlID0gcGNpX3Jl
-c291cmNlX3N0YXJ0KGFkZXYtPnBkZXYsIDApOw0KPiA+PiArICAgICAgIGFkZXYtPm1jLmFwZXJf
-c2l6ZSA9IHBjaV9yZXNvdXJjZV9sZW4oYWRldi0+cGRldiwgMCk7DQo+ID4+ICsNCj4gPj4gICAj
-aWZkZWYgQ09ORklHX1g4Nl82NA0KPiA+PiAgICAgICAgICBpZiAoYWRldi0+ZmxhZ3MgJiBBTURf
-SVNfQVBVKSB7DQo+ID4+ICAgICAgICAgICAgICAgICAgYWRldi0+bWMuYXBlcl9iYXNlID0gKCh1
-NjQpUlJFRzMyKG1tTUNfVk1fRkJfT0ZGU0VUKSkNCj4gPDwgMjI7DQo+ID4+IGRpZmYgLS1naXQg
-YS9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9nbWNfdjhfMC5jDQo+IGIvZHJpdmVycy9ncHUv
-ZHJtL2FtZC9hbWRncHUvZ21jX3Y4XzAuYw0KPiA+PiBpbmRleCBjMDg3YjAwLi43NzYxYWQzIDEw
-MDY0NA0KPiA+PiAtLS0gYS9kcml2ZXJzL2dwdS9kcm0vYW1kL2FtZGdwdS9nbWNfdjhfMC5jDQo+
-ID4+ICsrKyBiL2RyaXZlcnMvZ3B1L2RybS9hbWQvYW1kZ3B1L2dtY192OF8wLmMNCj4gPj4gQEAg
-LTQ1OSwxMyArNDU5LDE1IEBAIHN0YXRpYyBpbnQgZ21jX3Y4XzBfbWNfaW5pdChzdHJ1Y3QNCj4g
-YW1kZ3B1X2RldmljZSAqYWRldikNCj4gPj4gICAgICAgICAgICAgICAgICBicmVhazsNCj4gPj4g
-ICAgICAgICAgfQ0KPiA+PiAgICAgICAgICBhZGV2LT5tYy52cmFtX3dpZHRoID0gbnVtY2hhbiAq
-IGNoYW5zaXplOw0KPiA+PiAtICAgICAgIC8qIENvdWxkIGFwZXIgc2l6ZSByZXBvcnQgMCA/ICov
-DQo+ID4+IC0gICAgICAgYWRldi0+bWMuYXBlcl9iYXNlID0gcGNpX3Jlc291cmNlX3N0YXJ0KGFk
-ZXYtPnBkZXYsIDApOw0KPiA+PiAtICAgICAgIGFkZXYtPm1jLmFwZXJfc2l6ZSA9IHBjaV9yZXNv
-dXJjZV9sZW4oYWRldi0+cGRldiwgMCk7DQo+ID4+ICAgICAgICAgIC8qIHNpemUgaW4gTUIgb24g
-c2kgKi8NCj4gPj4gICAgICAgICAgYWRldi0+bWMubWNfdnJhbV9zaXplID0gUlJFRzMyKG1tQ09O
-RklHX01FTVNJWkUpICoNCj4gMTAyNFVMTCAqIDEwMjRVTEw7DQo+ID4+ICAgICAgICAgIGFkZXYt
-Pm1jLnJlYWxfdnJhbV9zaXplID0gUlJFRzMyKG1tQ09ORklHX01FTVNJWkUpICoNCj4gMTAyNFVM
-TCAqIDEwMjRVTEw7DQo+ID4+DQo+ID4+ICsgICAgICAgaWYgKCEoYWRldi0+ZmxhZ3MgJiBBTURf
-SVNfQVBVKSkNCj4gPj4gKyAgICAgICAgICAgICAgIGFtZGdwdV9yZXNpemVfYmFyMChhZGV2KTsN
-Cj4gPj4gKyAgICAgICBhZGV2LT5tYy5hcGVyX2Jhc2UgPSBwY2lfcmVzb3VyY2Vfc3RhcnQoYWRl
-di0+cGRldiwgMCk7DQo+ID4+ICsgICAgICAgYWRldi0+bWMuYXBlcl9zaXplID0gcGNpX3Jlc291
-cmNlX2xlbihhZGV2LT5wZGV2LCAwKTsNCj4gPj4gKw0KPiA+PiAgICNpZmRlZiBDT05GSUdfWDg2
-XzY0DQo+ID4+ICAgICAgICAgIGlmIChhZGV2LT5mbGFncyAmIEFNRF9JU19BUFUpIHsNCj4gPj4g
-ICAgICAgICAgICAgICAgICBhZGV2LT5tYy5hcGVyX2Jhc2UgPSAoKHU2NClSUkVHMzIobW1NQ19W
-TV9GQl9PRkZTRVQpKQ0KPiA8PCAyMjsNCj4gPj4gLS0NCj4gPj4gMi43LjQNCj4gPj4NCj4gPj4g
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18NCj4gPj4gZHJp
-LWRldmVsIG1haWxpbmcgbGlzdA0KPiA+PiBkcmktZGV2ZWxAbGlzdHMuZnJlZWRlc2t0b3Aub3Jn
-DQo+ID4+IGh0dHBzOi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vZHJp
-LWRldmVsDQo+IA0KPiANCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18NCj4gYW1kLWdmeCBtYWlsaW5nIGxpc3QNCj4gYW1kLWdmeEBsaXN0cy5mcmVlZGVz
-a3RvcC5vcmcNCj4gaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5m
-by9hbWQtZ2Z4DQo=
+On Friday, March 31, 2017 12:39:35 PM Hans de Goede wrote:
+> Hi,
+> 
+> On 30-03-17 22:56, Rafael J. Wysocki wrote:
+> > On Sunday, January 01, 2017 09:30:06 PM Hans de Goede wrote:
+> >> Hi,
+> >>
+> >> On 30-12-16 02:27, Rafael J. Wysocki wrote:
+> >>> From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >>>
+> >>> The way acpi_find_child_device() works currently is that, if there
+> >>> are two (or more) devices with the same _ADR value in the same
+> >>> namespace scope (which is not specifically allowed by the spec and
+> >>> the OS behavior in that case is not defined), the first one of them
+> >>> found to be present (with the help of _STA) will be returned.
+> >>>
+> >>> This covers the majority of cases, but is not sufficient if some of
+> >>> the devices in question have a _HID (or _CID) returning some valid
+> >>> ACPI/PNP device IDs (which is disallowed by the spec) and the
+> >>> ASL writers' expectation appears to be that the OS will match
+> >>> devices without a valid ACPI/PNP device ID against a given bus
+> >>> address first.
+> >>>
+> >>> To cover this special case as well, modify find_child_checks()
+> >>> to prefer devices without ACPI/PNP device IDs over devices that
+> >>> have them.
+> >>>
+> >>> Suggested-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+> >>> Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> >>> ---
+> >>>
+> >>> I'm not actually sure if this is sufficient to fix the original 80860F14 uid "2"
+> >>> sd-controller problem on CherryTrail.  Hans, can you please check?
+> >>
+> >> Ok, just booted a kernel with this patch replacing my own attempt
+> >> at fixing this, and the kernel still sees and initializes the
+> >> mmc controller in question correctly with this patch:
+> >>
+> >> Tested-by: Hans de Goede <hdegoede@redhat.com>
+> >
+> > Unfortunately, this breaks discrete graphics enumeration in
+> >
+> > https://bugzilla.kernel.org/show_bug.cgi?id=194889
+> >
+> > so can you please check if the patch below doesn't break the platform fixed by
+> > the above?
+> 
+> I've just tried this and this patch does not regress the platform fixed
+> by the original commit.
+
+OK, thanks!
+
