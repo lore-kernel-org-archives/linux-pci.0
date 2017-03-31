@@ -1,59 +1,31 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC PATCH v2 16/32] x86: kvm: Provide support to create Guest
- and HV shared per-CPU variables
-To: Borislav Petkov <bp@suse.de>, Brijesh Singh <brijesh.singh@amd.com>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846773666.2349.9492983018843773590.stgit@brijesh-build-machine>
- <20170328183931.rqorduu5fnp5r3y2@pd.tnic>
-Cc: simon.guinot@sequanux.org, linux-efi@vger.kernel.org,
-        kvm@vger.kernel.org, rkrcmar@redhat.com, matt@codeblueprint.co.uk,
-        linux-pci@vger.kernel.org, linus.walleij@linaro.org,
-        gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org,
-        akpm@linux-foundation.org, davem@davemloft.net
-From: Paolo Bonzini <pbonzini@redhat.com>
-Message-ID: <9a8723fc-300d-eb76-deb1-cbc8492e9d49@redhat.com>
-Date: Wed, 29 Mar 2017 17:21:13 +0200
+Date: Fri, 31 Mar 2017 00:09:50 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC 5/8] scatterlist: Modify SG copy functions to support io
+ memory.
+Message-ID: <20170331070950.GA9059@infradead.org>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-6-git-send-email-logang@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <20170328183931.rqorduu5fnp5r3y2@pd.tnic>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1490911959-5146-6-git-send-email-logang@deltatee.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 28/03/2017 20:39, Borislav Petkov wrote:
->> 2) Since the encryption attributes works on PAGE_SIZE hence add some extra
->> padding to 'struct kvm-steal-time' to make it PAGE_SIZE and then at runtime
->> clear the encryption attribute of the full PAGE. The downside of this was
->> now we need to modify structure which may break the compatibility.
-> From SEV-ES whitepaper:
-> 
-> "To facilitate this communication, the SEV-ES architecture defines
-> a Guest Hypervisor Communication Block (GHCB). The GHCB resides in
-> page of shared memory so it is accessible to both the guest VM and the
-> hypervisor."
-> 
-> So this is kinda begging to be implemented with a shared page between
-> guest and host. And then put steal-time, ... etc in there too. Provided
-> there's enough room in the single page for the GHCB *and* our stuff.
-
-The GHCB would have to be allocated much earlier, possibly even by
-firmware depending on how things will be designed.  I think it's
-premature to consider SEV-ES requirements.
-
-Paolo
+You're calling memcpy_{to,from}_iomem on non-__iomem pointers.  This
+is a fundamental no-go as we keep I/O memory separate from kernel
+pointers.
