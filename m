@@ -1,41 +1,54 @@
-Return-Path: <SRS0=g4On=3E=ellerman.id.au=mpe@kernel.org>
-Return-Path: <SRS0=g4On=3E=ellerman.id.au=mpe@kernel.org>
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Bjorn Helgaas <helgaas@kernel.org>, Yongji Xie <xyjxie@linux.vnet.ibm.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com, aik@ozlabs.ru, benh@kernel.crashing.org, paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: Re: [PATCH v9 2/3] PCI: Add a macro to set default alignment for all PCI devices
-In-Reply-To: <20170323205342.GB23612@bhelgaas-glaptop.roam.corp.google.com>
-References: <1487141106-2503-1-git-send-email-xyjxie@linux.vnet.ibm.com> <1487141106-2503-3-git-send-email-xyjxie@linux.vnet.ibm.com> <20170323205342.GB23612@bhelgaas-glaptop.roam.corp.google.com>
-Date: Mon, 27 Mar 2017 21:17:37 +1100
-Message-ID: <8737dzf2gu.fsf@concordia.ellerman.id.au>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 31 Mar 2017 14:06:27 -0500
+From: Rob Herring <robh@kernel.org>
+To: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: Re: [PATCH v5 14/24] dt-bindings: mfd: syscon: Add documentation for
+ #syscon-cells property
+Message-ID: <20170331190627.nucviejokdklgtk7@rob-hp-laptop>
+References: <20170327094520.3129-1-kishon@ti.com>
+ <20170327094520.3129-15-kishon@ti.com>
+ <20170331185852.mxa4gvjxbuxl65dq@rob-hp-laptop>
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20170331185852.mxa4gvjxbuxl65dq@rob-hp-laptop>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>,
+ linux-doc@vger.kernel.org, linux-pci@vger.kernel.org, nsekhar@ti.com,
+ linux-kernel@vger.kernel.org, hch@infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-omap@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
->
-> I don't know how powerpc kernels are built: can you build a kernel
-> that will run on PowerNV as well as on different powerpc systems?
+On Fri, Mar 31, 2017 at 01:58:52PM -0500, Rob Herring wrote:
+> On Mon, Mar 27, 2017 at 03:15:10PM +0530, Kishon Vijay Abraham I wrote:
+> > Add documentation for the optional #syscon-cells property to determine
+> > the number of cells that should be given in the phandle while
+> > referencing the syscon-node.
+> > 
+> > Suggested-by: Rob Herring <robh@kernel.org>
+> 
+> I did? When?
+> 
+> I'm not remembering why we need this. Generally, phandles to a syscon 
+> are for a single defined purpose. When do we need a list of them?
 
-Yes you can. But there are some restrictions.
+Ah, I remember now the context. I suggested using standard parsing 
+function rather than open coding. I wasn't suggesting changing the 
+binding. Instead of of_parse_phandle_with_args, can't 
+of_parse_phandle_with_fixed_args work?
 
-You can only build a 64-bit OR a 32-bit kernel.
+Rob
 
-And within 64-bit you can only build a *kernel* for the "server
-architecture (~= IBM CPUs)" or the "embedded architecture
-(Freescale/NXP)".
-
-So in practice you can build a 64-bit kernel that supports:
- - powernv (bare metal on IBM server chips)
- - pseries (virtualised on IBM server chips or qemu)
- - powermac (Apple G5s)
- - pasemi (long dead but still used by some Amiga folks?)
- - Cell/PS3 (also long dead)
-
-> If so, is it acceptable to force that kernel to user 64K alignment even
-> when it's running on non-PowerNV systems?
-
-Probably, but I'm not sure TBH. Benh will know, I'll try and get his
-attention.
-
-cheers
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
