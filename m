@@ -1,73 +1,87 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Andrey Smirnov <andrew.smirnov@gmail.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v6 2/4] PCI: imx6: Do not wait for speed change on i.MX7
-Date: Tue, 14 Mar 2017 08:18:25 -0700
-Message-Id: <20170314151827.31248-3-andrew.smirnov@gmail.com>
-In-Reply-To: <20170314151827.31248-1-andrew.smirnov@gmail.com>
-References: <20170314151827.31248-1-andrew.smirnov@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:47872 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754963AbdCaWmN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 31 Mar 2017 18:42:13 -0400
+To: Sinan Kaya <okaya@codeaurora.org>, Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-2-git-send-email-logang@deltatee.com>
+ <cb102386-0314-a3a3-ed44-b42debdf1512@codeaurora.org>
+ <7158f2e8-2016-f398-e77f-0fcbe6cb41dd@deltatee.com>
+ <e6a74aeb-9f54-51c5-8ad9-3b6fb92c03b3@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <0280fbb4-ba9e-ac64-6bb3-b72590a54e57@deltatee.com>
+Date: Fri, 31 Mar 2017 16:42:01 -0600
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrey Smirnov <andrew.smirnov@gmail.com>, linux-kernel@vger.kernel.org,
- Fabio Estevam <fabio.estevam@nxp.com>, Bjorn Helgaas <bhelgaas@google.com>,
- yurovsky@gmail.com, linux-arm-kernel@lists.infradead.org,
- Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <e6a74aeb-9f54-51c5-8ad9-3b6fb92c03b3@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-QXMgY2FuIGJlIHNlZW4gZnJvbSBbMV06CgoiLi4udGhlIGRpZmZlcmVudCBiZWhhdmlvciBiZXR3
-ZWVuIGlNWDZRIFBDSWUgYW5kIGlNWDdEIFBDSWUgbWF5YmUKY2F1c2VkIGJ5IHRoZSBkaWZmZXJl
-bnQgY29udHJvbGxlciB2ZXJzaW9uLgoKUmVnYXJkaW5nIHRvIHRoZSBET0MgZGVzY3JpcHRpb24s
-IHRoZSBESVJFQ1RfU1BFRURfQ0hBTkdFIHNob3VsZCBiZQpjbGVhcmVkIGFmdGVyIHRoZSBzcGVl
-ZCBjaGFuZ2UgZnJvbSBHRU4xIHRvIEdFTjIuIFVuZm9ydHVuYXRlbHksIHdoZW4KR0VOMSBkZXZp
-Y2UgaXMgdXNlZCwgdGhlIGJlaGF2aW9yIGlzIG5vdCBkb2N1bWVudGVkLgoKU28sIElDIGRlc2ln
-biBndXlzIHJ1biB0aGUgc2ltdWxhdGlvbiBhbmQKZmluZCBvdXQgdGhlIGZvbGxvd2luZyBiZWhh
-dmlvcnM6CgogICAgIDEuIERJUkVDVF9TUEVFRF9DSEFOR0Ugd2lsbCBiZSBjbGVhcmVkIGluIDdE
-IGFmdGVyIHNwZWVkIGNoYW5nZQogICAgIAlmcm9tIEdFTjEgdG8gR0VOMi4gVGhpcyBtYXRjaGVz
-IGRvY+KAmXMgZGVzY3JpcHRpb24KCiAgICAgMi4gc2V0IE1BWCBsaW5rIHNwZWVkKFBDSUVfQ0FQ
-X1RBUkdFVF9MSU5LX1NQRUVEPTB4MDEpIGFzIEdFTjEgYW5kCiAgICAgCXJlLXJ1biB0aGUgc2lt
-dWxhdGlvbiwgRElSRUNUX1NQRUVEX0NIQU5HRSB3aWxsIG5vdCBiZSBjbGVhcmVkOwogICAgIAly
-ZW1haW4gYXMgMSwgdGhpcyBtYXRjaGVzIHlvdXIgcmVzdWx0LCBidXQgZnVuY3Rpb24gdGVzdCBp
-cwogICAgIAlwYXNzZWQsIHNvIHRoaXMgYml0IHNob3VsZCBub3QgYWZmZWN0IHRoZSBub3JtYWwg
-UENJZSBmdW5jdGlvbi4KLi4uIgoKaW14Nl9wY2llX3dhaXRfZm9yX3NwZWVkX2NoYW5nZSB3aWxs
-IHJlcG9ydCBmYWxzZSBmYWlsdXJlcyBmb3IgR2VuMSAtPgpHZW4xIHNwZWVkIHRyYW5zaXRpb24s
-IHNvIGF2b2lkIGRvaW5nIHRoYXQgY2hlY2sgYW5kIGp1c3QgcmVseSBvbgppbXg2X3BjaWVfd2Fp
-dF9mb3JfbGluayBvbmx5LgoKWzFdIGh0dHBzOi8vY29tbXVuaXR5Lm54cC5jb20vbWVzc2FnZS84
-Njc5NDMKCkNjOiB5dXJvdnNreUBnbWFpbC5jb20KQ2M6IEx1Y2FzIFN0YWNoIDxsLnN0YWNoQHBl
-bmd1dHJvbml4LmRlPgpDYzogQmpvcm4gSGVsZ2FhcyA8YmhlbGdhYXNAZ29vZ2xlLmNvbT4KQ2M6
-IEZhYmlvIEVzdGV2YW0gPGZhYmlvLmVzdGV2YW1AbnhwLmNvbT4KQ2M6IGxpbnV4LWFybS1rZXJu
-ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpDYzogbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZwpT
-aWduZWQtb2ZmLWJ5OiBBbmRyZXkgU21pcm5vdiA8YW5kcmV3LnNtaXJub3ZAZ21haWwuY29tPgot
-LS0KIGRyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYyB8IDE5ICsrKysrKysrKysrKysrKy0tLS0K
-IDEgZmlsZSBjaGFuZ2VkLCAxNSBpbnNlcnRpb25zKCspLCA0IGRlbGV0aW9ucygtKQoKZGlmZiAt
-LWdpdCBhL2RyaXZlcnMvcGNpL2hvc3QvcGNpLWlteDYuYyBiL2RyaXZlcnMvcGNpL2hvc3QvcGNp
-LWlteDYuYwppbmRleCAyZjNmMzc1Li40NzNiYmRjIDEwMDY0NAotLS0gYS9kcml2ZXJzL3BjaS9o
-b3N0L3BjaS1pbXg2LmMKKysrIGIvZHJpdmVycy9wY2kvaG9zdC9wY2ktaW14Ni5jCkBAIC01Nzcs
-MTAgKzU3NywyMSBAQCBzdGF0aWMgaW50IGlteDZfcGNpZV9lc3RhYmxpc2hfbGluayhzdHJ1Y3Qg
-aW14Nl9wY2llICppbXg2X3BjaWUpCiAJdG1wIHw9IFBPUlRfTE9HSUNfU1BFRURfQ0hBTkdFOwog
-CWR3X3BjaWVfd3JpdGVsX3JjKHBwLCBQQ0lFX0xJTktfV0lEVEhfU1BFRURfQ09OVFJPTCwgdG1w
-KTsKIAotCXJldCA9IGlteDZfcGNpZV93YWl0X2Zvcl9zcGVlZF9jaGFuZ2UoaW14Nl9wY2llKTsK
-LQlpZiAocmV0KSB7Ci0JCWRldl9lcnIoZGV2LCAiRmFpbGVkIHRvIGJyaW5nIGxpbmsgdXAhXG4i
-KTsKLQkJZ290byBlcnJfcmVzZXRfcGh5OworCWlmIChpbXg2X3BjaWUtPnZhcmlhbnQgIT0gSU1Y
-N0QpIHsKKwkJLyoKKwkJICogT24gaS5NWDcsIERJUkVDVF9TUEVFRF9DSEFOR0UgYmVoYXZlcyBk
-aWZmZXJlbnRseQorCQkgKiBmcm9tIGkuTVg2IGZhbWlseSB3aGVuIG5vIGxpbmsgc3BlZWQgdHJh
-bnNpdGlvbgorCQkgKiBvY2N1cnMgYW5kIHdlIGdvIEdlbjEgLT4geWVwLCBHZW4xLiBUaGUgZGlm
-ZmVyZW5jZQorCQkgKiBpcyB0aGF0LCBpbiBzdWNoIGNhc2UsIGl0IHdpbGwgbm90IGJlIGNsZWFy
-ZWQgYnkgSFcKKwkJICogd2hpY2ggd2lsbCBjYXVzZSB0aGUgZm9sbG93aW5nIGNvZGUgdG8gcmVw
-b3J0IGZhbHNlCisJCSAqIGZhaWx1cmUuCisJCSAqLworCisJCXJldCA9IGlteDZfcGNpZV93YWl0
-X2Zvcl9zcGVlZF9jaGFuZ2UoaW14Nl9wY2llKTsKKwkJaWYgKHJldCkgeworCQkJZGV2X2Vycihk
-ZXYsICJGYWlsZWQgdG8gYnJpbmcgbGluayB1cCFcbiIpOworCQkJZ290byBlcnJfcmVzZXRfcGh5
-OworCQl9CiAJfQogCiAJLyogTWFrZSBzdXJlIGxpbmsgdHJhaW5pbmcgaXMgZmluaXNoZWQgYXMg
-d2VsbCEgKi8KLS0gCjIuOS4zCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5l
-bEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4v
-bGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+
+
+On 31/03/17 03:38 PM, Sinan Kaya wrote:
+> On 3/31/2017 5:23 PM, Logan Gunthorpe wrote:
+>> What exactly would you white/black list? It can't be the NIC or the
+>> disk. If it's going to be a white/black list on the switch or root port
+>> then you'd need essentially the same code to ensure they are all behind
+>> the same switch or root port.
+> 
+> What is so special about being connected to the same switch?
+> 
+> Why don't we allow the feature by default and blacklist by the root ports
+> that don't work with a quirk.
+
+Well root ports have the same issue here. There may be more than one
+root port or other buses (ie QPI) between the devices in question. So
+you can't just say "this system has root port X therefore we can always
+use p2pmem". In the end, if you want to do any kind of restrictions
+you're going to have to walk the tree, as the code currently does, and
+figure out what's between the devices being used and black or white list
+accordingly. Then seeing there's just such a vast number of devices out
+there you'd almost certainly have to use some kind of white list and not
+a black list. Then the question becomes which devices will be white
+listed? The first to be listed would be switches seeing they will always
+work. This is pretty much what we have (though it doesn't currently
+cover multiple levels of switches). The next step, if someone wanted to
+test with specific hardware, might be to allow the case where all the
+devices are behind the same root port which Intel Ivy Bridge or newer.
+However, I don't think a comprehensive white list should be a
+requirement for this work to go forward and I don't think anything
+you've suggested will remove any of the "ugliness".
+
+What we discussed at LSF was that only allowing cases with a switch was
+the simplest way to be sure any given setup would actually work.
+
+> I'm looking at this from portability perspective to be honest.
+
+I'm looking at this from the fact that there's a vast number of
+topologies and devices involved, and figuring out which will work is
+very complicated and could require a lot of hardware testing. The LSF
+folks were primarily concerned with not having users enable the feature
+and see breakage or terrible performance.
+
+> I'd rather see the feature enabled by default without any assumptions.
+> Using it with a switch is just a use case that you happened to test.
+> It can allow new architectures to use your code tomorrow.
+
+That's why I was advocating for letting userspace decide such that if
+you're setting up a system with this you say to use a specific p2pmem
+device and then you are responsible to test and benchmark it and decide
+to use it in going forward. However, this has received a lot of push back.
+
+Logan
