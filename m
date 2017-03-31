@@ -1,84 +1,69 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 13 Mar 2017 16:46:16 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V4 0/3] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-Message-ID: <20170313214616.GE8232@bhelgaas-glaptop.roam.corp.google.com>
-References: <1489438085-2055-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <1489438085-2055-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, mayurkumar.patel@intel.com,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=R59S=3I=semihalf.com=tn@kernel.org>
+Return-Path: <SRS0=R59S=3I=semihalf.com=tn@kernel.org>
+From: Tomasz Nowicki <tn@semihalf.com>
+To: helgaas@kernel.org,
+	Lorenzo.Pieralisi@arm.com,
+	robert.richter@caviumnetworks.com,
+	ddaney@caviumnetworks.com,
+	Vadim.Lomovtsev@caviumnetworks.com,
+	rafael@kernel.org
+Cc: Sunil.Goutham@cavium.com,
+	geethasowjanya.akula@gmail.com,
+	linu.cherian@cavium.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-acpi@vger.kernel.org,
+	Tomasz Nowicki <tn@semihalf.com>
+Subject: [PATCH 1/1] PCI: Fix for PEM-specific resource reservation for legacy firmware case
+Date: Fri, 31 Mar 2017 17:06:44 +0200
+Message-Id: <1490972804-25830-1-git-send-email-tn@semihalf.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Mar 13, 2017 at 04:48:02PM -0400, Sinan Kaya wrote:
-> y
-> (POLICY_DEFAULT), current code is querying the enable/disable
-> states from ASPM registers to determine the policy.
-> 
-> For example, a BIOS could set the power saving state to performance
-> and clear all ASPM control registers. A balanced ASPM policy could
-> enable L0s and disable L1. A power conscious BIOS could enable both
-> L0s and L1 to trade off latency and performance vs. power.
-> 
-> After hotplug removal, pcie_aspm_exit_link_state() function clears
-> the ASPM registers. An insertion following hotplug removal reads
-> incorrect policy as ASPM disabled even though ASPM was enabled
-> during boot.
-> 
-> This is caused by the fact that same function is used for reconfiguring
-> ASPM regardless of the of the power on state.
-> 
-> ------------------------
-> Changes from v3 (https://lkml.org/lkml/2017/3/8/670)
-> ------------------------
-> - call pcie_aspm_init_link_state() for every device, maybe from
-> pci_init_capabilities()
-> 
-> - for bridges, have pcie_aspm_init_link_state() allocate a
-> link_state, regardless of whether it currently has any children,
-> and save the ASPM settings done by firmware
-> 
-> - for endpoints, have pcie_aspm_init_link_state() do the actual ASPM
-> setup of the link as it currently does
-> 
-> - for endpoints, change pcie_aspm_exit_link_state() so it cleans up
-> the device's own state and disables ASPM if necessary, but doesn't
-> remove the parent's link_state
-> 
-> - for bridges, change pcie_aspm_exit_link_state() so it frees the
-> bridge's own link_state
-> 
-> Sinan Kaya (3):
->   PCI/ASPM: divide ASPM capability init into pre and post init
->   PCI/ASPM: move part of ASPM initialization to pci_init_capabilities
->   PCI/ASPM: move link_state cleanup to bridge remove
-> 
->  drivers/pci/pcie/aspm.c | 175 +++++++++++++++++++++++++++++++++++-------------
->  drivers/pci/probe.c     |   3 +
->  include/linux/pci.h     |   6 ++
->  3 files changed, 136 insertions(+), 48 deletions(-)
+SZ_16M PEM resource size includes PEM-specific register and its children
+resources. Reservation of the whole SZ_16M range leads to child device
+driver failure when pcieport driver is requesting resources:
+pcieport 0004:1f:00.0: can't enable device: BAR 0 [mem 0x87e0c0f00000-0x87e0c0ffffff 64bit] not claimed
+So we cannot reserve full 16M here and instead we want to reserve
+PEM-specific register only which is SZ_64K.
 
-What is this series based on?  Unless they depend on other in-flight
-patches, I apply patches to branches based on my "master" branch,
-which is typically -rc1 or -rc2 (it's currently v4.11-rc1).  These
-don't apply to either.
+At the end increase PEM resource to SZ_16M since this is what
+thunder_pem_init() call expects for proper initialization.
 
-Bjorn
+Fixes: 9abb27c7594a ("PCI: thunder-pem: Add legacy firmware support for Cavium ThunderX host controller")
+Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+CC: stable@vger.kernel.org	# v4.10+
+---
+ drivers/pci/host/pci-thunder-pem.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+index b89c373..6e031b5 100644
+--- a/drivers/pci/host/pci-thunder-pem.c
++++ b/drivers/pci/host/pci-thunder-pem.c
+@@ -375,7 +375,6 @@ static void thunder_pem_legacy_fw(struct acpi_pci_root *root,
+ 	index -= node * PEM_MAX_DOM_IN_NODE;
+ 	res_pem->start = PEM_RES_BASE | FIELD_PREP(PEM_NODE_MASK, node) |
+ 					FIELD_PREP(PEM_INDX_MASK, index);
+-	res_pem->end = res_pem->start + SZ_16M - 1;
+ 	res_pem->flags = IORESOURCE_MEM;
+ }
+ 
+@@ -399,8 +398,15 @@ static int thunder_pem_acpi_init(struct pci_config_window *cfg)
+ 	 */
+ 	if (ret) {
+ 		thunder_pem_legacy_fw(root, res_pem);
+-		/* Reserve PEM-specific resources and PCI configuration space */
++		/*
++		 * Reserve 64K size PEM specific resources. The full 16M range
++		 * size is required for thunder_pem_init() call.
++		 */
++		res_pem->end = res_pem->start + SZ_64K - 1;
+ 		thunder_pem_reserve_range(dev, root->segment, res_pem);
++		res_pem->end = res_pem->start + SZ_16M - 1;
++
++		/* Reserve PCI configuration space as well. */
+ 		thunder_pem_reserve_range(dev, root->segment, &cfg->res);
+ 	}
+ 
+-- 
+2.7.4
