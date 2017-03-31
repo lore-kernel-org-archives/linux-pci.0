@@ -1,211 +1,191 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49900 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751357AbdCPLG4 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 16 Mar 2017 07:06:56 -0400
-Subject: Re: [RFC PATCH v2 16/32] x86: kvm: Provide support to create Guest
- and HV shared per-CPU variables
-To: Brijesh Singh <brijesh.singh@amd.com>, simon.guinot@sequanux.org,
-        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
-        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
-        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, bp@suse.de, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedoraproject.org, tony.luck@intel.com,
-        alexandre.bounine@idt.com, kuleshovmail@gmail.com,
-        linux-kernel@vger.kernel.org, mcgrof@kernel.org, mst@redhat.com,
-        linux-crypto@vger.kernel.org, tj@kernel.org,
-        akpm@linux-foundation.org, davem@davemloft.net
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846773666.2349.9492983018843773590.stgit@brijesh-build-machine>
-From: Paolo Bonzini <pbonzini@redhat.com>
-Message-ID: <02c00224-6b4d-4256-ead0-854755d6d0ea@redhat.com>
-Date: Thu, 16 Mar 2017 12:06:44 +0100
+Received: from mail-he1eur01on0087.outbound.protection.outlook.com ([104.47.0.87]:64082
+        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932934AbdCaPHo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 31 Mar 2017 11:07:44 -0400
+Subject: Re: [v2] PCI: Add an option to control probing of VFs before enabling
+ SR-IOV
+To: <bhelgaas@google.com>
+References: <1490198038-20465-1-git-send-email-bodong@mellanox.com>
+ <272b9606-1b39-0b41-4c19-a35cfe5d789a@mellanox.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <saeedm@mellanox.com>, Eli Cohen <eli@mellanox.com>
+From: Bodong Wang <bodong@mellanox.com>
+Message-ID: <9ccd6738-0db3-280e-5bed-d2498fa732d7@mellanox.com>
+Date: Fri, 31 Mar 2017 10:07:24 -0500
 MIME-Version: 1.0
-In-Reply-To: <148846773666.2349.9492983018843773590.stgit@brijesh-build-machine>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <272b9606-1b39-0b41-4c19-a35cfe5d789a@mellanox.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 3/27/2017 10:11 AM, Bodong Wang wrote:
+> On 3/22/2017 10:53 AM, bodong@mellanox.com wrote:
+>> From: Bodong Wang <bodong@mellanox.com>
+>>
+>> Sometimes it is not desirable to probe the virtual functions after
+>> SRIOV is enabled. This can save host side resource usage by VF
+>> instances which would be eventually probed to VMs.
+>>
+>> Add a new PCI sysfs interface "sriov_probe_vfs" to control that
+>> from the PF, all current callers still retain the same functionality.
+>> To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
+>>
+>> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+>>
+>> Note that, the choice must be made before enabling VFs. The change
+>> will not take effect if VFs are already enabled. Simply, one can set
+>> sriov_numvfs to 0, choose whether to probe or not, and then resume
+>> sriov_numvfs.
+>>
+>> Signed-off-by: Bodong Wang <bodong@mellanox.com>
+>> Signed-off-by: Eli Cohen <eli@mellanox.com>
+>> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> ---
+>>   Documentation/PCI/pci-iov-howto.txt | 10 ++++++++++
+>>   drivers/pci/iov.c                   |  1 +
+>>   drivers/pci/pci-driver.c            | 22 ++++++++++++++++++----
+>>   drivers/pci/pci-sysfs.c             | 28 ++++++++++++++++++++++++++++
+>>   drivers/pci/pci.h                   |  1 +
+>>   5 files changed, 58 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/Documentation/PCI/pci-iov-howto.txt 
+>> b/Documentation/PCI/pci-iov-howto.txt
+>> index 2d91ae2..902a528 100644
+>> --- a/Documentation/PCI/pci-iov-howto.txt
+>> +++ b/Documentation/PCI/pci-iov-howto.txt
+>> @@ -68,6 +68,16 @@ To disable SR-IOV capability:
+>>       echo  0 > \
+>> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_numvfs
+>>   +To enable probing VFs by a compatible driver on the host:
+>> +Before enabling SR-IOV capabilities, do:
+>> +    echo 1 > \
+>> + /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+>> +
+>> +To disable probing VFs by a compatible driver on the host:
+>> +Before enabling SR-IOV capabilities, do:
+>> +    echo  0 > \
+>> + /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+>> +
+>>   3.2 Usage example
+>>     Following piece of code illustrates the usage of the SR-IOV API.
+>> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+>> index 2479ae8..70691de 100644
+>> --- a/drivers/pci/iov.c
+>> +++ b/drivers/pci/iov.c
+>> @@ -450,6 +450,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>>       iov->total_VFs = total;
+>>       iov->pgsz = pgsz;
+>>       iov->self = dev;
+>> +    iov->probe_vfs = true;
+>>       pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+>>       pci_read_config_byte(dev, pos + PCI_SRIOV_FUNC_LINK, &iov->link);
+>>       if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END)
+>> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+>> index afa7271..2a1cf84 100644
+>> --- a/drivers/pci/pci-driver.c
+>> +++ b/drivers/pci/pci-driver.c
+>> @@ -394,6 +394,18 @@ void __weak pcibios_free_irq(struct pci_dev *dev)
+>>   {
+>>   }
+>>   +#ifdef CONFIG_PCI_IOV
+>> +static inline bool pci_device_can_probe(struct pci_dev *pdev)
+>> +{
+>> +    return (!pdev->is_virtfn || pdev->physfn->sriov->probe_vfs);
+>> +}
+>> +#else
+>> +static inline bool pci_device_can_probe(struct pci_dev *pdev)
+>> +{
+>> +    return true;
+>> +}
+>> +#endif
+>> +
+>>   static int pci_device_probe(struct device *dev)
+>>   {
+>>       int error;
+>> @@ -405,10 +417,12 @@ static int pci_device_probe(struct device *dev)
+>>           return error;
+>>         pci_dev_get(pci_dev);
+>> -    error = __pci_device_probe(drv, pci_dev);
+>> -    if (error) {
+>> -        pcibios_free_irq(pci_dev);
+>> -        pci_dev_put(pci_dev);
+>> +    if (pci_device_can_probe(pci_dev)) {
+>> +        error = __pci_device_probe(drv, pci_dev);
+>> +        if (error) {
+>> +            pcibios_free_irq(pci_dev);
+>> +            pci_dev_put(pci_dev);
+>> +        }
+>>       }
+>>         return error;
+>> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+>> index 25d010d..1d5b89d 100644
+>> --- a/drivers/pci/pci-sysfs.c
+>> +++ b/drivers/pci/pci-sysfs.c
+>> @@ -526,10 +526,37 @@ static ssize_t sriov_numvfs_store(struct device 
+>> *dev,
+>>       return count;
+>>   }
+>>   +static ssize_t sriov_probe_vfs_show(struct device *dev,
+>> +                    struct device_attribute *attr,
+>> +                    char *buf)
+>> +{
+>> +    struct pci_dev *pdev = to_pci_dev(dev);
+>> +
+>> +    return sprintf(buf, "%u\n", pdev->sriov->probe_vfs);
+>> +}
+>> +
+>> +static ssize_t sriov_probe_vfs_store(struct device *dev,
+>> +                     struct device_attribute *attr,
+>> +                     const char *buf, size_t count)
+>> +{
+>> +    struct pci_dev *pdev = to_pci_dev(dev);
+>> +    bool probe_vfs;
+>> +
+>> +    if (kstrtobool(buf, &probe_vfs) < 0)
+>> +        return -EINVAL;
+>> +
+>> +    pdev->sriov->probe_vfs = probe_vfs;
+>> +
+>> +    return count;
+>> +}
+>> +
+>>   static struct device_attribute sriov_totalvfs_attr = 
+>> __ATTR_RO(sriov_totalvfs);
+>>   static struct device_attribute sriov_numvfs_attr =
+>>           __ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+>>                  sriov_numvfs_show, sriov_numvfs_store);
+>> +static struct device_attribute sriov_probe_vfs_attr =
+>> +        __ATTR(sriov_probe_vfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+>> +               sriov_probe_vfs_show, sriov_probe_vfs_store);
+>>   #endif /* CONFIG_PCI_IOV */
+>>     static ssize_t driver_override_store(struct device *dev,
+>> @@ -1549,6 +1576,7 @@ static umode_t 
+>> pci_dev_hp_attrs_are_visible(struct kobject *kobj,
+>>   static struct attribute *sriov_dev_attrs[] = {
+>>       &sriov_totalvfs_attr.attr,
+>>       &sriov_numvfs_attr.attr,
+>> +    &sriov_probe_vfs_attr.attr,
+>>       NULL,
+>>   };
+>>   diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index 8dd38e6..b7d8127d 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -272,6 +272,7 @@ struct pci_sriov {
+>>       struct pci_dev *self;    /* this PF */
+>>       struct mutex lock;    /* lock for setting sriov_numvfs in sysfs */
+>>       resource_size_t barsz[PCI_SRIOV_NUM_BARS];    /* VF BAR size */
+>> +    bool probe_vfs;        /* control probing of VFs */
+>>   };
+>>     #ifdef CONFIG_PCI_ATS
+>
+> Hi Bjorn, could you please comment?
+>
+> Thanks.
+>
+Didn't see any comment on this patch. Is there any plan to pull this 
+patch in?
 
-
-On 02/03/2017 16:15, Brijesh Singh wrote:
-> Some KVM specific MSR's (steal-time, asyncpf, avic_eio) allocates per-CPU
-> variable at compile time and share its physical address with hypervisor.
-> It presents a challege when SEV is active in guest OS. When SEV is active,
-> guest memory is encrypted with guest key and hypervisor will no longer able
-> to modify the guest memory. When SEV is active, we need to clear the
-> encryption attribute of shared physical addresses so that both guest and
-> hypervisor can access the data.
-> 
-> To solve this problem, I have tried these three options:
-> 
-> 1) Convert the static per-CPU to dynamic per-CPU allocation. When SEV is
-> detected then clear the encryption attribute. But while doing so I found
-> that per-CPU dynamic allocator was not ready when kvm_guest_cpu_init was
-> called.
-> 
-> 2) Since the encryption attributes works on PAGE_SIZE hence add some extra
-> padding to 'struct kvm-steal-time' to make it PAGE_SIZE and then at runtime
-> clear the encryption attribute of the full PAGE. The downside of this was
-> now we need to modify structure which may break the compatibility.
-> 
-> 3) Define a new per-CPU section (.data..percpu.hv_shared) which will be
-> used to hold the compile time shared per-CPU variables. When SEV is
-> detected we map this section with encryption attribute cleared.
-> 
-> This patch implements #3. It introduces a new DEFINE_PER_CPU_HV_SHAHRED
-> macro to create a compile time per-CPU variable. When SEV is detected we
-> map the per-CPU variable as decrypted (i.e with encryption attribute cleared).
-> 
-> Signed-off-by: Brijesh Singh <brijesh.singh@amd.com>
-
-Looks good to me.
-
-Paolo
-
-> ---
->  arch/x86/kernel/kvm.c             |   43 +++++++++++++++++++++++++++++++------
->  include/asm-generic/vmlinux.lds.h |    3 +++
->  include/linux/percpu-defs.h       |    9 ++++++++
->  3 files changed, 48 insertions(+), 7 deletions(-)
-> 
-> diff --git a/arch/x86/kernel/kvm.c b/arch/x86/kernel/kvm.c
-> index 099fcba..706a08e 100644
-> --- a/arch/x86/kernel/kvm.c
-> +++ b/arch/x86/kernel/kvm.c
-> @@ -75,8 +75,8 @@ static int parse_no_kvmclock_vsyscall(char *arg)
->  
->  early_param("no-kvmclock-vsyscall", parse_no_kvmclock_vsyscall);
->  
-> -static DEFINE_PER_CPU(struct kvm_vcpu_pv_apf_data, apf_reason) __aligned(64);
-> -static DEFINE_PER_CPU(struct kvm_steal_time, steal_time) __aligned(64);
-> +static DEFINE_PER_CPU_HV_SHARED(struct kvm_vcpu_pv_apf_data, apf_reason) __aligned(64);
-> +static DEFINE_PER_CPU_HV_SHARED(struct kvm_steal_time, steal_time) __aligned(64);
->  static int has_steal_clock = 0;
->  
->  /*
-> @@ -290,6 +290,22 @@ static void __init paravirt_ops_setup(void)
->  #endif
->  }
->  
-> +static int kvm_map_percpu_hv_shared(void *addr, unsigned long size)
-> +{
-> +	/* When SEV is active, the percpu static variables initialized
-> +	 * in data section will contain the encrypted data so we first
-> +	 * need to decrypt it and then map it as decrypted.
-> +	 */
-> +	if (sev_active()) {
-> +		unsigned long pa = slow_virt_to_phys(addr);
-> +
-> +		sme_early_decrypt(pa, size);
-> +		return early_set_memory_decrypted(addr, size);
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static void kvm_register_steal_time(void)
->  {
->  	int cpu = smp_processor_id();
-> @@ -298,12 +314,17 @@ static void kvm_register_steal_time(void)
->  	if (!has_steal_clock)
->  		return;
->  
-> +	if (kvm_map_percpu_hv_shared(st, sizeof(*st))) {
-> +		pr_err("kvm-stealtime: failed to map hv_shared percpu\n");
-> +		return;
-> +	}
-> +
->  	wrmsrl(MSR_KVM_STEAL_TIME, (slow_virt_to_phys(st) | KVM_MSR_ENABLED));
->  	pr_info("kvm-stealtime: cpu %d, msr %llx\n",
->  		cpu, (unsigned long long) slow_virt_to_phys(st));
->  }
->  
-> -static DEFINE_PER_CPU(unsigned long, kvm_apic_eoi) = KVM_PV_EOI_DISABLED;
-> +static DEFINE_PER_CPU_HV_SHARED(unsigned long, kvm_apic_eoi) = KVM_PV_EOI_DISABLED;
->  
->  static notrace void kvm_guest_apic_eoi_write(u32 reg, u32 val)
->  {
-> @@ -327,25 +348,33 @@ static void kvm_guest_cpu_init(void)
->  	if (kvm_para_has_feature(KVM_FEATURE_ASYNC_PF) && kvmapf) {
->  		u64 pa = slow_virt_to_phys(this_cpu_ptr(&apf_reason));
->  
-> +		if (kvm_map_percpu_hv_shared(this_cpu_ptr(&apf_reason),
-> +					sizeof(struct kvm_vcpu_pv_apf_data)))
-> +			goto skip_asyncpf;
->  #ifdef CONFIG_PREEMPT
->  		pa |= KVM_ASYNC_PF_SEND_ALWAYS;
->  #endif
->  		wrmsrl(MSR_KVM_ASYNC_PF_EN, pa | KVM_ASYNC_PF_ENABLED);
->  		__this_cpu_write(apf_reason.enabled, 1);
-> -		printk(KERN_INFO"KVM setup async PF for cpu %d\n",
-> -		       smp_processor_id());
-> +		printk(KERN_INFO"KVM setup async PF for cpu %d msr %llx\n",
-> +		       smp_processor_id(), pa);
->  	}
-> -
-> +skip_asyncpf:
->  	if (kvm_para_has_feature(KVM_FEATURE_PV_EOI)) {
->  		unsigned long pa;
->  		/* Size alignment is implied but just to make it explicit. */
->  		BUILD_BUG_ON(__alignof__(kvm_apic_eoi) < 4);
-> +		if (kvm_map_percpu_hv_shared(this_cpu_ptr(&kvm_apic_eoi),
-> +					sizeof(unsigned long)))
-> +			goto skip_pv_eoi;
->  		__this_cpu_write(kvm_apic_eoi, 0);
->  		pa = slow_virt_to_phys(this_cpu_ptr(&kvm_apic_eoi))
->  			| KVM_MSR_ENABLED;
->  		wrmsrl(MSR_KVM_PV_EOI_EN, pa);
-> +		printk(KERN_INFO"KVM setup PV EOI for cpu %d msr %lx\n",
-> +		       smp_processor_id(), pa);
->  	}
-> -
-> +skip_pv_eoi:
->  	if (has_steal_clock)
->  		kvm_register_steal_time();
->  }
-> diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-> index 0968d13..8d29910 100644
-> --- a/include/asm-generic/vmlinux.lds.h
-> +++ b/include/asm-generic/vmlinux.lds.h
-> @@ -773,6 +773,9 @@
->  	. = ALIGN(cacheline);						\
->  	*(.data..percpu)						\
->  	*(.data..percpu..shared_aligned)				\
-> +	. = ALIGN(PAGE_SIZE);						\
-> +	*(.data..percpu..hv_shared)					\
-> +	. = ALIGN(PAGE_SIZE);						\
->  	VMLINUX_SYMBOL(__per_cpu_end) = .;
->  
->  /**
-> diff --git a/include/linux/percpu-defs.h b/include/linux/percpu-defs.h
-> index 8f16299..5af366e 100644
-> --- a/include/linux/percpu-defs.h
-> +++ b/include/linux/percpu-defs.h
-> @@ -172,6 +172,15 @@
->  #define DEFINE_PER_CPU_READ_MOSTLY(type, name)				\
->  	DEFINE_PER_CPU_SECTION(type, name, "..read_mostly")
->  
-> +/* Declaration/definition used for per-CPU variables that must be shared
-> + * between hypervisor and guest OS.
-> + */
-> +#define DECLARE_PER_CPU_HV_SHARED(type, name)				\
-> +	DECLARE_PER_CPU_SECTION(type, name, "..hv_shared")
-> +
-> +#define DEFINE_PER_CPU_HV_SHARED(type, name)				\
-> +	DEFINE_PER_CPU_SECTION(type, name, "..hv_shared")
-> +
->  /*
->   * Intermodule exports for per-CPU variables.  sparse forgets about
->   * address space across EXPORT_SYMBOL(), change EXPORT_SYMBOL() to
-> 
+Thanks.
