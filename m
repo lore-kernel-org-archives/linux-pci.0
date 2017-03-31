@@ -1,76 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0080.outbound.protection.outlook.com ([104.47.34.80]:64384
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754328AbdC1UhH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 28 Mar 2017 16:37:07 -0400
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: 'Joerg Roedel' <jroedel@suse.de>
-CC: 'Joerg Roedel' <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        "Nath, Arindam" <Arindam.Nath@amd.com>
-Subject: RE: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
-Date: Tue, 28 Mar 2017 20:37:01 +0000
-Message-ID: <BN6PR12MB16527AD3EF2DDA863957B87EF7320@BN6PR12MB1652.namprd12.prod.outlook.com>
-References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
- <BN6PR12MB1652414344196BA60520B828F7320@BN6PR12MB1652.namprd12.prod.outlook.com>
- <20170328202844.GQ8329@suse.de>
-In-Reply-To: <20170328202844.GQ8329@suse.de>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=cakr=3I=chromium.org=briannorris@kernel.org>
+Return-Path: <SRS0=cakr=3I=chromium.org=briannorris@kernel.org>
+Date: Thu, 30 Mar 2017 17:26:09 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Jeffy Chen <jeffy.chen@rock-chips.com>,
+	Wenrui Li <wenrui.li@rock-chips.com>, linux-pci@vger.kernel.org,
+	linux-rockchip@lists.infradead.org, Ray Jui <rjui@broadcom.com>
+Subject: Re: [PATCH v2 3/5] PCI: rockchip: add remove() support
+Message-ID: <20170331002608.GA72818@google.com>
+References: <20170310024617.67303-1-briannorris@chromium.org>
+ <20170310024617.67303-3-briannorris@chromium.org>
+ <20170324142541.GA25380@bhelgaas-glaptop.roam.corp.google.com>
+ <20170324172218.GA119093@google.com>
+ <20170330232825.GB3912@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170330232825.GB3912@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Joerg Roedel [mailto:jroedel@suse.de]
-> Sent: Tuesday, March 28, 2017 4:29 PM
-> To: Deucher, Alexander
-> Cc: 'Joerg Roedel'; Bjorn Helgaas; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; Daniel Drake; Nath, Arindam
-> Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
->=20
-> On Tue, Mar 28, 2017 at 08:18:26PM +0000, Deucher, Alexander wrote:
-> > > -----Original Message-----
-> > > From: Joerg Roedel [mailto:joro@8bytes.org]
-> > > Sent: Tuesday, March 28, 2017 8:17 AM
-> > > To: Bjorn Helgaas
-> > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Joerg
-> Roedel;
-> > > Daniel Drake; Deucher, Alexander
-> > > Subject: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
-> > >
-> > > From: Joerg Roedel <jroedel@suse.de>
-> > >
-> > > ATS is broken on these devices. Under invalidation load, the
-> > > GPU does not reply to invalidations anymore, causing
-> > > Completion-wait loop timeouts on the AMD IOMMU driver side.
-> > > Fix it by not enabling ATS on these devices.
-> > >
-> > > Note that below mentioned commit is not broken, it just
-> > > triggers the issue because it might cause invalidation
-> > > storms on devices.
-> > >
-> > > Fixes: b1516a14657a ('iommu/amd: Implement flush queue')
-> > > Reported-by: Daniel Drake <drake@endlessm.com>
-> > > Cc: Daniel Drake <drake@endlessm.com>
-> > > Cc: Alexander Deucher <Alexander.Deucher@amd.com>
-> > > Signed-off-by: Joerg Roedel <jroedel@suse.de>
-> >
-> > Did you see Arindam's patch from yesterday[1]?  Not sure which is the
-> proper fix, maybe both?
->=20
-> Arindam's patch makes sense on its own, but not as a fix for this issue.
-> It lowers the invalidation load on the GPU, but there are still ways to
-> trigger a high invalidation rate on the device. So it might hide the
-> issue, but not fix it.
->=20
-> We need to disable ATS on the device if it doesn't work reliably.
+Hi Bjorn,
 
-The question is, could the problem stem from flushing an entity that didn't=
- request it, or should that not matter?  I guess it shouldn't matter otherw=
-ise we'd see this on other platforms like Carrizo as well.
+On Thu, Mar 30, 2017 at 06:28:25PM -0500, Bjorn Helgaas wrote:
+> On Fri, Mar 24, 2017 at 10:22:19AM -0700, Brian Norris wrote:
+> > On Fri, Mar 24, 2017 at 09:25:41AM -0500, Bjorn Helgaas wrote:
+> > > These don't have .remove:
+> > > 
+> > >   imx6_pcie_driver
+> > >   ls_pcie_driver
+> > >   armada8k_pcie_driver
+> > >   artpec6_pcie_driver
+> > >   dw_plat_pcie_driver
+> > >   hisi_pcie_driver
+> > >   hisi_pcie_almost_ecam_driver
+> > >   spear13xx_pcie_driver
+> > >   gen_pci_driver
+> > 
+> > I think these are all technically broken.
+> 
+> Can we fix them all at the same time as you fix Rockchip?  Maybe we
+> should have a series that adds ".suppress_bind_attrs = true" to all
+> these drivers,
 
-Alex
+Sure, I can do that.
+
+> including Rockchip.
+
+Huh? Why? So I can revert that in the next patch?
+
+> Then you could have this current 
+> series to make Rockchip modular on top, if there's still value in it.
+
+I do see value in it. That's the whole reason I wrote this patchset.
+It's useful for stressing out certain behaviors that will happen all the
+time (i.e., boot-time initialization, from platform probe, to bus init,
+to client/EP init), via repeated bind/unbind (or modprobe/rmmod). It's
+much faster than reboot testing.
+
+Personally, I'd rather just patch the other drivers, and you can wait
+until I follow through on that promise before applying my existing work
+for the Rockchip driver, if that's what you'd prefer.
+
+> If we find a common problem, I'd like to fix it everywhere we know
+> about so it doesn't get forgotten or copied to even more places.
+
+Sure. But you only just pointed out how broken several drivers were; I
+didn't really notice :)
+
+Brian
