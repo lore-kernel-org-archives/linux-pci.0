@@ -1,71 +1,42 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH] pci-error-recovery: doc cleanup
-To: <linasvepstas@gmail.com>
-References: <1490102658-22768-1-git-send-email-caoj.fnst@cn.fujitsu.com>
- <CAHrUA34WX1sqEWJiuiy8yN2B1NHjDzj5UQ2A=0Nsdad1cVNjDw@mail.gmail.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        <linux-doc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "Michael S. Tsirkin" <mst@redhat.com>
-From: Cao jin <caoj.fnst@cn.fujitsu.com>
-Message-ID: <58D21FDF.4000506@cn.fujitsu.com>
-Date: Wed, 22 Mar 2017 14:55:27 +0800
+To: Sinan Kaya <okaya@codeaurora.org>, Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-2-git-send-email-logang@deltatee.com>
+ <cb102386-0314-a3a3-ed44-b42debdf1512@codeaurora.org>
+ <7158f2e8-2016-f398-e77f-0fcbe6cb41dd@deltatee.com>
+ <e6a74aeb-9f54-51c5-8ad9-3b6fb92c03b3@codeaurora.org>
+ <0280fbb4-ba9e-ac64-6bb3-b72590a54e57@deltatee.com>
+ <0ae27bca-21be-b89c-aba4-6cc9766ebd7b@codeaurora.org>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <c8edc480-a2ac-a763-8438-18f3396db483@deltatee.com>
+Date: Fri, 31 Mar 2017 19:57:36 -0600
 MIME-Version: 1.0
-In-Reply-To: <CAHrUA34WX1sqEWJiuiy8yN2B1NHjDzj5UQ2A=0Nsdad1cVNjDw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <0ae27bca-21be-b89c-aba4-6cc9766ebd7b@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CC MST who touched this file in last commit on it.
 
-On 03/22/2017 01:48 PM, Linas Vepstas wrote:
-> Hi,
-> 
-> On Tue, Mar 21, 2017 at 9:24 PM, Cao jin <caoj.fnst@cn.fujitsu.com> wrote:
->> Include whitespace shooting; correction; typo fix; superfluous word
->> dropping.
-> 
->>
->> diff --git a/Documentation/PCI/pci-error-recovery.txt b/Documentation/PCI/pci-error-recovery.txt
->> index da3b217..0b6bb3e 100644
->> --- a/Documentation/PCI/pci-error-recovery.txt
->> +++ b/Documentation/PCI/pci-error-recovery.txt
->>
->> @@ -231,14 +231,14 @@ proceeds to STEP 4 (Slot Reset)
->>  STEP 3: Link Reset
->>  ------------------
->>  The platform resets the link.  This is a PCI-Express specific step
->> -and is done whenever a non-fatal error has been detected that can be
->> +and is done whenever a fatal error has been detected that can be
->>  "solved" by resetting the link.
-> 
-> First: I thought I saw a patch a few months ago that proposed removing
-> the link rest step.  I don't know if the patch was accepted or not.
-> 
 
-Yes, I sent this one and I asked to ignore it. At that time, .link_reset
-handler still exists, now is gone.
+On 31/03/17 05:51 PM, Sinan Kaya wrote:
+> You can put a restriction with DMI/SMBIOS such that all devices from 2016
+> work else they belong to blacklist.
 
-> If link resets are still supported, then they can only fix NON-fatal errors:
-> basically, one resets the link, and only the link; one does NOT reset
-> either the device driver, nor the device state. The idea is that after a link
-> reset, communications with the device can immediately resume right
-> where it left off. (this can be hard in practice, if the driver/firmware doesn't
-> know what it was doing when the error occurred.  this might be why no one
-> implements it.)  Anyway, the whole point of a link reset is that it is
-> explicitly
-> a non-fatal error.
-> 
+How do you get a manufacturing date for a given device within the
+kernel? Is this actually something generically available?
 
-Perhaps you are still talking about link re-training. After last commit
-on this file, section "Link Reset" seems only focus on PCI-Express. If
-it is a PCI-Express specific step, then I think the "fatal" &
-"non-fatal" referred here are in the PCI-Express(AER) territory, and
-according to the AER driver(function do_recovery()), platform level link
-reset targeted to fatal error.
-
--- 
-Sincerely,
-Cao jin
+Logan
