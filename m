@@ -1,84 +1,118 @@
-Return-Path: <SRS0=cjEM=3L=arm.com=robin.murphy@kernel.org>
-Return-Path: <SRS0=cjEM=3L=arm.com=robin.murphy@kernel.org>
-Subject: Re: [PATCH v4 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-To: Jayachandran C <jnair@caviumnetworks.com>,
- Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org
-References: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
- <1491225304-3559-3-git-send-email-jnair@caviumnetworks.com>
-Cc: linux-arm-kernel@lists.infradead.org, Jon Masters <jcm@redhat.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <b44e6df5-4840-ecb4-59c6-b4bc474ad28c@arm.com>
-Date: Mon, 3 Apr 2017 16:07:53 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:53138 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751550AbdDAPO6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 1 Apr 2017 11:14:58 -0400
+Date: Sat, 1 Apr 2017 10:14:25 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH] PCI: rockchip: Mark SLC bit as well as CCC bit for RC
+Message-ID: <20170401151425.GA10456@bhelgaas-glaptop.roam.corp.google.com>
+References: <1489735493-148838-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <1491225304-3559-3-git-send-email-jnair@caviumnetworks.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1489735493-148838-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/04/17 14:15, Jayachandran C wrote:
-> The Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the PCI
-> topology is slightly unusual. For a multi-node system, it looks like:
-> 
-> [node level PCI bridges - one per node]
->     [SoC PCI devices with MSI-X but no IOMMU]
->     [PCI-PCIe "glue" bridges - upto 14, one per real port below]
->         [PCIe real root ports associated with IOMMU and GICv3 ITS]
->             [External PCI devices connected to PCIe links]
+On Fri, Mar 17, 2017 at 03:24:53PM +0800, Shawn Lin wrote:
+> lspci traces CCC to see if the end-2-end supports common
+> clock, so the current code should work as we mark the CCC bit
+> of RC. 
 
-Since it's not entirely obvious, what does the actual DT - or IORT if
-you must ;) - topology for this look like? I can't help thinking that
-either it's inaccurate, or that this is going to expose a shortcoming in
-pci_dma_configure() which breaks things - unless I'm missing something,
-isn't find_pci_root_bus() going to go all the way up to the top-level
-glue bridge and pick up the wrong firmware node (if any) for the
-appropriate DMA properties?
+I assume you're talking about lspci code here, where the bit is called
+PCI_EXP_LNKCTL_CLOCK.  The only use of PCI_EXP_LNKCTL_CLOCK in lspci
+is to decode it in cap_express_link().  I don't know what you mean by
+"tracing CCC", since lspci only decodes registers of one device at a
+time; it never follows the hierarchy from an endpoint up to a root
+port.
 
-Robin.
+I'm not sure how this lspci information is relevant to this patch.
 
-> The top two levels of bridges should have introduced aliases since they
-> are PCI and PCI/PCIe bridges, but in the case of ThunderX2 they do not.
-> In the case of external PCIe devices, the "real" root ports are connected
-> to the SMMU and the GIC ITS, so PCI-PCIe bridge does not introduce an
-> alias. The SoC PCI devices are directly connected to the GIC ITS, so the
-> node level bridges do not introduce an alias either.
+> However, ASPM code actually check SLC bit of RC and try to
+> compare it with the downstream components' SLC instead. 
+
+Here I think you're talking about pcie_aspm_configure_common_clock()
+in Linux.  That looks at PCI_EXP_LNKSTA_SLC on both ends of a link.
+If PCI_EXP_LNKSTA_SLC is set at both ends, we set PCI_EXP_LNKCTL_CCC
+on both ends; otherwise we clear PCI_EXP_LNKCTL_CCC on both ends.
+This follows the Implementation Note in PCIe r3.1, sec 7.8.7.
+
+Per that note, PCI_EXP_LNKSTA_SLC in the root port tells us whether
+the port "uses a clock that has a common source ... to the clock
+signal provided on the slot" below the port.
+
+This patch sets PCI_EXP_LNKSTA_SLC based on your knowledge of the
+platform topology, i.e., that the root port clock and the slot clock
+have the same source.  I assume this is *always* the case for every
+possible platform using Rockchip?
+
+If so, just say that, and you can go on to say that this enables the
+ASPM code to set PCI_EXP_LNKCTL_CCC if the downstream end also sets
+PCI_EXP_LNKSTA_SLC to indicate that it uses the clock provided on the
+slot, e.g., something like this:
+
+  All platforms using Rockchip use a common clock for the Root Port
+  and the slot connected to it.  Indicate this by setting the Slot
+  Clock Configuration (PCI_EXP_LNKSTA_SLC) bit in the Root Port's Link
+  Status.
+
+  Per the Implementation Note in the spec (PCIe r3.1, sec 7.8.7), if
+  the downstream component also sets PCI_EXP_LNKSTA_SLC, software may
+  set the Common Clock Configuration (PCI_EXP_LNKCTL_CCC) bits on both
+  ends of the Link.  This is done by pcie_aspm_configure_common_clock().
+
+> So when
+> enabling ASPM, CCC will be cleared after failing to match SLC with
+> the corresponding bit of downstream components. On one hand, from the
+> code of pcie_aspm_configure_common_clock, we could find that what we
+> actually need to set is SLC. 
+
+> On the other hand, we should also guarantee
+> that CCC should be marked w/o supporting ASPM. 
+
+This patch doesn't change anything with PCI_EXP_LNKCTL_CCC.  I'd
+suggest that we should *not* set it here because we have no idea what
+(if anything) is at the other end of the link.  Per the implementation
+note, I think we should only set PCI_EXP_LNKCTL_CCC if both ends of
+the link have PCI_EXP_LNKSTA_SLC set.
+
+Are you suggesting that we should set PCI_EXP_LNKCTL_CCC on both ends
+of the link whenever possible, and that today we don't do that unless
+ASPM is enabled?  That sounds plausible to me, but that would be a
+generic PCIe enhancement, not anything Rockchip-specific, and of
+course, this patch doesn't make that happen.
+
+> This patch fixes this
+> issue.
 > 
-> To handle this quirk, we mark the real PCIe root ports and node level
-> PCI bridges with the flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT.  With this,
-> pci_for_each_dma_alias() works correctly for external PCIe devices and
-> SoC PCI devices.
-> 
-> For the current revision of Cavium ThunderX2, the VendorID and Device ID
-> are from Broadcom Vulcan (14e4:90XX).
-> 
-> Signed-off-by: Jayachandran C <jnair@caviumnetworks.com>
+> Cc: Brian Norris <briannorris@chromium.org>
+> Cc: jeffy.chen <jeffy.chen@rock-chips.com>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 > ---
->  drivers/pci/quirks.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 6736836..564a84a 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3958,6 +3958,20 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2260, quirk_mic_x200_dma_alias);
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2264, quirk_mic_x200_dma_alias);
+>  drivers/pci/host/pcie-rockchip.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 26ddd35..7cd4d5c 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -596,7 +596,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
 >  
->  /*
-> + * The IOMMU and interrupt controller on Broadcom Vulcan/Cavium ThunderX2 are
-> + * associated not at the root bus, but at a bridge below. This quirk flag
-> + * will ensure that the aliases are identified correctly.
-> + */
-> +static void quirk_bridge_cavm_thrx2_pcie_root(struct pci_dev *pdev)
-> +{
-> +	pdev->dev_flags |= PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT;
-> +}
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9000,
-> +				quirk_bridge_cavm_thrx2_pcie_root);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9084,
-> +				quirk_bridge_cavm_thrx2_pcie_root);
-> +
-> +/*
->   * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
->   * class code.  Fix it.
->   */
+>  	/* Set RC's clock architecture as common clock */
+>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> -	status |= PCI_EXP_LNKCTL_CCC;
+> +	status |= (PCI_EXP_LNKCTL_CCC | PCI_EXP_LNKSTA_SLC << 16);
+>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>  
+>  	/* Enable Gen1 training */
+> -- 
+> 1.9.1
+> 
 > 
