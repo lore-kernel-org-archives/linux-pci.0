@@ -1,145 +1,58 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam01on0055.outbound.protection.outlook.com ([104.47.34.55]:30336
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753726AbdDQV0s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Apr 2017 17:26:48 -0400
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>, <hch@lst.de>
-CC: <himanshu.madhani@cavium.com>
-Subject: [PATCH] PCI/MSI: Only disable affinity settings if pre and post vector count is equal to max_vecs and not min_vecs
-Date: Mon, 17 Apr 2017 14:26:25 -0700
-Message-ID: <20170417212625.14309-1-himanshu.madhani@cavium.com>
+Received: from ale.deltatee.com ([207.54.116.67]:50815 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751941AbdDAWQs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 1 Apr 2017 18:16:48 -0400
+To: okaya@codeaurora.org
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-2-git-send-email-logang@deltatee.com>
+ <cb102386-0314-a3a3-ed44-b42debdf1512@codeaurora.org>
+ <7158f2e8-2016-f398-e77f-0fcbe6cb41dd@deltatee.com>
+ <e6a74aeb-9f54-51c5-8ad9-3b6fb92c03b3@codeaurora.org>
+ <0280fbb4-ba9e-ac64-6bb3-b72590a54e57@deltatee.com>
+ <0ae27bca-21be-b89c-aba4-6cc9766ebd7b@codeaurora.org>
+ <c8edc480-a2ac-a763-8438-18f3396db483@deltatee.com>
+ <e2165253dc355d5cb223e754d78047b1@codeaurora.org>
+Cc: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <c5d7da85-41fd-2769-fcf8-b3c2a1fab95f@deltatee.com>
+Date: Sat, 1 Apr 2017 16:16:35 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <e2165253dc355d5cb223e754d78047b1@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-min_vecs is the minimum amount of vectors needed to operate in MSI-X mode
-which may just include the vectors that don't need affinity.
+Hey,
 
-Disabling affinity settings causes the qla2xxx driver scsi_add_host
-to fail when blk_mq is enabled as the blk_mq_pci_map_queues expects
-affinity masks on each vector.
+On 31/03/17 08:17 PM, okaya@codeaurora.org wrote:
+> See drivers/pci and drivers/acpi directory.
 
-Fixes: dfef358bd1be ("PCI/MSI: Don't apply affinity if there aren't enough vectors left")
-Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: <stable@vger.kernel.org> # 4.10
----
-This patch has been compile on linux-next tree 
+The best I could find was the date of the firmware/bios. I really don't
+think that makes sense to tie the two together. And really the more that
+I think about it trying to do a date cutoff for this seems crazy without
+very comprehensive hardware testing done. I have no idea which AMD chips
+have decent root ports for this and then if we include all of ARM and
+POWERPC, etc there's a huge amount of unknown hardware. Saying that the
+system's firmware has to be written after 2016 seems like an arbitrary
+restriction that isn't likely to correlate to any working systems.
 
-commit f4fa27cbc0b6b9f3f41a8fbd771af3abbc480f13
-Author: Stephen Rothwell <sfr@canb.auug.org.au>
-Date:   Thu Apr 13 15:35:23 2017 +1000
+I still say the only sane thing to do is allow all switches and then add
+a whitelist of root ports that are known to work well. If we care about
+preventing broken systems in a comprehensive way then that's the only
+thing that is going to work.
 
-    Add linux-next specific files for 20170413
-
-    Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
-
-Also has compiled on pci tree next branch with following commit
-
-commit 9c5579a1a10f29c1491b38cfe8a16bf2d0a68aa1
-Merge: 22e2495b76db b8e82c1bdd28
-Author: Bjorn Helgaas <bhelgaas@google.com>
-Date:   Wed Apr 12 12:25:43 2017 -0500
-
-    Merge branch 'pci/host-mvebu' into next
-
-    * pci/host-mvebu:
-      PCI: mvebu: Avoid changing the SCC bit in the Link Status register
-
- drivers/pci/msi.c         | 14 ++------------
- include/linux/interrupt.h |  2 +-
- kernel/irq/affinity.c     | 12 +++++++++++-
- 3 files changed, 14 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index ba44fdfda66b..9e1569107cd6 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1058,7 +1058,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
- 
- 	for (;;) {
- 		if (affd) {
--			nvec = irq_calc_affinity_vectors(nvec, affd);
-+			nvec = irq_calc_affinity_vectors(minvec, nvec, affd);
- 			if (nvec < minvec)
- 				return -ENOSPC;
- 		}
-@@ -1097,7 +1097,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
- 
- 	for (;;) {
- 		if (affd) {
--			nvec = irq_calc_affinity_vectors(nvec, affd);
-+			nvec = irq_calc_affinity_vectors(minvec, nvec, affd);
- 			if (nvec < minvec)
- 				return -ENOSPC;
- 		}
-@@ -1165,16 +1165,6 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 	if (flags & PCI_IRQ_AFFINITY) {
- 		if (!affd)
- 			affd = &msi_default_affd;
--
--		if (affd->pre_vectors + affd->post_vectors > min_vecs)
--			return -EINVAL;
--
--		/*
--		 * If there aren't any vectors left after applying the pre/post
--		 * vectors don't bother with assigning affinity.
--		 */
--		if (affd->pre_vectors + affd->post_vectors == min_vecs)
--			affd = NULL;
- 	} else {
- 		if (WARN_ON(affd))
- 			affd = NULL;
-diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
-index 53144e78a369..b3c569f7405b 100644
---- a/include/linux/interrupt.h
-+++ b/include/linux/interrupt.h
-@@ -291,7 +291,7 @@ extern int
- irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
- 
- struct cpumask *irq_create_affinity_masks(int nvec, const struct irq_affinity *affd);
--int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
-+int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity *affd);
- 
- #else /* CONFIG_SMP */
- 
-diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
-index dc529116f7e6..e545e7a96270 100644
---- a/kernel/irq/affinity.c
-+++ b/kernel/irq/affinity.c
-@@ -69,6 +69,13 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
- 	if (!zalloc_cpumask_var(&nmsk, GFP_KERNEL))
- 		return NULL;
- 
-+	/*
-+	 * If there aren't any vectors left after applying the pre/post
-+	 * vectors don't bother with assigning affinity.
-+	 */
-+	if (!affv)
-+		return NULL;
-+
- 	masks = kcalloc(nvecs, sizeof(*masks), GFP_KERNEL);
- 	if (!masks)
- 		goto out;
-@@ -143,12 +150,15 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
-  * @maxvec:	The maximum number of vectors available
-  * @affd:	Description of the affinity requirements
-  */
--int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
-+int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity *affd)
- {
- 	int resv = affd->pre_vectors + affd->post_vectors;
- 	int vecs = maxvec - resv;
- 	int cpus;
- 
-+	if (resv > minvec)
-+		return 0;
-+
- 	/* Stabilize the cpumasks */
- 	get_online_cpus();
- 	cpus = cpumask_weight(cpu_online_mask);
--- 
-2.12.0
+Logan
