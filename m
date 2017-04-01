@@ -1,55 +1,32 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Ralf Baechle <ralf@linux-mips.org>,
-        Huacai Chen <chenhc@lemote.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v3 16/32] mips: include default ioremap_nopost() implementation
-Date: Tue, 11 Apr 2017 13:28:56 +0100
-Message-Id: <20170411122923.6285-17-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+MIME-Version: 1.0
+Reply-To: pricardofc@gmail.com
+In-Reply-To: <CAH9N0t8PGNd74HJxzQLCfo0nu-ko5WVJdKi3u0JMS4Zbgb3RQg@mail.gmail.com>
+References: <CAH9N0t8PGNd74HJxzQLCfo0nu-ko5WVJdKi3u0JMS4Zbgb3RQg@mail.gmail.com>
+From: Paulo Ricardo Carvalho <pricardofc@gmail.com>
+Date: Sun, 2 Apr 2017 00:45:07 +0100
+Message-ID: <CAH9N0t8FDYvbceRCnNahBiP8-=C+YappPzRd8UU6GY=zRVZfMw@mail.gmail.com>
+Subject: Two read DMAs simultaneous using same interrupt give completion
+ timeout reported by AER
+To: Linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and Posting")
-mandate non-posted configuration transactions. As further highlighted in
-the PCIe specifications (4.0 - Rev0.3, "Ordering Considerations for the
-Enhanced Configuration Access Mechanism"), through ECAM and
-ECAM-derivative configuration mechanism, the memory mapped transactions
-from the host CPU into Configuration Requests on the PCI express fabric
-may create ordering problems for software because writes to memory
-address are typically posted transactions (unless the architecture can
-enforce through virtual address mapping non-posted write transactions
-behaviour) but writes to Configuration Space are not posted on the PCI
-express fabric.
-
-Include the asm-generic ioremap_nopost() implementation (currently
-falling back to ioremap_nocache()) to provide a non-posted writes
-ioremap interface to kernel subsystems.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Ralf Baechle <ralf@linux-mips.org>
-Cc: Huacai Chen <chenhc@lemote.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- arch/mips/include/asm/io.h | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/arch/mips/include/asm/io.h b/arch/mips/include/asm/io.h
-index ecabc00..d8d1bae 100644
---- a/arch/mips/include/asm/io.h
-+++ b/arch/mips/include/asm/io.h
-@@ -257,6 +257,7 @@ static inline void __iomem * __ioremap_mode(phys_addr_t offset, unsigned long si
- #define ioremap_nocache(offset, size)					\
- 	__ioremap_mode((offset), (size), _CACHE_UNCACHED)
- #define ioremap_uc ioremap_nocache
-+#include <asm-generic/ioremap-nopost.h>
- 
- /*
-  * ioremap_cachable -	map bus memory into CPU space
--- 
-2.10.0
+Hi,
+Im using a pcie board to read data from 2 dma chancelas at lhe same time.
+Both DMAs use lhe same interrupt service routine but have separeted
+read functions.
+2 device file nodes are used for each dma.
+so i have 2 applications running to read from one and other dma channel.
+the interrupt routine reads na fpga register to know what dma rise the
+interrupt to wake up
+the corresponding waitqueue.
+when i have only one dma at a time everything goes ok but when both
+are working at same time i get completion timeout error reported by
+AER and data from both dmas loose a lot of packets.
+im using both fedora and scientific Linux. kernels are 4.1 and 3.10 RT
+respectively and behavior is the same.
+does anybody know what am i missing?
+Thx,
+Ricardo
