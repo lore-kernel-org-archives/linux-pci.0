@@ -1,79 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 20 Mar 2017 15:09:30 +0800
-From: Dong Aisheng <dongas86@gmail.com>
-To: Andrey Smirnov <andrew.smirnov@gmail.com>
-Subject: Re: [PATCH v6 0/4] i.MX7 PCI support
-Message-ID: <20170320070930.GB11325@b29396-OptiPlex-7040>
-References: <20170314151827.31248-1-andrew.smirnov@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170314151827.31248-1-andrew.smirnov@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
- Fabio Estevam <fabio.estevam@nxp.com>, yurovsky@gmail.com,
- linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 31 Mar 2017 22:17:07 -0400
+From: okaya@codeaurora.org
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
+In-Reply-To: <c8edc480-a2ac-a763-8438-18f3396db483@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-2-git-send-email-logang@deltatee.com>
+ <cb102386-0314-a3a3-ed44-b42debdf1512@codeaurora.org>
+ <7158f2e8-2016-f398-e77f-0fcbe6cb41dd@deltatee.com>
+ <e6a74aeb-9f54-51c5-8ad9-3b6fb92c03b3@codeaurora.org>
+ <0280fbb4-ba9e-ac64-6bb3-b72590a54e57@deltatee.com>
+ <0ae27bca-21be-b89c-aba4-6cc9766ebd7b@codeaurora.org>
+ <c8edc480-a2ac-a763-8438-18f3396db483@deltatee.com>
+Message-ID: <e2165253dc355d5cb223e754d78047b1@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 14, 2017 at 08:18:23AM -0700, Andrey Smirnov wrote:
-> Hello, everyone:
+On 2017-03-31 21:57, Logan Gunthorpe wrote:
+> On 31/03/17 05:51 PM, Sinan Kaya wrote:
+>> You can put a restriction with DMI/SMBIOS such that all devices from 
+>> 2016
+>> work else they belong to blacklist.
 > 
-> This is a sixth iteration of the code that adds PCI-subsystem bits
-> necessary for enabling PCI support on i.MX7.
+> How do you get a manufacturing date for a given device within the
+> kernel? Is this actually something generically available?
 > 
+> Logan
 
-....
+Smbios calls are used all over the place in kernel for introducing new 
+functionality while maintaining backwards compatibility.
 
-> Andrey Smirnov (4):
->   PCI: imx6: Add code to support i.MX7D
->   PCI: imx6: Do not wait for speed change on i.MX7
->   PCI: imx6: Do not switch speed if Gen2 is disabled
->   PCI: imx6: Allow probe deferal by reset GPIO
-> 
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 +-
->  drivers/pci/host/pci-imx6.c                        | 199 +++++++++++++++------
-
-Can't apply and test it.
-
-The directory has been changed to drivers/pci/host/dwc/pci-imx6.c
-since the commit below:
-commit 950bf6388bc22c2749b8b66c501df1462639d6bd
-Author: Kishon Vijay Abraham I <kishon@ti.com>
-Date:   Fri Jan 6 18:22:48 2017 +0530
-
-    PCI: Move DesignWare IP support to new drivers/pci/dwc/ directory
-    
-    Group all the PCI drivers that use DesignWare core in dwc directory.
-    dwc IP is capable of operating in both host mode and device mode and
-    keeping it inside the *host* directory is misleading.
-    
-    Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-    Acked-by: Jingoo Han <jingoohan1@gmail.com>
-    Acked-By: Joao Pinto <jpinto@synopsys.com>
-
-Regards
-Dong Aisheng
-
->  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
->  3 files changed, 161 insertions(+), 55 deletions(-)
-> 
-
-
-> -- 
-> 2.9.3
-> 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+See drivers/pci and drivers/acpi directory.
