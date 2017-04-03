@@ -1,351 +1,292 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V10 07/12] of/acpi: Configure dma operations at probe time
- for platform/amba/pci bus devices
-To: Robin Murphy <robin.murphy@arm.com>, will.deacon@arm.com,
- joro@8bytes.org, lorenzo.pieralisi@arm.com,
- iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
- robh+dt@kernel.org, frowand.list@gmail.com, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
- lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
- linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-8-git-send-email-sricharan@codeaurora.org>
- <1d036139-b885-bac6-01c0-78d3ac690d80@arm.com>
-From: Sricharan R <sricharan@codeaurora.org>
-Message-ID: <60b8502f-bdcf-713a-56ce-8f3eec5e1603@codeaurora.org>
-Date: Tue, 4 Apr 2017 18:00:32 +0530
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-6-git-send-email-logang@deltatee.com>
+ <20170331070950.GA9059@infradead.org>
+ <435d4471-436b-87e6-8827-c9fc6cbdde2c@deltatee.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Cc: Jens Axboe <axboe@kernel.dk>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Steve Wise <swise@opengridcomputing.com>,
+        linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org,
+        Keith Busch <keith.busch@intel.com>,
+        linux-scsi@vger.kernel.org, Max Gurtovoy <maxg@mellanox.com>,
+        Christoph Hellwig <hch@lst.de>
+Message-ID: <445bc352-75d7-438f-96ef-c2411215628d@deltatee.com>
+Date: Mon, 3 Apr 2017 15:20:57 -0600
 MIME-Version: 1.0
-In-Reply-To: <1d036139-b885-bac6-01c0-78d3ac690d80@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <435d4471-436b-87e6-8827-c9fc6cbdde2c@deltatee.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC 5/8] scatterlist: Modify SG copy functions to support io
+ memory.
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Robin,
+Hi Christoph,
 
-On 4/4/2017 5:47 PM, Robin Murphy wrote:
-> On 04/04/17 11:18, Sricharan R wrote:
->> Configuring DMA ops at probe time will allow deferring device probe when
->> the IOMMU isn't available yet. The dma_configure for the device is
->> now called from the generic device_attach callback just before the
->> bus/driver probe is called. This way, configuring the DMA ops for the
->> device would be called at the same place for all bus_types, hence the
->> deferred probing mechanism should work for all buses as well.
->>
->> pci_bus_add_devices    (platform/amba)(_device_create/driver_register)
->>        |                         |
->> pci_bus_add_device     (device_add/driver_register)
->>        |                         |
->> device_attach           device_initial_probe
->>        |                         |
->> __device_attach_driver    __device_attach_driver
->>        |
->> driver_probe_device
->>        |
->> really_probe
->>        |
->> dma_configure
->>
->> Similarly on the device/driver_unregister path __device_release_driver is
->> called which inturn calls dma_deconfigure.
->>
->> This patch changes the dma ops configuration to probe time for
->> both OF and ACPI based platform/amba/pci bus devices.
->
-> Reviewed-by: Robin Murphy <robin.murphy@arm.com>
->
-> It's possible we could subsume {of,acpi}_dma_deconfigure() into
-> dma_deconfigure() entirely in future if it becomes clear that neither of
-> them will ever need to do anything firmware-specific, but I think for
-> now it's probably safer to keep the current symmetry - calling
-> arch_teardown_dma_ops() twice is benign (and even if it weren't, I'd say
-> it really should be!)
->
+What are your thoughts on an approach like the following untested
+draft patch.
 
-Ya, calling it twice should cause no harm. If nothing firmware specific
-gets added this could simply be put in deconfigure itself in future.
-Thanks for all the reviews !!
+The patch (if fleshed out) makes it so iomem can be used in an sgl
+and WARN_ONs will occur in places where drivers attempt to access
+iomem directly through the sgl.
 
-Regards,
-  Sricharan
+I'd also probably create a p2pmem_alloc_sgl helper function so driver
+writers wouldn't have to mess with sg_set_iomem_page.
+
+With all that in place, it should be relatively safe for drivers to
+implement p2pmem even though we'd still technically be violating the
+__iomem boundary in some places.
+
+Logan
 
 
+commit b435a154a4ec4f82766f6ab838092c3c5a9388ac
+Author: Logan Gunthorpe <logang@deltatee.com>
+Date:   Wed Feb 8 12:44:52 2017 -0700
 
-> Robin.
->
->> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
->> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
->> Acked-by: Bjorn Helgaas <bhelgaas@google.com> (drivers/pci part)
->> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
->> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> ---
->>
->>  [V10] Added dummy dma_(de)configure functions in case
->>        of !CONFIG_HAS_DMA to avoid build breaks.
->>
->>  drivers/acpi/glue.c         |  5 -----
->>  drivers/base/dd.c           |  9 +++++++++
->>  drivers/base/dma-mapping.c  | 40 ++++++++++++++++++++++++++++++++++++++++
->>  drivers/of/platform.c       |  5 +----
->>  drivers/pci/probe.c         | 28 ----------------------------
->>  include/linux/dma-mapping.h | 12 ++++++++++++
->>  6 files changed, 62 insertions(+), 37 deletions(-)
->>
->> diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
->> index fb19e1c..c05f241 100644
->> --- a/drivers/acpi/glue.c
->> +++ b/drivers/acpi/glue.c
->> @@ -176,7 +176,6 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
->>  	struct list_head *physnode_list;
->>  	unsigned int node_id;
->>  	int retval = -EINVAL;
->> -	enum dev_dma_attr attr;
->>
->>  	if (has_acpi_companion(dev)) {
->>  		if (acpi_dev) {
->> @@ -233,10 +232,6 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
->>  	if (!has_acpi_companion(dev))
->>  		ACPI_COMPANION_SET(dev, acpi_dev);
->>
->> -	attr = acpi_get_dma_attr(acpi_dev);
->> -	if (attr != DEV_DMA_NOT_SUPPORTED)
->> -		acpi_dma_configure(dev, attr);
->> -
->>  	acpi_physnode_link_name(physical_node_name, node_id);
->>  	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
->>  				   physical_node_name);
->> diff --git a/drivers/base/dd.c b/drivers/base/dd.c
->> index a1fbf55..4882f06 100644
->> --- a/drivers/base/dd.c
->> +++ b/drivers/base/dd.c
->> @@ -19,6 +19,7 @@
->>
->>  #include <linux/device.h>
->>  #include <linux/delay.h>
->> +#include <linux/dma-mapping.h>
->>  #include <linux/module.h>
->>  #include <linux/kthread.h>
->>  #include <linux/wait.h>
->> @@ -356,6 +357,10 @@ static int really_probe(struct device *dev, struct device_driver *drv)
->>  	if (ret)
->>  		goto pinctrl_bind_failed;
->>
->> +	ret = dma_configure(dev);
->> +	if (ret)
->> +		goto dma_failed;
->> +
->>  	if (driver_sysfs_add(dev)) {
->>  		printk(KERN_ERR "%s: driver_sysfs_add(%s) failed\n",
->>  			__func__, dev_name(dev));
->> @@ -417,6 +422,8 @@ static int really_probe(struct device *dev, struct device_driver *drv)
->>  	goto done;
->>
->>  probe_failed:
->> +	dma_deconfigure(dev);
->> +dma_failed:
->>  	if (dev->bus)
->>  		blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
->>  					     BUS_NOTIFY_DRIVER_NOT_BOUND, dev);
->> @@ -826,6 +833,8 @@ static void __device_release_driver(struct device *dev, struct device *parent)
->>  			drv->remove(dev);
->>
->>  		device_links_driver_cleanup(dev);
->> +		dma_deconfigure(dev);
->> +
->>  		devres_release_all(dev);
->>  		dev->driver = NULL;
->>  		dev_set_drvdata(dev, NULL);
->> diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
->> index efd71cf..449b948 100644
->> --- a/drivers/base/dma-mapping.c
->> +++ b/drivers/base/dma-mapping.c
->> @@ -7,9 +7,11 @@
->>   * This file is released under the GPLv2.
->>   */
->>
->> +#include <linux/acpi.h>
->>  #include <linux/dma-mapping.h>
->>  #include <linux/export.h>
->>  #include <linux/gfp.h>
->> +#include <linux/of_device.h>
->>  #include <linux/slab.h>
->>  #include <linux/vmalloc.h>
->>
->> @@ -341,3 +343,41 @@ void dma_common_free_remap(void *cpu_addr, size_t size, unsigned long vm_flags)
->>  	vunmap(cpu_addr);
->>  }
->>  #endif
->> +
->> +/*
->> + * Common configuration to enable DMA API use for a device
->> + */
->> +#include <linux/pci.h>
->> +
->> +int dma_configure(struct device *dev)
->> +{
->> +	struct device *bridge = NULL, *dma_dev = dev;
->> +	enum dev_dma_attr attr;
->> +
->> +	if (dev_is_pci(dev)) {
->> +		bridge = pci_get_host_bridge_device(to_pci_dev(dev));
->> +		dma_dev = bridge;
->> +		if (IS_ENABLED(CONFIG_OF) && dma_dev->parent &&
->> +		    dma_dev->parent->of_node)
->> +			dma_dev = dma_dev->parent;
->> +	}
->> +
->> +	if (dma_dev->of_node) {
->> +		of_dma_configure(dev, dma_dev->of_node);
->> +	} else if (has_acpi_companion(dma_dev)) {
->> +		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
->> +		if (attr != DEV_DMA_NOT_SUPPORTED)
->> +			acpi_dma_configure(dev, attr);
->> +	}
->> +
->> +	if (bridge)
->> +		pci_put_host_bridge_device(bridge);
->> +
->> +	return 0;
->> +}
->> +
->> +void dma_deconfigure(struct device *dev)
->> +{
->> +	of_dma_deconfigure(dev);
->> +	acpi_dma_deconfigure(dev);
->> +}
->> diff --git a/drivers/of/platform.c b/drivers/of/platform.c
->> index 5344db5..2aa4ebb 100644
->> --- a/drivers/of/platform.c
->> +++ b/drivers/of/platform.c
->> @@ -22,6 +22,7 @@
->>  #include <linux/slab.h>
->>  #include <linux/of_address.h>
->>  #include <linux/of_device.h>
->> +#include <linux/of_iommu.h>
->>  #include <linux/of_irq.h>
->>  #include <linux/of_platform.h>
->>  #include <linux/platform_device.h>
->> @@ -186,11 +187,9 @@ static struct platform_device *of_platform_device_create_pdata(
->>
->>  	dev->dev.bus = &platform_bus_type;
->>  	dev->dev.platform_data = platform_data;
->> -	of_dma_configure(&dev->dev, dev->dev.of_node);
->>  	of_msi_configure(&dev->dev, dev->dev.of_node);
->>
->>  	if (of_device_add(dev) != 0) {
->> -		of_dma_deconfigure(&dev->dev);
->>  		platform_device_put(dev);
->>  		goto err_clear_flag;
->>  	}
->> @@ -248,7 +247,6 @@ static struct amba_device *of_amba_device_create(struct device_node *node,
->>  		dev_set_name(&dev->dev, "%s", bus_id);
->>  	else
->>  		of_device_make_bus_id(&dev->dev);
->> -	of_dma_configure(&dev->dev, dev->dev.of_node);
->>
->>  	/* Allow the HW Peripheral ID to be overridden */
->>  	prop = of_get_property(node, "arm,primecell-periphid", NULL);
->> @@ -542,7 +540,6 @@ static int of_platform_device_destroy(struct device *dev, void *data)
->>  		amba_device_unregister(to_amba_device(dev));
->>  #endif
->>
->> -	of_dma_deconfigure(dev);
->>  	of_node_clear_flag(dev->of_node, OF_POPULATED);
->>  	of_node_clear_flag(dev->of_node, OF_POPULATED_BUS);
->>  	return 0;
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index dfc9a27..5a8dd43 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -1893,33 +1893,6 @@ static void pci_set_msi_domain(struct pci_dev *dev)
->>  	dev_set_msi_domain(&dev->dev, d);
->>  }
->>
->> -/**
->> - * pci_dma_configure - Setup DMA configuration
->> - * @dev: ptr to pci_dev struct of the PCI device
->> - *
->> - * Function to update PCI devices's DMA configuration using the same
->> - * info from the OF node or ACPI node of host bridge's parent (if any).
->> - */
->> -static void pci_dma_configure(struct pci_dev *dev)
->> -{
->> -	struct device *bridge = pci_get_host_bridge_device(dev);
->> -
->> -	if (IS_ENABLED(CONFIG_OF) &&
->> -		bridge->parent && bridge->parent->of_node) {
->> -			of_dma_configure(&dev->dev, bridge->parent->of_node);
->> -	} else if (has_acpi_companion(bridge)) {
->> -		struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
->> -		enum dev_dma_attr attr = acpi_get_dma_attr(adev);
->> -
->> -		if (attr == DEV_DMA_NOT_SUPPORTED)
->> -			dev_warn(&dev->dev, "DMA not supported.\n");
->> -		else
->> -			acpi_dma_configure(&dev->dev, attr);
->> -	}
->> -
->> -	pci_put_host_bridge_device(bridge);
->> -}
->> -
->>  void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->>  {
->>  	int ret;
->> @@ -1933,7 +1906,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
->>  	dev->dev.dma_mask = &dev->dma_mask;
->>  	dev->dev.dma_parms = &dev->dma_parms;
->>  	dev->dev.coherent_dma_mask = 0xffffffffull;
->> -	pci_dma_configure(dev);
->>
->>  	pci_set_dma_max_seg_size(dev, 65536);
->>  	pci_set_dma_seg_boundary(dev, 0xffffffff);
->> diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
->> index 0977317..4f3eece 100644
->> --- a/include/linux/dma-mapping.h
->> +++ b/include/linux/dma-mapping.h
->> @@ -728,6 +728,18 @@ void *dma_mark_declared_memory_occupied(struct device *dev,
->>  }
->>  #endif /* CONFIG_HAVE_GENERIC_DMA_COHERENT */
->>
->> +#ifdef CONFIG_HAS_DMA
->> +int dma_configure(struct device *dev);
->> +void dma_deconfigure(struct device *dev);
->> +#else
->> +static inline int dma_configure(struct device *dev)
->> +{
->> +	return 0;
->> +}
->> +
->> +static inline void dma_deconfigure(struct device *dev) {}
->> +#endif
->> +
->>  /*
->>   * Managed DMA API
->>   */
->>
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-arm-msm" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+    scatterlist: Add support for iomem pages
 
--- 
-"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+    This patch steals another bit from the page_link field to indicate the
+    sg points to iomem. In sg_copy_buffer we use this flag to select
+    between memcpy and iomemcpy. Other sg_miter users will get an WARN_ON
+    unless they indicate they support iomemory by setting the
+    SG_MITER_IOMEM flag.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+    Also added are sg_kmap functions which would replace a common pattern
+    of kmap(sg_page(sg)). These new functions then also warn if the caller
+    tries to map io memory. Another option may be to automatically copy
+    the iomem to a new page and return that transparently to the driver.
+
+    Another coccinelle patch would then be done to convert kmap(sg_page(sg))
+    instances to the appropriate sg_kmap calls.
+
+    Signed-off-by: Logan Gunthorpe <logang@deltatee.com>
+
+diff --git a/drivers/dma-buf/dma-buf.c b/drivers/dma-buf/dma-buf.c
+index 0007b79..bd690a2c 100644
+--- a/drivers/dma-buf/dma-buf.c
++++ b/drivers/dma-buf/dma-buf.c
+@@ -37,6 +37,9 @@
+
+ #include <uapi/linux/dma-buf.h>
+
++/* Avoid the highmem.h macro from aliasing our ops->kunmap_atomic */
++#undef kunmap_atomic
++
+ static inline int is_dma_buf_file(struct file *);
+
+ struct dma_buf_list {
+diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+index cb3c8fe..7608da0 100644
+--- a/include/linux/scatterlist.h
++++ b/include/linux/scatterlist.h
+@@ -5,6 +5,7 @@
+ #include <linux/types.h>
+ #include <linux/bug.h>
+ #include <linux/mm.h>
++#include <linux/highmem.h>
+ #include <asm/io.h>
+
+ struct scatterlist {
+@@ -53,6 +54,9 @@ struct sg_table {
+  *
+  * If bit 1 is set, then this sg entry is the last element in a list.
+  *
++ * We also use bit 2 to indicate whether the page_link points to an
++ * iomem page or not.
++ *
+  * See sg_next().
+  *
+  */
+@@ -64,10 +68,17 @@ struct sg_table {
+  * a valid sg entry, or whether it points to the start of a new
+scatterlist.
+  * Those low bits are there for everyone! (thanks mason :-)
+  */
+-#define sg_is_chain(sg)		((sg)->page_link & 0x01)
+-#define sg_is_last(sg)		((sg)->page_link & 0x02)
++#define PAGE_LINK_MASK	0x7
++#define PAGE_LINK_CHAIN	0x1
++#define PAGE_LINK_LAST	0x2
++#define PAGE_LINK_IOMEM	0x4
++
++#define sg_is_chain(sg)		((sg)->page_link & PAGE_LINK_CHAIN)
++#define sg_is_last(sg)		((sg)->page_link & PAGE_LINK_LAST)
+ #define sg_chain_ptr(sg)	\
+-	((struct scatterlist *) ((sg)->page_link & ~0x03))
++	((struct scatterlist *) ((sg)->page_link & ~(PAGE_LINK_CHAIN | \
++						     PAGE_LINK_LAST)))
++#define sg_is_iomem(sg)		((sg)->page_link & PAGE_LINK_IOMEM)
+
+ /**
+  * sg_assign_page - Assign a given page to an SG entry
+@@ -81,13 +92,13 @@ struct sg_table {
+  **/
+ static inline void sg_assign_page(struct scatterlist *sg, struct page
+*page)
+ {
+-	unsigned long page_link = sg->page_link & 0x3;
++	unsigned long page_link = sg->page_link & PAGE_LINK_MASK;
+
+ 	/*
+ 	 * In order for the low bit stealing approach to work, pages
+-	 * must be aligned at a 32-bit boundary as a minimum.
++	 * must be aligned at a 64-bit boundary as a minimum.
+ 	 */
+-	BUG_ON((unsigned long) page & 0x03);
++	BUG_ON((unsigned long) page & PAGE_LINK_MASK);
+ #ifdef CONFIG_DEBUG_SG
+ 	BUG_ON(sg->sg_magic != SG_MAGIC);
+ 	BUG_ON(sg_is_chain(sg));
+@@ -117,13 +128,56 @@ static inline void sg_set_page(struct scatterlist
+*sg, struct page *page,
+ 	sg->length = len;
+ }
+
++/**
++ * sg_set_page - Set sg entry to point at given iomem page
++ * @sg:		 SG entry
++ * @page:	 The page
++ * @len:	 Length of data
++ * @offset:	 Offset into page
++ *
++ * Description:
++ *   Same as sg_set_page but used when the page is a ZONE_DEVICE page that
++ *   points to IO memory.
++ *
++ **/
++static inline void sg_set_iomem_page(struct scatterlist *sg, struct
+page *page,
++				     unsigned int len, unsigned int offset)
++{
++	sg_set_page(sg, page, len, offset);
++	sg->page_link |= PAGE_LINK_IOMEM;
++}
++
+ static inline struct page *sg_page(struct scatterlist *sg)
+ {
+ #ifdef CONFIG_DEBUG_SG
+ 	BUG_ON(sg->sg_magic != SG_MAGIC);
+ 	BUG_ON(sg_is_chain(sg));
+ #endif
+-	return (struct page *)((sg)->page_link & ~0x3);
++	return (struct page *)((sg)->page_link & ~PAGE_LINK_MASK);
++}
++
++static inline void *sg_kmap(struct scatterlist *sg)
++{
++	WARN_ON(sg_is_iomem(sg));
++
++	return kmap(sg_page(sg));
++}
++
++static inline void sg_kunmap(struct scatterlist *sg, void *addr)
++{
++	kunmap(addr);
++}
++
++static inline void *sg_kmap_atomic(struct scatterlist *sg)
++{
++	WARN_ON(sg_is_iomem(sg));
++
++	return kmap(sg_page(sg));
++}
++
++static inline void sg_kunmap_atomic(struct scatterlist *sg, void *addr)
++{
++	kunmap_atomic(addr);
+ }
+
+ /**
+@@ -171,7 +225,8 @@ static inline void sg_chain(struct scatterlist *prv,
+unsigned int prv_nents,
+ 	 * Set lowest bit to indicate a link pointer, and make sure to clear
+ 	 * the termination bit if it happens to be set.
+ 	 */
+-	prv[prv_nents - 1].page_link = ((unsigned long) sgl | 0x01) & ~0x02;
++	prv[prv_nents - 1].page_link =
++		((unsigned long) sgl & ~PAGE_LINK_MASK) | PAGE_LINK_CHAIN;
+ }
+
+ /**
+@@ -191,8 +246,8 @@ static inline void sg_mark_end(struct scatterlist *sg)
+ 	/*
+ 	 * Set termination bit, clear potential chain bit
+ 	 */
+-	sg->page_link |= 0x02;
+-	sg->page_link &= ~0x01;
++	sg->page_link &= ~PAGE_LINK_MASK;
++	sg->page_link |= PAGE_LINK_LAST;
+ }
+
+ /**
+@@ -208,7 +263,7 @@ static inline void sg_unmark_end(struct scatterlist *sg)
+ #ifdef CONFIG_DEBUG_SG
+ 	BUG_ON(sg->sg_magic != SG_MAGIC);
+ #endif
+-	sg->page_link &= ~0x02;
++	sg->page_link &= ~PAGE_LINK_LAST;
+ }
+
+ /**
+@@ -383,6 +438,7 @@ static inline dma_addr_t
+sg_page_iter_dma_address(struct sg_page_iter *piter)
+ #define SG_MITER_ATOMIC		(1 << 0)	 /* use kmap_atomic */
+ #define SG_MITER_TO_SG		(1 << 1)	/* flush back to phys on unmap */
+ #define SG_MITER_FROM_SG	(1 << 2)	/* nop */
++#define SG_MITER_IOMEM		(1 << 3)	/* support iomem in miter ops */
+
+ struct sg_mapping_iter {
+ 	/* the following three fields can be accessed directly */
+diff --git a/lib/scatterlist.c b/lib/scatterlist.c
+index c6cf822..6d8f39b 100644
+--- a/lib/scatterlist.c
++++ b/lib/scatterlist.c
+@@ -580,6 +580,9 @@ bool sg_miter_next(struct sg_mapping_iter *miter)
+ 	if (!sg_miter_get_next_page(miter))
+ 		return false;
+
++	if (!(miter->__flags & SG_MITER_IOMEM))
++		WARN_ON(sg_is_iomem(miter->piter.sg));
++
+ 	miter->page = sg_page_iter_page(&miter->piter);
+ 	miter->consumed = miter->length = miter->__remaining;
+
+@@ -651,7 +654,7 @@ size_t sg_copy_buffer(struct scatterlist *sgl,
+unsigned int nents, void *buf,
+ {
+ 	unsigned int offset = 0;
+ 	struct sg_mapping_iter miter;
+-	unsigned int sg_flags = SG_MITER_ATOMIC;
++	unsigned int sg_flags = SG_MITER_ATOMIC | SG_MITER_IOMEM;
+
+ 	if (to_buffer)
+ 		sg_flags |= SG_MITER_FROM_SG;
+@@ -668,10 +671,17 @@ size_t sg_copy_buffer(struct scatterlist *sgl,
+unsigned int nents, void *buf,
+
+ 		len = min(miter.length, buflen - offset);
+
+-		if (to_buffer)
+-			memcpy(buf + offset, miter.addr, len);
+-		else
+-			memcpy(miter.addr, buf + offset, len);
++		if (sg_is_iomem(miter.piter.sg)) {
++			if (to_buffer)
++				memcpy_fromio(buf + offset,  miter.addr, len);
++			else
++				memcpy_toio(miter.addr, buf + offset, len);
++		} else {
++			if (to_buffer)
++				memcpy(buf + offset, miter.addr, len);
++			else
++				memcpy(miter.addr, buf + offset, len);
++		}
+
+ 		offset += len;
+ 	}
