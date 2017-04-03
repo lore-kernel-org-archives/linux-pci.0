@@ -1,52 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41712 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751193AbdDMQ2i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Apr 2017 12:28:38 -0400
-Subject: Re: [stable-4.10: PATCH] xen: revert commits 72a9b186292 and
- da72ff5bfcb0
-To: Greg KH <greg@kroah.com>
-References: <20170413144949.4295-1-jgross@suse.com>
- <20170413162458.GA5676@kroah.com>
-Cc: stable@vger.kernel.org,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Julien Grall <julien.grall@arm.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Ross Lagerwall <ross.lagerwall@citrix.com>,
-        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>,
-        KarimAllah Ahmed <karahmed@amazon.de>
-From: Juergen Gross <jgross@suse.com>
-Message-ID: <82b08730-4672-07aa-6c42-9d77ad4ac8ae@suse.com>
-Date: Thu, 13 Apr 2017 18:28:33 +0200
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-6-git-send-email-logang@deltatee.com>
+ <20170331070950.GA9059@infradead.org>
+ <435d4471-436b-87e6-8827-c9fc6cbdde2c@deltatee.com>
+ <445bc352-75d7-438f-96ef-c2411215628d@deltatee.com>
+ <CAPcyv4g=MHbjbY0GFPoLq3wAGwhcC7813O7iLUWGEChWh0M7Dw@mail.gmail.com>
+ <ff0dd5ec-2562-9f1d-1335-d0a8813f2f50@deltatee.com>
+ <CAPcyv4gx4g3Ry_A99yTodqwm2vH72oMSLKAKF7iEsmG5G4TcbQ@mail.gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        Steve Wise <swise@opengridcomputing.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Christoph Hellwig <hch@lst.de>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <22930db3-a194-8b60-5aab-4a8add1ddc55@deltatee.com>
+Date: Mon, 3 Apr 2017 17:12:38 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170413162458.GA5676@kroah.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAPcyv4gx4g3Ry_A99yTodqwm2vH72oMSLKAKF7iEsmG5G4TcbQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [RFC 5/8] scatterlist: Modify SG copy functions to support io
+ memory.
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 13/04/17 18:24, Greg KH wrote:
-> On Thu, Apr 13, 2017 at 04:49:49PM +0200, Juergen Gross wrote:
->> Revert commit 72a9b186292 ("xen: Remove event channel notification
->> through Xen PCI platform device") as the original analysis was wrong
->> that all the removed code isn't in use any more. As commit da72ff5bfcb0
->> ("partially revert xen: Remove event channel notification through Xen
->> PCI platform device") reverted already some parts of it revert this
->> commit, too.
->>
->> It is still necessary for old Xen versions (< 4.0) and for being able
->> to run the Linux kernel as dom0 in a nested Xen environment.
-> 
-> Is there a commit in Linus's tree that matches this revert as well?
-
-Not yet. I'm working on it.
 
 
-Juergen
+On 03/04/17 04:47 PM, Dan Williams wrote:
+> I wouldn't necessarily conflate supporting pfn_t in the scatterlist
+> with the stalled stuct-page-less DMA effor. A pfn_t_to_page()
+> conversion will still work and be required. However you're right, the
+> minute we use pfn_t for this we're into the realm of special case
+> drivers that understand scatterlists with special "I/O-pfn_t" entries.
+
+Well yes, it would certainly be possible to convert the scatterlist code
+from page_link to pfn_t. (The only slightly tricky thing is that
+scatterlist uses extra chaining bits and pfn_t uses extra flag bits so
+they'd have to be harmonized somehow). But if we aren't moving toward
+struct-page-less DMA, I fail to see the point of the conversion.
+
+I'll definitely need IO scatterlists of some form or another and I like
+pfn_t but right now it just seems like extra work with unclear benefit.
+(Though, if someone told me that I can't use a third bit in the
+page_link field then maybe that would be a good reason to move to pfn_t.)
+
+> However, maybe that's what we want? I think peer-to-peer DMA is not a
+> general purpose feature unless/until we get it standardized in PCI. So
+> maybe drivers with special case scatterlist support is exactly what we
+> want for now.
+
+Well, I think this should be completely independent from PCI code. I see
+no reason why we can't have infrastructure for DMA on iomem from any
+bus. Largely all the work I've done in this area is completely agnostic
+to the bus in use. (Except for any kind of white/black list when it is
+used.)
+
+The "special case scatterlist" is essentially what I'm proposing in the
+patch I sent upthread, it just stores the flag in the page_link instead
+of in a pfn_t.
+
+Logan
