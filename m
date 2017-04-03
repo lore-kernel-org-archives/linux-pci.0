@@ -1,71 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49234 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932643AbdDGLdo (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Apr 2017 07:33:44 -0400
-Date: Fri, 7 Apr 2017 13:33:25 +0200
-From: Borislav Petkov <bp@suse.de>
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, simon.guinot@sequanux.org,
-        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
-        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
-        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedo.suse.de
-Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
- when spliting large pages
-Message-ID: <20170407113325.vykr4g3qdufgt2rd@pd.tnic>
-References: <f46ff1e1-1cc7-1907-74a0-e2709fa1e5fb@amd.com>
- <20170406172520.iyjjtz56u3jlnjhq@pd.tnic>
- <ba739600-d468-1f1b-aff6-89c79fd6030b@amd.com>
+Received: from mail-oi0-f42.google.com ([209.85.218.42]:34273 "EHLO
+        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751628AbdDCWrK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Apr 2017 18:47:10 -0400
+Received: by mail-oi0-f42.google.com with SMTP id d2so10975227oig.1
+        for <linux-pci@vger.kernel.org>; Mon, 03 Apr 2017 15:47:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <ba739600-d468-1f1b-aff6-89c79fd6030b@amd.com>
+In-Reply-To: <ff0dd5ec-2562-9f1d-1335-d0a8813f2f50@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-6-git-send-email-logang@deltatee.com> <20170331070950.GA9059@infradead.org>
+ <435d4471-436b-87e6-8827-c9fc6cbdde2c@deltatee.com> <445bc352-75d7-438f-96ef-c2411215628d@deltatee.com>
+ <CAPcyv4g=MHbjbY0GFPoLq3wAGwhcC7813O7iLUWGEChWh0M7Dw@mail.gmail.com> <ff0dd5ec-2562-9f1d-1335-d0a8813f2f50@deltatee.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 3 Apr 2017 15:47:09 -0700
+Message-ID: <CAPcyv4gx4g3Ry_A99yTodqwm2vH72oMSLKAKF7iEsmG5G4TcbQ@mail.gmail.com>
+Subject: Re: [RFC 5/8] scatterlist: Modify SG copy functions to support io memory.
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        Steve Wise <swise@opengridcomputing.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 06, 2017 at 01:37:41PM -0500, Brijesh Singh wrote:
-> I did thought about prot idea but ran into another corner case which may require
-> us changing the signature of phys_pud_init and phys_pmd_init. The paddr_start
-> and paddr_end args into kernel_physical_mapping_init() should be aligned on PMD
-> level down (see comment [1]). So, if we encounter a case where our address range
-> is part of large page but we need to clear only one entry (i.e asked to clear just
-> one page into 2M region). In that case, now we need to pass additional arguments
-> into kernel_physical_mapping, phys_pud_init and phys_pmd_init to hint the splitting
-> code that it should use our prot for specific entries and all other entries will use
-> the old_prot.
+On Mon, Apr 3, 2017 at 3:10 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+>
+> On 03/04/17 03:44 PM, Dan Williams wrote:
+>> On Mon, Apr 3, 2017 at 2:20 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+>>> Hi Christoph,
+>>>
+>>> What are your thoughts on an approach like the following untested
+>>> draft patch.
+>>>
+>>> The patch (if fleshed out) makes it so iomem can be used in an sgl
+>>> and WARN_ONs will occur in places where drivers attempt to access
+>>> iomem directly through the sgl.
+>>>
+>>> I'd also probably create a p2pmem_alloc_sgl helper function so driver
+>>> writers wouldn't have to mess with sg_set_iomem_page.
+>>>
+>>> With all that in place, it should be relatively safe for drivers to
+>>> implement p2pmem even though we'd still technically be violating the
+>>> __iomem boundary in some places.
+>>
+>> Just reacting to this mail, I still haven't had a chance to take a
+>> look at the rest of the series.
+>>
+>> The pfn_t type was invented to carry extra type and page lookup
+>> information about the memory behind a given pfn. At first glance that
+>> seems a more natural place to carry an indication that this is an
+>> "I/O" pfn.
+>
+> I agree... But what are the plans for pfn_t? Is anyone working on using
+> it in the scatterlist code? Currently it's not there yet and given the
+> assertion that we will continue to be using struct page for DMA is that
+> a direction we'd want to go?
+>
 
-Ok, but your !4K case:
+I wouldn't necessarily conflate supporting pfn_t in the scatterlist
+with the stalled stuct-page-less DMA effor. A pfn_t_to_page()
+conversion will still work and be required. However you're right, the
+minute we use pfn_t for this we're into the realm of special case
+drivers that understand scatterlists with special "I/O-pfn_t" entries.
+However, maybe that's what we want? I think peer-to-peer DMA is not a
+general purpose feature unless/until we get it standardized in PCI. So
+maybe drivers with special case scatterlist support is exactly what we
+want for now.
 
-+               /*
-+                * virtual address is part of large page, create the page
-+                * table mapping to use smaller pages (4K). The virtual and
-+                * physical address must be aligned to PMD level.
-+                */
-+               kernel_physical_mapping_init(__pa(vaddr & PMD_MASK),
-+                                            __pa((vaddr_end & PMD_MASK) + PMD_SIZE),
-+                                            0);
-
-
-would map a 2M page as encrypted by default. What if we want to map a 2M page
-frame as ~_PAGE_ENC?
-
-IOW, if you're adding a new interface, it should be generic enough, like
-with prot argument.
-
--- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+Thoughts?
