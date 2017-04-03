@@ -1,57 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58180 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934374AbdDYTj7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Apr 2017 15:39:59 -0400
-Date: Tue, 25 Apr 2017 14:39:55 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Byczkowski, Jakub" <jakub.byczkowski@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Cabiddu, Giovanni" <giovanni.cabiddu@intel.com>,
-        "Benedetto, Salvatore" <salvatore.benedetto@intel.com>,
-        "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
-        "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        qat-linux <qat-linux@intel.com>,
-        "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 5/7] IB/hfi1: use pcie_flr instead of duplicating it
-Message-ID: <20170425193955.GC29024@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170414191131.14286-1-hch@lst.de>
- <20170414191131.14286-6-hch@lst.de>
- <A33E225544E47D4DB5713032774B132783960382@irsmsx105.ger.corp.intel.com>
- <20170424143507.GA28812@lst.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170424143507.GA28812@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5af054c8-28cd-6719-b506-d0133c03042b@arm.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-5-jean-philippe.brucker@arm.com>
+ <CA+sq2CeWpGarhT9p+iVo8nJXR=xpkj6XNMwv4LvbP0M6JxA_SA@mail.gmail.com>
+ <5af054c8-28cd-6719-b506-d0133c03042b@arm.com>
+From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+Date: Mon, 3 Apr 2017 17:12:46 +0530
+Message-ID: <CA+sq2Ccb1mUQpTvHWsEGWyc+9HjLdq8FSqBGRM7Ey932_6X5jg@mail.gmail.com>
+Subject: Re: [RFC PATCH 04/30] iommu/arm-smmu-v3: Add support for PCI ATS
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
+ LAKML <linux-arm-kernel@lists.infradead.org>,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 24, 2017 at 04:35:07PM +0200, Christoph Hellwig wrote:
-> On Mon, Apr 24, 2017 at 02:16:31PM +0000, Byczkowski, Jakub wrote:
-> > Tested-by: Jakub Byczkowski <jakub.byczkowski@intel.com>
-> 
-> Are you (and Doug) ok with queueing this up in the PCI tree?
+On Mon, Apr 3, 2017 at 3:44 PM, Jean-Philippe Brucker
+<jean-philippe.brucker@arm.com> wrote:
+> On 03/04/17 09:34, Sunil Kovvuri wrote:
+>>> +static size_t arm_smmu_atc_invalidate_domain(struct arm_smmu_domain *smmu_domain,
+>>> +                                            unsigned long iova, size_t size)
+>>> +{
+>>> +       unsigned long flags;
+>>> +       struct arm_smmu_cmdq_ent cmd = {0};
+>>> +       struct arm_smmu_group *smmu_group;
+>>> +       struct arm_smmu_master_data *master;
+>>> +       struct arm_smmu_device *smmu = smmu_domain->smmu;
+>>> +       struct arm_smmu_cmdq_ent sync_cmd = {
+>>> +               .opcode = CMDQ_OP_CMD_SYNC,
+>>> +       };
+>>> +
+>>> +       spin_lock_irqsave(&smmu_domain->groups_lock, flags);
+>>> +
+>>> +       list_for_each_entry(smmu_group, &smmu_domain->groups, domain_head) {
+>>> +               if (!smmu_group->ats_enabled)
+>>> +                       continue;
+>>
+>> If ATS is not supported, this seems to increase no of cycles spent in
+>> pgtbl_lock.
+>> Can we return from this API by checking 'ARM_SMMU_FEAT_ATS' in smmu->features ?
+>
+> Sure, I can add a check before taking the lock. Have you been able to
+> observe a significant difference in cycles between checking FEAT_ATS,
+> checking group->ats_enabled after taking the lock, and removing this
+> function call altogether?
+>
+> Thanks,
+> Jean-Philippe
 
-Applied this with Jakub's tested-by and Doug's ack to pci/virtualization
-for v4.12.
+No, I haven't verified, was just making an observation.
 
-This still leaves these:
+Thanks,
+Sunil.
 
-  [PATCH 4/7] ixgbe: use pcie_flr instead of duplicating it
-  [PATCH 6/7] crypto: qat: use pcie_flr instead of duplicating it
-  [PATCH 7/7] liquidio: use pcie_flr instead of duplicating it
-
-I haven't seen any response to 4 and 6.  Felix reported an unused
-variable in 7.  Let me know if you'd like me to do anything with
-these.
-
-Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
