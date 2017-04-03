@@ -1,156 +1,107 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:54358 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750945AbdDCVDY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 3 Apr 2017 17:03:24 -0400
+Date: Mon, 3 Apr 2017 16:03:19 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sasha Neftin <sasha.neftin@intel.com>
+Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
+        alex.williamson@redhat.com, dima.ruinskiy@intel.com,
+        alexander.h.duyck@intel.com
+Subject: Re: [PATCH] PCI: do not perform FLR for 82579 devices
+Message-ID: <20170403210319.GB13232@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170319081542.20908-1-sasha.neftin@intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20170411131639.GA6652@red-moon>
-References: <CAKv+Gu-qRg8-YRCairppKrEfeLcW+OwVF8qZHp7vxXJA_AwPOw@mail.gmail.com>
- <20170330100524.GA22801@red-moon>
- <CAKv+Gu-ff98HrPK3f+E8soGJUXaaMxPLs2AuJ+rvXd0HWX-jXw@mail.gmail.com>
- <CAKv+Gu8YjySTDMgsrtGqEPMOtVhHc8gvTHZ4C5Ga8OTYdC9R3A@mail.gmail.com>
- <ae87ae28-f50d-095f-576e-f3fd7f96dea2@codeaurora.org>
- <CAKv+Gu8x0rQUnTUorknW-mW9LFgrxFYsXyy4LU_w9JbA-m_sjA@mail.gmail.com>
- <CAKv+Gu9Su0F9CSRe=sxomuDDH7c2szO6Z8dpqOQ=t_1Vn3JD3g@mail.gmail.com>
- <20170410165328.GA5248@red-moon>
- <CAKv+Gu-AN-OwnAJG5dt0Qg4GU8HxZBowTSA0H3LhNA3nHfrsQg@mail.gmail.com>
- <CAKv+Gu9dS4OhLbBw59yKYQmoJ8SpFexzk9yH=XfXnzn8NJ4mcg@mail.gmail.com>
- <20170411131639.GA6652@red-moon>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Tue, 11 Apr 2017 17:06:53 +0100
-Message-ID: <CAKv+Gu92WM+LaPfNBMyZQ_wnBT0fNvx3CFmMhTDwZ961_KQXYQ@mail.gmail.com>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
- Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
- Peter Jones <pjones@redhat.com>, Sinan Kaya <okaya@codeaurora.org>,
- Heyi Guo <heyi.guo@linaro.org>, Lukas Wunner <lukas@wunner.de>,
- Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Yinghai Lu <yinghai@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170319081542.20908-1-sasha.neftin@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11 April 2017 at 14:16, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> On Mon, Apr 10, 2017 at 06:29:27PM +0100, Ard Biesheuvel wrote:
->
-> [...]
->
->> >>> So before starting the next round of hacking to work around this, I
->> >>> would like rekindle the discussion regarding the way we blindly
->> >>> reassign all resources on ACPI/arm64 systems, and whether there is a
->> >>> way imaginable to avoid doing that.
->> >>
->> >> There is a way if the whole ARM ecosystem work together to sort this
->> >> out and we think that's the right way to do; I am personally not
->> >> entirely convinced about that.
->> >>
->> >
->> > So what are the pros and cons here? EFI fb is not a hugely important
->> > use case, but it is one that relies on BARs staying where they are.
->> > Are there others like that?
->
-> Not that I am aware of, which means that pros are thin on the ground.
->
+On Sun, Mar 19, 2017 at 10:15:42AM +0200, Sasha Neftin wrote:
+> This patch come to solve problem of 82579 network adapters hang.
+> Link on Datasheets and Specification Updates:
+> http://www.intel.com/content/www/us/en/embedded/products
+> /networking/82579-gigabit-ethernet-connection-family-documentation.html
+> Please, refer to Specification Update:
+> http://www.intel.com/content/dam/www/public/us/en/documents/
+> specification-updates/
+> 82579lm-82579v-gigabit-network-connection-spec-update.pdf
+> 
+> Reproduction:
+> Attach the device to a VM, then detach and try to attach again.
+> 
+> Fix:
+> Operating system won't support FLR for 82579 devices.
+> 
+> Signed-off-by: Sasha Neftin <sasha.neftin@intel.com>
 
-OK. Sinan?
+Applied to pci/virtualization for v4.12, thanks!
 
->> >>> I suppose the state of the BARs as we inherit it from the firmware
->> >>> cannot be blindly trusted (and IIUC, this is Lorenzo's primary issue
->> >>> with it). So should there be some side channel (UEFI config table
->> >>> perhaps?) to describe this?
->> >>
->> >> PCI firmware specifications rev 3.1, 4.6.5, "_DSM for Ignoring PCI
->> >> Boot Configurations".
->> >>
->> >> Do we want to enforce it on ARM ? I do not know to be honest (and it
->> >> still would not solve the DT firmware case).
->> >>
->> >
->> > No, it doesn't. But that doesn't mean we shouldn't solve it on ACPI if
->> > the pros outweigh the cons.
->
-> No one is screaming for that to happen, I can implement resource
-> claiming but at the moment I do not see the benefit.
->
-> [...]
->
->> > The reason is to eliminate another unknown from the discussion whether
->> > UEFI can be expected to leave the entire PCI hierarchy in a sane
->> > state.
->> >
->> >> If we want to try to claim the whole resource tree on boot (in ACPI)
->> >> I can send a patch for that but there will be regressions.
->> >>
->> >
->> > I would like to see it, yes.
->>
->> FWIW, the following minimal [naive] patch
->>
->> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->> index 4f0e3ebfea4b..37c4d2f116a4 100644
->> --- a/arch/arm64/kernel/pci.c
->> +++ b/arch/arm64/kernel/pci.c
->> @@ -27,7 +27,7 @@
->>   */
->>  void pcibios_fixup_bus(struct pci_bus *bus)
->>  {
->> -       /* nothing to do, expected to be removed in the future */
->> +       pci_read_bridge_bases(bus);
->>  }
->>
->>  /*
->> @@ -208,8 +208,8 @@ struct pci_bus *pci_acpi_scan_root(struct
->> acpi_pci_root *root)
->>         if (!bus)
->>                 return NULL;
->>
->> -       pci_bus_size_bridges(bus);
->> -       pci_bus_assign_resources(bus);
->> +       pci_assign_unassigned_root_bus_resources(bus);
->> +       pci_bus_claim_resources(bus);
->
-> I do not understand this code. If you reassign the whole thing
-> before claiming it I am not sure what's the point of claiming
-> the resources later, that's basically a nop. pci_bus_claim_resources()
-> should suffice (if FW set-up is sane - which also reads bridge bases,
-> BTW).
->
-
-OK, I'm struggling a bit with this code. As you know, it is not light
-bedtime reading :-)
-
-In any case, I am starting to see your point. While I am able to claim
-most of the configuration by calling pci_bus_claim_resources() only
-[modulo some I/O BARs for which I will send out a bugfix shortly], the
-option ROM BARs are left disabled by UEFI, and so I end up with
-
-pci 0000:00:01.0: PCI bridge to [bus 01]
-pci 0000:00:02.0: PCI bridge to [bus 02]
-pci 0000:00:03.0: PCI bridge to [bus 03]
-pci 0000:02:01.0: can't claim BAR 6 [mem 0xffff0000-0xffffffff pref]:
-no compatible bridge window
-pci 0000:03:01.0: can't claim BAR 6 [mem 0xfffc0000-0xffffffff pref]:
-no compatible bridge window
-
-and everything else works fine.
-
-Both PPC and x86 have similar code to infer from the BARs themselves
-whether they were programmed, but in our case, it comes down to
-checking whether a parent resource exists that covers the range.
-
-It may still make sense to add support for the _DSM method, and leave
-it to the firmware to tell the kernel whether the PCI configuration is
-supposed to be correct, so I will send out an RFC for that as well.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/pci/pci.c    |  6 ++++++
+>  drivers/pci/quirks.c | 13 +++++++++++++
+>  include/linux/pci.h  |  2 ++
+>  3 files changed, 21 insertions(+)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 7904d02ffdb9..bef14777bb30 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3781,6 +3781,9 @@ static int pcie_flr(struct pci_dev *dev, int probe)
+>  	if (!(cap & PCI_EXP_DEVCAP_FLR))
+>  		return -ENOTTY;
+>  
+> +	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
+> +		return -ENOTTY;
+> +
+>  	if (probe)
+>  		return 0;
+>  
+> @@ -3801,6 +3804,9 @@ static int pci_af_flr(struct pci_dev *dev, int probe)
+>  	if (!pos)
+>  		return -ENOTTY;
+>  
+> +	if (dev->dev_flags & PCI_DEV_FLAGS_NO_FLR_RESET)
+> +		return -ENOTTY;
+> +
+>  	pci_read_config_byte(dev, pos + PCI_AF_CAP, &cap);
+>  	if (!(cap & PCI_AF_CAP_TP) || !(cap & PCI_AF_CAP_FLR))
+>  		return -ENOTTY;
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 1800befa8b8b..eb333a61637e 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4566,3 +4566,16 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2030, quirk_no_aersid);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
+> +
+> +/*
+> + * Workaround FLR issues for 82579 devices
+> + * This code make sure not perform the FLR (Function Level Reset) via PCIe,
+> + * in order to workaround a bug found while using device passthrough,
+> + * where the interface would become non-responsive.
+> + */
+> +static void quirk_intel_no_flr(struct pci_dev *dev)
+> +{
+> +	dev->dev_flags |= PCI_DEV_FLAGS_NO_FLR_RESET;
+> +}
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1502, quirk_intel_no_flr);
+> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x1503, quirk_intel_no_flr);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index e2d1a124216a..f4fea5ad2d12 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -178,6 +178,8 @@ enum pci_dev_flags {
+>  	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
+>  	/* Get VPD from function 0 VPD */
+>  	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
+> +	/* Do not use FLR even if device advertises PCI_AF_CAP */
+> +	PCI_DEV_FLAGS_NO_FLR_RESET = (__force pci_dev_flags_t) (1 << 9),
+>  };
+>  
+>  enum pci_irq_reroute_variant {
+> -- 
+> 2.11.0
+> 
