@@ -1,80 +1,93 @@
-Return-Path: <SRS0=u2l1=3T=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=u2l1=3T=vodafone.de=deathsimple@kernel.org>
-Subject: Re: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models
- 30h-3fh) Processors
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
- <1489408896-25039-4-git-send-email-deathsimple@vodafone.de>
- <20170324154744.GE25380@bhelgaas-glaptop.roam.corp.google.com>
-Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
- platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
- linux-kernel@vger.kernel.org
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
-Message-ID: <a1ac66f3-3c3f-e9c6-82c9-6e9ca5715b67@vodafone.de>
-Date: Tue, 11 Apr 2017 17:48:25 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Jayachandran C <jnair@caviumnetworks.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ Alex Williamson <alex.williamson@redhat.com>,
+ iommu@lists.linux-foundation.org
+Subject: [PATCH v4 0/2] Handle Cavium ThunderX2 PCI topology quirk
+Date: Mon,  3 Apr 2017 13:15:02 +0000
+Message-Id: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
 MIME-Version: 1.0
-In-Reply-To: <20170324154744.GE25380@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jon Masters <jcm@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
+ Jayachandran C <jnair@caviumnetworks.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 24.03.2017 um 16:47 schrieb Bjorn Helgaas:
-> On Mon, Mar 13, 2017 at 01:41:35PM +0100, Christian König wrote:
->> From: Christian König <christian.koenig@amd.com>
->>
->> Most BIOS don't enable this because of compatibility reasons.
-> Can you give any more details here?  Without more hints, it's hard to
-> know whether any of the compatibility reasons might apply to Linux as
-> well.
+Hi Bjorn, Alex,
 
-Unfortunately not, I could try to ask a few more people at AMD if they 
-know the background.
+Sending this again (with a trivial fix to author name), please review.
+Updated summary below:
 
-I was told that there are a few boards which offers that as a BIOS 
-option, but so far I haven't found any (and I have quite a few here).
+Here is v4 of the patchset to handle the PCIe topology quirk of Cavium
+ThunderX2 systems (previously known as Broadcom Vulcan).
 
-My best guess is that older windows versions have a problem with that.
+The earlier discussions on this can be seen at:
+http://www.spinics.net/lists/linux-pci/msg51001.html
+https://patchwork.ozlabs.org/patch/582633/ and
+https://lists.linuxfoundation.org/pipermail/iommu/2016-June/017681.html
 
->> Manually enable a 64bit BAR of 64GB size so that we have
->> enough room for PCI devices.
->  From the context, I'm guessing this is enabling a new 64GB window
-> through the PCI host bridge?
+The earlier discussion on this patchset ended with a suggestion that it
+may be possible to fix up this quirk by handling the issue in the
+function argument of pci_for_each_dma_alias(). But at that point we did
+not have the codebase to make the changes since the full ACPI and OF code
+for SMMU and GIC ITS was not upstream.
 
-Yes, exactly. Sorry for the confusion.
+Now that the changes are upstream, I tried to fix it in both the SMMU
+and the GIC ITS code based on this suggestion, the changes needed are at:
+ https://github.com/jchandra-cavm/linux/commits/rid-xlate-fixup
 
-> That might be documented as a "BAR", but
-> it's not anything the Linux PCI core would recognize as a BAR.
+The problems with this approach are:
+ - of the 14 uses of pci_for_each_dma_alias in the function in the kernel
+   tree, I have to fixup 6 callers (which is all but one ofthe callers
+   outside x86)
+ - 4 of these can be reasonably handled (please see the github repo above),
+   but the calls in drivers/irqchip/irq-gic-v3-its-pci-msi.c and
+   drivers/iommu/iommu.c cannot be reasonably fixed up.
+ - Even without the 2 above two changes I can get it to work for now.
+   But pci_for_each_dma_alias does not work as expected on this platform
+   and we have to be aware of that for all future uses of the function.
+  
+For now, I have ruled out the approach, and I have rebased the earlier
+patch on to 4.11-rc and submitting again for review. The changes are:
 
-At least the AMD NB documentation calls this the host BARs. But I'm 
-perfectly fine with any terminology.
+v3->v4:
+ - new address of author
 
-How about calling it host bridge window instead?
+v2>v3:
+ - changed device flag name from PCI_DEV_FLAGS_DMA_ALIAS_ROOT to
+   PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT
+ - updated commit message to make the quirk clearer.
 
-> I think the specs would envision this being done via an ACPI _SRS
-> method on the PNP0A03 host bridge device.  That would be a more
-> generic path that would work on any host bridge.  Did you explore that
-> possibility?  I would prefer to avoid adding device-specific code if
-> that's possible.
+Let me know your comments and suggestions.
 
-I've checked quite a few boards, but none of them actually implements it 
-this way.
-
-M$ is working on a new ACPI table to enable this vendor neutral, but I 
-guess that will still take a while.
-
-I want to support this for all AMD CPU released in the past 5 years or 
-so, so we are going to deal with a bunch of older boards as well.
+Thanks,
+JC.
 
 
->> +	pci_bus_add_resource(dev->bus, res, 0);
-> We would need some sort of printk here to explain how this new window
-> magically appeared.
+Jayachandran C (2):
+  PCI: Add device flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT
+  PCI: quirks: Fix ThunderX2 dma alias handling
 
-Good point, consider this done.
+ drivers/pci/quirks.c | 14 ++++++++++++++
+ drivers/pci/search.c |  4 ++++
+ include/linux/pci.h  |  2 ++
+ 3 files changed, 20 insertions(+)
 
-But is this actually the right place of doing it? Or would you prefer 
-something to be added to the probing code?
+-- 
+2.7.4
 
-I think those fixups are applied a bit later, aren't they?
 
-Best regards,
-Christian.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
