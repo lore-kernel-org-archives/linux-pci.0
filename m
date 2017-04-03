@@ -1,44 +1,82 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v4 11/21] PCI: rockchip: update PCI config space remap function
-Date: Wed, 19 Apr 2017 17:49:00 +0100
-Message-Id: <20170419164913.19674-12-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 04/30] iommu/arm-smmu-v3: Add support for PCI ATS
+To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-5-jean-philippe.brucker@arm.com>
+ <CA+sq2CeWpGarhT9p+iVo8nJXR=xpkj6XNMwv4LvbP0M6JxA_SA@mail.gmail.com>
+ <5af054c8-28cd-6719-b506-d0133c03042b@arm.com>
+ <CA+sq2Ccb1mUQpTvHWsEGWyc+9HjLdq8FSqBGRM7Ey932_6X5jg@mail.gmail.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <19143d08-07ee-c2a4-eb71-e48fef0c8874@arm.com>
+Date: Mon, 3 Apr 2017 12:56:28 +0100
+MIME-Version: 1.0
+In-Reply-To: <CA+sq2Ccb1mUQpTvHWsEGWyc+9HjLdq8FSqBGRM7Ey932_6X5jg@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
+ LAKML <linux-arm-kernel@lists.infradead.org>,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_pci_remap_cfg* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+On 03/04/17 12:42, Sunil Kovvuri wrote:
+> On Mon, Apr 3, 2017 at 3:44 PM, Jean-Philippe Brucker
+> <jean-philippe.brucker@arm.com> wrote:
+>> On 03/04/17 09:34, Sunil Kovvuri wrote:
+>>>> +static size_t arm_smmu_atc_invalidate_domain(struct arm_smmu_domain *smmu_domain,
+>>>> +                                            unsigned long iova, size_t size)
+>>>> +{
+>>>> +       unsigned long flags;
+>>>> +       struct arm_smmu_cmdq_ent cmd = {0};
+>>>> +       struct arm_smmu_group *smmu_group;
+>>>> +       struct arm_smmu_master_data *master;
+>>>> +       struct arm_smmu_device *smmu = smmu_domain->smmu;
+>>>> +       struct arm_smmu_cmdq_ent sync_cmd = {
+>>>> +               .opcode = CMDQ_OP_CMD_SYNC,
+>>>> +       };
+>>>> +
+>>>> +       spin_lock_irqsave(&smmu_domain->groups_lock, flags);
+>>>> +
+>>>> +       list_for_each_entry(smmu_group, &smmu_domain->groups, domain_head) {
+>>>> +               if (!smmu_group->ats_enabled)
+>>>> +                       continue;
+>>>
+>>> If ATS is not supported, this seems to increase no of cycles spent in
+>>> pgtbl_lock.
+>>> Can we return from this API by checking 'ARM_SMMU_FEAT_ATS' in smmu->features ?
+>>
+>> Sure, I can add a check before taking the lock. Have you been able to
+>> observe a significant difference in cycles between checking FEAT_ATS,
+>> checking group->ats_enabled after taking the lock, and removing this
+>> function call altogether?
+>>
+>> Thanks,
+>> Jean-Philippe
+> 
+> No, I haven't verified, was just making an observation.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>
----
- drivers/pci/host/pcie-rockchip.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Fair enough, I think avoiding the lock when ATS isn't in use makes sense.
 
-diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-index 26ddd35..690a7b5 100644
---- a/drivers/pci/host/pcie-rockchip.c
-+++ b/drivers/pci/host/pcie-rockchip.c
-@@ -822,7 +822,7 @@ static int rockchip_pcie_parse_dt(struct rockchip_pcie *rockchip)
- 	regs = platform_get_resource_byname(pdev,
- 					    IORESOURCE_MEM,
- 					    "axi-base");
--	rockchip->reg_base = devm_ioremap_resource(dev, regs);
-+	rockchip->reg_base = devm_pci_remap_cfg_resource(dev, regs);
- 	if (IS_ERR(rockchip->reg_base))
- 		return PTR_ERR(rockchip->reg_base);
- 
--- 
-2.10.0
+Thanks,
+Jean-Philippe
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
