@@ -1,145 +1,61 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Khuong  Dinh <kdinh@apm.com>
-To: lorenzo.pieralisi@arm.com, marc.zyngier@arm.com, msalter@redhat.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org, jcm@redhat.com
-Subject: [PATCH v2 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
- boot for X-Gene v1
-Date: Thu, 27 Apr 2017 18:54:07 -0600
-Message-Id: <1493340847-25720-1-git-send-email-kdinh@apm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: patches@apm.com, Duc Dang <dhdang@apm.com>, rjw@rjwysocki.net,
- linux-kernel@vger.kernel.org, Khuong Dinh <kdinh@apm.com>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:55360 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751282AbdDCVMH (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 3 Apr 2017 17:12:07 -0400
+Date: Mon, 3 Apr 2017 16:12:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-rockchip@lists.infradead.org,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH] PCI: rockchip: set RC's RCB to 128 bytes
+Message-ID: <20170403211203.GC13232@bhelgaas-glaptop.roam.corp.google.com>
+References: <1490002780-67737-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1490002780-67737-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Khuong Dinh <kdinh@apm.com>
+On Mon, Mar 20, 2017 at 05:39:40PM +0800, Shawn Lin wrote:
+> Read Completion Boundary could be 64 bytes or 128 bytes
+> for rockchip RC. The reset value of RCB is zero which means
+> it doesn't support RCB to be 128 bytes, however it does support
+> that. When setting the RCB to 128 bytes, we see some significant
+> improvment for testing NVMe with libaio. So this patch will set
+> RC's RCB to 128 bytes.
+> 
+> Cc: Brian Norris <briannorris@chromium.org>
+> Cc: Jeffy Chen <jeffy.chen@rock-chips.com>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-This patch makes pci-xgene-msi driver ACPI-aware and provides
-MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
+Applied to pci/host-rockchip for v4.12, thanks!
 
-Signed-off-by: Khuong Dinh <kdinh@apm.com>
-Signed-off-by: Duc Dang <dhdang@apm.com>
-Acked-by: Marc Zyngier <marc.zyngier@arm.com>
----
-v2:
- - Verify with BIOS version 3.06.25 and 3.07.09
-v1:
- - Initial version
----
- drivers/pci/host/pci-xgene-msi.c |   35 ++++++++++++++++++++++++++++++++---
- 1 files changed, 32 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-index f1b633b..00aaa3d 100644
---- a/drivers/pci/host/pci-xgene-msi.c
-+++ b/drivers/pci/host/pci-xgene-msi.c
-@@ -24,6 +24,7 @@
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/of_pci.h>
-+#include <linux/acpi.h>
- 
- #define MSI_IR0			0x000000
- #define MSI_INT0		0x800000
-@@ -39,7 +40,7 @@ struct xgene_msi_group {
- };
- 
- struct xgene_msi {
--	struct device_node	*node;
-+	struct fwnode_handle	*fwnode;
- 	struct irq_domain	*inner_domain;
- 	struct irq_domain	*msi_domain;
- 	u64			msi_addr;
-@@ -249,6 +250,13 @@ static void xgene_irq_domain_free(struct irq_domain *domain,
- 	.free   = xgene_irq_domain_free,
- };
- 
-+#ifdef CONFIG_ACPI
-+static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
-+{
-+	return xgene_msi_ctrl.fwnode;
-+}
-+#endif
-+
- static int xgene_allocate_domains(struct xgene_msi *msi)
- {
- 	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
-@@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
- 	if (!msi->inner_domain)
- 		return -ENOMEM;
- 
--	msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
-+	msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
- 						    &xgene_msi_domain_info,
- 						    msi->inner_domain);
- 
-@@ -265,6 +273,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
- 		return -ENOMEM;
- 	}
- 
-+#ifdef CONFIG_ACPI
-+	pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
-+#endif
- 	return 0;
- }
- 
-@@ -449,6 +460,13 @@ static int xgene_msi_hwirq_free(unsigned int cpu)
- 	{},
- };
- 
-+#ifdef CONFIG_ACPI
-+static const struct acpi_device_id xgene_msi_acpi_ids[] = {
-+	{"APMC0D0E", 0},
-+	{ },
-+};
-+#endif
-+
- static int xgene_msi_probe(struct platform_device *pdev)
- {
- 	struct resource *res;
-@@ -469,7 +487,17 @@ static int xgene_msi_probe(struct platform_device *pdev)
- 		goto error;
- 	}
- 	xgene_msi->msi_addr = res->start;
--	xgene_msi->node = pdev->dev.of_node;
-+
-+	xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
-+	if (!xgene_msi->fwnode) {
-+		xgene_msi->fwnode = irq_domain_alloc_fwnode(NULL);
-+		if (!xgene_msi->fwnode) {
-+			dev_err(&pdev->dev, "Failed to create fwnode\n");
-+			rc = ENOMEM;
-+			goto error;
-+		}
-+	}
-+
- 	xgene_msi->num_cpus = num_possible_cpus();
- 
- 	rc = xgene_msi_init_allocator(xgene_msi);
-@@ -540,6 +568,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
- 	.driver = {
- 		.name = "xgene-msi",
- 		.of_match_table = xgene_msi_match_table,
-+		.acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
- 	},
- 	.probe = xgene_msi_probe,
- 	.remove = xgene_msi_remove,
--- 
-1.7.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+> 
+>  drivers/pci/host/pcie-rockchip.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 26ddd35..8bcd417 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -599,6 +599,11 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  	status |= PCI_EXP_LNKCTL_CCC;
+>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>  
+> +	/* Set RC's RCB to 128 */
+> +	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> +	status |= PCI_EXP_LNKCTL_RCB;
+> +	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+> +
+>  	/* Enable Gen1 training */
+>  	rockchip_pcie_write(rockchip, PCIE_CLIENT_LINK_TRAIN_ENABLE,
+>  			    PCIE_CLIENT_CONFIG);
+> -- 
+> 1.9.1
+> 
+> 
