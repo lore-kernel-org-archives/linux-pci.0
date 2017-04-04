@@ -1,149 +1,79 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V10 06/12] of: device: Fix overflow of coherent_dma_mask
-To: Frank Rowand <frowand.list@gmail.com>,
-        Sricharan R <sricharan@codeaurora.org>, will.deacon@arm.com,
-        joro@8bytes.org, lorenzo.pieralisi@arm.com,
-        iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robh+dt@kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
-        gregkh@linuxfoundation.org
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-7-git-send-email-sricharan@codeaurora.org>
- <58E5E7B7.1050400@gmail.com>
- <b77e3405-f060-bcd5-99f6-7d76f9edf08a@codeaurora.org>
- <58E69831.6010306@gmail.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <b38312b0-268b-ed86-a5b3-886f86ea13f5@arm.com>
-Date: Fri, 7 Apr 2017 15:46:27 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <58E69831.6010306@gmail.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <22930db3-a194-8b60-5aab-4a8add1ddc55@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-6-git-send-email-logang@deltatee.com> <20170331070950.GA9059@infradead.org>
+ <435d4471-436b-87e6-8827-c9fc6cbdde2c@deltatee.com> <445bc352-75d7-438f-96ef-c2411215628d@deltatee.com>
+ <CAPcyv4g=MHbjbY0GFPoLq3wAGwhcC7813O7iLUWGEChWh0M7Dw@mail.gmail.com>
+ <ff0dd5ec-2562-9f1d-1335-d0a8813f2f50@deltatee.com> <CAPcyv4gx4g3Ry_A99yTodqwm2vH72oMSLKAKF7iEsmG5G4TcbQ@mail.gmail.com>
+ <22930db3-a194-8b60-5aab-4a8add1ddc55@deltatee.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Mon, 3 Apr 2017 17:07:55 -0700
+Message-ID: <CAPcyv4gL=Z42x52So1iL-MNhPY67Pktz3c0J_h0tj_60TowNuQ@mail.gmail.com>
+Subject: Re: [RFC 5/8] scatterlist: Modify SG copy functions to support io memory.
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Christoph Hellwig <hch@infradead.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        Keith Busch <keith.busch@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
+        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
+        Steve Wise <swise@opengridcomputing.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/04/17 20:34, Frank Rowand wrote:
-> On 04/06/17 04:01, Sricharan R wrote:
->> Hi Frank,
->>
->> On 4/6/2017 12:31 PM, Frank Rowand wrote:
->>> On 04/04/17 03:18, Sricharan R wrote:
->>>> Size of the dma-range is calculated as coherent_dma_mask + 1
->>>> and passed to arch_setup_dma_ops further. It overflows when
->>>> the coherent_dma_mask is set for full 64 bits 0xFFFFFFFFFFFFFFFF,
->>>> resulting in size getting passed as 0 wrongly. Fix this by
->>>> passsing in max(mask, mask + 1). Note that in this case
->>>> when the mask is set to full 64bits, we will be passing the mask
->>>> itself to arch_setup_dma_ops instead of the size. The real fix
->>>> for this should be to make arch_setup_dma_ops receive the
->>>> mask and handle it, to be done in the future.
->>>>
->>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->>>> ---
->>>>  drivers/of/device.c | 2 +-
->>>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/of/device.c b/drivers/of/device.c
->>>> index c17c19d..c2ae6bb 100644
->>>> --- a/drivers/of/device.c
->>>> +++ b/drivers/of/device.c
->>>> @@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct device_node *np)
->>>>      ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->>>>      if (ret < 0) {
->>>>          dma_addr = offset = 0;
->>>> -        size = dev->coherent_dma_mask + 1;
->>>> +        size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
->>>>      } else {
->>>>          offset = PFN_DOWN(paddr - dma_addr);
->>>>          dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->>>>
->>>
->>> NACK.
->>>
->>> Passing an invalid size to arch_setup_dma_ops() is only part of the problem.
->>> size is also used in of_dma_configure() before calling arch_setup_dma_ops():
->>>
->>>         dev->coherent_dma_mask = min(dev->coherent_dma_mask,
->>>                                      DMA_BIT_MASK(ilog2(dma_addr + size)));
->>>         *dev->dma_mask = min((*dev->dma_mask),
->>>                              DMA_BIT_MASK(ilog2(dma_addr + size)));
->>>
->>> which would be incorrect for size == 0xffffffffffffffffULL when
->>> dma_addr != 0.  So the proposed fix really is not papering over
->>> the base problem very well.
->>>
->>
->> Ok, but with your fix for of_dma_get_range and the above fix,
->> dma_addr will be '0' when size = 0xffffffffffffffffULL,
->> but DMA_BIT_MASK(ilog2(dma_addr + size)) would be wrong though,
->> making coherent_dma_mask to be smaller 0x7fffffffffffffffULL.
-> 
-> Yes, that was my point.  Setting size to 0x7fffffffffffffffULL
-> affects several places.  Another potential location (based only
-> on the function header comment, not from reading the code) is
-> iommu_dma_init_domain().  The header comment says:
-> 
->     * @base and @size should be exact multiples of IOMMU page granularity to
->     * avoid rounding surprises.
+On Mon, Apr 3, 2017 at 4:12 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+>
+> On 03/04/17 04:47 PM, Dan Williams wrote:
+>> I wouldn't necessarily conflate supporting pfn_t in the scatterlist
+>> with the stalled stuct-page-less DMA effor. A pfn_t_to_page()
+>> conversion will still work and be required. However you're right, the
+>> minute we use pfn_t for this we're into the realm of special case
+>> drivers that understand scatterlists with special "I/O-pfn_t" entries.
+>
+> Well yes, it would certainly be possible to convert the scatterlist code
+> from page_link to pfn_t. (The only slightly tricky thing is that
+> scatterlist uses extra chaining bits and pfn_t uses extra flag bits so
+> they'd have to be harmonized somehow). But if we aren't moving toward
+> struct-page-less DMA, I fail to see the point of the conversion.
+>
+> I'll definitely need IO scatterlists of some form or another and I like
+> pfn_t but right now it just seems like extra work with unclear benefit.
+> (Though, if someone told me that I can't use a third bit in the
+> page_link field then maybe that would be a good reason to move to pfn_t.)
+>
+>> However, maybe that's what we want? I think peer-to-peer DMA is not a
+>> general purpose feature unless/until we get it standardized in PCI. So
+>> maybe drivers with special case scatterlist support is exactly what we
+>> want for now.
+>
+> Well, I think this should be completely independent from PCI code. I see
+> no reason why we can't have infrastructure for DMA on iomem from any
+> bus. Largely all the work I've done in this area is completely agnostic
+> to the bus in use. (Except for any kind of white/black list when it is
+> used.)
 
-That is really only referring to the fact that some of the work done
-therein involves truncation to PFNs, so anyone passing in non-exact
-values expecting them to round a particular way may get things off by a
-page one way or the other. It's not going to have much practical
-significance for real devices (in particular since size is used more as
-a sanity check than any kind of actual limit there).
+The completely agnostic part is where I get worried, but I shouldn't
+say anymore until I actually read the patch.The worry is cases where
+this agnostic enabling allows unsuspecting code paths to do the wrong
+thing. Like bypass iomem safety.
 
-> I have not read enough context to really understand of_dma_configure(), but
-> it seems there is yet another issue in how the error return case from
-> of_dma_get_range() is handled (with the existing code, as well as if
-> my patch gets accepted).  An error return value can mean _either_
-> there is no dma-ranges property _or_ "an other problem occurred".  Should
-> the "an other problem occurred" case be handled by defaulting size to
-> a value based on dev->coherent_dma_mask (the current case) or should the
-> attempt to set up the DMA configuration just fail?
+> The "special case scatterlist" is essentially what I'm proposing in the
+> patch I sent upthread, it just stores the flag in the page_link instead
+> of in a pfn_t.
 
-There is indeed a lot wrong with of_dma_configure() and
-arch_setup_dma_ops(), but fixing those is beyond the scope of this
-series. This is just working around a latent bug in the one specific
-case where a value is *not* derived from DT. Any DT which worked before
-still works; any DT which made of_dma_configure() go wrong before still
-makes of_dma_configure() go wrong exactly the same.
+Makes sense. The suggestion of pfn_t was to try to get more type
+safety throughout the stack. So that, again, unsuspecting code paths
+that get an I/O pfn aren't able to do things like page_address() or
+kmap() without failing.
 
-Whilst it's not ideal, since a DMA mask basically represents the maximum
-size of address that that particular device can be given, I can't see it
-making any practical difference for a full 64-bit DMA mask to be trimmed
-down to 63 bits upon re-probing - no system is likely to have that many
-physical address bits anyway, and I don't think any IOMMUs support that
-large an IOVA space either, so as long as it's still big enough to cover
-"everything", it'll be OK.
-
-Of course, whether DMA_BIT_MASK(ilog2(dma_addr + size)) is the right
-thing to do in the first place is yet another matter, as there are
-plenty of cases where it results in something which can't reach the
-given range at all, but again, this isn't the place. Much as I'm keen to
-get the behaviour of of_dma_configure() sorted out properly, it doesn't
-seem reasonable that that should suddenly block this
-almost-entirely-orthogonal series that various other work has been
-waiting on for some time now. The WIP patch I have for
-arch_setup_dma_ops() already touches 3 architectures and 4 other
-subsystems...
-
-Robin.
-
-> 
->>
->> Regards,
->>  Sricharan
->>
->>> I agree that the proper solution involves passing a mask instead
->>> of a size to arch_setup_dma_ops().
->>>
->>
-> 
-
+I'll stop commenting now and set aside some time to go read the patches.
