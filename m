@@ -1,126 +1,74 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Casey Leedom <leedom@chelsio.com>, Bjorn Helgaas <helgaas@kernel.org>,
- Alexander Duyck <alexander.duyck@gmail.com>
-Subject: RE: [PATCH net-next 1/4] ixgbe: sparc: rename the
- ARCH_WANT_RELAX_ORDER to IXGBE_ALLOW_RELAXED_ORDER
-Date: Fri, 28 Apr 2017 09:12:57 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E205620E4@FRAEML521-MBX.china.huawei.com>
-References: <20170401.112603.1991545644693496714.davem@davemloft.net>
- <42428725-89f1-1508-4e3d-723e087b3bbb@huawei.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E205199C0@FRAEML521-MBX.china.huawei.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFFD3C52@AcuExch.aculab.com>
- <DB5PR05MB138288172B04713EB0C1DB55D3190@DB5PR05MB1382.eurprd05.prod.outlook.com>
- <a2239141-a185-1bb8-0abd-7a05b9fde015@huawei.com>
- <CAKgT0Uc4L=GgYbpO-Fm9OfN+_fLypbDP1c+X4T_ta90ecQiyGQ@mail.gmail.com>,
- <20170427171938.GA10705@bhelgaas-glaptop.roam.corp.google.com>
- <MWHPR12MB1600CB0756EA24211C93E053C8100@MWHPR12MB1600.namprd12.prod.outlook.com>
-In-Reply-To: <MWHPR12MB1600CB0756EA24211C93E053C8100@MWHPR12MB1600.namprd12.prod.outlook.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:49200 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932079AbdDDQnP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Apr 2017 12:43:15 -0400
+Date: Tue, 4 Apr 2017 11:43:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Joerg Roedel <jroedel@suse.de>,
+        Daniel Drake <drake@endlessm.com>,
+        Alexander Deucher <Alexander.Deucher@amd.com>
+Subject: Re: [PATCH] PCI: Blacklist AMD Stoney GPU devices for ATS
+Message-ID: <20170404164311.GB27692@bhelgaas-glaptop.roam.corp.google.com>
+References: <1490703404-4944-1-git-send-email-joro@8bytes.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, Amir Ancel <amira@mellanox.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Dingtianhong <dingtianhong@huawei.com>, Will Deacon <will.deacon@arm.com>,
- Linuxarm <linuxarm@huawei.com>, "davem@davemloft.net" <davem@davemloft.net>,
- David Laight <David.Laight@aculab.com>,
- "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Robin Murphy <robin.murphy@arm.com>,
- "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1490703404-4944-1-git-send-email-joro@8bytes.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Casey
+Hi Joerg,
 
-Many thanks for the detailed explanation
+On Tue, Mar 28, 2017 at 02:16:44PM +0200, Joerg Roedel wrote:
+> From: Joerg Roedel <jroedel@suse.de>
+> 
+> ATS is broken on these devices. Under invalidation load, the
+> GPU does not reply to invalidations anymore, causing
+> Completion-wait loop timeouts on the AMD IOMMU driver side.
+> Fix it by not enabling ATS on these devices.
+> 
+> Note that below mentioned commit is not broken, it just
+> triggers the issue because it might cause invalidation
+> storms on devices.
+> 
+> Fixes: b1516a14657a ('iommu/amd: Implement flush queue')
+> Reported-by: Daniel Drake <drake@endlessm.com>
+> Cc: Daniel Drake <drake@endlessm.com>
+> Cc: Alexander Deucher <Alexander.Deucher@amd.com>
+> Signed-off-by: Joerg Roedel <jroedel@suse.de>
+> ---
+>  drivers/pci/ats.c | 8 ++++++++
+>  1 file changed, 8 insertions(+)
+> 
+> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+> index eeb9fb2..711bdb2 100644
+> --- a/drivers/pci/ats.c
+> +++ b/drivers/pci/ats.c
+> @@ -17,10 +17,18 @@
+>  
+>  #include "pci.h"
+>  
+> +static const struct pci_device_id broken_ats_tbl[] = {
+> +	{ PCI_DEVICE(PCI_VENDOR_ID_AMD, 0x98e4) }, /* AMD Stoney GPU part */
+> +	{ 0 }
+> +};
+> +
+>  void pci_ats_init(struct pci_dev *dev)
+>  {
+>  	int pos;
+>  
+> +	if (pci_match_id(broken_ats_tbl, dev))
+> +		return;
 
-> -----Original Message-----
-> From: Casey Leedom [mailto:leedom@chelsio.com]
-> Sent: 27 April 2017 21:35
-> To: Bjorn Helgaas; Alexander Duyck
-> Cc: Dingtianhong; Mark Rutland; Amir Ancel; Gabriele Paoloni; linux-
-> pci@vger.kernel.org; Catalin Marinas; Will Deacon; Linuxarm; David
-> Laight; jeffrey.t.kirsher@intel.com; netdev@vger.kernel.org; Robin
-> Murphy; davem@davemloft.net; linux-arm-kernel@lists.infradead.org
-> Subject: Re: [PATCH net-next 1/4] ixgbe: sparc: rename the
-> ARCH_WANT_RELAX_ORDER to IXGBE_ALLOW_RELAXED_ORDER
-> 
-> | From: Bjorn Helgaas <helgaas@kernel.org>
-> | Sent: Thursday, April 27, 2017 10:19 AM
-> |
-> | Are you hinting that the PCI core or arch code could actually
-> *enable*
-> | Relaxed Ordering without the driver doing anything?  Is it safe to do
-> that?
-> | Is there such a thing as a device that is capable of using RO, but
-> where the
-> | driver must be aware of it being enabled, so it programs the device
-> | appropriately?
-> 
->   I forgot to reply to this portion of Bjorn's email.
-> 
->   The PCI Configuration Space PCI Capability Device Control[Enable
-> Relaxed
-> Ordering] bit governs enabling the _ability_ for the PCIe Device to
-> send
-> TLPs with the Relaxed Ordering Attribute set.  It does not _cause_ RO
-> to be
-> set on TLPs.  Doing that would almost certainly cause Data Corruption
-> Bugs
-> since you only want a subset of TLPs to have RO set.
-> 
->   For instance, we typically use RO for Ingress Packet Data delivery
-> but
-> non-RO for messages notifying the Host that an Ingress Packet has been
-> delivered.  This ensures that the "Ingress Packet Delivered" non-RO TLP
-> is
-> processed _after_ any preceding RO TLPs delivering the actual Ingress
-> Packet
-> Data.
-> 
->   In the above scenario, if one were to turn off Enable Relaxed
-> Ordering via
-> the PCIe Capability, then the on-chip PCIe engine would simply never
-> send a
-> TLP with the Relaxed Ordering Attribute set, regardless of any other
-> chip
-> programming.
-> 
->   And finally, just to be absolutely clear, using Relaxed Ordering
-> isn't and
-> "Architecture Thing".  It's a PCIe Fabric End Point Thing.  Many End
-> Points
-> simply ignore the Relaxed Ordering Attribute (except to reflect it back
-> in
-> Response TLPs).  In this sense, Relaxed Ordering simply provides
-> potentially useful optimization information to the PCIe End Point.
+This is fine functionally, but from a stylistic point of view, I guess
+I would prefer to have it implemented in drivers/pci/quirks.c just to
+have some consistency in how we work around device defects.
 
-I think your view matches what I found out about the current usage of the
-"Enable Relaxed Ordering" bit in Linux mainline: i.e. looking at where and
-why the other drivers set/clear the "Enable Relaxed Ordering" they do not
-look for any global symbol, nor they look at the host architecture.
-
-So with respect to this specific ixgbe driver I guess the main question is
-why RO was disabled by default by Intel for this EP (commit 3d5c520727ce
-mentions issues with "some chipsets"), then why it is safe to enable it back
-on SPARC....?
-
-Thanks
-Gab
-
+>  	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ATS);
+>  	if (!pos)
+>  		return;
+> -- 
+> 1.9.1
 > 
-> Casey
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
