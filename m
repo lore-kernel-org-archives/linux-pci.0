@@ -1,13 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [RFC/RFT PATCH 10/18] PCI: rcar: Convert PCI scan API to
- pci_scan_root_bus_bridge()
-Date: Wed, 26 Apr 2017 12:18:01 +0100
-Message-Id: <20170426111809.19922-11-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
-References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+Date: Tue, 4 Apr 2017 11:50:39 +0000
+From: Jayachandran C <jnair@caviumnetworks.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Subject: Re: [PATCH v4 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
+Message-ID: <20170404115037.GA2401@localhost>
+References: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
+ <1491225304-3559-3-git-send-email-jnair@caviumnetworks.com>
+ <b44e6df5-4840-ecb4-59c6-b4bc474ad28c@arm.com>
+MIME-Version: 1.0
+In-Reply-To: <b44e6df5-4840-ecb4-59c6-b4bc474ad28c@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -15,99 +17,81 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
- Roy Zang <tie-fei.zang@freescale.com>
-MIME-Version: 1.0
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, Jon Masters <jcm@redhat.com>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The introduction of pci_scan_root_bus_bridge() provides a PCI core
-API to scan a PCI root bus backed by an already initialized
-struct pci_host_bridge object, which simplifies the bus scan
-interface and makes the PCI scan root bus interface easier to
-generalize as members are added to the struct pci_host_bridge().
+On Mon, Apr 03, 2017 at 04:07:53PM +0100, Robin Murphy wrote:
+> On 03/04/17 14:15, Jayachandran C wrote:
+> > The Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the PCI
+> > topology is slightly unusual. For a multi-node system, it looks like:
+> > 
+> > [node level PCI bridges - one per node]
+> >     [SoC PCI devices with MSI-X but no IOMMU]
+> >     [PCI-PCIe "glue" bridges - upto 14, one per real port below]
+> >         [PCIe real root ports associated with IOMMU and GICv3 ITS]
+> >             [External PCI devices connected to PCIe links]
+> 
+> Since it's not entirely obvious, what does the actual DT - or IORT if
+> you must ;) - topology for this look like? I can't help thinking that
+> either it's inaccurate, or that this is going to expose a shortcoming in
+> pci_dma_configure() which breaks things - unless I'm missing something,
+> isn't find_pci_root_bus() going to go all the way up to the top-level
+> glue bridge and pick up the wrong firmware node (if any) for the
+> appropriate DMA properties?
 
-Convert PCI rcar host code to pci_scan_root_bus_bridge() to
-improve the PCI root bus scanning interface.
+I will try to describe the ACPI interface:
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Simon Horman <horms@verge.net.au>
----
- drivers/pci/host/pcie-rcar.c | 28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
+There is just one ECAM area, a single bus range and one set of memory
+windows for the whole system - so there is just one entry in DSDT for
+the PCI controller. This entry also corresponds to the PCI RC node in
+IORT. DMA is coherent and supports 64 bits system-wide, the attributes
+(in DSDT and IORT) reflect this.
 
-diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
-index cb07c45..051b4db 100644
---- a/drivers/pci/host/pcie-rcar.c
-+++ b/drivers/pci/host/pcie-rcar.c
-@@ -451,27 +451,35 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
- 	struct pci_bus *bus, *child;
--	LIST_HEAD(res);
-+	struct pci_host_bridge *bridge;
-+	int ret;
-+
-+	bridge = pci_alloc_host_bridge(0);
-+	if (!bridge)
-+		return -ENOMEM;
- 
- 	/* Try setting 5 GT/s link speed */
- 	rcar_pcie_force_speedup(pcie);
- 
--	rcar_pcie_setup(&res, pcie);
-+	rcar_pcie_setup(&bridge->windows, pcie);
- 
- 	pci_add_flags(PCI_REASSIGN_ALL_RSRC | PCI_REASSIGN_ALL_BUS);
- 
-+	bridge->dev.parent = dev;
-+	bridge->sysdata = pcie;
-+	bridge->busnr = pcie->root_bus_nr;
-+	bridge->ops = &rcar_pcie_ops;
- 	if (IS_ENABLED(CONFIG_PCI_MSI))
--		bus = pci_scan_root_bus_msi(dev, pcie->root_bus_nr,
--				&rcar_pcie_ops, pcie, &res, &pcie->msi.chip);
--	else
--		bus = pci_scan_root_bus(dev, pcie->root_bus_nr,
--				&rcar_pcie_ops, pcie, &res);
-+		bridge->msi = &pcie->msi.chip;
- 
--	if (!bus) {
--		dev_err(dev, "Scanning rootbus failed");
--		return -ENODEV;
-+	ret = pci_scan_root_bus_bridge(bridge);
-+	if (ret < 0) {
-+		kfree(bridge);
-+		return ret;
- 	}
- 
-+	bus = bridge->bus;
-+
- 	pci_fixup_irqs(pci_common_swizzle, of_irq_parse_and_map_pci);
- 
- 	pci_bus_size_bridges(bus);
--- 
-2.10.0
+lspci on the system looks like this:
+-[0000:00]-+-00.0-[01-1e]--+-04.0  14e4:9026
+           |               +-04.1  14e4:9026
+           |               +-05.0  14e4:9027
+           |               +-05.1  14e4:9027
+           |               +-0a.0-[02-03]----00.0-[03]--
+           |               +-0a.1-[04-05]----00.0-[05]--
+           |           [...etc...]
+           |               +-0b.0-[12-14]----00.0-[13-14]--+-00.0  8086:1583
+           |               |                               \-00.1  8086:1583
+           |           [...etc...]
+           |               \-0b.5-[1d-1e]----00.0-[1e]--
+           \-00.1-[1f-3b]--+-04.0  14e4:9026
+                           +-04.1  14e4:9026
+                           +-05.0  14e4:9027
+                           +-05.1  14e4:9027
+                           +-0a.0-[20-21]----00.0-[21]--
+                       [...etc...]
 
+The devices here are:
+ - 00:00.0 and 00:00.1 are the node (socket) level bridges
+ - 01:[45].x and 1f:[45].x are SoC PCI devices like SATA and USB
+ - 01:[ab].x and 1f:[ab].x are the PCI-PCIe "reverse"/glue bridges
+ - 02:00.0 etc are the "real" PCIe ports connected to external PCIe cards. 
+Each node has a GIC ITS, and a group of 4 PCIe ports have an SMMU.
+
+The IORT is built by the firmware based on its PCI enumeration. The IORT
+will have multiple entries under the PCI RC node:
+ - one entry per node to map the SoC devices directly to ITS for MSI-X,
+   since the SoC devices are not attached to any SMMU.
+ - An entry per "real" PCIe port to map RIDs under it to the corresponding
+   SMMU.
+The SMMU nodes will have an entry to map its RID ranges to the node ITS.
+
+The IORT spec supports this configuration, and the corresponding code is
+already upstream, so the only sticking point right now is
+pci_for_each_dma_alias().
+
+JC.
 
 _______________________________________________
 linux-arm-kernel mailing list
