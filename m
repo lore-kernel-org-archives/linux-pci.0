@@ -1,173 +1,142 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:47326 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967139AbdD1OQS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 28 Apr 2017 10:16:18 -0400
-From: Imre Deak <imre.deak@intel.com>
-To: intel-gfx@lists.freedesktop.org
-Cc: Jani Nikula <jani.nikula@intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Marta Lofstedt <marta.lofstedt@intel.com>,
-        David Weinehall <david.weinehall@linux.intel.com>,
-        Tomi Sarvela <tomi.p.sarvela@intel.com>,
-        =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?=
-        <ville.syrjala@linux.intel.com>,
-        Mika Kuoppala <mika.kuoppala@intel.com>,
-        Chris Wilson <chris@chris-wilson.co.uk>,
-        Takashi Iwai <tiwai@suse.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: [PATCH v3 2/2] drm/i915: Prevent the system suspend complete optimization
-Date: Fri, 28 Apr 2017 17:16:03 +0300
-Message-Id: <1493388963-5278-2-git-send-email-imre.deak@intel.com>
-In-Reply-To: <1493388963-5278-1-git-send-email-imre.deak@intel.com>
-References: <1493388963-5278-1-git-send-email-imre.deak@intel.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+ catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+ gregkh@linuxfoundation.org
+Subject: [PATCH V10 02/12] iommu/of: Prepare for deferred IOMMU configuration
+Date: Tue,  4 Apr 2017 15:48:15 +0530
+Message-Id: <1491301105-5274-3-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: sricharan@codeaurora.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Since
+From: Robin Murphy <robin.murphy@arm.com>
 
-commit bac2a909a096c9110525c18cbb8ce73c660d5f71
-Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Date:   Wed Jan 21 02:17:42 2015 +0100
+IOMMU configuration represents unchanging properties of the hardware,
+and as such should only need happen once in a device's lifetime, but
+the necessary interaction with the IOMMU device and driver complicates
+exactly when that point should be.
 
-    PCI / PM: Avoid resuming PCI devices during system suspend
+Since the only reasonable tool available for handling the inter-device
+dependency is probe deferral, we need to prepare of_iommu_configure()
+to run later than it is currently called (i.e. at driver probe rather
+than device creation), to handle being retried, and to tell whether a
+not-yet present IOMMU should be waited for or skipped (by virtue of
+having declared a built-in driver or not).
 
-PCI devices will default to allowing the system suspend complete
-optimization where devices are not woken up during system suspend if
-they were already runtime suspended. This however breaks the i915/HDA
-drivers for two reasons:
-
-- The i915 driver has system suspend specific steps that it needs to
-  run, that bring the device to a different state than its runtime
-  suspended state.
-
-- The HDA driver's suspend handler requires power that it will request
-  from the i915 driver's power domain handler. This in turn requires the
-  i915 driver to runtime resume itself, but this won't be possible if the
-  suspend complete optimization is in effect: in this case the i915
-  runtime PM is disabled and trying to get an RPM reference returns
-  -EACCESS.
-
-Solve this by requiring the PCI/PM core to resume the device during
-system suspend which in effect disables the suspend complete optimization.
-
-Regardless of the above commit the optimization stayed disabled for DRM
-devices until
-
-commit d14d2a8453d650bea32a1c5271af1458cd283a0f
-Author: Lukas Wunner <lukas@wunner.de>
-Date:   Wed Jun 8 12:49:29 2016 +0200
-
-    drm: Remove dev_pm_ops from drm_class
-
-so this patch is in practice a fix for this commit. Another reason for
-the bug staying hidden for so long is that the optimization for a device
-is disabled if it's disabled for any of its children devices. i915 may
-have a backlight device as its child which doesn't support runtime PM
-and so doesn't allow the optimization either.  So if this backlight
-device got registered the bug stayed hidden.
-
-Credits to Marta, Tomi and David who enabled pstore logging,
-that caught one instance of this issue across a suspend/
-resume-to-ram and Ville who rememberd that the optimization was enabled
-for some devices at one point.
-
-The first WARN triggered by the problem:
-
-[ 6250.746445] WARNING: CPU: 2 PID: 17384 at drivers/gpu/drm/i915/intel_runtime_pm.c:2846 intel_runtime_pm_get+0x6b/0xd0 [i915]
-[ 6250.746448] pm_runtime_get_sync() failed: -13
-[ 6250.746451] Modules linked in: snd_hda_intel i915 vgem snd_hda_codec_hdmi x86_pkg_temp_thermal intel_powerclamp coretemp crct10dif_pclmul crc32_pclmul
-snd_hda_codec_realtek snd_hda_codec_generic ghash_clmulni_intel e1000e snd_hda_codec snd_hwdep snd_hda_core ptp mei_me pps_core snd_pcm lpc_ich mei prime_
-numbers i2c_hid i2c_designware_platform i2c_designware_core [last unloaded: i915]
-[ 6250.746512] CPU: 2 PID: 17384 Comm: kworker/u8:0 Tainted: G     U  W       4.11.0-rc5-CI-CI_DRM_334+ #1
-[ 6250.746515] Hardware name:                  /NUC5i5RYB, BIOS RYBDWi35.86A.0362.2017.0118.0940 01/18/2017
-[ 6250.746521] Workqueue: events_unbound async_run_entry_fn
-[ 6250.746525] Call Trace:
-[ 6250.746530]  dump_stack+0x67/0x92
-[ 6250.746536]  __warn+0xc6/0xe0
-[ 6250.746542]  ? pci_restore_standard_config+0x40/0x40
-[ 6250.746546]  warn_slowpath_fmt+0x46/0x50
-[ 6250.746553]  ? __pm_runtime_resume+0x56/0x80
-[ 6250.746584]  intel_runtime_pm_get+0x6b/0xd0 [i915]
-[ 6250.746610]  intel_display_power_get+0x1b/0x40 [i915]
-[ 6250.746646]  i915_audio_component_get_power+0x15/0x20 [i915]
-[ 6250.746654]  snd_hdac_display_power+0xc8/0x110 [snd_hda_core]
-[ 6250.746661]  azx_runtime_resume+0x218/0x280 [snd_hda_intel]
-[ 6250.746667]  pci_pm_runtime_resume+0x76/0xa0
-[ 6250.746672]  __rpm_callback+0xb4/0x1f0
-[ 6250.746677]  ? pci_restore_standard_config+0x40/0x40
-[ 6250.746682]  rpm_callback+0x1f/0x80
-[ 6250.746686]  ? pci_restore_standard_config+0x40/0x40
-[ 6250.746690]  rpm_resume+0x4ba/0x740
-[ 6250.746698]  __pm_runtime_resume+0x49/0x80
-[ 6250.746703]  pci_pm_suspend+0x57/0x140
-[ 6250.746709]  dpm_run_callback+0x6f/0x330
-[ 6250.746713]  ? pci_pm_freeze+0xe0/0xe0
-[ 6250.746718]  __device_suspend+0xf9/0x370
-[ 6250.746724]  ? dpm_watchdog_set+0x60/0x60
-[ 6250.746730]  async_suspend+0x1a/0x90
-[ 6250.746735]  async_run_entry_fn+0x34/0x160
-[ 6250.746741]  process_one_work+0x1f2/0x6d0
-[ 6250.746749]  worker_thread+0x49/0x4a0
-[ 6250.746755]  kthread+0x107/0x140
-[ 6250.746759]  ? process_one_work+0x6d0/0x6d0
-[ 6250.746763]  ? kthread_create_on_node+0x40/0x40
-[ 6250.746768]  ret_from_fork+0x2e/0x40
-[ 6250.746778] ---[ end trace 102a62fd2160f5e6 ]---
-
-v2:
-- Use the new pci_dev->needs_resume flag, to avoid any overhead during
-  the ->pm_prepare hook. (Rafael)
-
-v3:
-- Update commit message to reference the actual regressing commit.
-  (Lukas)
-
-Fixes: d14d2a8453d6 ("drm: Remove dev_pm_ops from drm_class")
-References: https://bugs.freedesktop.org/show_bug.cgi?id=100378
-References: https://bugs.freedesktop.org/show_bug.cgi?id=100770
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Marta Lofstedt <marta.lofstedt@intel.com>
-Cc: David Weinehall <david.weinehall@linux.intel.com>
-Cc: Tomi Sarvela <tomi.p.sarvela@intel.com>
-Cc: Ville Syrjälä <ville.syrjala@linux.intel.com>
-Cc: Mika Kuoppala <mika.kuoppala@intel.com>
-Cc: Chris Wilson <chris@chris-wilson.co.uk>
-Cc: Takashi Iwai <tiwai@suse.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org
-Cc: stable@vger.kernel.org
-Signed-off-by: Imre Deak <imre.deak@intel.com>
-Reviewed-by: Chris Wilson <chris@chris-wilson.co.uk> (v1)
-Reported-and-tested-by: Marta Lofstedt <marta.lofstedt@intel.com>
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
 ---
- drivers/gpu/drm/i915/i915_drv.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/iommu/of_iommu.c | 43 ++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 42 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
-index 2d3c4264..964248c 100644
---- a/drivers/gpu/drm/i915/i915_drv.c
-+++ b/drivers/gpu/drm/i915/i915_drv.c
-@@ -1238,6 +1238,15 @@ int i915_driver_load(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto out_fini;
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 8f4e599..c8be889 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -96,6 +96,19 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+ }
+ EXPORT_SYMBOL_GPL(of_get_dma_window);
  
- 	pci_set_drvdata(pdev, &dev_priv->drm);
++static bool of_iommu_driver_present(struct device_node *np)
++{
 +	/*
-+	 * Disable the system suspend direct complete optimization, which can
-+	 * leave the device suspended skipping the driver's suspend handlers
-+	 * if the device was already runtime suspended. This is needed due to
-+	 * the difference in our runtime and system suspend sequence and
-+	 * becaue the HDA driver may require us to enable the audio power
-+	 * domain during system suspend.
++	 * If the IOMMU still isn't ready by the time we reach init, assume
++	 * it never will be. We don't want to defer indefinitely, nor attempt
++	 * to dereference __iommu_of_table after it's been freed.
 +	 */
-+	pci_resume_before_suspend(pdev, true);
++	if (system_state > SYSTEM_BOOTING)
++		return false;
++
++	return of_match_node(&__iommu_of_table, np);
++}
++
+ static const struct iommu_ops
+ *of_iommu_xlate(struct device *dev, struct of_phandle_args *iommu_spec)
+ {
+@@ -104,12 +117,20 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+ 	int err;
  
- 	ret = i915_driver_init_early(dev_priv, ent);
- 	if (ret < 0)
+ 	ops = iommu_ops_from_fwnode(fwnode);
+-	if (!ops || !ops->of_xlate)
++	if ((ops && !ops->of_xlate) ||
++	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
+ 		return NULL;
+ 
+ 	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
+ 	if (err)
+ 		return ERR_PTR(err);
++	/*
++	 * The otherwise-empty fwspec handily serves to indicate the specific
++	 * IOMMU device we're waiting for, which will be useful if we ever get
++	 * a proper probe-ordering dependency mechanism in future.
++	 */
++	if (!ops)
++		return ERR_PTR(-EPROBE_DEFER);
+ 
+ 	err = ops->of_xlate(dev, iommu_spec);
+ 	if (err)
+@@ -186,14 +207,34 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
+ 					   struct device_node *master_np)
+ {
+ 	const struct iommu_ops *ops;
++	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
+ 
+ 	if (!master_np)
+ 		return NULL;
+ 
++	if (fwspec) {
++		if (fwspec->ops)
++			return fwspec->ops;
++
++		/* In the deferred case, start again from scratch */
++		iommu_fwspec_free(dev);
++	}
++
+ 	if (dev_is_pci(dev))
+ 		ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
+ 	else
+ 		ops = of_platform_iommu_init(dev, master_np);
++	/*
++	 * If we have reason to believe the IOMMU driver missed the initial
++	 * add_device callback for dev, replay it to get things in order.
++	 */
++	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
++	    dev->bus && !dev->iommu_group) {
++		int err = ops->add_device(dev);
++
++		if (err)
++			ops = ERR_PTR(err);
++	}
+ 
+ 	return IS_ERR(ops) ? NULL : ops;
+ }
 -- 
-2.5.0
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
