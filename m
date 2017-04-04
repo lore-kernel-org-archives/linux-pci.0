@@ -1,52 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:55955 "EHLO ale.deltatee.com"
+Received: from mail.kernel.org ([198.145.29.136]:52830 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752719AbdDKEhI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Apr 2017 00:37:08 -0400
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-        kurt.schwemmer@microsemi.com, stephen.bates@microsemi.com,
-        bhelgaas@google.com
-References: <20170411043204.19343-1-christophe.jaillet@wanadoo.fr>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <ddf51036-d86b-8ef7-37ad-1420397eb172@deltatee.com>
-Date: Mon, 10 Apr 2017 22:36:59 -0600
+        id S1752259AbdDDRED (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Apr 2017 13:04:03 -0400
+Date: Tue, 4 Apr 2017 12:03:59 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Brian Norris <computersforpeace@gmail.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [TRIVIAL PATCH] PCI: fix typo in doc for pci_cfg_access_lock()
+Message-ID: <20170404170359.GC27692@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170328004614.12889-1-briannorris@chromium.org>
 MIME-Version: 1.0
-In-Reply-To: <20170411043204.19343-1-christophe.jaillet@wanadoo.fr>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH] switchtec: Fix an error handling
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170328004614.12889-1-briannorris@chromium.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Nice catch. Thanks.
-
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-
-Logan
-
-On 10/04/17 10:32 PM, Christophe JAILLET wrote:
-> 'stuser_create' returns an error pointer in case of error, not NULL.
-> So test its return value with IS_ERR.
+On Mon, Mar 27, 2017 at 05:46:14PM -0700, Brian Norris wrote:
+> There is no pci_cfg_access_unlocked(). I think the author meant
+> pci_cfg_access_unlock().
 > 
-> Fixes: 74004262f329 ("MicroSemi Switchtec management interface driver")
-> 
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
+
+Applied to pci/misc for v4.12, thanks!
+
 > ---
->  drivers/pci/switch/switchtec.c | 2 +-
+>  drivers/pci/access.c | 2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-> index fcde98161d9a..cc6e085008fb 100644
-> --- a/drivers/pci/switch/switchtec.c
-> +++ b/drivers/pci/switch/switchtec.c
-> @@ -608,7 +608,7 @@ static int switchtec_dev_open(struct inode *inode, struct file *filp)
->  	stdev = container_of(inode->i_cdev, struct switchtec_dev, cdev);
->  
->  	stuser = stuser_create(stdev);
-> -	if (!stuser)
-> +	if (IS_ERR(stuser))
->  		return PTR_ERR(stuser);
->  
->  	filp->private_data = stuser;
-> 
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 8b7382705bf2..20ec96c4239e 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -629,7 +629,7 @@ void pci_vpd_release(struct pci_dev *dev)
+>   *
+>   * When access is locked, any userspace reads or writes to config
+>   * space and concurrent lock requests will sleep until access is
+> - * allowed via pci_cfg_access_unlocked again.
+> + * allowed via pci_cfg_access_unlock again.
+>   */
+>  void pci_cfg_access_lock(struct pci_dev *dev)
+>  {
+> -- 
+> 2.12.2.564
