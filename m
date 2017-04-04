@@ -1,38 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:25925 "EHLO mga09.intel.com"
+Received: from quartz.orcorp.ca ([184.70.90.242]:33987 "EHLO quartz.orcorp.ca"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S970297AbdDTPLD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Apr 2017 11:11:03 -0400
-Date: Thu, 20 Apr 2017 11:20:12 -0400
-From: Keith Busch <keith.busch@intel.com>
-To: Jisheng Zhang <jszhang@marvell.com>
-Cc: bhelgaas@google.com, jingoohan1@gmail.com, Joao.Pinto@synopsys.com,
-        svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc/host: Mark PCIe/PCI (MSI) cascade ISR as
- IRQF_NO_THREAD
-Message-ID: <20170420152011.GC21311@localhost.localdomain>
-References: <20170420102718.3778-1-jszhang@marvell.com>
+        id S1754793AbdDDPrF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Apr 2017 11:47:05 -0400
+Date: Tue, 4 Apr 2017 09:46:29 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Sagi Grimberg <sagi@grimberg.me>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [RFC 6/8] nvmet: Be careful about using iomem accesses when
+ dealing with p2pmem
+Message-ID: <20170404154629.GA13552@obsidianresearch.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-7-git-send-email-logang@deltatee.com>
+ <080b68b4-eba3-861c-4f29-5d829425b5e7@grimberg.me>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170420102718.3778-1-jszhang@marvell.com>
+In-Reply-To: <080b68b4-eba3-861c-4f29-5d829425b5e7@grimberg.me>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 20, 2017 at 06:27:18PM +0800, Jisheng Zhang wrote:
-> Similar as commit 8ff0ef996ca0 ("PCI: host: Mark PCIe/PCI (MSI) IRQ
-> cascade handlers as IRQF_NO_THREAD"), we should mark PCIe/PCI (MSI)
-> IRQ cascade handlers IRQF_NO_THREAD explicitly. I just found this
-> issue in pcie-designware-plat driver, then searched the code, I think
-> we should fix pcie-qcom and vmd as well.
-> 
-> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
-> ---
->  drivers/pci/dwc/pcie-designware-plat.c | 3 ++-
->  drivers/pci/dwc/pcie-qcom.c            | 3 ++-
->  drivers/pci/host/vmd.c                 | 3 ++-
->  3 files changed, 6 insertions(+), 3 deletions(-)
+On Tue, Apr 04, 2017 at 01:59:26PM +0300, Sagi Grimberg wrote:
+> Note that the nvme completion queues are still on the host memory, so
+> this means we have lost the ordering between data and completions as
+> they go to different pcie targets.
 
-Okay for vmd driver.
+Hmm, in this simple up/down case with a switch, I think it might
+actually be OK.
 
-Reviewed-by: Keith Busch <keith.busch@intel.com>
+Transactions might not complete at the NVMe device before the CPU
+processes the RDMA completion, however due to the PCI-E ordering rules
+new TLPs directed to the NVMe will complete after the RMDA TLPs and
+thus observe the new data. (eg order preserving)
+
+It would be very hard to use P2P if fabric ordering is not preserved..
+
+Jason
