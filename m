@@ -1,63 +1,207 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 3 Apr 2017 16:33:32 -0500
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Tue, 4 Apr 2017 16:36:31 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Jayachandran C <jchandra@broadcom.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Christopher Covington <cov@codeaurora.org>,
-        Duc Dang <dhdang@apm.com>, linux-pci@vger.kernel.org,
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: generic: stop hiding pci_host_common_probe
- declaration
-Message-ID: <20170403213332.GE13232@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170321160003.339217-1-arnd@arndb.de>
+Subject: Re: [PATCH 04/17] pci: Add arch_can_pci_mmap_wc() macro
+Message-ID: <20170404213631.GB989@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+ <11552df0208f8134f315f32217a3e033fe2174f4.1490188942.git.dwmw2@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170321160003.339217-1-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <11552df0208f8134f315f32217a3e033fe2174f4.1490188942.git.dwmw2@infradead.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 21, 2017 at 04:59:52PM +0100, Arnd Bergmann wrote:
-> When pci_host_common_probe() was moved into a separate module, the #ifdef around
-> the declaration was left in the header file, which can lead to build errors in
-> some configurations:
+On Wed, Mar 22, 2017 at 01:25:18PM +0000, David Woodhouse wrote:
+> From: David Woodhouse <dwmw@amazon.co.uk>
 > 
-> drivers/pci/host/pci-thunder-pem.c: In function 'thunder_pem_probe':
-> drivers/pci/host/pci-thunder-pem.c:412:9: error: implicit declaration of function 'pci_host_common_probe';did you mean 'pci_host_bridge_priv'? [-Werror=implicit-function-declaration]
+> Most of the almost-identical versions of pci_mmap_page_range() silently
+> ignore the 'write_combine' argument and give uncached mappings.
 > 
-> The ifdef serves no real purpose anyway, so we can just remove it.
+> Yet we allow the PCIIOC_WRITE_COMBINE ioctl in /proc/bus/pci, expose the
+> 'resourceX_wc' file in sysfs, and allow an attempted mapping to apparently
+> succeed.
 > 
-> Fixes: 4e64dbe226e7 ("PCI: generic: Expose pci_host_common_probe() for use by other drivers")
-
-It looks like 4e64dbe226e7 was merged for v4.6-rc1.  Does that mean
-this build error has been there that long?  Is there another, more
-recent commit that actually broke this?
-
-I suspect something broke in the v4.11 merge window, so I'm fishing
-for a commit from that window so I can include this for v4.11.
-
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> To fix this, introduce a macro arch_can_pci_mmap_wc() which indicates
+> whether the platform can do a write-combining mapping. On x86 this ends
+> up being pat_enabled(), while the few other platforms that support it
+> can just set it to a literal '1'.
+> 
+> Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
 > ---
->  include/linux/pci-ecam.h | 2 --
->  1 file changed, 2 deletions(-)
+>  Documentation/filesystems/sysfs-pci.txt |  4 ++++
+>  arch/ia64/include/asm/pci.h             |  2 ++
+>  arch/powerpc/include/asm/pci.h          |  5 +++--
+>  arch/x86/include/asm/pci.h              |  2 ++
+>  arch/xtensa/include/asm/pci.h           |  6 +++++-
+>  arch/xtensa/kernel/pci.c                |  2 +-
+>  drivers/pci/pci-sysfs.c                 |  6 ++++--
+>  drivers/pci/proc.c                      | 17 ++++++++++-------
+>  8 files changed, 31 insertions(+), 13 deletions(-)
 > 
-> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-> index f0d2b9451270..92a73847e1d3 100644
-> --- a/include/linux/pci-ecam.h
-> +++ b/include/linux/pci-ecam.h
-> @@ -68,9 +68,7 @@ extern struct pci_ecam_ops xgene_v1_pcie_ecam_ops; /* APM X-Gene PCIe v1 */
->  extern struct pci_ecam_ops xgene_v2_pcie_ecam_ops; /* APM X-Gene PCIe v2.x */
->  #endif
+> diff --git a/Documentation/filesystems/sysfs-pci.txt b/Documentation/filesystems/sysfs-pci.txt
+> index 6ea1ced..25b7f1c 100644
+> --- a/Documentation/filesystems/sysfs-pci.txt
+> +++ b/Documentation/filesystems/sysfs-pci.txt
+> @@ -117,6 +117,10 @@ code must define HAVE_PCI_MMAP and provide a pci_mmap_page_range function.
+>  Platforms are free to only support subsets of the mmap functionality, but
+>  useful return codes should be provided.
 >  
-> -#ifdef CONFIG_PCI_HOST_GENERIC
->  /* for DT-based PCI controllers that support ECAM */
->  int pci_host_common_probe(struct platform_device *pdev,
->  			  struct pci_ecam_ops *ops);
+> +Platforms which support write-combining maps of PCI resources must define
+> +arch_can_pci_mmap_wc() which shall evaluate to non-zero at runtime when
+> +write-combining is permitted.
+> +
+>  Legacy resources are protected by the HAVE_PCI_LEGACY define.  Platforms
+>  wishing to support legacy functionality should define it and provide
+>  pci_legacy_read, pci_legacy_write and pci_mmap_legacy_page_range functions.
+> diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+> index c0835b0..6283758 100644
+> --- a/arch/ia64/include/asm/pci.h
+> +++ b/arch/ia64/include/asm/pci.h
+> @@ -51,6 +51,8 @@ extern unsigned long ia64_max_iommu_merge_mask;
+>  #define PCI_DMA_BUS_IS_PHYS	(ia64_max_iommu_merge_mask == ~0UL)
+>  
+>  #define HAVE_PCI_MMAP
+> +#define arch_can_pci_mmap_wc()	1
+> +
+>  extern int pci_mmap_page_range (struct pci_dev *dev, struct vm_area_struct *vma,
+>  				enum pci_mmap_state mmap_state, int write_combine);
+>  #define HAVE_PCI_LEGACY
+> diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+> index 93eded8..b5b68c6 100644
+> --- a/arch/powerpc/include/asm/pci.h
+> +++ b/arch/powerpc/include/asm/pci.h
+> @@ -81,8 +81,9 @@ struct vm_area_struct;
+>  int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+>  			enum pci_mmap_state mmap_state, int write_combine);
+>  
+> -/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+> -#define HAVE_PCI_MMAP	1
+> +/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() and it does WC */
+> +#define HAVE_PCI_MMAP		1
+> +#define arch_can_pci_mmap_wc()	1
+>  
+>  extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
+>  			   size_t count);
+> diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+> index 1411dbe..f6e22c2 100644
+> --- a/arch/x86/include/asm/pci.h
+> +++ b/arch/x86/include/asm/pci.h
+> @@ -7,6 +7,7 @@
+>  #include <linux/string.h>
+>  #include <linux/scatterlist.h>
+>  #include <asm/io.h>
+> +#include <asm/pat.h>
+>  #include <asm/x86_init.h>
+>  
+>  #ifdef __KERNEL__
+> @@ -102,6 +103,7 @@ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
+>  
+>  
+>  #define HAVE_PCI_MMAP
+> +#define arch_can_pci_mmap_wc()	pat_enabled()
+>  extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+>  			       enum pci_mmap_state mmap_state,
+>  			       int write_combine);
+> diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
+> index 5d6bd93..f106879 100644
+> --- a/arch/xtensa/include/asm/pci.h
+> +++ b/arch/xtensa/include/asm/pci.h
+> @@ -51,7 +51,11 @@ int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+>  			enum pci_mmap_state mmap_state, int write_combine);
+>  
+>  /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+> -#define HAVE_PCI_MMAP	1
+> +#define HAVE_PCI_MMAP		1
+> +
+> +/* This was wrapped in #if 0 since the first merge of xtensa support...
+> +#define arch_can_pci_mmap_wc()	1
+> +*/
+>  
+>  #endif /* __KERNEL__ */
+>  
+> diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+> index b848cc3..c5944d3 100644
+> --- a/arch/xtensa/kernel/pci.c
+> +++ b/arch/xtensa/kernel/pci.c
+> @@ -345,7 +345,7 @@ __pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vma,
+>  
+>  	/* Set to write-through */
+>  	prot = (prot & _PAGE_CA_MASK) | _PAGE_CA_WT;
+> -#if 0
+> +#ifdef arch_can_pci_mmap_wc
+
+This hunk seems like maybe it should be a separate patch.
+
+The rest of the patch:
+
+  - skips creation of /sys/.../resourceX_wc if !arch_can_pci_mmap_wc()
+  - makes PCIIOC_WRITE_COMBINE fail if !arch_can_pci_mmap_wc()
+
+This part seems different -- it changes the way pci_mmap_page_range()
+works.
+
+>  	if (!write_combine)
+>  		prot |= _PAGE_WRITETHRU;
 >  #endif
-> -#endif
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 7ac258f..cf2c7d8 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -1210,10 +1210,12 @@ static int pci_create_resource_files(struct pci_dev *pdev)
+>  			continue;
+>  
+>  		retval = pci_create_attr(pdev, i, 0);
+> +#ifdef arch_can_pci_mmap_wc
+>  		/* for prefetchable resources, create a WC mappable file */
+> -		if (!retval && pdev->resource[i].flags & IORESOURCE_PREFETCH)
+> +		if (!retval && arch_can_pci_mmap_wc() &&
+> +		    pdev->resource[i].flags & IORESOURCE_PREFETCH)
+>  			retval = pci_create_attr(pdev, i, 1);
+> -
+> +#endif
+>  		if (retval) {
+>  			pci_remove_resource_files(pdev);
+>  			return retval;
+> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+> index dc8912e..c49be71 100644
+> --- a/drivers/pci/proc.c
+> +++ b/drivers/pci/proc.c
+> @@ -209,15 +209,18 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
+>  		fpriv->mmap_state = pci_mmap_mem;
+>  		break;
+>  
+> +#ifdef arch_can_pci_mmap_wc
+
+Can we get rid of these #ifdefs in the code by adding this to linux/pci.h?
+
+  #ifndef arch_can_pci_mmap_wc
+  #define arch_can_pci_mmap_wc()	0
+  #endif
+
+>  	case PCIIOC_WRITE_COMBINE:
+> -		if (arg)
+> -			fpriv->write_combine = 1;
+> -		else
+> -			fpriv->write_combine = 0;
+> -		break;
+> -
+> +		if (arch_can_pci_mmap_wc()) {
+> +			if (arg)
+> +				fpriv->write_combine = 1;
+> +			else
+> +				fpriv->write_combine = 0;
+> +			break;
+> +		}
+> +		/* If arch decided it can't, fall through... */
+> +#endif /* arch_can_pci_mmap_wc */
+>  #endif /* HAVE_PCI_MMAP */
+> -
+>  	default:
+>  		ret = -EINVAL;
+>  		break;
 > -- 
-> 2.9.0
+> 2.9.3
 > 
