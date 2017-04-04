@@ -1,94 +1,235 @@
-Return-Path: <SRS0=xXVv=3X=gmail.com=larry.finger@kernel.org>
-Return-Path: <SRS0=xXVv=3X=gmail.com=larry.finger@kernel.org>
-Sender: Larry Finger <larry.finger@gmail.com>
-Subject: Re: 4.10.9 nok with realtek wlan, atom
-To: rupert THURNER <rupert.thurner@gmail.com>
-References: <CAJs9aZ8HVPn_J9yPjvdBm-A_d3FiquPMGoy1xFsGopF8Xg_89Q@mail.gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- Chaoming Li <chaoming_li@realsil.com.cn>, Kalle Valo <kvalo@codeaurora.org>,
- linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
- linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <9e48930c-4822-5af4-2ebb-4d2dcd12d448@lwfinger.net>
-Date: Sat, 15 Apr 2017 15:40:57 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAJs9aZ8HVPn_J9yPjvdBm-A_d3FiquPMGoy1xFsGopF8Xg_89Q@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+        gregkh@linuxfoundation.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V10 11/12] iommu/arm-smmu: Clean up early-probing workarounds
+Date: Tue,  4 Apr 2017 15:48:24 +0530
+Message-Id: <1491301105-5274-12-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/14/2017 03:26 PM, rupert THURNER wrote:
-> On Thu, Feb 9, 2017 at 9:09 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->> On 02/09/2017 01:43 PM, Bjorn Helgaas wrote:
->>>
->>> [+cc rtl8192ce folks in case they've seen this]
->>>
->>> On Thu, Feb 09, 2017 at 03:45:01PM +0100, rupert THURNER wrote:
->>>>
->>>> hi,
->>>>
->>>> not technical expert enough, i just wanted to give a short user
->>>> feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
->>>> kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
->>>> well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
->>>> hotspot is possible then drops, or connecting to wlan fails
->>>> alltogether.
->>>
->>>
->>> Thanks very much for your report, and sorry for the inconvenience.
->>>
->>> v4.10-rc7 works, so I guess we don't need to worry about fixing v4.10.
->>>
->>> But the stable kernels v4.9.6, v4.9.7, and v4.9.8 are broken, so we
->>> need to figure out why and make sure we fix the v4.9 stable series.
->>>
->>> I can't tell yet whether this is PCI-related or not.  If it is,
->>> 4922a6a5cfa7 ("PCI: Enumerate switches below PCI-to-PCIe bridges")
->>> appeared in v4.9.6, and there is a known issue with that.  The issue
->>> should be fixed by 610c2b7ff8f6 ("PCI/ASPM: Handle PCI-to-PCIe bridges
->>> as roots of PCIe hierarchies"), which appeared in v4.9.9, so I guess
->>> the first thing to do would be to test v4.9.9.
->>>
->>> If it's not fixed in v4.9.9, can you share the complete dmesg log
->>> (output of "dmesg" command) and "lspci -vv" output for v4.9.5 (last
->>> known working version) and v4.9.6 (first known broken version)?  On
->>> v4.9.6, collect the dmesg output after the failure occurs.
->>>
->>>> 24: PCI 300.0: 0282 WLAN controller
->>>>   [Created at pci.366]
->>>>   Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
->>>>   Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
->>>>   Revision: 0x01
->>>>   Driver: "rtl8192ce"
->>>>   Driver Modules: "rtl8192ce"
->>>>   Device File: wlp3s0
->>>>   Features: WLAN
->>
->>
->> It would be helpful if someone were to bisect this issue. The only issue
->> that comes to mind was fixed in commit 52f5631a4c05 ("rtlwifi: rtl8192ce:
->> Fix loading of incorrect firmware") which is in 4.10-rc7 and will be
->> backported to 4.9.
->>
->> The above issue is one that could not be reproduced on my hardware, thus it
->> took Jurij Smakov to find the fix. Without his bisection of the problem, who
->> knows how long it would have taken to find my edit mistake.
->
-> larry, using the newest kernel 4.10.8 the network connection dropps
-> again irregular.
->
-> # dmesg
-> [    0.000000] Linux version 4.10.9-1-ARCH (builduser@tobias) (gcc
-> version 6.3.1 20170306 (GCC) ) #1 SMP PREEMPT Sat Apr 8 12:39:59 CEST
-> 2017
-> [   11.933373] rtl8192ce: rtl8192ce: Power Save off (module option)
-> [   11.933396] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
-> [   11.978307] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
-> [   11.978945] rtlwifi: rtlwifi: wireless switch is on
->
-> # lspci -vv
-> Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter
-> Kernel driver in use: rtl8192ce
+From: Robin Murphy <robin.murphy@arm.com>
 
-Is firmware rtlwifi/rtl8192cfw.bin also used on kernels that work?
+Now that the appropriate ordering is enforced via probe-deferral of
+masters in core code, rip it all out and bask in the simplicity.
 
-Larry
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+[Sricharan: Rebased on top of ACPI IORT SMMU series]
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+---
+ drivers/iommu/arm-smmu-v3.c |  46 +-----------------
+ drivers/iommu/arm-smmu.c    | 110 +++++++++++++++++++-------------------------
+ 2 files changed, 49 insertions(+), 107 deletions(-)
+
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 591bb96..4362139 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -2761,51 +2761,9 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
+ 	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
++module_platform_driver(arm_smmu_driver);
+ 
+-static int __init arm_smmu_init(void)
+-{
+-	static bool registered;
+-	int ret = 0;
+-
+-	if (!registered) {
+-		ret = platform_driver_register(&arm_smmu_driver);
+-		registered = !ret;
+-	}
+-	return ret;
+-}
+-
+-static void __exit arm_smmu_exit(void)
+-{
+-	return platform_driver_unregister(&arm_smmu_driver);
+-}
+-
+-subsys_initcall(arm_smmu_init);
+-module_exit(arm_smmu_exit);
+-
+-static int __init arm_smmu_of_init(struct device_node *np)
+-{
+-	int ret = arm_smmu_init();
+-
+-	if (ret)
+-		return ret;
+-
+-	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
+-		return -ENODEV;
+-
+-	return 0;
+-}
+-IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
+-
+-#ifdef CONFIG_ACPI
+-static int __init acpi_smmu_v3_init(struct acpi_table_header *table)
+-{
+-	if (iort_node_match(ACPI_IORT_NODE_SMMU_V3))
+-		return arm_smmu_init();
+-
+-	return 0;
+-}
+-IORT_ACPI_DECLARE(arm_smmu_v3, ACPI_SIG_IORT, acpi_smmu_v3_init);
+-#endif
++IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", NULL);
+ 
+ MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
+ MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index b493c99..792fe7d 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -2075,6 +2075,23 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev,
+ 	return 0;
+ }
+ 
++static void arm_smmu_bus_init(void)
++{
++	/* Oh, for a proper bus abstraction */
++	if (!iommu_present(&platform_bus_type))
++		bus_set_iommu(&platform_bus_type, &arm_smmu_ops);
++#ifdef CONFIG_ARM_AMBA
++	if (!iommu_present(&amba_bustype))
++		bus_set_iommu(&amba_bustype, &arm_smmu_ops);
++#endif
++#ifdef CONFIG_PCI
++	if (!iommu_present(&pci_bus_type)) {
++		pci_request_acs();
++		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
++	}
++#endif
++}
++
+ static int arm_smmu_device_probe(struct platform_device *pdev)
+ {
+ 	struct resource *res;
+@@ -2180,21 +2197,30 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
+ 	arm_smmu_device_reset(smmu);
+ 	arm_smmu_test_smr_masks(smmu);
+ 
+-	/* Oh, for a proper bus abstraction */
+-	if (!iommu_present(&platform_bus_type))
+-		bus_set_iommu(&platform_bus_type, &arm_smmu_ops);
+-#ifdef CONFIG_ARM_AMBA
+-	if (!iommu_present(&amba_bustype))
+-		bus_set_iommu(&amba_bustype, &arm_smmu_ops);
+-#endif
+-#ifdef CONFIG_PCI
+-	if (!iommu_present(&pci_bus_type)) {
+-		pci_request_acs();
+-		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
+-	}
+-#endif
++	/*
++	 * For ACPI and generic DT bindings, an SMMU will be probed before
++	 * any device which might need it, so we want the bus ops in place
++	 * ready to handle default domain setup as soon as any SMMU exists.
++	 */
++	if (!using_legacy_binding)
++		arm_smmu_bus_init();
++
++	return 0;
++}
++
++/*
++ * With the legacy DT binding in play, though, we have no guarantees about
++ * probe order, but then we're also not doing default domains, so we can
++ * delay setting bus ops until we're sure every possible SMMU is ready,
++ * and that way ensure that no add_device() calls get missed.
++ */
++static int arm_smmu_legacy_bus_init(void)
++{
++	if (using_legacy_binding)
++		arm_smmu_bus_init();
+ 	return 0;
+ }
++device_initcall_sync(arm_smmu_legacy_bus_init);
+ 
+ static int arm_smmu_device_remove(struct platform_device *pdev)
+ {
+@@ -2219,56 +2245,14 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
+ 	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
+-
+-static int __init arm_smmu_init(void)
+-{
+-	static bool registered;
+-	int ret = 0;
+-
+-	if (!registered) {
+-		ret = platform_driver_register(&arm_smmu_driver);
+-		registered = !ret;
+-	}
+-	return ret;
+-}
+-
+-static void __exit arm_smmu_exit(void)
+-{
+-	return platform_driver_unregister(&arm_smmu_driver);
+-}
+-
+-subsys_initcall(arm_smmu_init);
+-module_exit(arm_smmu_exit);
+-
+-static int __init arm_smmu_of_init(struct device_node *np)
+-{
+-	int ret = arm_smmu_init();
+-
+-	if (ret)
+-		return ret;
+-
+-	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
+-		return -ENODEV;
+-
+-	return 0;
+-}
+-IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", arm_smmu_of_init);
+-
+-#ifdef CONFIG_ACPI
+-static int __init arm_smmu_acpi_init(struct acpi_table_header *table)
+-{
+-	if (iort_node_match(ACPI_IORT_NODE_SMMU))
+-		return arm_smmu_init();
+-
+-	return 0;
+-}
+-IORT_ACPI_DECLARE(arm_smmu, ACPI_SIG_IORT, arm_smmu_acpi_init);
+-#endif
++module_platform_driver(arm_smmu_driver);
++
++IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", NULL);
++IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", NULL);
++IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", NULL);
++IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", NULL);
++IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", NULL);
++IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", NULL);
+ 
+ MODULE_DESCRIPTION("IOMMU API for ARM architected SMMU implementations");
+ MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
