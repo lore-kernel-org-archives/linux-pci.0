@@ -1,67 +1,57 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Sagi Grimberg <sagi@grimberg.me>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-7-git-send-email-logang@deltatee.com>
+ <080b68b4-eba3-861c-4f29-5d829425b5e7@grimberg.me>
+ <20170404154629.GA13552@obsidianresearch.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v2 11/27] arm: Use generic pci_mmap_resource_range()
-Date: Wed, 12 Apr 2017 13:26:00 +0100
-Message-Id: <8be48e631d445d30f76574602a7a7120564a7c15.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <c5638d51-d43f-f30e-f32c-531b3091bd49@deltatee.com>
+Date: Tue, 4 Apr 2017 11:21:58 -0600
+MIME-Version: 1.0
+In-Reply-To: <20170404154629.GA13552@obsidianresearch.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC 6/8] nvmet: Be careful about using iomem accesses when
+ dealing with p2pmem
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/arm/include/asm/pci.h |  1 +
- arch/arm/kernel/bios32.c   | 20 --------------------
- 2 files changed, 1 insertion(+), 20 deletions(-)
 
-diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
-index 51118a0..396c92b 100644
---- a/arch/arm/include/asm/pci.h
-+++ b/arch/arm/include/asm/pci.h
-@@ -29,6 +29,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
- #define PCI_DMA_BUS_IS_PHYS     (1)
- 
- #define HAVE_PCI_MMAP
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE
- 
- static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
- {
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index a4fc3f4..b259956 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -597,26 +597,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	return start;
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	if (mmap_state == pci_mmap_io)
--		return -EINVAL;
--
--	/*
--	 * Mark this as IO
--	 */
--	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
--
--	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			     vma->vm_end - vma->vm_start,
--			     vma->vm_page_prot))
--		return -EAGAIN;
--
--	return 0;
--}
--
- void __init pci_map_io_early(unsigned long pfn)
- {
- 	struct map_desc pci_io_desc = {
--- 
-2.9.3
+On 04/04/17 04:59 AM, Sagi Grimberg wrote:
+> We can never ever get here from an IO command, and that is a good thing
+> because it would have been broken if we did, regardless of what copy
+> method we use...
+
+Yes, I changed this mostly for admin commands. I did notice connect
+commands do end up reading from the p2mem and this patchset correctly
+switches it to iomemcpy. However, based on Cristoph's comment, I hope to
+make it more general such that iomem is hidden within sgls and any
+access will either be correct or create a warning.
+
+
+On 04/04/17 09:46 AM, Jason Gunthorpe wrote:
+> Transactions might not complete at the NVMe device before the CPU
+> processes the RDMA completion, however due to the PCI-E ordering rules
+> new TLPs directed to the NVMe will complete after the RMDA TLPs and
+> thus observe the new data. (eg order preserving)
+> 
+> It would be very hard to use P2P if fabric ordering is not preserved..
+
+Yes, my understanding is the same, the PCI-E ordering rules save us here.
+
+Thanks,
+
+Logan
