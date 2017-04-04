@@ -1,91 +1,107 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:45751 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752841AbdDKLCA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Apr 2017 07:02:00 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: davem@davemloft.net
-Cc: bhelgaas@google.com, netanel@annapurnalabs.com, jcliburn@gmail.com,
-        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org,
-        jiri@mellanox.com, idosch@mellanox.com, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH 5/5] mlxsw: convert to pci_alloc_irq_vectors
-Date: Tue, 11 Apr 2017 13:01:25 +0200
-Message-Id: <20170411110125.3446-6-hch@lst.de>
-In-Reply-To: <20170411110125.3446-1-hch@lst.de>
-References: <20170411110125.3446-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V10 12/12] ACPI/IORT: Remove linker section for IORT
+ entries probing
+To: Sricharan R <sricharan@codeaurora.org>, will.deacon@arm.com,
+ joro@8bytes.org, lorenzo.pieralisi@arm.com,
+ iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+ bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
+ robh+dt@kernel.org, frowand.list@gmail.com, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
+ lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
+ linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-13-git-send-email-sricharan@codeaurora.org>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <fd719e47-2dff-c8f5-b979-d54d2cbf7796@arm.com>
+Date: Tue, 4 Apr 2017 12:33:11 +0100
+MIME-Version: 1.0
+In-Reply-To: <1491301105-5274-13-git-send-email-sricharan@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Trivial conversion as only one vector is supported, but at least we
-lose the useless msix_entry member in the per-device structure.
+On 04/04/17 11:18, Sricharan R wrote:
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> The IORT linker section introduced by commit 34ceea275f62
+> ("ACPI/IORT: Introduce linker section for IORT entries probing")
+> was needed to make sure SMMU drivers are registered (and therefore
+> probed) in the kernel before devices using the SMMU have a chance
+> to probe in turn.
+> 
+> Through the introduction of deferred IOMMU configuration the linker
+> section based IORT probing infrastructure is not needed any longer, in
+> that device/SMMU probe dependencies are managed through the probe
+> deferral mechanism, making the IORT linker section infrastructure
+> unused, so that it can be removed.
+> 
+> Remove the unused IORT linker section probing infrastructure
+> from the kernel to complete the ACPI IORT IOMMU configure probe
+> deferral mechanism implementation.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Jiri Pirko <jiri@mellanox.com>
-Reviewed-by: Ido Schimmel <idosch@mellanox.com>
-Tested-by: Ido Schimmel <idosch@mellanox.com>
----
- drivers/net/ethernet/mellanox/mlxsw/pci.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
 
-diff --git a/drivers/net/ethernet/mellanox/mlxsw/pci.c b/drivers/net/ethernet/mellanox/mlxsw/pci.c
-index eaa3e3bf5a2b..23f7d828cf67 100644
---- a/drivers/net/ethernet/mellanox/mlxsw/pci.c
-+++ b/drivers/net/ethernet/mellanox/mlxsw/pci.c
-@@ -136,7 +136,6 @@ struct mlxsw_pci {
- 	u8 __iomem *hw_addr;
- 	struct mlxsw_pci_queue_type_group queues[MLXSW_PCI_QUEUE_TYPE_COUNT];
- 	u32 doorbell_offset;
--	struct msix_entry msix_entry;
- 	struct mlxsw_core *core;
- 	struct {
- 		struct mlxsw_pci_mem_item *items;
-@@ -1409,7 +1408,7 @@ static int mlxsw_pci_init(void *bus_priv, struct mlxsw_core *mlxsw_core,
- 	if (err)
- 		goto err_aqs_init;
- 
--	err = request_irq(mlxsw_pci->msix_entry.vector,
-+	err = request_irq(pci_irq_vector(pdev, 0),
- 			  mlxsw_pci_eq_irq_handler, 0,
- 			  mlxsw_pci->bus_info.device_kind, mlxsw_pci);
- 	if (err) {
-@@ -1442,7 +1441,7 @@ static void mlxsw_pci_fini(void *bus_priv)
- {
- 	struct mlxsw_pci *mlxsw_pci = bus_priv;
- 
--	free_irq(mlxsw_pci->msix_entry.vector, mlxsw_pci);
-+	free_irq(pci_irq_vector(mlxsw_pci->pdev, 0), mlxsw_pci);
- 	mlxsw_pci_aqs_fini(mlxsw_pci);
- 	mlxsw_pci_fw_area_fini(mlxsw_pci);
- 	mlxsw_pci_mbox_free(mlxsw_pci, &mlxsw_pci->cmd.out_mbox);
-@@ -1717,8 +1716,8 @@ static int mlxsw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		goto err_sw_reset;
- 	}
- 
--	err = pci_enable_msix_exact(pdev, &mlxsw_pci->msix_entry, 1);
--	if (err) {
-+	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
-+	if (err < 0) {
- 		dev_err(&pdev->dev, "MSI-X init failed\n");
- 		goto err_msix_init;
- 	}
-@@ -1737,7 +1736,7 @@ static int mlxsw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return 0;
- 
- err_bus_device_register:
--	pci_disable_msix(mlxsw_pci->pdev);
-+	pci_free_irq_vectors(mlxsw_pci->pdev);
- err_msix_init:
- err_sw_reset:
- 	iounmap(mlxsw_pci->hw_addr);
-@@ -1757,7 +1756,7 @@ static void mlxsw_pci_remove(struct pci_dev *pdev)
- 	struct mlxsw_pci *mlxsw_pci = pci_get_drvdata(pdev);
- 
- 	mlxsw_core_bus_device_unregister(mlxsw_pci->core);
--	pci_disable_msix(mlxsw_pci->pdev);
-+	pci_free_irq_vectors(mlxsw_pci->pdev);
- 	iounmap(mlxsw_pci->hw_addr);
- 	pci_release_regions(mlxsw_pci->pdev);
- 	pci_disable_device(mlxsw_pci->pdev);
--- 
-2.11.0
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Sricharan R <sricharan@codeaurora.org>
+> ---
+>  drivers/acpi/arm64/iort.c         | 2 --
+>  include/asm-generic/vmlinux.lds.h | 1 -
+>  include/linux/acpi_iort.h         | 3 ---
+>  3 files changed, 6 deletions(-)
+> 
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> index e323ece..e7b1940 100644
+> --- a/drivers/acpi/arm64/iort.c
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -1000,6 +1000,4 @@ void __init acpi_iort_init(void)
+>  	}
+>  
+>  	iort_init_platform_devices();
+> -
+> -	acpi_probe_device_table(iort);
+>  }
+> diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
+> index 0968d13..9faa26c 100644
+> --- a/include/asm-generic/vmlinux.lds.h
+> +++ b/include/asm-generic/vmlinux.lds.h
+> @@ -566,7 +566,6 @@
+>  	IRQCHIP_OF_MATCH_TABLE()					\
+>  	ACPI_PROBE_TABLE(irqchip)					\
+>  	ACPI_PROBE_TABLE(clksrc)					\
+> -	ACPI_PROBE_TABLE(iort)						\
+>  	EARLYCON_TABLE()
+>  
+>  #define INIT_TEXT							\
+> diff --git a/include/linux/acpi_iort.h b/include/linux/acpi_iort.h
+> index 77e0809..f167e1d04 100644
+> --- a/include/linux/acpi_iort.h
+> +++ b/include/linux/acpi_iort.h
+> @@ -52,7 +52,4 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
+>  { return NULL; }
+>  #endif
+>  
+> -#define IORT_ACPI_DECLARE(name, table_id, fn)		\
+> -	ACPI_DECLARE_PROBE_ENTRY(iort, name, table_id, 0, NULL, 0, fn)
+> -
+>  #endif /* __ACPI_IORT_H__ */
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
