@@ -1,77 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <5af054c8-28cd-6719-b506-d0133c03042b@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-5-jean-philippe.brucker@arm.com>
- <CA+sq2CeWpGarhT9p+iVo8nJXR=xpkj6XNMwv4LvbP0M6JxA_SA@mail.gmail.com>
- <5af054c8-28cd-6719-b506-d0133c03042b@arm.com>
-From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-Date: Mon, 3 Apr 2017 17:12:46 +0530
-Message-ID: <CA+sq2Ccb1mUQpTvHWsEGWyc+9HjLdq8FSqBGRM7Ey932_6X5jg@mail.gmail.com>
-Subject: Re: [RFC PATCH 04/30] iommu/arm-smmu-v3: Add support for PCI ATS
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
- LAKML <linux-arm-kernel@lists.infradead.org>,
- Nate Watterson <nwatters@qti.qualcomm.com>
+Return-Path: <SRS0=zeLE=3M=microsoft.com=kys@kernel.org>
+Return-Path: <SRS0=zeLE=3M=microsoft.com=kys@kernel.org>
+From: KY Srinivasan <kys@microsoft.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+	"olaf@aepfle.de" <olaf@aepfle.de>, "apw@canonical.com" <apw@canonical.com>,
+	"vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com"
+	<jasowang@redhat.com>, "leann.ogasawara@canonical.com"
+	<leann.ogasawara@canonical.com>, "marcelo.cerri@canonical.com"
+	<marcelo.cerri@canonical.com>, Stephen Hemminger <sthemmin@microsoft.com>
+Subject: RE: [PATCH 0/2] pci-hyperv: Some miscellaneous fixes
+Date: Tue, 4 Apr 2017 19:54:33 +0000
+Message-ID: <DM5PR03MB249052D8580711F8999048D8A00B0@DM5PR03MB2490.namprd03.prod.outlook.com>
+References: <1490378800-26907-1-git-send-email-kys@exchange.microsoft.com>
+ <20170404190331.GD27692@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170404190331.GD27692@bhelgaas-glaptop.roam.corp.google.com>
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+MIME-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 3, 2017 at 3:44 PM, Jean-Philippe Brucker
-<jean-philippe.brucker@arm.com> wrote:
-> On 03/04/17 09:34, Sunil Kovvuri wrote:
->>> +static size_t arm_smmu_atc_invalidate_domain(struct arm_smmu_domain *smmu_domain,
->>> +                                            unsigned long iova, size_t size)
->>> +{
->>> +       unsigned long flags;
->>> +       struct arm_smmu_cmdq_ent cmd = {0};
->>> +       struct arm_smmu_group *smmu_group;
->>> +       struct arm_smmu_master_data *master;
->>> +       struct arm_smmu_device *smmu = smmu_domain->smmu;
->>> +       struct arm_smmu_cmdq_ent sync_cmd = {
->>> +               .opcode = CMDQ_OP_CMD_SYNC,
->>> +       };
->>> +
->>> +       spin_lock_irqsave(&smmu_domain->groups_lock, flags);
->>> +
->>> +       list_for_each_entry(smmu_group, &smmu_domain->groups, domain_head) {
->>> +               if (!smmu_group->ats_enabled)
->>> +                       continue;
->>
->> If ATS is not supported, this seems to increase no of cycles spent in
->> pgtbl_lock.
->> Can we return from this API by checking 'ARM_SMMU_FEAT_ATS' in smmu->features ?
->
-> Sure, I can add a check before taking the lock. Have you been able to
-> observe a significant difference in cycles between checking FEAT_ATS,
-> checking group->ats_enabled after taking the lock, and removing this
-> function call altogether?
->
-> Thanks,
-> Jean-Philippe
 
-No, I haven't verified, was just making an observation.
+
+> -----Original Message-----
+> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> Sent: Tuesday, April 4, 2017 12:04 PM
+> To: KY Srinivasan <kys@microsoft.com>
+> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
+> vkuznets@redhat.com; jasowang@redhat.com;
+> leann.ogasawara@canonical.com; marcelo.cerri@canonical.com; Stephen
+> Hemminger <sthemmin@microsoft.com>
+> Subject: Re: [PATCH 0/2] pci-hyperv: Some miscellaneous fixes
+>=20
+> On Fri, Mar 24, 2017 at 11:06:40AM -0700, kys@exchange.microsoft.com
+> wrote:
+> > From: K. Y. Srinivasan <kys@microsoft.com>
+> >
+> > Some miscellaneous fixes.
+> >
+> > K. Y. Srinivasan (2):
+> >   pci-hyperv: Fix a bug in specifying CPU affinity
+> >   pci-hyperv: Fix an atomic bug
+> >
+> >  drivers/pci/host/pci-hyperv.c |   13 +++++++++----
+> >  1 files changed, 9 insertions(+), 4 deletions(-)
+>=20
+> I applied these with Long's reviewed-by to pci/host-hv for v4.12 with the
+> following subject lines:
+>=20
+>   PCI: hv: Specify CPU_AFFINITY_ALL for MSI affinity when >=3D 32 CPUs
+>   PCI: hv: Allocate interrupt descriptors with GFP_ATOMIC
+>=20
+Thank you.
+
+> There were two copies of [1/2], which makes this error-prone.  I applied
+> the second one that defines CPU_AFFINITY_ALL.
+
+Thanks again; sorry for the confusion.
+
+>=20
+> They're both marked for stable, but without any clue about when the
+> problems were introduced or how serious they are, I did not queue them fo=
+r
+> v4.11.  If you want them in v4.11, please supply those additional details=
+.
+
+I think these issues have been there since   the driver got merged upstream=
+.
+I would want this to be applied against 4.11 as well. Let me know if I shou=
+ld resend
+these patches.
 
 Thanks,
-Sunil.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+K. Y=20
+>=20
+> Bjorn
