@@ -1,203 +1,66 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
- Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 2/2] dt-bindings: pcie: Add documentation for Mediatek PCIe
-Date: Sun, 23 Apr 2017 16:19:03 +0800
-Message-ID: <1492935543-18190-3-git-send-email-ryder.lee@mediatek.com>
-In-Reply-To: <1492935543-18190-1-git-send-email-ryder.lee@mediatek.com>
-References: <1492935543-18190-1-git-send-email-ryder.lee@mediatek.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail1.bemta12.messagelabs.com ([216.82.251.10]:35264 "EHLO
+        mail1.bemta12.messagelabs.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752432AbdDDOC1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2017 10:02:27 -0400
+Subject: Re: [PATCH] PCI: generic: stop hiding pci_host_common_probe
+ declaration
+To: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Jayachandran C <jchandra@broadcom.com>,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Dongdong Liu <liudongdong3@huawei.com>,
+        Christopher Covington <cov@codeaurora.org>,
+        Duc Dang <dhdang@apm.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
+References: <20170321160003.339217-1-arnd@arndb.de>
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Message-ID: <eef2bf83-97aa-270f-f83f-372fb30ea132@sigmadesigns.com>
+Date: Tue, 4 Apr 2017 16:02:10 +0200
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Ryder Lee <ryder.lee@mediatek.com>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-mediatek@lists.infradead.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170321160003.339217-1-arnd@arndb.de>
+Content-Type: text/plain; charset="ISO-8859-15"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add documentation for PCIe host driver available in MT7623
-series SoCs.
+On 21/03/2017 16:59, Arnd Bergmann wrote:
 
-Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
----
- .../bindings/pci/mediatek,mt7623-pcie.txt          | 153 +++++++++++++++++++++
- 1 file changed, 153 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> When pci_host_common_probe() was moved into a separate module, the #ifdef around
+> the declaration was left in the header file, which can lead to build errors in
+> some configurations:
+> 
+> drivers/pci/host/pci-thunder-pem.c: In function 'thunder_pem_probe':
+> drivers/pci/host/pci-thunder-pem.c:412:9: error: implicit declaration of function 'pci_host_common_probe';did you mean 'pci_host_bridge_priv'? [-Werror=implicit-function-declaration]
+> 
+> The ifdef serves no real purpose anyway, so we can just remove it.
+> 
+> Fixes: 4e64dbe226e7 ("PCI: generic: Expose pci_host_common_probe() for use by other drivers")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  include/linux/pci-ecam.h | 2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+> index f0d2b9451270..92a73847e1d3 100644
+> --- a/include/linux/pci-ecam.h
+> +++ b/include/linux/pci-ecam.h
+> @@ -68,9 +68,7 @@ extern struct pci_ecam_ops xgene_v1_pcie_ecam_ops; /* APM X-Gene PCIe v1 */
+>  extern struct pci_ecam_ops xgene_v2_pcie_ecam_ops; /* APM X-Gene PCIe v2.x */
+>  #endif
+>  
+> -#ifdef CONFIG_PCI_HOST_GENERIC
+>  /* for DT-based PCI controllers that support ECAM */
+>  int pci_host_common_probe(struct platform_device *pdev,
+>  			  struct pci_ecam_ops *ops);
+>  #endif
+> -#endif
+> 
 
-diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-new file mode 100644
-index 0000000..ee93ba2
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-@@ -0,0 +1,153 @@
-+Mediatek MT7623 PCIe controller
-+
-+Required properties:
-+- compatible: Should contain "mediatek,mt7623-pcie".
-+- device_type: Must be "pci"
-+- reg: Base addresses and lengths of the pcie controller.
-+- interrupts: A list of interrupt outputs of the controller.
-+- #address-cells: Address representation for root ports (must be 3)
-+  - cell 0 specifies the bus and device numbers of the root port:
-+    [23:16]: bus number
-+    [15:11]: device number
-+  - cell 1 denotes the upper 32 address bits and should be 0
-+  - cell 2 contains the lower 32 address bits and is used to translate to the
-+    CPU address space
-+- #size-cells: Size representation for root ports (must be 2)
-+- clocks: Must contain an entry for each entry in clock-names.
-+  See ../clocks/clock-bindings.txt for details.
-+- clock-names: Must include the following entries:
-+  - free_ck
-+- power-domains: A phandle and power domain specifier pair to the power domain
-+  which is responsible for collapsing and restoring power to the peripheral
-+- bus-range: Range of bus numbers associated with this controller
-+- ranges: Describes the translation of addresses for root ports and standard
-+  PCI regions. The entries must be 6 cells each, where the first three cells
-+  correspond to the address as described for the #address-cells property
-+  above, the fourth cell is the physical CPU address to translate to and the
-+  fifth and six cells are as described for the #size-cells property above.
-+  - The first three entries are expected to translate the addresses for the root
-+    port registers, which are referenced by the assigned-addresses property of
-+    the root port nodes (see below).
-+  - The remaining entries setup the mapping for the standard I/O and memory
-+	regions.
-+  Please refer to the standard PCI bus binding document for a more detailed
-+  explanation.
-+
-+In addition, the device tree node must have sub-nodes describing each
-+PCIe interface, having the following mandatory properties:
-+
-+Required properties:
-+- device_type: Must be "pci"
-+- assigned-addresses: Address and size of the port configuration registers
-+- reg: Only the first four bytes are used to refer to the correct bus number
-+  and device number.
-+- #address-cells: Must be 3
-+- #size-cells: Must be 2
-+- ranges: Sub-ranges distributed from the PCIe controller node. An empty
-+  property is sufficient.
-+- clocks: Must contain an entry for each entry in clock-names.
-+  See ../clocks/clock-bindings.txt for details.
-+- clock-names: Must include the following entries:
-+  - sys_ck
-+- resets: Must contain an entry for each entry in reset-names.
-+  See ../reset/reset.txt for details.
-+- reset-names: Must include the following entries:
-+  - pcie-reset
-+- num-lanes: Number of lanes to use for this port.
-+- phys: Must contain an entry for each entry in phy-names.
-+- phy-names: Must include an entry for each sub node. Entries are of the form
-+  "pcie-phyN": where N ranges from 0 to the value specified for port number.
-+  See ../phy/phy-mt7623-pcie.txt for details.
-+
-+Examples:
-+
-+SoC dtsi:
-+
-+	pcie: pcie@1a140000 {
-+		compatible = "mediatek,mt7623-pcie";
-+		device_type = "pci";
-+		reg = <0 0x1a140000 0 0x1000>; /* PCIe shared registers */
-+		interrupts = <GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>,
-+			     <GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>,
-+			     <GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
-+		#address-cells = <3>;
-+		#size-cells = <2>;
-+		clocks = <&topckgen CLK_TOP_ETHIF_SEL>;
-+		clock-names = "free_ck";
-+		power-domains = <&scpsys MT2701_POWER_DOMAIN_HIF>;
-+
-+		bus-range = <0x00 0xff>;
-+		ranges = <0x82000000 0 0x1a142000 0 0x1a142000 0 0x1000 /* Por0 registers */
-+			  0x82000000 0 0x1a143000 0 0x1a143000 0 0x1000 /* Por1 registers */
-+			  0x82000000 0 0x1a144000 0 0x1a144000 0 0x1000 /* Por2 registers */
-+			  0x81000000 0 0x1a160000 0 0x1a160000 0 0x00010000 /* I/O space */
-+			  0x83000000 0 0x60000000 0 0x60000000 0 0x10000000>;	/* memory space */
-+		status = "disabled";
-+
-+		pcie@1,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82000800 0 0x1a142000 0 0x1000>;
-+			reg = <0x0800 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+			status = "disabled";
-+
-+			clocks = <&hifsys CLK_HIFSYS_PCIE0>;
-+			clock-names = "sys_ck";
-+			resets = <&hifsys MT2701_HIFSYS_PCIE0_RST>;
-+			reset-names = "pcie-reset";
-+
-+			num-lanes = <1>;
-+			phys = <&pcie0_phy>;
-+			phy-names = "pcie-phy0";
-+		};
-+
-+		pcie@2,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001000 0 0x1a143000 0 0x1000>;
-+			reg = <0x1000 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+			status = "disabled";
-+
-+			clocks = <&hifsys CLK_HIFSYS_PCIE1>;
-+			clock-names = "sys_ck";
-+			resets = <&hifsys MT2701_HIFSYS_PCIE1_RST>;
-+			reset-names = "pcie-reset";
-+
-+			num-lanes = <1>;
-+			phys = <&pcie1_phy>;
-+			phy-names = "pcie-phy1";
-+		};
-+
-+		pcie@3,0 {
-+			device_type = "pci";
-+			assigned-addresses = <0x82001800 0 0x1a144000 0 0x1000>;
-+			reg = <0x1800 0 0 0 0>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges;
-+			status = "disabled";
-+
-+			clocks = <&hifsys CLK_HIFSYS_PCIE2>;
-+			clock-names = "sys_ck";
-+			resets = <&hifsys MT2701_HIFSYS_PCIE2_RST>;
-+			reset-names = "pcie-reset";
-+
-+			num-lanes = <1>;
-+			phys = <&pcie2_phy>;
-+			phy-names = "pcie-phy2";
-+		};
-+	};
-+
-+Board dts:
-+
-+	&pcie {
-+		status = "okay";
-+
-+		pcie@1,0 {
-+			status = "okay";
-+		};
-+	};
-\ No newline at end of file
--- 
-1.9.1
+I ran into this issue as well (on v4.9) and submitted a patch a week
+after you did, by pure coincidence:
 
+Subject: [TRIVIAL PATCH] PCI: Change pci_host_common_probe visibility
+Date: Tue, 28 Mar 2017 17:29:51 +0200
+https://www.spinics.net/lists/linux-pci/msg59823.html
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards.
