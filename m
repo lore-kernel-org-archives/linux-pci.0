@@ -1,161 +1,305 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 22/27] xtensa: Use generic pci_mmap_resource_range()
-Date: Wed, 12 Apr 2017 13:26:11 +0100
-Message-Id: <cd5598d945d7fdac72da5b9b3c6e2b63bcbf95bb.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:46696 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753079AbdDDKTw (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2017 06:19:52 -0400
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+        gregkh@linuxfoundation.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V10 07/12] of/acpi: Configure dma operations at probe time for platform/amba/pci bus devices
+Date: Tue,  4 Apr 2017 15:48:20 +0530
+Message-Id: <1491301105-5274-8-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+Configuring DMA ops at probe time will allow deferring device probe when
+the IOMMU isn't available yet. The dma_configure for the device is
+now called from the generic device_attach callback just before the
+bus/driver probe is called. This way, configuring the DMA ops for the
+device would be called at the same place for all bus_types, hence the
+deferred probing mechanism should work for all buses as well.
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+pci_bus_add_devices    (platform/amba)(_device_create/driver_register)
+       |                         |
+pci_bus_add_device     (device_add/driver_register)
+       |                         |
+device_attach           device_initial_probe
+       |                         |
+__device_attach_driver    __device_attach_driver
+       |
+driver_probe_device
+       |
+really_probe
+       |
+dma_configure
+
+Similarly on the device/driver_unregister path __device_release_driver is
+called which inturn calls dma_deconfigure.
+
+This patch changes the dma ops configuration to probe time for
+both OF and ACPI based platform/amba/pci bus devices.
+
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com> (drivers/pci part)
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
 ---
- arch/xtensa/include/asm/pci.h |  7 ++--
- arch/xtensa/kernel/pci.c      | 94 ++++---------------------------------------
- 2 files changed, 12 insertions(+), 89 deletions(-)
 
-diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
-index e4f366a..0ddb411 100644
---- a/arch/xtensa/include/asm/pci.h
-+++ b/arch/xtensa/include/asm/pci.h
-@@ -46,9 +46,10 @@ struct pci_dev;
+ [V10] Added dummy dma_(de)configure functions in case
+       of !CONFIG_HAS_DMA to avoid build breaks.
+
+ drivers/acpi/glue.c         |  5 -----
+ drivers/base/dd.c           |  9 +++++++++
+ drivers/base/dma-mapping.c  | 40 ++++++++++++++++++++++++++++++++++++++++
+ drivers/of/platform.c       |  5 +----
+ drivers/pci/probe.c         | 28 ----------------------------
+ include/linux/dma-mapping.h | 12 ++++++++++++
+ 6 files changed, 62 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/acpi/glue.c b/drivers/acpi/glue.c
+index fb19e1c..c05f241 100644
+--- a/drivers/acpi/glue.c
++++ b/drivers/acpi/glue.c
+@@ -176,7 +176,6 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+ 	struct list_head *physnode_list;
+ 	unsigned int node_id;
+ 	int retval = -EINVAL;
+-	enum dev_dma_attr attr;
  
- #define PCI_DMA_BUS_IS_PHYS	(1)
+ 	if (has_acpi_companion(dev)) {
+ 		if (acpi_dev) {
+@@ -233,10 +232,6 @@ int acpi_bind_one(struct device *dev, struct acpi_device *acpi_dev)
+ 	if (!has_acpi_companion(dev))
+ 		ACPI_COMPANION_SET(dev, acpi_dev);
  
--/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
--#define HAVE_PCI_MMAP		1
--#define arch_can_pci_mmap_io()	1
-+/* Tell PCI code what kind of PCI resource mappings we support */
-+#define HAVE_PCI_MMAP			1
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE	1
-+#define arch_can_pci_mmap_io()		1
+-	attr = acpi_get_dma_attr(acpi_dev);
+-	if (attr != DEV_DMA_NOT_SUPPORTED)
+-		acpi_dma_configure(dev, attr);
+-
+ 	acpi_physnode_link_name(physical_node_name, node_id);
+ 	retval = sysfs_create_link(&acpi_dev->dev.kobj, &dev->kobj,
+ 				   physical_node_name);
+diff --git a/drivers/base/dd.c b/drivers/base/dd.c
+index a1fbf55..4882f06 100644
+--- a/drivers/base/dd.c
++++ b/drivers/base/dd.c
+@@ -19,6 +19,7 @@
  
- #endif /* __KERNEL__ */
+ #include <linux/device.h>
+ #include <linux/delay.h>
++#include <linux/dma-mapping.h>
+ #include <linux/module.h>
+ #include <linux/kthread.h>
+ #include <linux/wait.h>
+@@ -356,6 +357,10 @@ static int really_probe(struct device *dev, struct device_driver *drv)
+ 	if (ret)
+ 		goto pinctrl_bind_failed;
  
-diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-index 903963e..8f11b6d 100644
---- a/arch/xtensa/kernel/pci.c
-+++ b/arch/xtensa/kernel/pci.c
-@@ -47,7 +47,6 @@
-  * pcibios_align_resource
-  * pcibios_fixup_bus
-  * pci_bus_add_device
-- * pci_mmap_page_range
++	ret = dma_configure(dev);
++	if (ret)
++		goto dma_failed;
++
+ 	if (driver_sysfs_add(dev)) {
+ 		printk(KERN_ERR "%s: driver_sysfs_add(%s) failed\n",
+ 			__func__, dev_name(dev));
+@@ -417,6 +422,8 @@ static int really_probe(struct device *dev, struct device_driver *drv)
+ 	goto done;
+ 
+ probe_failed:
++	dma_deconfigure(dev);
++dma_failed:
+ 	if (dev->bus)
+ 		blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
+ 					     BUS_NOTIFY_DRIVER_NOT_BOUND, dev);
+@@ -826,6 +833,8 @@ static void __device_release_driver(struct device *dev, struct device *parent)
+ 			drv->remove(dev);
+ 
+ 		device_links_driver_cleanup(dev);
++		dma_deconfigure(dev);
++
+ 		devres_release_all(dev);
+ 		dev->driver = NULL;
+ 		dev_set_drvdata(dev, NULL);
+diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+index efd71cf..449b948 100644
+--- a/drivers/base/dma-mapping.c
++++ b/drivers/base/dma-mapping.c
+@@ -7,9 +7,11 @@
+  * This file is released under the GPLv2.
   */
  
- struct pci_controller* pci_ctrl_head;
-@@ -266,98 +265,21 @@ pci_controller_num(struct pci_dev *dev)
- #endif /* CONFIG_PROC_FS */
++#include <linux/acpi.h>
+ #include <linux/dma-mapping.h>
+ #include <linux/export.h>
+ #include <linux/gfp.h>
++#include <linux/of_device.h>
+ #include <linux/slab.h>
+ #include <linux/vmalloc.h>
  
- /*
-- * Platform support for /proc/bus/pci/X/Y mmap()s,
-- * modelled on the sparc64 implementation by Dave Miller.
-+ * Platform support for /proc/bus/pci/X/Y mmap()s.
-  *  -- paulus.
-  */
- 
--/*
-- * Adjust vm_pgoff of VMA such that it is the physical page offset
-- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
-- *
-- * Basically, the user finds the base address for his device which he wishes
-- * to mmap.  They read the 32-bit value from the config space base register,
-- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
-- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
-- *
-- * Returns negative error code on failure, zero on success.
-- */
--static __inline__ int
--__pci_mmap_make_offset(struct pci_dev *dev, struct vm_area_struct *vma,
--		       enum pci_mmap_state mmap_state)
-+int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
- {
--	struct pci_controller *pci_ctrl = (struct pci_controller*) dev->sysdata;
--	unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
--	unsigned long io_offset = 0;
--	int i, res_bit;
-+	struct pci_controller *pci_ctrl = (struct pci_controller*) pdev->sysdata;
-+	resource_size_t ioaddr = pci_resource_start(pdev, bar);
- 
- 	if (pci_ctrl == 0)
- 		return -EINVAL;		/* should never happen */
- 
--	/* If memory, add on the PCI bridge address offset */
--	if (mmap_state == pci_mmap_mem) {
--		res_bit = IORESOURCE_MEM;
--	} else {
--		io_offset = (unsigned long)pci_ctrl->io_space.base;
--		offset += io_offset;
--		res_bit = IORESOURCE_IO;
--	}
--
--	/*
--	 * Check that the offset requested corresponds to one of the
--	 * resources of the device.
--	 */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		struct resource *rp = &dev->resource[i];
--		int flags = rp->flags;
--
--		/* treat ROM as memory (should be already) */
--		if (i == PCI_ROM_RESOURCE)
--			flags |= IORESOURCE_MEM;
--
--		/* Active and same type? */
--		if ((flags & res_bit) == 0)
--			continue;
--
--		/* In the range of this resource? */
--		if (offset < (rp->start & PAGE_MASK) || offset > rp->end)
--			continue;
--
--		/* found it! construct the final physical address */
--		if (mmap_state == pci_mmap_io)
--			offset += pci_ctrl->io_space.start - io_offset;
--		vma->vm_pgoff = offset >> PAGE_SHIFT;
--		return 0;
--	}
--
--	return -EINVAL;
--}
-+	/* Convert to an offset within this PCI controller */
-+	ioaddr -= (unsigned long)pci_ctrl->io_space.base;
- 
--/*
-- * Perform the actual remap of the pages for a PCI device mapping, as
-- * appropriate for this architecture.  The region in the process to map
-- * is described by vm_start and vm_end members of VMA, the base physical
-- * address is found in vm_pgoff.
-- * The pci device structure is provided so that architectures may make mapping
-- * decisions on a per-device or per-bus basis.
-- *
-- * Returns a negative error code on failure, zero on success.
-- */
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state,
--			int write_combine)
--{
--	int ret;
--
--	ret = __pci_mmap_make_offset(dev, vma, mmap_state);
--	if (ret < 0)
--		return ret;
--
--	vma->vm_page_prot = pgprot_device(vma->vm_page_prot);
--
--	ret = io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			         vma->vm_end - vma->vm_start,vma->vm_page_prot);
--
--	return ret;
-+	vma->vm_pgoff += (ioaddr + pci_ctrl->io_space.start) >> PAGE_SHIFT;
-+	return 0;
+@@ -341,3 +343,41 @@ void dma_common_free_remap(void *cpu_addr, size_t size, unsigned long vm_flags)
+ 	vunmap(cpu_addr);
  }
+ #endif
++
++/*
++ * Common configuration to enable DMA API use for a device
++ */
++#include <linux/pci.h>
++
++int dma_configure(struct device *dev)
++{
++	struct device *bridge = NULL, *dma_dev = dev;
++	enum dev_dma_attr attr;
++
++	if (dev_is_pci(dev)) {
++		bridge = pci_get_host_bridge_device(to_pci_dev(dev));
++		dma_dev = bridge;
++		if (IS_ENABLED(CONFIG_OF) && dma_dev->parent &&
++		    dma_dev->parent->of_node)
++			dma_dev = dma_dev->parent;
++	}
++
++	if (dma_dev->of_node) {
++		of_dma_configure(dev, dma_dev->of_node);
++	} else if (has_acpi_companion(dma_dev)) {
++		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
++		if (attr != DEV_DMA_NOT_SUPPORTED)
++			acpi_dma_configure(dev, attr);
++	}
++
++	if (bridge)
++		pci_put_host_bridge_device(bridge);
++
++	return 0;
++}
++
++void dma_deconfigure(struct device *dev)
++{
++	of_dma_deconfigure(dev);
++	acpi_dma_deconfigure(dev);
++}
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index 5344db5..2aa4ebb 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -22,6 +22,7 @@
+ #include <linux/slab.h>
+ #include <linux/of_address.h>
+ #include <linux/of_device.h>
++#include <linux/of_iommu.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_platform.h>
+ #include <linux/platform_device.h>
+@@ -186,11 +187,9 @@ static struct platform_device *of_platform_device_create_pdata(
+ 
+ 	dev->dev.bus = &platform_bus_type;
+ 	dev->dev.platform_data = platform_data;
+-	of_dma_configure(&dev->dev, dev->dev.of_node);
+ 	of_msi_configure(&dev->dev, dev->dev.of_node);
+ 
+ 	if (of_device_add(dev) != 0) {
+-		of_dma_deconfigure(&dev->dev);
+ 		platform_device_put(dev);
+ 		goto err_clear_flag;
+ 	}
+@@ -248,7 +247,6 @@ static struct amba_device *of_amba_device_create(struct device_node *node,
+ 		dev_set_name(&dev->dev, "%s", bus_id);
+ 	else
+ 		of_device_make_bus_id(&dev->dev);
+-	of_dma_configure(&dev->dev, dev->dev.of_node);
+ 
+ 	/* Allow the HW Peripheral ID to be overridden */
+ 	prop = of_get_property(node, "arm,primecell-periphid", NULL);
+@@ -542,7 +540,6 @@ static int of_platform_device_destroy(struct device *dev, void *data)
+ 		amba_device_unregister(to_amba_device(dev));
+ #endif
+ 
+-	of_dma_deconfigure(dev);
+ 	of_node_clear_flag(dev->of_node, OF_POPULATED);
+ 	of_node_clear_flag(dev->of_node, OF_POPULATED_BUS);
+ 	return 0;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index dfc9a27..5a8dd43 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1893,33 +1893,6 @@ static void pci_set_msi_domain(struct pci_dev *dev)
+ 	dev_set_msi_domain(&dev->dev, d);
+ }
+ 
+-/**
+- * pci_dma_configure - Setup DMA configuration
+- * @dev: ptr to pci_dev struct of the PCI device
+- *
+- * Function to update PCI devices's DMA configuration using the same
+- * info from the OF node or ACPI node of host bridge's parent (if any).
+- */
+-static void pci_dma_configure(struct pci_dev *dev)
+-{
+-	struct device *bridge = pci_get_host_bridge_device(dev);
+-
+-	if (IS_ENABLED(CONFIG_OF) &&
+-		bridge->parent && bridge->parent->of_node) {
+-			of_dma_configure(&dev->dev, bridge->parent->of_node);
+-	} else if (has_acpi_companion(bridge)) {
+-		struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
+-		enum dev_dma_attr attr = acpi_get_dma_attr(adev);
+-
+-		if (attr == DEV_DMA_NOT_SUPPORTED)
+-			dev_warn(&dev->dev, "DMA not supported.\n");
+-		else
+-			acpi_dma_configure(&dev->dev, attr);
+-	}
+-
+-	pci_put_host_bridge_device(bridge);
+-}
+-
+ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ {
+ 	int ret;
+@@ -1933,7 +1906,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+ 	dev->dev.dma_mask = &dev->dma_mask;
+ 	dev->dev.dma_parms = &dev->dma_parms;
+ 	dev->dev.coherent_dma_mask = 0xffffffffull;
+-	pci_dma_configure(dev);
+ 
+ 	pci_set_dma_max_seg_size(dev, 65536);
+ 	pci_set_dma_seg_boundary(dev, 0xffffffff);
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index 0977317..4f3eece 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -728,6 +728,18 @@ void *dma_mark_declared_memory_occupied(struct device *dev,
+ }
+ #endif /* CONFIG_HAVE_GENERIC_DMA_COHERENT */
+ 
++#ifdef CONFIG_HAS_DMA
++int dma_configure(struct device *dev);
++void dma_deconfigure(struct device *dev);
++#else
++static inline int dma_configure(struct device *dev)
++{
++	return 0;
++}
++
++static inline void dma_deconfigure(struct device *dev) {}
++#endif
++
+ /*
+  * Managed DMA API
+  */
 -- 
-2.9.3
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
