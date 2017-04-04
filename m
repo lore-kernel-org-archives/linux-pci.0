@@ -1,62 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:56529 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S980587AbdDYGV3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Apr 2017 02:21:29 -0400
-Date: Tue, 25 Apr 2017 08:21:49 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Imre Deak <imre.deak@intel.com>, intel-gfx@lists.freedesktop.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI / PM: Add needs_resume flag to avoid suspend
- complete optimization
-Message-ID: <20170425062149.GA9999@wunner.de>
-References: <1493044063-2095-1-git-send-email-imre.deak@intel.com>
- <20170424200230.GA9910@wunner.de>
- <20170424204242.GA9933@wunner.de>
- <1741762.duLppskeDL@aspire.rjw.lan>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 4 Apr 2017 14:03:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: kys@microsoft.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
+        vkuznets@redhat.com, jasowang@redhat.com,
+        leann.ogasawara@canonical.com, marcelo.cerri@canonical.com,
+        sthemmin@microsoft.com
+Subject: Re: [PATCH 0/2] pci-hyperv: Some miscellaneous fixes
+Message-ID: <20170404190331.GD27692@bhelgaas-glaptop.roam.corp.google.com>
+References: <1490378800-26907-1-git-send-email-kys@exchange.microsoft.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1741762.duLppskeDL@aspire.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1490378800-26907-1-git-send-email-kys@exchange.microsoft.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 24, 2017 at 10:56:40PM +0200, Rafael J. Wysocki wrote:
-> On Monday, April 24, 2017 10:42:42 PM Lukas Wunner wrote:
-> > On Mon, Apr 24, 2017 at 10:02:30PM +0200, Lukas Wunner wrote:
-> > > On Mon, Apr 24, 2017 at 05:27:42PM +0300, Imre Deak wrote:
-> > > > Some drivers - like i915 - may not support the system suspend direct
-> > > > complete optimization due to differences in their runtime and system
-> > > > suspend sequence. Add a flag that when set resumes the device before
-> > > > calling the driver's system suspend handlers which effectively disables
-> > > > the optimization.
-> > > 
-> > > FWIW, there are at least two alternative solutions to this problem which
-> > > do not require changes to the PCI core:
-> > > 
-> > > (1) Add a ->prepare hook to i915_pm_ops which calls pm_runtime_get_sync()
-> > >     and a ->complete hook which calls pm_runtime_put().
-> > 
-> > Thinking a bit more about this, it's even simpler:  The PM core acquires
-> > a runtime PM ref in device_prepare() and releases it in device_complete(),
-> > so it's sufficient to just call pm_runtime_resume() in a ->prepare hook
-> > that's newly added to i915.  No ->complete hook necessary.  Tentative
-> > patch below, based on drm-intel-fixes, would replace both of your patches.
+On Fri, Mar 24, 2017 at 11:06:40AM -0700, kys@exchange.microsoft.com wrote:
+> From: K. Y. Srinivasan <kys@microsoft.com>
 > 
-> Calling it in ->prepare() means that everybody is now waiting for you to
-> resume.
+> Some miscellaneous fixes.
 > 
-> Not quite optimal IMO.
+> K. Y. Srinivasan (2):
+>   pci-hyperv: Fix a bug in specifying CPU affinity
+>   pci-hyperv: Fix an atomic bug
+> 
+>  drivers/pci/host/pci-hyperv.c |   13 +++++++++----
+>  1 files changed, 9 insertions(+), 4 deletions(-)
 
-Okay, understood.
+I applied these with Long's reviewed-by to pci/host-hv for v4.12 with the
+following subject lines:
 
-However in the absence of a device_link from the HDA device (consumer)
-to the GPU (supplier), there's no guarantee that the GPU is resumed
-when the HDA device needs it due to the asynchronous invocation of
-the ->suspend hooks.  This is assuming that the HDA device already
-needs the GPU during ->suspend phase.
+  PCI: hv: Specify CPU_AFFINITY_ALL for MSI affinity when >= 32 CPUs
+  PCI: hv: Allocate interrupt descriptors with GFP_ATOMIC
 
-Thanks,
+There were two copies of [1/2], which makes this error-prone.  I applied
+the second one that defines CPU_AFFINITY_ALL.
 
-Lukas
+They're both marked for stable, but without any clue about when the
+problems were introduced or how serious they are, I did not queue them for
+v4.11.  If you want them in v4.11, please supply those additional details.
+
+Bjorn
