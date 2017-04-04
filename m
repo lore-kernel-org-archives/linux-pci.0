@@ -1,55 +1,46 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rich Felker <dalias@libc.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>
-Subject: [PATCH v3 23/32] sh: include default ioremap_nopost() implementation
-Date: Tue, 11 Apr 2017 13:29:03 +0100
-Message-Id: <20170411122923.6285-24-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+To: Sagi Grimberg <sagi@grimberg.me>, Christoph Hellwig <hch@lst.de>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-5-git-send-email-logang@deltatee.com>
+ <95928b70-0148-7297-8f5e-5031d996bb98@grimberg.me>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <d6dac1a4-8c16-d780-fca5-9cbc4d3e2407@deltatee.com>
+Date: Tue, 4 Apr 2017 11:25:41 -0600
+MIME-Version: 1.0
+In-Reply-To: <95928b70-0148-7297-8f5e-5031d996bb98@grimberg.me>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC 4/8] p2pmem: Add debugfs "stats" file
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and Posting")
-mandate non-posted configuration transactions. As further highlighted in
-the PCIe specifications (4.0 - Rev0.3, "Ordering Considerations for the
-Enhanced Configuration Access Mechanism"), through ECAM and
-ECAM-derivative configuration mechanism, the memory mapped transactions
-from the host CPU into Configuration Requests on the PCI express fabric
-may create ordering problems for software because writes to memory
-address are typically posted transactions (unless the architecture can
-enforce through virtual address mapping non-posted write transactions
-behaviour) but writes to Configuration Space are not posted on the PCI
-express fabric.
 
-Include the asm-generic ioremap_nopost() implementation (currently
-falling back to ioremap_nocache()) to provide a non-posted writes
-ioremap interface to kernel subsystems.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Rich Felker <dalias@libc.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Yoshinori Sato <ysato@users.sourceforge.jp>
----
- arch/sh/include/asm/io.h | 1 +
- 1 file changed, 1 insertion(+)
+On 04/04/17 04:46 AM, Sagi Grimberg wrote:
+> 
+>> +    p2pmem_debugfs_root = debugfs_create_dir("p2pmem", NULL);
+>> +    if (!p2pmem_debugfs_root)
+>> +        pr_info("could not create debugfs entry, continuing\n");
+>> +
+> 
+> Why continue? I think it'd be better to just fail it.
 
-diff --git a/arch/sh/include/asm/io.h b/arch/sh/include/asm/io.h
-index 3280a6b..23814cd 100644
---- a/arch/sh/include/asm/io.h
-+++ b/arch/sh/include/asm/io.h
-@@ -371,6 +371,7 @@ static inline int iounmap_fixed(void __iomem *addr) { return -EINVAL; }
- #define ioremap_nocache	ioremap
- #define ioremap_uc	ioremap
- #define iounmap		__iounmap
-+#include <asm-generic/ioremap-nopost.h>
- 
- /*
-  * Convert a physical pointer to a virtual kernel pointer for /dev/mem
--- 
-2.10.0
+Yup, agreed. This should probably also be PTR_ERR as well.
+
+> Besides, this can be safely squashed into patch 1.
+
+Sure, the only real reason I kept it separate was it was authored by
+Steve Wise.
+
+Logan
