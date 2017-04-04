@@ -1,60 +1,115 @@
-Return-Path: <SRS0=Wmv6=3W=google.com=bhelgaas@kernel.org>
-Return-Path: <SRS0=Wmv6=3W=google.com=bhelgaas@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bastet.se.axis.com ([195.60.68.11]:55394 "EHLO
+        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750926AbdDDHy3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2017 03:54:29 -0400
+Subject: Re: [PATCH] PCI: dwc: fix crash seen due to missing ops
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20170321144354.15452-1-niklass@axis.com>
+ <20170403231525.GF13232@bhelgaas-glaptop.roam.corp.google.com>
+CC: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+        <Joao.Pinto@synopsys.com>, <kishon@ti.com>,
+        <linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+From: Niklas Cassel <niklas.cassel@axis.com>
+Message-ID: <5f1e5394-26fc-b533-b78c-89e409e9e1cf@axis.com>
+Date: Tue, 4 Apr 2017 09:54:25 +0200
 MIME-Version: 1.0
-In-Reply-To: <76b74ad0-0c7f-a366-89d6-dc87ac315bc5@codeaurora.org>
-References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
- <1491627351-1111-4-git-send-email-okaya@codeaurora.org> <20170413204800.GB28316@bhelgaas-glaptop.roam.corp.google.com>
- <20170413210218.GA24910@bhelgaas-glaptop.roam.corp.google.com> <76b74ad0-0c7f-a366-89d6-dc87ac315bc5@codeaurora.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 13 Apr 2017 20:30:54 -0500
-Message-ID: <CAErSpo6OgQODbJGAyVRp5Y7ifDjmmvRtVbXKbGXBJcYsQJr9OQ@mail.gmail.com>
-Subject: Re: [PATCH V8 3/5] PCI/ASPM: add init hook to device_add
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
-	David Daney <david.daney@cavium.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Timur Tabi <timur@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Julia Lawall <Julia.Lawall@lip6.fr>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>, Rajat Jain <rajatja@google.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20170403231525.GF13232@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 13, 2017 at 8:19 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 4/13/2017 5:02 PM, Bjorn Helgaas wrote:
->> I do see that you change the deallocation in patch [5/5], but I think
->> the deallocation change should be in the same patch as the allocation
->> change.  Otherwise I think we have a use-after-free problem in this
->> sequence:
->
-> Sure, I'll reorder. As you can see here, link will be only removed if
-> root port is being removed.
->
-> Without this, we'll hit the use after free issue you mentioned.
->
->         if (pdev->has_secondary_link) {
->                 link = pdev->link_state;
->                 down_read(&pci_bus_sem);
->                 mutex_lock(&aspm_lock);
->
->                 list_del(&link->sibling);
->                 list_del(&link->link);
->
->                 /* Clock PM is for endpoint device */
->                 free_link_state(link);
->                 mutex_unlock(&aspm_lock);
->                 up_read(&pci_bus_sem);
->                 return;
->         }
+On 04/04/2017 01:15 AM, Bjorn Helgaas wrote:
+> On Tue, Mar 21, 2017 at 03:43:54PM +0100, Niklas Cassel wrote:
+>> From: Niklas Cassel <niklas.cassel@axis.com>
+>>
+>> Fix the following crash, seen in dwc/pcie-artpec6.
+>>
+>>   Unable to handle kernel NULL pointer dereference at virtual address 00000004
+>>   pgd = c0204000
+>>   [00000004] *pgd=00000000
+>>   Internal error: Oops: 5 [#1] SMP ARM
+>>   Modules linked in:
+>>   CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.11.0-rc3-next-20170321 #1
+>>   Hardware name: Axis ARTPEC-6 Platform
+>>   task: db098000 task.stack: db096000
+>>   PC is at dw_pcie_writel_dbi+0x2c/0xd0
+>>   ...
+>>
+>> While at it, fix the same problem for pcie-designware-plat.
+>>
+>> Fixes: 442ec4c04d12 ("PCI: dwc: all: Split struct pcie_port into host-only and core structures")
+>> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
+> 
+> For artpec6, I think this has already been fixed by Kishon's "PCI: dwc:
+> artpec6: Populate cpu_addr_fixup ops".
 
-Right, but this "pdev->has_secondary_link" check is in your new code
-and doesn't show up until patch [5/5].
+Agreed.
 
-As of *this* patch [3/5], the link is removed when the endpoint is
-removed, so we could hit the use-after-free.
+> 
+> Since both the artpec6 and designware-plat issues were introduced by
+> 442ec4c04d12, which we merged in the v4.11 merge window, I moved Kishon's
+> fix and the designware-plat part of this patch to for-linus for v4.11.
 
-Granted, we'll only be susceptible to this while bisecting because
-normally all the patches will be applied.  But I think this patch will
-make more sense and be easier to review if it makes the link_state
-lifetime match the Port's lifetime.
+I didn't think that including "PCI: dwc: designware: Add new *ops* for
+CPU addr fixup" was an option, but doing so is a cleaner solution imo.
 
-Bjorn
+> 
+> Please double-check my for-linus branch to make sure it has what we need.
+
+The branch looks good. I did test it, and it works marvelously.
+
+> 
+>> ---
+>>  drivers/pci/dwc/pcie-artpec6.c         | 4 ++++
+>>  drivers/pci/dwc/pcie-designware-plat.c | 4 ++++
+>>  2 files changed, 8 insertions(+)
+>>
+>> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+>> index fcd3ef845883..6d23683c0892 100644
+>> --- a/drivers/pci/dwc/pcie-artpec6.c
+>> +++ b/drivers/pci/dwc/pcie-artpec6.c
+>> @@ -234,6 +234,9 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+>>  	return 0;
+>>  }
+>>  
+>> +static const struct dw_pcie_ops dw_pcie_ops = {
+>> +};
+>> +
+>>  static int artpec6_pcie_probe(struct platform_device *pdev)
+>>  {
+>>  	struct device *dev = &pdev->dev;
+>> @@ -252,6 +255,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
+>>  		return -ENOMEM;
+>>  
+>>  	pci->dev = dev;
+>> +	pci->ops = &dw_pcie_ops;
+>>  
+>>  	artpec6_pcie->pci = pci;
+>>  
+>> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+>> index b6c832ba39dd..f20d494922ab 100644
+>> --- a/drivers/pci/dwc/pcie-designware-plat.c
+>> +++ b/drivers/pci/dwc/pcie-designware-plat.c
+>> @@ -86,6 +86,9 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+>>  	return 0;
+>>  }
+>>  
+>> +static const struct dw_pcie_ops dw_pcie_ops = {
+>> +};
+>> +
+>>  static int dw_plat_pcie_probe(struct platform_device *pdev)
+>>  {
+>>  	struct device *dev = &pdev->dev;
+>> @@ -103,6 +106,7 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
+>>  		return -ENOMEM;
+>>  
+>>  	pci->dev = dev;
+>> +	pci->ops = &dw_pcie_ops;
+>>  
+>>  	dw_plat_pcie->pci = pci;
+>>  
+>> -- 
+>> 2.11.0
+>>
