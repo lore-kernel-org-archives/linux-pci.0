@@ -1,78 +1,88 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0041.outbound.protection.outlook.com ([104.47.42.41]:22368
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932092AbdDMUbF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Apr 2017 16:31:05 -0400
-From: Jayachandran C <jnair@caviumnetworks.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Jayachandran C <jnair@caviumnetworks.com>,
-        iommu@lists.linux-foundation.org,
-        Robin Murphy <robin.murphy@arm.com>,
-        Jon Masters <jcm@redhat.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Joerg Roedel <joro@8bytes.org>
-Subject: [PATCH v5 1/2] PCI: Add device flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT
-Date: Thu, 13 Apr 2017 20:30:44 +0000
-Message-Id: <1492115445-4069-2-git-send-email-jnair@caviumnetworks.com>
-In-Reply-To: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
-References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V10 05/12] ACPI/IORT: Add function to check SMMUs drivers
+ presence
+To: Sricharan R <sricharan@codeaurora.org>, will.deacon@arm.com,
+ joro@8bytes.org, lorenzo.pieralisi@arm.com,
+ iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+ bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
+ robh+dt@kernel.org, frowand.list@gmail.com, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
+ lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
+ linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-6-git-send-email-sricharan@codeaurora.org>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <e2713b7b-718d-c059-2e14-cc6ab7636a22@arm.com>
+Date: Tue, 4 Apr 2017 12:04:39 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1491301105-5274-6-git-send-email-sricharan@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add a new quirk flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT to limit the DMA
-alias search to go no further than the bridge where the IOMMU unit is
-attached.
+On 04/04/17 11:18, Sricharan R wrote:
+> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> The IOMMU probe deferral implementation requires a mechanism to detect
+> if drivers for SMMU components are built-in in the kernel to detect
+> whether IOMMU configuration for a given device should be deferred (ie
+> SMMU drivers present but still not probed) or not (drivers not present).
+> 
+> Add a simple function to IORT to detect if SMMU drivers for SMMU
+> components managed by IORT are built-in in the kernel.
 
-The flag will be used to indicate a bridge device which forwards the
-address translation requests to the IOMMU, i.e where the interrupt and
-DMA requests leave the PCIe hierarchy and go into the system blocks.
+Ah, if only DT could be this neat and tidy :D
 
-Usually this happens at the PCI RC, so this flag is not needed.  But
-on systems where there are bridges that introduce aliases above the
-"real" root bridge, this flag is needed to ensure that the function
-pci_for_each_dma_alias() works correctly.
-
-The function pci_for_each_dma_alias() is updated to stop when it see a
-bridge with this flag set.
-
-Signed-off-by: Jayachandran C <jnair@caviumnetworks.com>
 Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-Acked-by: David Daney <david.daney@cavium.com>
----
- drivers/pci/search.c | 4 ++++
- include/linux/pci.h  | 2 ++
- 2 files changed, 6 insertions(+)
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 33e0f03..4c6044a 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -60,6 +60,10 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 
- 		tmp = bus->self;
- 
-+		/* stop at bridge where translation unit is associated */
-+		if (tmp->dev_flags & PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT)
-+			return ret;
-+
- 		/*
- 		 * PCIe-to-PCI/X bridges alias transactions from downstream
- 		 * devices using the subordinate bus number (PCI Express to
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index eb3da1a..3f596ac 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -178,6 +178,8 @@ enum pci_dev_flags {
- 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
- 	/* Get VPD from function 0 VPD */
- 	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
-+	/* a non-root bridge where translation occurs, stop alias search here */
-+	PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT = (__force pci_dev_flags_t) (1 << 9),
- };
- 
- enum pci_irq_reroute_variant {
--- 
-2.7.4
+> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Robin Murphy <robin.murphy@arm.com>
+> Cc: Sricharan R <sricharan@codeaurora.org>
+> ---
+>  drivers/acpi/arm64/iort.c | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
+> 
+> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
+> index 4a5bb96..3dd9ec3 100644
+> --- a/drivers/acpi/arm64/iort.c
+> +++ b/drivers/acpi/arm64/iort.c
+> @@ -523,6 +523,19 @@ static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
+>  	return ret;
+>  }
+>  
+> +static inline bool iort_iommu_driver_enabled(u8 type)
+> +{
+> +	switch (type) {
+> +	case ACPI_IORT_NODE_SMMU_V3:
+> +		return IS_BUILTIN(CONFIG_ARM_SMMU_V3);
+> +	case ACPI_IORT_NODE_SMMU:
+> +		return IS_BUILTIN(CONFIG_ARM_SMMU);
+> +	default:
+> +		pr_warn("IORT node type %u does not describe an SMMU\n", type);
+> +		return false;
+> +	}
+> +}
+> +
+>  static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
+>  					struct acpi_iort_node *node,
+>  					u32 streamid)
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
