@@ -1,91 +1,82 @@
-Return-Path: <SRS0=HZWG=3X=google.com=bhelgaas@kernel.org>
-Return-Path: <SRS0=HZWG=3X=google.com=bhelgaas@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:34336 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752792AbdDDUjh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Apr 2017 16:39:37 -0400
+Date: Tue, 4 Apr 2017 15:39:29 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "apw@canonical.com" <apw@canonical.com>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "jasowang@redhat.com" <jasowang@redhat.com>,
+        "leann.ogasawara@canonical.com" <leann.ogasawara@canonical.com>,
+        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>
+Subject: Re: [PATCH 0/2] pci-hyperv: Some miscellaneous fixes
+Message-ID: <20170404203929.GF27692@bhelgaas-glaptop.roam.corp.google.com>
+References: <1490378800-26907-1-git-send-email-kys@exchange.microsoft.com>
+ <20170404190331.GD27692@bhelgaas-glaptop.roam.corp.google.com>
+ <DM5PR03MB249052D8580711F8999048D8A00B0@DM5PR03MB2490.namprd03.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <20170414210646.GA5346@localhost>
-References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
- <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
- <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com> <20170414210646.GA5346@localhost>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 14 Apr 2017 21:00:06 -0500
-Message-ID: <CAErSpo731xSzrnKF+G+8SA_UUHy7ROA1V9oFkpwKi85GQf9VAg@mail.gmail.com>
-Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-To: Jayachandran C <jnair@caviumnetworks.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>, Robin Murphy <robin.murphy@arm.com>,
-	Jon Masters <jcm@redhat.com>, linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Joerg Roedel <joro@8bytes.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <DM5PR03MB249052D8580711F8999048D8A00B0@DM5PR03MB2490.namprd03.prod.outlook.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 14, 2017 at 4:06 PM, Jayachandran C
-<jnair@caviumnetworks.com> wrote:
-> On Thu, Apr 13, 2017 at 07:19:11PM -0500, Bjorn Helgaas wrote:
->> I tentatively applied both patches to pci/host-thunder for v4.12.
->>
->> However, I am concerned about the topology here:
->>
->> On Thu, Apr 13, 2017 at 08:30:45PM +0000, Jayachandran C wrote:
->> > On Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the
->> > PCI topology is slightly unusual.  For a multi-node system, it looks
->> > like:
->> >
->> >     00:00.0 [PCI] bridge to [bus 01-1e]
->> >     01:0a.0 [PCI-PCIe bridge, type 8] bridge to [bus 02-04]
->> >     02:00.0 [PCIe root port, type 4] bridge to [bus 03-04] (XLATE_ROOT)
->> >     03:00.0 PCIe Endpoint
->>
->> A root port normally has a single PCIe link leading downstream.
->> According to this, 02:00.0 is a root port that has the usual
->> downstream link leading to 03:00.0, but it also has an upstream link
->> to 01:0a.0.
->
-> The PCI topology is a bit broken due to the way that the PCIe IP block
-> was integrated into SoC PCI bridges and devices. The current mechanism
-> of adding a PCI-PCIe bridge to glue these together is not ideal.
+On Tue, Apr 04, 2017 at 07:54:33PM +0000, KY Srinivasan wrote:
+> > -----Original Message-----
+> > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
+> > Sent: Tuesday, April 4, 2017 12:04 PM
+> > To: KY Srinivasan <kys@microsoft.com>
+> > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
+> > devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
+> > vkuznets@redhat.com; jasowang@redhat.com;
+> > leann.ogasawara@canonical.com; marcelo.cerri@canonical.com; Stephen
+> > Hemminger <sthemmin@microsoft.com>
+> > Subject: Re: [PATCH 0/2] pci-hyperv: Some miscellaneous fixes
+> > 
+> > On Fri, Mar 24, 2017 at 11:06:40AM -0700, kys@exchange.microsoft.com
+> > wrote:
+> > > From: K. Y. Srinivasan <kys@microsoft.com>
+> > >
+> > > Some miscellaneous fixes.
+> > >
+> > > K. Y. Srinivasan (2):
+> > >   pci-hyperv: Fix a bug in specifying CPU affinity
+> > >   pci-hyperv: Fix an atomic bug
+> > >
+> > >  drivers/pci/host/pci-hyperv.c |   13 +++++++++----
+> > >  1 files changed, 9 insertions(+), 4 deletions(-)
+> > 
+> > I applied these with Long's reviewed-by to pci/host-hv for v4.12 with the
+> > following subject lines:
+> > 
+> >   PCI: hv: Specify CPU_AFFINITY_ALL for MSI affinity when >= 32 CPUs
+> >   PCI: hv: Allocate interrupt descriptors with GFP_ATOMIC
+> > 
+> Thank you.
+> 
+> > There were two copies of [1/2], which makes this error-prone.  I applied
+> > the second one that defines CPU_AFFINITY_ALL.
+> 
+> Thanks again; sorry for the confusion.
+> 
+> > 
+> > They're both marked for stable, but without any clue about when the
+> > problems were introduced or how serious they are, I did not queue them for
+> > v4.11.  If you want them in v4.11, please supply those additional details.
+> 
+> I think these issues have been there since   the driver got merged upstream.
+> I would want this to be applied against 4.11 as well. Let me know if I should resend
+> these patches.
 
-Yeah, that's definitely broken.
-
->> Maybe this example is omitting details that are not relevant to DMA
->> aliases?  The PCIe capability only contains one set of link-related
->> registers, so I don't know how we could manage a single device that
->> has two links.
->
-> The root port is standard and has just one link to the EP (or whatever
-> is on the external PCIe slot). The fallout of the current hw design is
-> that the PCI-PCIe bridge has a link that does not follow standard and
-> does not have a counterpart (as you noted).
->
->> A device with two links would break things like ASPM.  In
->> set_pcie_port_type(), for example, we have this comment:
->>
->>    * A Root Port or a PCI-to-PCIe bridge is always the upstream end
->>    * of a Link.  No PCIe component has two Links.  Two Links are
->>    * connected by a Switch that has a Port on each Link and internal
->>    * logic to connect the two Ports.
->>
->> The topology above breaks these assumptions, which will make
->> pdev->has_secondary_link incorrect, which means ASPM won't work
->> correctly.
->
-> Given the current hardware, the pcieport driver seems to work reasonably
-> for the root port at 02:00.0, with AER support. I will take a look at the
-> ASPM part.
-
-I don't think pcieport itself cares much about links.  ASPM does, but
-it looks like set_pcie_port_type() actually is smart enough to know
-that PCI-to-PCIe bridges and Root Ports always have links on their
-secondary sides.  So has_secondary_link probably does get set
-correctly.
-
-But I think you'll hit the VIA "strange chipset" thing in
-pcie_aspm_init_link_state(), which will probably prevent us from doing
-ASPM on the link from 02:00.0 to 03:00.0.
-
-Could you collect "lspci -vv" output from this system?  I'd like to
-archive that as background for this IOMMU issue and the ASPM tweaks I
-suspect we'll have to do.  I *wish* we had more information about that
-VIA thing, because I suspect we could get rid of it if we had more
-details.
+No need to resend, but I do need more details about what issues these fix
+and why they're more urgent than garden-variety bug fixes that are planned
+for v4.12.  In general for-linus is for fixing problems we added during the
+merge window, or other high-priority, low-risk changes.
 
 Bjorn
