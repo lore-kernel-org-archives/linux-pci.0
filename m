@@ -1,235 +1,50 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
-        gregkh@linuxfoundation.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V11 10/11] iommu/arm-smmu: Clean up early-probing workarounds
-Date: Mon, 10 Apr 2017 16:51:05 +0530
-Message-Id: <1491823266-1209-11-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
-References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC 2/8] cxgb4: setup pcie memory window 4 and create p2pmem
+ region
+To: Logan Gunthorpe <logang@deltatee.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-3-git-send-email-logang@deltatee.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+From: Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <f269d9e1-8dcf-7970-382e-cb0d9a020efc@grimberg.me>
+Date: Tue, 4 Apr 2017 13:42:57 +0300
+MIME-Version: 1.0
+In-Reply-To: <1490911959-5146-3-git-send-email-logang@deltatee.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Robin Murphy <robin.murphy@arm.com>
 
-Now that the appropriate ordering is enforced via probe-deferral of
-masters in core code, rip it all out and bask in the simplicity.
+> +static void setup_memwin_p2pmem(struct adapter *adap)
+> +{
+> +	unsigned int mem_base = t4_read_reg(adap, CIM_EXTMEM2_BASE_ADDR_A);
+> +	unsigned int mem_size = t4_read_reg(adap, CIM_EXTMEM2_ADDR_SIZE_A);
+> +
+> +	if (!use_p2pmem)
+> +		return;
 
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Acked-by: Will Deacon <will.deacon@arm.com>
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
-[Sricharan: Rebased on top of ACPI IORT SMMU series]
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
----
- drivers/iommu/arm-smmu-v3.c |  46 +-----------------
- drivers/iommu/arm-smmu.c    | 110 +++++++++++++++++++-------------------------
- 2 files changed, 49 insertions(+), 107 deletions(-)
+This is weird, why even call this if !use_p2pmem?
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 5806a6a..9497800 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2761,51 +2761,9 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
- 	.probe	= arm_smmu_device_probe,
- 	.remove	= arm_smmu_device_remove,
- };
-+module_platform_driver(arm_smmu_driver);
- 
--static int __init arm_smmu_init(void)
--{
--	static bool registered;
--	int ret = 0;
--
--	if (!registered) {
--		ret = platform_driver_register(&arm_smmu_driver);
--		registered = !ret;
--	}
--	return ret;
--}
--
--static void __exit arm_smmu_exit(void)
--{
--	return platform_driver_unregister(&arm_smmu_driver);
--}
--
--subsys_initcall(arm_smmu_init);
--module_exit(arm_smmu_exit);
--
--static int __init arm_smmu_of_init(struct device_node *np)
--{
--	int ret = arm_smmu_init();
--
--	if (ret)
--		return ret;
--
--	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
--		return -ENODEV;
--
--	return 0;
--}
--IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
--
--#ifdef CONFIG_ACPI
--static int __init acpi_smmu_v3_init(struct acpi_table_header *table)
--{
--	if (iort_node_match(ACPI_IORT_NODE_SMMU_V3))
--		return arm_smmu_init();
--
--	return 0;
--}
--IORT_ACPI_DECLARE(arm_smmu_v3, ACPI_SIG_IORT, acpi_smmu_v3_init);
--#endif
-+IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", NULL);
- 
- MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
- MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
-diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-index abf6496..be53b02 100644
---- a/drivers/iommu/arm-smmu.c
-+++ b/drivers/iommu/arm-smmu.c
-@@ -2075,6 +2075,23 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev,
- 	return 0;
- }
- 
-+static void arm_smmu_bus_init(void)
-+{
-+	/* Oh, for a proper bus abstraction */
-+	if (!iommu_present(&platform_bus_type))
-+		bus_set_iommu(&platform_bus_type, &arm_smmu_ops);
-+#ifdef CONFIG_ARM_AMBA
-+	if (!iommu_present(&amba_bustype))
-+		bus_set_iommu(&amba_bustype, &arm_smmu_ops);
-+#endif
-+#ifdef CONFIG_PCI
-+	if (!iommu_present(&pci_bus_type)) {
-+		pci_request_acs();
-+		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
-+	}
-+#endif
-+}
-+
- static int arm_smmu_device_probe(struct platform_device *pdev)
- {
- 	struct resource *res;
-@@ -2180,21 +2197,30 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
- 	arm_smmu_device_reset(smmu);
- 	arm_smmu_test_smr_masks(smmu);
- 
--	/* Oh, for a proper bus abstraction */
--	if (!iommu_present(&platform_bus_type))
--		bus_set_iommu(&platform_bus_type, &arm_smmu_ops);
--#ifdef CONFIG_ARM_AMBA
--	if (!iommu_present(&amba_bustype))
--		bus_set_iommu(&amba_bustype, &arm_smmu_ops);
--#endif
--#ifdef CONFIG_PCI
--	if (!iommu_present(&pci_bus_type)) {
--		pci_request_acs();
--		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
--	}
--#endif
-+	/*
-+	 * For ACPI and generic DT bindings, an SMMU will be probed before
-+	 * any device which might need it, so we want the bus ops in place
-+	 * ready to handle default domain setup as soon as any SMMU exists.
-+	 */
-+	if (!using_legacy_binding)
-+		arm_smmu_bus_init();
-+
-+	return 0;
-+}
-+
-+/*
-+ * With the legacy DT binding in play, though, we have no guarantees about
-+ * probe order, but then we're also not doing default domains, so we can
-+ * delay setting bus ops until we're sure every possible SMMU is ready,
-+ * and that way ensure that no add_device() calls get missed.
-+ */
-+static int arm_smmu_legacy_bus_init(void)
-+{
-+	if (using_legacy_binding)
-+		arm_smmu_bus_init();
- 	return 0;
- }
-+device_initcall_sync(arm_smmu_legacy_bus_init);
- 
- static int arm_smmu_device_remove(struct platform_device *pdev)
- {
-@@ -2219,56 +2245,14 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
- 	.probe	= arm_smmu_device_probe,
- 	.remove	= arm_smmu_device_remove,
- };
--
--static int __init arm_smmu_init(void)
--{
--	static bool registered;
--	int ret = 0;
--
--	if (!registered) {
--		ret = platform_driver_register(&arm_smmu_driver);
--		registered = !ret;
--	}
--	return ret;
--}
--
--static void __exit arm_smmu_exit(void)
--{
--	return platform_driver_unregister(&arm_smmu_driver);
--}
--
--subsys_initcall(arm_smmu_init);
--module_exit(arm_smmu_exit);
--
--static int __init arm_smmu_of_init(struct device_node *np)
--{
--	int ret = arm_smmu_init();
--
--	if (ret)
--		return ret;
--
--	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
--		return -ENODEV;
--
--	return 0;
--}
--IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", arm_smmu_of_init);
--IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", arm_smmu_of_init);
--IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", arm_smmu_of_init);
--IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", arm_smmu_of_init);
--IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", arm_smmu_of_init);
--IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", arm_smmu_of_init);
--
--#ifdef CONFIG_ACPI
--static int __init arm_smmu_acpi_init(struct acpi_table_header *table)
--{
--	if (iort_node_match(ACPI_IORT_NODE_SMMU))
--		return arm_smmu_init();
--
--	return 0;
--}
--IORT_ACPI_DECLARE(arm_smmu, ACPI_SIG_IORT, arm_smmu_acpi_init);
--#endif
-+module_platform_driver(arm_smmu_driver);
-+
-+IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", NULL);
-+IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", NULL);
-+IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", NULL);
-+IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", NULL);
-+IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", NULL);
-+IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", NULL);
- 
- MODULE_DESCRIPTION("IOMMU API for ARM architected SMMU implementations");
- MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+> +static int init_p2pmem(struct adapter *adapter)
+> +{
+> +	unsigned int mem_size = t4_read_reg(adapter, CIM_EXTMEM2_ADDR_SIZE_A);
+> +	struct p2pmem_dev *p;
+> +	int rc;
+> +	struct resource res;
+> +
+> +	if (!mem_size || !use_p2pmem)
+> +		return 0;
 
+Again, weird...
