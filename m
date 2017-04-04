@@ -1,41 +1,174 @@
 Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 28 Apr 2017 17:00:05 +0200
-From: Joerg Roedel <jroedel@suse.de>
-To: Sricharan R <sricharan@codeaurora.org>
-Cc: Ralph Sennhauser <ralph.sennhauser@gmail.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        netdev@vger.kernel.org
-Subject: Re: [REGRESSION next-20170426] Commit 09515ef5ddad ("of/acpi:
- Configure dma operations at probe time for platform/amba/pci bus devices")
- causes oops in mvneta
-Message-ID: <20170428150005.GY5077@suse.de>
-References: <20170426181508.687b52af@gmail.com>
- <2fb57b9b-3944-d9cc-1fac-8dcccaa0c37a@codeaurora.org>
- <20170427164014.422a124c@gmail.com>
- <524b7fc8-1eca-a7d8-7bc7-6743be17c208@codeaurora.org>
- <20170428081919.21bb569d@gmail.com>
- <bcdcc1cc-181c-8396-dd3c-dd40d0c7efc1@codeaurora.org>
- <20170428142503.3b465425@gmail.com>
- <fa9a9c9b-68e5-251c-b640-6af5b1b3ce68@codeaurora.org>
+Subject: Re: [PATCH V10 08/12] iommu: of: Handle IOMMU lookup failure with
+ deferred probing or error
+To: Sricharan R <sricharan@codeaurora.org>, will.deacon@arm.com,
+        joro@8bytes.org, lorenzo.pieralisi@arm.com,
+        iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+        gregkh@linuxfoundation.org
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-9-git-send-email-sricharan@codeaurora.org>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <82a620b7-bcd0-3db7-dfd0-4bf6b293ba7a@arm.com>
+Date: Tue, 4 Apr 2017 12:24:50 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <fa9a9c9b-68e5-251c-b640-6af5b1b3ce68@codeaurora.org>
+In-Reply-To: <1491301105-5274-9-git-send-email-sricharan@codeaurora.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 28, 2017 at 06:48:33PM +0530, Sricharan R wrote:
-> Also, probably this patch now going through the iommu tree looks more apt,
-> as its for probe-deferral.
-> Joerg, is that correct ?
+On 04/04/17 11:18, Sricharan R wrote:
+> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+> 
+> Failures to look up an IOMMU when parsing the DT iommus property need to
+> be handled separately from the .of_xlate() failures to support deferred
+> probing.
+> 
+> The lack of a registered IOMMU can be caused by the lack of a driver for
+> the IOMMU, the IOMMU device probe not having been performed yet, having
+> been deferred, or having failed.
+> 
+> The first case occurs when the device tree describes the bus master and
+> IOMMU topology correctly but no device driver exists for the IOMMU yet
+> or the device driver has not been compiled in. Return NULL, the caller
+> will configure the device without an IOMMU.
+> 
+> The second and third cases are handled by deferring the probe of the bus
+> master device which will eventually get reprobed after the IOMMU.
+> 
+> The last case is currently handled by deferring the probe of the bus
+> master device as well. A mechanism to either configure the bus master
+> device without an IOMMU or to fail the bus master device probe depending
+> on whether the IOMMU is optional or mandatory would be a good
+> enhancement.
 
-Definitly. Please send the patch directly to me and I put it in the
-tree.
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
 
-Thanks,
-
-	Joerg
+> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+> Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
+> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+> ---
+>  drivers/base/dma-mapping.c | 5 +++--
+>  drivers/iommu/of_iommu.c   | 4 ++--
+>  drivers/of/device.c        | 7 ++++++-
+>  include/linux/of_device.h  | 9 ++++++---
+>  4 files changed, 17 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+> index 449b948..82bd45c 100644
+> --- a/drivers/base/dma-mapping.c
+> +++ b/drivers/base/dma-mapping.c
+> @@ -353,6 +353,7 @@ int dma_configure(struct device *dev)
+>  {
+>  	struct device *bridge = NULL, *dma_dev = dev;
+>  	enum dev_dma_attr attr;
+> +	int ret = 0;
+>  
+>  	if (dev_is_pci(dev)) {
+>  		bridge = pci_get_host_bridge_device(to_pci_dev(dev));
+> @@ -363,7 +364,7 @@ int dma_configure(struct device *dev)
+>  	}
+>  
+>  	if (dma_dev->of_node) {
+> -		of_dma_configure(dev, dma_dev->of_node);
+> +		ret = of_dma_configure(dev, dma_dev->of_node);
+>  	} else if (has_acpi_companion(dma_dev)) {
+>  		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
+>  		if (attr != DEV_DMA_NOT_SUPPORTED)
+> @@ -373,7 +374,7 @@ int dma_configure(struct device *dev)
+>  	if (bridge)
+>  		pci_put_host_bridge_device(bridge);
+>  
+> -	return 0;
+> +	return ret;
+>  }
+>  
+>  void dma_deconfigure(struct device *dev)
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index c8be889..9f44ee8 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -236,7 +236,7 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
+>  			ops = ERR_PTR(err);
+>  	}
+>  
+> -	return IS_ERR(ops) ? NULL : ops;
+> +	return ops;
+>  }
+>  
+>  static int __init of_iommu_init(void)
+> @@ -247,7 +247,7 @@ static int __init of_iommu_init(void)
+>  	for_each_matching_node_and_match(np, matches, &match) {
+>  		const of_iommu_init_fn init_fn = match->data;
+>  
+> -		if (init_fn(np))
+> +		if (init_fn && init_fn(np))
+>  			pr_err("Failed to initialise IOMMU %s\n",
+>  				of_node_full_name(np));
+>  	}
+> diff --git a/drivers/of/device.c b/drivers/of/device.c
+> index c2ae6bb..bea8aec 100644
+> --- a/drivers/of/device.c
+> +++ b/drivers/of/device.c
+> @@ -82,7 +82,7 @@ int of_device_add(struct platform_device *ofdev)
+>   * can use a platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE events
+>   * to fix up DMA configuration.
+>   */
+> -void of_dma_configure(struct device *dev, struct device_node *np)
+> +int of_dma_configure(struct device *dev, struct device_node *np)
+>  {
+>  	u64 dma_addr, paddr, size;
+>  	int ret;
+> @@ -129,10 +129,15 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>  		coherent ? " " : " not ");
+>  
+>  	iommu = of_iommu_configure(dev, np);
+> +	if (IS_ERR(iommu))
+> +		return PTR_ERR(iommu);
+> +
+>  	dev_dbg(dev, "device is%sbehind an iommu\n",
+>  		iommu ? " " : " not ");
+>  
+>  	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
+> +
+> +	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(of_dma_configure);
+>  
+> diff --git a/include/linux/of_device.h b/include/linux/of_device.h
+> index af98455..2cacdd8 100644
+> --- a/include/linux/of_device.h
+> +++ b/include/linux/of_device.h
+> @@ -55,7 +55,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+>  	return of_node_get(cpu_dev->of_node);
+>  }
+>  
+> -void of_dma_configure(struct device *dev, struct device_node *np);
+> +int of_dma_configure(struct device *dev, struct device_node *np);
+>  void of_dma_deconfigure(struct device *dev);
+>  #else /* CONFIG_OF */
+>  
+> @@ -104,8 +104,11 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+>  {
+>  	return NULL;
+>  }
+> -static inline void of_dma_configure(struct device *dev, struct device_node *np)
+> -{}
+> +
+> +static inline int of_dma_configure(struct device *dev, struct device_node *np)
+> +{
+> +	return 0;
+> +}
+>  static inline void of_dma_deconfigure(struct device *dev)
+>  {}
+>  #endif /* CONFIG_OF */
+> 
 
