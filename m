@@ -1,130 +1,98 @@
-Return-Path: <SRS0=zE+4=3N=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=zE+4=3N=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Wed, 5 Apr 2017 13:38:12 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Tony Luck <tony.luck@intel.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Haavard Skinnemoen <hskinnemoen@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	John Garry <john.garry@huawei.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	"Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
- interface
-Message-ID: <20170405113238.GA2465@red-moon>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
- <20170327094954.7162-3-lorenzo.pieralisi@arm.com>
- <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
- <20170328144543.GA18046@red-moon>
- <20170405105841.GG7909@n2100.armlinux.org.uk>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: RE: [PATCH V7 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+Date: Tue, 4 Apr 2017 15:02:45 +0000
+Message-ID: <92EBB4272BF81E4089A7126EC1E7B28466761383@IRSMSX101.ger.corp.intel.com>
+References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
+ <7c48ca8b-b834-3257-91dc-77e9d19def6c@codeaurora.org>
+In-Reply-To: <7c48ca8b-b834-3257-91dc-77e9d19def6c@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170405105841.GG7909@n2100.armlinux.org.uk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "timur@codeaurora.org" <timur@codeaurora.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 05, 2017 at 11:58:41AM +0100, Russell King - ARM Linux wrote:
-> On Tue, Mar 28, 2017 at 03:45:43PM +0100, Lorenzo Pieralisi wrote:
-> > On Mon, Mar 27, 2017 at 08:41:10PM -0500, Bjorn Helgaas wrote:
-> > > On Mon, Mar 27, 2017 at 10:49:30AM +0100, Lorenzo Pieralisi wrote:
-> > > > diff --git a/arch/x86/include/asm/io.h b/arch/x86/include/asm/io.h
-> > > > index 7afb0e2..50b292f 100644
-> > > > --- a/arch/x86/include/asm/io.h
-> > > > +++ b/arch/x86/include/asm/io.h
-> > > > @@ -171,6 +171,7 @@ static inline unsigned int isa_virt_to_bus(volatile void *address)
-> > > >  extern void __iomem *ioremap_nocache(resource_size_t offset, unsigned long size);
-> > > >  extern void __iomem *ioremap_uc(resource_size_t offset, unsigned long size);
-> > > >  #define ioremap_uc ioremap_uc
-> > > > +#define ioremap_nopost ioremap_nocache
-> > > 
-> > > These are all the same as the default from asm-generic.h.  Do we really
-> > > need these definitions in alpha, avr32, frv, ia64, x86?
-> > 
-> > Those arches do not include asm-generic.h (I suppose for a good reason)
-> > but a definition is needed anyway if we want code using ioremap_nopost()
-> > to be unconditional. This is one way of doing it, there are others not
-> > sure they are any better, I am open to suggestions.
-> 
-> We do have linux/io.h, which should be included in preference to asm/io.h.
-> linux/io.h has existed for years, but I still see (from time to time)
-> patches adding drivers that (imho incorrectly) use asm/io.h.
-> 
-> Also, this:
-> 
-> > > > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-> > > > index 7ef015e..0e81938 100644
-> > > > --- a/include/asm-generic/io.h
-> > > > +++ b/include/asm-generic/io.h
-> > > > @@ -915,6 +915,10 @@ extern void ioport_unmap(void __iomem *p);
-> > > >  #endif /* CONFIG_GENERIC_IOMAP */
-> > > >  #endif /* CONFIG_HAS_IOPORT_MAP */
-> > > >  
-> > > > +#ifndef ioremap_nopost
-> > > > +#define ioremap_nopost ioremap_nocache
-> > > > +#endif
-> > > > +
-> > > >  #ifndef xlate_dev_kmem_ptr
-> > > >  #define xlate_dev_kmem_ptr xlate_dev_kmem_ptr
-> > > >  static inline void *xlate_dev_kmem_ptr(void *addr)
-> 
-> could well be located in linux/io.h, which would make it available
-> everywhere.
-> 
-> I'd suggest one change to this though:
-> 
-> #ifndef ioremap_nopost
-> static inline void __iomem *ioremap_nopost(resource_size_t offset,
-> 					   unsigned long size)
-> {
-> 	return ioremap_nocache(offset, size);
-> }
-> #endif
-> 
-> This way, if someone forgets to define ioremap_nopost() in their
-> asm/io.h but provides a definition or extern prototype for
-> ioremap_nopost(), we end up with a compile error to highlight the
-> error, rather than the error being hidden by the preprocessor.
+Hi Sinan
 
-Yes, I could add ioremap_nopost() to linux/io.h I did not do it because
-linux/io.h, for whatever reason, does not seem to contain ioremap_*
-prototypes; this does not mean we should not add it there but that
-would look odd (with all others ioremap_* in asm/io.h), all I am
-saying. This stuff requires some clean-up regardless, for the records.
+>Hi Mayurkumar,
+>
+>On 3/30/2017 9:30 AM, Sinan Kaya wrote:
+>> When the operating system is booted with the default ASPM policy
+>> (POLICY_DEFAULT), current code is querying the enable/disable
+>> states from ASPM registers to determine the policy.
+>>
+>> For example, a BIOS could set the power saving state to performance
+>> and clear all ASPM control registers. A balanced ASPM policy could
+>> enable L0s and disable L1. A power conscious BIOS could enable both
+>> L0s and L1 to trade off latency and performance vs. power.
+>>
+>> After hotplug removal, pcie_aspm_exit_link_state() function clears
+>> the ASPM registers. An insertion following hotplug removal reads
+>> incorrect policy as ASPM disabled even though ASPM was enabled
+>> during boot.
+>>
+>> This is caused by the fact that same function is used for reconfiguring
+>> ASPM regardless of the power on state.
+>>
+>> ------------------------
+>> Changes from v6 (https://www.spinics.net/lists/arm-kernel/msg572876.html)
+>> ------------------------
+>> - revert the accidental parent check in bridge remove
+>>
+>> Sinan Kaya (5):
+>>   PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
+>>   PCI/ASPM: split pci_aspm_init() into two
+>>   PCI/ASPM: add init hook to device_add
+>>   PCI/ASPM: save power on values during bridge init
+>>   PCI/ASPM: move link_state cleanup to bridge remove
+>>
+>>  drivers/pci/pcie/aspm.c | 137 ++++++++++++++++++++++++++++++++----------------
+>>  drivers/pci/probe.c     |   3 ++
+>>  drivers/pci/remove.c    |   3 +-
+>>  include/linux/pci.h     |   2 +
+>>  4 files changed, 98 insertions(+), 47 deletions(-)
+>>
+>
+>Did you get a chance to test?
+>
 
-As for the static inline, I did that and that did not make the
-kbuild robot happy at all on some arches:
+Not yet. Will get back in this week sometimes to give you some feedback.
 
-eg: openrisc
 
->> include/asm-generic/io.h:922:9: error: implicit declaration of
->> function 'ioremap_nocache' [-Werror=implicit-function-declaration]
-     return ioremap_nocache(offset, size);
 
-I will have another stab at it since what you put forward makes sense,
-I just have to find a way that works across arches.
+Thanks
+Mayur
 
-Thanks !
-Lorenzo
+>Sinan
+>
+>--
+>Sinan Kaya
+>Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+>Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Intel Deutschland GmbH
+Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
+Tel: +49 89 99 8853-0, www.intel.de
+Managing Directors: Christin Eisenschmid, Christian Lamprechter
+Chairperson of the Supervisory Board: Nicole Lau
+Registered Office: Munich
+Commercial Register: Amtsgericht Muenchen HRB 186928
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
