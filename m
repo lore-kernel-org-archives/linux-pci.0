@@ -1,71 +1,45 @@
-Return-Path: <SRS0=k68l=3W=cavium.com=Jayachandran.Nair@kernel.org>
-Return-Path: <SRS0=k68l=3W=cavium.com=Jayachandran.Nair@kernel.org>
-Date: Fri, 14 Apr 2017 21:06:46 +0000
-From: Jayachandran C <jnair@caviumnetworks.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	Robin Murphy <robin.murphy@arm.com>, Jon Masters <jcm@redhat.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Joerg Roedel <joro@8bytes.org>
-Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-Message-ID: <20170414210646.GA5346@localhost>
-References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
- <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
- <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from ale.deltatee.com ([207.54.116.67]:59364 "EHLO ale.deltatee.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753696AbdDDP4y (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 4 Apr 2017 11:56:54 -0400
+To: Sagi Grimberg <sagi@grimberg.me>, Christoph Hellwig <hch@lst.de>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-3-git-send-email-logang@deltatee.com>
+ <f269d9e1-8dcf-7970-382e-cb0d9a020efc@grimberg.me>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <962a8dd8-4d09-0802-9569-00dbf29382d3@deltatee.com>
+Date: Tue, 4 Apr 2017 09:56:48 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <f269d9e1-8dcf-7970-382e-cb0d9a020efc@grimberg.me>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC 2/8] cxgb4: setup pcie memory window 4 and create p2pmem
+ region
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 13, 2017 at 07:19:11PM -0500, Bjorn Helgaas wrote:
-> I tentatively applied both patches to pci/host-thunder for v4.12.
-> 
-> However, I am concerned about the topology here:
-> 
-> On Thu, Apr 13, 2017 at 08:30:45PM +0000, Jayachandran C wrote:
-> > On Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the
-> > PCI topology is slightly unusual.  For a multi-node system, it looks
-> > like:
-> > 
-> >     00:00.0 [PCI] bridge to [bus 01-1e]
-> >     01:0a.0 [PCI-PCIe bridge, type 8] bridge to [bus 02-04]
-> >     02:00.0 [PCIe root port, type 4] bridge to [bus 03-04] (XLATE_ROOT)
-> >     03:00.0 PCIe Endpoint
-> 
-> A root port normally has a single PCIe link leading downstream.
-> According to this, 02:00.0 is a root port that has the usual
-> downstream link leading to 03:00.0, but it also has an upstream link
-> to 01:0a.0.
 
-The PCI topology is a bit broken due to the way that the PCIe IP block
-was integrated into SoC PCI bridges and devices. The current mechanism
-of adding a PCI-PCIe bridge to glue these together is not ideal.
 
-> Maybe this example is omitting details that are not relevant to DMA
-> aliases?  The PCIe capability only contains one set of link-related
-> registers, so I don't know how we could manage a single device that
-> has two links.
- 
-The root port is standard and has just one link to the EP (or whatever
-is on the external PCIe slot). The fallout of the current hw design is
-that the PCI-PCIe bridge has a link that does not follow standard and
-does not have a counterpart (as you noted).
+On 04/04/17 04:42 AM, Sagi Grimberg wrote:
+> This is weird, why even call this if !use_p2pmem?
 
-> A device with two links would break things like ASPM.  In
-> set_pcie_port_type(), for example, we have this comment:
-> 
->    * A Root Port or a PCI-to-PCIe bridge is always the upstream end
->    * of a Link.  No PCIe component has two Links.  Two Links are
->    * connected by a Switch that has a Port on each Link and internal
->    * logic to connect the two Ports.
-> 
-> The topology above breaks these assumptions, which will make
-> pdev->has_secondary_link incorrect, which means ASPM won't work
-> correctly.
+I personally find it cleaner than:
 
-Given the current hardware, the pcieport driver seems to work reasonably
-for the root port at 02:00.0, with AER support. I will take a look at the
-ASPM part.
+if (use_p2pmem)
+	setup_memwin_p2pmem(...)
 
-Thanks,
-JC.
+I'm not sure why that's so weird.
+
+Logan
