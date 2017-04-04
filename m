@@ -1,117 +1,77 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f180.google.com ([209.85.128.180]:36393 "EHLO
-        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S967714AbdDZVLr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Apr 2017 17:11:47 -0400
-Received: by mail-wr0-f180.google.com with SMTP id l50so6728456wrc.3
-        for <linux-pci@vger.kernel.org>; Wed, 26 Apr 2017 14:11:47 -0700 (PDT)
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V7 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+To: mayurkumar.patel@intel.com
+References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <7c48ca8b-b834-3257-91dc-77e9d19def6c@codeaurora.org>
+Date: Tue, 4 Apr 2017 09:13:28 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170426181502.770-1-l.stach@pengutronix.de>
-References: <20170426181502.770-1-l.stach@pengutronix.de>
-From: Tim Harvey <tharvey@gateworks.com>
-Date: Wed, 26 Apr 2017 14:11:45 -0700
-Message-ID: <CAJ+vNU0AEZtc+DaYSV7S1LtXCncVh9nV4hG7BtYxJE=m6-80EA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: dwc: fall back to legacy IRQs when multiple devices
- are attached
-To: Lucas Stach <l.stach@pengutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        patchwork-lst@pengutronix.de
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 26, 2017 at 11:15 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> The DWC host does not support legacy PCI IRQs and MSIs at the same time,
-> so we need to fall back to using only legacy IRQs if there is a chance
-> that multiple devices with differing MSI capabilities are connected to
-> the host. The only configuration where MSIs can be safely used is when
-> the device below the host bridge is not a bridge, i.e. the only device
-> connected to this host.
->
-> By disallowing MSI allocation when multiple devices might be attached
-> we get those configurations in a working state. The only configurations
-> that depend on MSIs being available, that I am aware of, are some
-> embedded devices with a PCIe attached FPGA, that is incapable of
-> generating PCI legacy IRQs. Those are kept working by allowing MSIs
-> when only a single device is attached to the host.
->
-> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> ---
->  drivers/pci/dwc/pcie-designware-host.c | 24 ++++++++++++++++++++++--
->  drivers/pci/dwc/pcie-designware.h      |  1 +
->  2 files changed, 23 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 5ba334938b52..be2b2762c944 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -92,6 +92,8 @@ void dw_pcie_msi_init(struct pcie_port *pp)
->                             (u32)(msi_target & 0xffffffff));
->         dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
->                             (u32)(msi_target >> 32 & 0xffffffff));
-> +
-> +       pp->msi_disabled = false;
->  }
->
->  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-> @@ -136,9 +138,11 @@ static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
->  static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
->  {
->         int irq, pos0, i;
-> -       struct pcie_port *pp;
-> +       struct pcie_port *pp = (struct pcie_port *)msi_desc_to_pci_sysdata(desc);
-> +
-> +       if (pp->msi_disabled)
-> +               return -EINVAL;
->
-> -       pp = (struct pcie_port *)msi_desc_to_pci_sysdata(desc);
->         pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
->                                        order_base_2(no_irqs));
->         if (pos0 < 0)
-> @@ -410,6 +414,22 @@ int dw_pcie_host_init(struct pcie_port *pp)
->                 goto error;
->         }
->
-> +       /*
-> +        * The DWC host does not support legacy PCI IRQs and MSIs at the same
-> +        * time, so we need to fall back to using only legacy IRQs if there is
-> +        * a chance that multiple devices with differing MSI capabilities are
-> +        * connected to the host. The only configuration where MSIs can be
-> +        * safely used is when the device below the host bridge is not a bridge,
-> +        * i.e. the only device connected to this host.
-> +        */
-> +       child = list_first_entry(&bus->children, struct pci_bus, node);
-> +       if (!list_empty(&child->devices)) {
-> +               struct pci_dev *dev = list_first_entry(&child->devices,
-> +                                                      struct pci_dev, bus_list);
-> +               if (pci_is_bridge(dev))
-> +                       pp->msi_disabled = true;
-> +       }
-> +
->         if (pp->ops->scan_bus)
->                 pp->ops->scan_bus(pp);
->
-> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-> index cd3b8713fe50..741bc31f8947 100644
-> --- a/drivers/pci/dwc/pcie-designware.h
-> +++ b/drivers/pci/dwc/pcie-designware.h
-> @@ -140,6 +140,7 @@ struct pcie_port {
->         struct irq_domain       *irq_domain;
->         unsigned long           msi_data;
->         DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
-> +       bool                    msi_disabled;
->  };
->
->  struct dw_pcie_ops {
-> --
-> 2.11.0
->
+Hi Mayurkumar,
 
-Lucas,
+On 3/30/2017 9:30 AM, Sinan Kaya wrote:
+> When the operating system is booted with the default ASPM policy
+> (POLICY_DEFAULT), current code is querying the enable/disable
+> states from ASPM registers to determine the policy.
+> 
+> For example, a BIOS could set the power saving state to performance
+> and clear all ASPM control registers. A balanced ASPM policy could
+> enable L0s and disable L1. A power conscious BIOS could enable both
+> L0s and L1 to trade off latency and performance vs. power.
+> 
+> After hotplug removal, pcie_aspm_exit_link_state() function clears
+> the ASPM registers. An insertion following hotplug removal reads
+> incorrect policy as ASPM disabled even though ASPM was enabled
+> during boot.
+> 
+> This is caused by the fact that same function is used for reconfiguring
+> ASPM regardless of the power on state.
+> 
+> ------------------------
+> Changes from v6 (https://www.spinics.net/lists/arm-kernel/msg572876.html)
+> ------------------------
+> - revert the accidental parent check in bridge remove
+> 
+> Sinan Kaya (5):
+>   PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
+>   PCI/ASPM: split pci_aspm_init() into two
+>   PCI/ASPM: add init hook to device_add
+>   PCI/ASPM: save power on values during bridge init
+>   PCI/ASPM: move link_state cleanup to bridge remove
+> 
+>  drivers/pci/pcie/aspm.c | 137 ++++++++++++++++++++++++++++++++----------------
+>  drivers/pci/probe.c     |   3 ++
+>  drivers/pci/remove.c    |   3 +-
+>  include/linux/pci.h     |   2 +
+>  4 files changed, 98 insertions(+), 47 deletions(-)
+> 
 
-Legacy interrupts are still not firing with this.
+Did you get a chance to test?
 
-Tim
+Sinan
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
