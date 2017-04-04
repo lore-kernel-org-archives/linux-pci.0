@@ -1,97 +1,88 @@
 Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Tue, 4 Apr 2017 17:43:55 -0500
+Date: Tue, 4 Apr 2017 15:56:17 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 00/17] PCI resource mmap cleanup
-Message-ID: <20170404224355.GC989@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1490188942.git.dwmw2@infradead.org>
+To: Wesley Terpstra <wesley@sifive.com>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
+Subject: Re: PCI enumeration without a BIOS
+Message-ID: <20170404205617.GG27692@bhelgaas-glaptop.roam.corp.google.com>
+References: <CAMgXwTjX1j2dhi7n+APNef0di5oo+iK57Cq0S+3NdMtQzAc=Vw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <cover.1490188942.git.dwmw2@infradead.org>
+In-Reply-To: <CAMgXwTjX1j2dhi7n+APNef0di5oo+iK57Cq0S+3NdMtQzAc=Vw@mail.gmail.com>
 Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 22, 2017 at 01:25:14PM +0000, David Woodhouse wrote:
-> This started out as a fairly trivial "add pci_mmap_page_range() for 
-> ARM64" patch. But pci_mmap_page_range() is a vile interface, taking 
-> "user visible" resource addresses converted with pci_resource_to_user() 
-> on those platforms unlucky enough to use that... and even in the *sane* 
-> sysfs-based mmap method, we convert through user addresses to call the
-> platform-specific method.
-> 
-> In most cases there's just no need for any of this crap. We can migrate
-> most architectures to a generic implementation without much thought,
-> and the few that aren't converted in this series can probably be added
-> fairly easily too but need a little more arch-specific attention.
-> 
-> Utterly untested for now; I'll do some testing while I deal with the
-> inevitable bikeshedding.
+Hi Wesley,
 
-This looks really nice; thanks a lot for doing this!
-
-I agree with Arnd about the __aarch64__ ifdef in pci/proc.c; I'd rather get
-rid of that if we can.
-
-I think you had a couple other updates; can you post a v2 when you're done
-with those?
-
-> David Woodhouse (17):
->   pci: Fix pci_mmap_fits() for HAVE_PCI_RESOURCE_TO_USER platforms
->   pci: Fix another sanity check bug in /proc/pci mmap
->   pci: Only allow WC mmap on prefetchable resources
->   pci: Add arch_can_pci_mmap_wc() macro
->   pci: Move multiple declarations of pci_mmap_page_range() to <linux/pci.h>
->   pci: Add HAVE_PCI_MMAP_IO to architectures which can mmap() I/O space
->   pci: Use BAR index in sysfs attr->private instead of resource pointer
->   pci: Add BAR index argument to pci_mmap_page_range()
->   pci: Add pci_mmap_resource_range() and use it for ARM64
->   arm: Use generic pci_mmap_resource_range()
->   cris: Use generic pci_mmap_resource_range()
->   mips: Use generic pci_mmap_resource_range()
->   mn10300: Use generic pci_mmap_resource_range()
->   parisc: Use generic pci_mmap_resource_range()
->   sh: Use generic pci_mmap_resource_range()
->   unicore: Use generic pci_mmap_resource_range()
->   arm64: Do not expose PCI mmap through procfs
+On Tue, Apr 04, 2017 at 12:31:57PM -0700, Wesley Terpstra wrote:
+> Good morning,
 > 
->  Documentation/filesystems/sysfs-pci.txt |  9 +++-
->  arch/arm/include/asm/pci.h              |  3 +-
->  arch/arm/kernel/bios32.c                | 19 -------
->  arch/arm64/include/asm/pci.h            |  3 ++
->  arch/cris/arch-v32/drivers/pci/bios.c   | 22 --------
->  arch/cris/include/asm/pci.h             |  4 +-
->  arch/ia64/include/asm/pci.h             |  4 +-
->  arch/ia64/pci/pci.c                     |  3 +-
->  arch/microblaze/include/asm/pci.h       |  6 +--
->  arch/microblaze/pci/pci-common.c        |  2 +-
->  arch/mips/include/asm/pci.h             |  5 +-
->  arch/mips/pci/pci.c                     | 24 ---------
->  arch/mn10300/include/asm/pci.h          |  4 +-
->  arch/mn10300/unit-asb2305/pci-asb2305.c | 23 ---------
->  arch/parisc/include/asm/pci.h           |  4 +-
->  arch/parisc/kernel/pci.c                | 28 ----------
->  arch/powerpc/include/asm/pci.h          |  9 ++--
->  arch/powerpc/kernel/pci-common.c        |  3 +-
->  arch/sh/drivers/pci/pci.c               | 21 --------
->  arch/sh/include/asm/pci.h               |  4 +-
->  arch/sparc/include/asm/pci_64.h         |  5 +-
->  arch/sparc/kernel/pci.c                 |  6 +--
->  arch/unicore32/include/asm/pci.h        |  3 +-
->  arch/unicore32/kernel/pci.c             | 23 ---------
->  arch/x86/include/asm/pci.h              |  6 +--
->  arch/x86/pci/i386.c                     |  3 +-
->  arch/xtensa/include/asm/pci.h           | 11 ++--
->  arch/xtensa/kernel/pci.c                |  5 +-
->  drivers/pci/Makefile                    |  2 +-
->  drivers/pci/mmap.c                      | 90 +++++++++++++++++++++++++++++++++
->  drivers/pci/pci-sysfs.c                 | 77 +++++++++++++---------------
->  drivers/pci/proc.c                      | 55 ++++++++++++++------
->  include/linux/pci.h                     | 19 +++++++
->  33 files changed, 233 insertions(+), 272 deletions(-)
->  create mode 100644 drivers/pci/mmap.c
+> I am trying to clean up PCIe support for the RISC-V port. On this
+> architecture, PCIe enumeration may not have been performed by the
+> "BIOS", of which there is none. However, it looks like linux is
+> expecting a valid PCIe configuration during boot. I've attached the
+> output of dmesg.
+
+If firmware has already configured PCI, Linux generally will use that
+configuration.  Linux *should* be able to enumerate PCI devices and
+configure them even without any prior firmware configuration.  But
+there may be bugs there, since those paths aren't exercised as much.
+
+> In particular, these are the lines that seem wrong to me:
+> [    5.920000] pci 0000:00:00.0: bridge configuration invalid ([bus
+> 00-00]), reconfiguring
+> [    5.930000] pci 0000:01:00.0: bridge configuration invalid ([bus
+> 00-00]), reconfiguring
+
+This is normal but possibly worded more alarmingly than necessary.
+Bridges power up with secondary/subordinate bus numbers as zero, so
+this just means nothing has changed their configuration from the
+power-up default.
+
+> [    6.000000] pci 0000:04:00.0: [Firmware Bug]: reg 0x10: invalid BAR
+> (can't size)
+> [    6.010000] pci 0000:06:00.0: [Firmware Bug]: reg 0x10: invalid BAR
+> (can't size)
+
+These are more worrisome.  We discover the size of a BAR by writing
+all ones to it and reading it back, which tells us how many bits of
+the BAR are hard-wired to zero.  This behavior is prescribed by the
+PCI specs, so it's likely a hardware defect.
+
+It's tagged as a "Firmware Bug" because sometimes this problem is a
+consequence of a BIOS forgetting to configure something in the device
+or forgetting to hide the device from the OS completely.  Possibly the
+tag is a little too aggressive -- it's making assumptions that aren't
+always true.
+
+> To my eyes the above looks like linux was expecting a pre-enumerated
+> bus. How can I tell linux to just enumerate everything and not be
+> surprised? Ideally, I'd like this to be optional, in case a future
+> boot loader might enumerate PCIe in order to netboot or whatever.
 > 
-> -- 
-> 2.9.3
-> 
+> These warnings are also troubling, but seem to be a general weakness
+> of the xilinx PCIe bridge:
+> [    6.210000] pci 0000:02:01.0: BAR 7: no space for [io  size 0x1000]
+> [    6.210000] pci 0000:02:01.0: BAR 7: failed to assign [io  size 0x1000]
+
+This is because the xilinx host bridge doesn't support I/O space (it
+could be that the hardware itself doesn't support it, or maybe the
+Linux driver just doesn't support it).  In any event, you have no PCI
+devices that actually require I/O space, so this doesn't hurt
+anything.  The messages about "BAR 7" are really referring to the
+bridge I/O windows, which Linux tries to configure by default.
+
+I wish we had more informative messages about this situation, but it's
+a little subtle to detect this situation, so we don't.
+
+> Everything actually works in the end, so this is mostly a cosmetic concern.
+
+Yeah, everything seems mostly working.  The "invalid BAR" things
+*could* be an issue -- those registers are not what the PCI spec says
+they should be.  Occasionally people put non-BAR registers where BARs
+are supposed to be.  We write 0xffffffff to those registers (as the
+spec says we must), and if they are non-BARs, we have no idea what
+that might do, so it's possible it could break something.  See the
+quirks that set non_compliant_bars for examples.
+
+Bjorn
