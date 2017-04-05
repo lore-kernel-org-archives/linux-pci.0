@@ -1,59 +1,146 @@
-Return-Path: <SRS0=HVeC=32=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=HVeC=32=deltatee.com=logang@kernel.org>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
- <1492381396.25766.43.camel@kernel.crashing.org>
- <20170418164557.GA7181@obsidianresearch.com>
- <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
- <20170418190138.GH7181@obsidianresearch.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Dan Williams <dan.j.williams@intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
- Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
- "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
- Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
- Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
- linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jerome Glisse <jglisse@redhat.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
-Date: Tue, 18 Apr 2017 13:35:32 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v6 05/23] PCI: endpoint: Create configfs entry for EPC device
+ and EPF driver
+Date: Wed, 5 Apr 2017 14:22:25 +0530
+Message-ID: <20170405085243.18123-6-kishon@ti.com>
+In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
+References: <20170405085243.18123-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20170418190138.GH7181@obsidianresearch.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Invoke APIs provided by pci-ep-cfs to create configfs entry for every EPC
+device and EPF driver to help users in creating EPF device and binding the
+EPF device to the EPC device.
+
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/endpoint/pci-epc-core.c | 4 ++++
+ drivers/pci/endpoint/pci-epf-core.c | 4 ++++
+ include/linux/pci-epc.h             | 2 ++
+ include/linux/pci-epf.h             | 2 ++
+ 4 files changed, 12 insertions(+)
+
+diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+index 54b366ece844..9ae9e59b2a74 100644
+--- a/drivers/pci/endpoint/pci-epc-core.c
++++ b/drivers/pci/endpoint/pci-epc-core.c
+@@ -24,6 +24,7 @@
+ 
+ #include <linux/pci-epc.h>
+ #include <linux/pci-epf.h>
++#include <linux/pci-ep-cfs.h>
+ 
+ static struct class *pci_epc_class;
+ 
+@@ -441,6 +442,7 @@ EXPORT_SYMBOL_GPL(pci_epc_linkup);
+  */
+ void pci_epc_destroy(struct pci_epc *epc)
+ {
++	pci_ep_cfs_remove_epc_group(epc->group);
+ 	device_unregister(&epc->dev);
+ 	kfree(epc);
+ }
+@@ -507,6 +509,8 @@ __pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
+ 	if (ret)
+ 		goto put_dev;
+ 
++	epc->group = pci_ep_cfs_add_epc_group(dev_name(dev));
++
+ 	return epc;
+ 
+ put_dev:
+diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+index 7564a29f435c..92db7dcd911c 100644
+--- a/drivers/pci/endpoint/pci-epf-core.c
++++ b/drivers/pci/endpoint/pci-epf-core.c
+@@ -24,6 +24,7 @@
+ 
+ #include <linux/pci-epc.h>
+ #include <linux/pci-epf.h>
++#include <linux/pci-ep-cfs.h>
+ 
+ static struct bus_type pci_epf_bus_type;
+ static struct device_type pci_epf_type;
+@@ -143,6 +144,7 @@ EXPORT_SYMBOL_GPL(pci_epf_alloc_space);
+  */
+ void pci_epf_unregister_driver(struct pci_epf_driver *driver)
+ {
++	pci_ep_cfs_remove_epf_group(driver->group);
+ 	driver_unregister(&driver->driver);
+ }
+ EXPORT_SYMBOL_GPL(pci_epf_unregister_driver);
+@@ -172,6 +174,8 @@ int __pci_epf_register_driver(struct pci_epf_driver *driver,
+ 	if (ret)
+ 		return ret;
+ 
++	driver->group = pci_ep_cfs_add_epf_group(driver->driver.name);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(__pci_epf_register_driver);
+diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
+index 8c63d3c37f76..af5edbf3eea3 100644
+--- a/include/linux/pci-epc.h
++++ b/include/linux/pci-epc.h
+@@ -77,6 +77,7 @@ struct pci_epc_mem {
+  * @ops: function pointers for performing endpoint operations
+  * @mem: address space of the endpoint controller
+  * @max_functions: max number of functions that can be configured in this EPC
++ * @group: configfs group representing the PCI EPC device
+  * @lock: spinlock to protect pci_epc ops
+  */
+ struct pci_epc {
+@@ -85,6 +86,7 @@ struct pci_epc {
+ 	const struct pci_epc_ops	*ops;
+ 	struct pci_epc_mem		*mem;
+ 	u8				max_functions;
++	struct config_group		*group;
+ 	/* spinlock to protect against concurrent access of EP controller */
+ 	spinlock_t			lock;
+ };
+diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
+index 5628714f7bcf..0d529cb90143 100644
+--- a/include/linux/pci-epf.h
++++ b/include/linux/pci-epf.h
+@@ -82,6 +82,7 @@ struct pci_epf_ops {
+  * @driver: PCI EPF driver
+  * @ops: set of function pointers for performing EPF operations
+  * @owner: the owner of the module that registers the PCI EPF driver
++ * @group: configfs group corresponding to the PCI EPF driver
+  * @id_table: identifies EPF devices for probing
+  */
+ struct pci_epf_driver {
+@@ -91,6 +92,7 @@ struct pci_epf_driver {
+ 	struct device_driver	driver;
+ 	struct pci_epf_ops	*ops;
+ 	struct module		*owner;
++	struct config_group	*group;
+ 	const struct pci_epf_device_id	*id_table;
+ };
+ 
+-- 
+2.11.0
 
 
-On 18/04/17 01:01 PM, Jason Gunthorpe wrote:
-> Ultimately every dma_ops will need special code to support P2P with
-> the special hardware that ops is controlling, so it makes some sense
-> to start by pushing the check down there in the first place. This
-> advice is partially motivated by how dma_map_sg is just a small
-> wrapper around the function pointer call...
-
-Yes, I noticed this problem too and that makes sense. It just means
-every dma_ops will probably need to be modified to either support p2p
-pages or fail on them. Though, the only real difficulty there is that it
-will be a lot of work.
-
-> Where p2p_same_segment_map_page checks if the two devices are on the
-> 'same switch' and if so returns the address translated to match the
-> bus address programmed into the BAR or fails. We knows this case is
-> required to work by the PCI spec, so it makes sense to use it as the
-> first canned helper.
-
-I've also suggested that this check should probably be done (or perhaps
-duplicated) before we even get to the map stage. In the case of
-nvme-fabrics we'd probably want to let the user know when they try to
-configure it or at least fall back to allocating regular memory instead.
-It would be a difficult situation to have already copied a block of data
-from a NIC to p2p memory only to have it be deemed unmappable on the
-NVMe device it's destined for. (Or vice-versa.) This was another issue
-p2pmem was attempting to solve.
-
-Logan
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
