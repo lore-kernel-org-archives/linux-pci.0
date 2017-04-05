@@ -1,251 +1,166 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34530 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1424438AbdDUTEw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Apr 2017 15:04:52 -0400
-Date: Fri, 21 Apr 2017 14:04:47 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>,
-        Lucas Stach <l.stach@pengutronix.de>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Jesper Nilsson <jesper.nilsson@axis.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Will Deacon <will.deacon@arm.com>,
-        David Daney <david.daney@cavium.com>,
-        Rob Herring <robh@kernel.org>,
-        Tanmay Inamdar <tinamdar@apm.com>
-Subject: Re: [PATCH] PCI: don't allow unbinding host controllers that aren't
- prepared
-Message-ID: <20170421190447.GB2638@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170331011203.41505-1-briannorris@chromium.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170331011203.41505-1-briannorris@chromium.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Sw8i=3N=twosheds.srs.infradead.org=BATV+f448afa6c40205be055d+4973+infradead.org+dwmw2@kernel.org>
+Return-Path: <SRS0=Sw8i=3N=twosheds.srs.infradead.org=BATV+f448afa6c40205be055d+4973+infradead.org+dwmw2@kernel.org>
+Message-ID: <1491376944.22176.15.camel@infradead.org>
+Subject: Re: [PATCH 04/17] pci: Add arch_can_pci_mmap_wc() macro
+From: David Woodhouse <dwmw2@infradead.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+In-Reply-To: <20170404213631.GB989@bhelgaas-glaptop.roam.corp.google.com>
+References: <cover.1490188942.git.dwmw2@infradead.org>
+	 <11552df0208f8134f315f32217a3e033fe2174f4.1490188942.git.dwmw2@infradead.org>
+	 <20170404213631.GB989@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: multipart/signed; micalg="sha-256"; protocol="application/x-pkcs7-signature"; boundary="=-aMgi7qKcxIgw0vBuWKq/"
+Date: Wed, 05 Apr 2017 09:22:24 +0200
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 30, 2017 at 06:12:03PM -0700, Brian Norris wrote:
-> Many PCI host controller drivers aren't prepared to have their devices
-> unbound from them forcefully (e.g., through /sys/.../<driver>/unbind),
-> as they don't provide any driver .remove callback, where they'd detach
-> the root bus, release resources, etc. Keeping the driver built in (i.e.,
-> not a loadable module) is not enough; and providing no .remove callback
-> just means we don't do any teardown.
-> 
-> To rule out the possibility of unbinding a device via sysfs, we need to
-> set the ".suppress_bind_attrs" field.
-> 
-> I found the suspect drivers via the following search:
-> 
->   git grep -l platform_driver $(git grep -L -e '\.remove' -e suppress_bind_attrs drivers/pci/)
-> 
-> Then I inspected them to ensure that
-> (a) they set up a PCI bus in their probe() and
-> (b) they don't have a remove() callback for undoing the setup
-> 
-> I excluded drivers/pci/host/pcie-rockchip.c, because I've implemented
-> remove() support elsewhere [1].
-> 
-> [1] https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1349576.html
->     [PATCH v2 3/5] PCI: rockchip: add remove() support
-> 
-> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-> Signed-off-by: Brian Norris <briannorris@chromium.org>
 
-Applied to pci/remove for v4.12, thanks, Brian!
+--=-aMgi7qKcxIgw0vBuWKq/
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-> ---
-> Not tested, other than to compile a few of these.
-> 
->  drivers/pci/dwc/pci-imx6.c             | 1 +
->  drivers/pci/dwc/pci-layerscape.c       | 1 +
->  drivers/pci/dwc/pcie-armada8k.c        | 1 +
->  drivers/pci/dwc/pcie-artpec6.c         | 1 +
->  drivers/pci/dwc/pcie-designware-plat.c | 1 +
->  drivers/pci/dwc/pcie-hisi.c            | 2 ++
->  drivers/pci/dwc/pcie-spear13xx.c       | 1 +
->  drivers/pci/host/pci-ftpci100.c        | 1 +
->  drivers/pci/host/pci-host-generic.c    | 1 +
->  drivers/pci/host/pci-thunder-ecam.c    | 1 +
->  drivers/pci/host/pci-thunder-pem.c     | 1 +
->  drivers/pci/host/pci-versatile.c       | 1 +
->  drivers/pci/host/pci-xgene.c           | 1 +
->  13 files changed, 14 insertions(+)
-> 
-> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-> index 801e46cd266d..f85a063e9964 100644
-> --- a/drivers/pci/dwc/pci-imx6.c
-> +++ b/drivers/pci/dwc/pci-imx6.c
-> @@ -725,6 +725,7 @@ static struct platform_driver imx6_pcie_driver = {
->  	.driver = {
->  		.name	= "imx6q-pcie",
->  		.of_match_table = imx6_pcie_of_match,
-> +		.suppress_bind_attrs = true,
->  	},
->  	.shutdown = imx6_pcie_shutdown,
->  };
-> diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-> index c32e392a0ae6..880f345bff43 100644
-> --- a/drivers/pci/dwc/pci-layerscape.c
-> +++ b/drivers/pci/dwc/pci-layerscape.c
-> @@ -305,6 +305,7 @@ static struct platform_driver ls_pcie_driver = {
->  	.driver = {
->  		.name = "layerscape-pcie",
->  		.of_match_table = ls_pcie_of_match,
-> +		.suppress_bind_attrs = true,
->  	},
->  };
->  builtin_platform_driver_probe(ls_pcie_driver, ls_pcie_probe);
-> diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-> index f110e3b24a26..9d8f7e4db5df 100644
-> --- a/drivers/pci/dwc/pcie-armada8k.c
-> +++ b/drivers/pci/dwc/pcie-armada8k.c
-> @@ -262,6 +262,7 @@ static struct platform_driver armada8k_pcie_driver = {
->  	.driver = {
->  		.name	= "armada8k-pcie",
->  		.of_match_table = of_match_ptr(armada8k_pcie_of_match),
-> +		.suppress_bind_attrs = true,
->  	},
->  };
->  builtin_platform_driver(armada8k_pcie_driver);
-> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-> index fcd3ef845883..7a86d4b4dcc1 100644
-> --- a/drivers/pci/dwc/pcie-artpec6.c
-> +++ b/drivers/pci/dwc/pcie-artpec6.c
-> @@ -290,6 +290,7 @@ static struct platform_driver artpec6_pcie_driver = {
->  	.driver = {
->  		.name	= "artpec6-pcie",
->  		.of_match_table = artpec6_pcie_of_match,
-> +		.suppress_bind_attrs = true,
->  	},
->  };
->  builtin_platform_driver(artpec6_pcie_driver);
-> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-> index b6c832ba39dd..bdb75a5758ae 100644
-> --- a/drivers/pci/dwc/pcie-designware-plat.c
-> +++ b/drivers/pci/dwc/pcie-designware-plat.c
-> @@ -129,6 +129,7 @@ static struct platform_driver dw_plat_pcie_driver = {
->  	.driver = {
->  		.name	= "dw-pcie",
->  		.of_match_table = dw_plat_pcie_of_match,
-> +		.suppress_bind_attrs = true,
->  	},
->  	.probe = dw_plat_pcie_probe,
->  };
-> diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
-> index fd66a3199db7..088ed5e4e46b 100644
-> --- a/drivers/pci/dwc/pcie-hisi.c
-> +++ b/drivers/pci/dwc/pcie-hisi.c
-> @@ -334,6 +334,7 @@ static struct platform_driver hisi_pcie_driver = {
->  	.driver = {
->  		   .name = "hisi-pcie",
->  		   .of_match_table = hisi_pcie_of_match,
-> +		   .suppress_bind_attrs = true,
->  	},
->  };
->  builtin_platform_driver(hisi_pcie_driver);
-> @@ -391,6 +392,7 @@ static struct platform_driver hisi_pcie_almost_ecam_driver = {
->  	.driver = {
->  		   .name = "hisi-pcie-almost-ecam",
->  		   .of_match_table = hisi_pcie_almost_ecam_of_match,
-> +		   .suppress_bind_attrs = true,
->  	},
->  };
->  builtin_platform_driver(hisi_pcie_almost_ecam_driver);
-> diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
-> index eaa4ea8e2ea4..0d117499da0d 100644
-> --- a/drivers/pci/dwc/pcie-spear13xx.c
-> +++ b/drivers/pci/dwc/pcie-spear13xx.c
-> @@ -308,6 +308,7 @@ static struct platform_driver spear13xx_pcie_driver = {
->  	.driver = {
->  		.name	= "spear-pcie",
->  		.of_match_table = of_match_ptr(spear13xx_pcie_of_match),
-> +		.suppress_bind_attrs = true,
->  	},
->  };
->  
-> diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-> index 4ae5418a1aad..9d2713707a91 100644
-> --- a/drivers/pci/host/pci-ftpci100.c
-> +++ b/drivers/pci/host/pci-ftpci100.c
-> @@ -556,6 +556,7 @@ static struct platform_driver faraday_pci_driver = {
->  	.driver = {
->  		.name = "ftpci100",
->  		.of_match_table = of_match_ptr(faraday_pci_of_match),
-> +		.suppress_bind_attrs = true,
->  	},
->  	.probe  = faraday_pci_probe,
->  };
-> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
-> index c05ea9d72f69..7d709a7e0aa8 100644
-> --- a/drivers/pci/host/pci-host-generic.c
-> +++ b/drivers/pci/host/pci-host-generic.c
-> @@ -60,6 +60,7 @@ static struct platform_driver gen_pci_driver = {
->  	.driver = {
->  		.name = "pci-host-generic",
->  		.of_match_table = gen_pci_of_match,
-> +		.suppress_bind_attrs = true,
->  	},
->  	.probe = gen_pci_probe,
->  };
-> diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
-> index 3f54a43bbbea..fc0ca03f280e 100644
-> --- a/drivers/pci/host/pci-thunder-ecam.c
-> +++ b/drivers/pci/host/pci-thunder-ecam.c
-> @@ -373,6 +373,7 @@ static struct platform_driver thunder_ecam_driver = {
->  	.driver = {
->  		.name = KBUILD_MODNAME,
->  		.of_match_table = thunder_ecam_of_match,
-> +		.suppress_bind_attrs = true,
->  	},
->  	.probe = thunder_ecam_probe,
->  };
-> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
-> index 52b5bdccf5f0..4260b0765949 100644
-> --- a/drivers/pci/host/pci-thunder-pem.c
-> +++ b/drivers/pci/host/pci-thunder-pem.c
-> @@ -416,6 +416,7 @@ static struct platform_driver thunder_pem_driver = {
->  	.driver = {
->  		.name = KBUILD_MODNAME,
->  		.of_match_table = thunder_pem_of_match,
-> +		.suppress_bind_attrs = true,
->  	},
->  	.probe = thunder_pem_probe,
->  };
-> diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
-> index 5ebee7d37ff5..5a5b84227eb6 100644
-> --- a/drivers/pci/host/pci-versatile.c
-> +++ b/drivers/pci/host/pci-versatile.c
-> @@ -221,6 +221,7 @@ static struct platform_driver versatile_pci_driver = {
->  	.driver = {
->  		.name = "versatile-pci",
->  		.of_match_table = versatile_pci_of_match,
-> +		.suppress_bind_attrs = true,
->  	},
->  	.probe = versatile_pci_probe,
->  };
-> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
-> index 1a6108788f6f..517bea33809f 100644
-> --- a/drivers/pci/host/pci-xgene.c
-> +++ b/drivers/pci/host/pci-xgene.c
-> @@ -697,6 +697,7 @@ static struct platform_driver xgene_pcie_driver = {
->  	.driver = {
->  		   .name = "xgene-pcie",
->  		   .of_match_table = of_match_ptr(xgene_pcie_match_table),
-> +		   .suppress_bind_attrs = true,
->  	},
->  	.probe = xgene_pcie_probe_bridge,
->  };
-> -- 
-> 2.12.2.564.g063fe858b8-goog
-> 
+On Tue, 2017-04-04 at 16:36 -0500, Bjorn Helgaas wrote:
+> > --- a/arch/xtensa/kernel/pci.c
+> > +++ b/arch/xtensa/kernel/pci.c
+> > @@ -345,7 +345,7 @@ __pci_mmap_set_pgprot(struct pci_dev *dev, struct v=
+m_area_struct *vma,
+> > =C2=A0
+> > =C2=A0	/* Set to write-through */
+> > =C2=A0	prot =3D (prot & _PAGE_CA_MASK) | _PAGE_CA_WT;
+> > -#if 0
+> > +#ifdef arch_can_pci_mmap_wc
+>
+> This hunk seems like maybe it should be a separate patch.
+>=20
+> ...
+>
+> This part seems different -- it changes the way pci_mmap_page_range()
+> works.
+
+It doesn't, because arch_can_pci_map_wc isn't defined on xtensa. So
+it's just a trivial cleanup for future-proofing, turning that 'if 0'
+into 'if <something that isn't set>'.
+
+> > diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+> > index dc8912e..c49be71 100644
+> > --- a/drivers/pci/proc.c
+> > +++ b/drivers/pci/proc.c
+> > @@ -209,15 +209,18 @@ static long proc_bus_pci_ioctl(struct file *file,=
+ unsigned int cmd,
+> > =C2=A0		fpriv->mmap_state =3D pci_mmap_mem;
+> > =C2=A0		break;
+> > =C2=A0
+> > +#ifdef arch_can_pci_mmap_wc
+> Can we get rid of these #ifdefs in the code by adding this to linux/pci.h=
+?
+>=20
+> =C2=A0 #ifndef arch_can_pci_mmap_wc
+> =C2=A0 #define arch_can_pci_mmap_wc()	0
+> =C2=A0 #endif
+
+Er.... at the time, that was non-trivial because there was something
+that actually needed to be *removed* with the preprocessor instead of
+just not being called. But after I settled on the incremental approach
+of having pci_mmap_resource_range() be a wrapper for
+pci_mmap_page_range() *and* vice versa I think that requirement went
+away. I'll take another look and see if I can do that now; thanks.
+
+Are you happy with the suggestion that we use HAVE_PCI_MMAP *only* to
+control mmap on /proc/bus/pci, and we present mmap through sysfs on all
+platforms via the generic code?
+--=-aMgi7qKcxIgw0vBuWKq/
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCDzUw
+ggSvMIIDl6ADAgECAhEA4CPLFRKDU4mtYW56VGdrITANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQG
+EwJTRTEUMBIGA1UEChMLQWRkVHJ1c3QgQUIxJjAkBgNVBAsTHUFkZFRydXN0IEV4dGVybmFsIFRU
+UCBOZXR3b3JrMSIwIAYDVQQDExlBZGRUcnVzdCBFeHRlcm5hbCBDQSBSb290MB4XDTE0MTIyMjAw
+MDAwMFoXDTIwMDUzMDEwNDgzOFowgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1h
+bmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEw
+PwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBF
+bWFpbCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAImxDdp6UxlOcFIdvFamBia3
+uEngludRq/HwWhNJFaO0jBtgvHpRQqd5jKQi3xdhTpHVdiMKFNNKAn+2HQmAbqUEPdm6uxb+oYep
+LkNSQxZ8rzJQyKZPWukI2M+TJZx7iOgwZOak+FaA/SokFDMXmaxE5WmLo0YGS8Iz1OlAnwawsayT
+QLm1CJM6nCpToxDbPSBhPFUDjtlOdiUCISn6o3xxdk/u4V+B6ftUgNvDezVSt4TeIj0sMC0xf1m9
+UjewM2ktQ+v61qXxl3dnUYzZ7ifrvKUHOHaMpKk4/9+M9QOsSb7K93OZOg8yq5yVOhM9DkY6V3Rh
+UL7GQD/L5OKfoiECAwEAAaOCARcwggETMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1Qa
+MB0GA1UdDgQWBBSSYWuC4aKgqk/sZ/HCo/e0gADB7DAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/
+BAgwBgEB/wIBADAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEQYDVR0gBAowCDAGBgRV
+HSAAMEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9BZGRUcnVzdEV4
+dGVybmFsQ0FSb290LmNybDA1BggrBgEFBQcBAQQpMCcwJQYIKwYBBQUHMAGGGWh0dHA6Ly9vY3Nw
+LnVzZXJ0cnVzdC5jb20wDQYJKoZIhvcNAQELBQADggEBABsqbqxVwTqriMXY7c1V86prYSvACRAj
+mQ/FZmpvsfW0tXdeDwJhAN99Bf4Ss6SAgAD8+x1banICCkG8BbrBWNUmwurVTYT7/oKYz1gb4yJj
+nFL4uwU2q31Ypd6rO2Pl2tVz7+zg+3vio//wQiOcyraNTT7kSxgDsqgt1Ni7QkuQaYUQ26Y3NOh7
+4AEQpZzKOsefT4g0bopl0BqKu6ncyso20fT8wmQpNa/WsadxEdIDQ7GPPprsnjJT9HaSyoY0B7ks
+yuYcStiZDcGG4pCS+1pCaiMhEOllx/XVu37qjIUgAmLq0ToHLFnFmTPyOInltukWeh95FPZKEBom
++nyK+5swggU9MIIEJaADAgECAhBqC1BYlVMtBFBN4igR/howMA0GCSqGSIb3DQEBCwUAMIGbMQsw
+CQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3Jk
+MRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xp
+ZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTYxMjIwMDAwMDAwWhcN
+MTcxMjIwMjM1OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRlYWQub3JnMIIBIjAN
+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwbTrFaiGdvN2pThnR9q+4eaXB2wQZQNqhter5ZrJ
+pPO47e87bZ+f1tmYoh6+rB90G/XN24NErPRfvU4zVzNT9pCtCzSSVnBlZQBpaEYMKhcXo5PGKNsm
+An8BoGwNXjlxwbBNRaNO+ky0wNCaMNd1JLxEuvqg9J7rrcpHhWmnpXD5IKa8gv9GyVAJgOpiBOts
+p91sShc2kHvWJ5waPEWPCHDH9J+twGGKqKIIU7fdbURLUgUL1wlDSAHf/lgIAVCSj2H2HpoGqHpy
+HgOAClX9iRSLNa0Znj8HTaqfOwxXevsz1KkLFY+Ahm426GIEqdfkK2iT6Hhgc7tjNO3f8i5ALQID
+AQABo4IB8TCCAe0wHwYDVR0jBBgwFoAUkmFrguGioKpP7GfxwqP3tIAAwewwHQYDVR0OBBYEFILE
+dmHLtK6oxmFJZvBhTQhvqrS0MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1UdJQQZ
+MBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0gBD8wPTA7
+BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9D
+UFMwXQYDVR0fBFYwVDBSoFCgToZMaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPU0hBMjU2
+Q2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFpbENBLmNybDCBkAYIKwYBBQUHAQEEgYMw
+gYAwWAYIKwYBBQUHMAKGTGh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVu
+dEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9v
+Y3NwLmNvbW9kb2NhLmNvbTAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRlYWQub3JnMA0GCSqGSIb3
+DQEBCwUAA4IBAQA+AfvNhFwtapF5Lzjapgul3zYuEnMfR538Ya1vhP8wuOkcoJeT2gEFXzVO2WUu
+eWM0g0/DumnRB53htV/Qq/+vsL0i6a2+iOO7kHi5O7bZkgbdNv0t2lzonDUHi6LTa7NUj+tv+j6y
+hW+iNquC3ACP1dIZH8gJmicHblW63qRgp6wxhn315MLBeavi3uiSag2eeKFePiTIwJjN2UYq6kWg
+PL5G/Ycf9x/xN1XBTfJiURc0FsXhrA98VMWnt52C5Lo4txhGjzTI+IZg40b3YDs6E7mTYb5KKmbc
+QZA9priOFDdj1z5W9BdWhU6I/D0P9y8Z4Tr6+ZscMUVD0RqWy2LeMIIFPTCCBCWgAwIBAgIQagtQ
+WJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQsFADCBmzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy
+ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExp
+bWl0ZWQxQTA/BgNVBAMTOENPTU9ETyBTSEEtMjU2IENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
+U2VjdXJlIEVtYWlsIENBMB4XDTE2MTIyMDAwMDAwMFoXDTE3MTIyMDIzNTk1OVowJDEiMCAGCSqG
+SIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBAMG06xWohnbzdqU4Z0favuHmlwdsEGUDaobXq+WayaTzuO3vO22fn9bZmKIevqwfdBv1zduD
+RKz0X71OM1czU/aQrQs0klZwZWUAaWhGDCoXF6OTxijbJgJ/AaBsDV45ccGwTUWjTvpMtMDQmjDX
+dSS8RLr6oPSe663KR4Vpp6Vw+SCmvIL/RslQCYDqYgTrbKfdbEoXNpB71iecGjxFjwhwx/SfrcBh
+iqiiCFO33W1ES1IFC9cJQ0gB3/5YCAFQko9h9h6aBqh6ch4DgApV/YkUizWtGZ4/B02qnzsMV3r7
+M9SpCxWPgIZuNuhiBKnX5Ctok+h4YHO7YzTt3/IuQC0CAwEAAaOCAfEwggHtMB8GA1UdIwQYMBaA
+FJJha4LhoqCqT+xn8cKj97SAAMHsMB0GA1UdDgQWBBSCxHZhy7SuqMZhSWbwYU0Ib6q0tDAOBgNV
+HQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGyMQED
+BQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYBBAGyMQECAQEBMCswKQYIKwYB
+BQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BTMF0GA1UdHwRWMFQwUqBQoE6GTGh0
+dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVudEF1dGhlbnRpY2F0aW9uYW5k
+U2VjdXJlRW1haWxDQS5jcmwwgZAGCCsGAQUFBwEBBIGDMIGAMFgGCCsGAQUFBzAChkxodHRwOi8v
+Y3J0LmNvbW9kb2NhLmNvbS9DT01PRE9TSEEyNTZDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3Vy
+ZUVtYWlsQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0R
+BBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEAPgH7zYRcLWqReS84
+2qYLpd82LhJzH0ed/GGtb4T/MLjpHKCXk9oBBV81TtllLnljNINPw7pp0Qed4bVf0Kv/r7C9Iumt
+vojju5B4uTu22ZIG3Tb9Ldpc6Jw1B4ui02uzVI/rb/o+soVvojargtwAj9XSGR/ICZonB25Vut6k
+YKesMYZ99eTCwXmr4t7okmoNnnihXj4kyMCYzdlGKupFoDy+Rv2HH/cf8TdVwU3yYlEXNBbF4awP
+fFTFp7edguS6OLcYRo80yPiGYONG92A7OhO5k2G+Sipm3EGQPaa4jhQ3Y9c+VvQXVoVOiPw9D/cv
+GeE6+vmbHDFFQ9Ealsti3jGCA9MwggPPAgEBMIGwMIGbMQswCQYDVQQGEwJHQjEbMBkGA1UECBMS
+R3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0Eg
+TGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFu
+ZCBTZWN1cmUgRW1haWwgQ0ECEGoLUFiVUy0EUE3iKBH+GjAwDQYJYIZIAWUDBAIBBQCgggHzMBgG
+CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MDQwNTA3MjIyNFowLwYJ
+KoZIhvcNAQkEMSIEII5RoDXy/VdmyJPBQE+61sH8AT9yJceol5HtoUH4uPKwMIHBBgkrBgEEAYI3
+EAQxgbMwgbAwgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
+BgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01P
+RE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQ
+WJVTLQRQTeIoEf4aMDCBwwYLKoZIhvcNAQkQAgsxgbOggbAwgZsxCzAJBgNVBAYTAkdCMRswGQYD
+VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
+TyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRp
+b24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQWJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQEFAASC
+AQAKlNIff/GVBF+2qH9qq1DHcvejEd+STMs4NStOfZvqiY2iYku4vzI7OvVqaBaR8zea0B5DjYse
+a0+kpmmfIMA1Q1fmvIjI1c2g9IXHH42CekeDQC3xTscbxaKOIBw8U/t64i7sQwWaGLAbLlmXVu1O
+G21/mrxwRmak0UXTTnTK1W4ehL8MDrbYW4w6rsmr+XylCR5qBF7wYYgvOLQG67yDNKPgjBpSReZE
+7vhxSunrK6QwarFpH4tWFfTDsdWcWstTigF/ENlGbR9WxF5O/KAjN3E0TsmZgWAZoqPzLYt0phEq
+Q2WQqJCdkeB3SzFXfL8KgdqZ9Zp1nUmqUtceSx2SAAAAAAAA
+
+
+--=-aMgi7qKcxIgw0vBuWKq/--
