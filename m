@@ -1,92 +1,130 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 18/27] x86: Use generic pci_mmap_resource_range()
-Date: Wed, 12 Apr 2017 13:26:07 +0100
-Message-Id: <d56ef188d8769d84fb97e691222876772e209a54.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=zE+4=3N=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=zE+4=3N=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Wed, 5 Apr 2017 13:38:12 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Tony Luck <tony.luck@intel.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	John Garry <john.garry@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
+ interface
+Message-ID: <20170405113238.GA2465@red-moon>
+References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+ <20170327094954.7162-3-lorenzo.pieralisi@arm.com>
+ <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
+ <20170328144543.GA18046@red-moon>
+ <20170405105841.GG7909@n2100.armlinux.org.uk>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170405105841.GG7909@n2100.armlinux.org.uk>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+On Wed, Apr 05, 2017 at 11:58:41AM +0100, Russell King - ARM Linux wrote:
+> On Tue, Mar 28, 2017 at 03:45:43PM +0100, Lorenzo Pieralisi wrote:
+> > On Mon, Mar 27, 2017 at 08:41:10PM -0500, Bjorn Helgaas wrote:
+> > > On Mon, Mar 27, 2017 at 10:49:30AM +0100, Lorenzo Pieralisi wrote:
+> > > > diff --git a/arch/x86/include/asm/io.h b/arch/x86/include/asm/io.h
+> > > > index 7afb0e2..50b292f 100644
+> > > > --- a/arch/x86/include/asm/io.h
+> > > > +++ b/arch/x86/include/asm/io.h
+> > > > @@ -171,6 +171,7 @@ static inline unsigned int isa_virt_to_bus(volatile void *address)
+> > > >  extern void __iomem *ioremap_nocache(resource_size_t offset, unsigned long size);
+> > > >  extern void __iomem *ioremap_uc(resource_size_t offset, unsigned long size);
+> > > >  #define ioremap_uc ioremap_uc
+> > > > +#define ioremap_nopost ioremap_nocache
+> > > 
+> > > These are all the same as the default from asm-generic.h.  Do we really
+> > > need these definitions in alpha, avr32, frv, ia64, x86?
+> > 
+> > Those arches do not include asm-generic.h (I suppose for a good reason)
+> > but a definition is needed anyway if we want code using ioremap_nopost()
+> > to be unconditional. This is one way of doing it, there are others not
+> > sure they are any better, I am open to suggestions.
+> 
+> We do have linux/io.h, which should be included in preference to asm/io.h.
+> linux/io.h has existed for years, but I still see (from time to time)
+> patches adding drivers that (imho incorrectly) use asm/io.h.
+> 
+> Also, this:
+> 
+> > > > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> > > > index 7ef015e..0e81938 100644
+> > > > --- a/include/asm-generic/io.h
+> > > > +++ b/include/asm-generic/io.h
+> > > > @@ -915,6 +915,10 @@ extern void ioport_unmap(void __iomem *p);
+> > > >  #endif /* CONFIG_GENERIC_IOMAP */
+> > > >  #endif /* CONFIG_HAS_IOPORT_MAP */
+> > > >  
+> > > > +#ifndef ioremap_nopost
+> > > > +#define ioremap_nopost ioremap_nocache
+> > > > +#endif
+> > > > +
+> > > >  #ifndef xlate_dev_kmem_ptr
+> > > >  #define xlate_dev_kmem_ptr xlate_dev_kmem_ptr
+> > > >  static inline void *xlate_dev_kmem_ptr(void *addr)
+> 
+> could well be located in linux/io.h, which would make it available
+> everywhere.
+> 
+> I'd suggest one change to this though:
+> 
+> #ifndef ioremap_nopost
+> static inline void __iomem *ioremap_nopost(resource_size_t offset,
+> 					   unsigned long size)
+> {
+> 	return ioremap_nocache(offset, size);
+> }
+> #endif
+> 
+> This way, if someone forgets to define ioremap_nopost() in their
+> asm/io.h but provides a definition or extern prototype for
+> ioremap_nopost(), we end up with a compile error to highlight the
+> error, rather than the error being hidden by the preprocessor.
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/x86/include/asm/pci.h |  1 +
- arch/x86/pci/i386.c        | 48 ----------------------------------------------
- 2 files changed, 1 insertion(+), 48 deletions(-)
+Yes, I could add ioremap_nopost() to linux/io.h I did not do it because
+linux/io.h, for whatever reason, does not seem to contain ioremap_*
+prototypes; this does not mean we should not add it there but that
+would look odd (with all others ioremap_* in asm/io.h), all I am
+saying. This stuff requires some clean-up regardless, for the records.
 
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 734cc94..f513cc2 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -104,6 +104,7 @@ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
- 
- #define HAVE_PCI_MMAP
- #define arch_can_pci_mmap_wc()	pat_enabled()
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE
- 
- #ifdef CONFIG_PCI
- extern void early_quirks(void);
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 8ca5e5d..68499cf 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -406,51 +406,3 @@ void __init pcibios_resource_survey(void)
- 	 */
- 	ioapic_insert_resources();
- }
--
--static const struct vm_operations_struct pci_mmap_ops = {
--	.access = generic_access_phys,
--};
--
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	unsigned long prot;
--
--	/* I/O space cannot be accessed via normal processor loads and
--	 * stores on this platform.
--	 */
--	if (mmap_state == pci_mmap_io)
--		return -EINVAL;
--
--	prot = pgprot_val(vma->vm_page_prot);
--
--	/*
-- 	 * Return error if pat is not enabled and write_combine is requested.
-- 	 * Caller can followup with UC MINUS request and add a WC mtrr if there
-- 	 * is a free mtrr slot.
-- 	 */
--	if (!pat_enabled() && write_combine)
--		return -EINVAL;
--
--	if (pat_enabled() && write_combine)
--		prot |= cachemode2protval(_PAGE_CACHE_MODE_WC);
--	else if (pat_enabled() || boot_cpu_data.x86 > 3)
--		/*
--		 * ioremap() and ioremap_nocache() defaults to UC MINUS for now.
--		 * To avoid attribute conflicts, request UC MINUS here
--		 * as well.
--		 */
--		prot |= cachemode2protval(_PAGE_CACHE_MODE_UC_MINUS);
--
--	vma->vm_page_prot = __pgprot(prot);
--
--	if (io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			       vma->vm_end - vma->vm_start,
--			       vma->vm_page_prot))
--		return -EAGAIN;
--
--	vma->vm_ops = &pci_mmap_ops;
--
--	return 0;
--}
--- 
-2.9.3
+As for the static inline, I did that and that did not make the
+kbuild robot happy at all on some arches:
+
+eg: openrisc
+
+>> include/asm-generic/io.h:922:9: error: implicit declaration of
+>> function 'ioremap_nocache' [-Werror=implicit-function-declaration]
+     return ioremap_nocache(offset, size);
+
+I will have another stab at it since what you put forward makes sense,
+I just have to find a way that works across arches.
+
+Thanks !
+Lorenzo
