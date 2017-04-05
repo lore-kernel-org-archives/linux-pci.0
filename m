@@ -1,95 +1,97 @@
-Return-Path: <SRS0=iY1L=4A=google.com=bhelgaas@kernel.org>
-Return-Path: <SRS0=iY1L=4A=google.com=bhelgaas@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v6 10/23] dt-bindings: PCI: Add DT bindings for PCI designware
+ EP mode
+Date: Wed, 5 Apr 2017 14:22:30 +0530
+Message-ID: <20170405085243.18123-11-kishon@ti.com>
+In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
+References: <20170405085243.18123-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <20170424093429.GT16981@rric.localdomain>
-References: <1490789773-21506-1-git-send-email-tn@semihalf.com>
- <20170421165614.GA17916@bhelgaas-glaptop.roam.corp.google.com> <20170424093429.GT16981@rric.localdomain>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 24 Apr 2017 12:05:05 -0500
-Message-ID: <CAErSpo4-a4jKEpxZX3YKeAzE-oVdE3gtRDGSx7nrGuVzK9OKGA@mail.gmail.com>
-Subject: Re: [PATCH 1/1] PCI: Add MCFG quirk for 2nd node of Cavium ThunderX
- pass2.x host controller
-To: Robert Richter <robert.richter@cavium.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
-	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, David Daney <ddaney@caviumnetworks.com>,
-	Vadim.Lomovtsev@caviumnetworks.com, "Rafael J. Wysocki" <rafael@kernel.org>,
-	Sunil.Goutham@cavium.com, geethasowjanya.akula@gmail.com,
-	linu.cherian@cavium.com,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 24, 2017 at 4:34 AM, Robert Richter
-<robert.richter@cavium.com> wrote:
-> On 21.04.17 11:56:14, Bjorn Helgaas wrote:
->> On Wed, Mar 29, 2017 at 02:16:13PM +0200, Tomasz Nowicki wrote:
->> > Currently SoCs pass2.x do not emulate EA headers for ACPI boot method at all.
->> > However, for pass2.x some devices (like EDAC) advertise incorrect base addresses
->> > in their BARs which results in driver probe failure during resource request.
->> > Since all problematic blocks are on 2nd NUMA node under domain 10 add necessary
->> > quirk entry to obtain BAR addresses correction using EA header emulation.
->> >
->> > Fixes: 44f22bd91e88 ("PCI: Add MCFG quirks for Cavium ThunderX pass2.x host controller")
->> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> > CC: stable@vger.kernel.org  # v4.10+
->>
->> Sorry Tomasz, I must have mistakenly marked this "accepted" in
->> patchwork, so it fell off my to-do list.  It's too late to get this in
->> v4.11, but I can still apply it for v4.12.
->>
->> I put it on my pci/host-thunder branch with Robert's ack.  I added a preceding
->> patch to tidy up whitespace, which makes this patch look like just:
->>
->>         /* SoC pass2.x */
->>         THUNDER_PEM_QUIRK(1, 0),
->>         THUNDER_PEM_QUIRK(1, 1),
->> +       THUNDER_ECAM_QUIRK(1, 10),
->>
->> Please double-check it to make sure this is what you need.
->
-> Bjorn,
->
-> since the second is marked stable there will be conflicts when
-> applying it to stable (or built errors). The best would be to change
-> order of both (128cd6e8249f^, 128cd6e8249f) for smooth backporting
-> which makes it then more close to Tomasz's version again.
+Add device tree binding documentation for PCI designware EP mode.
 
-Thanks, I should have noticed that.  Could go either way; I just
-marked 128cd6e8249f^ for stable as well, since it seemed marginally
-easier to read to split the whitespace changes from the real change.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Acked-by: Rob Herring <robh@kernel.org>
+---
+ .../devicetree/bindings/pci/designware-pcie.txt    | 26 +++++++++++++++-------
+ 1 file changed, 18 insertions(+), 8 deletions(-)
 
->> > ---
->> >  drivers/acpi/pci_mcfg.c | 7 ++++---
->> >  1 file changed, 4 insertions(+), 3 deletions(-)
->> >
->> > diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->> > index a6a4cea..a0a391e 100644
->> > --- a/drivers/acpi/pci_mcfg.c
->> > +++ b/drivers/acpi/pci_mcfg.c
->> > @@ -90,13 +90,14 @@ static struct mcfg_fixup mcfg_quirks[] = {
->> >       &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x894057000000UL, node) },  \
->> >     { "CAVIUM", "THUNDERX", rev, 9 + (10 * (node)), MCFG_BUS_ANY,       \
->> >       &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, node) }
->> > +#define THUNDER_ECAM_QUIRK(rev, seg)                                       \
->> > +   { "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,                 \
->> > +   &pci_thunder_ecam_ops }
->> >     /* SoC pass2.x */
->> >     THUNDER_PEM_QUIRK(1, 0),
->> >     THUNDER_PEM_QUIRK(1, 1),
->> > +   THUNDER_ECAM_QUIRK(1, 10),
->> >
->> > -#define THUNDER_ECAM_QUIRK(rev, seg)                                       \
->> > -   { "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,                 \
->> > -   &pci_thunder_ecam_ops }
->> >     /* SoC pass1.x */
->> >     THUNDER_PEM_QUIRK(2, 0),        /* off-chip devices */
->> >     THUNDER_PEM_QUIRK(2, 1),        /* off-chip devices */
->> > --
->> > 2.7.4
->> >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+index 1392c705ceca..b2480dd38c11 100644
+--- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
++++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+@@ -6,30 +6,40 @@ Required properties:
+ - reg-names: Must be "config" for the PCIe configuration space.
+     (The old way of getting the configuration address space from "ranges"
+     is deprecated and should be avoided.)
++- num-lanes: number of lanes to use
++RC mode:
+ - #address-cells: set to <3>
+ - #size-cells: set to <2>
+ - device_type: set to "pci"
+ - ranges: ranges for the PCI memory and I/O regions
+ - #interrupt-cells: set to <1>
+-- interrupt-map-mask and interrupt-map: standard PCI properties
+-	to define the mapping of the PCIe interface to interrupt
++- interrupt-map-mask and interrupt-map: standard PCI
++	properties to define the mapping of the PCIe interface to interrupt
+ 	numbers.
+-- num-lanes: number of lanes to use
++EP mode:
++- num-ib-windows: number of inbound address translation
++        windows
++- num-ob-windows: number of outbound address translation
++        windows
+ 
+ Optional properties:
+-- num-viewport: number of view ports configured in hardware.  If a platform
+-  does not specify it, the driver assumes 2.
+ - num-lanes: number of lanes to use (this property should be specified unless
+   the link is brought already up in BIOS)
+ - reset-gpio: gpio pin number of power good signal
+-- bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
+-  specify this property, to keep backwards compatibility a range of 0x00-0xff
+-  is assumed if not present)
+ - clocks: Must contain an entry for each entry in clock-names.
+ 	See ../clocks/clock-bindings.txt for details.
+ - clock-names: Must include the following entries:
+ 	- "pcie"
+ 	- "pcie_bus"
++RC mode:
++- num-viewport: number of view ports configured in
++  hardware. If a platform does not specify it, the driver assumes 2.
++- bus-range: PCI bus numbers covered (it is recommended
++  for new devicetrees to specify this property, to keep backwards
++  compatibility a range of 0x00-0xff is assumed if not present)
++EP mode:
++- max-functions: maximum number of functions that can be
++  configured
+ 
+ Example configuration:
+ 
+-- 
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
