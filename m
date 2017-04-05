@@ -1,52 +1,80 @@
-Return-Path: <SRS0=Ppao=3Y=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=Ppao=3Y=deltatee.com=logang@kernel.org>
-To: Dan Williams <dan.j.williams@intel.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1491974532.7236.43.camel@kernel.crashing.org>
- <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
- <1492034124.7236.77.camel@kernel.crashing.org>
- <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
- <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
- <20170414041656.GA30694@obsidianresearch.com>
- <1492169849.25766.3.camel@kernel.crashing.org>
- <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
- <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
- <1492207643.25766.18.camel@kernel.crashing.org>
- <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
- <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
- <1492311719.25766.37.camel@kernel.crashing.org>
- <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
- Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
- "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
- Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
- Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
- linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jerome Glisse <jglisse@redhat.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <5e43818e-8c6b-8be8-23ff-b798633d2a73@deltatee.com>
-Date: Sun, 16 Apr 2017 10:34:54 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:33840 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753319AbdDENvS (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Apr 2017 09:51:18 -0400
+Subject: Re: [RFC] PCI ACS Flags Clarification
+To: Alex Williamson <alex.williamson@redhat.com>
+References: <49257b71-6fa1-5870-fba6-1b8c5179b8ec@codeaurora.org>
+ <20170404133923.5232e424@t450s.home>
+Cc: Linux PCI <linux-pci@vger.kernel.org>,
+        iommu@lists.linux-foundation.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <615834cc-37d2-afd4-d093-23fc9e33f5d7@codeaurora.org>
+Date: Wed, 5 Apr 2017 09:51:06 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+In-Reply-To: <20170404133923.5232e424@t450s.home>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi Alex,
 
+Thank you very much for the detailed explanation.
 
-On 16/04/17 09:53 AM, Dan Williams wrote:
-> ZONE_DEVICE allows you to redirect via get_dev_pagemap() to retrieve
-> context about the physical address in question. I'm thinking you can
-> hang bus address translation data off of that structure. This seems
-> vaguely similar to what HMM is doing.
+On 4/4/2017 3:39 PM, Alex Williamson wrote:
+> On Tue, 4 Apr 2017 14:47:58 -0400
+> Sinan Kaya <okaya@codeaurora.org> wrote:
+> 
+[cut]
 
-Thanks! I didn't realize you had the infrastructure to look up a device
-from a pfn/page. That would really come in handy for us.
+>> The requirement is to have an 
+>> 1. ACS capability with PCI_ACS_SV if p2p is not supported
+>> 2. ACS capability with PCI_ACS_SV|PCI_ACS_RR | PCI_ACS_CR |
+>>   PCI_ACS_UF if p2p is supported.
+>>
+>> Did I get this right?
+> 
 
-Logan
+I'm looking for sanity check on OS requirements. According to the PCIE spec,
+ACS itself is optional. However, Linux requires ACS capability. I want to
+make sure that we are satisfying the Linux requirements here.
+
+I also agree that spec should be the guide. Maybe, a combination of spec+linux
+is the right answer.
+
+> I'd suggest following the spec, not the code, that way you always have a
+> case for how you interpret the spec and the behavior of your hardware.
+> The code is an attempt to validate the device against the spec, but more
+> thorough implementations may follow.  REQ_ACS_FLAGS defines the set of
+> ACS capabilities we think are relevant to device isolation.  In
+> particular, UF seems like a key feature and our current test for it may
+> not be fully correct.  Note how RR and CR only specify p2p with other
+> root ports while UF requires transaction towards to the RC.  Section
+> 6.12.2 further defines Redirected Request Validation as a feature
+> within the context of RR and CR.  So rather than look at the code,
+> discuss section 6.12 with the hardware engineers and understand how it
+> behaves relative to each device and transaction type.  Implement the
+> capabilities that best match.  Attempting a minimal implementation
+> based on the current software interpretation may bite later, for
+> instance if we re-interpret how UF works.  Thanks,
+
+I read your reply multiple times. Here is what I got from it.
+
+The summary below is for the root ports only.
+
+- P2P on root ports is optional. 
+- If P2P is there source validation, translation blocking, upstream forwarding,
+p2p request redirection and p2p completion redirection ACS capabilities need to be
+there for spec+linux compliance. 
+- If P2P is not there source validation, translation blocking and upstream forwarding
+needs to be there for spec+linux compliance.
+- The code is relaxed to allow any combination of these today based on the ACS
+capability but it can change tomorrow. 
+
+Sinan
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
