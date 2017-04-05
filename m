@@ -1,61 +1,65 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34332 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933841AbdDGT0E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Apr 2017 15:26:04 -0400
-Date: Fri, 7 Apr 2017 14:26:00 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Niklas Cassel <niklas.cassel@axis.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Jingoo Han <jingoohan1@gmail.com>
-Subject: [GIT PULL] PCI fixes for v4.11
-Message-ID: <20170407192600.GA12235@bhelgaas-glaptop.roam.corp.google.com>
+Received: from fllnx210.ext.ti.com ([198.47.19.17]:42566 "EHLO
+        fllnx210.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751121AbdDEFn7 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Apr 2017 01:43:59 -0400
+Subject: Re: [pci:pci/host-designware 37/43]
+ drivers/misc/pci_endpoint_test.c:420:8: error: implicit declaration of
+ function 'pci_alloc_irq_vectors'
+To: kbuild test robot <fengguang.wu@intel.com>
+References: <201704050616.ukHhiUMi%fengguang.wu@intel.com>
+CC: <kbuild-all@01.org>, <linux-pci@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <142dc385-28e5-a068-d6a9-076c7156e955@ti.com>
+Date: Wed, 5 Apr 2017 11:13:52 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201704050616.ukHhiUMi%fengguang.wu@intel.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI fixes:
-
-  - fix ThunderX legacy firmware resources
-
-  - fix ARTPEC-6 and DesignWare platform driver NULL pointer dereferences
-
-  - fix HiSilicon link error
 
 
-The following changes since commit 9abb27c7594a62bbf6385e20b7f5a90b4eceae2f:
+On Wednesday 05 April 2017 03:42 AM, kbuild test robot wrote:
+> tree:   https://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git pci/host-designware
+> head:   f6a1972e20ab2f40f4a8a1000bf34f4df3145c01
+> commit: 450afc42599ba3544e23fb45e86a995d839e2e1c [37/43] misc: Add host side PCI driver for PCI test function device
+> config: blackfin-allmodconfig (attached as .config)
+> compiler: bfin-uclinux-gcc (GCC) 6.2.0
+> reproduce:
+>         wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         git checkout 450afc42599ba3544e23fb45e86a995d839e2e1c
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=blackfin 
+> 
+> All error/warnings (new ones prefixed by >>):
+> 
+>    drivers/misc/pci_endpoint_test.c: In function 'pci_endpoint_test_probe':
+>>> drivers/misc/pci_endpoint_test.c:420:8: error: implicit declaration of function 'pci_alloc_irq_vectors' [-Werror=implicit-function-declaration]
+>      irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
+>            ^~~~~~~~~~~~~~~~~~~~~
+>>> drivers/misc/pci_endpoint_test.c:420:43: error: 'PCI_IRQ_MSI' undeclared (first use in this function)
+>      irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
+>                                               ^~~~~~~~~~~
+>    drivers/misc/pci_endpoint_test.c:420:43: note: each undeclared identifier is reported only once for each function it appears in
+>>> drivers/misc/pci_endpoint_test.c:487:2: error: implicit declaration of function 'pci_disable_msi' [-Werror=implicit-function-declaration]
+>      pci_disable_msi(pdev);
+>      ^~~~~~~~~~~~~~~
+>    drivers/misc/pci_endpoint_test.c: At top level:
+>>> drivers/misc/pci_endpoint_test.c:530:1: warning: data definition has no type or storage class
+>     module_pci_driver(pci_endpoint_test_driver);
+>     ^~~~~~~~~~~~~~~~~
+>>> drivers/misc/pci_endpoint_test.c:530:1: error: type defaults to 'int' in declaration of 'module_pci_driver' [-Werror=implicit-int]
+>>> drivers/misc/pci_endpoint_test.c:530:1: warning: parameter names (without types) in function declaration
+>    drivers/misc/pci_endpoint_test.c:524:26: warning: 'pci_endpoint_test_driver' defined but not used [-Wunused-variable]
+>     static struct pci_driver pci_endpoint_test_driver = {
+>                              ^~~~~~~~~~~~~~~~~~~~~~~~
+>    cc1: some warnings being treated as errors
 
-  PCI: thunder-pem: Add legacy firmware support for Cavium ThunderX host controller (2017-03-23 17:11:26 -0500)
+This seems to be because of CONFIG_COMPILE_TEST=y. Will fix the Kconfig of
+pci_endpoint_test.c.
 
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.11-fixes-4
-
-for you to fetch changes up to 794a8604fe6e4a311373cde57a86ad4aab9d32b8:
-
-  PCI: dwc: Fix dw_pcie_ops NULL pointer dereference (2017-04-04 08:24:25 -0500)
-
-----------------------------------------------------------------
-pci-v4.11-fixes-4
-
-----------------------------------------------------------------
-Arnd Bergmann (1):
-      PCI: dwc: Select PCI_HOST_COMMON for hisi
-
-Niklas Cassel (1):
-      PCI: dwc: Fix dw_pcie_ops NULL pointer dereference
-
-Tomasz Nowicki (1):
-      PCI: thunder-pem: Fix legacy firmware PEM-specific resources
-
- drivers/pci/dwc/Kconfig                |  1 +
- drivers/pci/dwc/pcie-artpec6.c         |  4 ++++
- drivers/pci/dwc/pcie-designware-plat.c |  4 ++++
- drivers/pci/host/pci-thunder-pem.c     | 10 ++++++++--
- 4 files changed, 17 insertions(+), 2 deletions(-)
+Thanks
+Kishon
