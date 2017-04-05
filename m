@@ -1,123 +1,168 @@
-Return-Path: <SRS0=rdsm=3O=sifive.com=wesley@kernel.org>
-Return-Path: <SRS0=rdsm=3O=sifive.com=wesley@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v6 04/23] Documentation: PCI: Guide to use PCI endpoint
+ configfs
+Date: Wed, 5 Apr 2017 14:22:24 +0530
+Message-ID: <20170405085243.18123-5-kishon@ti.com>
+In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
+References: <20170405085243.18123-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <1491444359.50673.4.camel@intel.com>
-References: <CAMgXwTjX1j2dhi7n+APNef0di5oo+iK57Cq0S+3NdMtQzAc=Vw@mail.gmail.com>
- <20170404205617.GG27692@bhelgaas-glaptop.roam.corp.google.com>
- <CAMgXwTgacUcfzinQKuf8htwxFDJ_GvUN-R0zj7sNbqnpJF3QBA@mail.gmail.com>
- <20170405183732.GB17066@bhelgaas-glaptop.roam.corp.google.com>
- <1491441105.50673.2.camel@intel.com> <CAMgXwTj2sKhn9XB+6aEgZyxjgnv3njLks26XG6B0nL3BEMiivw@mail.gmail.com>
- <1491444359.50673.4.camel@intel.com>
-From: Wesley Terpstra <wesley@sifive.com>
-Date: Wed, 5 Apr 2017 19:22:48 -0700
-Message-ID: <CAMgXwThzPOiEcy=TWwFMjkxoAcwJTHoA65qqnDO6XVtWAoJ9mg@mail.gmail.com>
-Subject: Re: PCI enumeration without a BIOS
-To: Ley Foon Tan <ley.foon.tan@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org, Michal Simek <michal.simek@xilinx.com>,
-	rfi@lists.rocketboards.org
-Content-Type: text/plain; charset=UTF-8
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Is there an equivalent patch for xilinx-pcie.c? That one is for
-xilinx-pcie-nwl.c. Also, forgive my ignorance, but if a patch has been
-around since August 2016, shouldn't it be in 4.11 by now? (I'm running
-4.11-rc1 which has the altera fix but neither of the xilinx changes).
+Add Documentation to help users use PCI endpoint to configure PCI endpoint
+function and to bind the endpoint function with endpoint controller.
 
-On Wed, Apr 5, 2017 at 7:05 PM, Ley Foon Tan <ley.foon.tan@intel.com> wrote:
-> On Wed, 2017-04-05 at 18:59 -0700, Wesley Terpstra wrote:
->> On Wed, Apr 5, 2017 at 6:11 PM, Ley Foon Tan <ley.foon.tan@intel.com>
->> wrote:
->> >
->> > We have fixed this in last year.
->> Right, for host/pcie-altera.c
->> However, the problem persists in host/pcie-xilinx.c and host/pcie-
->> xilinx-nwl.c
->
-> It hasn't integrated to mainline yet.
-> https://lkml.org/lkml/2016/8/30/198
->
->>
->> >
->> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/
->> > comm
->> > it/drivers/pci/host/pcie-
->> > altera.c?id=99496bd2971fc378226ad4413e5b72c4545714bd
->> >
->> > >
->> > >
->> > > >
->> > > >
->> > > > Without it I see:
->> > > >
->> > > > [    6.230000] ------------[ cut here ]------------
->> > > > [    6.230000] WARNING: CPU: 0 PID: 1 at
->> > > > /scratch/terpstra/freedom-u-
->> > > > sdk/linux/kernel/irq/irqdomain.c:365
->> > > > irq_domain_associate+0x190/0x200
->> > > > [    6.240000] error: hwirq 0x4 is too large for dummy
->> > > > [    6.250000] CPU: 0 PID: 1 Comm: swapper Not tainted
->> > > > 4.11.0-rc1-661305-g4f97179 #12
->> > > > [    6.250000] Call Trace:
->> > > > [    6.260000] [<ffffffff80288660>] walk_stackframe+0x0/0x104
->> > > > [    6.260000] [<ffffffff80288800>] show_stack+0x38/0x50
->> > > > [    6.270000] [<ffffffff803c6e30>] dump_stack+0x2c/0x40
->> > > > [    6.270000] [<ffffffff8028c600>] __warn+0x118/0x130
->> > > > [    6.280000] [<ffffffff8028c658>] warn_slowpath_fmt+0x40/0x54
->> > > > [    6.280000] [<ffffffff802c02a8>]
->> > > > irq_domain_associate+0x18c/0x200
->> > > > [    6.290000] [<ffffffff802c0a3c>]
->> > > > irq_create_mapping+0x90/0xe4
->> > > > [    6.300000] [<ffffffff802c0be4>]
->> > > > irq_create_fwspec_mapping+0x154/0x288
->> > > > [    6.300000] [<ffffffff802c0d7c>]
->> > > > irq_create_of_mapping+0x64/0x84
->> > > > [    6.310000] [<ffffffff804f9cb8>]
->> > > > of_irq_parse_and_map_pci+0x38/0x50
->> > > > [    6.310000] [<ffffffff80407e00>] pci_fixup_irqs+0x6c/0x114
->> > > > [    6.320000] [<ffffffff80408e64>]
->> > > > xilinx_pcie_probe+0x308/0x3f0
->> > > > [    6.330000] [<ffffffff8042cba4>]
->> > > > platform_drv_probe+0x3c/0x88
->> > > > [    6.330000] [<ffffffff8042aec0>] really_probe+0xbc/0x260
->> > > > [    6.340000] [<ffffffff8042b138>] __driver_attach+0xd4/0xdc
->> > > > [    6.340000] [<ffffffff80429200>] bus_for_each_dev+0x68/0xb8
->> > > > [    6.350000] [<ffffffff8042b640>] driver_attach+0x24/0x38
->> > > > [    6.350000] [<ffffffff80429db8>] bus_add_driver+0x1b4/0x22c
->> > > > [    6.360000] [<ffffffff8042bdc0>] driver_register+0x68/0x12c
->> > > > [    6.360000] [<ffffffff8042da78>]
->> > > > __platform_driver_register+0x48/0x5c
->> > > > [    6.370000] [<ffffffff8000db38>]
->> > > > xilinx_pcie_driver_init+0x20/0x34
->> > > > [    6.380000] [<ffffffff80000d48>] do_one_initcall+0x98/0x140
->> > > > [    6.380000] [<ffffffff80000f38>]
->> > > > kernel_init_freeable+0x148/0x218
->> > > > [    6.390000] [<ffffffff805ad19c>] kernel_init+0x18/0x114
->> > > > [    6.390000] [<ffffffff80286cac>] ret_from_syscall+0xc/0x10
->> > > > [    6.400000] ---[ end trace 8023adf5befc91e0 ]---
->> > > >
->> > > > ... that said, I am not confident my patch is the right fix. So
->> > > > consider this a bug report + work-around only. :)
->> > > >
->> > > > >
->> > > > >
->> > > > > Yeah, everything seems mostly working.  The "invalid BAR"
->> > > > > things
->> > > > > *could* be an issue -- those registers are not what the PCI
->> > > > > spec
->> > > > > says
->> > > > > they should be.
->> > > > The devices in question are:
->> > > > 04:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
->> > > > RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev
->> > > > 06)
->> > > > 06:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9230
->> > > > PCIe
->> > > > SATA 6Gb/s Controller (rev 11)
->> > > >
->> > > > I am going to plug them in to an Intel machine with 4.11 and
->> > > > see if
->> > > > I
->> > > > get the same warnings.
->> > Regards
->> > Ley Foon
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Acked-By: Joao Pinto <jpinto@synopsys.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ Documentation/PCI/00-INDEX                      |   2 +
+ Documentation/PCI/endpoint/pci-endpoint-cfs.txt | 105 ++++++++++++++++++++++++
+ 2 files changed, 107 insertions(+)
+ create mode 100644 Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+
+diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
+index ba950b296bd8..bf8223a1bf08 100644
+--- a/Documentation/PCI/00-INDEX
++++ b/Documentation/PCI/00-INDEX
+@@ -14,3 +14,5 @@ pcieaer-howto.txt
+ 	- the PCI Express Advanced Error Reporting Driver Guide HOWTO
+ endpoint/pci-endpoint.txt
+ 	- guide to add endpoint controller driver and endpoint function driver.
++endpoint/pci-endpoint-cfs.txt
++	- guide to use configfs to configure the PCI endpoint function.
+diff --git a/Documentation/PCI/endpoint/pci-endpoint-cfs.txt b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+new file mode 100644
+index 000000000000..d740f29960a4
+--- /dev/null
++++ b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+@@ -0,0 +1,105 @@
++                   CONFIGURING PCI ENDPOINT USING CONFIGFS
++                    Kishon Vijay Abraham I <kishon@ti.com>
++
++The PCI Endpoint Core exposes configfs entry (pci_ep) to configure the
++PCI endpoint function and to bind the endpoint function
++with the endpoint controller. (For introducing other mechanisms to
++configure the PCI Endpoint Function refer to [1]).
++
++*) Mounting configfs
++
++The PCI Endpoint Core layer creates pci_ep directory in the mounted configfs
++directory. configfs can be mounted using the following command.
++
++	mount -t configfs none /sys/kernel/config
++
++*) Directory Structure
++
++The pci_ep configfs has two directories at its root: controllers and
++functions. Every EPC device present in the system will have an entry in
++the *controllers* directory and and every EPF driver present in the system
++will have an entry in the *functions* directory.
++
++/sys/kernel/config/pci_ep/
++	.. controllers/
++	.. functions/
++
++*) Creating EPF Device
++
++Every registered EPF driver will be listed in controllers directory. The
++entries corresponding to EPF driver will be created by the EPF core.
++
++/sys/kernel/config/pci_ep/functions/
++	.. <EPF Driver1>/
++		... <EPF Device 11>/
++		... <EPF Device 21>/
++	.. <EPF Driver2>/
++		... <EPF Device 12>/
++		... <EPF Device 22>/
++
++In order to create a <EPF device> of the type probed by <EPF Driver>, the
++user has to create a directory inside <EPF DriverN>.
++
++Every <EPF device> directory consists of the following entries that can be
++used to configure the standard configuration header of the endpoint function.
++(These entries are created by the framework when any new <EPF Device> is
++created)
++
++	.. <EPF Driver1>/
++		... <EPF Device 11>/
++			... vendorid
++			... deviceid
++			... revid
++			... progif_code
++			... subclass_code
++			... baseclass_code
++			... cache_line_size
++			... subsys_vendor_id
++			... subsys_id
++			... interrupt_pin
++
++*) EPC Device
++
++Every registered EPC device will be listed in controllers directory. The
++entries corresponding to EPC device will be created by the EPC core.
++
++/sys/kernel/config/pci_ep/controllers/
++	.. <EPC Device1>/
++		... <Symlink EPF Device11>/
++		... <Symlink EPF Device12>/
++		... start
++	.. <EPC Device2>/
++		... <Symlink EPF Device21>/
++		... <Symlink EPF Device22>/
++		... start
++
++The <EPC Device> directory will have a list of symbolic links to
++<EPF Device>. These symbolic links should be created by the user to
++represent the functions present in the endpoint device.
++
++The <EPC Device> directory will also have a *start* field. Once
++"1" is written to this field, the endpoint device will be ready to
++establish the link with the host. This is usually done after
++all the EPF devices are created and linked with the EPC device.
++
++
++			 | controllers/
++				| <Directory: EPC name>/
++					| <Symbolic Link: Function>
++					| start
++			 | functions/
++				| <Directory: EPF driver>/
++					| <Directory: EPF device>/
++						| vendorid
++						| deviceid
++						| revid
++						| progif_code
++						| subclass_code
++						| baseclass_code
++						| cache_line_size
++						| subsys_vendor_id
++						| subsys_id
++						| interrupt_pin
++						| function
++
++[1] -> Documentation/PCI/endpoint/pci-endpoint.txt
+-- 
+2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
