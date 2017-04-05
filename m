@@ -1,39 +1,43 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38594 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1425138AbdDUTcu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Apr 2017 15:32:50 -0400
-Subject: [PATCH 9/9] lspci: Fix "Auxiliary" spelling error
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org,
-        Jayachandran C <jnair@caviumnetworks.com>
-Date: Fri, 21 Apr 2017 14:32:41 -0500
-Message-ID: <20170421193241.6562.57167.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170421192844.6562.30976.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170421192844.6562.30976.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from regular1.263xmail.com ([211.150.99.138]:35229 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751021AbdDEC3Q (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2017 22:29:16 -0400
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-pci@vger.kernel.org
+Cc: robh@kernel.org, toshi.kani@hpe.com, shawn.lin@rock-chips.com,
+        briannorris@chromium.org, linux-kernel@vger.kernel.org,
+        dianders@chromium.org, bhelgaas@google.com, dtor@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Subject: [PATCH v5 0/1] Fix memory leak in of_pci_get_host_bridge_resources
+Date: Wed,  5 Apr 2017 10:28:21 +0800
+Message-Id: <1491359303-1385-1-git-send-email-jeffy.chen@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+In of_pci_get_host_bridge_resources, we alloced some struct resource
+variables, and they would cause memory leak since no where to free them.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- lib/pci.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Changes in v5:
+Fix some careless compile errors.
 
-diff --git a/lib/pci.h b/lib/pci.h
-index 9781acc..052f43b 100644
---- a/lib/pci.h
-+++ b/lib/pci.h
-@@ -147,7 +147,7 @@ struct pci_dev {
-   u8 *cache;				/* Cached config registers */
-   int cache_len;
-   int hdrtype;				/* Cached low 7 bits of header type, -1 if unknown */
--  void *aux;				/* Auxillary data */
-+  void *aux;				/* Auxiliary data */
- };
- 
- #define PCI_ADDR_IO_MASK (~(pciaddr_t) 0x3)
+Changes in v4:
+Use IORESOURCE_AUTO to mark struct resources which could be copied.
+
+Changes in v3:
+Add some comments.
+
+Changes in v2:
+Don't change the resource_list_create_entry's behavior.
+
+Jeffy Chen (1):
+  of/pci: Fix memory leak in of_pci_get_host_bridge_resources
+
+ drivers/of/of_pci.c | 51 ++++++++++++++++++---------------------------------
+ drivers/pci/bus.c   |  7 ++++++-
+ 2 files changed, 24 insertions(+), 34 deletions(-)
+
+-- 
+2.1.4
