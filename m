@@ -1,104 +1,43 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v3 02/32] asm-generic/pgtable.h: introduce pgprot_nonposted
- remap attribute
-Date: Tue, 11 Apr 2017 13:28:42 +0100
-Message-Id: <20170411122923.6285-3-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- "James E.J. Bottomley" <jejb@parisc-linux.org>,
- David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
- Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
- Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
- Jesper Nilsson <jesper.nilsson@axis.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Yoshinori Sato <ysato@users.sourceforge.jp>,
- Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
- Russell King <linux@armlinux.org.uk>, Ingo Molnar <mingo@redhat.com>,
- Geert Uytterhoeven <geert@linux-m68k.org>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Matt Turner <mattst88@gmail.com>, Haavard Skinnemoen <hskinnemoen@gmail.com>,
- Fenghua Yu <fenghua.yu@intel.com>, James Hogan <james.hogan@imgtec.com>,
- Chris Metcalf <cmetcalf@mellanox.com>, Arnd Bergmann <arnd@arndb.de>,
- Heiko Carstens <heiko.carstens@de.ibm.com>,
- Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
- Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
- Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
- Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
- linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
- Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
- "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
- "David S. Miller" <davem@davemloft.net>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Steve Wise" <swise@opengridcomputing.com>
+To: "'Sagi Grimberg'" <sagi@grimberg.me>,
+        "'Logan Gunthorpe'" <logang@deltatee.com>,
+        "'Christoph Hellwig'" <hch@lst.de>,
+        "'James E.J. Bottomley'" <jejb@linux.vnet.ibm.com>,
+        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
+        "'Jens Axboe'" <axboe@kernel.dk>,
+        "'Stephen Bates'" <sbates@raithlin.com>,
+        "'Max Gurtovoy'" <maxg@mellanox.com>,
+        "'Dan Williams'" <dan.j.williams@intel.com>,
+        "'Keith Busch'" <keith.busch@intel.com>,
+        "'Jason Gunthorpe'" <jgunthorpe@obsidianresearch.com>
+Cc: <linux-pci@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-nvme@lists.infradead.org>, <linux-rdma@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-kernel@vger.kernel.org>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com> <1490911959-5146-5-git-send-email-logang@deltatee.com> <95928b70-0148-7297-8f5e-5031d996bb98@grimberg.me>
+In-Reply-To: <95928b70-0148-7297-8f5e-5031d996bb98@grimberg.me>
+Subject: RE: [RFC 4/8] p2pmem: Add debugfs "stats" file
+Date: Wed, 5 Apr 2017 10:43:38 -0500
+Message-ID: <003201d2ae23$6527ef10$2f77cd30$@opengridcomputing.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain;
+        charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-According to the PCI local bus specifications (Revision 3.0, 3.2.5),
-I/O Address space transactions are non-posted. On architectures where
-I/O space is implemented through a chunk of memory mapped space mapped
-to PCI address space (ie IA64/ARM/ARM64) the memory mapping for the
-region backing I/O Address Space transactions determines the I/O
-transactions attributes (before the transactions actually reaches the
-PCI bus where it is handled according to the PCI specifications).
+> 
+> > +	p2pmem_debugfs_root = debugfs_create_dir("p2pmem", NULL);
+> > +	if (!p2pmem_debugfs_root)
+> > +		pr_info("could not create debugfs entry, continuing\n");
+> > +
+> 
+> Why continue? I think it'd be better to just fail it.
+> 
 
-The kernel lacks a pgprot_* attribute to map memory with type
-generating non-posted writes transactions, which therefore needs to
-be added.
+Because not having debugfs support isn't fatal to using p2pmem.  So I
+believe it is better to continue.  But this is trivial, IMO, so either was
+is ok with me.
 
-Add a pgprot_nonposted mapping prot to create a memory mapping for
-memory areas requiring non-posted write transactions; make it default to
-pgprot_noncached (which should provide a sane default behaviour) but
-still allowing architectures on which pgprot_noncached results in posted
-write transactions to override the prot with an arch specific
-implementation that guarantees non-posted writes transactions.
+> Besides, this can be safely squashed into patch 1.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
----
- include/asm-generic/pgtable.h | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/include/asm-generic/pgtable.h b/include/asm-generic/pgtable.h
-index 1fad160..2070172 100644
---- a/include/asm-generic/pgtable.h
-+++ b/include/asm-generic/pgtable.h
-@@ -399,6 +399,10 @@ static inline int pud_same(pud_t pud_a, pud_t pud_b)
- #define pgprot_device pgprot_noncached
- #endif
- 
-+#ifndef pgprot_nonposted
-+#define pgprot_nonposted pgprot_noncached
-+#endif
-+
- #ifndef pgprot_modify
- #define pgprot_modify pgprot_modify
- static inline pgprot_t pgprot_modify(pgprot_t oldprot, pgprot_t newprot)
--- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Yes.
