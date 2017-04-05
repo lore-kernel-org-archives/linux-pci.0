@@ -1,269 +1,659 @@
-Return-Path: <SRS0=Uw6M=34=sigmadesigns.com=Marc_Gonzalez@kernel.org>
-Return-Path: <SRS0=Uw6M=34=sigmadesigns.com=Marc_Gonzalez@kernel.org>
-Subject: [PATCH v4 1/2] PCI: Add tango MSI controller support
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-To: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>
-CC: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Liviu Dudau
-	<liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>, linux-pci
-	<linux-pci@vger.kernel.org>, Linux ARM
-	<linux-arm-kernel@lists.infradead.org>, Thibaud Cornic
-	<thibaud_cornic@sigmadesigns.com>, Phuong Nguyen
-	<phuong_nguyen@sigmadesigns.com>, LKML <linux-kernel@vger.kernel.org>, Mason
-	<slash.tmp@free.fr>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
-Message-ID: <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
-Date: Thu, 20 Apr 2017 16:28:08 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v6 17/23] misc: Add host side PCI driver for PCI test function
+ device
+Date: Wed, 5 Apr 2017 14:22:37 +0530
+Message-ID: <20170405085243.18123-18-kishon@ti.com>
+In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
+References: <20170405085243.18123-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
-Content-Type: text/plain; charset="ISO-8859-15"
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The MSI controller in Tango supports 256 message-signaled interrupts,
-and a single doorbell address.
+Add PCI endpoint test driver that can verify base address register, legacy
+interrupt/MSI interrupt and read/write/copy buffers between host and
+device. The corresponding pci-epf-test function driver should be used on
+the EP side.
 
-Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/host/pcie-tango.c | 232 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 232 insertions(+)
+ drivers/misc/Kconfig             |   7 +
+ drivers/misc/Makefile            |   1 +
+ drivers/misc/pci_endpoint_test.c | 534 +++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/Kbuild        |   1 +
+ include/uapi/linux/pcitest.h     |  19 ++
+ 5 files changed, 562 insertions(+)
+ create mode 100644 drivers/misc/pci_endpoint_test.c
+ create mode 100644 include/uapi/linux/pcitest.h
 
-diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index c290990d73ed..527b115c4e23 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -771,6 +771,13 @@ config PANEL_BOOT_MESSAGE
+ 
+ endif # PANEL
+ 
++config PCI_ENDPOINT_TEST
++	depends on PCI
++	tristate "PCI Endpoint Test driver"
++	---help---
++           Enable this configuration option to enable the host side test driver
++           for PCI Endpoint.
++
+ source "drivers/misc/c2port/Kconfig"
+ source "drivers/misc/eeprom/Kconfig"
+ source "drivers/misc/cb710/Kconfig"
+diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
+index 7a3ea89339b4..6e139cd70421 100644
+--- a/drivers/misc/Makefile
++++ b/drivers/misc/Makefile
+@@ -54,6 +54,7 @@ obj-$(CONFIG_ECHO)		+= echo/
+ obj-$(CONFIG_VEXPRESS_SYSCFG)	+= vexpress-syscfg.o
+ obj-$(CONFIG_CXL_BASE)		+= cxl/
+ obj-$(CONFIG_PANEL)             += panel.o
++obj-$(CONFIG_PCI_ENDPOINT_TEST)	+= pci_endpoint_test.o
+ 
+ lkdtm-$(CONFIG_LKDTM)		+= lkdtm_core.o
+ lkdtm-$(CONFIG_LKDTM)		+= lkdtm_bugs.o
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
 new file mode 100644
-index 000000000000..ada8d35066ab
+index 000000000000..09c10f426b64
 --- /dev/null
-+++ b/drivers/pci/host/pcie-tango.c
-@@ -0,0 +1,232 @@
-+#include <linux/irqchip/chained_irq.h>
-+#include <linux/irqdomain.h>
-+#include <linux/pci-ecam.h>
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -0,0 +1,534 @@
++/**
++ * Host side test driver to test endpoint functionality
++ *
++ * Copyright (C) 2017 Texas Instruments
++ * Author: Kishon Vijay Abraham I <kishon@ti.com>
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 of
++ * the License as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include <linux/crc32.h>
 +#include <linux/delay.h>
-+#include <linux/msi.h>
++#include <linux/fs.h>
++#include <linux/io.h>
++#include <linux/interrupt.h>
++#include <linux/irq.h>
++#include <linux/miscdevice.h>
++#include <linux/module.h>
++#include <linux/mutex.h>
++#include <linux/random.h>
++#include <linux/slab.h>
++#include <linux/pci.h>
++#include <linux/pci_ids.h>
 +
-+#define MSI_MAX 256
++#include <linux/pci_regs.h>
 +
-+struct tango_pcie {
-+	DECLARE_BITMAP(bitmap, MSI_MAX);
-+	spinlock_t lock;
-+	void __iomem *mux;
-+	void __iomem *msi_status;
-+	void __iomem *msi_enable;
-+	phys_addr_t msi_doorbell;
-+	struct irq_domain *irq_dom;
-+	struct irq_domain *msi_dom;
++#include <uapi/linux/pcitest.h>
++
++#define DRV_MODULE_NAME			"pci-endpoint-test"
++
++#define PCI_ENDPOINT_TEST_MAGIC		0x0
++
++#define PCI_ENDPOINT_TEST_COMMAND	0x4
++#define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
++#define COMMAND_RAISE_MSI_IRQ		BIT(1)
++#define MSI_NUMBER_SHIFT		2
++/* 6 bits for MSI number */
++#define COMMAND_READ                    BIT(8)
++#define COMMAND_WRITE                   BIT(9)
++#define COMMAND_COPY                    BIT(10)
++
++#define PCI_ENDPOINT_TEST_STATUS	0x8
++#define STATUS_READ_SUCCESS             BIT(0)
++#define STATUS_READ_FAIL                BIT(1)
++#define STATUS_WRITE_SUCCESS            BIT(2)
++#define STATUS_WRITE_FAIL               BIT(3)
++#define STATUS_COPY_SUCCESS             BIT(4)
++#define STATUS_COPY_FAIL                BIT(5)
++#define STATUS_IRQ_RAISED               BIT(6)
++#define STATUS_SRC_ADDR_INVALID         BIT(7)
++#define STATUS_DST_ADDR_INVALID         BIT(8)
++
++#define PCI_ENDPOINT_TEST_LOWER_SRC_ADDR	0xc
++#define PCI_ENDPOINT_TEST_UPPER_SRC_ADDR	0x10
++
++#define PCI_ENDPOINT_TEST_LOWER_DST_ADDR	0x14
++#define PCI_ENDPOINT_TEST_UPPER_DST_ADDR	0x18
++
++#define PCI_ENDPOINT_TEST_SIZE		0x1c
++#define PCI_ENDPOINT_TEST_CHECKSUM	0x20
++
++static DEFINE_IDA(pci_endpoint_test_ida);
++
++#define to_endpoint_test(priv) container_of((priv), struct pci_endpoint_test, \
++					    miscdev)
++enum pci_barno {
++	BAR_0,
++	BAR_1,
++	BAR_2,
++	BAR_3,
++	BAR_4,
++	BAR_5,
++};
++
++struct pci_endpoint_test {
++	struct pci_dev	*pdev;
++	void __iomem	*base;
++	void __iomem	*bar[6];
++	struct completion irq_raised;
++	int		last_irq;
++	/* mutex to protect the ioctls */
++	struct mutex	mutex;
++	struct miscdevice miscdev;
++};
++
++static int bar_size[] = { 4, 512, 1024, 16384, 131072, 1048576 };
++
++static inline u32 pci_endpoint_test_readl(struct pci_endpoint_test *test,
++					  u32 offset)
++{
++	return readl(test->base + offset);
++}
++
++static inline void pci_endpoint_test_writel(struct pci_endpoint_test *test,
++					    u32 offset, u32 value)
++{
++	writel(value, test->base + offset);
++}
++
++static inline u32 pci_endpoint_test_bar_readl(struct pci_endpoint_test *test,
++					      int bar, int offset)
++{
++	return readl(test->bar[bar] + offset);
++}
++
++static inline void pci_endpoint_test_bar_writel(struct pci_endpoint_test *test,
++						int bar, u32 offset, u32 value)
++{
++	writel(value, test->bar[bar] + offset);
++}
++
++static irqreturn_t pci_endpoint_test_irqhandler(int irq, void *dev_id)
++{
++	struct pci_endpoint_test *test = dev_id;
++	u32 reg;
++
++	reg = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
++	if (reg & STATUS_IRQ_RAISED) {
++		test->last_irq = irq;
++		complete(&test->irq_raised);
++		reg &= ~STATUS_IRQ_RAISED;
++	}
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_STATUS,
++				 reg);
++
++	return IRQ_HANDLED;
++}
++
++static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
++				  enum pci_barno barno)
++{
++	int j;
++	u32 val;
++	int size;
++
++	if (!test->bar[barno])
++		return false;
++
++	size = bar_size[barno];
++
++	for (j = 0; j < size; j += 4)
++		pci_endpoint_test_bar_writel(test, barno, j, 0xA0A0A0A0);
++
++	for (j = 0; j < size; j += 4) {
++		val = pci_endpoint_test_bar_readl(test, barno, j);
++		if (val != 0xA0A0A0A0)
++			return false;
++	}
++
++	return true;
++}
++
++static bool pci_endpoint_test_legacy_irq(struct pci_endpoint_test *test)
++{
++	u32 val;
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
++				 COMMAND_RAISE_LEGACY_IRQ);
++	val = wait_for_completion_timeout(&test->irq_raised,
++					  msecs_to_jiffies(1000));
++	if (!val)
++		return false;
++
++	return true;
++}
++
++static bool pci_endpoint_test_msi_irq(struct pci_endpoint_test *test,
++				      u8 msi_num)
++{
++	u32 val;
++	struct pci_dev *pdev = test->pdev;
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
++				 msi_num << MSI_NUMBER_SHIFT |
++				 COMMAND_RAISE_MSI_IRQ);
++	val = wait_for_completion_timeout(&test->irq_raised,
++					  msecs_to_jiffies(1000));
++	if (!val)
++		return false;
++
++	if (test->last_irq - pdev->irq == msi_num - 1)
++		return true;
++
++	return false;
++}
++
++static bool pci_endpoint_test_copy(struct pci_endpoint_test *test, size_t size)
++{
++	bool ret = false;
++	void *src_addr;
++	void *dst_addr;
++	dma_addr_t src_phys_addr;
++	dma_addr_t dst_phys_addr;
++	struct pci_dev *pdev = test->pdev;
++	struct device *dev = &pdev->dev;
++	u32 src_crc32;
++	u32 dst_crc32;
++
++	src_addr = dma_alloc_coherent(dev, size, &src_phys_addr, GFP_KERNEL);
++	if (!src_addr) {
++		dev_err(dev, "failed to allocate source buffer\n");
++		ret = false;
++		goto err;
++	}
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_SRC_ADDR,
++				 lower_32_bits(src_phys_addr));
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_SRC_ADDR,
++				 upper_32_bits(src_phys_addr));
++
++	get_random_bytes(src_addr, size);
++	src_crc32 = crc32_le(~0, src_addr, size);
++
++	dst_addr = dma_alloc_coherent(dev, size, &dst_phys_addr, GFP_KERNEL);
++	if (!dst_addr) {
++		dev_err(dev, "failed to allocate destination address\n");
++		ret = false;
++		goto err_src_addr;
++	}
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_DST_ADDR,
++				 lower_32_bits(dst_phys_addr));
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_DST_ADDR,
++				 upper_32_bits(dst_phys_addr));
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE,
++				 size);
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
++				 1 << MSI_NUMBER_SHIFT | COMMAND_COPY);
++
++	wait_for_completion(&test->irq_raised);
++
++	dst_crc32 = crc32_le(~0, dst_addr, size);
++	if (dst_crc32 == src_crc32)
++		ret = true;
++
++	dma_free_coherent(dev, size, dst_addr, dst_phys_addr);
++
++err_src_addr:
++	dma_free_coherent(dev, size, src_addr, src_phys_addr);
++
++err:
++	return ret;
++}
++
++static bool pci_endpoint_test_write(struct pci_endpoint_test *test, size_t size)
++{
++	bool ret = false;
++	u32 reg;
++	void *addr;
++	dma_addr_t phys_addr;
++	struct pci_dev *pdev = test->pdev;
++	struct device *dev = &pdev->dev;
++	u32 crc32;
++
++	addr = dma_alloc_coherent(dev, size, &phys_addr, GFP_KERNEL);
++	if (!addr) {
++		dev_err(dev, "failed to allocate address\n");
++		ret = false;
++		goto err;
++	}
++
++	get_random_bytes(addr, size);
++
++	crc32 = crc32_le(~0, addr, size);
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_CHECKSUM,
++				 crc32);
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_SRC_ADDR,
++				 lower_32_bits(phys_addr));
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_SRC_ADDR,
++				 upper_32_bits(phys_addr));
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
++				 1 << MSI_NUMBER_SHIFT | COMMAND_READ);
++
++	wait_for_completion(&test->irq_raised);
++
++	reg = pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_STATUS);
++	if (reg & STATUS_READ_SUCCESS)
++		ret = true;
++
++	dma_free_coherent(dev, size, addr, phys_addr);
++
++err:
++	return ret;
++}
++
++static bool pci_endpoint_test_read(struct pci_endpoint_test *test, size_t size)
++{
++	bool ret = false;
++	void *addr;
++	dma_addr_t phys_addr;
++	struct pci_dev *pdev = test->pdev;
++	struct device *dev = &pdev->dev;
++	u32 crc32;
++
++	addr = dma_alloc_coherent(dev, size, &phys_addr, GFP_KERNEL);
++	if (!addr) {
++		dev_err(dev, "failed to allocate destination address\n");
++		ret = false;
++		goto err;
++	}
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_LOWER_DST_ADDR,
++				 lower_32_bits(phys_addr));
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_UPPER_DST_ADDR,
++				 upper_32_bits(phys_addr));
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_SIZE, size);
++
++	pci_endpoint_test_writel(test, PCI_ENDPOINT_TEST_COMMAND,
++				 1 << MSI_NUMBER_SHIFT | COMMAND_WRITE);
++
++	wait_for_completion(&test->irq_raised);
++
++	crc32 = crc32_le(~0, addr, size);
++	if (crc32 == pci_endpoint_test_readl(test, PCI_ENDPOINT_TEST_CHECKSUM))
++		ret = true;
++
++	dma_free_coherent(dev, size, addr, phys_addr);
++err:
++	return ret;
++}
++
++static long pci_endpoint_test_ioctl(struct file *file, unsigned int cmd,
++				    unsigned long arg)
++{
++	int ret = -EINVAL;
++	enum pci_barno bar;
++	struct pci_endpoint_test *test = to_endpoint_test(file->private_data);
++
++	mutex_lock(&test->mutex);
++	switch (cmd) {
++	case PCITEST_BAR:
++		bar = arg;
++		if (bar < 0 || bar > 5)
++			goto ret;
++		ret = pci_endpoint_test_bar(test, bar);
++		break;
++	case PCITEST_LEGACY_IRQ:
++		ret = pci_endpoint_test_legacy_irq(test);
++		break;
++	case PCITEST_MSI:
++		ret = pci_endpoint_test_msi_irq(test, arg);
++		break;
++	case PCITEST_WRITE:
++		ret = pci_endpoint_test_write(test, arg);
++		break;
++	case PCITEST_READ:
++		ret = pci_endpoint_test_read(test, arg);
++		break;
++	case PCITEST_COPY:
++		ret = pci_endpoint_test_copy(test, arg);
++		break;
++	}
++
++ret:
++	mutex_unlock(&test->mutex);
++	return ret;
++}
++
++static const struct file_operations pci_endpoint_test_fops = {
++	.owner = THIS_MODULE,
++	.unlocked_ioctl = pci_endpoint_test_ioctl,
++};
++
++static int pci_endpoint_test_probe(struct pci_dev *pdev,
++				   const struct pci_device_id *ent)
++{
++	int i;
++	int err;
 +	int irq;
-+};
++	int id;
++	char name[20];
++	enum pci_barno bar;
++	void __iomem *base;
++	struct device *dev = &pdev->dev;
++	struct pci_endpoint_test *test;
++	struct miscdevice *misc_device;
 +
-+/*** MSI CONTROLLER SUPPORT ***/
++	if (pci_is_bridge(pdev))
++		return -ENODEV;
 +
-+static void dispatch(struct tango_pcie *pcie, unsigned long status, int base)
-+{
-+	unsigned int pos, virq;
++	test = devm_kzalloc(dev, sizeof(*test), GFP_KERNEL);
++	if (!test)
++		return -ENOMEM;
 +
-+	for_each_set_bit(pos, &status, 32) {
-+		virq = irq_find_mapping(pcie->irq_dom, base + pos);
-+		generic_handle_irq(virq);
-+	}
-+}
++	test->pdev = pdev;
++	init_completion(&test->irq_raised);
++	mutex_init(&test->mutex);
 +
-+static void tango_msi_isr(struct irq_desc *desc)
-+{
-+	struct irq_chip *chip = irq_desc_get_chip(desc);
-+	struct tango_pcie *pcie = irq_desc_get_handler_data(desc);
-+	unsigned int status, base, pos = 0;
-+
-+	chained_irq_enter(chip, desc);
-+
-+	while ((pos = find_next_bit(pcie->bitmap, MSI_MAX, pos)) < MSI_MAX) {
-+		base = round_down(pos, 32);
-+		status = readl_relaxed(pcie->msi_status + base / 8);
-+		dispatch(pcie, status, base);
-+		pos = base + 32;
++	err = pci_enable_device(pdev);
++	if (err) {
++		dev_err(dev, "Cannot enable PCI device\n");
++		return err;
 +	}
 +
-+	chained_irq_exit(chip, desc);
-+}
++	err = pci_request_regions(pdev, DRV_MODULE_NAME);
++	if (err) {
++		dev_err(dev, "Cannot obtain PCI resources\n");
++		goto err_disable_pdev;
++	}
 +
-+static void tango_ack(struct irq_data *data)
-+{
-+	u32 bit = BIT(data->hwirq);
-+	struct tango_pcie *pcie = irq_data_get_irq_chip_data(data);
++	pci_set_master(pdev);
 +
-+	writel_relaxed(bit, pcie->msi_status);
-+}
++	irq = pci_alloc_irq_vectors(pdev, 1, 32, PCI_IRQ_MSI);
++	if (irq < 0)
++		dev_err(dev, "failed to get MSI interrupts\n");
 +
-+static void update_msi_enable(struct irq_data *data, bool unmask)
-+{
-+	unsigned long flags;
-+	u32 val, bit = BIT(data->hwirq % 32);
-+	int byte_offset = (data->hwirq / 32) * 4;
-+	struct tango_pcie *pcie = data->chip_data;
++	err = devm_request_irq(dev, pdev->irq, pci_endpoint_test_irqhandler,
++			       IRQF_SHARED, DRV_MODULE_NAME, test);
++	if (err) {
++		dev_err(dev, "failed to request IRQ %d\n", pdev->irq);
++		goto err_disable_msi;
++	}
 +
-+	spin_lock_irqsave(&pcie->lock, flags);
-+	val = readl_relaxed(pcie->msi_enable + byte_offset);
-+	val = unmask ? val | bit : val & ~bit;
-+	writel_relaxed(val, pcie->msi_enable + byte_offset);
-+	spin_unlock_irqrestore(&pcie->lock, flags);
-+}
++	for (i = 1; i < irq; i++) {
++		err = devm_request_irq(dev, pdev->irq + i,
++				       pci_endpoint_test_irqhandler,
++				       IRQF_SHARED, DRV_MODULE_NAME, test);
++		if (err)
++			dev_err(dev, "failed to request IRQ %d for MSI %d\n",
++				pdev->irq + i, i + 1);
++	}
 +
-+static void tango_mask(struct irq_data *data)
-+{
-+	update_msi_enable(data, false);
-+}
++	for (bar = BAR_0; bar <= BAR_5; bar++) {
++		base = pci_ioremap_bar(pdev, bar);
++		if (!base) {
++			dev_err(dev, "failed to read BAR%d\n", bar);
++			WARN_ON(bar == BAR_0);
++		}
++		test->bar[bar] = base;
++	}
 +
-+static void tango_unmask(struct irq_data *data)
-+{
-+	update_msi_enable(data, true);
-+}
++	test->base = test->bar[0];
++	if (!test->base) {
++		dev_err(dev, "Cannot perform PCI test without BAR0\n");
++		goto err_iounmap;
++	}
 +
-+static int tango_set_affinity(struct irq_data *data,
-+		const struct cpumask *mask, bool force)
-+{
-+	return -EINVAL;
-+}
++	pci_set_drvdata(pdev, test);
 +
-+static void tango_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
-+{
-+	struct tango_pcie *pcie = irq_data_get_irq_chip_data(data);
++	id = ida_simple_get(&pci_endpoint_test_ida, 0, 0, GFP_KERNEL);
++	if (id < 0) {
++		dev_err(dev, "unable to get id\n");
++		goto err_iounmap;
++	}
 +
-+	msg->address_lo = lower_32_bits(pcie->msi_doorbell);
-+	msg->address_hi = upper_32_bits(pcie->msi_doorbell);
-+	msg->data = data->hwirq;
-+}
++	snprintf(name, sizeof(name), DRV_MODULE_NAME ".%d", id);
++	misc_device = &test->miscdev;
++	misc_device->minor = MISC_DYNAMIC_MINOR;
++	misc_device->name = name;
++	misc_device->fops = &pci_endpoint_test_fops,
 +
-+static struct irq_chip tango_chip = {
-+	.irq_ack		= tango_ack,
-+	.irq_mask		= tango_mask,
-+	.irq_unmask		= tango_unmask,
-+	.irq_set_affinity	= tango_set_affinity,
-+	.irq_compose_msi_msg	= tango_compose_msi_msg,
-+};
-+
-+static void msi_ack(struct irq_data *data)
-+{
-+	irq_chip_ack_parent(data);
-+}
-+
-+static void msi_mask(struct irq_data *data)
-+{
-+	pci_msi_mask_irq(data);
-+	irq_chip_mask_parent(data);
-+}
-+
-+static void msi_unmask(struct irq_data *data)
-+{
-+	pci_msi_unmask_irq(data);
-+	irq_chip_unmask_parent(data);
-+}
-+
-+static struct irq_chip msi_chip = {
-+	.name = "MSI",
-+	.irq_ack = msi_ack,
-+	.irq_mask = msi_mask,
-+	.irq_unmask = msi_unmask,
-+};
-+
-+static struct msi_domain_info msi_dom_info = {
-+	.flags	= MSI_FLAG_PCI_MSIX
-+		| MSI_FLAG_USE_DEF_DOM_OPS
-+		| MSI_FLAG_USE_DEF_CHIP_OPS,
-+	.chip	= &msi_chip,
-+};
-+
-+static int find_free_msi(struct irq_domain *dom, unsigned int virq)
-+{
-+	unsigned int pos;
-+	struct tango_pcie *pcie = dom->host_data;
-+
-+	pos = find_first_zero_bit(pcie->bitmap, MSI_MAX);
-+	if (pos >= MSI_MAX)
-+		return -ENOSPC;
-+	__set_bit(pos, pcie->bitmap);
-+
-+	irq_domain_set_info(dom, virq, pos, &tango_chip, pcie,
-+			handle_edge_irq, NULL, NULL);
++	err = misc_register(misc_device);
++	if (err) {
++		dev_err(dev, "failed to register device\n");
++		goto err_ida_remove;
++	}
 +
 +	return 0;
-+}
 +
-+static int tango_irq_domain_alloc(struct irq_domain *dom,
-+		unsigned int virq, unsigned int nr_irqs, void *args)
-+{
-+	int err;
-+	unsigned long flags;
-+	struct tango_pcie *pcie = dom->host_data;
++err_ida_remove:
++	ida_simple_remove(&pci_endpoint_test_ida, id);
 +
-+	spin_lock_irqsave(&pcie->lock, flags);
-+	err = find_free_msi(dom, virq);
-+	spin_unlock_irqrestore(&pcie->lock, flags);
++err_iounmap:
++	for (bar = BAR_0; bar <= BAR_5; bar++) {
++		if (test->bar[bar])
++			pci_iounmap(pdev, test->bar[bar]);
++	}
++
++err_disable_msi:
++	pci_disable_msi(pdev);
++	pci_release_regions(pdev);
++
++err_disable_pdev:
++	pci_disable_device(pdev);
 +
 +	return err;
 +}
 +
-+static void tango_irq_domain_free(struct irq_domain *dom,
-+		unsigned int virq, unsigned int nr_irqs)
++static void pci_endpoint_test_remove(struct pci_dev *pdev)
 +{
-+	unsigned long flags;
-+	struct irq_data *data = irq_domain_get_irq_data(dom, virq);
-+	struct tango_pcie *pcie = irq_data_get_irq_chip_data(data);
++	int id;
++	enum pci_barno bar;
++	struct pci_endpoint_test *test = pci_get_drvdata(pdev);
++	struct miscdevice *misc_device = &test->miscdev;
 +
-+	spin_lock_irqsave(&pcie->lock, flags);
-+	__clear_bit(data->hwirq, pcie->bitmap);
-+	spin_unlock_irqrestore(&pcie->lock, flags);
++	if (sscanf(misc_device->name, DRV_MODULE_NAME ".%d", &id) != 1)
++		return;
++
++	misc_deregister(&test->miscdev);
++	ida_simple_remove(&pci_endpoint_test_ida, id);
++	for (bar = BAR_0; bar <= BAR_5; bar++) {
++		if (test->bar[bar])
++			pci_iounmap(pdev, test->bar[bar]);
++	}
++	pci_disable_msi(pdev);
++	pci_release_regions(pdev);
++	pci_disable_device(pdev);
 +}
 +
-+static const struct irq_domain_ops irq_dom_ops = {
-+	.alloc	= tango_irq_domain_alloc,
-+	.free	= tango_irq_domain_free,
++static const struct pci_device_id pci_endpoint_test_tbl[] = {
++	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA72x) },
++	{ }
 +};
++MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
 +
-+static int tango_msi_remove(struct platform_device *pdev)
-+{
-+	struct tango_pcie *pcie = platform_get_drvdata(pdev);
++static struct pci_driver pci_endpoint_test_driver = {
++	.name		= DRV_MODULE_NAME,
++	.id_table	= pci_endpoint_test_tbl,
++	.probe		= pci_endpoint_test_probe,
++	.remove		= pci_endpoint_test_remove,
++};
++module_pci_driver(pci_endpoint_test_driver);
 +
-+	irq_set_chained_handler_and_data(pcie->irq, NULL, NULL);
-+	irq_domain_remove(pcie->msi_dom);
-+	irq_domain_remove(pcie->irq_dom);
++MODULE_DESCRIPTION("PCI ENDPOINT TEST HOST DRIVER");
++MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
++MODULE_LICENSE("GPL v2");
+diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
+index dd9820b1c779..baee6db08287 100644
+--- a/include/uapi/linux/Kbuild
++++ b/include/uapi/linux/Kbuild
+@@ -333,6 +333,7 @@ header-y += parport.h
+ header-y += patchkey.h
+ header-y += pci.h
+ header-y += pci_regs.h
++header-y += pcitest.h
+ header-y += perf_event.h
+ header-y += personality.h
+ header-y += pfkeyv2.h
+diff --git a/include/uapi/linux/pcitest.h b/include/uapi/linux/pcitest.h
+new file mode 100644
+index 000000000000..a6aa10c45ad1
+--- /dev/null
++++ b/include/uapi/linux/pcitest.h
+@@ -0,0 +1,19 @@
++/**
++ * pcitest.h - PCI test uapi defines
++ *
++ * Copyright (C) 2017 Texas Instruments
++ * Author: Kishon Vijay Abraham I <kishon@ti.com>
++ *
++ */
 +
-+	return 0;
-+}
++#ifndef __UAPI_LINUX_PCITEST_H
++#define __UAPI_LINUX_PCITEST_H
 +
-+static int tango_msi_probe(struct platform_device *pdev, struct tango_pcie *pcie)
-+{
-+	int i, virq;
-+	struct irq_domain *msi_dom, *irq_dom;
-+	struct fwnode_handle *fwnode = of_node_to_fwnode(pdev->dev.of_node);
++#define PCITEST_BAR		_IO('P', 0x1)
++#define PCITEST_LEGACY_IRQ	_IO('P', 0x2)
++#define PCITEST_MSI		_IOW('P', 0x3, int)
++#define PCITEST_WRITE		_IOW('P', 0x4, unsigned long)
++#define PCITEST_READ		_IOW('P', 0x5, unsigned long)
++#define PCITEST_COPY		_IOW('P', 0x6, unsigned long)
 +
-+	spin_lock_init(&pcie->lock);
-+	for (i = 0; i < MSI_MAX / 32; ++i)
-+		writel_relaxed(0, pcie->msi_enable + i * 4);
-+
-+	irq_dom = irq_domain_create_linear(fwnode, MSI_MAX, &irq_dom_ops, pcie);
-+	if (!irq_dom) {
-+		pr_err("Failed to create IRQ domain\n");
-+		return -ENOMEM;
-+	}
-+
-+	msi_dom = pci_msi_create_irq_domain(fwnode, &msi_dom_info, irq_dom);
-+	if (!msi_dom) {
-+		pr_err("Failed to create MSI domain\n");
-+		irq_domain_remove(irq_dom);
-+		return -ENOMEM;
-+	}
-+
-+	virq = platform_get_irq(pdev, 1);
-+	if (virq <= 0) {
-+		pr_err("Failed to map IRQ\n");
-+		irq_domain_remove(msi_dom);
-+		irq_domain_remove(irq_dom);
-+		return -ENXIO;
-+	}
-+
-+	pcie->irq_dom = irq_dom;
-+	pcie->msi_dom = msi_dom;
-+	pcie->irq = virq;
-+	irq_set_chained_handler_and_data(virq, tango_msi_isr, pcie);
-+
-+	return 0;
-+}
++#endif /* __UAPI_LINUX_PCITEST_H */
 -- 
 2.11.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
