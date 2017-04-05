@@ -1,118 +1,617 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53138 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751550AbdDAPO6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 1 Apr 2017 11:14:58 -0400
-Date: Sat, 1 Apr 2017 10:14:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH] PCI: rockchip: Mark SLC bit as well as CCC bit for RC
-Message-ID: <20170401151425.GA10456@bhelgaas-glaptop.roam.corp.google.com>
-References: <1489735493-148838-1-git-send-email-shawn.lin@rock-chips.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+ <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+ <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v6 07/23] PCI: endpoint: functions: Add an EP function to test
+ PCI
+Date: Wed, 5 Apr 2017 14:22:27 +0530
+Message-ID: <20170405085243.18123-8-kishon@ti.com>
+In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
+References: <20170405085243.18123-1-kishon@ti.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1489735493-148838-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Mar 17, 2017 at 03:24:53PM +0800, Shawn Lin wrote:
-> lspci traces CCC to see if the end-2-end supports common
-> clock, so the current code should work as we mark the CCC bit
-> of RC. 
+Adds a new endpoint function driver (to program the virtual test device)
+making use of the EP-core library.
 
-I assume you're talking about lspci code here, where the bit is called
-PCI_EXP_LNKCTL_CLOCK.  The only use of PCI_EXP_LNKCTL_CLOCK in lspci
-is to decode it in cap_express_link().  I don't know what you mean by
-"tracing CCC", since lspci only decodes registers of one device at a
-time; it never follows the hierarchy from an endpoint up to a root
-port.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/endpoint/Kconfig                  |   2 +
+ drivers/pci/endpoint/Makefile                 |   2 +-
+ drivers/pci/endpoint/functions/Kconfig        |  12 +
+ drivers/pci/endpoint/functions/Makefile       |   5 +
+ drivers/pci/endpoint/functions/pci-epf-test.c | 510 ++++++++++++++++++++++++++
+ 5 files changed, 530 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/pci/endpoint/functions/Kconfig
+ create mode 100644 drivers/pci/endpoint/functions/Makefile
+ create mode 100644 drivers/pci/endpoint/functions/pci-epf-test.c
 
-I'm not sure how this lspci information is relevant to this patch.
+diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
+index c86bca9b7de3..c23f146fb5a6 100644
+--- a/drivers/pci/endpoint/Kconfig
++++ b/drivers/pci/endpoint/Kconfig
+@@ -26,4 +26,6 @@ config PCI_ENDPOINT_CONFIGFS
+ 	   configure the endpoint function and used to bind the
+ 	   function with a endpoint controller.
+ 
++source "drivers/pci/endpoint/functions/Kconfig"
++
+ endmenu
+diff --git a/drivers/pci/endpoint/Makefile b/drivers/pci/endpoint/Makefile
+index 7219d51bb401..1041f80a4645 100644
+--- a/drivers/pci/endpoint/Makefile
++++ b/drivers/pci/endpoint/Makefile
+@@ -4,4 +4,4 @@
+ 
+ obj-$(CONFIG_PCI_ENDPOINT_CONFIGFS)	+= pci-ep-cfs.o
+ obj-$(CONFIG_PCI_ENDPOINT)		+= pci-epc-core.o pci-epf-core.o\
+-					   pci-epc-mem.o
++					   pci-epc-mem.o functions/
+diff --git a/drivers/pci/endpoint/functions/Kconfig b/drivers/pci/endpoint/functions/Kconfig
+new file mode 100644
+index 000000000000..175edad42d2f
+--- /dev/null
++++ b/drivers/pci/endpoint/functions/Kconfig
+@@ -0,0 +1,12 @@
++#
++# PCI Endpoint Functions
++#
++
++config PCI_EPF_TEST
++	tristate "PCI Endpoint Test driver"
++	depends on PCI_ENDPOINT
++	help
++	   Enable this configuration option to enable the test driver
++	   for PCI Endpoint.
++
++	   If in doubt, say "N" to disable Endpoint test driver.
+diff --git a/drivers/pci/endpoint/functions/Makefile b/drivers/pci/endpoint/functions/Makefile
+new file mode 100644
+index 000000000000..6d94a4801838
+--- /dev/null
++++ b/drivers/pci/endpoint/functions/Makefile
+@@ -0,0 +1,5 @@
++#
++# Makefile for PCI Endpoint Functions
++#
++
++obj-$(CONFIG_PCI_EPF_TEST)		+= pci-epf-test.o
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+new file mode 100644
+index 000000000000..d6a7a12a99f7
+--- /dev/null
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -0,0 +1,510 @@
++/**
++ * Test driver to test endpoint functionality
++ *
++ * Copyright (C) 2017 Texas Instruments
++ * Author: Kishon Vijay Abraham I <kishon@ti.com>
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 of
++ * the License as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include <linux/crc32.h>
++#include <linux/delay.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/slab.h>
++#include <linux/pci_ids.h>
++#include <linux/random.h>
++
++#include <linux/pci-epc.h>
++#include <linux/pci-epf.h>
++#include <linux/pci_regs.h>
++
++#define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
++#define COMMAND_RAISE_MSI_IRQ		BIT(1)
++#define MSI_NUMBER_SHIFT		2
++#define MSI_NUMBER_MASK			(0x3f << MSI_NUMBER_SHIFT)
++#define COMMAND_READ			BIT(8)
++#define COMMAND_WRITE			BIT(9)
++#define COMMAND_COPY			BIT(10)
++
++#define STATUS_READ_SUCCESS		BIT(0)
++#define STATUS_READ_FAIL		BIT(1)
++#define STATUS_WRITE_SUCCESS		BIT(2)
++#define STATUS_WRITE_FAIL		BIT(3)
++#define STATUS_COPY_SUCCESS		BIT(4)
++#define STATUS_COPY_FAIL		BIT(5)
++#define STATUS_IRQ_RAISED		BIT(6)
++#define STATUS_SRC_ADDR_INVALID		BIT(7)
++#define STATUS_DST_ADDR_INVALID		BIT(8)
++
++#define TIMER_RESOLUTION		1
++
++static struct workqueue_struct *kpcitest_workqueue;
++
++struct pci_epf_test {
++	void			*reg[6];
++	struct pci_epf		*epf;
++	struct delayed_work	cmd_handler;
++};
++
++struct pci_epf_test_reg {
++	u32	magic;
++	u32	command;
++	u32	status;
++	u64	src_addr;
++	u64	dst_addr;
++	u32	size;
++	u32	checksum;
++} __packed;
++
++static struct pci_epf_header test_header = {
++	.vendorid	= PCI_ANY_ID,
++	.deviceid	= PCI_ANY_ID,
++	.baseclass_code = PCI_CLASS_OTHERS,
++	.interrupt_pin	= PCI_INTERRUPT_INTA,
++};
++
++static int bar_size[] = { 512, 1024, 16384, 131072, 1048576 };
++
++static int pci_epf_test_copy(struct pci_epf_test *epf_test)
++{
++	int ret;
++	void __iomem *src_addr;
++	void __iomem *dst_addr;
++	phys_addr_t src_phys_addr;
++	phys_addr_t dst_phys_addr;
++	struct pci_epf *epf = epf_test->epf;
++	struct device *dev = &epf->dev;
++	struct pci_epc *epc = epf->epc;
++	struct pci_epf_test_reg *reg = epf_test->reg[0];
++
++	src_addr = pci_epc_mem_alloc_addr(epc, &src_phys_addr, reg->size);
++	if (!src_addr) {
++		dev_err(dev, "failed to allocate source address\n");
++		reg->status = STATUS_SRC_ADDR_INVALID;
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	ret = pci_epc_map_addr(epc, src_phys_addr, reg->src_addr, reg->size);
++	if (ret) {
++		dev_err(dev, "failed to map source address\n");
++		reg->status = STATUS_SRC_ADDR_INVALID;
++		goto err_src_addr;
++	}
++
++	dst_addr = pci_epc_mem_alloc_addr(epc, &dst_phys_addr, reg->size);
++	if (!dst_addr) {
++		dev_err(dev, "failed to allocate destination address\n");
++		reg->status = STATUS_DST_ADDR_INVALID;
++		ret = -ENOMEM;
++		goto err_src_map_addr;
++	}
++
++	ret = pci_epc_map_addr(epc, dst_phys_addr, reg->dst_addr, reg->size);
++	if (ret) {
++		dev_err(dev, "failed to map destination address\n");
++		reg->status = STATUS_DST_ADDR_INVALID;
++		goto err_dst_addr;
++	}
++
++	memcpy(dst_addr, src_addr, reg->size);
++
++	pci_epc_unmap_addr(epc, dst_phys_addr);
++
++err_dst_addr:
++	pci_epc_mem_free_addr(epc, dst_phys_addr, dst_addr, reg->size);
++
++err_src_map_addr:
++	pci_epc_unmap_addr(epc, src_phys_addr);
++
++err_src_addr:
++	pci_epc_mem_free_addr(epc, src_phys_addr, src_addr, reg->size);
++
++err:
++	return ret;
++}
++
++static int pci_epf_test_read(struct pci_epf_test *epf_test)
++{
++	int ret;
++	void __iomem *src_addr;
++	void *buf;
++	u32 crc32;
++	phys_addr_t phys_addr;
++	struct pci_epf *epf = epf_test->epf;
++	struct device *dev = &epf->dev;
++	struct pci_epc *epc = epf->epc;
++	struct pci_epf_test_reg *reg = epf_test->reg[0];
++
++	src_addr = pci_epc_mem_alloc_addr(epc, &phys_addr, reg->size);
++	if (!src_addr) {
++		dev_err(dev, "failed to allocate address\n");
++		reg->status = STATUS_SRC_ADDR_INVALID;
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	ret = pci_epc_map_addr(epc, phys_addr, reg->src_addr, reg->size);
++	if (ret) {
++		dev_err(dev, "failed to map address\n");
++		reg->status = STATUS_SRC_ADDR_INVALID;
++		goto err_addr;
++	}
++
++	buf = kzalloc(reg->size, GFP_KERNEL);
++	if (!buf) {
++		ret = -ENOMEM;
++		goto err_map_addr;
++	}
++
++	memcpy(buf, src_addr, reg->size);
++
++	crc32 = crc32_le(~0, buf, reg->size);
++	if (crc32 != reg->checksum)
++		ret = -EIO;
++
++	kfree(buf);
++
++err_map_addr:
++	pci_epc_unmap_addr(epc, phys_addr);
++
++err_addr:
++	pci_epc_mem_free_addr(epc, phys_addr, src_addr, reg->size);
++
++err:
++	return ret;
++}
++
++static int pci_epf_test_write(struct pci_epf_test *epf_test)
++{
++	int ret;
++	void __iomem *dst_addr;
++	void *buf;
++	phys_addr_t phys_addr;
++	struct pci_epf *epf = epf_test->epf;
++	struct device *dev = &epf->dev;
++	struct pci_epc *epc = epf->epc;
++	struct pci_epf_test_reg *reg = epf_test->reg[0];
++
++	dst_addr = pci_epc_mem_alloc_addr(epc, &phys_addr, reg->size);
++	if (!dst_addr) {
++		dev_err(dev, "failed to allocate address\n");
++		reg->status = STATUS_DST_ADDR_INVALID;
++		ret = -ENOMEM;
++		goto err;
++	}
++
++	ret = pci_epc_map_addr(epc, phys_addr, reg->dst_addr, reg->size);
++	if (ret) {
++		dev_err(dev, "failed to map address\n");
++		reg->status = STATUS_DST_ADDR_INVALID;
++		goto err_addr;
++	}
++
++	buf = kzalloc(reg->size, GFP_KERNEL);
++	if (!buf) {
++		ret = -ENOMEM;
++		goto err_map_addr;
++	}
++
++	get_random_bytes(buf, reg->size);
++	reg->checksum = crc32_le(~0, buf, reg->size);
++
++	memcpy(dst_addr, buf, reg->size);
++
++	/*
++	 * wait 1ms inorder for the write to complete. Without this delay L3
++	 * error in observed in the host system.
++	 */
++	mdelay(1);
++
++	kfree(buf);
++
++err_map_addr:
++	pci_epc_unmap_addr(epc, phys_addr);
++
++err_addr:
++	pci_epc_mem_free_addr(epc, phys_addr, dst_addr, reg->size);
++
++err:
++	return ret;
++}
++
++static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
++{
++	u8 irq;
++	u8 msi_count;
++	struct pci_epf *epf = epf_test->epf;
++	struct pci_epc *epc = epf->epc;
++	struct pci_epf_test_reg *reg = epf_test->reg[0];
++
++	reg->status |= STATUS_IRQ_RAISED;
++	msi_count = pci_epc_get_msi(epc);
++	irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
++	if (irq > msi_count || msi_count <= 0)
++		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
++	else
++		pci_epc_raise_irq(epc, PCI_EPC_IRQ_MSI, irq);
++}
++
++static void pci_epf_test_cmd_handler(struct work_struct *work)
++{
++	int ret;
++	u8 irq;
++	u8 msi_count;
++	struct pci_epf_test *epf_test = container_of(work, struct pci_epf_test,
++						     cmd_handler.work);
++	struct pci_epf *epf = epf_test->epf;
++	struct pci_epc *epc = epf->epc;
++	struct pci_epf_test_reg *reg = epf_test->reg[0];
++
++	if (!reg->command)
++		goto reset_handler;
++
++	if (reg->command & COMMAND_RAISE_LEGACY_IRQ) {
++		reg->status = STATUS_IRQ_RAISED;
++		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
++		goto reset_handler;
++	}
++
++	if (reg->command & COMMAND_WRITE) {
++		ret = pci_epf_test_write(epf_test);
++		if (ret)
++			reg->status |= STATUS_WRITE_FAIL;
++		else
++			reg->status |= STATUS_WRITE_SUCCESS;
++		pci_epf_test_raise_irq(epf_test);
++		goto reset_handler;
++	}
++
++	if (reg->command & COMMAND_READ) {
++		ret = pci_epf_test_read(epf_test);
++		if (!ret)
++			reg->status |= STATUS_READ_SUCCESS;
++		else
++			reg->status |= STATUS_READ_FAIL;
++		pci_epf_test_raise_irq(epf_test);
++		goto reset_handler;
++	}
++
++	if (reg->command & COMMAND_COPY) {
++		ret = pci_epf_test_copy(epf_test);
++		if (!ret)
++			reg->status |= STATUS_COPY_SUCCESS;
++		else
++			reg->status |= STATUS_COPY_FAIL;
++		pci_epf_test_raise_irq(epf_test);
++		goto reset_handler;
++	}
++
++	if (reg->command & COMMAND_RAISE_MSI_IRQ) {
++		msi_count = pci_epc_get_msi(epc);
++		irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
++		if (irq > msi_count || msi_count <= 0)
++			goto reset_handler;
++		reg->status = STATUS_IRQ_RAISED;
++		pci_epc_raise_irq(epc, PCI_EPC_IRQ_MSI, irq);
++		goto reset_handler;
++	}
++
++reset_handler:
++	reg->command = 0;
++
++	queue_delayed_work(kpcitest_workqueue, &epf_test->cmd_handler,
++			   msecs_to_jiffies(1));
++}
++
++static void pci_epf_test_linkup(struct pci_epf *epf)
++{
++	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
++
++	queue_delayed_work(kpcitest_workqueue, &epf_test->cmd_handler,
++			   msecs_to_jiffies(1));
++}
++
++static void pci_epf_test_unbind(struct pci_epf *epf)
++{
++	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
++	struct pci_epc *epc = epf->epc;
++	int bar;
++
++	cancel_delayed_work(&epf_test->cmd_handler);
++	pci_epc_stop(epc);
++	for (bar = BAR_0; bar <= BAR_5; bar++) {
++		if (epf_test->reg[bar]) {
++			pci_epf_free_space(epf, epf_test->reg[bar], bar);
++			pci_epc_clear_bar(epc, bar);
++		}
++	}
++}
++
++static int pci_epf_test_set_bar(struct pci_epf *epf)
++{
++	int flags;
++	int bar;
++	int ret;
++	struct pci_epf_bar *epf_bar;
++	struct pci_epc *epc = epf->epc;
++	struct device *dev = &epf->dev;
++	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
++
++	flags = PCI_BASE_ADDRESS_SPACE_MEMORY | PCI_BASE_ADDRESS_MEM_TYPE_32;
++	if (sizeof(dma_addr_t) == 0x8)
++		flags |= PCI_BASE_ADDRESS_MEM_TYPE_64;
++
++	for (bar = BAR_0; bar <= BAR_5; bar++) {
++		epf_bar = &epf->bar[bar];
++		ret = pci_epc_set_bar(epc, bar, epf_bar->phys_addr,
++				      epf_bar->size, flags);
++		if (ret) {
++			pci_epf_free_space(epf, epf_test->reg[bar], bar);
++			dev_err(dev, "failed to set BAR%d\n", bar);
++			if (bar == BAR_0)
++				return ret;
++		}
++	}
++
++	return 0;
++}
++
++static int pci_epf_test_alloc_space(struct pci_epf *epf)
++{
++	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
++	struct device *dev = &epf->dev;
++	void *base;
++	int bar;
++
++	base = pci_epf_alloc_space(epf, sizeof(struct pci_epf_test_reg),
++				   BAR_0);
++	if (!base) {
++		dev_err(dev, "failed to allocated register space\n");
++		return -ENOMEM;
++	}
++	epf_test->reg[0] = base;
++
++	for (bar = BAR_1; bar <= BAR_5; bar++) {
++		base = pci_epf_alloc_space(epf, bar_size[bar - 1], bar);
++		if (!base)
++			dev_err(dev, "failed to allocate space for BAR%d\n",
++				bar);
++		epf_test->reg[bar] = base;
++	}
++
++	return 0;
++}
++
++static int pci_epf_test_bind(struct pci_epf *epf)
++{
++	int ret;
++	struct pci_epf_header *header = epf->header;
++	struct pci_epc *epc = epf->epc;
++	struct device *dev = &epf->dev;
++
++	if (WARN_ON_ONCE(!epc))
++		return -EINVAL;
++
++	ret = pci_epc_write_header(epc, header);
++	if (ret) {
++		dev_err(dev, "configuration header write failed\n");
++		return ret;
++	}
++
++	ret = pci_epf_test_alloc_space(epf);
++	if (ret)
++		return ret;
++
++	ret = pci_epf_test_set_bar(epf);
++	if (ret)
++		return ret;
++
++	ret = pci_epc_set_msi(epc, epf->msi_interrupts);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
++static int pci_epf_test_probe(struct pci_epf *epf)
++{
++	struct pci_epf_test *epf_test;
++	struct device *dev = &epf->dev;
++
++	epf_test = devm_kzalloc(dev, sizeof(*epf_test), GFP_KERNEL);
++	if (!epf)
++		return -ENOMEM;
++
++	epf->header = &test_header;
++	epf_test->epf = epf;
++
++	INIT_DELAYED_WORK(&epf_test->cmd_handler, pci_epf_test_cmd_handler);
++
++	epf_set_drvdata(epf, epf_test);
++	return 0;
++}
++
++static int pci_epf_test_remove(struct pci_epf *epf)
++{
++	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
++
++	kfree(epf_test);
++	return 0;
++}
++
++static struct pci_epf_ops ops = {
++	.unbind	= pci_epf_test_unbind,
++	.bind	= pci_epf_test_bind,
++	.linkup = pci_epf_test_linkup,
++};
++
++static const struct pci_epf_device_id pci_epf_test_ids[] = {
++	{
++		.name = "pci_epf_test",
++	},
++	{},
++};
++
++static struct pci_epf_driver test_driver = {
++	.driver.name	= "pci_epf_test",
++	.probe		= pci_epf_test_probe,
++	.remove		= pci_epf_test_remove,
++	.id_table	= pci_epf_test_ids,
++	.ops		= &ops,
++	.owner		= THIS_MODULE,
++};
++
++static int __init pci_epf_test_init(void)
++{
++	int ret;
++
++	kpcitest_workqueue = alloc_workqueue("kpcitest",
++					     WQ_MEM_RECLAIM | WQ_HIGHPRI, 0);
++	ret = pci_epf_register_driver(&test_driver);
++	if (ret) {
++		pr_err("failed to register pci epf test driver --> %d\n", ret);
++		return ret;
++	}
++
++	return 0;
++}
++module_init(pci_epf_test_init);
++
++static void __exit pci_epf_test_exit(void)
++{
++	pci_epf_unregister_driver(&test_driver);
++}
++module_exit(pci_epf_test_exit);
++
++MODULE_DESCRIPTION("PCI EPF TEST DRIVER");
++MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
++MODULE_LICENSE("GPL v2");
+-- 
+2.11.0
 
-> However, ASPM code actually check SLC bit of RC and try to
-> compare it with the downstream components' SLC instead. 
 
-Here I think you're talking about pcie_aspm_configure_common_clock()
-in Linux.  That looks at PCI_EXP_LNKSTA_SLC on both ends of a link.
-If PCI_EXP_LNKSTA_SLC is set at both ends, we set PCI_EXP_LNKCTL_CCC
-on both ends; otherwise we clear PCI_EXP_LNKCTL_CCC on both ends.
-This follows the Implementation Note in PCIe r3.1, sec 7.8.7.
-
-Per that note, PCI_EXP_LNKSTA_SLC in the root port tells us whether
-the port "uses a clock that has a common source ... to the clock
-signal provided on the slot" below the port.
-
-This patch sets PCI_EXP_LNKSTA_SLC based on your knowledge of the
-platform topology, i.e., that the root port clock and the slot clock
-have the same source.  I assume this is *always* the case for every
-possible platform using Rockchip?
-
-If so, just say that, and you can go on to say that this enables the
-ASPM code to set PCI_EXP_LNKCTL_CCC if the downstream end also sets
-PCI_EXP_LNKSTA_SLC to indicate that it uses the clock provided on the
-slot, e.g., something like this:
-
-  All platforms using Rockchip use a common clock for the Root Port
-  and the slot connected to it.  Indicate this by setting the Slot
-  Clock Configuration (PCI_EXP_LNKSTA_SLC) bit in the Root Port's Link
-  Status.
-
-  Per the Implementation Note in the spec (PCIe r3.1, sec 7.8.7), if
-  the downstream component also sets PCI_EXP_LNKSTA_SLC, software may
-  set the Common Clock Configuration (PCI_EXP_LNKCTL_CCC) bits on both
-  ends of the Link.  This is done by pcie_aspm_configure_common_clock().
-
-> So when
-> enabling ASPM, CCC will be cleared after failing to match SLC with
-> the corresponding bit of downstream components. On one hand, from the
-> code of pcie_aspm_configure_common_clock, we could find that what we
-> actually need to set is SLC. 
-
-> On the other hand, we should also guarantee
-> that CCC should be marked w/o supporting ASPM. 
-
-This patch doesn't change anything with PCI_EXP_LNKCTL_CCC.  I'd
-suggest that we should *not* set it here because we have no idea what
-(if anything) is at the other end of the link.  Per the implementation
-note, I think we should only set PCI_EXP_LNKCTL_CCC if both ends of
-the link have PCI_EXP_LNKSTA_SLC set.
-
-Are you suggesting that we should set PCI_EXP_LNKCTL_CCC on both ends
-of the link whenever possible, and that today we don't do that unless
-ASPM is enabled?  That sounds plausible to me, but that would be a
-generic PCIe enhancement, not anything Rockchip-specific, and of
-course, this patch doesn't make that happen.
-
-> This patch fixes this
-> issue.
-> 
-> Cc: Brian Norris <briannorris@chromium.org>
-> Cc: jeffy.chen <jeffy.chen@rock-chips.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> ---
-> 
->  drivers/pci/host/pcie-rockchip.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 26ddd35..7cd4d5c 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -596,7 +596,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  
->  	/* Set RC's clock architecture as common clock */
->  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
-> -	status |= PCI_EXP_LNKCTL_CCC;
-> +	status |= (PCI_EXP_LNKCTL_CCC | PCI_EXP_LNKSTA_SLC << 16);
->  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
->  
->  	/* Enable Gen1 training */
-> -- 
-> 1.9.1
-> 
-> 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
