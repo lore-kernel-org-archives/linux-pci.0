@@ -1,113 +1,164 @@
-Return-Path: <SRS0=Mum+=3N=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Return-Path: <SRS0=Mum+=3N=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Date: Wed, 5 Apr 2017 11:58:41 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Tony Luck <tony.luck@intel.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Haavard Skinnemoen <hskinnemoen@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	John Garry <john.garry@huawei.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Roy Zang <tie-fei.zang@freescale.com>,
-	"Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
- interface
-Message-ID: <20170405105841.GG7909@n2100.armlinux.org.uk>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
- <20170327094954.7162-3-lorenzo.pieralisi@arm.com>
- <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
- <20170328144543.GA18046@red-moon>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170328144543.GA18046@red-moon>
-Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from regular1.263xmail.com ([211.150.99.131]:55570 "EHLO
+        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754586AbdDECQa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2017 22:16:30 -0400
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-pci@vger.kernel.org
+Cc: robh@kernel.org, toshi.kani@hpe.com, shawn.lin@rock-chips.com,
+        briannorris@chromium.org, linux-kernel@vger.kernel.org,
+        dianders@chromium.org, bhelgaas@google.com, dtor@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Subject: [PATCH v4] of/pci: Fix memory leak in of_pci_get_host_bridge_resources
+Date: Wed,  5 Apr 2017 10:15:21 +0800
+Message-Id: <1491358521-17834-2-git-send-email-jeffy.chen@rock-chips.com>
+In-Reply-To: <1491358521-17834-1-git-send-email-jeffy.chen@rock-chips.com>
+References: <1491358521-17834-1-git-send-email-jeffy.chen@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 28, 2017 at 03:45:43PM +0100, Lorenzo Pieralisi wrote:
-> On Mon, Mar 27, 2017 at 08:41:10PM -0500, Bjorn Helgaas wrote:
-> > On Mon, Mar 27, 2017 at 10:49:30AM +0100, Lorenzo Pieralisi wrote:
-> > > diff --git a/arch/x86/include/asm/io.h b/arch/x86/include/asm/io.h
-> > > index 7afb0e2..50b292f 100644
-> > > --- a/arch/x86/include/asm/io.h
-> > > +++ b/arch/x86/include/asm/io.h
-> > > @@ -171,6 +171,7 @@ static inline unsigned int isa_virt_to_bus(volatile void *address)
-> > >  extern void __iomem *ioremap_nocache(resource_size_t offset, unsigned long size);
-> > >  extern void __iomem *ioremap_uc(resource_size_t offset, unsigned long size);
-> > >  #define ioremap_uc ioremap_uc
-> > > +#define ioremap_nopost ioremap_nocache
-> > 
-> > These are all the same as the default from asm-generic.h.  Do we really
-> > need these definitions in alpha, avr32, frv, ia64, x86?
-> 
-> Those arches do not include asm-generic.h (I suppose for a good reason)
-> but a definition is needed anyway if we want code using ioremap_nopost()
-> to be unconditional. This is one way of doing it, there are others not
-> sure they are any better, I am open to suggestions.
+Currently we only free the allocated resource struct when error.
+This would cause memory leak after pci_free_resource_list.
 
-We do have linux/io.h, which should be included in preference to asm/io.h.
-linux/io.h has existed for years, but I still see (from time to time)
-patches adding drivers that (imho incorrectly) use asm/io.h.
+Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+---
 
-Also, this:
+Changes in v4:
+Use IORESOURCE_AUTO to mark struct resources which could be copied.
 
-> > > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-> > > index 7ef015e..0e81938 100644
-> > > --- a/include/asm-generic/io.h
-> > > +++ b/include/asm-generic/io.h
-> > > @@ -915,6 +915,10 @@ extern void ioport_unmap(void __iomem *p);
-> > >  #endif /* CONFIG_GENERIC_IOMAP */
-> > >  #endif /* CONFIG_HAS_IOPORT_MAP */
-> > >  
-> > > +#ifndef ioremap_nopost
-> > > +#define ioremap_nopost ioremap_nocache
-> > > +#endif
-> > > +
-> > >  #ifndef xlate_dev_kmem_ptr
-> > >  #define xlate_dev_kmem_ptr xlate_dev_kmem_ptr
-> > >  static inline void *xlate_dev_kmem_ptr(void *addr)
+Changes in v3:
+Add some comments.
 
-could well be located in linux/io.h, which would make it available
-everywhere.
+Changes in v2:
+Don't change the resource_list_create_entry's behavior.
 
-I'd suggest one change to this though:
+ drivers/of/of_pci.c | 51 ++++++++++++++++++---------------------------------
+ drivers/pci/bus.c   |  7 ++++++-
+ 2 files changed, 24 insertions(+), 34 deletions(-)
 
-#ifndef ioremap_nopost
-static inline void __iomem *ioremap_nopost(resource_size_t offset,
-					   unsigned long size)
-{
-	return ioremap_nocache(offset, size);
-}
-#endif
-
-This way, if someone forgets to define ioremap_nopost() in their
-asm/io.h but provides a definition or extern prototype for
-ioremap_nopost(), we end up with a compile error to highlight the
-error, rather than the error being hidden by the preprocessor.
-
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 0ee42c3..1ecbd79 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -189,9 +189,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base)
+ {
+-	struct resource_entry *window;
+-	struct resource *res;
+-	struct resource *bus_range;
++	struct resource res;
+ 	struct of_pci_range range;
+ 	struct of_pci_range_parser parser;
+ 	char range_type[4];
+@@ -200,24 +198,21 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 	if (io_base)
+ 		*io_base = (resource_size_t)OF_BAD_ADDR;
+ 
+-	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
+-	if (!bus_range)
+-		return -ENOMEM;
+-
+ 	pr_info("host bridge %s ranges:\n", dev->full_name);
+ 
+-	err = of_pci_parse_bus_range(dev, bus_range);
++	err = of_pci_parse_bus_range(dev, &res);
+ 	if (err) {
+-		bus_range->start = busno;
+-		bus_range->end = bus_max;
+-		bus_range->flags = IORESOURCE_BUS;
+-		pr_info("  No bus range found for %s, using %pR\n",
+-			dev->full_name, bus_range);
++		res.start = busno;
++		res.end = bus_max;
++		res.flags = IORESOURCE_BUS;
++		pr_info("  No bus range found for %s\n", dev->full_name);
+ 	} else {
+-		if (bus_range->end > bus_range->start + bus_max)
+-			bus_range->end = bus_range->start + bus_max;
++		if (res.end > res.start + bus_max)
++			res.end = res.start + bus_max;
+ 	}
+-	pci_add_resource(resources, bus_range);
++
++	res.flags |= IORESOURCE_AUTO;
++	pci_add_resource(resources, res);
+ 
+ 	/* Check for ranges property */
+ 	err = of_pci_range_parser_init(&parser, dev);
+@@ -244,24 +239,16 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
+ 			continue;
+ 
+-		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
+-		if (!res) {
+-			err = -ENOMEM;
+-			goto parse_failed;
+-		}
+-
+-		err = of_pci_range_to_resource(&range, dev, res);
+-		if (err) {
+-			kfree(res);
++		err = of_pci_range_to_resource(&range, dev, &res);
++		if (err)
+ 			continue;
+-		}
+ 
+-		if (resource_type(res) == IORESOURCE_IO) {
++		if (resource_type(&res) == IORESOURCE_IO) {
+ 			if (!io_base) {
+ 				pr_err("I/O range found for %s. Please provide an io_base pointer to save CPU base address\n",
+ 					dev->full_name);
+ 				err = -EINVAL;
+-				goto conversion_failed;
++				goto parse_failed;
+ 			}
+ 			if (*io_base != (resource_size_t)OF_BAD_ADDR)
+ 				pr_warn("More than one I/O resource converted for %s. CPU base address for old range lost!\n",
+@@ -269,16 +256,14 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 			*io_base = range.cpu_addr;
+ 		}
+ 
+-		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
++		res.flags |= IORESOURCE_AUTO;
++		pci_add_resource_offset(resources, res,
++					res->start - range.pci_addr);
+ 	}
+ 
+ 	return 0;
+ 
+-conversion_failed:
+-	kfree(res);
+ parse_failed:
+-	resource_list_for_each_entry(window, resources)
+-		kfree(window->res);
+ 	pci_free_resource_list(resources);
+ 	return err;
+ }
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index bc56cf1..5f32bfd 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -22,12 +22,17 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
+ {
+ 	struct resource_entry *entry;
+ 
+-	entry = resource_list_create_entry(res, 0);
++	entry = resource_list_create_entry(NULL, 0);
+ 	if (!entry) {
+ 		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
+ 		return;
+ 	}
+ 
++	if (res->flags & IORESOURCE_AUTO)
++		*entry->res = *res;
++	else
++		entry->res = res
++
+ 	entry->offset = offset;
+ 	resource_list_add_tail(entry, resources);
+ }
 -- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+2.1.4
