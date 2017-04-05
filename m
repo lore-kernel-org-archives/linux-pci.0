@@ -1,39 +1,121 @@
-Return-Path: <SRS0=WdvV=3W=lst.de=hch@kernel.org>
-Return-Path: <SRS0=WdvV=3W=lst.de=hch@kernel.org>
-Date: Fri, 14 Apr 2017 17:57:09 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-	Salvatore Benedetto <salvatore.benedetto@intel.com>,
-	Mike Marciniszyn <mike.marciniszyn@intel.com>,
-	Dennis Dalessandro <dennis.dalessandro@intel.com>,
-	Derek Chickles <derek.chickles@caviumnetworks.com>,
-	Satanand Burla <satananda.burla@caviumnetworks.com>,
-	Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-	Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	linux-pci@vger.kernel.org, qat-linux@intel.com,
-	linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: export pcie_flr and remove copies of it in drivers
-Message-ID: <20170414155709.GB22412@lst.de>
-References: <20170413145339.20186-1-hch@lst.de> <20170414144108.GB29349@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH 2/2] ARM: imx_v6_v7_defconfig: enable PCI_MSI
+To: Jingoo Han <jingoohan1@gmail.com>, 'Tim Harvey' <tharvey@gateworks.com>,
+ 'Joao Pinto' <Joao.Pinto@synopsys.com>
+References: <1448902811-11399-1-git-send-email-l.stach@pengutronix.de>
+ <1448902811-11399-2-git-send-email-l.stach@pengutronix.de>
+ <CAJ+vNU2Fb7gpO0LsoVpPbUX5rSyH3yC4K30JpAf5j7aQkDH9tw@mail.gmail.com>
+ <1460708469.22710.4.camel@pengutronix.de>
+ <CAJ+vNU1-M3qSODKHMf872kfOsH0g9xFgKNEgKqiJu6A8z-ChxA@mail.gmail.com>
+ <CAJ+vNU0+ksyYCpydpmcJOO-w0v4D0axvG84wK7f09iK_1yzo_A@mail.gmail.com>
+ <001c01d2ad85$b06af1a0$1140d4e0$@gmail.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <6eb58d54-b6e8-b709-c7f9-fa19d52cd492@synopsys.com>
+Date: Wed, 5 Apr 2017 13:07:21 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170414144108.GB29349@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <001c01d2ad85$b06af1a0$1140d4e0$@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, patchwork-lst@pengutronix.de,
+ =?UTF-8?Q?'Krzysztof_Ha=c5=82asa'?= <khalasa@piap.pl>,
+ 'Sascha Hauer' <kernel@pengutronix.de>, 'Shawn Guo' <shawnguo@kernel.org>,
+ linux-arm-kernel@lists.infradead.org, 'Lucas Stach' <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 14, 2017 at 09:41:08AM -0500, Bjorn Helgaas wrote:
-> Looks good to me (except the comment on probe).  If you want to apply
-> the whole series via netdev or some non-PCI tree, here's my ack for
-> the drivers/pci parts, assuming the probe thing is resolved:
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Otherwise, I'd be glad to take the series given acks for the non-PCI
-> parts.  Just let me know.
-
-I guess the best would be if you take the first three patches (once
-resent) for the PCI tree for 4.12, then we can do the other patches
-in the next merge window.
+w4BzIDk6NTQgUE0gZGUgNC80LzIwMTcsIEppbmdvbyBIYW4gZXNjcmV2ZXU6Cj4gT24gRnJpZGF5
+LCBNYXJjaCAzMSwgMjAxNyAxMjowNSBQTSwgVGltIEhhcnZleSB3cm90ZToKPj4gT24gVGh1LCBN
+YXIgMzAsIDIwMTcgYXQgNDo0MiBQTSwgVGltIEhhcnZleSA8dGhhcnZleUBnYXRld29ya3MuY29t
+PiB3cm90ZToKPj4+IE9uIEZyaSwgQXByIDE1LCAyMDE2IGF0IDE6MjEgQU0sIEx1Y2FzIFN0YWNo
+IDxsLnN0YWNoQHBlbmd1dHJvbml4LmRlPgo+PiB3cm90ZToKPj4+PiBBbSBEb25uZXJzdGFnLCBk
+ZW4gMTQuMDQuMjAxNiwgMDg6MTMgLTA3MDAgc2NocmllYiBUaW0gSGFydmV5Ogo+Pj4+PiBPbiBN
+b24sIE5vdiAzMCwgMjAxNSBhdCA5OjAwIEFNLCBMdWNhcyBTdGFjaCA8bC5zdGFjaEBwZW5ndXRy
+b25peC5kZT4KPj4gd3JvdGU6Cj4+Pj4+PiBUaGlzIGhhcyBiZWVuIHN0YWJsZSBvbiBpLk1YNiBm
+b3IgYSBnb29kIHdoaWxlIG5vdyBhbmQgdGhlcmUgaXMgbm8KPj4+Pj4+IHJlYXNvbiB0byBrZWVw
+IGl0IGRpc2FibGVkLCBhcyBpdCBhbGxvd3MgdG8gYWxsb2NhdGUgbm9uLXNoYXJlZAo+Pj4+Pj4g
+SVJRcyBpZiBzZXZlcmFsIFBDSWUgZGV2aWNlcyBhcmUgY29ubmVjdGVkIHRvIGEgc2luZ2xlIGhv
+c3QuCj4+Pj4+Pgo+Pj4+Pj4gU2lnbmVkLW9mZi1ieTogTHVjYXMgU3RhY2ggPGwuc3RhY2hAcGVu
+Z3V0cm9uaXguZGU+Cj4+Pj4+PiAtLS0KPj4+Pj4+ICBhcmNoL2FybS9jb25maWdzL2lteF92Nl92
+N19kZWZjb25maWcgfCAxICsKPj4+Pj4+ICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKykK
+Pj4+Pj4+Cj4+Pj4+PiBkaWZmIC0tZ2l0IGEvYXJjaC9hcm0vY29uZmlncy9pbXhfdjZfdjdfZGVm
+Y29uZmlnCj4+IGIvYXJjaC9hcm0vY29uZmlncy9pbXhfdjZfdjdfZGVmY29uZmlnCj4+Pj4+PiBp
+bmRleCA0MTg3ZjY5ZjY2MzAuLmUyY2U2MGQwMGU4YSAxMDA2NDQKPj4+Pj4+IC0tLSBhL2FyY2gv
+YXJtL2NvbmZpZ3MvaW14X3Y2X3Y3X2RlZmNvbmZpZwo+Pj4+Pj4gKysrIGIvYXJjaC9hcm0vY29u
+Zmlncy9pbXhfdjZfdjdfZGVmY29uZmlnCj4+Pj4+PiBAQCAtNDUsNiArNDUsNyBAQCBDT05GSUdf
+U09DX0lNWDdEPXkKPj4+Pj4+ICBDT05GSUdfU09DX0xTMTAyMUE9eQo+Pj4+Pj4gIENPTkZJR19T
+T0NfVkY2MTA9eQo+Pj4+Pj4gIENPTkZJR19QQ0k9eQo+Pj4+Pj4gK0NPTkZJR19QQ0lfTVNJPXkK
+Pj4+Pj4+ICBDT05GSUdfUENJX0lNWDY9eQo+Pj4+Pj4gIENPTkZJR19TTVA9eQo+Pj4+Pj4gIENP
+TkZJR19QUkVFTVBUX1ZPTFVOVEFSWT15Cj4+Pj4+PiAtLQo+Pj4+Pj4gMi42LjIKPj4+Pj4+Cj4+
+Pj4+Pgo+Pj4+Pj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KPj4+Pj4+IGxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0Cj4+Pj4+PiBsaW51eC1hcm0t
+a2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKPj4+Pj4+IGh0dHBzOi8vdXJsZGVmZW5zZS5wcm9v
+ZnBvaW50LmNvbS92Mi91cmw/dT1odHRwLTNBX19saXN0cy5pbmZyYWRlYWQub3JnX21haWxtYW5f
+bGlzdGluZm9fbGludXgtMkRhcm0tMkRrZXJuZWwmZD1Ed0lDYVEmYz1EUEw2X1hfNkprWEZ4N0FY
+V3FCMHRnJnI9czJmTzBoaWkwT0dOT3Y5cVF5X0hSWHkteEFKVUQxTk5vRWNjM2lvX2t4MCZtPXlR
+eDd5YnUtSkdjUFBoNlpsUXl4a0M2X1V3NjJjdUJLTGI3bzN6cEs3aFEmcz1vLXRSMG1aNXlLTlRU
+WEtYMU1SN051RExwSGZ2U0hJanppNDdZTHVlMGFBJmU9IAo+Pj4+Pgo+Pj4+PiBMdWNhcywKPj4+
+Pj4KPj4+Pj4gQW55IHRob3VnaHRzIG9uIHdoeSBlbmFibGluZyBNU0kgb24gSU1YNiBicmVha3Mg
+bGVnYWN5IGludGVycnVwdHM/Cj4+Pj4+Cj4+Pj4+IEFnYWluLCBtYW55IFBDSSBkZXZpY2VzL2Ry
+aXZlcnMgZG9uJ3Qgc3VwcG9ydCBNU0kgYW5kIHRodXMgZW5hYmxpbmcKPj4+Pj4gTVNJIGFzIHRo
+aXMgcGF0Y2ggZG9lcyBtYWtlcyB0aGlzIGNvbmZpZyBicmVhayBtYW55IFBDSSBkZXZpY2VzIG9u
+Cj4+Pj4+IElNWDYuCj4+Pj4+Cj4+Pj4+IEkgaGF2ZSBmb3VuZCB0aGF0IE1TSSBkb2VzIGluZGVl
+ZCB3b3JrIG9uIHRoZSBJTVg2IGZvciBjYXJkcy9kcml2ZXJzCj4+Pj4+IHRoYXQgdXNlIE1TSSwg
+YnV0IGZvciB0aG9zZSB0aGF0IGRvbid0IHRoZSBsZWdhY3kgaW50ZXJydXB0cyBuZXZlcgo+Pj4+
+PiBmaXJlIHJlZ2FyZGxlc3Mgb2YgZ29pbmcgdGhyb3VnaCBhIGJyaWRnZSBvciBkaXJlY3RseSBo
+YW5naW5nIG9mZiB0aGUKPj4+Pj4gSU1YNi4gSSBhc3N1bWUgeW91IGNhbiBjb25maXJtIHRoaXMg
+b24geW91ciBib2FyZHMvZGV2aWNlcyBhcyB3ZWxsPwo+Pj4+Pgo+Pj4+IE5vLCB0aGlzIHNlZW1z
+IHRvIGJlIGFuIGVycmF0YSBpbiB0aGUgRFcgUENJZSBjb3JlLiBUaGUgbWFudWFsIHN0YXRlcwo+
+Pj4+IHRoYXQgbGVnYWN5IElSUXMgYW5kIE1TSXMgY2FuJ3QgYmUgdXNlZCB0b2dldGhlciwgYnV0
+IEkgdGhvdWdodCB0aGlzCj4+Pj4gb25seSBhcHBsaWVzIHRvIHRoZSBFUCBwYXJ0IG9mIHRoZSBj
+b3JlLgo+Pj4+Cj4+Pj4gV2UgY2FuIHByb2JhYmx5IGZpeCB0aGUgc2ltcGxlIGNvbmZpZ3VyYXRp
+b24gYnkgbm90IGVuYWJsaW5nIE1TSQo+PiBzdXBwb3J0Cj4+Pj4gdW50aWwgc29tZW9uZSBhY3R1
+YWxseSByZXF1ZXN0cyB0byBzZXQgdXAgYW4gTVNJIElSUSwgc28gYm90aCBJUlEgdHlwZXMKPj4+
+PiB3b3JrIHdoZW4gb25seSBvbmUgRVAgaXMgY29ubmVjdGVkLgo+Pj4+IEkgZG9uJ3QgaGF2ZSBh
+bnkgaWRlYSB5ZXQgaG93IHRvIGZpeCBzZXR1cHMgd2l0aCBhIFBDSWUgc3dpdGNoIHdoZXJlCj4+
+Pj4gc29tZSBjb25uZWN0ZWQgRVBzIG1pZ2h0IGxpa2UgdG8gdXNlIE1TSXMgd2hpbGUgc29tZSBv
+dGhlcnMgY2FuJ3QgdXNlCj4+Pj4gdGhlbS4KPj4+Pgo+Pj4+IFJlZ2FyZHMsCj4+Pj4gTHVjYXMK
+Pj4+Pgo+Pj4KPj4+IEx1Y2FzLAo+Pj4KPj4+IEkgZmVlbCBhIGJpdCBkdW1iIGhlcmUgZm9yIGZv
+cmdldHRpbmcgYWJvdXQgdGhpcyBpc3N1ZSBhbmQgbGV0dGluZyBpdAo+Pj4gZHJvcCwgYnV0IEkn
+dmUganVzdCBzcGVudCBhIGRheSBkZWJ1Z2dpbmcgYW4gaXNzdWUgd2l0aCB0aGUgYXRoOWsKPj4+
+IHdpcmVsZXNzIGRyaXZlciBvbmx5IHRvIHJlYWxpemUgaXQgd2FzIHRoYXQgdGhlIGF0aDlrIGNh
+cmQgYW5kL29yCj4+PiBkcml2ZXIgZG9lc24ndCBzdXBwb3J0IE1TSSBpbnRlcnJ1cHRzIGFuZCB0
+aHVzIG5vIGxvbmdlciB3b3JrIG9uCj4+PiBtYWlubGluZSBrZXJuZWxzIHRoYXQgaGF2ZSBNU0kg
+ZW5hYmxlZC4gVG8gYmUgaG9uZXN0IEknbSBub3Qgc3VyZSBob3cKPj4+IG1hbnkgUENJZSBkZXZp
+Y2VzIG91dCB0aGVyZSBjYW4ndCBzdXBwb3J0IE1TSSBiZWNhdXNlIG9mIGhhcmR3YXJlCj4+PiBs
+aW1pdGF0aW9ucyB2cyBkcml2ZXJzIHRoYXQgc2ltcGx5IGhhdmUgbm90IGltcGxlbWVudGVkIGl0
+Lgo+Pj4KPj4+IFRvIG1ha2UgbWF0dGVycyB3b3JzZSAzZWU4MDM2NDFlNzZiZWE3NmVjNzMwYzgw
+ZGNjNjQ3MzlhOTkxOWZmIG1ha2VzCj4+PiBpdCBzdWNoIHRoYXQgeW91IGNhbid0IGRpc2FibGUg
+TVNJIG9uIHRoZSBJTVg2Lgo+Pj4KPj4+IElzIHRoZXJlIHNvbWUgZml4IHlvdSBjYW4gdGhpbmsg
+b2YgdG8gbWFrZSB0aGUgSU1YNiBQQ0llIGhvc3QKPj4+IGNvbnRyb2xsZXIgcmFpc2UgYW4gaW50
+ZXJydXB0IGZvciBjYXJkcy9kcml2ZXJzIHRoYXQgdXNlIGxlZ2FjeSBpcnEncz8KPj4+IElmIG5v
+dCwgdGhlbiB3ZSBuZWVkIHRvIGFsbG93IE1TSSB0byBiZSBkaXNhYmxlZCBmb3IgSU1YNiBhbmQg
+ZGVmYXVsdAo+Pj4gaXQgdG8gZGlzYWJsZWQgZm9yIGNvbXBhdGliaWxpdHkuCj4+Pgo+Pgo+PiBK
+b2FvIC8gSmluZ29vLAo+Pgo+PiAoQWRkaW5nIGxpbnV4LXBjaSB0byB0aGUgbGlzdCB0byBwaWNr
+IHVwIG1haW50YWluZXJzIG9mIG90aGVyIERXQyBQQ0llCj4+IGNvcmUgZHJpdmVycykKPj4KPj4g
+SXMgTHVjYSdzIHN0YXRlbWVudCB0aGF0ICdsZWdhY3kgSVJRcyBhbmQgTVNJcyBjYW4ndCBiZSB1
+c2VkIHRvZ2V0aGVyJwo+PiB0cnVlIGluIGdlbmVyYWwgZm9yIHRoZSBEVyBQQ0llIGNvcmU/IElm
+IGFueSBvZiB0aGUgaG9zdCBjb250cm9sbGVycwo+PiB1c2luZyB0aGlzIGNvcmUgY2FuJ3Qgc3Vw
+cG9ydCBib3RoIGxlZ2FjeSBhbmQgTVNJIGlycXMgdG9nZXRoZXIgSQo+PiBzdGlsbCBiZWxpZXZl
+IHdlIHNob3VsZG4ndCBlbmFibGUvcmVxdWlyZSBNU0kgYXMgaXQgYnJlYWtzIGFueQo+PiBjYXJk
+L2RyaXZlciB0aGF0IG9ubHkgc3VwcG9ydHMgbGVnYWN5IGludGVycnVwdHMgKHN1Y2ggYXMgYXRo
+OWspLgo+IAo+IElmIHRoZXJlIGFyZSAyIERXIFBDSWUgY29udHJvbGxlcnMsIG9uZSBjb250cm9s
+bGVyIGNhbiBiZSB1c2VkIGZvciBsZWdhY3kKPiBhbmQgYW5vdGhlciBjb250cm9sbGVyIGNhbiBi
+ZSB1c2VkIGZvciBNU0kuCj4gCj4gQnV0LCBJIGFtIG5vdCBzdXJlIHRoYXQgb25lIERXIFBDSWUg
+Y29udHJvbGxlciBjYW4gc3VwcG9ydCBib3RoIE1TSSBkZXZpY2UKPiBhbmQgbGVnYWN5IGludGVy
+cnVwdCBkZXZpY2UgYXQgdGhlIHNhbWUgdGltZS4KPiAKPiBUbyBKb2FvIFBpbnRvLAo+IFdpbGwg
+eW91IGNvbmZpcm0gdGhpcz8KPiAKCkhpIEppbmdvbywKSSBjb25maXJtIHRoYXQgaWYgYSBSQyBo
+YXMgTVNJIGVuYWJsZSwgaXQgd29uJ3Qgc3VwcG9ydCBsZWdhY3kgaW50ZXJydXB0cy4KClJlZ2Fy
+ZHMsCkpvYW8KCj4gT3IgaWYgdGhlcmUgaXMgYW55b25lIHdobyBrbm93cyB0aGlzIHdlbGwsIHBs
+ZWFzZSBzaGFyZSB5b3VyIGtub3dsZWRnZS4gOi0pCj4gVGhhbmtzLgo+IAo+IEJlc3QgcmVnYXJk
+cywKPiBKaW5nb28gSGFuCj4gCj4+Cj4+IFJlZ2FyZHMsCj4+Cj4+IFRpbQo+IAoKCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwg
+bWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8v
+bGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
