@@ -1,66 +1,49 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:57111 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933206AbdDSBrp (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Apr 2017 21:47:45 -0400
-From: Michael Ellerman <mpe@ellerman.id.au>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
-        Yongji Xie <elohimes@gmail.com>
-Cc: Li Zhong <zhong@linux.vnet.ibm.com>,
-        Alexey Kardashevskiy <aik@ozlabs.ru>,
-        "linux-pci\@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
-Subject: Re: [PATCH v11 4/7] powerpc/powernv: Override pcibios_default_alignment() to force PCI devices to be page aligned
-In-Reply-To: <CAErSpo6gtDos6GH5Z7aOoW4a3uS4X-HOOHtPFtyg=F+B6+osrw@mail.gmail.com>
-References: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com> <20170417213653.21092.27784.stgit@bhelgaas-glaptop.roam.corp.google.com> <CAErSpo6gtDos6GH5Z7aOoW4a3uS4X-HOOHtPFtyg=F+B6+osrw@mail.gmail.com>
-Date: Wed, 19 Apr 2017 11:47:43 +1000
-Message-ID: <87bmrt6udc.fsf@concordia.ellerman.id.au>
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v6 22/23] MAINTAINERS: Add PCI Endpoint maintainer
+Date: Wed, 5 Apr 2017 14:22:42 +0530
+Message-ID: <20170405085243.18123-23-kishon@ti.com>
+In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
+References: <20170405085243.18123-1-kishon@ti.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <bhelgaas@google.com> writes:
+Add maintainer for the newly introduced PCI Endpoint framework.
 
-> On Mon, Apr 17, 2017 at 4:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
->> From: Yongji Xie <elohimes@gmail.com>
->> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
->> index 6901a06da2f9..b724487cbd0f 100644
->> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
->> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
->> @@ -3287,6 +3287,11 @@ static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
->>         }
->>  }
->>
->> +static resource_size_t pnv_pci_default_alignment(struct pci_dev *pdev)
->> +{
->> +       return PAGE_SIZE;
->> +}
->
-> Is it necessary that pcibios_default_alignment() take a pci_dev
-> pointer?
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ MAINTAINERS | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-It's not necessary given the current implementation, obviously.
-
-But it did strike me as a good idea to pass it in case we ever want to
-do anything device specific in future.
-
-> I'd like this better if it were:
->
->   resource_size_t pcibios_default_alignment(void) { ... }
->
-> because the last patch relies on the assumption that all resources of
-> *all* devices will be realigned to the same alignment.
-
-But I guess that precludes doing anything device specific, at least
-without further changes. So in that case it would be better if the API
-didn't include the pci_dev.
-
-Hopefully Yongji can confirm that there were no plans to use the
-pci_dev in future patches.
-
-cheers
+diff --git a/MAINTAINERS b/MAINTAINERS
+index c265a5fe4848..15ed84389092 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -9581,6 +9581,15 @@ F:	include/linux/pci*
+ F:	arch/x86/pci/
+ F:	arch/x86/kernel/quirks.c
+ 
++PCI ENDPOINT SUBSYSTEM
++M:	Kishon Vijay Abraham I <kishon@ti.com>
++L:	linux-pci@vger.kernel.org
++T:	git git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git
++S:	Supported
++F:	drivers/pci/endpoint/
++F:	drivers/misc/pci_endpoint_test.c
++F:	tools/pci/
++
+ PCI DRIVER FOR ALTERA PCIE IP
+ M:	Ley Foon Tan <lftan@altera.com>
+ L:	rfi@lists.rocketboards.org (moderated for non-subscribers)
+-- 
+2.11.0
