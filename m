@@ -1,163 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-pci@vger.kernel.org
-Cc: robh@kernel.org, toshi.kani@hpe.com, shawn.lin@rock-chips.com,
-        briannorris@chromium.org, linux-kernel@vger.kernel.org,
-        dianders@chromium.org, bhelgaas@google.com, dtor@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: [PATCH v5] of/pci: Fix memory leak in of_pci_get_host_bridge_resources
-Date: Wed,  5 Apr 2017 10:28:22 +0800
-Message-Id: <1491359303-1385-2-git-send-email-jeffy.chen@rock-chips.com>
-In-Reply-To: <1491359303-1385-1-git-send-email-jeffy.chen@rock-chips.com>
-References: <1491359303-1385-1-git-send-email-jeffy.chen@rock-chips.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from fllnx209.ext.ti.com ([198.47.19.16]:46154 "EHLO
+        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755069AbdDEI4A (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Apr 2017 04:56:00 -0400
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v6 13/23] dt-bindings: PCI: dra7xx: Add DT bindings for PCI dra7xx EP mode
+Date: Wed, 5 Apr 2017 14:22:33 +0530
+Message-ID: <20170405085243.18123-14-kishon@ti.com>
+In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
+References: <20170405085243.18123-1-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently we only free the allocated resource struct when error.
-This would cause memory leak after pci_free_resource_list.
+Add device tree binding documentation for PCI dra7xx EP mode.
 
-Signed-off-by: Jeffy Chen <jeffy.chen@rock-chips.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
+ Documentation/devicetree/bindings/pci/ti-pci.txt | 37 +++++++++++++++++++-----
+ 1 file changed, 30 insertions(+), 7 deletions(-)
 
-Changes in v5:
-Fix some careless compile errors.
-
-Changes in v4:
-Use IORESOURCE_AUTO to mark struct resources which could be copied.
-
-Changes in v3:
-Add some comments.
-
-Changes in v2:
-Don't change the resource_list_create_entry's behavior.
-
- drivers/of/of_pci.c | 51 ++++++++++++++++++---------------------------------
- drivers/pci/bus.c   |  7 ++++++-
- 2 files changed, 24 insertions(+), 34 deletions(-)
-
-diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-index 0ee42c3..49233bf 100644
---- a/drivers/of/of_pci.c
-+++ b/drivers/of/of_pci.c
-@@ -189,9 +189,7 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
- 			unsigned char busno, unsigned char bus_max,
- 			struct list_head *resources, resource_size_t *io_base)
- {
--	struct resource_entry *window;
--	struct resource *res;
--	struct resource *bus_range;
-+	struct resource res;
- 	struct of_pci_range range;
- 	struct of_pci_range_parser parser;
- 	char range_type[4];
-@@ -200,24 +198,21 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
- 	if (io_base)
- 		*io_base = (resource_size_t)OF_BAD_ADDR;
+diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
+index 60e25161f351..60c3cccefabc 100644
+--- a/Documentation/devicetree/bindings/pci/ti-pci.txt
++++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
+@@ -1,17 +1,22 @@
+ TI PCI Controllers
  
--	bus_range = kzalloc(sizeof(*bus_range), GFP_KERNEL);
--	if (!bus_range)
--		return -ENOMEM;
--
- 	pr_info("host bridge %s ranges:\n", dev->full_name);
- 
--	err = of_pci_parse_bus_range(dev, bus_range);
-+	err = of_pci_parse_bus_range(dev, &res);
- 	if (err) {
--		bus_range->start = busno;
--		bus_range->end = bus_max;
--		bus_range->flags = IORESOURCE_BUS;
--		pr_info("  No bus range found for %s, using %pR\n",
--			dev->full_name, bus_range);
-+		res.start = busno;
-+		res.end = bus_max;
-+		res.flags = IORESOURCE_BUS;
-+		pr_info("  No bus range found for %s\n", dev->full_name);
- 	} else {
--		if (bus_range->end > bus_range->start + bus_max)
--			bus_range->end = bus_range->start + bus_max;
-+		if (res.end > res.start + bus_max)
-+			res.end = res.start + bus_max;
- 	}
--	pci_add_resource(resources, bus_range);
+ PCIe Designware Controller
+- - compatible: Should be "ti,dra7-pcie""
+- - reg : Two register ranges as listed in the reg-names property
+- - reg-names : The first entry must be "ti-conf" for the TI specific registers
+-	       The second entry must be "rc-dbics" for the designware pcie
+-	       registers
+-	       The third entry must be "config" for the PCIe configuration space
++ - compatible: Should be "ti,dra7-pcie" for RC
++	       Should be "ti,dra7-pcie-ep" for EP
+  - phys : list of PHY specifiers (used by generic PHY framework)
+  - phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
+ 	       number of PHYs as specified in *phys* property.
+  - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
+ 	       where <X> is the instance number of the pcie from the HW spec.
++ - num-lanes as specified in ../designware-pcie.txt
 +
-+	res.flags |= IORESOURCE_AUTO;
-+	pci_add_resource(resources, &res);
++HOST MODE
++=========
++ - reg : Two register ranges as listed in the reg-names property
++ - reg-names : The first entry must be "ti-conf" for the TI specific registers
++	       The second entry must be "rc-dbics" for the DesignWare PCIe
++	       registers
++	       The third entry must be "config" for the PCIe configuration space
+  - interrupts : Two interrupt entries must be specified. The first one is for
+ 		main interrupt line and the second for MSI interrupt line.
+  - #address-cells,
+@@ -19,13 +24,31 @@ PCIe Designware Controller
+    #interrupt-cells,
+    device_type,
+    ranges,
+-   num-lanes,
+    interrupt-map-mask,
+    interrupt-map : as specified in ../designware-pcie.txt
  
- 	/* Check for ranges property */
- 	err = of_pci_range_parser_init(&parser, dev);
-@@ -244,24 +239,16 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
- 		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
- 			continue;
- 
--		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
--		if (!res) {
--			err = -ENOMEM;
--			goto parse_failed;
--		}
--
--		err = of_pci_range_to_resource(&range, dev, res);
--		if (err) {
--			kfree(res);
-+		err = of_pci_range_to_resource(&range, dev, &res);
-+		if (err)
- 			continue;
--		}
- 
--		if (resource_type(res) == IORESOURCE_IO) {
-+		if (resource_type(&res) == IORESOURCE_IO) {
- 			if (!io_base) {
- 				pr_err("I/O range found for %s. Please provide an io_base pointer to save CPU base address\n",
- 					dev->full_name);
- 				err = -EINVAL;
--				goto conversion_failed;
-+				goto parse_failed;
- 			}
- 			if (*io_base != (resource_size_t)OF_BAD_ADDR)
- 				pr_warn("More than one I/O resource converted for %s. CPU base address for old range lost!\n",
-@@ -269,16 +256,14 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
- 			*io_base = range.cpu_addr;
- 		}
- 
--		pci_add_resource_offset(resources, res,	res->start - range.pci_addr);
-+		res.flags |= IORESOURCE_AUTO;
-+		pci_add_resource_offset(resources, &res,
-+					res.start - range.pci_addr);
- 	}
- 
- 	return 0;
- 
--conversion_failed:
--	kfree(res);
- parse_failed:
--	resource_list_for_each_entry(window, resources)
--		kfree(window->res);
- 	pci_free_resource_list(resources);
- 	return err;
- }
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index bc56cf1..3dbcb95 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -22,12 +22,17 @@ void pci_add_resource_offset(struct list_head *resources, struct resource *res,
- {
- 	struct resource_entry *entry;
- 
--	entry = resource_list_create_entry(res, 0);
-+	entry = resource_list_create_entry(NULL, 0);
- 	if (!entry) {
- 		printk(KERN_ERR "PCI: can't add host bridge window %pR\n", res);
- 		return;
- 	}
- 
-+	if (res->flags & IORESOURCE_AUTO)
-+		*entry->res = *res;
-+	else
-+		entry->res = res;
++DEVICE MODE
++===========
++ - reg : Four register ranges as listed in the reg-names property
++ - reg-names : "ti-conf" for the TI specific registers
++	       "ep_dbics" for the standard configuration registers as
++		they are locally accessed within the DIF CS space
++	       "ep_dbics2" for the standard configuration registers as
++		they are locally accessed within the DIF CS2 space
++	       "addr_space" used to map remote RC address space
++ - interrupts : one interrupt entries must be specified for main interrupt.
++ - num-ib-windows : number of inbound address translation windows
++ - num-ob-windows : number of outbound address translation windows
 +
- 	entry->offset = offset;
- 	resource_list_add_tail(entry, resources);
- }
+ Optional Property:
+  - gpios : Should be added if a gpio line is required to drive PERST# line
+ 
++NOTE: Two DT nodes may be added for each PCI controller; one for host
++mode and another for device mode. So in order for PCI to
++work in host mode, EP mode DT node should be disabled and in order to PCI to
++work in EP mode, host mode DT node should be disabled. Host mode and EP
++mode are mutually exclusive.
++
+ Example:
+ axi {
+ 	compatible = "simple-bus";
 -- 
-2.1.4
+2.11.0
