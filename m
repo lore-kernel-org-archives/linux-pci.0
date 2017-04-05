@@ -1,617 +1,440 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v6 07/23] PCI: endpoint: functions: Add an EP function to test
- PCI
-Date: Wed, 5 Apr 2017 14:22:27 +0530
-Message-ID: <20170405085243.18123-8-kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v6 12/23] PCI: dwc: dra7xx: Add EP mode support
+Date: Wed, 5 Apr 2017 14:22:32 +0530
+Message-ID: <20170405085243.18123-13-kishon@ti.com>
 In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
 References: <20170405085243.18123-1-kishon@ti.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Adds a new endpoint function driver (to program the virtual test device)
-making use of the EP-core library.
+The PCIe controller integrated in dra7xx SoCs is capable of operating in
+endpoint mode. Add endpoint mode support to dra7xx driver.
 
 Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/endpoint/Kconfig                  |   2 +
- drivers/pci/endpoint/Makefile                 |   2 +-
- drivers/pci/endpoint/functions/Kconfig        |  12 +
- drivers/pci/endpoint/functions/Makefile       |   5 +
- drivers/pci/endpoint/functions/pci-epf-test.c | 510 ++++++++++++++++++++++++++
- 5 files changed, 530 insertions(+), 1 deletion(-)
- create mode 100644 drivers/pci/endpoint/functions/Kconfig
- create mode 100644 drivers/pci/endpoint/functions/Makefile
- create mode 100644 drivers/pci/endpoint/functions/pci-epf-test.c
+ drivers/pci/dwc/Kconfig           |  31 +++++-
+ drivers/pci/dwc/Makefile          |   4 +-
+ drivers/pci/dwc/pci-dra7xx.c      | 197 +++++++++++++++++++++++++++++++++++---
+ drivers/pci/dwc/pcie-designware.h |   7 ++
+ 4 files changed, 221 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
-index c86bca9b7de3..c23f146fb5a6 100644
---- a/drivers/pci/endpoint/Kconfig
-+++ b/drivers/pci/endpoint/Kconfig
-@@ -26,4 +26,6 @@ config PCI_ENDPOINT_CONFIGFS
- 	   configure the endpoint function and used to bind the
- 	   function with a endpoint controller.
+diff --git a/drivers/pci/dwc/Kconfig b/drivers/pci/dwc/Kconfig
+index d37ea72a846a..b7e15526d676 100644
+--- a/drivers/pci/dwc/Kconfig
++++ b/drivers/pci/dwc/Kconfig
+@@ -16,14 +16,37 @@ config PCIE_DW_EP
  
-+source "drivers/pci/endpoint/functions/Kconfig"
-+
- endmenu
-diff --git a/drivers/pci/endpoint/Makefile b/drivers/pci/endpoint/Makefile
-index 7219d51bb401..1041f80a4645 100644
---- a/drivers/pci/endpoint/Makefile
-+++ b/drivers/pci/endpoint/Makefile
-@@ -4,4 +4,4 @@
- 
- obj-$(CONFIG_PCI_ENDPOINT_CONFIGFS)	+= pci-ep-cfs.o
- obj-$(CONFIG_PCI_ENDPOINT)		+= pci-epc-core.o pci-epf-core.o\
--					   pci-epc-mem.o
-+					   pci-epc-mem.o functions/
-diff --git a/drivers/pci/endpoint/functions/Kconfig b/drivers/pci/endpoint/functions/Kconfig
-new file mode 100644
-index 000000000000..175edad42d2f
---- /dev/null
-+++ b/drivers/pci/endpoint/functions/Kconfig
-@@ -0,0 +1,12 @@
-+#
-+# PCI Endpoint Functions
-+#
-+
-+config PCI_EPF_TEST
-+	tristate "PCI Endpoint Test driver"
-+	depends on PCI_ENDPOINT
+ config PCI_DRA7XX
+ 	bool "TI DRA7xx PCIe controller"
+-	depends on PCI
++	depends on (PCI && PCI_MSI_IRQ_DOMAIN) || PCI_ENDPOINT
+ 	depends on OF && HAS_IOMEM && TI_PIPE3
 +	help
-+	   Enable this configuration option to enable the test driver
-+	   for PCI Endpoint.
++	 Enables support for the PCIe controller in the DRA7xx SoC. There
++	 are two instances of PCIe controller in DRA7xx. This controller can
++	 work either as EP or RC. In order to enable host-specific features
++	 PCI_DRA7XX_HOST must be selected and in order to enable device-
++	 specific features PCI_DRA7XX_EP must be selected. This uses
++	 the Designware core.
 +
-+	   If in doubt, say "N" to disable Endpoint test driver.
-diff --git a/drivers/pci/endpoint/functions/Makefile b/drivers/pci/endpoint/functions/Makefile
-new file mode 100644
-index 000000000000..6d94a4801838
---- /dev/null
-+++ b/drivers/pci/endpoint/functions/Makefile
-@@ -0,0 +1,5 @@
-+#
-+# Makefile for PCI Endpoint Functions
-+#
++if PCI_DRA7XX
 +
-+obj-$(CONFIG_PCI_EPF_TEST)		+= pci-epf-test.o
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-new file mode 100644
-index 000000000000..d6a7a12a99f7
---- /dev/null
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -0,0 +1,510 @@
-+/**
-+ * Test driver to test endpoint functionality
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
++config PCI_DRA7XX_HOST
++	bool "PCI DRA7xx Host Mode"
++	depends on PCI
+ 	depends on PCI_MSI_IRQ_DOMAIN
+ 	select PCIE_DW_HOST
++	default y
+ 	help
+-	 Enables support for the PCIe controller in the DRA7xx SoC.  There
+-	 are two instances of PCIe controller in DRA7xx.  This controller can
+-	 act both as EP and RC.  This reuses the Designware core.
++	 Enables support for the PCIe controller in the DRA7xx SoC to work in
++	 host mode.
 +
-+#include <linux/crc32.h>
++config PCI_DRA7XX_EP
++	bool "PCI DRA7xx Endpoint Mode"
++	depends on PCI_ENDPOINT
++	select PCIE_DW_EP
++	help
++	 Enables support for the PCIe controller in the DRA7xx SoC to work in
++	 endpoint mode.
++
++endif
+ 
+ config PCIE_DW_PLAT
+ 	bool "Platform bus based DesignWare PCIe Controller"
+diff --git a/drivers/pci/dwc/Makefile b/drivers/pci/dwc/Makefile
+index b38425d36200..f31a8596442a 100644
+--- a/drivers/pci/dwc/Makefile
++++ b/drivers/pci/dwc/Makefile
+@@ -2,7 +2,9 @@ obj-$(CONFIG_PCIE_DW) += pcie-designware.o
+ obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
+ obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
+ obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
+-obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
++ifneq ($(filter y,$(CONFIG_PCI_DRA7XX_HOST) $(CONFIG_PCI_DRA7XX_EP)),)
++        obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
++endif
+ obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
+ obj-$(CONFIG_PCI_IMX6) += pci-imx6.o
+ obj-$(CONFIG_PCIE_SPEAR13XX) += pcie-spear13xx.o
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index d78974d20360..35c18534469c 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -10,12 +10,14 @@
+  * published by the Free Software Foundation.
+  */
+ 
 +#include <linux/delay.h>
-+#include <linux/io.h>
-+#include <linux/module.h>
-+#include <linux/slab.h>
-+#include <linux/pci_ids.h>
-+#include <linux/random.h>
+ #include <linux/err.h>
+ #include <linux/interrupt.h>
+ #include <linux/irq.h>
+ #include <linux/irqdomain.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
++#include <linux/of_device.h>
+ #include <linux/of_gpio.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci.h>
+@@ -57,6 +59,11 @@
+ #define	MSI						BIT(4)
+ #define	LEG_EP_INTERRUPTS (INTA | INTB | INTC | INTD)
+ 
++#define	PCIECTRL_TI_CONF_DEVICE_TYPE			0x0100
++#define	DEVICE_TYPE_EP					0x0
++#define	DEVICE_TYPE_LEG_EP				0x1
++#define	DEVICE_TYPE_RC					0x4
 +
-+#include <linux/pci-epc.h>
-+#include <linux/pci-epf.h>
-+#include <linux/pci_regs.h>
+ #define	PCIECTRL_DRA7XX_CONF_DEVICE_CMD			0x0104
+ #define	LTSSM_EN					0x1
+ 
+@@ -66,6 +73,13 @@
+ 
+ #define EXP_CAP_ID_OFFSET				0x70
+ 
++#define	PCIECTRL_TI_CONF_INTX_ASSERT			0x0124
++#define	PCIECTRL_TI_CONF_INTX_DEASSERT			0x0128
 +
-+#define COMMAND_RAISE_LEGACY_IRQ	BIT(0)
-+#define COMMAND_RAISE_MSI_IRQ		BIT(1)
-+#define MSI_NUMBER_SHIFT		2
-+#define MSI_NUMBER_MASK			(0x3f << MSI_NUMBER_SHIFT)
-+#define COMMAND_READ			BIT(8)
-+#define COMMAND_WRITE			BIT(9)
-+#define COMMAND_COPY			BIT(10)
++#define	PCIECTRL_TI_CONF_MSI_XMT			0x012c
++#define MSI_REQ_GRANT					BIT(0)
++#define MSI_VECTOR_SHIFT				7
 +
-+#define STATUS_READ_SUCCESS		BIT(0)
-+#define STATUS_READ_FAIL		BIT(1)
-+#define STATUS_WRITE_SUCCESS		BIT(2)
-+#define STATUS_WRITE_FAIL		BIT(3)
-+#define STATUS_COPY_SUCCESS		BIT(4)
-+#define STATUS_COPY_FAIL		BIT(5)
-+#define STATUS_IRQ_RAISED		BIT(6)
-+#define STATUS_SRC_ADDR_INVALID		BIT(7)
-+#define STATUS_DST_ADDR_INVALID		BIT(8)
-+
-+#define TIMER_RESOLUTION		1
-+
-+static struct workqueue_struct *kpcitest_workqueue;
-+
-+struct pci_epf_test {
-+	void			*reg[6];
-+	struct pci_epf		*epf;
-+	struct delayed_work	cmd_handler;
+ struct dra7xx_pcie {
+ 	struct dw_pcie		*pci;
+ 	void __iomem		*base;		/* DT ti_conf */
+@@ -73,6 +87,11 @@ struct dra7xx_pcie {
+ 	struct phy		**phy;
+ 	int			link_gen;
+ 	struct irq_domain	*irq_domain;
++	enum dw_pcie_device_mode mode;
 +};
 +
-+struct pci_epf_test_reg {
-+	u32	magic;
-+	u32	command;
-+	u32	status;
-+	u64	src_addr;
-+	u64	dst_addr;
-+	u32	size;
-+	u32	checksum;
-+} __packed;
++struct dra7xx_pcie_of_data {
++	enum dw_pcie_device_mode mode;
+ };
+ 
+ #define to_dra7xx_pcie(x)	dev_get_drvdata((x)->dev)
+@@ -101,9 +120,19 @@ static int dra7xx_pcie_link_up(struct dw_pcie *pci)
+ 	return !!(reg & LINK_UP);
+ }
+ 
+-static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
++static void dra7xx_pcie_stop_link(struct dw_pcie *pci)
+ {
+-	struct dw_pcie *pci = dra7xx->pci;
++	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
++	u32 reg;
 +
-+static struct pci_epf_header test_header = {
-+	.vendorid	= PCI_ANY_ID,
-+	.deviceid	= PCI_ANY_ID,
-+	.baseclass_code = PCI_CLASS_OTHERS,
-+	.interrupt_pin	= PCI_INTERRUPT_INTA,
-+};
-+
-+static int bar_size[] = { 512, 1024, 16384, 131072, 1048576 };
-+
-+static int pci_epf_test_copy(struct pci_epf_test *epf_test)
-+{
-+	int ret;
-+	void __iomem *src_addr;
-+	void __iomem *dst_addr;
-+	phys_addr_t src_phys_addr;
-+	phys_addr_t dst_phys_addr;
-+	struct pci_epf *epf = epf_test->epf;
-+	struct device *dev = &epf->dev;
-+	struct pci_epc *epc = epf->epc;
-+	struct pci_epf_test_reg *reg = epf_test->reg[0];
-+
-+	src_addr = pci_epc_mem_alloc_addr(epc, &src_phys_addr, reg->size);
-+	if (!src_addr) {
-+		dev_err(dev, "failed to allocate source address\n");
-+		reg->status = STATUS_SRC_ADDR_INVALID;
-+		ret = -ENOMEM;
-+		goto err;
-+	}
-+
-+	ret = pci_epc_map_addr(epc, src_phys_addr, reg->src_addr, reg->size);
-+	if (ret) {
-+		dev_err(dev, "failed to map source address\n");
-+		reg->status = STATUS_SRC_ADDR_INVALID;
-+		goto err_src_addr;
-+	}
-+
-+	dst_addr = pci_epc_mem_alloc_addr(epc, &dst_phys_addr, reg->size);
-+	if (!dst_addr) {
-+		dev_err(dev, "failed to allocate destination address\n");
-+		reg->status = STATUS_DST_ADDR_INVALID;
-+		ret = -ENOMEM;
-+		goto err_src_map_addr;
-+	}
-+
-+	ret = pci_epc_map_addr(epc, dst_phys_addr, reg->dst_addr, reg->size);
-+	if (ret) {
-+		dev_err(dev, "failed to map destination address\n");
-+		reg->status = STATUS_DST_ADDR_INVALID;
-+		goto err_dst_addr;
-+	}
-+
-+	memcpy(dst_addr, src_addr, reg->size);
-+
-+	pci_epc_unmap_addr(epc, dst_phys_addr);
-+
-+err_dst_addr:
-+	pci_epc_mem_free_addr(epc, dst_phys_addr, dst_addr, reg->size);
-+
-+err_src_map_addr:
-+	pci_epc_unmap_addr(epc, src_phys_addr);
-+
-+err_src_addr:
-+	pci_epc_mem_free_addr(epc, src_phys_addr, src_addr, reg->size);
-+
-+err:
-+	return ret;
++	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD);
++	reg &= ~LTSSM_EN;
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
 +}
 +
-+static int pci_epf_test_read(struct pci_epf_test *epf_test)
++static int dra7xx_pcie_establish_link(struct dw_pcie *pci)
 +{
-+	int ret;
-+	void __iomem *src_addr;
-+	void *buf;
-+	u32 crc32;
-+	phys_addr_t phys_addr;
-+	struct pci_epf *epf = epf_test->epf;
-+	struct device *dev = &epf->dev;
-+	struct pci_epc *epc = epf->epc;
-+	struct pci_epf_test_reg *reg = epf_test->reg[0];
-+
-+	src_addr = pci_epc_mem_alloc_addr(epc, &phys_addr, reg->size);
-+	if (!src_addr) {
-+		dev_err(dev, "failed to allocate address\n");
-+		reg->status = STATUS_SRC_ADDR_INVALID;
-+		ret = -ENOMEM;
-+		goto err;
++	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
+ 	struct device *dev = pci->dev;
+ 	u32 reg;
+ 	u32 exp_cap_off = EXP_CAP_ID_OFFSET;
+@@ -137,7 +166,7 @@ static int dra7xx_pcie_establish_link(struct dra7xx_pcie *dra7xx)
+ 	reg |= LTSSM_EN;
+ 	dra7xx_pcie_writel(dra7xx, PCIECTRL_DRA7XX_CONF_DEVICE_CMD, reg);
+ 
+-	return dw_pcie_wait_for_link(pci);
++	return 0;
+ }
+ 
+ static void dra7xx_pcie_enable_msi_interrupts(struct dra7xx_pcie *dra7xx)
+@@ -171,7 +200,8 @@ static void dra7xx_pcie_host_init(struct pcie_port *pp)
+ 
+ 	dw_pcie_setup_rc(pp);
+ 
+-	dra7xx_pcie_establish_link(dra7xx);
++	dra7xx_pcie_establish_link(pci);
++	dw_pcie_wait_for_link(pci);
+ 	dw_pcie_msi_init(pp);
+ 	dra7xx_pcie_enable_interrupts(dra7xx);
+ }
+@@ -249,6 +279,7 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	struct dra7xx_pcie *dra7xx = arg;
+ 	struct dw_pcie *pci = dra7xx->pci;
+ 	struct device *dev = pci->dev;
++	struct dw_pcie_ep *ep = &pci->ep;
+ 	u32 reg;
+ 
+ 	reg = dra7xx_pcie_readl(dra7xx, PCIECTRL_DRA7XX_CONF_IRQSTATUS_MAIN);
+@@ -285,8 +316,11 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	if (reg & LINK_REQ_RST)
+ 		dev_dbg(dev, "Link Request Reset\n");
+ 
+-	if (reg & LINK_UP_EVT)
++	if (reg & LINK_UP_EVT) {
++		if (dra7xx->mode == DW_PCIE_EP_TYPE)
++			dw_pcie_ep_linkup(ep);
+ 		dev_dbg(dev, "Link-up state change\n");
 +	}
+ 
+ 	if (reg & CFG_BME_EVT)
+ 		dev_dbg(dev, "CFG 'Bus Master Enable' change\n");
+@@ -299,6 +333,94 @@ static irqreturn_t dra7xx_pcie_irq_handler(int irq, void *arg)
+ 	return IRQ_HANDLED;
+ }
+ 
++static void dra7xx_pcie_ep_init(struct dw_pcie_ep *ep)
++{
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
 +
-+	ret = pci_epc_map_addr(epc, phys_addr, reg->src_addr, reg->size);
-+	if (ret) {
-+		dev_err(dev, "failed to map address\n");
-+		reg->status = STATUS_SRC_ADDR_INVALID;
-+		goto err_addr;
-+	}
-+
-+	buf = kzalloc(reg->size, GFP_KERNEL);
-+	if (!buf) {
-+		ret = -ENOMEM;
-+		goto err_map_addr;
-+	}
-+
-+	memcpy(buf, src_addr, reg->size);
-+
-+	crc32 = crc32_le(~0, buf, reg->size);
-+	if (crc32 != reg->checksum)
-+		ret = -EIO;
-+
-+	kfree(buf);
-+
-+err_map_addr:
-+	pci_epc_unmap_addr(epc, phys_addr);
-+
-+err_addr:
-+	pci_epc_mem_free_addr(epc, phys_addr, src_addr, reg->size);
-+
-+err:
-+	return ret;
++	dra7xx_pcie_enable_wrapper_interrupts(dra7xx);
 +}
 +
-+static int pci_epf_test_write(struct pci_epf_test *epf_test)
++static void dra7xx_pcie_raise_legacy_irq(struct dra7xx_pcie *dra7xx)
 +{
-+	int ret;
-+	void __iomem *dst_addr;
-+	void *buf;
-+	phys_addr_t phys_addr;
-+	struct pci_epf *epf = epf_test->epf;
-+	struct device *dev = &epf->dev;
-+	struct pci_epc *epc = epf->epc;
-+	struct pci_epf_test_reg *reg = epf_test->reg[0];
-+
-+	dst_addr = pci_epc_mem_alloc_addr(epc, &phys_addr, reg->size);
-+	if (!dst_addr) {
-+		dev_err(dev, "failed to allocate address\n");
-+		reg->status = STATUS_DST_ADDR_INVALID;
-+		ret = -ENOMEM;
-+		goto err;
-+	}
-+
-+	ret = pci_epc_map_addr(epc, phys_addr, reg->dst_addr, reg->size);
-+	if (ret) {
-+		dev_err(dev, "failed to map address\n");
-+		reg->status = STATUS_DST_ADDR_INVALID;
-+		goto err_addr;
-+	}
-+
-+	buf = kzalloc(reg->size, GFP_KERNEL);
-+	if (!buf) {
-+		ret = -ENOMEM;
-+		goto err_map_addr;
-+	}
-+
-+	get_random_bytes(buf, reg->size);
-+	reg->checksum = crc32_le(~0, buf, reg->size);
-+
-+	memcpy(dst_addr, buf, reg->size);
-+
-+	/*
-+	 * wait 1ms inorder for the write to complete. Without this delay L3
-+	 * error in observed in the host system.
-+	 */
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_INTX_ASSERT, 0x1);
 +	mdelay(1);
-+
-+	kfree(buf);
-+
-+err_map_addr:
-+	pci_epc_unmap_addr(epc, phys_addr);
-+
-+err_addr:
-+	pci_epc_mem_free_addr(epc, phys_addr, dst_addr, reg->size);
-+
-+err:
-+	return ret;
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_INTX_DEASSERT, 0x1);
 +}
 +
-+static void pci_epf_test_raise_irq(struct pci_epf_test *epf_test)
++static void dra7xx_pcie_raise_msi_irq(struct dra7xx_pcie *dra7xx,
++				      u8 interrupt_num)
 +{
-+	u8 irq;
-+	u8 msi_count;
-+	struct pci_epf *epf = epf_test->epf;
-+	struct pci_epc *epc = epf->epc;
-+	struct pci_epf_test_reg *reg = epf_test->reg[0];
++	u32 reg;
 +
-+	reg->status |= STATUS_IRQ_RAISED;
-+	msi_count = pci_epc_get_msi(epc);
-+	irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
-+	if (irq > msi_count || msi_count <= 0)
-+		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
-+	else
-+		pci_epc_raise_irq(epc, PCI_EPC_IRQ_MSI, irq);
++	reg = (interrupt_num - 1) << MSI_VECTOR_SHIFT;
++	reg |= MSI_REQ_GRANT;
++	dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_MSI_XMT, reg);
 +}
 +
-+static void pci_epf_test_cmd_handler(struct work_struct *work)
++static int dra7xx_pcie_raise_irq(struct dw_pcie_ep *ep,
++				 enum pci_epc_irq_type type, u8 interrupt_num)
 +{
-+	int ret;
-+	u8 irq;
-+	u8 msi_count;
-+	struct pci_epf_test *epf_test = container_of(work, struct pci_epf_test,
-+						     cmd_handler.work);
-+	struct pci_epf *epf = epf_test->epf;
-+	struct pci_epc *epc = epf->epc;
-+	struct pci_epf_test_reg *reg = epf_test->reg[0];
++	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
++	struct dra7xx_pcie *dra7xx = to_dra7xx_pcie(pci);
 +
-+	if (!reg->command)
-+		goto reset_handler;
-+
-+	if (reg->command & COMMAND_RAISE_LEGACY_IRQ) {
-+		reg->status = STATUS_IRQ_RAISED;
-+		pci_epc_raise_irq(epc, PCI_EPC_IRQ_LEGACY, 0);
-+		goto reset_handler;
-+	}
-+
-+	if (reg->command & COMMAND_WRITE) {
-+		ret = pci_epf_test_write(epf_test);
-+		if (ret)
-+			reg->status |= STATUS_WRITE_FAIL;
-+		else
-+			reg->status |= STATUS_WRITE_SUCCESS;
-+		pci_epf_test_raise_irq(epf_test);
-+		goto reset_handler;
-+	}
-+
-+	if (reg->command & COMMAND_READ) {
-+		ret = pci_epf_test_read(epf_test);
-+		if (!ret)
-+			reg->status |= STATUS_READ_SUCCESS;
-+		else
-+			reg->status |= STATUS_READ_FAIL;
-+		pci_epf_test_raise_irq(epf_test);
-+		goto reset_handler;
-+	}
-+
-+	if (reg->command & COMMAND_COPY) {
-+		ret = pci_epf_test_copy(epf_test);
-+		if (!ret)
-+			reg->status |= STATUS_COPY_SUCCESS;
-+		else
-+			reg->status |= STATUS_COPY_FAIL;
-+		pci_epf_test_raise_irq(epf_test);
-+		goto reset_handler;
-+	}
-+
-+	if (reg->command & COMMAND_RAISE_MSI_IRQ) {
-+		msi_count = pci_epc_get_msi(epc);
-+		irq = (reg->command & MSI_NUMBER_MASK) >> MSI_NUMBER_SHIFT;
-+		if (irq > msi_count || msi_count <= 0)
-+			goto reset_handler;
-+		reg->status = STATUS_IRQ_RAISED;
-+		pci_epc_raise_irq(epc, PCI_EPC_IRQ_MSI, irq);
-+		goto reset_handler;
-+	}
-+
-+reset_handler:
-+	reg->command = 0;
-+
-+	queue_delayed_work(kpcitest_workqueue, &epf_test->cmd_handler,
-+			   msecs_to_jiffies(1));
-+}
-+
-+static void pci_epf_test_linkup(struct pci_epf *epf)
-+{
-+	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
-+
-+	queue_delayed_work(kpcitest_workqueue, &epf_test->cmd_handler,
-+			   msecs_to_jiffies(1));
-+}
-+
-+static void pci_epf_test_unbind(struct pci_epf *epf)
-+{
-+	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
-+	struct pci_epc *epc = epf->epc;
-+	int bar;
-+
-+	cancel_delayed_work(&epf_test->cmd_handler);
-+	pci_epc_stop(epc);
-+	for (bar = BAR_0; bar <= BAR_5; bar++) {
-+		if (epf_test->reg[bar]) {
-+			pci_epf_free_space(epf, epf_test->reg[bar], bar);
-+			pci_epc_clear_bar(epc, bar);
-+		}
-+	}
-+}
-+
-+static int pci_epf_test_set_bar(struct pci_epf *epf)
-+{
-+	int flags;
-+	int bar;
-+	int ret;
-+	struct pci_epf_bar *epf_bar;
-+	struct pci_epc *epc = epf->epc;
-+	struct device *dev = &epf->dev;
-+	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
-+
-+	flags = PCI_BASE_ADDRESS_SPACE_MEMORY | PCI_BASE_ADDRESS_MEM_TYPE_32;
-+	if (sizeof(dma_addr_t) == 0x8)
-+		flags |= PCI_BASE_ADDRESS_MEM_TYPE_64;
-+
-+	for (bar = BAR_0; bar <= BAR_5; bar++) {
-+		epf_bar = &epf->bar[bar];
-+		ret = pci_epc_set_bar(epc, bar, epf_bar->phys_addr,
-+				      epf_bar->size, flags);
-+		if (ret) {
-+			pci_epf_free_space(epf, epf_test->reg[bar], bar);
-+			dev_err(dev, "failed to set BAR%d\n", bar);
-+			if (bar == BAR_0)
-+				return ret;
-+		}
++	switch (type) {
++	case PCI_EPC_IRQ_LEGACY:
++		dra7xx_pcie_raise_legacy_irq(dra7xx);
++		break;
++	case PCI_EPC_IRQ_MSI:
++		dra7xx_pcie_raise_msi_irq(dra7xx, interrupt_num);
++		break;
++	default:
++		dev_err(pci->dev, "UNKNOWN IRQ type\n");
 +	}
 +
 +	return 0;
 +}
 +
-+static int pci_epf_test_alloc_space(struct pci_epf *epf)
-+{
-+	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
-+	struct device *dev = &epf->dev;
-+	void *base;
-+	int bar;
++static struct dw_pcie_ep_ops pcie_ep_ops = {
++	.ep_init = dra7xx_pcie_ep_init,
++	.raise_irq = dra7xx_pcie_raise_irq,
++};
 +
-+	base = pci_epf_alloc_space(epf, sizeof(struct pci_epf_test_reg),
-+				   BAR_0);
-+	if (!base) {
-+		dev_err(dev, "failed to allocated register space\n");
++static int __init dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
++				     struct platform_device *pdev)
++{
++	int ret;
++	struct dw_pcie_ep *ep;
++	struct resource *res;
++	struct device *dev = &pdev->dev;
++	struct dw_pcie *pci = dra7xx->pci;
++
++	ep = &pci->ep;
++	ep->ops = &pcie_ep_ops;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics");
++	pci->dbi_base = devm_ioremap(dev, res->start, resource_size(res));
++	if (!pci->dbi_base)
 +		return -ENOMEM;
-+	}
-+	epf_test->reg[0] = base;
 +
-+	for (bar = BAR_1; bar <= BAR_5; bar++) {
-+		base = pci_epf_alloc_space(epf, bar_size[bar - 1], bar);
-+		if (!base)
-+			dev_err(dev, "failed to allocate space for BAR%d\n",
-+				bar);
-+		epf_test->reg[bar] = base;
-+	}
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ep_dbics2");
++	pci->dbi_base2 = devm_ioremap(dev, res->start, resource_size(res));
++	if (!pci->dbi_base2)
++		return -ENOMEM;
 +
-+	return 0;
-+}
-+
-+static int pci_epf_test_bind(struct pci_epf *epf)
-+{
-+	int ret;
-+	struct pci_epf_header *header = epf->header;
-+	struct pci_epc *epc = epf->epc;
-+	struct device *dev = &epf->dev;
-+
-+	if (WARN_ON_ONCE(!epc))
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "addr_space");
++	if (!res)
 +		return -EINVAL;
 +
-+	ret = pci_epc_write_header(epc, header);
++	ep->phys_base = res->start;
++	ep->addr_size = resource_size(res);
++
++	ret = dw_pcie_ep_init(ep);
 +	if (ret) {
-+		dev_err(dev, "configuration header write failed\n");
++		dev_err(dev, "failed to initialize endpoint\n");
 +		return ret;
 +	}
 +
-+	ret = pci_epf_test_alloc_space(epf);
-+	if (ret)
-+		return ret;
-+
-+	ret = pci_epf_test_set_bar(epf);
-+	if (ret)
-+		return ret;
-+
-+	ret = pci_epc_set_msi(epc, epf->msi_interrupts);
-+	if (ret)
-+		return ret;
-+
 +	return 0;
 +}
 +
-+static int pci_epf_test_probe(struct pci_epf *epf)
-+{
-+	struct pci_epf_test *epf_test;
-+	struct device *dev = &epf->dev;
-+
-+	epf_test = devm_kzalloc(dev, sizeof(*epf_test), GFP_KERNEL);
-+	if (!epf)
-+		return -ENOMEM;
-+
-+	epf->header = &test_header;
-+	epf_test->epf = epf;
-+
-+	INIT_DELAYED_WORK(&epf_test->cmd_handler, pci_epf_test_cmd_handler);
-+
-+	epf_set_drvdata(epf, epf_test);
-+	return 0;
-+}
-+
-+static int pci_epf_test_remove(struct pci_epf *epf)
-+{
-+	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
-+
-+	kfree(epf_test);
-+	return 0;
-+}
-+
-+static struct pci_epf_ops ops = {
-+	.unbind	= pci_epf_test_unbind,
-+	.bind	= pci_epf_test_bind,
-+	.linkup = pci_epf_test_linkup,
+ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 				       struct platform_device *pdev)
+ {
+@@ -342,6 +464,8 @@ static int __init dra7xx_add_pcie_port(struct dra7xx_pcie *dra7xx,
+ 
+ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.cpu_addr_fixup = dra7xx_pcie_cpu_addr_fixup,
++	.start_link = dra7xx_pcie_establish_link,
++	.stop_link = dra7xx_pcie_stop_link,
+ 	.link_up = dra7xx_pcie_link_up,
+ };
+ 
+@@ -384,6 +508,26 @@ static int dra7xx_pcie_enable_phy(struct dra7xx_pcie *dra7xx)
+ 	return ret;
+ }
+ 
++static const struct dra7xx_pcie_of_data dra7xx_pcie_rc_of_data = {
++	.mode = DW_PCIE_RC_TYPE,
 +};
 +
-+static const struct pci_epf_device_id pci_epf_test_ids[] = {
++static const struct dra7xx_pcie_of_data dra7xx_pcie_ep_of_data = {
++	.mode = DW_PCIE_EP_TYPE,
++};
++
++static const struct of_device_id of_dra7xx_pcie_match[] = {
 +	{
-+		.name = "pci_epf_test",
++		.compatible = "ti,dra7-pcie",
++		.data = &dra7xx_pcie_rc_of_data,
++	},
++	{
++		.compatible = "ti,dra7-pcie-ep",
++		.data = &dra7xx_pcie_ep_of_data,
 +	},
 +	{},
 +};
 +
-+static struct pci_epf_driver test_driver = {
-+	.driver.name	= "pci_epf_test",
-+	.probe		= pci_epf_test_probe,
-+	.remove		= pci_epf_test_remove,
-+	.id_table	= pci_epf_test_ids,
-+	.ops		= &ops,
-+	.owner		= THIS_MODULE,
+ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ {
+ 	u32 reg;
+@@ -401,6 +545,16 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	struct device_node *np = dev->of_node;
+ 	char name[10];
+ 	struct gpio_desc *reset;
++	const struct of_device_id *match;
++	const struct dra7xx_pcie_of_data *data;
++	enum dw_pcie_device_mode mode;
++
++	match = of_match_device(of_match_ptr(of_dra7xx_pcie_match), dev);
++	if (!match)
++		return -EINVAL;
++
++	data = (struct dra7xx_pcie_of_data *)match->data;
++	mode = (enum dw_pcie_device_mode)data->mode;
+ 
+ 	dra7xx = devm_kzalloc(dev, sizeof(*dra7xx), GFP_KERNEL);
+ 	if (!dra7xx)
+@@ -479,9 +633,25 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	if (dra7xx->link_gen < 0 || dra7xx->link_gen > 2)
+ 		dra7xx->link_gen = 2;
+ 
+-	ret = dra7xx_add_pcie_port(dra7xx, pdev);
+-	if (ret < 0)
+-		goto err_gpio;
++	switch (mode) {
++	case DW_PCIE_RC_TYPE:
++		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
++				   DEVICE_TYPE_RC);
++		ret = dra7xx_add_pcie_port(dra7xx, pdev);
++		if (ret < 0)
++			goto err_gpio;
++		break;
++	case DW_PCIE_EP_TYPE:
++		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
++				   DEVICE_TYPE_EP);
++		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
++		if (ret < 0)
++			goto err_gpio;
++		break;
++	default:
++		dev_err(dev, "INVALID device type %d\n", mode);
++	}
++	dra7xx->mode = mode;
+ 
+ 	ret = devm_request_irq(dev, irq, dra7xx_pcie_irq_handler,
+ 			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
+@@ -509,6 +679,9 @@ static int dra7xx_pcie_suspend(struct device *dev)
+ 	struct dw_pcie *pci = dra7xx->pci;
+ 	u32 val;
+ 
++	if (dra7xx->mode != DW_PCIE_RC_TYPE)
++		return 0;
++
+ 	/* clear MSE */
+ 	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
+ 	val &= ~PCI_COMMAND_MEMORY;
+@@ -523,6 +696,9 @@ static int dra7xx_pcie_resume(struct device *dev)
+ 	struct dw_pcie *pci = dra7xx->pci;
+ 	u32 val;
+ 
++	if (dra7xx->mode != DW_PCIE_RC_TYPE)
++		return 0;
++
+ 	/* set MSE */
+ 	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
+ 	val |= PCI_COMMAND_MEMORY;
+@@ -561,11 +737,6 @@ static const struct dev_pm_ops dra7xx_pcie_pm_ops = {
+ 				      dra7xx_pcie_resume_noirq)
+ };
+ 
+-static const struct of_device_id of_dra7xx_pcie_match[] = {
+-	{ .compatible = "ti,dra7-pcie", },
+-	{},
+-};
+-
+ static struct platform_driver dra7xx_pcie_driver = {
+ 	.driver = {
+ 		.name	= "dra7-pcie",
+diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+index 3cafba40abbc..c6a840575796 100644
+--- a/drivers/pci/dwc/pcie-designware.h
++++ b/drivers/pci/dwc/pcie-designware.h
+@@ -120,6 +120,13 @@ enum dw_pcie_region_type {
+ 	DW_PCIE_REGION_OUTBOUND,
+ };
+ 
++enum dw_pcie_device_mode {
++	DW_PCIE_UNKNOWN_TYPE,
++	DW_PCIE_EP_TYPE,
++	DW_PCIE_LEG_EP_TYPE,
++	DW_PCIE_RC_TYPE,
 +};
 +
-+static int __init pci_epf_test_init(void)
-+{
-+	int ret;
-+
-+	kpcitest_workqueue = alloc_workqueue("kpcitest",
-+					     WQ_MEM_RECLAIM | WQ_HIGHPRI, 0);
-+	ret = pci_epf_register_driver(&test_driver);
-+	if (ret) {
-+		pr_err("failed to register pci epf test driver --> %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+module_init(pci_epf_test_init);
-+
-+static void __exit pci_epf_test_exit(void)
-+{
-+	pci_epf_unregister_driver(&test_driver);
-+}
-+module_exit(pci_epf_test_exit);
-+
-+MODULE_DESCRIPTION("PCI EPF TEST DRIVER");
-+MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
-+MODULE_LICENSE("GPL v2");
+ struct dw_pcie_host_ops {
+ 	int (*rd_own_conf)(struct pcie_port *pp, int where, int size, u32 *val);
+ 	int (*wr_own_conf)(struct pcie_port *pp, int where, int size, u32 val);
 -- 
 2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
