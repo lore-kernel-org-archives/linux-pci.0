@@ -1,75 +1,108 @@
-Return-Path: <SRS0=93Wk=3W=au1.ibm.com=benh@kernel.org>
-Return-Path: <SRS0=93Wk=3W=au1.ibm.com=benh@kernel.org>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-From: Benjamin Herrenschmidt <benh@au1.ibm.com>
-Reply-To: benh@au1.ibm.com
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Jason Gunthorpe
-	 <jgunthorpe@obsidianresearch.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-        "James
- E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen"
- <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise
- <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>, Max
- Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
-        linux-kernel@vger.kernel.org, Jerome Glisse <jglisse@redhat.com>
-Date: Fri, 14 Apr 2017 21:39:52 +1000
-In-Reply-To: <1492169879.25766.4.camel@kernel.crashing.org>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
-	 <1491974532.7236.43.camel@kernel.crashing.org>
-	 <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
-	 <1492034124.7236.77.camel@kernel.crashing.org>
-	 <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
-	 <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
-	 <20170414041656.GA30694@obsidianresearch.com>
-	 <08c32f0d-6c7c-b65f-6453-dde0d7c173d1@deltatee.com>
-	 <1492169879.25766.4.camel@kernel.crashing.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Message-Id: <1492169992.25766.5.camel@au1.ibm.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v6 14/23] PCI: dwc: dra7xx: Workaround for errata id i870
+Date: Wed, 5 Apr 2017 14:22:34 +0530
+Message-ID: <20170405085243.18123-15-kishon@ti.com>
+In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
+References: <20170405085243.18123-1-kishon@ti.com>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 2017-04-14 at 21:37 +1000, Benjamin Herrenschmidt wrote:
-> On Thu, 2017-04-13 at 22:40 -0600, Logan Gunthorpe wrote:
-> > 
-> > On 13/04/17 10:16 PM, Jason Gunthorpe wrote:
-> > > I'd suggest just detecting if there is any translation in bus
-> > > addresses anywhere and just hard disabling P2P on such systems.
-> > 
-> > That's a fantastic suggestion. It simplifies things significantly.
-> > Unless there are any significant objections I think I will plan on
-> > doing
-> > that.
-> 
-> I object.
+According to errata i870, access to the PCIe slave port that are not 32-bit
+aligned will result in incorrect mapping to TLP Address and Byte enable
+fields.
 
-Note: It would also make your stuff fundamentally incompatible with
-KVM guest pass-through since KVM plays with remapping BARs all over
-the place.
+Accessing non 32-bit aligned data causes incorrect data in the target
+buffer if memcpy is used. Implement the workaround for this errata here.
 
-Ben.
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/dwc/pci-dra7xx.c | 49 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
 
-> > > On modern hardware with 64 bit BARs there is very little reason
-> > > to
-> > > have translation, so I think this is a legacy feature.
-> > 
-> > Yes, p2pmem users are likely to be designing systems around it (ie
-> > JBOFs) and not trying to shoehorn it onto legacy architectures.
-> > 
-> > At the very least, it makes sense to leave it out and if someone
-> > comes
-> > along who cares they can put in the effort to support the address
-> > translation.
-> > 
-> > Thanks,
-> > 
-> > Logan
+diff --git a/drivers/pci/dwc/pci-dra7xx.c b/drivers/pci/dwc/pci-dra7xx.c
+index 35c18534469c..8decf46cf525 100644
+--- a/drivers/pci/dwc/pci-dra7xx.c
++++ b/drivers/pci/dwc/pci-dra7xx.c
+@@ -26,6 +26,8 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/resource.h>
+ #include <linux/types.h>
++#include <linux/mfd/syscon.h>
++#include <linux/regmap.h>
+ 
+ #include "pcie-designware.h"
+ 
+@@ -528,6 +530,48 @@ static const struct of_device_id of_dra7xx_pcie_match[] = {
+ 	{},
+ };
+ 
++/*
++ * dra7xx_pcie_ep_unaligned_memaccess: workaround for AM572x/AM571x Errata i870
++ * @dra7xx: the dra7xx device where the workaround should be applied
++ *
++ * Access to the PCIe slave port that are not 32-bit aligned will result
++ * in incorrect mapping to TLP Address and Byte enable fields. Therefore,
++ * byte and half-word accesses are not possible to byte offset 0x1, 0x2, or
++ * 0x3.
++ *
++ * To avoid this issue set PCIE_SS1_AXI2OCP_LEGACY_MODE_ENABLE to 1.
++ */
++static int dra7xx_pcie_ep_unaligned_memaccess(struct device *dev)
++{
++	int ret;
++	struct device_node *np = dev->of_node;
++	struct of_phandle_args args;
++	struct regmap *regmap;
++
++	regmap = syscon_regmap_lookup_by_phandle(np,
++						 "ti,syscon-unaligned-access");
++	if (IS_ERR(regmap)) {
++		dev_dbg(dev, "can't get ti,syscon-unaligned-access\n");
++		return -EINVAL;
++	}
++
++	ret = of_parse_phandle_with_fixed_args(np, "ti,syscon-unaligned-access",
++					       2, 0, &args);
++	if (ret) {
++		dev_err(dev, "failed to parse ti,syscon-unaligned-access\n");
++		return ret;
++	}
++
++	ret = regmap_update_bits(regmap, args.args[0], args.args[1],
++				 args.args[1]);
++	if (ret)
++		dev_err(dev, "failed to enable unaligned access\n");
++
++	of_node_put(args.np);
++
++	return ret;
++}
++
+ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ {
+ 	u32 reg;
+@@ -644,6 +688,11 @@ static int __init dra7xx_pcie_probe(struct platform_device *pdev)
+ 	case DW_PCIE_EP_TYPE:
+ 		dra7xx_pcie_writel(dra7xx, PCIECTRL_TI_CONF_DEVICE_TYPE,
+ 				   DEVICE_TYPE_EP);
++
++		ret = dra7xx_pcie_ep_unaligned_memaccess(dev);
++		if (ret)
++			goto err_gpio;
++
+ 		ret = dra7xx_add_pcie_ep(dra7xx, pdev);
+ 		if (ret < 0)
+ 			goto err_gpio;
+-- 
+2.11.0
