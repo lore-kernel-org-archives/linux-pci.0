@@ -1,93 +1,36 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: RE: [PATCH V7 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-Date: Thu, 6 Apr 2017 15:56:23 +0000
-Message-ID: <92EBB4272BF81E4089A7126EC1E7B28466762B36@IRSMSX101.ger.corp.intel.com>
-References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
- <7c48ca8b-b834-3257-91dc-77e9d19def6c@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B28466761383@IRSMSX101.ger.corp.intel.com>
- <92EBB4272BF81E4089A7126EC1E7B2846676271D@IRSMSX101.ger.corp.intel.com>
- <5a4b37c7-0319-2fa5-cd3e-93261cf45b99@codeaurora.org>
-In-Reply-To: <5a4b37c7-0319-2fa5-cd3e-93261cf45b99@codeaurora.org>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>, Rajat Jain <rajatja@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jeffy Chen <jeffy.chen@rock-chips.com>
+To: linux-pci@vger.kernel.org
+Cc: robh@kernel.org, toshi.kani@hpe.com, shawn.lin@rock-chips.com,
+        briannorris@chromium.org, linux-kernel@vger.kernel.org,
+        dianders@chromium.org, bhelgaas@google.com, dtor@chromium.org,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+        Frank Rowand <frowand.list@gmail.com>
+Subject: [PATCH v4 0/1] Fix memory leak in of_pci_get_host_bridge_resources
+Date: Wed,  5 Apr 2017 10:15:20 +0800
+Message-Id: <1491358521-17834-1-git-send-email-jeffy.chen@rock-chips.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan,
+In of_pci_get_host_bridge_resources, we alloced some struct resource
+variables, and they would cause memory leak since no where to free them.
 
->
->Hi Mayurkumar,
->
->On 4/6/2017 9:23 AM, Patel, Mayurkumar wrote:
->> The patch seems to be working for ASPM L1 so far. I am seeing a problem now with your patches for L1.2 as following:
->>
->> ASPM L1.2 does not get enabled on the Upstream as well as downstream port due to following reasons.
->> In the case, I see now, if the EP is not connected while reboot of the Machine, Root Port does not configure
->> It's own L1.2 also from the BIOS. (I am not sure whether it's even advisable to enable L1.2 on root
->> Port when no downstream device is not connected to it as it may have an impact on CLKREQ# and device is connected
->> At later stage may have a problem with it)
->>
->
->I have two questions:
->
->1. if the endpoint is connected during boot and have ASPM L1.2 enabled during boot,
->do you see that L1.2 gets re-enabled following a hotplug remove and then insert.
->This is the goal of this patch. If yes, we achieved our goal. This is working on
->my platform but I do not have L1SS support on my platform.
->
+Changes in v4:
+Use IORESOURCE_AUTO to mark struct resources which could be copied.
 
-Yes this works fine if the EP is connected during platform boot up and I could see the L1SS enabled.
+Changes in v3:
+Add some comments.
 
+Changes in v2:
+Don't change the resource_list_create_entry's behavior.
 
->2. if you do not connect any endpoint during boot and insert the card, do you
->see any ASPM enabled at all with and without my patch using the default policy?
->I think this is the part you are describing above. I'll confirm this on my platform
->too. I think this one will require another patch/discussion unless I broke something.
->
+Jeffy Chen (1):
+  of/pci: Fix memory leak in of_pci_get_host_bridge_resources
 
-Actually, without your patches, I see during boot if EP is connected then L1SS are enabled.
-Also, if EP is connected afterwards, L1SS are enabled. But behavior is as previously, that
-It gets disabled due to POLICY_DEFAULT bug and does not stay consistent following next power cycle of Endpoint.
+ drivers/of/of_pci.c | 51 ++++++++++++++++++---------------------------------
+ drivers/pci/bus.c   |  7 ++++++-
+ 2 files changed, 24 insertions(+), 34 deletions(-)
 
-
-
-
->
->> Later when the Device get connected, BIOS configures L1.2 for Root port and EP but due to policy set to incorrect,
->> Kernel disables ASPM L1.2.
->
->Sinan
->
->--
->Sinan Kaya
->Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
->Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-Intel Deutschland GmbH
-Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-Tel: +49 89 99 8853-0, www.intel.de
-Managing Directors: Christin Eisenschmid, Christian Lamprechter
-Chairperson of the Supervisory Board: Nicole Lau
-Registered Office: Munich
-Commercial Register: Amtsgericht Muenchen HRB 186928
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+2.1.4
