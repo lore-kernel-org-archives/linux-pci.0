@@ -1,32 +1,223 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from edison.jonmasters.org ([173.255.233.168]:37478 "EHLO
-        edison.jonmasters.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759484AbdDSFAR (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Apr 2017 01:00:17 -0400
-To: abhijit <abhijitnaik27@gmail.com>, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-References: <50712b3b-2943-0b78-9413-257f33b26c3f@gmail.com>
-From: Jon Masters <jcm@jonmasters.org>
-Message-ID: <99dce715-e83a-72ce-aa01-f388b73c2604@jonmasters.org>
-Date: Wed, 19 Apr 2017 01:00:15 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
+Subject: [PATCH v6 19/23] tools: PCI: Add a userspace tool to test PCI endpoint
+Date: Wed, 5 Apr 2017 14:22:39 +0530
+Message-ID: <20170405085243.18123-20-kishon@ti.com>
+In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
+References: <20170405085243.18123-1-kishon@ti.com>
 MIME-Version: 1.0
-In-Reply-To: <50712b3b-2943-0b78-9413-257f33b26c3f@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: Doubt on first access for PCIe device
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/11/2017 10:15 AM, abhijit wrote:
+Add a userspace tool to invoke the ioctls exposed by the PCI endpoint test
+driver to perform various PCI tests.
 
-> Here I am assuming, the completer ID will be device number and function 
-> number that will eventually programmed in to  device. In that case, my 
-> question is, without first write, how read request(VENDOR ID read) is 
-> serviced/routed?
+Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ tools/pci/pcitest.c | 186 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 186 insertions(+)
+ create mode 100644 tools/pci/pcitest.c
 
-You'll want to read about PCIe enumeration at boot time and how the BIOS
-walks the topology to assign these (which an OS may later re-number). In
-particular, read about ECAM for configuration. This uses memory mapped
-config space read/write accessors that target a memory address space
-under the control of the root complex.
-
-Jon.
+diff --git a/tools/pci/pcitest.c b/tools/pci/pcitest.c
+new file mode 100644
+index 000000000000..ad54a58d7dda
+--- /dev/null
++++ b/tools/pci/pcitest.c
+@@ -0,0 +1,186 @@
++/**
++ * Userspace PCI Endpoint Test Module
++ *
++ * Copyright (C) 2017 Texas Instruments
++ * Author: Kishon Vijay Abraham I <kishon@ti.com>
++ *
++ * This program is free software: you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 of
++ * the License as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
++ */
++
++#include <errno.h>
++#include <fcntl.h>
++#include <stdbool.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <sys/ioctl.h>
++#include <time.h>
++#include <unistd.h>
++
++#include <linux/pcitest.h>
++
++#define BILLION 1E9
++
++static char *result[] = { "NOT OKAY", "OKAY" };
++
++struct pci_test {
++	char		*device;
++	char		barnum;
++	bool		legacyirq;
++	unsigned int	msinum;
++	bool		read;
++	bool		write;
++	bool		copy;
++	unsigned long	size;
++};
++
++static int run_test(struct pci_test *test)
++{
++	long ret;
++	int fd;
++	struct timespec start, end;
++	double time;
++
++	fd = open(test->device, O_RDWR);
++	if (fd < 0) {
++		perror("can't open PCI Endpoint Test device");
++		return fd;
++	}
++
++	if (test->barnum >= 0 && test->barnum <= 5) {
++		ret = ioctl(fd, PCITEST_BAR, test->barnum);
++		fprintf(stdout, "BAR%d:\t\t", test->barnum);
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	if (test->legacyirq) {
++		ret = ioctl(fd, PCITEST_LEGACY_IRQ, 0);
++		fprintf(stdout, "LEGACY IRQ:\t");
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	if (test->msinum > 0 && test->msinum <= 32) {
++		ret = ioctl(fd, PCITEST_MSI, test->msinum);
++		fprintf(stdout, "MSI%d:\t\t", test->msinum);
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	if (test->write) {
++		ret = ioctl(fd, PCITEST_WRITE, test->size);
++		fprintf(stdout, "WRITE (%7ld bytes):\t\t", test->size);
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	if (test->read) {
++		ret = ioctl(fd, PCITEST_READ, test->size);
++		fprintf(stdout, "READ (%7ld bytes):\t\t", test->size);
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	if (test->copy) {
++		ret = ioctl(fd, PCITEST_COPY, test->size);
++		fprintf(stdout, "COPY (%7ld bytes):\t\t", test->size);
++		if (ret < 0)
++			fprintf(stdout, "TEST FAILED\n");
++		else
++			fprintf(stdout, "%s\n", result[ret]);
++	}
++
++	fflush(stdout);
++}
++
++int main(int argc, char **argv)
++{
++	int c;
++	struct pci_test *test;
++
++	test = calloc(1, sizeof(*test));
++	if (!test) {
++		perror("Fail to allocate memory for pci_test\n");
++		return -ENOMEM;
++	}
++
++	/* since '0' is a valid BAR number, initialize it to -1 */
++	test->barnum = -1;
++
++	/* set default size as 100KB */
++	test->size = 0x19000;
++
++	/* set default endpoint device */
++	test->device = "/dev/pci-endpoint-test.0";
++
++	while ((c = getopt(argc, argv, "D:b:m:lrwcs:")) != EOF)
++	switch (c) {
++	case 'D':
++		test->device = optarg;
++		continue;
++	case 'b':
++		test->barnum = atoi(optarg);
++		if (test->barnum < 0 || test->barnum > 5)
++			goto usage;
++		continue;
++	case 'l':
++		test->legacyirq = true;
++		continue;
++	case 'm':
++		test->msinum = atoi(optarg);
++		if (test->msinum < 1 || test->msinum > 32)
++			goto usage;
++		continue;
++	case 'r':
++		test->read = true;
++		continue;
++	case 'w':
++		test->write = true;
++		continue;
++	case 'c':
++		test->copy = true;
++		continue;
++	case 's':
++		test->size = strtoul(optarg, NULL, 0);
++		continue;
++	case '?':
++	case 'h':
++	default:
++usage:
++		fprintf(stderr,
++			"usage: %s [options]\n"
++			"Options:\n"
++			"\t-D <dev>		PCI endpoint test device {default: /dev/pci-endpoint-test.0}\n"
++			"\t-b <bar num>		BAR test (bar number between 0..5)\n"
++			"\t-m <msi num>		MSI test (msi number between 1..32)\n"
++			"\t-r			Read buffer test\n"
++			"\t-w			Write buffer test\n"
++			"\t-c			Copy buffer test\n"
++			"\t-s <size>		Size of buffer {default: 100KB}\n",
++			argv[0]);
++		return -EINVAL;
++	}
++
++	run_test(test);
++	return 0;
++}
+-- 
+2.11.0
