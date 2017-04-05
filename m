@@ -1,16 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
- boot for X-Gene v1
-To: Khuong Dinh <kdinh@apm.com>, lorenzo.pieralisi@arm.com,
- msalter@redhat.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- jcm@redhat.com
-References: <1493340847-25720-1-git-send-email-kdinh@apm.com>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <f5cb58a5-7c06-8d54-6293-1a72ee0a4707@arm.com>
-Date: Fri, 28 Apr 2017 10:27:34 +0100
+Date: Wed, 5 Apr 2017 11:04:25 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Robin Murphy <robin.murphy@arm.com>
+Subject: Re: [PATCH V10 00/12] IOMMU probe deferral support
+Message-ID: <20170405100425.GA13290@red-moon>
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+ <b0f3a1ec-ea13-7465-1d44-9191e3e803ef@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <1493340847-25720-1-git-send-email-kdinh@apm.com>
+In-Reply-To: <b0f3a1ec-ea13-7465-1d44-9191e3e803ef@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,143 +17,220 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: rjw@rjwysocki.net, Duc Dang <dhdang@apm.com>, patches@apm.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
+ frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
+ tn@semihalf.com, joro@8bytes.org, linux-acpi@vger.kernel.org,
+ linux-pci@vger.kernel.org, lenb@kernel.org, devicetree@vger.kernel.org,
+ arnd@arndb.de, linux-arm-msm@vger.kernel.org, robh+dt@kernel.org,
+ bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
+ gregkh@linuxfoundation.org, rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
+ iommu@lists.linux-foundation.org, hanjun.guo@linaro.org, sudeep.holla@arm.com,
+ Sricharan R <sricharan@codeaurora.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 28/04/17 01:54, Khuong Dinh wrote:
-> From: Khuong Dinh <kdinh@apm.com>
+On Tue, Apr 04, 2017 at 01:49:29PM +0100, Robin Murphy wrote:
+> On 04/04/17 11:18, Sricharan R wrote:
+> > This series calls the dma ops configuration for the devices
+> > at a generic place so that it works for all busses.
+> > The dma_configure_ops for a device is now called during
+> > the device_attach callback just before the probe of the
+> > bus/driver is called. Similarly dma_deconfigure is called during
+> > device/driver_detach path.
+> > 
+> > pci_bus_add_devices    (platform/amba)(_device_create/driver_register)
+> >        |                         |
+> > pci_bus_add_device     (device_add/driver_register)
+> >        |                         |
+> > device_attach           device_initial_probe
+> >        |                         |
+> > __device_attach_driver    __device_attach_driver
+> >        |
+> > driver_probe_device
+> >        |
+> > really_probe
+> >        |
+> > dma_configure
+> > 
+> > Similarly on the device/driver_unregister path __device_release_driver is
+> > called which inturn calls dma_deconfigure.
+> > 
+> > Rebased the series against mainline 4.11-rc5. Applies and builds cleanly
+> > against mainline and linux-next, iommu-next.
+> >   
+> > * Tested with platform and pci devices for probe deferral
+> >   and reprobe on arm64 based platform.
 > 
-> This patch makes pci-xgene-msi driver ACPI-aware and provides
-> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
-> 
-> Signed-off-by: Khuong Dinh <kdinh@apm.com>
-> Signed-off-by: Duc Dang <dhdang@apm.com>
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
-> ---
-> v2:
->  - Verify with BIOS version 3.06.25 and 3.07.09
-> v1:
->  - Initial version
-> ---
->  drivers/pci/host/pci-xgene-msi.c |   35 ++++++++++++++++++++++++++++++++---
->  1 files changed, 32 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
-> index f1b633b..00aaa3d 100644
-> --- a/drivers/pci/host/pci-xgene-msi.c
-> +++ b/drivers/pci/host/pci-xgene-msi.c
-> @@ -24,6 +24,7 @@
->  #include <linux/pci.h>
->  #include <linux/platform_device.h>
->  #include <linux/of_pci.h>
-> +#include <linux/acpi.h>
->  
->  #define MSI_IR0			0x000000
->  #define MSI_INT0		0x800000
-> @@ -39,7 +40,7 @@ struct xgene_msi_group {
->  };
->  
->  struct xgene_msi {
-> -	struct device_node	*node;
-> +	struct fwnode_handle	*fwnode;
->  	struct irq_domain	*inner_domain;
->  	struct irq_domain	*msi_domain;
->  	u64			msi_addr;
-> @@ -249,6 +250,13 @@ static void xgene_irq_domain_free(struct irq_domain *domain,
->  	.free   = xgene_irq_domain_free,
->  };
->  
-> +#ifdef CONFIG_ACPI
-> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
-> +{
-> +	return xgene_msi_ctrl.fwnode;
-> +}
-> +#endif
-> +
->  static int xgene_allocate_domains(struct xgene_msi *msi)
->  {
->  	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
-> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
->  	if (!msi->inner_domain)
->  		return -ENOMEM;
->  
-> -	msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
-> +	msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
->  						    &xgene_msi_domain_info,
->  						    msi->inner_domain);
->  
-> @@ -265,6 +273,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
->  		return -ENOMEM;
->  	}
->  
-> +#ifdef CONFIG_ACPI
-> +	pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
-> +#endif
->  	return 0;
->  }
->  
-> @@ -449,6 +460,13 @@ static int xgene_msi_hwirq_free(unsigned int cpu)
->  	{},
->  };
->  
-> +#ifdef CONFIG_ACPI
-> +static const struct acpi_device_id xgene_msi_acpi_ids[] = {
-> +	{"APMC0D0E", 0},
-> +	{ },
-> +};
-> +#endif
-> +
->  static int xgene_msi_probe(struct platform_device *pdev)
->  {
->  	struct resource *res;
-> @@ -469,7 +487,17 @@ static int xgene_msi_probe(struct platform_device *pdev)
->  		goto error;
->  	}
->  	xgene_msi->msi_addr = res->start;
-> -	xgene_msi->node = pdev->dev.of_node;
-> +
-> +	xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
-> +	if (!xgene_msi->fwnode) {
-> +		xgene_msi->fwnode = irq_domain_alloc_fwnode(NULL);
+> Sricharan, thanks for keeping this going - I really think we're there now :)
 
-Please provide something other than NULL, such as the base address if
-the device. That's quite useful for debugging.
-
-> +		if (!xgene_msi->fwnode) {
-> +			dev_err(&pdev->dev, "Failed to create fwnode\n");
-> +			rc = ENOMEM;
-> +			goto error;
-> +		}
-> +	}
-> +
->  	xgene_msi->num_cpus = num_possible_cpus();
->  
->  	rc = xgene_msi_init_allocator(xgene_msi);
-> @@ -540,6 +568,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
->  	.driver = {
->  		.name = "xgene-msi",
->  		.of_match_table = xgene_msi_match_table,
-> +		.acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
->  	},
->  	.probe = xgene_msi_probe,
->  	.remove = xgene_msi_remove,
-> 
-
-The code is trivial, but relies on the MSI controller to probe before
-the PCI bus. What enforces this? How is it making sure that this is not
-going to break in the next kernel release? As far as I can tell, there
-is no explicit dependency between the two, making it the whole thing
-extremely fragile.
+FYI, I re-tested this series with ACPI and tried a merge with IORT
+patches queued for 4.12 (via arm64) and there does not seem to be any
+merge conflicts so it should be ready to go.
 
 Thanks,
+Lorenzo
 
-	M.
--- 
-Jazz is not dead. It just smells funny...
+> Joerg, I realise that at -rc5 time is getting on a bit already, but even
+> the non-vintage parts of the series are pretty mature now so it would be
+> nice to at least give it a spin in -next. If you don't quite share my
+> confidence for landing it in 4.12, please consider it for early next
+> cycle to get a full workout.
+> 
+> Thanks,
+> Robin.
+> 
+> > Previous post of this series [8]. 
+> > 
+> > Please note that, i have kept the tested/acked tags intact from V8
+> > because V9/10 were for more fixes that was added, so the original
+> > tags that was given for the functional testing remains the same.
+> > 
+> >  [V10]
+> >      * Rebased on top of 4.11-rc5.
+> >  
+> >      * Fixed coherent_dma_mask 64bit overflow issue [8]
+> >        for OF. The fix for OF was added as a separate
+> >        patch#6, since the issue is true even without probe deferral,
+> >        but gets reproduced with the probe deferral series.
+> >        Added Lorenzo's ACPI fix for coherent_dma_mask overflow
+> >        and the fix for dma_configure getting called more than
+> >        once for the same device.
+> > 
+> >      * Also fixed an build issue caught by kbuild robot for
+> >        m68k arch. The issue was dma_(de)configure was not
+> >        getting defined for !CONFIG_HAS_DMA, so fixed that as well.
+> > 
+> >  [V9]
+> >      * Rebased on top of 4.11-rc1.
+> > 
+> >      * Merged Robin's fixes for legacy binding issue,
+> >        pci devices with no iommu-map property and deferencing
+> >        of_iommu_table after init.
+> >      
+> >  [V8]
+> >      * Picked up all the acks and tested tags from Marek and
+> >        Hanjun for DT and ACPI patches respectively, since
+> >        no functional changes was done.
+> > 
+> >      * Addressed Minor comments Sinan and Bjorn.
+> > 
+> >      * Added Robin's fix for fixing the deferencing NULL for
+> >        of_iommu_table after init in patch #2.
+> > 
+> >      * Rebased it on top of linux-next
+> > 
+> >  [V7]
+> >      * Updated the subject and commit log for patch #6 as per
+> >        comments from Lorenzo. No functional changes.
+> > 
+> >  [V6]
+> >      * Fixed a bug in dma_configure function pointed out by
+> >        Robin.
+> >      * Reordered the patches as per comments from Robin and
+> >        Lorenzo.
+> >      * Added Tags.
+> > 
+> >  [V5]
+> >      * Reworked the pci configuration code hanging outside and
+> >        pushed it to dma_configure as in PATCH#5,6,7.
+> >        Also added a couple of patches that Lorenzo provided for
+> >        correcting the Probe deferring mechanism in case of
+> >        ACPI devices from here [5].
+> > 
+> >  [V4]
+> >      * Took the reworked patches [2] from Robin's branch and
+> >        rebased on top of Lorenzo's ACPI IORT ARM support series [3].
+> > 
+> >      * Added the patches for moving the dma ops configuration of
+> >        acpi based devices to probe time as well.
+> >  [V3]
+> >      * Removed the patch to split dma_masks/dma_ops configuration
+> >        separately based on review comments that both masks and ops are
+> >        required only during the device probe time.
+> > 
+> >      * Reworked the series based on Generic DT bindings series.
+> > 
+> >      * Added call to iommu's remove_device in the cleanup path for arm and
+> >        arm64.
+> > 
+> >      * Removed the notifier trick in arm64 to handle early device
+> >        registration.
+> > 
+> >      * Added reset of dma_ops in cleanup path for arm based on comments.
+> > 
+> >      * Fixed the pci_iommu_configure path and tested with PCI device as
+> >        well.
+> >  
+> >      * Fixed a bug to return the correct iommu_ops from patch 7 [4] in
+> >        last post.
+> > 
+> >      * Fixed few other cosmetic comments.
+> >   
+> >  [V2]
+> >      * Updated the Initial post to call dma_configure/deconfigure from
+> >        generic code
+> >  
+> >      * Added iommu add_device callback from of_iommu_configure path
+> > 
+> >  [V1]
+> >      * Initial post from Laurent Pinchart [1]
+> > 
+> > [1] http://lists.linuxfoundation.org/pipermail/iommu/2015-May/013016.html
+> > [2] http://www.linux-arm.org/git?p=linux-rm.git;a=shortlog;h=refs/heads/iommu/defer
+> > [3] https://lkml.org/lkml/2016/11/21/141
+> > [4] https://www.mail-archive.com/iommu@xxxxxxxxxxxxxxxxxxxxxxxxxx/msg13940.html
+> > [5] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git iommu/probe-deferral
+> > [6] http://www.spinics.net/lists/linux-pci/msg57992.html
+> > [7] https://www.spinics.net/lists/arm-kernel/msg556209.html
+> > [8] http://patchwork.ozlabs.org/patch/743898/
+> > 
+> > Laurent Pinchart (3):
+> >   of: dma: Move range size workaround to of_dma_get_range()
+> >   of: dma: Make of_dma_deconfigure() public
+> >   iommu: of: Handle IOMMU lookup failure with deferred probing or error
+> > 
+> > Lorenzo Pieralisi (2):
+> >   ACPI/IORT: Add function to check SMMUs drivers presence
+> >   ACPI/IORT: Remove linker section for IORT entries probing
+> > 
+> > Robin Murphy (3):
+> >   iommu/of: Refactor of_iommu_configure() for error handling
+> >   iommu/of: Prepare for deferred IOMMU configuration
+> >   iommu/arm-smmu: Clean up early-probing workarounds
+> > 
+> > Sricharan R (4):
+> >   of: device: Fix overflow of coherent_dma_mask
+> >   of/acpi: Configure dma operations at probe time for platform/amba/pci
+> >     bus devices
+> >   drivers: acpi: Handle IOMMU lookup failure with deferred probing or
+> >     error
+> >   arm64: dma-mapping: Remove the notifier trick to handle early setting
+> >     of dma_ops
+> > 
+> >  arch/arm64/mm/dma-mapping.c       | 142 +++++---------------------------------
+> >  drivers/acpi/arm64/iort.c         |  48 ++++++++++++-
+> >  drivers/acpi/glue.c               |   5 --
+> >  drivers/acpi/scan.c               |  11 ++-
+> >  drivers/base/dd.c                 |   9 +++
+> >  drivers/base/dma-mapping.c        |  41 +++++++++++
+> >  drivers/iommu/arm-smmu-v3.c       |  46 +-----------
+> >  drivers/iommu/arm-smmu.c          | 110 +++++++++++++----------------
+> >  drivers/iommu/of_iommu.c          | 126 ++++++++++++++++++++++++---------
+> >  drivers/of/address.c              |  20 +++++-
+> >  drivers/of/device.c               |  36 +++++-----
+> >  drivers/of/platform.c             |  10 +--
+> >  drivers/pci/probe.c               |  28 --------
+> >  include/acpi/acpi_bus.h           |   2 +-
+> >  include/asm-generic/vmlinux.lds.h |   1 -
+> >  include/linux/acpi.h              |   7 +-
+> >  include/linux/acpi_iort.h         |   3 -
+> >  include/linux/dma-mapping.h       |  12 ++++
+> >  include/linux/of_device.h         |  10 ++-
+> >  19 files changed, 329 insertions(+), 338 deletions(-)
+> > 
+> 
 
 _______________________________________________
 linux-arm-kernel mailing list
