@@ -1,68 +1,102 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:46597 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753427AbdDLM0S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Apr 2017 08:26:18 -0400
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 04/27] xtensa: Do not mmap PCI BARs to userspace as write-through
-Date: Wed, 12 Apr 2017 13:25:53 +0100
-Message-Id: <6816f5f6ecc8d862718d3b0f87a7916576f5cef5.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V10 06/12] of: device: Fix overflow of coherent_dma_mask
+To: Frank Rowand <frowand.list@gmail.com>, robin.murphy@arm.com,
+ will.deacon@arm.com, joro@8bytes.org, lorenzo.pieralisi@arm.com,
+ iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+ bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
+ robh+dt@kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
+ lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
+ linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-7-git-send-email-sricharan@codeaurora.org>
+ <58E5E7B7.1050400@gmail.com>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <b77e3405-f060-bcd5-99f6-7d76f9edf08a@codeaurora.org>
+Date: Thu, 6 Apr 2017 16:31:30 +0530
+MIME-Version: 1.0
+In-Reply-To: <58E5E7B7.1050400@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+Hi Frank,
 
-These should be uncached, not write-through.
+On 4/6/2017 12:31 PM, Frank Rowand wrote:
+> On 04/04/17 03:18, Sricharan R wrote:
+>> Size of the dma-range is calculated as coherent_dma_mask + 1
+>> and passed to arch_setup_dma_ops further. It overflows when
+>> the coherent_dma_mask is set for full 64 bits 0xFFFFFFFFFFFFFFFF,
+>> resulting in size getting passed as 0 wrongly. Fix this by
+>> passsing in max(mask, mask + 1). Note that in this case
+>> when the mask is set to full 64bits, we will be passing the mask
+>> itself to arch_setup_dma_ops instead of the size. The real fix
+>> for this should be to make arch_setup_dma_ops receive the
+>> mask and handle it, to be done in the future.
+>>
+>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>> ---
+>>  drivers/of/device.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/of/device.c b/drivers/of/device.c
+>> index c17c19d..c2ae6bb 100644
+>> --- a/drivers/of/device.c
+>> +++ b/drivers/of/device.c
+>> @@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>>  	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>>  	if (ret < 0) {
+>>  		dma_addr = offset = 0;
+>> -		size = dev->coherent_dma_mask + 1;
+>> +		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+>>  	} else {
+>>  		offset = PFN_DOWN(paddr - dma_addr);
+>>  		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+>>
+>
+> NACK.
+>
+> Passing an invalid size to arch_setup_dma_ops() is only part of the problem.
+> size is also used in of_dma_configure() before calling arch_setup_dma_ops():
+>
+>         dev->coherent_dma_mask = min(dev->coherent_dma_mask,
+>                                      DMA_BIT_MASK(ilog2(dma_addr + size)));
+>         *dev->dma_mask = min((*dev->dma_mask),
+>                              DMA_BIT_MASK(ilog2(dma_addr + size)));
+>
+> which would be incorrect for size == 0xffffffffffffffffULL when
+> dma_addr != 0.  So the proposed fix really is not papering over
+> the base problem very well.
+>
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/xtensa/kernel/pci.c | 21 +--------------------
- 1 file changed, 1 insertion(+), 20 deletions(-)
+Ok, but with your fix for of_dma_get_range and the above fix,
+dma_addr will be '0' when size = 0xffffffffffffffffULL,
+but DMA_BIT_MASK(ilog2(dma_addr + size)) would be wrong though,
+making coherent_dma_mask to be smaller 0x7fffffffffffffffULL.
 
-diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-index b848cc3..5b73fc2 100644
---- a/arch/xtensa/kernel/pci.c
-+++ b/arch/xtensa/kernel/pci.c
-@@ -334,25 +334,6 @@ __pci_mmap_make_offset(struct pci_dev *dev, struct vm_area_struct *vma,
- }
- 
- /*
-- * Set vm_page_prot of VMA, as appropriate for this architecture, for a pci
-- * device mapping.
-- */
--static __inline__ void
--__pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vma,
--		      enum pci_mmap_state mmap_state, int write_combine)
--{
--	int prot = pgprot_val(vma->vm_page_prot);
--
--	/* Set to write-through */
--	prot = (prot & _PAGE_CA_MASK) | _PAGE_CA_WT;
--#if 0
--	if (!write_combine)
--		prot |= _PAGE_WRITETHRU;
--#endif
--	vma->vm_page_prot = __pgprot(prot);
--}
--
--/*
-  * Perform the actual remap of the pages for a PCI device mapping, as
-  * appropriate for this architecture.  The region in the process to map
-  * is described by vm_start and vm_end members of VMA, the base physical
-@@ -372,7 +353,7 @@ int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- 	if (ret < 0)
- 		return ret;
- 
--	__pci_mmap_set_pgprot(dev, vma, mmap_state, write_combine);
-+	vma->vm_page_prot = pgprot_device(vma->vm_page_prot);
- 
- 	ret = io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
- 			         vma->vm_end - vma->vm_start,vma->vm_page_prot);
+Regards,
+  Sricharan
+
+> I agree that the proper solution involves passing a mask instead
+> of a size to arch_setup_dma_ops().
+>
+
 -- 
-2.9.3
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
