@@ -1,93 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jayachandran C <jnair@caviumnetworks.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org
-Subject: [PATCH v4 0/2] Handle Cavium ThunderX2 PCI topology quirk
-Date: Mon,  3 Apr 2017 13:15:02 +0000
-Message-Id: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
+Return-Path: <SRS0=bnU8=3O=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=bnU8=3O=ti.com=kishon@kernel.org>
+Subject: Re: [PATCH v6 01/23] PCI: endpoint: Add EP core layer to enable EP
+ controller and EP functions
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20170405085243.18123-1-kishon@ti.com>
+ <20170405085243.18123-2-kishon@ti.com>
+ <20170405165254.GA17066@bhelgaas-glaptop.roam.corp.google.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <hch@infradead.org>, <nsekhar@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <f02ddadd-239a-b559-ab85-0bed3f3e0112@ti.com>
+Date: Thu, 6 Apr 2017 10:49:17 +0530
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jon Masters <jcm@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
- Jayachandran C <jnair@caviumnetworks.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170405165254.GA17066@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn, Alex,
+Hi Bjorn,
 
-Sending this again (with a trivial fix to author name), please review.
-Updated summary below:
+On Wednesday 05 April 2017 10:22 PM, Bjorn Helgaas wrote:
+> On Wed, Apr 05, 2017 at 02:22:21PM +0530, Kishon Vijay Abraham I wrote:
+>> Introduce a new EP core layer in order to support endpoint functions in
+>> linux kernel. This comprises the EPC library (Endpoint Controller Library)
+>> and EPF library (Endpoint Function Library). EPC library implements
+>> functions specific to an endpoint controller and EPF library implements
+>> functions specific to an endpoint function.
+>> ...
+> 
+>> +/**
+>> + * pci_epf_linkup() - Notify the function driver that EPC device has
+>> + *		      established a connection with the Root Complex.
+>> + * @epf: the EPF device bound to the EPC device which has established
+>> + *	 the connection with the host
+>> + *
+>> + * Invoke to notify the function driver that EPC device has established
+>> + * a connection with the Root Complex.
+>> + */
+>> +void pci_epf_linkup(struct pci_epf *epf)
+>> +{
+>> +	if (!epf->driver)
+>> +		dev_WARN(&epf->dev, "epf device not bound to driver\n");
+>> +
+>> +	epf->driver->ops->linkup(epf);
+> 
+> I don't understand what's going on here.  We warn if epf->driver is
+> NULL, but the next thing we do is dereference it.
+> 
+> For NULL pointers that are symptoms of Linux defects, I usually prefer
+> not to check at all so that a dereference generates an oops and we can
+> debug the problem.  For NULL pointers caused by user error, we would
+> generally return an error that percolates up to the user.
+> 
+> I haven't competely wrapped my head around this endpoint support, but
+> I assume a NULL pointer here would be caused by user error, not
+> necessarily a Linux defect.  So why would we dereference a NULL
+> pointer?  And what happens when we do?  Is this just going to oops an
+> embedded Linux running inside the endpoint?  Is that the correct
+> behavior?
 
-Here is v4 of the patchset to handle the PCIe topology quirk of Cavium
-ThunderX2 systems (previously known as Broadcom Vulcan).
+With the new configfs directory structure, this should be a kernel error.
+However the EPF layer should be independent of how it's API's are used i.e
+someone can create a new sysfs/configfs structure and the value of epf->driver
+might be dependent on user actions.
 
-The earlier discussions on this can be seen at:
-http://www.spinics.net/lists/linux-pci/msg51001.html
-https://patchwork.ozlabs.org/patch/582633/ and
-https://lists.linuxfoundation.org/pipermail/iommu/2016-June/017681.html
+I think I'd prefer not to dereference NULL pointers since we anyways have a
+dev_WARN for debug. I'll resend this patch with return if epf->driver is NULL.
 
-The earlier discussion on this patchset ended with a suggestion that it
-may be possible to fix up this quirk by handling the issue in the
-function argument of pci_for_each_dma_alias(). But at that point we did
-not have the codebase to make the changes since the full ACPI and OF code
-for SMMU and GIC ITS was not upstream.
-
-Now that the changes are upstream, I tried to fix it in both the SMMU
-and the GIC ITS code based on this suggestion, the changes needed are at:
- https://github.com/jchandra-cavm/linux/commits/rid-xlate-fixup
-
-The problems with this approach are:
- - of the 14 uses of pci_for_each_dma_alias in the function in the kernel
-   tree, I have to fixup 6 callers (which is all but one ofthe callers
-   outside x86)
- - 4 of these can be reasonably handled (please see the github repo above),
-   but the calls in drivers/irqchip/irq-gic-v3-its-pci-msi.c and
-   drivers/iommu/iommu.c cannot be reasonably fixed up.
- - Even without the 2 above two changes I can get it to work for now.
-   But pci_for_each_dma_alias does not work as expected on this platform
-   and we have to be aware of that for all future uses of the function.
-  
-For now, I have ruled out the approach, and I have rebased the earlier
-patch on to 4.11-rc and submitting again for review. The changes are:
-
-v3->v4:
- - new address of author
-
-v2>v3:
- - changed device flag name from PCI_DEV_FLAGS_DMA_ALIAS_ROOT to
-   PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT
- - updated commit message to make the quirk clearer.
-
-Let me know your comments and suggestions.
-
-Thanks,
-JC.
-
-
-Jayachandran C (2):
-  PCI: Add device flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT
-  PCI: quirks: Fix ThunderX2 dma alias handling
-
- drivers/pci/quirks.c | 14 ++++++++++++++
- drivers/pci/search.c |  4 ++++
- include/linux/pci.h  |  2 ++
- 3 files changed, 20 insertions(+)
-
--- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks
+Kishon
