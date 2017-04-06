@@ -1,69 +1,94 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:35625 "EHLO
-        mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752040AbdDKQdZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Apr 2017 12:33:25 -0400
-Received: by mail-wm0-f52.google.com with SMTP id w64so68308462wma.0
-        for <linux-pci@vger.kernel.org>; Tue, 11 Apr 2017 09:33:24 -0700 (PDT)
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
-Cc: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
-        lorenzo.pieralisi@arm.com, tn@semihalf.com,
-        graeme.gregory@linaro.org, leif.lindholm@linaro.org,
-        okaya@codeaurora.org, Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: [PATCH 1/2] drivers: pci: do not disregard parent resources starting at 0x0
-Date: Tue, 11 Apr 2017 17:33:12 +0100
-Message-Id: <20170411163313.18577-2-ard.biesheuvel@linaro.org>
-In-Reply-To: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
-References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
+Received: from mail.kernel.org ([198.145.29.136]:47674 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752345AbdDFV3x (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Apr 2017 17:29:53 -0400
+Date: Thu, 6 Apr 2017 16:29:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: bhelgaas@google.com, davem@davemloft.net,
+        netanel@annapurnalabs.com, jcliburn@gmail.com,
+        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org,
+        netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 4/4] PCI: remove pci_enable_msix
+Message-ID: <20170406212949.GA18836@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170406122448.31854-1-hch@lst.de>
+ <20170406122448.31854-5-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170406122448.31854-5-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Commit f44116ae8818 ("PCI: Remove pci_find_parent_resource() use for
-allocation") updated the logic that iterates over all bus resources
-and compares them to a given resource, in order to decide whether one
-is the parent of the latter.
+On Thu, Apr 06, 2017 at 02:24:48PM +0200, Christoph Hellwig wrote:
+> Unused now that all callers switched to pci_alloc_irq_vectors.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-This change inadvertently causes pci_find_parent_resource() to disregard
-resources starting at address 0x0, resulting in an error such as the one
-below on ARM systems whose I/O window starts at 0x0.
+I already acked this, but I can do it again :)
+(https://lkml.kernel.org/r/20170330230913.GA3912@bhelgaas-glaptop.roam.corp.google.com)
 
-pci_bus 0000:00: root bus resource [mem 0x10000000-0x3efeffff window]
-pci_bus 0000:00: root bus resource [io  0x0000-0xffff window]
-pci_bus 0000:00: root bus resource [mem 0x8000000000-0xffffffffff window]
-pci_bus 0000:00: root bus resource [bus 00-0f]
-pci 0000:00:01.0: PCI bridge to [bus 01]
-pci 0000:00:02.0: PCI bridge to [bus 02]
-pci 0000:00:03.0: PCI bridge to [bus 03]
-pci 0000:00:03.0: can't claim BAR 13 [io  0x0000-0x0fff]: no compatible bridge window
-pci 0000:03:01.0: can't claim BAR 0 [io  0x0000-0x001f]: no compatible bridge window
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 
-While this never happens on x86, it is perfectly legal in general for a
-PCI MMIO or IO window to start at address 0x0, and it was supported in
-the code before commit f44116ae8818.
-
-So let's drop the test for res->start != 0; resource_contains() already
-checks whether [start, end) completely covers the resource, and so it
-should be redundant.
-
-Fixes: f44116ae8818 ("PCI: Remove pci_find_parent_resource() use for allocation")
-Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02ffdb9..53a41b1f7ef7 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -454,7 +454,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 	pci_bus_for_each_resource(bus, r, i) {
- 		if (!r)
- 			continue;
--		if (res->start && resource_contains(r, res)) {
-+		if (resource_contains(r, res)) {
- 
- 			/*
- 			 * If the window is prefetchable but the BAR is
--- 
-2.9.3
+> ---
+>  drivers/pci/msi.c   | 21 ---------------------
+>  include/linux/pci.h |  4 ----
+>  2 files changed, 25 deletions(-)
+> 
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index d571bc330686..0042c365b29b 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -973,27 +973,6 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
+>  	return msix_capability_init(dev, entries, nvec, affd);
+>  }
+>  
+> -/**
+> - * pci_enable_msix - configure device's MSI-X capability structure
+> - * @dev: pointer to the pci_dev data structure of MSI-X device function
+> - * @entries: pointer to an array of MSI-X entries (optional)
+> - * @nvec: number of MSI-X irqs requested for allocation by device driver
+> - *
+> - * Setup the MSI-X capability structure of device function with the number
+> - * of requested irqs upon its software driver call to request for
+> - * MSI-X mode enabled on its hardware device function. A return of zero
+> - * indicates the successful configuration of MSI-X capability structure
+> - * with new allocated MSI-X irqs. A return of < 0 indicates a failure.
+> - * Or a return of > 0 indicates that driver request is exceeding the number
+> - * of irqs or MSI-X vectors available. Driver should use the returned value to
+> - * re-send its request.
+> - **/
+> -int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+> -{
+> -	return __pci_enable_msix(dev, entries, nvec, NULL);
+> -}
+> -EXPORT_SYMBOL(pci_enable_msix);
+> -
+>  void pci_msix_shutdown(struct pci_dev *dev)
+>  {
+>  	struct msi_desc *entry;
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index eb3da1a04e6c..82dec36845e6 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -1300,7 +1300,6 @@ int pci_msi_vec_count(struct pci_dev *dev);
+>  void pci_msi_shutdown(struct pci_dev *dev);
+>  void pci_disable_msi(struct pci_dev *dev);
+>  int pci_msix_vec_count(struct pci_dev *dev);
+> -int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
+>  void pci_msix_shutdown(struct pci_dev *dev);
+>  void pci_disable_msix(struct pci_dev *dev);
+>  void pci_restore_msi_state(struct pci_dev *dev);
+> @@ -1330,9 +1329,6 @@ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+>  static inline void pci_msi_shutdown(struct pci_dev *dev) { }
+>  static inline void pci_disable_msi(struct pci_dev *dev) { }
+>  static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+> -static inline int pci_enable_msix(struct pci_dev *dev,
+> -				  struct msix_entry *entries, int nvec)
+> -{ return -ENOSYS; }
+>  static inline void pci_msix_shutdown(struct pci_dev *dev) { }
+>  static inline void pci_disable_msix(struct pci_dev *dev) { }
+>  static inline void pci_restore_msi_state(struct pci_dev *dev) { }
+> -- 
+> 2.11.0
+> 
