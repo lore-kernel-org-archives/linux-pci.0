@@ -1,82 +1,121 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f42.google.com ([209.85.218.42]:34273 "EHLO
-        mail-oi0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751628AbdDCWrK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 3 Apr 2017 18:47:10 -0400
-Received: by mail-oi0-f42.google.com with SMTP id d2so10975227oig.1
-        for <linux-pci@vger.kernel.org>; Mon, 03 Apr 2017 15:47:10 -0700 (PDT)
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V10 06/12] of: device: Fix overflow of coherent_dma_mask
+To: Sricharan R <sricharan@codeaurora.org>, robin.murphy@arm.com,
+ will.deacon@arm.com, joro@8bytes.org, lorenzo.pieralisi@arm.com,
+ iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+ bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
+ robh+dt@kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
+ lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
+ linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-7-git-send-email-sricharan@codeaurora.org>
+ <58E5E7B7.1050400@gmail.com>
+ <b77e3405-f060-bcd5-99f6-7d76f9edf08a@codeaurora.org>
+From: Frank Rowand <frowand.list@gmail.com>
+Message-ID: <58E69831.6010306@gmail.com>
+Date: Thu, 6 Apr 2017 12:34:09 -0700
 MIME-Version: 1.0
-In-Reply-To: <ff0dd5ec-2562-9f1d-1335-d0a8813f2f50@deltatee.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-6-git-send-email-logang@deltatee.com> <20170331070950.GA9059@infradead.org>
- <435d4471-436b-87e6-8827-c9fc6cbdde2c@deltatee.com> <445bc352-75d7-438f-96ef-c2411215628d@deltatee.com>
- <CAPcyv4g=MHbjbY0GFPoLq3wAGwhcC7813O7iLUWGEChWh0M7Dw@mail.gmail.com> <ff0dd5ec-2562-9f1d-1335-d0a8813f2f50@deltatee.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Mon, 3 Apr 2017 15:47:09 -0700
-Message-ID: <CAPcyv4gx4g3Ry_A99yTodqwm2vH72oMSLKAKF7iEsmG5G4TcbQ@mail.gmail.com>
-Subject: Re: [RFC 5/8] scatterlist: Modify SG copy functions to support io memory.
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        Steve Wise <swise@opengridcomputing.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <b77e3405-f060-bcd5-99f6-7d76f9edf08a@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 3, 2017 at 3:10 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
->
->
-> On 03/04/17 03:44 PM, Dan Williams wrote:
->> On Mon, Apr 3, 2017 at 2:20 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
->>> Hi Christoph,
+On 04/06/17 04:01, Sricharan R wrote:
+> Hi Frank,
+> 
+> On 4/6/2017 12:31 PM, Frank Rowand wrote:
+>> On 04/04/17 03:18, Sricharan R wrote:
+>>> Size of the dma-range is calculated as coherent_dma_mask + 1
+>>> and passed to arch_setup_dma_ops further. It overflows when
+>>> the coherent_dma_mask is set for full 64 bits 0xFFFFFFFFFFFFFFFF,
+>>> resulting in size getting passed as 0 wrongly. Fix this by
+>>> passsing in max(mask, mask + 1). Note that in this case
+>>> when the mask is set to full 64bits, we will be passing the mask
+>>> itself to arch_setup_dma_ops instead of the size. The real fix
+>>> for this should be to make arch_setup_dma_ops receive the
+>>> mask and handle it, to be done in the future.
 >>>
->>> What are your thoughts on an approach like the following untested
->>> draft patch.
+>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>>> ---
+>>>  drivers/of/device.c | 2 +-
+>>>  1 file changed, 1 insertion(+), 1 deletion(-)
 >>>
->>> The patch (if fleshed out) makes it so iomem can be used in an sgl
->>> and WARN_ONs will occur in places where drivers attempt to access
->>> iomem directly through the sgl.
+>>> diff --git a/drivers/of/device.c b/drivers/of/device.c
+>>> index c17c19d..c2ae6bb 100644
+>>> --- a/drivers/of/device.c
+>>> +++ b/drivers/of/device.c
+>>> @@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>>>      ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>>>      if (ret < 0) {
+>>>          dma_addr = offset = 0;
+>>> -        size = dev->coherent_dma_mask + 1;
+>>> +        size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+>>>      } else {
+>>>          offset = PFN_DOWN(paddr - dma_addr);
+>>>          dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
 >>>
->>> I'd also probably create a p2pmem_alloc_sgl helper function so driver
->>> writers wouldn't have to mess with sg_set_iomem_page.
->>>
->>> With all that in place, it should be relatively safe for drivers to
->>> implement p2pmem even though we'd still technically be violating the
->>> __iomem boundary in some places.
 >>
->> Just reacting to this mail, I still haven't had a chance to take a
->> look at the rest of the series.
+>> NACK.
 >>
->> The pfn_t type was invented to carry extra type and page lookup
->> information about the memory behind a given pfn. At first glance that
->> seems a more natural place to carry an indication that this is an
->> "I/O" pfn.
->
-> I agree... But what are the plans for pfn_t? Is anyone working on using
-> it in the scatterlist code? Currently it's not there yet and given the
-> assertion that we will continue to be using struct page for DMA is that
-> a direction we'd want to go?
->
+>> Passing an invalid size to arch_setup_dma_ops() is only part of the problem.
+>> size is also used in of_dma_configure() before calling arch_setup_dma_ops():
+>>
+>>         dev->coherent_dma_mask = min(dev->coherent_dma_mask,
+>>                                      DMA_BIT_MASK(ilog2(dma_addr + size)));
+>>         *dev->dma_mask = min((*dev->dma_mask),
+>>                              DMA_BIT_MASK(ilog2(dma_addr + size)));
+>>
+>> which would be incorrect for size == 0xffffffffffffffffULL when
+>> dma_addr != 0.  So the proposed fix really is not papering over
+>> the base problem very well.
+>>
+> 
+> Ok, but with your fix for of_dma_get_range and the above fix,
+> dma_addr will be '0' when size = 0xffffffffffffffffULL,
+> but DMA_BIT_MASK(ilog2(dma_addr + size)) would be wrong though,
+> making coherent_dma_mask to be smaller 0x7fffffffffffffffULL.
 
-I wouldn't necessarily conflate supporting pfn_t in the scatterlist
-with the stalled stuct-page-less DMA effor. A pfn_t_to_page()
-conversion will still work and be required. However you're right, the
-minute we use pfn_t for this we're into the realm of special case
-drivers that understand scatterlists with special "I/O-pfn_t" entries.
-However, maybe that's what we want? I think peer-to-peer DMA is not a
-general purpose feature unless/until we get it standardized in PCI. So
-maybe drivers with special case scatterlist support is exactly what we
-want for now.
+Yes, that was my point.  Setting size to 0x7fffffffffffffffULL
+affects several places.  Another potential location (based only
+on the function header comment, not from reading the code) is
+iommu_dma_init_domain().  The header comment says:
 
-Thoughts?
+    * @base and @size should be exact multiples of IOMMU page granularity to
+    * avoid rounding surprises.
+
+I have not read enough context to really understand of_dma_configure(), but
+it seems there is yet another issue in how the error return case from
+of_dma_get_range() is handled (with the existing code, as well as if
+my patch gets accepted).  An error return value can mean _either_
+there is no dma-ranges property _or_ "an other problem occurred".  Should
+the "an other problem occurred" case be handled by defaulting size to
+a value based on dev->coherent_dma_mask (the current case) or should the
+attempt to set up the DMA configuration just fail?
+
+> 
+> Regards,
+>  Sricharan
+> 
+>> I agree that the proper solution involves passing a mask instead
+>> of a size to arch_setup_dma_ops().
+>>
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
