@@ -1,58 +1,124 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:50815 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751941AbdDAWQs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sat, 1 Apr 2017 18:16:48 -0400
-To: okaya@codeaurora.org
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-2-git-send-email-logang@deltatee.com>
- <cb102386-0314-a3a3-ed44-b42debdf1512@codeaurora.org>
- <7158f2e8-2016-f398-e77f-0fcbe6cb41dd@deltatee.com>
- <e6a74aeb-9f54-51c5-8ad9-3b6fb92c03b3@codeaurora.org>
- <0280fbb4-ba9e-ac64-6bb3-b72590a54e57@deltatee.com>
- <0ae27bca-21be-b89c-aba4-6cc9766ebd7b@codeaurora.org>
- <c8edc480-a2ac-a763-8438-18f3396db483@deltatee.com>
- <e2165253dc355d5cb223e754d78047b1@codeaurora.org>
-Cc: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <c5d7da85-41fd-2769-fcf8-b3c2a1fab95f@deltatee.com>
-Date: Sat, 1 Apr 2017 16:16:35 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V10 06/12] of: device: Fix overflow of coherent_dma_mask
+To: Frank Rowand <frowand.list@gmail.com>,
+ Sricharan R <sricharan@codeaurora.org>, will.deacon@arm.com,
+ joro@8bytes.org, lorenzo.pieralisi@arm.com,
+ iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+ bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
+ robh+dt@kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
+ lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
+ linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-7-git-send-email-sricharan@codeaurora.org>
+ <58E5E7B7.1050400@gmail.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <b081f333-084d-ffa5-635f-f7f1c0232ac3@arm.com>
+Date: Thu, 6 Apr 2017 11:24:31 +0100
 MIME-Version: 1.0
-In-Reply-To: <e2165253dc355d5cb223e754d78047b1@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <58E5E7B7.1050400@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey,
+On 06/04/17 08:01, Frank Rowand wrote:
+> On 04/04/17 03:18, Sricharan R wrote:
+>> Size of the dma-range is calculated as coherent_dma_mask + 1
+>> and passed to arch_setup_dma_ops further. It overflows when
+>> the coherent_dma_mask is set for full 64 bits 0xFFFFFFFFFFFFFFFF,
+>> resulting in size getting passed as 0 wrongly. Fix this by
+>> passsing in max(mask, mask + 1). Note that in this case
+>> when the mask is set to full 64bits, we will be passing the mask
+>> itself to arch_setup_dma_ops instead of the size. The real fix
+>> for this should be to make arch_setup_dma_ops receive the
+>> mask and handle it, to be done in the future.
+>>
+>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>> ---
+>>  drivers/of/device.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/of/device.c b/drivers/of/device.c
+>> index c17c19d..c2ae6bb 100644
+>> --- a/drivers/of/device.c
+>> +++ b/drivers/of/device.c
+>> @@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>>  	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+>>  	if (ret < 0) {
+>>  		dma_addr = offset = 0;
+>> -		size = dev->coherent_dma_mask + 1;
+>> +		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+>>  	} else {
+>>  		offset = PFN_DOWN(paddr - dma_addr);
+>>  		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+>>
+> 
+> NACK.
+> 
+> Passing an invalid size to arch_setup_dma_ops() is only part of the problem.
+> size is also used in of_dma_configure() before calling arch_setup_dma_ops():
+> 
+>         dev->coherent_dma_mask = min(dev->coherent_dma_mask,
+>                                      DMA_BIT_MASK(ilog2(dma_addr + size)));
+>         *dev->dma_mask = min((*dev->dma_mask),
+>                              DMA_BIT_MASK(ilog2(dma_addr + size)));
+> 
+> which would be incorrect for size == 0xffffffffffffffffULL when
+> dma_addr != 0.  So the proposed fix really is not papering over
+> the base problem very well.
 
-On 31/03/17 08:17 PM, okaya@codeaurora.org wrote:
-> See drivers/pci and drivers/acpi directory.
+I'm not sure I agree there. Granted, there exist many more problematic
+aspects than are dealt with here (I've got more patches cooking to sort
+out some of the other issues we have with dma-ranges), but considering
+size specifically:
 
-The best I could find was the date of the firmware/bios. I really don't
-think that makes sense to tie the two together. And really the more that
-I think about it trying to do a date cutoff for this seems crazy without
-very comprehensive hardware testing done. I have no idea which AMD chips
-have decent root ports for this and then if we include all of ARM and
-POWERPC, etc there's a huge amount of unknown hardware. Saying that the
-system's firmware has to be written after 2016 seems like an arbitrary
-restriction that isn't likely to correlate to any working systems.
+- It is not possible to explicitly specify a range with a size of 2^64
+in DT. If someone does specify a size of 0, they've done a silly thing
+and should not be surprised that it ends badly.
 
-I still say the only sane thing to do is allow all switches and then add
-a whitelist of root ports that are known to work well. If we care about
-preventing broken systems in a comprehensive way then that's the only
-thing that is going to work.
+- It *is* perfectly legitimate for bus code (or a previous device
+driver, once we start coming here at probe time) to have set a device's
+DMA mask to 0xffffffffffffffffULL. If this code then blindly overflows
+and infers an invalid size of 0 from that, breaking things in the
+process, that is this code's fault alone. It just so happens that
+nothing managed to trigger the latent problem until patch #7 here shakes
+up the callsites.
 
-Logan
+Yes, wacky impossible base + size combinations in DT were a theoretical
+problem before, and remain a theoretical problem, but also fall into the
+"how did you ever expect this to work?" category. There's certainly
+plenty more we can do to improve the DT parsing/validation, but that
+still doesn't apply to this path where the information is *not* coming
+from the DT at all.
+
+> I agree that the proper solution involves passing a mask instead
+> of a size to arch_setup_dma_ops().
+
+Having started writing that patch too, I can tell you it's a big bugger
+touching multiple architectures and fixing up various drivers doing
+stupid things, hence why I'm happy with this point fix being the lesser
+of two evils in terms of not holding up this mostly-orthogonal series.
+
+Robin.
+
+> 
+> -Frank
+> 
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
