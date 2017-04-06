@@ -1,62 +1,103 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V7 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
- Rajat Jain <rajatja@google.com>
-References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
- <7c48ca8b-b834-3257-91dc-77e9d19def6c@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B28466761383@IRSMSX101.ger.corp.intel.com>
- <92EBB4272BF81E4089A7126EC1E7B2846676271D@IRSMSX101.ger.corp.intel.com>
- <951505b8-9580-7131-2f14-de92817190a7@codeaurora.org>
- <CACK8Z6FG7QHs1kQUoTJTcP3606+xBLFp9RUmLuv0m0X2mxH9XA@mail.gmail.com>
- <92EBB4272BF81E4089A7126EC1E7B2846676309A@IRSMSX101.ger.corp.intel.com>
- <896488eb-cb1d-03b9-73a0-011e4a9025c5@codeaurora.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <a1e13239-9471-5ea3-4d26-2a7ee4ff08b6@codeaurora.org>
-Date: Sat, 8 Apr 2017 01:03:08 -0400
+Return-Path: <SRS0=QdZ4=3O=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
+Return-Path: <SRS0=QdZ4=3O=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
+Date: Thu, 6 Apr 2017 18:19:19 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Tony Luck <tony.luck@intel.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	John Garry <john.garry@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Roy Zang <tie-fei.zang@freescale.com>
+Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
+ interface
+Message-ID: <20170406171919.GJ17774@n2100.armlinux.org.uk>
+References: <20170405105841.GG7909@n2100.armlinux.org.uk>
+ <20170405113238.GA2465@red-moon>
+ <20170406102636.GA9623@red-moon>
+ <20170406105312.GE28800@wotan.suse.de>
+ <20170406113845.GA10013@red-moon>
+ <20170406115906.GF28800@wotan.suse.de>
+ <20170406130727.GE17774@n2100.armlinux.org.uk>
+ <20170406162156.GA10134@red-moon>
+ <20170406164015.GI17774@n2100.armlinux.org.uk>
+ <20170406170951.GA10520@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <896488eb-cb1d-03b9-73a0-011e4a9025c5@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170406170951.GA10520@red-moon>
+Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mayurkumar,
-
-On 4/7/2017 9:09 AM, Sinan Kaya wrote:
-> On 4/7/2017 5:03 AM, Patel, Mayurkumar wrote:
->> So basically, I am not currently 100% sure, what is the proper fix for this. Whether BIOS should
->> enable L1SS on Root Port no matter Endpoint is connected or not during boot?
+On Thu, Apr 06, 2017 at 06:09:51PM +0100, Lorenzo Pieralisi wrote:
+> On Thu, Apr 06, 2017 at 05:40:16PM +0100, Russell King - ARM Linux wrote:
+> > On Thu, Apr 06, 2017 at 05:21:56PM +0100, Lorenzo Pieralisi wrote:
+> > > Ok, so:
+> > > 
+> > > (1) I can do asm-generic/ioremap-nopost.h, which I assume you want to
+> > >     contain something like
+> > > 
+> > > static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
+> > > {
+> > > 	return ioremap_nocache(offset, size);
+> > > }
+> > > 
+> > > Funny bit is that it has to be included by asm*/io.h files _after_
+> > > ioremap_nocache has been #defined (that's the reason my approach was
+> > > failing miserably even on arches like eg powerpc (see [1] below) that
+> > > does have ioremap_nocache),
+> > 
+> > PowerPC does have ioremap_nocache() though:
+> > 
+> > /**
+> >  * ioremap     -   map bus memory into CPU space
+> > ...
+> >  * * ioremap_nocache is identical to ioremap
+> > extern void __iomem *ioremap(phys_addr_t address, unsigned long size);
+> > #define ioremap_nocache(addr, size)     ioremap((addr), (size))
+> > 
+> > and this include file is included very early on in linux/io.h.  I don't
+> > see anything that conditionalises it on anything except __KERNEL__.  So,
+> > the report from 0-day really doesn't make any sense to me.
+> > 
+> > Do we know how we're ending up in linux/io.h line 169 without having
+> > picked up the ioremap_nocache() definition provided by PowerPC's
+> > asm/io.h ?
 > 
-> I'd like to force the kernel to reconfigure ASPM for all combinations
-> when there is no card attached during boot and we do a hotplug insertion. 
+> I will debug it further but I *think* it is because:
 > 
-> I'm thinking about how to do this now.
+> eg arch/powerpc/oprofile/op_model_cell.c includes <asm/io.h>
 > 
+> and <asm/io.h> includes <linux/io.h> before ioremap_nocache is defined
 
-I posted V8. can you please test it again?
-
-Sinan
+Oh, that's just very wrong.  asm/foo.h should never include linux/foo.h
+especially when linux/foo.h already includes asm/foo.h.  I think we
+need PowerPC folk to fix this.
 
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
