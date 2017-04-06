@@ -1,167 +1,135 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:47105 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753458AbdDLM0S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Apr 2017 08:26:18 -0400
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 05/27] pci: Add arch_can_pci_mmap_wc() macro
-Date: Wed, 12 Apr 2017 13:25:54 +0100
-Message-Id: <8536a58aa86a634c8ac53c54499351b3981ef20a.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
+Received: from mail-wr0-f195.google.com ([209.85.128.195]:33759 "EHLO
+        mail-wr0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755720AbdDFFr2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Apr 2017 01:47:28 -0400
+Subject: Re: [RFC 3/8] nvmet: Use p2pmem in nvme target
+To: Logan Gunthorpe <logang@deltatee.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-4-git-send-email-logang@deltatee.com>
+ <bce6b009-7756-3cf7-5053-2628b26c8d97@grimberg.me>
+ <ec05b7d9-8dfd-8227-84d2-7d391df32219@deltatee.com>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
+        Sinan Kaya <okaya@codeaurora.org>
+From: Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <0689e764-bf04-6da2-3b7d-2cbf0b6b94a0@grimberg.me>
+Date: Thu, 6 Apr 2017 08:47:22 +0300
+MIME-Version: 1.0
+In-Reply-To: <ec05b7d9-8dfd-8227-84d2-7d391df32219@deltatee.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
 
-Most of the almost-identical versions of pci_mmap_page_range() silently
-ignore the 'write_combine' argument and give uncached mappings.
+> I hadn't done this yet but I think a simple closest device in the tree
+> would solve the issue sufficiently. However, I originally had it so the
+> user has to pick the device and I prefer that approach. But if the user
+> picks the device, then why bother restricting what he picks?
 
-Yet we allow the PCIIOC_WRITE_COMBINE ioctl in /proc/bus/pci, expose the
-'resourceX_wc' file in sysfs, and allow an attempted mapping to apparently
-succeed.
+Because the user can get it wrong, and its our job to do what we can in
+order to prevent the user from screwing itself.
 
-To fix this, introduce a macro arch_can_pci_mmap_wc() which indicates
-whether the platform can do a write-combining mapping. On x86 this ends
-up being pat_enabled(), while the few other platforms that support it
-can just set it to a literal '1'.
+> Per the
+> thread with Sinan, I'd prefer to use what the user picks. You were one
+> of the biggest opponents to that so I'd like to hear your opinion on
+> removing the restrictions.
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- Documentation/filesystems/sysfs-pci.txt |  4 ++++
- arch/ia64/include/asm/pci.h             |  2 ++
- arch/powerpc/include/asm/pci.h          |  5 +++--
- arch/x86/include/asm/pci.h              |  2 ++
- drivers/pci/pci-sysfs.c                 |  4 ++--
- drivers/pci/proc.c                      | 15 ++++++++-------
- include/linux/pci.h                     |  4 ++++
- 7 files changed, 25 insertions(+), 11 deletions(-)
+I wasn't against it that much, I'm all for making things "just work"
+with minimal configuration steps, but I'm not sure we can get it
+right without it.
 
-diff --git a/Documentation/filesystems/sysfs-pci.txt b/Documentation/filesystems/sysfs-pci.txt
-index 6ea1ced..25b7f1c 100644
---- a/Documentation/filesystems/sysfs-pci.txt
-+++ b/Documentation/filesystems/sysfs-pci.txt
-@@ -117,6 +117,10 @@ code must define HAVE_PCI_MMAP and provide a pci_mmap_page_range function.
- Platforms are free to only support subsets of the mmap functionality, but
- useful return codes should be provided.
- 
-+Platforms which support write-combining maps of PCI resources must define
-+arch_can_pci_mmap_wc() which shall evaluate to non-zero at runtime when
-+write-combining is permitted.
-+
- Legacy resources are protected by the HAVE_PCI_LEGACY define.  Platforms
- wishing to support legacy functionality should define it and provide
- pci_legacy_read, pci_legacy_write and pci_mmap_legacy_page_range functions.
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index c0835b0..6283758 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -51,6 +51,8 @@ extern unsigned long ia64_max_iommu_merge_mask;
- #define PCI_DMA_BUS_IS_PHYS	(ia64_max_iommu_merge_mask == ~0UL)
- 
- #define HAVE_PCI_MMAP
-+#define arch_can_pci_mmap_wc()	1
-+
- extern int pci_mmap_page_range (struct pci_dev *dev, struct vm_area_struct *vma,
- 				enum pci_mmap_state mmap_state, int write_combine);
- #define HAVE_PCI_LEGACY
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index 93eded8..b5b68c6 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -81,8 +81,9 @@ struct vm_area_struct;
- int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine);
- 
--/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
--#define HAVE_PCI_MMAP	1
-+/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() and it does WC */
-+#define HAVE_PCI_MMAP		1
-+#define arch_can_pci_mmap_wc()	1
- 
- extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
- 			   size_t count);
-diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
-index 1411dbe..f6e22c2 100644
---- a/arch/x86/include/asm/pci.h
-+++ b/arch/x86/include/asm/pci.h
-@@ -7,6 +7,7 @@
- #include <linux/string.h>
- #include <linux/scatterlist.h>
- #include <asm/io.h>
-+#include <asm/pat.h>
- #include <asm/x86_init.h>
- 
- #ifdef __KERNEL__
-@@ -102,6 +103,7 @@ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
- 
- 
- #define HAVE_PCI_MMAP
-+#define arch_can_pci_mmap_wc()	pat_enabled()
- extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
- 			       enum pci_mmap_state mmap_state,
- 			       int write_combine);
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 7ac258f..7d494bd 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1211,9 +1211,9 @@ static int pci_create_resource_files(struct pci_dev *pdev)
- 
- 		retval = pci_create_attr(pdev, i, 0);
- 		/* for prefetchable resources, create a WC mappable file */
--		if (!retval && pdev->resource[i].flags & IORESOURCE_PREFETCH)
-+		if (!retval && arch_can_pci_mmap_wc() &&
-+		    pdev->resource[i].flags & IORESOURCE_PREFETCH)
- 			retval = pci_create_attr(pdev, i, 1);
--
- 		if (retval) {
- 			pci_remove_resource_files(pdev);
- 			return retval;
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index dc8912e..a2aa58a 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -210,14 +210,15 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
- 		break;
- 
- 	case PCIIOC_WRITE_COMBINE:
--		if (arg)
--			fpriv->write_combine = 1;
--		else
--			fpriv->write_combine = 0;
--		break;
--
-+		if (arch_can_pci_mmap_wc()) {
-+			if (arg)
-+				fpriv->write_combine = 1;
-+			else
-+				fpriv->write_combine = 0;
-+			break;
-+		}
-+		/* If arch decided it can't, fall through... */
- #endif /* HAVE_PCI_MMAP */
--
- 	default:
- 		ret = -EINVAL;
- 		break;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index eb3da1a..e614fb4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1626,6 +1626,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- 
- #include <asm/pci.h>
- 
-+#ifndef arch_can_pci_mmap_wc
-+#define arch_can_pci_mmap_wc()		0
-+#endif
-+
- #ifndef pci_root_bus_fwnode
- #define pci_root_bus_fwnode(bus)	NULL
- #endif
--- 
-2.9.3
+>>> Ideally, we'd want to use an NVME CMB buffer as p2p memory. This would
+>>> save an extra PCI transfer as the NVME card could just take the data
+>>> out of it's own memory. However, at this time, cards with CMB buffers
+>>> don't seem to be available.
+>>
+>> Even if it was available, it would be hard to make real use of this
+>> given that we wouldn't know how to pre-post recv buffers (for in-capsule
+>> data). But let's leave this out of the scope entirely...
+>
+> I don't understand what you're referring to. We'd simply use the CMB
+> buffer as a p2pmem device, why does that change anything?
+
+I'm referring to the in-capsule data buffers pre-posts that we do.
+Because we prepare a buffer that would contain in-capsule data, we have
+no knowledge to which device the incoming I/O is directed to, which
+means we can (and will) have I/O where the data lies in CMB of device
+A but it's really targeted to device B - which sorta defeats the purpose
+of what we're trying to optimize here...
+
+>> Why do you need this? you have a reference to the
+>> queue itself.
+>
+> This keeps track of whether the response was actually allocated with
+> p2pmem or not. It's needed for when we free the SGL because the queue
+> may have a p2pmem device assigned to it but, if the alloc failed and it
+> fell back on system memory then we need to know how to free it. I'm
+> currently looking at having SGLs having an iomem flag. In which case,
+> this would no longer be needed as the flag in the SGL could be used.
+
+That would be better, maybe...
+
+[...]
+
+>> This is a problem. namespaces can be added at any point in time. No one
+>> guarantee that dma_devs are all the namepaces we'll ever see.
+>
+> Yeah, well restricting p2pmem based on all the devices in use is hard.
+> So we'd need a call into the transport every time an ns is added and
+> we'd have to drop the p2pmem if they add one that isn't supported. This
+> complexity is just one of the reasons I prefer just letting the user chose.
+
+Still the user can get it wrong. Not sure we can get a way without
+keeping track of this as new devices join the subsystem.
+
+>>> +
+>>> +    if (queue->p2pmem)
+>>> +        pr_debug("using %s for rdma nvme target queue",
+>>> +             dev_name(&queue->p2pmem->dev));
+>>> +
+>>> +    kfree(dma_devs);
+>>> +}
+>>> +
+>>>  static int nvmet_rdma_queue_connect(struct rdma_cm_id *cm_id,
+>>>          struct rdma_cm_event *event)
+>>>  {
+>>> @@ -1199,6 +1271,8 @@ static int nvmet_rdma_queue_connect(struct
+>>> rdma_cm_id *cm_id,
+>>>      }
+>>>      queue->port = cm_id->context;
+>>>
+>>> +    nvmet_rdma_queue_setup_p2pmem(queue);
+>>> +
+>>
+>> Why is all this done for each queue? looks completely redundant to me.
+>
+> A little bit. Where would you put it?
+
+I think we'll need a representation of a controller in nvmet-rdma for
+that. we sort of got a way without it so far, but I don't think we can
+anymore with this.
+
+>>>      ret = nvmet_rdma_cm_accept(cm_id, queue, &event->param.conn);
+>>>      if (ret)
+>>>          goto release_queue;
+>>
+>> You seemed to skip the in-capsule buffers for p2pmem (inline_page), I'm
+>> curious why?
+>
+> Yes, the thinking was that these transfers were small anyway so there
+> would not be significant benefit to pushing them through p2pmem. There's
+> really no reason why we couldn't do that if it made sense to though.
+
+I don't see an urgent reason for it too. I was just curious...
