@@ -1,155 +1,122 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1493347608.29314.56.camel@mtkswgap22>
-Subject: Re: [PATCH 1/2] PCI: mediatek: Add Mediatek PCIe host controller
- support
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 28 Apr 2017 10:46:48 +0800
-In-Reply-To: <CAK8P3a0DjPL8uWuXfCmEwt05SCPJ0yEQTAJmZAPtFDEfsn4a1Q@mail.gmail.com>
-References: <1492935543-18190-1-git-send-email-ryder.lee@mediatek.com>
- <1492935543-18190-2-git-send-email-ryder.lee@mediatek.com>
- <CAK8P3a39TFkJ5=jp8me+Dyg-Qi-N_1ZKxpJGvnhmPEo4csnFCw@mail.gmail.com>
- <1493194200.27023.79.camel@mtkswgap22>
- <CAK8P3a0DjPL8uWuXfCmEwt05SCPJ0yEQTAJmZAPtFDEfsn4a1Q@mail.gmail.com>
+Return-Path: <SRS0=QdZ4=3O=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
+Return-Path: <SRS0=QdZ4=3O=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
+Date: Thu, 6 Apr 2017 17:40:16 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Tony Luck <tony.luck@intel.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	John Garry <john.garry@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Roy Zang <tie-fei.zang@freescale.com>
+Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
+ interface
+Message-ID: <20170406164015.GI17774@n2100.armlinux.org.uk>
+References: <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
+ <20170328144543.GA18046@red-moon>
+ <20170405105841.GG7909@n2100.armlinux.org.uk>
+ <20170405113238.GA2465@red-moon>
+ <20170406102636.GA9623@red-moon>
+ <20170406105312.GE28800@wotan.suse.de>
+ <20170406113845.GA10013@red-moon>
+ <20170406115906.GF28800@wotan.suse.de>
+ <20170406130727.GE17774@n2100.armlinux.org.uk>
+ <20170406162156.GA10134@red-moon>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
- Bjorn Helgaas <bhelgaas@google.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170406162156.GA10134@red-moon>
+Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On Thu, 2017-04-27 at 20:55 +0200, Arnd Bergmann wrote:
-> On Wed, Apr 26, 2017 at 10:10 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
-> > On Tue, 2017-04-25 at 14:38 +0200, Arnd Bergmann wrote:
-> >> On Sun, Apr 23, 2017 at 10:19 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+On Thu, Apr 06, 2017 at 05:21:56PM +0100, Lorenzo Pieralisi wrote:
+> Ok, so:
 > 
-> >> > +static int mtk_pcie_enable_ports(struct mtk_pcie *pcie)
-> >> > +{
-> >> > +       struct device *dev = pcie->dev;
-> >> > +       struct mtk_pcie_port *port, *tmp;
-> >> > +       int err, linkup = 0;
-> >> > +
-> >> > +       list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> >> > +               err = clk_prepare_enable(port->sys_ck);
-> >> > +               if (err) {
-> >> > +                       dev_err(dev, "failed to enable port%d clock\n",
-> >> > +                               port->index);
-> >> > +                       continue;
-> >> > +               }
-> >> > +
-> >> > +               /* assert RC */
-> >> > +               reset_control_assert(port->reset);
-> >> > +               /* de-assert RC */
-> >> > +               reset_control_deassert(port->reset);
-> >> > +
-> >> > +               /* power on PHY */
-> >> > +               err = phy_power_on(port->phy);
-> >> > +               if (err) {
-> >> > +                       dev_err(dev, "failed to power on port%d phy\n",
-> >> > +                               port->index);
-> >> > +                       goto err_phy_on;
-> >> > +               }
-> >> > +
-> >> > +               mtk_pcie_assert_ports(port);
-> >> > +
-> >>
-> >> Similar to the comment I had for the binding, I wonder if it would be
-> >> better to keep all the information about the ports in one place and
-> >> then just deal with it at the root level.
-> >>
-> >> Alternatively, we could decide to standardize on the properties
-> >> you have added to the pcie port node, but then I would handle
-> >> them in the pcieport driver rather than in the host bridge driver.
-> >
-> > Sorry, I'm not sure what you want me to do here.
-> >
-> > I could move all clock operation in root level. But we need to keep the
-> > reset and PHY operation sequence in the loop, In addition, we could
-> > easily free resources if ports link fail.
-> >
-> > How about moving this function to mtk_pcie_parse_and_add_res()?
+> (1) I can do asm-generic/ioremap-nopost.h, which I assume you want to
+>     contain something like
 > 
-> That could work, please try it out and see if the code gets better or
-> worse. This may depend on what we end up doing with the DT
-> properties.
-
-I will try it on next version, and we can continue our discussion on
-that series.
-
-> >> > +/*
-> >> > + * This IP lacks interrupt status register to check or map INTx from
-> >> > + * different devices at the same time.
-> >> > + */
-> >> > +static int __init mtk_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-> >> > +{
-> >> > +       struct mtk_pcie *pcie = dev->bus->sysdata;
-> >> > +       struct mtk_pcie_port *port;
-> >> > +
-> >> > +       list_for_each_entry(port, &pcie->ports, list)
-> >> > +               if (port->index == slot)
-> >> > +                       return port->irq;
-> >> > +
-> >> > +       return -1;
-> >> > +}
-> >>
-> >> This looks odd, what is it needed for specifically? It looks like
-> >> it's broken for devices behind bridges, and the interrupt mapping
-> >> should normally come from the interrupt-map property, without
-> >> the need for a driver specific map_irq override.
-> >
-> > Our hardware just has a GIC for each port and lacks interrupt status for
-> > host driver to distinguish INTx. So I return port IRQ here.
+> static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
+> {
+> 	return ioremap_nocache(offset, size);
+> }
 > 
-> You should still be able to express this with standard interrupt-map
-> DT property, without having to resort to your own map_irq
-> callback handler.
+> Funny bit is that it has to be included by asm*/io.h files _after_
+> ioremap_nocache has been #defined (that's the reason my approach was
+> failing miserably even on arches like eg powerpc (see [1] below) that
+> does have ioremap_nocache),
+
+PowerPC does have ioremap_nocache() though:
+
+/**
+ * ioremap     -   map bus memory into CPU space
+...
+ * * ioremap_nocache is identical to ioremap
+extern void __iomem *ioremap(phys_addr_t address, unsigned long size);
+#define ioremap_nocache(addr, size)     ioremap((addr), (size))
+
+and this include file is included very early on in linux/io.h.  I don't
+see anything that conditionalises it on anything except __KERNEL__.  So,
+the report from 0-day really doesn't make any sense to me.
+
+Do we know how we're ending up in linux/io.h line 169 without having
+picked up the ioremap_nocache() definition provided by PowerPC's
+asm/io.h ?
+
+> not sure it is going to be very nice to have
+> an include in the middle of asm*/io.h include files (and I have to patch
+> all arches which I can do).
+
+You mean like we already have to do with this asm-generic/io.h thing in
+the ARM io.h header file, because we need to define all the accessors
+first, to prevent the asm-generic/io.h thing defining them for us?
+Given how asm-generic has headed in this regard, having include files
+at all sorts of strange locations within the architecture asm/*.h
+header files has become quite normal, unfortunately.
+
+> (2) I add:
 > 
-> In the interrupt-map-mask, you can ignore the interrupt line
-> only list the devfn of the root ports for each entry.
-
-Okay, I will fix it.
-
-> >> > +static int mtk_pcie_register_ports(struct mtk_pcie *pcie)
-> >> > +{
-> >> > +       struct pci_bus *bus, *child;
-> >> > +
-> >> > +       bus = pci_scan_root_bus(pcie->dev, 0, &mtk_pcie_ops, pcie,
-> >> > +                               &pcie->resources);
-> >>
-> >> Can you use the new pci_register_host_bridge() method instead of
-> >> pci_scan_root_bus() here?
-> >
-> > May I know what's difference between pci_scan_root_bus() and using
-> > pci_register_host_bridge() directly? What situation should we use it?
-> > It seems that just tegra use this new method currently.
+> #ifndef ioremap_nopost
+> static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
+> {
+> 	return NULL; <-(making it return ioremap_nocache() does not
+> 			work, see [1] for the reason)
+> }
+> #endif
 > 
-> We introduced the new function for tegra for now, in the long run
-> I would hope we can convert all other drivers to it as well, to make it
-> easier to add further parameters.
-> 
-> The new function also has a cleaner way of dealing with the memory
-> allocations, similar to how other subsystems work.
+> in linux/io.h
 
-Sounds good. I will change to use that.
+... which breaks the kernel if ioremap_nopost is missing from the arch
+header, and one of the drivers that you're modifying to use this new
+ioremap variant happens to be built and used on such an architecture.
 
-Thanks!
+> (3) ioremap_nopost follows Luis' ioremap_uc approach
 
+Same problem as (2), as I understand correctly.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-- 
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
