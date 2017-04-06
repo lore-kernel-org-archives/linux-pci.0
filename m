@@ -1,175 +1,138 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45284 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755993AbdDRULx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Apr 2017 16:11:53 -0400
-Date: Tue, 18 Apr 2017 15:11:48 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Niklas Soderlund <niklas.soderlund+renesas@ragnatech.se>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Matthew Garrett <mjg59@srcf.ucam.org>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: Freeze PME scan before suspending devices
-Message-ID: <20170418201148.GJ25295@bhelgaas-glaptop.roam.corp.google.com>
-References: <03aaf3220cccbabb7db86aa4eb10d1147add5c34.1492536769.git.lukas@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <03aaf3220cccbabb7db86aa4eb10d1147add5c34.1492536769.git.lukas@wunner.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=Z9g4=3O=intel.com=ley.foon.tan@kernel.org>
+Return-Path: <SRS0=Z9g4=3O=intel.com=ley.foon.tan@kernel.org>
+Message-ID: <1491444359.50673.4.camel@intel.com>
+Subject: Re: PCI enumeration without a BIOS
+From: Ley Foon Tan <ley.foon.tan@intel.com>
+To: Wesley Terpstra <wesley@sifive.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org, Michal Simek <michal.simek@xilinx.com>,
+	rfi@lists.rocketboards.org
+Date: Thu, 06 Apr 2017 10:05:59 +0800
+In-Reply-To: <CAMgXwTj2sKhn9XB+6aEgZyxjgnv3njLks26XG6B0nL3BEMiivw@mail.gmail.com>
+References: 
+	<CAMgXwTjX1j2dhi7n+APNef0di5oo+iK57Cq0S+3NdMtQzAc=Vw@mail.gmail.com>
+	 <20170404205617.GG27692@bhelgaas-glaptop.roam.corp.google.com>
+	 <CAMgXwTgacUcfzinQKuf8htwxFDJ_GvUN-R0zj7sNbqnpJF3QBA@mail.gmail.com>
+	 <20170405183732.GB17066@bhelgaas-glaptop.roam.corp.google.com>
+	 <1491441105.50673.2.camel@intel.com>
+	 <CAMgXwTj2sKhn9XB+6aEgZyxjgnv3njLks26XG6B0nL3BEMiivw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 18, 2017 at 08:44:30PM +0200, Lukas Wunner wrote:
-> Laurent Pinchart reported that the Renesas R-Car H2 Lager board
-> (r8a7790) crashes during suspend tests.  Geert Uytterhoeven managed to
-> reproduce the issue on an M2-W Koelsch board (r8a7791):
-> 
-> It occurs when the PME scan runs, once per second.  During PME scan, the
-> PCI host bridge (rcar-pci) registers are accessed while its module clock
-> has already been disabled, leading to the crash.
-> 
-> One reproducer is to configure s2ram to use "s2idle" instead of "deep"
-> suspend:
-> 
-> # echo 0 > /sys/module/printk/parameters/console_suspend
-> # echo s2idle > /sys/power/mem_sleep
-> # echo mem > /sys/power/state
-> 
-> Another reproducer is to write either "platform" or "processors" to
-> /sys/power/pm_test.  It does not (or is less likely) to happen during
-> full system suspend ("core" or "none") because system suspend also
-> disables timers, and thus the workqueue handling PME scans no longer
-> runs.  Geert believes the issue may still happen in the small window
-> between disabling module clocks and disabling timers:
-> 
-> # echo 0 > /sys/module/printk/parameters/console_suspend
-> # echo platform > /sys/power/pm_test    # Or "processors"
-> # echo mem > /sys/power/state
-> 
-> (Make sure CONFIG_PCI_RCAR_GEN2 and CONFIG_USB_OHCI_HCD_PCI are
-> enabled.)
-> 
-> Rafael Wysocki agrees that PME scans should be suspended before the host
-> bridge registers become inaccessible.  To that end, queue the task on a
-> workqueue that gets frozen before devices suspend.
-> 
-> Rafael notes however that as a result, some wakeup events may be missed
-> if they are delivered via PME from a device without working IRQ (which
-> hence must be polled) and occur after the workqueue has been frozen.
-> If that turns out to be an issue in practice, it may be possible to
-> solve it by calling pci_pme_list_scan() once directly from one of the
-> host bridge's pm_ops callbacks.
-> 
-> Stacktrace for posterity:
-> 
-> PM: Syncing filesystems ... [   38.566237] done.
-> PM: Preparing system for sleep (mem)
-> Freezing user space processes ... [   38.579813] (elapsed 0.001 seconds) done.
-> Freezing remaining freezable tasks ... (elapsed 0.001 seconds) done.
-> PM: Suspending system (mem)
-> PM: suspend of devices complete after 152.456 msecs
-> PM: late suspend of devices complete after 2.809 msecs
-> PM: noirq suspend of devices complete after 29.863 msecs
-> suspend debug: Waiting for 5 second(s).
-> Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
-> pgd = c0003000
-> [00000000] *pgd=80000040004003, *pmd=00000000
-> Internal error: : 1211 [#1] SMP ARM
-> Modules linked in:
-> CPU: 1 PID: 20 Comm: kworker/1:1 Not tainted
-> 4.9.0-rc1-koelsch-00011-g68db9bc814362e7f #3383
-> Hardware name: Generic R8A7791 (Flattened Device Tree)
-> Workqueue: events pci_pme_list_scan
-> task: eb56e140 task.stack: eb58e000
-> PC is at pci_generic_config_read+0x64/0x6c
-> LR is at rcar_pci_cfg_base+0x64/0x84
-> pc : [<c041d7b4>]    lr : [<c04309a0>]    psr: 600d0093
-> sp : eb58fe98  ip : c041d750  fp : 00000008
-> r10: c0e2283c  r9 : 00000000  r8 : 600d0013
-> r7 : 00000008  r6 : eb58fed6  r5 : 00000002  r4 : eb58feb4
-> r3 : 00000000  r2 : 00000044  r1 : 00000008  r0 : 00000000
-> Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment user
-> Control: 30c5387d  Table: 6a9f6c80  DAC: 55555555
-> Process kworker/1:1 (pid: 20, stack limit = 0xeb58e210)
-> Stack: (0xeb58fe98 to 0xeb590000)
-> fe80:                                                       00000002 00000044
-> fea0: eb6f5800 c041d9b0 eb58feb4 00000008 00000044 00000000 eb78a000 eb78a000
-> fec0: 00000044 00000000 eb9aff00 c0424bf0 eb78a000 00000000 eb78a000 c0e22830
-> fee0: ea8a6fc0 c0424c5c eaae79c0 c0424ce0 eb55f380 c0e22838 eb9a9800 c0235fbc
-> ff00: eb55f380 c0e22838 eb55f380 eb9a9800 eb9a9800 eb58e000 eb9a9824 c0e02100
-> ff20: eb55f398 c02366c4 eb56e140 eb5631c0 00000000 eb55f380 c023641c 00000000
-> ff40: 00000000 00000000 00000000 c023a928 cd105598 00000000 40506a34 eb55f380
-> ff60: 00000000 00000000 dead4ead ffffffff ffffffff eb58ff74 eb58ff74 00000000
-> ff80: 00000000 dead4ead ffffffff ffffffff eb58ff90 eb58ff90 eb58ffac eb5631c0
-> ffa0: c023a844 00000000 00000000 c0206d68 00000000 00000000 00000000 00000000
-> ffc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> ffe0: 00000000 00000000 00000000 00000000 00000013 00000000 3a81336c 10ccd1dd
-> [<c041d7b4>] (pci_generic_config_read) from [<c041d9b0>]
-> (pci_bus_read_config_word+0x58/0x80)
-> [<c041d9b0>] (pci_bus_read_config_word) from [<c0424bf0>]
-> (pci_check_pme_status+0x34/0x78)
-> [<c0424bf0>] (pci_check_pme_status) from [<c0424c5c>] (pci_pme_wakeup+0x28/0x54)
-> [<c0424c5c>] (pci_pme_wakeup) from [<c0424ce0>] (pci_pme_list_scan+0x58/0xb4)
-> [<c0424ce0>] (pci_pme_list_scan) from [<c0235fbc>]
-> (process_one_work+0x1bc/0x308)
-> [<c0235fbc>] (process_one_work) from [<c02366c4>] (worker_thread+0x2a8/0x3e0)
-> [<c02366c4>] (worker_thread) from [<c023a928>] (kthread+0xe4/0xfc)
-> [<c023a928>] (kthread) from [<c0206d68>] (ret_from_fork+0x14/0x2c)
-> Code: ea000000 e5903000 f57ff04f e3a00000 (e5843000)
-> ---[ end trace 667d43ba3aa9e589 ]---
-> 
-> Reported-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
-> Reported-and-tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Niklas Söderlund <niklas.soderlund+renesas@ragnatech.se>
-> Cc: Simon Horman <horms+renesas@verge.net.au>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> Cc: Matthew Garrett <mjg59@srcf.ucam.org>
-> Cc: stable@vger.kernel.org # 2.6.37+
-> Fixes: df17e62e5bff ("PCI: Add support for polling PME state on suspended legacy PCI devices")
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+On Wed, 2017-04-05 at 18:59 -0700, Wesley Terpstra wrote:
+> On Wed, Apr 5, 2017 at 6:11 PM, Ley Foon Tan <ley.foon.tan@intel.com>
+> wrote:
+> >=20
+> > We have fixed this in last year.
+> Right, for host/pcie-altera.c
+> However, the problem persists in host/pcie-xilinx.c and host/pcie-
+> xilinx-nwl.c
 
-Applied to pci/pm for v4.12, thanks, Lukas!
+It hasn't integrated to mainline yet.
+https://lkml.org/lkml/2016/8/30/198
 
-> ---
->  drivers/pci/pci.c | 9 +++++----
->  1 file changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index aa55501d2179..c561a9e4916a 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1784,8 +1784,8 @@ static void pci_pme_list_scan(struct work_struct *work)
->  		}
->  	}
->  	if (!list_empty(&pci_pme_list))
-> -		schedule_delayed_work(&pci_pme_work,
-> -				      msecs_to_jiffies(PME_TIMEOUT));
-> +		queue_delayed_work(system_freezable_wq, &pci_pme_work,
-> +				   msecs_to_jiffies(PME_TIMEOUT));
->  	mutex_unlock(&pci_pme_list_mutex);
->  }
->  
-> @@ -1850,8 +1850,9 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
->  			mutex_lock(&pci_pme_list_mutex);
->  			list_add(&pme_dev->list, &pci_pme_list);
->  			if (list_is_singular(&pci_pme_list))
-> -				schedule_delayed_work(&pci_pme_work,
-> -						      msecs_to_jiffies(PME_TIMEOUT));
-> +				queue_delayed_work(system_freezable_wq,
-> +						   &pci_pme_work,
-> +						   msecs_to_jiffies(PME_TIMEOUT));
->  			mutex_unlock(&pci_pme_list_mutex);
->  		} else {
->  			mutex_lock(&pci_pme_list_mutex);
-> -- 
-> 2.11.0
-> 
+>=20
+> >=20
+> > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/
+> > comm
+> > it/drivers/pci/host/pcie-
+> > altera.c?id=3D99496bd2971fc378226ad4413e5b72c4545714bd
+> >=20
+> > >=20
+> > >=20
+> > > >=20
+> > > >=20
+> > > > Without it I see:
+> > > >=20
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.230000] ------------[ cut here ]--------=
+----
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.230000] WARNING: CPU: 0 PID: 1 at
+> > > > /scratch/terpstra/freedom-u-
+> > > > sdk/linux/kernel/irq/irqdomain.c:365
+> > > > irq_domain_associate+0x190/0x200
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.240000] error: hwirq 0x4 is too large fo=
+r dummy
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.250000] CPU: 0 PID: 1 Comm: swapper Not =
+tainted
+> > > > 4.11.0-rc1-661305-g4f97179 #12
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.250000] Call Trace:
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.260000] [<ffffffff80288660>] walk_stackf=
+rame+0x0/0x104
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.260000] [<ffffffff80288800>] show_stack+=
+0x38/0x50
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.270000] [<ffffffff803c6e30>] dump_stack+=
+0x2c/0x40
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.270000] [<ffffffff8028c600>] __warn+0x11=
+8/0x130
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.280000] [<ffffffff8028c658>] warn_slowpa=
+th_fmt+0x40/0x54
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.280000] [<ffffffff802c02a8>]
+> > > > irq_domain_associate+0x18c/0x200
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.290000] [<ffffffff802c0a3c>]
+> > > > irq_create_mapping+0x90/0xe4
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.300000] [<ffffffff802c0be4>]
+> > > > irq_create_fwspec_mapping+0x154/0x288
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.300000] [<ffffffff802c0d7c>]
+> > > > irq_create_of_mapping+0x64/0x84
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.310000] [<ffffffff804f9cb8>]
+> > > > of_irq_parse_and_map_pci+0x38/0x50
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.310000] [<ffffffff80407e00>] pci_fixup_i=
+rqs+0x6c/0x114
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.320000] [<ffffffff80408e64>]
+> > > > xilinx_pcie_probe+0x308/0x3f0
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.330000] [<ffffffff8042cba4>]
+> > > > platform_drv_probe+0x3c/0x88
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.330000] [<ffffffff8042aec0>] really_prob=
+e+0xbc/0x260
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.340000] [<ffffffff8042b138>] __driver_at=
+tach+0xd4/0xdc
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.340000] [<ffffffff80429200>] bus_for_eac=
+h_dev+0x68/0xb8
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.350000] [<ffffffff8042b640>] driver_atta=
+ch+0x24/0x38
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.350000] [<ffffffff80429db8>] bus_add_dri=
+ver+0x1b4/0x22c
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.360000] [<ffffffff8042bdc0>] driver_regi=
+ster+0x68/0x12c
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.360000] [<ffffffff8042da78>]
+> > > > __platform_driver_register+0x48/0x5c
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.370000] [<ffffffff8000db38>]
+> > > > xilinx_pcie_driver_init+0x20/0x34
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.380000] [<ffffffff80000d48>] do_one_init=
+call+0x98/0x140
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.380000] [<ffffffff80000f38>]
+> > > > kernel_init_freeable+0x148/0x218
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.390000] [<ffffffff805ad19c>] kernel_init=
++0x18/0x114
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.390000] [<ffffffff80286cac>] ret_from_sy=
+scall+0xc/0x10
+> > > > [=C2=A0=C2=A0=C2=A0=C2=A06.400000] ---[ end trace 8023adf5befc91e0 =
+]---
+> > > >=20
+> > > > ... that said, I am not confident my patch is the right fix. So
+> > > > consider this a bug report + work-around only. :)
+> > > >=20
+> > > > >=20
+> > > > >=20
+> > > > > Yeah, everything seems mostly working.=C2=A0=C2=A0The "invalid BA=
+R"
+> > > > > things
+> > > > > *could* be an issue -- those registers are not what the PCI
+> > > > > spec
+> > > > > says
+> > > > > they should be.
+> > > > The devices in question are:
+> > > > 04:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+> > > > RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev
+> > > > 06)
+> > > > 06:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9230
+> > > > PCIe
+> > > > SATA 6Gb/s Controller (rev 11)
+> > > >=20
+> > > > I am going to plug them in to an Intel machine with 4.11 and
+> > > > see if
+> > > > I
+> > > > get the same warnings.
+> > Regards
+> > Ley Foon
