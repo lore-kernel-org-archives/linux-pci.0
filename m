@@ -1,133 +1,151 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-To: <bhelgaas@google.com>, <marc.zyngier@arm.com>, <robh@kernel.org>,
- <paul.gortmaker@windriver.com>, <colin.king@canonical.com>,
- <linux-pci@vger.kernel.org>
-Subject: [PATCH v5] PCI: Xilinx NWL: Modifying irq chip for legacy interrupts
-Date: Fri, 14 Apr 2017 20:34:32 +0530
-Message-ID: <1492182272-31132-1-git-send-email-bharatku@xilinx.com>
+Return-Path: <SRS0=Q2iE=3O=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=Q2iE=3O=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 6 Apr 2017 11:26:36 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Tony Luck <tony.luck@intel.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	John Garry <john.garry@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
+ interface
+Message-ID: <20170406102636.GA9623@red-moon>
+References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+ <20170327094954.7162-3-lorenzo.pieralisi@arm.com>
+ <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
+ <20170328144543.GA18046@red-moon>
+ <20170405105841.GG7909@n2100.armlinux.org.uk>
+ <20170405113238.GA2465@red-moon>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: arnd@arndb.de, linux-kernel@vger.kernel.org, michal.simek@xilinx.com,
- Bharat Kumar Gogada <bharatku@xilinx.com>, rgummal@xilinx.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170405113238.GA2465@red-moon>
 List-ID: <linux-pci.vger.kernel.org>
 
-- Adding spinlock for protecting legacy mask register
-- Few wifi end points which only support legacy interrupts,
-performs hardware reset functionalities after disabling interrupts
-by invoking disable_irq and then re-enable using enable_irq, they
-enable hardware interrupts first and then virtual irq line later.
-- The legacy irq line goes low only after DEASSERT_INTx is
-received.As the legacy irq line is high immediately after hardware
-interrupts are enabled but virq of EP is still in disabled state
-and EP handler is never executed resulting no DEASSERT_INTx.If dummy
-irq chip is used, interrutps are not masked and system is
-hanging with CPU stall.
-- Adding irq chip functions instead of dummy irq chip for legacy
-interrupts.
-- Legacy interrupts are level sensitive, so using handle_level_irq
-is more appropriate as it is masks interrupts until End point handles
-interrupts and unmasks interrutps after End point handler is executed.
-- Legacy interrupts are level triggered, virtual irq line of End
-Point shows as edge in /proc/interrupts.
-- Setting irq flags of virtual irq line of EP to level triggered
-at the time of mapping.
+On Wed, Apr 05, 2017 at 01:38:12PM +0100, Lorenzo Pieralisi wrote:
+> On Wed, Apr 05, 2017 at 11:58:41AM +0100, Russell King - ARM Linux wrote:
+> > On Tue, Mar 28, 2017 at 03:45:43PM +0100, Lorenzo Pieralisi wrote:
+> > > On Mon, Mar 27, 2017 at 08:41:10PM -0500, Bjorn Helgaas wrote:
+> > > > On Mon, Mar 27, 2017 at 10:49:30AM +0100, Lorenzo Pieralisi wrote:
+> > > > > diff --git a/arch/x86/include/asm/io.h b/arch/x86/include/asm/io.h
+> > > > > index 7afb0e2..50b292f 100644
+> > > > > --- a/arch/x86/include/asm/io.h
+> > > > > +++ b/arch/x86/include/asm/io.h
+> > > > > @@ -171,6 +171,7 @@ static inline unsigned int isa_virt_to_bus(volatile void *address)
+> > > > >  extern void __iomem *ioremap_nocache(resource_size_t offset, unsigned long size);
+> > > > >  extern void __iomem *ioremap_uc(resource_size_t offset, unsigned long size);
+> > > > >  #define ioremap_uc ioremap_uc
+> > > > > +#define ioremap_nopost ioremap_nocache
+> > > > 
+> > > > These are all the same as the default from asm-generic.h.  Do we really
+> > > > need these definitions in alpha, avr32, frv, ia64, x86?
+> > > 
+> > > Those arches do not include asm-generic.h (I suppose for a good reason)
+> > > but a definition is needed anyway if we want code using ioremap_nopost()
+> > > to be unconditional. This is one way of doing it, there are others not
+> > > sure they are any better, I am open to suggestions.
+> > 
+> > We do have linux/io.h, which should be included in preference to asm/io.h.
+> > linux/io.h has existed for years, but I still see (from time to time)
+> > patches adding drivers that (imho incorrectly) use asm/io.h.
+> > 
+> > Also, this:
+> > 
+> > > > > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> > > > > index 7ef015e..0e81938 100644
+> > > > > --- a/include/asm-generic/io.h
+> > > > > +++ b/include/asm-generic/io.h
+> > > > > @@ -915,6 +915,10 @@ extern void ioport_unmap(void __iomem *p);
+> > > > >  #endif /* CONFIG_GENERIC_IOMAP */
+> > > > >  #endif /* CONFIG_HAS_IOPORT_MAP */
+> > > > >  
+> > > > > +#ifndef ioremap_nopost
+> > > > > +#define ioremap_nopost ioremap_nocache
+> > > > > +#endif
+> > > > > +
+> > > > >  #ifndef xlate_dev_kmem_ptr
+> > > > >  #define xlate_dev_kmem_ptr xlate_dev_kmem_ptr
+> > > > >  static inline void *xlate_dev_kmem_ptr(void *addr)
+> > 
+> > could well be located in linux/io.h, which would make it available
+> > everywhere.
+> > 
+> > I'd suggest one change to this though:
+> > 
+> > #ifndef ioremap_nopost
+> > static inline void __iomem *ioremap_nopost(resource_size_t offset,
+> > 					   unsigned long size)
+> > {
+> > 	return ioremap_nocache(offset, size);
+> > }
+> > #endif
+> > 
+> > This way, if someone forgets to define ioremap_nopost() in their
+> > asm/io.h but provides a definition or extern prototype for
+> > ioremap_nopost(), we end up with a compile error to highlight the
+> > error, rather than the error being hidden by the preprocessor.
+> 
+> Yes, I could add ioremap_nopost() to linux/io.h I did not do it because
+> linux/io.h, for whatever reason, does not seem to contain ioremap_*
+> prototypes; this does not mean we should not add it there but that
+> would look odd (with all others ioremap_* in asm/io.h), all I am
+> saying. This stuff requires some clean-up regardless, for the records.
+> 
+> As for the static inline, I did that and that did not make the
+> kbuild robot happy at all on some arches:
+> 
+> eg: openrisc
+> 
+> >> include/asm-generic/io.h:922:9: error: implicit declaration of
+> >> function 'ioremap_nocache' [-Werror=implicit-function-declaration]
+>      return ioremap_nocache(offset, size);
 
-Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
----
- drivers/pci/host/pcie-xilinx-nwl.c | 45 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 44 insertions(+), 1 deletion(-)
+Indeed, the static inline ioremap_nocache() fallback does not work
+on all arches (whether I add the fallback in linux/io.h or
+asm-generic/io.h is irrelevant), I bump into issues such as the one
+reported above.
 
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 43eaa4a..36f4fb4 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -184,6 +184,7 @@ struct nwl_pcie {
- 	u8 root_busno;
- 	struct nwl_msi msi;
- 	struct irq_domain *legacy_irq_domain;
-+	raw_spinlock_t leg_mask_lock;
- };
- 
- static inline u32 nwl_bridge_readl(struct nwl_pcie *pcie, u32 off)
-@@ -395,11 +396,52 @@ static void nwl_pcie_msi_handler_low(struct irq_desc *desc)
- 	chained_irq_exit(chip, desc);
- }
- 
-+static void nwl_mask_leg_irq(struct irq_data *data)
-+{
-+	struct irq_desc *desc = irq_to_desc(data->irq);
-+	struct nwl_pcie *pcie;
-+	unsigned long flags;
-+	u32 mask;
-+	u32 val;
-+
-+	pcie = irq_desc_get_chip_data(desc);
-+	mask = 1 << (data->hwirq - 1);
-+	raw_spin_lock_irqsave(&pcie->leg_mask_lock, flags);
-+	val = nwl_bridge_readl(pcie, MSGF_LEG_MASK);
-+	nwl_bridge_writel(pcie, (val & (~mask)), MSGF_LEG_MASK);
-+	raw_spin_unlock_irqrestore(&pcie->leg_mask_lock, flags);
-+}
-+
-+static void nwl_unmask_leg_irq(struct irq_data *data)
-+{
-+	struct irq_desc *desc = irq_to_desc(data->irq);
-+	struct nwl_pcie *pcie;
-+	unsigned long flags;
-+	u32 mask;
-+	u32 val;
-+
-+	pcie = irq_desc_get_chip_data(desc);
-+	mask = 1 << (data->hwirq - 1);
-+	raw_spin_lock_irqsave(&pcie->leg_mask_lock, flags);
-+	val = nwl_bridge_readl(pcie, MSGF_LEG_MASK);
-+	nwl_bridge_writel(pcie, (val | mask), MSGF_LEG_MASK);
-+	raw_spin_unlock_irqrestore(&pcie->leg_mask_lock, flags);
-+}
-+
-+static struct irq_chip nwl_leg_irq_chip = {
-+	.name = "nwl_pcie:legacy",
-+	.irq_enable = nwl_unmask_leg_irq,
-+	.irq_disable = nwl_mask_leg_irq,
-+	.irq_mask = nwl_mask_leg_irq,
-+	.irq_unmask = nwl_unmask_leg_irq,
-+};
-+
- static int nwl_legacy_map(struct irq_domain *domain, unsigned int irq,
- 			  irq_hw_number_t hwirq)
- {
--	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
-+	irq_set_chip_and_handler(irq, &nwl_leg_irq_chip, handle_level_irq);
- 	irq_set_chip_data(irq, domain->host_data);
-+	irq_set_status_flags(irq, IRQ_LEVEL);
- 
- 	return 0;
- }
-@@ -538,6 +580,7 @@ static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
- 		return -ENOMEM;
- 	}
- 
-+	raw_spin_lock_init(&pcie->leg_mask_lock);
- 	nwl_pcie_init_msi_irq_domain(pcie);
- 	return 0;
- }
--- 
-2.1.1
+I could make it:
 
+#ifndef ioremap_nopost
+static inline void __iomem *ioremap_nopost(resource_size_t offset,
+					   unsigned long size)
+{
+	return NULL;
+}
+#endif
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+which would force arches to define ioremap_nopost() (if they need it).
+
+This is what I *assume* was done for ioremap_uc() in asm-generic/io.h,
+but honestly history is hard to follow here.
+
+Thoughts ?
+
+Thanks,
+Lorenzo
