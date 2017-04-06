@@ -1,49 +1,57 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8849 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1168607AbdDXKhE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Apr 2017 06:37:04 -0400
-Date: Mon, 24 Apr 2017 13:36:58 +0300
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Pan Bian <bianpan201603@163.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Keith Busch <keith.busch@intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Pan Bian <bianpan2016@163.com>
-Subject: Re: [PATCH 1/1] PCI: check return value of pci_find_ext_capability
-Message-ID: <20170424103658.GU7152@lahna.fi.intel.com>
-References: <1492956020-32271-1-git-send-email-bianpan201603@163.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [RFC 6/8] nvmet: Be careful about using iomem accesses when
+ dealing with p2pmem
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1490911959-5146-7-git-send-email-logang@deltatee.com>
+ <080b68b4-eba3-861c-4f29-5d829425b5e7@grimberg.me>
+ <20170404154629.GA13552@obsidianresearch.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
+        linux-kernel@vger.kernel.org
+From: Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <4df229d8-8124-664a-9bc4-6401bc034be1@grimberg.me>
+Date: Thu, 6 Apr 2017 08:33:38 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1492956020-32271-1-git-send-email-bianpan201603@163.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170404154629.GA13552@obsidianresearch.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 23, 2017 at 10:00:20PM +0800, Pan Bian wrote:
-> From: Pan Bian <bianpan2016@163.com>
-> 
-> Function pci_find_ext_capability() will returns 0 on failure, and its
-> return value should be checked before it is used. However, in function
-> pcie_port_enable_msix(), its return value is not checked. This patch
-> adds the check.
-> 
-> Signed-off-by: Pan Bian <bianpan2016@163.com>
-> ---
->  drivers/pci/pcie/portdrv_core.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-> index cea504f..001951d 100644
-> --- a/drivers/pci/pcie/portdrv_core.c
-> +++ b/drivers/pci/pcie/portdrv_core.c
-> @@ -103,6 +103,8 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
->  		 * interrupt message."
->  		 */
->  		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-> +		if (!pos)
-> +			goto out_free_irqs;
 
-I don't think this can happen because get_port_device_capability() will
-enumerate this capability and only if it exists, set PCIE_PORT_SERVICE_AER.
+>> Note that the nvme completion queues are still on the host memory, so
+>> this means we have lost the ordering between data and completions as
+>> they go to different pcie targets.
+>
+> Hmm, in this simple up/down case with a switch, I think it might
+> actually be OK.
+>
+> Transactions might not complete at the NVMe device before the CPU
+> processes the RDMA completion, however due to the PCI-E ordering rules
+> new TLPs directed to the NVMe will complete after the RMDA TLPs and
+> thus observe the new data. (eg order preserving)
+>
+> It would be very hard to use P2P if fabric ordering is not preserved..
+
+I think it still can race if the p2p device is connected with more than
+a single port to the switch.
+
+Say it's connected via 2 legs, the bar is accessed from leg A and the
+data from the disk comes via leg B. In this case, the data is heading
+towards the p2p device via leg B (might be congested), the completion
+goes directly to the RC, and then the host issues a read from the
+bar via leg A. I don't understand what can guarantee ordering here.
+
+Stephen told me that this still guarantees ordering, but I honestly
+can't understand how, perhaps someone can explain to me in a simple
+way that I can understand.
