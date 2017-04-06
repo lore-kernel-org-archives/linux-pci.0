@@ -1,71 +1,188 @@
-Return-Path: <SRS0=TGTz=4B=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=TGTz=4B=deltatee.com=logang@kernel.org>
-To: Knut Omang <knut.omang@oracle.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Dan Williams <dan.j.williams@intel.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1492034124.7236.77.camel@kernel.crashing.org>
- <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
- <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
- <20170414041656.GA30694@obsidianresearch.com>
- <1492169849.25766.3.camel@kernel.crashing.org>
- <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
- <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
- <1492207643.25766.18.camel@kernel.crashing.org>
- <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
- <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
- <1492311719.25766.37.camel@kernel.crashing.org>
- <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
- <5e43818e-8c6b-8be8-23ff-b798633d2a73@deltatee.com>
- <1492381907.25766.49.camel@kernel.crashing.org>
- <1493019397.3171.118.camel@oracle.com>
- <9b6c0830-a728-c7ca-e6c6-2135f3f760ed@deltatee.com>
- <1493101803.3171.246.camel@oracle.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
- Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
- "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
- Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
- Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
- linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jerome Glisse <jglisse@redhat.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <0cc95df5-b9dd-6493-15fe-771d535c1020@deltatee.com>
-Date: Tue, 25 Apr 2017 11:03:27 -0600
+Return-Path: <SRS0=Q2iE=3O=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=Q2iE=3O=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 6 Apr 2017 12:38:45 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Cc: Russell King - ARM Linux <linux@armlinux.org.uk>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Tony Luck <tony.luck@intel.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	John Garry <john.garry@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Roy Zang <tie-fei.zang@freescale.com>
+Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
+ interface
+Message-ID: <20170406113845.GA10013@red-moon>
+References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+ <20170327094954.7162-3-lorenzo.pieralisi@arm.com>
+ <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
+ <20170328144543.GA18046@red-moon>
+ <20170405105841.GG7909@n2100.armlinux.org.uk>
+ <20170405113238.GA2465@red-moon>
+ <20170406102636.GA9623@red-moon>
+ <20170406105312.GE28800@wotan.suse.de>
 MIME-Version: 1.0
-In-Reply-To: <1493101803.3171.246.camel@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170406105312.GE28800@wotan.suse.de>
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 25/04/17 12:30 AM, Knut Omang wrote:
-> Yes, that's why I used 'significant'. One good thing is that given resources 
-> it can easily be done in parallel with other development, and will give additional
-> insight of some form.
-
-Yup, well if someone wants to start working on an emulated RDMA device
-that actually simulates proper DMA transfers that would be great!
-
->> I also imagine it would be quite difficult to develop those models
->> given the array of hardware that needs to be supported and the deep
->> functional knowledge required to figure out appropriate restrictions.
+On Thu, Apr 06, 2017 at 12:53:12PM +0200, Luis R. Rodriguez wrote:
+> On Thu, Apr 06, 2017 at 11:26:36AM +0100, Lorenzo Pieralisi wrote:
+> > On Wed, Apr 05, 2017 at 01:38:12PM +0100, Lorenzo Pieralisi wrote:
+> > > On Wed, Apr 05, 2017 at 11:58:41AM +0100, Russell King - ARM Linux wrote:
+> > > > On Tue, Mar 28, 2017 at 03:45:43PM +0100, Lorenzo Pieralisi wrote:
+> > > > > On Mon, Mar 27, 2017 at 08:41:10PM -0500, Bjorn Helgaas wrote:
+> > > > > > On Mon, Mar 27, 2017 at 10:49:30AM +0100, Lorenzo Pieralisi wrote:
+> > > > > > > diff --git a/arch/x86/include/asm/io.h b/arch/x86/include/asm/io.h
+> > > > > > > index 7afb0e2..50b292f 100644
+> > > > > > > --- a/arch/x86/include/asm/io.h
+> > > > > > > +++ b/arch/x86/include/asm/io.h
+> > > > > > > @@ -171,6 +171,7 @@ static inline unsigned int isa_virt_to_bus(volatile void *address)
+> > > > > > >  extern void __iomem *ioremap_nocache(resource_size_t offset, unsigned long size);
+> > > > > > >  extern void __iomem *ioremap_uc(resource_size_t offset, unsigned long size);
+> > > > > > >  #define ioremap_uc ioremap_uc
+> > > > > > > +#define ioremap_nopost ioremap_nocache
+> > > > > > 
+> > > > > > These are all the same as the default from asm-generic.h.  Do we really
+> > > > > > need these definitions in alpha, avr32, frv, ia64, x86?
+> > > > > 
+> > > > > Those arches do not include asm-generic.h (I suppose for a good reason)
+> > > > > but a definition is needed anyway if we want code using ioremap_nopost()
+> > > > > to be unconditional. This is one way of doing it, there are others not
+> > > > > sure they are any better, I am open to suggestions.
+> > > > 
+> > > > We do have linux/io.h, which should be included in preference to asm/io.h.
+> > > > linux/io.h has existed for years, but I still see (from time to time)
+> > > > patches adding drivers that (imho incorrectly) use asm/io.h.
+> > > > 
+> > > > Also, this:
+> > > > 
+> > > > > > > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> > > > > > > index 7ef015e..0e81938 100644
+> > > > > > > --- a/include/asm-generic/io.h
+> > > > > > > +++ b/include/asm-generic/io.h
+> > > > > > > @@ -915,6 +915,10 @@ extern void ioport_unmap(void __iomem *p);
+> > > > > > >  #endif /* CONFIG_GENERIC_IOMAP */
+> > > > > > >  #endif /* CONFIG_HAS_IOPORT_MAP */
+> > > > > > >  
+> > > > > > > +#ifndef ioremap_nopost
+> > > > > > > +#define ioremap_nopost ioremap_nocache
+> > > > > > > +#endif
+> > > > > > > +
+> > > > > > >  #ifndef xlate_dev_kmem_ptr
+> > > > > > >  #define xlate_dev_kmem_ptr xlate_dev_kmem_ptr
+> > > > > > >  static inline void *xlate_dev_kmem_ptr(void *addr)
+> > > > 
+> > > > could well be located in linux/io.h, which would make it available
+> > > > everywhere.
+> > > > 
+> > > > I'd suggest one change to this though:
+> > > > 
+> > > > #ifndef ioremap_nopost
+> > > > static inline void __iomem *ioremap_nopost(resource_size_t offset,
+> > > > 					   unsigned long size)
+> > > > {
+> > > > 	return ioremap_nocache(offset, size);
+> > > > }
+> > > > #endif
+> > > > 
+> > > > This way, if someone forgets to define ioremap_nopost() in their
+> > > > asm/io.h but provides a definition or extern prototype for
+> > > > ioremap_nopost(), we end up with a compile error to highlight the
+> > > > error, rather than the error being hidden by the preprocessor.
+> > > 
+> > > Yes, I could add ioremap_nopost() to linux/io.h I did not do it because
+> > > linux/io.h, for whatever reason, does not seem to contain ioremap_*
+> > > prototypes; this does not mean we should not add it there but that
+> > > would look odd (with all others ioremap_* in asm/io.h), all I am
+> > > saying. This stuff requires some clean-up regardless, for the records.
+> > > 
+> > > As for the static inline, I did that and that did not make the
+> > > kbuild robot happy at all on some arches:
+> > > 
+> > > eg: openrisc
+> > > 
+> > > >> include/asm-generic/io.h:922:9: error: implicit declaration of
+> > > >> function 'ioremap_nocache' [-Werror=implicit-function-declaration]
+> > >      return ioremap_nocache(offset, size);
+> > 
+> > Indeed, the static inline ioremap_nocache() fallback does not work
+> > on all arches (whether I add the fallback in linux/io.h or
+> > asm-generic/io.h is irrelevant), I bump into issues such as the one
+> > reported above.
 > 
-> From my naive perspective it seems it need not even be a full model to get some benefits,
-> just low level functionality tests with some instances of a
-> device that offers some MMIO space 'playground'.
+> Its also not *safe* to assume on behalf of all architectures a new ioremap
+> call is both a good idea and proper.
+> 
+> > I could make it:
+> > 
+> > #ifndef ioremap_nopost
+> > static inline void __iomem *ioremap_nopost(resource_size_t offset,
+> > 					   unsigned long size)
+> > {
+> > 	return NULL;
+> > }
+> > #endif
+> > 
+> > which would force arches to define ioremap_nopost() (if they need it).
+> 
+> Yes, please do this.
 
-Yes, the nvme device in qemu has a CMB buffer which is a good choice to
-test with but we don't have code to use it for p2p transfers in the
-kernel so it is a bit awkward. We also posted [1] to qemu which was also
-handy to test with using a small out of tree module. But I don't see a
-lot of value in it if you completely ignore any hardware quirks.
+Ok but where ? linux/io.h or asm-generic/io.h ? As I replied to Russell,
+having it in linux/io.h is a bit odd given that it would be the only
+ioremap_* implementation declared there, I think we need more
+consistency here instead of deviating again from what you did.
 
-Logan
+> > This is what I *assume* was done for ioremap_uc() in asm-generic/io.h,
+> > but honestly history is hard to follow here.
+> > 
+> > Thoughts ?
+> 
+> Hard to follow ?
 
-[1] https://lists.gnu.org/archive/html/qemu-devel/2016-10/msg04331.html
+I was referring to the whole asm-generic/io.h history.
+
+> I think commit 8c7ea50c010b2 ("x86/mm, asm-generic: Add IOMMU ioremap_uc()
+> variant default") makes it very clear that historically we have made bad
+> assumptions and these assumptions are not safe, so the only correct thing we
+> can do to not stall development is to do what you did above, and each
+> architecture then can add support for its proper mapping. Its up to each
+> architecture maintainer to be attentive and review these patches, if they don't
+> get to it, this will just not work for the new driver that needs it, such is
+> life, its better than having incorrect defaults spread for all architectures.
+> 
+> The old strategy was very sloppy. Its why I tried to be as clear as possible on
+> both the commit log and headers about this. If the commit log and headers were
+> not clear, please help clarify this more somehow in your patches.
+
+I see your point and I can replicate (probably I will have to patch
+microblaze too since some of the PCI drivers patches in this series
+that I updated to use ioremap_nopost() will run on it too) what you
+did for ioremap_uc() for ioremap_nopost(), I am ok with that, I need
+to know if we all are.
+
+Thanks,
+Lorenzo
