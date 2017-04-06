@@ -1,75 +1,134 @@
-Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH] PCI: Add cast when assigning PCI_ROM_ADDRESS_MASK to a
- 32-bit variable
-To: Matthias Kaehlcke <mka@chromium.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci
- <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
- Grant Grundler <grundler@chromium.org>, Greg Hackmann
- <ghackmann@google.com>, Michael Davidson <md@google.com>
-References: <20170410222457.113155-1-mka@chromium.org>
- <20170411012445.GA8025@bhelgaas-glaptop.roam.corp.google.com>
- <6111642d-9f1d-f8bf-5920-82f4eb427cff@free.fr>
- <20170411172307.GC28657@google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <d5f0d600-3c88-d42a-05a9-f0760975f6a7@free.fr>
-Date: Tue, 11 Apr 2017 19:28:46 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-co1nam03on0053.outbound.protection.outlook.com ([104.47.40.53]:43290
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752331AbdDFWpW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 6 Apr 2017 18:45:22 -0400
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>, <hch@lst.de>
+CC: <himanshu.madhani@cavium.com>
+Subject: [PATCH v4] PCI/MSI: Only disable affinity settings if pre and post vector count is equal to max_vecs and not min_vecs
+Date: Thu, 6 Apr 2017 15:45:14 -0700
+Message-ID: <20170406224514.21247-1-himanshu.madhani@cavium.com>
 MIME-Version: 1.0
-In-Reply-To: <20170411172307.GC28657@google.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/04/2017 19:23, Matthias Kaehlcke wrote:
+min_vecs is the minimum amount of vectors needed to operate in MSI-X mode
+which may just include the vectors that don't need affinity.
 
-> El Tue, Apr 11, 2017 at 12:08:38PM +0200 Mason ha dit:
-> 
->> On 11/04/2017 03:24, Bjorn Helgaas wrote:
->>
->>> On Mon, Apr 10, 2017 at 03:24:57PM -0700, Matthias Kaehlcke wrote:
->>>
->>>> This fixes a clang warning about "implicit conversion from 'unsigned
->>>> long' to 'u32'"
->>>>
->>>> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
->>>> ---
->>>>  drivers/pci/probe.c | 2 +-
->>>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>>
->>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->>>> index dfc9a2794141..148e80d5caf1 100644
->>>> --- a/drivers/pci/probe.c
->>>> +++ b/drivers/pci/probe.c
->>>> @@ -180,7 +180,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->>>>  	u16 orig_cmd;
->>>>  	struct pci_bus_region region, inverted_region;
->>>>  
->>>> -	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
->>>> +	mask = type ? (u32)PCI_ROM_ADDRESS_MASK : ~0;
->>>
->>> Can we put the cast in the PCI_ROM_ADDRESS_MASK #define so we don't have to
->>> repeat it in all the uses?
->>
->> Fixing these "implicit conversion" warnings, especially for
->> unsigned types, is a slippery slope. (The behavior of the
->> conversion is well-defined.)
->>
->> How about changing the type of PCI_ROM_ADDRESS_MASK instead?
->> It's defined as ~0x7ffUL but it's only used in the context
->> of u32.
->>
->> So make it an unsigned int:
->> #define PCI_ROM_ADDRESS_MASK (~0x7ffU)
->>
->> AFAIU, unsigned int is 32 bits on all platforms supported
->> by Linux.
-> 
-> I considered this initially, but wasn't sure if the unsigned long
-> mask might be needed in some cases. From the comments I interpret that
-> there should be no problems with using a 32 bit mask everywhere.
-> 
-> I'll send out an updated patch shortly.
+Disabling affinity settings causes the qla2xxx driver scsi_add_host
+to fail when blk_mq is enabled as the blk_mq_pci_map_queues expects
+affinity masks on each vector.
 
-Full disclaimer: I'm just a grunt with no knowledge of
-the PCI framework. Bjorn is the authority here ;-)
+Fixes: dfef358bd1be ("PCI/MSI: Don't apply affinity if there aren't enough vectors left")
+Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: <stable@vger.kernel.org> # 4.10
+---
+v3 --> v4
+o Moved pre/post reserved vector range checks to affinity.c as per
+  comments from Bjorn Helgaas.
 
-Regards.
+v2 --> v3
+o fixed code as per review comments.
+
+v1 --> v2
+o Moved the check from pci_alloc_irq_vectors_affinity() to
+  __pci_enable_{msi|msix}_range()
+
+ drivers/pci/msi.c         | 14 ++------------
+ include/linux/interrupt.h |  2 +-
+ kernel/irq/affinity.c     | 12 +++++++++++-
+ 3 files changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 7f73bacf13ed..a5c13d052f18 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1091,7 +1091,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+ 
+ 	for (;;) {
+ 		if (affd) {
+-			nvec = irq_calc_affinity_vectors(nvec, affd);
++			nvec = irq_calc_affinity_vectors(minvec, nvec, affd);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+ 		}
+@@ -1138,7 +1138,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
+ 
+ 	for (;;) {
+ 		if (affd) {
+-			nvec = irq_calc_affinity_vectors(nvec, affd);
++			nvec = irq_calc_affinity_vectors(minvec, nvec, affd);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+ 		}
+@@ -1206,16 +1206,6 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+ 	if (flags & PCI_IRQ_AFFINITY) {
+ 		if (!affd)
+ 			affd = &msi_default_affd;
+-
+-		if (affd->pre_vectors + affd->post_vectors > min_vecs)
+-			return -EINVAL;
+-
+-		/*
+-		 * If there aren't any vectors left after applying the pre/post
+-		 * vectors don't bother with assigning affinity.
+-		 */
+-		if (affd->pre_vectors + affd->post_vectors == min_vecs)
+-			affd = NULL;
+ 	} else {
+ 		if (WARN_ON(affd))
+ 			affd = NULL;
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index 53144e78a369..b3c569f7405b 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -291,7 +291,7 @@ extern int
+ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
+ 
+ struct cpumask *irq_create_affinity_masks(int nvec, const struct irq_affinity *affd);
+-int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
++int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity *affd);
+ 
+ #else /* CONFIG_SMP */
+ 
+diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+index 4544b115f5eb..13c15a419e4e 100644
+--- a/kernel/irq/affinity.c
++++ b/kernel/irq/affinity.c
+@@ -69,6 +69,13 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+ 	if (!zalloc_cpumask_var(&nmsk, GFP_KERNEL))
+ 		return NULL;
+ 
++	/*
++	 * If there aren't any vectors left after applying the pre/post
++	 * vectors don't bother with assigning affinity.
++	 */
++	if (!affv)
++		return NULL;
++
+ 	masks = kcalloc(nvecs, sizeof(*masks), GFP_KERNEL);
+ 	if (!masks)
+ 		goto out;
+@@ -141,12 +148,15 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+  * @maxvec:	The maximum number of vectors available
+  * @affd:	Description of the affinity requirements
+  */
+-int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
++int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity *affd)
+ {
+ 	int resv = affd->pre_vectors + affd->post_vectors;
+ 	int vecs = maxvec - resv;
+ 	int cpus;
+ 
++	if (resv > minvec)
++		return 0;
++
+ 	/* Stabilize the cpumasks */
+ 	get_online_cpus();
+ 	cpus = cpumask_weight(cpu_online_mask);
+-- 
+2.12.0
