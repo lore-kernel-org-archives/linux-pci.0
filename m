@@ -1,93 +1,82 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [RFC/RFT PATCH 12/18] PCI: Build setup-irq.o on all arches
-Date: Wed, 26 Apr 2017 12:18:03 +0100
-Message-Id: <20170426111809.19922-13-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
-References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:42482 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934664AbdDFMZH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Apr 2017 08:25:07 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: bhelgaas@google.com, davem@davemloft.net,
+        netanel@annapurnalabs.com, jcliburn@gmail.com,
+        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org
+Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 4/4] PCI: remove pci_enable_msix
+Date: Thu,  6 Apr 2017 14:24:48 +0200
+Message-Id: <20170406122448.31854-5-hch@lst.de>
+In-Reply-To: <20170406122448.31854-1-hch@lst.de>
+References: <20170406122448.31854-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Minter <matt@masarand.com>
+Unused now that all callers switched to pci_alloc_irq_vectors.
 
-The functions included in setup-irq.o currently apply only to a selection
-of architectures which share common IRQ assignment code. However this
-code needs to be generalised for all arches to allow deferred IRQ
-assignment. So the first step is to build it on all architectures.
-
-Signed-off-by: Matthew Minter <matt@masarand.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/Makefile | 17 ++---------------
- 1 file changed, 2 insertions(+), 15 deletions(-)
+ drivers/pci/msi.c   | 21 ---------------------
+ include/linux/pci.h |  4 ----
+ 2 files changed, 25 deletions(-)
 
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index 8db5079..9698239 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -4,7 +4,8 @@
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d571bc330686..0042c365b29b 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -973,27 +973,6 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
+ 	return msix_capability_init(dev, entries, nvec, affd);
+ }
  
- obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
- 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
--			irq.o vpd.o setup-bus.o vc.o
-+			irq.o vpd.o setup-bus.o vc.o setup-irq.o
-+
- obj-$(CONFIG_PROC_FS) += proc.o
- obj-$(CONFIG_SYSFS) += slot.o
- 
-@@ -29,20 +30,6 @@ obj-$(CONFIG_PCI_ATS) += ats.o
- obj-$(CONFIG_PCI_IOV) += iov.o
- 
- #
--# Some architectures use the generic PCI setup functions
--#
--obj-$(CONFIG_ALPHA) += setup-irq.o
--obj-$(CONFIG_ARC) += setup-irq.o
--obj-$(CONFIG_ARM) += setup-irq.o
--obj-$(CONFIG_ARM64) += setup-irq.o
--obj-$(CONFIG_UNICORE32) += setup-irq.o
--obj-$(CONFIG_SUPERH) += setup-irq.o
--obj-$(CONFIG_MIPS) += setup-irq.o
--obj-$(CONFIG_TILE) += setup-irq.o
--obj-$(CONFIG_SPARC_LEON) += setup-irq.o
--obj-$(CONFIG_M68K) += setup-irq.o
+-/**
+- * pci_enable_msix - configure device's MSI-X capability structure
+- * @dev: pointer to the pci_dev data structure of MSI-X device function
+- * @entries: pointer to an array of MSI-X entries (optional)
+- * @nvec: number of MSI-X irqs requested for allocation by device driver
+- *
+- * Setup the MSI-X capability structure of device function with the number
+- * of requested irqs upon its software driver call to request for
+- * MSI-X mode enabled on its hardware device function. A return of zero
+- * indicates the successful configuration of MSI-X capability structure
+- * with new allocated MSI-X irqs. A return of < 0 indicates a failure.
+- * Or a return of > 0 indicates that driver request is exceeding the number
+- * of irqs or MSI-X vectors available. Driver should use the returned value to
+- * re-send its request.
+- **/
+-int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+-{
+-	return __pci_enable_msix(dev, entries, nvec, NULL);
+-}
+-EXPORT_SYMBOL(pci_enable_msix);
 -
--#
- # ACPI Related PCI FW Functions
- # ACPI _DSM provided firmware instance and string name
- #
+ void pci_msix_shutdown(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eb3da1a04e6c..82dec36845e6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1300,7 +1300,6 @@ int pci_msi_vec_count(struct pci_dev *dev);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+ int pci_msix_vec_count(struct pci_dev *dev);
+-int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
+ void pci_msix_shutdown(struct pci_dev *dev);
+ void pci_disable_msix(struct pci_dev *dev);
+ void pci_restore_msi_state(struct pci_dev *dev);
+@@ -1330,9 +1329,6 @@ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+ static inline void pci_msi_shutdown(struct pci_dev *dev) { }
+ static inline void pci_disable_msi(struct pci_dev *dev) { }
+ static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+-static inline int pci_enable_msix(struct pci_dev *dev,
+-				  struct msix_entry *entries, int nvec)
+-{ return -ENOSYS; }
+ static inline void pci_msix_shutdown(struct pci_dev *dev) { }
+ static inline void pci_disable_msix(struct pci_dev *dev) { }
+ static inline void pci_restore_msi_state(struct pci_dev *dev) { }
 -- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
