@@ -1,174 +1,198 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <1492935543-18190-2-git-send-email-ryder.lee@mediatek.com>
-References: <1492935543-18190-1-git-send-email-ryder.lee@mediatek.com>
- <1492935543-18190-2-git-send-email-ryder.lee@mediatek.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Tue, 25 Apr 2017 14:38:39 +0200
-Message-ID: <CAK8P3a39TFkJ5=jp8me+Dyg-Qi-N_1ZKxpJGvnhmPEo4csnFCw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: mediatek: Add Mediatek PCIe host controller
- support
-To: Ryder Lee <ryder.lee@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
- Bjorn Helgaas <bhelgaas@google.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:57863 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934662AbdDFMZH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Apr 2017 08:25:07 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: bhelgaas@google.com, davem@davemloft.net,
+        netanel@annapurnalabs.com, jcliburn@gmail.com,
+        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org
+Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH 2/4] net/ena: switch to pci_alloc_irq_vectors
+Date: Thu,  6 Apr 2017 14:24:46 +0200
+Message-Id: <20170406122448.31854-3-hch@lst.de>
+In-Reply-To: <20170406122448.31854-1-hch@lst.de>
+References: <20170406122448.31854-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 23, 2017 at 10:19 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+Remove the deprecated pci_enable_msix API in favour of it's successor.
 
-> +static inline bool mtk_pcie_link_is_up(struct mtk_pcie_port *port)
-> +{
-> +       return !!(readl_relaxed(port->base + PCIE_LINK_STATUS) &
-> +                 PCIE_PORT_LINKUP);
-> +}
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/net/ethernet/amazon/ena/ena_netdev.c | 55 ++++++----------------------
+ drivers/net/ethernet/amazon/ena/ena_netdev.h |  2 -
+ 2 files changed, 12 insertions(+), 45 deletions(-)
 
-If this is not performance critical, please use the regular readl() instead
-of readl_relaxed().
-
-> +static bool mtk_pcie_valid_device(struct mtk_pcie *pcie,
-> +                                 struct pci_bus *bus, int devfn)
-> +{
-> +       struct mtk_pcie_port *port;
-> +       struct pci_dev *dev;
-> +       struct pci_bus *pbus;
-> +
-> +       /* if there is no link, then there is no device */
-> +       list_for_each_entry(port, &pcie->ports, list) {
-> +               if (bus->number == 0 && port->index == PCI_SLOT(devfn) &&
-> +                   mtk_pcie_link_is_up(port)) {
-> +                       return true;
-> +               } else if (bus->number != 0) {
-> +                       pbus = bus;
-> +                       do {
-> +                               dev = pbus->self;
-> +                               if (port->index == PCI_SLOT(dev->devfn) &&
-> +                                   mtk_pcie_link_is_up(port)) {
-> +                                       return true;
-> +                               }
-> +                               pbus = dev->bus;
-> +                       } while (dev->bus->number != 0);
-> +               }
-> +       }
-> +
-> +       return false;
-> +}
-
-
-
-
-> +static int mtk_pcie_hw_rd_cfg(struct mtk_pcie *pcie, u32 bus, u32 devfn,
-> +                             int where, int size, u32 *val)
-> +{
-> +       writel(PCIE_CONF_ADDR(where, PCI_FUNC(devfn), PCI_SLOT(devfn), bus),
-> +              pcie->base + PCIE_CFG_ADDR);
-> +
-> +       *val = 0;
-> +
-> +       switch (size) {
-> +       case 1:
-> +               *val = readb(pcie->base + PCIE_CFG_DATA + (where & 3));
-> +               break;
-> +       case 2:
-> +               *val = readw(pcie->base + PCIE_CFG_DATA + (where & 2));
-> +               break;
-> +       case 4:
-> +               *val = readl(pcie->base + PCIE_CFG_DATA);
-> +               break;
-> +       }
-> +
-> +       return PCIBIOS_SUCCESSFUL;
-> +}
-
-This is a fairly standard set of read/write operations. Can you change
-the pci_ops
-to use pci_generic_config_read/pci_generic_config_write and an appropriate
-map function instead?
-
-> +static int mtk_pcie_enable_ports(struct mtk_pcie *pcie)
-> +{
-> +       struct device *dev = pcie->dev;
-> +       struct mtk_pcie_port *port, *tmp;
-> +       int err, linkup = 0;
-> +
-> +       list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
-> +               err = clk_prepare_enable(port->sys_ck);
-> +               if (err) {
-> +                       dev_err(dev, "failed to enable port%d clock\n",
-> +                               port->index);
-> +                       continue;
-> +               }
-> +
-> +               /* assert RC */
-> +               reset_control_assert(port->reset);
-> +               /* de-assert RC */
-> +               reset_control_deassert(port->reset);
-> +
-> +               /* power on PHY */
-> +               err = phy_power_on(port->phy);
-> +               if (err) {
-> +                       dev_err(dev, "failed to power on port%d phy\n",
-> +                               port->index);
-> +                       goto err_phy_on;
-> +               }
-> +
-> +               mtk_pcie_assert_ports(port);
-> +
-
-Similar to the comment I had for the binding, I wonder if it would be
-better to keep all the information about the ports in one place and
-then just deal with it at the root level.
-
-Alternatively, we could decide to standardize on the properties
-you have added to the pcie port node, but then I would handle
-them in the pcieport driver rather than in the host bridge driver.
-
-> +/*
-> + * This IP lacks interrupt status register to check or map INTx from
-> + * different devices at the same time.
-> + */
-> +static int __init mtk_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
-> +{
-> +       struct mtk_pcie *pcie = dev->bus->sysdata;
-> +       struct mtk_pcie_port *port;
-> +
-> +       list_for_each_entry(port, &pcie->ports, list)
-> +               if (port->index == slot)
-> +                       return port->irq;
-> +
-> +       return -1;
-> +}
-
-This looks odd, what is it needed for specifically? It looks like
-it's broken for devices behind bridges, and the interrupt mapping
-should normally come from the interrupt-map property, without
-the need for a driver specific map_irq override.
-
-> +static int mtk_pcie_register_ports(struct mtk_pcie *pcie)
-> +{
-> +       struct pci_bus *bus, *child;
-> +
-> +       bus = pci_scan_root_bus(pcie->dev, 0, &mtk_pcie_ops, pcie,
-> +                               &pcie->resources);
-
-Can you use the new pci_register_host_bridge() method instead of
-pci_scan_root_bus() here?
-
-       ARnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/net/ethernet/amazon/ena/ena_netdev.c b/drivers/net/ethernet/amazon/ena/ena_netdev.c
+index 35f19430c84a..7c1214d78855 100644
+--- a/drivers/net/ethernet/amazon/ena/ena_netdev.c
++++ b/drivers/net/ethernet/amazon/ena/ena_netdev.c
+@@ -133,7 +133,7 @@ static int ena_init_rx_cpu_rmap(struct ena_adapter *adapter)
+ 		int irq_idx = ENA_IO_IRQ_IDX(i);
+ 
+ 		rc = irq_cpu_rmap_add(adapter->netdev->rx_cpu_rmap,
+-				      adapter->msix_entries[irq_idx].vector);
++				      pci_irq_vector(adapter->pdev, irq_idx));
+ 		if (rc) {
+ 			free_irq_cpu_rmap(adapter->netdev->rx_cpu_rmap);
+ 			adapter->netdev->rx_cpu_rmap = NULL;
+@@ -1208,13 +1208,7 @@ static irqreturn_t ena_intr_msix_io(int irq, void *data)
+ 
+ static int ena_enable_msix(struct ena_adapter *adapter, int num_queues)
+ {
+-	int i, msix_vecs, rc;
+-
+-	if (test_bit(ENA_FLAG_MSIX_ENABLED, &adapter->flags)) {
+-		netif_err(adapter, probe, adapter->netdev,
+-			  "Error, MSI-X is already enabled\n");
+-		return -EPERM;
+-	}
++	int msix_vecs, rc;
+ 
+ 	/* Reserved the max msix vectors we might need */
+ 	msix_vecs = ENA_MAX_MSIX_VEC(num_queues);
+@@ -1222,16 +1216,9 @@ static int ena_enable_msix(struct ena_adapter *adapter, int num_queues)
+ 	netif_dbg(adapter, probe, adapter->netdev,
+ 		  "trying to enable MSI-X, vectors %d\n", msix_vecs);
+ 
+-	adapter->msix_entries = vzalloc(msix_vecs * sizeof(struct msix_entry));
+-
+-	if (!adapter->msix_entries)
+-		return -ENOMEM;
+-
+-	for (i = 0; i < msix_vecs; i++)
+-		adapter->msix_entries[i].entry = i;
+-
+-	rc = pci_enable_msix(adapter->pdev, adapter->msix_entries, msix_vecs);
+-	if (rc != 0) {
++	rc = pci_alloc_irq_vectors(adapter->pdev, msix_vecs, msix_vecs,
++			PCI_IRQ_MSIX);
++	if (rc < 0) {
+ 		netif_err(adapter, probe, adapter->netdev,
+ 			  "Failed to enable MSI-X, vectors %d rc %d\n",
+ 			  msix_vecs, rc);
+@@ -1248,7 +1235,6 @@ static int ena_enable_msix(struct ena_adapter *adapter, int num_queues)
+ 	}
+ 
+ 	adapter->msix_vecs = msix_vecs;
+-	set_bit(ENA_FLAG_MSIX_ENABLED, &adapter->flags);
+ 
+ 	return 0;
+ }
+@@ -1264,7 +1250,7 @@ static void ena_setup_mgmnt_intr(struct ena_adapter *adapter)
+ 		ena_intr_msix_mgmnt;
+ 	adapter->irq_tbl[ENA_MGMNT_IRQ_IDX].data = adapter;
+ 	adapter->irq_tbl[ENA_MGMNT_IRQ_IDX].vector =
+-		adapter->msix_entries[ENA_MGMNT_IRQ_IDX].vector;
++		pci_irq_vector(adapter->pdev, ENA_MGMNT_IRQ_IDX);
+ 	cpu = cpumask_first(cpu_online_mask);
+ 	adapter->irq_tbl[ENA_MGMNT_IRQ_IDX].cpu = cpu;
+ 	cpumask_set_cpu(cpu,
+@@ -1287,7 +1273,7 @@ static void ena_setup_io_intr(struct ena_adapter *adapter)
+ 		adapter->irq_tbl[irq_idx].handler = ena_intr_msix_io;
+ 		adapter->irq_tbl[irq_idx].data = &adapter->ena_napi[i];
+ 		adapter->irq_tbl[irq_idx].vector =
+-			adapter->msix_entries[irq_idx].vector;
++			pci_irq_vector(adapter->pdev, irq_idx);
+ 		adapter->irq_tbl[irq_idx].cpu = cpu;
+ 
+ 		cpumask_set_cpu(cpu,
+@@ -1325,12 +1311,6 @@ static int ena_request_io_irq(struct ena_adapter *adapter)
+ 	struct ena_irq *irq;
+ 	int rc = 0, i, k;
+ 
+-	if (!test_bit(ENA_FLAG_MSIX_ENABLED, &adapter->flags)) {
+-		netif_err(adapter, ifup, adapter->netdev,
+-			  "Failed to request I/O IRQ: MSI-X is not enabled\n");
+-		return -EINVAL;
+-	}
+-
+ 	for (i = ENA_IO_IRQ_FIRST_IDX; i < adapter->msix_vecs; i++) {
+ 		irq = &adapter->irq_tbl[i];
+ 		rc = request_irq(irq->vector, irq->handler, flags, irq->name,
+@@ -1389,16 +1369,6 @@ static void ena_free_io_irq(struct ena_adapter *adapter)
+ 	}
+ }
+ 
+-static void ena_disable_msix(struct ena_adapter *adapter)
+-{
+-	if (test_and_clear_bit(ENA_FLAG_MSIX_ENABLED, &adapter->flags))
+-		pci_disable_msix(adapter->pdev);
+-
+-	if (adapter->msix_entries)
+-		vfree(adapter->msix_entries);
+-	adapter->msix_entries = NULL;
+-}
+-
+ static void ena_disable_io_intr_sync(struct ena_adapter *adapter)
+ {
+ 	int i;
+@@ -2479,8 +2449,7 @@ static int ena_enable_msix_and_set_admin_interrupts(struct ena_adapter *adapter,
+ 	return 0;
+ 
+ err_disable_msix:
+-	ena_disable_msix(adapter);
+-
++	pci_free_irq_vectors(adapter->pdev);
+ 	return rc;
+ }
+ 
+@@ -2518,7 +2487,7 @@ static void ena_fw_reset_device(struct work_struct *work)
+ 
+ 	ena_free_mgmnt_irq(adapter);
+ 
+-	ena_disable_msix(adapter);
++	pci_free_irq_vectors(adapter->pdev);
+ 
+ 	ena_com_abort_admin_commands(ena_dev);
+ 
+@@ -2569,7 +2538,7 @@ static void ena_fw_reset_device(struct work_struct *work)
+ 	return;
+ err_disable_msix:
+ 	ena_free_mgmnt_irq(adapter);
+-	ena_disable_msix(adapter);
++	pci_free_irq_vectors(adapter->pdev);
+ err_device_destroy:
+ 	ena_com_admin_destroy(ena_dev);
+ err:
+@@ -3103,7 +3072,7 @@ static int ena_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ err_free_msix:
+ 	ena_com_dev_reset(ena_dev);
+ 	ena_free_mgmnt_irq(adapter);
+-	ena_disable_msix(adapter);
++	pci_free_irq_vectors(adapter->pdev);
+ err_worker_destroy:
+ 	ena_com_destroy_interrupt_moderation(ena_dev);
+ 	del_timer(&adapter->timer_service);
+@@ -3188,7 +3157,7 @@ static void ena_remove(struct pci_dev *pdev)
+ 
+ 	ena_free_mgmnt_irq(adapter);
+ 
+-	ena_disable_msix(adapter);
++	pci_free_irq_vectors(adapter->pdev);
+ 
+ 	free_netdev(netdev);
+ 
+diff --git a/drivers/net/ethernet/amazon/ena/ena_netdev.h b/drivers/net/ethernet/amazon/ena/ena_netdev.h
+index ed62d8e231a1..0e22bce6239d 100644
+--- a/drivers/net/ethernet/amazon/ena/ena_netdev.h
++++ b/drivers/net/ethernet/amazon/ena/ena_netdev.h
+@@ -248,7 +248,6 @@ enum ena_flags_t {
+ 	ENA_FLAG_DEVICE_RUNNING,
+ 	ENA_FLAG_DEV_UP,
+ 	ENA_FLAG_LINK_UP,
+-	ENA_FLAG_MSIX_ENABLED,
+ 	ENA_FLAG_TRIGGER_RESET
+ };
+ 
+@@ -267,7 +266,6 @@ struct ena_adapter {
+ 
+ 	int num_queues;
+ 
+-	struct msix_entry *msix_entries;
+ 	int msix_vecs;
+ 
+ 	u32 tx_usecs, rx_usecs; /* interrupt moderation */
+-- 
+2.11.0
