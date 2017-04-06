@@ -1,105 +1,173 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1491974532.7236.43.camel@kernel.crashing.org>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@ml01.01.org, linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
-Date: Wed, 12 Apr 2017 11:09:53 -0600
+Return-Path: <SRS0=Hsbi=3O=suse.de=lurodriguez@kernel.org>
+Return-Path: <SRS0=Hsbi=3O=suse.de=lurodriguez@kernel.org>
+Date: Thu, 6 Apr 2017 12:53:12 +0200
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Russell King - ARM Linux <linux@armlinux.org.uk>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Tony Luck <tony.luck@intel.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	John Garry <john.garry@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Roy Zang <tie-fei.zang@freescale.com>,
+	"Luis R. Rodriguez" <mcgrof@kernel.org>
+Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
+ interface
+Message-ID: <20170406105312.GE28800@wotan.suse.de>
+References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
+ <20170327094954.7162-3-lorenzo.pieralisi@arm.com>
+ <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
+ <20170328144543.GA18046@red-moon>
+ <20170405105841.GG7909@n2100.armlinux.org.uk>
+ <20170405113238.GA2465@red-moon>
+ <20170406102636.GA9623@red-moon>
 MIME-Version: 1.0
-In-Reply-To: <1491974532.7236.43.camel@kernel.crashing.org>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170406102636.GA9623@red-moon>
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 11/04/17 11:22 PM, Benjamin Herrenschmidt wrote:
-> Another issue of course is that not all systems support P2P
-> between host bridges :-) (Though almost all switches can enable it).
-
-Yes, I'm either going to just let the user enable and test or limit it
-to switches only to start. However, currently our bigger issue is
-working on a way to not violate iomem safety.
-
-> Ok. I suppose that's a reasonable starting point. Do I haven't looked
-> at the patches in detail yet but it would be nice if that policy was in
-> a well isolated component so it can potentially be affected by
-> arch/platform code.
-
-The policy is isolated in the new p2pmem driver. There's no reason the
-policy couldn't become arbitrarily complex with specific arch
-exceptions. It's just people would have to do the work to create those
-exceptions.
-
-> Do you handle funky address translation too ? IE. the fact that the PCI
-> addresses aren't the same as the CPU physical addresses for a BAR ?
-
-No, we use the CPU physical address of the BAR. If it's not mapped that
-way we can't use it.
-
->> This will mean many setups that could likely
->> work well will not be supported so that we can be more confident it
->> will work and not place any responsibility on the user to understand
->> their topology. (We've chosen to go this route based on feedback we
->> received at LSF).
->>
->> In order to enable this functionality we introduce a new p2pmem device
->> which can be instantiated by PCI drivers. The device will register some
->> PCI memory as ZONE_DEVICE and provide an genalloc based allocator for
->> users of these devices to get buffers.
+On Thu, Apr 06, 2017 at 11:26:36AM +0100, Lorenzo Pieralisi wrote:
+> On Wed, Apr 05, 2017 at 01:38:12PM +0100, Lorenzo Pieralisi wrote:
+> > On Wed, Apr 05, 2017 at 11:58:41AM +0100, Russell King - ARM Linux wrote:
+> > > On Tue, Mar 28, 2017 at 03:45:43PM +0100, Lorenzo Pieralisi wrote:
+> > > > On Mon, Mar 27, 2017 at 08:41:10PM -0500, Bjorn Helgaas wrote:
+> > > > > On Mon, Mar 27, 2017 at 10:49:30AM +0100, Lorenzo Pieralisi wrote:
+> > > > > > diff --git a/arch/x86/include/asm/io.h b/arch/x86/include/asm/io.h
+> > > > > > index 7afb0e2..50b292f 100644
+> > > > > > --- a/arch/x86/include/asm/io.h
+> > > > > > +++ b/arch/x86/include/asm/io.h
+> > > > > > @@ -171,6 +171,7 @@ static inline unsigned int isa_virt_to_bus(volatile void *address)
+> > > > > >  extern void __iomem *ioremap_nocache(resource_size_t offset, unsigned long size);
+> > > > > >  extern void __iomem *ioremap_uc(resource_size_t offset, unsigned long size);
+> > > > > >  #define ioremap_uc ioremap_uc
+> > > > > > +#define ioremap_nopost ioremap_nocache
+> > > > > 
+> > > > > These are all the same as the default from asm-generic.h.  Do we really
+> > > > > need these definitions in alpha, avr32, frv, ia64, x86?
+> > > > 
+> > > > Those arches do not include asm-generic.h (I suppose for a good reason)
+> > > > but a definition is needed anyway if we want code using ioremap_nopost()
+> > > > to be unconditional. This is one way of doing it, there are others not
+> > > > sure they are any better, I am open to suggestions.
+> > > 
+> > > We do have linux/io.h, which should be included in preference to asm/io.h.
+> > > linux/io.h has existed for years, but I still see (from time to time)
+> > > patches adding drivers that (imho incorrectly) use asm/io.h.
+> > > 
+> > > Also, this:
+> > > 
+> > > > > > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+> > > > > > index 7ef015e..0e81938 100644
+> > > > > > --- a/include/asm-generic/io.h
+> > > > > > +++ b/include/asm-generic/io.h
+> > > > > > @@ -915,6 +915,10 @@ extern void ioport_unmap(void __iomem *p);
+> > > > > >  #endif /* CONFIG_GENERIC_IOMAP */
+> > > > > >  #endif /* CONFIG_HAS_IOPORT_MAP */
+> > > > > >  
+> > > > > > +#ifndef ioremap_nopost
+> > > > > > +#define ioremap_nopost ioremap_nocache
+> > > > > > +#endif
+> > > > > > +
+> > > > > >  #ifndef xlate_dev_kmem_ptr
+> > > > > >  #define xlate_dev_kmem_ptr xlate_dev_kmem_ptr
+> > > > > >  static inline void *xlate_dev_kmem_ptr(void *addr)
+> > > 
+> > > could well be located in linux/io.h, which would make it available
+> > > everywhere.
+> > > 
+> > > I'd suggest one change to this though:
+> > > 
+> > > #ifndef ioremap_nopost
+> > > static inline void __iomem *ioremap_nopost(resource_size_t offset,
+> > > 					   unsigned long size)
+> > > {
+> > > 	return ioremap_nocache(offset, size);
+> > > }
+> > > #endif
+> > > 
+> > > This way, if someone forgets to define ioremap_nopost() in their
+> > > asm/io.h but provides a definition or extern prototype for
+> > > ioremap_nopost(), we end up with a compile error to highlight the
+> > > error, rather than the error being hidden by the preprocessor.
+> > 
+> > Yes, I could add ioremap_nopost() to linux/io.h I did not do it because
+> > linux/io.h, for whatever reason, does not seem to contain ioremap_*
+> > prototypes; this does not mean we should not add it there but that
+> > would look odd (with all others ioremap_* in asm/io.h), all I am
+> > saying. This stuff requires some clean-up regardless, for the records.
+> > 
+> > As for the static inline, I did that and that did not make the
+> > kbuild robot happy at all on some arches:
+> > 
+> > eg: openrisc
+> > 
+> > >> include/asm-generic/io.h:922:9: error: implicit declaration of
+> > >> function 'ioremap_nocache' [-Werror=implicit-function-declaration]
+> >      return ioremap_nocache(offset, size);
 > 
-> I don't completely understand this. This is actual memory on the PCI
-> bus ? Where does it come from ? Or are you just trying to create struct
-> pages that cover your PCIe DMA target ?
+> Indeed, the static inline ioremap_nocache() fallback does not work
+> on all arches (whether I add the fallback in linux/io.h or
+> asm-generic/io.h is irrelevant), I bump into issues such as the one
+> reported above.
 
-Yes, the memory is on the PCI bus in a BAR. For now we have a special
-PCI card for this, but in the future it would likely be the CMB in an
-NVMe card. These patches create struct pages to map these BAR addresses
-using ZONE_DEVICE.
+Its also not *safe* to assume on behalf of all architectures a new ioremap
+call is both a good idea and proper.
 
+> I could make it:
+> 
+> #ifndef ioremap_nopost
+> static inline void __iomem *ioremap_nopost(resource_size_t offset,
+> 					   unsigned long size)
+> {
+> 	return NULL;
+> }
+> #endif
+> 
+> which would force arches to define ioremap_nopost() (if they need it).
 
-> So correct me if I'm wrong, you are trying to create struct page's that
-> map a PCIe BAR right ? I'm trying to understand how that interacts with
-> what Jerome is doing for HMM.
+Yes, please do this.
 
-Yes, well we are using ZONE_DEVICE in the exact same way as the dax code
-is. These patches use the existing API with no modifications. As I
-understand it, HMM was using ZONE_DEVICE in a way that was quite
-different to how it was originally designed.
+> This is what I *assume* was done for ioremap_uc() in asm-generic/io.h,
+> but honestly history is hard to follow here.
+> 
+> Thoughts ?
 
-> The reason is that the HMM currently creates the struct pages with
-> "fake" PFNs pointing to a hole in the address space rather than
-> covering the actual PCIe memory of the GPU. He does that to deal with
-> the fact that some GPUs have a smaller aperture on PCIe than their
-> total memory.
+Hard to follow ?
 
-I'm aware of what HMM is trying to do and although I'm not familiar with
-the intimate details, I saw it as fairly orthogonal to what we are
-attempting to do.
+I think commit 8c7ea50c010b2 ("x86/mm, asm-generic: Add IOMMU ioremap_uc()
+variant default") makes it very clear that historically we have made bad
+assumptions and these assumptions are not safe, so the only correct thing we
+can do to not stall development is to do what you did above, and each
+architecture then can add support for its proper mapping. Its up to each
+architecture maintainer to be attentive and review these patches, if they don't
+get to it, this will just not work for the new driver that needs it, such is
+life, its better than having incorrect defaults spread for all architectures.
 
-> However, I have asked him to only apply that policy if the aperture is
-> indeed smaller, and if not, create struct pages that directly cover the
-> PCIe BAR of the GPU instead, which will work better on systems or
-> architecture that don't have a "pinhole" window limitation.
-> However he was under the impression that this was going to collide with
-> what you guys are doing, so I'm trying to understand how. 
+The old strategy was very sloppy. Its why I tried to be as clear as possible on
+both the commit log and headers about this. If the commit log and headers were
+not clear, please help clarify this more somehow in your patches.
 
-I'm not sure I understand how either. However, I suspect if you collide
-with these patches then you'd also be breaking dax too.
-
-Logan
+  Luis
