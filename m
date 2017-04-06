@@ -1,99 +1,191 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:34787
-        "EHLO osg.samsung.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1753852AbdDDMet (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2017 08:34:49 -0400
-Date: Tue, 4 Apr 2017 09:34:25 -0300
-From: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: Linux Media Mailing List <linux-media@vger.kernel.org>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        Mauro Carvalho Chehab <mchehab@infradead.org>,
-        Noam Camus <noamca@mellanox.com>,
-        James Morris <james.l.morris@oracle.com>,
-        zijun_hu <zijun_hu@htc.com>,
-        Markus Heiser <markus.heiser@darmarit.de>,
-        linux-clk@vger.kernel.org, Jani Nikula <jani.nikula@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        linux-block@vger.kernel.org,
-        "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Ingo Molnar <mingo@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Michal Hocko <mhocko@suse.com>,
-        Ross Zwisler <ross.zwisler@linux.intel.com>,
-        Chris Wilson <chris@chris-wilson.co.uk>, linux-mm@kvack.org,
-        linux-security-module@vger.kernel.org,
-        Silvio Fricke <silvio.fricke@gmail.com>,
-        Takashi Iwai <tiwai@suse.de>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Jan Kara <jack@suse.cz>, Vlastimil Babka <vbabka@suse.cz>,
-        linux-pci@vger.kernel.org, Matt Fleming <matt@codeblueprint.co.uk>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Mel Gorman <mgorman@techsingularity.net>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Alexey Dobriyan <adobriyan@gmail.com>,
-        Hillf Danton <hillf.zj@alibaba-inc.com>
-Subject: Re: [PATCH 0/9] convert genericirq.tmpl and kernel-api.tmpl to
- DocBook
-Message-ID: <20170404093425.54da2050@vento.lan>
-In-Reply-To: <20170402143418.3de75239@lwn.net>
-References: <cover.1490904090.git.mchehab@s-opensource.com>
-        <20170402143418.3de75239@lwn.net>
+Return-Path: <SRS0=Q2iE=3O=arm.com=lorenzo.pieralisi@kernel.org>
+Return-Path: <SRS0=Q2iE=3O=arm.com=lorenzo.pieralisi@kernel.org>
+Date: Thu, 6 Apr 2017 17:21:56 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Henderson <rth@twiddle.net>,
+	Tony Luck <tony.luck@intel.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Ingo Molnar <mingo@redhat.com>,
+	Haavard Skinnemoen <hskinnemoen@gmail.com>,
+	Pratyush Anand <pratyush.anand@gmail.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Mingkai Hu <mingkai.hu@freescale.com>,
+	John Garry <john.garry@huawei.com>,
+	Tanmay Inamdar <tinamdar@apm.com>,
+	Murali Karicheri <m-karicheri2@ti.com>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Minghuan Lian <minghuan.Lian@freescale.com>,
+	Jon Mason <jonmason@broadcom.com>,
+	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+	Joao Pinto <Joao.Pinto@synopsys.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Michal Simek <michal.simek@xilinx.com>,
+	Stanimir Varbanov <svarbanov@mm-sol.com>,
+	Zhou Wang <wangzhou1@hisilicon.com>,
+	Roy Zang <tie-fei.zang@freescale.com>
+Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
+ interface
+Message-ID: <20170406162156.GA10134@red-moon>
+References: <20170327094954.7162-3-lorenzo.pieralisi@arm.com>
+ <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
+ <20170328144543.GA18046@red-moon>
+ <20170405105841.GG7909@n2100.armlinux.org.uk>
+ <20170405113238.GA2465@red-moon>
+ <20170406102636.GA9623@red-moon>
+ <20170406105312.GE28800@wotan.suse.de>
+ <20170406113845.GA10013@red-moon>
+ <20170406115906.GF28800@wotan.suse.de>
+ <20170406130727.GE17774@n2100.armlinux.org.uk>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170406130727.GE17774@n2100.armlinux.org.uk>
 List-ID: <linux-pci.vger.kernel.org>
 
-Em Sun, 2 Apr 2017 14:34:18 -0600
-Jonathan Corbet <corbet@lwn.net> escreveu:
-
-> On Thu, 30 Mar 2017 17:11:27 -0300
-> Mauro Carvalho Chehab <mchehab@s-opensource.com> wrote:
-> 
-> > This series converts just two documents, adding them to the
-> > core-api.rst book. It addresses the errors/warnings that popup
-> > after the conversion.
+On Thu, Apr 06, 2017 at 02:07:27PM +0100, Russell King - ARM Linux wrote:
+> On Thu, Apr 06, 2017 at 01:59:07PM +0200, Luis R. Rodriguez wrote:
+> > On Thu, Apr 06, 2017 at 12:38:45PM +0100, Lorenzo Pieralisi wrote:
+> > > Ok but where ? linux/io.h or asm-generic/io.h ? As I replied to Russell,
+> > > having it in linux/io.h is a bit odd given that it would be the only
+> > > ioremap_* implementation declared there, I think we need more
+> > > consistency here instead of deviating again from what you did.
 > > 
-> > I had to add two fixes to scripts/kernel-doc, in order to solve
-> > some of the issues.  
+> > asm-generic/io.h is the right place for generics which let you override.
 > 
-> I've applied the set, including the add-on to move some stuff to
-> driver-api - thanks.
-
-Thanks!
-
-> For whatever reason, I had a hard time applying a few of these; "git am"
-> would tell me this:
+> I disagree for two reasons, and I will refer you to Linus' comments back
+> in 2005 at http://yarchive.net/comp/linux/generic.html
 > 
-> > Applying: docs-rst: core_api: move driver-specific stuff to drivers_api
-> > fatal: sha1 information is lacking or useless (Documentation/driver-api/index.rst).
-> > Patch failed at 0001 docs-rst: core_api: move driver-specific stuff to drivers_api
-> > The copy of the patch that failed is found in: .git/rebase-apply/patch  
+> 1) asm-generic/io.h has become an ifdef mess, every single definition in
+>    there is conditional.  The reason for this has happened is that
+>    architectures can't pick and choose what they want from a single file
+>    unless something like that is done.  It would be _far_ better to
+>    split this file up by functional group - eg, ISA IO accessors,
+>    io(read|write)*(), read|write*(), and so forth.
 > 
-> I was able to get around this, but it took some hand work.  How are you
-> generating these?
+> 2) We're at the point where we have various .c files around the kernel
+>    _directly_ including asm-generic header files, which means the
+>    use of asm-generic headers is no longer a choice of the architecture.
+> 
+> 3) asm-generic/ started out life as the place where example
+>    implementations of asm/*.h header files were found, and but has
+>    grown into a place where we dump default implementations.  We had
+>    a place for default implementations for years, which were the
+>    linux/*.h headers.  We have now ended up with a mixture of both
+>    techniques, even for something like io.h, we have the messy
+>    asm-generic/io.h, the architecture's asm/io.h, and then linux/io.h.
+>    We have ended up with both linux/io.h and asm-generic/io.h containing
+>    default definitions.
+> 
+> We've had the rule that where both linux/foo.h and asm/foo.h exist, the
+> linux/ counterpart is the preferred include file.  That didn't really
+> happen with asm/io.h due to the number of users that there were, but
+> when new stuff was added to asm/io.h which we wanted to be generic,
+> linux/io.h was created to contain that.  This actually pre-dates the
+> "let's clutter up asm-generic with shared arch stuff" push.
+> 
+> Now, what you say _may_ make sense if we have an
+> asm-generic/ioremap-nopost.h header which just defines a default
+> ioremap_nopost.h implementation, and architectures would then be able to
+> choose whether to include that or not depending on whether they provide
+> their own implementation.  No ugly ifdefs are necessary with that
+> approach.
+> 
+> Out of the three choices, I would much rather see the
+> asm-generic/ioremap-nopost.h approach.  However, the down-side to that
+> is it means all architectures asm/io.h would need to be touched to
+> explicitly include that.
+> 
+> What I'm absolutely certain of, though, is that making asm-generic/io.h
+> even worse by adding yet more conditional stuff to it is not a sane way
+> forward.
 
-That's weird. I'm using this to generate the patches:
+Ok, so:
 
-	git format-patch -o $tmp_dir --stat --summary --patience --signoff --thread=shallow
+(1) I can do asm-generic/ioremap-nopost.h, which I assume you want to
+    contain something like
 
-plus some scripting that runs scripts/get_maintainers.
+static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
+{
+	return ioremap_nocache(offset, size);
+}
 
-After that, I run:
+Funny bit is that it has to be included by asm*/io.h files _after_
+ioremap_nocache has been #defined (that's the reason my approach was
+failing miserably even on arches like eg powerpc (see [1] below) that
+does have ioremap_nocache), not sure it is going to be very nice to have
+an include in the middle of asm*/io.h include files (and I have to patch
+all arches which I can do).
 
-	git send-email $tmp_dir
+Or
 
-Then, exim sends the patches to a smart SMTP server (currently,
-infradead.org, but I'm switching to s-opensource.org, as I'm getting
-some troubles because the IP doesn't match the From: line).
+(2) I add:
+
+#ifndef ioremap_nopost
+static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
+{
+	return NULL; <-(making it return ioremap_nocache() does not
+			work, see [1] for the reason)
+}
+#endif
+
+in linux/io.h
+
+(3) ioremap_nopost follows Luis' ioremap_uc approach
+
+(1)-(2) bypass completely what Luis did for ioremap_uc(), which implies
+that we have yet another way of implementing ioremap_*.
+
+I would like to get this patchset done so if you have an opinion it
+is time to state it.
 
 Thanks,
-Mauro
+Lorenzo
+
+[1] powerpc build report:
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git pci/config-io-mappings-fix-v3
+head:   283a324b549a662346c95c05b08983dd5b83354b
+commit: e66b493fe93226c02b1a33355f79db7ed6efe718 [2/23] linux/io.h: add ioremap_nopost remap interface
+config: powerpc-defconfig (attached as .config)
+compiler: powerpc64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
+reproduce:
+        wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        git checkout e66b493fe93226c02b1a33355f79db7ed6efe718
+        # save the attached .config to linux build tree
+        make.cross ARCH=powerpc
+
+All errors (new ones prefixed by >>):
+
+   In file included from arch/powerpc/include/asm/io.h:28:0,
+                    from arch/powerpc/oprofile/op_model_cell.c:29:
+   include/linux/io.h: In function 'ioremap_nopost':
+   include/linux/io.h:169:9: error: implicit declaration of function 'ioremap_nocache' [-Werror=implicit-function-declaration]
+     return ioremap_nocache(offset, size);
+            ^~~~~~~~~~~~~~~
+>> include/linux/io.h:169:9: error: return makes pointer from integer without a cast [-Werror=int-conversion]
+     return ioremap_nocache(offset, size);
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   cc1: all warnings being treated as errors
+
+vim +169 include/linux/io.h
+
+   163  }
+   164  #endif
+   165 
+   166  #ifndef ioremap_nopost
+   167  static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
+   168  {
+ > 169           return ioremap_nocache(offset, size);
+   170  }
+   171  #endif
+   172 
