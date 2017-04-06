@@ -1,80 +1,130 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ms.lwn.net ([45.79.88.28]:49780 "EHLO ms.lwn.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751663AbdDBUeV (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 2 Apr 2017 16:34:21 -0400
-Date: Sun, 2 Apr 2017 14:34:18 -0600
-From: Jonathan Corbet <corbet@lwn.net>
-To: Mauro Carvalho Chehab <mchehab@s-opensource.com>
-Cc: Linux Media Mailing List <linux-media@vger.kernel.org>,
-        Linux Doc Mailing List <linux-doc@vger.kernel.org>,
-        Mauro Carvalho Chehab <mchehab@infradead.org>,
-        Noam Camus <noamca@mellanox.com>,
-        James Morris <james.l.morris@oracle.com>,
-        zijun_hu <zijun_hu@htc.com>,
-        Markus Heiser <markus.heiser@darmarit.de>,
-        linux-clk@vger.kernel.org, Jani Nikula <jani.nikula@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        Nicholas Piggin <npiggin@gmail.com>,
-        Russell King <linux@armlinux.org.uk>,
-        linux-block@vger.kernel.org,
-        "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Joonsoo Kim <iamjoonsoo.kim@lge.com>,
-        Ingo Molnar <mingo@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Serge E. Hallyn" <serge@hallyn.com>,
-        Michal Hocko <mhocko@suse.com>,
-        Ross Zwisler <ross.zwisler@linux.intel.com>,
-        Chris Wilson <chris@chris-wilson.co.uk>, linux-mm@kvack.org,
-        linux-security-module@vger.kernel.org,
-        Silvio Fricke <silvio.fricke@gmail.com>,
-        Takashi Iwai <tiwai@suse.de>,
-        Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-        Jan Kara <jack@suse.cz>, Vlastimil Babka <vbabka@suse.cz>,
-        linux-pci@vger.kernel.org, Matt Fleming <matt@codeblueprint.co.uk>,
-        Johannes Weiner <hannes@cmpxchg.org>,
-        Andrey Ryabinin <aryabinin@virtuozzo.com>,
-        Andy Lutomirski <luto@kernel.org>,
-        Mel Gorman <mgorman@techsingularity.net>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Alexey Dobriyan <adobriyan@gmail.com>,
-        Hillf Danton <hillf.zj@alibaba-inc.com>
-Subject: Re: [PATCH 0/9] convert genericirq.tmpl and kernel-api.tmpl to
- DocBook
-Message-ID: <20170402143418.3de75239@lwn.net>
-In-Reply-To: <cover.1490904090.git.mchehab@s-opensource.com>
-References: <cover.1490904090.git.mchehab@s-opensource.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V10 03/12] of: dma: Move range size workaround to
+ of_dma_get_range()
+To: Sricharan R <sricharan@codeaurora.org>, robin.murphy@arm.com,
+ will.deacon@arm.com, joro@8bytes.org, lorenzo.pieralisi@arm.com,
+ iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
+ linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+ bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+ tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
+ robh+dt@kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
+ lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
+ linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
+References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
+ <1491301105-5274-4-git-send-email-sricharan@codeaurora.org>
+From: Frank Rowand <frowand.list@gmail.com>
+Message-ID: <58E5DF13.2020700@gmail.com>
+Date: Wed, 5 Apr 2017 23:24:19 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1491301105-5274-4-git-send-email-sricharan@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 30 Mar 2017 17:11:27 -0300
-Mauro Carvalho Chehab <mchehab@s-opensource.com> wrote:
-
-> This series converts just two documents, adding them to the
-> core-api.rst book. It addresses the errors/warnings that popup
-> after the conversion.
+On 04/04/17 03:18, Sricharan R wrote:
+> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 > 
-> I had to add two fixes to scripts/kernel-doc, in order to solve
-> some of the issues.
+> Invalid dma-ranges values should be worked around when retrieving the
+> DMA range in of_dma_get_range(), not by all callers of the function.
+> This isn't much of a problem now that we have a single caller, but that
+> situation will change when moving DMA configuration to device probe
+> time.
 
-I've applied the set, including the add-on to move some stuff to
-driver-api - thanks.
-
-For whatever reason, I had a hard time applying a few of these; "git am"
-would tell me this:
-
-> Applying: docs-rst: core_api: move driver-specific stuff to drivers_api
-> fatal: sha1 information is lacking or useless (Documentation/driver-api/index.rst).
-> Patch failed at 0001 docs-rst: core_api: move driver-specific stuff to drivers_api
-> The copy of the patch that failed is found in: .git/rebase-apply/patch
-
-I was able to get around this, but it took some hand work.  How are you
-generating these?
+Please drop this patch from the series.  I just now sent Rob an
+alternative that reflects other changes that have occurred since
+this patch series was first created many, many moons ago
+(https://lkml.org/lkml/2017/4/6/53).
 
 Thanks,
 
-jon
+Frank
+
+> 
+> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+> Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+> ---
+>  drivers/of/address.c | 20 ++++++++++++++++++--
+>  drivers/of/device.c  | 15 ---------------
+>  2 files changed, 18 insertions(+), 17 deletions(-)
+> 
+> diff --git a/drivers/of/address.c b/drivers/of/address.c
+> index 02b2903..6aeb816 100644
+> --- a/drivers/of/address.c
+> +++ b/drivers/of/address.c
+> @@ -819,8 +819,8 @@ void __iomem *of_io_request_and_map(struct device_node *np, int index,
+>   *	CPU addr (phys_addr_t)	: pna cells
+>   *	size			: nsize cells
+>   *
+> - * It returns -ENODEV if "dma-ranges" property was not found
+> - * for this device in DT.
+> + * Return 0 on success, -ENODEV if the "dma-ranges" property was not found for
+> + * this device in DT, or -EINVAL if the CPU address or size is invalid.
+>   */
+>  int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *size)
+>  {
+> @@ -880,6 +880,22 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
+>  	*dma_addr = dmaaddr;
+>  
+>  	*size = of_read_number(ranges + naddr + pna, nsize);
+> +	/*
+> +	 * DT nodes sometimes incorrectly set the size as a mask. Work around
+> +	 * those incorrect DT by computing the size as mask + 1.
+> +	 */
+> +	if (*size & 1) {
+> +		pr_warn("%s: size 0x%llx for dma-range in node(%s) set as mask\n",
+> +			__func__, *size, np->full_name);
+> +		*size = *size + 1;
+> +	}
+> +
+> +	if (!*size) {
+> +		pr_err("%s: invalid size zero for dma-range in node(%s)\n",
+> +		       __func__, np->full_name);
+> +		ret = -EINVAL;
+> +		goto out;
+> +	}
+>  
+>  	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
+>  		 *dma_addr, *paddr, *size);
+> diff --git a/drivers/of/device.c b/drivers/of/device.c
+> index b1e6beb..09dedd0 100644
+> --- a/drivers/of/device.c
+> +++ b/drivers/of/device.c
+> @@ -110,21 +110,6 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+>  		size = dev->coherent_dma_mask + 1;
+>  	} else {
+>  		offset = PFN_DOWN(paddr - dma_addr);
+> -
+> -		/*
+> -		 * Add a work around to treat the size as mask + 1 in case
+> -		 * it is defined in DT as a mask.
+> -		 */
+> -		if (size & 1) {
+> -			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
+> -				 size);
+> -			size = size + 1;
+> -		}
+> -
+> -		if (!size) {
+> -			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
+> -			return;
+> -		}
+>  		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
+>  	}
+>  
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
