@@ -1,197 +1,96 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [GIT PULL] PCI: Support for configurable PCI endpoint
-Date: Wed, 5 Apr 2017 14:22:20 +0530
-Message-ID: <20170405085243.18123-1-kishon@ti.com>
+Return-Path: <SRS0=rdsm=3O=sifive.com=wesley@kernel.org>
+Return-Path: <SRS0=rdsm=3O=sifive.com=wesley@kernel.org>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1491441105.50673.2.camel@intel.com>
+References: <CAMgXwTjX1j2dhi7n+APNef0di5oo+iK57Cq0S+3NdMtQzAc=Vw@mail.gmail.com>
+ <20170404205617.GG27692@bhelgaas-glaptop.roam.corp.google.com>
+ <CAMgXwTgacUcfzinQKuf8htwxFDJ_GvUN-R0zj7sNbqnpJF3QBA@mail.gmail.com>
+ <20170405183732.GB17066@bhelgaas-glaptop.roam.corp.google.com> <1491441105.50673.2.camel@intel.com>
+From: Wesley Terpstra <wesley@sifive.com>
+Date: Wed, 5 Apr 2017 18:59:19 -0700
+Message-ID: <CAMgXwTj2sKhn9XB+6aEgZyxjgnv3njLks26XG6B0nL3BEMiivw@mail.gmail.com>
+Subject: Re: PCI enumeration without a BIOS
+To: Ley Foon Tan <ley.foon.tan@intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org, Michal Simek <michal.simek@xilinx.com>,
+	rfi@lists.rocketboards.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Wed, Apr 5, 2017 at 6:11 PM, Ley Foon Tan <ley.foon.tan@intel.com> wrote:
+> We have fixed this in last year.
 
-Please find the pull request for PCI endpoint support below. I've
-also included all the history here.
+Right, for host/pcie-altera.c
+However, the problem persists in host/pcie-xilinx.c and host/pcie-xilinx-nwl.c
 
-Changes from v5:
-*) remove #syscon-cells property added in v5 and used 
-   of_parse_phandle_with_fixed_args
-*) fix compilation error in make.cross ARCH=blackfin that was because
-   pci_endpoint_test.c driver depends on COMPILE_TEST.
-
-Changes from v4:
-*) add #syscon-cells property and used of_parse_phandle_with_args
-   to perform a configuration in syscon module (as suggested by
-   Rob Herring)
-*) Remove unnecessary white space.
-
-Changes from v3:
-*) fixed a typo and adapted to https://lkml.org/lkml/2017/3/13/562.
-
-Changes from v2:
-*) changed the configfs structure as suggested by Christoph Hellwig. With
-   this change the framework creates configfs entry for EP function driver
-   and EP controller. Previously these entries have to be created by the
-   the user. (Haven't changed the epc core or epf core except for invoking
-   configfs APIs to create entries for EP function driver and EP controller.
-   That's mostly because the EP function device can still be created by
-   directly invoking the epf core API without using configfs).
-*) Now the user has to use configfs entry 'start' to start the link.
-   This was previously done by the function driver. However in the case of
-   multi function EP, the function driver shouldn't start the link.
-
-Changes from v1:
-*) The preparation patches for adding EP support is removed and is sent
-   separately
-*) Added device ID for DRA74x/DRA72x and used it instead of
-   using "PCI_ANY_ID"
-*) Added userguide for PCI endpoint test function
-
-Major Improvements from RFC:
- *) support multi-function devices (hw supported not virtual)
- *) Access host side buffers
- *) Raise MSI interrupts
- *) Add user space program to use the host side PCI driver
- *) Adapt all other users of designware to use the new design (only
-    compile tested. Since I have only dra7xx boards, the new design
-    has only been tested in dra7xx. I'd require the help of others
-    to test the platforms they have access to).
-
-This is based on
-git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git
-pci/host-designware
-
-Thanks
-Kishon
-
-The following changes since commit 7ea64dcf602c21b3e5062ca90111ca4459fab403:
-
-  __end__ (2017-04-04 15:29:37 -0500)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kishon/pci-endpoint.git tags/pci-endpoint-for-4.12
-
-for you to fetch changes up to a5c85ba45c9682456077d7277196e91f8ea5fd5c:
-
-  ARM: DRA7: clockdomain: Change the CLKTRCTRL of CM_PCIE_CLKSTCTRL to SW_WKUP (2017-04-05 14:05:28 +0530)
-
-----------------------------------------------------------------
-pci: endpoint: for 4.12
-
- *) Add PCI endpoint core layer
- *) Modify designware and dra7xx driver to be configured in EP mode
- *) Add a PCI endpoint *test* function driver and corresponding host
-    driver
-
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-
-----------------------------------------------------------------
-Kishon Vijay Abraham I (23):
-      PCI: endpoint: Add EP core layer to enable EP controller and EP functions
-      Documentation: PCI: Guide to use PCI Endpoint Core Layer
-      PCI: endpoint: Introduce configfs entry for configuring EP functions
-      Documentation: PCI: Guide to use PCI endpoint configfs
-      PCI: endpoint: Create configfs entry for EPC device and EPF driver
-      Documentation: PCI: Add specification for the *PCI test* function device
-      PCI: endpoint: functions: Add an EP function to test PCI
-      Documentation: PCI: Add binding documentation for pci-test endpoint function
-      PCI: dwc: designware: Add EP mode support
-      dt-bindings: PCI: Add DT bindings for PCI designware EP mode
-      PCI: dwc: dra7xx: Facilitate wrapper and MSI interrupts to be enabled independently
-      PCI: dwc: dra7xx: Add EP mode support
-      dt-bindings: PCI: dra7xx: Add DT bindings for PCI dra7xx EP mode
-      PCI: dwc: dra7xx: Workaround for errata id i870
-      dt-bindings: PCI: dra7xx: Add DT bindings to enable unaligned access
-      PCI: Add device IDs for DRA74x and DRA72x
-      misc: Add host side PCI driver for PCI test function device
-      Documentation: misc-devices: Add Documentation for pci-endpoint-test driver
-      tools: PCI: Add a userspace tool to test PCI endpoint
-      tools: PCI: Add sample test script to invoke pcitest
-      Documentation: PCI: Add userguide for PCI endpoint test function
-      MAINTAINERS: Add PCI Endpoint maintainer
-      ARM: DRA7: clockdomain: Change the CLKTRCTRL of CM_PCIE_CLKSTCTRL to SW_WKUP
-
- Documentation/PCI/00-INDEX                                |  10 +++
- Documentation/PCI/endpoint/function/binding/pci-test.txt  |  17 +++++
- Documentation/PCI/endpoint/pci-endpoint-cfs.txt           | 105 ++++++++++++++++++++++++++
- Documentation/PCI/endpoint/pci-endpoint.txt               | 215 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- Documentation/PCI/endpoint/pci-test-function.txt          |  66 ++++++++++++++++
- Documentation/PCI/endpoint/pci-test-howto.txt             | 179 +++++++++++++++++++++++++++++++++++++++++++
- Documentation/devicetree/bindings/pci/designware-pcie.txt |  26 +++++--
- Documentation/devicetree/bindings/pci/ti-pci.txt          |  42 +++++++++--
- Documentation/misc-devices/pci-endpoint-test.txt          |  35 +++++++++
- MAINTAINERS                                               |   9 +++
- arch/arm/mach-omap2/clockdomains7xx_data.c                |   2 +-
- drivers/Makefile                                          |   2 +
- drivers/misc/Kconfig                                      |   7 ++
- drivers/misc/Makefile                                     |   1 +
- drivers/misc/pci_endpoint_test.c                          | 534 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/Kconfig                                       |   1 +
- drivers/pci/dwc/Kconfig                                   |  36 ++++++++-
- drivers/pci/dwc/Makefile                                  |   5 +-
- drivers/pci/dwc/pci-dra7xx.c                              | 270 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-----
- drivers/pci/dwc/pcie-designware-ep.c                      | 342 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/dwc/pcie-designware.c                         | 125 ++++++++++++++++++++++++++++++
- drivers/pci/dwc/pcie-designware.h                         | 112 +++++++++++++++++++++++++++
- drivers/pci/endpoint/Kconfig                              |  31 ++++++++
- drivers/pci/endpoint/Makefile                             |   7 ++
- drivers/pci/endpoint/functions/Kconfig                    |  12 +++
- drivers/pci/endpoint/functions/Makefile                   |   5 ++
- drivers/pci/endpoint/functions/pci-epf-test.c             | 510 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/endpoint/pci-ep-cfs.c                         | 509 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/endpoint/pci-epc-core.c                       | 579 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/pci/endpoint/pci-epc-mem.c                        | 143 +++++++++++++++++++++++++++++++++++
- drivers/pci/endpoint/pci-epf-core.c                       | 351 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/mod_devicetable.h                           |  10 +++
- include/linux/pci-ep-cfs.h                                |  41 ++++++++++
- include/linux/pci-epc.h                                   | 144 +++++++++++++++++++++++++++++++++++
- include/linux/pci-epf.h                                   | 162 +++++++++++++++++++++++++++++++++++++++
- include/linux/pci_ids.h                                   |   2 +
- include/uapi/linux/Kbuild                                 |   1 +
- include/uapi/linux/pcitest.h                              |  19 +++++
- tools/pci/pcitest.c                                       | 186 +++++++++++++++++++++++++++++++++++++++++++++
- tools/pci/pcitest.sh                                      |  56 ++++++++++++++
- 40 files changed, 4869 insertions(+), 40 deletions(-)
- create mode 100644 Documentation/PCI/endpoint/function/binding/pci-test.txt
- create mode 100644 Documentation/PCI/endpoint/pci-endpoint-cfs.txt
- create mode 100644 Documentation/PCI/endpoint/pci-endpoint.txt
- create mode 100644 Documentation/PCI/endpoint/pci-test-function.txt
- create mode 100644 Documentation/PCI/endpoint/pci-test-howto.txt
- create mode 100644 Documentation/misc-devices/pci-endpoint-test.txt
- create mode 100644 drivers/misc/pci_endpoint_test.c
- create mode 100644 drivers/pci/dwc/pcie-designware-ep.c
- create mode 100644 drivers/pci/endpoint/Kconfig
- create mode 100644 drivers/pci/endpoint/Makefile
- create mode 100644 drivers/pci/endpoint/functions/Kconfig
- create mode 100644 drivers/pci/endpoint/functions/Makefile
- create mode 100644 drivers/pci/endpoint/functions/pci-epf-test.c
- create mode 100644 drivers/pci/endpoint/pci-ep-cfs.c
- create mode 100644 drivers/pci/endpoint/pci-epc-core.c
- create mode 100644 drivers/pci/endpoint/pci-epc-mem.c
- create mode 100644 drivers/pci/endpoint/pci-epf-core.c
- create mode 100644 include/linux/pci-ep-cfs.h
- create mode 100644 include/linux/pci-epc.h
- create mode 100644 include/linux/pci-epf.h
- create mode 100644 include/uapi/linux/pcitest.h
- create mode 100644 tools/pci/pcitest.c
- create mode 100644 tools/pci/pcitest.sh
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/comm
+> it/drivers/pci/host/pcie-
+> altera.c?id=99496bd2971fc378226ad4413e5b72c4545714bd
+>
+>>
+>> >
+>> > Without it I see:
+>> >
+>> > [    6.230000] ------------[ cut here ]------------
+>> > [    6.230000] WARNING: CPU: 0 PID: 1 at
+>> > /scratch/terpstra/freedom-u-sdk/linux/kernel/irq/irqdomain.c:365
+>> > irq_domain_associate+0x190/0x200
+>> > [    6.240000] error: hwirq 0x4 is too large for dummy
+>> > [    6.250000] CPU: 0 PID: 1 Comm: swapper Not tainted
+>> > 4.11.0-rc1-661305-g4f97179 #12
+>> > [    6.250000] Call Trace:
+>> > [    6.260000] [<ffffffff80288660>] walk_stackframe+0x0/0x104
+>> > [    6.260000] [<ffffffff80288800>] show_stack+0x38/0x50
+>> > [    6.270000] [<ffffffff803c6e30>] dump_stack+0x2c/0x40
+>> > [    6.270000] [<ffffffff8028c600>] __warn+0x118/0x130
+>> > [    6.280000] [<ffffffff8028c658>] warn_slowpath_fmt+0x40/0x54
+>> > [    6.280000] [<ffffffff802c02a8>]
+>> > irq_domain_associate+0x18c/0x200
+>> > [    6.290000] [<ffffffff802c0a3c>] irq_create_mapping+0x90/0xe4
+>> > [    6.300000] [<ffffffff802c0be4>]
+>> > irq_create_fwspec_mapping+0x154/0x288
+>> > [    6.300000] [<ffffffff802c0d7c>] irq_create_of_mapping+0x64/0x84
+>> > [    6.310000] [<ffffffff804f9cb8>]
+>> > of_irq_parse_and_map_pci+0x38/0x50
+>> > [    6.310000] [<ffffffff80407e00>] pci_fixup_irqs+0x6c/0x114
+>> > [    6.320000] [<ffffffff80408e64>] xilinx_pcie_probe+0x308/0x3f0
+>> > [    6.330000] [<ffffffff8042cba4>] platform_drv_probe+0x3c/0x88
+>> > [    6.330000] [<ffffffff8042aec0>] really_probe+0xbc/0x260
+>> > [    6.340000] [<ffffffff8042b138>] __driver_attach+0xd4/0xdc
+>> > [    6.340000] [<ffffffff80429200>] bus_for_each_dev+0x68/0xb8
+>> > [    6.350000] [<ffffffff8042b640>] driver_attach+0x24/0x38
+>> > [    6.350000] [<ffffffff80429db8>] bus_add_driver+0x1b4/0x22c
+>> > [    6.360000] [<ffffffff8042bdc0>] driver_register+0x68/0x12c
+>> > [    6.360000] [<ffffffff8042da78>]
+>> > __platform_driver_register+0x48/0x5c
+>> > [    6.370000] [<ffffffff8000db38>]
+>> > xilinx_pcie_driver_init+0x20/0x34
+>> > [    6.380000] [<ffffffff80000d48>] do_one_initcall+0x98/0x140
+>> > [    6.380000] [<ffffffff80000f38>]
+>> > kernel_init_freeable+0x148/0x218
+>> > [    6.390000] [<ffffffff805ad19c>] kernel_init+0x18/0x114
+>> > [    6.390000] [<ffffffff80286cac>] ret_from_syscall+0xc/0x10
+>> > [    6.400000] ---[ end trace 8023adf5befc91e0 ]---
+>> >
+>> > ... that said, I am not confident my patch is the right fix. So
+>> > consider this a bug report + work-around only. :)
+>> >
+>> > >
+>> > > Yeah, everything seems mostly working.  The "invalid BAR" things
+>> > > *could* be an issue -- those registers are not what the PCI spec
+>> > > says
+>> > > they should be.
+>> > The devices in question are:
+>> > 04:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
+>> > RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 06)
+>> > 06:00.0 SATA controller: Marvell Technology Group Ltd. 88SE9230
+>> > PCIe
+>> > SATA 6Gb/s Controller (rev 11)
+>> >
+>> > I am going to plug them in to an Intel machine with 4.11 and see if
+>> > I
+>> > get the same warnings.
+>>
+>
+> Regards
+> Ley Foon
