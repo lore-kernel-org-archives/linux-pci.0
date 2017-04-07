@@ -1,69 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 25 Apr 2017 11:19:13 -0700
-From: John Hubbard <jhubbard@nvidia.com>
-To: Christoph Hellwig <hch@infradead.org>
-CC: Haiyang Zhang <haiyangz@microsoft.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Piotr Jaroszynski <pjaroszynski@nvidia.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] pci-hyperv: Use only 16 bit integer for PCI domain
-In-Reply-To: <20170425131432.GA4714@infradead.org>
-Message-ID: <alpine.LNX.2.20.1704251112550.1507@sandstorm>
-References: <1492706123-22913-1-git-send-email-haiyangz@exchange.microsoft.com> <CAErSpo4iFS05Kk3Km54fFmpMf11XCoaPmGxSzqE3QuA5P=T6=Q@mail.gmail.com> <BLUPR03MB1412F7A0A693B67685D5FE9FCA1B0@BLUPR03MB1412.namprd03.prod.outlook.com> <8ff72ec3-d61e-07d9-8c9d-92951195b67d@nvidia.com>
- <20170425131432.GA4714@infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V7 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
+ Rajat Jain <rajatja@google.com>
+References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
+ <7c48ca8b-b834-3257-91dc-77e9d19def6c@codeaurora.org>
+ <92EBB4272BF81E4089A7126EC1E7B28466761383@IRSMSX101.ger.corp.intel.com>
+ <92EBB4272BF81E4089A7126EC1E7B2846676271D@IRSMSX101.ger.corp.intel.com>
+ <951505b8-9580-7131-2f14-de92817190a7@codeaurora.org>
+ <CACK8Z6FG7QHs1kQUoTJTcP3606+xBLFp9RUmLuv0m0X2mxH9XA@mail.gmail.com>
+ <92EBB4272BF81E4089A7126EC1E7B2846676309A@IRSMSX101.ger.corp.intel.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <896488eb-cb1d-03b9-73a0-011e4a9025c5@codeaurora.org>
+Date: Fri, 7 Apr 2017 09:09:36 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B2846676309A@IRSMSX101.ger.corp.intel.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "timur@codeaurora.org" <timur@codeaurora.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 25 Apr 2017, Christoph Hellwig wrote:
+On 4/7/2017 5:03 AM, Patel, Mayurkumar wrote:
+> So basically, I am not currently 100% sure, what is the proper fix for this. Whether BIOS should
+> enable L1SS on Root Port no matter Endpoint is connected or not during boot?
 
-> Hi John,
-> 
-> please fix your quoting of the previous mails, thanks!
+I'd like to force the kernel to reconfigure ASPM for all combinations
+when there is no card attached during boot and we do a hotplug insertion. 
 
-Shoot, sorry about any quoting issues. I'm sufficiently new to conversing 
-on these lists that I'm not even sure which mistake I made.
+I'm thinking about how to do this now.
 
-> 
-> 
-> What ACPI defines does not matter at all.  Linux uses 32-bit domains
-> IDs, and on x86 specifily uses those for non-ACPI enumarated domains
-> (e.g. VMD).
-> 
-> You've also not demontrated any issue with any Linux driver yet.
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
-The NVIDIA out-of-tree driver has historically treated domains as 16-bit. 
-So this showed up when people tried to run that driver in a hyper-v VM.
-
-> 
-> > Also...it would be nice if we could use Haiyang's patch as at least a
-> > temporary fix, because distros are just today releasing the previous code,
-> > and HyperV will start breaking "occasionally", depending on whether the
-> > 32-bit virtual (fake) PCI domain fits within 16 bits. (If not, then we can
-> > rush out a driver update to fix it, but there will be a window of time with
-> > some breakage there.)
-> 
-> Just send the fix to whatever driver is broken to the driver maintainer.
-
-Done: that would be us. :)
-
-> But I can't find a single broken driver in the tree, and as you know
-> nothing else matters for Linux anyway.
-> 
-
-Yes, I looked at Nouveau, and I see that they allow for a 32-bit domain, 
-so I agree that we haven't found any in-tree drivers that have a problem.
-
-Anyway, thanks for the answers and explanations.
-
---
-thanks,
-john h
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
