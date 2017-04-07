@@ -1,108 +1,112 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [RFC/RFT PATCH 07/18] ARM: PCI: orion5x: Convert PCI scan API to
- pci_scan_root_bus_bridge()
-Date: Wed, 26 Apr 2017 12:17:58 +0100
-Message-Id: <20170426111809.19922-8-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
-References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>, Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Jason Cooper <jason@lakedaemon.net>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
- Roy Zang <tie-fei.zang@freescale.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Date: Fri, 07 Apr 2017 23:07:15 +0200
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: `pci_apply_final_quirks()` taking half a second
+Message-ID: <44cada166e42007d27b4c3e3aa0744d7@molgen.mpg.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The introduction of pci_scan_root_bus_bridge() provides a PCI core
-API to scan a PCI root bus backed by an already initialized
-struct pci_host_bridge object, which simplifies the bus scan
-interface and makes the PCI scan root bus interface easier to
-generalize as members are added to the struct pci_host_bridge().
-
-Convert ARM orion5x platform code to pci_scan_root_bus_bridge() to
-improve the PCI root bus scanning interface.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Jason Cooper <jason@lakedaemon.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: Andrew Lunn <andrew@lunn.ch>
----
- arch/arm/mach-orion5x/pci.c | 29 +++++++++++++++++++++++------
- 1 file changed, 23 insertions(+), 6 deletions(-)
-
-diff --git a/arch/arm/mach-orion5x/pci.c b/arch/arm/mach-orion5x/pci.c
-index ecb998e..6dc4c89 100644
---- a/arch/arm/mach-orion5x/pci.c
-+++ b/arch/arm/mach-orion5x/pci.c
-@@ -557,13 +557,30 @@ int __init orion5x_pci_sys_setup(int nr, struct pci_sys_data *sys)
- 
- struct pci_bus __init *orion5x_pci_sys_scan_bus(int nr, struct pci_sys_data *sys)
- {
--	if (nr == 0)
--		return pci_scan_root_bus(NULL, sys->busnr, &pcie_ops, sys,
--					 &sys->resources);
-+	struct pci_host_bridge *bridge;
-+	int ret = -ENODEV;
- 
--	if (nr == 1 && !orion5x_pci_disabled)
--		return pci_scan_root_bus(NULL, sys->busnr, &pci_ops, sys,
--					 &sys->resources);
-+	bridge = pci_alloc_host_bridge(0);
-+	if (!bridge)
-+		return NULL;
-+
-+	list_splice_init(&sys->resources, &bridge->windows);
-+	bridge->dev.parent = NULL;
-+	bridge->sysdata = sys;
-+	bridge->busnr = sys->busnr;
-+
-+	if (nr == 0) {
-+		bridge->ops = &pcie_ops;
-+		ret = pci_scan_root_bus_bridge(bridge);
-+	}
-+
-+	if (nr == 1 && !orion5x_pci_disabled) {
-+		bridge->ops = &pci_ops;
-+		ret = pci_scan_root_bus_bridge(bridge);
-+	}
-+
-+	if (!ret)
-+		return bridge->bus;
- 
- 	BUG();
- 	return NULL;
--- 
-2.10.0
+Dear Linux folks,
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Measuring where time is spent during boot with `systemd-bootchart` on an 
+Asus A780FullHD, it turns out that half a second is spent in 
+`pci_apply_final_quirks()`.
+
+Here are the times copied from the SVG:
+
+   init_ladder 0.012s
+   init_menu 0.012s
+   pm_sysrq_init 0.012s
+   acpi_init 0.027s
+   pci_subsys_init 0.008s
+   hpet_late_init 0.004s
+   tracer_init_tracefs 0.002s
+   event_trace_init 0.008s
+   pnpacpi_init 0.002s
+   chr_dev_init 0.003s
+   init_acpi_pm_clocksource 0.004s
+   pci_apply_final_quirks 0.452s
+   populate_rootfs 0.400s
+   pci_iommu_init 0.003s
+   rsa_init 0.058s
+   serial8250_init 0.020s
+   i8042_init 0.003s
+   load_system_certificate_list 0.002s
+   ata_init 0.007s
+   ehci_pci_init 0.030s
+   ohci_pci_init 0.312s
+   ahci_pci_driver_init 0.342s
+   atiixp_pci_driver_init 0.337s
+   hid_init 0.004s
+   init_sr 0.031s
+
+I don’t know what information you need, so I just include the Linux 
+Kernel version, and the output of `lspci -nn`.
+
+```
+$ more /proc/version
+Linux version 4.9.0-0.bpo.2-amd64 (debian-kernel@lists.debian.org) (gcc 
+version 4.9.2 (Debian 4.9.2-10) ) #1 SMP Debian 4.9.13-1~bpo8+1 (201
+7-02-27)
+$ lspci -nn
+00:00.0 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] RS780 
+Host Bridge [1022:9600]
+00:01.0 PCI bridge [0604]: ASRock Incorporation Device [1849:9602]
+00:09.0 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] 
+RS780/RS880 PCI to PCI bridge (PCIE port 4) [1022:9608]
+00:0a.0 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] 
+RS780/RS880 PCI to PCI bridge (PCIE port 5) [1022:9609]
+00:11.0 SATA controller [0106]: Advanced Micro Devices, Inc. [AMD/ATI] 
+SB7x0/SB8x0/SB9x0 SATA Controller [AHCI mode] [1002:4391]
+00:12.0 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
+SB7x0/SB8x0/SB9x0 USB OHCI0 Controller [1002:4397]
+00:12.1 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
+SB7x0 USB OHCI1 Controller [1002:4398]
+00:12.2 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
+SB7x0/SB8x0/SB9x0 USB EHCI Controller [1002:4396]
+00:13.0 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
+SB7x0/SB8x0/SB9x0 USB OHCI0 Controller [1002:4397]
+00:13.1 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
+SB7x0 USB OHCI1 Controller [1002:4398]
+00:13.2 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
+SB7x0/SB8x0/SB9x0 USB EHCI Controller [1002:4396]
+00:14.0 SMBus [0c05]: Advanced Micro Devices, Inc. [AMD/ATI] SBx00 SMBus 
+Controller [1002:4385] (rev 3a)
+00:14.1 IDE interface [0101]: Advanced Micro Devices, Inc. [AMD/ATI] 
+SB7x0/SB8x0/SB9x0 IDE Controller [1002:439c]
+00:14.2 Audio device [0403]: Advanced Micro Devices, Inc. [AMD/ATI] 
+SBx00 Azalia (Intel HDA) [1002:4383]
+00:14.3 ISA bridge [0601]: Advanced Micro Devices, Inc. [AMD/ATI] 
+SB7x0/SB8x0/SB9x0 LPC host controller [1002:439d]
+00:14.4 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD/ATI] SBx00 
+PCI to PCI Bridge [1002:4384]
+00:14.5 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
+SB7x0/SB8x0/SB9x0 USB OHCI2 Controller [1002:4399]
+00:18.0 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] K8 
+[Athlon64/Opteron] HyperTransport Technology Configuration [1022:1100]
+00:18.1 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] K8 
+[Athlon64/Opteron] Address Map [1022:1101]
+00:18.2 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] K8 
+[Athlon64/Opteron] DRAM Controller [1022:1102]
+00:18.3 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] K8 
+[Athlon64/Opteron] Miscellaneous Control [1022:1103]
+01:05.0 VGA compatible controller [0300]: Advanced Micro Devices, Inc. 
+[AMD/ATI] RS780 [Radeon HD 3200] [1002:9610]
+04:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. 
+RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller [10ec:8168] 
+(rev 02)
+```
+
+It’d be great, if the times could be reduced, so that the time from GRUB 
+to entering the LUKS passphrase gets smaller.
+
+
+Kind regards,
+
+Paul
