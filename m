@@ -1,51 +1,61 @@
-Return-Path: <SRS0=N5Sh=3T=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=N5Sh=3T=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V8 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
- <20170411211924.GC14778@bhelgaas-glaptop.roam.corp.google.com>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
- linux-arm-msm@vger.kernel.org, mayurkumar.patel@intel.com,
- linux-arm-kernel@lists.infradead.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <7b94bfbb-b3e6-cbc3-06a1-4490f4142ffe@codeaurora.org>
-Date: Tue, 11 Apr 2017 17:27:59 -0400
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:34332 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933841AbdDGT0E (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 7 Apr 2017 15:26:04 -0400
+Date: Fri, 7 Apr 2017 14:26:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Tomasz Nowicki <tn@semihalf.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Joao Pinto <jpinto@synopsys.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Jingoo Han <jingoohan1@gmail.com>
+Subject: [GIT PULL] PCI fixes for v4.11
+Message-ID: <20170407192600.GA12235@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170411211924.GC14778@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/11/2017 5:19 PM, Bjorn Helgaas wrote:
-> Hi Sinan,
-> 
-> What are these patches based on?  I normally apply things to my "master"
-> branch, which is typically -rc1 or -rc2.  Right now it's v4.11-rc1, and
-> these don't apply cleanly:
-> 
->   04:17:59 ~/linux (master)$ stg branch --create pci/aspm-sk-v8 v4.11-rc1
->   Checking for changes in the working directory ... done
->   Don't know how to determine parent branch from "v4.11-rc1"
->   Branch "pci/aspm-sk-v8" created
->   04:18:18 ~/linux (pci/aspm-sk-v8)$ stg import -M --sign m/sk-v8
->   Checking for changes in the working directory ... done
->   Importing patch "pci-aspm-introduce" ... done
->   Importing patch "pci-aspm-split-pci_aspm_init" ... done
->   Importing patch "pci-aspm-add-init-hook-to" ... error: patch failed: drivers/pci/pcie/aspm.c:798
->   error: drivers/pci/pcie/aspm.c: patch does not apply
->   stg import: Diff does not apply cleanly
+PCI fixes:
 
-This is what I have.
+  - fix ThunderX legacy firmware resources
 
-41a7175 PCI/ASPM: move link_state cleanup to bridge remove
-3b646e2 PCI/ASPM: save power on values during bridge init
-181510d PCI/ASPM: add init hook to device_add
-282d008 PCI/ASPM: split pci_aspm_init() into two
-8e89fc2 PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
-97da385 Linux 4.11-rc3
+  - fix ARTPEC-6 and DesignWare platform driver NULL pointer dereferences
+
+  - fix HiSilicon link error
 
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+The following changes since commit 9abb27c7594a62bbf6385e20b7f5a90b4eceae2f:
+
+  PCI: thunder-pem: Add legacy firmware support for Cavium ThunderX host controller (2017-03-23 17:11:26 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/helgaas/pci.git tags/pci-v4.11-fixes-4
+
+for you to fetch changes up to 794a8604fe6e4a311373cde57a86ad4aab9d32b8:
+
+  PCI: dwc: Fix dw_pcie_ops NULL pointer dereference (2017-04-04 08:24:25 -0500)
+
+----------------------------------------------------------------
+pci-v4.11-fixes-4
+
+----------------------------------------------------------------
+Arnd Bergmann (1):
+      PCI: dwc: Select PCI_HOST_COMMON for hisi
+
+Niklas Cassel (1):
+      PCI: dwc: Fix dw_pcie_ops NULL pointer dereference
+
+Tomasz Nowicki (1):
+      PCI: thunder-pem: Fix legacy firmware PEM-specific resources
+
+ drivers/pci/dwc/Kconfig                |  1 +
+ drivers/pci/dwc/pcie-artpec6.c         |  4 ++++
+ drivers/pci/dwc/pcie-designware-plat.c |  4 ++++
+ drivers/pci/host/pci-thunder-pem.c     | 10 ++++++++--
+ 4 files changed, 17 insertions(+), 2 deletions(-)
