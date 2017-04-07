@@ -1,300 +1,153 @@
-Return-Path: <SRS0=5PB6=4B=gmail.com=alexdeucher@kernel.org>
-Return-Path: <SRS0=5PB6=4B=gmail.com=alexdeucher@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <acd547a0-17d9-e5ba-8005-07a8f47c2f74@vodafone.de>
-References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
- <1493126394-1239-5-git-send-email-deathsimple@vodafone.de>
- <CADnq5_NHDo3Y0Ao_5uWQ=Q2mb5-qYZu9Z-cx1M48cfD0rxMi2w@mail.gmail.com>
- <9d345f33-a291-1647-9d03-d0df17733b14@vodafone.de> <CADnq5_PquOLg1RLNE36-ZXGpSZFBu_N56-3Ox18CXu6oG2nk=w@mail.gmail.com>
- <acd547a0-17d9-e5ba-8005-07a8f47c2f74@vodafone.de>
-From: Alex Deucher <alexdeucher@gmail.com>
-Date: Tue, 25 Apr 2017 12:29:36 -0400
-Message-ID: <CADnq5_M3ZkD049dYQvw_FAz_KCHy0LTPEm3TU6vr9yfGFd_BDw@mail.gmail.com>
-Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access v2
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
-	Maling list - DRI developers <dri-devel@lists.freedesktop.org>, platform-driver-x86@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1491569585.6021.15.camel@infradead.org>
+Subject: Re: [PATCH] PCI: Add ATS-disable quirk for AMD Stoney GPUs
+From: David Woodhouse <dwmw2@infradead.org>
+To: Joerg Roedel <joro@8bytes.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Daniel Drake <drake@endlessm.com>,
+        Alexander Deucher <Alexander.Deucher@amd.com>,
+        Samuel Sieb <samuel@sieb.net>, Joerg Roedel <jroedel@suse.de>
+In-Reply-To: <1491568828-17146-1-git-send-email-joro@8bytes.org>
+References: <1491568828-17146-1-git-send-email-joro@8bytes.org>
+Content-Type: multipart/signed; micalg="sha-256"; protocol="application/x-pkcs7-signature"; boundary="=-2WrvHnN0AOL7mHz0JCTu"
+Date: Fri, 07 Apr 2017 14:53:05 +0200
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 25, 2017 at 12:22 PM, Christian K=C3=B6nig
-<deathsimple@vodafone.de> wrote:
-> Am 25.04.2017 um 17:14 schrieb Alex Deucher:
->>
->> On Tue, Apr 25, 2017 at 11:09 AM, Christian K=C3=B6nig
->> <deathsimple@vodafone.de> wrote:
->>>
->>> Am 25.04.2017 um 16:34 schrieb Alex Deucher:
->>>>
->>>> On Tue, Apr 25, 2017 at 9:19 AM, Christian K=C3=B6nig
->>>> <deathsimple@vodafone.de> wrote:
->>>>>
->>>>> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->>>>>
->>>>> Try to resize BAR0 to let CPU access all of VRAM.
->>>>>
->>>>> v2: rebased, style cleanups, disable mem decode before resize,
->>>>>       handle gmc_v9 as well, round size up to power of two.
->>>>>
->>>>> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
->>>>> ---
->>>>>    drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
->>>>>    drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 37
->>>>> ++++++++++++++++++++++++++++++
->>>>>    drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 ++++---
->>>>>    drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 ++++---
->>>>>    drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c      | 10 ++++----
->>>>>    5 files changed, 54 insertions(+), 10 deletions(-)
->>>>>
->>>>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->>>>> b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->>>>> index 4a16e3c..9484062 100644
->>>>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->>>>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->>>>> @@ -1879,6 +1879,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct
->>>>> amdgpu_device *adev, struct ttm_tt *ttm,
->>>>>                                    struct ttm_mem_reg *mem);
->>>>>    void amdgpu_vram_location(struct amdgpu_device *adev, struct
->>>>> amdgpu_mc
->>>>> *mc, u64 base);
->>>>>    void amdgpu_gtt_location(struct amdgpu_device *adev, struct
->>>>> amdgpu_mc
->>>>> *mc);
->>>>> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
->>>>>    void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u=
-64
->>>>> size);
->>>>>    int amdgpu_ttm_init(struct amdgpu_device *adev);
->>>>>    void amdgpu_ttm_fini(struct amdgpu_device *adev);
->>>>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->>>>> b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->>>>> index a09ad3cf..d5ca77a 100644
->>>>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->>>>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->>>>> @@ -695,6 +695,43 @@ void amdgpu_gtt_location(struct amdgpu_device
->>>>> *adev,
->>>>> struct amdgpu_mc *mc)
->>>>>                           mc->gtt_size >> 20, mc->gtt_start,
->>>>> mc->gtt_end);
->>>>>    }
->>>>>
->>>>> +/**
->>>>> + * amdgpu_resize_bar0 - try to resize BAR0
->>>>> + *
->>>>> + * @adev: amdgpu_device pointer
->>>>> + *
->>>>> + * Try to resize BAR0 to make all VRAM CPU accessible.
->>>>> + */
->>>>> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
->>>>
->>>> I'd suggest renaming this to amdgpu_device_resize_bar() to try and
->>>> impose some consistency in this file, but not a big deal either way.
->>>>
->>>>> +{
->>>>> +       u64 space_needed =3D roundup_pow_of_two(adev->mc.real_vram_si=
-ze);
->>>>> +       u32 rbar_size =3D order_base_2(((space_needed >> 20) | 1)) -1=
-;
->>>>> +       u16 cmd;
->>>>> +       int r;
->>>>> +
->>>>> +       /* Free the doorbell mapping, it most likely needs to move as
->>>>> well */
->>>>> +       amdgpu_doorbell_fini(adev);
->>>>> +       pci_release_resource(adev->pdev, 2);
->>>>
->>>> This should check for if (adev->asic_type >=3D CHIP_BONAIRE) since SI
->>>> didn't have doorbells.
->>>>
->>>>> +
->>>>> +       /* Disable memory decoding while we change the BAR addresses
->>>>> and
->>>>> size */
->>>>> +       pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
->>>>> +       pci_write_config_word(adev->pdev, PCI_COMMAND,
->>>>> +                             cmd & ~PCI_COMMAND_MEMORY);
->>>>> +
->>>>> +       r =3D pci_resize_resource(adev->pdev, 0, rbar_size);
->>>>> +       if (r =3D=3D -ENOSPC)
->>>>> +               DRM_INFO("Not enough PCI address space for a large
->>>>> BAR.");
->>>>> +       else if (r && r !=3D -ENOTSUPP)
->>>>> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
->>>>> +
->>>>> +       pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
->>>>> +
->>>>> +       /* When the doorbell BAR isn't available we have no chance of
->>>>> +        * using the device.
->>>>> +        */
->>>>> +       BUG_ON(amdgpu_doorbell_init(adev));
->>>>
->>>> Same here.
->>>>
->>>>> +}
->>>>> +
->>>>>    /*
->>>>>     * GPU helpers function.
->>>>>     */
->>>>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->>>>> b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->>>>> index a9083a1..ae71524 100644
->>>>
->>>> What about SI (gmc_v6_0.c)?
->>>
->>>
->>> As far as I know there is no SI hardware with resizeable BAR support.
->>>
->>> The all VI generation can do this, but I'm not 100% sure if there aren'=
-t
->>> any
->>> Bonaires out there which can handle it as well that's why I added gmc_v=
-7
->>> support.
->>>
->>> Still need to double check that.
->>
->> I think NI or even evergreen supported resizeable bars in theory,
->> although I'm not sure if any boards were fused to expose it.
->
->
-> In theory yes, in practice no.
->
-> Their PCIE config space defines the necessary registers, but I haven't fo=
-und
-> any board from Evergreen, NI, SI or CIK generation where that is actually
-> validated.
->
-> Tonga is the first one I'm 100% sure that it is supported and I have
-> hardware to test it.
->
-> I would rather drop Bonaire support as well and wait for somebody with th=
-e
-> hardware to complain so that we can test and enable it.
 
-I may have some workstation CI parts that support it.
+--=-2WrvHnN0AOL7mHz0JCTu
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Alex
+On Fri, 2017-04-07 at 14:40 +0200, Joerg Roedel wrote:
+>=20
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 6736836..3bc9856 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4634,3 +4634,22 @@ static void quirk_no_aersid(struct pci_dev *pdev)
+> =C2=A0DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersi=
+d);
+> =C2=A0DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersi=
+d);
+> =C2=A0DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersi=
+d);
+> +
+> +/*
+> + * Some devices have a broken ATS implementation causing IOMMU stalls.
+> + * Don't use ATS for those devices.
+> + */
+> +static void quirk_disable_ats(struct pci_dev *pdev)
+> +{
+> +#ifdef CONFIG_PCI_ATS
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0/*
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * Set pdev->ats_cap =3D 0 to =
+make pci_enable_ats() bail out
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * early.
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0dev_info(&pdev->dev, "QUIRK: D=
+isabling ATS");
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0pdev->ats_cap =3D 0;
+> +#endif
+> +}
+> +
+> +/* AMD Stoney platform GPU */
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4, quirk_disable_ats);
 
->
-> Christian.
->
->
->>
->> Alex
->>
->>
->>> Christian.
->>>
->>>
->>>> Alex
->>>>
->>>>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->>>>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->>>>> @@ -372,13 +372,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_devic=
-e
->>>>> *adev)
->>>>>                   }
->>>>>                   adev->mc.vram_width =3D numchan * chansize;
->>>>>           }
->>>>> -       /* Could aper size report 0 ? */
->>>>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>>>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>>>>           /* size in MB on si */
->>>>>           adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024UL=
-L *
->>>>> 1024ULL;
->>>>>           adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024=
-ULL
->>>>> *
->>>>> 1024ULL;
->>>>>
->>>>> +       if (!(adev->flags & AMD_IS_APU))
->>>>> +               amdgpu_resize_bar0(adev);
->>>>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>>>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>>>> +
->>>>>    #ifdef CONFIG_X86_64
->>>>>           if (adev->flags & AMD_IS_APU) {
->>>>>                   adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFS=
-ET))
->>>>> <<
->>>>> 22;
->>>>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->>>>> b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->>>>> index 4ac9978..1655de2 100644
->>>>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->>>>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->>>>> @@ -534,13 +534,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_devic=
-e
->>>>> *adev)
->>>>>                   }
->>>>>                   adev->mc.vram_width =3D numchan * chansize;
->>>>>           }
->>>>> -       /* Could aper size report 0 ? */
->>>>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>>>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>>>>           /* size in MB on si */
->>>>>           adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024UL=
-L *
->>>>> 1024ULL;
->>>>>           adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024=
-ULL
->>>>> *
->>>>> 1024ULL;
->>>>>
->>>>> +       if (!(adev->flags & AMD_IS_APU))
->>>>> +               amdgpu_resize_bar0(adev);
->>>>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>>>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>>>> +
->>>>>    #ifdef CONFIG_X86_64
->>>>>           if (adev->flags & AMD_IS_APU) {
->>>>>                   adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFS=
-ET))
->>>>> <<
->>>>> 22;
->>>>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
->>>>> b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
->>>>> index e5d4dfe..4bbef79 100644
->>>>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
->>>>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
->>>>> @@ -469,16 +469,18 @@ static int gmc_v9_0_mc_init(struct amdgpu_devic=
-e
->>>>> *adev)
->>>>>           }
->>>>>           adev->mc.vram_width =3D numchan * chansize;
->>>>>
->>>>> -       /* Could aper size report 0 ? */
->>>>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>>>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>>>>           /* size in MB on si */
->>>>>           adev->mc.mc_vram_size =3D
->>>>>                   nbio_v6_1_get_memsize(adev) * 1024ULL * 1024ULL;
->>>>>           adev->mc.real_vram_size =3D adev->mc.mc_vram_size;
->>>>> -       adev->mc.visible_vram_size =3D adev->mc.aper_size;
->>>>> +
->>>>> +       if (!(adev->flags & AMD_IS_APU))
->>>>> +               amdgpu_resize_bar0(adev);
->>>>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>>>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>>>>
->>>>>           /* In case the PCI BAR is larger than the actual amount of
->>>>> vram
->>>>> */
->>>>> +       adev->mc.visible_vram_size =3D adev->mc.aper_size;
->>>>>           if (adev->mc.visible_vram_size > adev->mc.real_vram_size)
->>>>>                   adev->mc.visible_vram_size =3D adev->mc.real_vram_s=
-ize;
->>>>>
->>>>> --
->>>>> 2.7.4
->>>>>
->>>>> _______________________________________________
->>>>> dri-devel mailing list
->>>>> dri-devel@lists.freedesktop.org
->>>>> https://lists.freedesktop.org/mailman/listinfo/dri-devel
->>>
->>>
->>>
->
+Why not put the #ifdef around *all* of the above?
+--=-2WrvHnN0AOL7mHz0JCTu
+Content-Type: application/x-pkcs7-signature; name="smime.p7s"
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Transfer-Encoding: base64
+
+MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCDzUw
+ggSvMIIDl6ADAgECAhEA4CPLFRKDU4mtYW56VGdrITANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQG
+EwJTRTEUMBIGA1UEChMLQWRkVHJ1c3QgQUIxJjAkBgNVBAsTHUFkZFRydXN0IEV4dGVybmFsIFRU
+UCBOZXR3b3JrMSIwIAYDVQQDExlBZGRUcnVzdCBFeHRlcm5hbCBDQSBSb290MB4XDTE0MTIyMjAw
+MDAwMFoXDTIwMDUzMDEwNDgzOFowgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1h
+bmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEw
+PwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBF
+bWFpbCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAImxDdp6UxlOcFIdvFamBia3
+uEngludRq/HwWhNJFaO0jBtgvHpRQqd5jKQi3xdhTpHVdiMKFNNKAn+2HQmAbqUEPdm6uxb+oYep
+LkNSQxZ8rzJQyKZPWukI2M+TJZx7iOgwZOak+FaA/SokFDMXmaxE5WmLo0YGS8Iz1OlAnwawsayT
+QLm1CJM6nCpToxDbPSBhPFUDjtlOdiUCISn6o3xxdk/u4V+B6ftUgNvDezVSt4TeIj0sMC0xf1m9
+UjewM2ktQ+v61qXxl3dnUYzZ7ifrvKUHOHaMpKk4/9+M9QOsSb7K93OZOg8yq5yVOhM9DkY6V3Rh
+UL7GQD/L5OKfoiECAwEAAaOCARcwggETMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1Qa
+MB0GA1UdDgQWBBSSYWuC4aKgqk/sZ/HCo/e0gADB7DAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/
+BAgwBgEB/wIBADAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEQYDVR0gBAowCDAGBgRV
+HSAAMEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9BZGRUcnVzdEV4
+dGVybmFsQ0FSb290LmNybDA1BggrBgEFBQcBAQQpMCcwJQYIKwYBBQUHMAGGGWh0dHA6Ly9vY3Nw
+LnVzZXJ0cnVzdC5jb20wDQYJKoZIhvcNAQELBQADggEBABsqbqxVwTqriMXY7c1V86prYSvACRAj
+mQ/FZmpvsfW0tXdeDwJhAN99Bf4Ss6SAgAD8+x1banICCkG8BbrBWNUmwurVTYT7/oKYz1gb4yJj
+nFL4uwU2q31Ypd6rO2Pl2tVz7+zg+3vio//wQiOcyraNTT7kSxgDsqgt1Ni7QkuQaYUQ26Y3NOh7
+4AEQpZzKOsefT4g0bopl0BqKu6ncyso20fT8wmQpNa/WsadxEdIDQ7GPPprsnjJT9HaSyoY0B7ks
+yuYcStiZDcGG4pCS+1pCaiMhEOllx/XVu37qjIUgAmLq0ToHLFnFmTPyOInltukWeh95FPZKEBom
++nyK+5swggU9MIIEJaADAgECAhBqC1BYlVMtBFBN4igR/howMA0GCSqGSIb3DQEBCwUAMIGbMQsw
+CQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3Jk
+MRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xp
+ZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTYxMjIwMDAwMDAwWhcN
+MTcxMjIwMjM1OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRlYWQub3JnMIIBIjAN
+BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwbTrFaiGdvN2pThnR9q+4eaXB2wQZQNqhter5ZrJ
+pPO47e87bZ+f1tmYoh6+rB90G/XN24NErPRfvU4zVzNT9pCtCzSSVnBlZQBpaEYMKhcXo5PGKNsm
+An8BoGwNXjlxwbBNRaNO+ky0wNCaMNd1JLxEuvqg9J7rrcpHhWmnpXD5IKa8gv9GyVAJgOpiBOts
+p91sShc2kHvWJ5waPEWPCHDH9J+twGGKqKIIU7fdbURLUgUL1wlDSAHf/lgIAVCSj2H2HpoGqHpy
+HgOAClX9iRSLNa0Znj8HTaqfOwxXevsz1KkLFY+Ahm426GIEqdfkK2iT6Hhgc7tjNO3f8i5ALQID
+AQABo4IB8TCCAe0wHwYDVR0jBBgwFoAUkmFrguGioKpP7GfxwqP3tIAAwewwHQYDVR0OBBYEFILE
+dmHLtK6oxmFJZvBhTQhvqrS0MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1UdJQQZ
+MBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0gBD8wPTA7
+BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9D
+UFMwXQYDVR0fBFYwVDBSoFCgToZMaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPU0hBMjU2
+Q2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFpbENBLmNybDCBkAYIKwYBBQUHAQEEgYMw
+gYAwWAYIKwYBBQUHMAKGTGh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVu
+dEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9v
+Y3NwLmNvbW9kb2NhLmNvbTAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRlYWQub3JnMA0GCSqGSIb3
+DQEBCwUAA4IBAQA+AfvNhFwtapF5Lzjapgul3zYuEnMfR538Ya1vhP8wuOkcoJeT2gEFXzVO2WUu
+eWM0g0/DumnRB53htV/Qq/+vsL0i6a2+iOO7kHi5O7bZkgbdNv0t2lzonDUHi6LTa7NUj+tv+j6y
+hW+iNquC3ACP1dIZH8gJmicHblW63qRgp6wxhn315MLBeavi3uiSag2eeKFePiTIwJjN2UYq6kWg
+PL5G/Ycf9x/xN1XBTfJiURc0FsXhrA98VMWnt52C5Lo4txhGjzTI+IZg40b3YDs6E7mTYb5KKmbc
+QZA9priOFDdj1z5W9BdWhU6I/D0P9y8Z4Tr6+ZscMUVD0RqWy2LeMIIFPTCCBCWgAwIBAgIQagtQ
+WJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQsFADCBmzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy
+ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExp
+bWl0ZWQxQTA/BgNVBAMTOENPTU9ETyBTSEEtMjU2IENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
+U2VjdXJlIEVtYWlsIENBMB4XDTE2MTIyMDAwMDAwMFoXDTE3MTIyMDIzNTk1OVowJDEiMCAGCSqG
+SIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+ggEBAMG06xWohnbzdqU4Z0favuHmlwdsEGUDaobXq+WayaTzuO3vO22fn9bZmKIevqwfdBv1zduD
+RKz0X71OM1czU/aQrQs0klZwZWUAaWhGDCoXF6OTxijbJgJ/AaBsDV45ccGwTUWjTvpMtMDQmjDX
+dSS8RLr6oPSe663KR4Vpp6Vw+SCmvIL/RslQCYDqYgTrbKfdbEoXNpB71iecGjxFjwhwx/SfrcBh
+iqiiCFO33W1ES1IFC9cJQ0gB3/5YCAFQko9h9h6aBqh6ch4DgApV/YkUizWtGZ4/B02qnzsMV3r7
+M9SpCxWPgIZuNuhiBKnX5Ctok+h4YHO7YzTt3/IuQC0CAwEAAaOCAfEwggHtMB8GA1UdIwQYMBaA
+FJJha4LhoqCqT+xn8cKj97SAAMHsMB0GA1UdDgQWBBSCxHZhy7SuqMZhSWbwYU0Ib6q0tDAOBgNV
+HQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGyMQED
+BQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYBBAGyMQECAQEBMCswKQYIKwYB
+BQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BTMF0GA1UdHwRWMFQwUqBQoE6GTGh0
+dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVudEF1dGhlbnRpY2F0aW9uYW5k
+U2VjdXJlRW1haWxDQS5jcmwwgZAGCCsGAQUFBwEBBIGDMIGAMFgGCCsGAQUFBzAChkxodHRwOi8v
+Y3J0LmNvbW9kb2NhLmNvbS9DT01PRE9TSEEyNTZDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3Vy
+ZUVtYWlsQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0R
+BBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEAPgH7zYRcLWqReS84
+2qYLpd82LhJzH0ed/GGtb4T/MLjpHKCXk9oBBV81TtllLnljNINPw7pp0Qed4bVf0Kv/r7C9Iumt
+vojju5B4uTu22ZIG3Tb9Ldpc6Jw1B4ui02uzVI/rb/o+soVvojargtwAj9XSGR/ICZonB25Vut6k
+YKesMYZ99eTCwXmr4t7okmoNnnihXj4kyMCYzdlGKupFoDy+Rv2HH/cf8TdVwU3yYlEXNBbF4awP
+fFTFp7edguS6OLcYRo80yPiGYONG92A7OhO5k2G+Sipm3EGQPaa4jhQ3Y9c+VvQXVoVOiPw9D/cv
+GeE6+vmbHDFFQ9Ealsti3jGCA9MwggPPAgEBMIGwMIGbMQswCQYDVQQGEwJHQjEbMBkGA1UECBMS
+R3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0Eg
+TGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFu
+ZCBTZWN1cmUgRW1haWwgQ0ECEGoLUFiVUy0EUE3iKBH+GjAwDQYJYIZIAWUDBAIBBQCgggHzMBgG
+CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MDQwNzEyNTMwNVowLwYJ
+KoZIhvcNAQkEMSIEIAbo49eLlOmZK3fEoBKbIkqu24pmpSd3SZ8bjEXZf28dMIHBBgkrBgEEAYI3
+EAQxgbMwgbAwgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
+BgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01P
+RE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQ
+WJVTLQRQTeIoEf4aMDCBwwYLKoZIhvcNAQkQAgsxgbOggbAwgZsxCzAJBgNVBAYTAkdCMRswGQYD
+VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
+TyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRp
+b24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQWJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQEFAASC
+AQA6iiyKNbRe0G9M/RRKCWNhiZbseQ1tfeblsLKhQRIll6nqt5nxjJ9vWnKZcIl5e+PkHIIRSjcV
+Lvn8Xw0pUuLQ2JQYOqyIIfJhKOPMgDtEF3/4f4YPyal8scYYIqBFCdYaT51LN3T8Q5uBQUDfN2y3
+kfSTjhzDV4jFchHK97lgTdAr1sOLYUupkGrvEx6Vk/0SsaPvdToKezs51E3vfrfZiXZE02dfiD33
+xjP4GGhTlPep5sWnhJY6OrQCvxoLWtd/3q+Fv4VKkYPWIHgC2k9mS6eIG57sZ7Tcxnz2Wul6DZH8
+CzspV7GNAM0FvxpL94Laiu+iPI7DKBUs0zjqIou1AAAAAAAA
+
+
+--=-2WrvHnN0AOL7mHz0JCTu--
