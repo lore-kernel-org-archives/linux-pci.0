@@ -1,19 +1,19 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 12 Apr 2017 18:10:34 +0000
-From: Jayachandran C <jnair@caviumnetworks.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH v4 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-Message-ID: <20170412181034.GA3671@localhost>
-References: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
- <1491225304-3559-3-git-send-email-jnair@caviumnetworks.com>
- <20170411012847.GA15291@bhelgaas-glaptop.roam.corp.google.com>
- <20170411071047.GA3610@localhost>
- <20170411134125.GA31773@bhelgaas-glaptop.roam.corp.google.com>
- <20170411152702.GA2910@localhost>
- <20170412162118.GC25197@bhelgaas-glaptop.roam.corp.google.com>
+From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
+To: Rajat Jain <rajatja@google.com>, Sinan Kaya <okaya@codeaurora.org>
+Subject: RE: [PATCH V7 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+Date: Fri, 7 Apr 2017 09:03:22 +0000
+Message-ID: <92EBB4272BF81E4089A7126EC1E7B2846676309A@IRSMSX101.ger.corp.intel.com>
+References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
+ <7c48ca8b-b834-3257-91dc-77e9d19def6c@codeaurora.org>
+ <92EBB4272BF81E4089A7126EC1E7B28466761383@IRSMSX101.ger.corp.intel.com>
+ <92EBB4272BF81E4089A7126EC1E7B2846676271D@IRSMSX101.ger.corp.intel.com>
+ <951505b8-9580-7131-2f14-de92817190a7@codeaurora.org>
+ <CACK8Z6FG7QHs1kQUoTJTcP3606+xBLFp9RUmLuv0m0X2mxH9XA@mail.gmail.com>
+In-Reply-To: <CACK8Z6FG7QHs1kQUoTJTcP3606+xBLFp9RUmLuv0m0X2mxH9XA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170412162118.GC25197@bhelgaas-glaptop.roam.corp.google.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,166 +21,145 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
- Alex Williamson <alex.williamson@redhat.com>, iommu@lists.linux-foundation.org,
- Jon Masters <jcm@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
- linux-arm-kernel@lists.infradead.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "timur@codeaurora.org" <timur@codeaurora.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 12, 2017 at 11:21:18AM -0500, Bjorn Helgaas wrote:
-> On Tue, Apr 11, 2017 at 03:27:02PM +0000, Jayachandran C wrote:
-> > On Tue, Apr 11, 2017 at 08:41:25AM -0500, Bjorn Helgaas wrote:
-> > > [+cc Joerg]
-> > > 
-> > > On Tue, Apr 11, 2017 at 07:10:48AM +0000, Jayachandran C wrote:
-> > > > On Mon, Apr 10, 2017 at 08:28:47PM -0500, Bjorn Helgaas wrote:
-> > > > > Hi Jayachandran,
-> > > > > 
-> > > > > On Mon, Apr 03, 2017 at 01:15:04PM +0000, Jayachandran C wrote:
-> > > > > > The Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the PCI
-> > > > > > topology is slightly unusual. For a multi-node system, it looks like:
-> > > > > > 
-> > > > > > [node level PCI bridges - one per node]
-> > > > > >     [SoC PCI devices with MSI-X but no IOMMU]
-> > > > > >     [PCI-PCIe "glue" bridges - upto 14, one per real port below]
-> > > > > >         [PCIe real root ports associated with IOMMU and GICv3 ITS]
-> > > > > >             [External PCI devices connected to PCIe links]
-> > > > > > 
-> > > > > > The top two levels of bridges should have introduced aliases since they
-> > > > > > are PCI and PCI/PCIe bridges, but in the case of ThunderX2 they do not.
-> > > > > > In the case of external PCIe devices, the "real" root ports are connected
-> > > > > > to the SMMU and the GIC ITS, so PCI-PCIe bridge does not introduce an
-> > > > > > alias. The SoC PCI devices are directly connected to the GIC ITS, so the
-> > > > > > node level bridges do not introduce an alias either.
-> > > > > > 
-> > > > > > To handle this quirk, we mark the real PCIe root ports and node level
-> > > > > > PCI bridges with the flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT.  With this,
-> > > > > > pci_for_each_dma_alias() works correctly for external PCIe devices and
-> > > > > > SoC PCI devices.
-> > > > > > 
-> > > > > > For the current revision of Cavium ThunderX2, the VendorID and Device ID
-> > > > > > are from Broadcom Vulcan (14e4:90XX).
-> > > > > 
-> > > > > Can you supply some text here about why we want to apply this patch?
-> > > > > E.g., does it avoid making unnecessary IOMMU mappings, improve
-> > > > > performance, avoid a crash, etc?
-> > > > 
-> > > > If this is for the commit message, I hope the following is ok:
-> > > > 
-> > > > "With this change, both MSI-X and IO virtualization work correctly on
-> > > > Cavium ThunderX2. The GIC ITS driver gets the correct device ID to
-> > > > configure MSI-X, the SMMUv3 driver gets the correct Stream IDs for PCI
-> > > > devices, and the IOMMU groups are setup correctly."
-> > > 
-> > > This doesn't get at what the actual problem is.  I'm hoping for
-> > > something like "without this change, we set up an IOMMU mapping for
-> > > requestor ID X, but device DMA uses requestor ID Y because ...., which
-> > > results in an IOMMU fault"
-> > 
-> > Ok. I hope this would be better:
-> > 
-> > "Without this change, the last alias seen while traversing the PCI
-> > hierarchy will be used as the RID to generate the device ID for ITS
-> > and stream ID for SMMU. This in turn causes the MSI-X generated by the
-> > device to fail since the ITS expects to have translation tables based
-> > on the actual PCIe RID and not the (irrelevant) alias. Similarly, the
-> > device DMA also fails when SMMU is enabled due to incorrect value in
-> > SMMU translation tables"
-> 
-> This description is true, but I don't think it addresses the real
-> problem.  I think the real problem is that your IOMMU code doesn't
-> handle aliases correctly, and by ignoring these invalid aliases, we
-> happen to map an alias that works for the builtin devices.  But that's
-> only because we got lucky (those devices use a single RID and they're
-> not behind bridges that optionally take ownership).
-> 
-> It would make sense to me if we fixed the IOMMU code to map *all* the
-> aliases, which should be enough to make your devices work.  If we then
-> wanted to apply a patch like this on top, it would be simply an
-> optimization that avoids unnecessary IOMMU mappings.
+Hi Rajat
 
-The issue that the IOMMU code does not handle valid aliases is
-unrelated to what I am trying to fix. The quirk is to make sure
-that invalid aliases are not seen on ThunderX2 while doing
-pci_for_each_dma_alias().
 
-The DMA and MSI-X requests leave the PCI/PCIe hierarchy at the point
-where the SMMU (or ITS) is attached, i.e. at the bridge marked with
-PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT. The quirk ensures that we don't look
-for aliases above that point.
+>On Thu, Apr 6, 2017 at 8:19 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>>
+>> On 4/6/2017 9:23 AM, Patel, Mayurkumar wrote:
+>> > Actually, The enabling/configuring of ASPM L1.2 is opposite then ASPM L1.
+>> > In case of L1, Upstream must configure first L1 and then downstream according to PCIe spec.
+>> > In case of L1.2, Downstream must configure L1.2 and then upstream according (to L1.2 ECN spec. -> 5.5.4. L1 PM
+>> > substates Configuration).
+>> >
+>> > @Bjorn:
+>> > I even found that programming of pcie_config_aspm_l1ss() sub-states is done in the opposite way than described in
+>> > the spec.,
+>> >
+>> > The spec. says following and correct me If I am wrong or I misinterpret the spec. :
+>> >
+>> > 5.5.4. L1 PM Substates Configuration
+>> >
+>> > The Setting of any enable bit must be performed at the Downstream Port before the
+>> > corresponding bit is permitted to be Set at the Upstream Port. If any L1 PM Substates enable
+>> > bit is at a later time to be cleared, the enable bit(s) must be cleared in the Upstream Port
+>> > before the corresponding enable bit(s) are permitted to be cleared in the Downstream Port.
+>> >
+>
+>Thanks for bringing to attention. My understanding / interpretation of
+>"Downstream port" was the port pointing downwards (from the "Upstream"
+>component). E.g. when an EP connects to a hub port, PCIe text refers
+>to the hub port as the "downstream port". Similarly "upstream port" is
+>used for referring to a switch's port that "points" upwards towards
+>the root port. Thus, I interpreted the text to mean that I need to
+>enable it in the "downstream port" (in the root port / switch port)
+>followed by the "upstream port" (in the device).
+>
+>It would have been great if the PCIe spec was as clear for L1
+>substates as it was for L1:
+>----------------------------
+>ASPM L1 must be enabled by software in the Upstream
+>component on a Link prior to enabling ASPM L1 in the
+>Downstream component on that Link.
+>-----------------------------
+>For ASPM L1, the spec clearly says "Upstream component" which can only
+>mean the switch's "downstream" port. I'm open to changing it if there
+>is consensus that my interpretation is wrong.
 
-The toplevel bridge is marked PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT since
-the on-chip devices are directly connected to the ITS (they do not
-use SMMU).
+In fact, Your understanding seems to be correct. It was my mistake that I raised it without
+actually, keeping in mind or understanding port/component difference which I didn't notice.
+My sincere apologies for that.
 
-The top two levels of bridges are not real PCI bridges but just
-PCI bridge-like things that were added to tie the whole hierarchy
-together for configuration and enumeration. They do not handle
-PCI/PCIe transactions in the traditional sense.
 
-I think my problem description is still not correct, maybe:
-"The SMMU (and ITS) expects to device tables to use the RID seen
-at the bridge they are associated with. Currently the
-pci_for_each_dma_alias() code traverses beyond this point and
-generates incorrect aliases due to the PCI and PCI/PCIe bridges
-above. This causes MSI-X interrupts and device DMA to fail since
-the SMMU and ITS tables to be setup with incorrect IDs"
+>
+>I'm actually not sure if I understood what is the problem that is
+>being seen with L1 PM substates. Can you please elaborate?
+>
 
-> > > I suspect the reason this patch makes a difference is because the
-> > > current pci_for_each_dma_alias() believes one of those top-level
-> > > bridges is an alias, and the iterator produces it last, so that's the
-> > > one you map.  The IOMMU is attached lower down, so that top-level
-> > > bridge is not in fact an alias, but since you only look at the *last*
-> > > one, you don't map the correct aliases from lower down in the tree.
-> > 
-> > Exactly. The IORT spec allows a range of RIDs to map to an SMMU, which
-> > means that a PCI RC can multiple SMMUs, each handling a subset of RIDs.
-> > 
-> > In the case of Cavium ThunderX2, the RID which we should see on the RC
-> > - if we follow the standard and factor in the aliasing introduced by the
-> > PCI bridge and the PCI/PCIe bridge - is not the RID seen by the SMMU (or
-> > ITS).
-> > 
-> > But, if we stop the traversal at the point where SMMU (or ITS) is
-> > attached, we will get the correct RID as seen by these.
-> 
-> There is a single "correct RID" for your builtin SATA and USB, but in
-> general there is no single RID.
 
-In case of external PCIe devices too, the RID (or aliases) seen to the
-point where SMMU or ITS is connected (i.e, the bridge marked with flag
-PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT) are correct.
- 
-> > > Stopping the iterator earlier happens to make the last alias be one of
-> > > the correct ones, but it doesn't solve the problems of quirked devices
-> > > that can use multiple requester IDs, and it doesn't solve the problem
-> > > of PCIe-to-PCI bridges that optionally take ownership of transactions.
-> >  
-> > If these happen below the point where the SMMU is attached, we will
-> > consider the last alias introduced, which should be ok. If they are
-> > above, the alias introduced is not relevant.  Devices with multiple
-> > aliases is not handled anywhere in ARM code, so I don't think we should
-> > consider that here.
-> 
-> I think we *should* consider it here.  The multiple alias situation is
-> generic PCIe, independent of ARM.  If you want to support arbitrary
-> PCIe plugin devices, you have to handle it.  I think any device with a
-> quirk that calls pci_add_dma_alias() will currently fail on your
-> system.  And I think devices behind a bridge that optionally takes
-> ownership of DMA transactions will also fail.
- 
-The issue that IOMMU code does not handle all aliases has to be addressed
-separately (and Robin seems to be looking at this from his response).
+The actual problem, what Sinan and me were seeing with ASPM L1 with POLICY_DEFAULT
+as described in https://patchwork.kernel.org/patch/9548321/ 
 
-And even when that is addressed, this quirk is still needed on ThunderX2,
-as I pointed out above.
 
-Hope I am still not missing the point, and thanks for your patience here.
-JC.
+Sinan worked out patches to resolve the issue but on my platform now I am starting to see
+that ASPM L1SS gets impacted by these patches. Basically, with his patches, when Policy is set to default,
+and if no PCIe EP is connected to Root Port during boot up, BIOS does not configure L1SS for it, on my
+platform. So the link->aspm_default in aspm.c stores configuration without L1SS. When the EP gets
+connected afterwards, due to link->aspm_default set to non L1SS configuration, even if BIOS
+sets ASPM L1SS for Root Port and Endpoint both, it gets cleared in the aspm driver.
 
+Without the patches Sinan has worked, it was a different issue as described above, and L1/L1SS were
+getting always enabled by the BIOS for endpoint and RP, but kernel enabled/disabled them alternatively.
+
+So basically, I am not currently 100% sure, what is the proper fix for this. Whether BIOS should
+enable L1SS on Root Port no matter Endpoint is connected or not during boot?
+
+Or I am not sure, whether could we should still update link->aspm_default partly for L1SS in the old patch way
+https://patchwork.ozlabs.org/patch/736771/ 
+
+Any feedback would be helpful then may be if required I can or if Sinan can work out the patches for L1SS also fine for me.
+
+
+>
+>>
+>>
+>> Thanks for testing.
+>>
+>> commit a142f4d3e5c54db5e942fa6ee5f3dc0e8c83207b
+>> Author: Rajat Jain <rajatja@google.com>
+>> Date:   Mon Jan 2 22:34:15 2017 -0800
+>>
+>>     PCI/ASPM: Add comment about L1 substate latency
+>>
+>>     Since the exit latencies for L1 substates are not advertised by a device,
+>>     it is not clear in spec how to do a L1 substate exit latency check.  We
+>>     assume that the L1 exit latencies advertised by a device include L1
+>>     substate latencies (and hence do not do any check).  If that is not true,
+>>     we should do some sort of check here.
+>>
+>>     (I'm not clear about what that check should like currently. I'd be glad to
+>>     take up any suggestions).
+>>
+>>     Signed-off-by: Rajat Jain <rajatja@google.com>
+>>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+>>
+>> I added Rajat for discussion on L1SS. I think this deserves its own discussion.
+>
+>Thanks, The above commit specifically adds a comment to
+>pcie_aspm_check_latency(), because I wanted to leave a note
+>highlighting that potentially, we could add a more stringent check for
+>exit latency for L1SS. But that has nothing to do with how we are
+>configuring or enabling / disabling the L1 substates.
+>
+>Thanks & Best Regards,
+>
+>Rajat
+>
+>> I'll look at the other part of your email and move things around a little bit
+>> less aggressively for the aspm_default.
+>>
+>>
+>> --
+>> Sinan Kaya
+>> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+>> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Intel Deutschland GmbH
+Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
+Tel: +49 89 99 8853-0, www.intel.de
+Managing Directors: Christin Eisenschmid, Christian Lamprechter
+Chairperson of the Supervisory Board: Nicole Lau
+Registered Office: Munich
+Commercial Register: Amtsgericht Muenchen HRB 186928
 _______________________________________________
 linux-arm-kernel mailing list
 linux-arm-kernel@lists.infradead.org
