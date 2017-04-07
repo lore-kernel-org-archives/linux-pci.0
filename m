@@ -1,70 +1,97 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Sat, 22 Apr 2017 18:45:47 -0700
-From: Yinghai Lu <yinghai@kernel.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-Message-ID: <20170423014546.GA2704@dhcp-whq-twvpn-1-vpnpool-10-159-153-149.vpn.oracle.com>
-References: <CAKv+Gu-qRg8-YRCairppKrEfeLcW+OwVF8qZHp7vxXJA_AwPOw@mail.gmail.com>
- <20170330100524.GA22801@red-moon>
- <CAKv+Gu-ff98HrPK3f+E8soGJUXaaMxPLs2AuJ+rvXd0HWX-jXw@mail.gmail.com>
- <CAKv+Gu8YjySTDMgsrtGqEPMOtVhHc8gvTHZ4C5Ga8OTYdC9R3A@mail.gmail.com>
- <ae87ae28-f50d-095f-576e-f3fd7f96dea2@codeaurora.org>
- <CAKv+Gu8x0rQUnTUorknW-mW9LFgrxFYsXyy4LU_w9JbA-m_sjA@mail.gmail.com>
- <CAKv+Gu9Su0F9CSRe=sxomuDDH7c2szO6Z8dpqOQ=t_1Vn3JD3g@mail.gmail.com>
- <20170410165328.GA5248@red-moon>
- <CAKv+Gu-AN-OwnAJG5dt0Qg4GU8HxZBowTSA0H3LhNA3nHfrsQg@mail.gmail.com>
- <CAKv+Gu9dS4OhLbBw59yKYQmoJ8SpFexzk9yH=XfXnzn8NJ4mcg@mail.gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu9dS4OhLbBw59yKYQmoJ8SpFexzk9yH=XfXnzn8NJ4mcg@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
- Lukas Wunner <lukas@wunner.de>, Matt Fleming <matt@codeblueprint.co.uk>,
- linux-pci <linux-pci@vger.kernel.org>, Peter Jones <pjones@redhat.com>,
- Sinan Kaya <okaya@codeaurora.org>, Heyi Guo <heyi.guo@linaro.org>,
+Return-Path: <SRS0=5wzB=3P=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=5wzB=3P=free.fr=slash.tmp@kernel.org>
+Subject: Re: Enumerating an empty bus hangs the entire system
+From: Mason <slash.tmp@free.fr>
+To: linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ David Laight <david.laight@aculab.com>, Robin Murphy <robin.murphy@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>,
  Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>
+References: <1eeea8ff-0840-a005-38b4-61f3c253cee1@free.fr>
+Message-ID: <d0bdd0da-e6f6-396f-486a-7b1685d45d69@free.fr>
+Date: Fri, 7 Apr 2017 17:15:32 +0200
+MIME-Version: 1.0
+In-Reply-To: <1eeea8ff-0840-a005-38b4-61f3c253cee1@free.fr>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 10, 2017 at 06:29:27PM +0100, Ard Biesheuvel wrote:
->  /*
-> @@ -208,8 +208,8 @@ struct pci_bus *pci_acpi_scan_root(struct
-> acpi_pci_root *root)
->         if (!bus)
->                 return NULL;
+On 15/03/2017 16:25, Mason wrote:
+
+> My driver works reasonably well on revision 1 of the PCIe controller.
+> (For lax enough values of "reasonably well"...)
 > 
-> -       pci_bus_size_bridges(bus);
-> -       pci_bus_assign_resources(bus);
-> +       pci_assign_unassigned_root_bus_resources(bus);
-> +       pci_bus_claim_resources(bus);
+> So I wanted to try it out on revision 2 of the controller.
 > 
->         list_for_each_entry(child, &bus->children, node)
->                 pcie_bus_configure_settings(child);
->
+> Turns out the system hangs if I boot with no card inserted in the PCIe
+> slot. (This does not happen on revision 1.) If I log all config space
+> accesses, this is what I see:
+> 
+> ...
+> [    2.966402] tango_config_read: bus=0 devfn=0 where=128 size=2
+> [    2.972284] tango_config_read: bus=0 devfn=0 where=140 size=4
+> [    2.978167] tango_config_read: bus=0 devfn=0 where=146 size=2
+> [    2.984144] pci_bus 0000:01: busn_res: can not insert [bus 01-ff] under [bus 00-3f] (conflicts with (null) [bus 00-3f])
+> [    2.995105] tango_config_write: bus=0 devfn=0 where=24 size=4 val=0xff0100
+> [    3.002134] pci_bus 0000:01: scanning bus
+> [    3.006274] tango_config_read: bus=1 devfn=0 where=0 size=4
+> 
+> Basically, the PCI framework tries to read vendor and device IDs
+> of the non-existent device on bus 1, which hangs the system,
+> because the read never completes :-(
+> 
+> I had the same problem with the legacy driver for 3.4 but I was
+> hoping I would magically avoid it in a recent kernel.
+> 
+> The only work-around I see is: assuming the first access to a
+> bus will be to register 0, check the PHY for an active link
+> before sending an actual read request to register 0.
+> 
+> Is that reasonable?
+> 
+> Is it compliant for the PCIe controller to hang like that,
+> or should it handle some kind of time out?
+> 
+> Liviu suggested: "The PCIe controller probably generates (or propagates)
+> a bus abort that it should actually trap in HW. Check if there is a SW
+> configurable way to recover that."
+> 
+> But I unmasked all system/misc errors, and I don't see any
+> interrupts firing.
 
-looks like those two lines are reversed. you should use:
-                pcibios_resource_survey_bus(bus);
-                pci_assign_unassigned_root_bus_resources(bus);
+I now have a better understanding of the situation, which inevitably
+leads to more questions...
 
-please check x86 pcibios_resource_survey_bus() definition in
-	arch/x86/pci/i386.c
+By reading a controller-specific debug register, I sampled the LTSSM
+(Link Training and Status State-Machine) value as fast as possible.
 
-but pci_bus_claim_resources() should work too.
+A) if there is no card inserted in the PCIe slot, the State-Machine
+oscillates between "Detect.Quiet" and "Detect.Active" SubStates of
+the "Detect" State.
 
-Yinghai
+B) if there is a card inserted in the PCIe slot, then after a few
+milliseconds, the State-Machine changes to "Polling.Active", then
+"Polling.Configuration", then "Configuration" (this step must be
+very short, because I don't see it consistently), then "L0".
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+One issue I noted in a separate message is that, on rev1 of my HW,
+if the PCIe framework tries to read the card's device ID too soon,
+i.e. before link training is complete, then the read returns ~0,
+and the framework immediately gives up.
+
+Looking at pci_bus_read_dev_vendor_id(), I see that there is a
+retry mechanism implemented, but it seems to be a quirk?
+
+Does the framework expect pci_bus_read_dev_vendor_id() to always
+succeed when there is indeed a device on that specific bus?
+
+In that cas, my driver needs to take care of only starting enumeration
+once the link to the PCIe card is really "up" and functional?
+
+I was given the advice to move the link detection code to the
+probe function, and reset the host bridge (to save power) when
+no link is detected after some time. What do you think?
+
+Regards.
