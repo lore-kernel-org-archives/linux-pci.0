@@ -1,185 +1,85 @@
-Return-Path: <SRS0=1xxJ=3T=cavium.com=Jayachandran.Nair@kernel.org>
-Return-Path: <SRS0=1xxJ=3T=cavium.com=Jayachandran.Nair@kernel.org>
-Date: Tue, 11 Apr 2017 15:27:02 +0000
-From: Jayachandran C <jnair@caviumnetworks.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Jon Masters <jcm@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
-	linux-arm-kernel@lists.infradead.org,
-	Joerg Roedel <joro@8bytes.org>
-Subject: Re: [PATCH v4 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-Message-ID: <20170411152702.GA2910@localhost>
-References: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
- <1491225304-3559-3-git-send-email-jnair@caviumnetworks.com>
- <20170411012847.GA15291@bhelgaas-glaptop.roam.corp.google.com>
- <20170411071047.GA3610@localhost>
- <20170411134125.GA31773@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:39373 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751409AbdDHHkt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 8 Apr 2017 03:40:49 -0400
+Date: Sat, 8 Apr 2017 09:41:07 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Joerg Roedel <joro@8bytes.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Daniel Drake <drake@endlessm.com>,
+        Alexander Deucher <Alexander.Deucher@amd.com>,
+        Samuel Sieb <samuel@sieb.net>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Joerg Roedel <jroedel@suse.de>,
+        Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
+Message-ID: <20170408074107.GA3585@wunner.de>
+References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170411134125.GA31773@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <1491575538-22694-1-git-send-email-joro@8bytes.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 11, 2017 at 08:41:25AM -0500, Bjorn Helgaas wrote:
-> [+cc Joerg]
+On Fri, Apr 07, 2017 at 04:32:18PM +0200, Joerg Roedel wrote:
+> From: Joerg Roedel <jroedel@suse.de>
 > 
-> On Tue, Apr 11, 2017 at 07:10:48AM +0000, Jayachandran C wrote:
-> > On Mon, Apr 10, 2017 at 08:28:47PM -0500, Bjorn Helgaas wrote:
-> > > Hi Jayachandran,
-> > > 
-> > > On Mon, Apr 03, 2017 at 01:15:04PM +0000, Jayachandran C wrote:
-> > > > The Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the PCI
-> > > > topology is slightly unusual. For a multi-node system, it looks like:
-> > > > 
-> > > > [node level PCI bridges - one per node]
-> > > >     [SoC PCI devices with MSI-X but no IOMMU]
-> > > >     [PCI-PCIe "glue" bridges - upto 14, one per real port below]
-> > > >         [PCIe real root ports associated with IOMMU and GICv3 ITS]
-> > > >             [External PCI devices connected to PCIe links]
-> > > > 
-> > > > The top two levels of bridges should have introduced aliases since they
-> > > > are PCI and PCI/PCIe bridges, but in the case of ThunderX2 they do not.
-> > > > In the case of external PCIe devices, the "real" root ports are connected
-> > > > to the SMMU and the GIC ITS, so PCI-PCIe bridge does not introduce an
-> > > > alias. The SoC PCI devices are directly connected to the GIC ITS, so the
-> > > > node level bridges do not introduce an alias either.
-> > > > 
-> > > > To handle this quirk, we mark the real PCIe root ports and node level
-> > > > PCI bridges with the flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT.  With this,
-> > > > pci_for_each_dma_alias() works correctly for external PCIe devices and
-> > > > SoC PCI devices.
-> > > > 
-> > > > For the current revision of Cavium ThunderX2, the VendorID and Device ID
-> > > > are from Broadcom Vulcan (14e4:90XX).
-> > > 
-> > > Can you supply some text here about why we want to apply this patch?
-> > > E.g., does it avoid making unnecessary IOMMU mappings, improve
-> > > performance, avoid a crash, etc?
-> > 
-> > If this is for the commit message, I hope the following is ok:
-> > 
-> > "With this change, both MSI-X and IO virtualization work correctly on
-> > Cavium ThunderX2. The GIC ITS driver gets the correct device ID to
-> > configure MSI-X, the SMMUv3 driver gets the correct Stream IDs for PCI
-> > devices, and the IOMMU groups are setup correctly."
-> 
-> This doesn't get at what the actual problem is.  I'm hoping for
-> something like "without this change, we set up an IOMMU mapping for
-> requestor ID X, but device DMA uses requestor ID Y because ...., which
-> results in an IOMMU fault"
+> ATS is broken on this hardware and causes IOMMU stalls and
+> system failure. Disable ATS on these devices to make them
+> usable again with IOMMU enabled.
 
-Ok. I hope this would be better:
+AMD Stoney Ridge is an x86 CPU + GPU combo and this quirk pertains
+to the GPU, right?
 
-"Without this change, the last alias seen while traversing the PCI
-hierarchy will be used as the RID to generate the device ID for ITS
-and stream ID for SMMU. This in turn causes the MSI-X generated by the
-device to fail since the ITS expects to have translation tables based
-on the actual PCIe RID and not the (irrelevant) alias. Similarly, the
-device DMA also fails when SMMU is enabled due to incorrect value in
-SMMU translation tables"
-
-> I've been puzzling over the fact that most of the callers of
-> pci_for_each_dma_alias() don't seem to use it correctly.  For Intel
-> IOMMUs, domain_context_mapping() uses it to add a mapping for every
-> possible alias.  But most of the other callers only look at the last
-> alias and ignore all the others.  That might work most of the time,
-> but:
-> 
->   - There's no guarantee that pci_for_each_dma_alias() iterates in any
->     particular order, so relying on the current order is fragile,
-> 
->   - The pci_add_dma_alias() interface allows an arbitrary number of
->     aliases (as long as they're all on the same bus), and some devices
->     do use more than one, e.g., quirk_dma_func0_alias(),
->     quirk_mic_x200_dma_alias(),
-> 
->   - pci_for_each_dma_alias() translates the rules in the PCIe to
->     PCI/PCI-X Bridge spec, r1.0, sec 2.3, about taking ownership into
->     aliases.  I think it's important to pay attention to *every*
->     possible alias, not just the last one.
-
-pci_for_each_dma_alias() is used by the ARM code to find the RID
-(Requester ID), and this is taken as the last alias as seen from the
-PCI controller (RC). The RID is then used to program the Device ID
-of the GIC ITS (ARM generic interrupt controller's interrupt translation
-service) for MSI-X (and similarly to program Stream ID of the SMMU).
-
-The translation from RID to Device ID or stream ID is provided by the
-IORT ACPI table[1] or by the a {iommu,msi}-{map,mask} [2] property in
-the device tree.
-
-Taking the last alias maybe reasonable since the mapping is from
-(PCI RC, RID) to (SMMU, streamID) or (GIC ITS, deviceID) and we are
-looking for a single the RID for a device as seen from the controller.
-
-> I suspect the reason this patch makes a difference is because the
-> current pci_for_each_dma_alias() believes one of those top-level
-> bridges is an alias, and the iterator produces it last, so that's the
-> one you map.  The IOMMU is attached lower down, so that top-level
-> bridge is not in fact an alias, but since you only look at the *last*
-> one, you don't map the correct aliases from lower down in the tree.
-
-Exactly. The IORT spec allows a range of RIDs to map to an SMMU, which
-means that a PCI RC can multiple SMMUs, each handling a subset of RIDs.
-
-In the case of Cavium ThunderX2, the RID which we should see on the RC
-- if we follow the standard and factor in the aliasing introduced by the
-PCI bridge and the PCI/PCIe bridge - is not the RID seen by the SMMU (or
-ITS).
-
-But, if we stop the traversal at the point where SMMU (or ITS) is
-attached, we will get the correct RID as seen by these.
-
-> Stopping the iterator earlier happens to make the last alias be one of
-> the correct ones, but it doesn't solve the problems of quirked devices
-> that can use multiple requester IDs, and it doesn't solve the problem
-> of PCIe-to-PCI bridges that optionally take ownership of transactions.
- 
-If these happen below the point where the SMMU is attached, we will
-consider the last alias introduced, which should be ok. If they are
-above, the alias introduced is not relevant.  Devices with multiple
-aliases is not handled anywhere in ARM code, so I don't think we should
-consider that here.
-
-> > I can send out a new patch if needed.
-> > 
-> > The on chip SATA and USB use MSI-X, so this is needed for basic
-> > functionality of the platform.
-> 
-> No need for a new patch; I can integrate something into the changelog.
-> 
-> > > > Signed-off-by: Jayachandran C <jnair@caviumnetworks.com>
-> > > > ---
-> > > >  drivers/pci/quirks.c | 14 ++++++++++++++
-> > > >  1 file changed, 14 insertions(+)
-> > > > 
-> > > > diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> > > > index 6736836..564a84a 100644
-> > > > --- a/drivers/pci/quirks.c
-> > > > +++ b/drivers/pci/quirks.c
-> > > > @@ -3958,6 +3958,20 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2260, quirk_mic_x200_dma_alias);
-> > > >  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2264, quirk_mic_x200_dma_alias);
-> > > >  
-> > > >  /*
-> > > > + * The IOMMU and interrupt controller on Broadcom Vulcan/Cavium ThunderX2 are
-> > > > + * associated not at the root bus, but at a bridge below. This quirk flag
-> > > > + * will ensure that the aliases are identified correctly.
-> > > > + */
-> > > > +static void quirk_bridge_cavm_thrx2_pcie_root(struct pci_dev *pdev)
-> > > > +{
-> > > > +	pdev->dev_flags |= PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT;
-> > > > +}
-> > > > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9000,
-> > > > +				quirk_bridge_cavm_thrx2_pcie_root);
-> > > > +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9084,
-> > > > +				quirk_bridge_cavm_thrx2_pcie_root);
-> > > > +
-> > > > +/*
-> > > >   * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
-> > > >   * class code.  Fix it.
-> > > >   */
+In that case the quirk should go to arch/x86.  Paul Menzel (+cc)
+has just complained on linux-pci@ that final fixups are taking half
+a second, and I think that could be reduced if more efforts were
+spent to move arch-specific quirks out of the catch-all in
+drivers/pci/quirks.c.
 
 Thanks,
-JC.
-[1] http://infocenter.arm.com/help/topic/com.arm.doc.den0049b/DEN0049B_IO_Remapping_Table.pdf
-[2] https://www.kernel.org/doc/Documentation/devicetree/bindings/pci/pci-iommu.txt
+
+Lukas
+
+> 
+> Note that the commit in the Fixes-tag is not buggy, it
+> just uncovers the problem in the hardware by increasing
+> the ATS-flush rate.
+> 
+> Fixes: b1516a14657a ('iommu/amd: Implement flush queue')
+> Signed-off-by: Joerg Roedel <jroedel@suse.de>
+> ---
+>  drivers/pci/quirks.c | 19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 6736836..7cbe316 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4634,3 +4634,22 @@ static void quirk_no_aersid(struct pci_dev *pdev)
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
+>  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
+> +
+> +#ifdef CONFIG_PCI_ATS
+> +/*
+> + * Some devices have a broken ATS implementation causing IOMMU stalls.
+> + * Don't use ATS for those devices.
+> + */
+> +static void quirk_disable_ats(struct pci_dev *pdev)
+> +{
+> +	/*
+> +	 * Set pdev->ats_cap = 0 to make pci_enable_ats() bail out
+> +	 * early.
+> +	 */
+> +	dev_info(&pdev->dev, "QUIRK: Disabling ATS");
+> +	pdev->ats_cap = 0;
+> +}
+> +
+> +/* AMD Stoney platform GPU */
+> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4, quirk_disable_ats);
+> +#endif /* CONFIG_PCI_ATS */
+> -- 
+> 1.9.1
+> 
