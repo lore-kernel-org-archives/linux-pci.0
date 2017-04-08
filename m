@@ -1,92 +1,62 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-Id: <20170418170553.806707929@linutronix.de>
-Date: Tue, 18 Apr 2017 19:04:59 +0200
-From: Thomas Gleixner <tglx@linutronix.de>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Sebastian Siewior <bigeasy@linutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [patch V2 17/24] PCI: Use cpu_hotplug_disable() instead of
- get_online_cpus()
-References: <20170418170442.665445272@linutronix.de>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V7 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
+ Rajat Jain <rajatja@google.com>
+References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
+ <7c48ca8b-b834-3257-91dc-77e9d19def6c@codeaurora.org>
+ <92EBB4272BF81E4089A7126EC1E7B28466761383@IRSMSX101.ger.corp.intel.com>
+ <92EBB4272BF81E4089A7126EC1E7B2846676271D@IRSMSX101.ger.corp.intel.com>
+ <951505b8-9580-7131-2f14-de92817190a7@codeaurora.org>
+ <CACK8Z6FG7QHs1kQUoTJTcP3606+xBLFp9RUmLuv0m0X2mxH9XA@mail.gmail.com>
+ <92EBB4272BF81E4089A7126EC1E7B2846676309A@IRSMSX101.ger.corp.intel.com>
+ <896488eb-cb1d-03b9-73a0-011e4a9025c5@codeaurora.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <a1e13239-9471-5ea3-4d26-2a7ee4ff08b6@codeaurora.org>
+Date: Sat, 8 Apr 2017 01:03:08 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <896488eb-cb1d-03b9-73a0-011e4a9025c5@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "timur@codeaurora.org" <timur@codeaurora.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Converting the hotplug locking, i.e. get_online_cpus(), to a percpu rwsem
-unearthed a circular lock dependency which was hidden from lockdep due to
-the lockdep annotation of get_online_cpus() which prevents lockdep from
-creating full dependency chains. There are several variants of this. And
-example is:
+Hi Mayurkumar,
 
-Chain exists of:
+On 4/7/2017 9:09 AM, Sinan Kaya wrote:
+> On 4/7/2017 5:03 AM, Patel, Mayurkumar wrote:
+>> So basically, I am not currently 100% sure, what is the proper fix for this. Whether BIOS should
+>> enable L1SS on Root Port no matter Endpoint is connected or not during boot?
+> 
+> I'd like to force the kernel to reconfigure ASPM for all combinations
+> when there is no card attached during boot and we do a hotplug insertion. 
+> 
+> I'm thinking about how to do this now.
+> 
 
-cpu_hotplug_lock.rw_sem --> drm_global_mutex --> &item->mutex
+I posted V8. can you please test it again?
 
-CPU0                    CPU1
-----                    ----
-lock(&item->mutex);
-                        lock(drm_global_mutex);
-                        lock(&item->mutex);
-lock(cpu_hotplug_lock.rw_sem);
+Sinan
 
-because there are dependencies through workqueues. The call chain is:
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
-	get_online_cpus
-	apply_workqueue_attrs
-	__alloc_workqueue_key
-	ttm_mem_global_init
-	ast_ttm_mem_global_init
-	drm_global_item_ref
-	ast_mm_init
-	ast_driver_load
-	drm_dev_register
-	drm_get_pci_dev
-	ast_pci_probe
-	local_pci_probe
-	work_for_cpu_fn
-	process_one_work
-	worker_thread
-
-This is not a problem of get_online_cpus() recursion, it's a possible
-deadlock undetected by lockdep so far.
-
-The cure is to use cpu_hotplug_disable() instead of get_online_cpus() to
-protect the PCI probing.
-
-There is a side effect to this: cpu_hotplug_disable() makes a concurrent
-cpu hotplug attempt via the sysfs interfaces fail with -EBUSY, but PCI
-probing usually happens during the boot process where no interaction is
-possible. Any later invocations are infrequent enough and concurrent
-hotplug attempts are so unlikely that the danger of user space visible
-regressions is very close to zero. Anyway, thats preferrable over a real
-deadlock.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
----
- drivers/pci/pci-driver.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -349,13 +349,13 @@ static int pci_call_probe(struct pci_dri
- 	if (node >= 0 && node != numa_node_id()) {
- 		int cpu;
- 
--		get_online_cpus();
-+		cpu_hotplug_disable();
- 		cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
- 		if (cpu < nr_cpu_ids)
- 			error = work_on_cpu(cpu, local_pci_probe, &ddi);
- 		else
- 			error = local_pci_probe(&ddi);
--		put_online_cpus();
-+		cpu_hotplug_enable();
- 	} else
- 		error = local_pci_probe(&ddi);
- 
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
