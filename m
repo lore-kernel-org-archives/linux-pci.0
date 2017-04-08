@@ -1,48 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:33178 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752608AbdDLQrb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Apr 2017 12:47:31 -0400
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-        Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-References: <20170412083525.GF3250@mwanda>
-Cc: Stephen Bates <stephen.bates@microsemi.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        kernel-janitors@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <3de7a06b-d27c-9775-8eb9-1b02bf8e2fec@deltatee.com>
-Date: Wed, 12 Apr 2017 10:47:27 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V8 4/5] PCI/ASPM: save power on values during bridge init
+Date: Sat,  8 Apr 2017 00:55:50 -0400
+Message-Id: <1491627351-1111-5-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
+ linux-arm-msm@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+ linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ Julia Lawall <Julia.Lawall@lip6.fr>, Bjorn Helgaas <bhelgaas@google.com>,
+ Rajat Jain <rajatja@google.com>, Yinghai Lu <yinghai@kernel.org>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <20170412083525.GF3250@mwanda>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH] switchtec: checking for NULL instead of IS_ERR()
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Dan,
+Now that we added a hook to be called from device_add, save the
+default values from the HW registers early in the boot for further
+reuse during hot device add/remove operations.
 
-Thanks for the fix. This is the exact same patch Christophe Jaillet sent
-a couple of days ago so only one needs to be merged.
+If the link is down during boot, assume that we want to enable L0s
+and L1 following hotplug insertion as well as L1SS if supported.
 
-Logan
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pcie/aspm.c | 34 ++++++++++++++++++++++++++++++----
+ 1 file changed, 30 insertions(+), 4 deletions(-)
 
-On 12/04/17 02:35 AM, Dan Carpenter wrote:
-> stuser_create() uses error pointers, it never returns NULL.
-> 
-> Fixes: 74004262f329 ("MicroSemi Switchtec management interface driver")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-> index fcde98161d9a..cc6e085008fb 100644
-> --- a/drivers/pci/switch/switchtec.c
-> +++ b/drivers/pci/switch/switchtec.c
-> @@ -608,7 +608,7 @@ static int switchtec_dev_open(struct inode *inode, struct file *filp)
->  	stdev = container_of(inode->i_cdev, struct switchtec_dev, cdev);
->  
->  	stuser = stuser_create(stdev);
-> -	if (!stuser)
-> +	if (IS_ERR(stuser))
->  		return PTR_ERR(stuser);
->  
->  	filp->private_data = stuser;
-> 
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index e33f84b..c7da087 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -505,8 +505,10 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 	 */
+ 	if (dwreg.support & upreg.support & PCIE_LINK_STATE_L0S)
+ 		link->aspm_support |= ASPM_STATE_L0S;
+-	if (dwreg.enabled & PCIE_LINK_STATE_L0S)
++	if (dwreg.enabled & PCIE_LINK_STATE_L0S) {
+ 		link->aspm_enabled |= ASPM_STATE_L0S_UP;
++		link->aspm_default |= ASPM_STATE_L0S_UP;
++	}
+ 	if (upreg.enabled & PCIE_LINK_STATE_L0S)
+ 		link->aspm_enabled |= ASPM_STATE_L0S_DW;
+ 	link->latency_up.l0s = calc_l0s_latency(upreg.latency_encoding_l0s);
+@@ -542,9 +544,6 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
+ 	if (link->aspm_support & ASPM_STATE_L1SS)
+ 		aspm_calc_l1ss_info(link, &upreg, &dwreg);
+ 
+-	/* Save default state */
+-	link->aspm_default = link->aspm_enabled;
+-
+ 	/* Setup initial capable state. Will be updated later */
+ 	link->aspm_capable = link->aspm_support;
+ 	/*
+@@ -835,11 +834,38 @@ static int pci_aspm_init_downstream(struct pci_dev *pdev)
+ static int pci_aspm_init_upstream(struct pci_dev *pdev)
+ {
+ 	struct pcie_link_state *link;
++	struct aspm_register_info upreg;
++	u16 lnk_status;
++	bool ret;
+ 
+ 	link = alloc_pcie_link_state(pdev);
+ 	if (!link)
+ 		return -ENOMEM;
+ 
++	pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
++	ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
++
++	if (ret) {
++		pcie_get_aspm_reg(pdev, &upreg);
++		if (upreg.enabled & PCIE_LINK_STATE_L0S)
++			link->aspm_default |= ASPM_STATE_L0S_DW;
++		if (upreg.enabled & PCIE_LINK_STATE_L1)
++			link->aspm_default |= ASPM_STATE_L1;
++		if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_ASPM_L1_1)
++			link->aspm_default |= ASPM_STATE_L1_1;
++		if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_ASPM_L1_2)
++			link->aspm_default |= ASPM_STATE_L1_2;
++		if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_PCIPM_L1_1)
++			link->aspm_default |= ASPM_STATE_L1_1_PCIPM;
++		if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_PCIPM_L1_2)
++			link->aspm_default |= ASPM_STATE_L1_2_PCIPM;
++	} else {
++		if (!pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_L1SS))
++			link->aspm_default = ASPM_STATE_L0S | ASPM_STATE_L1;
++		else
++			link->aspm_default = ASPM_STATE_ALL;
++	}
++
+ 	return 0;
+ }
+ 
+-- 
+1.9.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
