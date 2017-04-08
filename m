@@ -1,127 +1,100 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: Doubt on first access for PCIe device
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <50712b3b-2943-0b78-9413-257f33b26c3f@gmail.com>
- <20170419102652.GA23487@red-moon>
- <CANaY3hNcB0Yk=2f7S+J2r+wtd6T7mLd+ZNprNHFkMegZzvx7pQ@mail.gmail.com>
- <20170421155900.GA19059@red-moon>
- <de02b73d-7eb5-b6eb-9e66-2919d442473e@gmail.com>
- <20170424100159.GA23513@red-moon>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-From: abhijit <abhijitnaik27@gmail.com>
-Message-ID: <72634ca0-d2bf-3618-26e3-b784875a8fe5@gmail.com>
-Date: Mon, 24 Apr 2017 16:45:50 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V8 1/5] PCI/ASPM: introduce pci_aspm_init() and add to
+ pci_init_capabilities()
+Date: Sat,  8 Apr 2017 00:55:47 -0400
+Message-Id: <1491627351-1111-2-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
+ linux-arm-msm@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
+ linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
+ Julia Lawall <Julia.Lawall@lip6.fr>, Bjorn Helgaas <bhelgaas@google.com>,
+ Rajat Jain <rajatja@google.com>, linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
-In-Reply-To: <20170424100159.GA23513@red-moon>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+We need a callback from pci_init_capabilities function for every
+single new PCI device that is currently being added.
 
-I think, you are referring to statement,
+pci_aspm_init() will be used to save the power on state of the HW.
 
-"The Completion ID field is not meaningful prior to the software 
-initialization and configuration of the completing device (using at 
-least one Configuration Write Request), and for this case the
-Requester must ignore the value returned in the Completer ID field."
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pcie/aspm.c | 10 ++++++++++
+ drivers/pci/probe.c     |  3 +++
+ include/linux/pci.h     |  2 ++
+ 3 files changed, 15 insertions(+)
 
-Actually one of experimental Endpoint function IP that we are using is 
-not responding for configuration request if Requester ID and Completion 
-ID are same even during configuration phase. So wanted to cross-check 
-whether we are missing out something.
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 1dfa10c..dc36717 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -827,6 +827,16 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ }
+ 
+ /*
++ * pci_aspm_init: Initiate PCI express link state.
++ * It is called from device_add for every single pci device.
++ * @pdev: all pci devices
++ */
++int pci_aspm_init(struct pci_dev *pdev)
++{
++	return 0;
++}
++
++/*
+  * pcie_aspm_init_link_state: Initiate PCI express link state.
+  * It is called after the pcie and its children devices are scanned.
+  * @pdev: the root port or switch downstream port
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index dfc9a27..1e19364 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1847,6 +1847,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 
+ 	/* Advanced Error Reporting */
+ 	pci_aer_init(dev);
++
++	/* Active State Power Management */
++	pci_aspm_init(dev);
+ }
+ 
+ /*
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eb3da1a..8828dd7 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1396,8 +1396,10 @@ static inline int pci_irq_get_node(struct pci_dev *pdev, int vec)
+ 
+ #ifdef CONFIG_PCIEASPM
+ bool pcie_aspm_support_enabled(void);
++int pci_aspm_init(struct pci_dev *pdev);
+ #else
+ static inline bool pcie_aspm_support_enabled(void) { return false; }
++static inline int pci_aspm_init(struct pci_dev *pdev) { return -ENODEV; }
+ #endif
+ 
+ #ifdef CONFIG_PCIEAER
+-- 
+1.9.1
 
-It seems that behavior of endpoint IP is not correct.
 
-Thank you very much for all your time and patience :)
-
-Regards,
-     Abhijit
-
-On Monday 24 April 2017 03:31 PM, Lorenzo Pieralisi wrote:
-> On Mon, Apr 24, 2017 at 11:52:27AM +0530, abhijit wrote:
->> Hi Lorenzo,
->>
->> Yes that's true..
->>
->> My question is: what if EP function default completer ID means BDF
->> has values = 0(meaning B = 0, D = 0, f = 0) and Root complex
->> requester ID also has same BDF, that is 0.
->>
->> Is that valid case as per PCIe standard, as in this case, requester
->> ID and completion ID have same BDF?
->
-> Read "2.2.9: Completion rules" and you will have your question answered
-> there ;-)
->
-> Lorenzo
->
->>
->> Thank you very much for your replies
->>
->> Regards,
->>     Abhijit
->>
->>
->> On Friday 21 April 2017 09:29 PM, Lorenzo Pieralisi wrote:
->>> On Fri, Apr 21, 2017 at 03:33:45PM +0530, abhijit naik wrote:
->>>>   Hi Lorenzo,
->>>>   Thank you very much for reply.
->>>>   As you mentioned I noted that, "If a Function must generate a Completion
->>>>   prior to the initial device Configuration Write Request, 0's must be
->>>>   entered into the Bus Number and Device Number fields"
->>>>   By above statement this means that completion ID will be 0x0000. For the
->>>>   first device on any bus,  device number will be 0 and function number will
->>>>   be 0.
->>>>   Isn't completer (for configuration read) packet will be addressing itself
->>>>   instead of root complex with bus, device and function number 0?
->>>
->>> I don't understand what you are asking. The completion (containing
->>> the read data) is routed back to the initiator via ID (of the requester)
->>> routing.
->>>
->>> 2.2.4.2
->>> 2.2.9
->>>
->>> Lorenzo
->>>
->>>>   On Wed, Apr 19, 2017 at 3:56 PM, Lorenzo Pieralisi
->>>>   <lorenzo.pieralisi@arm.com> wrote:
->>>>
->>>>     On Tue, Apr 11, 2017 at 07:45:40PM +0530, abhijit wrote:
->>>>     >
->>>>     > Hi All,
->>>>     >
->>>>     > I was referring Linux code for PCIe enumeration and I have one doubt
->>>>     > w.r.t to very first operation that must be done on device.
->>>>     >
->>>>     > Currently while scanning for device, we directly read vendor ID from
->>>>     > device. But PCIE base specification
->>>>     > "CB-PCI_Express_Base_4.0r0.7_November-11-2016.pdf" section 2.2.6.2
->>>>     > specifies that,
->>>>     >
->>>>     > "Functions must capture the Bus and Device Numbers supplied with all
->>>>     > Type 0 Configuration Write Requests completed by the Function and
->>>>     > supply these numbers in the Bus and Device Number fields of the
->>>>     > Requester ID for all Requests initiated by the Device/Function."
->>>>
->>>>     Please note:
->>>>     "for all Requests initiated by the Device/Function".
->>>>                       ^^^^^^^^^
->>>>     > Here I am assuming, the completer ID will be device number and
->>>>     > function number that will eventually programmed in to  device. In
->>>>     > that case, my question is, without first write, how read
->>>>     > request(VENDOR ID read) is serviced/routed?
->>>>
->>>>     That's not initiated by the endpoint device, it is routed by
->>>>     requester ID, which is the requester ID of the configuration
->>>>     request - ie master (ie root complex) requester ID.
->>>>
->>>>     Read 2.2.9 - Completion rules
->>>>
->>>>     HTH,
->>>>     Lorenzo
->>>>
->>>>   --
->>>>   Best wishes,
->>>>   Abhijit Naik
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
