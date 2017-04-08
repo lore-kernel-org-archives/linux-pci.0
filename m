@@ -1,79 +1,185 @@
-Return-Path: <SRS0=zeLE=3M=microsoft.com=kys@kernel.org>
-Return-Path: <SRS0=zeLE=3M=microsoft.com=kys@kernel.org>
-From: KY Srinivasan <kys@microsoft.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-	"olaf@aepfle.de" <olaf@aepfle.de>, "apw@canonical.com" <apw@canonical.com>,
-	"vkuznets@redhat.com" <vkuznets@redhat.com>, "jasowang@redhat.com"
-	<jasowang@redhat.com>, "leann.ogasawara@canonical.com"
-	<leann.ogasawara@canonical.com>, "marcelo.cerri@canonical.com"
-	<marcelo.cerri@canonical.com>, Stephen Hemminger <sthemmin@microsoft.com>
-Subject: RE: [PATCH 0/2] pci-hyperv: Some miscellaneous fixes
-Date: Tue, 4 Apr 2017 19:54:33 +0000
-Message-ID: <DM5PR03MB249052D8580711F8999048D8A00B0@DM5PR03MB2490.namprd03.prod.outlook.com>
-References: <1490378800-26907-1-git-send-email-kys@exchange.microsoft.com>
- <20170404190331.GD27692@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170404190331.GD27692@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sinan Kaya <okaya@codeaurora.org>
+To: linux-pci@vger.kernel.org,
+	timur@codeaurora.org
+Subject: [PATCH V8 3/5] PCI/ASPM: add init hook to device_add
+Date: Sat,  8 Apr 2017 00:55:49 -0400
+Message-Id: <1491627351-1111-4-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
+ linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Sinan Kaya <okaya@codeaurora.org>, Julia Lawall <Julia.Lawall@lip6.fr>,
+ Bjorn Helgaas <bhelgaas@google.com>, Rajat Jain <rajatja@google.com>,
+ linux-arm-kernel@lists.infradead.org
 MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+For bridges, have pcie_aspm_init_link_state() allocate a link_state,
+regardless of whether it currently has any children.
+
+pcie_aspm_init_link_state(): Called for bridges (upstream end of
+link) after all children have been enumerated.  No longer needs to
+check aspm_support_enabled or pdev->has_secondary_link or the VIA
+quirk: pci_aspm_init() already checked that stuff, so we only need
+to check pdev->link_state here.
+
+Now that we are calling alloc_pcie_link_state() from pci_aspm_init()
+, get rid of pci_function_0 function and detect downstream link in
+pci_aspm_init_upstream() instead when the function number is 0.
+
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
+Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+---
+ drivers/pci/pcie/aspm.c | 72 ++++++++++++++++++++++++-------------------------
+ 1 file changed, 36 insertions(+), 36 deletions(-)
+
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index a80d64b..e33f84b 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -422,20 +422,6 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
+ 	}
+ }
+ 
+-/*
+- * The L1 PM substate capability is only implemented in function 0 in a
+- * multi function device.
+- */
+-static struct pci_dev *pci_function_0(struct pci_bus *linkbus)
+-{
+-	struct pci_dev *child;
+-
+-	list_for_each_entry(child, &linkbus->devices, bus_list)
+-		if (PCI_FUNC(child->devfn) == 0)
+-			return child;
+-	return NULL;
+-}
+-
+ /* Calculate L1.2 PM substate timing parameters */
+ static void aspm_calc_l1ss_info(struct pcie_link_state *link,
+ 				struct aspm_register_info *upreg,
+@@ -798,7 +784,6 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ 	INIT_LIST_HEAD(&link->children);
+ 	INIT_LIST_HEAD(&link->link);
+ 	link->pdev = pdev;
+-	link->downstream = pci_function_0(pdev->subordinate);
+ 
+ 	/*
+ 	 * Root Ports and PCI/PCI-X to PCIe Bridges are roots of PCIe
+@@ -828,11 +813,33 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+ 
+ static int pci_aspm_init_downstream(struct pci_dev *pdev)
+ {
++	struct pcie_link_state *link;
++	struct pci_dev *parent;
++
++	/*
++	 * The L1 PM substate capability is only implemented in function 0 in a
++	 * multi function device.
++	 */
++	if (PCI_FUNC(pdev->devfn) != 0)
++		return -EINVAL;
++
++	parent = pdev->bus->self;
++	if (!parent)
++		return -EINVAL;
++
++	link = parent->link_state;
++	link->downstream = pdev;
+ 	return 0;
+ }
+ 
+ static int pci_aspm_init_upstream(struct pci_dev *pdev)
+ {
++	struct pcie_link_state *link;
++
++	link = alloc_pcie_link_state(pdev);
++	if (!link)
++		return -ENOMEM;
++
+ 	return 0;
+ }
+ 
+@@ -843,6 +850,17 @@ static int pci_aspm_init_upstream(struct pci_dev *pdev)
+  */
+ int pci_aspm_init(struct pci_dev *pdev)
+ {
++	if (!aspm_support_enabled)
++		return 0;
++
++	if (!pci_is_pcie(pdev))
++		return -EINVAL;
++
++	/* VIA has a strange chipset, root port is under a bridge */
++	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
++	    pdev->bus->self)
++		return 0;
++
+ 	if (!pdev->has_secondary_link)
+ 		return pci_aspm_init_downstream(pdev);
+ 
+@@ -859,33 +877,16 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 	struct pcie_link_state *link;
+ 	int blacklist = !!pcie_aspm_sanity_check(pdev);
+ 
+-	if (!aspm_support_enabled)
+-		return;
+-
+-	if (pdev->link_state)
+-		return;
+-
+-	/*
+-	 * We allocate pcie_link_state for the component on the upstream
+-	 * end of a Link, so there's nothing to do unless this device has a
+-	 * Link on its secondary side.
+-	 */
+-	if (!pdev->has_secondary_link)
+-		return;
+-
+-	/* VIA has a strange chipset, root port is under a bridge */
+-	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
+-	    pdev->bus->self)
++	if (!pdev->link_state)
+ 		return;
+ 
++	link = pdev->link_state;
+ 	down_read(&pci_bus_sem);
+ 	if (list_empty(&pdev->subordinate->devices))
+ 		goto out;
+ 
+ 	mutex_lock(&aspm_lock);
+-	link = alloc_pcie_link_state(pdev);
+-	if (!link)
+-		goto unlock;
++
+ 	/*
+ 	 * Setup initial ASPM state. Note that we need to configure
+ 	 * upstream links also because capable state of them can be
+@@ -910,7 +911,6 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+ 		pcie_set_clkpm(link, policy_to_clkpm_state(link));
+ 	}
+ 
+-unlock:
+ 	mutex_unlock(&aspm_lock);
+ out:
+ 	up_read(&pci_bus_sem);
+-- 
+1.9.1
 
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Tuesday, April 4, 2017 12:04 PM
-> To: KY Srinivasan <kys@microsoft.com>
-> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
-> vkuznets@redhat.com; jasowang@redhat.com;
-> leann.ogasawara@canonical.com; marcelo.cerri@canonical.com; Stephen
-> Hemminger <sthemmin@microsoft.com>
-> Subject: Re: [PATCH 0/2] pci-hyperv: Some miscellaneous fixes
->=20
-> On Fri, Mar 24, 2017 at 11:06:40AM -0700, kys@exchange.microsoft.com
-> wrote:
-> > From: K. Y. Srinivasan <kys@microsoft.com>
-> >
-> > Some miscellaneous fixes.
-> >
-> > K. Y. Srinivasan (2):
-> >   pci-hyperv: Fix a bug in specifying CPU affinity
-> >   pci-hyperv: Fix an atomic bug
-> >
-> >  drivers/pci/host/pci-hyperv.c |   13 +++++++++----
-> >  1 files changed, 9 insertions(+), 4 deletions(-)
->=20
-> I applied these with Long's reviewed-by to pci/host-hv for v4.12 with the
-> following subject lines:
->=20
->   PCI: hv: Specify CPU_AFFINITY_ALL for MSI affinity when >=3D 32 CPUs
->   PCI: hv: Allocate interrupt descriptors with GFP_ATOMIC
->=20
-Thank you.
-
-> There were two copies of [1/2], which makes this error-prone.  I applied
-> the second one that defines CPU_AFFINITY_ALL.
-
-Thanks again; sorry for the confusion.
-
->=20
-> They're both marked for stable, but without any clue about when the
-> problems were introduced or how serious they are, I did not queue them fo=
-r
-> v4.11.  If you want them in v4.11, please supply those additional details=
-.
-
-I think these issues have been there since   the driver got merged upstream=
-.
-I would want this to be applied against 4.11 as well. Let me know if I shou=
-ld resend
-these patches.
-
-Thanks,
-
-K. Y=20
->=20
-> Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
