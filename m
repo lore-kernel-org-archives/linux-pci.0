@@ -1,53 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 02/27] pci: Fix another sanity check bug in /proc/pci mmap
-Date: Wed, 12 Apr 2017 13:25:51 +0100
-Message-Id: <08d0400c6bf711e3b26824eaa2870c1502f79834.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, "timur@codeaurora.org" <timur@codeaurora.org>
+Subject: RE: [PATCH V8 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+Date: Mon, 10 Apr 2017 11:37:03 +0000
+Message-ID: <92EBB4272BF81E4089A7126EC1E7B284667665E7@IRSMSX101.ger.corp.intel.com>
+References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+In-Reply-To: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+>
+>When the operating system is booted with the default ASPM policy
+>(POLICY_DEFAULT), current code is querying the enable/disable
+>states from ASPM registers to determine the policy.
+>
+>For example, a BIOS could set the power saving state to performance
+>and clear all ASPM control registers. A balanced ASPM policy could
+>enable L0s and disable L1. A power conscious BIOS could enable both
+>L0s and L1 to trade off latency and performance vs. power.
+>
+>After hotplug removal, pcie_aspm_exit_link_state() function clears
+>the ASPM registers. An insertion following hotplug removal reads
+>incorrect policy as ASPM disabled even though ASPM was enabled
+>during boot.
+>
+>This is caused by the fact that same function is used for reconfiguring
+>ASPM regardless of the power on state.
+>
+>------------------------
+>Changes from v7 (https://www.spinics.net/lists/arm-kernel/msg573034.html)
+>------------------------
+>- enable LTSSM as a best effort if the endpoint is not connected during
+>  boot
+>
+>
+>Sinan Kaya (5):
+>  PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
+>  PCI/ASPM: split pci_aspm_init() into two
+>  PCI/ASPM: add init hook to device_add
+>  PCI/ASPM: save power on values during bridge init
+>  PCI/ASPM: move link_state cleanup to bridge remove
+>
 
-Don't match MMIO maps with I/O BARs and vice versa.
+Thanks Sinan for new patches. No issues seen so far in my testing for L1 and L1SS both.
+May you please add my tested-by in the patches?
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
-Cc: stable@vger.kernel.org
----
- drivers/pci/proc.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+I will keep on testing it and let you know if something goes wrong for any
+corner case.
 
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index f82710a..62a0c3e 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -231,14 +231,20 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- {
- 	struct pci_dev *dev = PDE_DATA(file_inode(file));
- 	struct pci_filp_private *fpriv = file->private_data;
--	int i, ret, write_combine;
-+	int i, ret, write_combine, res_bit;
- 
- 	if (!capable(CAP_SYS_RAWIO))
- 		return -EPERM;
- 
-+	if (fpriv->mmap_state == pci_mmap_io)
-+		res_bit = IORESOURCE_IO;
-+	else
-+		res_bit = IORESOURCE_MEM;
-+
- 	/* Make sure the caller is mapping a real resource for this device */
- 	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
--		if (pci_mmap_fits(dev, i, vma,  PCI_MMAP_PROCFS))
-+		if (dev->resource[i].flags & res_bit &&
-+		    pci_mmap_fits(dev, i, vma,  PCI_MMAP_PROCFS))
- 			break;
- 	}
- 
--- 
-2.9.3
+> drivers/pci/pcie/aspm.c | 149 +++++++++++++++++++++++++++++++++---------------
+> drivers/pci/probe.c     |   3 +
+> drivers/pci/remove.c    |   3 +-
+> include/linux/pci.h     |   2 +
+> 4 files changed, 110 insertions(+), 47 deletions(-)
+>
+>--
+>1.9.1
+
+Intel Deutschland GmbH
+Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
+Tel: +49 89 99 8853-0, www.intel.de
+Managing Directors: Christin Eisenschmid, Christian Lamprechter
+Chairperson of the Supervisory Board: Nicole Lau
+Registered Office: Munich
+Commercial Register: Amtsgericht Muenchen HRB 186928
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
