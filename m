@@ -1,26 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V10 06/12] of: device: Fix overflow of coherent_dma_mask
-To: Frank Rowand <frowand.list@gmail.com>,
- Sricharan R <sricharan@codeaurora.org>, will.deacon@arm.com,
- joro@8bytes.org, lorenzo.pieralisi@arm.com,
- iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
- robh+dt@kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
- lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
- linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-7-git-send-email-sricharan@codeaurora.org>
- <58E5E7B7.1050400@gmail.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <b081f333-084d-ffa5-635f-f7f1c0232ac3@arm.com>
-Date: Thu, 6 Apr 2017 11:24:31 +0100
+Subject: Re: [RFC PATCH 01/30] iommu/arm-smmu-v3: Link groups and devices
+To: Robin Murphy <robin.murphy@arm.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-2-jean-philippe.brucker@arm.com>
+ <9ce9e3c5-3f94-8b06-2bd7-a665f0f33304@arm.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <91a0ac80-139b-0631-a743-e2a3861a51bf@arm.com>
+Date: Mon, 10 Apr 2017 12:02:31 +0100
 MIME-Version: 1.0
-In-Reply-To: <58E5E7B7.1050400@gmail.com>
+In-Reply-To: <9ce9e3c5-3f94-8b06-2bd7-a665f0f33304@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -28,94 +17,70 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
+ Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, David Woodhouse <dwmw2@infradead.org>,
+ linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 06/04/17 08:01, Frank Rowand wrote:
-> On 04/04/17 03:18, Sricharan R wrote:
->> Size of the dma-range is calculated as coherent_dma_mask + 1
->> and passed to arch_setup_dma_ops further. It overflows when
->> the coherent_dma_mask is set for full 64 bits 0xFFFFFFFFFFFFFFFF,
->> resulting in size getting passed as 0 wrongly. Fix this by
->> passsing in max(mask, mask + 1). Note that in this case
->> when the mask is set to full 64bits, we will be passing the mask
->> itself to arch_setup_dma_ops instead of the size. The real fix
->> for this should be to make arch_setup_dma_ops receive the
->> mask and handle it, to be done in the future.
+On 27/03/17 13:18, Robin Murphy wrote:
+> Hi Jean-Philippe,
+> 
+> On 27/02/17 19:54, Jean-Philippe Brucker wrote:
+>> Reintroduce smmu_group. This structure was removed during the generic DT
+>> bindings rework, but will be needed when implementing PCIe ATS, to lookup
+>> devices attached to a given domain.
 >>
->> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> ---
->>  drivers/of/device.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/of/device.c b/drivers/of/device.c
->> index c17c19d..c2ae6bb 100644
->> --- a/drivers/of/device.c
->> +++ b/drivers/of/device.c
->> @@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct device_node *np)
->>  	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->>  	if (ret < 0) {
->>  		dma_addr = offset = 0;
->> -		size = dev->coherent_dma_mask + 1;
->> +		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
->>  	} else {
->>  		offset = PFN_DOWN(paddr - dma_addr);
->>  		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->>
+>> When unmapping from a domain, we need to send an invalidation to all
+>> devices that could have stored the mapping in their ATC. It would be nice
+>> to use IOMMU API's iommu_group_for_each_dev, but that list is protected by
+>> group->mutex, which we can't use because atc_invalidate won't be allowed
+>> to sleep. So add a list of devices, protected by a spinlock.
 > 
-> NACK.
+> Much as I dislike that particular duplication, with patch #4 in mind I
+> think there's a more fundamental problem - since the primary reason for
+> multi-device groups is lack of ACS, is there any guarantee that ATS
+> support/enablement will be actually be homogeneous across any old set of
+> devices in that situation, and thus valid to evaluate at the iommu_group
+> level?
+
+I doubt that support of ATS in group would be homogeneous, so I also test
+ats bit in pci_device structure before sending a command, making the group
+check an optimization.
+
+> That said, looking at how things end up at the top commit, I think this
+> is fairly easily sidestepped. We have this pattern a few times:
 > 
-> Passing an invalid size to arch_setup_dma_ops() is only part of the problem.
-> size is also used in of_dma_configure() before calling arch_setup_dma_ops():
+> 	spin_lock_irqsave(&smmu_domain->groups_lock)
+> 	list_for_each_entry(&smmu_domain->groups)
+> 		spin_lock(&smmu_group->devices_lock)
+> 		list_for_each_entry(&smmu_group->devices)
+> 			do a thing for each device in the domain...
 > 
->         dev->coherent_dma_mask = min(dev->coherent_dma_mask,
->                                      DMA_BIT_MASK(ilog2(dma_addr + size)));
->         *dev->dma_mask = min((*dev->dma_mask),
->                              DMA_BIT_MASK(ilog2(dma_addr + size)));
+> which strongly suggests that we'd be better off just linking the devices
+> to the domain directly - which would also let us scope ats_enabled to
+> the per-device level which seems safer than per-group as above. And if
+> only devices with ATS enabled are added to a domain's list in the first
+> place, then ATC invalidate gets even simpler too.
 > 
-> which would be incorrect for size == 0xffffffffffffffffULL when
-> dma_addr != 0.  So the proposed fix really is not papering over
-> the base problem very well.
+> The only other uses I can see are of smmu_group->domain, which always
+> looks to be directly equivalent to to_smmu_domain(iommu_group->domain).
+> Overall it really looks like the smmu_group abstraction winds up making
+> the end result more complex than it needs to be.
 
-I'm not sure I agree there. Granted, there exist many more problematic
-aspects than are dealt with here (I've got more patches cooking to sort
-out some of the other issues we have with dma-ranges), but considering
-size specifically:
+Yes in retrospect, smmu_group hardly seems necessary. I'll work on getting
+rid of it.
 
-- It is not possible to explicitly specify a range with a size of 2^64
-in DT. If someone does specify a size of 0, they've done a silly thing
-and should not be surprised that it ends badly.
-
-- It *is* perfectly legitimate for bus code (or a previous device
-driver, once we start coming here at probe time) to have set a device's
-DMA mask to 0xffffffffffffffffULL. If this code then blindly overflows
-and infers an invalid size of 0 from that, breaking things in the
-process, that is this code's fault alone. It just so happens that
-nothing managed to trigger the latent problem until patch #7 here shakes
-up the callsites.
-
-Yes, wacky impossible base + size combinations in DT were a theoretical
-problem before, and remain a theoretical problem, but also fall into the
-"how did you ever expect this to work?" category. There's certainly
-plenty more we can do to improve the DT parsing/validation, but that
-still doesn't apply to this path where the information is *not* coming
-from the DT at all.
-
-> I agree that the proper solution involves passing a mask instead
-> of a size to arch_setup_dma_ops().
-
-Having started writing that patch too, I can tell you it's a big bugger
-touching multiple architectures and fixing up various drivers doing
-stupid things, hence why I'm happy with this point fix being the lesser
-of two evils in terms of not holding up this mostly-orthogonal series.
-
-Robin.
-
-> 
-> -Frank
-> 
+Thanks,
+Jean-Philippe
 
 
 _______________________________________________
