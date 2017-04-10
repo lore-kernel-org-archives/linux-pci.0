@@ -1,57 +1,77 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Richard Henderson <rth@twiddle.net>,
-        Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
-        Matt Turner <mattst88@gmail.com>
-Subject: [PATCH v3 05/32] alpha: include default ioremap_nopost() implementation
-Date: Tue, 11 Apr 2017 13:28:45 +0100
-Message-Id: <20170411122923.6285-6-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f66.google.com ([74.125.83.66]:36227 "EHLO
+        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753291AbdDJMBc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Apr 2017 08:01:32 -0400
+Received: by mail-pg0-f66.google.com with SMTP id 81so25490604pgh.3
+        for <linux-pci@vger.kernel.org>; Mon, 10 Apr 2017 05:01:32 -0700 (PDT)
+From: Yongji Xie <elohimes@gmail.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
+        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
+        paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: [PATCH v10 2/4] PCI: Add pcibios_default_alignment() for arch-specific alignment control
+Date: Mon, 10 Apr 2017 19:58:12 +0800
+Message-Id: <1491825494-19331-3-git-send-email-elohimes@gmail.com>
+In-Reply-To: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
+References: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and Posting")
-mandate non-posted configuration transactions. As further highlighted in
-the PCIe specifications (4.0 - Rev0.3, "Ordering Considerations for the
-Enhanced Configuration Access Mechanism"), through ECAM and
-ECAM-derivative configuration mechanism, the memory mapped transactions
-from the host CPU into Configuration Requests on the PCI express fabric
-may create ordering problems for software because writes to memory
-address are typically posted transactions (unless the architecture can
-enforce through virtual address mapping non-posted write transactions
-behaviour) but writes to Configuration Space are not posted on the PCI
-express fabric.
+When VFIO passes through a PCI device to a guest, it does not allow
+the guest to mmap BARs that are smaller than PAGE_SIZE unless it
+can reserve the rest of the page (see vfio_pci_probe_mmaps()). This
+is because a page might contain several small BARs for unrelated
+devices and a guest should not be able to access all of them.
 
-Include the asm-generic ioremap_nopost() implementation (currently
-falling back to ioremap_nocache()) to provide a non-posted writes
-ioremap interface to kernel subsystems.
+VFIO emulates guest accesses to non-mappable BARs, which is functional
+but slow. On systems with large page sizes, e.g., PowerNV with 64K pages,
+BARs are more likely to share a page and performance is more likely to
+be a problem.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Richard Henderson <rth@twiddle.net>
-Cc: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-Cc: Matt Turner <mattst88@gmail.com>
+Add a weak function to set default alignment for all PCI devices.
+An arch can override it to force the PCI core to place memory BARs on
+their own pages.
+
+Signed-off-by: Yongji Xie <elohimes@gmail.com>
 ---
- arch/alpha/include/asm/io.h | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/pci.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/arch/alpha/include/asm/io.h b/arch/alpha/include/asm/io.h
-index ff40491..5d7cc11 100644
---- a/arch/alpha/include/asm/io.h
-+++ b/arch/alpha/include/asm/io.h
-@@ -300,6 +300,7 @@ static inline void __iomem * ioremap_nocache(unsigned long offset,
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02..02f1255 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4947,6 +4947,11 @@ void pci_ignore_hotplug(struct pci_dev *dev)
  }
+ EXPORT_SYMBOL_GPL(pci_ignore_hotplug);
  
- #define ioremap_uc ioremap_nocache
-+#include <asm-generic/ioremap-nopost.h>
- 
- static inline void iounmap(volatile void __iomem *addr)
++resource_size_t __weak pcibios_default_alignment(struct pci_dev *dev)
++{
++	return 0;
++}
++
+ #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
+ static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
+ static DEFINE_SPINLOCK(resource_alignment_lock);
+@@ -4962,14 +4967,15 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
  {
+ 	int seg, bus, slot, func, align_order, count;
+ 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+-	resource_size_t align = 0;
++	resource_size_t align = pcibios_default_alignment(dev);
+ 	char *p;
+ 
+ 	spin_lock(&resource_alignment_lock);
+ 	p = resource_alignment_param;
+-	if (!*p)
++	if (!*p && !align)
+ 		goto out;
+ 	if (pci_has_flag(PCI_PROBE_ONLY)) {
++		align = 0;
+ 		pr_info_once("PCI: Ignoring requested alignments (PCI_PROBE_ONLY)\n");
+ 		goto out;
+ 	}
 -- 
-2.10.0
+1.7.9.5
