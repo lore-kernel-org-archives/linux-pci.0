@@ -1,14 +1,21 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <1491627351-1111-5-git-send-email-okaya@codeaurora.org>
-References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
- <1491627351-1111-5-git-send-email-okaya@codeaurora.org>
-From: Rajat Jain <rajatja@google.com>
-Date: Wed, 12 Apr 2017 12:19:01 -0700
-Message-ID: <CACK8Z6GXfMWxakNQnvMToig9z9McnJKeYFc2BAAFy7ys8=PUWg@mail.gmail.com>
-Subject: Re: [PATCH V8 4/5] PCI/ASPM: save power on values during bridge init
-To: Sinan Kaya <okaya@codeaurora.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+ catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+ gregkh@linuxfoundation.org
+Subject: [PATCH V11 03/11] of: dma: Make of_dma_deconfigure() public
+Date: Mon, 10 Apr 2017 16:50:58 +0530
+Message-Id: <1491823266-1209-4-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
+References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,124 +23,94 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
- Rajat Jain <rajatxjain@gmail.com>, David Daney <david.daney@cavium.com>,
- linux-pci@vger.kernel.org, timur@codeaurora.org, linux-kernel@vger.kernel.org,
- Julia Lawall <Julia.Lawall@lip6.fr>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Yinghai Lu <yinghai@kernel.org>,
- Shawn Lin <shawn.lin@rock-chips.com>, linux-arm-kernel@lists.infradead.org
+Cc: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+ sricharan@codeaurora.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 7, 2017 at 9:55 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> Now that we added a hook to be called from device_add, save the
-> default values from the HW registers early in the boot for further
-> reuse during hot device add/remove operations.
->
-> If the link is down during boot, assume that we want to enable L0s
-> and L1 following hotplug insertion as well as L1SS if supported.
+From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
 
-IIUC, so far POLICY_DEFAULT meant that we'd just use & follow what
-BIOS has done, and play it safe (never try to be more opportunistic).
-With this change however, we'd be slightly overstepping and giving
-ourselves benefit of doubt if the BIOS could not enable ASPM states
-because the link was not up. This may be good, but I think we should
-call it out, and add some more elaborate comment on the POLICY_DEFAULT
-description (what to, and what not to expect in different situations).
+As part of moving DMA initializing to probe time the
+of_dma_deconfigure() function will need to be called from different
+source files. Make it public and move it to drivers/of/device.c where
+the of_dma_configure() function is.
 
-It is important because existing systems today, that used to boot
-without cards and later hotplugged them, didn't have ASPM states
-enabled. They will now suddenly start seeing all ASPM states enabled
-including L1 substates for the first time (if supported).
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+---
+ drivers/of/device.c       | 12 ++++++++++++
+ drivers/of/platform.c     |  5 -----
+ include/linux/of_device.h |  3 +++
+ 3 files changed, 15 insertions(+), 5 deletions(-)
 
-My system is not hotplug capable (I have the EP soldered on board, so
-couldn't do much testing, except for sanity. Please feel free to use
-my Reviewed-by.
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index b1e6beb..0d378c0 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -151,6 +151,18 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+ }
+ EXPORT_SYMBOL_GPL(of_dma_configure);
+ 
++/**
++ * of_dma_deconfigure - Clean up DMA configuration
++ * @dev:	Device for which to clean up DMA configuration
++ *
++ * Clean up all configuration performed by of_dma_configure_ops() and free all
++ * resources that have been allocated.
++ */
++void of_dma_deconfigure(struct device *dev)
++{
++	arch_teardown_dma_ops(dev);
++}
++
+ int of_device_register(struct platform_device *pdev)
+ {
+ 	device_initialize(&pdev->dev);
+diff --git a/drivers/of/platform.c b/drivers/of/platform.c
+index 5dfcc96..5344db5 100644
+--- a/drivers/of/platform.c
++++ b/drivers/of/platform.c
+@@ -158,11 +158,6 @@ struct platform_device *of_device_alloc(struct device_node *np,
+ }
+ EXPORT_SYMBOL(of_device_alloc);
+ 
+-static void of_dma_deconfigure(struct device *dev)
+-{
+-	arch_teardown_dma_ops(dev);
+-}
+-
+ /**
+  * of_platform_device_create_pdata - Alloc, initialize and register an of_device
+  * @np: pointer to node to create device for
+diff --git a/include/linux/of_device.h b/include/linux/of_device.h
+index c12dace..af98455 100644
+--- a/include/linux/of_device.h
++++ b/include/linux/of_device.h
+@@ -56,6 +56,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+ }
+ 
+ void of_dma_configure(struct device *dev, struct device_node *np);
++void of_dma_deconfigure(struct device *dev);
+ #else /* CONFIG_OF */
+ 
+ static inline int of_driver_match_device(struct device *dev,
+@@ -105,6 +106,8 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
+ }
+ static inline void of_dma_configure(struct device *dev, struct device_node *np)
+ {}
++static inline void of_dma_deconfigure(struct device *dev)
++{}
+ #endif /* CONFIG_OF */
+ 
+ #endif /* _LINUX_OF_DEVICE_H */
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
->
-> Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/pcie/aspm.c | 34 ++++++++++++++++++++++++++++++----
->  1 file changed, 30 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index e33f84b..c7da087 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -505,8 +505,10 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
->          */
->         if (dwreg.support & upreg.support & PCIE_LINK_STATE_L0S)
->                 link->aspm_support |= ASPM_STATE_L0S;
-> -       if (dwreg.enabled & PCIE_LINK_STATE_L0S)
-> +       if (dwreg.enabled & PCIE_LINK_STATE_L0S) {
->                 link->aspm_enabled |= ASPM_STATE_L0S_UP;
-> +               link->aspm_default |= ASPM_STATE_L0S_UP;
-> +       }
->         if (upreg.enabled & PCIE_LINK_STATE_L0S)
->                 link->aspm_enabled |= ASPM_STATE_L0S_DW;
->         link->latency_up.l0s = calc_l0s_latency(upreg.latency_encoding_l0s);
-> @@ -542,9 +544,6 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
->         if (link->aspm_support & ASPM_STATE_L1SS)
->                 aspm_calc_l1ss_info(link, &upreg, &dwreg);
->
-> -       /* Save default state */
-> -       link->aspm_default = link->aspm_enabled;
-> -
->         /* Setup initial capable state. Will be updated later */
->         link->aspm_capable = link->aspm_support;
->         /*
-> @@ -835,11 +834,38 @@ static int pci_aspm_init_downstream(struct pci_dev *pdev)
->  static int pci_aspm_init_upstream(struct pci_dev *pdev)
->  {
->         struct pcie_link_state *link;
-> +       struct aspm_register_info upreg;
-> +       u16 lnk_status;
-> +       bool ret;
->
->         link = alloc_pcie_link_state(pdev);
->         if (!link)
->                 return -ENOMEM;
->
-> +       pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnk_status);
-> +       ret = !!(lnk_status & PCI_EXP_LNKSTA_DLLLA);
-> +
-> +       if (ret) {
-> +               pcie_get_aspm_reg(pdev, &upreg);
-> +               if (upreg.enabled & PCIE_LINK_STATE_L0S)
-> +                       link->aspm_default |= ASPM_STATE_L0S_DW;
-> +               if (upreg.enabled & PCIE_LINK_STATE_L1)
-> +                       link->aspm_default |= ASPM_STATE_L1;
-> +               if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_ASPM_L1_1)
-> +                       link->aspm_default |= ASPM_STATE_L1_1;
-> +               if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_ASPM_L1_2)
-> +                       link->aspm_default |= ASPM_STATE_L1_2;
-> +               if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_PCIPM_L1_1)
-> +                       link->aspm_default |= ASPM_STATE_L1_1_PCIPM;
-> +               if (upreg.l1ss_ctl1 & PCI_L1SS_CTL1_PCIPM_L1_2)
-> +                       link->aspm_default |= ASPM_STATE_L1_2_PCIPM;
-> +       } else {
-> +               if (!pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_L1SS))
-> +                       link->aspm_default = ASPM_STATE_L0S | ASPM_STATE_L1;
-> +               else
-> +                       link->aspm_default = ASPM_STATE_ALL;
-> +       }
-
-Optional: May be consider moving this code (more aptly) to
-pcie_aspm_cap_init() by adding a check for link-up before we start
-reading downstream registers there? I guess you'll need to move the
-call to pcie_aspm_cap_init() a little further up in
-pcie_aspm_init_link_state().
-
-> +
->         return 0;
->  }
->
-> --
-> 1.9.1
->
 
 _______________________________________________
 linux-arm-kernel mailing list
