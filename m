@@ -1,126 +1,187 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44692 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752304AbdDDNyc (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 4 Apr 2017 09:54:32 -0400
-Date: Tue, 4 Apr 2017 08:54:26 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Niklas Cassel <niklas.cassel@axis.com>
-Cc: bhelgaas@google.com, jingoohan1@gmail.com, Joao.Pinto@synopsys.com,
-        kishon@ti.com, linux-arm-kernel@axis.com,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: dwc: fix crash seen due to missing ops
-Message-ID: <20170404135426.GA27692@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170321144354.15452-1-niklass@axis.com>
- <20170403231525.GF13232@bhelgaas-glaptop.roam.corp.google.com>
- <5f1e5394-26fc-b533-b78c-89e409e9e1cf@axis.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+ catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+ gregkh@linuxfoundation.org
+Subject: [PATCH V11 01/11] iommu/of: Refactor of_iommu_configure() for error
+ handling
+Date: Mon, 10 Apr 2017 16:50:56 +0530
+Message-Id: <1491823266-1209-2-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
+References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: sricharan@codeaurora.org
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5f1e5394-26fc-b533-b78c-89e409e9e1cf@axis.com>
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 04, 2017 at 09:54:25AM +0200, Niklas Cassel wrote:
-> On 04/04/2017 01:15 AM, Bjorn Helgaas wrote:
-> > On Tue, Mar 21, 2017 at 03:43:54PM +0100, Niklas Cassel wrote:
-> >> From: Niklas Cassel <niklas.cassel@axis.com>
-> >>
-> >> Fix the following crash, seen in dwc/pcie-artpec6.
-> >>
-> >>   Unable to handle kernel NULL pointer dereference at virtual address 00000004
-> >>   pgd = c0204000
-> >>   [00000004] *pgd=00000000
-> >>   Internal error: Oops: 5 [#1] SMP ARM
-> >>   Modules linked in:
-> >>   CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.11.0-rc3-next-20170321 #1
-> >>   Hardware name: Axis ARTPEC-6 Platform
-> >>   task: db098000 task.stack: db096000
-> >>   PC is at dw_pcie_writel_dbi+0x2c/0xd0
-> >>   ...
-> >>
-> >> While at it, fix the same problem for pcie-designware-plat.
-> >>
-> >> Fixes: 442ec4c04d12 ("PCI: dwc: all: Split struct pcie_port into host-only and core structures")
-> >> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> > 
-> > For artpec6, I think this has already been fixed by Kishon's "PCI: dwc:
-> > artpec6: Populate cpu_addr_fixup ops".
-> 
-> Agreed.
-> 
-> > 
-> > Since both the artpec6 and designware-plat issues were introduced by
-> > 442ec4c04d12, which we merged in the v4.11 merge window, I moved Kishon's
-> > fix and the designware-plat part of this patch to for-linus for v4.11.
-> 
-> I didn't think that including "PCI: dwc: designware: Add new *ops* for
-> CPU addr fixup" was an option, but doing so is a cleaner solution imo.
-> 
-> > 
-> > Please double-check my for-linus branch to make sure it has what we need.
-> 
-> The branch looks good. I did test it, and it works marvelously.
+From: Robin Murphy <robin.murphy@arm.com>
 
-Thanks a lot for testing it.  I had already reconsidered this and
-decided that I don't really like patches that do two things at once,
-i.e., the "CPU addr fixup" patch both fixes the CPU addr thing and
-fixes the NULL pointer dereference as an unintended side effect.
+In preparation for some upcoming cleverness, rework the control flow in
+of_iommu_configure() to minimise duplication and improve the propogation
+of errors. It's also as good a time as any to switch over from the
+now-just-a-compatibility-wrapper of_iommu_get_ops() to using the generic
+IOMMU instance interface directly.
 
-So I ended up putting your original patch on for-linus, then rebasing
-pci/host-designware on top of for-linus.  That way we have your simple
-patch for v4.11 that fixes the NULL pointer problems, and the CPU addr
-fixups will go in v4.12 along with the rest of that series.  It's much
-ado about nothing, really, and could go either way.
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+---
+ drivers/iommu/of_iommu.c | 83 +++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 53 insertions(+), 30 deletions(-)
 
-> >> ---
-> >>  drivers/pci/dwc/pcie-artpec6.c         | 4 ++++
-> >>  drivers/pci/dwc/pcie-designware-plat.c | 4 ++++
-> >>  2 files changed, 8 insertions(+)
-> >>
-> >> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-> >> index fcd3ef845883..6d23683c0892 100644
-> >> --- a/drivers/pci/dwc/pcie-artpec6.c
-> >> +++ b/drivers/pci/dwc/pcie-artpec6.c
-> >> @@ -234,6 +234,9 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
-> >>  	return 0;
-> >>  }
-> >>  
-> >> +static const struct dw_pcie_ops dw_pcie_ops = {
-> >> +};
-> >> +
-> >>  static int artpec6_pcie_probe(struct platform_device *pdev)
-> >>  {
-> >>  	struct device *dev = &pdev->dev;
-> >> @@ -252,6 +255,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
-> >>  		return -ENOMEM;
-> >>  
-> >>  	pci->dev = dev;
-> >> +	pci->ops = &dw_pcie_ops;
-> >>  
-> >>  	artpec6_pcie->pci = pci;
-> >>  
-> >> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-> >> index b6c832ba39dd..f20d494922ab 100644
-> >> --- a/drivers/pci/dwc/pcie-designware-plat.c
-> >> +++ b/drivers/pci/dwc/pcie-designware-plat.c
-> >> @@ -86,6 +86,9 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
-> >>  	return 0;
-> >>  }
-> >>  
-> >> +static const struct dw_pcie_ops dw_pcie_ops = {
-> >> +};
-> >> +
-> >>  static int dw_plat_pcie_probe(struct platform_device *pdev)
-> >>  {
-> >>  	struct device *dev = &pdev->dev;
-> >> @@ -103,6 +106,7 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
-> >>  		return -ENOMEM;
-> >>  
-> >>  	pci->dev = dev;
-> >> +	pci->ops = &dw_pcie_ops;
-> >>  
-> >>  	dw_plat_pcie->pci = pci;
-> >>  
-> >> -- 
-> >> 2.11.0
-> >>
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 2683e9f..8f4e599 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -96,6 +96,28 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+ }
+ EXPORT_SYMBOL_GPL(of_get_dma_window);
+ 
++static const struct iommu_ops
++*of_iommu_xlate(struct device *dev, struct of_phandle_args *iommu_spec)
++{
++	const struct iommu_ops *ops;
++	struct fwnode_handle *fwnode = &iommu_spec->np->fwnode;
++	int err;
++
++	ops = iommu_ops_from_fwnode(fwnode);
++	if (!ops || !ops->of_xlate)
++		return NULL;
++
++	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
++	if (err)
++		return ERR_PTR(err);
++
++	err = ops->of_xlate(dev, iommu_spec);
++	if (err)
++		return ERR_PTR(err);
++
++	return ops;
++}
++
+ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+ {
+ 	struct of_phandle_args *iommu_spec = data;
+@@ -105,10 +127,11 @@ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+ }
+ 
+ static const struct iommu_ops
+-*of_pci_iommu_configure(struct pci_dev *pdev, struct device_node *bridge_np)
++*of_pci_iommu_init(struct pci_dev *pdev, struct device_node *bridge_np)
+ {
+ 	const struct iommu_ops *ops;
+ 	struct of_phandle_args iommu_spec;
++	int err;
+ 
+ 	/*
+ 	 * Start by tracing the RID alias down the PCI topology as
+@@ -123,56 +146,56 @@ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
+ 	 * bus into the system beyond, and which IOMMU it ends up at.
+ 	 */
+ 	iommu_spec.np = NULL;
+-	if (of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
+-			   "iommu-map-mask", &iommu_spec.np, iommu_spec.args))
+-		return NULL;
++	err = of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
++			     "iommu-map-mask", &iommu_spec.np,
++			     iommu_spec.args);
++	if (err)
++		return err == -ENODEV ? NULL : ERR_PTR(err);
+ 
+-	ops = iommu_ops_from_fwnode(&iommu_spec.np->fwnode);
+-	if (!ops || !ops->of_xlate ||
+-	    iommu_fwspec_init(&pdev->dev, &iommu_spec.np->fwnode, ops) ||
+-	    ops->of_xlate(&pdev->dev, &iommu_spec))
+-		ops = NULL;
++	ops = of_iommu_xlate(&pdev->dev, &iommu_spec);
+ 
+ 	of_node_put(iommu_spec.np);
+ 	return ops;
+ }
+ 
+-const struct iommu_ops *of_iommu_configure(struct device *dev,
+-					   struct device_node *master_np)
++static const struct iommu_ops
++*of_platform_iommu_init(struct device *dev, struct device_node *np)
+ {
+ 	struct of_phandle_args iommu_spec;
+-	struct device_node *np;
+ 	const struct iommu_ops *ops = NULL;
+ 	int idx = 0;
+ 
+-	if (dev_is_pci(dev))
+-		return of_pci_iommu_configure(to_pci_dev(dev), master_np);
+-
+ 	/*
+ 	 * We don't currently walk up the tree looking for a parent IOMMU.
+ 	 * See the `Notes:' section of
+ 	 * Documentation/devicetree/bindings/iommu/iommu.txt
+ 	 */
+-	while (!of_parse_phandle_with_args(master_np, "iommus",
+-					   "#iommu-cells", idx,
+-					   &iommu_spec)) {
+-		np = iommu_spec.np;
+-		ops = iommu_ops_from_fwnode(&np->fwnode);
+-
+-		if (!ops || !ops->of_xlate ||
+-		    iommu_fwspec_init(dev, &np->fwnode, ops) ||
+-		    ops->of_xlate(dev, &iommu_spec))
+-			goto err_put_node;
+-
+-		of_node_put(np);
++	while (!of_parse_phandle_with_args(np, "iommus", "#iommu-cells",
++					   idx, &iommu_spec)) {
++		ops = of_iommu_xlate(dev, &iommu_spec);
++		of_node_put(iommu_spec.np);
+ 		idx++;
++		if (IS_ERR_OR_NULL(ops))
++			break;
+ 	}
+ 
+ 	return ops;
++}
++
++const struct iommu_ops *of_iommu_configure(struct device *dev,
++					   struct device_node *master_np)
++{
++	const struct iommu_ops *ops;
++
++	if (!master_np)
++		return NULL;
++
++	if (dev_is_pci(dev))
++		ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
++	else
++		ops = of_platform_iommu_init(dev, master_np);
+ 
+-err_put_node:
+-	of_node_put(np);
+-	return NULL;
++	return IS_ERR(ops) ? NULL : ops;
+ }
+ 
+ static int __init of_iommu_init(void)
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
