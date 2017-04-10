@@ -1,43 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:46991 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932413AbdDQHkV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Apr 2017 03:40:21 -0400
-Date: Mon, 17 Apr 2017 09:40:11 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Peter Zijlstra <peterz@infradead.org>
-cc: LKML <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Sebastian Siewior <bigeasy@linutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [patch 17/20] PCI: Use cpu_hotplug_disable() instead of
- get_online_cpus()
-In-Reply-To: <20170417064619.fjpizfsfd65dtear@hirez.programming.kicks-ass.net>
-Message-ID: <alpine.DEB.2.20.1704170940020.2327@nanos>
-References: <20170415170107.643253702@linutronix.de> <20170415171652.675049942@linutronix.de> <20170417064619.fjpizfsfd65dtear@hirez.programming.kicks-ass.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+        gregkh@linuxfoundation.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V11 05/11] of: device: Fix overflow of coherent_dma_mask
+Date: Mon, 10 Apr 2017 16:51:00 +0530
+Message-Id: <1491823266-1209-6-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
+References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 17 Apr 2017, Peter Zijlstra wrote:
-> On Sat, Apr 15, 2017 at 07:01:24PM +0200, Thomas Gleixner wrote:
-> > +++ b/drivers/pci/pci-driver.c
-> > @@ -320,10 +320,19 @@ static long local_pci_probe(void *_ddi)
-> >  	return 0;
-> >  }
-> >  
-> > +static bool pci_physfn_is_probed(struct pci_dev *dev)
-> > +{
-> > +#ifdef CONFIG_ATS
-> > +	return dev->physfn->is_probed;
-> > +#else
-> > +	return false;
-> > +#endif
-> > +}
-> > +
-> 
-> Should be in the next patch perhaps?
+Size of the dma-range is calculated as coherent_dma_mask + 1
+and passed to arch_setup_dma_ops further. It overflows when
+the coherent_dma_mask is set for full 64 bits 0xFFFFFFFFFFFFFFFF,
+resulting in size getting passed as 0 wrongly. Fix this by
+passsing in max(mask, mask + 1). Note that in this case
+when the mask is set to full 64bits, we will be passing the mask
+itself to arch_setup_dma_ops instead of the size. The real fix
+for this should be to make arch_setup_dma_ops receive the
+mask and handle it, to be done in the future.
 
-Indeed.
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+---
+ drivers/of/device.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/of/device.c b/drivers/of/device.c
+index 0d378c0..e1ae9e7 100644
+--- a/drivers/of/device.c
++++ b/drivers/of/device.c
+@@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct device_node *np)
+ 	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
+ 	if (ret < 0) {
+ 		dma_addr = offset = 0;
+-		size = dev->coherent_dma_mask + 1;
++		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
+ 	} else {
+ 		offset = PFN_DOWN(paddr - dma_addr);
+ 
+-- 
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
