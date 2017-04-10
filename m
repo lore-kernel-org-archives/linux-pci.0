@@ -1,93 +1,49 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37761 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1035221AbdDUFFk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Apr 2017 01:05:40 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 02/13] PCI: Add pci_find_bus_resource()
-Date: Thu, 20 Apr 2017 22:04:49 -0700
-Message-Id: <20170421050500.13957-3-yinghai@kernel.org>
-In-Reply-To: <20170421050500.13957-1-yinghai@kernel.org>
-References: <20170421050500.13957-1-yinghai@kernel.org>
+Received: from mail-pg0-f67.google.com ([74.125.83.67]:35508 "EHLO
+        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752955AbdDJMBa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Apr 2017 08:01:30 -0400
+Received: by mail-pg0-f67.google.com with SMTP id g2so25440398pge.2
+        for <linux-pci@vger.kernel.org>; Mon, 10 Apr 2017 05:01:30 -0700 (PDT)
+From: Yongji Xie <elohimes@gmail.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
+        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
+        paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: [PATCH v10 1/4] PCI: A fix for caculating bridge window's size and alignment
+Date: Mon, 10 Apr 2017 19:58:11 +0800
+Message-Id: <1491825494-19331-2-git-send-email-elohimes@gmail.com>
+In-Reply-To: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
+References: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add pci_find_bus_resource() to return bus resource for input resource.
+In case that one device's alignment is greater than its size,
+we may get an incorrect size and alignment for its bus's memory
+window in pbus_size_mem(). This patch fixes this case.
 
-In some case, we may only have bus instead of dev.
-It is same as pci_find_parent_resource, but take bus as input.
-
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Signed-off-by: Yongji Xie <elohimes@gmail.com>
 ---
- drivers/pci/pci.c   | 27 ++++++++++++++++-----------
- include/linux/pci.h |  2 ++
- 2 files changed, 18 insertions(+), 11 deletions(-)
+ drivers/pci/setup-bus.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 4ffa152..deb828f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -437,18 +437,9 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
- }
- EXPORT_SYMBOL_GPL(pci_find_ht_capability);
- 
--/**
-- * pci_find_parent_resource - return resource region of parent bus of given region
-- * @dev: PCI device structure contains resources to be searched
-- * @res: child resource record for which parent is sought
-- *
-- *  For given resource region of given device, return the resource
-- *  region of parent bus the given region is contained in.
-- */
--struct resource *pci_find_parent_resource(const struct pci_dev *dev,
--					  struct resource *res)
-+struct resource *pci_find_bus_resource(const struct pci_bus *bus,
-+					struct resource *res)
- {
--	const struct pci_bus *bus = dev->bus;
- 	struct resource *r;
- 	int i;
- 
-@@ -478,6 +469,20 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 	}
- 	return NULL;
- }
-+
-+/**
-+ * pci_find_parent_resource - return resource region of parent bus of given region
-+ * @dev: PCI device structure contains resources to be searched
-+ * @res: child resource record for which parent is sought
-+ *
-+ *  For given resource region of given device, return the resource
-+ *  region of parent bus the given region is contained in.
-+ */
-+struct resource *pci_find_parent_resource(const struct pci_dev *dev,
-+					  struct resource *res)
-+{
-+	return pci_find_bus_resource(dev->bus, res);
-+}
- EXPORT_SYMBOL(pci_find_parent_resource);
- 
- /**
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 88185ff..817786b 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -836,6 +836,8 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- 			     struct resource *res);
- void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region);
-+struct resource *pci_find_bus_resource(const struct pci_bus *bus,
-+					struct resource *res);
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index cb389277..958da7d 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1066,10 +1066,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				r->flags = 0;
+ 				continue;
+ 			}
+-			size += r_size;
++			size += max(r_size, align);
+ 			/* Exclude ranges with size > align from
+ 			   calculation of the alignment. */
+-			if (r_size == align)
++			if (r_size <= align)
+ 				aligns[order] += align;
+ 			if (order > max_order)
+ 				max_order = order;
 -- 
-2.9.3
+1.7.9.5
