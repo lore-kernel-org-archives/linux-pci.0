@@ -1,82 +1,235 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:55113 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967342AbdD1OQJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 28 Apr 2017 10:16:09 -0400
-From: Imre Deak <imre.deak@intel.com>
-To: intel-gfx@lists.freedesktop.org
-Cc: Jani Nikula <jani.nikula@intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: [PATCH v3 1/2] PCI / PM: Add needs_resume flag to avoid suspend complete optimization
-Date: Fri, 28 Apr 2017 17:16:02 +0300
-Message-Id: <1493388963-5278-1-git-send-email-imre.deak@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+        gregkh@linuxfoundation.org
+Cc: sricharan@codeaurora.org
+Subject: [PATCH V11 10/11] iommu/arm-smmu: Clean up early-probing workarounds
+Date: Mon, 10 Apr 2017 16:51:05 +0530
+Message-Id: <1491823266-1209-11-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
+References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some drivers - like i915 - may not support the system suspend direct
-complete optimization due to differences in their runtime and system
-suspend sequence. Add a flag that when set resumes the device before
-calling the driver's system suspend handlers which effectively disables
-the optimization.
+From: Robin Murphy <robin.murphy@arm.com>
 
-Needed by the next patch fixing suspend/resume on i915.
+Now that the appropriate ordering is enforced via probe-deferral of
+masters in core code, rip it all out and bask in the simplicity.
 
-Suggested by Rafael.
-
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: stable@vger.kernel.org
-Signed-off-by: Imre Deak <imre.deak@intel.com>
+Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Acked-by: Will Deacon <will.deacon@arm.com>
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+[Sricharan: Rebased on top of ACPI IORT SMMU series]
+Signed-off-by: Sricharan R <sricharan@codeaurora.org>
 ---
+ drivers/iommu/arm-smmu-v3.c |  46 +-----------------
+ drivers/iommu/arm-smmu.c    | 110 +++++++++++++++++++-------------------------
+ 2 files changed, 49 insertions(+), 107 deletions(-)
 
-[ After discussing with Jani, I'm going to apply this and the next patch
-  for now to the intel-gfx specific CI branch to unblock our testing. ]
-
- drivers/pci/pci.c   | 3 ++-
- include/linux/pci.h | 7 +++++++
- 2 files changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02..020f02d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2141,7 +2141,8 @@ bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
+diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
+index 5806a6a..9497800 100644
+--- a/drivers/iommu/arm-smmu-v3.c
++++ b/drivers/iommu/arm-smmu-v3.c
+@@ -2761,51 +2761,9 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
+ 	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
++module_platform_driver(arm_smmu_driver);
  
- 	if (!pm_runtime_suspended(dev)
- 	    || pci_target_state(pci_dev) != pci_dev->current_state
--	    || platform_pci_need_resume(pci_dev))
-+	    || platform_pci_need_resume(pci_dev)
-+	    || pci_dev->needs_resume)
- 		return false;
+-static int __init arm_smmu_init(void)
+-{
+-	static bool registered;
+-	int ret = 0;
+-
+-	if (!registered) {
+-		ret = platform_driver_register(&arm_smmu_driver);
+-		registered = !ret;
+-	}
+-	return ret;
+-}
+-
+-static void __exit arm_smmu_exit(void)
+-{
+-	return platform_driver_unregister(&arm_smmu_driver);
+-}
+-
+-subsys_initcall(arm_smmu_init);
+-module_exit(arm_smmu_exit);
+-
+-static int __init arm_smmu_of_init(struct device_node *np)
+-{
+-	int ret = arm_smmu_init();
+-
+-	if (ret)
+-		return ret;
+-
+-	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
+-		return -ENODEV;
+-
+-	return 0;
+-}
+-IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
+-
+-#ifdef CONFIG_ACPI
+-static int __init acpi_smmu_v3_init(struct acpi_table_header *table)
+-{
+-	if (iort_node_match(ACPI_IORT_NODE_SMMU_V3))
+-		return arm_smmu_init();
+-
+-	return 0;
+-}
+-IORT_ACPI_DECLARE(arm_smmu_v3, ACPI_SIG_IORT, acpi_smmu_v3_init);
+-#endif
++IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", NULL);
  
- 	/*
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 5948cfd..2f012f8 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -316,6 +316,9 @@ struct pci_dev {
- 	unsigned int	hotplug_user_indicators:1; /* SlotCtl indicators
- 						      controlled exclusively by
- 						      user sysfs */
-+	unsigned int	needs_resume:1;	/* Resume before calling the driver's
-+					   system suspend hooks, disabling the
-+					   direct_complete optimization. */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+ MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
+ MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
+diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
+index abf6496..be53b02 100644
+--- a/drivers/iommu/arm-smmu.c
++++ b/drivers/iommu/arm-smmu.c
+@@ -2075,6 +2075,23 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev,
+ 	return 0;
+ }
  
-@@ -1110,6 +1113,10 @@ bool pci_check_pme_status(struct pci_dev *dev);
- void pci_pme_wakeup_bus(struct pci_bus *bus);
- void pci_d3cold_enable(struct pci_dev *dev);
- void pci_d3cold_disable(struct pci_dev *dev);
-+static inline void pci_resume_before_suspend(struct pci_dev *dev, bool enable)
++static void arm_smmu_bus_init(void)
 +{
-+	dev->needs_resume = enable;
++	/* Oh, for a proper bus abstraction */
++	if (!iommu_present(&platform_bus_type))
++		bus_set_iommu(&platform_bus_type, &arm_smmu_ops);
++#ifdef CONFIG_ARM_AMBA
++	if (!iommu_present(&amba_bustype))
++		bus_set_iommu(&amba_bustype, &arm_smmu_ops);
++#endif
++#ifdef CONFIG_PCI
++	if (!iommu_present(&pci_bus_type)) {
++		pci_request_acs();
++		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
++	}
++#endif
 +}
++
+ static int arm_smmu_device_probe(struct platform_device *pdev)
+ {
+ 	struct resource *res;
+@@ -2180,21 +2197,30 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
+ 	arm_smmu_device_reset(smmu);
+ 	arm_smmu_test_smr_masks(smmu);
  
- static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
- 				  bool enable)
+-	/* Oh, for a proper bus abstraction */
+-	if (!iommu_present(&platform_bus_type))
+-		bus_set_iommu(&platform_bus_type, &arm_smmu_ops);
+-#ifdef CONFIG_ARM_AMBA
+-	if (!iommu_present(&amba_bustype))
+-		bus_set_iommu(&amba_bustype, &arm_smmu_ops);
+-#endif
+-#ifdef CONFIG_PCI
+-	if (!iommu_present(&pci_bus_type)) {
+-		pci_request_acs();
+-		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
+-	}
+-#endif
++	/*
++	 * For ACPI and generic DT bindings, an SMMU will be probed before
++	 * any device which might need it, so we want the bus ops in place
++	 * ready to handle default domain setup as soon as any SMMU exists.
++	 */
++	if (!using_legacy_binding)
++		arm_smmu_bus_init();
++
++	return 0;
++}
++
++/*
++ * With the legacy DT binding in play, though, we have no guarantees about
++ * probe order, but then we're also not doing default domains, so we can
++ * delay setting bus ops until we're sure every possible SMMU is ready,
++ * and that way ensure that no add_device() calls get missed.
++ */
++static int arm_smmu_legacy_bus_init(void)
++{
++	if (using_legacy_binding)
++		arm_smmu_bus_init();
+ 	return 0;
+ }
++device_initcall_sync(arm_smmu_legacy_bus_init);
+ 
+ static int arm_smmu_device_remove(struct platform_device *pdev)
+ {
+@@ -2219,56 +2245,14 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
+ 	.probe	= arm_smmu_device_probe,
+ 	.remove	= arm_smmu_device_remove,
+ };
+-
+-static int __init arm_smmu_init(void)
+-{
+-	static bool registered;
+-	int ret = 0;
+-
+-	if (!registered) {
+-		ret = platform_driver_register(&arm_smmu_driver);
+-		registered = !ret;
+-	}
+-	return ret;
+-}
+-
+-static void __exit arm_smmu_exit(void)
+-{
+-	return platform_driver_unregister(&arm_smmu_driver);
+-}
+-
+-subsys_initcall(arm_smmu_init);
+-module_exit(arm_smmu_exit);
+-
+-static int __init arm_smmu_of_init(struct device_node *np)
+-{
+-	int ret = arm_smmu_init();
+-
+-	if (ret)
+-		return ret;
+-
+-	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
+-		return -ENODEV;
+-
+-	return 0;
+-}
+-IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", arm_smmu_of_init);
+-IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", arm_smmu_of_init);
+-
+-#ifdef CONFIG_ACPI
+-static int __init arm_smmu_acpi_init(struct acpi_table_header *table)
+-{
+-	if (iort_node_match(ACPI_IORT_NODE_SMMU))
+-		return arm_smmu_init();
+-
+-	return 0;
+-}
+-IORT_ACPI_DECLARE(arm_smmu, ACPI_SIG_IORT, arm_smmu_acpi_init);
+-#endif
++module_platform_driver(arm_smmu_driver);
++
++IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", NULL);
++IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", NULL);
++IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", NULL);
++IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", NULL);
++IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", NULL);
++IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", NULL);
+ 
+ MODULE_DESCRIPTION("IOMMU API for ARM architected SMMU implementations");
+ MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
 -- 
-2.5.0
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
