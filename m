@@ -1,77 +1,141 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:36227 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753291AbdDJMBc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Apr 2017 08:01:32 -0400
-Received: by mail-pg0-f66.google.com with SMTP id 81so25490604pgh.3
-        for <linux-pci@vger.kernel.org>; Mon, 10 Apr 2017 05:01:32 -0700 (PDT)
-From: Yongji Xie <elohimes@gmail.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
-        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
-        paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: [PATCH v10 2/4] PCI: Add pcibios_default_alignment() for arch-specific alignment control
-Date: Mon, 10 Apr 2017 19:58:12 +0800
-Message-Id: <1491825494-19331-3-git-send-email-elohimes@gmail.com>
-In-Reply-To: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
-References: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Sricharan R <sricharan@codeaurora.org>
+To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
+ lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
+ linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+ m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
+ okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+ sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+ catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+ gregkh@linuxfoundation.org
+Subject: [PATCH V11 02/11] iommu/of: Prepare for deferred IOMMU configuration
+Date: Mon, 10 Apr 2017 16:50:57 +0530
+Message-Id: <1491823266-1209-3-git-send-email-sricharan@codeaurora.org>
+In-Reply-To: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
+References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: sricharan@codeaurora.org
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When VFIO passes through a PCI device to a guest, it does not allow
-the guest to mmap BARs that are smaller than PAGE_SIZE unless it
-can reserve the rest of the page (see vfio_pci_probe_mmaps()). This
-is because a page might contain several small BARs for unrelated
-devices and a guest should not be able to access all of them.
+From: Robin Murphy <robin.murphy@arm.com>
 
-VFIO emulates guest accesses to non-mappable BARs, which is functional
-but slow. On systems with large page sizes, e.g., PowerNV with 64K pages,
-BARs are more likely to share a page and performance is more likely to
-be a problem.
+IOMMU configuration represents unchanging properties of the hardware,
+and as such should only need happen once in a device's lifetime, but
+the necessary interaction with the IOMMU device and driver complicates
+exactly when that point should be.
 
-Add a weak function to set default alignment for all PCI devices.
-An arch can override it to force the PCI core to place memory BARs on
-their own pages.
+Since the only reasonable tool available for handling the inter-device
+dependency is probe deferral, we need to prepare of_iommu_configure()
+to run later than it is currently called (i.e. at driver probe rather
+than device creation), to handle being retried, and to tell whether a
+not-yet present IOMMU should be waited for or skipped (by virtue of
+having declared a built-in driver or not).
 
-Signed-off-by: Yongji Xie <elohimes@gmail.com>
+Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
 ---
- drivers/pci/pci.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/iommu/of_iommu.c | 43 ++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 42 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02..02f1255 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4947,6 +4947,11 @@ void pci_ignore_hotplug(struct pci_dev *dev)
+diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+index 8f4e599..c8be889 100644
+--- a/drivers/iommu/of_iommu.c
++++ b/drivers/iommu/of_iommu.c
+@@ -96,6 +96,19 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
  }
- EXPORT_SYMBOL_GPL(pci_ignore_hotplug);
+ EXPORT_SYMBOL_GPL(of_get_dma_window);
  
-+resource_size_t __weak pcibios_default_alignment(struct pci_dev *dev)
++static bool of_iommu_driver_present(struct device_node *np)
 +{
-+	return 0;
++	/*
++	 * If the IOMMU still isn't ready by the time we reach init, assume
++	 * it never will be. We don't want to defer indefinitely, nor attempt
++	 * to dereference __iommu_of_table after it's been freed.
++	 */
++	if (system_state > SYSTEM_BOOTING)
++		return false;
++
++	return of_match_node(&__iommu_of_table, np);
 +}
 +
- #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
- static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
- static DEFINE_SPINLOCK(resource_alignment_lock);
-@@ -4962,14 +4967,15 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ static const struct iommu_ops
+ *of_iommu_xlate(struct device *dev, struct of_phandle_args *iommu_spec)
  {
- 	int seg, bus, slot, func, align_order, count;
- 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
--	resource_size_t align = 0;
-+	resource_size_t align = pcibios_default_alignment(dev);
- 	char *p;
+@@ -104,12 +117,20 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
+ 	int err;
  
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
--	if (!*p)
-+	if (!*p && !align)
- 		goto out;
- 	if (pci_has_flag(PCI_PROBE_ONLY)) {
-+		align = 0;
- 		pr_info_once("PCI: Ignoring requested alignments (PCI_PROBE_ONLY)\n");
- 		goto out;
- 	}
+ 	ops = iommu_ops_from_fwnode(fwnode);
+-	if (!ops || !ops->of_xlate)
++	if ((ops && !ops->of_xlate) ||
++	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
+ 		return NULL;
+ 
+ 	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
+ 	if (err)
+ 		return ERR_PTR(err);
++	/*
++	 * The otherwise-empty fwspec handily serves to indicate the specific
++	 * IOMMU device we're waiting for, which will be useful if we ever get
++	 * a proper probe-ordering dependency mechanism in future.
++	 */
++	if (!ops)
++		return ERR_PTR(-EPROBE_DEFER);
+ 
+ 	err = ops->of_xlate(dev, iommu_spec);
+ 	if (err)
+@@ -186,14 +207,34 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
+ 					   struct device_node *master_np)
+ {
+ 	const struct iommu_ops *ops;
++	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
+ 
+ 	if (!master_np)
+ 		return NULL;
+ 
++	if (fwspec) {
++		if (fwspec->ops)
++			return fwspec->ops;
++
++		/* In the deferred case, start again from scratch */
++		iommu_fwspec_free(dev);
++	}
++
+ 	if (dev_is_pci(dev))
+ 		ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
+ 	else
+ 		ops = of_platform_iommu_init(dev, master_np);
++	/*
++	 * If we have reason to believe the IOMMU driver missed the initial
++	 * add_device callback for dev, replay it to get things in order.
++	 */
++	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
++	    dev->bus && !dev->iommu_group) {
++		int err = ops->add_device(dev);
++
++		if (err)
++			ops = ERR_PTR(err);
++	}
+ 
+ 	return IS_ERR(ops) ? NULL : ops;
+ }
 -- 
-1.7.9.5
+QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
