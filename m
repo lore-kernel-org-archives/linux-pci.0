@@ -1,146 +1,137 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v6 05/23] PCI: endpoint: Create configfs entry for EPC device
- and EPF driver
-Date: Wed, 5 Apr 2017 14:22:25 +0530
-Message-ID: <20170405085243.18123-6-kishon@ti.com>
-In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
-References: <20170405085243.18123-1-kishon@ti.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35741 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753165AbdDJMCk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Apr 2017 08:02:40 -0400
+Received: by mail-pf0-f196.google.com with SMTP id a188so669426pfa.2
+        for <linux-pci@vger.kernel.org>; Mon, 10 Apr 2017 05:02:40 -0700 (PDT)
+From: Yongji Xie <elohimes@gmail.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
+        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
+        paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: [PATCH v10 4/4] PCI: Don't extend device's size when using default alignment for all devices
+Date: Mon, 10 Apr 2017 19:58:14 +0800
+Message-Id: <1491825494-19331-5-git-send-email-elohimes@gmail.com>
+In-Reply-To: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
+References: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Invoke APIs provided by pci-ep-cfs to create configfs entry for every EPC
-device and EPF driver to help users in creating EPF device and binding the
-EPF device to the EPC device.
+Currently we reassign the alignment by extending resources' size in
+pci_reassigndev_resource_alignment(). This could potentially break
+some drivers when the driver uses the size to locate register
+whose length is related to the size. Some examples as below:
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+- misc/Hpilo.c:
+off = pci_resource_len(pdev, bar) - 0x2000;
+
+- net/ethernet/chelsio/cxgb4/cxgb4_uld.h:
+(pci_resource_len((pdev), 2) - roundup_pow_of_two((vres)->ocq.size))
+
+- infiniband/hw/nes/Nes_hw.c:
+num_pds = pci_resource_len(nesdev->pcidev, BAR_1) >> PAGE_SHIFT;
+
+This risk could be easily prevented before because we only had one way
+(kernel parameter resource_alignment) to touch those codes. And even
+some users may be happy to see the extended size.
+
+But now we introduce pcibios_default_alignment() to set default alignment
+for all PCI devices which would also touch those codes. It would be hard
+to prevent the risk in this case. So this patch tries to use
+START_ALIGNMENT to identify the resource's alignment without extending
+the size when the alignment reassigning is caused by the default alignment.
+
+Signed-off-by: Yongji Xie <elohimes@gmail.com>
 ---
- drivers/pci/endpoint/pci-epc-core.c | 4 ++++
- drivers/pci/endpoint/pci-epf-core.c | 4 ++++
- include/linux/pci-epc.h             | 2 ++
- include/linux/pci-epf.h             | 2 ++
- 4 files changed, 12 insertions(+)
+ drivers/pci/pci.c |   34 ++++++++++++++++++++++++----------
+ 1 file changed, 24 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-index 54b366ece844..9ae9e59b2a74 100644
---- a/drivers/pci/endpoint/pci-epc-core.c
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -24,6 +24,7 @@
- 
- #include <linux/pci-epc.h>
- #include <linux/pci-epf.h>
-+#include <linux/pci-ep-cfs.h>
- 
- static struct class *pci_epc_class;
- 
-@@ -441,6 +442,7 @@ EXPORT_SYMBOL_GPL(pci_epc_linkup);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 02f1255..358366e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4959,11 +4959,13 @@ resource_size_t __weak pcibios_default_alignment(struct pci_dev *dev)
+ /**
+  * pci_specified_resource_alignment - get resource alignment specified by user.
+  * @dev: the PCI device to get
++ * @resize: whether or not to change resources' size when reassigning alignment
+  *
+  * RETURNS: Resource alignment if it is specified.
+  *          Zero if it is not specified.
   */
- void pci_epc_destroy(struct pci_epc *epc)
+-static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
++static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
++							bool *resize)
  {
-+	pci_ep_cfs_remove_epc_group(epc->group);
- 	device_unregister(&epc->dev);
- 	kfree(epc);
- }
-@@ -507,6 +509,8 @@ __pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
- 	if (ret)
- 		goto put_dev;
+ 	int seg, bus, slot, func, align_order, count;
+ 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+@@ -5005,6 +5007,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 				(!device || (device == dev->device)) &&
+ 				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
+ 				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
++				*resize = true;
+ 				if (align_order == -1)
+ 					align = PAGE_SIZE;
+ 				else
+@@ -5030,6 +5033,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 				bus == dev->bus->number &&
+ 				slot == PCI_SLOT(dev->devfn) &&
+ 				func == PCI_FUNC(dev->devfn)) {
++				*resize = true;
+ 				if (align_order == -1)
+ 					align = PAGE_SIZE;
+ 				else
+@@ -5062,6 +5066,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	struct resource *r;
+ 	resource_size_t align, size;
+ 	u16 command;
++	bool resize = false;
  
-+	epc->group = pci_ep_cfs_add_epc_group(dev_name(dev));
-+
- 	return epc;
+ 	/*
+ 	 * VF BARs are read-only zero according to SR-IOV spec r1.1, sec
+@@ -5073,7 +5078,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		return;
  
- put_dev:
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-index 7564a29f435c..92db7dcd911c 100644
---- a/drivers/pci/endpoint/pci-epf-core.c
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -24,6 +24,7 @@
+ 	/* check if specified PCI is target device to reassign */
+-	align = pci_specified_resource_alignment(dev);
++	align = pci_specified_resource_alignment(dev, &resize);
+ 	if (!align)
+ 		return;
  
- #include <linux/pci-epc.h>
- #include <linux/pci-epf.h>
-+#include <linux/pci-ep-cfs.h>
+@@ -5101,15 +5106,24 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		}
  
- static struct bus_type pci_epf_bus_type;
- static struct device_type pci_epf_type;
-@@ -143,6 +144,7 @@ EXPORT_SYMBOL_GPL(pci_epf_alloc_space);
-  */
- void pci_epf_unregister_driver(struct pci_epf_driver *driver)
- {
-+	pci_ep_cfs_remove_epf_group(driver->group);
- 	driver_unregister(&driver->driver);
- }
- EXPORT_SYMBOL_GPL(pci_epf_unregister_driver);
-@@ -172,6 +174,8 @@ int __pci_epf_register_driver(struct pci_epf_driver *driver,
- 	if (ret)
- 		return ret;
- 
-+	driver->group = pci_ep_cfs_add_epf_group(driver->driver.name);
-+
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(__pci_epf_register_driver);
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-index 8c63d3c37f76..af5edbf3eea3 100644
---- a/include/linux/pci-epc.h
-+++ b/include/linux/pci-epc.h
-@@ -77,6 +77,7 @@ struct pci_epc_mem {
-  * @ops: function pointers for performing endpoint operations
-  * @mem: address space of the endpoint controller
-  * @max_functions: max number of functions that can be configured in this EPC
-+ * @group: configfs group representing the PCI EPC device
-  * @lock: spinlock to protect pci_epc ops
-  */
- struct pci_epc {
-@@ -85,6 +86,7 @@ struct pci_epc {
- 	const struct pci_epc_ops	*ops;
- 	struct pci_epc_mem		*mem;
- 	u8				max_functions;
-+	struct config_group		*group;
- 	/* spinlock to protect against concurrent access of EP controller */
- 	spinlock_t			lock;
- };
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index 5628714f7bcf..0d529cb90143 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -82,6 +82,7 @@ struct pci_epf_ops {
-  * @driver: PCI EPF driver
-  * @ops: set of function pointers for performing EPF operations
-  * @owner: the owner of the module that registers the PCI EPF driver
-+ * @group: configfs group corresponding to the PCI EPF driver
-  * @id_table: identifies EPF devices for probing
-  */
- struct pci_epf_driver {
-@@ -91,6 +92,7 @@ struct pci_epf_driver {
- 	struct device_driver	driver;
- 	struct pci_epf_ops	*ops;
- 	struct module		*owner;
-+	struct config_group	*group;
- 	const struct pci_epf_device_id	*id_table;
- };
- 
+ 		size = resource_size(r);
+-		if (size < align) {
+-			size = align;
+-			dev_info(&dev->dev,
+-				"Rounding up size of resource #%d to %#llx.\n",
+-				i, (unsigned long long)size);
++		if (resize) {
++			if (size < align) {
++				size = align;
++				dev_info(&dev->dev,
++					"Rounding up size of resource #%d to %#llx.\n",
++					i, (unsigned long long)size);
++			}
++			r->flags |= IORESOURCE_UNSET;
++			r->start = 0;
++		} else {
++			if (size < align) {
++				r->flags &= ~IORESOURCE_SIZEALIGN;
++				r->flags |= IORESOURCE_STARTALIGN |
++							IORESOURCE_UNSET;
++				r->start = align;
++			}
+ 		}
+-		r->flags |= IORESOURCE_UNSET;
+-		r->end = size - 1;
+-		r->start = 0;
++		r->end = r->start + size - 1;
+ 	}
+ 	/* Need to disable bridge's resource window,
+ 	 * to enable the kernel to reassign new resource
 -- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.7.9.5
