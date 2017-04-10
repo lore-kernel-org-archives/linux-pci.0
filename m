@@ -1,106 +1,51 @@
-Return-Path: <SRS0=imYQ=4C=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=imYQ=4C=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH V8 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
+To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "timur@codeaurora.org" <timur@codeaurora.org>
+References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+ <92EBB4272BF81E4089A7126EC1E7B284667665E7@IRSMSX101.ger.corp.intel.com>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <33d18b40-8449-78a5-7127-9988d846d179@codeaurora.org>
+Date: Mon, 10 Apr 2017 09:07:16 -0400
 MIME-Version: 1.0
-In-Reply-To: <1493126394-1239-4-git-send-email-deathsimple@vodafone.de>
-References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de> <1493126394-1239-4-git-send-email-deathsimple@vodafone.de>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Wed, 26 Apr 2017 20:18:15 +0300
-Message-ID: <CAHp75Vf5ETss24VkMpNn388D5AT5Yckeav0nSS-ESn-AdiHSGQ@mail.gmail.com>
-Subject: Re: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models
- 30h-3fh) Processors v2
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: helgaas@kernel.org,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
-	Platform Driver <platform-driver-x86@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B284667665E7@IRSMSX101.ger.corp.intel.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 25, 2017 at 4:19 PM, Christian K=C3=B6nig
-<deathsimple@vodafone.de> wrote:
-> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->
-> Most BIOS don't enable this because of compatibility reasons.
->
-> Manually enable a 64bit BAR of 64GB size so that we have
-> enough room for PCI devices.
+On 4/10/2017 7:37 AM, Patel, Mayurkumar wrote:
+>> PCI/ASPM: save power on values during bridge init
+>>  PCI/ASPM: move link_state cleanup to bridge remove
+>>
+> Thanks Sinan for new patches. No issues seen so far in my testing for L1 and L1SS both.
+> May you please add my tested-by in the patches?
+> 
+> I will keep on testing it and let you know if something goes wrong for any
+> corner case.
+> 
 
-> +static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
-> +{
+Thanks for testing and providing your tested-by.
 
-> +       uint32_t base, limit, high;
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
-Is u32 or uint32_t used actually in this file?
-
-> +       struct resource *res, *conflict;
-
-> +       unsigned i;
-
-unsigned int i;
-
-Reversed tree order.
-
-> +       for (i =3D 0; i < 8; ++i) {
-> +               pci_read_config_dword(dev, 0x80 + i * 0x8, &base);
-> +               pci_read_config_dword(dev, 0x180 + i * 0x4, &high);
-> +
-> +               /* Is this slot free? */
-> +               if ((base & 0x3) =3D=3D 0x0)
-> +                       break;
-> +
-> +               base >>=3D 8;
-> +               base |=3D high << 24;
-> +
-> +               /* Abort if a slot already configures a 64bit BAR. */
-> +               if (base > 0x10000)
-> +                       return;
-> +       }
-> +       if (i =3D=3D 8)
-> +               return;
-> +
-> +       res =3D kzalloc(sizeof(*res), GFP_KERNEL);
-> +       if (!res)
-> +               return;
-> +
-> +       res->name =3D "PCI Bus 0000:00";
-
-> +       res->flags =3D IORESOURCE_PREFETCH | IORESOURCE_MEM |
-> +               IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
-
-You are using this constant twice AFAICS, perhaps define it in generic
-pci.h and re-use?
-
-> +       res->start =3D 0x100000000;
-> +       res->end =3D 0xfd00000000 - 1;
-
-Perhaps you forgot ul / ull in many places in your code. Care to
-compile for 32-bit and fix the warnings?
-
-> +       dev_info(&dev->dev, "adding root bus resource %pR\n", res);
-
-Some of your messages I think are rather dev_dbg() than dev_info().
-
-> +       base =3D ((res->start >> 8) & 0xffffff00) | 0x3;
-> +       limit =3D ((res->end + 1) >> 8) & 0xffffff00;
-> +       high =3D ((res->start >> 40) & 0xff) |
-> +               ((((res->end + 1) >> 40) & 0xff) << 16);
-
-It would be nice to have the magics defined (just on top of this function) =
-like
-
-#define PCI_AMD_BAR_XXX_MASK GENMASK(...)
-#define PCI_AMD_BAR_XXX_SHIFT nn
-
-> +       pci_write_config_dword(dev, 0x180 + i * 0x4, high);
-> +       pci_write_config_dword(dev, 0x84 + i * 0x8, limit);
-> +       pci_write_config_dword(dev, 0x80 + i * 0x8, base);
-
-Ditto for pos:s.
-
-> +
-> +       pci_bus_add_resource(dev->bus, res, 0);
-> +}
-
---=20
-With Best Regards,
-Andy Shevchenko
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
