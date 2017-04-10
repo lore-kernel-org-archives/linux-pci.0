@@ -1,98 +1,74 @@
-Return-Path: <SRS0=kBs1=3Y=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=kBs1=3Y=kernel.crashing.org=benh@kernel.org>
-Message-ID: <1492311719.25766.37.camel@kernel.crashing.org>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Dan Williams <dan.j.williams@intel.com>,
-        Logan Gunthorpe
-	 <logang@deltatee.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-        Jason Gunthorpe
- <jgunthorpe@obsidianresearch.com>,
-        Christoph Hellwig <hch@lst.de>, Sagi
- Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley"
- <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen"
- <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise
- <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>, Max
- Gurtovoy <maxg@mellanox.com>,
-        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm
- <linux-nvdimm@ml01.01.org>,
-        "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>,
-        Jerome Glisse <jglisse@redhat.com>
-Date: Sun, 16 Apr 2017 13:01:59 +1000
-In-Reply-To: <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
-	 <1491974532.7236.43.camel@kernel.crashing.org>
-	 <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
-	 <1492034124.7236.77.camel@kernel.crashing.org>
-	 <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
-	 <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
-	 <20170414041656.GA30694@obsidianresearch.com>
-	 <1492169849.25766.3.camel@kernel.crashing.org>
-	 <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
-	 <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
-	 <1492207643.25766.18.camel@kernel.crashing.org>
-	 <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
-	 <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtp-fw-6001.amazon.com ([52.95.48.154]:36388 "EHLO
+        smtp-fw-6001.amazon.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752343AbdDJM2y (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Apr 2017 08:28:54 -0400
+From: "Raslan, KarimAllah" <karahmed@amazon.de>
+To: David Vrabel <david.vrabel@citrix.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>
+CC: Juergen Gross <jgross@suse.com>,
+        Ross Lagerwall <ross.lagerwall@citrix.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "x86@kernel.org" <x86@kernel.org>,
+        "Paul Gortmaker" <paul.gortmaker@windriver.com>,
+        Julien Grall <julien.grall@citrix.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        "Ingo Molnar" <mingo@redhat.com>,
+        "Liguori, Anthony" <aliguori@amazon.com>,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Boris Ostrovsky" <boris.ostrovsky@oracle.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+Subject: Re: [Xen-devel] [PATCH] xen: Remove event channel notification
+ through Xen PCI platform device
+Date: Mon, 10 Apr 2017 12:28:38 +0000
+Message-ID: <5E59C7DE-9640-4D97-A633-BFFDC4BF1352@amazon.de>
+References: <1472248536-2063-1-git-send-email-karahmed@amazon.de>
+ <57EE7AB7.4020405@citrix.com>
+In-Reply-To: <57EE7AB7.4020405@citrix.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, 2017-04-15 at 15:09 -0700, Dan Williams wrote:
-> I'm wondering, since this is limited to support behind a single
-> switch, if you could have a software-iommu hanging off that switch
-> device object that knows how to catch and translate the non-zero
-> offset bus address case. We have something like this with VMD driver,
-> and I toyed with a soft pci bridge when trying to support AHCI+NVME
-> bar remapping. When the dma api looks up the iommu for its device it
-> hits this soft-iommu and that driver checks if the page is host memory
-> or device memory to do the dma translation. You wouldn't need a bit in
-> struct page, just a lookup to the hosting struct dev_pagemap in the
-> is_zone_device_page() case and that can point you to p2p details.
-
-I was thinking about a hook in the arch DMA ops but that kind of
-wrapper might work instead indeed. However I'm not sure what's the best
-way to "instantiate" it.
-
-The main issue is that the DMA ops are a function of the initiator,
-not the target (since the target is supposed to be memory) so things
-are a bit awkward.
-
-One (user ?) would have to know that a given device "intends" to DMA
-directly to another device.
-
-This is awkward because in the ideal scenario, this isn't something the
-device knows. For example, one could want to have an existing NIC DMA
-directly to/from NVME pages or GPU pages.
-
-The NIC itself doesn't know the characteristic of these pages, but
-*something* needs to insert itself in the DMA ops of that bridge to
-make it possible.
-
-That's why I wonder if it's the struct page of the target that should
-be "marked" in such a way that the arch dma'ops can immediately catch
-that they belong to a device and might require "wrapped" operations.
-
-Are ZONE_DEVICE pages identifiable based on the struct page alone ? (a
-flag ?)
-
-That would allow us to keep a fast path for normal memory targets, but
-also have some kind of way to handle the special cases of such peer 2
-peer (or also handle other type of peer to peer that don't necessarily
-involve PCI address wrangling but could require additional iommu bits).
-
-Just thinking out loud ... I don't have a firm idea or a design. But
-peer to peer is definitely a problem we need to tackle generically, the
-demand for it keeps coming up.
-
-Cheers,
-Ben.
+VW5mb3J0dW5hdGVseSwgdGhpcyBjb21taXQgaXMgcG90ZW50aWFsbHkgYSBjYW5kaWRhdGUgZm9y
+IHJldmVydGluZy4gQWZ0ZXIgYQ0KbGVuZ3RoeSBxdWFsaWZpY2F0aW9uIEkgcmVhbGl6ZWQgdGhh
+dCB0aGVyZSBpcyBhIGZ1bmN0aW9uIGNhbGxlZDoNCiJ4ZW5fc3RyaWN0X3hlbmJ1c19xdWlyaygp
+IiB0aGF0IGlzIGJlaW5nIGNhbGxlZCBpbiB0aGUgb2ZmZW5kaW5nIHBhdGggdGhhdA0Kc2hvcnQt
+Y2lyY3VpdHMgdGhlIG9mZmVuZGluZyBjb2RlIQ0KDQpTbyBhdCB0aGUgbW9tZW50IGFueSBkb21V
+IGtlcm5lbCB3aXRoIHRoaXMgY29tbWl0IHdpbGwgbm90IGJvb3Qgb24gYW55IFhlbg0KdmVyc2lv
+biA8IDQuMCEgIFNvIG5vYm9keSB3aXRoIFhlbiA8IDQuMCB3YXMgY29tcGxhaW5pbmcgbm90IGJl
+Y2F1c2Ugbm9ib2R5IGlzDQp1c2luZyBpdCBidXQgcmF0aGVyIGJlY2F1c2UgdGhlcmUgaXMgYSBz
+aG9ydC1jaXJjdWl0IGluIHRoZSBjb2RlIHRoYXQgYXZvaWRzDQpoaXR0aW5nIHRoZSBvZmZlbmRp
+bmcgY29kZSBpbiB0aGUgZmlyc3QgcGxhY2UhIFNvIHRoZSBvcmlnaW5hbCBhc3N1bXB0aW9uIHRo
+YXQNCnRoZSBjb2RlIGlzIGRlYWQgbWlnaHQgbm8gYmUgMTAwJSBjb3JyZWN0IQ0KDQpTbyBldmVu
+IHRob3VnaCB0aGUgY29kZSBmb3IgSU5UeCBpcyBicm9rZW4gZm9yIGFueSBYZW4gPiA0LjAsIHRo
+ZSByaWdodCB0aGluZw0KdG8gZG8gbm93IGlzIHRvIGFjdHVhbGx5IGZpeCB0aGUgSU5UeCBwcm9w
+ZXJseSBhbmQgY29tcGxldGVseSByZXZlcnQgdGhpcw0KY29tbWl0IChhY3R1YWxseSBub3cgYWxz
+byBjb21taXQgZGE3MmZmNWJmY2IwIG5lZWRzIHRvIGJlIHJldmVydGVkIHRvIGNsZWFubHkNCnJl
+dmVydCB0aGlzIGNvbW1pdCkgdG8gYXZvaWQgYW55IHBvdGVudGlhbCByZWdyZXNzaW9uLg0KDQpE
+YXZpZCwNCkRvZXMgdGhpcyBtYWtlIHNlbnNlIHRvIHlvdT8NCg0KSSB3aWxsIHNlbmQgYSBwYXRj
+aCB0byBmaXggSU5UeCBzaG9ydGx5IGFzIHdlbGwuDQoNCk9uIDkvMzAvMTYsIDQ6NDYgUE0sICJE
+YXZpZCBWcmFiZWwiIDxkYXZpZC52cmFiZWxAY2l0cml4LmNvbT4gd3JvdGU6DQoNCiAgICBPbiAy
+Ni8wOC8xNiAyMjo1NSwgS2FyaW1BbGxhaCBBaG1lZCB3cm90ZToNCiAgICA+IEV2ZXIgc2luY2Ug
+Y29tbWl0IDI1NGQxYTNmMDJlYiAoInhlbi9wdi1vbi1odm0ga2V4ZWM6IHNodXRkb3duIHdhdGNo
+ZXMNCiAgICA+IGZyb20gb2xkIGtlcm5lbCIpIHVzaW5nIHRoZSBJTlR4IGludGVycnVwdCBmcm9t
+IFhlbiBQQ0kgcGxhdGZvcm0gZGV2aWNlIGZvcg0KICAgID4gZXZlbnQgY2hhbm5lbCBub3RpZmlj
+YXRpb24gd291bGQganVzdCBsb2NrdXAgdGhlIGd1ZXN0IGR1cmluZyBib290dXAuDQogICAgPiBw
+b3N0Y29yZV9pbml0Y2FsbCBub3cgY2FsbHMgeHNfcmVzZXRfd2F0Y2hlcyB3aGljaCB3aWxsIGV2
+ZW50dWFsbHkgdHJ5IHRvIHJlYWQNCiAgICA+IGEgdmFsdWUgZnJvbSBYZW5TdG9yZSBhbmQgd2ls
+bCBnZXQgc3R1Y2sgb24gcmVhZF9yZXBseSBhdCBYZW5CdXMgZm9yZXZlciBzaW5jZQ0KICAgID4g
+dGhlIHBsYXRmb3JtIGRyaXZlciBpcyBub3QgcHJvYmVkIHlldCBhbmQgaXRzIElOVHggaW50ZXJy
+dXB0IGhhbmRsZXIgaXMgbm90DQogICAgPiByZWdpc3RlcmVkIHlldC4gVGhhdCBtZWFucyB0aGF0
+IHRoZSBndWVzdCBjYW4gbm90IGJlIG5vdGlmaWVkIGF0IHRoaXMgbW9tZW50IG9mDQogICAgPiBh
+bnkgcGVuZGluZyBldmVudCBjaGFubmVscyBhbmQgbm9uZSBvZiB0aGUgcGVyLWV2ZW50IGhhbmRs
+ZXJzIHdpbGwgZXZlciBiZQ0KICAgID4gaW52b2tlZCAoaW5jbHVkaW5nIHRoZSBYZW5TdG9yZSBv
+bmUpIGFuZCB0aGUgcmVwbHkgd2lsbCBuZXZlciBiZSBwaWNrZWQgdXAgYnkNCiAgICA+IHRoZSBr
+ZXJuZWwuDQogICAgDQogICAgQXBwbGllZCB0byBmb3ItbGludXMtNC45LCB0aGFua3MuDQogICAg
+DQogICAgRGF2aWQNCiAgICANCiAgICANCiAgICANCg0KQW1hem9uIERldmVsb3BtZW50IENlbnRl
+ciBHZXJtYW55IEdtYkgKQmVybGluIC0gRHJlc2RlbiAtIEFhY2hlbgptYWluIG9mZmljZTogS3Jh
+dXNlbnN0ci4gMzgsIDEwMTE3IEJlcmxpbgpHZXNjaGFlZnRzZnVlaHJlcjogRHIuIFJhbGYgSGVy
+YnJpY2gsIENocmlzdGlhbiBTY2hsYWVnZXIKVXN0LUlEOiBERTI4OTIzNzg3OQpFaW5nZXRyYWdl
+biBhbSBBbXRzZ2VyaWNodCBDaGFybG90dGVuYnVyZyBIUkIgMTQ5MTczIEIK
