@@ -1,92 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40394 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753657AbdDQVhL (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Apr 2017 17:37:11 -0400
-Subject: [PATCH v11 6/7] PCI: Don't reassign resources that are already
- aligned
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yongji Xie <elohimes@gmail.com>
-Cc: zhong@linux.vnet.ibm.com, Alexey Kardashevskiy <aik@ozlabs.ru>,
-        linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org
-Date: Mon, 17 Apr 2017 16:37:08 -0500
-Message-ID: <20170417213707.21092.35205.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Michal Simek <monstr@monstr.eu>
+Subject: [PATCH v3 15/32] microblaze: include default ioremap_nopost() implementation
+Date: Tue, 11 Apr 2017 13:28:55 +0100
+Message-Id: <20170411122923.6285-16-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The "pci=resource_alignment=" kernel argument designates devices for which
-we want alignment greater than is required by the PCI specs.  Previously we
-set IORESOURCE_UNSET for every MEM resource of those devices, even if the
-resource was *already* sufficiently aligned.
+The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and Posting")
+mandate non-posted configuration transactions. As further highlighted in
+the PCIe specifications (4.0 - Rev0.3, "Ordering Considerations for the
+Enhanced Configuration Access Mechanism"), through ECAM and
+ECAM-derivative configuration mechanism, the memory mapped transactions
+from the host CPU into Configuration Requests on the PCI express fabric
+may create ordering problems for software because writes to memory
+address are typically posted transactions (unless the architecture can
+enforce through virtual address mapping non-posted write transactions
+behaviour) but writes to Configuration Space are not posted on the PCI
+express fabric.
 
-If a resource is already sufficiently aligned, leave it alone and don't try
-to reassign it.
+Include the asm-generic ioremap_nopost() implementation (currently
+falling back to ioremap_nocache()) to provide a non-posted writes
+ioremap interface to kernel subsystems.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Michal Simek <monstr@monstr.eu>
 ---
- drivers/pci/pci.c |   40 +++++++++++++++++++---------------------
- 1 file changed, 19 insertions(+), 21 deletions(-)
+ arch/microblaze/include/asm/io.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 17746f778ca2..d92b80837cfa 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5065,30 +5065,28 @@ static void pci_request_resource_alignment(struct pci_dev *dev, int bar,
- 	}
+diff --git a/arch/microblaze/include/asm/io.h b/arch/microblaze/include/asm/io.h
+index 39b6315..4714a6d 100644
+--- a/arch/microblaze/include/asm/io.h
++++ b/arch/microblaze/include/asm/io.h
+@@ -43,6 +43,7 @@ extern void __iomem *ioremap(phys_addr_t address, unsigned long size);
+ #define ioremap_fullcache(addr, size)		ioremap((addr), (size))
+ #define ioremap_wc(addr, size)			ioremap((addr), (size))
+ #define ioremap_wt(addr, size)			ioremap((addr), (size))
++#include <asm-generic/ioremap-nopost.h>
  
- 	size = resource_size(r);
--	if (size < align) {
-+	if (size >= align)
-+		return;
+ #endif /* CONFIG_MMU */
  
--		/*
--		 * Increase the size of the resource.  BARs are aligned on
--		 * their size, so when we reallocate space for this
--		 * resource, we'll allocate it with the larger alignment.
--		 * It also prevents assignment of any other BARs inside the
--		 * size.  If we're requesting page alignment, this means no
--		 * other BARs will share the page.
--		 *
--		 * This makes the resource larger than the hardware BAR,
--		 * which may break drivers that compute things based on the
--		 * resource size, e.g., to find registers at a fixed offset
--		 * before the end of the BAR.  We hope users don't request
--		 * alignment for such devices.
--		 */
--		size = align;
--		dev_info(&dev->dev, "BAR%d %pR: requesting alignment to %#llx\n",
--			 bar, r, (unsigned long long)align);
-+	/*
-+	 * Increase the size of the resource.  BARs are aligned on their
-+	 * size, so when we reallocate space for this resource, we'll
-+	 * allocate it with the larger alignment.  It also prevents
-+	 * assignment of any other BARs inside the size.  If we're
-+	 * requesting page alignment, this means no other BARs will share
-+	 * the page.
-+	 *
-+	 * This makes the resource larger than the hardware BAR, which may
-+	 * break drivers that compute things based on the resource size,
-+	 * e.g., to find registers at a fixed offset before the end of the
-+	 * BAR.  We hope users don't request alignment for such devices.
-+	 */
-+	dev_info(&dev->dev, "BAR%d %pR: requesting alignment to %#llx\n",
-+		 bar, r, (unsigned long long)align);
- 
--	}
--	r->flags |= IORESOURCE_UNSET;
--	r->end = size - 1;
- 	r->start = 0;
-+	r->end = align - 1;
-+	r->flags |= IORESOURCE_UNSET;
- }
- 
- /*
+-- 
+2.10.0
