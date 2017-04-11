@@ -1,17 +1,12 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <1493194200.27023.79.camel@mtkswgap22>
-References: <1492935543-18190-1-git-send-email-ryder.lee@mediatek.com>
- <1492935543-18190-2-git-send-email-ryder.lee@mediatek.com>
- <CAK8P3a39TFkJ5=jp8me+Dyg-Qi-N_1ZKxpJGvnhmPEo4csnFCw@mail.gmail.com>
- <1493194200.27023.79.camel@mtkswgap22>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Thu, 27 Apr 2017 20:55:21 +0200
-Message-ID: <CAK8P3a0DjPL8uWuXfCmEwt05SCPJ0yEQTAJmZAPtFDEfsn4a1Q@mail.gmail.com>
-Subject: Re: [PATCH 1/2] PCI: mediatek: Add Mediatek PCIe host controller
- support
-To: Ryder Lee <ryder.lee@mediatek.com>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v3 32/32] lib: implement Devres ioremap_nopost() interface
+Date: Tue, 11 Apr 2017 13:29:12 +0100
+Message-Id: <20170411122923.6285-33-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -19,123 +14,180 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
- Bjorn Helgaas <bhelgaas@google.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc: linux-arch@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Jonathan Corbet <corbet@lwn.net>, linux-kernel@vger.kernel.org,
+ Tejun Heo <tj@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 26, 2017 at 10:10 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
-> On Tue, 2017-04-25 at 14:38 +0200, Arnd Bergmann wrote:
->> On Sun, Apr 23, 2017 at 10:19 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+The introduction of the ioremap_nopost() interface allows
+kernel drivers to map memory through a dedicated kernel
+interface providing non-posted writes semantics.
 
->> > +static int mtk_pcie_enable_ports(struct mtk_pcie *pcie)
->> > +{
->> > +       struct device *dev = pcie->dev;
->> > +       struct mtk_pcie_port *port, *tmp;
->> > +       int err, linkup = 0;
->> > +
->> > +       list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
->> > +               err = clk_prepare_enable(port->sys_ck);
->> > +               if (err) {
->> > +                       dev_err(dev, "failed to enable port%d clock\n",
->> > +                               port->index);
->> > +                       continue;
->> > +               }
->> > +
->> > +               /* assert RC */
->> > +               reset_control_assert(port->reset);
->> > +               /* de-assert RC */
->> > +               reset_control_deassert(port->reset);
->> > +
->> > +               /* power on PHY */
->> > +               err = phy_power_on(port->phy);
->> > +               if (err) {
->> > +                       dev_err(dev, "failed to power on port%d phy\n",
->> > +                               port->index);
->> > +                       goto err_phy_on;
->> > +               }
->> > +
->> > +               mtk_pcie_assert_ports(port);
->> > +
->>
->> Similar to the comment I had for the binding, I wonder if it would be
->> better to keep all the information about the ports in one place and
->> then just deal with it at the root level.
->>
->> Alternatively, we could decide to standardize on the properties
->> you have added to the pcie port node, but then I would handle
->> them in the pcieport driver rather than in the host bridge driver.
->
-> Sorry, I'm not sure what you want me to do here.
->
-> I could move all clock operation in root level. But we need to keep the
-> reset and PHY operation sequence in the loop, In addition, we could
-> easily free resources if ports link fail.
->
-> How about moving this function to mtk_pcie_parse_and_add_res()?
+Introduce two new functions in the Devres kernel layer and Devres
+documentation:
 
-That could work, please try it out and see if the code gets better or
-worse. This may depend on what we end up doing with the DT
-properties.
+- devm_ioremap_nopost()
+- devm_ioremap_nopost_resource()
 
->> > +/*
->> > + * This IP lacks interrupt status register to check or map INTx from
->> > + * different devices at the same time.
->> > + */
->> > +static int __init mtk_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
->> > +{
->> > +       struct mtk_pcie *pcie = dev->bus->sysdata;
->> > +       struct mtk_pcie_port *port;
->> > +
->> > +       list_for_each_entry(port, &pcie->ports, list)
->> > +               if (port->index == slot)
->> > +                       return port->irq;
->> > +
->> > +       return -1;
->> > +}
->>
->> This looks odd, what is it needed for specifically? It looks like
->> it's broken for devices behind bridges, and the interrupt mapping
->> should normally come from the interrupt-map property, without
->> the need for a driver specific map_irq override.
->
-> Our hardware just has a GIC for each port and lacks interrupt status for
-> host driver to distinguish INTx. So I return port IRQ here.
+so that drivers can make use of devm_* interface to map memory
+regions requiring non-posted writes memory attributes.
 
-You should still be able to express this with standard interrupt-map
-DT property, without having to resort to your own map_irq
-callback handler.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tejun Heo <tj@kernel.org>
+---
+ Documentation/driver-model/devres.txt |  3 ++
+ include/linux/device.h                |  2 +
+ include/linux/io.h                    |  2 +
+ lib/devres.c                          | 78 +++++++++++++++++++++++++++++++++++
+ 4 files changed, 85 insertions(+)
 
-In the interrupt-map-mask, you can ignore the interrupt line
-only list the devfn of the root ports for each entry.
+diff --git a/Documentation/driver-model/devres.txt b/Documentation/driver-model/devres.txt
+index bf34d5b..9991a66 100644
+--- a/Documentation/driver-model/devres.txt
++++ b/Documentation/driver-model/devres.txt
+@@ -294,7 +294,10 @@ IOMAP
+   devm_ioremap()
+   devm_ioremap_nocache()
+   devm_ioremap_wc()
++  devm_ioremap_nopost()
+   devm_ioremap_resource() : checks resource, requests memory region, ioremaps
++  devm_ioremap_nopost_resource() : do devm_ioremap_resource() with nopost
++				   memory attributes
+   devm_iounmap()
+   pcim_iomap()
+   pcim_iomap_regions()	: do request_region() and iomap() on multiple BARs
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 9ef518a..1dce865 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -689,6 +689,8 @@ extern unsigned long devm_get_free_pages(struct device *dev,
+ extern void devm_free_pages(struct device *dev, unsigned long addr);
+ 
+ void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res);
++void __iomem *devm_ioremap_nopost_resource(struct device *dev,
++					   struct resource *res);
+ 
+ /* allows to add/remove a custom action to devres stack */
+ int devm_add_action(struct device *dev, void (*action)(void *), void *data);
+diff --git a/include/linux/io.h b/include/linux/io.h
+index 82ef36e..e34d799 100644
+--- a/include/linux/io.h
++++ b/include/linux/io.h
+@@ -79,6 +79,8 @@ void __iomem *devm_ioremap_nocache(struct device *dev, resource_size_t offset,
+ 				   resource_size_t size);
+ void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
+ 				   resource_size_t size);
++void __iomem *devm_ioremap_nopost(struct device *dev, resource_size_t offset,
++				   resource_size_t size);
+ void devm_iounmap(struct device *dev, void __iomem *addr);
+ int check_signature(const volatile void __iomem *io_addr,
+ 			const unsigned char *signature, int length);
+diff --git a/lib/devres.c b/lib/devres.c
+index 78eca71..d16bd76 100644
+--- a/lib/devres.c
++++ b/lib/devres.c
+@@ -100,6 +100,34 @@ void __iomem *devm_ioremap_wc(struct device *dev, resource_size_t offset,
+ EXPORT_SYMBOL(devm_ioremap_wc);
+ 
+ /**
++ * devm_ioremap_nopost - Managed ioremap_nopost()
++ * @dev: Generic device to remap IO address for
++ * @offset: Resource address to map
++ * @size: Size of map
++ *
++ * Managed ioremap_nopost().  Map is automatically unmapped on driver detach.
++ */
++void __iomem *devm_ioremap_nopost(struct device *dev, resource_size_t offset,
++			      resource_size_t size)
++{
++	void __iomem **ptr, *addr;
++
++	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
++	if (!ptr)
++		return NULL;
++
++	addr = ioremap_nopost(offset, size);
++	if (addr) {
++		*ptr = addr;
++		devres_add(dev, ptr);
++	} else
++		devres_free(ptr);
++
++	return addr;
++}
++EXPORT_SYMBOL(devm_ioremap_nopost);
++
++/**
+  * devm_iounmap - Managed iounmap()
+  * @dev: Generic device to unmap for
+  * @addr: Address to unmap
+@@ -163,6 +191,56 @@ void __iomem *devm_ioremap_resource(struct device *dev, struct resource *res)
+ }
+ EXPORT_SYMBOL(devm_ioremap_resource);
+ 
++/**
++ * devm_ioremap_nopost_resource() - devm_ioremap_resource() nopost version
++ * @dev: generic device to handle the resource for
++ * @res: resource to be handled
++ *
++ * Checks that a resource is a valid memory region, requests the memory
++ * region and ioremaps it with ioremap_nopost() interface.
++ * All operations are managed and will be undone on driver detach.
++ *
++ * Returns a pointer to the remapped memory or an ERR_PTR() encoded error code
++ * on failure. Usage example:
++ *
++ *	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
++ *	base = devm_ioremap_nopost_resource(&pdev->dev, res);
++ *	if (IS_ERR(base))
++ *		return PTR_ERR(base);
++ */
++void __iomem *devm_ioremap_nopost_resource(struct device *dev,
++					   struct resource *res)
++{
++	resource_size_t size;
++	const char *name;
++	void __iomem *dest_ptr;
++
++	BUG_ON(!dev);
++
++	if (!res || resource_type(res) != IORESOURCE_MEM) {
++		dev_err(dev, "invalid resource\n");
++		return IOMEM_ERR_PTR(-EINVAL);
++	}
++
++	size = resource_size(res);
++	name = res->name ?: dev_name(dev);
++
++	if (!devm_request_mem_region(dev, res->start, size, name)) {
++		dev_err(dev, "can't request region for resource %pR\n", res);
++		return IOMEM_ERR_PTR(-EBUSY);
++	}
++
++	dest_ptr = devm_ioremap_nopost(dev, res->start, size);
++	if (!dest_ptr) {
++		dev_err(dev, "ioremap failed for resource %pR\n", res);
++		devm_release_mem_region(dev, res->start, size);
++		dest_ptr = IOMEM_ERR_PTR(-ENOMEM);
++	}
++
++	return dest_ptr;
++}
++EXPORT_SYMBOL(devm_ioremap_nopost_resource);
++
+ #ifdef CONFIG_HAS_IOPORT_MAP
+ /*
+  * Generic iomap devres
+-- 
+2.10.0
 
->> > +static int mtk_pcie_register_ports(struct mtk_pcie *pcie)
->> > +{
->> > +       struct pci_bus *bus, *child;
->> > +
->> > +       bus = pci_scan_root_bus(pcie->dev, 0, &mtk_pcie_ops, pcie,
->> > +                               &pcie->resources);
->>
->> Can you use the new pci_register_host_bridge() method instead of
->> pci_scan_root_bus() here?
->
-> May I know what's difference between pci_scan_root_bus() and using
-> pci_register_host_bridge() directly? What situation should we use it?
-> It seems that just tegra use this new method currently.
-
-We introduced the new function for tegra for now, in the long run
-I would hope we can convert all other drivers to it as well, to make it
-easier to add further parameters.
-
-The new function also has a cleaner way of dealing with the memory
-allocations, similar to how other subsystems work.
-
-     Arnd
 
 _______________________________________________
 linux-arm-kernel mailing list
