@@ -1,69 +1,35 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 28 Apr 2017 17:20:06 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Subject: Re: [PATCH v4 05/21] lib: fix Devres devm_ioremap_* offset parameter
- kerneldoc description
-Message-ID: <20170428212006.GD22354@htj.duckdns.org>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
- <20170419164913.19674-6-lorenzo.pieralisi@arm.com>
+Return-Path: <SRS0=jESd=3T=chromium.org=briannorris@kernel.org>
+Return-Path: <SRS0=jESd=3T=chromium.org=briannorris@kernel.org>
+Date: Tue, 11 Apr 2017 11:18:39 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Jeffy Chen <jeffy.chen@rock-chips.com>,
+	Wenrui Li <wenrui.li@rock-chips.com>, linux-pci@vger.kernel.org,
+	linux-rockchip@lists.infradead.org, Ray Jui <rjui@broadcom.com>
+Subject: Re: [PATCH v2 3/5] PCI: rockchip: add remove() support
+Message-ID: <20170411181838.GA83471@google.com>
+References: <20170310024617.67303-1-briannorris@chromium.org>
+ <20170310024617.67303-3-briannorris@chromium.org>
+ <20170324142541.GA25380@bhelgaas-glaptop.roam.corp.google.com>
+ <20170324172218.GA119093@google.com>
+ <20170330232825.GB3912@bhelgaas-glaptop.roam.corp.google.com>
+ <20170331002608.GA72818@google.com>
+ <20170331051702.GA13240@bhelgaas-glaptop.roam.corp.google.com>
+ <20170331164015.GB146301@google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170419164913.19674-6-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Murali Karicheri <m-karicheri2@ti.com>, linux-pci@vger.kernel.org,
- Arnd Bergmann <arnd@arndb.de>, Jon Mason <jonmason@broadcom.com>,
- Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
- linux-arm-kernel@lists.infradead.org, "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170331164015.GB146301@google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 19, 2017 at 05:48:54PM +0100, Lorenzo Pieralisi wrote:
-> The offset parameter in Devres devm_ioremap_* functions kerneldoc
-> entries is erroneously defined as BUS offset whereas it is actually
-> a resource address.
-> 
-> Since it is actually misleading, fix the Devres devm_ioremap_* offset
-> parameter kerneldoc entry by replacing BUS offset with a more
-> suitable description (ie Resource address).
-> 
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Tejun Heo <tj@kernel.org>
+Hi Bjorn,
 
-Acked-by: Tejun Heo <tj@kernel.org>
+On Fri, Mar 31, 2017 at 09:40:15AM -0700, Brian Norris wrote:
+> Sure, I can grok that. Just let me know if you want any more action from
+> me.
 
-Thanks.
+Any thoughts here? Would you like me to prepare my patches any
+differently?
 
--- 
-tejun
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Brian
