@@ -1,235 +1,93 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
-        gregkh@linuxfoundation.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V10 11/12] iommu/arm-smmu: Clean up early-probing workarounds
-Date: Tue,  4 Apr 2017 15:48:24 +0530
-Message-Id: <1491301105-5274-12-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 11 Apr 2017 15:24:56 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH v3 21/32] powerpc: include default ioremap_nopost()
+ implementation
+Message-ID: <20170411142456.GB6821@red-moon>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+ <20170411122923.6285-22-lorenzo.pieralisi@arm.com>
+ <1491917928.7236.8.camel@kernel.crashing.org>
+MIME-Version: 1.0
+In-Reply-To: <1491917928.7236.8.camel@kernel.crashing.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-arch@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
+ Michael Ellerman <mpe@ellerman.id.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="iso-8859-1"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Robin Murphy <robin.murphy@arm.com>
+On Tue, Apr 11, 2017 at 11:38:48PM +1000, Benjamin Herrenschmidt wrote:
+> On Tue, 2017-04-11 at 13:29 +0100, Lorenzo Pieralisi wrote:
+> > The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and Postin=
+g")
+> > mandate non-posted configuration transactions. As further highlighted in
+> > the PCIe specifications (4.0 - Rev0.3, "Ordering Considerations for the
+> > Enhanced Configuration Access Mechanism"), through ECAM and
+> > ECAM-derivative configuration mechanism, the memory mapped transactions
+> > from the host CPU into Configuration Requests on the PCI express fabric
+> > may create ordering problems for software because writes to memory
+> > address are typically posted transactions (unless the architecture can
+> > enforce through virtual address mapping non-posted write transactions
+> > behaviour) but writes to Configuration Space are not posted on the PCI
+> > express fabric.
+> > =
 
-Now that the appropriate ordering is enforced via probe-deferral of
-masters in core code, rip it all out and bask in the simplicity.
+> > Include the asm-generic ioremap_nopost() implementation (currently
+> > falling back to ioremap_nocache()) to provide a non-posted writes
+> > ioremap interface to kernel subsystems.
+> =
 
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Acked-by: Will Deacon <will.deacon@arm.com>
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
-[Sricharan: Rebased on top of ACPI IORT SMMU series]
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
----
- drivers/iommu/arm-smmu-v3.c |  46 +-----------------
- drivers/iommu/arm-smmu.c    | 110 +++++++++++++++++++-------------------------
- 2 files changed, 49 insertions(+), 107 deletions(-)
+> NAK. As explained in my reply to patch 0.
 
-diff --git a/drivers/iommu/arm-smmu-v3.c b/drivers/iommu/arm-smmu-v3.c
-index 591bb96..4362139 100644
---- a/drivers/iommu/arm-smmu-v3.c
-+++ b/drivers/iommu/arm-smmu-v3.c
-@@ -2761,51 +2761,9 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
- 	.probe	= arm_smmu_device_probe,
- 	.remove	= arm_smmu_device_remove,
- };
-+module_platform_driver(arm_smmu_driver);
- 
--static int __init arm_smmu_init(void)
--{
--	static bool registered;
--	int ret = 0;
--
--	if (!registered) {
--		ret = platform_driver_register(&arm_smmu_driver);
--		registered = !ret;
--	}
--	return ret;
--}
--
--static void __exit arm_smmu_exit(void)
--{
--	return platform_driver_unregister(&arm_smmu_driver);
--}
--
--subsys_initcall(arm_smmu_init);
--module_exit(arm_smmu_exit);
--
--static int __init arm_smmu_of_init(struct device_node *np)
--{
--	int ret = arm_smmu_init();
--
--	if (ret)
--		return ret;
--
--	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
--		return -ENODEV;
--
--	return 0;
--}
--IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", arm_smmu_of_init);
--
--#ifdef CONFIG_ACPI
--static int __init acpi_smmu_v3_init(struct acpi_table_header *table)
--{
--	if (iort_node_match(ACPI_IORT_NODE_SMMU_V3))
--		return arm_smmu_init();
--
--	return 0;
--}
--IORT_ACPI_DECLARE(arm_smmu_v3, ACPI_SIG_IORT, acpi_smmu_v3_init);
--#endif
-+IOMMU_OF_DECLARE(arm_smmuv3, "arm,smmu-v3", NULL);
- 
- MODULE_DESCRIPTION("IOMMU API for ARM architected SMMUv3 implementations");
- MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
-diff --git a/drivers/iommu/arm-smmu.c b/drivers/iommu/arm-smmu.c
-index b493c99..792fe7d 100644
---- a/drivers/iommu/arm-smmu.c
-+++ b/drivers/iommu/arm-smmu.c
-@@ -2075,6 +2075,23 @@ static int arm_smmu_device_dt_probe(struct platform_device *pdev,
- 	return 0;
- }
- 
-+static void arm_smmu_bus_init(void)
-+{
-+	/* Oh, for a proper bus abstraction */
-+	if (!iommu_present(&platform_bus_type))
-+		bus_set_iommu(&platform_bus_type, &arm_smmu_ops);
-+#ifdef CONFIG_ARM_AMBA
-+	if (!iommu_present(&amba_bustype))
-+		bus_set_iommu(&amba_bustype, &arm_smmu_ops);
-+#endif
-+#ifdef CONFIG_PCI
-+	if (!iommu_present(&pci_bus_type)) {
-+		pci_request_acs();
-+		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
-+	}
-+#endif
-+}
-+
- static int arm_smmu_device_probe(struct platform_device *pdev)
- {
- 	struct resource *res;
-@@ -2180,21 +2197,30 @@ static int arm_smmu_device_probe(struct platform_device *pdev)
- 	arm_smmu_device_reset(smmu);
- 	arm_smmu_test_smr_masks(smmu);
- 
--	/* Oh, for a proper bus abstraction */
--	if (!iommu_present(&platform_bus_type))
--		bus_set_iommu(&platform_bus_type, &arm_smmu_ops);
--#ifdef CONFIG_ARM_AMBA
--	if (!iommu_present(&amba_bustype))
--		bus_set_iommu(&amba_bustype, &arm_smmu_ops);
--#endif
--#ifdef CONFIG_PCI
--	if (!iommu_present(&pci_bus_type)) {
--		pci_request_acs();
--		bus_set_iommu(&pci_bus_type, &arm_smmu_ops);
--	}
--#endif
-+	/*
-+	 * For ACPI and generic DT bindings, an SMMU will be probed before
-+	 * any device which might need it, so we want the bus ops in place
-+	 * ready to handle default domain setup as soon as any SMMU exists.
-+	 */
-+	if (!using_legacy_binding)
-+		arm_smmu_bus_init();
-+
-+	return 0;
-+}
-+
-+/*
-+ * With the legacy DT binding in play, though, we have no guarantees about
-+ * probe order, but then we're also not doing default domains, so we can
-+ * delay setting bus ops until we're sure every possible SMMU is ready,
-+ * and that way ensure that no add_device() calls get missed.
-+ */
-+static int arm_smmu_legacy_bus_init(void)
-+{
-+	if (using_legacy_binding)
-+		arm_smmu_bus_init();
- 	return 0;
- }
-+device_initcall_sync(arm_smmu_legacy_bus_init);
- 
- static int arm_smmu_device_remove(struct platform_device *pdev)
- {
-@@ -2219,56 +2245,14 @@ static int arm_smmu_device_remove(struct platform_device *pdev)
- 	.probe	= arm_smmu_device_probe,
- 	.remove	= arm_smmu_device_remove,
- };
--
--static int __init arm_smmu_init(void)
--{
--	static bool registered;
--	int ret = 0;
--
--	if (!registered) {
--		ret = platform_driver_register(&arm_smmu_driver);
--		registered = !ret;
--	}
--	return ret;
--}
--
--static void __exit arm_smmu_exit(void)
--{
--	return platform_driver_unregister(&arm_smmu_driver);
--}
--
--subsys_initcall(arm_smmu_init);
--module_exit(arm_smmu_exit);
--
--static int __init arm_smmu_of_init(struct device_node *np)
--{
--	int ret = arm_smmu_init();
--
--	if (ret)
--		return ret;
--
--	if (!of_platform_device_create(np, NULL, platform_bus_type.dev_root))
--		return -ENODEV;
--
--	return 0;
--}
--IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", arm_smmu_of_init);
--IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", arm_smmu_of_init);
--IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", arm_smmu_of_init);
--IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", arm_smmu_of_init);
--IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", arm_smmu_of_init);
--IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", arm_smmu_of_init);
--
--#ifdef CONFIG_ACPI
--static int __init arm_smmu_acpi_init(struct acpi_table_header *table)
--{
--	if (iort_node_match(ACPI_IORT_NODE_SMMU))
--		return arm_smmu_init();
--
--	return 0;
--}
--IORT_ACPI_DECLARE(arm_smmu, ACPI_SIG_IORT, arm_smmu_acpi_init);
--#endif
-+module_platform_driver(arm_smmu_driver);
-+
-+IOMMU_OF_DECLARE(arm_smmuv1, "arm,smmu-v1", NULL);
-+IOMMU_OF_DECLARE(arm_smmuv2, "arm,smmu-v2", NULL);
-+IOMMU_OF_DECLARE(arm_mmu400, "arm,mmu-400", NULL);
-+IOMMU_OF_DECLARE(arm_mmu401, "arm,mmu-401", NULL);
-+IOMMU_OF_DECLARE(arm_mmu500, "arm,mmu-500", NULL);
-+IOMMU_OF_DECLARE(cavium_smmuv2, "cavium,smmu-v2", NULL);
- 
- MODULE_DESCRIPTION("IOMMU API for ARM architected SMMU implementations");
- MODULE_AUTHOR("Will Deacon <will.deacon@arm.com>");
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+Ok, point taken. BTW, may I ask you guys to have a look into this
+please ?
+
+https://lkml.org/lkml/2017/4/6/743
+
+It is a side effect of this thread (v2), not sure why <asm/io.h>
+on powerpc has to include <linux/io.h>.
+
+Thanks,
+Lorenzo
+
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > > Cc: Michael Ellerman <mpe@ellerman.id.au>
+> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> > > Cc: Paul Mackerras <paulus@samba.org>
+> > ---
+> > =A0arch/powerpc/include/asm/io.h | 1 +
+> > =A01 file changed, 1 insertion(+)
+> > =
+
+> > diff --git a/arch/powerpc/include/asm/io.h b/arch/powerpc/include/asm/i=
+o.h
+> > index 5ed2924..6dcd0e2 100644
+> > --- a/arch/powerpc/include/asm/io.h
+> > +++ b/arch/powerpc/include/asm/io.h
+> > @@ -757,6 +757,7 @@ extern void __iomem *ioremap_prot(phys_addr_t addre=
+ss, unsigned long size,
+> > =A0extern void __iomem *ioremap_wc(phys_addr_t address, unsigned long s=
+ize);
+> > > =A0#define ioremap_nocache(addr, size)	ioremap((addr), (size))
+> > > =A0#define ioremap_uc(addr, size)		ioremap((addr), (size))
+> > +#include <asm-generic/ioremap-nopost.h>
+> > =A0
+> > =A0extern void iounmap(volatile void __iomem *addr);
+> > =A0
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
