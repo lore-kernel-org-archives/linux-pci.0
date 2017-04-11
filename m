@@ -1,89 +1,84 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jayachandran C <jnair@caviumnetworks.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org
-Subject: [PATCH v4 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-Date: Mon,  3 Apr 2017 13:15:04 +0000
-Message-Id: <1491225304-3559-3-git-send-email-jnair@caviumnetworks.com>
-In-Reply-To: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
-References: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jon Masters <jcm@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
- Jayachandran C <jnair@caviumnetworks.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:60960 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754164AbdDKLBu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Apr 2017 07:01:50 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: davem@davemloft.net
+Cc: bhelgaas@google.com, netanel@annapurnalabs.com, jcliburn@gmail.com,
+        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org,
+        jiri@mellanox.com, idosch@mellanox.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 4/5] PCI: remove pci_enable_msix
+Date: Tue, 11 Apr 2017 13:01:24 +0200
+Message-Id: <20170411110125.3446-5-hch@lst.de>
+In-Reply-To: <20170411110125.3446-1-hch@lst.de>
+References: <20170411110125.3446-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the PCI
-topology is slightly unusual. For a multi-node system, it looks like:
+Unused now that all callers switched to pci_alloc_irq_vectors.
 
-[node level PCI bridges - one per node]
-    [SoC PCI devices with MSI-X but no IOMMU]
-    [PCI-PCIe "glue" bridges - upto 14, one per real port below]
-        [PCIe real root ports associated with IOMMU and GICv3 ITS]
-            [External PCI devices connected to PCIe links]
-
-The top two levels of bridges should have introduced aliases since they
-are PCI and PCI/PCIe bridges, but in the case of ThunderX2 they do not.
-In the case of external PCIe devices, the "real" root ports are connected
-to the SMMU and the GIC ITS, so PCI-PCIe bridge does not introduce an
-alias. The SoC PCI devices are directly connected to the GIC ITS, so the
-node level bridges do not introduce an alias either.
-
-To handle this quirk, we mark the real PCIe root ports and node level
-PCI bridges with the flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT.  With this,
-pci_for_each_dma_alias() works correctly for external PCIe devices and
-SoC PCI devices.
-
-For the current revision of Cavium ThunderX2, the VendorID and Device ID
-are from Broadcom Vulcan (14e4:90XX).
-
-Signed-off-by: Jayachandran C <jnair@caviumnetworks.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/quirks.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ drivers/pci/msi.c   | 21 ---------------------
+ include/linux/pci.h |  4 ----
+ 2 files changed, 25 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6736836..564a84a 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3958,6 +3958,20 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2260, quirk_mic_x200_dma_alias);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2264, quirk_mic_x200_dma_alias);
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index d571bc330686..0042c365b29b 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -973,27 +973,6 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
+ 	return msix_capability_init(dev, entries, nvec, affd);
+ }
  
- /*
-+ * The IOMMU and interrupt controller on Broadcom Vulcan/Cavium ThunderX2 are
-+ * associated not at the root bus, but at a bridge below. This quirk flag
-+ * will ensure that the aliases are identified correctly.
-+ */
-+static void quirk_bridge_cavm_thrx2_pcie_root(struct pci_dev *pdev)
-+{
-+	pdev->dev_flags |= PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT;
-+}
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9000,
-+				quirk_bridge_cavm_thrx2_pcie_root);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9084,
-+				quirk_bridge_cavm_thrx2_pcie_root);
-+
-+/*
-  * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
-  * class code.  Fix it.
-  */
+-/**
+- * pci_enable_msix - configure device's MSI-X capability structure
+- * @dev: pointer to the pci_dev data structure of MSI-X device function
+- * @entries: pointer to an array of MSI-X entries (optional)
+- * @nvec: number of MSI-X irqs requested for allocation by device driver
+- *
+- * Setup the MSI-X capability structure of device function with the number
+- * of requested irqs upon its software driver call to request for
+- * MSI-X mode enabled on its hardware device function. A return of zero
+- * indicates the successful configuration of MSI-X capability structure
+- * with new allocated MSI-X irqs. A return of < 0 indicates a failure.
+- * Or a return of > 0 indicates that driver request is exceeding the number
+- * of irqs or MSI-X vectors available. Driver should use the returned value to
+- * re-send its request.
+- **/
+-int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
+-{
+-	return __pci_enable_msix(dev, entries, nvec, NULL);
+-}
+-EXPORT_SYMBOL(pci_enable_msix);
+-
+ void pci_msix_shutdown(struct pci_dev *dev)
+ {
+ 	struct msi_desc *entry;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eb3da1a04e6c..82dec36845e6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1300,7 +1300,6 @@ int pci_msi_vec_count(struct pci_dev *dev);
+ void pci_msi_shutdown(struct pci_dev *dev);
+ void pci_disable_msi(struct pci_dev *dev);
+ int pci_msix_vec_count(struct pci_dev *dev);
+-int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
+ void pci_msix_shutdown(struct pci_dev *dev);
+ void pci_disable_msix(struct pci_dev *dev);
+ void pci_restore_msi_state(struct pci_dev *dev);
+@@ -1330,9 +1329,6 @@ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+ static inline void pci_msi_shutdown(struct pci_dev *dev) { }
+ static inline void pci_disable_msi(struct pci_dev *dev) { }
+ static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
+-static inline int pci_enable_msix(struct pci_dev *dev,
+-				  struct msix_entry *entries, int nvec)
+-{ return -ENOSYS; }
+ static inline void pci_msix_shutdown(struct pci_dev *dev) { }
+ static inline void pci_disable_msix(struct pci_dev *dev) { }
+ static inline void pci_restore_msi_state(struct pci_dev *dev) { }
 -- 
-2.7.4
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
