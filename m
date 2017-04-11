@@ -1,94 +1,51 @@
-Return-Path: <leon@kernel.org>
-Return-Path: <leon@kernel.org>
-Date: Wed, 19 Apr 2017 19:40:01 +0300
-From: Leon Romanovsky <leon@kernel.org>
+Return-Path: <SRS0=N5Sh=3T=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=N5Sh=3T=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V8 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
+ POLICY_DEFAULT
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-	Salvatore Benedetto <salvatore.benedetto@intel.com>,
-	Mike Marciniszyn <mike.marciniszyn@intel.com>,
-	Dennis Dalessandro <dennis.dalessandro@intel.com>,
-	Derek Chickles <derek.chickles@caviumnetworks.com>,
-	Satanand Burla <satananda.burla@caviumnetworks.com>,
-	Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-	Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-	linux-pci@vger.kernel.org, qat-linux@intel.com,
-	linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: export pcie_flr and remove copies of it in drivers V2
-Message-ID: <20170419164001.GK14088@mtr-leonro.local>
-References: <20170414191131.14286-1-hch@lst.de>
- <20170418183612.GC25295@bhelgaas-glaptop.roam.corp.google.com>
- <20170419053737.GG14088@mtr-leonro.local>
+References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+ <20170411211924.GC14778@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-arm-msm@vger.kernel.org, mayurkumar.patel@intel.com,
+ linux-arm-kernel@lists.infradead.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <7b94bfbb-b3e6-cbc3-06a1-4490f4142ffe@codeaurora.org>
+Date: Tue, 11 Apr 2017 17:27:59 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="YPJ8CVbwFUtL7OFW"
-In-Reply-To: <20170419053737.GG14088@mtr-leonro.local>
+In-Reply-To: <20170411211924.GC14778@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
+On 4/11/2017 5:19 PM, Bjorn Helgaas wrote:
+> Hi Sinan,
+> 
+> What are these patches based on?  I normally apply things to my "master"
+> branch, which is typically -rc1 or -rc2.  Right now it's v4.11-rc1, and
+> these don't apply cleanly:
+> 
+>   04:17:59 ~/linux (master)$ stg branch --create pci/aspm-sk-v8 v4.11-rc1
+>   Checking for changes in the working directory ... done
+>   Don't know how to determine parent branch from "v4.11-rc1"
+>   Branch "pci/aspm-sk-v8" created
+>   04:18:18 ~/linux (pci/aspm-sk-v8)$ stg import -M --sign m/sk-v8
+>   Checking for changes in the working directory ... done
+>   Importing patch "pci-aspm-introduce" ... done
+>   Importing patch "pci-aspm-split-pci_aspm_init" ... done
+>   Importing patch "pci-aspm-add-init-hook-to" ... error: patch failed: drivers/pci/pcie/aspm.c:798
+>   error: drivers/pci/pcie/aspm.c: patch does not apply
+>   stg import: Diff does not apply cleanly
 
---YPJ8CVbwFUtL7OFW
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+This is what I have.
 
-On Wed, Apr 19, 2017 at 08:37:37AM +0300, Leon Romanovsky wrote:
-> On Tue, Apr 18, 2017 at 01:36:12PM -0500, Bjorn Helgaas wrote:
-> > On Fri, Apr 14, 2017 at 09:11:24PM +0200, Christoph Hellwig wrote:
-> > > Hi all,
-> > >
-> > > this exports the PCI layer pcie_flr helper, and removes various opencoded
-> > > copies of it.
-> > >
-> > > Changes since V1:
-> > >  - rebase on top of the pci/virtualization branch
-> > >  - fixed the probe case in __pci_dev_reset
-> > >  - added ACKs from Bjorn
-> >
-> > Applied the first three patches:
-> >
-> >   bc13871ef35a PCI: Export pcie_flr()
-> >   e641c375d414 PCI: Call pcie_flr() from reset_intel_82599_sfp_virtfn()
-> >   40e0901ea4bf PCI: Call pcie_flr() from reset_chelsio_generic_dev()
-> >
->
-> Bjorn,
->
-> How do you suggest to proceed with other patches? They should be applied
-> to your tree either, because they depend on "bc13871ef35a PCI: Export
-> pcie_flr()".
-
-I finally caught the old emails and found the answer by myself.
-http://marc.info/?l=linux-rdma&m=149218545228343&w=2
-
-Thanks
-
->
-> Thanks
->
->
-> > to pci/virtualization for v4.12, thanks!
+41a7175 PCI/ASPM: move link_state cleanup to bridge remove
+3b646e2 PCI/ASPM: save power on values during bridge init
+181510d PCI/ASPM: add init hook to device_add
+282d008 PCI/ASPM: split pci_aspm_init() into two
+8e89fc2 PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
+97da385 Linux 4.11-rc3
 
 
-
---YPJ8CVbwFUtL7OFW
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAlj3kuEACgkQ5GN7iDZy
-WKe9UA/6A11Wwv/G5iuMDuQlzercr2B7TKJ1/PlU403Xt1MaVTCZEIy6x5JGtJpd
-UnEEdKdqLT22FQ2jZfFYnrFb7CX9nKgmMyRj63HWMQVNPGo+88WGBQprgyd/QphS
-AUqQuV6cKvqQ/6s1i4gwPwkNzVu9MGNSq7Ud5kkoSxVQN4RDPlBFanL4p5ONd+XP
-ShN/NM5dp4unZysx/hg/n1vaB3meZ4iNZf398AruABe5nOdgadxb78AZG75l5PXM
-DpDa/91XhazAlmibloBPpdsInv9TaTDJFNwhEaYDBfXnGhhqJmZh/HAaPWY1Kq6C
-1C3uuKpUsYYgYWH0w1QGD9dFAu+G0RSYt7qTX2PlJ3KukOecV8HwJt5obOYk/H75
-IGHkjBNWe+KiJC5rTpJ9l2eQJWe2CcEBO1AJ0NU7H6E+7GZ6+rE03fS25lQfhIrg
-lRHedrj9UkR54zc3nbpyEDPoieek8IuC0yHmnRkrFIhh+/tOf/+NqfwJSh8+v5hP
-yOxIqjlb77RZXyXZTYoITcOlnMCh3XE3c4wKNJH0Qjj/12vP650+WnD530hUWins
-tH3NqMT7CsNG10DSDchKp/jZf3zRzFX3gTYR+0cPVE69Q24owlje7LdiZCaes9Jr
-JpvFXL/dwLks1E0OF+GzSIKDOofaHDvfdVrDZXvg7xbCAUppVm0=
-=NaHM
------END PGP SIGNATURE-----
-
---YPJ8CVbwFUtL7OFW--
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
