@@ -1,133 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:36687 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756190AbdDMHHW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Apr 2017 03:07:22 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Thomas Gleixner <tglx@linutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 3/4] PCI/irq: add pci_request_irq and pci_free_irq helpers
-Date: Thu, 13 Apr 2017 09:06:42 +0200
-Message-Id: <20170413070643.32165-4-hch@lst.de>
-In-Reply-To: <20170413070643.32165-1-hch@lst.de>
-References: <20170413070643.32165-1-hch@lst.de>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:38416 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752040AbdDKQd1 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Apr 2017 12:33:27 -0400
+Received: by mail-wm0-f46.google.com with SMTP id t189so5335084wmt.1
+        for <linux-pci@vger.kernel.org>; Tue, 11 Apr 2017 09:33:26 -0700 (PDT)
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org
+Cc: catalin.marinas@arm.com, will.deacon@arm.com, bhelgaas@google.com,
+        lorenzo.pieralisi@arm.com, tn@semihalf.com,
+        graeme.gregory@linaro.org, leif.lindholm@linaro.org,
+        okaya@codeaurora.org, Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: [PATCH 2/2] arm64: acpi/pci: invoke _DSM whether to preserve firmware PCI setup
+Date: Tue, 11 Apr 2017 17:33:13 +0100
+Message-Id: <20170411163313.18577-3-ard.biesheuvel@linaro.org>
+In-Reply-To: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
+References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-These are small wrappers around request_threaded_irq and free_irq,
-which dynamically allocate space for the device name so that drivers
-don't need to keep static buffers for these around.  Additionally it
-works with device-relative vector numbers to make the usage easier,
-and force the IRQF_SHARED flag on given that it has no runtime overhead
-and should be supported by all PCI devices.
+On arm64 ACPI systems, we unconditionally reconfigure the entire PCI
+hierarchy at boot. This is a departure from what is customary on ACPI
+systems, and may break assumptions in some places (e.g., EFIFB), that
+the kernel will leave BARs of enabled PCI devices where they are.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Given that PCI already specifies a device specific ACPI method (_DSM)
+for PCI root bridge nodes that tells us whether the firmware thinks
+the configuration should be left alone, let's sidestep the entire
+policy debate about whether the PCI configuration should be preserved
+or not, and put it under the control of the firmware instead.
+
+Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
 ---
- drivers/pci/irq.c   | 61 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
- include/linux/pci.h |  6 ++++++
- 2 files changed, 66 insertions(+), 1 deletion(-)
+ arch/arm64/kernel/pci.c  | 20 ++++++++++++++++++--
+ include/linux/pci-acpi.h |  7 ++++---
+ 2 files changed, 22 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
-index 6684f153ab57..53e7f30d9461 100644
---- a/drivers/pci/irq.c
-+++ b/drivers/pci/irq.c
-@@ -1,7 +1,8 @@
- /*
-- * PCI IRQ failure handing code
-+ * PCI IRQ handing code
-  *
-  * Copyright (c) 2008 James Bottomley <James.Bottomley@HansenPartnership.com>
-+ * Copyright (C) 2017 Christoph Hellwig.
-  */
+diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+index 4f0e3ebfea4b..c88e07e2eb84 100644
+--- a/arch/arm64/kernel/pci.c
++++ b/arch/arm64/kernel/pci.c
+@@ -185,6 +185,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	struct acpi_pci_generic_root_info *ri;
+ 	struct pci_bus *bus, *child;
+ 	struct acpi_pci_root_ops *root_ops;
++	union acpi_object *obj;
  
- #include <linux/acpi.h>
-@@ -59,3 +60,61 @@ enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *pdev)
- 	return PCI_LOST_IRQ_NO_INFORMATION;
- }
- EXPORT_SYMBOL(pci_lost_interrupt);
-+
-+/**
-+ * pci_request_irq - allocate an interrupt line for a PCI device
-+ * @dev:	PCI device to operate on
-+ * @nr:		device-relative interrupt vector index (0-based).
-+ * @handler:	Function to be called when the IRQ occurs.
-+ *		Primary handler for threaded interrupts.
-+ *		If NULL and thread_fn != NULL the default primary handler is
-+ *		installed.
-+ * @thread_fn:	Function called from the irq handler thread
-+ *		If NULL, no irq thread is created
-+ * @dev_id:	Cookie passed back to the handler function
-+ * @fmt:	Printf-like format string naming the handler
-+ *
-+ * This call allocates interrupt resources and enables the interrupt line and
-+ * IRQ handling. From the point this call is made @handler and @thread_fn may
-+ * be invoked.  All interrupt requsted using this function might be shared.
-+ *
-+ * @dev_id must not ne NULL and be globally unique.
-+ */
-+int pci_request_irq(struct pci_dev *dev, unsigned int nr, irq_handler_t handler,
-+		irq_handler_t thread_fn, void *dev_id, const char *fmt, ...)
-+{
-+	va_list ap;
-+	int ret;
-+	char *devname;
-+
-+	va_start(ap, fmt);
-+	devname = kvasprintf(GFP_KERNEL, fmt, ap);
-+	va_end(ap);
-+
-+	ret = request_threaded_irq(pci_irq_vector(dev, nr), handler, thread_fn,
-+			IRQF_SHARED, devname, dev_id);
-+	if (ret)
-+		kfree(devname);
-+	return ret;
-+}
-+EXPORT_SYMBOL(pci_request_irq);
-+
-+/**
-+ * pci_free_irq - free an interrupt allocated with pci_request_irq
-+ * @dev:	PCI device to operate on
-+ * @nr:		device-relative interrupt vector index (0-based).
-+ * @dev_id:	Device identity to free
-+ *
-+ * Remove an interrupt handler. The handler is removed and if the interrupt
-+ * line is no longer in use by any driver it is disabled.  The caller must
-+ * ensure the interrupt is disabled on the device before calling this function.
-+ * The function does not return until any executing interrupts for this IRQ
-+ * have completed.
-+ *
-+ * This function must not be called from interrupt context.
-+ */
-+void pci_free_irq(struct pci_dev *dev, unsigned int nr, void *dev_id)
-+{
-+	kfree(free_irq(pci_irq_vector(dev, nr), dev_id));
-+}
-+EXPORT_SYMBOL(pci_free_irq);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index eb3da1a04e6c..b23f81b583ab 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -28,6 +28,7 @@
- #include <linux/kobject.h>
- #include <linux/atomic.h>
- #include <linux/device.h>
-+#include <linux/interrupt.h>
- #include <linux/io.h>
- #include <linux/resource_ext.h>
- #include <uapi/linux/pci.h>
-@@ -1072,6 +1073,11 @@ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
- bool pci_device_is_present(struct pci_dev *pdev);
- void pci_ignore_hotplug(struct pci_dev *dev);
+ 	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
+ 	if (!ri)
+@@ -208,8 +209,23 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+ 	if (!bus)
+ 		return NULL;
  
-+int __printf(6, 7) pci_request_irq(struct pci_dev *dev, unsigned int nr,
-+		irq_handler_t handler, irq_handler_t thread_fn, void *dev_id,
-+		const char *fmt, ...);
-+void pci_free_irq(struct pci_dev *dev, unsigned int nr, void *dev_id);
-+
- /* ROM control related routines */
- int pci_enable_rom(struct pci_dev *pdev);
- void pci_disable_rom(struct pci_dev *pdev);
+-	pci_bus_size_bridges(bus);
+-	pci_bus_assign_resources(bus);
++	/*
++	 * Invoke the PCI device specific method (_DSM) #5 'Ignore PCI Boot
++	 * Configuration', which tells us whether the firmware wants us to
++	 * preserve the configuration of the PCI resource tree for this root
++	 * bridge.
++	 */
++	obj = acpi_evaluate_dsm(ACPI_HANDLE(bus->bridge), pci_acpi_dsm_uuid, 1,
++				IGNORE_PCI_BOOT_CONFIG_DSM, NULL);
++	if (obj && obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 0) {
++		/* preserve existing resource assignment */
++		pci_bus_claim_resources(bus);
++	} else {
++		/* reconfigure the resource tree from scratch */
++		pci_bus_size_bridges(bus);
++		pci_bus_assign_resources(bus);
++	}
++	ACPI_FREE(obj);
+ 
+ 	list_for_each_entry(child, &bus->children, node)
+ 		pcie_bus_configure_settings(child);
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 7a4e83a8c89c..308111489b83 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -106,9 +106,10 @@ static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
+ #endif
+ 
+ extern const u8 pci_acpi_dsm_uuid[];
+-#define DEVICE_LABEL_DSM	0x07
+-#define RESET_DELAY_DSM		0x08
+-#define FUNCTION_DELAY_DSM	0x09
++#define IGNORE_PCI_BOOT_CONFIG_DSM	0x05
++#define DEVICE_LABEL_DSM		0x07
++#define RESET_DELAY_DSM			0x08
++#define FUNCTION_DELAY_DSM		0x09
+ 
+ #else	/* CONFIG_ACPI */
+ static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
 -- 
-2.11.0
+2.9.3
