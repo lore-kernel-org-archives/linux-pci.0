@@ -1,73 +1,40 @@
-Return-Path: <SRS0=UqO1=3T=chromium.org=mka@kernel.org>
-Return-Path: <SRS0=UqO1=3T=chromium.org=mka@kernel.org>
-Date: Tue, 11 Apr 2017 10:23:07 -0700
-From: Matthias Kaehlcke <mka@chromium.org>
-To: Mason <slash.tmp@free.fr>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Grant Grundler <grundler@chromium.org>,
-	Greg Hackmann <ghackmann@google.com>,
-	Michael Davidson <md@google.com>
-Subject: Re: [PATCH] PCI: Add cast when assigning PCI_ROM_ADDRESS_MASK to a
- 32-bit variable
-Message-ID: <20170411172307.GC28657@google.com>
-References: <20170410222457.113155-1-mka@chromium.org>
- <20170411012445.GA8025@bhelgaas-glaptop.roam.corp.google.com>
- <6111642d-9f1d-f8bf-5920-82f4eb427cff@free.fr>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:34534 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751876AbdDKOQX (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Apr 2017 10:16:23 -0400
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+From: abhijit <abhijitnaik27@gmail.com>
+Subject: Doubt on first access for PCIe device
+Message-ID: <50712b3b-2943-0b78-9413-257f33b26c3f@gmail.com>
+Date: Tue, 11 Apr 2017 19:45:40 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <6111642d-9f1d-f8bf-5920-82f4eb427cff@free.fr>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-El Tue, Apr 11, 2017 at 12:08:38PM +0200 Mason ha dit:
 
-> On 11/04/2017 03:24, Bjorn Helgaas wrote:
-> 
-> > On Mon, Apr 10, 2017 at 03:24:57PM -0700, Matthias Kaehlcke wrote:
-> >
-> >> This fixes a clang warning about "implicit conversion from 'unsigned
-> >> long' to 'u32'"
-> >>
-> >> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
-> >> ---
-> >>  drivers/pci/probe.c | 2 +-
-> >>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>
-> >> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> >> index dfc9a2794141..148e80d5caf1 100644
-> >> --- a/drivers/pci/probe.c
-> >> +++ b/drivers/pci/probe.c
-> >> @@ -180,7 +180,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
-> >>  	u16 orig_cmd;
-> >>  	struct pci_bus_region region, inverted_region;
-> >>  
-> >> -	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
-> >> +	mask = type ? (u32)PCI_ROM_ADDRESS_MASK : ~0;
-> > 
-> > Can we put the cast in the PCI_ROM_ADDRESS_MASK #define so we don't have to
-> > repeat it in all the uses?
-> 
-> Fixing these "implicit conversion" warnings, especially for
-> unsigned types, is a slippery slope. (The behavior of the
-> conversion is well-defined.)
-> 
-> How about changing the type of PCI_ROM_ADDRESS_MASK instead?
-> It's defined as ~0x7ffUL but it's only used in the context
-> of u32.
-> 
-> So make it an unsigned int:
-> #define PCI_ROM_ADDRESS_MASK (~0x7ffU)
-> 
-> AFAIU, unsigned int is 32 bits on all platforms supported
-> by Linux.
+Hi All,
 
-I considered this initially, but wasn't sure if the unsigned long
-mask might be needed in some cases. From the comments I interpret that
-there should be no problems with using a 32 bit mask everywhere.
+I was referring Linux code for PCIe enumeration and I have one doubt 
+w.r.t to very first operation that must be done on device.
 
-I'll send out an updated patch shortly.
+Currently while scanning for device, we directly read vendor ID from 
+device. But PCIE base specification 
+"CB-PCI_Express_Base_4.0r0.7_November-11-2016.pdf" section 2.2.6.2 
+specifies that,
 
-Thanks
+"Functions must capture the Bus and Device Numbers supplied with all 
+Type 0 Configuration Write Requests completed by the Function and supply 
+these numbers in the Bus and Device Number fields of the Requester ID 
+for all Requests initiated by the Device/Function."
 
-Matthias
+Here I am assuming, the completer ID will be device number and function 
+number that will eventually programmed in to  device. In that case, my 
+question is, without first write, how read request(VENDOR ID read) is 
+serviced/routed?
+
+Sorry I am feeling bit confused, help will be appreciated.
+-- 
+Best wishes,
+Abhijit Naik
