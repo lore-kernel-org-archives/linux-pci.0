@@ -1,144 +1,89 @@
-Return-Path: <SRS0=kHC/=3Y=intel.com=dan.j.williams@kernel.org>
-Return-Path: <SRS0=kHC/=3Y=intel.com=dan.j.williams@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v3 01/32] PCI: remove __weak tag from pci_remap_iospace()
+Date: Tue, 11 Apr 2017 13:28:41 +0100
+Message-Id: <20170411122923.6285-2-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ "James E.J. Bottomley" <jejb@parisc-linux.org>,
+ David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
+ Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
+ Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
+ Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
+ Jesper Nilsson <jesper.nilsson@axis.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Yoshinori Sato <ysato@users.sourceforge.jp>,
+ Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
+ Russell King <linux@armlinux.org.uk>, Ingo Molnar <mingo@redhat.com>,
+ Geert Uytterhoeven <geert@linux-m68k.org>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Matt Turner <mattst88@gmail.com>, Haavard Skinnemoen <hskinnemoen@gmail.com>,
+ Fenghua Yu <fenghua.yu@intel.com>, James Hogan <james.hogan@imgtec.com>,
+ Chris Metcalf <cmetcalf@mellanox.com>, Arnd Bergmann <arnd@arndb.de>,
+ Heiko Carstens <heiko.carstens@de.ibm.com>,
+ Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
+ Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+ Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
+ linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
+ Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
+ Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
+ linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+ Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
+ "Luis R. Rodriguez" <mcgrof@kernel.org>,
+ Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
+ "David S. Miller" <davem@davemloft.net>
 MIME-Version: 1.0
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Sun, 16 Apr 2017 08:44:35 -0700
-Message-ID: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>,
-	Steve Wise <swise@opengridcomputing.com>, Stephen Bates <sbates@raithlin.com>,
-	Max Gurtovoy <maxg@mellanox.com>, Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
-	linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jerome Glisse <jglisse@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 15, 2017 at 10:36 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
->
->
-> On 15/04/17 04:17 PM, Benjamin Herrenschmidt wrote:
->> You can't. If the iommu is on, everything is remapped. Or do you mean
->> to have dma_map_* not do a remapping ?
->
-> Well, yes, you'd have to change the code so that iomem pages do not get
-> remapped and the raw BAR address is passed to the DMA engine. I said
-> specifically we haven't done this at this time but it really doesn't
-> seem like an unsolvable problem. It is something we will need to address
-> before a proper patch set is posted though.
->
->> That's the problem again, same as before, for that to work, the
->> dma_map_* ops would have to do something special that depends on *both*
->> the source and target device.
->
-> No, I don't think you have to do things different based on the source.
-> Have the p2pmem device layer restrict allocating p2pmem based on the
-> devices in use (similar to how the RFC code works now) and when the dma
-> mapping code sees iomem pages it just needs to leave the address alone
-> so it's used directly by the dma in question.
->
-> It's much better to make the decision on which memory to use when you
-> allocate it. If you wait until you map it, it would be a pain to fall
-> back to system memory if it doesn't look like it will work. So, if when
-> you allocate it, you know everything will work you just need the dma
-> mapping layer to stay out of the way.
+pci_remap_iospace() is marked as a weak symbol even though
+no architecture is currently overriding it; given that its
+implementation internals have already code paths that are
+arch specific (ie PCI_IOBASE and ioremap_page_range() attributes)
+there is no need to leave the weak symbol in the kernel since the
+same functionality can be achieved by customizing per-arch the
+corresponding functionality.
 
-I think we very much want the dma mapping layer to be in the way.
-It's the only sane semantic we have to communicate this translation.
+Remove the __weak symbol from pci_remap_iospace().
 
->
->> The dma_ops today are architecture specific and have no way to
->> differenciate between normal and those special P2P DMA pages.
->
-> Correct, unless Dan's idea works (which will need some investigation),
-> we'd need a flag in struct page or some other similar method to
-> determine that these are special iomem pages.
->
->>> Though if it does, I'd expect
->>> everything would still work you just wouldn't get the performance or
->>> traffic flow you are looking for. We've been testing with the software
->>> iommu which doesn't have this problem.
->>
->> So first, no, it's more than "you wouldn't get the performance". On
->> some systems it may also just not work. Also what do you mean by "the
->> SW iommu doesn't have this problem" ? It catches the fact that
->> addresses don't point to RAM and maps differently ?
->
-> I haven't tested it but I can't imagine why an iommu would not correctly
-> map the memory in the bar. But that's _way_ beside the point. We
-> _really_ want to avoid that situation anyway. If the iommu maps the
-> memory it defeats what we are trying to accomplish.
->
-> I believe the sotfware iommu only uses bounce buffers if the DMA engine
-> in use cannot address the memory. So in most cases, with modern
-> hardware, it just passes the BAR's address to the DMA engine and
-> everything works. The code posted in the RFC does in fact work without
-> needing to do any of this fussing.
->
->>>> The problem is that the latter while seemingly easier, is also slower
->>>> and not supported by all platforms and architectures (for example,
->>>> POWER currently won't allow it, or rather only allows a store-only
->>>> subset of it under special circumstances).
->>>
->>> Yes, I think situations where we have to cross host bridges will remain
->>> unsupported by this work for a long time. There are two many cases where
->>> it just doesn't work or it performs too poorly to be useful.
->>
->> And the situation where you don't cross bridges is the one where you
->> need to also take into account the offsets.
->
-> I think for the first incarnation we will just not support systems that
-> have offsets. This makes things much easier and still supports all the
-> use cases we are interested in.
->
->> So you are designing something that is built from scratch to only work
->> on a specific limited category of systems and is also incompatible with
->> virtualization.
->
-> Yes, we are starting with support for specific use cases. Almost all
-> technology starts that way. Dax has been in the kernel for years and
-> only recently has someone submitted patches for it to support pmem on
-> powerpc. This is not unusual. If you had forced the pmem developers to
-> support all architectures in existence before allowing them upstream
-> they couldn't possibly be as far as they are today.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-The difference is that there was nothing fundamental in the core
-design of pmem + DAX that prevented other archs from growing pmem
-support. THP and memory hotplug existed on other architectures and
-they just need to plug in their arch-specific enabling. p2p support
-needs the same starting point of something more than one architecture
-can plug into, and handling the bus address offset case needs to be
-incorporated into the design.
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02..bd98674 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3363,7 +3363,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
+  *	Only architectures that have memory mapped IO functions defined
+  *	(and the PCI_IOBASE value defined) should call this function.
+  */
+-int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
++int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
+ {
+ #if defined(PCI_IOBASE) && defined(CONFIG_MMU)
+ 	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
+-- 
+2.10.0
 
-pmem + dax did not change the meaning of what a dma_addr_t is, p2p does.
 
-> Virtualization specifically would be a _lot_ more difficult than simply
-> supporting offsets. The actual topology of the bus will probably be lost
-> on the guest OS and it would therefor have a difficult time figuring out
-> when it's acceptable to use p2pmem. I also have a difficult time seeing
-> a use case for it and thus I have a hard time with the argument that we
-> can't support use cases that do want it because use cases that don't
-> want it (perhaps yet) won't work.
->
->> This is an interesting experiement to look at I suppose, but if you
->> ever want this upstream I would like at least for you to develop a
->> strategy to support the wider case, if not an actual implementation.
->
-> I think there are plenty of avenues forward to support offsets, etc.
-> It's just work. Nothing we'd be proposing would be incompatible with it.
-> We just don't want to have to do it all upfront especially when no one
-> really knows how well various architecture's hardware supports this or
-> if anyone even wants to run it on systems such as those. (Keep in mind
-> this is a pretty specific optimization that mostly helps systems
-> designed in specific ways -- not a general "everybody gets faster" type
-> situation.) Get the cases working we know will work, can easily support
-> and people actually want.  Then expand it to support others as people
-> come around with hardware to test and use cases for it.
-
-I think you need to give other archs a chance to support this with a
-design that considers the offset case as a first class citizen rather
-than an afterthought.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
