@@ -1,157 +1,202 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 18 Apr 2017 16:49:37 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Subject: Re: [PATCH v3 04/32] asm-generic: add ioremap_nopost() remap interface
-Message-ID: <20170418154937.GA1006@red-moon>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
- <20170411122923.6285-5-lorenzo.pieralisi@arm.com>
- <1491917983.7236.9.camel@kernel.crashing.org>
- <20170412112022.GY17774@n2100.armlinux.org.uk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:37041 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753319AbdDKVvf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Apr 2017 17:51:35 -0400
+Date: Tue, 11 Apr 2017 15:51:34 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bodong@mellanox.com
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, saeedm@mellanox.com,
+        Eli Cohen <eli@mellanox.com>
+Subject: Re: [v2] PCI: Add an option to control probing of VFs before
+ enabling SR-IOV
+Message-ID: <20170411155134.70108168@t450s.home>
+In-Reply-To: <1490198038-20465-1-git-send-email-bodong@mellanox.com>
+References: <1490198038-20465-1-git-send-email-bodong@mellanox.com>
 MIME-Version: 1.0
-In-Reply-To: <20170412112022.GY17774@n2100.armlinux.org.uk>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
- Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
- Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
- Jesper Nilsson <jesper.nilsson@axis.com>,
- Yoshinori Sato <ysato@users.sourceforge.jp>,
- Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
- "James E.J. Bottomley" <jejb@parisc-linux.org>, Ingo Molnar <mingo@redhat.com>,
- Geert Uytterhoeven <geert@linux-m68k.org>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Matt Turner <mattst88@gmail.com>, Haavard Skinnemoen <hskinnemoen@gmail.com>,
- Fenghua Yu <fenghua.yu@intel.com>, James Hogan <james.hogan@imgtec.com>,
- Chris Metcalf <cmetcalf@mellanox.com>, Arnd Bergmann <arnd@arndb.de>,
- Heiko Carstens <heiko.carstens@de.ibm.com>,
- Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
- Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
- Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
- Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
- Vineet Gupta <vgupta@synopsys.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, Richard Kuo <rkuo@codeaurora.org>,
- Niklas Cassel <nks@flawful.org>, "Luis R . Rodriguez" <mcgrof@kernel.org>,
- Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
- "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 12, 2017 at 12:20:22PM +0100, Russell King - ARM Linux wrote:
-> On Tue, Apr 11, 2017 at 11:39:43PM +1000, Benjamin Herrenschmidt wrote:
-> > On Tue, 2017-04-11 at 13:28 +0100, Lorenzo Pieralisi wrote:
-> > > +static inline void __iomem *ioremap_nopost(phys_addr_t offset,
-> > > size_t size)
-> > > +{
-> > > +=A0=A0=A0=A0=A0=A0=A0return ioremap_nocache(offset, size);
-> > > +}
-> > > +
-> > =
+On Wed, 22 Mar 2017 17:53:58 +0200
+bodong@mellanox.com wrote:
 
-> > No this is wrong as I explained.
-> > =
+> From: Bodong Wang <bodong@mellanox.com>
+> 
+> Sometimes it is not desirable to probe the virtual functions after
+> SRIOV is enabled. This can save host side resource usage by VF
+> instances which would be eventually probed to VMs.
+> 
+> Add a new PCI sysfs interface "sriov_probe_vfs" to control that
+> from the PF, all current callers still retain the same functionality.
+> To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
+> 
+> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+> 
+> Note that, the choice must be made before enabling VFs. The change
+> will not take effect if VFs are already enabled. Simply, one can set
+> sriov_numvfs to 0, choose whether to probe or not, and then resume
+> sriov_numvfs.
+> 
+> Signed-off-by: Bodong Wang <bodong@mellanox.com>
+> Signed-off-by: Eli Cohen <eli@mellanox.com>
+> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> ---
+>  Documentation/PCI/pci-iov-howto.txt | 10 ++++++++++
+>  drivers/pci/iov.c                   |  1 +
+>  drivers/pci/pci-driver.c            | 22 ++++++++++++++++++----
+>  drivers/pci/pci-sysfs.c             | 28 ++++++++++++++++++++++++++++
+>  drivers/pci/pci.h                   |  1 +
+>  5 files changed, 58 insertions(+), 4 deletions(-)
 
-> > This is a semantic that simply *cannot* be generically provided accross
-> > architectures as a mapping attribute.
-> > =
+There should be an update to Documentation/ABI/testing/sysfs-bus-pci in
+here too.
 
-> > The solution to your problem lies elsewhere.
-> =
+> 
+> diff --git a/Documentation/PCI/pci-iov-howto.txt b/Documentation/PCI/pci-iov-howto.txt
+> index 2d91ae2..902a528 100644
+> --- a/Documentation/PCI/pci-iov-howto.txt
+> +++ b/Documentation/PCI/pci-iov-howto.txt
+> @@ -68,6 +68,16 @@ To disable SR-IOV capability:
+>  	echo  0 > \
+>          /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_numvfs
+>  
+> +To enable probing VFs by a compatible driver on the host:
 
-> I disagree.  Sure, it may not be supportable across all architectures,
-> but we're not introducing something brand new here.
-> =
+nit, probably a good idea to note that probing is enabled by default.
 
-> What we're trying to do is to fix some _existing_ drivers that are
-> already using ioremap() to map the PCI IO and configuration spaces.
-> Maybe it would help if those drivers were part of this patch set,
-> rather than the patch set just introducing a whole new architecture
-> interface without really showing where the problem drivers are.
-> =
-
-> The issue here is that if we make this new ioremap_nopost() fail by
-> returning NULL if an architecture does not provide an implementation,
-> then these drivers are going to start failing on such architectures.
-> =
-
-> It is only safe to do that where we know for certain that the drivers
-> are not used - but I don't think that's the case here (it's difficult
-> to tell, because no drivers are updated in this series, so we don't
-> know which are going to be affected.)
-> =
-
-> So, the question is:
-> =
-
-> - is it better to provide a default implementation which provides the
->   functionality that existing drivers are _already_ using, albiet not
->   entirely correctly.
-> =
-
-> or:
-> =
-
-> - is it better to break drivers on architectures when they're converted
->   to fix up this issue.
-> =
-
-> What, I suppose, we could do is not bother with a default implementation,
-> but instead litter drivers with:
-> =
-
-> +#ifdef ioremap_post
-> +	base =3D ioremap_post(...);
+> +Before enabling SR-IOV capabilities, do:
+> +	echo 1 > \
+> +        /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+> +
+> +To disable probing VFs by a compatible driver on the host:
+> +Before enabling SR-IOV capabilities, do:
+> +	echo  0 > \
+> +        /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+> +
+>  3.2 Usage example
+>  
+>  Following piece of code illustrates the usage of the SR-IOV API.
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 2479ae8..70691de 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -450,6 +450,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>  	iov->total_VFs = total;
+>  	iov->pgsz = pgsz;
+>  	iov->self = dev;
+> +	iov->probe_vfs = true;
+>  	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+>  	pci_read_config_byte(dev, pos + PCI_SRIOV_FUNC_LINK, &iov->link);
+>  	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END)
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index afa7271..2a1cf84 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -394,6 +394,18 @@ void __weak pcibios_free_irq(struct pci_dev *dev)
+>  {
+>  }
+>  
+> +#ifdef CONFIG_PCI_IOV
+> +static inline bool pci_device_can_probe(struct pci_dev *pdev)
+> +{
+> +	return (!pdev->is_virtfn || pdev->physfn->sriov->probe_vfs);
+> +}
 > +#else
-> 	base =3D ioremap(...);
+> +static inline bool pci_device_can_probe(struct pci_dev *pdev)
+> +{
+> +	return true;
+> +}
 > +#endif
-> =
+> +
+>  static int pci_device_probe(struct device *dev)
+>  {
+>  	int error;
+> @@ -405,10 +417,12 @@ static int pci_device_probe(struct device *dev)
+>  		return error;
+>  
+>  	pci_dev_get(pci_dev);
+> -	error = __pci_device_probe(drv, pci_dev);
+> -	if (error) {
+> -		pcibios_free_irq(pci_dev);
+> -		pci_dev_put(pci_dev);
+> +	if (pci_device_can_probe(pci_dev)) {
+> +		error = __pci_device_probe(drv, pci_dev);
+> +		if (error) {
+> +			pcibios_free_irq(pci_dev);
+> +			pci_dev_put(pci_dev);
+> +		}
+>  	}
+>  
+>  	return error;
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 25d010d..1d5b89d 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -526,10 +526,37 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  	return count;
+>  }
+>  
+> +static ssize_t sriov_probe_vfs_show(struct device *dev,
+> +				    struct device_attribute *attr,
+> +				    char *buf)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	return sprintf(buf, "%u\n", pdev->sriov->probe_vfs);
+> +}
+> +
+> +static ssize_t sriov_probe_vfs_store(struct device *dev,
+> +				     struct device_attribute *attr,
+> +				     const char *buf, size_t count)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +	bool probe_vfs;
+> +
+> +	if (kstrtobool(buf, &probe_vfs) < 0)
+> +		return -EINVAL;
+> +
+> +	pdev->sriov->probe_vfs = probe_vfs;
+> +
+> +	return count;
+> +}
+> +
+>  static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
+>  static struct device_attribute sriov_numvfs_attr =
+>  		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+>  		       sriov_numvfs_show, sriov_numvfs_store);
+> +static struct device_attribute sriov_probe_vfs_attr =
+> +		__ATTR(sriov_probe_vfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+> +		       sriov_probe_vfs_show, sriov_probe_vfs_store);
+>  #endif /* CONFIG_PCI_IOV */
+>  
+>  static ssize_t driver_override_store(struct device *dev,
+> @@ -1549,6 +1576,7 @@ static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
+>  static struct attribute *sriov_dev_attrs[] = {
+>  	&sriov_totalvfs_attr.attr,
+>  	&sriov_numvfs_attr.attr,
+> +	&sriov_probe_vfs_attr.attr,
+>  	NULL,
+>  };
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 8dd38e6..b7d8127d 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -272,6 +272,7 @@ struct pci_sriov {
+>  	struct pci_dev *self;	/* this PF */
+>  	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
+>  	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+> +	bool probe_vfs;		/* control probing of VFs */
+>  };
+>  
+>  #ifdef CONFIG_PCI_ATS
 
-> which gets around your objection - not providing a default that's weaker
-> than required, but also not breaking the drivers.  The problem is that
-> we end up littering drivers with ifdefs.
-> =
+Aside from the missing ABI update and howto nit, this seems ok to me,
+though I wonder if this isn't a more general problem that should maybe
+be solved in the driver core for any device that may create/expose
+child devices.  The drivers_autoprobe interface we currently have is
+pretty limited with its bus-subsystem level scope.  Thanks,
 
-> However, I'm willing to bet that the architectures that you're saying
-> will not be able to support the weaker semantic won't have any need to
-> use these drivers, or if they do, the drivers will need the method of
-> accessing stuff like PCI IO and configuration spaces radically altered.
-> =
-
-> So, maybe the best solution is to not provide any kind of default
-> implementation, add a HAVE_IOREMAP_POST Kconfig symbol, have architectures
-> select that when they do provide ioremap_post(), and make the drivers
-> depend on that (so we don't end up trying to build these drivers on
-> architectures where they can never work.)  Down side to that is reduced
-> build coverage.
-
-I can do that yes, which already means I have to know if eg microblaze
-(drivers/pci/host/pcie-xilinx.c) can provide a mapping with nonposted
-writes semantics, otherwise it is a dead-end.
-
-Another option would be going back to what v1 did, namely, to implement
-a pci_remap_cfgspace() interface (it is the _nopost() suffix that stirred
-debate - nobody would object to having a default pci_remap_cfgspace()
-implementation that defaults to ioremap_nocache(), I know Bjorn does not
-like it to be PCI specific, just adding an option on the table to make
-progress).
-
-Thanks,
-Lorenzo
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Alex
