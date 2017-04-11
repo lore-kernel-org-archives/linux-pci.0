@@ -1,35 +1,59 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-Date: Wed, 12 Apr 2017 23:53:59 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Tony Luck <tony.luck@gmail.com>
-cc: David Woodhouse <dwmw2@infradead.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v2 25/27] ia64: Use generic pci_mmap_resource_range()
-In-Reply-To: <CA+8MBbKwN=pBN17Msm-g=x-iEgvy6KNFkutKsw_pDboBHgMifA@mail.gmail.com>
-Message-ID: <alpine.DEB.2.20.1704122352440.2548@nanos>
-References: <cover.1491999859.git.dwmw2@infradead.org> <109e9ddbde4334d0da34f331797236309d789353.1491999859.git.dwmw2@infradead.org> <CA+8MBbKwN=pBN17Msm-g=x-iEgvy6KNFkutKsw_pDboBHgMifA@mail.gmail.com>
+Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH] PCI: Add cast when assigning PCI_ROM_ADDRESS_MASK to a
+ 32-bit variable
+To: Bjorn Helgaas <helgaas@kernel.org>, Matthias Kaehlcke <mka@chromium.org>
+Cc: linux-pci <linux-pci@vger.kernel.org>, LKML
+ <linux-kernel@vger.kernel.org>, Grant Grundler <grundler@chromium.org>,
+ Greg Hackmann <ghackmann@google.com>, Michael Davidson <md@google.com>
+References: <20170410222457.113155-1-mka@chromium.org>
+ <20170411012445.GA8025@bhelgaas-glaptop.roam.corp.google.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <6111642d-9f1d-f8bf-5920-82f4eb427cff@free.fr>
+Date: Tue, 11 Apr 2017 12:08:38 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-arch-owner@vger.kernel.org
+In-Reply-To: <20170411012445.GA8025@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 12 Apr 2017, Tony Luck wrote:
+On 11/04/2017 03:24, Bjorn Helgaas wrote:
 
-> On Wed, Apr 12, 2017 at 5:26 AM, David Woodhouse <dwmw2@infradead.org> wrote:
-> > From: David Woodhouse <dwmw@amazon.co.uk>
-> >
-> > Now that we eliminated the different behaviour in separately-reviewable
-> > commits, we can switch IA64 to the generic implementation.
-> >
-> > Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+> On Mon, Apr 10, 2017 at 03:24:57PM -0700, Matthias Kaehlcke wrote:
+>
+>> This fixes a clang warning about "implicit conversion from 'unsigned
+>> long' to 'u32'"
+>>
+>> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+>> ---
+>>  drivers/pci/probe.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>> index dfc9a2794141..148e80d5caf1 100644
+>> --- a/drivers/pci/probe.c
+>> +++ b/drivers/pci/probe.c
+>> @@ -180,7 +180,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>>  	u16 orig_cmd;
+>>  	struct pci_bus_region region, inverted_region;
+>>  
+>> -	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
+>> +	mask = type ? (u32)PCI_ROM_ADDRESS_MASK : ~0;
 > 
-> Well it builds and boots on my last remaining ia64 machine.
+> Can we put the cast in the PCI_ROM_ADDRESS_MASK #define so we don't have to
+> repeat it in all the uses?
 
-Does that mean ia64 reached the 'NCR Voyager' stage and can be scheduled
-for removal?
+Fixing these "implicit conversion" warnings, especially for
+unsigned types, is a slippery slope. (The behavior of the
+conversion is well-defined.)
 
-Thanks,
+How about changing the type of PCI_ROM_ADDRESS_MASK instead?
+It's defined as ~0x7ffUL but it's only used in the context
+of u32.
 
-	tglx
+So make it an unsigned int:
+#define PCI_ROM_ADDRESS_MASK (~0x7ffU)
+
+AFAIU, unsigned int is 32 bits on all platforms supported
+by Linux.
+
+Regards.
