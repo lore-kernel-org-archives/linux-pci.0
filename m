@@ -1,74 +1,74 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 25 Apr 2017 14:04:29 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Colin King <colin.king@canonical.com>
-Subject: Re: [PATCH] PCI: imx6: fix spelling mistake: "contol" -> "control"
-Message-ID: <20170425190429.GA29024@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170421070230.16582-1-colin.king@canonical.com>
+Return-Path: <SRS0=u2l1=3T=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=u2l1=3T=vodafone.de=deathsimple@kernel.org>
+Subject: Re: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models
+ 30h-3fh) Processors
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+ <1489408896-25039-4-git-send-email-deathsimple@vodafone.de>
+ <CAHp75Ve4RXtuh7=8FUDv8RXGFMuYLte9GCOd02Y427BrFtPzYA@mail.gmail.com>
+Cc: helgaas@kernel.org, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
+ Platform Driver <platform-driver-x86@vger.kernel.org>,
+ amd-gfx@lists.freedesktop.org,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
+Message-ID: <a35666e2-9b32-8dbd-232d-013f7298b688@vodafone.de>
+Date: Tue, 11 Apr 2017 11:21:19 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170421070230.16582-1-colin.king@canonical.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Richard Zhu <hongxing.zhu@nxp.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
- linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAHp75Ve4RXtuh7=8FUDv8RXGFMuYLte9GCOd02Y427BrFtPzYA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 21, 2017 at 08:02:30AM +0100, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> trivial fix to spelling mistake in dev_err message
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Am 13.03.2017 um 17:49 schrieb Andy Shevchenko:
+> On Mon, Mar 13, 2017 at 2:41 PM, Christian König
+> <deathsimple@vodafone.de> wrote:
+>
+>> Most BIOS don't enable this because of compatibility reasons.
+>>
+>> Manually enable a 64bit BAR of 64GB size so that we have
+>> enough room for PCI devices.
+>> +static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+>> +{
+>> +       const uint64_t size = 64ULL * 1024 * 1024 * 1024;
+> Perhaps extend <linux/sizes.h> and use SZ_64G here?
+>
+> It would be nice to do, since some of the drivers already are using
+> sizes like 4GB and alike.
 
-Applied with Richard's ack to pci/host-imx6 for v4.12, thanks.
+Actually using 64GB here was just for testing and to get some initial 
+feedback.
 
-FWIW, there are about 25 other occurrences of "contol" in other parts
-of the tree.
+I think we want to use all the remaining address space for PCIe, but for 
+this we would need a new function in the resource management I think.
 
-> ---
->  drivers/pci/dwc/pci-imx6.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-> index 102edcf1e261..129717ae5022 100644
-> --- a/drivers/pci/dwc/pci-imx6.c
-> +++ b/drivers/pci/dwc/pci-imx6.c
-> @@ -726,13 +726,13 @@ static int imx6_pcie_probe(struct platform_device *pdev)
->  		imx6_pcie->pciephy_reset = devm_reset_control_get(dev,
->  								  "pciephy");
->  		if (IS_ERR(imx6_pcie->pciephy_reset)) {
-> -			dev_err(dev, "Failed to get PCIEPHY reset contol\n");
-> +			dev_err(dev, "Failed to get PCIEPHY reset control\n");
->  			return PTR_ERR(imx6_pcie->pciephy_reset);
->  		}
->  
->  		imx6_pcie->apps_reset = devm_reset_control_get(dev, "apps");
->  		if (IS_ERR(imx6_pcie->apps_reset)) {
-> -			dev_err(dev, "Failed to get PCIE APPS reset contol\n");
-> +			dev_err(dev, "Failed to get PCIE APPS reset control\n");
->  			return PTR_ERR(imx6_pcie->apps_reset);
->  		}
->  		break;
-> -- 
-> 2.11.0
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Going to take a deeper look when I'm sure we actually want this.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>> +       if (i == 8)
+>> +               return;
+>> +
+>> +       res = kzalloc(sizeof(*res), GFP_KERNEL);
+>> +       res->flags = IORESOURCE_MEM | IORESOURCE_PREFETCH | IORESOURCE_MEM_64 |
+>> +               IORESOURCE_WINDOW;
+>> +       res->name = dev->bus->name;
+>> +       r = allocate_resource(&iomem_resource, res, size, 0x100000000,
+>> +                             0xfd00000000, size, NULL, NULL);
+>> +       if (r) {
+>> +               kfree(res);
+>> +               return;
+>> +       }
+>> +
+>> +       base = ((res->start >> 8) & 0xffffff00) | 0x3;
+>> +       limit = ((res->end + 1) >> 8) & 0xffffff00;
+>> +       high = ((res->start >> 40) & 0xff) |
+>> +               ((((res->end + 1) >> 40) & 0xff) << 16);
+> Perhaps some of constants can be replaced by defines (I think some of
+> them are already defined in ioport.h or somewhere else).
+
+Yeah, good idea. But that stuff is purely AMD CPU specific, so won't 
+belong into ioport.h or similar common code.
+
+Does anybody have any idea where I could put this?
+
+Regards,
+
+Christian.
