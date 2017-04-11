@@ -1,61 +1,123 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:45012 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752040AbdDMX0g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Apr 2017 19:26:36 -0400
-Date: Thu, 13 Apr 2017 18:26:31 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@ml01.01.org, linux-kernel@vger.kernel.org,
-        Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Message-ID: <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1491974532.7236.43.camel@kernel.crashing.org>
- <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
- <1492034124.7236.77.camel@kernel.crashing.org>
- <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Russell King <linux@armlinux.org.uk>
+Subject: [PATCH v3 30/32] arm: implement ioremap_nopost() interface
+Date: Tue, 11 Apr 2017 13:29:10 +0100
+Message-Id: <20170411122923.6285-31-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 13, 2017 at 03:22:06PM -0600, Logan Gunthorpe wrote:
-> 
-> 
-> On 12/04/17 03:55 PM, Benjamin Herrenschmidt wrote:
-> > Look at pcibios_resource_to_bus() and pcibios_bus_to_resource(). They
-> > will perform the conversion between the struct resource content (CPU
-> > physical address) and the actual PCI bus side address.
-> 
-> Ah, thanks for the tip! On my system, this translation returns the same
-> address so it was not necessary. And, yes, that means this would have to
-> find its way into the dma mapping routine somehow. This means we'll
-> eventually need a way to look-up the p2pmem device from the struct page.
-> Which means we will likely need a new flag bit in the struct page or
-> something. The big difficulty I see is testing. Do you know what
-> architectures or in what circumstances are these translations used?
+The PCI bus specifications (rev 3.0, 3.2.5 "Transaction Ordering
+and Posting") define rules for PCI configuration space transactions
+ordering and posting, that state that configuration writes have to
+be non-posted transactions.
 
-Any caller of pci_add_resource_offset() uses CPU addresses different from
-the PCI bus addresses (unless the offset is zero, of course).  All ACPI
-platforms also support this translation (see "translation_offset"), though
-in most x86 systems the offset is zero.  I'm aware of one x86 system that
-was tested with a non-zero offset but I don't think it was shipped that
-way.
+Current ioremap interface on ARM provides mapping functions that
+provide "bufferable" writes transactions (ie ioremap uses MT_DEVICE
+memory type) aka posted writes, so PCI host controller drivers have
+no arch interface to remap PCI configuration space with memory
+attributes that comply with the PCI specifications for configuration
+space.
 
-Bjorn
+Implement an ARM specific ioremap_nopost() interface that allows to
+map PCI config memory regions with MT_UNCACHED memory type (ie strongly
+ordered - non-posted writes), providing a remap function that complies
+with PCI specifications for config space transactions.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Russell King <linux@armlinux.org.uk>
+---
+ arch/arm/include/asm/io.h | 9 +++++++++
+ arch/arm/mm/ioremap.c     | 7 +++++++
+ arch/arm/mm/nommu.c       | 9 +++++++++
+ 3 files changed, 25 insertions(+)
+
+diff --git a/arch/arm/include/asm/io.h b/arch/arm/include/asm/io.h
+index 42871fb..28b15be 100644
+--- a/arch/arm/include/asm/io.h
++++ b/arch/arm/include/asm/io.h
+@@ -352,6 +352,7 @@ static inline void memcpy_toio(volatile void __iomem *to, const void *from,
+  * mapping has specific properties.
+  *
+  * Function		Memory type	Cacheability	Cache hint
++ * ioremap_nopost()	SO		n/a		n/a
+  * ioremap()		Device		n/a		n/a
+  * ioremap_nocache()	Device		n/a		n/a
+  * ioremap_cache()	Normal		Writeback	Read allocate
+@@ -372,6 +373,12 @@ static inline void memcpy_toio(volatile void __iomem *to, const void *from,
+  * compiler may generate unaligned accesses - eg, via inlining its own
+  * memcpy.
+  *
++ * ioremap_nopost() maps memory as strongly ordered, to be used for
++ * specific mappings (eg PCI config space) that require non-posted
++ * write transactions. Strongly ordered transactions are ordered wrt
++ * device mappings, which means that ioremap_nopost() is the same
++ * as ioremap() except for non-posted writes behaviour.
++ *
+  * All normal memory mappings have the following properties:
+  * - reads can be repeated with no side effects
+  * - repeated reads return the last value written
+@@ -407,6 +414,8 @@ void __iomem *ioremap_wc(resource_size_t res_cookie, size_t size);
+ #define ioremap_wc ioremap_wc
+ #define ioremap_wt ioremap_wc
+ 
++void __iomem *ioremap_nopost(resource_size_t res_cookie, size_t size);
++
+ void iounmap(volatile void __iomem *iomem_cookie);
+ #define iounmap iounmap
+ 
+diff --git a/arch/arm/mm/ioremap.c b/arch/arm/mm/ioremap.c
+index ff0eed2..4ffaf16 100644
+--- a/arch/arm/mm/ioremap.c
++++ b/arch/arm/mm/ioremap.c
+@@ -463,6 +463,13 @@ void iounmap(volatile void __iomem *cookie)
+ }
+ EXPORT_SYMBOL(iounmap);
+ 
++void __iomem *ioremap_nopost(resource_size_t res_cookie, size_t size)
++{
++	return arch_ioremap_caller(res_cookie, size, MT_UNCACHED,
++				   __builtin_return_address(0));
++}
++EXPORT_SYMBOL_GPL(ioremap_nopost);
++
+ #ifdef CONFIG_PCI
+ static int pci_ioremap_mem_type = MT_DEVICE;
+ 
+diff --git a/arch/arm/mm/nommu.c b/arch/arm/mm/nommu.c
+index 3b5c7aa..dfd736a 100644
+--- a/arch/arm/mm/nommu.c
++++ b/arch/arm/mm/nommu.c
+@@ -21,6 +21,8 @@
+ #include <asm/mpu.h>
+ #include <asm/procinfo.h>
+ 
++#include <asm/mach/map.h>
++
+ #include "mm.h"
+ 
+ unsigned long vectors_base;
+@@ -433,6 +435,13 @@ void __iomem *ioremap_wc(resource_size_t res_cookie, size_t size)
+ }
+ EXPORT_SYMBOL(ioremap_wc);
+ 
++void __iomem *ioremap_nopost(resource_size_t res_cookie, size_t size)
++{
++	return __arm_ioremap_caller(res_cookie, size, MT_UNCACHED,
++				    __builtin_return_address(0));
++}
++EXPORT_SYMBOL(ioremap_nopost);
++
+ void *arch_memremap_wb(phys_addr_t phys_addr, size_t size)
+ {
+ 	return (void *)phys_addr;
+-- 
+2.10.0
