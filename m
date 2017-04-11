@@ -1,75 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:41809 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755074AbdDNTMA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2017 15:12:00 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Salvatore Benedetto <salvatore.benedetto@intel.com>,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: linux-pci@vger.kernel.org, qat-linux@intel.com,
-        linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 4/7] ixgbe: use pcie_flr instead of duplicating it
-Date: Fri, 14 Apr 2017 21:11:28 +0200
-Message-Id: <20170414191131.14286-5-hch@lst.de>
-In-Reply-To: <20170414191131.14286-1-hch@lst.de>
-References: <20170414191131.14286-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1491952447.7236.24.camel@kernel.crashing.org>
+Subject: Re: [PATCH v3 04/32] asm-generic: add ioremap_nopost() remap interface
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Date: Wed, 12 Apr 2017 09:14:07 +1000
+In-Reply-To: <20170411143138.GC6821@red-moon>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+ <20170411122923.6285-5-lorenzo.pieralisi@arm.com>
+ <1491917983.7236.9.camel@kernel.crashing.org>
+ <20170411143138.GC6821@red-moon>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
+ linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+ "James E.J. Bottomley" <jejb@parisc-linux.org>,
+ David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
+ Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
+ Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
+ Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
+ Jesper Nilsson <jesper.nilsson@axis.com>,
+ Yoshinori Sato <ysato@users.sourceforge.jp>,
+ Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
+ Russell King <linux@armlinux.org.uk>, Ingo Molnar <mingo@redhat.com>,
+ Geert Uytterhoeven <geert@linux-m68k.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Matt Turner <mattst88@gmail.com>,
+ Haavard Skinnemoen <hskinnemoen@gmail.com>, Fenghua Yu <fenghua.yu@intel.com>,
+ James Hogan <james.hogan@imgtec.com>, Chris Metcalf <cmetcalf@mellanox.com>,
+ Arnd Bergmann <arnd@arndb.de>, Heiko Carstens <heiko.carstens@de.ibm.com>,
+ Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
+ Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+ Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
+ linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
+ Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
+ Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
+ linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+ Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
+ "Luis R . Rodriguez" <mcgrof@kernel.org>,
+ Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
+ "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 16 ++--------------
- 1 file changed, 2 insertions(+), 14 deletions(-)
+On Tue, 2017-04-11 at 15:31 +0100, Lorenzo Pieralisi wrote:
+> > This is a semantic that simply *cannot* be generically provided accross
+> > architectures as a mapping attribute.
+> 
+> I agree that a default implementation does not make much sense. The
+> only solution to this, if we want the ioremap_nopost to be made available
+> to generic code (and drivers - ie DT PCI host bridge drivers on ARM/ARM64
+> are not arch code), is to make the ioremap_nopost() call return NULL
+> unless overriden by arch code that can provide its semantics.
 
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-index a7a430a7be2c..543ddde5f8e2 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-@@ -7112,18 +7112,6 @@ static void ixgbe_watchdog_flush_tx(struct ixgbe_adapter *adapter)
- }
- 
- #ifdef CONFIG_PCI_IOV
--static inline void ixgbe_issue_vf_flr(struct ixgbe_adapter *adapter,
--				      struct pci_dev *vfdev)
--{
--	if (!pci_wait_for_pending_transaction(vfdev))
--		e_dev_warn("Issuing VFLR with pending transactions\n");
--
--	e_dev_err("Issuing VFLR for VF %s\n", pci_name(vfdev));
--	pcie_capability_set_word(vfdev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
--
--	msleep(100);
--}
--
- static void ixgbe_check_for_bad_vf(struct ixgbe_adapter *adapter)
- {
- 	struct ixgbe_hw *hw = &adapter->hw;
-@@ -7156,7 +7144,7 @@ static void ixgbe_check_for_bad_vf(struct ixgbe_adapter *adapter)
- 		pci_read_config_word(vfdev, PCI_STATUS, &status_reg);
- 		if (status_reg != IXGBE_FAILED_READ_CFG_WORD &&
- 		    status_reg & PCI_STATUS_REC_MASTER_ABORT)
--			ixgbe_issue_vf_flr(adapter, vfdev);
-+			pcie_flr(vfdev);
- 	}
- }
- 
-@@ -10244,7 +10232,7 @@ static pci_ers_result_t ixgbe_io_error_detected(struct pci_dev *pdev,
- 		 * VFLR.  Just clean up the AER in that case.
- 		 */
- 		if (vfdev) {
--			ixgbe_issue_vf_flr(adapter, vfdev);
-+			pcie_flr(vfdev);
- 			/* Free device reference count */
- 			pci_dev_put(vfdev);
- 		}
--- 
-2.11.0
+That would be a better option.
+
+You might be able to implement a fallback, for example by having the
+config ops do a read back from the bridge.
+
+Ben.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
