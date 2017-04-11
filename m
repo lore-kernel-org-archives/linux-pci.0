@@ -1,84 +1,83 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=QGRA=3T=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=QGRA=3T=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
+To: Mason <slash.tmp@free.fr>, Thomas Gleixner <tglx@linutronix.de>
+References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
+ <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
+ <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
+ <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
+ <0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
+ <4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
+ <30f662a6-5dab-515b-e35a-a312f3c7b509@free.fr>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <5f81730d-fbe3-1f4c-de34-09bbfb893ee1@arm.com>
+Date: Tue, 11 Apr 2017 16:49:58 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170412132423.GA6584@red-moon>
-References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
- <20170411163313.18577-2-ard.biesheuvel@linaro.org>
- <20170412132423.GA6584@red-moon>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Thu, 13 Apr 2017 08:39:12 +0100
-Message-ID: <CAKv+Gu9JrU=-SZQcTtFfOP423gVTyM1w9yF=_J1uGd74ntpwLw@mail.gmail.com>
-Subject: Re: [PATCH 1/2] drivers: pci: do not disregard parent resources
- starting at 0x0
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
- Graeme Gregory <graeme.gregory@linaro.org>,
- linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
- Leif Lindholm <leif.lindholm@linaro.org>, Sinan Kaya <okaya@codeaurora.org>,
- Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Yinghai Lu <yinghai@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <30f662a6-5dab-515b-e35a-a312f3c7b509@free.fr>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On 12 April 2017 at 14:24, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
-> [+Yinghai, Bjorn]
->
-> On Tue, Apr 11, 2017 at 05:33:12PM +0100, Ard Biesheuvel wrote:
->> Commit f44116ae8818 ("PCI: Remove pci_find_parent_resource() use for
->> allocation") updated the logic that iterates over all bus resources
->> and compares them to a given resource, in order to decide whether one
->> is the parent of the latter.
+On 11/04/17 16:13, Mason wrote:
+> On 27/03/2017 19:09, Marc Zyngier wrote:
+> 
+>> Here's what your system looks like:
 >>
->> This change inadvertently causes pci_find_parent_resource() to disregard
->> resources starting at address 0x0, resulting in an error such as the one
->> below on ARM systems whose I/O window starts at 0x0.
+>> PCI-EP -------> MSI Controller ------> INTC
+>>          MSI                    IRQ
 >>
->> pci_bus 0000:00: root bus resource [mem 0x10000000-0x3efeffff window]
->> pci_bus 0000:00: root bus resource [io  0x0000-0xffff window]
->> pci_bus 0000:00: root bus resource [mem 0x8000000000-0xffffffffff window]
->> pci_bus 0000:00: root bus resource [bus 00-0f]
->> pci 0000:00:01.0: PCI bridge to [bus 01]
->> pci 0000:00:02.0: PCI bridge to [bus 02]
->> pci 0000:00:03.0: PCI bridge to [bus 03]
->> pci 0000:00:03.0: can't claim BAR 13 [io  0x0000-0x0fff]: no compatible bridge window
->> pci 0000:03:01.0: can't claim BAR 0 [io  0x0000-0x001f]: no compatible bridge window
+>> A PCI MSI is always edge. No ifs, no buts. That's what it is, and nothing
+>> else. Now, your MSI controller signals its output using a level interrupt,
+>> since you need to whack it on the head so that it lowers its line.
 >>
->> While this never happens on x86, it is perfectly legal in general for a
->> PCI MMIO or IO window to start at address 0x0, and it was supported in
->> the code before commit f44116ae8818.
->>
->> So let's drop the test for res->start != 0; resource_contains() already
->> checks whether [start, end) completely covers the resource, and so it
->> should be redundant.
->>
->> Fixes: f44116ae8818 ("PCI: Remove pci_find_parent_resource() use for allocation")
->
-> I know this code fixes IO claiming on ARM/ARM64 (well, it fixes nothing
-> because we never claim resources on ARM/ARM64 apart from kvmtool and
-> generic host bridge), my _big_ worry is that it can cause endless
-> regressions on other arches, in any case I would be really really
-> careful about adding a Fixes: tag to it.
->
+>> There is not a single trigger, because there is not a single interrupt.
+> 
+> Hello Marc,
+> 
+> I was hoping you or Thomas might help clear some confusion
+> in my mind around IRQ domains (struct irq_domain).
+> 
+> I have read https://www.kernel.org/doc/Documentation/IRQ-domain.txt
+> 
+> IIUC, there should be one IRQ domain per IRQ controller.
+> 
+> I have this MSI controller handling 256 interrupts, so I should
+> have *one* domain for all possible MSIs. Yet the Altera driver
+> registers *two* domains (msi_domain and inner_domain).
+> 
+> Could I make everything work with a single IRQ domain?
 
-The patch is only 3 years old, and is obviously a regression given
-that the change in behavior described here occurs as a side effect.
-But given that my involvement with PCI is much more recent than that,
-it is very well possible that I am missing something here.
+No, because you have two irqchips. One that deals with the HW, and the
+other that deals with the MSIs how they are presented to the kernel,
+depending on the bus (PCI or something else). The fact that it doesn't
+really drive any HW doesn't make it irrelevant.
 
+> I'm confused by the sequence:
+> 
+>   irq_dom = irq_domain_create_linear(fwnode, MSI_COUNT, &msi_dom_ops, pcie);
+>   msi_dom = pci_msi_create_irq_domain(fwnode, &msi_domain_info, irq_dom);
+> 
+> It seems I should be able to call only pci_msi_create_irq_domain...
+> And the parent of the MSI controller is given in the DT.
+
+No, see above.
+
+> I'm not quite sure how I tell pci_msi_create_irq_domain how many
+> MSIs it's supposed to manage. Nor how I pass my private struct.
+
+You don't need to tell it anything about the number of interrupts you
+manage. As for your private structure, you've already given it to your
+low level domain, and there is no need to propagate it any further.
+
+Thanks,
+
+	M.
 -- 
-Ard.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Jazz is not dead. It just smells funny...
