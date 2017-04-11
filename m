@@ -1,105 +1,156 @@
-Return-Path: <SRS0=zDs+=3Z=cavium.com=Jayachandran.Nair@kernel.org>
-Return-Path: <SRS0=zDs+=3Z=cavium.com=Jayachandran.Nair@kernel.org>
-Date: Mon, 17 Apr 2017 17:47:13 +0000
-From: Jayachandran C <jnair@caviumnetworks.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Robin Murphy <robin.murphy@arm.com>, Jon Masters <jcm@redhat.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Joerg Roedel <joro@8bytes.org>
-Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-Message-ID: <20170417174712.GA7575@localhost>
-References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
- <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
- <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
- <20170414210646.GA5346@localhost>
- <CAErSpo731xSzrnKF+G+8SA_UUHy7ROA1V9oFkpwKi85GQf9VAg@mail.gmail.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAErSpo731xSzrnKF+G+8SA_UUHy7ROA1V9oFkpwKi85GQf9VAg@mail.gmail.com>
+In-Reply-To: <20170411131639.GA6652@red-moon>
+References: <CAKv+Gu-qRg8-YRCairppKrEfeLcW+OwVF8qZHp7vxXJA_AwPOw@mail.gmail.com>
+ <20170330100524.GA22801@red-moon>
+ <CAKv+Gu-ff98HrPK3f+E8soGJUXaaMxPLs2AuJ+rvXd0HWX-jXw@mail.gmail.com>
+ <CAKv+Gu8YjySTDMgsrtGqEPMOtVhHc8gvTHZ4C5Ga8OTYdC9R3A@mail.gmail.com>
+ <ae87ae28-f50d-095f-576e-f3fd7f96dea2@codeaurora.org>
+ <CAKv+Gu8x0rQUnTUorknW-mW9LFgrxFYsXyy4LU_w9JbA-m_sjA@mail.gmail.com>
+ <CAKv+Gu9Su0F9CSRe=sxomuDDH7c2szO6Z8dpqOQ=t_1Vn3JD3g@mail.gmail.com>
+ <20170410165328.GA5248@red-moon>
+ <CAKv+Gu-AN-OwnAJG5dt0Qg4GU8HxZBowTSA0H3LhNA3nHfrsQg@mail.gmail.com>
+ <CAKv+Gu9dS4OhLbBw59yKYQmoJ8SpFexzk9yH=XfXnzn8NJ4mcg@mail.gmail.com>
+ <20170411131639.GA6652@red-moon>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Tue, 11 Apr 2017 17:06:53 +0100
+Message-ID: <CAKv+Gu92WM+LaPfNBMyZQ_wnBT0fNvx3CFmMhTDwZ961_KQXYQ@mail.gmail.com>
+Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+ Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
+ Peter Jones <pjones@redhat.com>, Sinan Kaya <okaya@codeaurora.org>,
+ Heyi Guo <heyi.guo@linaro.org>, Lukas Wunner <lukas@wunner.de>,
+ Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Yinghai Lu <yinghai@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 14, 2017 at 09:00:06PM -0500, Bjorn Helgaas wrote:
-> On Fri, Apr 14, 2017 at 4:06 PM, Jayachandran C
-> <jnair@caviumnetworks.com> wrote:
-> > On Thu, Apr 13, 2017 at 07:19:11PM -0500, Bjorn Helgaas wrote:
-> >> I tentatively applied both patches to pci/host-thunder for v4.12.
-> >>
-> >> However, I am concerned about the topology here:
-> >>
-> >> On Thu, Apr 13, 2017 at 08:30:45PM +0000, Jayachandran C wrote:
-> >> > On Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the
-> >> > PCI topology is slightly unusual.  For a multi-node system, it looks
-> >> > like:
-> >> >
-> >> >     00:00.0 [PCI] bridge to [bus 01-1e]
-> >> >     01:0a.0 [PCI-PCIe bridge, type 8] bridge to [bus 02-04]
-> >> >     02:00.0 [PCIe root port, type 4] bridge to [bus 03-04] (XLATE_ROOT)
-> >> >     03:00.0 PCIe Endpoint
-> >>
-> >> A root port normally has a single PCIe link leading downstream.
-> >> According to this, 02:00.0 is a root port that has the usual
-> >> downstream link leading to 03:00.0, but it also has an upstream link
-> >> to 01:0a.0.
-> >
-> > The PCI topology is a bit broken due to the way that the PCIe IP block
-> > was integrated into SoC PCI bridges and devices. The current mechanism
-> > of adding a PCI-PCIe bridge to glue these together is not ideal.
-> 
-> Yeah, that's definitely broken.
-> 
-> >> Maybe this example is omitting details that are not relevant to DMA
-> >> aliases?  The PCIe capability only contains one set of link-related
-> >> registers, so I don't know how we could manage a single device that
-> >> has two links.
-> >
-> > The root port is standard and has just one link to the EP (or whatever
-> > is on the external PCIe slot). The fallout of the current hw design is
-> > that the PCI-PCIe bridge has a link that does not follow standard and
-> > does not have a counterpart (as you noted).
-> >
-> >> A device with two links would break things like ASPM.  In
-> >> set_pcie_port_type(), for example, we have this comment:
-> >>
-> >>    * A Root Port or a PCI-to-PCIe bridge is always the upstream end
-> >>    * of a Link.  No PCIe component has two Links.  Two Links are
-> >>    * connected by a Switch that has a Port on each Link and internal
-> >>    * logic to connect the two Ports.
-> >>
-> >> The topology above breaks these assumptions, which will make
-> >> pdev->has_secondary_link incorrect, which means ASPM won't work
-> >> correctly.
-> >
-> > Given the current hardware, the pcieport driver seems to work reasonably
-> > for the root port at 02:00.0, with AER support. I will take a look at the
-> > ASPM part.
-> 
-> I don't think pcieport itself cares much about links.  ASPM does, but
-> it looks like set_pcie_port_type() actually is smart enough to know
-> that PCI-to-PCIe bridges and Root Ports always have links on their
-> secondary sides.  So has_secondary_link probably does get set
-> correctly.
-> 
-> But I think you'll hit the VIA "strange chipset" thing in
-> pcie_aspm_init_link_state(), which will probably prevent us from doing
-> ASPM on the link from 02:00.0 to 03:00.0.
-> 
-> Could you collect "lspci -vv" output from this system?  I'd like to
-> archive that as background for this IOMMU issue and the ASPM tweaks I
-> suspect we'll have to do.  I *wish* we had more information about that
-> VIA thing, because I suspect we could get rid of it if we had more
-> details.
+On 11 April 2017 at 14:16, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+> On Mon, Apr 10, 2017 at 06:29:27PM +0100, Ard Biesheuvel wrote:
+>
+> [...]
+>
+>> >>> So before starting the next round of hacking to work around this, I
+>> >>> would like rekindle the discussion regarding the way we blindly
+>> >>> reassign all resources on ACPI/arm64 systems, and whether there is a
+>> >>> way imaginable to avoid doing that.
+>> >>
+>> >> There is a way if the whole ARM ecosystem work together to sort this
+>> >> out and we think that's the right way to do; I am personally not
+>> >> entirely convinced about that.
+>> >>
+>> >
+>> > So what are the pros and cons here? EFI fb is not a hugely important
+>> > use case, but it is one that relies on BARs staying where they are.
+>> > Are there others like that?
+>
+> Not that I am aware of, which means that pros are thin on the ground.
+>
 
-The full logs are slightly large, so I have kept them at:
-https://github.com/jchandra-cavm/thunderx2/blob/master/logs/
-The lspci -vv output is lspci-vv.txt and lspci -tvn output is lspci-tvn.txt
+OK. Sinan?
 
-The output is from 2 socket system, the cards are not on the first slot
-like the example above, so the bus and device numbers are different.
+>> >>> I suppose the state of the BARs as we inherit it from the firmware
+>> >>> cannot be blindly trusted (and IIUC, this is Lorenzo's primary issue
+>> >>> with it). So should there be some side channel (UEFI config table
+>> >>> perhaps?) to describe this?
+>> >>
+>> >> PCI firmware specifications rev 3.1, 4.6.5, "_DSM for Ignoring PCI
+>> >> Boot Configurations".
+>> >>
+>> >> Do we want to enforce it on ARM ? I do not know to be honest (and it
+>> >> still would not solve the DT firmware case).
+>> >>
+>> >
+>> > No, it doesn't. But that doesn't mean we shouldn't solve it on ACPI if
+>> > the pros outweigh the cons.
+>
+> No one is screaming for that to happen, I can implement resource
+> claiming but at the moment I do not see the benefit.
+>
+> [...]
+>
+>> > The reason is to eliminate another unknown from the discussion whether
+>> > UEFI can be expected to leave the entire PCI hierarchy in a sane
+>> > state.
+>> >
+>> >> If we want to try to claim the whole resource tree on boot (in ACPI)
+>> >> I can send a patch for that but there will be regressions.
+>> >>
+>> >
+>> > I would like to see it, yes.
+>>
+>> FWIW, the following minimal [naive] patch
+>>
+>> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
+>> index 4f0e3ebfea4b..37c4d2f116a4 100644
+>> --- a/arch/arm64/kernel/pci.c
+>> +++ b/arch/arm64/kernel/pci.c
+>> @@ -27,7 +27,7 @@
+>>   */
+>>  void pcibios_fixup_bus(struct pci_bus *bus)
+>>  {
+>> -       /* nothing to do, expected to be removed in the future */
+>> +       pci_read_bridge_bases(bus);
+>>  }
+>>
+>>  /*
+>> @@ -208,8 +208,8 @@ struct pci_bus *pci_acpi_scan_root(struct
+>> acpi_pci_root *root)
+>>         if (!bus)
+>>                 return NULL;
+>>
+>> -       pci_bus_size_bridges(bus);
+>> -       pci_bus_assign_resources(bus);
+>> +       pci_assign_unassigned_root_bus_resources(bus);
+>> +       pci_bus_claim_resources(bus);
+>
+> I do not understand this code. If you reassign the whole thing
+> before claiming it I am not sure what's the point of claiming
+> the resources later, that's basically a nop. pci_bus_claim_resources()
+> should suffice (if FW set-up is sane - which also reads bridge bases,
+> BTW).
+>
 
-Looks like I have to spend some time on ASPM next.
+OK, I'm struggling a bit with this code. As you know, it is not light
+bedtime reading :-)
 
-Thanks,
-JC.
+In any case, I am starting to see your point. While I am able to claim
+most of the configuration by calling pci_bus_claim_resources() only
+[modulo some I/O BARs for which I will send out a bugfix shortly], the
+option ROM BARs are left disabled by UEFI, and so I end up with
+
+pci 0000:00:01.0: PCI bridge to [bus 01]
+pci 0000:00:02.0: PCI bridge to [bus 02]
+pci 0000:00:03.0: PCI bridge to [bus 03]
+pci 0000:02:01.0: can't claim BAR 6 [mem 0xffff0000-0xffffffff pref]:
+no compatible bridge window
+pci 0000:03:01.0: can't claim BAR 6 [mem 0xfffc0000-0xffffffff pref]:
+no compatible bridge window
+
+and everything else works fine.
+
+Both PPC and x86 have similar code to infer from the BARs themselves
+whether they were programmed, but in our case, it comes down to
+checking whether a parent resource exists that covers the range.
+
+It may still make sense to add support for the _DSM method, and leave
+it to the firmware to tell the kernel whether the PCI configuration is
+supposed to be correct, so I will send out an RFC for that as well.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
