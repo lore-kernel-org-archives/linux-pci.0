@@ -1,15 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <20170426111809.19922-5-lorenzo.pieralisi@arm.com>
-References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
- <20170426111809.19922-5-lorenzo.pieralisi@arm.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 28 Apr 2017 14:41:59 +0200
-Message-ID: <CAK8P3a3+fjMkq9C6bbz69yWGr6Qh6w2dPN3PJBXDxur8Qc02Kg@mail.gmail.com>
-Subject: Re: [RFC/RFT PATCH 04/18] ARM: PCI: bios32: Convert PCI scan API to
- pci_scan_root_bus_bridge()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Message-ID: <1491917928.7236.8.camel@kernel.crashing.org>
+Subject: Re: [PATCH v3 21/32] powerpc: include default ioremap_nopost()
+ implementation
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
+Date: Tue, 11 Apr 2017 23:38:48 +1000
+In-Reply-To: <20170411122923.6285-22-lorenzo.pieralisi@arm.com>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+ <20170411122923.6285-22-lorenzo.pieralisi@arm.com>
+Mime-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,52 +17,49 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
- Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
+Cc: linux-arch@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
+ linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 26, 2017 at 1:17 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-
-> @@ -483,10 +483,31 @@ static void pcibios_init_hw(struct device *parent, struct hw_pci *hw,
->
->                         if (hw->scan)
->                                 sys->bus = hw->scan(nr, sys);
-> -                       else
-> -                               sys->bus = pci_scan_root_bus_msi(parent,
-> -                                       sys->busnr, hw->ops, sys,
-> -                                       &sys->resources, hw->msi_ctrl);
-> +                       else {
-> +                               bridge = pci_alloc_host_bridge(0);
-> +                               if (!bridge) {
-> +                                       kfree(sys);
-> +                                       break;
-> +                               }
-
-I think for consistency, the pci_alloc_host_bridge() here should replace
-the sys=kzalloc(sizeof(struct pci_sys_data), GFP_KERNEL), and
-the pci_sys_data made the bridge->private pointer.
-
-      Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+T24gVHVlLCAyMDE3LTA0LTExIGF0IDEzOjI5ICswMTAwLCBMb3JlbnpvIFBpZXJhbGlzaSB3cm90
+ZToKPiBUaGUgUENJIHNwZWNpZmljYXRpb25zIChSZXYgMy4wLCAzLjIuNSAiVHJhbnNhY3Rpb24g
+T3JkZXJpbmcgYW5kIFBvc3RpbmciKQo+IG1hbmRhdGUgbm9uLXBvc3RlZCBjb25maWd1cmF0aW9u
+IHRyYW5zYWN0aW9ucy4gQXMgZnVydGhlciBoaWdobGlnaHRlZCBpbgo+IHRoZSBQQ0llIHNwZWNp
+ZmljYXRpb25zICg0LjAgLSBSZXYwLjMsICJPcmRlcmluZyBDb25zaWRlcmF0aW9ucyBmb3IgdGhl
+Cj4gRW5oYW5jZWQgQ29uZmlndXJhdGlvbiBBY2Nlc3MgTWVjaGFuaXNtIiksIHRocm91Z2ggRUNB
+TSBhbmQKPiBFQ0FNLWRlcml2YXRpdmUgY29uZmlndXJhdGlvbiBtZWNoYW5pc20sIHRoZSBtZW1v
+cnkgbWFwcGVkIHRyYW5zYWN0aW9ucwo+IGZyb20gdGhlIGhvc3QgQ1BVIGludG8gQ29uZmlndXJh
+dGlvbiBSZXF1ZXN0cyBvbiB0aGUgUENJIGV4cHJlc3MgZmFicmljCj4gbWF5IGNyZWF0ZSBvcmRl
+cmluZyBwcm9ibGVtcyBmb3Igc29mdHdhcmUgYmVjYXVzZSB3cml0ZXMgdG8gbWVtb3J5Cj4gYWRk
+cmVzcyBhcmUgdHlwaWNhbGx5IHBvc3RlZCB0cmFuc2FjdGlvbnMgKHVubGVzcyB0aGUgYXJjaGl0
+ZWN0dXJlIGNhbgo+IGVuZm9yY2UgdGhyb3VnaCB2aXJ0dWFsIGFkZHJlc3MgbWFwcGluZyBub24t
+cG9zdGVkIHdyaXRlIHRyYW5zYWN0aW9ucwo+IGJlaGF2aW91cikgYnV0IHdyaXRlcyB0byBDb25m
+aWd1cmF0aW9uIFNwYWNlIGFyZSBub3QgcG9zdGVkIG9uIHRoZSBQQ0kKPiBleHByZXNzIGZhYnJp
+Yy4KPiAKPiBJbmNsdWRlIHRoZSBhc20tZ2VuZXJpYyBpb3JlbWFwX25vcG9zdCgpIGltcGxlbWVu
+dGF0aW9uIChjdXJyZW50bHkKPiBmYWxsaW5nIGJhY2sgdG8gaW9yZW1hcF9ub2NhY2hlKCkpIHRv
+IHByb3ZpZGUgYSBub24tcG9zdGVkIHdyaXRlcwo+IGlvcmVtYXAgaW50ZXJmYWNlIHRvIGtlcm5l
+bCBzdWJzeXN0ZW1zLgoKTkFLLiBBcyBleHBsYWluZWQgaW4gbXkgcmVwbHkgdG8gcGF0Y2ggMC4K
+Cj4gU2lnbmVkLW9mZi1ieTogTG9yZW56byBQaWVyYWxpc2kgPGxvcmVuem8ucGllcmFsaXNpQGFy
+bS5jb20+Cj4gPiBDYzogTWljaGFlbCBFbGxlcm1hbiA8bXBlQGVsbGVybWFuLmlkLmF1Pgo+ID4g
+Q2M6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+Cj4gPiBDYzogQmVuamFtaW4g
+SGVycmVuc2NobWlkdCA8YmVuaEBrZXJuZWwuY3Jhc2hpbmcub3JnPgo+ID4gQ2M6IFBhdWwgTWFj
+a2VycmFzIDxwYXVsdXNAc2FtYmEub3JnPgo+IC0tLQo+IMKgYXJjaC9wb3dlcnBjL2luY2x1ZGUv
+YXNtL2lvLmggfCAxICsKPiDCoDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKQo+IAo+IGRp
+ZmYgLS1naXQgYS9hcmNoL3Bvd2VycGMvaW5jbHVkZS9hc20vaW8uaCBiL2FyY2gvcG93ZXJwYy9p
+bmNsdWRlL2FzbS9pby5oCj4gaW5kZXggNWVkMjkyNC4uNmRjZDBlMiAxMDA2NDQKPiAtLS0gYS9h
+cmNoL3Bvd2VycGMvaW5jbHVkZS9hc20vaW8uaAo+ICsrKyBiL2FyY2gvcG93ZXJwYy9pbmNsdWRl
+L2FzbS9pby5oCj4gQEAgLTc1Nyw2ICs3NTcsNyBAQCBleHRlcm4gdm9pZCBfX2lvbWVtICppb3Jl
+bWFwX3Byb3QocGh5c19hZGRyX3QgYWRkcmVzcywgdW5zaWduZWQgbG9uZyBzaXplLAo+IMKgZXh0
+ZXJuIHZvaWQgX19pb21lbSAqaW9yZW1hcF93YyhwaHlzX2FkZHJfdCBhZGRyZXNzLCB1bnNpZ25l
+ZCBsb25nIHNpemUpOwo+ID4gwqAjZGVmaW5lIGlvcmVtYXBfbm9jYWNoZShhZGRyLCBzaXplKQlp
+b3JlbWFwKChhZGRyKSwgKHNpemUpKQo+ID4gwqAjZGVmaW5lIGlvcmVtYXBfdWMoYWRkciwgc2l6
+ZSkJCWlvcmVtYXAoKGFkZHIpLCAoc2l6ZSkpCj4gKyNpbmNsdWRlIDxhc20tZ2VuZXJpYy9pb3Jl
+bWFwLW5vcG9zdC5oPgo+IMKgCj4gwqBleHRlcm4gdm9pZCBpb3VubWFwKHZvbGF0aWxlIHZvaWQg
+X19pb21lbSAqYWRkcik7Cj4gwqAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJu
+ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFu
+L2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
