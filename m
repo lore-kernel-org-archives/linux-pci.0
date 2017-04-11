@@ -1,114 +1,55 @@
-Return-Path: <SRS0=5PB6=4B=gmail.com=alexdeucher@kernel.org>
-Return-Path: <SRS0=5PB6=4B=gmail.com=alexdeucher@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1493126394-1239-4-git-send-email-deathsimple@vodafone.de>
-References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de> <1493126394-1239-4-git-send-email-deathsimple@vodafone.de>
-From: Alex Deucher <alexdeucher@gmail.com>
-Date: Tue, 25 Apr 2017 11:00:28 -0400
-Message-ID: <CADnq5_Mg1vmpL-8N8kZY_yhsT982xjVOGj5-JuBZPGXVupzCKA@mail.gmail.com>
-Subject: Re: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models
- 30h-3fh) Processors v2
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
-	Maling list - DRI developers <dri-devel@lists.freedesktop.org>, platform-driver-x86@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Tony Luck <tony.luck@intel.com>,
+        Fenghua Yu <fenghua.yu@intel.com>
+Subject: [PATCH v3 11/32] ia64: include default ioremap_nopost() implementation
+Date: Tue, 11 Apr 2017 13:28:51 +0100
+Message-Id: <20170411122923.6285-12-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 25, 2017 at 9:19 AM, Christian K=C3=B6nig
-<deathsimple@vodafone.de> wrote:
-> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->
-> Most BIOS don't enable this because of compatibility reasons.
->
-> Manually enable a 64bit BAR of 64GB size so that we have
-> enough room for PCI devices.
->
-> v2: style cleanups, increase size, add resource name, set correct flags,
->     print message that windows was added
->
-> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
-> ---
->  arch/x86/pci/fixup.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++=
-++++++
->  1 file changed, 53 insertions(+)
->
-> diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-> index 6d52b94..8d949c4 100644
-> --- a/arch/x86/pci/fixup.c
-> +++ b/arch/x86/pci/fixup.c
-> @@ -571,3 +571,56 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0,=
- pci_invalid_bar);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
-> +
-> +static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
-> +{
-> +       uint32_t base, limit, high;
-> +       struct resource *res, *conflict;
-> +       unsigned i;
-> +
-> +       for (i =3D 0; i < 8; ++i) {
-> +               pci_read_config_dword(dev, 0x80 + i * 0x8, &base);
-> +               pci_read_config_dword(dev, 0x180 + i * 0x4, &high);
+The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and Posting")
+mandate non-posted configuration transactions. As further highlighted in
+the PCIe specifications (4.0 - Rev0.3, "Ordering Considerations for the
+Enhanced Configuration Access Mechanism"), through ECAM and
+ECAM-derivative configuration mechanism, the memory mapped transactions
+from the host CPU into Configuration Requests on the PCI express fabric
+may create ordering problems for software because writes to memory
+address are typically posted transactions (unless the architecture can
+enforce through virtual address mapping non-posted write transactions
+behaviour) but writes to Configuration Space are not posted on the PCI
+express fabric.
 
-Might be nice to define names for the register offsets.
+Include the asm-generic ioremap_nopost() implementation (currently
+falling back to ioremap_nocache()) to provide a non-posted writes
+ioremap interface to kernel subsystems.
 
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Tony Luck <tony.luck@intel.com>
+Cc: Fenghua Yu <fenghua.yu@intel.com>
+---
+ arch/ia64/include/asm/io.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-> +
-> +               /* Is this slot free? */
-> +               if ((base & 0x3) =3D=3D 0x0)
-> +                       break;
-> +
-> +               base >>=3D 8;
-> +               base |=3D high << 24;
-> +
-> +               /* Abort if a slot already configures a 64bit BAR. */
-> +               if (base > 0x10000)
-> +                       return;
-> +       }
-> +       if (i =3D=3D 8)
-> +               return;
-> +
-> +       res =3D kzalloc(sizeof(*res), GFP_KERNEL);
-> +       if (!res)
-> +               return;
-> +
-> +       res->name =3D "PCI Bus 0000:00";
-> +       res->flags =3D IORESOURCE_PREFETCH | IORESOURCE_MEM |
-> +               IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
-> +       res->start =3D 0x100000000;
-> +       res->end =3D 0xfd00000000 - 1;
-> +
-> +       /* Just grab the free area behind system memory for this */
-> +       while ((conflict =3D request_resource_conflict(&iomem_resource, r=
-es)))
-> +               res->start =3D conflict->end + 1;
-> +
-> +       dev_info(&dev->dev, "adding root bus resource %pR\n", res);
-> +
-> +       base =3D ((res->start >> 8) & 0xffffff00) | 0x3;
-> +       limit =3D ((res->end + 1) >> 8) & 0xffffff00;
-> +       high =3D ((res->start >> 40) & 0xff) |
-> +               ((((res->end + 1) >> 40) & 0xff) << 16);
-> +
-> +       pci_write_config_dword(dev, 0x180 + i * 0x4, high);
-> +       pci_write_config_dword(dev, 0x84 + i * 0x8, limit);
-> +       pci_write_config_dword(dev, 0x80 + i * 0x8, base);
-
-Same here.  Either way:
-Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
-
-> +
-> +       pci_bus_add_resource(dev->bus, res, 0);
-> +}
-> +DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_=
-bar);
-> --
-> 2.7.4
->
-> _______________________________________________
-> dri-devel mailing list
-> dri-devel@lists.freedesktop.org
-> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+diff --git a/arch/ia64/include/asm/io.h b/arch/ia64/include/asm/io.h
+index 5de673a..130956b 100644
+--- a/arch/ia64/include/asm/io.h
++++ b/arch/ia64/include/asm/io.h
+@@ -434,6 +434,7 @@ static inline void __iomem * ioremap_cache (unsigned long phys_addr, unsigned lo
+ }
+ #define ioremap_cache ioremap_cache
+ #define ioremap_uc ioremap_nocache
++#include <asm-generic/ioremap-nopost.h>
+ 
+ 
+ /*
+-- 
+2.10.0
