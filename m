@@ -1,99 +1,64 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V10 06/12] of: device: Fix overflow of coherent_dma_mask
-To: Sricharan R <sricharan@codeaurora.org>, robin.murphy@arm.com,
-        will.deacon@arm.com, joro@8bytes.org, lorenzo.pieralisi@arm.com,
-        iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robh+dt@kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
-        gregkh@linuxfoundation.org
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-7-git-send-email-sricharan@codeaurora.org>
- <58E5E7B7.1050400@gmail.com>
-From: Frank Rowand <frowand.list@gmail.com>
-Message-ID: <58E81C63.3020701@gmail.com>
-Date: Fri, 7 Apr 2017 16:10:27 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:44284 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752436AbdDKVm0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 11 Apr 2017 17:42:26 -0400
+Date: Tue, 11 Apr 2017 16:42:20 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Brian Norris <briannorris@chromium.org>,
+        "jeffy.chen" <jeffy.chen@rock-chips.com>
+Subject: Re: [PATCH v2] PCI: rockchip: Mark PCI_EXP_LNKSTA_SLC in the root
+ port
+Message-ID: <20170411214220.GD14778@bhelgaas-glaptop.roam.corp.google.com>
+References: <1491548357-145106-1-git-send-email-shawn.lin@rock-chips.com>
 MIME-Version: 1.0
-In-Reply-To: <58E5E7B7.1050400@gmail.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1491548357-145106-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/06/17 00:01, Frank Rowand wrote:
-> On 04/04/17 03:18, Sricharan R wrote:
->> Size of the dma-range is calculated as coherent_dma_mask + 1
->> and passed to arch_setup_dma_ops further. It overflows when
->> the coherent_dma_mask is set for full 64 bits 0xFFFFFFFFFFFFFFFF,
->> resulting in size getting passed as 0 wrongly. Fix this by
->> passsing in max(mask, mask + 1). Note that in this case
->> when the mask is set to full 64bits, we will be passing the mask
->> itself to arch_setup_dma_ops instead of the size. The real fix
->> for this should be to make arch_setup_dma_ops receive the
->> mask and handle it, to be done in the future.
->>
->> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> ---
->>  drivers/of/device.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/of/device.c b/drivers/of/device.c
->> index c17c19d..c2ae6bb 100644
->> --- a/drivers/of/device.c
->> +++ b/drivers/of/device.c
->> @@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct device_node *np)
->>  	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->>  	if (ret < 0) {
->>  		dma_addr = offset = 0;
->> -		size = dev->coherent_dma_mask + 1;
->> +		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
-
-NACK withdrawn below.
-
-However, I would prefer a change to this line for readability. Using max() results
-in the correct result, but obscures the reason behind the algorithm, where the
-intent is to avoid an overflow.  How about something like:
-
-	size = (dev->coherent_dma_mask == 0xffffffffffffffffULL)
-		? 0xffffffffffffffffULL : dev->coherent_dma_mask + 1;
-
-
->>  	} else {
->>  		offset = PFN_DOWN(paddr - dma_addr);
->>  		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->>
+On Fri, Apr 07, 2017 at 02:59:17PM +0800, Shawn Lin wrote:
+> All platforms using Rockchip use a common clock for the Root
+> Port and the slot connected to it. Indicate this by setting
+> the Slot Clock Configuration (PCI_EXP_LNKSTA_SLC) bit in the
+> Root Port's Link Status.
 > 
-> NACK.
+> Per the Implementation Note in the spec (PCIe r3.1, sec 7.8.7),
+> if the downstream component also sets PCI_EXP_LNKSTA_SLC, software
+> may set the Common Clock Configuration (PCI_EXP_LNKCTL_CCC) bits on
+> both ends of the Link. This is done by pcie_aspm_configure_common_clock()
 > 
-> Passing an invalid size to arch_setup_dma_ops() is only part of the problem.
-> size is also used in of_dma_configure() before calling arch_setup_dma_ops():
-> 
->         dev->coherent_dma_mask = min(dev->coherent_dma_mask,
->                                      DMA_BIT_MASK(ilog2(dma_addr + size)));
->         *dev->dma_mask = min((*dev->dma_mask),
->                              DMA_BIT_MASK(ilog2(dma_addr + size)));
-> 
-> which would be incorrect for size == 0xffffffffffffffffULL when
-> dma_addr != 0.  So the proposed fix really is not papering over
+> Cc: Brian Norris <briannorris@chromium.org>
+> Cc: jeffy.chen <jeffy.chen@rock-chips.com>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-  ^^^^^^^^^^^^^  This is the flaw in my objection.  When in the
-(ret < 0) path, dma_addr is set to zero.  So my worry about dma_addr != 0
-is baseless.
+Applied to pci/host-rockchip for v4.12, thanks!
 
-I withdraw my NACK because my analysis was flawed.
-
--Frank
-
-> the base problem very well.
+> ---
 > 
-> I agree that the proper solution involves passing a mask instead
-> of a size to arch_setup_dma_ops().
+> Changes in v2:
+> - replace CCC with SLC
+> - reword the commit msg
 > 
-> -Frank
+>  drivers/pci/host/pcie-rockchip.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-
+> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+> index 26ddd35..7e7a6b6 100644
+> --- a/drivers/pci/host/pcie-rockchip.c
+> +++ b/drivers/pci/host/pcie-rockchip.c
+> @@ -596,7 +596,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
+>  
+>  	/* Set RC's clock architecture as common clock */
+>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
+> -	status |= PCI_EXP_LNKCTL_CCC;
+> +	status |= PCI_EXP_LNKSTA_SLC << 16;
+>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
+>  
+>  	/* Enable Gen1 training */
+> -- 
+> 1.9.1
+> 
+> 
