@@ -1,79 +1,75 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V8 2/5] PCI/ASPM: split pci_aspm_init() into two
-Date: Sat,  8 Apr 2017 00:55:48 -0400
-Message-Id: <1491627351-1111-3-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
-References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
- linux-arm-msm@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
- linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- Julia Lawall <Julia.Lawall@lip6.fr>, Bjorn Helgaas <bhelgaas@google.com>,
- Rajat Jain <rajatja@google.com>, linux-arm-kernel@lists.infradead.org
+Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
+Subject: Re: [PATCH] PCI: Add cast when assigning PCI_ROM_ADDRESS_MASK to a
+ 32-bit variable
+To: Matthias Kaehlcke <mka@chromium.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci
+ <linux-pci@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>,
+ Grant Grundler <grundler@chromium.org>, Greg Hackmann
+ <ghackmann@google.com>, Michael Davidson <md@google.com>
+References: <20170410222457.113155-1-mka@chromium.org>
+ <20170411012445.GA8025@bhelgaas-glaptop.roam.corp.google.com>
+ <6111642d-9f1d-f8bf-5920-82f4eb427cff@free.fr>
+ <20170411172307.GC28657@google.com>
+From: Mason <slash.tmp@free.fr>
+Message-ID: <d5f0d600-3c88-d42a-05a9-f0760975f6a7@free.fr>
+Date: Tue, 11 Apr 2017 19:28:46 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170411172307.GC28657@google.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Split pci_aspm_init() body into pci_aspm_init_upstream()
-and pci_aspm_init_downstream() for bridge and endpoint
-specific code behavior.
+On 11/04/2017 19:23, Matthias Kaehlcke wrote:
 
-Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pcie/aspm.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
+> El Tue, Apr 11, 2017 at 12:08:38PM +0200 Mason ha dit:
+> 
+>> On 11/04/2017 03:24, Bjorn Helgaas wrote:
+>>
+>>> On Mon, Apr 10, 2017 at 03:24:57PM -0700, Matthias Kaehlcke wrote:
+>>>
+>>>> This fixes a clang warning about "implicit conversion from 'unsigned
+>>>> long' to 'u32'"
+>>>>
+>>>> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+>>>> ---
+>>>>  drivers/pci/probe.c | 2 +-
+>>>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>>>
+>>>> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+>>>> index dfc9a2794141..148e80d5caf1 100644
+>>>> --- a/drivers/pci/probe.c
+>>>> +++ b/drivers/pci/probe.c
+>>>> @@ -180,7 +180,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>>>>  	u16 orig_cmd;
+>>>>  	struct pci_bus_region region, inverted_region;
+>>>>  
+>>>> -	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
+>>>> +	mask = type ? (u32)PCI_ROM_ADDRESS_MASK : ~0;
+>>>
+>>> Can we put the cast in the PCI_ROM_ADDRESS_MASK #define so we don't have to
+>>> repeat it in all the uses?
+>>
+>> Fixing these "implicit conversion" warnings, especially for
+>> unsigned types, is a slippery slope. (The behavior of the
+>> conversion is well-defined.)
+>>
+>> How about changing the type of PCI_ROM_ADDRESS_MASK instead?
+>> It's defined as ~0x7ffUL but it's only used in the context
+>> of u32.
+>>
+>> So make it an unsigned int:
+>> #define PCI_ROM_ADDRESS_MASK (~0x7ffU)
+>>
+>> AFAIU, unsigned int is 32 bits on all platforms supported
+>> by Linux.
+> 
+> I considered this initially, but wasn't sure if the unsigned long
+> mask might be needed in some cases. From the comments I interpret that
+> there should be no problems with using a 32 bit mask everywhere.
+> 
+> I'll send out an updated patch shortly.
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index dc36717..a80d64b 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -826,6 +826,16 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- 	return link;
- }
- 
-+static int pci_aspm_init_downstream(struct pci_dev *pdev)
-+{
-+	return 0;
-+}
-+
-+static int pci_aspm_init_upstream(struct pci_dev *pdev)
-+{
-+	return 0;
-+}
-+
- /*
-  * pci_aspm_init: Initiate PCI express link state.
-  * It is called from device_add for every single pci device.
-@@ -833,7 +843,10 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
-  */
- int pci_aspm_init(struct pci_dev *pdev)
- {
--	return 0;
-+	if (!pdev->has_secondary_link)
-+		return pci_aspm_init_downstream(pdev);
-+
-+	return pci_aspm_init_upstream(pdev);
- }
- 
- /*
--- 
-1.9.1
+Full disclaimer: I'm just a grunt with no knowledge of
+the PCI framework. Bjorn is the authority here ;-)
 
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Regards.
