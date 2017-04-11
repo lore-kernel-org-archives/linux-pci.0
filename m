@@ -1,111 +1,88 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: KY Srinivasan <kys@microsoft.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "apw@canonical.com" <apw@canonical.com>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "jasowang@redhat.com" <jasowang@redhat.com>,
-        "leann.ogasawara@canonical.com" <leann.ogasawara@canonical.com>,
-        "marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>
-Subject: RE: [PATCH 0/2] pci-hyperv: Some miscellaneous fixes
-Date: Tue, 4 Apr 2017 21:47:39 +0000
-Message-ID: <DM5PR03MB2490AFB6317F263A607106ADA00B0@DM5PR03MB2490.namprd03.prod.outlook.com>
-References: <1490378800-26907-1-git-send-email-kys@exchange.microsoft.com>
- <20170404190331.GD27692@bhelgaas-glaptop.roam.corp.google.com>
- <DM5PR03MB249052D8580711F8999048D8A00B0@DM5PR03MB2490.namprd03.prod.outlook.com>
- <20170404203929.GF27692@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170404203929.GF27692@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170411163313.18577-2-ard.biesheuvel@linaro.org>
+References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
+ <20170411163313.18577-2-ard.biesheuvel@linaro.org>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Tue, 11 Apr 2017 19:30:48 +0100
+Message-ID: <CAKv+Gu_bzdw6V2U3yUrUKcoWSmyRyxmgjUVDJy3A14QjifCaeg@mail.gmail.com>
+Subject: Re: [PATCH 1/2] drivers: pci: do not disregard parent resources
+ starting at 0x0
+To: "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ linux-pci <linux-pci@vger.kernel.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Graeme Gregory <graeme.gregory@linaro.org>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ Leif Lindholm <leif.lindholm@linaro.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <bhelgaas@google.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 11 April 2017 at 17:33, Ard Biesheuvel <ard.biesheuvel@linaro.org> wrote:
+> Commit f44116ae8818 ("PCI: Remove pci_find_parent_resource() use for
+> allocation") updated the logic that iterates over all bus resources
+> and compares them to a given resource, in order to decide whether one
+> is the parent of the latter.
+>
+> This change inadvertently causes pci_find_parent_resource() to disregard
+> resources starting at address 0x0, resulting in an error such as the one
+> below on ARM systems whose I/O window starts at 0x0.
+>
+> pci_bus 0000:00: root bus resource [mem 0x10000000-0x3efeffff window]
+> pci_bus 0000:00: root bus resource [io  0x0000-0xffff window]
+> pci_bus 0000:00: root bus resource [mem 0x8000000000-0xffffffffff window]
+> pci_bus 0000:00: root bus resource [bus 00-0f]
+> pci 0000:00:01.0: PCI bridge to [bus 01]
+> pci 0000:00:02.0: PCI bridge to [bus 02]
+> pci 0000:00:03.0: PCI bridge to [bus 03]
+> pci 0000:00:03.0: can't claim BAR 13 [io  0x0000-0x0fff]: no compatible bridge window
+> pci 0000:03:01.0: can't claim BAR 0 [io  0x0000-0x001f]: no compatible bridge window
+>
+> While this never happens on x86, it is perfectly legal in general for a
+> PCI MMIO or IO window to start at address 0x0, and it was supported in
+> the code before commit f44116ae8818.
+>
+> So let's drop the test for res->start != 0; resource_contains() already
+> checks whether [start, end) completely covers the resource, and so it
+> should be redundant.
+>
+> Fixes: f44116ae8818 ("PCI: Remove pci_find_parent_resource() use for allocation")
+> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+> ---
+>  drivers/pci/pci.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 7904d02ffdb9..53a41b1f7ef7 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -454,7 +454,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+>         pci_bus_for_each_resource(bus, r, i) {
+>                 if (!r)
+>                         continue;
+> -               if (res->start && resource_contains(r, res)) {
+> +               if (resource_contains(r, res)) {
+>
+>                         /*
+>                          * If the window is prefetchable but the BAR is
 
+Actually, I managed to confuse myself a bit here: $SUBJECT is
+inaccurate, given that it is not the parent resource being disregarded
+if it starts at 0x0 but the containee.
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: Tuesday, April 4, 2017 1:39 PM
-> To: KY Srinivasan <kys@microsoft.com>
-> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
-> devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
-> vkuznets@redhat.com; jasowang@redhat.com;
-> leann.ogasawara@canonical.com; marcelo.cerri@canonical.com; Stephen
-> Hemminger <sthemmin@microsoft.com>
-> Subject: Re: [PATCH 0/2] pci-hyperv: Some miscellaneous fixes
->=20
-> On Tue, Apr 04, 2017 at 07:54:33PM +0000, KY Srinivasan wrote:
-> > > -----Original Message-----
-> > > From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> > > Sent: Tuesday, April 4, 2017 12:04 PM
-> > > To: KY Srinivasan <kys@microsoft.com>
-> > > Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org;
-> > > devel@linuxdriverproject.org; olaf@aepfle.de; apw@canonical.com;
-> > > vkuznets@redhat.com; jasowang@redhat.com;
-> > > leann.ogasawara@canonical.com; marcelo.cerri@canonical.com; Stephen
-> > > Hemminger <sthemmin@microsoft.com>
-> > > Subject: Re: [PATCH 0/2] pci-hyperv: Some miscellaneous fixes
-> > >
-> > > On Fri, Mar 24, 2017 at 11:06:40AM -0700, kys@exchange.microsoft.com
-> > > wrote:
-> > > > From: K. Y. Srinivasan <kys@microsoft.com>
-> > > >
-> > > > Some miscellaneous fixes.
-> > > >
-> > > > K. Y. Srinivasan (2):
-> > > >   pci-hyperv: Fix a bug in specifying CPU affinity
-> > > >   pci-hyperv: Fix an atomic bug
-> > > >
-> > > >  drivers/pci/host/pci-hyperv.c |   13 +++++++++----
-> > > >  1 files changed, 9 insertions(+), 4 deletions(-)
-> > >
-> > > I applied these with Long's reviewed-by to pci/host-hv for v4.12 with=
- the
-> > > following subject lines:
-> > >
-> > >   PCI: hv: Specify CPU_AFFINITY_ALL for MSI affinity when >=3D 32 CPU=
-s
-> > >   PCI: hv: Allocate interrupt descriptors with GFP_ATOMIC
-> > >
-> > Thank you.
-> >
-> > > There were two copies of [1/2], which makes this error-prone.  I appl=
-ied
-> > > the second one that defines CPU_AFFINITY_ALL.
-> >
-> > Thanks again; sorry for the confusion.
-> >
-> > >
-> > > They're both marked for stable, but without any clue about when the
-> > > problems were introduced or how serious they are, I did not queue the=
-m
-> for
-> > > v4.11.  If you want them in v4.11, please supply those additional det=
-ails.
-> >
-> > I think these issues have been there since   the driver got merged
-> upstream.
-> > I would want this to be applied against 4.11 as well. Let me know if I =
-should
-> resend
-> > these patches.
->=20
-> No need to resend, but I do need more details about what issues these fix
-> and why they're more urgent than garden-variety bug fixes that are planne=
-d
-> for v4.12.  In general for-linus is for fixing problems we added during t=
-he
-> merge window, or other high-priority, low-risk changes.
-
-For sure I want to get this into 4.12. Since it fixes issues that have been=
- there for a long time,
-(including 4.11), it would be good to get it into 4.11 as well.=20
-
-Regards,
-
-K. Y
->=20
-> Bjorn
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
