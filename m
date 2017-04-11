@@ -1,136 +1,192 @@
-Return-Path: <SRS0=QdOM=33=twosheds.srs.infradead.org=BATV+38a535747be6a14cb0f0+4987+infradead.org+dwmw2@kernel.org>
-Return-Path: <SRS0=QdOM=33=twosheds.srs.infradead.org=BATV+38a535747be6a14cb0f0+4987+infradead.org+dwmw2@kernel.org>
-Message-ID: <1492586617.17682.240.camel@infradead.org>
-Subject: Re: [PATCH v2 00/27] PCI resource mmap cleanup
-From: David Woodhouse <dwmw2@infradead.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
- linux-kernel@vger.kernel.org
-In-Reply-To: <20170418182816.GB25295@bhelgaas-glaptop.roam.corp.google.com>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-	 <20170418182816.GB25295@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: multipart/signed; micalg="sha-256"; protocol="application/x-pkcs7-signature"; boundary="=-aNlkrOhpJ5KfofUc8TW1"
-Date: Wed, 19 Apr 2017 08:23:37 +0100
-Mime-Version: 1.0
+Return-Path: <SRS0=rYaJ=3T=arm.com=robin.murphy@kernel.org>
+Return-Path: <SRS0=rYaJ=3T=arm.com=robin.murphy@kernel.org>
+Subject: Re: [PATCH v4 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Jayachandran C <jnair@caviumnetworks.com>
+References: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
+ <1491225304-3559-3-git-send-email-jnair@caviumnetworks.com>
+ <20170411012847.GA15291@bhelgaas-glaptop.roam.corp.google.com>
+ <20170411071047.GA3610@localhost>
+ <20170411134125.GA31773@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+ Alex Williamson <alex.williamson@redhat.com>, Jon Masters <jcm@redhat.com>,
+ linux-arm-kernel@lists.infradead.org, Joerg Roedel <joro@8bytes.org>,
+ Marc Zyngier <Marc.Zyngier@arm.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <cd9ffb91-5627-d26a-3e4a-32205a501621@arm.com>
+Date: Tue, 11 Apr 2017 16:34:07 +0100
+MIME-Version: 1.0
+In-Reply-To: <20170411134125.GA31773@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
+On 11/04/17 14:41, Bjorn Helgaas wrote:
+> [+cc Joerg]
+> 
+> On Tue, Apr 11, 2017 at 07:10:48AM +0000, Jayachandran C wrote:
+>> On Mon, Apr 10, 2017 at 08:28:47PM -0500, Bjorn Helgaas wrote:
+>>> Hi Jayachandran,
+>>>
+>>> On Mon, Apr 03, 2017 at 01:15:04PM +0000, Jayachandran C wrote:
+>>>> The Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the PCI
+>>>> topology is slightly unusual. For a multi-node system, it looks like:
+>>>>
+>>>> [node level PCI bridges - one per node]
+>>>>     [SoC PCI devices with MSI-X but no IOMMU]
+>>>>     [PCI-PCIe "glue" bridges - upto 14, one per real port below]
+>>>>         [PCIe real root ports associated with IOMMU and GICv3 ITS]
+>>>>             [External PCI devices connected to PCIe links]
+>>>>
+>>>> The top two levels of bridges should have introduced aliases since they
+>>>> are PCI and PCI/PCIe bridges, but in the case of ThunderX2 they do not.
+>>>> In the case of external PCIe devices, the "real" root ports are connected
+>>>> to the SMMU and the GIC ITS, so PCI-PCIe bridge does not introduce an
+>>>> alias. The SoC PCI devices are directly connected to the GIC ITS, so the
+>>>> node level bridges do not introduce an alias either.
+>>>>
+>>>> To handle this quirk, we mark the real PCIe root ports and node level
+>>>> PCI bridges with the flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT.  With this,
+>>>> pci_for_each_dma_alias() works correctly for external PCIe devices and
+>>>> SoC PCI devices.
+>>>>
+>>>> For the current revision of Cavium ThunderX2, the VendorID and Device ID
+>>>> are from Broadcom Vulcan (14e4:90XX).
+>>>
+>>> Can you supply some text here about why we want to apply this patch?
+>>> E.g., does it avoid making unnecessary IOMMU mappings, improve
+>>> performance, avoid a crash, etc?
+>>
+>> If this is for the commit message, I hope the following is ok:
+>>
+>> "With this change, both MSI-X and IO virtualization work correctly on
+>> Cavium ThunderX2. The GIC ITS driver gets the correct device ID to
+>> configure MSI-X, the SMMUv3 driver gets the correct Stream IDs for PCI
+>> devices, and the IOMMU groups are setup correctly."
+> 
+> This doesn't get at what the actual problem is.  I'm hoping for
+> something like "without this change, we set up an IOMMU mapping for
+> requestor ID X, but device DMA uses requestor ID Y because ...., which
+> results in an IOMMU fault"
 
---=-aNlkrOhpJ5KfofUc8TW1
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+The fact that certain bits of code only consider the last-seen alias RID
+does mean we will install all mappings for a RID the IOMMU will never
+see, causing subsequent attempt to access them (via the real RID) to
+fault. Even with that fixed, considering the past-the-IOMMU-connection
+bridges will cause IOMMU group assignment to believe the IOMMU can't
+distinguish them and thus prevent individual devices being assignable to
+different VMs.
 
-On Tue, 2017-04-18 at 13:28 -0500, Bjorn Helgaas wrote:
->=20
-> Applied to pci/resource-mmap for v4.12, thanks!
->=20
-> This consists of the email patches + the acks/etc so far.=C2=A0 It doesn'=
-t
-> include any updates from your git branch (but it doesn't look like it's
-> been updated recently).
+> I've been puzzling over the fact that most of the callers of
+> pci_for_each_dma_alias() don't seem to use it correctly.  For Intel
+> IOMMUs, domain_context_mapping() uses it to add a mapping for every
+> possible alias.  But most of the other callers only look at the last
+> alias and ignore all the others.
 
-Thanks. Aside from merging the acks, I had also fixed a typo in
-include/linux/pci.h (s/aroudn/around) and re-ordered the later commits
-to put the three IA64 changes immediately after the ones you already
-merged. Tony said it was OK to take those through your tree too.
+As it happens, I've just been looking into this and reaching the same
+conclusion (not least because a fair few of of the incorrect uses have
+my fingerprints all over them). The of_iommu_configure() and
+corresponding iort_iommu_configure() uses turn out to already be broken
+WRT DMA phantom functions vs. MSIs, but pretty straightforward to fix
+(and I now have one of the offending Marvell SATA cards to test things
+with). The one in its_pci_msi_prepare() turns out to be totally
+backwards, as it actually wants to iterate through every device which
+may alias with the given device (any suggestions for the neatest way to
+do that are most welcome).
 
-I've taken your pci/resource-mmap branch, edited it to apply the typo
-fix, and added the three IA64 commits at
+The other uses in pci_msi_*() are a little trickier, as in general we're
+assuming every device is associated with just a single ID (certainly for
+ARM GICv3 this assumption runs quite strongly through the architecture)
+- Marc and I have chucked some ideas around, but in the short term, it
+might be easier to just not even pretend to support MSIs from behind
+aliasing bridges for the DT/IORT cases. Either way, those are also
+broken for the phantom function case (and the tentative fix I've written
+will need rethinking in light of this discussion, oh well).
 
-=C2=A0git://git.infradead.org/users/dwmw2/random-2.6.git for-bjorn
-http://git.infradead.org/users/dwmw2/random-2.6.git/shortlog/refs/heads/for=
--bjorn
---=-aNlkrOhpJ5KfofUc8TW1
-Content-Type: application/x-pkcs7-signature; name="smime.p7s"
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Transfer-Encoding: base64
+>  That might work most of the time,
+> but:
+> 
+>   - There's no guarantee that pci_for_each_dma_alias() iterates in any
+>     particular order, so relying on the current order is fragile,
+> 
+>   - The pci_add_dma_alias() interface allows an arbitrary number of
+>     aliases (as long as they're all on the same bus), and some devices
+>     do use more than one, e.g., quirk_dma_func0_alias(),
+>     quirk_mic_x200_dma_alias(),
+> 
+>   - pci_for_each_dma_alias() translates the rules in the PCIe to
+>     PCI/PCI-X Bridge spec, r1.0, sec 2.3, about taking ownership into
+>     aliases.  I think it's important to pay attention to *every*
+>     possible alias, not just the last one.
 
-MIAGCSqGSIb3DQEHAqCAMIACAQExDzANBglghkgBZQMEAgEFADCABgkqhkiG9w0BBwEAAKCCDzUw
-ggSvMIIDl6ADAgECAhEA4CPLFRKDU4mtYW56VGdrITANBgkqhkiG9w0BAQsFADBvMQswCQYDVQQG
-EwJTRTEUMBIGA1UEChMLQWRkVHJ1c3QgQUIxJjAkBgNVBAsTHUFkZFRydXN0IEV4dGVybmFsIFRU
-UCBOZXR3b3JrMSIwIAYDVQQDExlBZGRUcnVzdCBFeHRlcm5hbCBDQSBSb290MB4XDTE0MTIyMjAw
-MDAwMFoXDTIwMDUzMDEwNDgzOFowgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1h
-bmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEw
-PwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBF
-bWFpbCBDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAImxDdp6UxlOcFIdvFamBia3
-uEngludRq/HwWhNJFaO0jBtgvHpRQqd5jKQi3xdhTpHVdiMKFNNKAn+2HQmAbqUEPdm6uxb+oYep
-LkNSQxZ8rzJQyKZPWukI2M+TJZx7iOgwZOak+FaA/SokFDMXmaxE5WmLo0YGS8Iz1OlAnwawsayT
-QLm1CJM6nCpToxDbPSBhPFUDjtlOdiUCISn6o3xxdk/u4V+B6ftUgNvDezVSt4TeIj0sMC0xf1m9
-UjewM2ktQ+v61qXxl3dnUYzZ7ifrvKUHOHaMpKk4/9+M9QOsSb7K93OZOg8yq5yVOhM9DkY6V3Rh
-UL7GQD/L5OKfoiECAwEAAaOCARcwggETMB8GA1UdIwQYMBaAFK29mHo0tCb3+sQmVO8DveAky1Qa
-MB0GA1UdDgQWBBSSYWuC4aKgqk/sZ/HCo/e0gADB7DAOBgNVHQ8BAf8EBAMCAYYwEgYDVR0TAQH/
-BAgwBgEB/wIBADAdBgNVHSUEFjAUBggrBgEFBQcDAgYIKwYBBQUHAwQwEQYDVR0gBAowCDAGBgRV
-HSAAMEQGA1UdHwQ9MDswOaA3oDWGM2h0dHA6Ly9jcmwudXNlcnRydXN0LmNvbS9BZGRUcnVzdEV4
-dGVybmFsQ0FSb290LmNybDA1BggrBgEFBQcBAQQpMCcwJQYIKwYBBQUHMAGGGWh0dHA6Ly9vY3Nw
-LnVzZXJ0cnVzdC5jb20wDQYJKoZIhvcNAQELBQADggEBABsqbqxVwTqriMXY7c1V86prYSvACRAj
-mQ/FZmpvsfW0tXdeDwJhAN99Bf4Ss6SAgAD8+x1banICCkG8BbrBWNUmwurVTYT7/oKYz1gb4yJj
-nFL4uwU2q31Ypd6rO2Pl2tVz7+zg+3vio//wQiOcyraNTT7kSxgDsqgt1Ni7QkuQaYUQ26Y3NOh7
-4AEQpZzKOsefT4g0bopl0BqKu6ncyso20fT8wmQpNa/WsadxEdIDQ7GPPprsnjJT9HaSyoY0B7ks
-yuYcStiZDcGG4pCS+1pCaiMhEOllx/XVu37qjIUgAmLq0ToHLFnFmTPyOInltukWeh95FPZKEBom
-+nyK+5swggU9MIIEJaADAgECAhBqC1BYlVMtBFBN4igR/howMA0GCSqGSIb3DQEBCwUAMIGbMQsw
-CQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3Jk
-MRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xp
-ZW50IEF1dGhlbnRpY2F0aW9uIGFuZCBTZWN1cmUgRW1haWwgQ0EwHhcNMTYxMjIwMDAwMDAwWhcN
-MTcxMjIwMjM1OTU5WjAkMSIwIAYJKoZIhvcNAQkBFhNkd213MkBpbmZyYWRlYWQub3JnMIIBIjAN
-BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwbTrFaiGdvN2pThnR9q+4eaXB2wQZQNqhter5ZrJ
-pPO47e87bZ+f1tmYoh6+rB90G/XN24NErPRfvU4zVzNT9pCtCzSSVnBlZQBpaEYMKhcXo5PGKNsm
-An8BoGwNXjlxwbBNRaNO+ky0wNCaMNd1JLxEuvqg9J7rrcpHhWmnpXD5IKa8gv9GyVAJgOpiBOts
-p91sShc2kHvWJ5waPEWPCHDH9J+twGGKqKIIU7fdbURLUgUL1wlDSAHf/lgIAVCSj2H2HpoGqHpy
-HgOAClX9iRSLNa0Znj8HTaqfOwxXevsz1KkLFY+Ahm426GIEqdfkK2iT6Hhgc7tjNO3f8i5ALQID
-AQABo4IB8TCCAe0wHwYDVR0jBBgwFoAUkmFrguGioKpP7GfxwqP3tIAAwewwHQYDVR0OBBYEFILE
-dmHLtK6oxmFJZvBhTQhvqrS0MA4GA1UdDwEB/wQEAwIFoDAMBgNVHRMBAf8EAjAAMCAGA1UdJQQZ
-MBcGCCsGAQUFBwMEBgsrBgEEAbIxAQMFAjARBglghkgBhvhCAQEEBAMCBSAwRgYDVR0gBD8wPTA7
-BgwrBgEEAbIxAQIBAQEwKzApBggrBgEFBQcCARYdaHR0cHM6Ly9zZWN1cmUuY29tb2RvLm5ldC9D
-UFMwXQYDVR0fBFYwVDBSoFCgToZMaHR0cDovL2NybC5jb21vZG9jYS5jb20vQ09NT0RPU0hBMjU2
-Q2xpZW50QXV0aGVudGljYXRpb25hbmRTZWN1cmVFbWFpbENBLmNybDCBkAYIKwYBBQUHAQEEgYMw
-gYAwWAYIKwYBBQUHMAKGTGh0dHA6Ly9jcnQuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVu
-dEF1dGhlbnRpY2F0aW9uYW5kU2VjdXJlRW1haWxDQS5jcnQwJAYIKwYBBQUHMAGGGGh0dHA6Ly9v
-Y3NwLmNvbW9kb2NhLmNvbTAeBgNVHREEFzAVgRNkd213MkBpbmZyYWRlYWQub3JnMA0GCSqGSIb3
-DQEBCwUAA4IBAQA+AfvNhFwtapF5Lzjapgul3zYuEnMfR538Ya1vhP8wuOkcoJeT2gEFXzVO2WUu
-eWM0g0/DumnRB53htV/Qq/+vsL0i6a2+iOO7kHi5O7bZkgbdNv0t2lzonDUHi6LTa7NUj+tv+j6y
-hW+iNquC3ACP1dIZH8gJmicHblW63qRgp6wxhn315MLBeavi3uiSag2eeKFePiTIwJjN2UYq6kWg
-PL5G/Ycf9x/xN1XBTfJiURc0FsXhrA98VMWnt52C5Lo4txhGjzTI+IZg40b3YDs6E7mTYb5KKmbc
-QZA9priOFDdj1z5W9BdWhU6I/D0P9y8Z4Tr6+ZscMUVD0RqWy2LeMIIFPTCCBCWgAwIBAgIQagtQ
-WJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQsFADCBmzELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy
-ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExp
-bWl0ZWQxQTA/BgNVBAMTOENPTU9ETyBTSEEtMjU2IENsaWVudCBBdXRoZW50aWNhdGlvbiBhbmQg
-U2VjdXJlIEVtYWlsIENBMB4XDTE2MTIyMDAwMDAwMFoXDTE3MTIyMDIzNTk1OVowJDEiMCAGCSqG
-SIb3DQEJARYTZHdtdzJAaW5mcmFkZWFkLm9yZzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
-ggEBAMG06xWohnbzdqU4Z0favuHmlwdsEGUDaobXq+WayaTzuO3vO22fn9bZmKIevqwfdBv1zduD
-RKz0X71OM1czU/aQrQs0klZwZWUAaWhGDCoXF6OTxijbJgJ/AaBsDV45ccGwTUWjTvpMtMDQmjDX
-dSS8RLr6oPSe663KR4Vpp6Vw+SCmvIL/RslQCYDqYgTrbKfdbEoXNpB71iecGjxFjwhwx/SfrcBh
-iqiiCFO33W1ES1IFC9cJQ0gB3/5YCAFQko9h9h6aBqh6ch4DgApV/YkUizWtGZ4/B02qnzsMV3r7
-M9SpCxWPgIZuNuhiBKnX5Ctok+h4YHO7YzTt3/IuQC0CAwEAAaOCAfEwggHtMB8GA1UdIwQYMBaA
-FJJha4LhoqCqT+xn8cKj97SAAMHsMB0GA1UdDgQWBBSCxHZhy7SuqMZhSWbwYU0Ib6q0tDAOBgNV
-HQ8BAf8EBAMCBaAwDAYDVR0TAQH/BAIwADAgBgNVHSUEGTAXBggrBgEFBQcDBAYLKwYBBAGyMQED
-BQIwEQYJYIZIAYb4QgEBBAQDAgUgMEYGA1UdIAQ/MD0wOwYMKwYBBAGyMQECAQEBMCswKQYIKwYB
-BQUHAgEWHWh0dHBzOi8vc2VjdXJlLmNvbW9kby5uZXQvQ1BTMF0GA1UdHwRWMFQwUqBQoE6GTGh0
-dHA6Ly9jcmwuY29tb2RvY2EuY29tL0NPTU9ET1NIQTI1NkNsaWVudEF1dGhlbnRpY2F0aW9uYW5k
-U2VjdXJlRW1haWxDQS5jcmwwgZAGCCsGAQUFBwEBBIGDMIGAMFgGCCsGAQUFBzAChkxodHRwOi8v
-Y3J0LmNvbW9kb2NhLmNvbS9DT01PRE9TSEEyNTZDbGllbnRBdXRoZW50aWNhdGlvbmFuZFNlY3Vy
-ZUVtYWlsQ0EuY3J0MCQGCCsGAQUFBzABhhhodHRwOi8vb2NzcC5jb21vZG9jYS5jb20wHgYDVR0R
-BBcwFYETZHdtdzJAaW5mcmFkZWFkLm9yZzANBgkqhkiG9w0BAQsFAAOCAQEAPgH7zYRcLWqReS84
-2qYLpd82LhJzH0ed/GGtb4T/MLjpHKCXk9oBBV81TtllLnljNINPw7pp0Qed4bVf0Kv/r7C9Iumt
-vojju5B4uTu22ZIG3Tb9Ldpc6Jw1B4ui02uzVI/rb/o+soVvojargtwAj9XSGR/ICZonB25Vut6k
-YKesMYZ99eTCwXmr4t7okmoNnnihXj4kyMCYzdlGKupFoDy+Rv2HH/cf8TdVwU3yYlEXNBbF4awP
-fFTFp7edguS6OLcYRo80yPiGYONG92A7OhO5k2G+Sipm3EGQPaa4jhQ3Y9c+VvQXVoVOiPw9D/cv
-GeE6+vmbHDFFQ9Ealsti3jGCA9MwggPPAgEBMIGwMIGbMQswCQYDVQQGEwJHQjEbMBkGA1UECBMS
-R3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0Eg
-TGltaXRlZDFBMD8GA1UEAxM4Q09NT0RPIFNIQS0yNTYgQ2xpZW50IEF1dGhlbnRpY2F0aW9uIGFu
-ZCBTZWN1cmUgRW1haWwgQ0ECEGoLUFiVUy0EUE3iKBH+GjAwDQYJYIZIAWUDBAIBBQCgggHzMBgG
-CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTE3MDQxOTA3MjMzN1owLwYJ
-KoZIhvcNAQkEMSIEIIDlC/RVR9SKZEZA+tPRouVy22Dbza/gkor0wKkVGG2sMIHBBgkrBgEEAYI3
-EAQxgbMwgbAwgZsxCzAJBgNVBAYTAkdCMRswGQYDVQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAO
-BgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9ETyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01P
-RE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRpb24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQ
-WJVTLQRQTeIoEf4aMDCBwwYLKoZIhvcNAQkQAgsxgbOggbAwgZsxCzAJBgNVBAYTAkdCMRswGQYD
-VQQIExJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcTB1NhbGZvcmQxGjAYBgNVBAoTEUNPTU9E
-TyBDQSBMaW1pdGVkMUEwPwYDVQQDEzhDT01PRE8gU0hBLTI1NiBDbGllbnQgQXV0aGVudGljYXRp
-b24gYW5kIFNlY3VyZSBFbWFpbCBDQQIQagtQWJVTLQRQTeIoEf4aMDANBgkqhkiG9w0BAQEFAASC
-AQBSHT4ZWAK0k7iPB/SCktAC0dmjnnLxXsWYZGnLY0GaiwgIb3pKQ7ddkf8RQjw1I9HnDCd1fPr/
-TAhWknLb/HmTXwByWWS3ECKbhvhXDWS87Hvn/iuMYP9PUCPdbRDFEZVN0ydCEIYYfxPiXDBby3oR
-HhfQLpFCIfVepfHgcNqMEz/TjqAAKeCe/Qa6vXTqewuIl6Az23tKKYAxCe6LJnrl3fd5zljLyvoz
-Lg4P5fdD6Yp/gCe4ev1ZMctB+ctxOUorV6bm4AA31CaDkphW8Tn1xbBxyexqIwYiyF+UJKJz51Tj
-baOxzvAMD0w6SJfZOOxFAu9dUmn7kQGyGGutKCOhAAAAAAAA
+Ha, that exact page is still open on my desktop since the "oh crap!"
+moment last Friday :)
 
+If I've interpreted that spec correctly, and it definitely is the case
+that a bridge may alias or not on a per-transaction basis, then that
+does end up making matters simpler; I can remove all the attempts to
+skip any IDs that the IOMMU is guaranteed never to see due to aliasing,
+if that set is in fact empty.
 
---=-aNlkrOhpJ5KfofUc8TW1--
+> I suspect the reason this patch makes a difference is because the
+> current pci_for_each_dma_alias() believes one of those top-level
+> bridges is an alias, and the iterator produces it last, so that's the
+> one you map.  The IOMMU is attached lower down, so that top-level
+> bridge is not in fact an alias, but since you only look at the *last*
+> one, you don't map the correct aliases from lower down in the tree.
+> 
+> Stopping the iterator earlier happens to make the last alias be one of
+> the correct ones, but it doesn't solve the problems of quirked devices
+> that can use multiple requester IDs, and it doesn't solve the problem
+> of PCIe-to-PCI bridges that optionally take ownership of transactions.
+
+Yes, that's pretty much the state of things, other than also solving the
+legitimate problem of get_pci_alias_group() going too far and inferring
+a false lack of isolation.
+
+Robin.
+
+>> I can send out a new patch if needed.
+>>
+>> The on chip SATA and USB use MSI-X, so this is needed for basic
+>> functionality of the platform.
+> 
+> No need for a new patch; I can integrate something into the changelog.
+> 
+>>>> Signed-off-by: Jayachandran C <jnair@caviumnetworks.com>
+>>>> ---
+>>>>  drivers/pci/quirks.c | 14 ++++++++++++++
+>>>>  1 file changed, 14 insertions(+)
+>>>>
+>>>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>>>> index 6736836..564a84a 100644
+>>>> --- a/drivers/pci/quirks.c
+>>>> +++ b/drivers/pci/quirks.c
+>>>> @@ -3958,6 +3958,20 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2260, quirk_mic_x200_dma_alias);
+>>>>  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2264, quirk_mic_x200_dma_alias);
+>>>>  
+>>>>  /*
+>>>> + * The IOMMU and interrupt controller on Broadcom Vulcan/Cavium ThunderX2 are
+>>>> + * associated not at the root bus, but at a bridge below. This quirk flag
+>>>> + * will ensure that the aliases are identified correctly.
+>>>> + */
+>>>> +static void quirk_bridge_cavm_thrx2_pcie_root(struct pci_dev *pdev)
+>>>> +{
+>>>> +	pdev->dev_flags |= PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT;
+>>>> +}
+>>>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9000,
+>>>> +				quirk_bridge_cavm_thrx2_pcie_root);
+>>>> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9084,
+>>>> +				quirk_bridge_cavm_thrx2_pcie_root);
+>>>> +
+>>>> +/*
+>>>>   * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
+>>>>   * class code.  Fix it.
+>>>>   */
+>>
+>> Thanks,
+>> JC.
+>>
+>> _______________________________________________
+>> linux-arm-kernel mailing list
+>> linux-arm-kernel@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
