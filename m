@@ -1,110 +1,91 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-In-Reply-To: <b081f333-084d-ffa5-635f-f7f1c0232ac3@arm.com>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-7-git-send-email-sricharan@codeaurora.org>
- <58E5E7B7.1050400@gmail.com> <b081f333-084d-ffa5-635f-f7f1c0232ac3@arm.com>
-From: Rob Herring <robh+dt@kernel.org>
-Date: Thu, 6 Apr 2017 08:56:33 -0500
-Message-ID: <CAL_JsqLsE378hfs=xNvSdPV2r+7H81cAFzOwtda2W+mFVoohuA@mail.gmail.com>
-Subject: Re: [PATCH V10 06/12] of: device: Fix overflow of coherent_dma_mask
-To: Robin Murphy <robin.murphy@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
- Frank Rowand <frowand.list@gmail.com>,
- Marek Szyprowski <m.szyprowski@samsung.com>,
- "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Tomasz Nowicki <tn@semihalf.com>, Joerg Roedel <joro@8bytes.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Len Brown <lenb@kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Arnd Bergmann <arnd@arndb.de>, linux-arm-msm <linux-arm-msm@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Linux IOMMU <iommu@lists.linux-foundation.org>,
- Hanjun Guo <hanjun.guo@linaro.org>, Sudeep Holla <sudeep.holla@arm.com>,
- Sricharan R <sricharan@codeaurora.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:45751 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752841AbdDKLCA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Apr 2017 07:02:00 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: davem@davemloft.net
+Cc: bhelgaas@google.com, netanel@annapurnalabs.com, jcliburn@gmail.com,
+        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org,
+        jiri@mellanox.com, idosch@mellanox.com, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH 5/5] mlxsw: convert to pci_alloc_irq_vectors
+Date: Tue, 11 Apr 2017 13:01:25 +0200
+Message-Id: <20170411110125.3446-6-hch@lst.de>
+In-Reply-To: <20170411110125.3446-1-hch@lst.de>
+References: <20170411110125.3446-1-hch@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 6, 2017 at 5:24 AM, Robin Murphy <robin.murphy@arm.com> wrote:
-> On 06/04/17 08:01, Frank Rowand wrote:
->> On 04/04/17 03:18, Sricharan R wrote:
->>> Size of the dma-range is calculated as coherent_dma_mask + 1
->>> and passed to arch_setup_dma_ops further. It overflows when
->>> the coherent_dma_mask is set for full 64 bits 0xFFFFFFFFFFFFFFFF,
->>> resulting in size getting passed as 0 wrongly. Fix this by
->>> passsing in max(mask, mask + 1). Note that in this case
->>> when the mask is set to full 64bits, we will be passing the mask
->>> itself to arch_setup_dma_ops instead of the size. The real fix
->>> for this should be to make arch_setup_dma_ops receive the
->>> mask and handle it, to be done in the future.
->>>
->>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->>> ---
->>>  drivers/of/device.c | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/of/device.c b/drivers/of/device.c
->>> index c17c19d..c2ae6bb 100644
->>> --- a/drivers/of/device.c
->>> +++ b/drivers/of/device.c
->>> @@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct device_node *np)
->>>      ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->>>      if (ret < 0) {
->>>              dma_addr = offset = 0;
->>> -            size = dev->coherent_dma_mask + 1;
->>> +            size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
->>>      } else {
->>>              offset = PFN_DOWN(paddr - dma_addr);
->>>              dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->>>
->>
->> NACK.
->>
->> Passing an invalid size to arch_setup_dma_ops() is only part of the problem.
->> size is also used in of_dma_configure() before calling arch_setup_dma_ops():
->>
->>         dev->coherent_dma_mask = min(dev->coherent_dma_mask,
->>                                      DMA_BIT_MASK(ilog2(dma_addr + size)));
->>         *dev->dma_mask = min((*dev->dma_mask),
->>                              DMA_BIT_MASK(ilog2(dma_addr + size)));
->>
->> which would be incorrect for size == 0xffffffffffffffffULL when
->> dma_addr != 0.  So the proposed fix really is not papering over
->> the base problem very well.
->
-> I'm not sure I agree there. Granted, there exist many more problematic
-> aspects than are dealt with here (I've got more patches cooking to sort
-> out some of the other issues we have with dma-ranges), but considering
-> size specifically:
->
-> - It is not possible to explicitly specify a range with a size of 2^64
-> in DT. If someone does specify a size of 0, they've done a silly thing
-> and should not be surprised that it ends badly.
+Trivial conversion as only one vector is supported, but at least we
+lose the useless msix_entry member in the per-device structure.
 
-And because of this, we allow ~0 (both 32 and 64 bit) in DT dma-ranges
-and fix these up as 2^32 and 2^64 sizes.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Jiri Pirko <jiri@mellanox.com>
+Reviewed-by: Ido Schimmel <idosch@mellanox.com>
+Tested-by: Ido Schimmel <idosch@mellanox.com>
+---
+ drivers/net/ethernet/mellanox/mlxsw/pci.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-Rob
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/net/ethernet/mellanox/mlxsw/pci.c b/drivers/net/ethernet/mellanox/mlxsw/pci.c
+index eaa3e3bf5a2b..23f7d828cf67 100644
+--- a/drivers/net/ethernet/mellanox/mlxsw/pci.c
++++ b/drivers/net/ethernet/mellanox/mlxsw/pci.c
+@@ -136,7 +136,6 @@ struct mlxsw_pci {
+ 	u8 __iomem *hw_addr;
+ 	struct mlxsw_pci_queue_type_group queues[MLXSW_PCI_QUEUE_TYPE_COUNT];
+ 	u32 doorbell_offset;
+-	struct msix_entry msix_entry;
+ 	struct mlxsw_core *core;
+ 	struct {
+ 		struct mlxsw_pci_mem_item *items;
+@@ -1409,7 +1408,7 @@ static int mlxsw_pci_init(void *bus_priv, struct mlxsw_core *mlxsw_core,
+ 	if (err)
+ 		goto err_aqs_init;
+ 
+-	err = request_irq(mlxsw_pci->msix_entry.vector,
++	err = request_irq(pci_irq_vector(pdev, 0),
+ 			  mlxsw_pci_eq_irq_handler, 0,
+ 			  mlxsw_pci->bus_info.device_kind, mlxsw_pci);
+ 	if (err) {
+@@ -1442,7 +1441,7 @@ static void mlxsw_pci_fini(void *bus_priv)
+ {
+ 	struct mlxsw_pci *mlxsw_pci = bus_priv;
+ 
+-	free_irq(mlxsw_pci->msix_entry.vector, mlxsw_pci);
++	free_irq(pci_irq_vector(mlxsw_pci->pdev, 0), mlxsw_pci);
+ 	mlxsw_pci_aqs_fini(mlxsw_pci);
+ 	mlxsw_pci_fw_area_fini(mlxsw_pci);
+ 	mlxsw_pci_mbox_free(mlxsw_pci, &mlxsw_pci->cmd.out_mbox);
+@@ -1717,8 +1716,8 @@ static int mlxsw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto err_sw_reset;
+ 	}
+ 
+-	err = pci_enable_msix_exact(pdev, &mlxsw_pci->msix_entry, 1);
+-	if (err) {
++	err = pci_alloc_irq_vectors(pdev, 1, 1, PCI_IRQ_MSIX);
++	if (err < 0) {
+ 		dev_err(&pdev->dev, "MSI-X init failed\n");
+ 		goto err_msix_init;
+ 	}
+@@ -1737,7 +1736,7 @@ static int mlxsw_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	return 0;
+ 
+ err_bus_device_register:
+-	pci_disable_msix(mlxsw_pci->pdev);
++	pci_free_irq_vectors(mlxsw_pci->pdev);
+ err_msix_init:
+ err_sw_reset:
+ 	iounmap(mlxsw_pci->hw_addr);
+@@ -1757,7 +1756,7 @@ static void mlxsw_pci_remove(struct pci_dev *pdev)
+ 	struct mlxsw_pci *mlxsw_pci = pci_get_drvdata(pdev);
+ 
+ 	mlxsw_core_bus_device_unregister(mlxsw_pci->core);
+-	pci_disable_msix(mlxsw_pci->pdev);
++	pci_free_irq_vectors(mlxsw_pci->pdev);
+ 	iounmap(mlxsw_pci->hw_addr);
+ 	pci_release_regions(mlxsw_pci->pdev);
+ 	pci_disable_device(mlxsw_pci->pdev);
+-- 
+2.11.0
