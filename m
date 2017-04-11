@@ -1,206 +1,108 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v4 00/21] PCI: fix config space memory mappings
-Date: Wed, 19 Apr 2017 17:48:49 +0100
-Message-Id: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Zhou Wang <wangzhou1@hisilicon.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Jonathan Corbet <corbet@lwn.net>, Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Murali Karicheri <m-karicheri2@ti.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Arnd Bergmann <arnd@arndb.de>, Jon Mason <jonmason@broadcom.com>,
- Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- "Luis R . Rodriguez" <mcgrof@kernel.org>,
- Roy Zang <tie-fei.zang@freescale.com>
+Return-Path: <SRS0=hG8h=3T=gmail.com=ddaney.cavm@kernel.org>
+Return-Path: <SRS0=hG8h=3T=gmail.com=ddaney.cavm@kernel.org>
+Subject: Re: [PATCH v4 0/2] Handle Cavium ThunderX2 PCI topology quirk
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Jayachandran C <jnair@caviumnetworks.com>
+References: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
+ <20170411134407.GB31773@bhelgaas-glaptop.roam.corp.google.com>
+Cc: David Daney <david.daney@cavium.com>, linux-pci@vger.kernel.org,
+ iommu@lists.linux-foundation.org,
+ Alex Williamson <alex.williamson@redhat.com>, Jon Masters <jcm@redhat.com>,
+ Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org
+From: David Daney <ddaney.cavm@gmail.com>
+Message-ID: <bdfc225a-7859-926b-6e17-327fb93c02bc@gmail.com>
+Date: Tue, 11 Apr 2017 09:01:27 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170411134407.GB31773@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series[1] is a v4 of a previous version:
+On 04/11/2017 06:44 AM, Bjorn Helgaas wrote:
+> [+cc David]
+>
+> I forgot to mention that I'm also hoping for an ack from David, since
+> he's listed as the maintainer of the ThunderX drivers.
+>
 
-v3 -> v4:
-	- Reverted back to pci_remap_cfgspace() interface for lack of
-	  consensus on ioremap_nopost() semantics
-	- Dropped pci_remap_iospace() rework (owing to lack of adequate
-	  pgprot_* attribute description across arches)
-	- Updated pci_remap_cfgspace() comments
+JC is really leading the development of this particular PCI 
+implementation, but I am happy to supply my:
 
-v3: http://lists.infradead.org/pipermail/linux-arm-kernel/2017-April/500838.html
-
-v2 -> v3:
-	- Created a default ioremap_nopost() implementation in a separate
-	  asm-generic header and patched all arches to make use of it
-	- Removed PCI drivers patches from the series to simplify the
-	  review, they will be posted separately once the ioremap_nopost()
-	  interface is settled
-	- Fixed devm_ioremap_* BUS offset comments and implemented
-	  nopost interface on top of it
-	- Added collected tags
-
-v2: https://lkml.org/lkml/2017/3/27/220
-
-v2 -> v3:
-	- Fixed devm_ioremap_* BUS offset comments and implemented
-	  nopost interface on top of it
-	- Added collected tags
-
-v1: https://lkml.org/lkml/2017/2/27/228
-
-v1 -> v2:
-	- Changed pci_remap_cfgspace() to more generic ioremap_nopost()
-	  interface
-	- Added pgprot_nonposted
-	- Fixed build errors on arches not relying on asm-generic headers
-	- Added PCI versatile host controller driver patch
-	- Added missing config space remapping to hisilicon host controller
-
-PCI local bus specifications (Rev3.0, 3.2.5 "Transaction Ordering
-and Posting") strictly require PCI configuration and I/O Address space
-write transactions to be non-posted.
-
-Current crop of DT/ACPI PCI host controllers drivers relies on
-the ioremap interface to map ECAM and ECAM-derivative PCI config
-regions and pci_remap_iospace() to create a VMA for mapping
-PCI host bridge I/O Address space transactions to CPU virtual address
-space.
-
-On some platforms (ie ARM/ARM64) ioremap fails to comply with the PCI
-configuration non-posted write transactions requirement, because it
-provides a memory mapping that issues "bufferable" or, in PCI terms
-"posted" write transactions. Likewise, the current pci_remap_iospace()
-implementation maps the physical address range that the PCI translates
-to I/O space cycles to virtual address space through pgprot_device()
-attributes that on eg ARM64 provides a memory mapping issuing
-posted writes transactions, which is not PCI specifications compliant.
-
-This patch series[1] addresses both issues in one go:
-
-- It updates the pci_remap_iospace() function to use a page mapping
-  that guarantees non-posted write transactions for I/O space addresses
-- It adds a kernel API to remap PCI config space resources, so that
-  architecture can override it with a mapping implementation that
-  guarantees PCI specifications compliancy wrt non-posted write
-  configuration transactions
-- It updates all PCI host controller implementations (and the generic
-  ECAM layer) to use the newly introduced mapping interface
-
-Tested on Juno ECAM based interface (DT/ACPI).
-
-Non-ECAM PCI host controller drivers patches need checking to make
-sure that:
-
-- I patched the correct resource region mapping for config space
-- There are not any other ways to ensure posted-write completion
-  in the respective pci_ops that make the relevant patch unnecessary
-
-[1] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git pci/config-io-mappings-fix-v4
-
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mingkai Hu <mingkai.hu@freescale.com>
-Cc: Tanmay Inamdar <tinamdar@apm.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Ray Jui <rjui@broadcom.com>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Minghuan Lian <minghuan.Lian@freescale.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Jon Mason <jonmason@broadcom.com>
-Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: Thierry Reding <thierry.reding@gmail.com>
-Cc: Luis R. Rodriguez <mcgrof@kernel.org>
-Cc: Michal Simek <michal.simek@xilinx.com>
-Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>
-Cc: Roy Zang <tie-fei.zang@freescale.com>
-
-Lorenzo Pieralisi (21):
-  PCI: remove __weak tag from pci_remap_iospace()
-  linux/io.h: add PCI config space remap interface
-  ARM64: implement pci_remap_cfgspace() interface
-  ARM: implement pci_remap_cfgspace() interface
-  lib: fix Devres devm_ioremap_* offset parameter kerneldoc description
-  PCI: implement Devres interface to map PCI config space
-  PCI: ECAM: use pci_remap_cfgspace() to map config region
-  PCI: xilinx: update PCI config space remap function
-  PCI: xilinx-nwl: update PCI config space remap function
-  PCI: spear13xx: update PCI config space remap function
-  PCI: rockchip: update PCI config space remap function
-  PCI: qcom: update PCI config space remap function
-  PCI: iproc-platform: update PCI config space remap function
-  PCI: designware: update PCI config space remap function
-  PCI: armada8k: update PCI config space remap function
-  PCI: xgene: update PCI config space remap function
-  PCI: tegra: update PCI config space remap function
-  PCI: hisi: update PCI config space remap function
-  PCI: layerscape: update PCI config space remap function
-  PCI: keystone-dw: update PCI config space remap function
-  PCI: versatile: update PCI config space remap function
-
- Documentation/driver-model/devres.txt  |  6 ++-
- arch/arm/include/asm/io.h              | 10 ++++
- arch/arm/mm/ioremap.c                  |  7 +++
- arch/arm/mm/nommu.c                    | 12 +++++
- arch/arm64/include/asm/io.h            | 10 ++++
- drivers/pci/dwc/pci-keystone-dw.c      |  2 +-
- drivers/pci/dwc/pci-layerscape.c       |  2 +-
- drivers/pci/dwc/pcie-armada8k.c        |  2 +-
- drivers/pci/dwc/pcie-designware-host.c | 12 +++--
- drivers/pci/dwc/pcie-hisi.c            |  7 ++-
- drivers/pci/dwc/pcie-qcom.c            |  2 +-
- drivers/pci/dwc/pcie-spear13xx.c       |  2 +-
- drivers/pci/ecam.c                     |  6 ++-
- drivers/pci/host/pci-tegra.c           |  4 +-
- drivers/pci/host/pci-versatile.c       |  3 +-
- drivers/pci/host/pci-xgene.c           |  4 +-
- drivers/pci/host/pcie-iproc-platform.c |  3 +-
- drivers/pci/host/pcie-rockchip.c       |  2 +-
- drivers/pci/host/pcie-xilinx-nwl.c     |  2 +-
- drivers/pci/host/pcie-xilinx.c         |  2 +-
- drivers/pci/pci.c                      | 84 +++++++++++++++++++++++++++++++++-
- include/linux/io.h                     | 19 ++++++++
- include/linux/pci.h                    |  5 ++
- lib/devres.c                           |  6 +--
- 24 files changed, 183 insertions(+), 31 deletions(-)
-
--- 
-2.10.0
+Acked-by: David Daney <david.daney@cavium.com>
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+> On Mon, Apr 03, 2017 at 01:15:02PM +0000, Jayachandran C wrote:
+>> Hi Bjorn, Alex,
+>>
+>> Sending this again (with a trivial fix to author name), please review.
+>> Updated summary below:
+>>
+>> Here is v4 of the patchset to handle the PCIe topology quirk of Cavium
+>> ThunderX2 systems (previously known as Broadcom Vulcan).
+>>
+>> The earlier discussions on this can be seen at:
+>> http://www.spinics.net/lists/linux-pci/msg51001.html
+>> https://patchwork.ozlabs.org/patch/582633/ and
+>> https://lists.linuxfoundation.org/pipermail/iommu/2016-June/017681.html
+>>
+>> The earlier discussion on this patchset ended with a suggestion that it
+>> may be possible to fix up this quirk by handling the issue in the
+>> function argument of pci_for_each_dma_alias(). But at that point we did
+>> not have the codebase to make the changes since the full ACPI and OF code
+>> for SMMU and GIC ITS was not upstream.
+>>
+>> Now that the changes are upstream, I tried to fix it in both the SMMU
+>> and the GIC ITS code based on this suggestion, the changes needed are at:
+>>  https://github.com/jchandra-cavm/linux/commits/rid-xlate-fixup
+>>
+>> The problems with this approach are:
+>>  - of the 14 uses of pci_for_each_dma_alias in the function in the kernel
+>>    tree, I have to fixup 6 callers (which is all but one ofthe callers
+>>    outside x86)
+>>  - 4 of these can be reasonably handled (please see the github repo above),
+>>    but the calls in drivers/irqchip/irq-gic-v3-its-pci-msi.c and
+>>    drivers/iommu/iommu.c cannot be reasonably fixed up.
+>>  - Even without the 2 above two changes I can get it to work for now.
+>>    But pci_for_each_dma_alias does not work as expected on this platform
+>>    and we have to be aware of that for all future uses of the function.
+>>
+>> For now, I have ruled out the approach, and I have rebased the earlier
+>> patch on to 4.11-rc and submitting again for review. The changes are:
+>>
+>> v3->v4:
+>>  - new address of author
+>>
+>> v2>v3:
+>>  - changed device flag name from PCI_DEV_FLAGS_DMA_ALIAS_ROOT to
+>>    PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT
+>>  - updated commit message to make the quirk clearer.
+>>
+>> Let me know your comments and suggestions.
+>>
+>> Thanks,
+>> JC.
+>>
+>>
+>> Jayachandran C (2):
+>>   PCI: Add device flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT
+>>   PCI: quirks: Fix ThunderX2 dma alias handling
+>>
+>>  drivers/pci/quirks.c | 14 ++++++++++++++
+>>  drivers/pci/search.c |  4 ++++
+>>  include/linux/pci.h  |  2 ++
+>>  3 files changed, 20 insertions(+)
+>>
+>> --
+>> 2.7.4
+>>
+>>
+>> _______________________________________________
+>> linux-arm-kernel mailing list
+>> linux-arm-kernel@lists.infradead.org
+>> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>
