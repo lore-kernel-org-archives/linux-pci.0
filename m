@@ -1,89 +1,78 @@
-Return-Path: <SRS0=xFRB=3W=gmail.com=rupert.thurner@kernel.org>
-Return-Path: <SRS0=xFRB=3W=gmail.com=rupert.thurner@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:34994 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752119AbdDKBno (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 10 Apr 2017 21:43:44 -0400
+Date: Mon, 10 Apr 2017 20:43:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Meelis Roos <mroos@linux.ee>
+Cc: Linux Kernel list <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org
+Subject: Re: 4.11-rc*: PCI IRQ allocation broken
+Message-ID: <20170411014338.GA9311@bhelgaas-glaptop.roam.corp.google.com>
+References: <alpine.LRH.2.20.1704102317110.14071@math.ut.ee>
 MIME-Version: 1.0
-From: rupert THURNER <rupert.thurner@gmail.com>
-Date: Fri, 14 Apr 2017 22:26:25 +0200
-Message-ID: <CAJs9aZ8HVPn_J9yPjvdBm-A_d3FiquPMGoy1xFsGopF8Xg_89Q@mail.gmail.com>
-Subject: 4.10.9 nok with realtek wlan, atom
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>, Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.LRH.2.20.1704102317110.14071@math.ut.ee>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 9, 2017 at 9:09 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 02/09/2017 01:43 PM, Bjorn Helgaas wrote:
->>
->> [+cc rtl8192ce folks in case they've seen this]
->>
->> On Thu, Feb 09, 2017 at 03:45:01PM +0100, rupert THURNER wrote:
->>>
->>> hi,
->>>
->>> not technical expert enough, i just wanted to give a short user
->>> feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
->>> kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
->>> well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
->>> hotspot is possible then drops, or connecting to wlan fails
->>> alltogether.
->>
->>
->> Thanks very much for your report, and sorry for the inconvenience.
->>
->> v4.10-rc7 works, so I guess we don't need to worry about fixing v4.10.
->>
->> But the stable kernels v4.9.6, v4.9.7, and v4.9.8 are broken, so we
->> need to figure out why and make sure we fix the v4.9 stable series.
->>
->> I can't tell yet whether this is PCI-related or not.  If it is,
->> 4922a6a5cfa7 ("PCI: Enumerate switches below PCI-to-PCIe bridges")
->> appeared in v4.9.6, and there is a known issue with that.  The issue
->> should be fixed by 610c2b7ff8f6 ("PCI/ASPM: Handle PCI-to-PCIe bridges
->> as roots of PCIe hierarchies"), which appeared in v4.9.9, so I guess
->> the first thing to do would be to test v4.9.9.
->>
->> If it's not fixed in v4.9.9, can you share the complete dmesg log
->> (output of "dmesg" command) and "lspci -vv" output for v4.9.5 (last
->> known working version) and v4.9.6 (first known broken version)?  On
->> v4.9.6, collect the dmesg output after the failure occurs.
->>
->>> 24: PCI 300.0: 0282 WLAN controller
->>>   [Created at pci.366]
->>>   Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
->>>   Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
->>>   Revision: 0x01
->>>   Driver: "rtl8192ce"
->>>   Driver Modules: "rtl8192ce"
->>>   Device File: wlp3s0
->>>   Features: WLAN
->
->
-> It would be helpful if someone were to bisect this issue. The only issue
-> that comes to mind was fixed in commit 52f5631a4c05 ("rtlwifi: rtl8192ce:
-> Fix loading of incorrect firmware") which is in 4.10-rc7 and will be
-> backported to 4.9.
->
-> The above issue is one that could not be reproduced on my hardware, thus it
-> took Jurij Smakov to find the fix. Without his bisection of the problem, who
-> knows how long it would have taken to find my edit mistake.
+On Mon, Apr 10, 2017 at 11:21:22PM +0300, Meelis Roos wrote:
+> This happens on my HP Compaq 8100 Elite SFF PC. While 4.10 works fine, 
+> 4.11.-rc5 and at least back to 4.10.0-10770-g2d6be4abf514 fail to assign 
+> PCI IRQ to multiple devices (no GSI messages in the dmesg). This results 
+> in mouse in one USB port working and keyboard in another USB port not 
+> working, reproducibly.
+> 
+> Will bisect.
 
-larry, using the newest kernel 4.10.8 the network connection dropps
-again irregular.
+Thanks a lot for the report, Meelis, and I apologize for the inconvenience.
+I opened https://bugzilla.kernel.org/show_bug.cgi?id=195319 to track this,
+marked it as a regression, and attached your v4.11-rc5 dmesg to it.
 
-# dmesg
-[    0.000000] Linux version 4.10.9-1-ARCH (builduser@tobias) (gcc
-version 6.3.1 20170306 (GCC) ) #1 SMP PREEMPT Sat Apr 8 12:39:59 CEST
-2017
-[   11.933373] rtl8192ce: rtl8192ce: Power Save off (module option)
-[   11.933396] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
-[   11.978307] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
-[   11.978945] rtlwifi: rtlwifi: wireless switch is on
+Something seems broken in ACPI.  There are a bunch of warnings, and I
+think the PCI IRQ problem is a consequence of the fact that the
+PNP0A08 _CRS evaluation failed, and we probably don't bother looking
+for a _PRT under that bridge.
 
-# lspci -vv
-Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter
-Kernel driver in use: rtl8192ce
-
-best,
-rupert
+> Linux version 4.11.0-rc5-00033-g308ac7563944 (mroos@prometheus) (gcc version 6.3.0 20170321 (Debian 6.3.0-11) ) #64 SMP Wed Apr 5 12:29:53 EEST 2017
+> Command line: BOOT_IMAGE=/boot/vmlinuz-4.11.0-rc5-00033-g308ac7563944 root=/dev/sda1 ro
+> ...
+> ACPI BIOS Warning (bug): Optional FADT field Pm2ControlBlock has valid Address but zero Length: 0x0000000000000050/0x0 (20170119/tbfadt-658)
+> ACPI BIOS Warning (bug): Invalid length for FADT/Pm2ControlBlock: 0, using default 8 (20170119/tbfadt-708)
+> ...
+> acpi LNXCPU:00: Invalid PBLK length [7]
+> acpi LNXCPU:01: Invalid PBLK length [7]
+> acpi LNXCPU:02: Invalid PBLK length [7]
+> acpi LNXCPU:03: Invalid PBLK length [7]
+> acpi PNP0A08:00: [Firmware Bug]: no secondary bus range in _CRS
+> ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+> acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+> ACPI BIOS Error (bug): \_SB.PCI0._OSC: Excess arguments - ASL declared 5, ACPI requires 4 (20170119/nsarguments-189)
+> ACPI Error: [CAPD] Namespace lookup failure, AE_ALREADY_EXISTS (20170119/dsfield-211)
+> ACPI Error: Method parse/execution failed [\_SB.PCI0._OSC] (Node ffff880113031668), AE_ALREADY_EXISTS (20170119/psparse-543)
+> acpi PNP0A08:00: _OSC failed (AE_ALREADY_EXISTS); disabling ASPM
+> acpi PNP0A08:00: [Firmware Info]: MMCONFIG for domain 0000 [bus 00-3f] only partially covers this bridge
+> acpi PNP0A08:00: failed to parse _CRS method, error code -5
+> acpi PNP0A08:00: Bus 0000:00 not present in PCI namespace
+> ...
+> PCI: Discovered peer bus 00
+> PCI: root bus 00: using default resources
+> PCI: Probing PCI hardware (bus 00)
+> ...
+> ACPI: \: failed to evaluate _DSM (0x1001)
+> ...
+> PCI host bridge to bus 0000:00
+> pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> pci_bus 0000:00: root bus resource [mem 0x00000000-0xfffffffff]
+> pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
+> ...
+> PCI: Discovered peer bus 3f
+> PCI: root bus 3f: using default resources
+> PCI: Probing PCI hardware (bus 3f)
+> ACPI: \: failed to evaluate _DSM (0x1001)
+> ...
+> pnp 00:00: Plug and Play ACPI device, IDs PNP0b00 (active)
+> pnp 00:01: can't evaluate _CRS: 12316
+> ...
+> [drm] ACPI BIOS requests an excessive sleep of 4294705151 ms, using 1500 ms instead
