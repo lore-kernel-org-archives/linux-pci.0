@@ -1,89 +1,80 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC PATCH 01/30] iommu/arm-smmu-v3: Link groups and devices
-To: Robin Murphy <robin.murphy@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-2-jean-philippe.brucker@arm.com>
- <9ce9e3c5-3f94-8b06-2bd7-a665f0f33304@arm.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <91a0ac80-139b-0631-a743-e2a3861a51bf@arm.com>
-Date: Mon, 10 Apr 2017 12:02:31 +0100
+Return-Path: <SRS0=u2l1=3T=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=u2l1=3T=vodafone.de=deathsimple@kernel.org>
+Subject: Re: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models
+ 30h-3fh) Processors
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+ <1489408896-25039-4-git-send-email-deathsimple@vodafone.de>
+ <20170324154744.GE25380@bhelgaas-glaptop.roam.corp.google.com>
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+ linux-kernel@vger.kernel.org
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
+Message-ID: <a1ac66f3-3c3f-e9c6-82c9-6e9ca5715b67@vodafone.de>
+Date: Tue, 11 Apr 2017 17:48:25 +0200
 MIME-Version: 1.0
-In-Reply-To: <9ce9e3c5-3f94-8b06-2bd7-a665f0f33304@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, David Woodhouse <dwmw2@infradead.org>,
- linux-arm-kernel@lists.infradead.org,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170324154744.GE25380@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/03/17 13:18, Robin Murphy wrote:
-> Hi Jean-Philippe,
-> 
-> On 27/02/17 19:54, Jean-Philippe Brucker wrote:
->> Reintroduce smmu_group. This structure was removed during the generic DT
->> bindings rework, but will be needed when implementing PCIe ATS, to lookup
->> devices attached to a given domain.
+Am 24.03.2017 um 16:47 schrieb Bjorn Helgaas:
+> On Mon, Mar 13, 2017 at 01:41:35PM +0100, Christian König wrote:
+>> From: Christian König <christian.koenig@amd.com>
 >>
->> When unmapping from a domain, we need to send an invalidation to all
->> devices that could have stored the mapping in their ATC. It would be nice
->> to use IOMMU API's iommu_group_for_each_dev, but that list is protected by
->> group->mutex, which we can't use because atc_invalidate won't be allowed
->> to sleep. So add a list of devices, protected by a spinlock.
-> 
-> Much as I dislike that particular duplication, with patch #4 in mind I
-> think there's a more fundamental problem - since the primary reason for
-> multi-device groups is lack of ACS, is there any guarantee that ATS
-> support/enablement will be actually be homogeneous across any old set of
-> devices in that situation, and thus valid to evaluate at the iommu_group
-> level?
+>> Most BIOS don't enable this because of compatibility reasons.
+> Can you give any more details here?  Without more hints, it's hard to
+> know whether any of the compatibility reasons might apply to Linux as
+> well.
 
-I doubt that support of ATS in group would be homogeneous, so I also test
-ats bit in pci_device structure before sending a command, making the group
-check an optimization.
+Unfortunately not, I could try to ask a few more people at AMD if they 
+know the background.
 
-> That said, looking at how things end up at the top commit, I think this
-> is fairly easily sidestepped. We have this pattern a few times:
-> 
-> 	spin_lock_irqsave(&smmu_domain->groups_lock)
-> 	list_for_each_entry(&smmu_domain->groups)
-> 		spin_lock(&smmu_group->devices_lock)
-> 		list_for_each_entry(&smmu_group->devices)
-> 			do a thing for each device in the domain...
-> 
-> which strongly suggests that we'd be better off just linking the devices
-> to the domain directly - which would also let us scope ats_enabled to
-> the per-device level which seems safer than per-group as above. And if
-> only devices with ATS enabled are added to a domain's list in the first
-> place, then ATC invalidate gets even simpler too.
-> 
-> The only other uses I can see are of smmu_group->domain, which always
-> looks to be directly equivalent to to_smmu_domain(iommu_group->domain).
-> Overall it really looks like the smmu_group abstraction winds up making
-> the end result more complex than it needs to be.
+I was told that there are a few boards which offers that as a BIOS 
+option, but so far I haven't found any (and I have quite a few here).
 
-Yes in retrospect, smmu_group hardly seems necessary. I'll work on getting
-rid of it.
+My best guess is that older windows versions have a problem with that.
 
-Thanks,
-Jean-Philippe
+>> Manually enable a 64bit BAR of 64GB size so that we have
+>> enough room for PCI devices.
+>  From the context, I'm guessing this is enabling a new 64GB window
+> through the PCI host bridge?
+
+Yes, exactly. Sorry for the confusion.
+
+> That might be documented as a "BAR", but
+> it's not anything the Linux PCI core would recognize as a BAR.
+
+At least the AMD NB documentation calls this the host BARs. But I'm 
+perfectly fine with any terminology.
+
+How about calling it host bridge window instead?
+
+> I think the specs would envision this being done via an ACPI _SRS
+> method on the PNP0A03 host bridge device.  That would be a more
+> generic path that would work on any host bridge.  Did you explore that
+> possibility?  I would prefer to avoid adding device-specific code if
+> that's possible.
+
+I've checked quite a few boards, but none of them actually implements it 
+this way.
+
+M$ is working on a new ACPI table to enable this vendor neutral, but I 
+guess that will still take a while.
+
+I want to support this for all AMD CPU released in the past 5 years or 
+so, so we are going to deal with a bunch of older boards as well.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>> +	pci_bus_add_resource(dev->bus, res, 0);
+> We would need some sort of printk here to explain how this new window
+> magically appeared.
+
+Good point, consider this done.
+
+But is this actually the right place of doing it? Or would you prefer 
+something to be added to the probing code?
+
+I think those fixups are applied a bit later, aren't they?
+
+Best regards,
+Christian.
