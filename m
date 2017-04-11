@@ -1,62 +1,51 @@
-Return-Path: <SRS0=wUoX=3V=linux.vnet.ibm.com=gwshan@kernel.org>
-Return-Path: <SRS0=wUoX=3V=linux.vnet.ibm.com=gwshan@kernel.org>
-Date: Thu, 13 Apr 2017 15:24:50 +1000
-From: Gavin Shan <gwshan@linux.vnet.ibm.com>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: bodong@mellanox.com, helgaas@kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, saeedm@mellanox.com,
-        Eli Cohen <eli@mellanox.com>, gwshan@linux.vnet.ibm.com
-Subject: Re: [v3] PCI: Add an option to control probing of VFs before
- enabling SR-IOV
-Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-References: <1492037500-84654-1-git-send-email-bodong@mellanox.com>
- <20170412205614.429db99c@t450s.home>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170412205614.429db99c@t450s.home>
-Message-Id: <20170413052450.GA32407@gwshan>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v3 12/32] m32r: include default ioremap_nopost() implementation
+Date: Tue, 11 Apr 2017 13:28:52 +0100
+Message-Id: <20170411122923.6285-13-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 12, 2017 at 08:56:14PM -0600, Alex Williamson wrote:
->On Thu, 13 Apr 2017 01:51:40 +0300
->bodong@mellanox.com wrote:
->
->> From: Bodong Wang <bodong@mellanox.com>
->> 
->> Sometimes it is not desirable to probe the virtual functions after
->> SRIOV is enabled. This can save host side resource usage by VF
->> instances which would be eventually probed to VMs.
->> 
->> Add a new PCI sysfs interface "sriov_drivers_autoprobe" to control
->> that from the PF, all current callers still retain the same
->> functionality. To modify it, echo 0/n/N (disable probe) or 1/y/Y
->> (enable probe) to:
->> 
->> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_drivers_autoprobe
->> 
->> Note that, the choice must be made before enabling VFs. The change
->> will not take effect if VFs are already enabled. Simply, one can set
->> sriov_numvfs to 0, choose whether to probe or not, and then resume
->> sriov_numvfs.
->> 
->> Signed-off-by: Bodong Wang <bodong@mellanox.com>
->> Signed-off-by: Eli Cohen <eli@mellanox.com>
->> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
->> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
->
->Whoa, I reviewed the last version, that's different than providing a
->Reviewed-by, and I've certainly never seen this version until now, so I
->can't possibly have endorsed it in any way.  It's also changed since
->Gavin saw it and I think Bjorn is in the same boat.  Probably a good
->idea to cc the people you're claiming reviewed this too (cc +Gavin).
->
+The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and Posting")
+mandate non-posted configuration transactions. As further highlighted in
+the PCIe specifications (4.0 - Rev0.3, "Ordering Considerations for the
+Enhanced Configuration Access Mechanism"), through ECAM and
+ECAM-derivative configuration mechanism, the memory mapped transactions
+from the host CPU into Configuration Requests on the PCI express fabric
+may create ordering problems for software because writes to memory
+address are typically posted transactions (unless the architecture can
+enforce through virtual address mapping non-posted write transactions
+behaviour) but writes to Configuration Space are not posted on the PCI
+express fabric.
 
-Thanks, Alex. I usually keep an eye on the patches that I ever
-reviewed and follow them until they are merged or rejected. More
-comments would be given if I have. Otherwise, everthing is fine.
-Yes, it's always nice to copy those who reviewed the patch.
+Include the asm-generic ioremap_nopost() implementation (currently
+falling back to ioremap_nocache()) to provide a non-posted writes
+ioremap interface to kernel subsystems.
 
-For this one, my reviewed-by is still valid.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ arch/m32r/include/asm/io.h | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Gavin
+diff --git a/arch/m32r/include/asm/io.h b/arch/m32r/include/asm/io.h
+index 4b0f5e0..1577102 100644
+--- a/arch/m32r/include/asm/io.h
++++ b/arch/m32r/include/asm/io.h
+@@ -70,6 +70,7 @@ extern void iounmap(volatile void __iomem *addr);
+ #define ioremap_wc ioremap_nocache
+ #define ioremap_wt ioremap_nocache
+ #define ioremap_uc ioremap_nocache
++#include <asm-generic/ioremap-nopost.h>
+ 
+ /*
+  * IO bus memory addresses are also 1:1 with the physical address
+-- 
+2.10.0
