@@ -1,123 +1,69 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Russell King <linux@armlinux.org.uk>
-Subject: [PATCH v3 30/32] arm: implement ioremap_nopost() interface
-Date: Tue, 11 Apr 2017 13:29:10 +0100
-Message-Id: <20170411122923.6285-31-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <SRS0=5FSy=3U=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=5FSy=3U=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
+To: Mason <slash.tmp@free.fr>, Thomas Gleixner <tglx@linutronix.de>
+References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
+ <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
+ <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
+ <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
+ <0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
+ <4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
+ <30f662a6-5dab-515b-e35a-a312f3c7b509@free.fr>
+ <5f81730d-fbe3-1f4c-de34-09bbfb893ee1@arm.com>
+ <2b5eef4c-32f2-54f1-ca2f-f9426e68fb2c@free.fr>
+ <67014006-a380-9e3b-c9af-a421052cb8e0@arm.com>
+ <b59b81ea-bc1b-bff5-4a78-8a69538b0de3@free.fr>
+ <bc5bf8ad-69ef-4f14-f450-e162ddb5af7c@arm.com>
+ <241b130e-1fb7-ecd4-034e-eb02065ada66@free.fr>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <37cd6172-b04e-fcad-18fc-4fbb26cc611b@arm.com>
+Date: Wed, 12 Apr 2017 10:59:13 +0100
+MIME-Version: 1.0
+In-Reply-To: <241b130e-1fb7-ecd4-034e-eb02065ada66@free.fr>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI bus specifications (rev 3.0, 3.2.5 "Transaction Ordering
-and Posting") define rules for PCI configuration space transactions
-ordering and posting, that state that configuration writes have to
-be non-posted transactions.
+On 12/04/17 10:50, Mason wrote:
+> On 12/04/2017 10:08, Marc Zyngier wrote:
+> 
+>> On 11/04/17 18:52, Mason wrote:
+>>
+>>> so data->irq is the virq (30, 34, 35, 36)
+>>> and data->hwirq is the domain hwirq (0, 524288, 524289, 524290)
+>>>
+>>> Is there a way to map hwirq 524288 to MSI 0, hwirq 524289 to MSI 1, etc?
+>>
+>> Why would you need to do such a thing?
+>> - In MSI domain: IRQ34 -> hwirq 524288
+>> - In foo domain: IRQ34 -> hwirq [whatever your driver has allocated]
+>>
+>> The data is already there, at your fingertips. Just deal with with your
+>> "foo" irqchip.
+> 
+> OK, let me take a step back, I may have missed the forest for
+> the trees.
+> 
+> In my original code (copied from the Altera driver) I unmasked
+> a given MSI in the tango_irq_domain_alloc() function. You said
+> this was the wrong place, as it should be done in the irqchip
+> unmask callback. Did I understand correctly, so far?
 
-Current ioremap interface on ARM provides mapping functions that
-provide "bufferable" writes transactions (ie ioremap uses MT_DEVICE
-memory type) aka posted writes, so PCI host controller drivers have
-no arch interface to remap PCI configuration space with memory
-attributes that comply with the PCI specifications for configuration
-space.
+Yes.
 
-Implement an ARM specific ioremap_nopost() interface that allows to
-map PCI config memory regions with MT_UNCACHED memory type (ie strongly
-ordered - non-posted writes), providing a remap function that complies
-with PCI specifications for config space transactions.
+> I have registered custom mask/unmask callbacks for both irq_chips.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Russell King <linux@armlinux.org.uk>
----
- arch/arm/include/asm/io.h | 9 +++++++++
- arch/arm/mm/ioremap.c     | 7 +++++++
- arch/arm/mm/nommu.c       | 9 +++++++++
- 3 files changed, 25 insertions(+)
+And that's *wrong*. I've repeatedly said that you only need to deal with
+*your* irqchip. End of story. Nowhere else. Please leave the MSI irqchip
+alone, it is very unlikely that you have to provide anything at all to it.
 
-diff --git a/arch/arm/include/asm/io.h b/arch/arm/include/asm/io.h
-index 42871fb..28b15be 100644
---- a/arch/arm/include/asm/io.h
-+++ b/arch/arm/include/asm/io.h
-@@ -352,6 +352,7 @@ static inline void memcpy_toio(volatile void __iomem *to, const void *from,
-  * mapping has specific properties.
-  *
-  * Function		Memory type	Cacheability	Cache hint
-+ * ioremap_nopost()	SO		n/a		n/a
-  * ioremap()		Device		n/a		n/a
-  * ioremap_nocache()	Device		n/a		n/a
-  * ioremap_cache()	Normal		Writeback	Read allocate
-@@ -372,6 +373,12 @@ static inline void memcpy_toio(volatile void __iomem *to, const void *from,
-  * compiler may generate unaligned accesses - eg, via inlining its own
-  * memcpy.
-  *
-+ * ioremap_nopost() maps memory as strongly ordered, to be used for
-+ * specific mappings (eg PCI config space) that require non-posted
-+ * write transactions. Strongly ordered transactions are ordered wrt
-+ * device mappings, which means that ioremap_nopost() is the same
-+ * as ioremap() except for non-posted writes behaviour.
-+ *
-  * All normal memory mappings have the following properties:
-  * - reads can be repeated with no side effects
-  * - repeated reads return the last value written
-@@ -407,6 +414,8 @@ void __iomem *ioremap_wc(resource_size_t res_cookie, size_t size);
- #define ioremap_wc ioremap_wc
- #define ioremap_wt ioremap_wc
- 
-+void __iomem *ioremap_nopost(resource_size_t res_cookie, size_t size);
-+
- void iounmap(volatile void __iomem *iomem_cookie);
- #define iounmap iounmap
- 
-diff --git a/arch/arm/mm/ioremap.c b/arch/arm/mm/ioremap.c
-index ff0eed2..4ffaf16 100644
---- a/arch/arm/mm/ioremap.c
-+++ b/arch/arm/mm/ioremap.c
-@@ -463,6 +463,13 @@ void iounmap(volatile void __iomem *cookie)
- }
- EXPORT_SYMBOL(iounmap);
- 
-+void __iomem *ioremap_nopost(resource_size_t res_cookie, size_t size)
-+{
-+	return arch_ioremap_caller(res_cookie, size, MT_UNCACHED,
-+				   __builtin_return_address(0));
-+}
-+EXPORT_SYMBOL_GPL(ioremap_nopost);
-+
- #ifdef CONFIG_PCI
- static int pci_ioremap_mem_type = MT_DEVICE;
- 
-diff --git a/arch/arm/mm/nommu.c b/arch/arm/mm/nommu.c
-index 3b5c7aa..dfd736a 100644
---- a/arch/arm/mm/nommu.c
-+++ b/arch/arm/mm/nommu.c
-@@ -21,6 +21,8 @@
- #include <asm/mpu.h>
- #include <asm/procinfo.h>
- 
-+#include <asm/mach/map.h>
-+
- #include "mm.h"
- 
- unsigned long vectors_base;
-@@ -433,6 +435,13 @@ void __iomem *ioremap_wc(resource_size_t res_cookie, size_t size)
- }
- EXPORT_SYMBOL(ioremap_wc);
- 
-+void __iomem *ioremap_nopost(resource_size_t res_cookie, size_t size)
-+{
-+	return __arm_ioremap_caller(res_cookie, size, MT_UNCACHED,
-+				    __builtin_return_address(0));
-+}
-+EXPORT_SYMBOL(ioremap_nopost);
-+
- void *arch_memremap_wb(phys_addr_t phys_addr, size_t size)
- {
- 	return (void *)phys_addr;
+	M.
 -- 
-2.10.0
+Jazz is not dead. It just smells funny...
