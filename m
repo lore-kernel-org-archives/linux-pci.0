@@ -1,43 +1,68 @@
-Return-Path: <SRS0=0Mm1=3S=sigmadesigns.com=Marc_Gonzalez@kernel.org>
-Return-Path: <SRS0=0Mm1=3S=sigmadesigns.com=Marc_Gonzalez@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>
-CC: Robin Murphy <robin.murphy@arm.com>, Lorenzo Pieralisi
-	<lorenzo.pieralisi@arm.com>, Liviu Dudau <liviu.dudau@arm.com>, David Laight
-	<david.laight@aculab.com>, Arnd Bergmann <arnd@arndb.de>, Thibaud Cornic
-	<thibaud_cornic@sigmadesigns.com>, Mason <slash.tmp@free.fr>, Yinghai Lu
-	<yinghai@kernel.org>, LKML <linux-kernel@vger.kernel.org>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Subject: [PATCH] PCI: Improve __pci_read_base robustness
-Message-ID: <1c0ad12a-9bfc-2a76-ee76-6ab403f912d3@sigmadesigns.com>
-Date: Mon, 10 Apr 2017 19:46:54 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 17/27] unicore: Use generic pci_mmap_resource_range()
+Date: Wed, 12 Apr 2017 13:26:06 +0100
+Message-Id: <96c9ec19826d30648041cf6de17e4ef62c4479a5.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Local variables 'l' and 'sz' are uninitialized. Normally, they would
-be initialized by pci_read_config_dword() but when an error occurs,
-some drivers immediately return an error code, which leaves the
-argument uninitialized.
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-Provide a safe initial value to make the code more robust.
-
-Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
 ---
- drivers/pci/probe.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/unicore32/include/asm/pci.h |  1 +
+ arch/unicore32/kernel/pci.c      | 24 ------------------------
+ 2 files changed, 1 insertion(+), 24 deletions(-)
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index d266d800f246..6fb929bd7040 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -175,7 +175,7 @@ static inline unsigned long decode_bar(struct pci_dev *dev, u32 bar)
- int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 		    struct resource *res, unsigned int pos)
- {
--	u32 l, sz, mask;
-+	u32 l = 0, sz = 0, mask;
- 	u64 l64, sz64, mask64;
- 	u16 orig_cmd;
- 	struct pci_bus_region region, inverted_region;
+diff --git a/arch/unicore32/include/asm/pci.h b/arch/unicore32/include/asm/pci.h
+index a5129086..ac5acdf 100644
+--- a/arch/unicore32/include/asm/pci.h
++++ b/arch/unicore32/include/asm/pci.h
+@@ -17,6 +17,7 @@
+ #include <mach/hardware.h> /* for PCIBIOS_MIN_* */
+ 
+ #define HAVE_PCI_MMAP
++#define ARCH_GENERIC_PCI_MMAP_RESOURCE
+ 
+ #endif /* __KERNEL__ */
+ #endif
+diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
+index 1b43885..1053bca 100644
+--- a/arch/unicore32/kernel/pci.c
++++ b/arch/unicore32/kernel/pci.c
+@@ -356,27 +356,3 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	}
+ 	return 0;
+ }
+-
+-int pci_mmap_page_range(struct pci_dev *dev, int bar,
+-			struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine)
+-{
+-	unsigned long phys;
+-
+-	if (mmap_state == pci_mmap_io)
+-		return -EINVAL;
+-
+-	phys = vma->vm_pgoff;
+-
+-	/*
+-	 * Mark this as IO
+-	 */
+-	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+-
+-	if (remap_pfn_range(vma, vma->vm_start, phys,
+-			     vma->vm_end - vma->vm_start,
+-			     vma->vm_page_prot))
+-		return -EAGAIN;
+-
+-	return 0;
+-}
 -- 
-2.11.0
+2.9.3
