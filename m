@@ -1,12 +1,19 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [RFC/RFT PATCH 03/18] PCI: Introduce pci_scan_root_bus_bridge()
-Date: Wed, 26 Apr 2017 12:17:54 +0100
-Message-Id: <20170426111809.19922-4-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
-References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+Date: Wed, 12 Apr 2017 15:16:55 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH v3 00/32] PCI: fix config and I/O Address space memory
+ mappings
+Message-ID: <20170412141654.GA17774@n2100.armlinux.org.uk>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+ <1491917906.7236.7.camel@kernel.crashing.org>
+ <20170411140857.GA6821@red-moon>
+ <1491952371.7236.22.camel@kernel.crashing.org>
+ <20170412113124.GZ17774@n2100.armlinux.org.uk>
+ <1492005119.7236.62.camel@kernel.crashing.org>
+MIME-Version: 1.0
+In-Reply-To: <1492005119.7236.62.camel@kernel.crashing.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -14,128 +21,92 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
+ linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+ David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
+ Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
+ Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
+ Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
+ Jesper Nilsson <jesper.nilsson@axis.com>,
  Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
- Roy Zang <tie-fei.zang@freescale.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+ Yoshinori Sato <ysato@users.sourceforge.jp>,
+ Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
+ "James E.J. Bottomley" <jejb@parisc-linux.org>, Ingo Molnar <mingo@redhat.com>,
+ Geert Uytterhoeven <geert@linux-m68k.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Matt Turner <mattst88@gmail.com>,
+ Haavard Skinnemoen <hskinnemoen@gmail.com>, Fenghua Yu <fenghua.yu@intel.com>,
+ James Hogan <james.hogan@imgtec.com>, Chris Metcalf <cmetcalf@mellanox.com>,
+ Arnd Bergmann <arnd@arndb.de>, Heiko Carstens <heiko.carstens@de.ibm.com>,
+ Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
+ Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+ Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
+ linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
+ Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
+ Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
+ linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+ Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
+ "Luis R. Rodriguez" <mcgrof@kernel.org>,
+ Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
+ "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Current pci_scan_root_bus() interface is made up of two main
-code paths:
+On Wed, Apr 12, 2017 at 11:51:59PM +1000, Benjamin Herrenschmidt wrote:
+> On Wed, 2017-04-12 at 12:31 +0100, Russell King - ARM Linux wrote:
+> > default implementation should fail if it's not supportable on all
+> > architectures.=A0 However, when we have existing drivers using an
+> > interface that doesn't provide the semantics they already require,
+> > then it makes no sense to effectively break these drivers on a range
+> > of existing architectures.
+> > =
 
-- pci_create_root_bus()
-- pci_scan_child_bus()
+> > The question really is - what's the best way to solve the problem
+> > with
+> > existing drivers without breaking them.=A0 I suspect that, sadly, the
+> > only realistic way forward here is via the litter-drivers-with-ifdefs
+> > approach since you don't like providing a default implementation that
+> > is compatible with what these drivers are already doing.
+> =
 
-pci_create_root_bus() is a wrapper function that allows to create
-a struct pci_host_bridge structure, initialize it with the passed
-parameters and register it with the kernel.
+> Then make ioremap_nopost return NULL when the arch doesn't have =
 
-As the struct pci_host_bridge require additional struct members,
-pci_create_root_bus() parameters list has grown in time, making
-it unwieldy to add further parameters to it in case the struct
-pci_host_bridge gains more members fields to augment its functionality.
+> the right semantic.
+> =
 
-Since PCI core code provides functions to allocate struct
-pci_host_bridge, instead of forcing the pci_create_root_bus() interface
-to add new parameters to cater for new struct pci_host_bridge
-functionality, it is more suitable to add an interface in PCI
-core code to scan a PCI bus straight from a struct pci_host_bridge
-created and customized by each specific PCI host controller driver.
+> The driver than can *chose* to either silently fallback to ioremap,
+> which has served us well for a long time despite being theorically in
+> violation of the spec, or do funny things like read back some register
+> after every config write to ensure ordering etc...
+> =
 
-Add a pci_scan_root_bus_bridge() function to allow PCI host controller
-drivers to create and initialize struct pci_host_bridge and scan
-the resulting bus.
+> I much prefer that approach than having some generic ioremap function
+> that exposes a semantic that silently provides a weaker one on some
+> architecture.
+> =
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c | 38 ++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |  1 +
- 2 files changed, 39 insertions(+)
+> At least we make the failure explicit, and the driver can take
+> alternate (possibly sub-optimal) action if it chooses to do so.
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 7e4ffc4..c7a7f72 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2412,6 +2412,44 @@ void pci_bus_release_busn_res(struct pci_bus *b)
- 			res, ret ? "can not be" : "is");
- }
- 
-+int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
-+{
-+	struct resource_entry *window;
-+	bool found = false;
-+	struct pci_bus *b;
-+	int max, bus, ret;
-+
-+	if (!bridge)
-+		return -EINVAL;
-+
-+	resource_list_for_each_entry(window, &bridge->windows)
-+		if (window->res->flags & IORESOURCE_BUS) {
-+			found = true;
-+			break;
-+		}
-+
-+	ret = pci_register_host_bridge(bridge);
-+	if (ret < 0)
-+		return ret;
-+
-+	b = bridge->bus;
-+	bus = bridge->busnr;
-+
-+	if (!found) {
-+		dev_info(&b->dev,
-+		 "No busn resource found for root bus, will use [bus %02x-ff]\n",
-+			bus);
-+		pci_bus_insert_busn_res(b, bus, 255);
-+	}
-+
-+	max = pci_scan_child_bus(b);
-+
-+	if (!found)
-+		pci_bus_update_busn_res_end(b, max);
-+
-+	return 0;
-+}
-+
- struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
- 		struct pci_ops *ops, void *sysdata,
- 		struct list_head *resources, struct msi_controller *msi)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 99878a9..757779a 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -847,6 +847,7 @@ struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
- struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
- 					     struct pci_ops *ops, void *sysdata,
- 					     struct list_head *resources);
-+int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge);
- struct pci_bus *pci_add_new_bus(struct pci_bus *parent, struct pci_dev *dev,
- 				int busnr);
- void pcie_update_link_speed(struct pci_bus *bus, u16 link_status);
--- 
-2.10.0
+The same points apply to things like pgprot_writecombine(),
+pgprot_noncached(), pgprot_device().  Then there's also pgprot_nonposted()
+that this series also introduces.
 
+If ioremap_nopost() is not possible on an architecture, then
+pgprot_nonposted() won't be possible either - but you've made no
+mention of that so far.
+
+Just like the proposed ioremap_nopost(), pgprot_nonposted() is given a
+default implementation that uses pgprot_noncached().  Maybe we should
+also make pci_remap_iospace() fail if pgprot_nonposted() is not defined
+by the architecture?
+
+-- =
+
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
 
 _______________________________________________
 linux-arm-kernel mailing list
