@@ -1,132 +1,114 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 21 Apr 2017 17:05:41 +0000
-From: Jayachandran C <jnair@caviumnetworks.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-Message-ID: <20170421170414.GA2429@localhost>
-References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
- <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
- <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
- <20170414210646.GA5346@localhost>
- <CAErSpo731xSzrnKF+G+8SA_UUHy7ROA1V9oFkpwKi85GQf9VAg@mail.gmail.com>
- <20170417174712.GA7575@localhost>
- <CAErSpo6+do8GXon3EzZAUpqc2TFsA0BDwWBULqZCd1ayCJhD6w@mail.gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <CAErSpo6+do8GXon3EzZAUpqc2TFsA0BDwWBULqZCd1ayCJhD6w@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Joerg Roedel <joro@8bytes.org>,
- "open list:INTEL IOMMU \(VT-d\)" <iommu@lists.linux-foundation.org>,
- Bjorn Helgaas <helgaas@kernel.org>, Jon Masters <jcm@redhat.com>,
- Robin Murphy <robin.murphy@arm.com>,
- linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 00/27] PCI resource mmap cleanup
+Date: Wed, 12 Apr 2017 13:25:49 +0100
+Message-Id: <cover.1491999859.git.dwmw2@infradead.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 21, 2017 at 10:48:15AM -0500, Bjorn Helgaas wrote:
-> On Mon, Apr 17, 2017 at 12:47 PM, Jayachandran C
-> <jnair@caviumnetworks.com> wrote:
-> > On Fri, Apr 14, 2017 at 09:00:06PM -0500, Bjorn Helgaas wrote:
-> >> On Fri, Apr 14, 2017 at 4:06 PM, Jayachandran C
-> >> <jnair@caviumnetworks.com> wrote:
-> >> > On Thu, Apr 13, 2017 at 07:19:11PM -0500, Bjorn Helgaas wrote:
-> >> >> I tentatively applied both patches to pci/host-thunder for v4.12.
-> >> >>
-> >> >> However, I am concerned about the topology here:
-> >> >>
-> >> >> On Thu, Apr 13, 2017 at 08:30:45PM +0000, Jayachandran C wrote:
-> >> >> > On Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the
-> >> >> > PCI topology is slightly unusual.  For a multi-node system, it looks
-> >> >> > like:
-> >> >> >
-> >> >> >     00:00.0 [PCI] bridge to [bus 01-1e]
-> >> >> >     01:0a.0 [PCI-PCIe bridge, type 8] bridge to [bus 02-04]
-> >> >> >     02:00.0 [PCIe root port, type 4] bridge to [bus 03-04] (XLATE_ROOT)
-> >> >> >     03:00.0 PCIe Endpoint
-> >> >>
-> >> >> A root port normally has a single PCIe link leading downstream.
-> >> >> According to this, 02:00.0 is a root port that has the usual
-> >> >> downstream link leading to 03:00.0, but it also has an upstream link
-> >> >> to 01:0a.0.
-> >> >
-> >> > The PCI topology is a bit broken due to the way that the PCIe IP block
-> >> > was integrated into SoC PCI bridges and devices. The current mechanism
-> >> > of adding a PCI-PCIe bridge to glue these together is not ideal.
-> >>
-> >> Yeah, that's definitely broken.
-> >>
-> >> >> Maybe this example is omitting details that are not relevant to DMA
-> >> >> aliases?  The PCIe capability only contains one set of link-related
-> >> >> registers, so I don't know how we could manage a single device that
-> >> >> has two links.
-> >> >
-> >> > The root port is standard and has just one link to the EP (or whatever
-> >> > is on the external PCIe slot). The fallout of the current hw design is
-> >> > that the PCI-PCIe bridge has a link that does not follow standard and
-> >> > does not have a counterpart (as you noted).
-> >> >
-> >> >> A device with two links would break things like ASPM.  In
-> >> >> set_pcie_port_type(), for example, we have this comment:
-> >> >>
-> >> >>    * A Root Port or a PCI-to-PCIe bridge is always the upstream end
-> >> >>    * of a Link.  No PCIe component has two Links.  Two Links are
-> >> >>    * connected by a Switch that has a Port on each Link and internal
-> >> >>    * logic to connect the two Ports.
-> >> >>
-> >> >> The topology above breaks these assumptions, which will make
-> >> >> pdev->has_secondary_link incorrect, which means ASPM won't work
-> >> >> correctly.
-> >> >
-> >> > Given the current hardware, the pcieport driver seems to work reasonably
-> >> > for the root port at 02:00.0, with AER support. I will take a look at the
-> >> > ASPM part.
-> >>
-> >> I don't think pcieport itself cares much about links.  ASPM does, but
-> >> it looks like set_pcie_port_type() actually is smart enough to know
-> >> that PCI-to-PCIe bridges and Root Ports always have links on their
-> >> secondary sides.  So has_secondary_link probably does get set
-> >> correctly.
-> >>
-> >> But I think you'll hit the VIA "strange chipset" thing in
-> >> pcie_aspm_init_link_state(), which will probably prevent us from doing
-> >> ASPM on the link from 02:00.0 to 03:00.0.
-> >>
-> >> Could you collect "lspci -vv" output from this system?  I'd like to
-> >> archive that as background for this IOMMU issue and the ASPM tweaks I
-> >> suspect we'll have to do.  I *wish* we had more information about that
-> >> VIA thing, because I suspect we could get rid of it if we had more
-> >> details.
-> >
-> > The full logs are slightly large, so I have kept them at:
-> > https://github.com/jchandra-cavm/thunderx2/blob/master/logs/
-> > The lspci -vv output is lspci-vv.txt and lspci -tvn output is lspci-tvn.txt
-> >
-> > The output is from 2 socket system, the cards are not on the first slot
-> > like the example above, so the bus and device numbers are different.
-> 
-> Can somebody with this system collect the "lspci -xxxx" output as well?
-> 
-> I'm making some lspci changes to handle the PCI-to-PCIe bridge
-> correctly, and I can use the "lspci -xxxx" output to create an lspci
-> test case.
+This pursues my previous patch set all the way to its logical conclusion.
 
-[Sorry was AFK for a few days]
+It kills off the legacy arch-provided pci_mmap_page_range() completely,
+along with its vile 'address converted by pci_resource_to_user()' API
+and the various bugs and other strange behaviour that various
+architectures had.
 
-I have updated the above directory with the log. Also tested your next branch
-and it works fine on ThunderX2.
+In some cases like IA64 I've killed off the odd behaviour *first* in
+separately reviewable patches, before the final switch over to the
+generic code which should then basically have no functional effect.
 
-JC.
+To accommodate the ARM64 maintainers' desire *not* to support mmap
+through /proc/bus/pci I have separated HAVE_PCI_MMAP from the sysfs
+implementation, which (as of the last patch in the series) ends up
+present on *all* platforms with an MMU. I still don't think that's a
+*good* idea though; it's a generic part of /proc, and nobody ever did
+answer my question about what *else* we can delete from /proc on ARM64
+"because it's a new platform"...
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I would very much like the interesting parts of this to go through the
+arch maintainers' trees. I'd suggest that we can pull everything up to
+and including patch 19 ("pci: Add I/O BAR support to generic
+pci_mmap_resource_range()") through the PCI tree, which includes the
+relatively trivial architectures. Then the others can go through the
+appropriate arch tree with more careful review and testing.
+
+Once everything's done, then we can apply something like the final
+patch ("pci: Kill ARCH_GENERIC_PCI_MMAP_RESOURCE"). But that's mostly
+just there for now as a demonstration of the intended end point.
+
+This is in
+ git://git.infradead.org/users/dwmw2/random-2.6.git pcimmap
+ http://git.infradead.org/users/dwmw2/random-2.6.git/shortlog/refs/heads/pcimmap
+
+David Woodhouse (27):
+  pci: Fix pci_mmap_fits() for HAVE_PCI_RESOURCE_TO_USER platforms
+  pci: Fix another sanity check bug in /proc/pci mmap
+  pci: Only allow WC mmap on prefetchable resources
+  xtensa: Do not mmap PCI BARs to userspace as write-through
+  pci: Add arch_can_pci_mmap_wc() macro
+  pci: Move multiple declarations of pci_mmap_page_range() to
+    <linux/pci.h>
+  pci: Add arch_can_pci_mmap_io() on architectures which can mmap() I/O
+    space
+  pci: Use BAR index in sysfs attr->private instead of resource pointer
+  pci: Add BAR index argument to pci_mmap_page_range()
+  pci: Add pci_mmap_resource_range() and use it for ARM64
+  arm: Use generic pci_mmap_resource_range()
+  cris: Use generic pci_mmap_resource_range()
+  mips: Use generic pci_mmap_resource_range()
+  mn10300: Use generic pci_mmap_resource_range()
+  parisc: Use generic pci_mmap_resource_range()
+  sh: Use generic pci_mmap_resource_range()
+  unicore: Use generic pci_mmap_resource_range()
+  x86: Use generic pci_mmap_resource_range()
+  pci: Add I/O BAR support to generic pci_mmap_resource_range()
+  powerpc: Use generic pci_mmap_resource_range()
+  microblaze: Use generic pci_mmap_resource_range()
+  xtensa: Use generic pci_mmap_resource_range()
+  ia64: Remove redundant valid_mmap_phys_addr_range() from
+    pci_mmap_page_range()
+  ia64: Remove redundant checks for WC in pci_mmap_page_range()
+  ia64: Use generic pci_mmap_resource_range()
+  sparc: Use generic pci_mmap_resource_range()
+  pci: Kill ARCH_GENERIC_PCI_MMAP_RESOURCE
+
+ Documentation/filesystems/sysfs-pci.txt |  12 ++-
+ arch/arm/include/asm/pci.h              |   2 -
+ arch/arm/kernel/bios32.c                |  19 ----
+ arch/cris/arch-v32/drivers/pci/bios.c   |  22 -----
+ arch/cris/include/asm/pci.h             |   3 -
+ arch/ia64/include/asm/pci.h             |   4 +-
+ arch/ia64/pci/pci.c                     |  46 ----------
+ arch/microblaze/include/asm/pci.h       |   8 +-
+ arch/microblaze/pci/pci-common.c        |  99 ++------------------
+ arch/mips/include/asm/pci.h             |   4 -
+ arch/mips/pci/pci.c                     |  24 -----
+ arch/mn10300/include/asm/pci.h          |   3 -
+ arch/mn10300/unit-asb2305/pci-asb2305.c |  23 -----
+ arch/parisc/include/asm/pci.h           |   3 -
+ arch/parisc/kernel/pci.c                |  28 ------
+ arch/powerpc/include/asm/pci.h          |   9 +-
+ arch/powerpc/kernel/pci-common.c        | 105 +++-------------------
+ arch/sh/drivers/pci/pci.c               |  21 -----
+ arch/sh/include/asm/pci.h               |   3 +-
+ arch/sparc/include/asm/pci_64.h         |   5 +-
+ arch/sparc/kernel/pci.c                 | 155 --------------------------------
+ arch/unicore32/include/asm/pci.h        |   2 -
+ arch/unicore32/kernel/pci.c             |  23 -----
+ arch/x86/include/asm/pci.h              |   6 +-
+ arch/x86/pci/i386.c                     |  47 ----------
+ arch/xtensa/include/asm/pci.h           |   9 +-
+ arch/xtensa/kernel/pci.c                | 112 ++---------------------
+ drivers/pci/Makefile                    |   1 +
+ drivers/pci/mmap.c                      |  67 ++++++++++++++
+ drivers/pci/pci-sysfs.c                 |  76 +++++++---------
+ drivers/pci/pci.h                       |   4 +-
+ drivers/pci/proc.c                      |  41 ++++++---
+ include/linux/pci.h                     |  30 +++++++
+ 33 files changed, 211 insertions(+), 805 deletions(-)
+ create mode 100644 drivers/pci/mmap.c
+
+-- 
+2.9.3
