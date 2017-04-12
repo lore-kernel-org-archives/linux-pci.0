@@ -1,68 +1,67 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-ve1eur01on0061.outbound.protection.outlook.com ([104.47.1.61]:59679
+        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754106AbdDLOhk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Apr 2017 10:37:40 -0400
+Subject: Re: [v2] PCI: Add an option to control probing of VFs before enabling
+ SR-IOV
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1490198038-20465-1-git-send-email-bodong@mellanox.com>
+ <20170411211211.GB14778@bhelgaas-glaptop.roam.corp.google.com>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <saeedm@mellanox.com>,
+        Eli Cohen <eli@mellanox.com>
+From: Bodong Wang <bodong@mellanox.com>
+Message-ID: <2e39e1b6-0205-2780-0223-3552d2c871a3@mellanox.com>
+Date: Wed, 12 Apr 2017 09:37:22 -0500
 MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu_n7xP-2RtF44GVzwyoMXDOeF-bR43yStwp2y+oBNs4jg@mail.gmail.com>
-References: <CAKv+Gu-qRg8-YRCairppKrEfeLcW+OwVF8qZHp7vxXJA_AwPOw@mail.gmail.com>
- <20170330100524.GA22801@red-moon>
- <CAKv+Gu-ff98HrPK3f+E8soGJUXaaMxPLs2AuJ+rvXd0HWX-jXw@mail.gmail.com>
- <CAKv+Gu8YjySTDMgsrtGqEPMOtVhHc8gvTHZ4C5Ga8OTYdC9R3A@mail.gmail.com>
- <ae87ae28-f50d-095f-576e-f3fd7f96dea2@codeaurora.org>
- <CAKv+Gu8x0rQUnTUorknW-mW9LFgrxFYsXyy4LU_w9JbA-m_sjA@mail.gmail.com>
- <CAKv+Gu9Su0F9CSRe=sxomuDDH7c2szO6Z8dpqOQ=t_1Vn3JD3g@mail.gmail.com>
- <20170410165328.GA5248@red-moon>
- <CAKv+Gu-AN-OwnAJG5dt0Qg4GU8HxZBowTSA0H3LhNA3nHfrsQg@mail.gmail.com>
- <CAKv+Gu9dS4OhLbBw59yKYQmoJ8SpFexzk9yH=XfXnzn8NJ4mcg@mail.gmail.com>
- <20170423014546.GA2704@dhcp-whq-twvpn-1-vpnpool-10-159-153-149.vpn.oracle.com>
- <CAKv+Gu_n7xP-2RtF44GVzwyoMXDOeF-bR43yStwp2y+oBNs4jg@mail.gmail.com>
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Fri, 28 Apr 2017 13:51:54 -0700
-Message-ID: <CAE9FiQVNWC7pGjSADJVTLwEuYt90TDUhGJzrVh3VPxDz0eJqqg@mail.gmail.com>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
- Lukas Wunner <lukas@wunner.de>, Matt Fleming <matt@codeblueprint.co.uk>,
- linux-pci <linux-pci@vger.kernel.org>, Peter Jones <pjones@redhat.com>,
- Sinan Kaya <okaya@codeaurora.org>, Heyi Guo <heyi.guo@linaro.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170411211211.GB14778@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 27, 2017 at 6:55 AM, Ard Biesheuvel
-<ard.biesheuvel@linaro.org> wrote:
-> On 23 April 2017 at 02:45, Yinghai Lu <yinghai@kernel.org> wrote:
-
->>
->> looks like those two lines are reversed. you should use:
->>                 pcibios_resource_survey_bus(bus);
->>                 pci_assign_unassigned_root_bus_resources(bus);
->>
->> please check x86 pcibios_resource_survey_bus() definition in
->>         arch/x86/pci/i386.c
->>
->> but pci_bus_claim_resources() should work too.
->>
+On 4/11/2017 4:12 PM, Bjorn Helgaas wrote:
+> Hi Bodong,
 >
-> pcibios_resource_survey_bus() is actually an empty function on arm64,
-> but I guess that is where logic should go that checks the state of the
-> BARs before trying to claim anything?
+> On Wed, Mar 22, 2017 at 05:53:58PM +0200, bodong@mellanox.com wrote:
+>> From: Bodong Wang <bodong@mellanox.com>
+>>
+>> Sometimes it is not desirable to probe the virtual functions after
+>> SRIOV is enabled. This can save host side resource usage by VF
+>> instances which would be eventually probed to VMs.
+>>
+>> Add a new PCI sysfs interface "sriov_probe_vfs" to control that
+>> from the PF, all current callers still retain the same functionality.
+>> To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
+>>
+>> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+> Is this basically the same functionality as /sys/bus/pci/drivers_autoprobe,
+> but limited to a specific PF?  I.e., could we accomplish the same thing
+> with the following?
+>
+>    # echo 0 > /sys/bus/pci/devices/DDDD:BB:dd.f/sriov_numvfs
+>    # echo 0 > /sys/bus/pci/drivers_autoprobe
+>    # echo 2 > /sys/bus/pci/devices/DDDD:BB:dd.f/sriov_numvfs
+>    # echo 1 > /sys/bus/pci/drivers_autoprobe
+>
+> If not, can you contrast the above with drivers_autoprobe?  If we need
+> both, should they be named more similarly?
+Hi Bjorn,
 
-Yes. Please copy for x86 and simplify it for arm64.
+I agree with Alex about not using driver_autoprobe to achieve this. It 
+will affect all pci related device once it's disabled(probably in a bad 
+way). On the other hand, current pci driver doesn't work for this use 
+case at all. VFs drivers(if any) will be probed once sriov is enabled no 
+matter what. The code path is pci_enable_sriov-> 
+pci_bus_add_device->device_attach, and drivers will be probed at the 
+end. Drivers_autoprobe only prevents probing pci_device_add is called. 
+This patch bounded the change to the device itself and requires no 
+device driver update.
 
-Yinghai
+For the name convention, it's aligned with other sriov related sysfs 
+entries. Let me know if you have better options.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+
+Bodong
