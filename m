@@ -1,53 +1,122 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 12 Apr 2017 15:41:09 +0100
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
-        Sinan Kaya <okaya@codeaurora.org>
-Subject: [RFC/RFT PATCH 2/3] PCI: Add call to set-up NUMA node for struct pci_bus devices
-Date: Wed, 26 Apr 2017 11:06:18 +0100
-Message-Id: <20170426100619.31758-2-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170426100619.31758-1-lorenzo.pieralisi@arm.com>
-References: <20170426100619.31758-1-lorenzo.pieralisi@arm.com>
-Sender: linux-acpi-owner@vger.kernel.org
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Subject: Re: [PATCH v3 00/32] PCI: fix config and I/O Address space memory
+ mappings
+Message-ID: <20170412144109.GB6842@red-moon>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+ <1491917906.7236.7.camel@kernel.crashing.org>
+ <20170411140857.GA6821@red-moon>
+ <1491952371.7236.22.camel@kernel.crashing.org>
+ <20170412113124.GZ17774@n2100.armlinux.org.uk>
+ <1492005119.7236.62.camel@kernel.crashing.org>
+ <20170412141654.GA17774@n2100.armlinux.org.uk>
+MIME-Version: 1.0
+In-Reply-To: <20170412141654.GA17774@n2100.armlinux.org.uk>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
+ Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
+ Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
+ Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
+ Jesper Nilsson <jesper.nilsson@axis.com>,
+ Yoshinori Sato <ysato@users.sourceforge.jp>,
+ Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
+ "James E.J. Bottomley" <jejb@parisc-linux.org>, Ingo Molnar <mingo@redhat.com>,
+ Geert Uytterhoeven <geert@linux-m68k.org>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Matt Turner <mattst88@gmail.com>, Haavard Skinnemoen <hskinnemoen@gmail.com>,
+ Fenghua Yu <fenghua.yu@intel.com>, James Hogan <james.hogan@imgtec.com>,
+ Chris Metcalf <cmetcalf@mellanox.com>, Arnd Bergmann <arnd@arndb.de>,
+ Heiko Carstens <heiko.carstens@de.ibm.com>,
+ Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
+ Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+ Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
+ linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
+ Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
+ Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
+ Vineet Gupta <vgupta@synopsys.com>, linux-kernel@vger.kernel.org,
+ Ralf Baechle <ralf@linux-mips.org>, Richard Kuo <rkuo@codeaurora.org>,
+ Niklas Cassel <nks@flawful.org>, "Luis R. Rodriguez" <mcgrof@kernel.org>,
+ Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
+ "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset="iso-8859-1"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The member dev in struct pci_bus represents the kernel struct
-device representation of a PCI bus, inclusive of its NUMA node.
-When a PCI host bridge is registered, initialize the corresponding
-struct pci_bus.dev member NUMA node and add code in
-pci_alloc_child_bus() to propagate the NUMA node set-up through the PCI
-bus hierarchy (ie child nodes are in the same NUMA node as the parent).
+On Wed, Apr 12, 2017 at 03:16:55PM +0100, Russell King - ARM Linux wrote:
+> On Wed, Apr 12, 2017 at 11:51:59PM +1000, Benjamin Herrenschmidt wrote:
+> > On Wed, 2017-04-12 at 12:31 +0100, Russell King - ARM Linux wrote:
+> > > default implementation should fail if it's not supportable on all
+> > > architectures.=A0 However, when we have existing drivers using an
+> > > interface that doesn't provide the semantics they already require,
+> > > then it makes no sense to effectively break these drivers on a range
+> > > of existing architectures.
+> > > =
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/probe.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> > > The question really is - what's the best way to solve the problem
+> > > with
+> > > existing drivers without breaking them.=A0 I suspect that, sadly, the
+> > > only realistic way forward here is via the litter-drivers-with-ifdefs
+> > > approach since you don't like providing a default implementation that
+> > > is compatible with what these drivers are already doing.
+> > =
 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index dfc9a27..5739a993 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -770,6 +770,7 @@ int pci_register_host_bridge(struct pci_host_bridge *bridge)
- 	device_enable_async_suspend(bus->bridge);
- 	pci_set_bus_of_node(bus);
- 	pci_set_bus_msi_domain(bus);
-+	set_dev_node(&bus->dev, pci_bus_find_numa_node(bus));
- 
- 	if (!parent)
- 		set_dev_node(bus->bridge, pcibus_to_node(bus));
-@@ -861,7 +862,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 	 */
- 	child->dev.class = &pcibus_class;
- 	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
--
-+	set_dev_node(&child->dev, dev_to_node(&parent->dev));
- 	/*
- 	 * Set up the primary, secondary and subordinate
- 	 * bus numbers.
--- 
-2.10.0
+> > Then make ioremap_nopost return NULL when the arch doesn't have =
 
+> > the right semantic.
+> > =
+
+> > The driver than can *chose* to either silently fallback to ioremap,
+> > which has served us well for a long time despite being theorically in
+> > violation of the spec, or do funny things like read back some register
+> > after every config write to ensure ordering etc...
+> > =
+
+> > I much prefer that approach than having some generic ioremap function
+> > that exposes a semantic that silently provides a weaker one on some
+> > architecture.
+> > =
+
+> > At least we make the failure explicit, and the driver can take
+> > alternate (possibly sub-optimal) action if it chooses to do so.
+> =
+
+> The same points apply to things like pgprot_writecombine(),
+> pgprot_noncached(), pgprot_device().  Then there's also pgprot_nonposted()
+> that this series also introduces.
+> =
+
+> If ioremap_nopost() is not possible on an architecture, then
+> pgprot_nonposted() won't be possible either - but you've made no
+> mention of that so far.
+> =
+
+> Just like the proposed ioremap_nopost(), pgprot_nonposted() is given a
+> default implementation that uses pgprot_noncached().  Maybe we should
+> also make pci_remap_iospace() fail if pgprot_nonposted() is not defined
+> by the architecture?
+
+Yes, I was about to mention that and you are right, I should deal with
+that too unfortunately. BTW, I have not posted the drivers to make the
+review easier (ie it would add 20 more patches to an already massive
+patch series - that will be trimmed when the asm-generic include is
+removed from arches according to this discussion).
+
+Thanks,
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
