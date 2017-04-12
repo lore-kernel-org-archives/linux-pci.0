@@ -1,80 +1,37 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41657 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934357AbdDFRZi (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Apr 2017 13:25:38 -0400
-Date: Thu, 6 Apr 2017 19:25:20 +0200
-From: Borislav Petkov <bp@suse.de>
-To: Brijesh Singh <brijesh.singh@amd.com>
-Cc: Paolo Bonzini <pbonzini@redhat.com>, simon.guinot@sequanux.org,
-        linux-efi@vger.kernel.org, kvm@vger.kernel.org, rkrcmar@redhat.com,
-        matt@codeblueprint.co.uk, linux-pci@vger.kernel.org,
-        linus.walleij@linaro.org, gary.hook@amd.com, linux-mm@kvack.org,
-        paul.gortmaker@windriver.com, hpa@zytor.com, cl@linux.com,
-        dan.j.williams@intel.com, aarcange@redhat.com,
-        sfr@canb.auug.org.au, andriy.shevchenko@linux.intel.com,
-        herbert@gondor.apana.org.au, bhe@redhat.com, xemul@parallels.com,
-        joro@8bytes.org, x86@kernel.org, peterz@infradead.org,
-        piotr.luc@intel.com, mingo@redhat.com, msalter@redhat.com,
-        ross.zwisler@linux.intel.com, dyoung@redhat.com,
-        thomas.lendacky@amd.com, jroedel@suse.de, keescook@chromium.org,
-        arnd@arndb.de, toshi.kani@hpe.com, mathieu.desnoyers@efficios.com,
-        luto@kernel.org, devel@linuxdriverproject.org, bhelgaas@google.com,
-        tglx@linutronix.de, mchehab@kernel.org, iamjoonsoo.kim@lge.com,
-        labbott@fedo.suse.de
-Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
- when spliting large pages
-Message-ID: <20170406172520.iyjjtz56u3jlnjhq@pd.tnic>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
- <20170310110657.hophlog2juw5hpzz@pd.tnic>
- <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
- <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
- <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
- <20170317101737.icdois7sdmtutt6b@pd.tnic>
- <f46ff1e1-1cc7-1907-74a0-e2709fa1e5fb@amd.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:19027 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751992AbdDLIfv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Apr 2017 04:35:51 -0400
+Date: Wed, 12 Apr 2017 11:35:25 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
+        Logan Gunthorpe <logang@deltatee.com>
+Cc: Stephen Bates <stephen.bates@microsemi.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: [PATCH] switchtec: checking for NULL instead of IS_ERR()
+Message-ID: <20170412083525.GF3250@mwanda>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <f46ff1e1-1cc7-1907-74a0-e2709fa1e5fb@amd.com>
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Brijesh,
+stuser_create() uses error pointers, it never returns NULL.
 
-On Thu, Apr 06, 2017 at 09:05:03AM -0500, Brijesh Singh wrote:
-> I looked into arch/x86/mm/init_{32,64}.c and as you pointed the file contains
-> routines to do basic page splitting. I think it sufficient for our usage.
+Fixes: 74004262f329 ("MicroSemi Switchtec management interface driver")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Good :)
-
-> I should be able to drop the memblock patch from the series and update the
-> Patch 15 [1] to use the kernel_physical_mapping_init().
-> 
-> The kernel_physical_mapping_init() creates the page table mapping using
-> default KERNEL_PAGE attributes, I tried to extend the function by passing
-> 'bool enc' flags to hint whether to clr or set _PAGE_ENC when splitting the
-> pages. The code did not looked clean hence I dropped that idea.
-
-Or, you could have a
-
-__kernel_physical_mapping_init_prot(..., prot)
-
-helper which gets a protection argument and hands it down. The lower
-levels already hand down prot which is good.
-
-The interface kernel_physical_mapping_init() will then itself call:
-
-	__kernel_physical_mapping_init_prot(..., PAGE_KERNEL);
-
-for the normal cases.
-
-That in a pre-patch of course.
-
-How does that sound?
-
--- 
-Regards/Gruss,
-    Boris.
-
-SUSE Linux GmbH, GF: Felix Imendörffer, Jane Smithard, Graham Norton, HRB 21284 (AG Nürnberg)
--- 
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index fcde98161d9a..cc6e085008fb 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -608,7 +608,7 @@ static int switchtec_dev_open(struct inode *inode, struct file *filp)
+ 	stdev = container_of(inode->i_cdev, struct switchtec_dev, cdev);
+ 
+ 	stuser = stuser_create(stdev);
+-	if (!stuser)
++	if (IS_ERR(stuser))
+ 		return PTR_ERR(stuser);
+ 
+ 	filp->private_data = stuser;
