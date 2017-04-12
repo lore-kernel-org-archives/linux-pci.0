@@ -1,188 +1,97 @@
-Return-Path: <SRS0=Q2iE=3O=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=Q2iE=3O=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Thu, 6 Apr 2017 12:38:45 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 12 Apr 2017 14:24:23 +0100
 From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Russell King - ARM Linux <linux@armlinux.org.uk>,
-	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Tony Luck <tony.luck@intel.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Haavard Skinnemoen <hskinnemoen@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	John Garry <john.garry@huawei.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Roy Zang <tie-fei.zang@freescale.com>
-Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
- interface
-Message-ID: <20170406113845.GA10013@red-moon>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
- <20170327094954.7162-3-lorenzo.pieralisi@arm.com>
- <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
- <20170328144543.GA18046@red-moon>
- <20170405105841.GG7909@n2100.armlinux.org.uk>
- <20170405113238.GA2465@red-moon>
- <20170406102636.GA9623@red-moon>
- <20170406105312.GE28800@wotan.suse.de>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH 1/2] drivers: pci: do not disregard parent resources
+ starting at 0x0
+Message-ID: <20170412132423.GA6584@red-moon>
+References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
+ <20170411163313.18577-2-ard.biesheuvel@linaro.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170406105312.GE28800@wotan.suse.de>
+In-Reply-To: <20170411163313.18577-2-ard.biesheuvel@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: catalin.marinas@arm.com, graeme.gregory@linaro.org,
+ linux-pci@vger.kernel.org, will.deacon@arm.com, leif.lindholm@linaro.org,
+ okaya@codeaurora.org, tn@semihalf.com, bhelgaas@google.com, yinghai@kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 06, 2017 at 12:53:12PM +0200, Luis R. Rodriguez wrote:
-> On Thu, Apr 06, 2017 at 11:26:36AM +0100, Lorenzo Pieralisi wrote:
-> > On Wed, Apr 05, 2017 at 01:38:12PM +0100, Lorenzo Pieralisi wrote:
-> > > On Wed, Apr 05, 2017 at 11:58:41AM +0100, Russell King - ARM Linux wrote:
-> > > > On Tue, Mar 28, 2017 at 03:45:43PM +0100, Lorenzo Pieralisi wrote:
-> > > > > On Mon, Mar 27, 2017 at 08:41:10PM -0500, Bjorn Helgaas wrote:
-> > > > > > On Mon, Mar 27, 2017 at 10:49:30AM +0100, Lorenzo Pieralisi wrote:
-> > > > > > > diff --git a/arch/x86/include/asm/io.h b/arch/x86/include/asm/io.h
-> > > > > > > index 7afb0e2..50b292f 100644
-> > > > > > > --- a/arch/x86/include/asm/io.h
-> > > > > > > +++ b/arch/x86/include/asm/io.h
-> > > > > > > @@ -171,6 +171,7 @@ static inline unsigned int isa_virt_to_bus(volatile void *address)
-> > > > > > >  extern void __iomem *ioremap_nocache(resource_size_t offset, unsigned long size);
-> > > > > > >  extern void __iomem *ioremap_uc(resource_size_t offset, unsigned long size);
-> > > > > > >  #define ioremap_uc ioremap_uc
-> > > > > > > +#define ioremap_nopost ioremap_nocache
-> > > > > > 
-> > > > > > These are all the same as the default from asm-generic.h.  Do we really
-> > > > > > need these definitions in alpha, avr32, frv, ia64, x86?
-> > > > > 
-> > > > > Those arches do not include asm-generic.h (I suppose for a good reason)
-> > > > > but a definition is needed anyway if we want code using ioremap_nopost()
-> > > > > to be unconditional. This is one way of doing it, there are others not
-> > > > > sure they are any better, I am open to suggestions.
-> > > > 
-> > > > We do have linux/io.h, which should be included in preference to asm/io.h.
-> > > > linux/io.h has existed for years, but I still see (from time to time)
-> > > > patches adding drivers that (imho incorrectly) use asm/io.h.
-> > > > 
-> > > > Also, this:
-> > > > 
-> > > > > > > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-> > > > > > > index 7ef015e..0e81938 100644
-> > > > > > > --- a/include/asm-generic/io.h
-> > > > > > > +++ b/include/asm-generic/io.h
-> > > > > > > @@ -915,6 +915,10 @@ extern void ioport_unmap(void __iomem *p);
-> > > > > > >  #endif /* CONFIG_GENERIC_IOMAP */
-> > > > > > >  #endif /* CONFIG_HAS_IOPORT_MAP */
-> > > > > > >  
-> > > > > > > +#ifndef ioremap_nopost
-> > > > > > > +#define ioremap_nopost ioremap_nocache
-> > > > > > > +#endif
-> > > > > > > +
-> > > > > > >  #ifndef xlate_dev_kmem_ptr
-> > > > > > >  #define xlate_dev_kmem_ptr xlate_dev_kmem_ptr
-> > > > > > >  static inline void *xlate_dev_kmem_ptr(void *addr)
-> > > > 
-> > > > could well be located in linux/io.h, which would make it available
-> > > > everywhere.
-> > > > 
-> > > > I'd suggest one change to this though:
-> > > > 
-> > > > #ifndef ioremap_nopost
-> > > > static inline void __iomem *ioremap_nopost(resource_size_t offset,
-> > > > 					   unsigned long size)
-> > > > {
-> > > > 	return ioremap_nocache(offset, size);
-> > > > }
-> > > > #endif
-> > > > 
-> > > > This way, if someone forgets to define ioremap_nopost() in their
-> > > > asm/io.h but provides a definition or extern prototype for
-> > > > ioremap_nopost(), we end up with a compile error to highlight the
-> > > > error, rather than the error being hidden by the preprocessor.
-> > > 
-> > > Yes, I could add ioremap_nopost() to linux/io.h I did not do it because
-> > > linux/io.h, for whatever reason, does not seem to contain ioremap_*
-> > > prototypes; this does not mean we should not add it there but that
-> > > would look odd (with all others ioremap_* in asm/io.h), all I am
-> > > saying. This stuff requires some clean-up regardless, for the records.
-> > > 
-> > > As for the static inline, I did that and that did not make the
-> > > kbuild robot happy at all on some arches:
-> > > 
-> > > eg: openrisc
-> > > 
-> > > >> include/asm-generic/io.h:922:9: error: implicit declaration of
-> > > >> function 'ioremap_nocache' [-Werror=implicit-function-declaration]
-> > >      return ioremap_nocache(offset, size);
-> > 
-> > Indeed, the static inline ioremap_nocache() fallback does not work
-> > on all arches (whether I add the fallback in linux/io.h or
-> > asm-generic/io.h is irrelevant), I bump into issues such as the one
-> > reported above.
-> 
-> Its also not *safe* to assume on behalf of all architectures a new ioremap
-> call is both a good idea and proper.
-> 
-> > I could make it:
-> > 
-> > #ifndef ioremap_nopost
-> > static inline void __iomem *ioremap_nopost(resource_size_t offset,
-> > 					   unsigned long size)
-> > {
-> > 	return NULL;
-> > }
-> > #endif
-> > 
-> > which would force arches to define ioremap_nopost() (if they need it).
-> 
-> Yes, please do this.
+[+Yinghai, Bjorn]
 
-Ok but where ? linux/io.h or asm-generic/io.h ? As I replied to Russell,
-having it in linux/io.h is a bit odd given that it would be the only
-ioremap_* implementation declared there, I think we need more
-consistency here instead of deviating again from what you did.
-
-> > This is what I *assume* was done for ioremap_uc() in asm-generic/io.h,
-> > but honestly history is hard to follow here.
-> > 
-> > Thoughts ?
+On Tue, Apr 11, 2017 at 05:33:12PM +0100, Ard Biesheuvel wrote:
+> Commit f44116ae8818 ("PCI: Remove pci_find_parent_resource() use for
+> allocation") updated the logic that iterates over all bus resources
+> and compares them to a given resource, in order to decide whether one
+> is the parent of the latter.
 > 
-> Hard to follow ?
-
-I was referring to the whole asm-generic/io.h history.
-
-> I think commit 8c7ea50c010b2 ("x86/mm, asm-generic: Add IOMMU ioremap_uc()
-> variant default") makes it very clear that historically we have made bad
-> assumptions and these assumptions are not safe, so the only correct thing we
-> can do to not stall development is to do what you did above, and each
-> architecture then can add support for its proper mapping. Its up to each
-> architecture maintainer to be attentive and review these patches, if they don't
-> get to it, this will just not work for the new driver that needs it, such is
-> life, its better than having incorrect defaults spread for all architectures.
+> This change inadvertently causes pci_find_parent_resource() to disregard
+> resources starting at address 0x0, resulting in an error such as the one
+> below on ARM systems whose I/O window starts at 0x0.
 > 
-> The old strategy was very sloppy. Its why I tried to be as clear as possible on
-> both the commit log and headers about this. If the commit log and headers were
-> not clear, please help clarify this more somehow in your patches.
+> pci_bus 0000:00: root bus resource [mem 0x10000000-0x3efeffff window]
+> pci_bus 0000:00: root bus resource [io  0x0000-0xffff window]
+> pci_bus 0000:00: root bus resource [mem 0x8000000000-0xffffffffff window]
+> pci_bus 0000:00: root bus resource [bus 00-0f]
+> pci 0000:00:01.0: PCI bridge to [bus 01]
+> pci 0000:00:02.0: PCI bridge to [bus 02]
+> pci 0000:00:03.0: PCI bridge to [bus 03]
+> pci 0000:00:03.0: can't claim BAR 13 [io  0x0000-0x0fff]: no compatible bridge window
+> pci 0000:03:01.0: can't claim BAR 0 [io  0x0000-0x001f]: no compatible bridge window
+> 
+> While this never happens on x86, it is perfectly legal in general for a
+> PCI MMIO or IO window to start at address 0x0, and it was supported in
+> the code before commit f44116ae8818.
+> 
+> So let's drop the test for res->start != 0; resource_contains() already
+> checks whether [start, end) completely covers the resource, and so it
+> should be redundant.
+> 
+> Fixes: f44116ae8818 ("PCI: Remove pci_find_parent_resource() use for allocation")
 
-I see your point and I can replicate (probably I will have to patch
-microblaze too since some of the PCI drivers patches in this series
-that I updated to use ioremap_nopost() will run on it too) what you
-did for ioremap_uc() for ioremap_nopost(), I am ok with that, I need
-to know if we all are.
+I know this code fixes IO claiming on ARM/ARM64 (well, it fixes nothing
+because we never claim resources on ARM/ARM64 apart from kvmtool and
+generic host bridge), my _big_ worry is that it can cause endless
+regressions on other arches, in any case I would be really really
+careful about adding a Fixes: tag to it.
+
+Yinghai, Bjorn ?
 
 Thanks,
 Lorenzo
+
+> Signed-off-by: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+> ---
+>  drivers/pci/pci.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 7904d02ffdb9..53a41b1f7ef7 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -454,7 +454,7 @@ struct resource *pci_find_parent_resource(const struct pci_dev *dev,
+>  	pci_bus_for_each_resource(bus, r, i) {
+>  		if (!r)
+>  			continue;
+> -		if (res->start && resource_contains(r, res)) {
+> +		if (resource_contains(r, res)) {
+>  
+>  			/*
+>  			 * If the window is prefetchable but the BAR is
+> -- 
+> 2.9.3
+> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
