@@ -1,200 +1,147 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
-        gregkh@linuxfoundation.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V11 08/11] drivers: acpi: Handle IOMMU lookup failure with deferred probing or error
-Date: Mon, 10 Apr 2017 16:51:03 +0530
-Message-Id: <1491823266-1209-9-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
-References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 12 Apr 2017 11:21:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jayachandran C <jnair@caviumnetworks.com>
+Subject: Re: [PATCH v4 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
+Message-ID: <20170412162118.GC25197@bhelgaas-glaptop.roam.corp.google.com>
+References: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
+ <1491225304-3559-3-git-send-email-jnair@caviumnetworks.com>
+ <20170411012847.GA15291@bhelgaas-glaptop.roam.corp.google.com>
+ <20170411071047.GA3610@localhost>
+ <20170411134125.GA31773@bhelgaas-glaptop.roam.corp.google.com>
+ <20170411152702.GA2910@localhost>
+MIME-Version: 1.0
+In-Reply-To: <20170411152702.GA2910@localhost>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+ Alex Williamson <alex.williamson@redhat.com>, iommu@lists.linux-foundation.org,
+ Jon Masters <jcm@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is an equivalent to the DT's handling of the iommu master's probe
-with deferred probing when the corrsponding iommu is not probed yet.
-The lack of a registered IOMMU can be caused by the lack of a driver for
-the IOMMU, the IOMMU device probe not having been performed yet, having
-been deferred, or having failed.
+On Tue, Apr 11, 2017 at 03:27:02PM +0000, Jayachandran C wrote:
+> On Tue, Apr 11, 2017 at 08:41:25AM -0500, Bjorn Helgaas wrote:
+> > [+cc Joerg]
+> > 
+> > On Tue, Apr 11, 2017 at 07:10:48AM +0000, Jayachandran C wrote:
+> > > On Mon, Apr 10, 2017 at 08:28:47PM -0500, Bjorn Helgaas wrote:
+> > > > Hi Jayachandran,
+> > > > 
+> > > > On Mon, Apr 03, 2017 at 01:15:04PM +0000, Jayachandran C wrote:
+> > > > > The Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the PCI
+> > > > > topology is slightly unusual. For a multi-node system, it looks like:
+> > > > > 
+> > > > > [node level PCI bridges - one per node]
+> > > > >     [SoC PCI devices with MSI-X but no IOMMU]
+> > > > >     [PCI-PCIe "glue" bridges - upto 14, one per real port below]
+> > > > >         [PCIe real root ports associated with IOMMU and GICv3 ITS]
+> > > > >             [External PCI devices connected to PCIe links]
+> > > > > 
+> > > > > The top two levels of bridges should have introduced aliases since they
+> > > > > are PCI and PCI/PCIe bridges, but in the case of ThunderX2 they do not.
+> > > > > In the case of external PCIe devices, the "real" root ports are connected
+> > > > > to the SMMU and the GIC ITS, so PCI-PCIe bridge does not introduce an
+> > > > > alias. The SoC PCI devices are directly connected to the GIC ITS, so the
+> > > > > node level bridges do not introduce an alias either.
+> > > > > 
+> > > > > To handle this quirk, we mark the real PCIe root ports and node level
+> > > > > PCI bridges with the flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT.  With this,
+> > > > > pci_for_each_dma_alias() works correctly for external PCIe devices and
+> > > > > SoC PCI devices.
+> > > > > 
+> > > > > For the current revision of Cavium ThunderX2, the VendorID and Device ID
+> > > > > are from Broadcom Vulcan (14e4:90XX).
+> > > > 
+> > > > Can you supply some text here about why we want to apply this patch?
+> > > > E.g., does it avoid making unnecessary IOMMU mappings, improve
+> > > > performance, avoid a crash, etc?
+> > > 
+> > > If this is for the commit message, I hope the following is ok:
+> > > 
+> > > "With this change, both MSI-X and IO virtualization work correctly on
+> > > Cavium ThunderX2. The GIC ITS driver gets the correct device ID to
+> > > configure MSI-X, the SMMUv3 driver gets the correct Stream IDs for PCI
+> > > devices, and the IOMMU groups are setup correctly."
+> > 
+> > This doesn't get at what the actual problem is.  I'm hoping for
+> > something like "without this change, we set up an IOMMU mapping for
+> > requestor ID X, but device DMA uses requestor ID Y because ...., which
+> > results in an IOMMU fault"
+> 
+> Ok. I hope this would be better:
+> 
+> "Without this change, the last alias seen while traversing the PCI
+> hierarchy will be used as the RID to generate the device ID for ITS
+> and stream ID for SMMU. This in turn causes the MSI-X generated by the
+> device to fail since the ITS expects to have translation tables based
+> on the actual PCIe RID and not the (irrelevant) alias. Similarly, the
+> device DMA also fails when SMMU is enabled due to incorrect value in
+> SMMU translation tables"
 
-The first case occurs when the firmware describes the bus master and
-IOMMU topology correctly but no device driver exists for the IOMMU yet
-or the device driver has not been compiled in. Return NULL, the caller
-will configure the device without an IOMMU.
+This description is true, but I don't think it addresses the real
+problem.  I think the real problem is that your IOMMU code doesn't
+handle aliases correctly, and by ignoring these invalid aliases, we
+happen to map an alias that works for the builtin devices.  But that's
+only because we got lucky (those devices use a single RID and they're
+not behind bridges that optionally take ownership).
 
-The second and third cases are handled by deferring the probe of the bus
-master device which will eventually get reprobed after the IOMMU.
+It would make sense to me if we fixed the IOMMU code to map *all* the
+aliases, which should be enough to make your devices work.  If we then
+wanted to apply a patch like this on top, it would be simply an
+optimization that avoids unnecessary IOMMU mappings.
 
-The last case is currently handled by deferring the probe of the bus
-master device as well. A mechanism to either configure the bus master
-device without an IOMMU or to fail the bus master device probe depending
-on whether the IOMMU is optional or mandatory would be a good
-enhancement.
+> > I suspect the reason this patch makes a difference is because the
+> > current pci_for_each_dma_alias() believes one of those top-level
+> > bridges is an alias, and the iterator produces it last, so that's the
+> > one you map.  The IOMMU is attached lower down, so that top-level
+> > bridge is not in fact an alias, but since you only look at the *last*
+> > one, you don't map the correct aliases from lower down in the tree.
+> 
+> Exactly. The IORT spec allows a range of RIDs to map to an SMMU, which
+> means that a PCI RC can multiple SMMUs, each handling a subset of RIDs.
+> 
+> In the case of Cavium ThunderX2, the RID which we should see on the RC
+> - if we follow the standard and factor in the aliasing introduced by the
+> PCI bridge and the PCI/PCIe bridge - is not the RID seen by the SMMU (or
+> ITS).
+> 
+> But, if we stop the traversal at the point where SMMU (or ITS) is
+> attached, we will get the correct RID as seen by these.
 
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-[Lorenzo: Added fixes for dma_coherent_mask overflow, acpi_dma_configure
-          called multiple times for same device]
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
----
- drivers/acpi/arm64/iort.c  | 33 ++++++++++++++++++++++++++++++++-
- drivers/acpi/scan.c        | 11 ++++++++---
- drivers/base/dma-mapping.c |  2 +-
- include/acpi/acpi_bus.h    |  2 +-
- include/linux/acpi.h       |  7 +++++--
- 5 files changed, 47 insertions(+), 8 deletions(-)
+There is a single "correct RID" for your builtin SATA and USB, but in
+general there is no single RID.
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 3dd9ec3..e323ece 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -543,6 +543,14 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
- 	const struct iommu_ops *ops = NULL;
- 	int ret = -ENODEV;
- 	struct fwnode_handle *iort_fwnode;
-+	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
-+
-+	/*
-+	 * If we already translated the fwspec there
-+	 * is nothing left to do, return the iommu_ops.
-+	 */
-+	if (fwspec && fwspec->ops)
-+		return fwspec->ops;
- 
- 	if (node) {
- 		iort_fwnode = iort_get_fwnode(node);
-@@ -550,8 +558,17 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
- 			return NULL;
- 
- 		ops = iommu_ops_from_fwnode(iort_fwnode);
-+		/*
-+		 * If the ops look-up fails, this means that either
-+		 * the SMMU drivers have not been probed yet or that
-+		 * the SMMU drivers are not built in the kernel;
-+		 * Depending on whether the SMMU drivers are built-in
-+		 * in the kernel or not, defer the IOMMU configuration
-+		 * or just abort it.
-+		 */
- 		if (!ops)
--			return NULL;
-+			return iort_iommu_driver_enabled(node->type) ?
-+			       ERR_PTR(-EPROBE_DEFER) : NULL;
- 
- 		ret = arm_smmu_iort_xlate(dev, streamid, iort_fwnode, ops);
- 	}
-@@ -625,12 +642,26 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
- 
- 		while (parent) {
- 			ops = iort_iommu_xlate(dev, parent, streamid);
-+			if (IS_ERR_OR_NULL(ops))
-+				return ops;
- 
- 			parent = iort_node_get_id(node, &streamid,
- 						  IORT_IOMMU_TYPE, i++);
- 		}
- 	}
- 
-+	/*
-+	 * If we have reason to believe the IOMMU driver missed the initial
-+	 * add_device callback for dev, replay it to get things in order.
-+	 */
-+	if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
-+	    dev->bus && !dev->iommu_group) {
-+		int err = ops->add_device(dev);
-+
-+		if (err)
-+			ops = ERR_PTR(err);
-+	}
-+
- 	return ops;
- }
- 
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index 1926918..2a513cc 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1373,20 +1373,25 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
-  * @dev: The pointer to the device
-  * @attr: device dma attributes
-  */
--void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
-+int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
- {
- 	const struct iommu_ops *iommu;
-+	u64 size;
- 
- 	iort_set_dma_mask(dev);
- 
- 	iommu = iort_iommu_configure(dev);
-+	if (IS_ERR(iommu))
-+		return PTR_ERR(iommu);
- 
-+	size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
- 	/*
- 	 * Assume dma valid range starts at 0 and covers the whole
- 	 * coherent_dma_mask.
- 	 */
--	arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
--			   attr == DEV_DMA_COHERENT);
-+	arch_setup_dma_ops(dev, 0, size, iommu, attr == DEV_DMA_COHERENT);
-+
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(acpi_dma_configure);
- 
-diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-index 82bd45c..755a2b5 100644
---- a/drivers/base/dma-mapping.c
-+++ b/drivers/base/dma-mapping.c
-@@ -368,7 +368,7 @@ int dma_configure(struct device *dev)
- 	} else if (has_acpi_companion(dma_dev)) {
- 		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
- 		if (attr != DEV_DMA_NOT_SUPPORTED)
--			acpi_dma_configure(dev, attr);
-+			ret = acpi_dma_configure(dev, attr);
- 	}
- 
- 	if (bridge)
-diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
-index ef0ae8a..2a9a5de 100644
---- a/include/acpi/acpi_bus.h
-+++ b/include/acpi/acpi_bus.h
-@@ -575,7 +575,7 @@ struct acpi_pci_root {
- 
- bool acpi_dma_supported(struct acpi_device *adev);
- enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
--void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
-+int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
- void acpi_dma_deconfigure(struct device *dev);
- 
- struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
-diff --git a/include/linux/acpi.h b/include/linux/acpi.h
-index 9b05886..79d06ef6 100644
---- a/include/linux/acpi.h
-+++ b/include/linux/acpi.h
-@@ -762,8 +762,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
- 	return DEV_DMA_NOT_SUPPORTED;
- }
- 
--static inline void acpi_dma_configure(struct device *dev,
--				      enum dev_dma_attr attr) { }
-+static inline int acpi_dma_configure(struct device *dev,
-+				     enum dev_dma_attr attr)
-+{
-+	return 0;
-+}
- 
- static inline void acpi_dma_deconfigure(struct device *dev) { }
- 
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+> > Stopping the iterator earlier happens to make the last alias be one of
+> > the correct ones, but it doesn't solve the problems of quirked devices
+> > that can use multiple requester IDs, and it doesn't solve the problem
+> > of PCIe-to-PCI bridges that optionally take ownership of transactions.
+>  
+> If these happen below the point where the SMMU is attached, we will
+> consider the last alias introduced, which should be ok. If they are
+> above, the alias introduced is not relevant.  Devices with multiple
+> aliases is not handled anywhere in ARM code, so I don't think we should
+> consider that here.
+
+I think we *should* consider it here.  The multiple alias situation is
+generic PCIe, independent of ARM.  If you want to support arbitrary
+PCIe plugin devices, you have to handle it.  I think any device with a
+quirk that calls pci_add_dma_alias() will currently fail on your
+system.  And I think devices behind a bridge that optionally takes
+ownership of DMA transactions will also fail.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
