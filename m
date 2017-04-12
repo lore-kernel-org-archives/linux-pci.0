@@ -1,77 +1,187 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f193.google.com ([209.85.128.193]:33301 "EHLO
-        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964934AbdDTOwK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Apr 2017 10:52:10 -0400
-Date: Thu, 20 Apr 2017 16:52:06 +0200
-From: Frederic Weisbecker <fweisbec@gmail.com>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-        torvalds@linux-foundation.org,
-        kernel list <linux-kernel@vger.kernel.org>,
-        linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
- after cold boots, boots after reboot
-Message-ID: <20170420145205.GD25160@lerouge>
-References: <20170203205129.GA3791@amd>
- <20170203211854.GA3697@amd>
- <20170214175956.GA3587@amd>
- <20170214192743.GA3869@amd>
- <20170223162825.GA16646@lerouge>
- <20170223184013.GA5177@amd>
- <20170403153850.GA4418@lerouge>
- <20170403182050.GA6555@amd>
- <20170412150832.GE21309@lerouge>
- <20170415213447.GA9506@amd>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 12 Apr 2017 18:10:34 +0000
+From: Jayachandran C <jnair@caviumnetworks.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH v4 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
+Message-ID: <20170412181034.GA3671@localhost>
+References: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
+ <1491225304-3559-3-git-send-email-jnair@caviumnetworks.com>
+ <20170411012847.GA15291@bhelgaas-glaptop.roam.corp.google.com>
+ <20170411071047.GA3610@localhost>
+ <20170411134125.GA31773@bhelgaas-glaptop.roam.corp.google.com>
+ <20170411152702.GA2910@localhost>
+ <20170412162118.GC25197@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170415213447.GA9506@amd>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170412162118.GC25197@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
+ Alex Williamson <alex.williamson@redhat.com>, iommu@lists.linux-foundation.org,
+ Jon Masters <jcm@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 15, 2017 at 11:34:47PM +0200, Pavel Machek wrote:
-> On Wed 2017-04-12 17:08:35, Frederic Weisbecker wrote:
-> > On Mon, Apr 03, 2017 at 08:20:50PM +0200, Pavel Machek wrote:
-> > > > > > > > ...1d.7: PCI fixup... pass 2
-> > > > > > > > ...1d.7: PCI fixup... pass 3
-> > > > > > > > ...1d.7: PCI fixup... pass 3 done
-> > > > > > > > 
-> > > > > > > > ...followed by hang. So yes, it looks USB related.
-> > > > > > > > 
-> > > > > > > > (Sometimes it hangs with some kind backtrace involving secondary CPU
-> > > > > > > > startup, unfortunately useful info is off screen at that point).
-> > > > > > > 
-> > > > > > > Forgot to say, 1d.7 is EHCI controller.
-> > > > > > > 
-> > > > > > > 00:1d.7 USB controller: Intel Corporation NM10/ICH7 Family USB2 EHCI
-> > > > > > > Controller (rev 01)
-> > > > > > 
-> > > > > > Ok, I should have access soon to a EeePc 1015CX (which seem to have this controller).
-> > > > > > I hope I'll be able to reproduce the issue there. If not, I'm sorry but I'll have to
-> > > > > > burden you again :-)
-> > > > > 
-> > > > > Go through more mails. It is only reproducible after cold boot. .. so
-> > > > > I doubt it will be easy to reproduce on another machine.
-> > > > > 
-> > > > > Now... I do have serial port, and I even might have serial cable
-> > > > > somewhere, but.... Giving how sensitive it is, it is probably going to
-> > > > > go away with console on ttyS...
-> > > > 
-> > > > I also tried on an eeepc (which has ICH7/NM10 as well), with your config.
-> > > > I even plugged a usb keyboard but even then I have been unable to
-> > > > reproduce either :-(
+On Wed, Apr 12, 2017 at 11:21:18AM -0500, Bjorn Helgaas wrote:
+> On Tue, Apr 11, 2017 at 03:27:02PM +0000, Jayachandran C wrote:
+> > On Tue, Apr 11, 2017 at 08:41:25AM -0500, Bjorn Helgaas wrote:
+> > > [+cc Joerg]
 > > > 
-> > > Ok, give me some time. I'm no longer using the affected machine, so no
-> > > promises.
+> > > On Tue, Apr 11, 2017 at 07:10:48AM +0000, Jayachandran C wrote:
+> > > > On Mon, Apr 10, 2017 at 08:28:47PM -0500, Bjorn Helgaas wrote:
+> > > > > Hi Jayachandran,
+> > > > > 
+> > > > > On Mon, Apr 03, 2017 at 01:15:04PM +0000, Jayachandran C wrote:
+> > > > > > The Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the PCI
+> > > > > > topology is slightly unusual. For a multi-node system, it looks like:
+> > > > > > 
+> > > > > > [node level PCI bridges - one per node]
+> > > > > >     [SoC PCI devices with MSI-X but no IOMMU]
+> > > > > >     [PCI-PCIe "glue" bridges - upto 14, one per real port below]
+> > > > > >         [PCIe real root ports associated with IOMMU and GICv3 ITS]
+> > > > > >             [External PCI devices connected to PCIe links]
+> > > > > > 
+> > > > > > The top two levels of bridges should have introduced aliases since they
+> > > > > > are PCI and PCI/PCIe bridges, but in the case of ThunderX2 they do not.
+> > > > > > In the case of external PCIe devices, the "real" root ports are connected
+> > > > > > to the SMMU and the GIC ITS, so PCI-PCIe bridge does not introduce an
+> > > > > > alias. The SoC PCI devices are directly connected to the GIC ITS, so the
+> > > > > > node level bridges do not introduce an alias either.
+> > > > > > 
+> > > > > > To handle this quirk, we mark the real PCIe root ports and node level
+> > > > > > PCI bridges with the flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT.  With this,
+> > > > > > pci_for_each_dma_alias() works correctly for external PCIe devices and
+> > > > > > SoC PCI devices.
+> > > > > > 
+> > > > > > For the current revision of Cavium ThunderX2, the VendorID and Device ID
+> > > > > > are from Broadcom Vulcan (14e4:90XX).
+> > > > > 
+> > > > > Can you supply some text here about why we want to apply this patch?
+> > > > > E.g., does it avoid making unnecessary IOMMU mappings, improve
+> > > > > performance, avoid a crash, etc?
+> > > > 
+> > > > If this is for the commit message, I hope the following is ok:
+> > > > 
+> > > > "With this change, both MSI-X and IO virtualization work correctly on
+> > > > Cavium ThunderX2. The GIC ITS driver gets the correct device ID to
+> > > > configure MSI-X, the SMMUv3 driver gets the correct Stream IDs for PCI
+> > > > devices, and the IOMMU groups are setup correctly."
+> > > 
+> > > This doesn't get at what the actual problem is.  I'm hoping for
+> > > something like "without this change, we set up an IOMMU mapping for
+> > > requestor ID X, but device DMA uses requestor ID Y because ...., which
+> > > results in an IOMMU fault"
 > > 
-> > Actually someone reported me a very similar issue than yours lately. It's probably
-> > the same. And I have a potential fix.
+> > Ok. I hope this would be better:
+> > 
+> > "Without this change, the last alias seen while traversing the PCI
+> > hierarchy will be used as the RID to generate the device ID for ITS
+> > and stream ID for SMMU. This in turn causes the MSI-X generated by the
+> > device to fail since the ITS expects to have translation tables based
+> > on the actual PCIe RID and not the (irrelevant) alias. Similarly, the
+> > device DMA also fails when SMMU is enabled due to incorrect value in
+> > SMMU translation tables"
 > 
-> Got the machine back to work -- I guess it will be useful for distcc.
+> This description is true, but I don't think it addresses the real
+> problem.  I think the real problem is that your IOMMU code doesn't
+> handle aliases correctly, and by ignoring these invalid aliases, we
+> happen to map an alias that works for the builtin devices.  But that's
+> only because we got lucky (those devices use a single RID and they're
+> not behind bridges that optionally take ownership).
 > 
-> And yes, you seem to have right fix :-). 
-> 
-> Tested-by: Pavel Machek <pavel@ucw.cz>
+> It would make sense to me if we fixed the IOMMU code to map *all* the
+> aliases, which should be enough to make your devices work.  If we then
+> wanted to apply a patch like this on top, it would be simply an
+> optimization that avoids unnecessary IOMMU mappings.
 
-Thanks a lot! I'm posting the fix.
+The issue that the IOMMU code does not handle valid aliases is
+unrelated to what I am trying to fix. The quirk is to make sure
+that invalid aliases are not seen on ThunderX2 while doing
+pci_for_each_dma_alias().
+
+The DMA and MSI-X requests leave the PCI/PCIe hierarchy at the point
+where the SMMU (or ITS) is attached, i.e. at the bridge marked with
+PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT. The quirk ensures that we don't look
+for aliases above that point.
+
+The toplevel bridge is marked PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT since
+the on-chip devices are directly connected to the ITS (they do not
+use SMMU).
+
+The top two levels of bridges are not real PCI bridges but just
+PCI bridge-like things that were added to tie the whole hierarchy
+together for configuration and enumeration. They do not handle
+PCI/PCIe transactions in the traditional sense.
+
+I think my problem description is still not correct, maybe:
+"The SMMU (and ITS) expects to device tables to use the RID seen
+at the bridge they are associated with. Currently the
+pci_for_each_dma_alias() code traverses beyond this point and
+generates incorrect aliases due to the PCI and PCI/PCIe bridges
+above. This causes MSI-X interrupts and device DMA to fail since
+the SMMU and ITS tables to be setup with incorrect IDs"
+
+> > > I suspect the reason this patch makes a difference is because the
+> > > current pci_for_each_dma_alias() believes one of those top-level
+> > > bridges is an alias, and the iterator produces it last, so that's the
+> > > one you map.  The IOMMU is attached lower down, so that top-level
+> > > bridge is not in fact an alias, but since you only look at the *last*
+> > > one, you don't map the correct aliases from lower down in the tree.
+> > 
+> > Exactly. The IORT spec allows a range of RIDs to map to an SMMU, which
+> > means that a PCI RC can multiple SMMUs, each handling a subset of RIDs.
+> > 
+> > In the case of Cavium ThunderX2, the RID which we should see on the RC
+> > - if we follow the standard and factor in the aliasing introduced by the
+> > PCI bridge and the PCI/PCIe bridge - is not the RID seen by the SMMU (or
+> > ITS).
+> > 
+> > But, if we stop the traversal at the point where SMMU (or ITS) is
+> > attached, we will get the correct RID as seen by these.
+> 
+> There is a single "correct RID" for your builtin SATA and USB, but in
+> general there is no single RID.
+
+In case of external PCIe devices too, the RID (or aliases) seen to the
+point where SMMU or ITS is connected (i.e, the bridge marked with flag
+PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT) are correct.
+ 
+> > > Stopping the iterator earlier happens to make the last alias be one of
+> > > the correct ones, but it doesn't solve the problems of quirked devices
+> > > that can use multiple requester IDs, and it doesn't solve the problem
+> > > of PCIe-to-PCI bridges that optionally take ownership of transactions.
+> >  
+> > If these happen below the point where the SMMU is attached, we will
+> > consider the last alias introduced, which should be ok. If they are
+> > above, the alias introduced is not relevant.  Devices with multiple
+> > aliases is not handled anywhere in ARM code, so I don't think we should
+> > consider that here.
+> 
+> I think we *should* consider it here.  The multiple alias situation is
+> generic PCIe, independent of ARM.  If you want to support arbitrary
+> PCIe plugin devices, you have to handle it.  I think any device with a
+> quirk that calls pci_add_dma_alias() will currently fail on your
+> system.  And I think devices behind a bridge that optionally takes
+> ownership of DMA transactions will also fail.
+ 
+The issue that IOMMU code does not handle all aliases has to be addressed
+separately (and Robin seems to be looking at this from his response).
+
+And even when that is addressed, this quirk is still needed on ThunderX2,
+as I pointed out above.
+
+Hope I am still not missing the point, and thanks for your patience here.
+JC.
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
