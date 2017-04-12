@@ -1,81 +1,54 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V11 00/11] IOMMU probe deferral support
-To: Sricharan R <sricharan@codeaurora.org>, robin.murphy@arm.com,
-        will.deacon@arm.com, joro@8bytes.org, lorenzo.pieralisi@arm.com,
-        iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robh+dt@kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
-        gregkh@linuxfoundation.org
-References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
-From: Frank Rowand <frowand.list@gmail.com>
-Message-ID: <58EB72E4.6030009@gmail.com>
-Date: Mon, 10 Apr 2017 04:56:20 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:42832 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752372AbdDLRdy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Apr 2017 13:33:54 -0400
+Date: Wed, 12 Apr 2017 12:33:50 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jarod Wilson <jarod@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH] pci/quirks: ITE 8893 needs
+ quirk_use_pcie_bridge_dma_alias
+Message-ID: <20170412173350.GG25197@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170411010127.57858-1-jarod@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170411010127.57858-1-jarod@redhat.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/10/17 04:20, Sricharan R wrote:
-> This series calls the dma ops configuration for the devices
-> at a generic place so that it works for all busses.
-> The dma_configure_ops for a device is now called during
-> the device_attach callback just before the probe of the
-> bus/driver is called. Similarly dma_deconfigure is called during
-> device/driver_detach path.
+On Mon, Apr 10, 2017 at 09:01:27PM -0400, Jarod Wilson wrote:
+> This bridge has the same problems as the ITE 8892, which were resulting in
+> crippling an older PCI 1Gbps NIC down to 45Mbps throughput with IOMMU and
+> VT-d enabled. With the patch, this old e1000 goes back up to ~900Mbps.
 > 
-> pci_bus_add_devices    (platform/amba)(_device_create/driver_register)
->        |                         |
-> pci_bus_add_device     (device_add/driver_register)
->        |                         |
-> device_attach           device_initial_probe
->        |                         |
-> __device_attach_driver    __device_attach_driver
->        |
-> driver_probe_device
->        |
-> really_probe
->        |
-> dma_configure
-> 
-> Similarly on the device/driver_unregister path __device_release_driver is
-> called which inturn calls dma_deconfigure.
-> 
-> Rebased the series against mainline 4.11-rc5. Applies and builds cleanly
-> against iommu-next and with 3-way merge applies on top of linux-next
-> as well (patch #8), because of "ACPI platform MSI support" from
-> Hanjun being merged.
->   
-> * Tested with platform and pci devices for probe deferral
->   and reprobe on arm64 based platform.
-> 
-> Previous post of this series [8]. 
-> 
-> Please note that, i have kept the tested/acked tags intact from V8
-> because V9/10/11 were for more fixes that was added, so the original
-> tags that was given for the functional testing remains the same.
-> 
->  [V11]
->      * No functional changes.
-> 
->      * Rebased on top of 4.11-rc6.
-> 
->      * Dropped patch#3 from V10, as a result have to make
->        a change in patch#7 to return a 'non-void' to fix a
->        build warning.
-> 
->      * Added Robin's and Rob's tags.
+> Suggested-by: Alex Williamson <alex.williamson@redhat.com>
+> CC: linux-pci@vger.kernel.org
+> CC: Alex Williamson <alex.williamson@redhat.com>
+> CC: Bjorn Helgaas <bhelgaas@google.com>
+> Signed-off-by: Jarod Wilson <jarod@redhat.com>
 
-< snip >
+Applied with Alex's reviewed-by to pci/iommu for v4.12, thanks!
 
-The changes are good enough for me and you have Rob's acks, so the
-series looks good from the device tree standpoint.
-
--Frank
-
+> ---
+>  drivers/pci/quirks.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index 9236e40ac055..c95fbf2431f8 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -3914,6 +3914,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080,
+>  DECLARE_PCI_FIXUP_HEADER(0x10e3, 0x8113, quirk_use_pcie_bridge_dma_alias);
+>  /* ITE 8892, https://bugzilla.kernel.org/show_bug.cgi?id=73551 */
+>  DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
+> +/* ITE 8893 has the same problem as the 8892 */
+> +DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8893, quirk_use_pcie_bridge_dma_alias);
+>  /* Intel 82801, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c49 */
+>  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
+>  
+> -- 
+> 2.12.1
+> 
