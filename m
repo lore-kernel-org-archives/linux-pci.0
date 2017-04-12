@@ -1,115 +1,172 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1493207459.2891.41.camel@pengutronix.de>
-Subject: Re: [PATCH 2/2] ARM: imx_v6_v7_defconfig: enable PCI_MSI
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Tim Harvey <tharvey@gateworks.com>
-Date: Wed, 26 Apr 2017 13:50:59 +0200
-In-Reply-To: <CAJ+vNU2MG66ruQ87TmSrVCtWfHwGc3s=_NG-ysgV2uyJzzskiQ@mail.gmail.com>
-References: <1448902811-11399-1-git-send-email-l.stach@pengutronix.de>
- <1448902811-11399-2-git-send-email-l.stach@pengutronix.de>
- <CAJ+vNU2Fb7gpO0LsoVpPbUX5rSyH3yC4K30JpAf5j7aQkDH9tw@mail.gmail.com>
- <1460708469.22710.4.camel@pengutronix.de>
- <CAJ+vNU1-M3qSODKHMf872kfOsH0g9xFgKNEgKqiJu6A8z-ChxA@mail.gmail.com>
- <CAJ+vNU0+ksyYCpydpmcJOO-w0v4D0axvG84wK7f09iK_1yzo_A@mail.gmail.com>
- <001c01d2ad85$b06af1a0$1140d4e0$@gmail.com>
- <6eb58d54-b6e8-b709-c7f9-fa19d52cd492@synopsys.com>
- <1491394571.2904.44.camel@pengutronix.de>
- <CAJ+vNU2MG66ruQ87TmSrVCtWfHwGc3s=_NG-ysgV2uyJzzskiQ@mail.gmail.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
- patchwork-lst@pengutronix.de,
- Krzysztof =?UTF-8?Q?Ha=C5=82asa?= <khalasa@piap.pl>,
- Sascha Hauer <kernel@pengutronix.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Shawn Guo <shawnguo@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 07/27] pci: Add arch_can_pci_mmap_io() on architectures which can mmap() I/O space
+Date: Wed, 12 Apr 2017 13:25:56 +0100
+Message-Id: <80de9ad4acdf80cb6a65134b9b01efdf445a6749.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Tim,
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-Am Dienstag, den 11.04.2017, 09:05 -0700 schrieb Tim Harvey:
-> On Wed, Apr 5, 2017 at 5:16 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> > Am Mittwoch, den 05.04.2017, 13:07 +0100 schrieb Joao Pinto:
-> > [...]
-> >> >>> Lucas,
-> >> >>>
-> >> >>> I feel a bit dumb here for forgetting about this issue and letting it
-> >> >>> drop, but I've just spent a day debugging an issue with the ath9k
-> >> >>> wireless driver only to realize it was that the ath9k card and/or
-> >> >>> driver doesn't support MSI interrupts and thus no longer work on
-> >> >>> mainline kernels that have MSI enabled. To be honest I'm not sure how
-> >> >>> many PCIe devices out there can't support MSI because of hardware
-> >> >>> limitations vs drivers that simply have not implemented it.
-> >> >>>
-> >> >>> To make matters worse 3ee803641e76bea76ec730c80dcc64739a9919ff makes
-> >> >>> it such that you can't disable MSI on the IMX6.
-> >> >>>
-> >> >>> Is there some fix you can think of to make the IMX6 PCIe host
-> >> >>> controller raise an interrupt for cards/drivers that use legacy irq's?
-> >> >>> If not, then we need to allow MSI to be disabled for IMX6 and default
-> >> >>> it to disabled for compatibility.
-> >> >>>
-> >> >>
-> >> >> Joao / Jingoo,
-> >> >>
-> >> >> (Adding linux-pci to the list to pick up maintainers of other DWC PCIe
-> >> >> core drivers)
-> >> >>
-> >> >> Is Luca's statement that 'legacy IRQs and MSIs can't be used together'
-> >> >> true in general for the DW PCIe core? If any of the host controllers
-> >> >> using this core can't support both legacy and MSI irqs together I
-> >> >> still believe we shouldn't enable/require MSI as it breaks any
-> >> >> card/driver that only supports legacy interrupts (such as ath9k).
-> >> >
-> >> > If there are 2 DW PCIe controllers, one controller can be used for legacy
-> >> > and another controller can be used for MSI.
-> >> >
-> >> > But, I am not sure that one DW PCIe controller can support both MSI device
-> >> > and legacy interrupt device at the same time.
-> >> >
-> >> > To Joao Pinto,
-> >> > Will you confirm this?
-> >> >
-> >>
-> >> Hi Jingoo,
-> >> I confirm that if a RC has MSI enable, it won't support legacy interrupts.
-> >
-> > Okay, so the only way to solve this in a generic way, that I can see at
-> > the moment is to defer MSI enable until the downstream device actually
-> > requests an MSI irq.
-> >
-> > Also we need to disable the MSI capability if any bridge device turns up
-> > during the bus topology scan, as we can have devices with conflicting
-> > requirements connected to the RC in that case.
-> >
-> > I'll cook up some patches to implement this.
-> >
-> 
-> Lucas,
-> 
-> Any thoughts yet? I'll likely want to backport this to stable although
-> the restructuring to drivers/pci/dwc and subsequent changes since 4.10
-> will likely require a re-written patch.
+This is relatively esoteric, and knowing that we don't have it makes
+life easier in some cases rather than just an eventual -EINVAL from
+pci_mmap_page_range().
 
-I have a fix for this, that I'm currently testing on different setups.
-I'll probably send it out in a few hours.
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+---
+ Documentation/filesystems/sysfs-pci.txt |  3 ++-
+ arch/microblaze/include/asm/pci.h       |  3 ++-
+ arch/powerpc/include/asm/pci.h          |  1 +
+ arch/sparc/include/asm/pci_64.h         |  1 +
+ arch/xtensa/include/asm/pci.h           |  3 ++-
+ drivers/pci/pci-sysfs.c                 | 13 ++++++++-----
+ drivers/pci/proc.c                      | 11 +++++++----
+ include/linux/pci.h                     |  3 +++
+ 8 files changed, 26 insertions(+), 12 deletions(-)
 
-Regards,
-Lucas
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/filesystems/sysfs-pci.txt b/Documentation/filesystems/sysfs-pci.txt
+index 25b7f1c..46b95d8 100644
+--- a/Documentation/filesystems/sysfs-pci.txt
++++ b/Documentation/filesystems/sysfs-pci.txt
+@@ -119,7 +119,8 @@ useful return codes should be provided.
+ 
+ Platforms which support write-combining maps of PCI resources must define
+ arch_can_pci_mmap_wc() which shall evaluate to non-zero at runtime when
+-write-combining is permitted.
++write-combining is permitted. Platforms which support maps of I/O resources
++define arch_can_pci_mmap_io() similarly.
+ 
+ Legacy resources are protected by the HAVE_PCI_LEGACY define.  Platforms
+ wishing to support legacy functionality should define it and provide
+diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
+index ab381d2..efd4983 100644
+--- a/arch/microblaze/include/asm/pci.h
++++ b/arch/microblaze/include/asm/pci.h
+@@ -48,7 +48,8 @@ extern int pci_proc_domain(struct pci_bus *bus);
+ struct vm_area_struct;
+ 
+ /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+-#define HAVE_PCI_MMAP	1
++#define HAVE_PCI_MMAP		1
++#define arch_can_pci_mmap_io()	1
+ 
+ extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
+ 			   size_t count);
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 55887d1..c8975da 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -80,6 +80,7 @@ struct vm_area_struct;
+ 
+ /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() and it does WC */
+ #define HAVE_PCI_MMAP		1
++#define arch_can_pci_mmap_io()	1
+ #define arch_can_pci_mmap_wc()	1
+ 
+ extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
+diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
+index 516fda7..b957ca5 100644
+--- a/arch/sparc/include/asm/pci_64.h
++++ b/arch/sparc/include/asm/pci_64.h
+@@ -42,6 +42,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ /* Platform support for /proc/bus/pci/X/Y mmap()s. */
+ 
+ #define HAVE_PCI_MMAP
++#define arch_can_pci_mmap_io()	1
+ #define HAVE_ARCH_PCI_GET_UNMAPPED_AREA
+ #define get_pci_unmapped_area get_fb_unmapped_area
+ 
+diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
+index bb5510b..e4f366a 100644
+--- a/arch/xtensa/include/asm/pci.h
++++ b/arch/xtensa/include/asm/pci.h
+@@ -47,7 +47,8 @@ struct pci_dev;
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ 
+ /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+-#define HAVE_PCI_MMAP	1
++#define HAVE_PCI_MMAP		1
++#define arch_can_pci_mmap_io()	1
+ 
+ #endif /* __KERNEL__ */
+ 
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 7d494bd..cb04bc2 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1174,11 +1174,14 @@ static int pci_create_attr(struct pci_dev *pdev, int num, int write_combine)
+ 	} else {
+ 		pdev->res_attr[num] = res_attr;
+ 		sprintf(res_attr_name, "resource%d", num);
+-		res_attr->mmap = pci_mmap_resource_uc;
+-	}
+-	if (pci_resource_flags(pdev, num) & IORESOURCE_IO) {
+-		res_attr->read = pci_read_resource_io;
+-		res_attr->write = pci_write_resource_io;
++		if (pci_resource_flags(pdev, num) & IORESOURCE_IO) {
++			res_attr->read = pci_read_resource_io;
++			res_attr->write = pci_write_resource_io;
++			if (arch_can_pci_mmap_io())
++				res_attr->mmap = pci_mmap_resource_uc;
++		} else {
++			res_attr->mmap = pci_mmap_resource_uc;
++		}
+ 	}
+ 	res_attr->attr.name = res_attr_name;
+ 	res_attr->attr.mode = S_IRUSR | S_IWUSR;
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index a2aa58a..45e5cf7 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -202,6 +202,8 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
+ 
+ #ifdef HAVE_PCI_MMAP
+ 	case PCIIOC_MMAP_IS_IO:
++		if (!arch_can_pci_mmap_io())
++			return -EINVAL;
+ 		fpriv->mmap_state = pci_mmap_io;
+ 		break;
+ 
+@@ -232,15 +234,16 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
+ {
+ 	struct pci_dev *dev = PDE_DATA(file_inode(file));
+ 	struct pci_filp_private *fpriv = file->private_data;
+-	int i, ret, write_combine = 0, res_bit;
++	int i, ret, write_combine = 0, res_bit = IORESOURCE_MEM;
+ 
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+ 
+-	if (fpriv->mmap_state == pci_mmap_io)
++	if (fpriv->mmap_state == pci_mmap_io) {
++		if (!arch_can_pci_mmap_io())
++			return -EINVAL;
+ 		res_bit = IORESOURCE_IO;
+-	else
+-		res_bit = IORESOURCE_MEM;
++	}
+ 
+ 	/* Make sure the caller is mapping a real resource for this device */
+ 	for (i = 0; i < PCI_ROM_RESOURCE; i++) {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e7bb4b62..590cfcf 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1636,6 +1636,9 @@ int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+ #ifndef arch_can_pci_mmap_wc
+ #define arch_can_pci_mmap_wc()		0
+ #endif
++#ifndef arch_can_pci_mmap_io
++#define arch_can_pci_mmap_io()		0
++#endif
+ 
+ #ifndef pci_root_bus_fwnode
+ #define pci_root_bus_fwnode(bus)	NULL
+-- 
+2.9.3
