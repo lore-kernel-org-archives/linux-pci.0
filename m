@@ -1,256 +1,242 @@
-Return-Path: <SRS0=5PB6=4B=gmail.com=alexdeucher@kernel.org>
-Return-Path: <SRS0=5PB6=4B=gmail.com=alexdeucher@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <9d345f33-a291-1647-9d03-d0df17733b14@vodafone.de>
-References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
- <1493126394-1239-5-git-send-email-deathsimple@vodafone.de>
- <CADnq5_NHDo3Y0Ao_5uWQ=Q2mb5-qYZu9Z-cx1M48cfD0rxMi2w@mail.gmail.com> <9d345f33-a291-1647-9d03-d0df17733b14@vodafone.de>
-From: Alex Deucher <alexdeucher@gmail.com>
-Date: Tue, 25 Apr 2017 11:14:41 -0400
-Message-ID: <CADnq5_PquOLg1RLNE36-ZXGpSZFBu_N56-3Ox18CXu6oG2nk=w@mail.gmail.com>
-Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access v2
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
-	Maling list - DRI developers <dri-devel@lists.freedesktop.org>, platform-driver-x86@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from merlin.infradead.org ([205.233.59.134]:38108 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753527AbdDLM0T (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Apr 2017 08:26:19 -0400
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 06/27] pci: Move multiple declarations of pci_mmap_page_range() to <linux/pci.h>
+Date: Wed, 12 Apr 2017 13:25:55 +0100
+Message-Id: <3391759e33092e5925d8d260960b2f76fce366b3.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 25, 2017 at 11:09 AM, Christian K=C3=B6nig
-<deathsimple@vodafone.de> wrote:
-> Am 25.04.2017 um 16:34 schrieb Alex Deucher:
->>
->> On Tue, Apr 25, 2017 at 9:19 AM, Christian K=C3=B6nig
->> <deathsimple@vodafone.de> wrote:
->>>
->>> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->>>
->>> Try to resize BAR0 to let CPU access all of VRAM.
->>>
->>> v2: rebased, style cleanups, disable mem decode before resize,
->>>      handle gmc_v9 as well, round size up to power of two.
->>>
->>> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
->>> ---
->>>   drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
->>>   drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 37
->>> ++++++++++++++++++++++++++++++
->>>   drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 ++++---
->>>   drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 ++++---
->>>   drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c      | 10 ++++----
->>>   5 files changed, 54 insertions(+), 10 deletions(-)
->>>
->>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->>> b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->>> index 4a16e3c..9484062 100644
->>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->>> @@ -1879,6 +1879,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct
->>> amdgpu_device *adev, struct ttm_tt *ttm,
->>>                                   struct ttm_mem_reg *mem);
->>>   void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_m=
-c
->>> *mc, u64 base);
->>>   void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc
->>> *mc);
->>> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
->>>   void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64
->>> size);
->>>   int amdgpu_ttm_init(struct amdgpu_device *adev);
->>>   void amdgpu_ttm_fini(struct amdgpu_device *adev);
->>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->>> b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->>> index a09ad3cf..d5ca77a 100644
->>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->>> @@ -695,6 +695,43 @@ void amdgpu_gtt_location(struct amdgpu_device *ade=
-v,
->>> struct amdgpu_mc *mc)
->>>                          mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end=
-);
->>>   }
->>>
->>> +/**
->>> + * amdgpu_resize_bar0 - try to resize BAR0
->>> + *
->>> + * @adev: amdgpu_device pointer
->>> + *
->>> + * Try to resize BAR0 to make all VRAM CPU accessible.
->>> + */
->>> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
->>
->> I'd suggest renaming this to amdgpu_device_resize_bar() to try and
->> impose some consistency in this file, but not a big deal either way.
->>
->>> +{
->>> +       u64 space_needed =3D roundup_pow_of_two(adev->mc.real_vram_size=
-);
->>> +       u32 rbar_size =3D order_base_2(((space_needed >> 20) | 1)) -1;
->>> +       u16 cmd;
->>> +       int r;
->>> +
->>> +       /* Free the doorbell mapping, it most likely needs to move as
->>> well */
->>> +       amdgpu_doorbell_fini(adev);
->>> +       pci_release_resource(adev->pdev, 2);
->>
->> This should check for if (adev->asic_type >=3D CHIP_BONAIRE) since SI
->> didn't have doorbells.
->>
->>> +
->>> +       /* Disable memory decoding while we change the BAR addresses an=
-d
->>> size */
->>> +       pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
->>> +       pci_write_config_word(adev->pdev, PCI_COMMAND,
->>> +                             cmd & ~PCI_COMMAND_MEMORY);
->>> +
->>> +       r =3D pci_resize_resource(adev->pdev, 0, rbar_size);
->>> +       if (r =3D=3D -ENOSPC)
->>> +               DRM_INFO("Not enough PCI address space for a large
->>> BAR.");
->>> +       else if (r && r !=3D -ENOTSUPP)
->>> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
->>> +
->>> +       pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
->>> +
->>> +       /* When the doorbell BAR isn't available we have no chance of
->>> +        * using the device.
->>> +        */
->>> +       BUG_ON(amdgpu_doorbell_init(adev));
->>
->> Same here.
->>
->>> +}
->>> +
->>>   /*
->>>    * GPU helpers function.
->>>    */
->>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->>> b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->>> index a9083a1..ae71524 100644
->>
->> What about SI (gmc_v6_0.c)?
->
->
-> As far as I know there is no SI hardware with resizeable BAR support.
->
-> The all VI generation can do this, but I'm not 100% sure if there aren't =
-any
-> Bonaires out there which can handle it as well that's why I added gmc_v7
-> support.
->
-> Still need to double check that.
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-I think NI or even evergreen supported resizeable bars in theory,
-although I'm not sure if any boards were fused to expose it.
+We can declare it <linux/pci.h> even on platforms where it isn't going
+to be defined. There's no need to have it littered through the various
+<asm/pci.h> files.
 
-Alex
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+---
+ arch/arm/include/asm/pci.h        | 2 --
+ arch/cris/include/asm/pci.h       | 3 ---
+ arch/ia64/include/asm/pci.h       | 2 --
+ arch/microblaze/include/asm/pci.h | 3 ---
+ arch/mips/include/asm/pci.h       | 3 ---
+ arch/mn10300/include/asm/pci.h    | 3 ---
+ arch/parisc/include/asm/pci.h     | 3 ---
+ arch/powerpc/include/asm/pci.h    | 3 ---
+ arch/sh/include/asm/pci.h         | 3 +--
+ arch/sparc/include/asm/pci_64.h   | 4 ----
+ arch/unicore32/include/asm/pci.h  | 2 --
+ arch/x86/include/asm/pci.h        | 4 ----
+ arch/xtensa/include/asm/pci.h     | 4 ----
+ include/linux/pci.h               | 7 +++++++
+ 14 files changed, 8 insertions(+), 38 deletions(-)
 
-
->
-> Christian.
->
->
->>
->> Alex
->>
->>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->>> @@ -372,13 +372,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device
->>> *adev)
->>>                  }
->>>                  adev->mc.vram_width =3D numchan * chansize;
->>>          }
->>> -       /* Could aper size report 0 ? */
->>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>>          /* size in MB on si */
->>>          adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL *
->>> 1024ULL;
->>>          adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL=
- *
->>> 1024ULL;
->>>
->>> +       if (!(adev->flags & AMD_IS_APU))
->>> +               amdgpu_resize_bar0(adev);
->>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>> +
->>>   #ifdef CONFIG_X86_64
->>>          if (adev->flags & AMD_IS_APU) {
->>>                  adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)=
-) <<
->>> 22;
->>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->>> b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->>> index 4ac9978..1655de2 100644
->>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->>> @@ -534,13 +534,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device
->>> *adev)
->>>                  }
->>>                  adev->mc.vram_width =3D numchan * chansize;
->>>          }
->>> -       /* Could aper size report 0 ? */
->>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>>          /* size in MB on si */
->>>          adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL *
->>> 1024ULL;
->>>          adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL=
- *
->>> 1024ULL;
->>>
->>> +       if (!(adev->flags & AMD_IS_APU))
->>> +               amdgpu_resize_bar0(adev);
->>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>> +
->>>   #ifdef CONFIG_X86_64
->>>          if (adev->flags & AMD_IS_APU) {
->>>                  adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)=
-) <<
->>> 22;
->>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
->>> b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
->>> index e5d4dfe..4bbef79 100644
->>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
->>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
->>> @@ -469,16 +469,18 @@ static int gmc_v9_0_mc_init(struct amdgpu_device
->>> *adev)
->>>          }
->>>          adev->mc.vram_width =3D numchan * chansize;
->>>
->>> -       /* Could aper size report 0 ? */
->>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>>          /* size in MB on si */
->>>          adev->mc.mc_vram_size =3D
->>>                  nbio_v6_1_get_memsize(adev) * 1024ULL * 1024ULL;
->>>          adev->mc.real_vram_size =3D adev->mc.mc_vram_size;
->>> -       adev->mc.visible_vram_size =3D adev->mc.aper_size;
->>> +
->>> +       if (!(adev->flags & AMD_IS_APU))
->>> +               amdgpu_resize_bar0(adev);
->>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
->>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
->>>
->>>          /* In case the PCI BAR is larger than the actual amount of vra=
-m
->>> */
->>> +       adev->mc.visible_vram_size =3D adev->mc.aper_size;
->>>          if (adev->mc.visible_vram_size > adev->mc.real_vram_size)
->>>                  adev->mc.visible_vram_size =3D adev->mc.real_vram_size=
-;
->>>
->>> --
->>> 2.7.4
->>>
->>> _______________________________________________
->>> dri-devel mailing list
->>> dri-devel@lists.freedesktop.org
->>> https://lists.freedesktop.org/mailman/listinfo/dri-devel
->
->
->
+diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
+index 057d381..51118a0 100644
+--- a/arch/arm/include/asm/pci.h
++++ b/arch/arm/include/asm/pci.h
+@@ -29,8 +29,6 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ #define PCI_DMA_BUS_IS_PHYS     (1)
+ 
+ #define HAVE_PCI_MMAP
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-                               enum pci_mmap_state mmap_state, int write_combine);
+ 
+ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ {
+diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
+index b1b289d..65198cb 100644
+--- a/arch/cris/include/asm/pci.h
++++ b/arch/cris/include/asm/pci.h
+@@ -42,9 +42,6 @@ struct pci_dev;
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ 
+ #define HAVE_PCI_MMAP
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-			       enum pci_mmap_state mmap_state, int write_combine);
+-
+ 
+ #endif /* __KERNEL__ */
+ 
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index 6283758..fc60b3d 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -53,8 +53,6 @@ extern unsigned long ia64_max_iommu_merge_mask;
+ #define HAVE_PCI_MMAP
+ #define arch_can_pci_mmap_wc()	1
+ 
+-extern int pci_mmap_page_range (struct pci_dev *dev, struct vm_area_struct *vma,
+-				enum pci_mmap_state mmap_state, int write_combine);
+ #define HAVE_PCI_LEGACY
+ extern int pci_mmap_legacy_page_range(struct pci_bus *bus,
+ 				      struct vm_area_struct *vma,
+diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
+index 2a120bb..ab381d2 100644
+--- a/arch/microblaze/include/asm/pci.h
++++ b/arch/microblaze/include/asm/pci.h
+@@ -46,9 +46,6 @@ extern int pci_domain_nr(struct pci_bus *bus);
+ extern int pci_proc_domain(struct pci_bus *bus);
+ 
+ struct vm_area_struct;
+-/* Map a range of PCI memory or I/O space for a device into user space */
+-int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine);
+ 
+ /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+ #define HAVE_PCI_MMAP	1
+diff --git a/arch/mips/include/asm/pci.h b/arch/mips/include/asm/pci.h
+index 30d1129..3141e2a 100644
+--- a/arch/mips/include/asm/pci.h
++++ b/arch/mips/include/asm/pci.h
+@@ -111,9 +111,6 @@ extern void pcibios_set_master(struct pci_dev *dev);
+ 
+ #define HAVE_PCI_MMAP
+ 
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-	enum pci_mmap_state mmap_state, int write_combine);
+-
+ #define HAVE_ARCH_PCI_RESOURCE_TO_USER
+ 
+ /*
+diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
+index 51159ff..082b6de 100644
+--- a/arch/mn10300/include/asm/pci.h
++++ b/arch/mn10300/include/asm/pci.h
+@@ -74,9 +74,6 @@ static inline int pci_controller_num(struct pci_dev *dev)
+ }
+ 
+ #define HAVE_PCI_MMAP
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-			       enum pci_mmap_state mmap_state,
+-			       int write_combine);
+ 
+ #endif /* __KERNEL__ */
+ 
+diff --git a/arch/parisc/include/asm/pci.h b/arch/parisc/include/asm/pci.h
+index defebd9..bb9ea90 100644
+--- a/arch/parisc/include/asm/pci.h
++++ b/arch/parisc/include/asm/pci.h
+@@ -201,7 +201,4 @@ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ 
+ #define HAVE_PCI_MMAP
+ 
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-	enum pci_mmap_state mmap_state, int write_combine);
+-
+ #endif /* __ASM_PARISC_PCI_H */
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index b5b68c6..55887d1 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -77,9 +77,6 @@ extern int pci_domain_nr(struct pci_bus *bus);
+ extern int pci_proc_domain(struct pci_bus *bus);
+ 
+ struct vm_area_struct;
+-/* Map a range of PCI memory or I/O space for a device into user space */
+-int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine);
+ 
+ /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() and it does WC */
+ #define HAVE_PCI_MMAP		1
+diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
+index 644314f..46abbc9 100644
+--- a/arch/sh/include/asm/pci.h
++++ b/arch/sh/include/asm/pci.h
+@@ -66,8 +66,7 @@ extern unsigned long PCIBIOS_MIN_IO, PCIBIOS_MIN_MEM;
+ struct pci_dev;
+ 
+ #define HAVE_PCI_MMAP
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-	enum pci_mmap_state mmap_state, int write_combine);
++
+ extern void pcibios_set_master(struct pci_dev *dev);
+ 
+ /* Dynamic DMA mapping stuff.
+diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
+index 2303635..516fda7 100644
+--- a/arch/sparc/include/asm/pci_64.h
++++ b/arch/sparc/include/asm/pci_64.h
+@@ -45,10 +45,6 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ #define HAVE_ARCH_PCI_GET_UNMAPPED_AREA
+ #define get_pci_unmapped_area get_fb_unmapped_area
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state,
+-			int write_combine);
+-
+ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
+ {
+ 	return PCI_IRQ_NONE;
+diff --git a/arch/unicore32/include/asm/pci.h b/arch/unicore32/include/asm/pci.h
+index 37e55d0..a5129086 100644
+--- a/arch/unicore32/include/asm/pci.h
++++ b/arch/unicore32/include/asm/pci.h
+@@ -17,8 +17,6 @@
+ #include <mach/hardware.h> /* for PCIBIOS_MIN_* */
+ 
+ #define HAVE_PCI_MMAP
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-	enum pci_mmap_state mmap_state, int write_combine);
+ 
+ #endif /* __KERNEL__ */
+ #endif
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index f6e22c2..734cc94 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -104,10 +104,6 @@ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
+ 
+ #define HAVE_PCI_MMAP
+ #define arch_can_pci_mmap_wc()	pat_enabled()
+-extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+-			       enum pci_mmap_state mmap_state,
+-			       int write_combine);
+-
+ 
+ #ifdef CONFIG_PCI
+ extern void early_quirks(void);
+diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
+index 5d6bd93..bb5510b 100644
+--- a/arch/xtensa/include/asm/pci.h
++++ b/arch/xtensa/include/asm/pci.h
+@@ -46,10 +46,6 @@ struct pci_dev;
+ 
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ 
+-/* Map a range of PCI memory or I/O space for a device into user space */
+-int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine);
+-
+ /* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+ #define HAVE_PCI_MMAP	1
+ 
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e614fb4..e7bb4b62 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1626,6 +1626,13 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ 
+ #include <asm/pci.h>
+ 
++/* Map a range of PCI memory or I/O space for a device into user space.
++ * Architectures provide this function if they set HAVE_PCI_MMAP, and
++ * it accepts the 'write_combine' argument when arch_can_pci_mmap_wc()
++ * evaluates to nonzero. */
++int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
++			enum pci_mmap_state mmap_state, int write_combine);
++
+ #ifndef arch_can_pci_mmap_wc
+ #define arch_can_pci_mmap_wc()		0
+ #endif
+-- 
+2.9.3
