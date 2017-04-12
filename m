@@ -1,83 +1,92 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v4 01/21] PCI: remove __weak tag from pci_remap_iospace()
-Date: Wed, 19 Apr 2017 17:48:50 +0100
-Message-Id: <20170419164913.19674-2-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+Return-Path: <SRS0=5FSy=3U=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=5FSy=3U=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
+To: Mason <slash.tmp@free.fr>, Thomas Gleixner <tglx@linutronix.de>
+References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
+ <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
+ <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
+ <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
+ <0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
+ <4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
+ <30f662a6-5dab-515b-e35a-a312f3c7b509@free.fr>
+ <5f81730d-fbe3-1f4c-de34-09bbfb893ee1@arm.com>
+ <2b5eef4c-32f2-54f1-ca2f-f9426e68fb2c@free.fr>
+ <67014006-a380-9e3b-c9af-a421052cb8e0@arm.com>
+ <b59b81ea-bc1b-bff5-4a78-8a69538b0de3@free.fr>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
  Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
- Murali Karicheri <m-karicheri2@ti.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
- Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <bc5bf8ad-69ef-4f14-f450-e162ddb5af7c@arm.com>
+Date: Wed, 12 Apr 2017 09:08:31 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <b59b81ea-bc1b-bff5-4a78-8a69538b0de3@free.fr>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_remap_iospace() is marked as a weak symbol even though
-no architecture is currently overriding it; given that its
-implementation internals have already code paths that are
-arch specific (ie PCI_IOBASE and ioremap_page_range() attributes)
-there is no need to leave the weak symbol in the kernel since the
-same functionality can be achieved by customizing per-arch the
-corresponding functionality.
+On 11/04/17 18:52, Mason wrote:
+> On 11/04/2017 18:43, Marc Zyngier wrote:
+> 
+>> On 11/04/17 17:26, Mason wrote:
+>>
+>>> Is there a function to map virq to the hwirq in any domain?
+>>
+>> Be more precise. If you want the hwirq associated with the view of a
+>> virq in a given domain, that's the hwirq field in the corresponding
+>> irq_data structure. Or are you after something else?
+> 
+> I registered an unmask method for my irq_chip.
+> (IIUC, I'm supposed to unmask a specific MSI in this callback.)
+> 
+> # cat /proc/interrupts 
+>            CPU0       CPU1       
+>  30:          0          0    MSIfoo      0 Edge      aerdrv
+>  34:          0          0    MSIfoo 524288 Edge      xhci_hcd
+>  35:          0          0    MSIfoo 524289 Edge      xhci_hcd
+>  36:          0          0    MSIfoo 524290 Edge      xhci_hcd
+> 
+> 
+> void foo_unmask(struct irq_data *data)
+> {
+> 	int xx,yy;
+> 	struct irq_domain *dom = data->domain;
+> 	printk("%s: irq_data=%p irq=%u hwirq=%lu chip=%p dom=%p pdata=%p data=%p\n",
+> 		__func__, data, data->irq, data->hwirq, data->chip, data->domain,
+> 		data->parent_data, data->chip_data);
+> 	printk("%s ops=%p data=%p parent=%p\n\n",
+> 		dom->name, dom->ops, dom->host_data, dom->parent);
+> 	printk("pcie=%p\n", dom->parent->host_data);
+> 	//dump_stack();
+> 	pci_msi_unmask_irq(data);
+> 	struct tango_pcie *pcie = data->domain->parent->host_data;
+> 	printk("\n%s: pcie=%p irq=%u hwirq=%lu\n\n",
+> 		__func__, pcie, data->irq, data->hwirq);
+> 	xx = irq_find_mapping(pcie->irq_domain, data->hwirq);
+> 	yy = irq_find_mapping(pcie->msi_domain, data->hwirq);
 
-Remove the __weak symbol from pci_remap_iospace().
+Do you realize that hwirq is *per domain*, and only makes sense to *one*
+irqchip? What you've written here doesn't make any sense.
 
-Acked-by: Arnd Bergmann <arnd@arndb.de>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> 	printk("xx=%d yy=%d\n", xx, yy);
+> }
+> 
+> so data->irq is the virq (30, 34, 35, 36)
+> and data->hwirq is the domain hwirq (0, 524288, 524289, 524290)
+> 
+> Is there a way to map hwirq 524288 to MSI 0, hwirq 524289 to MSI 1, etc?
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02..bd98674 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3363,7 +3363,7 @@ unsigned long __weak pci_address_to_pio(phys_addr_t address)
-  *	Only architectures that have memory mapped IO functions defined
-  *	(and the PCI_IOBASE value defined) should call this function.
-  */
--int __weak pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
-+int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
- {
- #if defined(PCI_IOBASE) && defined(CONFIG_MMU)
- 	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
+Why would you need to do such a thing?
+- In MSI domain: IRQ34 -> hwirq 524288
+- In foo domain: IRQ34 -> hwirq [whatever your driver has allocated]
+
+The data is already there, at your fingertips. Just deal with with your
+"foo" irqchip.
+
+	M.
 -- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Jazz is not dead. It just smells funny...
