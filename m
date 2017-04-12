@@ -1,67 +1,70 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V10 00/12] IOMMU probe deferral support
-To: Rob Herring <robh+dt@kernel.org>, Sricharan R <sricharan@codeaurora.org>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
- <CAL_JsqJH9C9sNGBSLH88bJ=uKF7RibHDAUZUW9M2xeO2AM-FUw@mail.gmail.com>
-From: Frank Rowand <frowand.list@gmail.com>
-Message-ID: <58E68CEF.8090101@gmail.com>
-Date: Thu, 6 Apr 2017 11:46:07 -0700
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:60404 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752544AbdDLQiA (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Apr 2017 12:38:00 -0400
+Date: Wed, 12 Apr 2017 11:37:53 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian =?iso-8859-1?Q?K=F6nig?= <deathsimple@vodafone.de>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org
+Subject: Re: [PATCH 2/4] PCI: add functionality for resizing resources v2
+Message-ID: <20170412163753.GD25197@bhelgaas-glaptop.roam.corp.google.com>
+References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+ <1489408896-25039-3-git-send-email-deathsimple@vodafone.de>
+ <20170324213445.GF25380@bhelgaas-glaptop.roam.corp.google.com>
+ <70ea3ef3-10a6-01f1-125c-dbf89e87b1d0@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <CAL_JsqJH9C9sNGBSLH88bJ=uKF7RibHDAUZUW9M2xeO2AM-FUw@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will.deacon@arm.com>, Sinan Kaya <okaya@codeaurora.org>,
- Marek Szyprowski <m.szyprowski@samsung.com>,
- "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Tomasz Nowicki <tn@semihalf.com>, Joerg Roedel <joro@8bytes.org>,
- "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Len Brown <lenb@kernel.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Arnd Bergmann <arnd@arndb.de>, linux-arm-msm <linux-arm-msm@vger.kernel.org>,
- "bhelgaas@google.com" <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rjw@rjwysocki.net>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Linux IOMMU <iommu@lists.linux-foundation.org>,
- Hanjun Guo <hanjun.guo@linaro.org>, Sudeep Holla <sudeep.holla@arm.com>,
- Robin Murphy <robin.murphy@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <70ea3ef3-10a6-01f1-125c-dbf89e87b1d0@vodafone.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/04/17 18:23, Rob Herring wrote:
-> On Tue, Apr 4, 2017 at 5:18 AM, Sricharan R <sricharan@codeaurora.org> wrote:
->> This series calls the dma ops configuration for the devices
->> at a generic place so that it works for all busses.
->> The dma_configure_ops for a device is now called during
->> the device_attach callback just before the probe of the
->> bus/driver is called. Similarly dma_deconfigure is called during
->> device/driver_detach path.
-> 
-> For patches 3, 4, 6, 7, 8:
-> 
-> Acked-by: Rob Herring <robh@kernel.org>
-> .
-> 
+On Tue, Apr 11, 2017 at 05:37:04PM +0200, Christian König wrote:
 
-And a few hours later, I had the opposite opinion on a couple of
-patches, so there is some ongoing discussion working this out.
+> >>+int pci_resize_resource(struct pci_dev *dev, int resno, int size)
+> >>+{
+> >>+	struct resource *res = dev->resource + resno;
+> >>+	u32 sizes = pci_rbar_get_possible_sizes(dev, resno);
+> >>+	int old = pci_rbar_get_current_size(dev, resno);
+> >>+	u64 bytes = 1ULL << (size + 20);
+> >>+	int ret = 0;
+> >I think we should fail the request if the device is enabled, i.e., if
+> >the PCI_COMMAND_MEMORY bit is set.  We can't safely change the BAR
+> >while memory decoding is enabled.
+> >
+> >I know there's code in pci_std_update_resource() that turns off
+> >PCI_COMMAND_MEMORY, but I think that's a mistake: I think it should
+> >fail when asked to update an enabled BAR the same way
+> >pci_iov_update_resource() does.
+> >
+> >I'm not sure why you call pci_reenable_device() below, but I think I
+> >would rather have the driver do something like this:
+> >
+> >   pci_disable_device(dev);
+> >   pci_resize_resource(dev, 0, size);
+> >   pci_enable_device(dev);
+> >
+> >That way it's very clear to the driver that it must re-read all BARs
+> >after resizing this one.
+> 
+> I've tried it, but this actually doesn't seem to work.
+> 
+> At least on the board I've tried pci_disable_device() doesn't clear
+> the PCI_COMMAND_MEMORY bit, it just clears the master bit.
 
--Frank
+Yeah, you're right.  We generally turn *on* PCI_COMMAND_MEMORY in the
+pci_enable_device() path, but the pci_disable_device() path doesn't
+turn it off.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Additional to that the power management reference counting
+> pci_disable_device() and pci_enable_device() doesn't look like what
+> I want for this functionality.
+> 
+> How about the driver needs to disabled memory decoding itself before
+> trying to resize anything?
+
+There are a few places that do that, so maybe that's the best option.
+
+Bjorn
