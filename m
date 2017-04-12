@@ -1,122 +1,266 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 12 Apr 2017 15:41:09 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Subject: Re: [PATCH v3 00/32] PCI: fix config and I/O Address space memory
- mappings
-Message-ID: <20170412144109.GB6842@red-moon>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
- <1491917906.7236.7.camel@kernel.crashing.org>
- <20170411140857.GA6821@red-moon>
- <1491952371.7236.22.camel@kernel.crashing.org>
- <20170412113124.GZ17774@n2100.armlinux.org.uk>
- <1492005119.7236.62.camel@kernel.crashing.org>
- <20170412141654.GA17774@n2100.armlinux.org.uk>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 10/27] pci: Add pci_mmap_resource_range() and use it for ARM64
+Date: Wed, 12 Apr 2017 13:25:59 +0100
+Message-Id: <7ca58472ed9ff750fd1b7432b1738573e782290b.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20170412141654.GA17774@n2100.armlinux.org.uk>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
- Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
- Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
- Jesper Nilsson <jesper.nilsson@axis.com>,
- Yoshinori Sato <ysato@users.sourceforge.jp>,
- Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
- "James E.J. Bottomley" <jejb@parisc-linux.org>, Ingo Molnar <mingo@redhat.com>,
- Geert Uytterhoeven <geert@linux-m68k.org>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Matt Turner <mattst88@gmail.com>, Haavard Skinnemoen <hskinnemoen@gmail.com>,
- Fenghua Yu <fenghua.yu@intel.com>, James Hogan <james.hogan@imgtec.com>,
- Chris Metcalf <cmetcalf@mellanox.com>, Arnd Bergmann <arnd@arndb.de>,
- Heiko Carstens <heiko.carstens@de.ibm.com>,
- Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
- Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
- Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
- Tony Luck <tony.luck@intel.com>, linux-pci@vger.kernel.org,
- Vineet Gupta <vgupta@synopsys.com>, linux-kernel@vger.kernel.org,
- Ralf Baechle <ralf@linux-mips.org>, Richard Kuo <rkuo@codeaurora.org>,
- Niklas Cassel <nks@flawful.org>, "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
- "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 12, 2017 at 03:16:55PM +0100, Russell King - ARM Linux wrote:
-> On Wed, Apr 12, 2017 at 11:51:59PM +1000, Benjamin Herrenschmidt wrote:
-> > On Wed, 2017-04-12 at 12:31 +0100, Russell King - ARM Linux wrote:
-> > > default implementation should fail if it's not supportable on all
-> > > architectures.=A0 However, when we have existing drivers using an
-> > > interface that doesn't provide the semantics they already require,
-> > > then it makes no sense to effectively break these drivers on a range
-> > > of existing architectures.
-> > > =
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-> > > The question really is - what's the best way to solve the problem
-> > > with
-> > > existing drivers without breaking them.=A0 I suspect that, sadly, the
-> > > only realistic way forward here is via the litter-drivers-with-ifdefs
-> > > approach since you don't like providing a default implementation that
-> > > is compatible with what these drivers are already doing.
-> > =
+Starting to leave behind the legacy of the pci_mmap_page_range()
+interface which takes "user-visible" BAR addresses. This takes just the
+resource and offset.
 
-> > Then make ioremap_nopost return NULL when the arch doesn't have =
+For now, both APIs coexist and depending on the platform, one is
+implemented as a wrapper around the other.
 
-> > the right semantic.
-> > =
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+---
+ Documentation/filesystems/sysfs-pci.txt | 10 ++--
+ arch/arm64/include/asm/pci.h            |  2 +
+ drivers/pci/Makefile                    |  2 +-
+ drivers/pci/mmap.c                      | 84 +++++++++++++++++++++++++++++++++
+ drivers/pci/pci-sysfs.c                 | 13 ++---
+ drivers/pci/pci.h                       |  4 +-
+ include/linux/pci.h                     | 19 ++++++--
+ 7 files changed, 114 insertions(+), 20 deletions(-)
+ create mode 100644 drivers/pci/mmap.c
 
-> > The driver than can *chose* to either silently fallback to ioremap,
-> > which has served us well for a long time despite being theorically in
-> > violation of the spec, or do funny things like read back some register
-> > after every config write to ensure ordering etc...
-> > =
-
-> > I much prefer that approach than having some generic ioremap function
-> > that exposes a semantic that silently provides a weaker one on some
-> > architecture.
-> > =
-
-> > At least we make the failure explicit, and the driver can take
-> > alternate (possibly sub-optimal) action if it chooses to do so.
-> =
-
-> The same points apply to things like pgprot_writecombine(),
-> pgprot_noncached(), pgprot_device().  Then there's also pgprot_nonposted()
-> that this series also introduces.
-> =
-
-> If ioremap_nopost() is not possible on an architecture, then
-> pgprot_nonposted() won't be possible either - but you've made no
-> mention of that so far.
-> =
-
-> Just like the proposed ioremap_nopost(), pgprot_nonposted() is given a
-> default implementation that uses pgprot_noncached().  Maybe we should
-> also make pci_remap_iospace() fail if pgprot_nonposted() is not defined
-> by the architecture?
-
-Yes, I was about to mention that and you are right, I should deal with
-that too unfortunately. BTW, I have not posted the drivers to make the
-review easier (ie it would add 20 more patches to an already massive
-patch series - that will be trimmed when the asm-generic include is
-removed from arches according to this discussion).
-
-Thanks,
-Lorenzo
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/Documentation/filesystems/sysfs-pci.txt b/Documentation/filesystems/sysfs-pci.txt
+index 46b95d8..06f1d64 100644
+--- a/Documentation/filesystems/sysfs-pci.txt
++++ b/Documentation/filesystems/sysfs-pci.txt
+@@ -113,9 +113,13 @@ Supporting PCI access on new platforms
+ --------------------------------------
+ 
+ In order to support PCI resource mapping as described above, Linux platform
+-code must define HAVE_PCI_MMAP and provide a pci_mmap_page_range function.
+-Platforms are free to only support subsets of the mmap functionality, but
+-useful return codes should be provided.
++code should ideally define ARCH_GENERIC_PCI_MMAP_RESOURCE and use the generic
++implementation of that functionality. To support the historical interface of
++mmap() through files in /proc/bus/pci, platforms may also set HAVE_PCI_MMAP.
++
++Alternatively, platforms which set HAVE_PCI_MMAP may provide their own
++implementation of pci_mmap_page_range() instead of defining
++ARCH_GENERIC_PCI_MMAP_RESOURCE.
+ 
+ Platforms which support write-combining maps of PCI resources must define
+ arch_can_pci_mmap_wc() which shall evaluate to non-zero at runtime when
+diff --git a/arch/arm64/include/asm/pci.h b/arch/arm64/include/asm/pci.h
+index b9a7ba9..1fc1974 100644
+--- a/arch/arm64/include/asm/pci.h
++++ b/arch/arm64/include/asm/pci.h
+@@ -22,6 +22,8 @@
+  */
+ #define PCI_DMA_BUS_IS_PHYS	(0)
+ 
++#define ARCH_GENERIC_PCI_MMAP_RESOURCE	1
++
+ extern int isa_dma_bridge_buggy;
+ 
+ #ifdef CONFIG_PCI
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 8db5079..3d40e41 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -4,7 +4,7 @@
+ 
+ obj-y		+= access.o bus.o probe.o host-bridge.o remove.o pci.o \
+ 			pci-driver.o search.o pci-sysfs.o rom.o setup-res.o \
+-			irq.o vpd.o setup-bus.o vc.o
++			irq.o vpd.o setup-bus.o vc.o mmap.o
+ obj-$(CONFIG_PROC_FS) += proc.o
+ obj-$(CONFIG_SYSFS) += slot.o
+ 
+diff --git a/drivers/pci/mmap.c b/drivers/pci/mmap.c
+new file mode 100644
+index 0000000..9ba720b
+--- /dev/null
++++ b/drivers/pci/mmap.c
+@@ -0,0 +1,84 @@
++/*
++ * mmap.c — generic PCI resource mmap helper
++ *
++ * Copyright © 2017 Amazon.com, Inc. or its affiliates.
++ *
++ * Author: David Woodhouse <dwmw2@infradead.org>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++
++ */
++
++#include <linux/kernel.h>
++#include <linux/mm.h>
++#include <linux/pci.h>
++
++#ifdef ARCH_GENERIC_PCI_MMAP_RESOURCE
++/* Modern setup: generic pci_mmap_resource_range(), and implement the legacy
++ * pci_mmap_page_range() (if needed) as a wrapper round it. */
++
++#ifdef HAVE_PCI_MMAP
++int pci_mmap_page_range(struct pci_dev *pdev, int bar,
++			struct vm_area_struct *vma,
++			enum pci_mmap_state mmap_state, int write_combine)
++{
++	/* Adjust vm_pgoff to be the offset within the resource */
++	resource_size_t start, end;
++
++	pci_resource_to_user(pdev, bar, &pdev->resource[bar], &start, &end);
++	vma->vm_pgoff -= start >> PAGE_SHIFT;
++	return pci_mmap_resource_range(pdev, bar, vma, mmap_state, write_combine);
++}
++#endif
++
++static const struct vm_operations_struct pci_phys_vm_ops = {
++#ifdef CONFIG_HAVE_IOREMAP_PROT
++        .access = generic_access_phys,
++#endif
++};
++
++int pci_mmap_resource_range(struct pci_dev *pdev, int bar,
++			    struct vm_area_struct *vma,
++			    enum pci_mmap_state mmap_state, int write_combine)
++{
++	unsigned long size;
++
++	if (mmap_state == pci_mmap_io)
++		return -EINVAL;
++
++	size = ((pci_resource_len(pdev, bar) - 1) >> PAGE_SHIFT) + 1;
++	if (vma->vm_pgoff + vma_pages(vma) > size)
++		return -EINVAL;
++
++	if (write_combine)
++		vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
++	else
++		vma->vm_page_prot = pgprot_device(vma->vm_page_prot);
++
++	vma->vm_pgoff += (pci_resource_start(pdev, bar) >> PAGE_SHIFT);
++        vma->vm_ops = &pci_phys_vm_ops;
++
++	return io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
++				  vma->vm_end - vma->vm_start, vma->vm_page_prot);
++}
++
++#elif defined(HAVE_PCI_MMAP) /* && !ARCH_GENERIC_PCI_MMAP_RESOURCE */
++/* Legacy setup: Impement pci_mmap_resource_range() as a wrapper around
++   the architecture's pci_mmap_page_range(), converting to "user visible"
++   addresses as necessary. */
++int pci_mmap_resource_range(struct pci_dev *pdev, int bar,
++			    struct vm_area_struct *vma,
++			    enum pci_mmap_state mmap_state, int write_combine)
++{
++	resource_size_t start, end;
++	/* pci_mmap_page_range() expects the same kind of entry as coming
++	 * from /proc/bus/pci/ which is a "user visible" value. If this is
++	 * different from the resource itself, arch will do necessary fixup.
++	 */
++	pci_resource_to_user(pdev, bar, &pdev->resource[bar], &start, &end);
++	vma->vm_pgoff += start >> PAGE_SHIFT;
++	return pci_mmap_page_range(pdev, bar, vma, mmap_state, write_combine);
++}
++#endif
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index bfd9efe..10feb98 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -980,7 +980,7 @@ void pci_remove_legacy_files(struct pci_bus *b)
+ }
+ #endif /* HAVE_PCI_LEGACY */
+ 
+-#ifdef HAVE_PCI_MMAP
++#if defined(HAVE_PCI_MMAP) || defined(ARCH_GENERIC_PCI_MMAP_RESOURCE)
+ 
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
+ 		  enum pci_mmap_api mmap_api)
+@@ -1019,7 +1019,6 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 	struct pci_dev *pdev = to_pci_dev(kobj_to_dev(kobj));
+ 	int bar = (unsigned long)attr->private;
+ 	enum pci_mmap_state mmap_type;
+-	resource_size_t start, end;
+ 	struct resource *res = &pdev->resource[bar];
+ 
+ 	if (res->flags & IORESOURCE_MEM && iomem_is_exclusive(res->start))
+@@ -1033,15 +1032,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+ 			(u64)pci_resource_len(pdev, bar));
+ 		return -EINVAL;
+ 	}
+-
+-	/* pci_mmap_page_range() expects the same kind of entry as coming
+-	 * from /proc/bus/pci/ which is a "user visible" value. If this is
+-	 * different from the resource itself, arch will do necessary fixup.
+-	 */
+-	pci_resource_to_user(pdev, bar, res, &start, &end);
+-	vma->vm_pgoff += start >> PAGE_SHIFT;
+ 	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
+-	return pci_mmap_page_range(pdev, bar, vma, mmap_type, write_combine);
++
++	return pci_mmap_resource_range(pdev, bar, vma, mmap_type, write_combine);
+ }
+ 
+ static int pci_mmap_resource_uc(struct file *filp, struct kobject *kobj,
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 8dd38e6..8e5ca2d 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -21,14 +21,14 @@ void pci_create_firmware_label_files(struct pci_dev *pdev);
+ void pci_remove_firmware_label_files(struct pci_dev *pdev);
+ #endif
+ void pci_cleanup_rom(struct pci_dev *dev);
+-#ifdef HAVE_PCI_MMAP
++
+ enum pci_mmap_api {
+ 	PCI_MMAP_SYSFS,	/* mmap on /sys/bus/pci/devices/<BDF>/resource<N> */
+ 	PCI_MMAP_PROCFS	/* mmap on /proc/bus/pci/<BDF> */
+ };
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
+ 		  enum pci_mmap_api mmap_api);
+-#endif
++
+ int pci_probe_reset_function(struct pci_dev *dev);
+ 
+ /**
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 7173a67..ff1c818 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1626,10 +1626,21 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
+ 
+ #include <asm/pci.h>
+ 
+-/* Map a range of PCI memory or I/O space for a device into user space.
+- * Architectures provide this function if they set HAVE_PCI_MMAP, and
+- * it accepts the 'write_combine' argument when arch_can_pci_mmap_wc()
+- * evaluates to nonzero. */
++/* These two functions provide almost identical functionality. Depennding
++ * on the architecture, one will be implemented as a wrapper aroudn the
++ * other (in drivers/pci/mmap.c).
++ *
++ * pci_mmap_resource_range() maps a specific BAR, and vm->vm_pgoff
++ * is expected to be an offset within that region.
++ *
++ * pci_mmap_page_range() is the legacy architecture-specific interface,
++ * which accepts a "user visible" resource address converted by
++ * pci_resource_to_user(), as used in the legacy mmap() interface in
++ * /proc/bus/pci/.
++ */
++int pci_mmap_resource_range(struct pci_dev *dev, int bar,
++			    struct vm_area_struct *vma,
++			    enum pci_mmap_state mmap_state, int write_combine);
+ int pci_mmap_page_range(struct pci_dev *pdev, int bar,
+ 			struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine);
+-- 
+2.9.3
