@@ -1,57 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:39952 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751852AbdDQVg3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Apr 2017 17:36:29 -0400
-Subject: [PATCH v11 0/7] PCI: Introduce a way to enforce all MMIO BARs not
- to share PAGE_SIZE
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yongji Xie <elohimes@gmail.com>
-Cc: zhong@linux.vnet.ibm.com, Alexey Kardashevskiy <aik@ozlabs.ru>,
-        linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org
-Date: Mon, 17 Apr 2017 16:36:25 -0500
-Message-ID: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 03/27] pci: Only allow WC mmap on prefetchable resources
+Date: Wed, 12 Apr 2017 13:25:52 +0100
+Message-Id: <7a91b25e609ef31ca984370dc08158ece3784f79.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is another iteration on Yongji's series to force MMIO BARs not to
-share pages, which allows direct passthrough instead of QEMU emulation.
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-The only things I really changed were to add some comments and factor out
-the code that requests resize.  I also pulled in the IOV patch, which
-touches the same code but was posted separately.
+The /proc/bus/pci mmap interface allows the user to specify whether they
+want WC or not. Don't let them do so on non-prefetchable BARs.
 
-These are all on my pci/resource branch, and if all goes well, I plan to
-merge these for v4.12.
-
-Changelog v11:
-- Include patch to ignore IOV alignment
-- Add patches to factor out realignment
-- Add comment about "resize" usage
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+Cc: stable@vger.kernel.org
 ---
+ drivers/pci/proc.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-Bjorn Helgaas (2):
-      PCI: Factor pci_reassigndev_resource_alignment()
-      PCI: Don't reassign resources that are already aligned
-
-Yongji Xie (5):
-      PCI: Ignore requested alignment for IOV BARs
-      PCI: A fix for caculating bridge window's size and alignment
-      PCI: Add pcibios_default_alignment() for arch-specific alignment control
-      powerpc/powernv: Override pcibios_default_alignment() to force PCI devices to be page aligned
-      PCI: Don't resize resources when realigning all devices in system
-
-
- arch/powerpc/include/asm/machdep.h        |    2 +
- arch/powerpc/kernel/pci-common.c          |    8 ++
- arch/powerpc/platforms/powernv/pci-ioda.c |    7 ++
- drivers/pci/pci.c                         |  106 ++++++++++++++++++++++-------
- drivers/pci/setup-bus.c                   |    4 +
- 5 files changed, 100 insertions(+), 27 deletions(-)
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index 62a0c3e..dc8912e 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -231,7 +231,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
+ {
+ 	struct pci_dev *dev = PDE_DATA(file_inode(file));
+ 	struct pci_filp_private *fpriv = file->private_data;
+-	int i, ret, write_combine, res_bit;
++	int i, ret, write_combine = 0, res_bit;
+ 
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+@@ -251,10 +251,13 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
+ 	if (i >= PCI_ROM_RESOURCE)
+ 		return -ENODEV;
+ 
+-	if (fpriv->mmap_state == pci_mmap_mem)
+-		write_combine = fpriv->write_combine;
+-	else
+-		write_combine = 0;
++	if (fpriv->mmap_state == pci_mmap_mem &&
++	    fpriv->write_combine) {
++		if (dev->resource[i].flags & IORESOURCE_PREFETCH)
++			write_combine = 1;
++		else
++			return -EINVAL;
++	}
+ 	ret = pci_mmap_page_range(dev, vma,
+ 				  fpriv->mmap_state, write_combine);
+ 	if (ret < 0)
+-- 
+2.9.3
