@@ -1,12 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v3 04/32] asm-generic: add ioremap_nopost() remap interface
-Date: Tue, 11 Apr 2017 13:28:44 +0100
-Message-Id: <20170411122923.6285-5-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH 2/2] arm64: acpi/pci: invoke _DSM whether to preserve
+ firmware PCI setup
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Ard Biesheuvel <ard.biesheuvel@linaro.org>
+References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
+ <20170411163313.18577-3-ard.biesheuvel@linaro.org>
+ <20170412172623.GA11570@red-moon>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <0b453fdf-8f25-8ee8-678d-996dbf2f3e48@codeaurora.org>
+Date: Wed, 12 Apr 2017 14:03:25 -0400
+MIME-Version: 1.0
+In-Reply-To: <20170412172623.GA11570@red-moon>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -14,97 +19,53 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- "James E.J. Bottomley" <jejb@parisc-linux.org>,
- David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
- Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
- Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
- Jesper Nilsson <jesper.nilsson@axis.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Yoshinori Sato <ysato@users.sourceforge.jp>,
- Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
- Russell King <linux@armlinux.org.uk>, Ingo Molnar <mingo@redhat.com>,
- Geert Uytterhoeven <geert@linux-m68k.org>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Matt Turner <mattst88@gmail.com>, Haavard Skinnemoen <hskinnemoen@gmail.com>,
- Fenghua Yu <fenghua.yu@intel.com>, James Hogan <james.hogan@imgtec.com>,
- Chris Metcalf <cmetcalf@mellanox.com>, Arnd Bergmann <arnd@arndb.de>,
- Heiko Carstens <heiko.carstens@de.ibm.com>,
- Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
- Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
- Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
- Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
- linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
- Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
- "Luis R . Rodriguez" <mcgrof@kernel.org>,
- Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
- "David S. Miller" <davem@davemloft.net>
-MIME-Version: 1.0
+Cc: catalin.marinas@arm.com, graeme.gregory@linaro.org,
+ linux-pci@vger.kernel.org, will.deacon@arm.com, leif.lindholm@linaro.org,
+ tn@semihalf.com, bhelgaas@google.com, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
-Posting") mandate non-posted configuration transactions. As further
-highlighted in the PCIe specifications (4.0 - Rev0.3, "Ordering
-Considerations for the Enhanced Configuration Access Mechanism"),
-through ECAM and ECAM-derivative configuration mechanism, the memory
-mapped transactions from the host CPU into Configuration Requests on the
-PCI express fabric may create ordering problems for software because
-writes to memory address are typically posted transactions (unless the
-architecture can enforce through virtual address mapping non-posted
-write transactions behaviour) but writes to Configuration Space are not
-posted on the PCI express fabric.
+On 4/12/2017 1:26 PM, Lorenzo Pieralisi wrote:
+>> +	if (obj && obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 0) {
+>> +		/* preserve existing resource assignment */
+>> +		pci_bus_claim_resources(bus);
+> Ok. By the PCI FW specs, we should also assign unassigned resources here
+> (ie resources that can't be claimed). Furthermore, by the PCI FW spec,
+> if !obj this is the path we should be taking (PCI firmware specification
+> Rev 3.1, 4.6.5, Description: 0:)
+> 
+> "...This situation is the same as the legacy situation where this
+> _DSM is not provided."
+> 
+> which makes me think that the PCI FW specification expects FW set-up
+> to be claimed on boot, it is my interpretation.
+> 
+> I wonder how many UEFI developers know this _DSM even exists. If we
+> want to enforce it at least we should mandate its usage at SBSA level,
+> it is a major change and I want to understand the reasons behind it,
+> so far, as I said, I may see why this was needed on x86 but on ARM64
+> I really don't.
 
-Current DT and ACPI host bridge controllers map PCI configuration space
-(ECAM and ECAM-derivative) into the virtual address space through
-ioremap() calls, that are non-cacheable device accesses on most
-architectures, but may provide "bufferable" or "posted" write semantics
-in architecture like eg ARM/ARM64 that allow ioremap'ed regions writes
-to be buffered in the bus connecting the host CPU to the PCI fabric;
-this behaviour, as underlined in the PCIe specifications, may trigger
-transactions ordering rules and must be prevented.
+IMO, DSMs are always considered optional to enable additional features
+in the operating system that otherwise are not required or are not defined
+in any of the PCI specs. 
 
-Introduce a new generic and explicit API to create a memory mapping for
-ECAM and ECAM-derivative config space area (and a corresponding generic
-asm-generic header file) that defaults to ioremap_nocache() (which
-should provide a sane default behaviour) and can be included by
-all architectures that do not require an arch specific memory mapping
-for ioremap_nopost() to guarantee non-posted writes behaviour.
+I think we are abusing the DSM here. We want to require the presence of
+a DSM but we want to require it to be 0 in order to have a UEFI
+compatible behavior. 
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: Luis R. Rodriguez <mcgrof@kernel.org>
----
- include/asm-generic/ioremap-nopost.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
- create mode 100644 include/asm-generic/ioremap-nopost.h
+I think we need to turn it the other way around by having a UEFI compatible
+behavior and do reassign only if this DSM is 1.
 
-diff --git a/include/asm-generic/ioremap-nopost.h b/include/asm-generic/ioremap-nopost.h
-new file mode 100644
-index 0000000..015911f
---- /dev/null
-+++ b/include/asm-generic/ioremap-nopost.h
-@@ -0,0 +1,9 @@
-+#ifndef __ASM_GENERIC_IOREMAP_NOPOST_H
-+#define __ASM_GENERIC_IOREMAP_NOPOST_H
-+
-+static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
-+{
-+	return ioremap_nocache(offset, size);
-+}
-+
-+#endif /* __ASM_GENERIC_IOREMAP_NOPOST_H */
+I understand that you are worried about regressions. We can try to fix
+it however time it takes before merging this.
+
 -- 
-2.10.0
-
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
 
 _______________________________________________
 linux-arm-kernel mailing list
