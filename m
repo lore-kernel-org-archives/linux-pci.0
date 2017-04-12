@@ -1,59 +1,35 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v4 20/21] PCI: keystone-dw: update PCI config space remap
- function
-Date: Wed, 19 Apr 2017 17:49:09 +0100
-Message-Id: <20170419164913.19674-21-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, Murali Karicheri <m-karicheri2@ti.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+Date: Wed, 12 Apr 2017 23:53:59 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Tony Luck <tony.luck@gmail.com>
+cc: David Woodhouse <dwmw2@infradead.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2 25/27] ia64: Use generic pci_mmap_resource_range()
+In-Reply-To: <CA+8MBbKwN=pBN17Msm-g=x-iEgvy6KNFkutKsw_pDboBHgMifA@mail.gmail.com>
+Message-ID: <alpine.DEB.2.20.1704122352440.2548@nanos>
+References: <cover.1491999859.git.dwmw2@infradead.org> <109e9ddbde4334d0da34f331797236309d789353.1491999859.git.dwmw2@infradead.org> <CA+8MBbKwN=pBN17Msm-g=x-iEgvy6KNFkutKsw_pDboBHgMifA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_pci_remap_cfg* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+On Wed, 12 Apr 2017, Tony Luck wrote:
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Murali Karicheri <m-karicheri2@ti.com>
----
- drivers/pci/dwc/pci-keystone-dw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On Wed, Apr 12, 2017 at 5:26 AM, David Woodhouse <dwmw2@infradead.org> wrote:
+> > From: David Woodhouse <dwmw@amazon.co.uk>
+> >
+> > Now that we eliminated the different behaviour in separately-reviewable
+> > commits, we can switch IA64 to the generic implementation.
+> >
+> > Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+> 
+> Well it builds and boots on my last remaining ia64 machine.
 
-diff --git a/drivers/pci/dwc/pci-keystone-dw.c b/drivers/pci/dwc/pci-keystone-dw.c
-index 6b396f6..8bc626e 100644
---- a/drivers/pci/dwc/pci-keystone-dw.c
-+++ b/drivers/pci/dwc/pci-keystone-dw.c
-@@ -543,7 +543,7 @@ int __init ks_dw_pcie_host_init(struct keystone_pcie *ks_pcie,
- 
- 	/* Index 0 is the config reg. space address */
- 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
--	pci->dbi_base = devm_ioremap_resource(dev, res);
-+	pci->dbi_base = devm_pci_remap_cfg_resource(dev, res);
- 	if (IS_ERR(pci->dbi_base))
- 		return PTR_ERR(pci->dbi_base);
- 
--- 
-2.10.0
+Does that mean ia64 reached the 'NCR Voyager' stage and can be scheduled
+for removal?
 
+Thanks,
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+	tglx
