@@ -1,84 +1,79 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1492555114.25766.93.camel@kernel.crashing.org>
-Subject: Re: [PATCH v3 00/32] PCI: fix config and I/O Address space memory
- mappings
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Date: Wed, 19 Apr 2017 08:38:34 +1000
-In-Reply-To: <20170418110350.GA1941@red-moon>
-References: <1491952371.7236.22.camel@kernel.crashing.org>
- <20170412113124.GZ17774@n2100.armlinux.org.uk>
- <1492005119.7236.62.camel@kernel.crashing.org>
- <20170412141654.GA17774@n2100.armlinux.org.uk>
- <20170412144109.GB6842@red-moon>
- <1492036240.7236.80.camel@kernel.crashing.org>
- <20170412224555.GB17774@n2100.armlinux.org.uk>
- <1492044780.7236.87.camel@kernel.crashing.org>
- <20170418085732.GA23882@red-moon>
- <1492511808.25766.91.camel@kernel.crashing.org>
- <20170418110350.GA1941@red-moon>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
- linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
- "James E.J. Bottomley" <jejb@parisc-linux.org>,
- David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
- Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
- Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
- Jesper Nilsson <jesper.nilsson@axis.com>,
- Yoshinori Sato <ysato@users.sourceforge.jp>,
- Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
- Russell King - ARM Linux <linux@armlinux.org.uk>,
- Ingo Molnar <mingo@redhat.com>, Geert Uytterhoeven <geert@linux-m68k.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Matt Turner <mattst88@gmail.com>,
- Haavard Skinnemoen <hskinnemoen@gmail.com>, Fenghua Yu <fenghua.yu@intel.com>,
- James Hogan <james.hogan@imgtec.com>, Chris Metcalf <cmetcalf@mellanox.com>,
- Arnd Bergmann <arnd@arndb.de>, Heiko Carstens <heiko.carstens@de.ibm.com>,
- Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
- Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
- Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
- Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
- linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
- Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
- "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
- "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:45538 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752862AbdDLPXS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Apr 2017 11:23:18 -0400
+Date: Wed, 12 Apr 2017 10:22:16 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Bodong Wang <bodong@mellanox.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, saeedm@mellanox.com,
+        Eli Cohen <eli@mellanox.com>
+Subject: Re: [v2] PCI: Add an option to control probing of VFs before
+ enabling SR-IOV
+Message-ID: <20170412152216.GA25197@bhelgaas-glaptop.roam.corp.google.com>
+References: <1490198038-20465-1-git-send-email-bodong@mellanox.com>
+ <20170411211211.GB14778@bhelgaas-glaptop.roam.corp.google.com>
+ <2e39e1b6-0205-2780-0223-3552d2c871a3@mellanox.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2e39e1b6-0205-2780-0223-3552d2c871a3@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2017-04-18 at 12:03 +0100, Lorenzo Pieralisi wrote:
-> > The above would effectively disable mmap'ing of IO space for any
-> > architecture that doesn't have pgprot_nonposted... so everybody
-> > except
-> > ARM. Thus breaking a number of systems that have been working fine
-> > for
-> > years.
+On Wed, Apr 12, 2017 at 09:37:22AM -0500, Bodong Wang wrote:
+> On 4/11/2017 4:12 PM, Bjorn Helgaas wrote:
+> >Hi Bodong,
+> >
+> >On Wed, Mar 22, 2017 at 05:53:58PM +0200, bodong@mellanox.com wrote:
+> >>From: Bodong Wang <bodong@mellanox.com>
+> >>
+> >>Sometimes it is not desirable to probe the virtual functions after
+> >>SRIOV is enabled. This can save host side resource usage by VF
+> >>instances which would be eventually probed to VMs.
+> >>
+> >>Add a new PCI sysfs interface "sriov_probe_vfs" to control that
+> >>from the PF, all current callers still retain the same functionality.
+> >>To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
+> >>
+> >>/sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
+> >Is this basically the same functionality as /sys/bus/pci/drivers_autoprobe,
+> >but limited to a specific PF?  I.e., could we accomplish the same thing
+> >with the following?
+> >
+> >   # echo 0 > /sys/bus/pci/devices/DDDD:BB:dd.f/sriov_numvfs
+> >   # echo 0 > /sys/bus/pci/drivers_autoprobe
+> >   # echo 2 > /sys/bus/pci/devices/DDDD:BB:dd.f/sriov_numvfs
+> >   # echo 1 > /sys/bus/pci/drivers_autoprobe
+> >
+> >If not, can you contrast the above with drivers_autoprobe?  If we need
+> >both, should they be named more similarly?
+> Hi Bjorn,
 > 
-> pci_remap_iospace() is used on ARM/ARM64 only AFAICT I do not
-> understand
-> what I would actually break (and I am not sure at all how well PCI IO
-> space is tested on ARM/ARM64 machines anyway).
+> I agree with Alex about not using driver_autoprobe to achieve this.
+> It will affect all pci related device once it's disabled(probably in
+> a bad way). 
 
-My bad, I incorrectly assumed you were hacking the generic sysfs PCI
-mapping.
+I agree drivers_autoprobe is racy with respect to other PCI devices, so
+it's not a great solution to your issue.  But I do want to make it
+obvious that these are related concepts.
 
-Cheers,
-Ben.
+Alex mooted the idea of a generic driver core knob for devices that
+create child devices.  That's intriguing.  What other situations
+besides SR-IOV do this?  Maybe we could add a "drivers_autoprobe"
+inside the directory of each device that's capable of having child
+devices?
 
+If we continue with the current approach (instead of Alex's idea),
+I propose that you:
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+  - Name your new knob "sriov_drivers_autoprobe" to be consistent with
+    other sriov sysfs files while also being parallel to
+    "drivers_autoprobe"
+
+  - Update Documentation/ABI/testing/sysfs-bus-pci to document your
+    new knob
+
+  - Update Documentation/ABI/... to document drivers_autoprobe
+
+Bjorn
