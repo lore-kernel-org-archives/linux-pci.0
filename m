@@ -1,125 +1,105 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V10 03/12] of: dma: Move range size workaround to
- of_dma_get_range()
-To: Sricharan R <sricharan@codeaurora.org>, will.deacon@arm.com,
- joro@8bytes.org, lorenzo.pieralisi@arm.com,
- iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
- robh+dt@kernel.org, frowand.list@gmail.com, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
- lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
- linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-4-git-send-email-sricharan@codeaurora.org>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <805ec386-3e42-aa16-ac7d-57ca6de232b0@arm.com>
-Date: Tue, 4 Apr 2017 11:46:22 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1491974532.7236.43.camel@kernel.crashing.org>
+Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@ml01.01.org, linux-kernel@vger.kernel.org
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+Date: Wed, 12 Apr 2017 11:09:53 -0600
 MIME-Version: 1.0
-In-Reply-To: <1491301105-5274-4-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1491974532.7236.43.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/04/17 11:18, Sricharan R wrote:
-> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+
+
+On 11/04/17 11:22 PM, Benjamin Herrenschmidt wrote:
+> Another issue of course is that not all systems support P2P
+> between host bridges :-) (Though almost all switches can enable it).
+
+Yes, I'm either going to just let the user enable and test or limit it
+to switches only to start. However, currently our bigger issue is
+working on a way to not violate iomem safety.
+
+> Ok. I suppose that's a reasonable starting point. Do I haven't looked
+> at the patches in detail yet but it would be nice if that policy was in
+> a well isolated component so it can potentially be affected by
+> arch/platform code.
+
+The policy is isolated in the new p2pmem driver. There's no reason the
+policy couldn't become arbitrarily complex with specific arch
+exceptions. It's just people would have to do the work to create those
+exceptions.
+
+> Do you handle funky address translation too ? IE. the fact that the PCI
+> addresses aren't the same as the CPU physical addresses for a BAR ?
+
+No, we use the CPU physical address of the BAR. If it's not mapped that
+way we can't use it.
+
+>> This will mean many setups that could likely
+>> work well will not be supported so that we can be more confident it
+>> will work and not place any responsibility on the user to understand
+>> their topology. (We've chosen to go this route based on feedback we
+>> received at LSF).
+>>
+>> In order to enable this functionality we introduce a new p2pmem device
+>> which can be instantiated by PCI drivers. The device will register some
+>> PCI memory as ZONE_DEVICE and provide an genalloc based allocator for
+>> users of these devices to get buffers.
 > 
-> Invalid dma-ranges values should be worked around when retrieving the
-> DMA range in of_dma_get_range(), not by all callers of the function.
-> This isn't much of a problem now that we have a single caller, but that
-> situation will change when moving DMA configuration to device probe
-> time.
+> I don't completely understand this. This is actual memory on the PCI
+> bus ? Where does it come from ? Or are you just trying to create struct
+> pages that cover your PCIe DMA target ?
 
-Just for completeness:
-
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-
-> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-> Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
-> ---
->  drivers/of/address.c | 20 ++++++++++++++++++--
->  drivers/of/device.c  | 15 ---------------
->  2 files changed, 18 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 02b2903..6aeb816 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -819,8 +819,8 @@ void __iomem *of_io_request_and_map(struct device_node *np, int index,
->   *	CPU addr (phys_addr_t)	: pna cells
->   *	size			: nsize cells
->   *
-> - * It returns -ENODEV if "dma-ranges" property was not found
-> - * for this device in DT.
-> + * Return 0 on success, -ENODEV if the "dma-ranges" property was not found for
-> + * this device in DT, or -EINVAL if the CPU address or size is invalid.
->   */
->  int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *size)
->  {
-> @@ -880,6 +880,22 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
->  	*dma_addr = dmaaddr;
->  
->  	*size = of_read_number(ranges + naddr + pna, nsize);
-> +	/*
-> +	 * DT nodes sometimes incorrectly set the size as a mask. Work around
-> +	 * those incorrect DT by computing the size as mask + 1.
-> +	 */
-> +	if (*size & 1) {
-> +		pr_warn("%s: size 0x%llx for dma-range in node(%s) set as mask\n",
-> +			__func__, *size, np->full_name);
-> +		*size = *size + 1;
-> +	}
-> +
-> +	if (!*size) {
-> +		pr_err("%s: invalid size zero for dma-range in node(%s)\n",
-> +		       __func__, np->full_name);
-> +		ret = -EINVAL;
-> +		goto out;
-> +	}
->  
->  	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
->  		 *dma_addr, *paddr, *size);
-> diff --git a/drivers/of/device.c b/drivers/of/device.c
-> index b1e6beb..09dedd0 100644
-> --- a/drivers/of/device.c
-> +++ b/drivers/of/device.c
-> @@ -110,21 +110,6 @@ void of_dma_configure(struct device *dev, struct device_node *np)
->  		size = dev->coherent_dma_mask + 1;
->  	} else {
->  		offset = PFN_DOWN(paddr - dma_addr);
-> -
-> -		/*
-> -		 * Add a work around to treat the size as mask + 1 in case
-> -		 * it is defined in DT as a mask.
-> -		 */
-> -		if (size & 1) {
-> -			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
-> -				 size);
-> -			size = size + 1;
-> -		}
-> -
-> -		if (!size) {
-> -			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
-> -			return;
-> -		}
->  		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->  	}
->  
-> 
+Yes, the memory is on the PCI bus in a BAR. For now we have a special
+PCI card for this, but in the future it would likely be the CMB in an
+NVMe card. These patches create struct pages to map these BAR addresses
+using ZONE_DEVICE.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> So correct me if I'm wrong, you are trying to create struct page's that
+> map a PCIe BAR right ? I'm trying to understand how that interacts with
+> what Jerome is doing for HMM.
+
+Yes, well we are using ZONE_DEVICE in the exact same way as the dax code
+is. These patches use the existing API with no modifications. As I
+understand it, HMM was using ZONE_DEVICE in a way that was quite
+different to how it was originally designed.
+
+> The reason is that the HMM currently creates the struct pages with
+> "fake" PFNs pointing to a hole in the address space rather than
+> covering the actual PCIe memory of the GPU. He does that to deal with
+> the fact that some GPUs have a smaller aperture on PCIe than their
+> total memory.
+
+I'm aware of what HMM is trying to do and although I'm not familiar with
+the intimate details, I saw it as fairly orthogonal to what we are
+attempting to do.
+
+> However, I have asked him to only apply that policy if the aperture is
+> indeed smaller, and if not, create struct pages that directly cover the
+> PCIe BAR of the GPU instead, which will work better on systems or
+> architecture that don't have a "pinhole" window limitation.
+> However he was under the impression that this was going to collide with
+> what you guys are doing, so I'm trying to understand how. 
+
+I'm not sure I understand how either. However, I suspect if you collide
+with these patches then you'd also be breaking dax too.
+
+Logan
