@@ -1,199 +1,170 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v3 00/32] PCI: fix config and I/O Address space memory mappings
-Date: Tue, 11 Apr 2017 13:28:40 +0100
-Message-Id: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- "James E.J. Bottomley" <jejb@parisc-linux.org>,
- David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
- Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
- Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
- Jesper Nilsson <jesper.nilsson@axis.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Yoshinori Sato <ysato@users.sourceforge.jp>,
- Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
- Russell King <linux@armlinux.org.uk>, Ingo Molnar <mingo@redhat.com>,
- Geert Uytterhoeven <geert@linux-m68k.org>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Matt Turner <mattst88@gmail.com>, Haavard Skinnemoen <hskinnemoen@gmail.com>,
- Fenghua Yu <fenghua.yu@intel.com>, James Hogan <james.hogan@imgtec.com>,
- Chris Metcalf <cmetcalf@mellanox.com>, Arnd Bergmann <arnd@arndb.de>,
- Heiko Carstens <heiko.carstens@de.ibm.com>,
- Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
- Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
- Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
- Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
- linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
- Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
- "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
- "David S. Miller" <davem@davemloft.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from merlin.infradead.org ([205.233.59.134]:38110 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753534AbdDLM0T (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Apr 2017 08:26:19 -0400
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 21/27] microblaze: Use generic pci_mmap_resource_range()
+Date: Wed, 12 Apr 2017 13:26:10 +0100
+Message-Id: <f6f2c84197a3ff15bb3f3a2882870a751f3f4eb2.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch series[1] is a v3 of a previous version:
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-v2: https://lkml.org/lkml/2017/3/27/220
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+---
+ arch/microblaze/include/asm/pci.h |  7 +--
+ arch/microblaze/pci/pci-common.c  | 99 ++++-----------------------------------
+ 2 files changed, 13 insertions(+), 93 deletions(-)
 
-v2 -> v3:
-	- Created a default ioremap_nopost() implementation in a separate
-	  asm-generic header and patched all arches to make use of it
-	- Removed PCI drivers patches from the series to simplify the
-	  review, they will be posted separately once the ioremap_nopost()
-	  interface is settled
-	- Fixed devm_ioremap_* BUS offset comments and implemented
-	  nopost interface on top of it
-	- Added collected tags
-
-v1: https://lkml.org/lkml/2017/2/27/228
-
-v1 -> v2:
-	- Changed pci_remap_cfgspace() to more generic ioremap_nopost()
-	  interface
-	- Added pgprot_nonposted
-	- Fixed build errors on arches not relying on asm-generic headers
-	- Added PCI versatile host controller driver patch
-	- Added missing config space remapping to hisilicon host controller
-
----------------------
-Original cover letter
----------------------
-
-PCI local bus specifications (Rev3.0, 3.2.5 "Transaction Ordering
-and Posting") strictly require PCI configuration and I/O Address space
-write transactions to be non-posted.
-
-Current crop of DT/ACPI PCI host controllers drivers relies on
-the ioremap interface to map ECAM and ECAM-derivative PCI config
-regions and pci_remap_iospace() to create a VMA for mapping
-PCI host bridge I/O Address space transactions to CPU virtual address
-space.
-
-On some platforms (ie ARM/ARM64) ioremap fails to comply with the PCI
-configuration non-posted write transactions requirement, because it
-provides a memory mapping that issues "bufferable" or, in PCI terms
-"posted" write transactions. Likewise, the current pci_remap_iospace()
-implementation maps the physical address range that the PCI translates
-to I/O space cycles to virtual address space through pgprot_device()
-attributes that on eg ARM64 provides a memory mapping issuing
-posted writes transactions, which is not PCI specifications compliant.
-
-This patch series[1] addresses both issues in one go:
-
-- It updates the pci_remap_iospace() function to use a page mapping
-  that guarantees non-posted write transactions for I/O space addresses
-- It adds a kernel API to remap PCI config space resources, so that
-  architecture can override it with a mapping implementation that
-  guarantees PCI specifications compliancy wrt non-posted write
-  configuration transactions
-- It updates all PCI host controller implementations (and the generic
-  ECAM layer) to use the newly introduced mapping interface
-
-Tested on Juno ECAM based interface (DT/ACPI).
-
-Non-ECAM PCI host controller drivers patches need checking to make
-sure that:
-
-- I patched the correct resource region mapping for config space
-- There are not any other ways to ensure posted-write completion
-  in the respective pci_ops that make the relevant patch unnecessary
-
-[1] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git
-pci/config-io-mappings-fix-v3
-
-Lorenzo Pieralisi (32):
-  PCI: remove __weak tag from pci_remap_iospace()
-  asm-generic/pgtable.h: introduce pgprot_nonposted remap attribute
-  PCI: fix pci_remap_iospace() remap attribute
-  asm-generic: add ioremap_nopost() remap interface
-  alpha: include default ioremap_nopost() implementation
-  avr32: include default ioremap_nopost() implementation
-  arc: include default ioremap_nopost() implementation
-  cris: include default ioremap_nopost() implementation
-  frv: include default ioremap_nopost() implementation
-  hexagon: include default ioremap_nopost() implementation
-  ia64: include default ioremap_nopost() implementation
-  m32r: include default ioremap_nopost() implementation
-  m68k: include default ioremap_nopost() implementation
-  metag: include default ioremap_nopost() implementation
-  microblaze: include default ioremap_nopost() implementation
-  mips: include default ioremap_nopost() implementation
-  mn10300: include default ioremap_nopost() implementation
-  nios2: include default ioremap_nopost() implementation
-  openrisc: include default ioremap_nopost() implementation
-  parisc: include default ioremap_nopost() implementation
-  powerpc: include default ioremap_nopost() implementation
-  s390: include default ioremap_nopost() implementation
-  sh: include default ioremap_nopost() implementation
-  sparc: include default ioremap_nopost() implementation
-  tile: include default ioremap_nopost() implementation
-  unicore32: include default ioremap_nopost() implementation
-  x86: include default ioremap_nopost() implementation
-  xtensa: include default ioremap_nopost() implementation
-  arm64: implement ioremap_nopost() interface
-  arm: implement ioremap_nopost() interface
-  lib: fix Devres devm_ioremap_* offset parameter kerneldoc description
-  lib: implement Devres ioremap_nopost() interface
-
- Documentation/driver-model/devres.txt |  3 ++
- arch/alpha/include/asm/io.h           |  1 +
- arch/arc/include/asm/io.h             |  1 +
- arch/arm/include/asm/io.h             |  9 ++++
- arch/arm/mm/ioremap.c                 |  7 +++
- arch/arm/mm/nommu.c                   |  9 ++++
- arch/arm64/include/asm/io.h           | 12 +++++
- arch/avr32/include/asm/io.h           |  1 +
- arch/cris/include/asm/io.h            |  1 +
- arch/frv/include/asm/io.h             |  1 +
- arch/hexagon/include/asm/io.h         |  2 +
- arch/ia64/include/asm/io.h            |  1 +
- arch/m32r/include/asm/io.h            |  1 +
- arch/m68k/include/asm/io.h            |  1 +
- arch/metag/include/asm/io.h           |  2 +
- arch/microblaze/include/asm/io.h      |  1 +
- arch/mips/include/asm/io.h            |  1 +
- arch/mn10300/include/asm/io.h         |  1 +
- arch/nios2/include/asm/io.h           |  1 +
- arch/openrisc/include/asm/io.h        |  2 +
- arch/parisc/include/asm/io.h          |  1 +
- arch/powerpc/include/asm/io.h         |  1 +
- arch/s390/include/asm/io.h            |  1 +
- arch/sh/include/asm/io.h              |  1 +
- arch/sparc/include/asm/io.h           |  1 +
- arch/tile/include/asm/io.h            |  1 +
- arch/unicore32/include/asm/io.h       |  1 +
- arch/x86/include/asm/io.h             |  1 +
- arch/xtensa/include/asm/io.h          |  1 +
- drivers/pci/pci.c                     |  4 +-
- include/asm-generic/ioremap-nopost.h  |  9 ++++
- include/asm-generic/pgtable.h         |  4 ++
- include/linux/device.h                |  2 +
- include/linux/io.h                    |  2 +
- lib/devres.c                          | 84 +++++++++++++++++++++++++++++++++--
- 35 files changed, 167 insertions(+), 5 deletions(-)
- create mode 100644 include/asm-generic/ioremap-nopost.h
-
+diff --git a/arch/microblaze/include/asm/pci.h b/arch/microblaze/include/asm/pci.h
+index efd4983..97452c0 100644
+--- a/arch/microblaze/include/asm/pci.h
++++ b/arch/microblaze/include/asm/pci.h
+@@ -47,9 +47,10 @@ extern int pci_proc_domain(struct pci_bus *bus);
+ 
+ struct vm_area_struct;
+ 
+-/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+-#define HAVE_PCI_MMAP		1
+-#define arch_can_pci_mmap_io()	1
++/* Tell PCI code what kind of PCI resource mappings we support */
++#define HAVE_PCI_MMAP			1
++#define ARCH_GENERIC_PCI_MMAP_RESOURCE	1
++#define arch_can_pci_mmap_io()		1
+ 
+ extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
+ 			   size_t count);
+diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
+index 404fb38..69c69f6 100644
+--- a/arch/microblaze/pci/pci-common.c
++++ b/arch/microblaze/pci/pci-common.c
+@@ -151,72 +151,22 @@ void pcibios_set_master(struct pci_dev *dev)
+ }
+ 
+ /*
+- * Platform support for /proc/bus/pci/X/Y mmap()s,
+- * modelled on the sparc64 implementation by Dave Miller.
+- *  -- paulus.
++ * Platform support for /proc/bus/pci/X/Y mmap()s.
+  */
+ 
+-/*
+- * Adjust vm_pgoff of VMA such that it is the physical page offset
+- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
+- *
+- * Basically, the user finds the base address for his device which he wishes
+- * to mmap.  They read the 32-bit value from the config space base register,
+- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
+- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
+- *
+- * Returns negative error code on failure, zero on success.
+- */
+-static struct resource *__pci_mmap_make_offset(struct pci_dev *dev,
+-					       resource_size_t *offset,
+-					       enum pci_mmap_state mmap_state)
++int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
+ {
+-	struct pci_controller *hose = pci_bus_to_host(dev->bus);
+-	unsigned long io_offset = 0;
+-	int i, res_bit;
++	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
++	resource_size_t ioaddr = pci_resource_start(pdev, bar);
+ 
+ 	if (!hose)
+-		return NULL;		/* should never happen */
+-
+-	/* If memory, add on the PCI bridge address offset */
+-	if (mmap_state == pci_mmap_mem) {
+-#if 0 /* See comment in pci_resource_to_user() for why this is disabled */
+-		*offset += hose->pci_mem_offset;
+-#endif
+-		res_bit = IORESOURCE_MEM;
+-	} else {
+-		io_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
+-		*offset += io_offset;
+-		res_bit = IORESOURCE_IO;
+-	}
+-
+-	/*
+-	 * Check that the offset requested corresponds to one of the
+-	 * resources of the device.
+-	 */
+-	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+-		struct resource *rp = &dev->resource[i];
+-		int flags = rp->flags;
++		return -EINVAL;		/* should never happen */
+ 
+-		/* treat ROM as memory (should be already) */
+-		if (i == PCI_ROM_RESOURCE)
+-			flags |= IORESOURCE_MEM;
+-
+-		/* Active and same type? */
+-		if ((flags & res_bit) == 0)
+-			continue;
+-
+-		/* In the range of this resource? */
+-		if (*offset < (rp->start & PAGE_MASK) || *offset > rp->end)
+-			continue;
+-
+-		/* found it! construct the final physical address */
+-		if (mmap_state == pci_mmap_io)
+-			*offset += hose->io_base_phys - io_offset;
+-		return rp;
+-	}
++	/* Convert to an offset within this PCI controller */
++	ioaddr -= (unsigned long)hose->io_base_virt - _IO_BASE;
+ 
+-	return NULL;
++	vma->vm_pgoff += (ioaddr + hose->io_base_phys) >> PAGE_SHIFT;
++	return 0;
+ }
+ 
+ /*
+@@ -268,37 +218,6 @@ pgprot_t pci_phys_mem_access_prot(struct file *file,
+ 	return prot;
+ }
+ 
+-/*
+- * Perform the actual remap of the pages for a PCI device mapping, as
+- * appropriate for this architecture.  The region in the process to map
+- * is described by vm_start and vm_end members of VMA, the base physical
+- * address is found in vm_pgoff.
+- * The pci device structure is provided so that architectures may make mapping
+- * decisions on a per-device or per-bus basis.
+- *
+- * Returns a negative error code on failure, zero on success.
+- */
+-int pci_mmap_page_range(struct pci_dev *dev, int bar, struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine)
+-{
+-	resource_size_t offset =
+-		((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
+-	struct resource *rp;
+-	int ret;
+-
+-	rp = __pci_mmap_make_offset(dev, &offset, mmap_state);
+-	if (rp == NULL)
+-		return -EINVAL;
+-
+-	vma->vm_pgoff = offset >> PAGE_SHIFT;
+-	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+-
+-	ret = remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+-			       vma->vm_end - vma->vm_start, vma->vm_page_prot);
+-
+-	return ret;
+-}
+-
+ /* This provides legacy IO read access on a bus */
+ int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val, size_t size)
+ {
 -- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.9.3
