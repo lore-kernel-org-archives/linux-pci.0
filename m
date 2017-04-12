@@ -1,96 +1,104 @@
-Return-Path: <SRS0=W5ki=4B=cavium.com=Jayachandran.Nair@kernel.org>
-Return-Path: <SRS0=W5ki=4B=cavium.com=Jayachandran.Nair@kernel.org>
-Date: Tue, 25 Apr 2017 13:03:47 +0000
-From: Jayachandran C <jnair@caviumnetworks.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Joerg Roedel <joro@8bytes.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
-	Jon Masters <jcm@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-Message-ID: <20170425130346.GA30542@localhost>
-References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
- <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
- <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
- <20170414210646.GA5346@localhost>
- <CAErSpo731xSzrnKF+G+8SA_UUHy7ROA1V9oFkpwKi85GQf9VAg@mail.gmail.com>
- <20170417174712.GA7575@localhost>
- <CAErSpo6+do8GXon3EzZAUpqc2TFsA0BDwWBULqZCd1ayCJhD6w@mail.gmail.com>
- <20170421170414.GA2429@localhost>
- <20170421175705.GB17916@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:35586 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751608AbdDLQzf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 12 Apr 2017 12:55:35 -0400
+Date: Wed, 12 Apr 2017 11:55:30 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian =?iso-8859-1?Q?K=F6nig?= <deathsimple@vodafone.de>
+Cc: linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        platform-driver-x86@vger.kernel.org, amd-gfx@lists.freedesktop.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h
+ (Models 30h-3fh) Processors
+Message-ID: <20170412165530.GE25197@bhelgaas-glaptop.roam.corp.google.com>
+References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
+ <1489408896-25039-4-git-send-email-deathsimple@vodafone.de>
+ <20170324154744.GE25380@bhelgaas-glaptop.roam.corp.google.com>
+ <a1ac66f3-3c3f-e9c6-82c9-6e9ca5715b67@vodafone.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170421175705.GB17916@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <a1ac66f3-3c3f-e9c6-82c9-6e9ca5715b67@vodafone.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 21, 2017 at 12:57:05PM -0500, Bjorn Helgaas wrote:
-> On Fri, Apr 21, 2017 at 05:05:41PM +0000, Jayachandran C wrote:
-> > On Fri, Apr 21, 2017 at 10:48:15AM -0500, Bjorn Helgaas wrote:
-> > > On Mon, Apr 17, 2017 at 12:47 PM, Jayachandran C
-> > > <jnair@caviumnetworks.com> wrote:
-> > > > On Fri, Apr 14, 2017 at 09:00:06PM -0500, Bjorn Helgaas wrote:
+On Tue, Apr 11, 2017 at 05:48:25PM +0200, Christian König wrote:
+> Am 24.03.2017 um 16:47 schrieb Bjorn Helgaas:
+> >On Mon, Mar 13, 2017 at 01:41:35PM +0100, Christian König wrote:
+> >>From: Christian König <christian.koenig@amd.com>
+> >>
+> >>Most BIOS don't enable this because of compatibility reasons.
+> >Can you give any more details here?  Without more hints, it's hard to
+> >know whether any of the compatibility reasons might apply to Linux as
+> >well.
 > 
-> > > >> Could you collect "lspci -vv" output from this system?  I'd like to
-> > > >> archive that as background for this IOMMU issue and the ASPM tweaks I
-> > > >> suspect we'll have to do.  I *wish* we had more information about that
-> > > >> VIA thing, because I suspect we could get rid of it if we had more
-> > > >> details.
-> > > >
-> > > > The full logs are slightly large, so I have kept them at:
-> > > > https://github.com/jchandra-cavm/thunderx2/blob/master/logs/
-> > > > The lspci -vv output is lspci-vv.txt and lspci -tvn output is lspci-tvn.txt
-> > > >
-> > > > The output is from 2 socket system, the cards are not on the first slot
-> > > > like the example above, so the bus and device numbers are different.
-> > > 
-> > > Can somebody with this system collect the "lspci -xxxx" output as well?
-> > > 
-> > > I'm making some lspci changes to handle the PCI-to-PCIe bridge
-> > > correctly, and I can use the "lspci -xxxx" output to create an lspci
-> > > test case.
-> > 
-> > [Sorry was AFK for a few days]
-> > 
-> > I have updated the above directory with the log. Also tested your next branch
-> > and it works fine on ThunderX2.
+> Unfortunately not, I could try to ask a few more people at AMD if
+> they know the background.
 > 
-> Thanks!
+> I was told that there are a few boards which offers that as a BIOS
+> option, but so far I haven't found any (and I have quite a few
+> here).
 > 
-> With regard to my lspci changes, they add "Slot-" here:
+> My best guess is that older windows versions have a problem with that.
 > 
->    01:0a.0 PCI bridge: Broadcom Corporation Device 9039
->    ...
->   -   Capabilities: [40] Express (v2) PCI/PCI-X to PCI-Express Bridge, MSI 00
->   +   Capabilities: [40] Express (v2) PCI/PCI-X to PCI-Express Bridge (Slot-), MSI 00
+> >>Manually enable a 64bit BAR of 64GB size so that we have
+> >>enough room for PCI devices.
+> > From the context, I'm guessing this is enabling a new 64GB window
+> >through the PCI host bridge?
 > 
-> for all your PCI-to-PCIe bridges.  I assume the "Slot-" is correct, i.e.,
-> the link is not connected to a slot, right?  This comes from the "Slot
-> Implemented" bit in the PCIe Capabilities Register.
+> Yes, exactly. Sorry for the confusion.
+> 
+> >That might be documented as a "BAR", but
+> >it's not anything the Linux PCI core would recognize as a BAR.
+> 
+> At least the AMD NB documentation calls this the host BARs. But I'm
+> perfectly fine with any terminology.
+> 
+> How about calling it host bridge window instead?
 
-Yes, Slot- should be correct.
- 
-> I did notice that all the Root Port devices claim to *not* be connected to
-> slots, which doesn't seem right.  For example,
-> 
->   12:00.0 PCI bridge: Broadcom Corporation Device 9084
->       Bus: primary=12, secondary=13, subordinate=14, sec-latency=0
->       Capabilities: [ac] Express (v2) Root Port (Slot-), MSI 00
-> 
->   13:00.0 Ethernet controller: Intel Corporation 82599EB 10-Gigabit SFI/SFP+ Network Connection
-> 
-> It seems strange because the 12:00.0 Root Port looks like it probably
-> *does* lead to a slot where the NIC is plugged in.  Or is that NIC really
-> soldered down?
-> 
-> But I assume there are *some* PCIe slots, so at some of those Root Ports
-> should advertise "Slot+" (which by itself does not imply hotplug support,
-> if that's the concern).
+That works for me.
 
-The Root Ports are connected to a slot, so I am not sure why the slot implemented
-bit is not set. There seems to be nothing useful in the slot capabilites, so this
-may be ok for now. I have reported this to the hardware team.
+> >I think the specs would envision this being done via an ACPI _SRS
+> >method on the PNP0A03 host bridge device.  That would be a more
+> >generic path that would work on any host bridge.  Did you explore that
+> >possibility?  I would prefer to avoid adding device-specific code if
+> >that's possible.
+> 
+> I've checked quite a few boards, but none of them actually
+> implements it this way.
+> 
+> M$ is working on a new ACPI table to enable this vendor neutral, but
+> I guess that will still take a while.
+> 
+> I want to support this for all AMD CPU released in the past 5 years
+> or so, so we are going to deal with a bunch of older boards as well.
 
-Thanks for the review and the comments,
-JC.
+I've never seen _SRS for host bridges either.  I'm curious about what
+sort of new table will be proposed.  It seems like the existing ACPI
+resource framework could manage it, but I certainly don't know all the
+issues.
+
+> >>+	pci_bus_add_resource(dev->bus, res, 0);
+> >We would need some sort of printk here to explain how this new window
+> >magically appeared.
+> 
+> Good point, consider this done.
+> 
+> But is this actually the right place of doing it? Or would you
+> prefer something to be added to the probing code?
+> 
+> I think those fixups are applied a bit later, aren't they?
+
+Logically, this should be done before we enumerate the PCI devices
+below the host bridge, so a PCI device fixup is not the ideal place
+for it, but it might be the most practical.
+
+I could imagine some sort of quirk like the ones in
+drivers/pnp/quirks.c that could add the window to the host bridge _CRS
+and program the bridge to open it.  But the PCI host bridges aren't
+handled through the path that applies those fixups, and it would be
+messy to identify your bridges (you currently use PCI vendor/device
+IDs, which are only available after enumerating the device).  So this
+doesn't seem like a viable strategy.
+
+Bjorn
