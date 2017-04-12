@@ -1,210 +1,67 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58744 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753556AbdDJLWx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Apr 2017 07:22:53 -0400
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
-        gregkh@linuxfoundation.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V11 09/11] arm64: dma-mapping: Remove the notifier trick to handle early setting of dma_ops
-Date: Mon, 10 Apr 2017 16:51:04 +0530
-Message-Id: <1491823266-1209-10-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
-References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 11/27] arm: Use generic pci_mmap_resource_range()
+Date: Wed, 12 Apr 2017 13:26:00 +0100
+Message-Id: <8be48e631d445d30f76574602a7a7120564a7c15.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-With arch_setup_dma_ops now being called late during device's probe after
-the device's iommu is probed, the notifier trick required to handle the
-early setup of dma_ops before the iommu group gets created is not
-required. So removing the notifier's here.
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Acked-by: Will Deacon <will.deacon@arm.com>
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-[rm: clean up even more]
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
 ---
- arch/arm64/mm/dma-mapping.c | 142 ++++++--------------------------------------
- 1 file changed, 18 insertions(+), 124 deletions(-)
+ arch/arm/include/asm/pci.h |  1 +
+ arch/arm/kernel/bios32.c   | 20 --------------------
+ 2 files changed, 1 insertion(+), 20 deletions(-)
 
-diff --git a/arch/arm64/mm/dma-mapping.c b/arch/arm64/mm/dma-mapping.c
-index 81cdb2e..b465759 100644
---- a/arch/arm64/mm/dma-mapping.c
-+++ b/arch/arm64/mm/dma-mapping.c
-@@ -813,34 +813,26 @@ static void __iommu_unmap_sg_attrs(struct device *dev,
- 	.mapping_error = iommu_dma_mapping_error,
- };
+diff --git a/arch/arm/include/asm/pci.h b/arch/arm/include/asm/pci.h
+index 51118a0..396c92b 100644
+--- a/arch/arm/include/asm/pci.h
++++ b/arch/arm/include/asm/pci.h
+@@ -29,6 +29,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ #define PCI_DMA_BUS_IS_PHYS     (1)
  
--/*
-- * TODO: Right now __iommu_setup_dma_ops() gets called too early to do
-- * everything it needs to - the device is only partially created and the
-- * IOMMU driver hasn't seen it yet, so it can't have a group. Thus we
-- * need this delayed attachment dance. Once IOMMU probe ordering is sorted
-- * to move the arch_setup_dma_ops() call later, all the notifier bits below
-- * become unnecessary, and will go away.
-- */
--struct iommu_dma_notifier_data {
--	struct list_head list;
--	struct device *dev;
--	const struct iommu_ops *ops;
--	u64 dma_base;
--	u64 size;
--};
--static LIST_HEAD(iommu_dma_masters);
--static DEFINE_MUTEX(iommu_dma_notifier_lock);
-+static int __init __iommu_dma_init(void)
-+{
-+	return iommu_dma_init();
-+}
-+arch_initcall(__iommu_dma_init);
+ #define HAVE_PCI_MMAP
++#define ARCH_GENERIC_PCI_MMAP_RESOURCE
  
--static bool do_iommu_attach(struct device *dev, const struct iommu_ops *ops,
--			   u64 dma_base, u64 size)
-+static void __iommu_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
-+				  const struct iommu_ops *ops)
+ static inline int pci_get_legacy_ide_irq(struct pci_dev *dev, int channel)
  {
--	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
-+	struct iommu_domain *domain;
-+
-+	if (!ops)
-+		return;
+diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
+index a4fc3f4..b259956 100644
+--- a/arch/arm/kernel/bios32.c
++++ b/arch/arm/kernel/bios32.c
+@@ -597,26 +597,6 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
+ 	return start;
+ }
  
- 	/*
--	 * If the IOMMU driver has the DMA domain support that we require,
--	 * then the IOMMU core will have already configured a group for this
--	 * device, and allocated the default domain for that group.
-+	 * The IOMMU core code allocates the default DMA domain, which the
-+	 * underlying IOMMU driver needs to support via the dma-iommu layer.
- 	 */
-+	domain = iommu_get_domain_for_dev(dev);
-+
- 	if (!domain)
- 		goto out_err;
- 
-@@ -851,109 +843,11 @@ static bool do_iommu_attach(struct device *dev, const struct iommu_ops *ops,
- 		dev->dma_ops = &iommu_dma_ops;
- 	}
- 
--	return true;
-+	return;
-+
- out_err:
--	pr_warn("Failed to set up IOMMU for device %s; retaining platform DMA ops\n",
-+	 pr_warn("Failed to set up IOMMU for device %s; retaining platform DMA ops\n",
- 		 dev_name(dev));
--	return false;
--}
--
--static void queue_iommu_attach(struct device *dev, const struct iommu_ops *ops,
--			      u64 dma_base, u64 size)
+-int pci_mmap_page_range(struct pci_dev *dev, int bar,
+-			struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine)
 -{
--	struct iommu_dma_notifier_data *iommudata;
+-	if (mmap_state == pci_mmap_io)
+-		return -EINVAL;
 -
--	iommudata = kzalloc(sizeof(*iommudata), GFP_KERNEL);
--	if (!iommudata)
--		return;
+-	/*
+-	 * Mark this as IO
+-	 */
+-	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
 -
--	iommudata->dev = dev;
--	iommudata->ops = ops;
--	iommudata->dma_base = dma_base;
--	iommudata->size = size;
+-	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+-			     vma->vm_end - vma->vm_start,
+-			     vma->vm_page_prot))
+-		return -EAGAIN;
 -
--	mutex_lock(&iommu_dma_notifier_lock);
--	list_add(&iommudata->list, &iommu_dma_masters);
--	mutex_unlock(&iommu_dma_notifier_lock);
--}
--
--static int __iommu_attach_notifier(struct notifier_block *nb,
--				   unsigned long action, void *data)
--{
--	struct iommu_dma_notifier_data *master, *tmp;
--
--	if (action != BUS_NOTIFY_BIND_DRIVER)
--		return 0;
--
--	mutex_lock(&iommu_dma_notifier_lock);
--	list_for_each_entry_safe(master, tmp, &iommu_dma_masters, list) {
--		if (data == master->dev && do_iommu_attach(master->dev,
--				master->ops, master->dma_base, master->size)) {
--			list_del(&master->list);
--			kfree(master);
--			break;
--		}
--	}
--	mutex_unlock(&iommu_dma_notifier_lock);
 -	return 0;
 -}
 -
--static int __init register_iommu_dma_ops_notifier(struct bus_type *bus)
--{
--	struct notifier_block *nb = kzalloc(sizeof(*nb), GFP_KERNEL);
--	int ret;
--
--	if (!nb)
--		return -ENOMEM;
--
--	nb->notifier_call = __iommu_attach_notifier;
--
--	ret = bus_register_notifier(bus, nb);
--	if (ret) {
--		pr_warn("Failed to register DMA domain notifier; IOMMU DMA ops unavailable on bus '%s'\n",
--			bus->name);
--		kfree(nb);
--	}
--	return ret;
--}
--
--static int __init __iommu_dma_init(void)
--{
--	int ret;
--
--	ret = iommu_dma_init();
--	if (!ret)
--		ret = register_iommu_dma_ops_notifier(&platform_bus_type);
--	if (!ret)
--		ret = register_iommu_dma_ops_notifier(&amba_bustype);
--#ifdef CONFIG_PCI
--	if (!ret)
--		ret = register_iommu_dma_ops_notifier(&pci_bus_type);
--#endif
--	return ret;
--}
--arch_initcall(__iommu_dma_init);
--
--static void __iommu_setup_dma_ops(struct device *dev, u64 dma_base, u64 size,
--				  const struct iommu_ops *ops)
--{
--	struct iommu_group *group;
--
--	if (!ops)
--		return;
--	/*
--	 * TODO: As a concession to the future, we're ready to handle being
--	 * called both early and late (i.e. after bus_add_device). Once all
--	 * the platform bus code is reworked to call us late and the notifier
--	 * junk above goes away, move the body of do_iommu_attach here.
--	 */
--	group = iommu_group_get(dev);
--	if (group) {
--		do_iommu_attach(dev, ops, dma_base, size);
--		iommu_group_put(group);
--	} else {
--		queue_iommu_attach(dev, ops, dma_base, size);
--	}
- }
- 
- void arch_teardown_dma_ops(struct device *dev)
+ void __init pci_map_io_early(unsigned long pfn)
+ {
+ 	struct map_desc pci_io_desc = {
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+2.9.3
