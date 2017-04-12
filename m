@@ -1,22 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Casey Leedom <leedom@chelsio.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Alexander Duyck
- <alexander.duyck@gmail.com>
-Subject: Re: [PATCH net-next 1/4] ixgbe: sparc: rename the
- ARCH_WANT_RELAX_ORDER to IXGBE_ALLOW_RELAXED_ORDER
-Date: Thu, 27 Apr 2017 19:00:27 +0000
-Message-ID: <MWHPR12MB1600F53E6E09C9B3F99D255EC8100@MWHPR12MB1600.namprd12.prod.outlook.com>
-References: <20170401.112603.1991545644693496714.davem@davemloft.net>
- <42428725-89f1-1508-4e3d-723e087b3bbb@huawei.com>
- <EE11001F9E5DDD47B7634E2F8A612F2E205199C0@FRAEML521-MBX.china.huawei.com>
- <063D6719AE5E284EB5DD2968C1650D6DCFFD3C52@AcuExch.aculab.com>
- <DB5PR05MB138288172B04713EB0C1DB55D3190@DB5PR05MB1382.eurprd05.prod.outlook.com>
- <a2239141-a185-1bb8-0abd-7a05b9fde015@huawei.com>
- <CAKgT0Uc4L=GgYbpO-Fm9OfN+_fLypbDP1c+X4T_ta90ecQiyGQ@mail.gmail.com>,
- <20170427171938.GA10705@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170427171938.GA10705@bhelgaas-glaptop.roam.corp.google.com>
+Date: Wed, 12 Apr 2017 12:20:22 +0100
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH v3 04/32] asm-generic: add ioremap_nopost() remap interface
+Message-ID: <20170412112022.GY17774@n2100.armlinux.org.uk>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+ <20170411122923.6285-5-lorenzo.pieralisi@arm.com>
+ <1491917983.7236.9.camel@kernel.crashing.org>
 MIME-Version: 1.0
+In-Reply-To: <1491917983.7236.9.camel@kernel.crashing.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -24,68 +17,116 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>, Amir Ancel <amira@mellanox.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Ding Tianhong <dingtianhong@huawei.com>, Will
- Deacon <will.deacon@arm.com>, LinuxArm <linuxarm@huawei.com>,
- "davem@davemloft.net" <davem@davemloft.net>,
- David Laight <David.Laight@aculab.com>,
- "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Robin Murphy <robin.murphy@arm.com>,
- "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
+Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
+ linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+ David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
+ Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
+ Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
+ Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
+ Jesper Nilsson <jesper.nilsson@axis.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Yoshinori Sato <ysato@users.sourceforge.jp>,
+ Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
+ "James E.J. Bottomley" <jejb@parisc-linux.org>, Ingo Molnar <mingo@redhat.com>,
+ Geert Uytterhoeven <geert@linux-m68k.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Matt Turner <mattst88@gmail.com>,
+ Haavard Skinnemoen <hskinnemoen@gmail.com>, Fenghua Yu <fenghua.yu@intel.com>,
+ James Hogan <james.hogan@imgtec.com>, Chris Metcalf <cmetcalf@mellanox.com>,
+ Arnd Bergmann <arnd@arndb.de>, Heiko Carstens <heiko.carstens@de.ibm.com>,
+ Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
+ Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+ Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
+ linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
+ Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
+ Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
+ linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+ Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
+ "Luis R . Rodriguez" <mcgrof@kernel.org>,
+ Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
+ "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset="iso-8859-1"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-  Thanks for adding me to the Cc list Bjorn.  Hopefully my message will make
-it out to the netdev and linux-pci lists -- I'm not currently subscribed to
-them.  I've explicitly marked this message to be sent in plain text but
-modern email agents suck with respect to this. (sigh) I have officially
-become a curmudgeon. 
+On Tue, Apr 11, 2017 at 11:39:43PM +1000, Benjamin Herrenschmidt wrote:
+> On Tue, 2017-04-11 at 13:28 +0100, Lorenzo Pieralisi wrote:
+> > +static inline void __iomem *ioremap_nopost(phys_addr_t offset,
+> > size_t size)
+> > +{
+> > +=A0=A0=A0=A0=A0=A0=A0return ioremap_nocache(offset, size);
+> > +}
+> > +
+> =
 
-  So, officially, Relaxed Ordering should be a Semantic Noop as far as PCIe
-transfers are concerned, as long as you don't care what order the PCIe
-Transaction Layer Packets are processed in by the target PCIe Fabric End
-Point.
+> No this is wrong as I explained.
+> =
 
-  Basically, if you have some number of back-to-back PCIe TLPs between two
-Fabric End Points {A} -> {B} which have the Relaxed Ordering Attribute set,
-the End Point {B} receiving these RO TLPs may process them in any order it
-likes.  When a TLP without Relaxed Ordering is sent {A} -> {B}, all
-preceding TLPs with Relaxed Ordering set must be processed by {B} prior to
-processing the TLP without Relaxed Ordering set.  In this sense, a TLP
-without Relaxed Ordering set is something akin to a "memory barrier".
+> This is a semantic that simply *cannot* be generically provided accross
+> architectures as a mapping attribute.
+> =
 
-  All of this is covered in Section 2.4.1 of the PCIe 3.0 Specification (PCI
-Express(r) Base Specification Revision 3.0 November 10, 2010).
+> The solution to your problem lies elsewhere.
 
-  The advantage of using Relaxed Ordering (which is heavily used when
-sending data to Graphics Cards as I understand it), is that the PCIe
-Endpoint can potentially optimize the processing order of RO TLPs with
-things like a local multi-channel Memory Controller in order to achieve the
-highest transfer bandwidth possible.
+I disagree.  Sure, it may not be supportable across all architectures,
+but we're not introducing something brand new here.
 
-  However, we have discovered at least two PCIe 3.0 Root Complex
-implementations which have problems with TLPs directed at them with the
-Relaxed Ordering Attribute set and I'm in the process of working up a Linux
-Kernel PCI "Quirk" to allow those PCIe End Points to be marked as "not being
-advisable to send RO TLPs to".  These problems range from "mere" Performance
-Problems to outright Data Corruption.  I'm working with the vendors of these
-...  "problematic" Root Complex implementations and hope to have this patch
-submitted to the linux-pci list by tomorrow.
+What we're trying to do is to fix some _existing_ drivers that are
+already using ioremap() to map the PCI IO and configuration spaces.
+Maybe it would help if those drivers were part of this patch set,
+rather than the patch set just introducing a whole new architecture
+interface without really showing where the problem drivers are.
 
-  By the way, it's important to note that just because, say, a Root Complex
-has problems with RO TLPs directed at it, that doesn't mean that you want to
-avoid all use of Relaxed Ordering within the PCIe Fabric.  For instance,
-with the vendor whose Root Complex has a Performance Problem with RO TLPs
-directed at it, it's perfectly reasonable -- and desired -- to use Relaxed
-Ordering in Peer-to-Peer traffic.  Say for instance, with an NVMe <->
-Ethernet application.
+The issue here is that if we make this new ioremap_nopost() fail by
+returning NULL if an architecture does not provide an implementation,
+then these drivers are going to start failing on such architectures.
 
-Casey
+It is only safe to do that where we know for certain that the drivers
+are not used - but I don't think that's the case here (it's difficult
+to tell, because no drivers are updated in this series, so we don't
+know which are going to be affected.)
+
+So, the question is:
+
+- is it better to provide a default implementation which provides the
+  functionality that existing drivers are _already_ using, albiet not
+  entirely correctly.
+
+or:
+
+- is it better to break drivers on architectures when they're converted
+  to fix up this issue.
+
+What, I suppose, we could do is not bother with a default implementation,
+but instead litter drivers with:
+
++#ifdef ioremap_post
++	base =3D ioremap_post(...);
++#else
+	base =3D ioremap(...);
++#endif
+
+which gets around your objection - not providing a default that's weaker
+than required, but also not breaking the drivers.  The problem is that
+we end up littering drivers with ifdefs.
+
+However, I'm willing to bet that the architectures that you're saying
+will not be able to support the weaker semantic won't have any need to
+use these drivers, or if they do, the drivers will need the method of
+accessing stuff like PCI IO and configuration spaces radically altered.
+
+So, maybe the best solution is to not provide any kind of default
+implementation, add a HAVE_IOREMAP_POST Kconfig symbol, have architectures
+select that when they do provide ioremap_post(), and make the drivers
+depend on that (so we don't end up trying to build these drivers on
+architectures where they can never work.)  Down side to that is reduced
+build coverage.
+
+-- =
+
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
 
 _______________________________________________
 linux-arm-kernel mailing list
