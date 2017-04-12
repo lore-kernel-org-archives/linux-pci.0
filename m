@@ -1,46 +1,65 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55078 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S946046AbdDTNl0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Apr 2017 09:41:26 -0400
-Date: Thu, 20 Apr 2017 08:41:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: linux-pci@vger.kernel.org
-Cc: Jayachandran C <jnair@caviumnetworks.com>
-Subject: Re: [PATCH] PCI: Include PCI-to-PCIe bridges as "Downstream Ports"
-Message-ID: <20170420134118.GB8377@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170419135332.GA16404@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170419135332.GA16404@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 24/27] ia64: Remove redundant checks for WC in pci_mmap_page_range()
+Date: Wed, 12 Apr 2017 13:26:13 +0100
+Message-Id: <9c83a007289d75decdb182afd0434dc517fe433b.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 19, 2017 at 08:53:32AM -0500, Bjorn Helgaas wrote:
-> A PCI/PCI-X to PCI Express bridge, sometimes referred to as a "reverse
-> bridge", is a bridge with conventional PCI or PCI-X on its primary side and
-> a PCI Express Port on its secondary (downstream) side.
-> 
-> That PCIe Port is a Downstream Port and could be connected to a slot, just
-> like a Root Port or a Switch Downstream Port.  Make pcie_downstream_port()
-> return true for them, so we can access the Slot registers in the PCIe
-> capability.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-I applied this to pci/enumeration for v4.12.
+For a PCI MMIO BAR, phys_mem_access_prot() should always return UC or WC.
+And while a mixture of cached and uncached mappings is forbidden, we were
+already mixing WC and UC, which is OK. Just do as we're asked.
 
-> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
-> index 1c8051003e67..9b09cd31158c 100644
-> --- a/drivers/pci/access.c
-> +++ b/drivers/pci/access.c
-> @@ -700,7 +700,8 @@ static bool pcie_downstream_port(const struct pci_dev *dev)
->  	int type = pci_pcie_type(dev);
->  
->  	return type == PCI_EXP_TYPE_ROOT_PORT ||
-> -	       type == PCI_EXP_TYPE_DOWNSTREAM;
-> +	       type == PCI_EXP_TYPE_DOWNSTREAM ||
-> +	       type == PCI_EXP_TYPE_PCIE_BRIDGE;
->  }
->  
->  bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+---
+ arch/ia64/pci/pci.c | 18 ++----------------
+ 1 file changed, 2 insertions(+), 16 deletions(-)
+
+diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
+index 27020f3..7438e8c 100644
+--- a/arch/ia64/pci/pci.c
++++ b/arch/ia64/pci/pci.c
+@@ -423,9 +423,6 @@ pci_mmap_page_range (struct pci_dev *dev, int bar,
+ 		     struct vm_area_struct *vma,
+ 		     enum pci_mmap_state mmap_state, int write_combine)
+ {
+-	unsigned long size = vma->vm_end - vma->vm_start;
+-	pgprot_t prot;
+-
+ 	/*
+ 	 * I/O space cannot be accessed via normal processor loads and
+ 	 * stores on this platform.
+@@ -439,21 +436,10 @@ pci_mmap_page_range (struct pci_dev *dev, int bar,
+ 		 */
+ 		return -EINVAL;
+ 
+-	prot = phys_mem_access_prot(NULL, vma->vm_pgoff, size,
+-				    vma->vm_page_prot);
+-
+-	/*
+-	 * If the user requested WC, the kernel uses UC or WC for this region,
+-	 * and the chipset supports WC, we can use WC. Otherwise, we have to
+-	 * use the same attribute the kernel uses.
+-	 */
+-	if (write_combine &&
+-	    ((pgprot_val(prot) & _PAGE_MA_MASK) == _PAGE_MA_UC ||
+-	     (pgprot_val(prot) & _PAGE_MA_MASK) == _PAGE_MA_WC) &&
+-	    efi_range_is_wc(vma->vm_start, vma->vm_end - vma->vm_start))
++	if (write_combine)
+ 		vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
+ 	else
+-		vma->vm_page_prot = prot;
++		vma->vm_page_prot = pgprot_device(vma->vm_page_prot);
+ 
+ 	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+ 			     vma->vm_end - vma->vm_start, vma->vm_page_prot))
+-- 
+2.9.3
