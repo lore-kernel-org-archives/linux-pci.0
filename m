@@ -1,44 +1,56 @@
-Return-Path: <SRS0=JtcQ=3L=gmail.com=robherring2@kernel.org>
-Return-Path: <SRS0=JtcQ=3L=gmail.com=robherring2@kernel.org>
-Date: Mon, 3 Apr 2017 09:51:15 -0500
-From: Rob Herring <robh@kernel.org>
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	DT <devicetree@vger.kernel.org>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Mason <slash.tmp@free.fr>, linux-pci <linux-pci@vger.kernel.org>,
-	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
-	Liviu Dudau <liviu.dudau@arm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	David Laight <david.laight@aculab.com>,
-	Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Linux ARM <linux-arm-kernel@lists.infradead.org>
-Subject: Re: [PATCH v3 2/2] PCI: Add tango PCIe host bridge support
-Message-ID: <20170403145115.kjy46bbjt67jxa3k@rob-hp-laptop>
-References: <5309e718-5813-5b79-db57-9d702b50d0f9@sigmadesigns.com>
- <65114e62-7458-b6f7-327c-f07a5096a452@sigmadesigns.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <65114e62-7458-b6f7-327c-f07a5096a452@sigmadesigns.com>
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 01/27] pci: Fix pci_mmap_fits() for HAVE_PCI_RESOURCE_TO_USER platforms
+Date: Wed, 12 Apr 2017 13:25:50 +0100
+Message-Id: <0d7c284a997414d7e9a264e21f316ca1ac673277.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Mar 29, 2017 at 01:34:45PM +0200, Marc Gonzalez wrote:
-> This driver is used to work around HW bugs in the controller.
-> 
-> Note: the controller does NOT support the following features.
-> 
->   Legacy PCI interrupts
->   IO space
-> 
-> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-> ---
->  Documentation/devicetree/bindings/pci/tango-pcie.txt |  33 +++++++++
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-Acked-by: Rob Herring <robh@kernel.org> 
+In the PCI_MMAP_PROCFS case when the address being passed by the user
+is a 'user visible' resource address based on the bus window, and not
+the actual contents of the resource, that's what we need to be checking
+it against.
 
->  drivers/pci/host/Kconfig                             |   7 ++
->  drivers/pci/host/Makefile                            |   1 +
->  drivers/pci/host/pcie-tango.c                        | 150 +++++++++++++++++++++++++++++++++++++++
->  4 files changed, 191 insertions(+)
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+Cc: stable@vger.kernel.org
+---
+ drivers/pci/pci-sysfs.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 25d010d..7ac258f 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -985,15 +985,19 @@ void pci_remove_legacy_files(struct pci_bus *b)
+ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vma,
+ 		  enum pci_mmap_api mmap_api)
+ {
+-	unsigned long nr, start, size, pci_start;
++	unsigned long nr, start, size;
++	resource_size_t pci_start = 0, pci_end;
+ 
+ 	if (pci_resource_len(pdev, resno) == 0)
+ 		return 0;
+ 	nr = vma_pages(vma);
+ 	start = vma->vm_pgoff;
+ 	size = ((pci_resource_len(pdev, resno) - 1) >> PAGE_SHIFT) + 1;
+-	pci_start = (mmap_api == PCI_MMAP_PROCFS) ?
+-			pci_resource_start(pdev, resno) >> PAGE_SHIFT : 0;
++	if (mmap_api == PCI_MMAP_PROCFS) {
++		pci_resource_to_user(pdev, resno, &pdev->resource[resno],
++				     &pci_start, &pci_end);
++		pci_start >>= PAGE_SHIFT;
++	}
+ 	if (start >= pci_start && start < pci_start + size &&
+ 			start + nr <= pci_start + size)
+ 		return 1;
+-- 
+2.9.3
