@@ -1,109 +1,45 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 28 Apr 2017 14:25:03 +0200
-From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
-To: Sricharan R <sricharan@codeaurora.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Joerg Roedel <jroedel@suse.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        netdev@vger.kernel.org
-Subject: Re: [REGRESSION next-20170426] Commit 09515ef5ddad ("of/acpi:
- Configure dma operations at probe time for platform/amba/pci bus devices")
- causes oops in mvneta
-Message-ID: <20170428142503.3b465425@gmail.com>
-In-Reply-To: <bcdcc1cc-181c-8396-dd3c-dd40d0c7efc1@codeaurora.org>
-References: <20170426181508.687b52af@gmail.com>
-        <2fb57b9b-3944-d9cc-1fac-8dcccaa0c37a@codeaurora.org>
-        <20170427164014.422a124c@gmail.com>
-        <524b7fc8-1eca-a7d8-7bc7-6743be17c208@codeaurora.org>
-        <20170428081919.21bb569d@gmail.com>
-        <bcdcc1cc-181c-8396-dd3c-dd40d0c7efc1@codeaurora.org>
+Return-Path: <SRS0=TEmQ=3U=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=TEmQ=3U=ti.com=kishon@kernel.org>
+Subject: Re: [GIT PULL] PCI: Support for configurable PCI endpoint
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20170405085243.18123-1-kishon@ti.com>
+ <20170410154328.GB13170@bhelgaas-glaptop.roam.corp.google.com>
+ <20170411193447.GA14778@bhelgaas-glaptop.roam.corp.google.com>
+CC: <devicetree@vger.kernel.org>, Joao Pinto <Joao.Pinto@synopsys.com>,
+        <linux-doc@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <nsekhar@ti.com>, <linux-kernel@vger.kernel.org>, <hch@infradead.org>,
+        Bjorn Helgaas
+	<bhelgaas@google.com>, <linux-omap@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <e4c7d2af-9d80-b6e0-def9-43254d815e25@ti.com>
+Date: Wed, 12 Apr 2017 11:13:41 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20170411193447.GA14778@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="windows-1252"
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 28 Apr 2017 17:26:41 +0530
-Sricharan R <sricharan@codeaurora.org> wrote:
+Hi Bjorn,
 
-> Hi Ralph,
+On Wednesday 12 April 2017 01:04 AM, Bjorn Helgaas wrote:
+> On Mon, Apr 10, 2017 at 10:43:28AM -0500, Bjorn Helgaas wrote:
+>> On Wed, Apr 05, 2017 at 02:22:20PM +0530, Kishon Vijay Abraham I wrote:
+>>> Hi Bjorn,
+>>>
+>>> Please find the pull request for PCI endpoint support below. I've
+>>> also included all the history here.
+>>
+>> Thanks, I applied these (with v7 of the first patch) to pci/host-designware
+>> for v4.12.
 > 
-> <snip..>
-> 
-> >>>>>
-> >>>>> Commit 09515ef5ddad ("of/acpi: Configure dma operations at probe
-> >>>>> time for platform/amba/pci bus devices") causes a kernel panic
-> >>>>> as in the log below on an armada-385. Reverting the commit
-> >>>>> fixes the issue.
-> >>>>>
-> >>>>> Regards
-> >>>>> Ralph      
-> >>>>
-> >>>> Somehow not getting a obvious clue on whats going wrong with the
-> >>>> logs below. From the log and looking in to dts, the drivers seems
-> >>>> to the one for "marvell,armada-370-neta".    
-> >>>
-> >>> Correct.
-> >>>     
-> >>>> Issue looks the data from the dma
-> >>>> has gone bad and subsequently referring the wrong data has
-> >>>> resulted in the crash. Looks like the dma_masks is the one going
-> >>>> wrong. Can i get some logs from mvneta_probe, about
-> >>>> dev->dma_mask, dev->coherent_dma_mask and dev->dma_ops with and
-> >>>> without the patch to see whats the difference ?    
-> >>>
-> >>> Not sure I understood what exactly you are after. Might be faster
-> >>> to just send me a patch with all debug print statements you like
-> >>> to see.   
-> >>
-> >> Attached the patch with debug prints.
-> >>
-> >> Regards,
-> >>  Sricharan
-> >>  
-> > 
-> > Hi Sricharan
-> > 
-> > With commit 09515ef5ddad
-> > 
-> > [    1.288962] mvneta f1070000.ethernet: dev->dma_mask 0xffffffff
-> > [    1.294827] mvneta f1070000.ethernet: dev->coherent_dma_mask
-> > 0xffffffff [    1.301472] mvneta f1070000.ethernet: dev->dma_ops
-> > 0x40b00c0601460
-> > 
-> > [    1.322047] mvneta f1034000.ethernet: dev->dma_mask 0xffffffff
-> > [    1.327904] mvneta f1034000.ethernet: dev->coherent_dma_mask
-> > 0xffffffff [    1.334549] mvneta f1034000.ethernet: dev->dma_ops
-> > 0x40b00c0601460
-> > 
-> > 
-> > With the patch reverted, the build that works
-> > 
-> > [    1.289001] mvneta f1070000.ethernet: dev->dma_mask 0xffffffff
-> > [    1.294866] mvneta f1070000.ethernet: dev->coherent_dma_mask
-> > 0xffffffff [    1.301511] mvneta f1070000.ethernet: dev->dma_ops
-> > 0x40b00c06014a8
-> > 
-> > [    1.317005] mvneta f1034000.ethernet: dev->dma_mask 0xffffffff
-> > [    1.322867] mvneta f1034000.ethernet: dev->coherent_dma_mask
-> > 0xffffffff [    1.329508] mvneta f1034000.ethernet: dev->dma_ops
-> > 0x40b00c06014a8 
-> 
-> My bad, i think it is this patch missing [1], attached it as well.
-> Infact, this was in the series initially and got acked to get merged
-> separately well before the series. I should have sent this to Russell.
-> I will do this now. If this fixes up the issue,
-> i will take this patch separately, while this series gets tested
-> on -next.
-> 
-> [1] https://patchwork.kernel.org/patch/9362113/
-> 
+> Ok, sorry, I screwed this up.  I think my branch actually had v5, not
+> v6.  But I *think* I fixed it.  Here's the diff from my branch to your
+> git tree.  Apparently you haven't pushed the v7 patch there, so I
+> *think* the diff below is the diff between v6 and v7 of that first
+> patch.
 
-With the attached patch,
-0001-arm-dma-mapping-Don-t-override-dma_ops-in-arch_setup.patch, on top
-of next all is well again.
+I just checked your pci/host-designware branch and it looks correct. Thanks for
+sorting this out.
 
-Thanks
-Ralph
+Cheers
+Kishon
