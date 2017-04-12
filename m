@@ -1,85 +1,206 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 11 Apr 2017 16:19:24 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V8 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-Message-ID: <20170411211924.GC14778@bhelgaas-glaptop.roam.corp.google.com>
-References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
-MIME-Version: 1.0
-In-Reply-To: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org, mayurkumar.patel@intel.com,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from merlin.infradead.org ([205.233.59.134]:38116 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753567AbdDLM0T (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Apr 2017 08:26:19 -0400
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 26/27] sparc: Use generic pci_mmap_resource_range()
+Date: Wed, 12 Apr 2017 13:26:15 +0100
+Message-Id: <24e2183a01d23fe3516b7a6c084949bdecc447f3.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 08, 2017 at 12:55:46AM -0400, Sinan Kaya wrote:
-> When the operating system is booted with the default ASPM policy
-> (POLICY_DEFAULT), current code is querying the enable/disable
-> states from ASPM registers to determine the policy.
-> 
-> For example, a BIOS could set the power saving state to performance
-> and clear all ASPM control registers. A balanced ASPM policy could
-> enable L0s and disable L1. A power conscious BIOS could enable both
-> L0s and L1 to trade off latency and performance vs. power.
-> 
-> After hotplug removal, pcie_aspm_exit_link_state() function clears
-> the ASPM registers. An insertion following hotplug removal reads
-> incorrect policy as ASPM disabled even though ASPM was enabled
-> during boot.
-> 
-> This is caused by the fact that same function is used for reconfiguring
-> ASPM regardless of the power on state.
-> 
-> ------------------------
-> Changes from v7 (https://www.spinics.net/lists/arm-kernel/msg573034.html)
-> ------------------------
-> - enable LTSSM as a best effort if the endpoint is not connected during
->   boot
-> 
-> 
-> Sinan Kaya (5):
->   PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
->   PCI/ASPM: split pci_aspm_init() into two
->   PCI/ASPM: add init hook to device_add
->   PCI/ASPM: save power on values during bridge init
->   PCI/ASPM: move link_state cleanup to bridge remove
-> 
->  drivers/pci/pcie/aspm.c | 149 +++++++++++++++++++++++++++++++++---------------
->  drivers/pci/probe.c     |   3 +
->  drivers/pci/remove.c    |   3 +-
->  include/linux/pci.h     |   2 +
->  4 files changed, 110 insertions(+), 47 deletions(-)
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-Hi Sinan,
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+---
+ arch/sparc/include/asm/pci_64.h |   1 +
+ arch/sparc/kernel/pci.c         | 155 ----------------------------------------
+ 2 files changed, 1 insertion(+), 155 deletions(-)
 
-What are these patches based on?  I normally apply things to my "master"
-branch, which is typically -rc1 or -rc2.  Right now it's v4.11-rc1, and
-these don't apply cleanly:
-
-  04:17:59 ~/linux (master)$ stg branch --create pci/aspm-sk-v8 v4.11-rc1
-  Checking for changes in the working directory ... done
-  Don't know how to determine parent branch from "v4.11-rc1"
-  Branch "pci/aspm-sk-v8" created
-  04:18:18 ~/linux (pci/aspm-sk-v8)$ stg import -M --sign m/sk-v8
-  Checking for changes in the working directory ... done
-  Importing patch "pci-aspm-introduce" ... done
-  Importing patch "pci-aspm-split-pci_aspm_init" ... done
-  Importing patch "pci-aspm-add-init-hook-to" ... error: patch failed: drivers/pci/pcie/aspm.c:798
-  error: drivers/pci/pcie/aspm.c: patch does not apply
-  stg import: Diff does not apply cleanly
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
+index b957ca5..b8206d5 100644
+--- a/arch/sparc/include/asm/pci_64.h
++++ b/arch/sparc/include/asm/pci_64.h
+@@ -42,6 +42,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ /* Platform support for /proc/bus/pci/X/Y mmap()s. */
+ 
+ #define HAVE_PCI_MMAP
++#define ARCH_GENERIC_PCI_MMAP_RESOURCE
+ #define arch_can_pci_mmap_io()	1
+ #define HAVE_ARCH_PCI_GET_UNMAPPED_AREA
+ #define get_pci_unmapped_area get_fb_unmapped_area
+diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
+index 7eceaa1..56a9a9f 100644
+--- a/arch/sparc/kernel/pci.c
++++ b/arch/sparc/kernel/pci.c
+@@ -730,161 +730,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
+ 	return 0;
+ }
+ 
+-/* Platform support for /proc/bus/pci/X/Y mmap()s. */
+-
+-/* If the user uses a host-bridge as the PCI device, he may use
+- * this to perform a raw mmap() of the I/O or MEM space behind
+- * that controller.
+- *
+- * This can be useful for execution of x86 PCI bios initialization code
+- * on a PCI card, like the xfree86 int10 stuff does.
+- */
+-static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struct *vma,
+-				      enum pci_mmap_state mmap_state)
+-{
+-	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
+-	unsigned long space_size, user_offset, user_size;
+-
+-	if (mmap_state == pci_mmap_io) {
+-		space_size = resource_size(&pbm->io_space);
+-	} else {
+-		space_size = resource_size(&pbm->mem_space);
+-	}
+-
+-	/* Make sure the request is in range. */
+-	user_offset = vma->vm_pgoff << PAGE_SHIFT;
+-	user_size = vma->vm_end - vma->vm_start;
+-
+-	if (user_offset >= space_size ||
+-	    (user_offset + user_size) > space_size)
+-		return -EINVAL;
+-
+-	if (mmap_state == pci_mmap_io) {
+-		vma->vm_pgoff = (pbm->io_space.start +
+-				 user_offset) >> PAGE_SHIFT;
+-	} else {
+-		vma->vm_pgoff = (pbm->mem_space.start +
+-				 user_offset) >> PAGE_SHIFT;
+-	}
+-
+-	return 0;
+-}
+-
+-/* Adjust vm_pgoff of VMA such that it is the physical page offset
+- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
+- *
+- * Basically, the user finds the base address for his device which he wishes
+- * to mmap.  They read the 32-bit value from the config space base register,
+- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
+- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
+- *
+- * Returns negative error code on failure, zero on success.
+- */
+-static int __pci_mmap_make_offset(struct pci_dev *pdev,
+-				  struct vm_area_struct *vma,
+-				  enum pci_mmap_state mmap_state)
+-{
+-	unsigned long user_paddr, user_size;
+-	int i, err;
+-
+-	/* First compute the physical address in vma->vm_pgoff,
+-	 * making sure the user offset is within range in the
+-	 * appropriate PCI space.
+-	 */
+-	err = __pci_mmap_make_offset_bus(pdev, vma, mmap_state);
+-	if (err)
+-		return err;
+-
+-	/* If this is a mapping on a host bridge, any address
+-	 * is OK.
+-	 */
+-	if ((pdev->class >> 8) == PCI_CLASS_BRIDGE_HOST)
+-		return err;
+-
+-	/* Otherwise make sure it's in the range for one of the
+-	 * device's resources.
+-	 */
+-	user_paddr = vma->vm_pgoff << PAGE_SHIFT;
+-	user_size = vma->vm_end - vma->vm_start;
+-
+-	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+-		struct resource *rp = &pdev->resource[i];
+-		resource_size_t aligned_end;
+-
+-		/* Active? */
+-		if (!rp->flags)
+-			continue;
+-
+-		/* Same type? */
+-		if (i == PCI_ROM_RESOURCE) {
+-			if (mmap_state != pci_mmap_mem)
+-				continue;
+-		} else {
+-			if ((mmap_state == pci_mmap_io &&
+-			     (rp->flags & IORESOURCE_IO) == 0) ||
+-			    (mmap_state == pci_mmap_mem &&
+-			     (rp->flags & IORESOURCE_MEM) == 0))
+-				continue;
+-		}
+-
+-		/* Align the resource end to the next page address.
+-		 * PAGE_SIZE intentionally added instead of (PAGE_SIZE - 1),
+-		 * because actually we need the address of the next byte
+-		 * after rp->end.
+-		 */
+-		aligned_end = (rp->end + PAGE_SIZE) & PAGE_MASK;
+-
+-		if ((rp->start <= user_paddr) &&
+-		    (user_paddr + user_size) <= aligned_end)
+-			break;
+-	}
+-
+-	if (i > PCI_ROM_RESOURCE)
+-		return -EINVAL;
+-
+-	return 0;
+-}
+-
+-/* Set vm_page_prot of VMA, as appropriate for this architecture, for a pci
+- * device mapping.
+- */
+-static void __pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vma,
+-					     enum pci_mmap_state mmap_state)
+-{
+-	/* Our io_remap_pfn_range takes care of this, do nothing.  */
+-}
+-
+-/* Perform the actual remap of the pages for a PCI device mapping, as appropriate
+- * for this architecture.  The region in the process to map is described by vm_start
+- * and vm_end members of VMA, the base physical address is found in vm_pgoff.
+- * The pci device structure is provided so that architectures may make mapping
+- * decisions on a per-device or per-bus basis.
+- *
+- * Returns a negative error code on failure, zero on success.
+- */
+-int pci_mmap_page_range(struct pci_dev *dev, int bar,
+-			struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine)
+-{
+-	int ret;
+-
+-	ret = __pci_mmap_make_offset(dev, vma, mmap_state);
+-	if (ret < 0)
+-		return ret;
+-
+-	__pci_mmap_set_pgprot(dev, vma, mmap_state);
+-
+-	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+-	ret = io_remap_pfn_range(vma, vma->vm_start,
+-				 vma->vm_pgoff,
+-				 vma->vm_end - vma->vm_start,
+-				 vma->vm_page_prot);
+-	if (ret)
+-		return ret;
+-
+-	return 0;
+-}
+-
+ #ifdef CONFIG_NUMA
+ int pcibus_to_node(struct pci_bus *pbus)
+ {
+-- 
+2.9.3
