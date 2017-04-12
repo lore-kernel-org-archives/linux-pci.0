@@ -1,62 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f50.google.com ([74.125.83.50]:33007 "EHLO
-        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1431510AbdDYOPH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Apr 2017 10:15:07 -0400
-Received: by mail-pg0-f50.google.com with SMTP id 63so29312834pgh.0
-        for <linux-pci@vger.kernel.org>; Tue, 25 Apr 2017 07:15:07 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAKXQXwKeA6YCaepmjJJBf+Nc3bOO9aEnGmnHfnb2aDX3f6YXzw@mail.gmail.com>
-References: <CAOxqCCT6MOCLG+HHsuOU0zoq1zxRRJNFn0DYz9tOj-ez7+BNRA@mail.gmail.com>
- <CAAEAJfC0MdO2Uy8P0OajRHEc3seUiwLv0qqxLzM3b9eFFfuk8g@mail.gmail.com>
- <1493030334.2891.7.camel@pengutronix.de> <CAKXQXwLuG1A37NTPrE0abPWhMDGd=10Ud+xNa-4+k+8qMhD8tA@mail.gmail.com>
- <CAKXQXwKeA6YCaepmjJJBf+Nc3bOO9aEnGmnHfnb2aDX3f6YXzw@mail.gmail.com>
-From: Ezequiel Garcia <ezequiel@vanguardiasur.com.ar>
-Date: Tue, 25 Apr 2017 11:15:06 -0300
-Message-ID: <CAAEAJfBEqFYtKLHuNBBbc8+RteM8rhRNs3PFvAnGsVWRpxEGNw@mail.gmail.com>
-Subject: Re: TW686x Linux Main Line Driver Issue
-To: Krishan Nilanga <krishan@tengriaero.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-        Anuradha Ranasinghe <anuradha@tengriaero.com>,
-        linux-media <linux-media@vger.kernel.org>,
-        Lakshitha Dayasena <lakshitha@tengriaero.com>,
-        linux-pci@vger.kernel.org, Richard.Zhu@freescale.com
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 12/27] cris: Use generic pci_mmap_resource_range()
+Date: Wed, 12 Apr 2017 13:26:01 +0100
+Message-Id: <828502b94cf12a278d4b1e43e98d0f4d3fd71ef2.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Krishan,
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-On 25 April 2017 at 03:46, Krishan Nilanga <krishan@tengriaero.com> wrote:
-> Hi All,
->
-> gst-launch-1.0 --gst-debug=3D3 v4l2src device=3D/dev/video0 !
-> video/x-raw,width=3D640,height=3D480,pixelformat=3DUYVY ! imxeglvivsink
->
-> I have tried to run the above gstreamer pipeline and I'm getting
->
-> [   97.392807] tw686x 0000:01:00.0: DMA timeout. Resetting DMA for all
-> channels
-> [   97.392827] tw686x 0000:01:00.0: reset: stopping DMA
->
-> for most IRQ calls of tw686x driver.
->
-> for some other IRQ calls I'm getting
->
-> [   99.592901] tw686x 0000:01:00.0: video0: unexpected p-b buffer!
-> [   99.592924] tw686x 0000:01:00.0: reset: stopping DMA
->
-> in dmesg.
->
-> I hope above details will help to understand the problem.
->
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+---
+ arch/cris/arch-v32/drivers/pci/bios.c | 23 -----------------------
+ arch/cris/include/asm/pci.h           |  1 +
+ 2 files changed, 1 insertion(+), 23 deletions(-)
 
-This does not provide much info. It merely says there is some hardware
-problem or the signal is being problematic. FWIW, when we get those
-messages on our platform it's always correlated to a bad cable
-or poor signal.
-
-What is your dma-mode configuration?
---=20
-Ezequiel Garc=C3=ADa, VanguardiaSur
-www.vanguardiasur.com.ar
+diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
+index a589686d..394c2a73 100644
+--- a/arch/cris/arch-v32/drivers/pci/bios.c
++++ b/arch/cris/arch-v32/drivers/pci/bios.c
+@@ -14,29 +14,6 @@ void pcibios_set_master(struct pci_dev *dev)
+ 	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
+ }
+ 
+-int pci_mmap_page_range(struct pci_dev *dev, int bar,
+-			struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state, int write_combine)
+-{
+-	unsigned long prot;
+-
+-	/* Leave vm_pgoff as-is, the PCI space address is the physical
+-	 * address on this platform.
+-	 */
+-	prot = pgprot_val(vma->vm_page_prot);
+-	vma->vm_page_prot = __pgprot(prot);
+-
+-	/* Write-combine setting is ignored, it is changed via the mtrr
+-	 * interfaces on this platform.
+-	 */
+-	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+-			     vma->vm_end - vma->vm_start,
+-			     vma->vm_page_prot))
+-		return -EAGAIN;
+-
+-	return 0;
+-}
+-
+ resource_size_t
+ pcibios_align_resource(void *data, const struct resource *res,
+ 		       resource_size_t size, resource_size_t align)
+diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
+index 65198cb..6e50533 100644
+--- a/arch/cris/include/asm/pci.h
++++ b/arch/cris/include/asm/pci.h
+@@ -42,6 +42,7 @@ struct pci_dev;
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ 
+ #define HAVE_PCI_MMAP
++#define ARCH_GENERIC_PCI_MMAP_RESOURCE
+ 
+ #endif /* __KERNEL__ */
+ 
+-- 
+2.9.3
