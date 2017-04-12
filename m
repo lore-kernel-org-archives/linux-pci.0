@@ -1,84 +1,161 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:60960 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754164AbdDKLBu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Apr 2017 07:01:50 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: davem@davemloft.net
-Cc: bhelgaas@google.com, netanel@annapurnalabs.com, jcliburn@gmail.com,
-        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org,
-        jiri@mellanox.com, idosch@mellanox.com, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH 4/5] PCI: remove pci_enable_msix
-Date: Tue, 11 Apr 2017 13:01:24 +0200
-Message-Id: <20170411110125.3446-5-hch@lst.de>
-In-Reply-To: <20170411110125.3446-1-hch@lst.de>
-References: <20170411110125.3446-1-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 22/27] xtensa: Use generic pci_mmap_resource_range()
+Date: Wed, 12 Apr 2017 13:26:11 +0100
+Message-Id: <cd5598d945d7fdac72da5b9b3c6e2b63bcbf95bb.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Unused now that all callers switched to pci_alloc_irq_vectors.
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
 ---
- drivers/pci/msi.c   | 21 ---------------------
- include/linux/pci.h |  4 ----
- 2 files changed, 25 deletions(-)
+ arch/xtensa/include/asm/pci.h |  7 ++--
+ arch/xtensa/kernel/pci.c      | 94 ++++---------------------------------------
+ 2 files changed, 12 insertions(+), 89 deletions(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index d571bc330686..0042c365b29b 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -973,27 +973,6 @@ static int __pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries,
- 	return msix_capability_init(dev, entries, nvec, affd);
- }
+diff --git a/arch/xtensa/include/asm/pci.h b/arch/xtensa/include/asm/pci.h
+index e4f366a..0ddb411 100644
+--- a/arch/xtensa/include/asm/pci.h
++++ b/arch/xtensa/include/asm/pci.h
+@@ -46,9 +46,10 @@ struct pci_dev;
  
--/**
-- * pci_enable_msix - configure device's MSI-X capability structure
-- * @dev: pointer to the pci_dev data structure of MSI-X device function
-- * @entries: pointer to an array of MSI-X entries (optional)
-- * @nvec: number of MSI-X irqs requested for allocation by device driver
+ #define PCI_DMA_BUS_IS_PHYS	(1)
+ 
+-/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+-#define HAVE_PCI_MMAP		1
+-#define arch_can_pci_mmap_io()	1
++/* Tell PCI code what kind of PCI resource mappings we support */
++#define HAVE_PCI_MMAP			1
++#define ARCH_GENERIC_PCI_MMAP_RESOURCE	1
++#define arch_can_pci_mmap_io()		1
+ 
+ #endif /* __KERNEL__ */
+ 
+diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
+index 903963e..8f11b6d 100644
+--- a/arch/xtensa/kernel/pci.c
++++ b/arch/xtensa/kernel/pci.c
+@@ -47,7 +47,6 @@
+  * pcibios_align_resource
+  * pcibios_fixup_bus
+  * pci_bus_add_device
+- * pci_mmap_page_range
+  */
+ 
+ struct pci_controller* pci_ctrl_head;
+@@ -266,98 +265,21 @@ pci_controller_num(struct pci_dev *dev)
+ #endif /* CONFIG_PROC_FS */
+ 
+ /*
+- * Platform support for /proc/bus/pci/X/Y mmap()s,
+- * modelled on the sparc64 implementation by Dave Miller.
++ * Platform support for /proc/bus/pci/X/Y mmap()s.
+  *  -- paulus.
+  */
+ 
+-/*
+- * Adjust vm_pgoff of VMA such that it is the physical page offset
+- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
 - *
-- * Setup the MSI-X capability structure of device function with the number
-- * of requested irqs upon its software driver call to request for
-- * MSI-X mode enabled on its hardware device function. A return of zero
-- * indicates the successful configuration of MSI-X capability structure
-- * with new allocated MSI-X irqs. A return of < 0 indicates a failure.
-- * Or a return of > 0 indicates that driver request is exceeding the number
-- * of irqs or MSI-X vectors available. Driver should use the returned value to
-- * re-send its request.
-- **/
--int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec)
--{
--	return __pci_enable_msix(dev, entries, nvec, NULL);
--}
--EXPORT_SYMBOL(pci_enable_msix);
--
- void pci_msix_shutdown(struct pci_dev *dev)
+- * Basically, the user finds the base address for his device which he wishes
+- * to mmap.  They read the 32-bit value from the config space base register,
+- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
+- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
+- *
+- * Returns negative error code on failure, zero on success.
+- */
+-static __inline__ int
+-__pci_mmap_make_offset(struct pci_dev *dev, struct vm_area_struct *vma,
+-		       enum pci_mmap_state mmap_state)
++int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
  {
- 	struct msi_desc *entry;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index eb3da1a04e6c..82dec36845e6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1300,7 +1300,6 @@ int pci_msi_vec_count(struct pci_dev *dev);
- void pci_msi_shutdown(struct pci_dev *dev);
- void pci_disable_msi(struct pci_dev *dev);
- int pci_msix_vec_count(struct pci_dev *dev);
--int pci_enable_msix(struct pci_dev *dev, struct msix_entry *entries, int nvec);
- void pci_msix_shutdown(struct pci_dev *dev);
- void pci_disable_msix(struct pci_dev *dev);
- void pci_restore_msi_state(struct pci_dev *dev);
-@@ -1330,9 +1329,6 @@ static inline int pci_msi_vec_count(struct pci_dev *dev) { return -ENOSYS; }
- static inline void pci_msi_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msi(struct pci_dev *dev) { }
- static inline int pci_msix_vec_count(struct pci_dev *dev) { return -ENOSYS; }
--static inline int pci_enable_msix(struct pci_dev *dev,
--				  struct msix_entry *entries, int nvec)
--{ return -ENOSYS; }
- static inline void pci_msix_shutdown(struct pci_dev *dev) { }
- static inline void pci_disable_msix(struct pci_dev *dev) { }
- static inline void pci_restore_msi_state(struct pci_dev *dev) { }
+-	struct pci_controller *pci_ctrl = (struct pci_controller*) dev->sysdata;
+-	unsigned long offset = vma->vm_pgoff << PAGE_SHIFT;
+-	unsigned long io_offset = 0;
+-	int i, res_bit;
++	struct pci_controller *pci_ctrl = (struct pci_controller*) pdev->sysdata;
++	resource_size_t ioaddr = pci_resource_start(pdev, bar);
+ 
+ 	if (pci_ctrl == 0)
+ 		return -EINVAL;		/* should never happen */
+ 
+-	/* If memory, add on the PCI bridge address offset */
+-	if (mmap_state == pci_mmap_mem) {
+-		res_bit = IORESOURCE_MEM;
+-	} else {
+-		io_offset = (unsigned long)pci_ctrl->io_space.base;
+-		offset += io_offset;
+-		res_bit = IORESOURCE_IO;
+-	}
+-
+-	/*
+-	 * Check that the offset requested corresponds to one of the
+-	 * resources of the device.
+-	 */
+-	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+-		struct resource *rp = &dev->resource[i];
+-		int flags = rp->flags;
+-
+-		/* treat ROM as memory (should be already) */
+-		if (i == PCI_ROM_RESOURCE)
+-			flags |= IORESOURCE_MEM;
+-
+-		/* Active and same type? */
+-		if ((flags & res_bit) == 0)
+-			continue;
+-
+-		/* In the range of this resource? */
+-		if (offset < (rp->start & PAGE_MASK) || offset > rp->end)
+-			continue;
+-
+-		/* found it! construct the final physical address */
+-		if (mmap_state == pci_mmap_io)
+-			offset += pci_ctrl->io_space.start - io_offset;
+-		vma->vm_pgoff = offset >> PAGE_SHIFT;
+-		return 0;
+-	}
+-
+-	return -EINVAL;
+-}
++	/* Convert to an offset within this PCI controller */
++	ioaddr -= (unsigned long)pci_ctrl->io_space.base;
+ 
+-/*
+- * Perform the actual remap of the pages for a PCI device mapping, as
+- * appropriate for this architecture.  The region in the process to map
+- * is described by vm_start and vm_end members of VMA, the base physical
+- * address is found in vm_pgoff.
+- * The pci device structure is provided so that architectures may make mapping
+- * decisions on a per-device or per-bus basis.
+- *
+- * Returns a negative error code on failure, zero on success.
+- */
+-int pci_mmap_page_range(struct pci_dev *dev, int bar,
+-			struct vm_area_struct *vma,
+-			enum pci_mmap_state mmap_state,
+-			int write_combine)
+-{
+-	int ret;
+-
+-	ret = __pci_mmap_make_offset(dev, vma, mmap_state);
+-	if (ret < 0)
+-		return ret;
+-
+-	vma->vm_page_prot = pgprot_device(vma->vm_page_prot);
+-
+-	ret = io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
+-			         vma->vm_end - vma->vm_start,vma->vm_page_prot);
+-
+-	return ret;
++	vma->vm_pgoff += (ioaddr + pci_ctrl->io_space.start) >> PAGE_SHIFT;
++	return 0;
+ }
 -- 
-2.11.0
+2.9.3
