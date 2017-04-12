@@ -1,138 +1,167 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:53161 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932639AbdDRTut (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2017 15:50:49 -0400
-Message-Id: <20170418170553.885818800@linutronix.de>
-Date: Tue, 18 Apr 2017 19:05:00 +0200
-From: Thomas Gleixner <tglx@linutronix.de>
-To: LKML <linux-kernel@vger.kernel.org>
-Cc: Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Sebastian Siewior <bigeasy@linutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: [patch V2 18/24] PCI: Replace the racy recursion prevention
-References: <20170418170442.665445272@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Received: from bombadil.infradead.org ([65.50.211.133]:47105 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753458AbdDLM0S (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Apr 2017 08:26:18 -0400
+From: David Woodhouse <dwmw2@infradead.org>
+To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2 05/27] pci: Add arch_can_pci_mmap_wc() macro
+Date: Wed, 12 Apr 2017 13:25:54 +0100
+Message-Id: <8536a58aa86a634c8ac53c54499351b3981ef20a.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
+In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
+References: <cover.1491999859.git.dwmw2@infradead.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-pci_call_probe() can called recursively when a physcial function is probed
-and the probing creates virtual functions, which are populated via
-pci_bus_add_device() which in turn can end up calling pci_call_probe()
-again.
+From: David Woodhouse <dwmw@amazon.co.uk>
 
-The code has an interesting way to prevent recursing into the workqueue
-code.  That's accomplished by a check whether the current task runs already
-on the numa node which is associated with the device.
+Most of the almost-identical versions of pci_mmap_page_range() silently
+ignore the 'write_combine' argument and give uncached mappings.
 
-While that works to prevent the recursion into the workqueue code, it's
-racy versus normal execution as there is no guarantee that the node does
-not vanish after the check.
+Yet we allow the PCIIOC_WRITE_COMBINE ioctl in /proc/bus/pci, expose the
+'resourceX_wc' file in sysfs, and allow an attempted mapping to apparently
+succeed.
 
-There is another issue with this code. It dereferences cpumask_of_node()
-unconditionally without checking whether the node is available.
+To fix this, introduce a macro arch_can_pci_mmap_wc() which indicates
+whether the platform can do a write-combining mapping. On x86 this ends
+up being pat_enabled(), while the few other platforms that support it
+can just set it to a literal '1'.
 
-Make the detection reliable by:
-
- - Mark a probed device as 'is_probed' in pci_call_probe()
- 
- - Check in pci_call_probe for a virtual function. If it's a virtual
-   function and the associated physical function device is marked
-   'is_probed' then this is a recursive call, so the call can be invoked in
-   the calling context.
-
- - Add a check whether the node is online before dereferencing it.
-
-Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
+Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
 ---
- drivers/pci/pci-driver.c |   47 +++++++++++++++++++++++++----------------------
- include/linux/pci.h      |    1 +
- 2 files changed, 26 insertions(+), 22 deletions(-)
+ Documentation/filesystems/sysfs-pci.txt |  4 ++++
+ arch/ia64/include/asm/pci.h             |  2 ++
+ arch/powerpc/include/asm/pci.h          |  5 +++--
+ arch/x86/include/asm/pci.h              |  2 ++
+ drivers/pci/pci-sysfs.c                 |  4 ++--
+ drivers/pci/proc.c                      | 15 ++++++++-------
+ include/linux/pci.h                     |  4 ++++
+ 7 files changed, 25 insertions(+), 11 deletions(-)
 
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -320,10 +320,19 @@ static long local_pci_probe(void *_ddi)
- 	return 0;
- }
+diff --git a/Documentation/filesystems/sysfs-pci.txt b/Documentation/filesystems/sysfs-pci.txt
+index 6ea1ced..25b7f1c 100644
+--- a/Documentation/filesystems/sysfs-pci.txt
++++ b/Documentation/filesystems/sysfs-pci.txt
+@@ -117,6 +117,10 @@ code must define HAVE_PCI_MMAP and provide a pci_mmap_page_range function.
+ Platforms are free to only support subsets of the mmap functionality, but
+ useful return codes should be provided.
  
-+static bool pci_physfn_is_probed(struct pci_dev *dev)
-+{
-+#ifdef CONFIG_ATS
-+	return dev->is_virtfn && dev->physfn->is_probed;
-+#else
-+	return false;
-+#endif
-+}
++Platforms which support write-combining maps of PCI resources must define
++arch_can_pci_mmap_wc() which shall evaluate to non-zero at runtime when
++write-combining is permitted.
 +
- static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
- 			  const struct pci_device_id *id)
- {
--	int error, node;
-+	int error, node, cpu;
- 	struct drv_dev_and_id ddi = { drv, dev, id };
+ Legacy resources are protected by the HAVE_PCI_LEGACY define.  Platforms
+ wishing to support legacy functionality should define it and provide
+ pci_legacy_read, pci_legacy_write and pci_mmap_legacy_page_range functions.
+diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
+index c0835b0..6283758 100644
+--- a/arch/ia64/include/asm/pci.h
++++ b/arch/ia64/include/asm/pci.h
+@@ -51,6 +51,8 @@ extern unsigned long ia64_max_iommu_merge_mask;
+ #define PCI_DMA_BUS_IS_PHYS	(ia64_max_iommu_merge_mask == ~0UL)
  
- 	/*
-@@ -332,33 +341,27 @@ static int pci_call_probe(struct pci_dri
- 	 * on the right node.
- 	 */
- 	node = dev_to_node(&dev->dev);
-+	dev->is_probed = 1;
+ #define HAVE_PCI_MMAP
++#define arch_can_pci_mmap_wc()	1
 +
-+	cpu_hotplug_disable();
+ extern int pci_mmap_page_range (struct pci_dev *dev, struct vm_area_struct *vma,
+ 				enum pci_mmap_state mmap_state, int write_combine);
+ #define HAVE_PCI_LEGACY
+diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
+index 93eded8..b5b68c6 100644
+--- a/arch/powerpc/include/asm/pci.h
++++ b/arch/powerpc/include/asm/pci.h
+@@ -81,8 +81,9 @@ struct vm_area_struct;
+ int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
+ 			enum pci_mmap_state mmap_state, int write_combine);
  
- 	/*
--	 * On NUMA systems, we are likely to call a PF probe function using
--	 * work_on_cpu().  If that probe calls pci_enable_sriov() (which
--	 * adds the VF devices via pci_bus_add_device()), we may re-enter
--	 * this function to call the VF probe function.  Calling
--	 * work_on_cpu() again will cause a lockdep warning.  Since VFs are
--	 * always on the same node as the PF, we can work around this by
--	 * avoiding work_on_cpu() when we're already on the correct node.
--	 *
--	 * Preemption is enabled, so it's theoretically unsafe to use
--	 * numa_node_id(), but even if we run the probe function on the
--	 * wrong node, it should be functionally correct.
-+	 * Prevent nesting work_on_cpu() for the case where a Virtual Function
-+	 * device is probed from work_on_cpu() of the Physical device.
- 	 */
--	if (node >= 0 && node != numa_node_id()) {
--		int cpu;
+-/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() */
+-#define HAVE_PCI_MMAP	1
++/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() and it does WC */
++#define HAVE_PCI_MMAP		1
++#define arch_can_pci_mmap_wc()	1
+ 
+ extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
+ 			   size_t count);
+diff --git a/arch/x86/include/asm/pci.h b/arch/x86/include/asm/pci.h
+index 1411dbe..f6e22c2 100644
+--- a/arch/x86/include/asm/pci.h
++++ b/arch/x86/include/asm/pci.h
+@@ -7,6 +7,7 @@
+ #include <linux/string.h>
+ #include <linux/scatterlist.h>
+ #include <asm/io.h>
++#include <asm/pat.h>
+ #include <asm/x86_init.h>
+ 
+ #ifdef __KERNEL__
+@@ -102,6 +103,7 @@ int pcibios_set_irq_routing(struct pci_dev *dev, int pin, int irq);
+ 
+ 
+ #define HAVE_PCI_MMAP
++#define arch_can_pci_mmap_wc()	pat_enabled()
+ extern int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
+ 			       enum pci_mmap_state mmap_state,
+ 			       int write_combine);
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 7ac258f..7d494bd 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1211,9 +1211,9 @@ static int pci_create_resource_files(struct pci_dev *pdev)
+ 
+ 		retval = pci_create_attr(pdev, i, 0);
+ 		/* for prefetchable resources, create a WC mappable file */
+-		if (!retval && pdev->resource[i].flags & IORESOURCE_PREFETCH)
++		if (!retval && arch_can_pci_mmap_wc() &&
++		    pdev->resource[i].flags & IORESOURCE_PREFETCH)
+ 			retval = pci_create_attr(pdev, i, 1);
 -
--		cpu_hotplug_disable();
-+	if (node < 0 || node >= MAX_NUMNODES || !node_online(node) ||
-+	    pci_physfn_is_probed(dev))
-+		cpu = nr_cpu_ids;
-+	else
- 		cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
--		if (cpu < nr_cpu_ids)
--			error = work_on_cpu(cpu, local_pci_probe, &ddi);
+ 		if (retval) {
+ 			pci_remove_resource_files(pdev);
+ 			return retval;
+diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+index dc8912e..a2aa58a 100644
+--- a/drivers/pci/proc.c
++++ b/drivers/pci/proc.c
+@@ -210,14 +210,15 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
+ 		break;
+ 
+ 	case PCIIOC_WRITE_COMBINE:
+-		if (arg)
+-			fpriv->write_combine = 1;
 -		else
--			error = local_pci_probe(&ddi);
--		cpu_hotplug_enable();
--	} else
-+
-+	if (cpu < nr_cpu_ids)
-+		error = work_on_cpu(cpu, local_pci_probe, &ddi);
-+	else
- 		error = local_pci_probe(&ddi);
- 
-+	dev->is_probed = 0;
-+	cpu_hotplug_enable();
- 	return error;
- }
- 
+-			fpriv->write_combine = 0;
+-		break;
+-
++		if (arch_can_pci_mmap_wc()) {
++			if (arg)
++				fpriv->write_combine = 1;
++			else
++				fpriv->write_combine = 0;
++			break;
++		}
++		/* If arch decided it can't, fall through... */
+ #endif /* HAVE_PCI_MMAP */
+-
+ 	default:
+ 		ret = -EINVAL;
+ 		break;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eb3da1a..e614fb4 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -365,6 +365,7 @@ struct pci_dev {
- 	unsigned int	irq_managed:1;
- 	unsigned int	has_secondary_link:1;
- 	unsigned int	non_compliant_bars:1;	/* broken BARs; ignore them */
-+	unsigned int	is_probed:1;		/* device probing in progress */
- 	pci_dev_flags_t dev_flags;
- 	atomic_t	enable_cnt;	/* pci_enable_device has been called */
+@@ -1626,6 +1626,10 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
  
+ #include <asm/pci.h>
+ 
++#ifndef arch_can_pci_mmap_wc
++#define arch_can_pci_mmap_wc()		0
++#endif
++
+ #ifndef pci_root_bus_fwnode
+ #define pci_root_bus_fwnode(bus)	NULL
+ #endif
+-- 
+2.9.3
