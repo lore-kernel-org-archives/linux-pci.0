@@ -1,62 +1,93 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=SndK=3U=huawei.com=liudongdong3@kernel.org>
+Return-Path: <SRS0=SndK=3U=huawei.com=liudongdong3@kernel.org>
+Subject: Re: [PATCH] PCI: hisi: Fix DT binding (hisi-pcie-almost-ecam)
+To: <helgaas@kernel.org>, <mark.rutland@arm.com>
+References: <1490275097-39349-1-git-send-email-liudongdong3@huawei.com>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
+        <linuxarm@huawei.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <ba97961b-ad10-65ed-63a0-e00fbaefbf03@huawei.com>
+Date: Wed, 12 Apr 2017 18:24:10 +0800
 MIME-Version: 1.0
-In-Reply-To: <20170227195441.5170-5-jean-philippe.brucker@arm.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-5-jean-philippe.brucker@arm.com>
-From: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-Date: Mon, 3 Apr 2017 14:04:35 +0530
-Message-ID: <CA+sq2CeWpGarhT9p+iVo8nJXR=xpkj6XNMwv4LvbP0M6JxA_SA@mail.gmail.com>
-Subject: Re: [RFC PATCH 04/30] iommu/arm-smmu-v3: Add support for PCI ATS
-To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
- LAKML <linux-arm-kernel@lists.infradead.org>,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1490275097-39349-1-git-send-email-liudongdong3@huawei.com>
+Content-Type: text/plain; charset="gbk"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-> +static size_t arm_smmu_atc_invalidate_domain(struct arm_smmu_domain *smmu_domain,
-> +                                            unsigned long iova, size_t size)
-> +{
-> +       unsigned long flags;
-> +       struct arm_smmu_cmdq_ent cmd = {0};
-> +       struct arm_smmu_group *smmu_group;
-> +       struct arm_smmu_master_data *master;
-> +       struct arm_smmu_device *smmu = smmu_domain->smmu;
-> +       struct arm_smmu_cmdq_ent sync_cmd = {
-> +               .opcode = CMDQ_OP_CMD_SYNC,
-> +       };
-> +
-> +       spin_lock_irqsave(&smmu_domain->groups_lock, flags);
-> +
-> +       list_for_each_entry(smmu_group, &smmu_domain->groups, domain_head) {
-> +               if (!smmu_group->ats_enabled)
-> +                       continue;
+Hi Bjorn
 
-If ATS is not supported, this seems to increase no of cycles spent in
-pgtbl_lock.
-Can we return from this API by checking 'ARM_SMMU_FEAT_ATS' in smmu->features ?
+This is a fixup for v4.11, and needs to go
+through ASAP so as to avoid a release with the broken binding.
+
+Please help to look at the patch.
 
 Thanks,
-Sunil.
+Dongdong
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ÔÚ 2017/3/23 21:18, Dongdong Liu Ð´µÀ:
+> The "hisilicon,pcie-almost-ecam", which goes against the usual DT
+> conventions, and is non-sensical in that it describes the IP based on
+> what it isn't. Fix the DT binding with "hisilicon,hip06-pcie-ecam"
+> and "hisilicon,hip07-pcie-ecam".
+>
+> Signed-off-by: Mark Rutland <mark.rutland@arm.com>
+> Signed-off-by: Dongdong Liu <liudongdong3@huawei.com>
+> ---
+>  Documentation/devicetree/bindings/pci/hisilicon-pcie.txt | 10 ++++++++--
+>  drivers/pci/dwc/pcie-hisi.c                              |  6 +++++-
+>  2 files changed, 13 insertions(+), 3 deletions(-)
+>
+> diff --git a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> index b7fa3b9..a339dbb 100644
+> --- a/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/hisilicon-pcie.txt
+> @@ -44,13 +44,19 @@ Hip05 Example (note that Hip06 is the same except compatible):
+>  	};
+>
+>  HiSilicon Hip06/Hip07 PCIe host bridge DT (almost-ECAM) description.
+> +
+> +Some BIOSes place the host controller in a mode where it is ECAM
+> +compliant for all devices other than the root complex. In such cases,
+> +the host controller should be described as below.
+> +
+>  The properties and their meanings are identical to those described in
+>  host-generic-pci.txt except as listed below.
+>
+>  Properties of the host controller node that differ from
+>  host-generic-pci.txt:
+>
+> -- compatible     : Must be "hisilicon,pcie-almost-ecam"
+> +- compatible     : Must be "hisilicon,hip06-pcie-ecam", or
+> +		   "hisilicon,hip07-pcie-ecam"
+>
+>  - reg            : Two entries: First the ECAM configuration space for any
+>  		   other bus underneath the root bus. Second, the base
+> @@ -59,7 +65,7 @@ host-generic-pci.txt:
+>
+>  Example:
+>  	pcie0: pcie@a0090000 {
+> -		compatible = "hisilicon,pcie-almost-ecam";
+> +		compatible = "hisilicon,hip06-pcie-ecam";
+>  		reg = <0 0xb0000000 0 0x2000000>,  /*  ECAM configuration space */
+>  		      <0 0xa0090000 0 0x10000>; /* host bridge registers */
+>  		bus-range = <0  31>;
+> diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+> index fd66a31..cf9d6a9 100644
+> --- a/drivers/pci/dwc/pcie-hisi.c
+> +++ b/drivers/pci/dwc/pcie-hisi.c
+> @@ -380,9 +380,13 @@ struct pci_ecam_ops hisi_pcie_platform_ops = {
+>
+>  static const struct of_device_id hisi_pcie_almost_ecam_of_match[] = {
+>  	{
+> -		.compatible = "hisilicon,pcie-almost-ecam",
+> +		.compatible =  "hisilicon,hip06-pcie-ecam",
+>  		.data	    = (void *) &hisi_pcie_platform_ops,
+>  	},
+> +	{
+> +		.compatible =  "hisilicon,hip07-pcie-ecam",
+> +		.data       = (void *) &hisi_pcie_platform_ops,
+> +	},
+>  	{},
+>  };
+>
+>
