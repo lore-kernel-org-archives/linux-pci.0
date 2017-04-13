@@ -1,212 +1,149 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <SRS0=wUoX=3V=linux.vnet.ibm.com=gwshan@kernel.org>
+Return-Path: <SRS0=wUoX=3V=linux.vnet.ibm.com=gwshan@kernel.org>
+Date: Thu, 13 Apr 2017 17:53:55 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+        bhelgaas@google.com, clsoto@us.ibm.com
+Subject: Re: [PATCH] PCI: Disable IOV before pcibios_sriov_disable()
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1488154712-8354-1-git-send-email-gwshan@linux.vnet.ibm.com>
+ <20170307201529.GF21358@bhelgaas-glaptop.roam.corp.google.com>
+ <20170309003432.GA27263@gwshan>
+ <20170318001907.GA16291@gwshan>
+ <20170320154644.GA24572@bhelgaas-glaptop.roam.corp.google.com>
+ <20170320225006.GA8591@gwshan>
+ <20170330232406.GA14305@gwshan>
 MIME-Version: 1.0
-In-Reply-To: <20170416075535.GA6620@wunner.de>
-References: <CAMuHMdVf-NT_6oGQVba_QgFuW-fZMBDF1CtidfxSxnCr8+BGHg@mail.gmail.com>
- <2661070.8D7d40DjM3@aspire.rjw.lan> <20170414082249.GA5417@wunner.de>
- <3960283.lbE9ESSj2m@aspire.rjw.lan> <20170416075535.GA6620@wunner.de>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 18 Apr 2017 08:49:39 +0200
-Message-ID: <CAMuHMdUzYUGZT3gWzZ97rmbPXG3RqYLdvYx_ZdLdmCvxbrt4Hw@mail.gmail.com>
-Subject: Re: PCI / PM: Crashes in PME scan during system suspend
-To: Lukas Wunner <lukas@wunner.de>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-        Simon Horman <horms@verge.net.au>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        =?UTF-8?Q?Niklas_S=C3=B6derlund?= <niklas.soderlund@ragnatech.se>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170330232406.GA14305@gwshan>
+Message-Id: <20170413075355.GA21414@gwshan>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lukas,
-
-On Sun, Apr 16, 2017 at 9:55 AM, Lukas Wunner <lukas@wunner.de> wrote:
-> On Sat, Apr 15, 2017 at 12:27:31AM +0200, Rafael J. Wysocki wrote:
->> On Friday, April 14, 2017 10:22:49 AM Lukas Wunner wrote:
->> > Below is a tentative patch which moves PME polling to a freezable
->> > workqueue, so it is frozen before the host bridge is suspended.
->> > Geert, Laurent, could you test this?
->> >
->> > The patch may be problematic in that pci_pme_list_scan() acquires
->> > pci_pme_list_mutex, which is also acquired by pci_pme_active(),
->> > which gets called when devices are suspended -- *after* the worker
->> > has been frozen.  I'm not really familiar with the freezer, can it
->> > happen that the worker is frozen while holding the mutex?  If so
->> > this would deadlock.  Rafael?
+On Fri, Mar 31, 2017 at 10:24:06AM +1100, Gavin Shan wrote:
+>On Tue, Mar 21, 2017 at 09:50:06AM +1100, Gavin Shan wrote:
+>>On Mon, Mar 20, 2017 at 10:46:44AM -0500, Bjorn Helgaas wrote:
+>>>On Sat, Mar 18, 2017 at 11:19:07AM +1100, Gavin Shan wrote:
+>>>> On Thu, Mar 09, 2017 at 11:34:32AM +1100, Gavin Shan wrote:
+>>>> >On Tue, Mar 07, 2017 at 02:15:29PM -0600, Bjorn Helgaas wrote:
+>>>> >>On Mon, Feb 27, 2017 at 11:18:32AM +1100, Gavin Shan wrote:
+>>>> >>> The PowerNV platform is the only user of pcibios_sriov_disable().
+>>>> >>> The IOV BAR could be shifted by pci_iov_update_resource(). The
+>>>> >>> warning message in the function is printed if the IOV capability
+>>>> >>> is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
+>>>> >>> 
+>>>> >>>    pci_disable_sriov
+>>>> >>>    sriov_disable
+>>>> >>>    pnv_pci_sriov_disable
+>>>> >>>    pnv_pci_vf_resource_shift
+>>>> >>>    pci_update_resource
+>>>> >>>    pci_iov_update_resource
+>>>> >>> 
+>>>> >>> This fixes the issue by disabling IOV capability before calling
+>>>> >>> pcibios_sriov_disable(). With it, the disabling path matches with
+>>>> >>> the enabling path: pcibios_sriov_enable() is called before the
+>>>> >>> IOV capability is enabled.
+>>>> >>
+>>>> >>I'm vaguely uncomfortable about this path:
+>>>> >>
+>>>> >>  pci_disable_sriov
+>>>> >>    sriov_disable
+>>>> >>      pcibios_sriov_disable           # powerpc version
+>>>> >>	pnv_pci_sriov_disable
+>>>> >>	  pnv_pci_vf_resource_shift
+>>>> >>	    res = &dev->resource[i + PCI_IOV_RESOURCES]
+>>>> >>	    res->start += size * offset
+>>>> >>	    pci_update_resource
+>>>> >>	      pci_iov_update_resource
+>>>> >>	  pnv_pci_vf_release_m64
+>>>> >>
+>>>> >>1) "res" is already in the resource tree, so we shouldn't be changing
+>>>> >>   its start address, because that may make the tree inconsistent,
+>>>> >>   e.g., the resource may no longer be completely contained in its
+>>>> >>   parent, it may conflict with a sibling, etc.
+>>>> >>
+>>>> >>2) If we update "res->start", shouldn't we update "res->end"
+>>>> >>   correspondingly?
+>>>> >>
+>>>> >>It seems like it'd be better if we didn't update the device resources
+>>>> >>in the enable/disable paths.  If we could do the resource adjustments
+>>>> >>earlier, somewhere before we give the device to a driver, it seems
+>>>> >>like it would avoid these issues.
+>>>> >>
+>>>> >>We might have talked about these questions in the past, so I apologize
+>>>> >>if you've already explained this.  If that's the case, maybe we just
+>>>> >>need some comments in the code to help the next confused reader.
+>>>> >>
+>>>> >
+>>>> >Bjorn, thanks for review. I agree it's not perfect. We discussed this long
+>>>> >time ago as I can remember. Let me try to make it a bit more clear: In our
+>>>> >PHB hardware, there are 16 MMIO BARs. Each of them can be shared by 256 PEs
+>>>> >(A) and owned exclusively by one PE (B). When VF BAR size is small enough,
+>>>> >we take (A). Otherwise, we have to take (B). Only when taking (A), we need
+>>>> >expand/move/shrink the IOV BAR. So lets stick to (A) for discussion here.
+>>>> >
+>>>> >Under (A), PF's IOV BAR size is extended to ((256 * (VF BAR size)) when the
+>>>> >PF is probed. Then the @res, which corresponds to the IOV BAR, is assigned
+>>>> >and put into the resource tree during resource sizing and assignment stage.
+>>>> >The IOV capability is going to be enabled by PF's driver or sysfs entry, it
+>>>> >calls into pnv_pci_sriov_enable() where number of contigous PEs (equal to
+>>>> >number of VFs to be enabled) are allocated. We shift the IOV BAR base according
+>>>> >to the starting PE number of the allocated block. Afterewards, the IOV BAR
+>>>> >is restored when the IOV capability is disabled. So it's all about the PE.
+>>>> >The IOV BAR's end address isn't touched, we needn't update @res->end when
+>>>> >restoring the IOV BAR.
+>>>> >
+>>>> >In order to avoid moving IOV BAR base address, I need know the the PEs
+>>>> >for the VFs before resourcd sizing and assignment stage. It means I need
+>>>> >to reserve PEs in advance, which isn't nice because we never enable the
+>>>> >VFs. In that case, the PEs are wasted.
+>>>> >
+>>>> >Yeah, it's nice to have add some comments in pnv_pci_vf_resource_shift()
+>>>> >where pci_update_resource() is called. I will post another patch to
+>>>> >linux-ppcdev and you'll be copied. If you agree, I think you can merge
+>>>> >this patch as none of the concerns are too much related.
+>>>> >
+>>>> 
+>>>> Sorry, Bjorn, ping! Please let me know if there are more concerns you have.
+>>>
+>>>I think we had a misunderstanding -- you mentioned adding some
+>>>comments and wrote "I will post another patch", and I *thought* you
+>>>meant you were going to post another version of *this* patch with some
+>>>updated comments.  So I've been waiting for that updated patch.  But I
+>>>think you've been waiting for me to merge *this* patch as-is.
+>>>
+>>>To avoid having this discussion a third time in the future, I think
+>>>you should add some comments at the point where you update the
+>>>resource.  Updating a resource after it's in the resource tree is
+>>>clearly dangerous, so we need some explanation of why it's sort of OK
+>>>in this particular case.
+>>>
+>>>If you can write a comment and dig up a URL to our previous
+>>>discussion, I'd like to incorporate that into *this* patch before I
+>>>merge it.  The sooner we can document this, the less work it will be
+>>>in the future.
+>>>
 >>
->> That depends on the worker, precisely on where it calls try_to_freeze().
+>>Ok. Sorry for the confusion and that I should looked into the code for more.
+>>We already had one comment like below in arch/powerpc/platforms/powernv/pci-ioda.c::
+>>pnv_pci_vf_resource_shift(). I think it's exactly what you like to have, please
+>>help to confirm. I believe it was added based on your comments long time ago when
+>>you review the SRIOV (for PowerNV) patches.
+>>
+>>        /*
+>>         * After doing so, there would be a "hole" in the /proc/iomem when
+>>         * offset is a positive value. It looks like the device return some
+>>         * mmio back to the system, which actually no one could use it.
+>>         */
+>>
+>>http://www.spinics.net/lists/linux-pci/msg39424.html
+>>
 >
-> pci_pme_list_scan() doesn't call try_to_freeze() at all, that's what had
-> me confused.  Neither do many other workers that are scheduled to
-> system_freezable_wq.
+>Bjorn, please let me know if you have concerns.
 >
-> However after familiarizing myself a bit more with the freezer it seems
-> that is fine.  The freezer prevents new workers from being scheduled and
-> then schedules the existing workers for up to 20 seconds to allow them
-> to finish.  The call to try_to_freeze() is thus only needed for long
-> running workers or for threads which are in some infinite loop.
->
-> Below is the same patch with a proper commit message, it's mostly copied
-> and pasted from Geert's comprehensive report.  Still needs to be tested
-> by Geert and/or Laurent as I was unable reproduce the issue on my x86
-> laptop.  Perhaps on x86 the OS is not responsible for disabling the PCI
-> clock (but presumably the BIOS) or x86 doesn't emit this kind of fault.
 
-Thanks, works fine (see below)!
+Bjorn, Sorry that I have to ping you again. I assume it's mergable.
+Please let me know if you have more concerns.
 
-> -- >8 --
-> Subject: [PATCH] PCI: Freeze PME scan before suspending devices
->
-> Laurent Pinchart reported that the Renesas R-Car H2 Lager board
-> (r8a7790) crashes during suspend tests.  Geert Uytterhoeven managed to
-> reproduce the issue on an M2-W Koelsch board (r8a7791):
->
-> It occurs when the PME scan runs, once per second.  During PME scan, the
-> PCI host bridge (rcar-pci) registers are accessed while its module clock
-> has already been disabled, leading to the crash.
->
-> The issue only occurs during suspend tests, after writing either
-> "platform" or "processors" to /sys/power/pm_test.  It does not (or is
-> less likely) to happen during full system suspend ("core" or "none")
-> because system suspend also disables timers, and thus the workqueue
-> handling PME scans no longer runs.  Geert believes the issue may still
-> happen in the small window between disabling module clocks and disabling
-> timers.
-
-It can also be reproduced easily by configuring s2ram to use s2idle instead
-of deep suspend, which is a real usecase:
-
-# echo 0 > /sys/module/printk/parameters/console_suspend
-# echo s2idle > /sys/power/mem_sleep
-# echo mem > /sys/power/state
-
-> Rafael Wysocki agrees that PME scans should be suspended before the host
-> bridge registers become inaccessible.  To that end, queue the task on a
-> workqueue that gets frozen before devices suspend.
->
-> How to reproduce:
->
-> # echo 0 > /sys/module/printk/parameters/console_suspend
-> # echo platform > /sys/power/pm_test    # Or "processors"
-> # echo mem > /sys/power/state
->
-> Make sure CONFIG_PCI_RCAR_GEN2 and CONFIG_USB_OHCI_HCD_PCI are
-> enabled.
->
-> PM: Syncing filesystems ... [   38.566237] done.
-> PM: Preparing system for sleep (mem)
-> Freezing user space processes ... [   38.579813] (elapsed 0.001 seconds) done.
-> Freezing remaining freezable tasks ... (elapsed 0.001 seconds) done.
-> PM: Suspending system (mem)
-> PM: suspend of devices complete after 152.456 msecs
-> PM: late suspend of devices complete after 2.809 msecs
-> PM: noirq suspend of devices complete after 29.863 msecs
-> suspend debug: Waiting for 5 second(s).
-> Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
-> pgd = c0003000
-> [00000000] *pgd=80000040004003, *pmd=00000000
-> Internal error: : 1211 [#1] SMP ARM
-> Modules linked in:
-> CPU: 1 PID: 20 Comm: kworker/1:1 Not tainted
-> 4.9.0-rc1-koelsch-00011-g68db9bc814362e7f #3383
-> Hardware name: Generic R8A7791 (Flattened Device Tree)
-> Workqueue: events pci_pme_list_scan
-> task: eb56e140 task.stack: eb58e000
-> PC is at pci_generic_config_read+0x64/0x6c
-> LR is at rcar_pci_cfg_base+0x64/0x84
-> pc : [<c041d7b4>]    lr : [<c04309a0>]    psr: 600d0093
-> sp : eb58fe98  ip : c041d750  fp : 00000008
-> r10: c0e2283c  r9 : 00000000  r8 : 600d0013
-> r7 : 00000008  r6 : eb58fed6  r5 : 00000002  r4 : eb58feb4
-> r3 : 00000000  r2 : 00000044  r1 : 00000008  r0 : 00000000
-> Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment user
-> Control: 30c5387d  Table: 6a9f6c80  DAC: 55555555
-> Process kworker/1:1 (pid: 20, stack limit = 0xeb58e210)
-> Stack: (0xeb58fe98 to 0xeb590000)
-> fe80:                                                       00000002 00000044
-> fea0: eb6f5800 c041d9b0 eb58feb4 00000008 00000044 00000000 eb78a000 eb78a000
-> fec0: 00000044 00000000 eb9aff00 c0424bf0 eb78a000 00000000 eb78a000 c0e22830
-> fee0: ea8a6fc0 c0424c5c eaae79c0 c0424ce0 eb55f380 c0e22838 eb9a9800 c0235fbc
-> ff00: eb55f380 c0e22838 eb55f380 eb9a9800 eb9a9800 eb58e000 eb9a9824 c0e02100
-> ff20: eb55f398 c02366c4 eb56e140 eb5631c0 00000000 eb55f380 c023641c 00000000
-> ff40: 00000000 00000000 00000000 c023a928 cd105598 00000000 40506a34 eb55f380
-> ff60: 00000000 00000000 dead4ead ffffffff ffffffff eb58ff74 eb58ff74 00000000
-> ff80: 00000000 dead4ead ffffffff ffffffff eb58ff90 eb58ff90 eb58ffac eb5631c0
-> ffa0: c023a844 00000000 00000000 c0206d68 00000000 00000000 00000000 00000000
-> ffc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-> ffe0: 00000000 00000000 00000000 00000000 00000013 00000000 3a81336c 10ccd1dd
-> [<c041d7b4>] (pci_generic_config_read) from [<c041d9b0>]
-> (pci_bus_read_config_word+0x58/0x80)
-> [<c041d9b0>] (pci_bus_read_config_word) from [<c0424bf0>]
-> (pci_check_pme_status+0x34/0x78)
-> [<c0424bf0>] (pci_check_pme_status) from [<c0424c5c>] (pci_pme_wakeup+0x28/0x54)
-> [<c0424c5c>] (pci_pme_wakeup) from [<c0424ce0>] (pci_pme_list_scan+0x58/0xb4)
-> [<c0424ce0>] (pci_pme_list_scan) from [<c0235fbc>]
-> (process_one_work+0x1bc/0x308)
-> [<c0235fbc>] (process_one_work) from [<c02366c4>] (worker_thread+0x2a8/0x3e0)
-> [<c02366c4>] (worker_thread) from [<c023a928>] (kthread+0xe4/0xfc)
-> [<c023a928>] (kthread) from [<c0206d68>] (ret_from_fork+0x14/0x2c)
-> Code: ea000000 e5903000 f57ff04f e3a00000 (e5843000)
-> ---[ end trace 667d43ba3aa9e589 ]---
->
-> Reported-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Simon Horman <horms@verge.net.au>
-> Cc: Yinghai Lu <yinghai@kernel.org>
-> Fixes: df17e62e5bff ("PCI: Add support for polling PME state on suspended legacy PCI devices")
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-
-Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
-
-> ---
->  drivers/pci/pci.c | 9 +++++----
->  1 file changed, 5 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index aa55501..c561a9e 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1784,8 +1784,8 @@ static void pci_pme_list_scan(struct work_struct *work)
->                 }
->         }
->         if (!list_empty(&pci_pme_list))
-> -               schedule_delayed_work(&pci_pme_work,
-> -                                     msecs_to_jiffies(PME_TIMEOUT));
-> +               queue_delayed_work(system_freezable_wq, &pci_pme_work,
-> +                                  msecs_to_jiffies(PME_TIMEOUT));
->         mutex_unlock(&pci_pme_list_mutex);
->  }
->
-> @@ -1850,8 +1850,9 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
->                         mutex_lock(&pci_pme_list_mutex);
->                         list_add(&pme_dev->list, &pci_pme_list);
->                         if (list_is_singular(&pci_pme_list))
-> -                               schedule_delayed_work(&pci_pme_work,
-> -                                                     msecs_to_jiffies(PME_TIMEOUT));
-> +                               queue_delayed_work(system_freezable_wq,
-> +                                                  &pci_pme_work,
-> +                                                  msecs_to_jiffies(PME_TIMEOUT));
->                         mutex_unlock(&pci_pme_list_mutex);
->                 } else {
->                         mutex_lock(&pci_pme_list_mutex);
-> --
-> 2.11.0
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Thanks,
+Gavin
