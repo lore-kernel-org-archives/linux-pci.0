@@ -1,49 +1,86 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f47.google.com ([74.125.83.47]:33814 "EHLO
-        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752923AbdDKR5M (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 11 Apr 2017 13:57:12 -0400
-Received: by mail-pg0-f47.google.com with SMTP id 21so2112620pgg.1
-        for <linux-pci@vger.kernel.org>; Tue, 11 Apr 2017 10:57:12 -0700 (PDT)
-From: Matthias Kaehlcke <mka@chromium.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Mason <slash.tmp@free.fr>,
-        Grant Grundler <grundler@chromium.org>,
-        Greg Hackmann <ghackmann@google.com>,
-        Michael Davidson <md@google.com>,
-        Matthias Kaehlcke <mka@chromium.org>
-Subject: [PATCH v2] PCI: Make PCI_ROM_ADDRESS_MASK a 32-bit constant
-Date: Tue, 11 Apr 2017 10:56:58 -0700
-Message-Id: <20170411175658.58512-1-mka@chromium.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arch-owner@vger.kernel.org>
+From: Michael Ellerman <mpe@ellerman.id.au>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Paul Mackerras <paulus@samba.org>
+Subject: Re: [PATCH v3 21/32] powerpc: include default ioremap_nopost() implementation
+In-Reply-To: <1491952528.7236.26.camel@kernel.crashing.org>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com> <20170411122923.6285-22-lorenzo.pieralisi@arm.com> <1491917928.7236.8.camel@kernel.crashing.org> <20170411142456.GB6821@red-moon> <1491952528.7236.26.camel@kernel.crashing.org>
+Date: Thu, 13 Apr 2017 13:35:47 +1000
+Message-ID: <87shld9dyk.fsf@concordia.ellerman.id.au>
+MIME-Version: 1.0
+Content-Type: text/plain
+Sender: linux-arch-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-A 64-bit value is not needed since a PCI ROM address consists in 32 bits.
-This fixes a clang warning about "implicit conversion from 'unsigned
-long' to 'u32'".
+Benjamin Herrenschmidt <benh@kernel.crashing.org> writes:
 
-Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
----
-Changes in v2:
-- Define PCI_ROM_ADDRESS_MASK as a 32-bit constant instead of using a cast
-- Updated commit message
+> On Tue, 2017-04-11 at 15:24 +0100, Lorenzo Pieralisi wrote:
+>> Ok, point taken. BTW, may I ask you guys to have a look into this
+>> please ?
+>> 
+>> https://lkml.org/lkml/2017/4/6/743
+>> 
+>> It is a side effect of this thread (v2), not sure why <asm/io.h>
+>> on powerpc has to include <linux/io.h>.
+>
+> Not sure how we ended up with that... it's odd indeed.
+>
+> Michael ? Any reason we can't just remove it ?
 
- include/uapi/linux/pci_regs.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+No ... idea.
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 634c9c44ed6c..fff521c9458c 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -114,7 +114,7 @@
- #define PCI_SUBSYSTEM_ID	0x2e
- #define PCI_ROM_ADDRESS		0x30	/* Bits 31..11 are address, 10..1 reserved */
- #define  PCI_ROM_ADDRESS_ENABLE	0x01
--#define PCI_ROM_ADDRESS_MASK	(~0x7ffUL)
-+#define PCI_ROM_ADDRESS_MASK	(~0x7ffU)
+Looks like it was added in:
+
+commit b41e5fffe8b81fc939067d8c1c195cc79115d5a3
+Author:     Emil Medve <Emilian.Medve@Freescale.com>
+AuthorDate: Sat May 3 06:34:04 2008 +1000
+Commit:     Paul Mackerras <paulus@samba.org>
+CommitDate: Mon May 5 16:47:14 2008 +1000
+
+    [POWERPC] devres: Add devm_ioremap_prot()
+    
+    We provide an ioremap_flags, so this provides a corresponding
+    devm_ioremap_prot.  The slight name difference is at Ben
+    Herrenschmidt's request as he plans on changing ioremap_flags to
+    ioremap_prot in the future.
+    
+    Signed-off-by: Emil Medve <Emilian.Medve@Freescale.com>
+    Signed-off-by: Kumar Gala <galak@kernel.crashing.org>
+    Acked-by: Tejun Heo <htejun@gmail.com>
+    Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+    Signed-off-by: Paul Mackerras <paulus@samba.org>
+
+diff --git a/include/asm-powerpc/io.h b/include/asm-powerpc/io.h
+index afae0697e8ce..e0062d73db1c 100644
+--- a/include/asm-powerpc/io.h
++++ b/include/asm-powerpc/io.h
+@@ -18,6 +18,9 @@ extern int check_legacy_ioport(unsigned long base_port);
+ #define _PNPWRP		0xa79
+ #define PNPBIOS_BASE	0xf000
  
- #define PCI_CAPABILITY_LIST	0x34	/* Offset of first capability list entry */
++#include <linux/device.h>
++#include <linux/io.h>
++
+ #include <linux/compiler.h>
+ #include <asm/page.h>
+ #include <asm/byteorder.h>
+@@ -744,6 +747,9 @@ static inline void * bus_to_virt(unsigned long address)
  
--- 
-2.12.2.715.g7642488e1d-goog
+ #define clrsetbits_8(addr, clear, set) clrsetbits(8, addr, clear, set)
+ 
++void __iomem *devm_ioremap_prot(struct device *dev, resource_size_t offset,
++				size_t size, unsigned long flags);
++
+ #endif /* __KERNEL__ */
+ 
+ #endif /* _ASM_POWERPC_IO_H */
+
+
+I'll try removing it and see what breaks.
+
+cheers
