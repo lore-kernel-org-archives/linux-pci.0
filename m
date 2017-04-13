@@ -1,95 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:46499 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1031559AbdD1VjS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Apr 2017 17:39:18 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Imre Deak <imre.deak@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: intel-gfx@lists.freedesktop.org,
-        Jani Nikula <jani.nikula@intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pci@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] PCI / PM: Add needs_resume flag to avoid suspend complete optimization
-Date: Fri, 28 Apr 2017 23:33:02 +0200
-Message-ID: <4849096.yzbfqj2AUz@aspire.rjw.lan>
-In-Reply-To: <1493388963-5278-1-git-send-email-imre.deak@intel.com>
-References: <1493388963-5278-1-git-send-email-imre.deak@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Salvatore Benedetto <salvatore.benedetto@intel.com>,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: linux-pci@vger.kernel.org, qat-linux@intel.com,
+        linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 1/7] PCI: export pcie_flr
+Date: Thu, 13 Apr 2017 16:53:33 +0200
+Message-Id: <20170413145339.20186-2-hch@lst.de>
+In-Reply-To: <20170413145339.20186-1-hch@lst.de>
+References: <20170413145339.20186-1-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, April 28, 2017 05:16:02 PM Imre Deak wrote:
-> Some drivers - like i915 - may not support the system suspend direct
-> complete optimization due to differences in their runtime and system
-> suspend sequence. Add a flag that when set resumes the device before
-> calling the driver's system suspend handlers which effectively disables
-> the optimization.
-> 
-> Needed by the next patch fixing suspend/resume on i915.
-> 
-> Suggested by Rafael.
-> 
-> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: linux-pci@vger.kernel.org
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Imre Deak <imre.deak@intel.com>
+Currently we opencode the FLR sequence in lots of place, export a core
+helper instead.  We split out the probing for FLR support as all the
+non-core callers already know their hardware.
 
-Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/pci.c   | 34 +++++++++++++++++++++++++---------
+ include/linux/pci.h |  1 +
+ 2 files changed, 26 insertions(+), 9 deletions(-)
 
-The reason why the opt-out flag was not added on day one was because we were
-not sure whether or not it would be necessary at all.
-
-Quite evidently, it is needed.
-
-> ---
-> 
-> [ After discussing with Jani, I'm going to apply this and the next patch
->   for now to the intel-gfx specific CI branch to unblock our testing. ]
-> 
->  drivers/pci/pci.c   | 3 ++-
->  include/linux/pci.h | 7 +++++++
->  2 files changed, 9 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 7904d02..020f02d 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -2141,7 +2141,8 @@ bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
->  
->  	if (!pm_runtime_suspended(dev)
->  	    || pci_target_state(pci_dev) != pci_dev->current_state
-> -	    || platform_pci_need_resume(pci_dev))
-> +	    || platform_pci_need_resume(pci_dev)
-> +	    || pci_dev->needs_resume)
->  		return false;
->  
->  	/*
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 5948cfd..2f012f8 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -316,6 +316,9 @@ struct pci_dev {
->  	unsigned int	hotplug_user_indicators:1; /* SlotCtl indicators
->  						      controlled exclusively by
->  						      user sysfs */
-> +	unsigned int	needs_resume:1;	/* Resume before calling the driver's
-> +					   system suspend hooks, disabling the
-> +					   direct_complete optimization. */
->  	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
->  	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
->  
-> @@ -1110,6 +1113,10 @@ bool pci_check_pme_status(struct pci_dev *dev);
->  void pci_pme_wakeup_bus(struct pci_bus *bus);
->  void pci_d3cold_enable(struct pci_dev *dev);
->  void pci_d3cold_disable(struct pci_dev *dev);
-> +static inline void pci_resume_before_suspend(struct pci_dev *dev, bool enable)
-> +{
-> +	dev->needs_resume = enable;
-> +}
->  
->  static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
->  				  bool enable)
-> 
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02ffdb9..3256a63c5d08 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3773,24 +3773,38 @@ static void pci_flr_wait(struct pci_dev *dev)
+ 			 (i - 1) * 100);
+ }
+ 
+-static int pcie_flr(struct pci_dev *dev, int probe)
++/**
++ * pcie_has_flr - check if a device supports function level resets
++ * @dev:	device to check
++ *
++ * Returns true if the device advertises support for PCIe function level
++ * resets.
++ */
++static bool pcie_has_flr(struct pci_dev *dev)
+ {
+ 	u32 cap;
+ 
+ 	pcie_capability_read_dword(dev, PCI_EXP_DEVCAP, &cap);
+-	if (!(cap & PCI_EXP_DEVCAP_FLR))
+-		return -ENOTTY;
+-
+-	if (probe)
+-		return 0;
++	return cap & PCI_EXP_DEVCAP_FLR;
++}
+ 
++/**
++ * pcie_flr - initiate a PCIe function level reset
++ * @dev:	device to reset
++ *
++ * Initiate a function level reset on @dev.  The caller should ensure the
++ * device supports FLR before calling this function, e.g. by using the
++ * pcie_has_flr helper.
++ */
++void pcie_flr(struct pci_dev *dev)
++{
+ 	if (!pci_wait_for_pending_transaction(dev))
+ 		dev_err(&dev->dev, "timed out waiting for pending transaction; performing function level reset anyway\n");
+ 
+ 	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+ 	pci_flr_wait(dev);
+-	return 0;
+ }
++EXPORT_SYMBOL_GPL(pcie_flr);
+ 
+ static int pci_af_flr(struct pci_dev *dev, int probe)
+ {
+@@ -3971,9 +3985,11 @@ static int __pci_dev_reset(struct pci_dev *dev, int probe)
+ 	if (rc != -ENOTTY)
+ 		goto done;
+ 
+-	rc = pcie_flr(dev, probe);
+-	if (rc != -ENOTTY)
++	if (pcie_has_flr(dev)) {
++		pcie_flr(dev);
++		rc = 0;
+ 		goto done;
++	}
+ 
+ 	rc = pci_af_flr(dev, probe);
+ 	if (rc != -ENOTTY)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eb3da1a04e6c..f35e51eddad0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1052,6 +1052,7 @@ int pcie_get_mps(struct pci_dev *dev);
+ int pcie_set_mps(struct pci_dev *dev, int mps);
+ int pcie_get_minimum_link(struct pci_dev *dev, enum pci_bus_speed *speed,
+ 			  enum pcie_link_width *width);
++void pcie_flr(struct pci_dev *dev);
+ int __pci_reset_function(struct pci_dev *dev);
+ int __pci_reset_function_locked(struct pci_dev *dev);
+ int pci_reset_function(struct pci_dev *dev);
+-- 
+2.11.0
