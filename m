@@ -1,351 +1,119 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38388 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1424996AbdDUTcX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Apr 2017 15:32:23 -0400
-Subject: [PATCH 6/9] lspci: Decode "Slot Implemented" for PCI/PCI-X to PCIe
- Bridges
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org,
-        Jayachandran C <jnair@caviumnetworks.com>
-Date: Fri, 21 Apr 2017 14:32:18 -0500
-Message-ID: <20170421193217.6562.7007.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170421192844.6562.30976.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170421192844.6562.30976.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1492044780.7236.87.camel@kernel.crashing.org>
+Subject: Re: [PATCH v3 00/32] PCI: fix config and I/O Address space memory
+ mappings
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Russell King - ARM Linux <linux@armlinux.org.uk>
+Date: Thu, 13 Apr 2017 10:53:00 +1000
+In-Reply-To: <20170412224555.GB17774@n2100.armlinux.org.uk>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+ <1491917906.7236.7.camel@kernel.crashing.org>
+ <20170411140857.GA6821@red-moon>
+ <1491952371.7236.22.camel@kernel.crashing.org>
+ <20170412113124.GZ17774@n2100.armlinux.org.uk>
+ <1492005119.7236.62.camel@kernel.crashing.org>
+ <20170412141654.GA17774@n2100.armlinux.org.uk>
+ <20170412144109.GB6842@red-moon>
+ <1492036240.7236.80.camel@kernel.crashing.org>
+ <20170412224555.GB17774@n2100.armlinux.org.uk>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
+ linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+ David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
+ Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
+ Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
+ Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
+ Jesper Nilsson <jesper.nilsson@axis.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Yoshinori Sato <ysato@users.sourceforge.jp>,
+ Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
+ "James E.J. Bottomley" <jejb@parisc-linux.org>, Ingo Molnar <mingo@redhat.com>,
+ Geert Uytterhoeven <geert@linux-m68k.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Matt Turner <mattst88@gmail.com>,
+ Haavard Skinnemoen <hskinnemoen@gmail.com>, Fenghua Yu <fenghua.yu@intel.com>,
+ James Hogan <james.hogan@imgtec.com>, Chris Metcalf <cmetcalf@mellanox.com>,
+ Arnd Bergmann <arnd@arndb.de>, Heiko Carstens <heiko.carstens@de.ibm.com>,
+ Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
+ Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+ Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
+ linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
+ Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
+ Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
+ linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+ Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
+ "Luis R. Rodriguez" <mcgrof@kernel.org>,
+ Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
+ "David S. Miller" <davem@davemloft.net>
 Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
-
-The secondary side of a PCI/PCI-X to PCIe Bridge (a "reverse bridge") is a
-PCIe Downstream Port and could support a slot just like Root Ports and
-Switch Downstream Ports.
-
-Decode "Slot Implemented" for reverse bridges and, if true, the Slot
-Capabilities, Control, and Status registers.
-
-For a reverse bridge with no slot, the difference in the "lspci -vv" output
-looks like this:
-
--    Capabilities: [40] Express (v2) PCI/PCI-X to PCI-Express Bridge, MSI 00
-+    Capabilities: [40] Express (v2) PCI/PCI-X to PCI-Express Bridge (Slot-), MSI 00
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- ls-caps.c              |    4 +
- tests/cap-exp-rev-slot |  288 ++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 291 insertions(+), 1 deletion(-)
- create mode 100644 tests/cap-exp-rev-slot
-
-diff --git a/ls-caps.c b/ls-caps.c
-index 1230746..2d3b59d 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -1159,7 +1159,9 @@ cap_express(struct device *d, int where, int cap)
-       printf("PCI-Express to PCI/PCI-X Bridge");
-       break;
-     case PCI_EXP_TYPE_PCIE_BRIDGE:
--      printf("PCI/PCI-X to PCI-Express Bridge");
-+      slot = cap & PCI_EXP_FLAGS_SLOT;
-+      printf("PCI/PCI-X to PCI-Express Bridge (Slot%c)",
-+	     FLAG(cap, PCI_EXP_FLAGS_SLOT));
-       break;
-     case PCI_EXP_TYPE_ROOT_INT_EP:
-       link = 0;
-diff --git a/tests/cap-exp-rev-slot b/tests/cap-exp-rev-slot
-new file mode 100644
-index 0000000..737d963
---- /dev/null
-+++ b/tests/cap-exp-rev-slot
-@@ -0,0 +1,288 @@
-+01:0a.0 PCI bridge: Broadcom Corporation Device 9039 (prog-if 00 [Normal decode])
-+	Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-+	Latency: 0, Cache Line Size: 64 bytes
-+	Region 0: Memory at 4001200000 (64-bit, prefetchable)
-+	Bus: primary=01, secondary=02, subordinate=03, sec-latency=0
-+	I/O behind bridge: None
-+	Memory behind bridge: None
-+	Prefetchable memory behind bridge: None
-+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-+	Capabilities: [40] Express (v2) PCI/PCI-X to PCI-Express Bridge (Slot-), MSI 00
-+		DevCap:	MaxPayload 128 bytes, PhantFunc 0
-+			ExtTag- RBE-
-+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-+			MaxPayload 128 bytes, MaxReadReq 4096 bytes
-+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr- TransPend-
-+		LnkCap:	Port #0, Speed unknown, Width x0, ASPM not supported, Exit Latency L0s <64ns, L1 <1us
-+			ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
-+		LnkCtl:	ASPM Disabled; Disabled- CommClk-
-+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-+		LnkSta:	Speed unknown, Width x0, TrErr- Train- SlotClk- DLActive- BWMgmt- ABWMgmt-
-+		DevCap2: Completion Timeout: Not Supported, TimeoutDis-, LTR-, OBFF Not Supported
-+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR-, OBFF Disabled
-+		LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
-+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-+			 Compliance De-emphasis: -6dB
-+		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-+	Capabilities: [90] Vendor Specific Information: Len=70 <?>
-+00: e4 14 39 90 06 00 10 00 00 00 04 06 10 00 81 00
-+10: 0c 00 20 01 40 00 00 00 01 02 03 00 f1 01 00 00
-+20: f0 ff 00 00 f1 ff 01 00 00 00 00 00 00 00 00 00
-+30: 00 00 00 00 40 00 00 00 00 00 00 00 00 00 00 00
-+40: 10 90 82 00 00 00 00 00 00 50 00 00 00 00 00 00
-+50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+60: 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00 00
-+70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+90: 09 00 70 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+140: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+1a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+1b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+1c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+1d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+1e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+1f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+220: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+230: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+240: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+260: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+2a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+2b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+2c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+2d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+2e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+2f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+300: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+310: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+320: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+330: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+340: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+350: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+360: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+370: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+380: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+390: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+3a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+3b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+3c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+3d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+3e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+3f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+400: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+410: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+420: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+430: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+440: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+450: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+460: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+470: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+480: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+490: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+4a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+4b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+4c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+4d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+4e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+4f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+500: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+510: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+520: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+530: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+540: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+550: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+560: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+570: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+590: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+5a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+5b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+5c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+5d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+5e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+5f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+600: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+610: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+620: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+630: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+640: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+650: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+660: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+670: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+680: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+690: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+6a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+6b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+6c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+6d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+6e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+6f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+700: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+710: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+720: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+730: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+740: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+750: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+760: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+770: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+780: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+790: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+7a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+7b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+7c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+7d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+7e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+7f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+800: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+810: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+820: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+830: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+840: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+850: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+860: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+870: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+880: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+890: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+8a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+8b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+8c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+8d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+8e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+8f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+900: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+910: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+920: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+930: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+940: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+950: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+960: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+970: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+980: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+990: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+9a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+9b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+9c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+9d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+9e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+9f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+aa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ab0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ac0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ad0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ae0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+af0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ba0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+bb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+bc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+bd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+be0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+bf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ca0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+cb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+cc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+cd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ce0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+cf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+da0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+db0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+dc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+dd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+de0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+df0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ea0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+eb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ec0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ed0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ee0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ef0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+fa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+T24gV2VkLCAyMDE3LTA0LTEyIGF0IDIzOjQ1ICswMTAwLCBSdXNzZWxsIEtpbmcgLSBBUk0gTGlu
+dXggd3JvdGU6Cj4gT24gVGh1LCBBcHIgMTMsIDIwMTcgYXQgMDg6MzA6NDBBTSArMTAwMCwgQmVu
+amFtaW4gSGVycmVuc2NobWlkdCB3cm90ZToKPiA+IE15IHBvaW50IHdpdGggbm9wb3N0KCkgaXMg
+dGhhdCBpdCdzIG5ldmVyIG9rIHRvIHNpbGVudGx5IGRvd25ncmFkZSBpdC4KPiA+IENvZGUgd3Jp
+dHRlbiB3aXRoIHRoZSBhc3N1bXB0aW9uIHRoYXQgdGhlcmUgaXMgbm8gcG9zdGluZyB3aWxsIGJl
+Cj4gPiAqaW5jb3JyZWN0KiBpZiBwb3N0aW5nIGhhcHBlbnMuIFdlIGRvIGxpdmUgd2l0aCB0aGF0
+ICJidWciIHRvZGF5IGluZGVlZAo+ID4gYnV0IG9uY2Ugd2UgaGF2ZSB0aGF0IGFjY2Vzc29ycyB3
+ZSBtaWdodCBzdGFydCBncm93aW5nIG1vcmUgY29kZSB0aGF0Cj4gPiByZWxpZXMgb24gdGhlIHNw
+ZWNpZmljIGF0dHJpYnV0ZSB0aGF0IHRoaW5ncyBhcmVuJ3QgcG9zdGVkIGFuZCB3aWxsIGJlCj4g
+PiB3cm9uZyBvbiBhbGwgdGhlIGFyY2hzIHByb3ZpZGluZyB0aGUgZGVmYXVsdCBpbXBsZW1lbnRh
+dGlvbi4KPiA+IAo+ID4gVGhpcyBpcyB3aHkgSSBpbnNpc3QgdGhhdCBwZ3Byb3Rfbm9wb3N0KCkg
+aWYgaXQgZXhpc3RzIGdsb2JhbGx5LCBzaG91bGQKPiA+IHJldHVybiBOVUxMIHdoZW4gdGhlIHNl
+bWFudGljIGNhbm5vdCBiZSBwcm92aWRlZC4KPiAKPiBOb3cgeW91J3JlIG5vdCB0YWxraW5nIHNl
+bnNlLsKgwqBwZ3Byb3Rfbm9wb3N0KCkgZG9lcyBfbm90XyByZXR1cm4gYSBwb2ludGVyLgo+IFlv
+dSdyZSB0YWxraW5nIGhlcmUgYXMgaWYgeW91J3JlIHN0aWxsIHRhbGtpbmcgYWJvdXQgaW9yZW1h
+cF9ub3Bvc3QoKS4KPiBTbywgSSB0aGluayB5b3UncmUgY29uZnVzZWQuCgpOYWgsIGp1c3QgInR5
+cG8iLCBJIG1lYW50IGlvcmVtYXBfbm9wb3N0LgoKPiA+ID4gPiBKdXN0IGxpa2UgdGhlIHByb3Bv
+c2VkIGlvcmVtYXBfbm9wb3N0KCksIHBncHJvdF9ub25wb3N0ZWQoKSBpcyBnaXZlbiBhCj4gPiA+
+ID4gZGVmYXVsdCBpbXBsZW1lbnRhdGlvbiB0aGF0IHVzZXMgcGdwcm90X25vbmNhY2hlZCgpLsKg
+IE1heWJlIHdlIHNob3VsZAo+ID4gPiA+IGFsc28gbWFrZSBwY2lfcmVtYXBfaW9zcGFjZSgpIGZh
+aWwgaWYgcGdwcm90X25vbnBvc3RlZCgpIGlzIG5vdCBkZWZpbmVkCj4gPiA+ID4gYnkgdGhlIGFy
+Y2hpdGVjdHVyZT8KPiA+IAo+ID4gT3Igd2UgKmRvY3VtZW50KiB0aGF0IG1tYXAgb2YgSU8gc3Bh
+Y2UgY2FuIHJlc3VsdCBpbiBzb21ldGhpbmcgdGhhdCBpcwo+ID4gcGFydGlhbGx5IG5vbi1wb3N0
+ZWQuCj4gCj4gT2gsIHNvIHdlIF9jYW5fIHByb3ZpZGUgYW4gaW50ZXJmYWNlIHRoYXQgaGFzIHdl
+YWtlciBzZW1hbnRpY3MgdGhhbiBpdAo+IHNob3VsZCBwcm92aWRlZCB3ZSBkb2N1bWVudCBpdC4K
+PiAKPiBJdCdzIGluc2FuZSB0byBoYXZlIGRpZmZlcmVudCBiZWhhdmlvdXJzIGZyb20gdGhlc2Ug
+dHdvIGludGVyZmFjZXMsIHlldAo+IHlvdSBzZWVtIHRvIGhhdmUgc2FpZCBleGFjdGx5IHRoYXQg
+aW4geW91ciByZXBseS4KPgo+IEl0J3MgYWN0dWFsbHkgd29yc2UgdGhhbiB0aGF0IC0gd2hhdCB5
+b3UndmUganVzdCBzYWlkIGlzIHRoYXQgaXQncyBva2F5Cj4gZm9yIHVzZXJzcGFjZSB0byBtYXAg
+SU8gc3BhY2Ugd2l0aCB3ZWFrZXIgc2VtYW50aWNzIHRoYW4gdGhlIFBDSQo+IHNwZWNpZmljYXRp
+b24gc3RhdGVzLCBidXQgaXQncyBub3Qgb2theSBmb3Iga2VybmVsIHNwYWNlIHRvIGRvIHRoYXQu
+CgpUaGF0IGlzIG5vdCB3aGF0IEknbSBzYXlpbmcuIFdoYXQgSSdtIHNheWluZyBpcyB0aGF0IGl0
+J3Mgbm90IG9rIHRvCnByb3ZpZGUgYSBnZW5lcmljIG1hcHBpbmcgYXR0cmlidXRlIHRoYXQgc2ls
+ZW50bHkgaGFwcGVucyB0byBiZSB3ZWFrZXIKdGhhbiBkb2N1bWVudGVkIG9uIHNvbWUgYXJjaGl0
+ZWN0dXJlcy4KClRoZSBQQ0kgcGFydCBpcyBvcnRob2dvbmFsLiBIb3cgZG8geW91IGhhbmRsZSBQ
+Q0kgaW4gYWJzZW5jZSBvZiB0aGF0CmF0dHJpYnV0ZSBpcyBhIHNlcGFyYXRlIHByb2JsZW0gKHdo
+aWNoIGlzIHByb2JhYmx5IGEgbWF0dGVyIG9mIGp1c3QKZG9jdW1lbnRpbmcgdGhpbmdzKS4KCkJU
+Vy4gSXMgY29uZmlnIHNwYWNlIGFsc28gbm9uLXBvc3RlZCBvbiBJbnRlbCB3aXRoIG1tY29uZmln
+ID8gSSBkaWRuJ3QKdGhpbmsgdGhleSBjb3VsZCBkbyBub24gcG9zdGVkIE1NSU8gc3RvcmVzLCBi
+dXQgbWF5YmUgSSdtIHdyb25nLgoKPiBFc3BlY2lhbGx5IGFzIHVzZXJzcGFjZSBjYW4ndCBrbm93
+IHdoYXQgc2VtYW50aWNzIGl0cyBnb2luZyB0byBlbmQgdXAKPiB3aXRoLCB0aGlzIHNlZW1zIHRv
+IGJlIGEgdmVyeSBzdHJhbmdlIHN0YW5jZSB0byB0YWtlLgoKVGhhdCdzIHdoeSB3ZSBkb2N1bWVu
+dCB0aGF0IHRoZSB1c2Vyc3BhY2UgaW50ZXJmYWNlIGZvciAqUENJKiBpcwpyZWxheGVkLgoKPiBJ
+J2Qgc2F5IHRoYXQgaWYgd2UgY2FuJ3Qgb2ZmZXIgdGhlIG5vLXBvc3RpbmcgYmVoYXZpb3VyIHRo
+YXQgUENJCj4gc3BlY2lmaWVzLCB0aGVuIHdlIHNob3VsZG4ndCBiZSBleHBvc2luZyBJTyBtYXBw
+aW5ncyB0byB1c2Vyc3BhY2UuCgpJIHN0cm9uZ2x5IGRpc2FncmVlLiBXZSd2ZSBiZWVuIGRvaW5n
+IGl0IGZvciBkZWNhZGVzIGFuZCBpdCB3b3JrcwpmaW5lIGluIHByZXR0eSBtdWNoIGFsbCBjYXNl
+cy4KCk5vdGUgYWxzbyB0aGF0IHNvbWUgcGxhdGZvcm1zIChpbmNsdWRpbmcgc29tZSBwb3dlcnBj
+IGFmYWlrKSBkbyBwcm92aWRlCnRoZSBub24tcG9zdGVkIGJlaGF2aW91ciwgc2ltcGx5IG5vdCBh
+cyBhIG1hcHBpbmcgYXR0cmlidXRlLiBJbnRlcm5hbApmYWJyaWNzIGFyZW4ndCBuZWNlc3Nhcmls
+eSBkb2luZyBwb3N0ZWQgd3JpdGVzIGFuZCBzb21lIGJyaWRnZXMgd2lsbApob2xkIHRoZSByZXNw
+b25zZSBmb3Igbm9uLXBvc3RlZCByZXF1ZXN0cy4KCkFueXdheSwgSSBkb24ndCBvYmplY3QgdG8g
+dHJ5aW5nIHRvIGltcHJvdmUgY29tcGxpYW5jZSB3aXRoIHRoZSBzcGVjCm9uIGFyY2ggdGhhdCBo
+YXZlIHN1Y2ggYSBtYXBwaW5nIGF0dHJpYnV0ZS4gQnV0IEkgZG8gb2JqZWN0IHRvIGhhdmluZwph
+IGdlbmVyaWMgbWFwcGluZyBhdHRyaWJ1dGUgKHRoYXQgaXNuJ3QgZnVuZGFtZW50YWxseSBhIFBD
+SSB0aGluZykgdGhhdApzaWxlbnRseSBkb3duZ3JhZGVzIHRvIHNvbWV0aGluZyB3ZWFrZXIuCgpC
+ZW4uCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbGlu
+dXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRl
+YWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgt
+YXJtLWtlcm5lbAo=
