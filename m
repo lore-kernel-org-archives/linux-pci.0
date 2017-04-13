@@ -1,70 +1,86 @@
-Return-Path: <SRS0=kBs1=3Y=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=kBs1=3Y=kernel.crashing.org=benh@kernel.org>
-Message-ID: <1492381577.25766.46.camel@kernel.crashing.org>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas
- <helgaas@kernel.org>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-        "James
- E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen"
- <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise
- <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>, Max
- Gurtovoy <maxg@mellanox.com>,
-        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm
- <linux-nvdimm@ml01.01.org>,
-        "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>,
-        Jerome Glisse <jglisse@redhat.com>
-Date: Mon, 17 Apr 2017 08:26:17 +1000
-In-Reply-To: <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
-	 <1491974532.7236.43.camel@kernel.crashing.org>
-	 <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
-	 <1492034124.7236.77.camel@kernel.crashing.org>
-	 <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
-	 <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
-	 <20170414041656.GA30694@obsidianresearch.com>
-	 <1492169849.25766.3.camel@kernel.crashing.org>
-	 <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
-	 <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
-	 <1492207643.25766.18.camel@kernel.crashing.org>
-	 <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
-	 <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
-	 <1492311719.25766.37.camel@kernel.crashing.org>
-	 <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <SRS0=6XZe=3V=cavium.com=Jayachandran.Nair@kernel.org>
+Return-Path: <SRS0=6XZe=3V=cavium.com=Jayachandran.Nair@kernel.org>
+From: Jayachandran C <jnair@caviumnetworks.com>
+To: Bjorn Helgaas <helgaas@kernel.org>,
+	linux-pci@vger.kernel.org
+Cc: Jayachandran C <jnair@caviumnetworks.com>,
+	iommu@lists.linux-foundation.org,
+	Robin Murphy <robin.murphy@arm.com>,
+	Jon Masters <jcm@redhat.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Joerg Roedel <joro@8bytes.org>
+Subject: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
+Date: Thu, 13 Apr 2017 20:30:45 +0000
+Message-Id: <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
+In-Reply-To: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
+References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2017-04-16 at 08:53 -0700, Dan Williams wrote:
-> > Just thinking out loud ... I don't have a firm idea or a design. But
-> > peer to peer is definitely a problem we need to tackle generically, the
-> > demand for it keeps coming up.
-> 
-> ZONE_DEVICE allows you to redirect via get_dev_pagemap() to retrieve
-> context about the physical address in question. I'm thinking you can
-> hang bus address translation data off of that structure. This seems
-> vaguely similar to what HMM is doing.
+On Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the
+PCI topology is slightly unusual.  For a multi-node system, it looks
+like:
 
-Ok, that's interesting. That would be a way to handle the "lookup" I
-was mentioning in the email I sent a few minutes ago.
+    00:00.0 [PCI] bridge to [bus 01-1e]
+    01:0a.0 [PCI-PCIe bridge, type 8] bridge to [bus 02-04]
+    02:00.0 [PCIe root port, type 4] bridge to [bus 03-04] (XLATE_ROOT)
+    03:00.0 PCIe Endpoint
 
-We would probably need to put some "structure" to that context.
+pci_for_each_dma_alias() assumes IOMMU translation is done at the root
+of the PCI hierarchy.  It generates 03:00.0, 01:0a.0, and 00:00.0 as
+DMA aliases for 03:00.0 because buses 01 and 00 are non-PCIe buses that
+doesn't carry the Requester ID.
 
-I'm very short on time to look into the details of this for at least
-a month (I'm taking about 3 weeks off for personal reasons next week),
-but I'm happy to dive more into this when I'm back and sort out with
-Jerome how to make it all co-habitate nicely with HMM.
+Because the ThunderX2 IOMMU is at 02:00.0, the Requester IDs 01:0a.0
+or 00:00.0 are never valid for the endpoint.  This quirk stops alias
+generation at the XLATE_ROOT bridge so we won't generate 01:0a.0 or
+00:00.0
 
-Cheers,
-Ben.
+The current IOMMU code only maps the last alias (this is a separate bug
+in itself).  Prior to this quirk, we only created IOMMU mappings for the
+invalid Requester ID 00:00:0, which never matched any DMA transactions.
+
+With this quirk, we create IOMMU mappings for a valid Requester ID,
+which fixes devices with no aliases but leaves devices with aliases
+still broken.
+
+The last alias for the endpoint is also used by the ARM GICv3 MSI-X
+code.  Without this quirk, the GIC Interrupt Translation Tables are
+setup with the invalid Requester ID, and the MSI-X generated by the
+device fails to be translated and routed.
+
+Signed-off-by: Jayachandran C <jnair@caviumnetworks.com>
+Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+Acked-by: David Daney <david.daney@cavium.com>
+---
+ drivers/pci/quirks.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 6736836..564a84a 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3958,6 +3958,20 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2260, quirk_mic_x200_dma_alias);
+ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x2264, quirk_mic_x200_dma_alias);
+ 
+ /*
++ * The IOMMU and interrupt controller on Broadcom Vulcan/Cavium ThunderX2 are
++ * associated not at the root bus, but at a bridge below. This quirk flag
++ * will ensure that the aliases are identified correctly.
++ */
++static void quirk_bridge_cavm_thrx2_pcie_root(struct pci_dev *pdev)
++{
++	pdev->dev_flags |= PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT;
++}
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9000,
++				quirk_bridge_cavm_thrx2_pcie_root);
++DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_BROADCOM, 0x9084,
++				quirk_bridge_cavm_thrx2_pcie_root);
++
++/*
+  * Intersil/Techwell TW686[4589]-based video capture cards have an empty (zero)
+  * class code.  Fix it.
+  */
+-- 
+2.7.4
