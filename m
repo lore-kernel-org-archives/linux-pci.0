@@ -1,60 +1,84 @@
-Return-Path: <SRS0=9gB6=33=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=9gB6=33=kernel.crashing.org=benh@kernel.org>
-Message-ID: <1492564984.25766.126.camel@kernel.crashing.org>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Logan Gunthorpe
-	 <logang@deltatee.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        Bjorn Helgaas
- <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg
- <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe
- <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates
- <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
-        Keith Busch
- <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        linux-scsi
- <linux-scsi@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm <linux-nvdimm@ml01.01.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jerome
- Glisse <jglisse@redhat.com>
-Date: Wed, 19 Apr 2017 11:23:04 +1000
-In-Reply-To: <20170418222440.GA27113@obsidianresearch.com>
-References: 
-	<CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
-	 <1492381396.25766.43.camel@kernel.crashing.org>
-	 <20170418164557.GA7181@obsidianresearch.com>
-	 <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
-	 <20170418190138.GH7181@obsidianresearch.com>
-	 <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
-	 <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
-	 <20170418210339.GA24257@obsidianresearch.com>
-	 <9fc9352f-86fe-3a9e-e372-24b3346b518c@deltatee.com>
-	 <20170418222440.GA27113@obsidianresearch.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <20170412132423.GA6584@red-moon>
+References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
+ <20170411163313.18577-2-ard.biesheuvel@linaro.org>
+ <20170412132423.GA6584@red-moon>
+From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Date: Thu, 13 Apr 2017 08:39:12 +0100
+Message-ID: <CAKv+Gu9JrU=-SZQcTtFfOP423gVTyM1w9yF=_J1uGd74ntpwLw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] drivers: pci: do not disregard parent resources
+ starting at 0x0
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Catalin Marinas <catalin.marinas@arm.com>,
+ Graeme Gregory <graeme.gregory@linaro.org>,
+ linux-pci <linux-pci@vger.kernel.org>, Will Deacon <will.deacon@arm.com>,
+ Leif Lindholm <leif.lindholm@linaro.org>, Sinan Kaya <okaya@codeaurora.org>,
+ Tomasz Nowicki <tn@semihalf.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Yinghai Lu <yinghai@kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2017-04-18 at 16:24 -0600, Jason Gunthorpe wrote:
-> Basically, all this list processing is a huge overhead compared to
-> just putting a helper call in the existing sg iteration loop of the
-> actual op.  Particularly if the actual op is a no-op like no-mmu x86
-> would use.
+On 12 April 2017 at 14:24, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
+> [+Yinghai, Bjorn]
+>
+> On Tue, Apr 11, 2017 at 05:33:12PM +0100, Ard Biesheuvel wrote:
+>> Commit f44116ae8818 ("PCI: Remove pci_find_parent_resource() use for
+>> allocation") updated the logic that iterates over all bus resources
+>> and compares them to a given resource, in order to decide whether one
+>> is the parent of the latter.
+>>
+>> This change inadvertently causes pci_find_parent_resource() to disregard
+>> resources starting at address 0x0, resulting in an error such as the one
+>> below on ARM systems whose I/O window starts at 0x0.
+>>
+>> pci_bus 0000:00: root bus resource [mem 0x10000000-0x3efeffff window]
+>> pci_bus 0000:00: root bus resource [io  0x0000-0xffff window]
+>> pci_bus 0000:00: root bus resource [mem 0x8000000000-0xffffffffff window]
+>> pci_bus 0000:00: root bus resource [bus 00-0f]
+>> pci 0000:00:01.0: PCI bridge to [bus 01]
+>> pci 0000:00:02.0: PCI bridge to [bus 02]
+>> pci 0000:00:03.0: PCI bridge to [bus 03]
+>> pci 0000:00:03.0: can't claim BAR 13 [io  0x0000-0x0fff]: no compatible bridge window
+>> pci 0000:03:01.0: can't claim BAR 0 [io  0x0000-0x001f]: no compatible bridge window
+>>
+>> While this never happens on x86, it is perfectly legal in general for a
+>> PCI MMIO or IO window to start at address 0x0, and it was supported in
+>> the code before commit f44116ae8818.
+>>
+>> So let's drop the test for res->start != 0; resource_contains() already
+>> checks whether [start, end) completely covers the resource, and so it
+>> should be redundant.
+>>
+>> Fixes: f44116ae8818 ("PCI: Remove pci_find_parent_resource() use for allocation")
+>
+> I know this code fixes IO claiming on ARM/ARM64 (well, it fixes nothing
+> because we never claim resources on ARM/ARM64 apart from kvmtool and
+> generic host bridge), my _big_ worry is that it can cause endless
+> regressions on other arches, in any case I would be really really
+> careful about adding a Fixes: tag to it.
+>
 
-Yes, I'm leaning toward that approach too.
+The patch is only 3 years old, and is obviously a regression given
+that the change in behavior described here occurs as a side effect.
+But given that my involvement with PCI is much more recent than that,
+it is very well possible that I am missing something here.
 
-The helper itself could hang off the devmap though.
+-- 
+Ard.
 
-> Since dma mapping is a performance path we must be careful not to
-> create intrinsic inefficiencies with otherwise nice layering :)
-> 
-> Jason
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
