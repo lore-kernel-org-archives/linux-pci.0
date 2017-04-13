@@ -1,45 +1,61 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36093 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1035315AbdDUFFt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Apr 2017 01:05:49 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH 12/13] PCI: Only treat non-pref mmio64 as pref if host bridge has mmio64
-Date: Thu, 20 Apr 2017 22:04:59 -0700
-Message-Id: <20170421050500.13957-13-yinghai@kernel.org>
-In-Reply-To: <20170421050500.13957-1-yinghai@kernel.org>
-References: <20170421050500.13957-1-yinghai@kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:45012 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752040AbdDMX0g (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Apr 2017 19:26:36 -0400
+Date: Thu, 13 Apr 2017 18:26:31 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm@ml01.01.org, linux-kernel@vger.kernel.org,
+        Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Message-ID: <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1491974532.7236.43.camel@kernel.crashing.org>
+ <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+ <1492034124.7236.77.camel@kernel.crashing.org>
+ <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-If host bridge does not have mmio64 above 4G, We don't need to
-treat device non-pref mmio64 as as pref mmio64.
+On Thu, Apr 13, 2017 at 03:22:06PM -0600, Logan Gunthorpe wrote:
+> 
+> 
+> On 12/04/17 03:55 PM, Benjamin Herrenschmidt wrote:
+> > Look at pcibios_resource_to_bus() and pcibios_bus_to_resource(). They
+> > will perform the conversion between the struct resource content (CPU
+> > physical address) and the actual PCI bus side address.
+> 
+> Ah, thanks for the tip! On my system, this translation returns the same
+> address so it was not necessary. And, yes, that means this would have to
+> find its way into the dma mapping routine somehow. This means we'll
+> eventually need a way to look-up the p2pmem device from the struct page.
+> Which means we will likely need a new flag bit in the struct page or
+> something. The big difficulty I see is testing. Do you know what
+> architectures or in what circumstances are these translations used?
 
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
----
- drivers/pci/setup-bus.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Any caller of pci_add_resource_offset() uses CPU addresses different from
+the PCI bus addresses (unless the offset is zero, of course).  All ACPI
+platforms also support this translation (see "translation_offset"), though
+in most x86 systems the offset is zero.  I'm aware of one x86 system that
+was tested with a non-zero offset but I don't think it was shipped that
+way.
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index b3fd314..7a0e59b 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -738,7 +738,7 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
- {
- 	if (pci_is_root_bus(bus))
--		return true;
-+		return to_pci_host_bridge(bus->bridge)->has_mem64;
- 
- 	if (bus->self) {
- 		int i;
--- 
-2.9.3
+Bjorn
