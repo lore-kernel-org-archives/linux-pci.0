@@ -1,285 +1,201 @@
-Return-Path: <SRS0=Uw6M=34=sigmadesigns.com=Marc_Gonzalez@kernel.org>
-Return-Path: <SRS0=Uw6M=34=sigmadesigns.com=Marc_Gonzalez@kernel.org>
-Subject: [PATCH v4 2/2] PCI: Add tango PCIe host bridge support
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci <linux-pci@vger.kernel.org>
-CC: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
-	Robin Murphy <robin.murphy@arm.com>, Lorenzo Pieralisi
-	<lorenzo.pieralisi@arm.com>, Liviu Dudau <liviu.dudau@arm.com>, David Laight
-	<david.laight@aculab.com>, Linux ARM <linux-arm-kernel@lists.infradead.org>,
-	Thibaud Cornic <thibaud_cornic@sigmadesigns.com>, Phuong Nguyen
-	<phuong_nguyen@sigmadesigns.com>, LKML <linux-kernel@vger.kernel.org>, Mason
-	<slash.tmp@free.fr>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
-Message-ID: <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
-Date: Thu, 20 Apr 2017 16:31:25 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 13 Apr 2017 15:48:00 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Sinan Kaya <okaya@codeaurora.org>
+Subject: Re: [PATCH V8 3/5] PCI/ASPM: add init hook to device_add
+Message-ID: <20170413204800.GB28316@bhelgaas-glaptop.roam.corp.google.com>
+References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+ <1491627351-1111-4-git-send-email-okaya@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
-Content-Type: text/plain; charset="ISO-8859-15"
+In-Reply-To: <1491627351-1111-4-git-send-email-okaya@codeaurora.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
+ linux-pci@vger.kernel.org, timur@codeaurora.org, linux-kernel@vger.kernel.org,
+ Julia Lawall <Julia.Lawall@lip6.fr>, linux-arm-msm@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Rajat Jain <rajatja@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This driver is required to work around several hardware bugs in the
-PCIe controller.
+Hi Sinan,
 
-NB: Revision 1 does not support legacy interrupts, or IO space.
+On Sat, Apr 08, 2017 at 12:55:49AM -0400, Sinan Kaya wrote:
+> For bridges, have pcie_aspm_init_link_state() allocate a link_state,
+> regardless of whether it currently has any children.
+> 
+> pcie_aspm_init_link_state(): Called for bridges (upstream end of
+> link) after all children have been enumerated.  No longer needs to
+> check aspm_support_enabled or pdev->has_secondary_link or the VIA
+> quirk: pci_aspm_init() already checked that stuff, so we only need
+> to check pdev->link_state here.
+> 
+> Now that we are calling alloc_pcie_link_state() from pci_aspm_init()
+> , get rid of pci_function_0 function and detect downstream link in
+> pci_aspm_init_upstream() instead when the function number is 0.
+> 
+> Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
+> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+> ---
+>  drivers/pci/pcie/aspm.c | 72 ++++++++++++++++++++++++-------------------------
+>  1 file changed, 36 insertions(+), 36 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index a80d64b..e33f84b 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -422,20 +422,6 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
+>  	}
+>  }
+>  
+> -/*
+> - * The L1 PM substate capability is only implemented in function 0 in a
+> - * multi function device.
+> - */
+> -static struct pci_dev *pci_function_0(struct pci_bus *linkbus)
+> -{
+> -	struct pci_dev *child;
+> -
+> -	list_for_each_entry(child, &linkbus->devices, bus_list)
+> -		if (PCI_FUNC(child->devfn) == 0)
+> -			return child;
+> -	return NULL;
+> -}
+> -
+>  /* Calculate L1.2 PM substate timing parameters */
+>  static void aspm_calc_l1ss_info(struct pcie_link_state *link,
+>  				struct aspm_register_info *upreg,
+> @@ -798,7 +784,6 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+>  	INIT_LIST_HEAD(&link->children);
+>  	INIT_LIST_HEAD(&link->link);
+>  	link->pdev = pdev;
+> -	link->downstream = pci_function_0(pdev->subordinate);
+>  
+>  	/*
+>  	 * Root Ports and PCI/PCI-X to PCIe Bridges are roots of PCIe
+> @@ -828,11 +813,33 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+>  
+>  static int pci_aspm_init_downstream(struct pci_dev *pdev)
+>  {
+> +	struct pcie_link_state *link;
+> +	struct pci_dev *parent;
+> +
+> +	/*
+> +	 * The L1 PM substate capability is only implemented in function 0 in a
+> +	 * multi function device.
+> +	 */
+> +	if (PCI_FUNC(pdev->devfn) != 0)
+> +		return -EINVAL;
+> +
+> +	parent = pdev->bus->self;
+> +	if (!parent)
+> +		return -EINVAL;
+> +
+> +	link = parent->link_state;
+> +	link->downstream = pdev;
+>  	return 0;
+>  }
+>  
+>  static int pci_aspm_init_upstream(struct pci_dev *pdev)
+>  {
+> +	struct pcie_link_state *link;
+> +
+> +	link = alloc_pcie_link_state(pdev);
+> +	if (!link)
+> +		return -ENOMEM;
 
-Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
----
- Documentation/devicetree/bindings/pci/tango-pcie.txt |  32 ++++++++
- drivers/pci/host/Kconfig                             |   8 ++
- drivers/pci/host/Makefile                            |   1 +
- drivers/pci/host/pcie-tango.c                        | 161 +++++++++++++++++++++++++++++++++++++++
- include/linux/pci_ids.h                              |   2 +
- 5 files changed, 204 insertions(+)
+This allocates the link_state when we enumerate a Downstream Port
+instead of when we enumerate a child device.  We want the link_state
+lifetime to match that of the Downstream Port, so this seems good.
 
-diff --git a/Documentation/devicetree/bindings/pci/tango-pcie.txt b/Documentation/devicetree/bindings/pci/tango-pcie.txt
-new file mode 100644
-index 000000000000..3353b4e77309
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/tango-pcie.txt
-@@ -0,0 +1,32 @@
-+Sigma Designs Tango PCIe controller
-+
-+Required properties:
-+
-+- compatible: "sigma,smp8759-pcie"
-+- reg: address/size of PCI configuration space, address/size of register area
-+- device_type: "pci"
-+- #size-cells: <2>
-+- #address-cells: <3>
-+- #interrupt-cells: <1>
-+- ranges: translation from system to bus addresses
-+- interrupts: spec for misc interrupts, spec for MSI
-+- msi-controller
-+
-+http://elinux.org/Device_Tree_Usage#PCI_Address_Translation
-+http://elinux.org/Device_Tree_Usage#Advanced_Interrupt_Mapping
-+
-+Example:
-+
-+	pcie@2e000 {
-+		compatible = "sigma,smp8759-pcie";
-+		reg = <0x50000000 SZ_4M>, <0x2e000 0x100>;
-+		device_type = "pci";
-+		#size-cells = <2>;
-+		#address-cells = <3>;
-+		#interrupt-cells = <1>;
-+		ranges = <0x02000000 0x0 0x00400000  0x50400000  0x0 SZ_60M>;
-+		msi-controller;
-+		interrupts =
-+			<54 IRQ_TYPE_LEVEL_HIGH>, /* misc interrupts */
-+			<55 IRQ_TYPE_LEVEL_HIGH>; /* MSI */
-+	};
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index d7e7c0a827c3..5183d9095c3a 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -285,6 +285,14 @@ config PCIE_ROCKCHIP
- 	  There is 1 internal PCIe port available to support GEN2 with
- 	  4 slots.
- 
-+config PCIE_TANGO
-+	bool "Tango PCIe controller"
-+	depends on ARCH_TANGO && PCI_MSI && OF
-+	select PCI_HOST_COMMON
-+	help
-+	  Say Y here to enable PCIe controller support for Sigma Designs
-+	  Tango systems, such as SMP8759 and later chips.
-+
- config VMD
- 	depends on PCI_MSI && X86_64
- 	tristate "Intel Volume Management Device Driver"
-diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-index 084cb4983645..fc7ea90196f3 100644
---- a/drivers/pci/host/Makefile
-+++ b/drivers/pci/host/Makefile
-@@ -32,4 +32,5 @@ obj-$(CONFIG_PCI_HOST_THUNDER_PEM) += pci-thunder-pem.o
- obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
- obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
- obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
-+obj-$(CONFIG_PCIE_TANGO) += pcie-tango.o
- obj-$(CONFIG_VMD) += vmd.o
-diff --git a/drivers/pci/host/pcie-tango.c b/drivers/pci/host/pcie-tango.c
-index ada8d35066ab..7eb74e82d325 100644
---- a/drivers/pci/host/pcie-tango.c
-+++ b/drivers/pci/host/pcie-tango.c
-@@ -230,3 +230,164 @@ static int tango_msi_probe(struct platform_device *pdev, struct tango_pcie *pcie
- 
- 	return 0;
- }
-+
-+/*** HOST BRIDGE SUPPORT ***/
-+
-+static int smp8759_config_read(struct pci_bus *bus,
-+		unsigned int devfn, int where, int size, u32 *val)
-+{
-+	int ret;
-+	struct pci_config_window *cfg = bus->sysdata;
-+	struct tango_pcie *pcie = dev_get_drvdata(cfg->parent);
-+
-+	/*
-+	 * QUIRK #1
-+	 * Reads in configuration space outside devfn 0 return garbage.
-+	 */
-+	if (devfn != 0)
-+		return PCIBIOS_FUNC_NOT_SUPPORTED;
-+
-+	/*
-+	 * QUIRK #2
-+	 * Unfortunately, config and mem spaces are muxed.
-+	 * Linux does not support such a setting, since drivers are free
-+	 * to access mem space directly, at any time.
-+	 * Therefore, we can only PRAY that config and mem space accesses
-+	 * NEVER occur concurrently.
-+	 */
-+	writel_relaxed(1, pcie->mux);
-+	ret = pci_generic_config_read(bus, devfn, where, size, val);
-+	writel_relaxed(0, pcie->mux);
-+
-+	return ret;
-+}
-+
-+static int smp8759_config_write(struct pci_bus *bus,
-+		unsigned int devfn, int where, int size, u32 val)
-+{
-+	int ret;
-+	struct pci_config_window *cfg = bus->sysdata;
-+	struct tango_pcie *pcie = dev_get_drvdata(cfg->parent);
-+
-+	writel_relaxed(1, pcie->mux);
-+	ret = pci_generic_config_write(bus, devfn, where, size, val);
-+	writel_relaxed(0, pcie->mux);
-+
-+	return ret;
-+}
-+
-+static struct pci_ecam_ops smp8759_ecam_ops = {
-+	.bus_shift	= 20,
-+	.pci_ops	= {
-+		.map_bus	= pci_ecam_map_bus,
-+		.read		= smp8759_config_read,
-+		.write		= smp8759_config_write,
-+	}
-+};
-+
-+static const struct of_device_id tango_pcie_ids[] = {
-+	{ .compatible = "sigma,smp8759-pcie" },
-+	{ /* sentinel */ },
-+};
-+
-+static int tango_check_pcie_link(void __iomem *test_out)
-+{
-+	int i;
-+
-+	writel_relaxed(16, test_out);
-+	for (i = 0; i < 10; ++i) {
-+		u32 ltssm_state = readl_relaxed(test_out) >> 8;
-+		if ((ltssm_state & 0x1f) == 0xf) /* L0 */
-+			return 0;
-+		usleep_range(3000, 4000);
-+	}
-+
-+	return -ENODEV;
-+}
-+
-+static int smp8759_init(struct tango_pcie *pcie, void __iomem *base)
-+{
-+	pcie->mux		= base + 0x48;
-+	pcie->msi_status	= base + 0x80;
-+	pcie->msi_enable	= base + 0xa0;
-+	pcie->msi_doorbell	= 0xa0000000 + 0x2e07c;
-+
-+	return tango_check_pcie_link(base + 0x74);
-+}
-+
-+static int tango_pcie_probe(struct platform_device *pdev)
-+{
-+	int ret = 0;
-+	void __iomem *base;
-+	struct resource *res;
-+	struct tango_pcie *pcie;
-+	struct device *dev = &pdev->dev;
-+
-+	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	platform_set_drvdata(pdev, pcie);
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 1);
-+	base = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(base))
-+		return PTR_ERR(base);
-+
-+	if (of_device_is_compatible(dev->of_node, "sigma,smp8759-pcie"))
-+		ret = smp8759_init(pcie, base);
-+
-+	if (ret)
-+		return ret;
-+
-+	ret = tango_msi_probe(pdev, pcie);
-+	if (ret)
-+		return ret;
-+
-+	return pci_host_common_probe(pdev, &smp8759_ecam_ops);
-+}
-+
-+static int tango_pcie_remove(struct platform_device *pdev)
-+{
-+	return tango_msi_remove(pdev);
-+}
-+
-+static struct platform_driver tango_pcie_driver = {
-+	.probe	= tango_pcie_probe,
-+	.remove	= tango_pcie_remove,
-+	.driver	= {
-+		.name = KBUILD_MODNAME,
-+		.of_match_table = tango_pcie_ids,
-+	},
-+};
-+
-+builtin_platform_driver(tango_pcie_driver);
-+
-+/*
-+ * QUIRK #3
-+ * The root complex advertizes the wrong device class.
-+ * Header Type 1 is for PCI-to-PCI bridges.
-+ */
-+static void tango_fixup_class(struct pci_dev *dev)
-+{
-+	dev->class = PCI_CLASS_BRIDGE_PCI << 8;
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIGMA, 0x24, tango_fixup_class);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIGMA, 0x28, tango_fixup_class);
-+
-+/*
-+ * QUIRK #4
-+ * The root complex exposes a "fake" BAR, which is used to filter
-+ * bus-to-system accesses. Only accesses within the range defined
-+ * by this BAR are forwarded to the host, others are ignored.
-+ *
-+ * By default, the DMA framework expects an identity mapping,
-+ * and DRAM0 is mapped at 0x80000000.
-+ */
-+static void tango_fixup_bar(struct pci_dev *dev)
-+{
-+	dev->non_compliant_bars = true;
-+	pci_write_config_dword(dev, PCI_BASE_ADDRESS_0, 0x80000000);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIGMA, 0x24, tango_fixup_bar);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SIGMA, 0x28, tango_fixup_bar);
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index f020ab4079d3..b577dbe46f8f 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -1369,6 +1369,8 @@
- #define PCI_DEVICE_ID_TTI_HPT374	0x0008
- #define PCI_DEVICE_ID_TTI_HPT372N	0x0009	/* apparently a 372N variant? */
- 
-+#define PCI_VENDOR_ID_SIGMA		0x1105
-+
- #define PCI_VENDOR_ID_VIA		0x1106
- #define PCI_DEVICE_ID_VIA_8763_0	0x0198
- #define PCI_DEVICE_ID_VIA_8380_0	0x0204
--- 
-2.11.0
+But we shouldn't at the same time change the link_state deallocation
+so it happens when the Downstream Port is removed, not when the child
+device is removed?
+
+>  	return 0;
+>  }
+>  
+> @@ -843,6 +850,17 @@ static int pci_aspm_init_upstream(struct pci_dev *pdev)
+>   */
+>  int pci_aspm_init(struct pci_dev *pdev)
+>  {
+> +	if (!aspm_support_enabled)
+> +		return 0;
+> +
+> +	if (!pci_is_pcie(pdev))
+> +		return -EINVAL;
+> +
+> +	/* VIA has a strange chipset, root port is under a bridge */
+> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
+> +	    pdev->bus->self)
+> +		return 0;
+> +
+>  	if (!pdev->has_secondary_link)
+>  		return pci_aspm_init_downstream(pdev);
+>  
+> @@ -859,33 +877,16 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+>  	struct pcie_link_state *link;
+>  	int blacklist = !!pcie_aspm_sanity_check(pdev);
+>  
+> -	if (!aspm_support_enabled)
+> -		return;
+> -
+> -	if (pdev->link_state)
+> -		return;
+> -
+> -	/*
+> -	 * We allocate pcie_link_state for the component on the upstream
+> -	 * end of a Link, so there's nothing to do unless this device has a
+> -	 * Link on its secondary side.
+> -	 */
+> -	if (!pdev->has_secondary_link)
+> -		return;
+> -
+> -	/* VIA has a strange chipset, root port is under a bridge */
+> -	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ROOT_PORT &&
+> -	    pdev->bus->self)
+> +	if (!pdev->link_state)
+>  		return;
+>  
+> +	link = pdev->link_state;
+>  	down_read(&pci_bus_sem);
+>  	if (list_empty(&pdev->subordinate->devices))
+>  		goto out;
+>  
+>  	mutex_lock(&aspm_lock);
+> -	link = alloc_pcie_link_state(pdev);
+> -	if (!link)
+> -		goto unlock;
+> +
+>  	/*
+>  	 * Setup initial ASPM state. Note that we need to configure
+>  	 * upstream links also because capable state of them can be
+> @@ -910,7 +911,6 @@ void pcie_aspm_init_link_state(struct pci_dev *pdev)
+>  		pcie_set_clkpm(link, policy_to_clkpm_state(link));
+>  	}
+>  
+> -unlock:
+>  	mutex_unlock(&aspm_lock);
+>  out:
+>  	up_read(&pci_bus_sem);
+> -- 
+> 1.9.1
+> 
+> 
+> _______________________________________________
+> linux-arm-kernel mailing list
+> linux-arm-kernel@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
