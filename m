@@ -1,172 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53382 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751473AbdDMM1i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Apr 2017 08:27:38 -0400
-Date: Thu, 13 Apr 2017 07:27:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com, clsoto@us.ibm.com
-Subject: Re: [PATCH] PCI: Disable IOV before pcibios_sriov_disable()
-Message-ID: <20170413122732.GA13978@bhelgaas-glaptop.roam.corp.google.com>
-References: <1488154712-8354-1-git-send-email-gwshan@linux.vnet.ibm.com>
- <20170307201529.GF21358@bhelgaas-glaptop.roam.corp.google.com>
- <20170309003432.GA27263@gwshan>
- <20170318001907.GA16291@gwshan>
- <20170320154644.GA24572@bhelgaas-glaptop.roam.corp.google.com>
- <20170320225006.GA8591@gwshan>
- <20170330232406.GA14305@gwshan>
- <20170413075355.GA21414@gwshan>
+Return-Path: <SRS0=kpg+=3V=google.com=bhelgaas@kernel.org>
+Return-Path: <SRS0=kpg+=3V=google.com=bhelgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170413075355.GA21414@gwshan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <alpine.LRH.2.20.1704132201410.21515@math.ut.ee>
+References: <alpine.LRH.2.20.1704102317110.14071@math.ut.ee>
+ <20170411014338.GA9311@bhelgaas-glaptop.roam.corp.google.com> <alpine.LRH.2.20.1704132201410.21515@math.ut.ee>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 13 Apr 2017 14:20:16 -0500
+Message-ID: <CAErSpo4Kr_TDgMOa8LaWngQa4HsA388_G4CANQcY5G14UBARaQ@mail.gmail.com>
+Subject: Re: 4.11-rc*: PCI IRQ allocation broken
+To: Meelis Roos <mroos@linux.ee>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 13, 2017 at 05:53:55PM +1000, Gavin Shan wrote:
-> On Fri, Mar 31, 2017 at 10:24:06AM +1100, Gavin Shan wrote:
-> >On Tue, Mar 21, 2017 at 09:50:06AM +1100, Gavin Shan wrote:
-> >>On Mon, Mar 20, 2017 at 10:46:44AM -0500, Bjorn Helgaas wrote:
-> >>>On Sat, Mar 18, 2017 at 11:19:07AM +1100, Gavin Shan wrote:
-> >>>> On Thu, Mar 09, 2017 at 11:34:32AM +1100, Gavin Shan wrote:
-> >>>> >On Tue, Mar 07, 2017 at 02:15:29PM -0600, Bjorn Helgaas wrote:
-> >>>> >>On Mon, Feb 27, 2017 at 11:18:32AM +1100, Gavin Shan wrote:
-> >>>> >>> The PowerNV platform is the only user of pcibios_sriov_disable().
-> >>>> >>> The IOV BAR could be shifted by pci_iov_update_resource(). The
-> >>>> >>> warning message in the function is printed if the IOV capability
-> >>>> >>> is in enabled (PCI_SRIOV_CTRL_VFE && PCI_SRIOV_CTRL_MSE) state.
-> >>>> >>> 
-> >>>> >>>    pci_disable_sriov
-> >>>> >>>    sriov_disable
-> >>>> >>>    pnv_pci_sriov_disable
-> >>>> >>>    pnv_pci_vf_resource_shift
-> >>>> >>>    pci_update_resource
-> >>>> >>>    pci_iov_update_resource
-> >>>> >>> 
-> >>>> >>> This fixes the issue by disabling IOV capability before calling
-> >>>> >>> pcibios_sriov_disable(). With it, the disabling path matches with
-> >>>> >>> the enabling path: pcibios_sriov_enable() is called before the
-> >>>> >>> IOV capability is enabled.
-> >>>> >>
-> >>>> >>I'm vaguely uncomfortable about this path:
-> >>>> >>
-> >>>> >>  pci_disable_sriov
-> >>>> >>    sriov_disable
-> >>>> >>      pcibios_sriov_disable           # powerpc version
-> >>>> >>	pnv_pci_sriov_disable
-> >>>> >>	  pnv_pci_vf_resource_shift
-> >>>> >>	    res = &dev->resource[i + PCI_IOV_RESOURCES]
-> >>>> >>	    res->start += size * offset
-> >>>> >>	    pci_update_resource
-> >>>> >>	      pci_iov_update_resource
-> >>>> >>	  pnv_pci_vf_release_m64
-> >>>> >>
-> >>>> >>1) "res" is already in the resource tree, so we shouldn't be changing
-> >>>> >>   its start address, because that may make the tree inconsistent,
-> >>>> >>   e.g., the resource may no longer be completely contained in its
-> >>>> >>   parent, it may conflict with a sibling, etc.
-> >>>> >>
-> >>>> >>2) If we update "res->start", shouldn't we update "res->end"
-> >>>> >>   correspondingly?
-> >>>> >>
-> >>>> >>It seems like it'd be better if we didn't update the device resources
-> >>>> >>in the enable/disable paths.  If we could do the resource adjustments
-> >>>> >>earlier, somewhere before we give the device to a driver, it seems
-> >>>> >>like it would avoid these issues.
-> >>>> >>
-> >>>> >>We might have talked about these questions in the past, so I apologize
-> >>>> >>if you've already explained this.  If that's the case, maybe we just
-> >>>> >>need some comments in the code to help the next confused reader.
-> >>>> >>
-> >>>> >
-> >>>> >Bjorn, thanks for review. I agree it's not perfect. We discussed this long
-> >>>> >time ago as I can remember. Let me try to make it a bit more clear: In our
-> >>>> >PHB hardware, there are 16 MMIO BARs. Each of them can be shared by 256 PEs
-> >>>> >(A) and owned exclusively by one PE (B). When VF BAR size is small enough,
-> >>>> >we take (A). Otherwise, we have to take (B). Only when taking (A), we need
-> >>>> >expand/move/shrink the IOV BAR. So lets stick to (A) for discussion here.
-> >>>> >
-> >>>> >Under (A), PF's IOV BAR size is extended to ((256 * (VF BAR size)) when the
-> >>>> >PF is probed. Then the @res, which corresponds to the IOV BAR, is assigned
-> >>>> >and put into the resource tree during resource sizing and assignment stage.
-> >>>> >The IOV capability is going to be enabled by PF's driver or sysfs entry, it
-> >>>> >calls into pnv_pci_sriov_enable() where number of contigous PEs (equal to
-> >>>> >number of VFs to be enabled) are allocated. We shift the IOV BAR base according
-> >>>> >to the starting PE number of the allocated block. Afterewards, the IOV BAR
-> >>>> >is restored when the IOV capability is disabled. So it's all about the PE.
-> >>>> >The IOV BAR's end address isn't touched, we needn't update @res->end when
-> >>>> >restoring the IOV BAR.
-> >>>> >
-> >>>> >In order to avoid moving IOV BAR base address, I need know the the PEs
-> >>>> >for the VFs before resourcd sizing and assignment stage. It means I need
-> >>>> >to reserve PEs in advance, which isn't nice because we never enable the
-> >>>> >VFs. In that case, the PEs are wasted.
-> >>>> >
-> >>>> >Yeah, it's nice to have add some comments in pnv_pci_vf_resource_shift()
-> >>>> >where pci_update_resource() is called. I will post another patch to
-> >>>> >linux-ppcdev and you'll be copied. If you agree, I think you can merge
-> >>>> >this patch as none of the concerns are too much related.
-> >>>> >
-> >>>> 
-> >>>> Sorry, Bjorn, ping! Please let me know if there are more concerns you have.
-> >>>
-> >>>I think we had a misunderstanding -- you mentioned adding some
-> >>>comments and wrote "I will post another patch", and I *thought* you
-> >>>meant you were going to post another version of *this* patch with some
-> >>>updated comments.  So I've been waiting for that updated patch.  But I
-> >>>think you've been waiting for me to merge *this* patch as-is.
-> >>>
-> >>>To avoid having this discussion a third time in the future, I think
-> >>>you should add some comments at the point where you update the
-> >>>resource.  Updating a resource after it's in the resource tree is
-> >>>clearly dangerous, so we need some explanation of why it's sort of OK
-> >>>in this particular case.
-> >>>
-> >>>If you can write a comment and dig up a URL to our previous
-> >>>discussion, I'd like to incorporate that into *this* patch before I
-> >>>merge it.  The sooner we can document this, the less work it will be
-> >>>in the future.
-> >>>
-> >>
-> >>Ok. Sorry for the confusion and that I should looked into the code for more.
-> >>We already had one comment like below in arch/powerpc/platforms/powernv/pci-ioda.c::
-> >>pnv_pci_vf_resource_shift(). I think it's exactly what you like to have, please
-> >>help to confirm. I believe it was added based on your comments long time ago when
-> >>you review the SRIOV (for PowerNV) patches.
-> >>
-> >>        /*
-> >>         * After doing so, there would be a "hole" in the /proc/iomem when
-> >>         * offset is a positive value. It looks like the device return some
-> >>         * mmio back to the system, which actually no one could use it.
-> >>         */
-> >>
-> >>http://www.spinics.net/lists/linux-pci/msg39424.html
-> >>
-> >
-> >Bjorn, please let me know if you have concerns.
-> >
-> 
-> Bjorn, Sorry that I have to ping you again. I assume it's mergable.
-> Please let me know if you have more concerns.
+On Thu, Apr 13, 2017 at 2:03 PM, Meelis Roos <mroos@linux.ee> wrote:
+>> > This happens on my HP Compaq 8100 Elite SFF PC. While 4.10 works fine,
+>> > 4.11.-rc5 and at least back to 4.10.0-10770-g2d6be4abf514 fail to assign
+>> > PCI IRQ to multiple devices (no GSI messages in the dmesg). This results
+>> > in mouse in one USB port working and keyboard in another USB port not
+>> > working, reproducibly.
+>> >
+>> > Will bisect.
+>>
+>> Thanks a lot for the report, Meelis, and I apologize for the inconvenience.
+>> I opened https://bugzilla.kernel.org/show_bug.cgi?id=195319 to track this,
+>> marked it as a regression, and attached your v4.11-rc5 dmesg to it.
+>
+> Bisecting got stuck - I reached a state with about 5-6 steps left when I
+> got an unbootable kernel. Went there yesterday, restarted a good kernel,
+> skipped the kernel and left. When I rebooted into the next bisect
+> kernel, it has hung again. Will see when I get to go there.
+> Unfortunately I did not remember to take the intermediate bisect state
+> with me :(
 
-I'm not going to merge this without a comment in
-pnv_pci_vf_resource_shift() that addresses the two questions I raised
-in my very first response.  I don't think the existing comment about
-"After doing so, there would be a 'hole'" is sufficient.  If it were
-sufficient, I wouldn't have raised the questions in the first place.
+I *think* the ACPI guys found the problem; at least Michael Marlen
+<michael@michaelmarley.com> reported the same problem and that it was
+fixed by reverting 57707a9a7780 ("ACPICA: Resources: Not a valid
+resource if buffer length too long").
 
-The resource tree relies on properties like "the sibling list is
-ordered by res->start" and "a child is completely contained within its
-parent".  pnv_pci_vf_resource_shift() does this:
+Sorry, I should have added you the cc list in bugzilla right away.
 
-  res->start += size * offset;
-
-That could easily break both of those properties, so you need to
-provide a way for a reader to verify that it actually does not break
-them.
-
-You can write that comment, or I can do it myself.  Either way, it's
-going to take me a while to figure out again what's going on there
-because it is definitely outside the usual resource management model.
-
-Bjorn
+>> Something seems broken in ACPI.  There are a bunch of warnings, and I
+>> think the PCI IRQ problem is a consequence of the fact that the
+>> PNP0A08 _CRS evaluation failed, and we probably don't bother looking
+>> for a _PRT under that bridge.
+>>
+>> > Linux version 4.11.0-rc5-00033-g308ac7563944 (mroos@prometheus) (gcc version 6.3.0 20170321 (Debian 6.3.0-11) ) #64 SMP Wed Apr 5 12:29:53 EEST 2017
+>> > Command line: BOOT_IMAGE=/boot/vmlinuz-4.11.0-rc5-00033-g308ac7563944 root=/dev/sda1 ro
+>> > ...
+>> > ACPI BIOS Warning (bug): Optional FADT field Pm2ControlBlock has valid Address but zero Length: 0x0000000000000050/0x0 (20170119/tbfadt-658)
+>> > ACPI BIOS Warning (bug): Invalid length for FADT/Pm2ControlBlock: 0, using default 8 (20170119/tbfadt-708)
+>> > ...
+>> > acpi LNXCPU:00: Invalid PBLK length [7]
+>> > acpi LNXCPU:01: Invalid PBLK length [7]
+>> > acpi LNXCPU:02: Invalid PBLK length [7]
+>> > acpi LNXCPU:03: Invalid PBLK length [7]
+>> > acpi PNP0A08:00: [Firmware Bug]: no secondary bus range in _CRS
+>> > ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+>> > acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+>> > ACPI BIOS Error (bug): \_SB.PCI0._OSC: Excess arguments - ASL declared 5, ACPI requires 4 (20170119/nsarguments-189)
+>> > ACPI Error: [CAPD] Namespace lookup failure, AE_ALREADY_EXISTS (20170119/dsfield-211)
+>> > ACPI Error: Method parse/execution failed [\_SB.PCI0._OSC] (Node ffff880113031668), AE_ALREADY_EXISTS (20170119/psparse-543)
+>> > acpi PNP0A08:00: _OSC failed (AE_ALREADY_EXISTS); disabling ASPM
+>> > acpi PNP0A08:00: [Firmware Info]: MMCONFIG for domain 0000 [bus 00-3f] only partially covers this bridge
+>> > acpi PNP0A08:00: failed to parse _CRS method, error code -5
+>> > acpi PNP0A08:00: Bus 0000:00 not present in PCI namespace
+>> > ...
+>> > PCI: Discovered peer bus 00
+>> > PCI: root bus 00: using default resources
+>> > PCI: Probing PCI hardware (bus 00)
+>> > ...
+>> > ACPI: \: failed to evaluate _DSM (0x1001)
+>> > ...
+>> > PCI host bridge to bus 0000:00
+>> > pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+>> > pci_bus 0000:00: root bus resource [mem 0x00000000-0xfffffffff]
+>> > pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
+>> > ...
+>> > PCI: Discovered peer bus 3f
+>> > PCI: root bus 3f: using default resources
+>> > PCI: Probing PCI hardware (bus 3f)
+>> > ACPI: \: failed to evaluate _DSM (0x1001)
+>> > ...
+>> > pnp 00:00: Plug and Play ACPI device, IDs PNP0b00 (active)
+>> > pnp 00:01: can't evaluate _CRS: 12316
+>> > ...
+>> > [drm] ACPI BIOS requests an excessive sleep of 4294705151 ms, using 1500 ms instead
+>>
+>
+> --
+> Meelis Roos (mroos@linux.ee)
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
