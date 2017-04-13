@@ -1,69 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V8 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-Date: Sat,  8 Apr 2017 00:55:46 -0400
-Message-Id: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Sinan Kaya <okaya@codeaurora.org>, linux-arm-msm@vger.kernel.org,
- mayurkumar.patel@intel.com, linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:54743 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752583AbdDMQZI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Apr 2017 12:25:08 -0400
+Date: Thu, 13 Apr 2017 18:24:58 +0200
+From: Greg KH <greg@kroah.com>
+To: Juergen Gross <jgross@suse.com>
+Cc: stable@vger.kernel.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Julien Grall <julien.grall@arm.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Ross Lagerwall <ross.lagerwall@citrix.com>,
+        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>,
+        KarimAllah Ahmed <karahmed@amazon.de>
+Subject: Re: [stable-4.10: PATCH] xen: revert commits 72a9b186292 and
+ da72ff5bfcb0
+Message-ID: <20170413162458.GA5676@kroah.com>
+References: <20170413144949.4295-1-jgross@suse.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170413144949.4295-1-jgross@suse.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When the operating system is booted with the default ASPM policy
-(POLICY_DEFAULT), current code is querying the enable/disable
-states from ASPM registers to determine the policy.
+On Thu, Apr 13, 2017 at 04:49:49PM +0200, Juergen Gross wrote:
+> Revert commit 72a9b186292 ("xen: Remove event channel notification
+> through Xen PCI platform device") as the original analysis was wrong
+> that all the removed code isn't in use any more. As commit da72ff5bfcb0
+> ("partially revert xen: Remove event channel notification through Xen
+> PCI platform device") reverted already some parts of it revert this
+> commit, too.
+> 
+> It is still necessary for old Xen versions (< 4.0) and for being able
+> to run the Linux kernel as dom0 in a nested Xen environment.
 
-For example, a BIOS could set the power saving state to performance
-and clear all ASPM control registers. A balanced ASPM policy could
-enable L0s and disable L1. A power conscious BIOS could enable both
-L0s and L1 to trade off latency and performance vs. power.
+Is there a commit in Linus's tree that matches this revert as well?
 
-After hotplug removal, pcie_aspm_exit_link_state() function clears
-the ASPM registers. An insertion following hotplug removal reads
-incorrect policy as ASPM disabled even though ASPM was enabled
-during boot.
+thanks,
 
-This is caused by the fact that same function is used for reconfiguring
-ASPM regardless of the power on state.
-
-------------------------
-Changes from v7 (https://www.spinics.net/lists/arm-kernel/msg573034.html)
-------------------------
-- enable LTSSM as a best effort if the endpoint is not connected during
-  boot
-
-
-Sinan Kaya (5):
-  PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
-  PCI/ASPM: split pci_aspm_init() into two
-  PCI/ASPM: add init hook to device_add
-  PCI/ASPM: save power on values during bridge init
-  PCI/ASPM: move link_state cleanup to bridge remove
-
- drivers/pci/pcie/aspm.c | 149 +++++++++++++++++++++++++++++++++---------------
- drivers/pci/probe.c     |   3 +
- drivers/pci/remove.c    |   3 +-
- include/linux/pci.h     |   2 +
- 4 files changed, 110 insertions(+), 47 deletions(-)
-
--- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+greg k-h
