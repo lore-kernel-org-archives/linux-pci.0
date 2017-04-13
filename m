@@ -1,97 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 12 Apr 2017 12:31:24 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v3 00/32] PCI: fix config and I/O Address space memory
- mappings
-Message-ID: <20170412113124.GZ17774@n2100.armlinux.org.uk>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
- <1491917906.7236.7.camel@kernel.crashing.org>
- <20170411140857.GA6821@red-moon>
- <1491952371.7236.22.camel@kernel.crashing.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 13 Apr 2017 18:55:54 +0200
+From: Greg KH <greg@kroah.com>
+To: Juergen Gross <jgross@suse.com>
+Cc: stable@vger.kernel.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Julien Grall <julien.grall@arm.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Ross Lagerwall <ross.lagerwall@citrix.com>,
+        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>,
+        KarimAllah Ahmed <karahmed@amazon.de>
+Subject: Re: [stable-4.10: PATCH] xen: revert commits 72a9b186292 and
+ da72ff5bfcb0
+Message-ID: <20170413165554.GA8378@kroah.com>
+References: <20170413144949.4295-1-jgross@suse.com>
+ <20170413162458.GA5676@kroah.com>
+ <82b08730-4672-07aa-6c42-9d77ad4ac8ae@suse.com>
 MIME-Version: 1.0
-In-Reply-To: <1491952371.7236.22.camel@kernel.crashing.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
- linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
- David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
- Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
- Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
- Jesper Nilsson <jesper.nilsson@axis.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Yoshinori Sato <ysato@users.sourceforge.jp>,
- Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
- "James E.J. Bottomley" <jejb@parisc-linux.org>, Ingo Molnar <mingo@redhat.com>,
- Geert Uytterhoeven <geert@linux-m68k.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Matt Turner <mattst88@gmail.com>,
- Haavard Skinnemoen <hskinnemoen@gmail.com>, Fenghua Yu <fenghua.yu@intel.com>,
- James Hogan <james.hogan@imgtec.com>, Chris Metcalf <cmetcalf@mellanox.com>,
- Arnd Bergmann <arnd@arndb.de>, Heiko Carstens <heiko.carstens@de.ibm.com>,
- Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
- Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
- Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
- Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
- linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
- Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
- "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
- "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <82b08730-4672-07aa-6c42-9d77ad4ac8ae@suse.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 12, 2017 at 09:12:51AM +1000, Benjamin Herrenschmidt wrote:
-> This is a problem to be solved by the bridge itself. If ARM has a
-> mapping attribute to make stores non-posted, keep this an ARM specific
-> attribute at this stage I'd say.
+On Thu, Apr 13, 2017 at 06:28:33PM +0200, Juergen Gross wrote:
+> On 13/04/17 18:24, Greg KH wrote:
+> > On Thu, Apr 13, 2017 at 04:49:49PM +0200, Juergen Gross wrote:
+> >> Revert commit 72a9b186292 ("xen: Remove event channel notification
+> >> through Xen PCI platform device") as the original analysis was wrong
+> >> that all the removed code isn't in use any more. As commit da72ff5bfcb0
+> >> ("partially revert xen: Remove event channel notification through Xen
+> >> PCI platform device") reverted already some parts of it revert this
+> >> commit, too.
+> >>
+> >> It is still necessary for old Xen versions (< 4.0) and for being able
+> >> to run the Linux kernel as dom0 in a nested Xen environment.
+> > 
+> > Is there a commit in Linus's tree that matches this revert as well?
+> 
+> Not yet. I'm working on it.
 
-So what you seem to be saying is to place drivers not in drivers/pci/host
-but in arch/arm, and a duplicate copy in arch/arm64.
+I'd prefer to take the same exact commit please.  That way nothing
+diverges here.
 
-No.  We're way past that by popular concensus.  We're not going back to
-doing what we did in the 2000s.  Drivers go in the drivers subtree,
-period.  That means we require architecture interfaces that provide
-access to architecture specific details that may not be suitable for
-all architectures to support.
+thanks,
 
-In the case of something brand new, then I agree with you that the
-default implementation should fail if it's not supportable on all
-architectures.  However, when we have existing drivers using an
-interface that doesn't provide the semantics they already require,
-then it makes no sense to effectively break these drivers on a range
-of existing architectures.
-
-The question really is - what's the best way to solve the problem with
-existing drivers without breaking them.  I suspect that, sadly, the
-only realistic way forward here is via the litter-drivers-with-ifdefs
-approach since you don't like providing a default implementation that
-is compatible with what these drivers are already doing.
-
-Drivers, such as:
-
-drivers/pci/host/pci-mvebu.c
-drivers/pci/host/pci-versatile.c
-drivers/pci/host/pci-xgene.c
-
-to name a few.
-
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+greg k-h
