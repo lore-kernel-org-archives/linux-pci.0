@@ -1,51 +1,52 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:41712 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751193AbdDMQ2i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 13 Apr 2017 12:28:38 -0400
+Subject: Re: [stable-4.10: PATCH] xen: revert commits 72a9b186292 and
+ da72ff5bfcb0
+To: Greg KH <greg@kroah.com>
+References: <20170413144949.4295-1-jgross@suse.com>
+ <20170413162458.GA5676@kroah.com>
+Cc: stable@vger.kernel.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Julien Grall <julien.grall@arm.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Ross Lagerwall <ross.lagerwall@citrix.com>,
+        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>,
+        KarimAllah Ahmed <karahmed@amazon.de>
+From: Juergen Gross <jgross@suse.com>
+Message-ID: <82b08730-4672-07aa-6c42-9d77ad4ac8ae@suse.com>
+Date: Thu, 13 Apr 2017 18:28:33 +0200
 MIME-Version: 1.0
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 7 Apr 2017 14:35:41 +0200
-Message-ID: <CAJZ5v0gD9-p++50Z1oG2P5Q_=y2vVPEdaNHPU2YZviAsP5xZ6A@mail.gmail.com>
-Subject: [GIT PULL] ACPI fix for v4.11-rc6
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux PCI <linux-pci@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20170413162458.GA5676@kroah.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Linus,
+On 13/04/17 18:24, Greg KH wrote:
+> On Thu, Apr 13, 2017 at 04:49:49PM +0200, Juergen Gross wrote:
+>> Revert commit 72a9b186292 ("xen: Remove event channel notification
+>> through Xen PCI platform device") as the original analysis was wrong
+>> that all the removed code isn't in use any more. As commit da72ff5bfcb0
+>> ("partially revert xen: Remove event channel notification through Xen
+>> PCI platform device") reverted already some parts of it revert this
+>> commit, too.
+>>
+>> It is still necessary for old Xen versions (< 4.0) and for being able
+>> to run the Linux kernel as dom0 in a nested Xen environment.
+> 
+> Is there a commit in Linus's tree that matches this revert as well?
 
-Please pull from the tag
+Not yet. I'm working on it.
 
- git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
- acpi-4.11-rc6
 
-with top-most commit dc752d54fd3a69c882d24133810edeb22dda2d0d
-
- Merge branch 'acpi-scan-fixes'
-
-on top of commit a71c9a1c779f2499fb2afc0553e543f18aff6edf
-
- Linux 4.11-rc5
-
-to receive an ACPI fix for v4.11-rc6.
-
-This fixes a core device enumeration code change made in 4.10, in
-order to address a reported issue, that went too far.
-
-Specifics:
-
- - Refine the check for the existence of _HID in find_child_checks()
-   so that it doesn't trigger for device objects with device IDs
-   made up by the kernel (Rafael Wysocki).
-
-Thanks!
-
----------------
-
-Rafael J. Wysocki (1):
-      ACPI / scan: Prefer devices without _HID for _ADR matching
-
----------------
-
- drivers/acpi/glue.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Juergen
