@@ -1,70 +1,105 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 12/27] cris: Use generic pci_mmap_resource_range()
-Date: Wed, 12 Apr 2017 13:26:01 +0100
-Message-Id: <828502b94cf12a278d4b1e43e98d0f4d3fd71ef2.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+MIME-Version: 1.0
+In-Reply-To: <CACK8Z6EfUTDjCM=fmdHfWeu8UV5GN+i6PX9fKkR1H8K90TXozg@mail.gmail.com>
+References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+ <1491627351-1111-3-git-send-email-okaya@codeaurora.org>
+ <CACK8Z6EfUTDjCM=fmdHfWeu8UV5GN+i6PX9fKkR1H8K90TXozg@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 13 Apr 2017 13:25:44 -0500
+Message-ID: <CAErSpo4gduGVq2Na0tYbG77Pi23R-RMBvAcJueWrQTJCRsHYGw@mail.gmail.com>
+Subject: Re: [PATCH V8 2/5] PCI/ASPM: split pci_aspm_init() into two
+To: Rajat Jain <rajatja@google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
+ Rajat Jain <rajatxjain@gmail.com>, David Daney <david.daney@cavium.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Timur Tabi <timur@codeaurora.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Sinan Kaya <okaya@codeaurora.org>, Julia Lawall <Julia.Lawall@lip6.fr>,
+ linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+ Shawn Lin <shawn.lin@rock-chips.com>,
+ linux-arm <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+On Wed, Apr 12, 2017 at 2:16 PM, Rajat Jain <rajatja@google.com> wrote:
+> On Fri, Apr 7, 2017 at 9:55 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
+>> Split pci_aspm_init() body into pci_aspm_init_upstream()
+>> and pci_aspm_init_downstream() for bridge and endpoint
+>> specific code behavior.
+>>
+>> Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
+>> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+>> ---
+>>  drivers/pci/pcie/aspm.c | 15 ++++++++++++++-
+>>  1 file changed, 14 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+>> index dc36717..a80d64b 100644
+>> --- a/drivers/pci/pcie/aspm.c
+>> +++ b/drivers/pci/pcie/aspm.c
+>> @@ -826,6 +826,16 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+>>         return link;
+>>  }
+>>
+>> +static int pci_aspm_init_downstream(struct pci_dev *pdev)
+>> +{
+>> +       return 0;
+>> +}
+>> +
+>> +static int pci_aspm_init_upstream(struct pci_dev *pdev)
+>> +{
+>> +       return 0;
+>> +}
+>> +
+>>  /*
+>>   * pci_aspm_init: Initiate PCI express link state.
+>>   * It is called from device_add for every single pci device.
+>> @@ -833,7 +843,10 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
+>>   */
+>>  int pci_aspm_init(struct pci_dev *pdev)
+>>  {
+>> -       return 0;
+>> +       if (!pdev->has_secondary_link)
+>> +               return pci_aspm_init_downstream(pdev);
+>> +
+>> +       return pci_aspm_init_upstream(pdev);
+>>  }
+>
+> Nit:
+>
+> if (x_flag())
+>    return x();
+> return y();
+>
+> May be better than
+>
+> if (!x_flag)
+>     return y();
+> return x();
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/cris/arch-v32/drivers/pci/bios.c | 23 -----------------------
- arch/cris/include/asm/pci.h           |  1 +
- 2 files changed, 1 insertion(+), 23 deletions(-)
+I agree, and I made that change on my branch.  I also renamed these to
+pci_aspm_init_downstream_port() (for Root Ports and Switch Downstream
+Ports) and pci_aspm_init_upstream_port() (for Switch Upstream Ports
+and Endpoints) to try to match the terminology in the spec.
 
-diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-index a589686d..394c2a73 100644
---- a/arch/cris/arch-v32/drivers/pci/bios.c
-+++ b/arch/cris/arch-v32/drivers/pci/bios.c
-@@ -14,29 +14,6 @@ void pcibios_set_master(struct pci_dev *dev)
- 	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	unsigned long prot;
--
--	/* Leave vm_pgoff as-is, the PCI space address is the physical
--	 * address on this platform.
--	 */
--	prot = pgprot_val(vma->vm_page_prot);
--	vma->vm_page_prot = __pgprot(prot);
--
--	/* Write-combine setting is ignored, it is changed via the mtrr
--	 * interfaces on this platform.
--	 */
--	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			     vma->vm_end - vma->vm_start,
--			     vma->vm_page_prot))
--		return -EAGAIN;
--
--	return 0;
--}
--
- resource_size_t
- pcibios_align_resource(void *data, const struct resource *res,
- 		       resource_size_t size, resource_size_t align)
-diff --git a/arch/cris/include/asm/pci.h b/arch/cris/include/asm/pci.h
-index 65198cb..6e50533 100644
---- a/arch/cris/include/asm/pci.h
-+++ b/arch/cris/include/asm/pci.h
-@@ -42,6 +42,7 @@ struct pci_dev;
- #define PCI_DMA_BUS_IS_PHYS	(1)
- 
- #define HAVE_PCI_MMAP
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE
- 
- #endif /* __KERNEL__ */
- 
--- 
-2.9.3
+FWIW, your email didn't seem to make it to the list, Rajat.  Maybe
+some gmail weirdness?  I don't *see* anything wrong, but ...  I'm
+responding via gmail, so my response probably won't make it to the
+list either.
+
+Bjorn
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
