@@ -1,82 +1,226 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: Colin King <colin.king@canonical.com>, Lucas Stach
- <l.stach@pengutronix.de>, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Subject: RE: [PATCH] PCI: imx6: fix spelling mistake: "contol" -> "control"
-Date: Tue, 25 Apr 2017 06:09:54 +0000
-Message-ID: <AM5PR0402MB28502178051215CE9C1EBAD08C1E0@AM5PR0402MB2850.eurprd04.prod.outlook.com>
-References: <20170421070230.16582-1-colin.king@canonical.com>
-In-Reply-To: <20170421070230.16582-1-colin.king@canonical.com>
+Return-Path: <SRS0=ARzJ=3V=redhat.com=alex.williamson@kernel.org>
+Return-Path: <SRS0=ARzJ=3V=redhat.com=alex.williamson@kernel.org>
+Date: Wed, 12 Apr 2017 20:56:14 -0600
+From: Alex Williamson <alex.williamson@redhat.com>
+To: bodong@mellanox.com
+Cc: helgaas@kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, saeedm@mellanox.com, Eli Cohen
+ <eli@mellanox.com>, <gwshan@linux.vnet.ibm.com>
+Subject: Re: [v3] PCI: Add an option to control probing of VFs before
+ enabling SR-IOV
+Message-ID: <20170412205614.429db99c@t450s.home>
+In-Reply-To: <1492037500-84654-1-git-send-email-bodong@mellanox.com>
+References: <1492037500-84654-1-git-send-email-bodong@mellanox.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, 13 Apr 2017 01:51:40 +0300
+bodong@mellanox.com wrote:
 
-> -----Original Message-----
-> From: Colin King [mailto:colin.king@canonical.com]
-> Sent: Friday, April 21, 2017 3:03 PM
-> To: Richard Zhu <hongxing.zhu@nxp.com>; Lucas Stach
-> <l.stach@pengutronix.de>; Bjorn Helgaas <bhelgaas@google.com>; linux-
-> pci@vger.kernel.org; linux-arm-kernel@lists.infradead.org
-> Cc: linux-kernel@vger.kernel.org
-> Subject: [PATCH] PCI: imx6: fix spelling mistake: "contol" -> "control"
+> From: Bodong Wang <bodong@mellanox.com>
 > 
-> From: Colin Ian King <colin.king@canonical.com>
+> Sometimes it is not desirable to probe the virtual functions after
+> SRIOV is enabled. This can save host side resource usage by VF
+> instances which would be eventually probed to VMs.
 > 
-> trivial fix to spelling mistake in dev_err message
+> Add a new PCI sysfs interface "sriov_drivers_autoprobe" to control
+> that from the PF, all current callers still retain the same
+> functionality. To modify it, echo 0/n/N (disable probe) or 1/y/Y
+> (enable probe) to:
 > 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-Acked-by: Richard Zhu <hongxing.Zhu@nxp.com>
+> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_drivers_autoprobe
+> 
+> Note that, the choice must be made before enabling VFs. The change
+> will not take effect if VFs are already enabled. Simply, one can set
+> sriov_numvfs to 0, choose whether to probe or not, and then resume
+> sriov_numvfs.
+> 
+> Signed-off-by: Bodong Wang <bodong@mellanox.com>
+> Signed-off-by: Eli Cohen <eli@mellanox.com>
+> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
 
-Best Regards
-hongxing zhu
-Email: hongxing.zhu@nxp.com
+Whoa, I reviewed the last version, that's different than providing a
+Reviewed-by, and I've certainly never seen this version until now, so I
+can't possibly have endorsed it in any way.  It's also changed since
+Gavin saw it and I think Bjorn is in the same boat.  Probably a good
+idea to cc the people you're claiming reviewed this too (cc +Gavin).
 
+> Reviewed-by: Bjorn Helgaas <helgaas@kernel.org>
 > ---
->  drivers/pci/dwc/pci-imx6.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>  Documentation/ABI/testing/sysfs-bus-pci |   18 ++++++++++++++++++
+>  Documentation/PCI/pci-iov-howto.txt     |   12 ++++++++++++
+>  drivers/pci/iov.c                       |    1 +
+>  drivers/pci/pci-driver.c                |   22 ++++++++++++++++++----
+>  drivers/pci/pci-sysfs.c                 |   28 ++++++++++++++++++++++++++++
+>  drivers/pci/pci.h                       |    1 +
+>  6 files changed, 78 insertions(+), 4 deletions(-)
 > 
-> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c index
-> 102edcf1e261..129717ae5022 100644
-> --- a/drivers/pci/dwc/pci-imx6.c
-> +++ b/drivers/pci/dwc/pci-imx6.c
-> @@ -726,13 +726,13 @@ static int imx6_pcie_probe(struct platform_device
-> *pdev)
->  		imx6_pcie->pciephy_reset = devm_reset_control_get(dev,
->  								  "pciephy");
->  		if (IS_ERR(imx6_pcie->pciephy_reset)) {
-> -			dev_err(dev, "Failed to get PCIEPHY reset contol\n");
-> +			dev_err(dev, "Failed to get PCIEPHY reset control\n");
->  			return PTR_ERR(imx6_pcie->pciephy_reset);
->  		}
-> 
->  		imx6_pcie->apps_reset = devm_reset_control_get(dev,
-> "apps");
->  		if (IS_ERR(imx6_pcie->apps_reset)) {
-> -			dev_err(dev, "Failed to get PCIE APPS reset
-> contol\n");
-> +			dev_err(dev, "Failed to get PCIE APPS reset
-> control\n");
->  			return PTR_ERR(imx6_pcie->apps_reset);
->  		}
->  		break;
-> --
-> 2.11.0
+> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> index 5a1732b..0878520 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -301,3 +301,21 @@ Contact:	Emil Velikov <emil.l.velikov@gmail.com>
+>  Description:
+>  		This file contains the revision field of the the PCI device.
+>  		The value comes from device config space. The file is read only.
+> +
+> +What:		/sys/bus/pci/devices/.../sriov_drivers_autoprobe
+> +Date:		April 2017
+> +Contact:	Bodong Wang<bodong@mellanox.com>
+> +Description:
+> +		This file appears when a physical PCIe device supports SR-IOV.
+> +		Userspace applications can read and write to this file to
+> +		determine and control the enablement(1/y/Y) or disablement
+> +		(0/n/N) of probing Virtual Functions (VFs) by a compatible
+> +		driver on host side. The default value is 1(enabled) which means
+> +		VFs will be probed and bound to a compatible driver on the host
+> +		side if SR-IOV is enabled. A typical use case is writing 0 to
+> +		this file to disable SR-IOV drivers auto probe, then admin from
+> +		host is able to assign the newly created VFs to virtual machines
+> +		directly after SR-IOV is enabled. Note that, changing this file
+> +		will not affect VFs which are already probed by host. In this
+> +		scenario, the user must first disable SR-IOV, make the change,
+> +		then resume SR-IOV.
+> diff --git a/Documentation/PCI/pci-iov-howto.txt b/Documentation/PCI/pci-iov-howto.txt
+> index 2d91ae2..b6807df 100644
+> --- a/Documentation/PCI/pci-iov-howto.txt
+> +++ b/Documentation/PCI/pci-iov-howto.txt
+> @@ -68,6 +68,18 @@ To disable SR-IOV capability:
+>  	echo  0 > \
+>          /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_numvfs
+>  
+> +To enable auto probing VFs by a compatible driver on the host, run
+> +command bellow before enabling SR-IOV capabilities. This is the
+> +default behavior.
+> +	echo 1 > \
+> +        /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_drivers_autoprobe
+> +
+> +To disable auto probing VFs by a compatible driver on the host, run
+> +command bellow before enabling SR-IOV capabilities. Updating this
+> +entry will not affect VFs which are already probed.
+> +	echo  0 > \
+> +        /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_drivers_autoprobe
+> +
+>  3.2 Usage example
+>  
+>  Following piece of code illustrates the usage of the SR-IOV API.
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 2479ae8..d9dc736 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -450,6 +450,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>  	iov->total_VFs = total;
+>  	iov->pgsz = pgsz;
+>  	iov->self = dev;
+> +	iov->drivers_autoprobe = true;
+>  	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+>  	pci_read_config_byte(dev, pos + PCI_SRIOV_FUNC_LINK, &iov->link);
+>  	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END)
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index afa7271..f99f7fe 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -394,6 +394,18 @@ void __weak pcibios_free_irq(struct pci_dev *dev)
+>  {
+>  }
+>  
+> +#ifdef CONFIG_PCI_IOV
+> +static inline bool pci_device_can_probe(struct pci_dev *pdev)
+> +{
+> +	return (!pdev->is_virtfn || pdev->physfn->sriov->drivers_autoprobe);
+> +}
+> +#else
+> +static inline bool pci_device_can_probe(struct pci_dev *pdev)
+> +{
+> +	return true;
+> +}
+> +#endif
+> +
+>  static int pci_device_probe(struct device *dev)
+>  {
+>  	int error;
+> @@ -405,10 +417,12 @@ static int pci_device_probe(struct device *dev)
+>  		return error;
+>  
+>  	pci_dev_get(pci_dev);
+> -	error = __pci_device_probe(drv, pci_dev);
+> -	if (error) {
+> -		pcibios_free_irq(pci_dev);
+> -		pci_dev_put(pci_dev);
+> +	if (pci_device_can_probe(pci_dev)) {
+> +		error = __pci_device_probe(drv, pci_dev);
+> +		if (error) {
+> +			pcibios_free_irq(pci_dev);
+> +			pci_dev_put(pci_dev);
+> +		}
+>  	}
+>  
+>  	return error;
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 25d010d..369c999 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -526,10 +526,37 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  	return count;
+>  }
+>  
+> +static ssize_t sriov_drivers_autoprobe_show(struct device *dev,
+> +					    struct device_attribute *attr,
+> +					    char *buf)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	return sprintf(buf, "%u\n", pdev->sriov->drivers_autoprobe);
+> +}
+> +
+> +static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
+> +					     struct device_attribute *attr,
+> +					     const char *buf, size_t count)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +	bool drivers_autoprobe;
+> +
+> +	if (kstrtobool(buf, &drivers_autoprobe) < 0)
+> +		return -EINVAL;
+> +
+> +	pdev->sriov->drivers_autoprobe = drivers_autoprobe;
+> +
+> +	return count;
+> +}
+> +
+>  static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
+>  static struct device_attribute sriov_numvfs_attr =
+>  		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+>  		       sriov_numvfs_show, sriov_numvfs_store);
+> +static struct device_attribute sriov_drivers_autoprobe_attr =
+> +		__ATTR(sriov_drivers_autoprobe, (S_IRUGO|S_IWUSR|S_IWGRP),
+> +		       sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
+>  #endif /* CONFIG_PCI_IOV */
+>  
+>  static ssize_t driver_override_store(struct device *dev,
+> @@ -1549,6 +1576,7 @@ static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
+>  static struct attribute *sriov_dev_attrs[] = {
+>  	&sriov_totalvfs_attr.attr,
+>  	&sriov_numvfs_attr.attr,
+> +	&sriov_drivers_autoprobe_attr.attr,
+>  	NULL,
+>  };
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 8dd38e6..3ba7d58 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -272,6 +272,7 @@ struct pci_sriov {
+>  	struct pci_dev *self;	/* this PF */
+>  	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
+>  	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+> +	bool drivers_autoprobe;	/* auto probing of VFs by driver */
+>  };
+>  
+>  #ifdef CONFIG_PCI_ATS
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Looks ok, so let me provide a
+
+Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
