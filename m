@@ -1,85 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V7 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
- <7c48ca8b-b834-3257-91dc-77e9d19def6c@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B28466761383@IRSMSX101.ger.corp.intel.com>
- <92EBB4272BF81E4089A7126EC1E7B2846676271D@IRSMSX101.ger.corp.intel.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <951505b8-9580-7131-2f14-de92817190a7@codeaurora.org>
-Date: Thu, 6 Apr 2017 11:19:07 -0400
+Return-Path: <SRS0=wUoX=3V=linux.vnet.ibm.com=gwshan@kernel.org>
+Return-Path: <SRS0=wUoX=3V=linux.vnet.ibm.com=gwshan@kernel.org>
+Date: Thu, 13 Apr 2017 15:24:50 +1000
+From: Gavin Shan <gwshan@linux.vnet.ibm.com>
+To: Alex Williamson <alex.williamson@redhat.com>
+Cc: bodong@mellanox.com, helgaas@kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, saeedm@mellanox.com,
+        Eli Cohen <eli@mellanox.com>, gwshan@linux.vnet.ibm.com
+Subject: Re: [v3] PCI: Add an option to control probing of VFs before
+ enabling SR-IOV
+Reply-To: Gavin Shan <gwshan@linux.vnet.ibm.com>
+References: <1492037500-84654-1-git-send-email-bodong@mellanox.com>
+ <20170412205614.429db99c@t450s.home>
 MIME-Version: 1.0
-In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B2846676271D@IRSMSX101.ger.corp.intel.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Rajat Jain <rajatja@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170412205614.429db99c@t450s.home>
+Message-Id: <20170413052450.GA32407@gwshan>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/6/2017 9:23 AM, Patel, Mayurkumar wrote:
-> Actually, The enabling/configuring of ASPM L1.2 is opposite then ASPM L1.
-> In case of L1, Upstream must configure first L1 and then downstream according to PCIe spec.
-> In case of L1.2, Downstream must configure L1.2 and then upstream according (to L1.2 ECN spec. -> 5.5.4. L1 PM
-> substates Configuration).  
-> 
-> @Bjorn:
-> I even found that programming of pcie_config_aspm_l1ss() sub-states is done in the opposite way than described in
-> the spec.,
-> 
-> The spec. says following and correct me If I am wrong or I misinterpret the spec. :
-> 
-> 5.5.4. L1 PM Substates Configuration
-> 
-> The Setting of any enable bit must be performed at the Downstream Port before the
-> corresponding bit is permitted to be Set at the Upstream Port. If any L1 PM Substates enable
-> bit is at a later time to be cleared, the enable bit(s) must be cleared in the Upstream Port
-> before the corresponding enable bit(s) are permitted to be cleared in the Downstream Port.
-> 
+On Wed, Apr 12, 2017 at 08:56:14PM -0600, Alex Williamson wrote:
+>On Thu, 13 Apr 2017 01:51:40 +0300
+>bodong@mellanox.com wrote:
+>
+>> From: Bodong Wang <bodong@mellanox.com>
+>> 
+>> Sometimes it is not desirable to probe the virtual functions after
+>> SRIOV is enabled. This can save host side resource usage by VF
+>> instances which would be eventually probed to VMs.
+>> 
+>> Add a new PCI sysfs interface "sriov_drivers_autoprobe" to control
+>> that from the PF, all current callers still retain the same
+>> functionality. To modify it, echo 0/n/N (disable probe) or 1/y/Y
+>> (enable probe) to:
+>> 
+>> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_drivers_autoprobe
+>> 
+>> Note that, the choice must be made before enabling VFs. The change
+>> will not take effect if VFs are already enabled. Simply, one can set
+>> sriov_numvfs to 0, choose whether to probe or not, and then resume
+>> sriov_numvfs.
+>> 
+>> Signed-off-by: Bodong Wang <bodong@mellanox.com>
+>> Signed-off-by: Eli Cohen <eli@mellanox.com>
+>> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+>
+>Whoa, I reviewed the last version, that's different than providing a
+>Reviewed-by, and I've certainly never seen this version until now, so I
+>can't possibly have endorsed it in any way.  It's also changed since
+>Gavin saw it and I think Bjorn is in the same boat.  Probably a good
+>idea to cc the people you're claiming reviewed this too (cc +Gavin).
+>
 
-Thanks for testing. 
+Thanks, Alex. I usually keep an eye on the patches that I ever
+reviewed and follow them until they are merged or rejected. More
+comments would be given if I have. Otherwise, everthing is fine.
+Yes, it's always nice to copy those who reviewed the patch.
 
-commit a142f4d3e5c54db5e942fa6ee5f3dc0e8c83207b
-Author: Rajat Jain <rajatja@google.com>
-Date:   Mon Jan 2 22:34:15 2017 -0800
+For this one, my reviewed-by is still valid.
 
-    PCI/ASPM: Add comment about L1 substate latency
-
-    Since the exit latencies for L1 substates are not advertised by a device,
-    it is not clear in spec how to do a L1 substate exit latency check.  We
-    assume that the L1 exit latencies advertised by a device include L1
-    substate latencies (and hence do not do any check).  If that is not true,
-    we should do some sort of check here.
-
-    (I'm not clear about what that check should like currently. I'd be glad to
-    take up any suggestions).
-
-    Signed-off-by: Rajat Jain <rajatja@google.com>
-    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-
-I added Rajat for discussion on L1SS. I think this deserves its own discussion. 
-I'll look at the other part of your email and move things around a little bit
-less aggressively for the aspm_default.
-
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Gavin
