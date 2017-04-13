@@ -1,111 +1,133 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:34398 "EHLO
-        atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754157AbdDOVeu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 15 Apr 2017 17:34:50 -0400
-Date: Sat, 15 Apr 2017 23:34:47 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Frederic Weisbecker <fweisbec@gmail.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-        torvalds@linux-foundation.org,
-        kernel list <linux-kernel@vger.kernel.org>,
-        linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
- after cold boots, boots after reboot
-Message-ID: <20170415213447.GA9506@amd>
-References: <Pine.LNX.4.44L0.1702031415140.1794-100000@iolanthe.rowland.org>
- <20170203205129.GA3791@amd>
- <20170203211854.GA3697@amd>
- <20170214175956.GA3587@amd>
- <20170214192743.GA3869@amd>
- <20170223162825.GA16646@lerouge>
- <20170223184013.GA5177@amd>
- <20170403153850.GA4418@lerouge>
- <20170403182050.GA6555@amd>
- <20170412150832.GE21309@lerouge>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="G4iJoqBmSsgzjUCe"
-In-Reply-To: <20170412150832.GE21309@lerouge>
+Received: from bombadil.infradead.org ([65.50.211.133]:36687 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756190AbdDMHHW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 13 Apr 2017 03:07:22 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: Thomas Gleixner <tglx@linutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 3/4] PCI/irq: add pci_request_irq and pci_free_irq helpers
+Date: Thu, 13 Apr 2017 09:06:42 +0200
+Message-Id: <20170413070643.32165-4-hch@lst.de>
+In-Reply-To: <20170413070643.32165-1-hch@lst.de>
+References: <20170413070643.32165-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+These are small wrappers around request_threaded_irq and free_irq,
+which dynamically allocate space for the device name so that drivers
+don't need to keep static buffers for these around.  Additionally it
+works with device-relative vector numbers to make the usage easier,
+and force the IRQF_SHARED flag on given that it has no runtime overhead
+and should be supported by all PCI devices.
 
---G4iJoqBmSsgzjUCe
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/pci/irq.c   | 61 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ include/linux/pci.h |  6 ++++++
+ 2 files changed, 66 insertions(+), 1 deletion(-)
 
-On Wed 2017-04-12 17:08:35, Frederic Weisbecker wrote:
-> On Mon, Apr 03, 2017 at 08:20:50PM +0200, Pavel Machek wrote:
-> > > > > > > ...1d.7: PCI fixup... pass 2
-> > > > > > > ...1d.7: PCI fixup... pass 3
-> > > > > > > ...1d.7: PCI fixup... pass 3 done
-> > > > > > >=20
-> > > > > > > ...followed by hang. So yes, it looks USB related.
-> > > > > > >=20
-> > > > > > > (Sometimes it hangs with some kind backtrace involving second=
-ary CPU
-> > > > > > > startup, unfortunately useful info is off screen at that poin=
-t).
-> > > > > >=20
-> > > > > > Forgot to say, 1d.7 is EHCI controller.
-> > > > > >=20
-> > > > > > 00:1d.7 USB controller: Intel Corporation NM10/ICH7 Family USB2=
- EHCI
-> > > > > > Controller (rev 01)
-> > > > >=20
-> > > > > Ok, I should have access soon to a EeePc 1015CX (which seem to ha=
-ve this controller).
-> > > > > I hope I'll be able to reproduce the issue there. If not, I'm sor=
-ry but I'll have to
-> > > > > burden you again :-)
-> > > >=20
-> > > > Go through more mails. It is only reproducible after cold boot. .. =
-so
-> > > > I doubt it will be easy to reproduce on another machine.
-> > > >=20
-> > > > Now... I do have serial port, and I even might have serial cable
-> > > > somewhere, but.... Giving how sensitive it is, it is probably going=
- to
-> > > > go away with console on ttyS...
-> > >=20
-> > > I also tried on an eeepc (which has ICH7/NM10 as well), with your con=
-fig.
-> > > I even plugged a usb keyboard but even then I have been unable to
-> > > reproduce either :-(
-> >=20
-> > Ok, give me some time. I'm no longer using the affected machine, so no
-> > promises.
->=20
-> Actually someone reported me a very similar issue than yours lately. It's=
- probably
-> the same. And I have a potential fix.
-
-Got the machine back to work -- I guess it will be useful for distcc.
-
-And yes, you seem to have right fix :-).=20
-
-Tested-by: Pavel Machek <pavel@ucw.cz>
-
-									Pavel
-
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---G4iJoqBmSsgzjUCe
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAljykfcACgkQMOfwapXb+vKkSwCgghAAViXNFXnv+hfJXnO2DxVJ
-XxEAn0A00XYL0agnIH54hE+RxjZ7UIdb
-=pN2S
------END PGP SIGNATURE-----
-
---G4iJoqBmSsgzjUCe--
+diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
+index 6684f153ab57..53e7f30d9461 100644
+--- a/drivers/pci/irq.c
++++ b/drivers/pci/irq.c
+@@ -1,7 +1,8 @@
+ /*
+- * PCI IRQ failure handing code
++ * PCI IRQ handing code
+  *
+  * Copyright (c) 2008 James Bottomley <James.Bottomley@HansenPartnership.com>
++ * Copyright (C) 2017 Christoph Hellwig.
+  */
+ 
+ #include <linux/acpi.h>
+@@ -59,3 +60,61 @@ enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *pdev)
+ 	return PCI_LOST_IRQ_NO_INFORMATION;
+ }
+ EXPORT_SYMBOL(pci_lost_interrupt);
++
++/**
++ * pci_request_irq - allocate an interrupt line for a PCI device
++ * @dev:	PCI device to operate on
++ * @nr:		device-relative interrupt vector index (0-based).
++ * @handler:	Function to be called when the IRQ occurs.
++ *		Primary handler for threaded interrupts.
++ *		If NULL and thread_fn != NULL the default primary handler is
++ *		installed.
++ * @thread_fn:	Function called from the irq handler thread
++ *		If NULL, no irq thread is created
++ * @dev_id:	Cookie passed back to the handler function
++ * @fmt:	Printf-like format string naming the handler
++ *
++ * This call allocates interrupt resources and enables the interrupt line and
++ * IRQ handling. From the point this call is made @handler and @thread_fn may
++ * be invoked.  All interrupt requsted using this function might be shared.
++ *
++ * @dev_id must not ne NULL and be globally unique.
++ */
++int pci_request_irq(struct pci_dev *dev, unsigned int nr, irq_handler_t handler,
++		irq_handler_t thread_fn, void *dev_id, const char *fmt, ...)
++{
++	va_list ap;
++	int ret;
++	char *devname;
++
++	va_start(ap, fmt);
++	devname = kvasprintf(GFP_KERNEL, fmt, ap);
++	va_end(ap);
++
++	ret = request_threaded_irq(pci_irq_vector(dev, nr), handler, thread_fn,
++			IRQF_SHARED, devname, dev_id);
++	if (ret)
++		kfree(devname);
++	return ret;
++}
++EXPORT_SYMBOL(pci_request_irq);
++
++/**
++ * pci_free_irq - free an interrupt allocated with pci_request_irq
++ * @dev:	PCI device to operate on
++ * @nr:		device-relative interrupt vector index (0-based).
++ * @dev_id:	Device identity to free
++ *
++ * Remove an interrupt handler. The handler is removed and if the interrupt
++ * line is no longer in use by any driver it is disabled.  The caller must
++ * ensure the interrupt is disabled on the device before calling this function.
++ * The function does not return until any executing interrupts for this IRQ
++ * have completed.
++ *
++ * This function must not be called from interrupt context.
++ */
++void pci_free_irq(struct pci_dev *dev, unsigned int nr, void *dev_id)
++{
++	kfree(free_irq(pci_irq_vector(dev, nr), dev_id));
++}
++EXPORT_SYMBOL(pci_free_irq);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eb3da1a04e6c..b23f81b583ab 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -28,6 +28,7 @@
+ #include <linux/kobject.h>
+ #include <linux/atomic.h>
+ #include <linux/device.h>
++#include <linux/interrupt.h>
+ #include <linux/io.h>
+ #include <linux/resource_ext.h>
+ #include <uapi/linux/pci.h>
+@@ -1072,6 +1073,11 @@ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+ bool pci_device_is_present(struct pci_dev *pdev);
+ void pci_ignore_hotplug(struct pci_dev *dev);
+ 
++int __printf(6, 7) pci_request_irq(struct pci_dev *dev, unsigned int nr,
++		irq_handler_t handler, irq_handler_t thread_fn, void *dev_id,
++		const char *fmt, ...);
++void pci_free_irq(struct pci_dev *dev, unsigned int nr, void *dev_id);
++
+ /* ROM control related routines */
+ int pci_enable_rom(struct pci_dev *pdev);
+ void pci_disable_rom(struct pci_dev *pdev);
+-- 
+2.11.0
