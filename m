@@ -1,69 +1,64 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Thu, 6 Apr 2017 10:35:21 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Sagi Grimberg <sagi@grimberg.me>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [RFC 6/8] nvmet: Be careful about using iomem accesses when
- dealing with p2pmem
-Message-ID: <20170406163520.GA7657@obsidianresearch.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-7-git-send-email-logang@deltatee.com>
- <080b68b4-eba3-861c-4f29-5d829425b5e7@grimberg.me>
- <20170404154629.GA13552@obsidianresearch.com>
- <4df229d8-8124-664a-9bc4-6401bc034be1@grimberg.me>
+Return-Path: <SRS0=BHG1=3V=mellanox.com=bodong@kernel.org>
+Return-Path: <SRS0=BHG1=3V=mellanox.com=bodong@kernel.org>
+Subject: Re: [v3] PCI: Add an option to control probing of VFs before enabling
+ SR-IOV
+To: Gavin Shan <gwshan@linux.vnet.ibm.com>, Alex Williamson
+	<alex.williamson@redhat.com>
+References: <1492037500-84654-1-git-send-email-bodong@mellanox.com>
+ <20170412205614.429db99c@t450s.home> <20170413052450.GA32407@gwshan>
+CC: <helgaas@kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <saeedm@mellanox.com>, Eli Cohen
+	<eli@mellanox.com>
+From: Bodong Wang <bodong@mellanox.com>
+Message-ID: <d093fccd-94c8-825a-2b95-35163a872a1d@mellanox.com>
+Date: Thu, 13 Apr 2017 09:16:34 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <4df229d8-8124-664a-9bc4-6401bc034be1@grimberg.me>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170413052450.GA32407@gwshan>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 06, 2017 at 08:33:38AM +0300, Sagi Grimberg wrote:
-> 
-> >>Note that the nvme completion queues are still on the host memory, so
-> >>this means we have lost the ordering between data and completions as
-> >>they go to different pcie targets.
-> >
-> >Hmm, in this simple up/down case with a switch, I think it might
-> >actually be OK.
-> >
-> >Transactions might not complete at the NVMe device before the CPU
-> >processes the RDMA completion, however due to the PCI-E ordering rules
-> >new TLPs directed to the NVMe will complete after the RMDA TLPs and
-> >thus observe the new data. (eg order preserving)
-> >
-> >It would be very hard to use P2P if fabric ordering is not preserved..
-> 
-> I think it still can race if the p2p device is connected with more than
-> a single port to the switch.
-> 
-> Say it's connected via 2 legs, the bar is accessed from leg A and the
-> data from the disk comes via leg B. In this case, the data is heading
-> towards the p2p device via leg B (might be congested), the completion
-> goes directly to the RC, and then the host issues a read from the
-> bar via leg A. I don't understand what can guarantee ordering here.
-
-Right, this is why I qualified my statement with 'simple up/down case'
-
-Make it any more complex and it clearly stops working sanely, but I
-wouldn't worry about unusual PCI-E fabrics at this point..
-
-> Stephen told me that this still guarantees ordering, but I honestly
-> can't understand how, perhaps someone can explain to me in a simple
-> way that I can understand.
-
-AFAIK PCI-E ordering is explicitly per link, so things that need order
-must always traverse the same link.
-
-Jason
+On 4/13/2017 12:24 AM, Gavin Shan wrote:
+> On Wed, Apr 12, 2017 at 08:56:14PM -0600, Alex Williamson wrote:
+>> On Thu, 13 Apr 2017 01:51:40 +0300
+>> bodong@mellanox.com wrote:
+>>
+>>> From: Bodong Wang <bodong@mellanox.com>
+>>>
+>>> Sometimes it is not desirable to probe the virtual functions after
+>>> SRIOV is enabled. This can save host side resource usage by VF
+>>> instances which would be eventually probed to VMs.
+>>>
+>>> Add a new PCI sysfs interface "sriov_drivers_autoprobe" to control
+>>> that from the PF, all current callers still retain the same
+>>> functionality. To modify it, echo 0/n/N (disable probe) or 1/y/Y
+>>> (enable probe) to:
+>>>
+>>> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_drivers_autoprobe
+>>>
+>>> Note that, the choice must be made before enabling VFs. The change
+>>> will not take effect if VFs are already enabled. Simply, one can set
+>>> sriov_numvfs to 0, choose whether to probe or not, and then resume
+>>> sriov_numvfs.
+>>>
+>>> Signed-off-by: Bodong Wang <bodong@mellanox.com>
+>>> Signed-off-by: Eli Cohen <eli@mellanox.com>
+>>> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+>>> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+>> Whoa, I reviewed the last version, that's different than providing a
+>> Reviewed-by, and I've certainly never seen this version until now, so I
+>> can't possibly have endorsed it in any way.  It's also changed since
+>> Gavin saw it and I think Bjorn is in the same boat.  Probably a good
+>> idea to cc the people you're claiming reviewed this too (cc +Gavin).
+>>
+> Thanks, Alex. I usually keep an eye on the patches that I ever
+> reviewed and follow them until they are merged or rejected. More
+> comments would be given if I have. Otherwise, everthing is fine.
+> Yes, it's always nice to copy those who reviewed the patch.
+>
+> For this one, my reviewed-by is still valid.
+>
+> Thanks,
+> Gavin
+>
+Thanks Alex/Gavin for the suggestion. Will follow this pattern in the 
+future.
