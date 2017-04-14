@@ -1,46 +1,56 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Roy Zang <tie-fei.zang@freescale.com>
-Subject: [PATCH v4 19/21] PCI: layerscape: update PCI config space remap function
-Date: Wed, 19 Apr 2017 17:49:08 +0100
-Message-Id: <20170419164913.19674-20-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Salvatore Benedetto <salvatore.benedetto@intel.com>,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: linux-pci@vger.kernel.org, qat-linux@intel.com,
+        linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 7/7] liquidio: use pcie_flr instead of duplicating it
+Date: Fri, 14 Apr 2017 21:11:31 +0200
+Message-Id: <20170414191131.14286-8-hch@lst.de>
+In-Reply-To: <20170414191131.14286-1-hch@lst.de>
+References: <20170414191131.14286-1-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_pci_remap_cfg* interface to make sure the correct
-memory mappings for PCI configuration space are used.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Mingkai Hu <mingkai.hu@freescale.com>
-Cc: Minghuan Lian <minghuan.Lian@freescale.com>
-Cc: Roy Zang <tie-fei.zang@freescale.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/pci/dwc/pci-layerscape.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/ethernet/cavium/liquidio/lio_vf_main.c | 15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
 
-diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
-index c32e392..8f0ee0d 100644
---- a/drivers/pci/dwc/pci-layerscape.c
-+++ b/drivers/pci/dwc/pci-layerscape.c
-@@ -283,7 +283,7 @@ static int __init ls_pcie_probe(struct platform_device *pdev)
- 	pcie->pci = pci;
+diff --git a/drivers/net/ethernet/cavium/liquidio/lio_vf_main.c b/drivers/net/ethernet/cavium/liquidio/lio_vf_main.c
+index 9d5e03502c76..afdbf7fa016e 100644
+--- a/drivers/net/ethernet/cavium/liquidio/lio_vf_main.c
++++ b/drivers/net/ethernet/cavium/liquidio/lio_vf_main.c
+@@ -869,20 +869,7 @@ static void octeon_pci_flr(struct octeon_device *oct)
+ 	pci_write_config_word(oct->pci_dev, PCI_COMMAND,
+ 			      PCI_COMMAND_INTX_DISABLE);
  
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "regs");
--	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
-+	pci->dbi_base = devm_pci_remap_cfg_resource(dev, dbi_base);
- 	if (IS_ERR(pci->dbi_base))
- 		return PTR_ERR(pci->dbi_base);
+-	/* Wait for Transaction Pending bit clean */
+-	msleep(100);
+-	pcie_capability_read_word(oct->pci_dev, PCI_EXP_DEVSTA, &status);
+-	if (status & PCI_EXP_DEVSTA_TRPND) {
+-		dev_info(&oct->pci_dev->dev, "Function reset incomplete after 100ms, sleeping for 5 seconds\n");
+-		ssleep(5);
+-		pcie_capability_read_word(oct->pci_dev, PCI_EXP_DEVSTA,
+-					  &status);
+-		if (status & PCI_EXP_DEVSTA_TRPND)
+-			dev_info(&oct->pci_dev->dev, "Function reset still incomplete after 5s, reset anyway\n");
+-	}
+-	pcie_capability_set_word(oct->pci_dev, PCI_EXP_DEVCTL,
+-				 PCI_EXP_DEVCTL_BCR_FLR);
+-	mdelay(100);
++	pcie_flr(oct->pci_dev);
+ 
+ 	pci_cfg_access_unlock(oct->pci_dev);
  
 -- 
-2.10.0
+2.11.0
