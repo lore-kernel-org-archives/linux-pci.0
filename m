@@ -1,39 +1,32 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:43871 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751554AbdDNRgv (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Apr 2017 13:36:51 -0400
+Date: Fri, 14 Apr 2017 19:36:49 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/4] genirq: return the irq name from free_irq
+Message-ID: <20170414173649.GA26228@lst.de>
+References: <20170413070643.32165-1-hch@lst.de> <20170413070643.32165-3-hch@lst.de> <alpine.DEB.2.20.1704141920560.2327@nanos>
 MIME-Version: 1.0
-In-Reply-To: <584359f9-5851-08c8-4b80-ae73abc4fe59@codeaurora.org>
-References: <20170419003130.5302-1-yinghai@kernel.org> <584359f9-5851-08c8-4b80-ae73abc4fe59@codeaurora.org>
-From: Yinghai Lu <yinghai@kernel.org>
-Date: Thu, 20 Apr 2017 16:37:16 -0700
-Message-ID: <CAE9FiQVQ4Mvc_SufENJcuO1309h+jqDdme9XNB3R9OvZJKzHvQ@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: disable SERR for kdump kernel
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.20.1704141920560.2327@nanos>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 20, 2017 at 10:14 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 4/18/2017 8:31 PM, Yinghai Lu wrote:
->> * pci_setup_device - fill in class and map information of a device
->>   * @dev: the device structure to fill
->> @@ -1572,6 +1592,9 @@ int pci_setup_device(struct pci_dev *dev
->>       /* device class may be changed after fixup */
->>       class = dev->class >> 8;
->>
->> +     if (is_kdump_kernel())
->> +             pci_disable_serr(dev);
->> +
->
-> This sounds like something that needs to be done while shutting down
-> the first kernel as part of the kdump procedure rather than boot of
-> the kdump kernel in pci setup.
+On Fri, Apr 14, 2017 at 07:28:42PM +0200, Thomas Gleixner wrote:
+> On Thu, 13 Apr 2017, Christoph Hellwig wrote:
+> 
+> > This allows callers to get back at them instead of having to store
+> > it in another variable.
+> 
+> Alternatively you tell the irq code to free it for you. Patch below.
 
-For kdump path, first kernel shutdown path is not called.
+Yes, this should work to.  But I think having the same layer free
+something they allocated again is a tad cleaner in terms of layering.
 
-We have to do sth in second kernel instead.
-
-Thanks
-
-Yinghai
+If you prefer this version I can respin the series.
