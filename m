@@ -1,36 +1,61 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC 4/8] p2pmem: Add debugfs "stats" file
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-5-git-send-email-logang@deltatee.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org
-From: Sagi Grimberg <sagi@grimberg.me>
-Message-ID: <95928b70-0148-7297-8f5e-5031d996bb98@grimberg.me>
-Date: Tue, 4 Apr 2017 13:46:09 +0300
-MIME-Version: 1.0
-In-Reply-To: <1490911959-5146-5-git-send-email-logang@deltatee.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Salvatore Benedetto <salvatore.benedetto@intel.com>,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: linux-pci@vger.kernel.org, qat-linux@intel.com,
+        linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/7] PCI: call pcie_flr from reset_intel_82599_sfp_virtfn
+Date: Fri, 14 Apr 2017 21:11:26 +0200
+Message-Id: <20170414191131.14286-3-hch@lst.de>
+In-Reply-To: <20170414191131.14286-1-hch@lst.de>
+References: <20170414191131.14286-1-hch@lst.de>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+The 82599 quirk contained an outdated copy of the FLR code.
 
-> +	p2pmem_debugfs_root = debugfs_create_dir("p2pmem", NULL);
-> +	if (!p2pmem_debugfs_root)
-> +		pr_info("could not create debugfs entry, continuing\n");
-> +
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/quirks.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
 
-Why continue? I think it'd be better to just fail it.
-
-Besides, this can be safely squashed into patch 1.
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 823271b13d12..8195ca294ee5 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3641,19 +3641,11 @@ static int reset_intel_82599_sfp_virtfn(struct pci_dev *dev, int probe)
+ 	 *
+ 	 * The 82599 supports FLR on VFs, but FLR support is reported only
+ 	 * in the PF DEVCAP (sec 9.3.10.4), not in the VF DEVCAP (sec 9.5).
+-	 * Therefore, we can't use pcie_flr(), which checks the VF DEVCAP.
++	 * Thus we must call pcie_flr directly without first checking if it is
++	 * supported.
+ 	 */
+-
+-	if (probe)
+-		return 0;
+-
+-	if (!pci_wait_for_pending_transaction(dev))
+-		dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
+-
+-	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+-
+-	msleep(100);
+-
++	if (!probe)
++		pcie_flr(dev);
+ 	return 0;
+ }
+ 
+-- 
+2.11.0
