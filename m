@@ -1,50 +1,89 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 21 Apr 2017 13:34:54 +0200
-From: Robert Richter <robert.richter@cavium.com>
-To: Tomasz Nowicki <tn@semihalf.com>
-Subject: Re: [PATCH 1/1] PCI: Add MCFG quirk for 2nd node of Cavium ThunderX
- pass2.x host controller
-Message-ID: <20170421113454.GR16981@rric.localdomain>
-References: <1490789773-21506-1-git-send-email-tn@semihalf.com>
+Return-Path: <SRS0=xFRB=3W=gmail.com=rupert.thurner@kernel.org>
+Return-Path: <SRS0=xFRB=3W=gmail.com=rupert.thurner@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1490789773-21506-1-git-send-email-tn@semihalf.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo.Pieralisi@arm.com, Sunil.Goutham@cavium.com, rafael@kernel.org,
- linux-pci@vger.kernel.org, linu.cherian@cavium.com, ddaney@caviumnetworks.com,
- geethasowjanya.akula@gmail.com, linux-acpi@vger.kernel.org, helgaas@kernel.org,
- Vadim.Lomovtsev@caviumnetworks.com, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+From: rupert THURNER <rupert.thurner@gmail.com>
+Date: Fri, 14 Apr 2017 22:26:25 +0200
+Message-ID: <CAJs9aZ8HVPn_J9yPjvdBm-A_d3FiquPMGoy1xFsGopF8Xg_89Q@mail.gmail.com>
+Subject: 4.10.9 nok with realtek wlan, atom
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>, Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 29.03.17 14:16:13, Tomasz Nowicki wrote:
-> Currently SoCs pass2.x do not emulate EA headers for ACPI boot method at all.
-> However, for pass2.x some devices (like EDAC) advertise incorrect base addresses
-> in their BARs which results in driver probe failure during resource request.
-> Since all problematic blocks are on 2nd NUMA node under domain 10 add necessary
-> quirk entry to obtain BAR addresses correction using EA header emulation.
-> 
-> Fixes: 44f22bd91e88 ("PCI: Add MCFG quirks for Cavium ThunderX pass2.x host controller")
-> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
-> CC: stable@vger.kernel.org	# v4.10+
+On Thu, Feb 9, 2017 at 9:09 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> On 02/09/2017 01:43 PM, Bjorn Helgaas wrote:
+>>
+>> [+cc rtl8192ce folks in case they've seen this]
+>>
+>> On Thu, Feb 09, 2017 at 03:45:01PM +0100, rupert THURNER wrote:
+>>>
+>>> hi,
+>>>
+>>> not technical expert enough, i just wanted to give a short user
+>>> feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
+>>> kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
+>>> well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
+>>> hotspot is possible then drops, or connecting to wlan fails
+>>> alltogether.
+>>
+>>
+>> Thanks very much for your report, and sorry for the inconvenience.
+>>
+>> v4.10-rc7 works, so I guess we don't need to worry about fixing v4.10.
+>>
+>> But the stable kernels v4.9.6, v4.9.7, and v4.9.8 are broken, so we
+>> need to figure out why and make sure we fix the v4.9 stable series.
+>>
+>> I can't tell yet whether this is PCI-related or not.  If it is,
+>> 4922a6a5cfa7 ("PCI: Enumerate switches below PCI-to-PCIe bridges")
+>> appeared in v4.9.6, and there is a known issue with that.  The issue
+>> should be fixed by 610c2b7ff8f6 ("PCI/ASPM: Handle PCI-to-PCIe bridges
+>> as roots of PCIe hierarchies"), which appeared in v4.9.9, so I guess
+>> the first thing to do would be to test v4.9.9.
+>>
+>> If it's not fixed in v4.9.9, can you share the complete dmesg log
+>> (output of "dmesg" command) and "lspci -vv" output for v4.9.5 (last
+>> known working version) and v4.9.6 (first known broken version)?  On
+>> v4.9.6, collect the dmesg output after the failure occurs.
+>>
+>>> 24: PCI 300.0: 0282 WLAN controller
+>>>   [Created at pci.366]
+>>>   Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
+>>>   Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
+>>>   Revision: 0x01
+>>>   Driver: "rtl8192ce"
+>>>   Driver Modules: "rtl8192ce"
+>>>   Device File: wlp3s0
+>>>   Features: WLAN
+>
+>
+> It would be helpful if someone were to bisect this issue. The only issue
+> that comes to mind was fixed in commit 52f5631a4c05 ("rtlwifi: rtl8192ce:
+> Fix loading of incorrect firmware") which is in 4.10-rc7 and will be
+> backported to 4.9.
+>
+> The above issue is one that could not be reproduced on my hardware, thus it
+> took Jurij Smakov to find the fix. Without his bisection of the problem, who
+> knows how long it would have taken to find my edit mistake.
 
-Acked-by: Robert Richter <rrichter@cavium.com>
+larry, using the newest kernel 4.10.8 the network connection dropps
+again irregular.
 
-Bjorn, please apply.
+# dmesg
+[    0.000000] Linux version 4.10.9-1-ARCH (builduser@tobias) (gcc
+version 6.3.1 20170306 (GCC) ) #1 SMP PREEMPT Sat Apr 8 12:39:59 CEST
+2017
+[   11.933373] rtl8192ce: rtl8192ce: Power Save off (module option)
+[   11.933396] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
+[   11.978307] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+[   11.978945] rtlwifi: rtlwifi: wireless switch is on
 
-Thanks,
+# lspci -vv
+Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter
+Kernel driver in use: rtl8192ce
 
--Robert
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+best,
+rupert
