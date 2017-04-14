@@ -1,89 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Jisheng Zhang'" <jszhang@marvell.com>, <bhelgaas@google.com>
-Cc: <Joao.Pinto@synopsys.com>, <svarbanov@mm-sol.com>,
-        <keith.busch@intel.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
-References: <20170420102718.3778-1-jszhang@marvell.com>
-In-Reply-To: <20170420102718.3778-1-jszhang@marvell.com>
-Subject: Re: [PATCH] PCI: dwc/host: Mark PCIe/PCI (MSI) cascade ISR as IRQF_NO_THREAD
-Date: Thu, 20 Apr 2017 11:07:11 -0400
-Message-ID: <000201d2b9e7$ca09a7a0$5e1cf6e0$@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="us-ascii"
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=93Wk=3W=au1.ibm.com=benh@kernel.org>
+Return-Path: <SRS0=93Wk=3W=au1.ibm.com=benh@kernel.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+From: Benjamin Herrenschmidt <benh@au1.ibm.com>
+Reply-To: benh@au1.ibm.com
+To: Logan Gunthorpe <logang@deltatee.com>,
+        Jason Gunthorpe
+	 <jgunthorpe@obsidianresearch.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+        "James
+ E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen"
+ <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise
+ <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>, Max
+ Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
+        linux-kernel@vger.kernel.org, Jerome Glisse <jglisse@redhat.com>
+Date: Fri, 14 Apr 2017 21:39:52 +1000
+In-Reply-To: <1492169879.25766.4.camel@kernel.crashing.org>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+	 <1491974532.7236.43.camel@kernel.crashing.org>
+	 <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+	 <1492034124.7236.77.camel@kernel.crashing.org>
+	 <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+	 <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+	 <20170414041656.GA30694@obsidianresearch.com>
+	 <08c32f0d-6c7c-b65f-6453-dde0d7c173d1@deltatee.com>
+	 <1492169879.25766.4.camel@kernel.crashing.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Message-Id: <1492169992.25766.5.camel@au1.ibm.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thursday, April 20, 2017 6:27 AM, Jisheng Zhang wrote:
+On Fri, 2017-04-14 at 21:37 +1000, Benjamin Herrenschmidt wrote:
+> On Thu, 2017-04-13 at 22:40 -0600, Logan Gunthorpe wrote:
+> > 
+> > On 13/04/17 10:16 PM, Jason Gunthorpe wrote:
+> > > I'd suggest just detecting if there is any translation in bus
+> > > addresses anywhere and just hard disabling P2P on such systems.
+> > 
+> > That's a fantastic suggestion. It simplifies things significantly.
+> > Unless there are any significant objections I think I will plan on
+> > doing
+> > that.
 > 
-> Similar as commit 8ff0ef996ca0 ("PCI: host: Mark PCIe/PCI (MSI) IRQ
-> cascade handlers as IRQF_NO_THREAD"), we should mark PCIe/PCI (MSI)
-> IRQ cascade handlers IRQF_NO_THREAD explicitly. I just found this
-> issue in pcie-designware-plat driver, then searched the code, I think
-> we should fix pcie-qcom and vmd as well.
-> 
-> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> I object.
 
-For pcie-designware-plat.c,
+Note: It would also make your stuff fundamentally incompatible with
+KVM guest pass-through since KVM plays with remapping BARs all over
+the place.
 
-Acked-by: Jingoo Han <jingoohan1@gmail.com>
-Thank you.
+Ben.
 
-Best regards,
-Jingoo Han
-
-> ---
->  drivers/pci/dwc/pcie-designware-plat.c | 3 ++-
->  drivers/pci/dwc/pcie-qcom.c            | 3 ++-
->  drivers/pci/host/vmd.c                 | 3 ++-
->  3 files changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/dwc/pcie-designware-plat.c
-> b/drivers/pci/dwc/pcie-designware-plat.c
-> index f20d494922ab..0db1dafc82bb 100644
-> --- a/drivers/pci/dwc/pcie-designware-plat.c
-> +++ b/drivers/pci/dwc/pcie-designware-plat.c
-> @@ -67,7 +67,8 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
-> 
->  		ret = devm_request_irq(dev, pp->msi_irq,
->  					dw_plat_pcie_msi_irq_handler,
-> -					IRQF_SHARED, "dw-plat-pcie-msi",
-pp);
-> +					IRQF_SHARED | IRQF_NO_THREAD,
-> +					"dw-plat-pcie-msi", pp);
->  		if (ret) {
->  			dev_err(dev, "failed to request MSI IRQ\n");
->  			return ret;
-> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-> index 67eb7f5926dd..a5570c58081e 100644
-> --- a/drivers/pci/dwc/pcie-qcom.c
-> +++ b/drivers/pci/dwc/pcie-qcom.c
-> @@ -727,7 +727,8 @@ static int qcom_pcie_probe(struct platform_device
-> *pdev)
-> 
->  		ret = devm_request_irq(dev, pp->msi_irq,
->  				       qcom_pcie_msi_irq_handler,
-> -				       IRQF_SHARED, "qcom-pcie-msi", pp);
-> +				       IRQF_SHARED | IRQF_NO_THREAD,
-> +				       "qcom-pcie-msi", pp);
->  		if (ret) {
->  			dev_err(dev, "cannot request msi irq\n");
->  			return ret;
-> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-> index e27ad2a3bd33..784f63beb487 100644
-> --- a/drivers/pci/host/vmd.c
-> +++ b/drivers/pci/host/vmd.c
-> @@ -704,7 +704,8 @@ static int vmd_probe(struct pci_dev *dev, const struct
-> pci_device_id *id)
-> 
->  		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
->  		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
-> -				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
-> +				       vmd_irq, IRQF_NO_THREAD,
-> +				       "vmd", &vmd->irqs[i]);
->  		if (err)
->  			return err;
->  	}
-> --
-> 2.11.0
+> > > On modern hardware with 64 bit BARs there is very little reason
+> > > to
+> > > have translation, so I think this is a legacy feature.
+> > 
+> > Yes, p2pmem users are likely to be designing systems around it (ie
+> > JBOFs) and not trying to shoehorn it onto legacy architectures.
+> > 
+> > At the very least, it makes sense to leave it out and if someone
+> > comes
+> > along who cares they can put in the effort to support the address
+> > translation.
+> > 
+> > Thanks,
+> > 
+> > Logan
