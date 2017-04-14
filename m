@@ -1,41 +1,63 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:58120 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932574AbdDQGqb (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Apr 2017 02:46:31 -0400
-Date: Mon, 17 Apr 2017 08:46:19 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-        Ingo Molnar <mingo@kernel.org>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Sebastian Siewior <bigeasy@linutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [patch 17/20] PCI: Use cpu_hotplug_disable() instead of
- get_online_cpus()
-Message-ID: <20170417064619.fjpizfsfd65dtear@hirez.programming.kicks-ass.net>
-References: <20170415170107.643253702@linutronix.de>
- <20170415171652.675049942@linutronix.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170415171652.675049942@linutronix.de>
+Received: from bombadil.infradead.org ([65.50.211.133]:44133 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754541AbdDNTMD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2017 15:12:03 -0400
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Salvatore Benedetto <salvatore.benedetto@intel.com>,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: linux-pci@vger.kernel.org, qat-linux@intel.com,
+        linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 3/7] PCI: call pcie_flr from reset_chelsio_generic_dev
+Date: Fri, 14 Apr 2017 21:11:27 +0200
+Message-Id: <20170414191131.14286-4-hch@lst.de>
+In-Reply-To: <20170414191131.14286-1-hch@lst.de>
+References: <20170414191131.14286-1-hch@lst.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 15, 2017 at 07:01:24PM +0200, Thomas Gleixner wrote:
-> +++ b/drivers/pci/pci-driver.c
-> @@ -320,10 +320,19 @@ static long local_pci_probe(void *_ddi)
->  	return 0;
->  }
->  
-> +static bool pci_physfn_is_probed(struct pci_dev *dev)
-> +{
-> +#ifdef CONFIG_ATS
-> +	return dev->physfn->is_probed;
-> +#else
-> +	return false;
-> +#endif
-> +}
-> +
+Instead of copy & pasting and old version of the code.
 
-Should be in the next patch perhaps?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/quirks.c | 15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 8195ca294ee5..715ed8c08fa3 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3750,20 +3750,7 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
+ 				      PCI_MSIX_FLAGS_ENABLE |
+ 				      PCI_MSIX_FLAGS_MASKALL);
+ 
+-	/*
+-	 * Start of pcie_flr() code sequence.  This reset code is a copy of
+-	 * the guts of pcie_flr() because that's not an exported function.
+-	 */
+-
+-	if (!pci_wait_for_pending_transaction(dev))
+-		dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
+-
+-	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
+-	msleep(100);
+-
+-	/*
+-	 * End of pcie_flr() code sequence.
+-	 */
++	pcie_flr(dev);
+ 
+ 	/*
+ 	 * Restore the configuration information (BAR values, etc.) including
+-- 
+2.11.0
