@@ -1,86 +1,76 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 18 Apr 2017 14:47:38 -0500
+Date: Fri, 14 Apr 2017 14:04:52 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Matthias Kaehlcke <mka@chromium.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Grant Grundler <grundler@chromium.org>,
-        Greg Hackmann <ghackmann@google.com>,
-        Michael Davidson <md@google.com>
-Subject: Re: [PATCH v3] PCI: Make PCI_ROM_ADDRESS_MASK a 32-bit constant
-Message-ID: <20170418194738.GI25295@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170414203802.119399-1-mka@chromium.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
+        linux-kernel@vger.kernel.org, Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Message-ID: <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1491974532.7236.43.camel@kernel.crashing.org>
+ <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+ <1492034124.7236.77.camel@kernel.crashing.org>
+ <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+ <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414041656.GA30694@obsidianresearch.com>
+ <1492169849.25766.3.camel@kernel.crashing.org>
+ <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170414203802.119399-1-mka@chromium.org>
+In-Reply-To: <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 14, 2017 at 01:38:02PM -0700, Matthias Kaehlcke wrote:
-> A 64-bit value is not needed since a PCI ROM address consists in 32 bits.
-> This fixes a clang warning about "implicit conversion from 'unsigned
-> long' to 'u32'".
+On Fri, Apr 14, 2017 at 11:30:14AM -0600, Logan Gunthorpe wrote:
+> On 14/04/17 05:37 AM, Benjamin Herrenschmidt wrote:
+> > I object to designing a subsystem that by design cannot work on whole
+> > categories of architectures out there.
 > 
-> Also remove now unnecessary casts to u32 from __pci_read_base() and
-> pci_std_update_resource().
-> 
-> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+> Hardly. That's extreme. We'd design a subsystem that works for the easy
+> cases and needs more work to support the offset cases. It would not be
+> designed in such a way that it could _never_ support those
+> architectures. It would simply be such that it only permits use by the
+> cases that are known to work. Then those cases could be expanded as time
+> goes on and people work on adding more support.
 
-Applied to pci/resource for v4.12, thanks!
+I'm a little hesitant about excluding offset support, so I'd like to
+hear more about this.
 
-> ---
-> Changes in v3:
-> - Remove unnecessary casts
-> - Updated commit message
-> 
-> Changes in v2:
-> - Define PCI_ROM_ADDRESS_MASK as a 32-bit constant instead of using a cast
-> - Updated commit message
-> 
->  drivers/pci/probe.c           | 2 +-
->  drivers/pci/setup-res.c       | 2 +-
->  include/uapi/linux/pci_regs.h | 2 +-
->  3 files changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index dfc9a2794141..7d5d4a56a186 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -231,7 +231,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->  			res->flags |= IORESOURCE_ROM_ENABLE;
->  		l64 = l & PCI_ROM_ADDRESS_MASK;
->  		sz64 = sz & PCI_ROM_ADDRESS_MASK;
-> -		mask64 = (u32)PCI_ROM_ADDRESS_MASK;
-> +		mask64 = PCI_ROM_ADDRESS_MASK;
->  	}
->  
->  	if (res->flags & IORESOURCE_MEM_64) {
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 4bc589ee78d0..85774b7a316a 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -63,7 +63,7 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
->  		mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
->  		new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
->  	} else if (resno == PCI_ROM_RESOURCE) {
-> -		mask = (u32)PCI_ROM_ADDRESS_MASK;
-> +		mask = PCI_ROM_ADDRESS_MASK;
->  	} else {
->  		mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
->  		new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 634c9c44ed6c..fff521c9458c 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -114,7 +114,7 @@
->  #define PCI_SUBSYSTEM_ID	0x2e
->  #define PCI_ROM_ADDRESS		0x30	/* Bits 31..11 are address, 10..1 reserved */
->  #define  PCI_ROM_ADDRESS_ENABLE	0x01
-> -#define PCI_ROM_ADDRESS_MASK	(~0x7ffUL)
-> +#define PCI_ROM_ADDRESS_MASK	(~0x7ffU)
->  
->  #define PCI_CAPABILITY_LIST	0x34	/* Offset of first capability list entry */
->  
-> -- 
-> 2.12.2.762.g0e3151a226-goog
-> 
+Is the issue related to PCI BARs that are not completely addressable
+by the CPU?  If so, that sounds like a first-class issue that should
+be resolved up front because I don't think the PCI core in general
+would deal well with that.
+
+If all the PCI memory of interest is in fact addressable by the CPU,
+I would think it would be pretty straightforward to support offsets --
+everywhere you currently use a PCI bus address, you just use the
+corresponding CPU physical address instead.
+
+> There's tons of stuff that needs to be done to get this upstream. I'd
+> rather not require it to work for every possible architecture from the
+> start. The testing alone would be impossible. Many subsystems start by
+> working for x86 first and then adding support in other architectures
+> later. (Often with that work done by the people who care about those
+> systems and actually have the hardware to test with.)
+
+I don't think exhaustive testing is that big a deal.  PCI offset
+support is generic, so you shouldn't need any arch-specific code to
+deal with it.  I'd rather have consistent support across the board,
+even though some arches might not be tested.  I think that's simpler
+and better than adding checks to disable functionality on some arches
+merely on the grounds that it hasn't been tested there.
+
+Bjorn
