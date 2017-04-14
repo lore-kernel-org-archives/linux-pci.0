@@ -1,82 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52708 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S946859AbdDTSw5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Apr 2017 14:52:57 -0400
-Subject: Re: [PATCH v2] PCI: disable SERR for kdump kernel
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <20170419003130.5302-1-yinghai@kernel.org>
- <584359f9-5851-08c8-4b80-ae73abc4fe59@codeaurora.org>
- <CAErSpo7paKmVjvGhedCdbSNbARqDmE6jfLikp4SO75fob3pMzw@mail.gmail.com>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <6f07625e-c22e-6ed9-efe3-a56bcc1c86cd@codeaurora.org>
-Date: Thu, 20 Apr 2017 14:52:54 -0400
+Received: from mail.kernel.org ([198.145.29.136]:58282 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751587AbdDNPno (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Apr 2017 11:43:44 -0400
+Date: Fri, 14 Apr 2017 10:43:40 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Matthias Kaehlcke <mka@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Mason <slash.tmp@free.fr>,
+        Grant Grundler <grundler@chromium.org>,
+        Greg Hackmann <ghackmann@google.com>,
+        Michael Davidson <md@google.com>
+Subject: Re: [PATCH v2] PCI: Make PCI_ROM_ADDRESS_MASK a 32-bit constant
+Message-ID: <20170414154340.GA5864@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170411175658.58512-1-mka@chromium.org>
 MIME-Version: 1.0
-In-Reply-To: <CAErSpo7paKmVjvGhedCdbSNbARqDmE6jfLikp4SO75fob3pMzw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170411175658.58512-1-mka@chromium.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/20/2017 2:38 PM, Bjorn Helgaas wrote:
-> On Thu, Apr 20, 2017 at 12:14 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
->> On 4/18/2017 8:31 PM, Yinghai Lu wrote:
->>> * pci_setup_device - fill in class and map information of a device
->>>   * @dev: the device structure to fill
->>> @@ -1572,6 +1592,9 @@ int pci_setup_device(struct pci_dev *dev
->>>       /* device class may be changed after fixup */
->>>       class = dev->class >> 8;
->>>
->>> +     if (is_kdump_kernel())
->>> +             pci_disable_serr(dev);
->>> +
->>
->> This sounds like something that needs to be done while shutting down
->> the first kernel as part of the kdump procedure rather than boot of
->> the kdump kernel in pci setup.
+On Tue, Apr 11, 2017 at 10:56:58AM -0700, Matthias Kaehlcke wrote:
+> A 64-bit value is not needed since a PCI ROM address consists in 32 bits.
+> This fixes a clang warning about "implicit conversion from 'unsigned
+> long' to 'u32'".
 > 
-> In general, I would rather make the new kernel more tolerant than make
-> assumptions about how the old kernel shut down.  I don't know if
-> there's an explicit statement of kexec philosophy on this (it'd be
-> nice if there were), but it seems like a more robust strategy, e.g.,
-> less prone to revlock issues between the old/new kernels.
+> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+> ---
+> Changes in v2:
+> - Define PCI_ROM_ADDRESS_MASK as a 32-bit constant instead of using a cast
+> - Updated commit message
 > 
-
-What if the secondary kernel never gets a chance to boot due to excessive
-errors? Code might not even make to the point where PCI driver is executed.
-
-If I remember this right, kexec is already doing PCI cleanup operation during
-shutdown and it is also calling the shutdown hook of device drivers. 
-
-(I recently added a shutdown hook to my own HIDMA driver for the very same reason)
-
-The requirement for the second kernel boot is not to have any pending DMA
-and IRQs so that secondary kernel can boot safely.
-
-Maybe, the right thing is to look for a way to put PCI into some safe mode.
-There should be some code there disabling the COMMAND enable bits if not already.
-
-This code could be added to the same place.
-
-http://lxr.free-electrons.com/ident?i=pci_device_shutdown
-
-469         /*
-470          * If this is a kexec reboot, turn off Bus Master bit on the
-471          * device to tell it to not continue to do DMA. Don't touch
-472          * devices in D3cold or unknown states.
-473          * If it is not a kexec reboot, firmware will hit the PCI
-474          * devices with big hammer and stop their DMA any way.
-475          */
-476         if (kexec_in_progress && (pci_dev->current_state <= PCI_D3hot))
-477                 pci_clear_master(pci_dev);
-
-> Bjorn
+>  include/uapi/linux/pci_regs.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index 634c9c44ed6c..fff521c9458c 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+> @@ -114,7 +114,7 @@
+>  #define PCI_SUBSYSTEM_ID	0x2e
+>  #define PCI_ROM_ADDRESS		0x30	/* Bits 31..11 are address, 10..1 reserved */
+>  #define  PCI_ROM_ADDRESS_ENABLE	0x01
+> -#define PCI_ROM_ADDRESS_MASK	(~0x7ffUL)
+> +#define PCI_ROM_ADDRESS_MASK	(~0x7ffU)
 
+Does this mean we can remove the "(u32)" casts in __pci_read_base() and
+pci_std_update_resource()?  If so, can you do that in the same patch?
 
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+>  #define PCI_CAPABILITY_LIST	0x34	/* Offset of first capability list entry */
+>  
+> -- 
+> 2.12.2.715.g7642488e1d-goog
+> 
