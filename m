@@ -1,64 +1,58 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44284 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752436AbdDKVm0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Apr 2017 17:42:26 -0400
-Date: Tue, 11 Apr 2017 16:42:20 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Brian Norris <briannorris@chromium.org>,
-        "jeffy.chen" <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH v2] PCI: rockchip: Mark PCI_EXP_LNKSTA_SLC in the root
- port
-Message-ID: <20170411214220.GD14778@bhelgaas-glaptop.roam.corp.google.com>
-References: <1491548357-145106-1-git-send-email-shawn.lin@rock-chips.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1491548357-145106-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=mpUv=3W=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=mpUv=3W=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1492169849.25766.3.camel@kernel.crashing.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Bjorn Helgaas
+	 <helgaas@kernel.org>
+Cc: Logan Gunthorpe <logang@deltatee.com>, Christoph Hellwig <hch@lst.de>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley"
+ <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen"
+ <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise
+ <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>, Max
+ Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
+        linux-kernel@vger.kernel.org, Jerome Glisse <jglisse@redhat.com>
+Date: Fri, 14 Apr 2017 21:37:29 +1000
+In-Reply-To: <20170414041656.GA30694@obsidianresearch.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+	 <1491974532.7236.43.camel@kernel.crashing.org>
+	 <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+	 <1492034124.7236.77.camel@kernel.crashing.org>
+	 <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+	 <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+	 <20170414041656.GA30694@obsidianresearch.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 07, 2017 at 02:59:17PM +0800, Shawn Lin wrote:
-> All platforms using Rockchip use a common clock for the Root
-> Port and the slot connected to it. Indicate this by setting
-> the Slot Clock Configuration (PCI_EXP_LNKSTA_SLC) bit in the
-> Root Port's Link Status.
+On Thu, 2017-04-13 at 22:16 -0600, Jason Gunthorpe wrote:
+> > Any caller of pci_add_resource_offset() uses CPU addresses different from
+> > the PCI bus addresses (unless the offset is zero, of course).  All ACPI
+> > platforms also support this translation (see "translation_offset"), though
+> > in most x86 systems the offset is zero.  I'm aware of one x86 system that
+> > was tested with a non-zero offset but I don't think it was shipped that
+> > way.
 > 
-> Per the Implementation Note in the spec (PCIe r3.1, sec 7.8.7),
-> if the downstream component also sets PCI_EXP_LNKSTA_SLC, software
-> may set the Common Clock Configuration (PCI_EXP_LNKCTL_CCC) bits on
-> both ends of the Link. This is done by pcie_aspm_configure_common_clock()
-> 
-> Cc: Brian Norris <briannorris@chromium.org>
-> Cc: jeffy.chen <jeffy.chen@rock-chips.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> I'd suggest just detecting if there is any translation in bus
+> addresses anywhere and just hard disabling P2P on such systems.
 
-Applied to pci/host-rockchip for v4.12, thanks!
+I object to designing a subsystem that by design cannot work on whole
+categories of architectures out there.
 
-> ---
-> 
-> Changes in v2:
-> - replace CCC with SLC
-> - reword the commit msg
-> 
->  drivers/pci/host/pcie-rockchip.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 26ddd35..7e7a6b6 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -596,7 +596,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->  
->  	/* Set RC's clock architecture as common clock */
->  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
-> -	status |= PCI_EXP_LNKCTL_CCC;
-> +	status |= PCI_EXP_LNKSTA_SLC << 16;
->  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
->  
->  	/* Enable Gen1 training */
-> -- 
-> 1.9.1
-> 
-> 
+> On modern hardware with 64 bit BARs there is very little reason to
+> have translation, so I think this is a legacy feature.
+
+No it's not.
+
+Cheers,
+Ben.
