@@ -1,63 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:44133 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754541AbdDNTMD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2017 15:12:03 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Salvatore Benedetto <salvatore.benedetto@intel.com>,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: linux-pci@vger.kernel.org, qat-linux@intel.com,
-        linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 3/7] PCI: call pcie_flr from reset_chelsio_generic_dev
-Date: Fri, 14 Apr 2017 21:11:27 +0200
-Message-Id: <20170414191131.14286-4-hch@lst.de>
-In-Reply-To: <20170414191131.14286-1-hch@lst.de>
-References: <20170414191131.14286-1-hch@lst.de>
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:33583 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751578AbdDNUic (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2017 16:38:32 -0400
+Received: by mail-pf0-f172.google.com with SMTP id s16so44408344pfs.0
+        for <linux-pci@vger.kernel.org>; Fri, 14 Apr 2017 13:38:32 -0700 (PDT)
+From: Matthias Kaehlcke <mka@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Grant Grundler <grundler@chromium.org>,
+        Greg Hackmann <ghackmann@google.com>,
+        Michael Davidson <md@google.com>,
+        Matthias Kaehlcke <mka@chromium.org>
+Subject: [PATCH v3] PCI: Make PCI_ROM_ADDRESS_MASK a 32-bit constant
+Date: Fri, 14 Apr 2017 13:38:02 -0700
+Message-Id: <20170414203802.119399-1-mka@chromium.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Instead of copy & pasting and old version of the code.
+A 64-bit value is not needed since a PCI ROM address consists in 32 bits.
+This fixes a clang warning about "implicit conversion from 'unsigned
+long' to 'u32'".
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Also remove now unnecessary casts to u32 from __pci_read_base() and
+pci_std_update_resource().
+
+Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
 ---
- drivers/pci/quirks.c | 15 +--------------
- 1 file changed, 1 insertion(+), 14 deletions(-)
+Changes in v3:
+- Remove unnecessary casts
+- Updated commit message
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 8195ca294ee5..715ed8c08fa3 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3750,20 +3750,7 @@ static int reset_chelsio_generic_dev(struct pci_dev *dev, int probe)
- 				      PCI_MSIX_FLAGS_ENABLE |
- 				      PCI_MSIX_FLAGS_MASKALL);
+Changes in v2:
+- Define PCI_ROM_ADDRESS_MASK as a 32-bit constant instead of using a cast
+- Updated commit message
+
+ drivers/pci/probe.c           | 2 +-
+ drivers/pci/setup-res.c       | 2 +-
+ include/uapi/linux/pci_regs.h | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index dfc9a2794141..7d5d4a56a186 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -231,7 +231,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+ 			res->flags |= IORESOURCE_ROM_ENABLE;
+ 		l64 = l & PCI_ROM_ADDRESS_MASK;
+ 		sz64 = sz & PCI_ROM_ADDRESS_MASK;
+-		mask64 = (u32)PCI_ROM_ADDRESS_MASK;
++		mask64 = PCI_ROM_ADDRESS_MASK;
+ 	}
  
--	/*
--	 * Start of pcie_flr() code sequence.  This reset code is a copy of
--	 * the guts of pcie_flr() because that's not an exported function.
--	 */
--
--	if (!pci_wait_for_pending_transaction(dev))
--		dev_err(&dev->dev, "transaction is not cleared; proceeding with reset anyway\n");
--
--	pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR);
--	msleep(100);
--
--	/*
--	 * End of pcie_flr() code sequence.
--	 */
-+	pcie_flr(dev);
+ 	if (res->flags & IORESOURCE_MEM_64) {
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 4bc589ee78d0..85774b7a316a 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -63,7 +63,7 @@ static void pci_std_update_resource(struct pci_dev *dev, int resno)
+ 		mask = (u32)PCI_BASE_ADDRESS_IO_MASK;
+ 		new |= res->flags & ~PCI_BASE_ADDRESS_IO_MASK;
+ 	} else if (resno == PCI_ROM_RESOURCE) {
+-		mask = (u32)PCI_ROM_ADDRESS_MASK;
++		mask = PCI_ROM_ADDRESS_MASK;
+ 	} else {
+ 		mask = (u32)PCI_BASE_ADDRESS_MEM_MASK;
+ 		new |= res->flags & ~PCI_BASE_ADDRESS_MEM_MASK;
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 634c9c44ed6c..fff521c9458c 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -114,7 +114,7 @@
+ #define PCI_SUBSYSTEM_ID	0x2e
+ #define PCI_ROM_ADDRESS		0x30	/* Bits 31..11 are address, 10..1 reserved */
+ #define  PCI_ROM_ADDRESS_ENABLE	0x01
+-#define PCI_ROM_ADDRESS_MASK	(~0x7ffUL)
++#define PCI_ROM_ADDRESS_MASK	(~0x7ffU)
  
- 	/*
- 	 * Restore the configuration information (BAR values, etc.) including
+ #define PCI_CAPABILITY_LIST	0x34	/* Offset of first capability list entry */
+ 
 -- 
-2.11.0
+2.12.2.762.g0e3151a226-goog
