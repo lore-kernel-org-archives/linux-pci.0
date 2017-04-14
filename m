@@ -1,73 +1,133 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jisheng Zhang <jszhang@marvell.com>
-To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-        <Joao.Pinto@synopsys.com>, <svarbanov@mm-sol.com>,
-        <keith.busch@intel.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-msm@vger.kernel.org>,
-        Jisheng Zhang <jszhang@marvell.com>
-Subject: [PATCH] PCI: dwc/host: Mark PCIe/PCI (MSI) cascade ISR as IRQF_NO_THREAD
-Date: Thu, 20 Apr 2017 18:27:18 +0800
-Message-ID: <20170420102718.3778-1-jszhang@marvell.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+To: <bhelgaas@google.com>, <marc.zyngier@arm.com>, <robh@kernel.org>,
+ <paul.gortmaker@windriver.com>, <colin.king@canonical.com>,
+ <linux-pci@vger.kernel.org>
+Subject: [PATCH v5] PCI: Xilinx NWL: Modifying irq chip for legacy interrupts
+Date: Fri, 14 Apr 2017 20:34:32 +0530
+Message-ID: <1492182272-31132-1-git-send-email-bharatku@xilinx.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: arnd@arndb.de, linux-kernel@vger.kernel.org, michal.simek@xilinx.com,
+ Bharat Kumar Gogada <bharatku@xilinx.com>, rgummal@xilinx.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Similar as commit 8ff0ef996ca0 ("PCI: host: Mark PCIe/PCI (MSI) IRQ
-cascade handlers as IRQF_NO_THREAD"), we should mark PCIe/PCI (MSI)
-IRQ cascade handlers IRQF_NO_THREAD explicitly. I just found this
-issue in pcie-designware-plat driver, then searched the code, I think
-we should fix pcie-qcom and vmd as well.
+- Adding spinlock for protecting legacy mask register
+- Few wifi end points which only support legacy interrupts,
+performs hardware reset functionalities after disabling interrupts
+by invoking disable_irq and then re-enable using enable_irq, they
+enable hardware interrupts first and then virtual irq line later.
+- The legacy irq line goes low only after DEASSERT_INTx is
+received.As the legacy irq line is high immediately after hardware
+interrupts are enabled but virq of EP is still in disabled state
+and EP handler is never executed resulting no DEASSERT_INTx.If dummy
+irq chip is used, interrutps are not masked and system is
+hanging with CPU stall.
+- Adding irq chip functions instead of dummy irq chip for legacy
+interrupts.
+- Legacy interrupts are level sensitive, so using handle_level_irq
+is more appropriate as it is masks interrupts until End point handles
+interrupts and unmasks interrutps after End point handler is executed.
+- Legacy interrupts are level triggered, virtual irq line of End
+Point shows as edge in /proc/interrupts.
+- Setting irq flags of virtual irq line of EP to level triggered
+at the time of mapping.
 
-Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+Signed-off-by: Bharat Kumar Gogada <bharatku@xilinx.com>
 ---
- drivers/pci/dwc/pcie-designware-plat.c | 3 ++-
- drivers/pci/dwc/pcie-qcom.c            | 3 ++-
- drivers/pci/host/vmd.c                 | 3 ++-
- 3 files changed, 6 insertions(+), 3 deletions(-)
+ drivers/pci/host/pcie-xilinx-nwl.c | 45 +++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 44 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
-index f20d494922ab..0db1dafc82bb 100644
---- a/drivers/pci/dwc/pcie-designware-plat.c
-+++ b/drivers/pci/dwc/pcie-designware-plat.c
-@@ -67,7 +67,8 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
+index 43eaa4a..36f4fb4 100644
+--- a/drivers/pci/host/pcie-xilinx-nwl.c
++++ b/drivers/pci/host/pcie-xilinx-nwl.c
+@@ -184,6 +184,7 @@ struct nwl_pcie {
+ 	u8 root_busno;
+ 	struct nwl_msi msi;
+ 	struct irq_domain *legacy_irq_domain;
++	raw_spinlock_t leg_mask_lock;
+ };
  
- 		ret = devm_request_irq(dev, pp->msi_irq,
- 					dw_plat_pcie_msi_irq_handler,
--					IRQF_SHARED, "dw-plat-pcie-msi", pp);
-+					IRQF_SHARED | IRQF_NO_THREAD,
-+					"dw-plat-pcie-msi", pp);
- 		if (ret) {
- 			dev_err(dev, "failed to request MSI IRQ\n");
- 			return ret;
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 67eb7f5926dd..a5570c58081e 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -727,7 +727,8 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ static inline u32 nwl_bridge_readl(struct nwl_pcie *pcie, u32 off)
+@@ -395,11 +396,52 @@ static void nwl_pcie_msi_handler_low(struct irq_desc *desc)
+ 	chained_irq_exit(chip, desc);
+ }
  
- 		ret = devm_request_irq(dev, pp->msi_irq,
- 				       qcom_pcie_msi_irq_handler,
--				       IRQF_SHARED, "qcom-pcie-msi", pp);
-+				       IRQF_SHARED | IRQF_NO_THREAD,
-+				       "qcom-pcie-msi", pp);
- 		if (ret) {
- 			dev_err(dev, "cannot request msi irq\n");
- 			return ret;
-diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
-index e27ad2a3bd33..784f63beb487 100644
---- a/drivers/pci/host/vmd.c
-+++ b/drivers/pci/host/vmd.c
-@@ -704,7 +704,8 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
++static void nwl_mask_leg_irq(struct irq_data *data)
++{
++	struct irq_desc *desc = irq_to_desc(data->irq);
++	struct nwl_pcie *pcie;
++	unsigned long flags;
++	u32 mask;
++	u32 val;
++
++	pcie = irq_desc_get_chip_data(desc);
++	mask = 1 << (data->hwirq - 1);
++	raw_spin_lock_irqsave(&pcie->leg_mask_lock, flags);
++	val = nwl_bridge_readl(pcie, MSGF_LEG_MASK);
++	nwl_bridge_writel(pcie, (val & (~mask)), MSGF_LEG_MASK);
++	raw_spin_unlock_irqrestore(&pcie->leg_mask_lock, flags);
++}
++
++static void nwl_unmask_leg_irq(struct irq_data *data)
++{
++	struct irq_desc *desc = irq_to_desc(data->irq);
++	struct nwl_pcie *pcie;
++	unsigned long flags;
++	u32 mask;
++	u32 val;
++
++	pcie = irq_desc_get_chip_data(desc);
++	mask = 1 << (data->hwirq - 1);
++	raw_spin_lock_irqsave(&pcie->leg_mask_lock, flags);
++	val = nwl_bridge_readl(pcie, MSGF_LEG_MASK);
++	nwl_bridge_writel(pcie, (val | mask), MSGF_LEG_MASK);
++	raw_spin_unlock_irqrestore(&pcie->leg_mask_lock, flags);
++}
++
++static struct irq_chip nwl_leg_irq_chip = {
++	.name = "nwl_pcie:legacy",
++	.irq_enable = nwl_unmask_leg_irq,
++	.irq_disable = nwl_mask_leg_irq,
++	.irq_mask = nwl_mask_leg_irq,
++	.irq_unmask = nwl_unmask_leg_irq,
++};
++
+ static int nwl_legacy_map(struct irq_domain *domain, unsigned int irq,
+ 			  irq_hw_number_t hwirq)
+ {
+-	irq_set_chip_and_handler(irq, &dummy_irq_chip, handle_simple_irq);
++	irq_set_chip_and_handler(irq, &nwl_leg_irq_chip, handle_level_irq);
+ 	irq_set_chip_data(irq, domain->host_data);
++	irq_set_status_flags(irq, IRQ_LEVEL);
  
- 		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
- 		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
--				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
-+				       vmd_irq, IRQF_NO_THREAD,
-+				       "vmd", &vmd->irqs[i]);
- 		if (err)
- 			return err;
+ 	return 0;
+ }
+@@ -538,6 +580,7 @@ static int nwl_pcie_init_irq_domain(struct nwl_pcie *pcie)
+ 		return -ENOMEM;
  	}
+ 
++	raw_spin_lock_init(&pcie->leg_mask_lock);
+ 	nwl_pcie_init_msi_irq_domain(pcie);
+ 	return 0;
+ }
 -- 
-2.11.0
+2.1.1
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
