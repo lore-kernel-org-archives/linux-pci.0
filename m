@@ -1,84 +1,53 @@
-Return-Path: <SRS0=aMaK=4E=pengutronix.de=l.stach@kernel.org>
-Return-Path: <SRS0=aMaK=4E=pengutronix.de=l.stach@kernel.org>
-Message-ID: <1493369471.13947.11.camel@pengutronix.de>
-Subject: Re: [PATCH net-next 1/4] ixgbe: sparc: rename the
- ARCH_WANT_RELAX_ORDER to IXGBE_ALLOW_RELAXED_ORDER
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>, Ding Tianhong
- <dingtianhong@huawei.com>, Mark Rutland <mark.rutland@arm.com>, Amir Ancel
- <amira@mellanox.com>, Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Catalin Marinas
- <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>, LinuxArm
- <linuxarm@huawei.com>, David Laight <David.Laight@aculab.com>,
- "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
- "netdev@vger.kernel.org" <netdev@vger.kernel.org>,  Robin Murphy
- <robin.murphy@arm.com>, "davem@davemloft.net" <davem@davemloft.net>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, Casey Leedom <leedom@chelsio.com>
-Date: Fri, 28 Apr 2017 10:51:11 +0200
-In-Reply-To: <20170427171938.GA10705@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170401.112603.1991545644693496714.davem@davemloft.net>
-	 <42428725-89f1-1508-4e3d-723e087b3bbb@huawei.com>
-	 <EE11001F9E5DDD47B7634E2F8A612F2E205199C0@FRAEML521-MBX.china.huawei.com>
-	 <063D6719AE5E284EB5DD2968C1650D6DCFFD3C52@AcuExch.aculab.com>
-	 <DB5PR05MB138288172B04713EB0C1DB55D3190@DB5PR05MB1382.eurprd05.prod.outlook.com>
-	 <a2239141-a185-1bb8-0abd-7a05b9fde015@huawei.com>
-	 <CAKgT0Uc4L=GgYbpO-Fm9OfN+_fLypbDP1c+X4T_ta90ecQiyGQ@mail.gmail.com>
-	 <20170427171938.GA10705@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <SRS0=GAJM=3W=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=GAJM=3W=deltatee.com=logang@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1491974532.7236.43.camel@kernel.crashing.org>
+ <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+ <1492034124.7236.77.camel@kernel.crashing.org>
+ <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+ <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414041656.GA30694@obsidianresearch.com>
+ <1492169849.25766.3.camel@kernel.crashing.org>
+Cc: Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+ Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Dan Williams <dan.j.williams@intel.com>, Keith Busch
+ <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
+ linux-kernel@vger.kernel.org, Jerome Glisse <jglisse@redhat.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
+Date: Fri, 14 Apr 2017 11:30:14 -0600
+MIME-Version: 1.0
+In-Reply-To: <1492169849.25766.3.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Donnerstag, den 27.04.2017, 12:19 -0500 schrieb Bjorn Helgaas:
-> [+cc Casey]
-> 
-> On Wed, Apr 26, 2017 at 09:18:33AM -0700, Alexander Duyck wrote:
-> > On Wed, Apr 26, 2017 at 2:26 AM, Ding Tianhong <dingtianhong@huawei.com> wrote:
-> > > Hi Amir:
-> > >
-> > > It is really glad to hear that the mlx5 will support RO mode this year, if so, do you agree that enable it dynamic by ethtool -s xxx,
-> > > we have try it several month ago but there was only one drivers would use it at that time so the maintainer against it, it mlx5 would support RO,
-> > > we could try to restart this solution, what do you think about it. :)
-> > >
-> > > Thanks
-> > > Ding
-> > 
-> > Hi Ding,
-> > 
-> > Enabing relaxed ordering really doesn't have any place in ethtool. It
-> > is a PCIe attribute that you are essentially wanting to enable.
-> > 
-> > It might be worth while to take a look at updating the PCIe code path
-> > to handle this. Really what we should probably do is guarantee that
-> > the architectures that need relaxed ordering are setting it in the
-> > PCIe Device Control register and that the ones that don't are clearing
-> > the bit. It's possible that this is already occurring, but I don't
-> > know the state of handling those bits is in the kernel. Once we can
-> > guarantee that we could use that to have the drivers determine their
-> > behavior in regards to relaxed ordering. For example in the case of
-> > igb/ixgbe we could probably change the behavior so that it will bey
-> > default try to use relaxed ordering but if it is not enabled in PCIe
-> > Device Control register the hardware should not request to use it. It
-> > would simplify things in the drivers and allow for each architecture
-> > to control things as needed in their PCIe code.
-> 
-> I thought Relaxed Ordering was an optimization.  Are there cases where
-> it is actually required for correct behavior?
 
-Yes, at least the Tegra 2 TRM claims that RO needs to be enabled on the
-device side for correct operation with the following language:
 
-"Tegra 2 requires relaxed ordering for responses to downstream requests
-(responses can pass writes). It is possible in some circumstances for
-PCIe transfers from an external bus masters (i.e. upstream transfers) to
-become blocked by a downstream read or non-posted write. The responses
-to these downstream requests are blocked by upstream posted writes only
-when PCIe strict ordering is imposed. It is therefore necessary to never
-impose strict ordering that would block a response to a downstream
-NPW/read request and always set the relaxed ordering bit to 1. Only
-devices that are capable of relaxed ordering may be used with Tegra 2
-devices."
+On 14/04/17 05:37 AM, Benjamin Herrenschmidt wrote:
+> I object to designing a subsystem that by design cannot work on whole
+> categories of architectures out there.
 
-Regards,
-Lucas
+Hardly. That's extreme. We'd design a subsystem that works for the easy
+cases and needs more work to support the offset cases. It would not be
+designed in such a way that it could _never_ support those
+architectures. It would simply be such that it only permits use by the
+cases that are known to work. Then those cases could be expanded as time
+goes on and people work on adding more support.
+
+There's tons of stuff that needs to be done to get this upstream. I'd
+rather not require it to work for every possible architecture from the
+start. The testing alone would be impossible. Many subsystems start by
+working for x86 first and then adding support in other architectures
+later. (Often with that work done by the people who care about those
+systems and actually have the hardware to test with.)
+
+Logan
