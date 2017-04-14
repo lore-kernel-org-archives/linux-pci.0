@@ -1,60 +1,99 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38060 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:60184 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1425132AbdDUTba (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Apr 2017 15:31:30 -0400
-Subject: [PATCH 0/9] lspci: AER, PCIe capability updates
+        id S1751873AbdDNP6z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Apr 2017 11:58:55 -0400
+Date: Fri, 14 Apr 2017 10:58:49 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org,
-        Jayachandran C <jnair@caviumnetworks.com>
-Date: Fri, 21 Apr 2017 14:31:26 -0500
-Message-ID: <20170421192844.6562.30976.stgit@bhelgaas-glaptop.roam.corp.google.com>
+To: Yongji Xie <elohimes@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
+        gwshan@linux.vnet.ibm.com, aik@ozlabs.ru, benh@kernel.crashing.org,
+        mpe@ellerman.id.au, paulus@samba.org, zhong@linux.vnet.ibm.com
+Subject: Re: [PATCH v10 3/4] powerpc/powernv: Override
+ pcibios_default_alignment() to force PCI devices to be page aligned
+Message-ID: <20170414155849.GB5864@bhelgaas-glaptop.roam.corp.google.com>
+References: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
+ <1491825494-19331-4-git-send-email-elohimes@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1491825494-19331-4-git-send-email-elohimes@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Martin,
+On Mon, Apr 10, 2017 at 07:58:13PM +0800, Yongji Xie wrote:
+> This overrides pcibios_default_alignment() to set default alignment
+> to PAGE_SIZE for all PCI devices on PowerNV platform. Thus sub-page
+> BARs would not share a page and could be mapped into guest when VFIO
+> passthrough them.
 
-These are some updates to decode more AER registers, decode "Slot
-Implemented" for reverse bridges, and drop ASPM exit latencies for
-unsupported states.  And a few more cosmetic whitespace, spelling, etc.,
-fixes.
+Thanks for doing this.  This looks like a reasonable strategy to me,
+but it would be good to get a powerpc ack for it.
 
-These are based on 3.5.4 (9f9e373b17f1).
-
----
-
-Bjorn Helgaas (9):
-      lspci: Decode AER Multiple Header and TLP Prefix Log bits
-      lspci: Dump AER Header Log
-      lspci: Decode AER Root Error Command, Root Error Status, Error Source
-      lspci: Include "ECRC" in the ECRC generate/check labels
-      lspci: Indent PCIe Capability DevCap2 & DevCtl2 correctly
-      lspci: Decode "Slot Implemented" for PCI/PCI-X to PCIe Bridges
-      lspci: Decode only supported ASPM exit latencies
-      lspci: Use #defines for greppability
-      lspci: Fix "Auxiliary" spelling error
-
-
- lib/header.h                 |   21 +
- lib/pci.h                    |    2 
- ls-caps.c                    |   63 +++-
- ls-ecaps.c                   |   53 +++-
- lspci.h                      |    2 
- tests/cap-aer-ecrc-label     |  327 ++++++++++++++++++++++
- tests/cap-aer-hdr            |  322 ++++++++++++++++++++++
- tests/cap-aer-log            |  323 ++++++++++++++++++++++
- tests/cap-aer-root           |  626 ++++++++++++++++++++++++++++++++++++++++++
- tests/cap-exp-aspm-latencies |  327 ++++++++++++++++++++++
- tests/cap-exp-dev2           |  327 ++++++++++++++++++++++
- tests/cap-exp-rev-slot       |  288 +++++++++++++++++++
- 12 files changed, 2644 insertions(+), 37 deletions(-)
- create mode 100644 tests/cap-aer-ecrc-label
- create mode 100644 tests/cap-aer-hdr
- create mode 100644 tests/cap-aer-log
- create mode 100644 tests/cap-aer-root
- create mode 100644 tests/cap-exp-aspm-latencies
- create mode 100644 tests/cap-exp-dev2
- create mode 100644 tests/cap-exp-rev-slot
+> Signed-off-by: Yongji Xie <elohimes@gmail.com>
+> ---
+>  arch/powerpc/include/asm/machdep.h        |    2 ++
+>  arch/powerpc/kernel/pci-common.c          |    8 ++++++++
+>  arch/powerpc/platforms/powernv/pci-ioda.c |    7 +++++++
+>  3 files changed, 17 insertions(+)
+> 
+> diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
+> index 5011b69..a82c192 100644
+> --- a/arch/powerpc/include/asm/machdep.h
+> +++ b/arch/powerpc/include/asm/machdep.h
+> @@ -173,6 +173,8 @@ struct machdep_calls {
+>  	/* Called after scan and before resource survey */
+>  	void (*pcibios_fixup_phb)(struct pci_controller *hose);
+>  
+> +	resource_size_t (*pcibios_default_alignment)(struct pci_dev *);
+> +
+>  #ifdef CONFIG_PCI_IOV
+>  	void (*pcibios_fixup_sriov)(struct pci_dev *pdev);
+>  	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *, int resno);
+> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
+> index ffda24a..ceda574 100644
+> --- a/arch/powerpc/kernel/pci-common.c
+> +++ b/arch/powerpc/kernel/pci-common.c
+> @@ -233,6 +233,14 @@ void pcibios_reset_secondary_bus(struct pci_dev *dev)
+>  	pci_reset_secondary_bus(dev);
+>  }
+>  
+> +resource_size_t pcibios_default_alignment(struct pci_dev *pdev)
+> +{
+> +	if (ppc_md.pcibios_default_alignment)
+> +		return ppc_md.pcibios_default_alignment(pdev);
+> +
+> +	return 0;
+> +}
+> +
+>  #ifdef CONFIG_PCI_IOV
+>  resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev, int resno)
+>  {
+> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+> index e367382..354c852 100644
+> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> @@ -3297,6 +3297,11 @@ static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
+>  	}
+>  }
+>  
+> +static resource_size_t pnv_pci_default_alignment(struct pci_dev *pdev)
+> +{
+> +	return PAGE_SIZE;
+> +}
+> +
+>  #ifdef CONFIG_PCI_IOV
+>  static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
+>  						      int resno)
+> @@ -3830,6 +3835,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
+>  		hose->controller_ops = pnv_pci_ioda_controller_ops;
+>  	}
+>  
+> +	ppc_md.pcibios_default_alignment = pnv_pci_default_alignment;
+> +
+>  #ifdef CONFIG_PCI_IOV
+>  	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_iov_resources;
+>  	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
+> -- 
+> 1.7.9.5
+> 
