@@ -1,42 +1,56 @@
-Return-Path: <SRS0=yoP8=32=ti.com=kishon@kernel.org>
-Return-Path: <SRS0=yoP8=32=ti.com=kishon@kernel.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-Subject: [Query] Enabling parent device clock from resume_noirq
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        <khilman@kernel.org>, <rnayak@codeaurora.org>,
-        Paul Walmsley <paul@pwsan.com>, Bjorn Helgaas
-	<helgaas@kernel.org>,
-        Grygorii Strashko <grygorii.strashko@ti.com>,
-        "Nori,
- Sekhar" <nsekhar@ti.com>, "Kristo, Tero" <t-kristo@ti.com>
-Message-ID: <62cd5ee0-3f0c-5e65-5f64-0c91a2a6f1e6@ti.com>
-Date: Tue, 18 Apr 2017 11:37:20 +0530
+Return-Path: <SRS0=sVE/=3W=chromium.org=mka@kernel.org>
+Return-Path: <SRS0=sVE/=3W=chromium.org=mka@kernel.org>
+Date: Fri, 14 Apr 2017 12:36:05 -0700
+From: Matthias Kaehlcke <mka@chromium.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Mason <slash.tmp@free.fr>,
+	Grant Grundler <grundler@chromium.org>,
+	Greg Hackmann <ghackmann@google.com>,
+	Michael Davidson <md@google.com>
+Subject: Re: [PATCH v2] PCI: Make PCI_ROM_ADDRESS_MASK a 32-bit constant
+Message-ID: <20170414193605.GN28657@google.com>
+References: <20170411175658.58512-1-mka@chromium.org>
+ <20170414154340.GA5864@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170414154340.GA5864@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
+El Fri, Apr 14, 2017 at 10:43:40AM -0500 Bjorn Helgaas ha dit:
 
-resume_noirq callbacks are used in PCIe core to restore PCI state (this
-accesses PCI module). So the clocks of PCI module has to be enabled before
-resume_noirq.
+> On Tue, Apr 11, 2017 at 10:56:58AM -0700, Matthias Kaehlcke wrote:
+> > A 64-bit value is not needed since a PCI ROM address consists in 32 bits.
+> > This fixes a clang warning about "implicit conversion from 'unsigned
+> > long' to 'u32'".
+> > 
+> > Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
+> > ---
+> > Changes in v2:
+> > - Define PCI_ROM_ADDRESS_MASK as a 32-bit constant instead of using a cast
+> > - Updated commit message
+> > 
+> >  include/uapi/linux/pci_regs.h | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> > index 634c9c44ed6c..fff521c9458c 100644
+> > --- a/include/uapi/linux/pci_regs.h
+> > +++ b/include/uapi/linux/pci_regs.h
+> > @@ -114,7 +114,7 @@
+> >  #define PCI_SUBSYSTEM_ID	0x2e
+> >  #define PCI_ROM_ADDRESS		0x30	/* Bits 31..11 are address, 10..1 reserved */
+> >  #define  PCI_ROM_ADDRESS_ENABLE	0x01
+> > -#define PCI_ROM_ADDRESS_MASK	(~0x7ffUL)
+> > +#define PCI_ROM_ADDRESS_MASK	(~0x7ffU)
+> 
+> Does this mean we can remove the "(u32)" casts in __pci_read_base() and
+> pci_std_update_resource()?
 
-The clocks for the PCI module in DRA7xx is provided by PIPE3 PHY device which
-in turn gets it's clock from OCP2SCP device. During resume_noirq callbacks,
-pm_runtime is disabled, so pm_runtime_get_sync is ineffective. However
-pm_runtime can be enabled using pm_runtime_force_resume. Now the problem is
-adding pm_runtime_force_resume() in resume_noirq callback of pci-dra7xx driver
-will enable only the pm_runtime of PCI device but not PIPE3 PHY or OCP2SCP.
-Adding pm_runtime_force_resume() in resume_noirq callback of PIPE3 PHY driver
-or OCP2SCP driver will not help if the resume_noirq callbacks in PIP3PHY driver
-and OCP2SCP driver are invoked after the resume_noirq of pci-dra7xx driver.
+Indeed
 
-How to enable the pm_runtime of parent devices in resume_noirq callback? Does
-existing pm_runtime framework has support for that?
+> If so, can you do that in the same patch?
 
-Thanks
-Kishon
+Will do
+
+Matthias
