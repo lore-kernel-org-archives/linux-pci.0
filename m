@@ -1,57 +1,71 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [RFC 6/8] nvmet: Be careful about using iomem accesses when
- dealing with p2pmem
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-7-git-send-email-logang@deltatee.com>
- <080b68b4-eba3-861c-4f29-5d829425b5e7@grimberg.me>
- <20170404154629.GA13552@obsidianresearch.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
-        linux-kernel@vger.kernel.org
-From: Sagi Grimberg <sagi@grimberg.me>
-Message-ID: <4df229d8-8124-664a-9bc4-6401bc034be1@grimberg.me>
-Date: Thu, 6 Apr 2017 08:33:38 +0300
+Return-Path: <SRS0=k68l=3W=cavium.com=Jayachandran.Nair@kernel.org>
+Return-Path: <SRS0=k68l=3W=cavium.com=Jayachandran.Nair@kernel.org>
+Date: Fri, 14 Apr 2017 21:06:46 +0000
+From: Jayachandran C <jnair@caviumnetworks.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+	Robin Murphy <robin.murphy@arm.com>, Jon Masters <jcm@redhat.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Joerg Roedel <joro@8bytes.org>
+Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
+Message-ID: <20170414210646.GA5346@localhost>
+References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
+ <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
+ <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170404154629.GA13552@obsidianresearch.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Apr 13, 2017 at 07:19:11PM -0500, Bjorn Helgaas wrote:
+> I tentatively applied both patches to pci/host-thunder for v4.12.
+> 
+> However, I am concerned about the topology here:
+> 
+> On Thu, Apr 13, 2017 at 08:30:45PM +0000, Jayachandran C wrote:
+> > On Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the
+> > PCI topology is slightly unusual.  For a multi-node system, it looks
+> > like:
+> > 
+> >     00:00.0 [PCI] bridge to [bus 01-1e]
+> >     01:0a.0 [PCI-PCIe bridge, type 8] bridge to [bus 02-04]
+> >     02:00.0 [PCIe root port, type 4] bridge to [bus 03-04] (XLATE_ROOT)
+> >     03:00.0 PCIe Endpoint
+> 
+> A root port normally has a single PCIe link leading downstream.
+> According to this, 02:00.0 is a root port that has the usual
+> downstream link leading to 03:00.0, but it also has an upstream link
+> to 01:0a.0.
 
->> Note that the nvme completion queues are still on the host memory, so
->> this means we have lost the ordering between data and completions as
->> they go to different pcie targets.
->
-> Hmm, in this simple up/down case with a switch, I think it might
-> actually be OK.
->
-> Transactions might not complete at the NVMe device before the CPU
-> processes the RDMA completion, however due to the PCI-E ordering rules
-> new TLPs directed to the NVMe will complete after the RMDA TLPs and
-> thus observe the new data. (eg order preserving)
->
-> It would be very hard to use P2P if fabric ordering is not preserved..
+The PCI topology is a bit broken due to the way that the PCIe IP block
+was integrated into SoC PCI bridges and devices. The current mechanism
+of adding a PCI-PCIe bridge to glue these together is not ideal.
 
-I think it still can race if the p2p device is connected with more than
-a single port to the switch.
+> Maybe this example is omitting details that are not relevant to DMA
+> aliases?  The PCIe capability only contains one set of link-related
+> registers, so I don't know how we could manage a single device that
+> has two links.
+ 
+The root port is standard and has just one link to the EP (or whatever
+is on the external PCIe slot). The fallout of the current hw design is
+that the PCI-PCIe bridge has a link that does not follow standard and
+does not have a counterpart (as you noted).
 
-Say it's connected via 2 legs, the bar is accessed from leg A and the
-data from the disk comes via leg B. In this case, the data is heading
-towards the p2p device via leg B (might be congested), the completion
-goes directly to the RC, and then the host issues a read from the
-bar via leg A. I don't understand what can guarantee ordering here.
+> A device with two links would break things like ASPM.  In
+> set_pcie_port_type(), for example, we have this comment:
+> 
+>    * A Root Port or a PCI-to-PCIe bridge is always the upstream end
+>    * of a Link.  No PCIe component has two Links.  Two Links are
+>    * connected by a Switch that has a Port on each Link and internal
+>    * logic to connect the two Ports.
+> 
+> The topology above breaks these assumptions, which will make
+> pdev->has_secondary_link incorrect, which means ASPM won't work
+> correctly.
 
-Stephen told me that this still guarantees ordering, but I honestly
-can't understand how, perhaps someone can explain to me in a simple
-way that I can understand.
+Given the current hardware, the pcieport driver seems to work reasonably
+for the root port at 02:00.0, with AER support. I will take a look at the
+ASPM part.
+
+Thanks,
+JC.
