@@ -1,59 +1,120 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1491917983.7236.9.camel@kernel.crashing.org>
-Subject: Re: [PATCH v3 04/32] asm-generic: add ioremap_nopost() remap interface
+Return-Path: <SRS0=mpUv=3W=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=mpUv=3W=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1492206774.25766.14.camel@kernel.crashing.org>
+Subject: Re: [PATCH v10 3/4] powerpc/powernv: Override
+ pcibios_default_alignment() to force PCI devices to be page aligned
 From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
-Date: Tue, 11 Apr 2017 23:39:43 +1000
-In-Reply-To: <20170411122923.6285-5-lorenzo.pieralisi@arm.com>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
- <20170411122923.6285-5-lorenzo.pieralisi@arm.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Yongji Xie <elohimes@gmail.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
+        gwshan@linux.vnet.ibm.com, aik@ozlabs.ru, mpe@ellerman.id.au,
+        paulus@samba.org, zhong@linux.vnet.ibm.com
+Date: Sat, 15 Apr 2017 07:52:54 +1000
+In-Reply-To: <20170414155849.GB5864@bhelgaas-glaptop.roam.corp.google.com>
+References: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
+	 <1491825494-19331-4-git-send-email-elohimes@gmail.com>
+	 <20170414155849.GB5864@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- "James E.J. Bottomley" <jejb@parisc-linux.org>,
- David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
- Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
- Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
- Jesper Nilsson <jesper.nilsson@axis.com>,
- Yoshinori Sato <ysato@users.sourceforge.jp>,
- Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
- Russell King <linux@armlinux.org.uk>, Ingo Molnar <mingo@redhat.com>,
- Geert Uytterhoeven <geert@linux-m68k.org>, Matt Turner <mattst88@gmail.com>,
- Haavard Skinnemoen <hskinnemoen@gmail.com>, Fenghua Yu <fenghua.yu@intel.com>,
- James Hogan <james.hogan@imgtec.com>, Chris Metcalf <cmetcalf@mellanox.com>,
- Arnd Bergmann <arnd@arndb.de>, Heiko Carstens <heiko.carstens@de.ibm.com>,
- Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
- Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
- Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
- Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
- linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
- Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>, "Luis
- R . Rodriguez" <mcgrof@kernel.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>,
- Ley Foon Tan <lftan@altera.com>, "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gVHVlLCAyMDE3LTA0LTExIGF0IDEzOjI4ICswMTAwLCBMb3JlbnpvIFBpZXJhbGlzaSB3cm90
-ZToKPiArc3RhdGljIGlubGluZSB2b2lkIF9faW9tZW0gKmlvcmVtYXBfbm9wb3N0KHBoeXNfYWRk
-cl90IG9mZnNldCwKPiBzaXplX3Qgc2l6ZSkKPiArewo+ICvCoMKgwqDCoMKgwqDCoHJldHVybiBp
-b3JlbWFwX25vY2FjaGUob2Zmc2V0LCBzaXplKTsKPiArfQo+ICsKCk5vIHRoaXMgaXMgd3Jvbmcg
-YXMgSSBleHBsYWluZWQuCgpUaGlzIGlzIGEgc2VtYW50aWMgdGhhdCBzaW1wbHkgKmNhbm5vdCog
-YmUgZ2VuZXJpY2FsbHkgcHJvdmlkZWQgYWNjcm9zcwphcmNoaXRlY3R1cmVzIGFzIGEgbWFwcGlu
-ZyBhdHRyaWJ1dGUuCgpUaGUgc29sdXRpb24gdG8geW91ciBwcm9ibGVtIGxpZXMgZWxzZXdoZXJl
-LgoKQ2hlZXJzLApCZW4uCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QKbGludXgtYXJtLWtlcm5lbEBs
-aXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRlYWQub3JnL21haWxtYW4vbGlz
-dGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+On Fri, 2017-04-14 at 10:58 -0500, Bjorn Helgaas wrote:
+> On Mon, Apr 10, 2017 at 07:58:13PM +0800, Yongji Xie wrote:
+> > This overrides pcibios_default_alignment() to set default alignment
+> > to PAGE_SIZE for all PCI devices on PowerNV platform. Thus sub-page
+> > BARs would not share a page and could be mapped into guest when
+> > VFIO
+> > passthrough them.
+> 
+> Thanks for doing this.  This looks like a reasonable strategy to me,
+> but it would be good to get a powerpc ack for it.
+
+I agree in principle. I'm surprised that PowerPC is the only one
+interested here though, what about other platforms who want to use
+KVM and PCI pass-through and use Linux to assign BARs ?
+
+Cheers,
+Ben.
+
+> > Signed-off-by: Yongji Xie <elohimes@gmail.com>
+> > ---
+> >  arch/powerpc/include/asm/machdep.h        |    2 ++
+> >  arch/powerpc/kernel/pci-common.c          |    8 ++++++++
+> >  arch/powerpc/platforms/powernv/pci-ioda.c |    7 +++++++
+> >  3 files changed, 17 insertions(+)
+> > 
+> > diff --git a/arch/powerpc/include/asm/machdep.h
+> > b/arch/powerpc/include/asm/machdep.h
+> > index 5011b69..a82c192 100644
+> > --- a/arch/powerpc/include/asm/machdep.h
+> > +++ b/arch/powerpc/include/asm/machdep.h
+> > @@ -173,6 +173,8 @@ struct machdep_calls {
+> >  	/* Called after scan and before resource survey */
+> >  	void (*pcibios_fixup_phb)(struct pci_controller *hose);
+> >  
+> > +	resource_size_t (*pcibios_default_alignment)(struct
+> > pci_dev *);
+> > +
+> >  #ifdef CONFIG_PCI_IOV
+> >  	void (*pcibios_fixup_sriov)(struct pci_dev *pdev);
+> >  	resource_size_t (*pcibios_iov_resource_alignment)(struct
+> > pci_dev *, int resno);
+> > diff --git a/arch/powerpc/kernel/pci-common.c
+> > b/arch/powerpc/kernel/pci-common.c
+> > index ffda24a..ceda574 100644
+> > --- a/arch/powerpc/kernel/pci-common.c
+> > +++ b/arch/powerpc/kernel/pci-common.c
+> > @@ -233,6 +233,14 @@ void pcibios_reset_secondary_bus(struct
+> > pci_dev *dev)
+> >  	pci_reset_secondary_bus(dev);
+> >  }
+> >  
+> > +resource_size_t pcibios_default_alignment(struct pci_dev *pdev)
+> > +{
+> > +	if (ppc_md.pcibios_default_alignment)
+> > +		return ppc_md.pcibios_default_alignment(pdev);
+> > +
+> > +	return 0;
+> > +}
+> > +
+> >  #ifdef CONFIG_PCI_IOV
+> >  resource_size_t pcibios_iov_resource_alignment(struct pci_dev
+> > *pdev, int resno)
+> >  {
+> > diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c
+> > b/arch/powerpc/platforms/powernv/pci-ioda.c
+> > index e367382..354c852 100644
+> > --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+> > +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+> > @@ -3297,6 +3297,11 @@ static void pnv_pci_setup_bridge(struct
+> > pci_bus *bus, unsigned long type)
+> >  	}
+> >  }
+> >  
+> > +static resource_size_t pnv_pci_default_alignment(struct pci_dev
+> > *pdev)
+> > +{
+> > +	return PAGE_SIZE;
+> > +}
+> > +
+> >  #ifdef CONFIG_PCI_IOV
+> >  static resource_size_t pnv_pci_iov_resource_alignment(struct
+> > pci_dev *pdev,
+> >  						      int resno)
+> > @@ -3830,6 +3835,8 @@ static void __init
+> > pnv_pci_init_ioda_phb(struct device_node *np,
+> >  		hose->controller_ops =
+> > pnv_pci_ioda_controller_ops;
+> >  	}
+> >  
+> > +	ppc_md.pcibios_default_alignment =
+> > pnv_pci_default_alignment;
+> > +
+> >  #ifdef CONFIG_PCI_IOV
+> >  	ppc_md.pcibios_fixup_sriov =
+> > pnv_pci_ioda_fixup_iov_resources;
+> >  	ppc_md.pcibios_iov_resource_alignment =
+> > pnv_pci_iov_resource_alignment;
+> > -- 
+> > 1.7.9.5
+> > 
