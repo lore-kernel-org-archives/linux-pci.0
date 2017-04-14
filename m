@@ -1,55 +1,45 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:45211 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751612AbdDNJRa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2017 05:17:30 -0400
+Date: Fri, 14 Apr 2017 11:17:20 +0200
+From: Greg KH <greg@kroah.com>
+To: Juergen Gross <jgross@suse.com>
+Cc: stable@vger.kernel.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
         Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Ingo Molnar <mingo@redhat.com>
-Subject: [PATCH v3 27/32] x86: include default ioremap_nopost() implementation
-Date: Tue, 11 Apr 2017 13:29:07 +0100
-Message-Id: <20170411122923.6285-28-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+        Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
+        Julien Grall <julien.grall@citrix.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Ross Lagerwall <ross.lagerwall@citrix.com>,
+        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>,
+        KarimAllah Ahmed <karahmed@amazon.de>
+Subject: Re: [stable-4.9: PATCH] xen: revert commit 72a9b186292
+Message-ID: <20170414091720.GB6372@kroah.com>
+References: <20170413130653.5183-1-jgross@suse.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170413130653.5183-1-jgross@suse.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and Posting")
-mandate non-posted configuration transactions. As further highlighted in
-the PCIe specifications (4.0 - Rev0.3, "Ordering Considerations for the
-Enhanced Configuration Access Mechanism"), through ECAM and
-ECAM-derivative configuration mechanism, the memory mapped transactions
-from the host CPU into Configuration Requests on the PCI express fabric
-may create ordering problems for software because writes to memory
-address are typically posted transactions (unless the architecture can
-enforce through virtual address mapping non-posted write transactions
-behaviour) but writes to Configuration Space are not posted on the PCI
-express fabric.
+On Thu, Apr 13, 2017 at 03:06:53PM +0200, Juergen Gross wrote:
+> Revert commit 72a9b186292 ("xen: Remove event channel notification
+> through Xen PCI platform device") as the original analysis was wrong
+> that all the removed code isn't in use any more.
+> 
+> It is still necessary for old Xen versions (< 4.0) and for being able
+> to run the Linux kernel as dom0 in a nested Xen environment.
 
-Include the asm-generic ioremap_nopost() implementation (currently
-falling back to ioremap_nocache()) to provide a non-posted writes
-ioremap interface to kernel subsystems.
+What is the commit id of this revert in Linus's tree?
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ingo Molnar <mingo@redhat.com>
----
- arch/x86/include/asm/io.h | 1 +
- 1 file changed, 1 insertion(+)
+thanks,
 
-diff --git a/arch/x86/include/asm/io.h b/arch/x86/include/asm/io.h
-index 7afb0e2..9d431ef 100644
---- a/arch/x86/include/asm/io.h
-+++ b/arch/x86/include/asm/io.h
-@@ -201,6 +201,7 @@ extern void set_iounmap_nonlazy(void);
- #ifdef __KERNEL__
- 
- #include <asm-generic/iomap.h>
-+#include <asm-generic/ioremap-nopost.h>
- 
- /*
-  * Convert a virtual cached pointer to an uncached pointer
--- 
-2.10.0
+greg k-h
