@@ -1,85 +1,46 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:39082 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751475AbdDNN73 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2017 09:59:29 -0400
+Subject: Re: [stable-4.9: PATCH] xen: revert commit 72a9b186292
+To: Greg KH <greg@kroah.com>, Juergen Gross <jgross@suse.com>
+References: <20170413130653.5183-1-jgross@suse.com>
+ <20170414091720.GB6372@kroah.com>
+Cc: stable@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
+        Julien Grall <julien.grall@citrix.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Ross Lagerwall <ross.lagerwall@citrix.com>,
+        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>,
+        KarimAllah Ahmed <karahmed@amazon.de>
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Message-ID: <d17d56ce-4ea2-abef-a20d-f7e31a9a06bf@oracle.com>
+Date: Fri, 14 Apr 2017 09:58:54 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170426111809.19922-9-lorenzo.pieralisi@arm.com>
-References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
- <20170426111809.19922-9-lorenzo.pieralisi@arm.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 28 Apr 2017 15:13:04 +0200
-Message-ID: <CAK8P3a1ULYxkopxJ8-vZpFs_uPP2gu5TsRWjCKUOW+0QRombLw@mail.gmail.com>
-Subject: Re: [RFC/RFT PATCH 08/18] PCI: designware: Convert PCI scan API to
- pci_scan_root_bus_bridge()
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
- Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170414091720.GB6372@kroah.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 26, 2017 at 1:17 PM, Lorenzo Pieralisi
-<lorenzo.pieralisi@arm.com> wrote:
-> The introduction of pci_scan_root_bus_bridge() provides a PCI core
-> API to scan a PCI root bus backed by an already initialized
-> struct pci_host_bridge object, which simplifies the bus scan
-> interface and makes the PCI scan root bus interface easier to
-> generalize as members are added to the struct pci_host_bridge().
->
-> Convert PCI designware host code to pci_scan_root_bus_bridge() to
-> improve the PCI root bus scanning interface.
->
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Jingoo Han <jingoohan1@gmail.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Joao Pinto <Joao.Pinto@synopsys.com>
-> ---
->  drivers/pci/dwc/pcie-designware-host.c | 36 +++++++++++++++++++++-------------
->  1 file changed, 22 insertions(+), 14 deletions(-)
->
-> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-> index 5ba3349..e43c21a 100644
-> --- a/drivers/pci/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/dwc/pcie-designware-host.c
-> @@ -294,16 +294,21 @@ int dw_pcie_host_init(struct pcie_port *pp)
->                 dev_err(dev, "missing *config* reg space\n");
->         }
->
-> -       ret = of_pci_get_host_bridge_resources(np, 0, 0xff, &res, &pp->io_base);
-> +       bridge = pci_alloc_host_bridge(0);
-> +       if (!bridge)
-> +               return  -ENOMEM;
-> +
+On 04/14/2017 05:17 AM, Greg KH wrote:
+> On Thu, Apr 13, 2017 at 03:06:53PM +0200, Juergen Gross wrote:
+>> Revert commit 72a9b186292 ("xen: Remove event channel notification
+>> through Xen PCI platform device") as the original analysis was wrong
+>> that all the removed code isn't in use any more.
+>>
+>> It is still necessary for old Xen versions (< 4.0) and for being able
+>> to run the Linux kernel as dom0 in a nested Xen environment.
+> What is the commit id of this revert in Linus's tree?
 
-I think here we warn to have the pci_alloc_host_bridge() called in the
-individual
-drivers, to have them allocate the dw_pcie structure as part of the host
-bridge allocation, before calling hisi_add_pcie_port().
+It hasn't been reverted in Linus tree yet --- there were some changes in
+Xen code in 4.11 that make the revert not a mechanical operation and we
+are somewhat hesitant to have a patch this late in the release cycle.
 
-      Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+-boris
