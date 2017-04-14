@@ -1,69 +1,55 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:44363 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932127AbdDGR7i (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Apr 2017 13:59:38 -0400
-To: Dan Williams <dan.j.williams@intel.com>
+Return-Path: <SRS0=xI27=3W=obsidianresearch.com=jgunthorpe@kernel.org>
+Return-Path: <SRS0=xI27=3W=obsidianresearch.com=jgunthorpe@kernel.org>
+Date: Thu, 13 Apr 2017 22:16:56 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Steve Wise <swise@opengridcomputing.com>,
+	Stephen Bates <sbates@raithlin.com>,
+	Max Gurtovoy <maxg@mellanox.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
+	linux-kernel@vger.kernel.org, Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Message-ID: <20170414041656.GA30694@obsidianresearch.com>
 References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-6-git-send-email-logang@deltatee.com>
- <20170331070950.GA9059@infradead.org>
- <435d4471-436b-87e6-8827-c9fc6cbdde2c@deltatee.com>
- <445bc352-75d7-438f-96ef-c2411215628d@deltatee.com>
- <CAPcyv4g=MHbjbY0GFPoLq3wAGwhcC7813O7iLUWGEChWh0M7Dw@mail.gmail.com>
- <ff0dd5ec-2562-9f1d-1335-d0a8813f2f50@deltatee.com>
- <CAPcyv4gx4g3Ry_A99yTodqwm2vH72oMSLKAKF7iEsmG5G4TcbQ@mail.gmail.com>
- <22930db3-a194-8b60-5aab-4a8add1ddc55@deltatee.com>
- <CAPcyv4gL=Z42x52So1iL-MNhPY67Pktz3c0J_h0tj_60TowNuQ@mail.gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        Steve Wise <swise@opengridcomputing.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <6206d74b-b2e2-f1f7-5a9d-60f20d837374@deltatee.com>
-Date: Fri, 7 Apr 2017 11:59:20 -0600
+ <1491974532.7236.43.camel@kernel.crashing.org>
+ <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+ <1492034124.7236.77.camel@kernel.crashing.org>
+ <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+ <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4gL=Z42x52So1iL-MNhPY67Pktz3c0J_h0tj_60TowNuQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC 5/8] scatterlist: Modify SG copy functions to support io
- memory.
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Dan,
+On Thu, Apr 13, 2017 at 06:26:31PM -0500, Bjorn Helgaas wrote:
+> > Ah, thanks for the tip! On my system, this translation returns the same
+> > address so it was not necessary. And, yes, that means this would have to
+> > find its way into the dma mapping routine somehow. This means we'll
+> > eventually need a way to look-up the p2pmem device from the struct page.
+> > Which means we will likely need a new flag bit in the struct page or
+> > something. The big difficulty I see is testing. Do you know what
+> > architectures or in what circumstances are these translations used?
+> 
+> Any caller of pci_add_resource_offset() uses CPU addresses different from
+> the PCI bus addresses (unless the offset is zero, of course).  All ACPI
+> platforms also support this translation (see "translation_offset"), though
+> in most x86 systems the offset is zero.  I'm aware of one x86 system that
+> was tested with a non-zero offset but I don't think it was shipped that
+> way.
 
-On 03/04/17 06:07 PM, Dan Williams wrote:
-> The completely agnostic part is where I get worried, but I shouldn't
-> say anymore until I actually read the patch.The worry is cases where
-> this agnostic enabling allows unsuspecting code paths to do the wrong
-> thing. Like bypass iomem safety.
+I'd suggest just detecting if there is any translation in bus
+addresses anywhere and just hard disabling P2P on such systems.
 
-Yup, you're right the iomem safety issue is a really difficult problem.
-I think replacing struct page with pfn_t in a bunch of places is
-probably going to be a requirement for my work. However, this is going
-to be a very large undertaking.
+On modern hardware with 64 bit BARs there is very little reason to
+have translation, so I think this is a legacy feature.
 
-I've done an audit of sg_page users and there will indeed be some
-difficult cases. However, I'm going to start doing some cleanup and
-semantic changes to hopefully move in that direction. The first step
-I've chosen to look at is to create an sg_kmap interface which replaces
-about 77 (out of ~340) sg_page users. I'm hoping the new interface can
-have the semantic that sg_kmap can fail (which would happen in the case
-that no suitable page exists).
-
-Eventually, I'd want to get to a place where sg_page either doesn't
-exists or can fail and is always checked. At that point swapping out
-pfn_t in the sgl would be manageable.
-
-Thoughts?
-
-Logan
+Jason
