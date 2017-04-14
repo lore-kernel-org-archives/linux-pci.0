@@ -1,81 +1,45 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:42061 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1428834AbdDYJqQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Apr 2017 05:46:16 -0400
-Date: Tue, 25 Apr 2017 11:46:42 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Imre Deak <imre.deak@intel.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        intel-gfx@lists.freedesktop.org,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 1/2] PCI / PM: Add needs_resume flag to avoid suspend
- complete optimization
-Message-ID: <20170425094642.GA10128@wunner.de>
-References: <1493044063-2095-1-git-send-email-imre.deak@intel.com>
- <20170424200230.GA9910@wunner.de>
- <20170424204242.GA9933@wunner.de>
- <1741762.duLppskeDL@aspire.rjw.lan>
- <20170425062149.GA9999@wunner.de>
- <20170425085507.GA3719@ideak-desk.fi.intel.com>
+Return-Path: <SRS0=Wmv6=3W=google.com=bhelgaas@kernel.org>
+Return-Path: <SRS0=Wmv6=3W=google.com=bhelgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170425085507.GA3719@ideak-desk.fi.intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170414144108.GB29349@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170413145339.20186-1-hch@lst.de> <20170414144108.GB29349@bhelgaas-glaptop.roam.corp.google.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 14 Apr 2017 09:51:48 -0500
+Message-ID: <CAErSpo4HBhG5cLZMMt4NtswjQ1yNvW9x39DsxFWtBPOVwG7JpA@mail.gmail.com>
+Subject: Re: export pcie_flr and remove copies of it in drivers
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+	Salvatore Benedetto <salvatore.benedetto@intel.com>,
+	Mike Marciniszyn <mike.marciniszyn@intel.com>,
+	Dennis Dalessandro <dennis.dalessandro@intel.com>,
+	Derek Chickles <derek.chickles@caviumnetworks.com>,
+	Satanand Burla <satananda.burla@caviumnetworks.com>,
+	Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+	Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, qat-linux@intel.com,
+	linux-crypto@vger.kernel.org,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 25, 2017 at 11:55:07AM +0300, Imre Deak wrote:
-> On Tue, Apr 25, 2017 at 08:21:49AM +0200, Lukas Wunner wrote:
-> > On Mon, Apr 24, 2017 at 10:56:40PM +0200, Rafael J. Wysocki wrote:
-> > > On Monday, April 24, 2017 10:42:42 PM Lukas Wunner wrote:
-> > > > On Mon, Apr 24, 2017 at 10:02:30PM +0200, Lukas Wunner wrote:
-> > > > > On Mon, Apr 24, 2017 at 05:27:42PM +0300, Imre Deak wrote:
-> > > > > > Some drivers - like i915 - may not support the system suspend direct
-> > > > > > complete optimization due to differences in their runtime and system
-> > > > > > suspend sequence. Add a flag that when set resumes the device before
-> > > > > > calling the driver's system suspend handlers which effectively disables
-> > > > > > the optimization.
-> > > > > 
-> > > > > FWIW, there are at least two alternative solutions to this problem which
-> > > > > do not require changes to the PCI core:
-> > > > > 
-> > > > > (1) Add a ->prepare hook to i915_pm_ops which calls pm_runtime_get_sync()
-> > > > >     and a ->complete hook which calls pm_runtime_put().
-> > > > 
-> > > > Thinking a bit more about this, it's even simpler:  The PM core acquires
-> > > > a runtime PM ref in device_prepare() and releases it in device_complete(),
-> > > > so it's sufficient to just call pm_runtime_resume() in a ->prepare hook
-> > > > that's newly added to i915.  No ->complete hook necessary.  Tentative
-> > > > patch below, based on drm-intel-fixes, would replace both of your patches.
-> > > 
-> > > Calling it in ->prepare() means that everybody is now waiting for you to
-> > > resume.
-> > > 
-> > > Not quite optimal IMO.
-> > 
-> > Okay, understood.
-> > 
-> > However in the absence of a device_link from the HDA device (consumer)
-> > to the GPU (supplier), there's no guarantee that the GPU is resumed
-> > when the HDA device needs it due to the asynchronous invocation of
-> > the ->suspend hooks.  This is assuming that the HDA device already
-> > needs the GPU during ->suspend phase.
-> 
-> i915 has ->resume_early and ->suspend_late hooks that provides the above
-> guarantee.
+On Fri, Apr 14, 2017 at 9:41 AM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Thu, Apr 13, 2017 at 04:53:32PM +0200, Christoph Hellwig wrote:
+>> Hi all,
+>>
+>> this exports the PCI layer pcie_flr helper, and removes various opencoded
+>> copies of it.
+>
+> Looks good to me (except the comment on probe).  If you want to apply
+> the whole series via netdev or some non-PCI tree, here's my ack for
+> the drivers/pci parts, assuming the probe thing is resolved:
+>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+>
+> Otherwise, I'd be glad to take the series given acks for the non-PCI
+> parts.  Just let me know.
 
-Employing device links is preferable IMO:
-
-* Less code.  Just find the HDA device in your ->probe hook and call
-  device_link_add().  Alternatively do it from the HDA driver.  Even
-  adding the link from both drivers should be fine.  I can provide
-  you with an evaluation patch if you'd like.
-
-* Avoidance of doing things behind the PM core's back.
-
-* Takes care of more stuff than just system sleep (e.g. shutdown ordering).
-
-Thanks,
-
-Lukas
+I do already have a patch (c5e4f0192ad2 ("PCI: Avoid FLR for Intel
+82579 NICs")) on my pci/virtualization branch that touches pcie_flr()
+and will conflict with this one.
