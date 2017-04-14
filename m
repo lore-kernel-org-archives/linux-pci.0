@@ -1,77 +1,51 @@
-Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
-Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
-To: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
- <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
- <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
- <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
- <0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
- <4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
- <30f662a6-5dab-515b-e35a-a312f3c7b509@free.fr>
- <5f81730d-fbe3-1f4c-de34-09bbfb893ee1@arm.com>
- <2b5eef4c-32f2-54f1-ca2f-f9426e68fb2c@free.fr>
- <67014006-a380-9e3b-c9af-a421052cb8e0@arm.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <b59b81ea-bc1b-bff5-4a78-8a69538b0de3@free.fr>
-Date: Tue, 11 Apr 2017 19:52:10 +0200
+Return-Path: <SRS0=WMCN=3W=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=WMCN=3W=codeaurora.org=okaya@kernel.org>
+Subject: Re: [PATCH V8 3/5] PCI/ASPM: add init hook to device_add
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+ <1491627351-1111-4-git-send-email-okaya@codeaurora.org>
+ <20170413204800.GB28316@bhelgaas-glaptop.roam.corp.google.com>
+ <20170413210218.GA24910@bhelgaas-glaptop.roam.corp.google.com>
+Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
+ linux-pci@vger.kernel.org, timur@codeaurora.org,
+ linux-kernel@vger.kernel.org, Julia Lawall <Julia.Lawall@lip6.fr>,
+ linux-arm-msm@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Rajat Jain <rajatja@google.com>, linux-arm-kernel@lists.infradead.org
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <76b74ad0-0c7f-a366-89d6-dc87ac315bc5@codeaurora.org>
+Date: Thu, 13 Apr 2017 21:19:17 -0400
 MIME-Version: 1.0
-In-Reply-To: <67014006-a380-9e3b-c9af-a421052cb8e0@arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20170413210218.GA24910@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset=windows-1252
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/04/2017 18:43, Marc Zyngier wrote:
+On 4/13/2017 5:02 PM, Bjorn Helgaas wrote:
+> I do see that you change the deallocation in patch [5/5], but I think
+> the deallocation change should be in the same patch as the allocation
+> change.  Otherwise I think we have a use-after-free problem in this
+> sequence:
 
-> On 11/04/17 17:26, Mason wrote:
->
->> Is there a function to map virq to the hwirq in any domain?
-> 
-> Be more precise. If you want the hwirq associated with the view of a
-> virq in a given domain, that's the hwirq field in the corresponding
-> irq_data structure. Or are you after something else?
+Sure, I'll reorder. As you can see here, link will be only removed if
+root port is being removed.
 
-I registered an unmask method for my irq_chip.
-(IIUC, I'm supposed to unmask a specific MSI in this callback.)
+Without this, we'll hit the use after free issue you mentioned.
 
-# cat /proc/interrupts 
-           CPU0       CPU1       
- 30:          0          0    MSIfoo      0 Edge      aerdrv
- 34:          0          0    MSIfoo 524288 Edge      xhci_hcd
- 35:          0          0    MSIfoo 524289 Edge      xhci_hcd
- 36:          0          0    MSIfoo 524290 Edge      xhci_hcd
+	if (pdev->has_secondary_link) {
+		link = pdev->link_state;
+		down_read(&pci_bus_sem);
+		mutex_lock(&aspm_lock);
 
+		list_del(&link->sibling);
+		list_del(&link->link);
 
-void foo_unmask(struct irq_data *data)
-{
-	int xx,yy;
-	struct irq_domain *dom = data->domain;
-	printk("%s: irq_data=%p irq=%u hwirq=%lu chip=%p dom=%p pdata=%p data=%p\n",
-		__func__, data, data->irq, data->hwirq, data->chip, data->domain,
-		data->parent_data, data->chip_data);
-	printk("%s ops=%p data=%p parent=%p\n\n",
-		dom->name, dom->ops, dom->host_data, dom->parent);
-	printk("pcie=%p\n", dom->parent->host_data);
-	//dump_stack();
-	pci_msi_unmask_irq(data);
-	struct tango_pcie *pcie = data->domain->parent->host_data;
-	printk("\n%s: pcie=%p irq=%u hwirq=%lu\n\n",
-		__func__, pcie, data->irq, data->hwirq);
-	xx = irq_find_mapping(pcie->irq_domain, data->hwirq);
-	yy = irq_find_mapping(pcie->msi_domain, data->hwirq);
-	printk("xx=%d yy=%d\n", xx, yy);
-}
+		/* Clock PM is for endpoint device */
+		free_link_state(link);
+		mutex_unlock(&aspm_lock);
+		up_read(&pci_bus_sem);
+		return;
+	}  
 
-so data->irq is the virq (30, 34, 35, 36)
-and data->hwirq is the domain hwirq (0, 524288, 524289, 524290)
-
-Is there a way to map hwirq 524288 to MSI 0, hwirq 524289 to MSI 1, etc?
-
-Regards.
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
