@@ -1,122 +1,222 @@
-Return-Path: <SRS0=QdZ4=3O=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Return-Path: <SRS0=QdZ4=3O=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Date: Thu, 6 Apr 2017 17:40:16 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Tony Luck <tony.luck@intel.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Haavard Skinnemoen <hskinnemoen@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	John Garry <john.garry@huawei.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Roy Zang <tie-fei.zang@freescale.com>
-Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
- interface
-Message-ID: <20170406164015.GI17774@n2100.armlinux.org.uk>
-References: <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
- <20170328144543.GA18046@red-moon>
- <20170405105841.GG7909@n2100.armlinux.org.uk>
- <20170405113238.GA2465@red-moon>
- <20170406102636.GA9623@red-moon>
- <20170406105312.GE28800@wotan.suse.de>
- <20170406113845.GA10013@red-moon>
- <20170406115906.GF28800@wotan.suse.de>
- <20170406130727.GE17774@n2100.armlinux.org.uk>
- <20170406162156.GA10134@red-moon>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56452 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751604AbdDNPhX (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 14 Apr 2017 11:37:23 -0400
+Date: Fri, 14 Apr 2017 10:37:18 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: bodong@mellanox.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        saeedm@mellanox.com, Eli Cohen <eli@mellanox.com>
+Subject: Re: [v3] PCI: Add an option to control probing of VFs before
+ enabling SR-IOV
+Message-ID: <20170414153718.GD29349@bhelgaas-glaptop.roam.corp.google.com>
+References: <1492037500-84654-1-git-send-email-bodong@mellanox.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170406162156.GA10134@red-moon>
-Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
+In-Reply-To: <1492037500-84654-1-git-send-email-bodong@mellanox.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 06, 2017 at 05:21:56PM +0100, Lorenzo Pieralisi wrote:
-> Ok, so:
+On Thu, Apr 13, 2017 at 01:51:40AM +0300, bodong@mellanox.com wrote:
+> From: Bodong Wang <bodong@mellanox.com>
 > 
-> (1) I can do asm-generic/ioremap-nopost.h, which I assume you want to
->     contain something like
+> Sometimes it is not desirable to probe the virtual functions after
+> SRIOV is enabled. This can save host side resource usage by VF
+> instances which would be eventually probed to VMs.
 > 
-> static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
-> {
-> 	return ioremap_nocache(offset, size);
-> }
+> Add a new PCI sysfs interface "sriov_drivers_autoprobe" to control
+> that from the PF, all current callers still retain the same
+> functionality. To modify it, echo 0/n/N (disable probe) or 1/y/Y
+> (enable probe) to:
 > 
-> Funny bit is that it has to be included by asm*/io.h files _after_
-> ioremap_nocache has been #defined (that's the reason my approach was
-> failing miserably even on arches like eg powerpc (see [1] below) that
-> does have ioremap_nocache),
-
-PowerPC does have ioremap_nocache() though:
-
-/**
- * ioremap     -   map bus memory into CPU space
-...
- * * ioremap_nocache is identical to ioremap
-extern void __iomem *ioremap(phys_addr_t address, unsigned long size);
-#define ioremap_nocache(addr, size)     ioremap((addr), (size))
-
-and this include file is included very early on in linux/io.h.  I don't
-see anything that conditionalises it on anything except __KERNEL__.  So,
-the report from 0-day really doesn't make any sense to me.
-
-Do we know how we're ending up in linux/io.h line 169 without having
-picked up the ioremap_nocache() definition provided by PowerPC's
-asm/io.h ?
-
-> not sure it is going to be very nice to have
-> an include in the middle of asm*/io.h include files (and I have to patch
-> all arches which I can do).
-
-You mean like we already have to do with this asm-generic/io.h thing in
-the ARM io.h header file, because we need to define all the accessors
-first, to prevent the asm-generic/io.h thing defining them for us?
-Given how asm-generic has headed in this regard, having include files
-at all sorts of strange locations within the architecture asm/*.h
-header files has become quite normal, unfortunately.
-
-> (2) I add:
+> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_drivers_autoprobe
 > 
-> #ifndef ioremap_nopost
-> static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
-> {
-> 	return NULL; <-(making it return ioremap_nocache() does not
-> 			work, see [1] for the reason)
-> }
-> #endif
+> Note that, the choice must be made before enabling VFs. The change
+> will not take effect if VFs are already enabled. Simply, one can set
+> sriov_numvfs to 0, choose whether to probe or not, and then resume
+> sriov_numvfs.
 > 
-> in linux/io.h
+> Signed-off-by: Bodong Wang <bodong@mellanox.com>
+> Signed-off-by: Eli Cohen <eli@mellanox.com>
+> Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+> Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+> Reviewed-by: Bjorn Helgaas <helgaas@kernel.org>
 
-... which breaks the kernel if ioremap_nopost is missing from the arch
-header, and one of the drivers that you're modifying to use this new
-ioremap variant happens to be built and used on such an architecture.
+Applied to pci/virtualization for v4.12, thanks, Bodong!
 
-> (3) ioremap_nopost follows Luis' ioremap_uc approach
-
-Same problem as (2), as I understand correctly.
-
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+> ---
+>  Documentation/ABI/testing/sysfs-bus-pci |   18 ++++++++++++++++++
+>  Documentation/PCI/pci-iov-howto.txt     |   12 ++++++++++++
+>  drivers/pci/iov.c                       |    1 +
+>  drivers/pci/pci-driver.c                |   22 ++++++++++++++++++----
+>  drivers/pci/pci-sysfs.c                 |   28 ++++++++++++++++++++++++++++
+>  drivers/pci/pci.h                       |    1 +
+>  6 files changed, 78 insertions(+), 4 deletions(-)
+> 
+> diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
+> index 5a1732b..0878520 100644
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -301,3 +301,21 @@ Contact:	Emil Velikov <emil.l.velikov@gmail.com>
+>  Description:
+>  		This file contains the revision field of the the PCI device.
+>  		The value comes from device config space. The file is read only.
+> +
+> +What:		/sys/bus/pci/devices/.../sriov_drivers_autoprobe
+> +Date:		April 2017
+> +Contact:	Bodong Wang<bodong@mellanox.com>
+> +Description:
+> +		This file appears when a physical PCIe device supports SR-IOV.
+> +		Userspace applications can read and write to this file to
+> +		determine and control the enablement(1/y/Y) or disablement
+> +		(0/n/N) of probing Virtual Functions (VFs) by a compatible
+> +		driver on host side. The default value is 1(enabled) which means
+> +		VFs will be probed and bound to a compatible driver on the host
+> +		side if SR-IOV is enabled. A typical use case is writing 0 to
+> +		this file to disable SR-IOV drivers auto probe, then admin from
+> +		host is able to assign the newly created VFs to virtual machines
+> +		directly after SR-IOV is enabled. Note that, changing this file
+> +		will not affect VFs which are already probed by host. In this
+> +		scenario, the user must first disable SR-IOV, make the change,
+> +		then resume SR-IOV.
+> diff --git a/Documentation/PCI/pci-iov-howto.txt b/Documentation/PCI/pci-iov-howto.txt
+> index 2d91ae2..b6807df 100644
+> --- a/Documentation/PCI/pci-iov-howto.txt
+> +++ b/Documentation/PCI/pci-iov-howto.txt
+> @@ -68,6 +68,18 @@ To disable SR-IOV capability:
+>  	echo  0 > \
+>          /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_numvfs
+>  
+> +To enable auto probing VFs by a compatible driver on the host, run
+> +command bellow before enabling SR-IOV capabilities. This is the
+> +default behavior.
+> +	echo 1 > \
+> +        /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_drivers_autoprobe
+> +
+> +To disable auto probing VFs by a compatible driver on the host, run
+> +command bellow before enabling SR-IOV capabilities. Updating this
+> +entry will not affect VFs which are already probed.
+> +	echo  0 > \
+> +        /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_drivers_autoprobe
+> +
+>  3.2 Usage example
+>  
+>  Following piece of code illustrates the usage of the SR-IOV API.
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index 2479ae8..d9dc736 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -450,6 +450,7 @@ static int sriov_init(struct pci_dev *dev, int pos)
+>  	iov->total_VFs = total;
+>  	iov->pgsz = pgsz;
+>  	iov->self = dev;
+> +	iov->drivers_autoprobe = true;
+>  	pci_read_config_dword(dev, pos + PCI_SRIOV_CAP, &iov->cap);
+>  	pci_read_config_byte(dev, pos + PCI_SRIOV_FUNC_LINK, &iov->link);
+>  	if (pci_pcie_type(dev) == PCI_EXP_TYPE_RC_END)
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index afa7271..f99f7fe 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -394,6 +394,18 @@ void __weak pcibios_free_irq(struct pci_dev *dev)
+>  {
+>  }
+>  
+> +#ifdef CONFIG_PCI_IOV
+> +static inline bool pci_device_can_probe(struct pci_dev *pdev)
+> +{
+> +	return (!pdev->is_virtfn || pdev->physfn->sriov->drivers_autoprobe);
+> +}
+> +#else
+> +static inline bool pci_device_can_probe(struct pci_dev *pdev)
+> +{
+> +	return true;
+> +}
+> +#endif
+> +
+>  static int pci_device_probe(struct device *dev)
+>  {
+>  	int error;
+> @@ -405,10 +417,12 @@ static int pci_device_probe(struct device *dev)
+>  		return error;
+>  
+>  	pci_dev_get(pci_dev);
+> -	error = __pci_device_probe(drv, pci_dev);
+> -	if (error) {
+> -		pcibios_free_irq(pci_dev);
+> -		pci_dev_put(pci_dev);
+> +	if (pci_device_can_probe(pci_dev)) {
+> +		error = __pci_device_probe(drv, pci_dev);
+> +		if (error) {
+> +			pcibios_free_irq(pci_dev);
+> +			pci_dev_put(pci_dev);
+> +		}
+>  	}
+>  
+>  	return error;
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 25d010d..369c999 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -526,10 +526,37 @@ static ssize_t sriov_numvfs_store(struct device *dev,
+>  	return count;
+>  }
+>  
+> +static ssize_t sriov_drivers_autoprobe_show(struct device *dev,
+> +					    struct device_attribute *attr,
+> +					    char *buf)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +
+> +	return sprintf(buf, "%u\n", pdev->sriov->drivers_autoprobe);
+> +}
+> +
+> +static ssize_t sriov_drivers_autoprobe_store(struct device *dev,
+> +					     struct device_attribute *attr,
+> +					     const char *buf, size_t count)
+> +{
+> +	struct pci_dev *pdev = to_pci_dev(dev);
+> +	bool drivers_autoprobe;
+> +
+> +	if (kstrtobool(buf, &drivers_autoprobe) < 0)
+> +		return -EINVAL;
+> +
+> +	pdev->sriov->drivers_autoprobe = drivers_autoprobe;
+> +
+> +	return count;
+> +}
+> +
+>  static struct device_attribute sriov_totalvfs_attr = __ATTR_RO(sriov_totalvfs);
+>  static struct device_attribute sriov_numvfs_attr =
+>  		__ATTR(sriov_numvfs, (S_IRUGO|S_IWUSR|S_IWGRP),
+>  		       sriov_numvfs_show, sriov_numvfs_store);
+> +static struct device_attribute sriov_drivers_autoprobe_attr =
+> +		__ATTR(sriov_drivers_autoprobe, (S_IRUGO|S_IWUSR|S_IWGRP),
+> +		       sriov_drivers_autoprobe_show, sriov_drivers_autoprobe_store);
+>  #endif /* CONFIG_PCI_IOV */
+>  
+>  static ssize_t driver_override_store(struct device *dev,
+> @@ -1549,6 +1576,7 @@ static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
+>  static struct attribute *sriov_dev_attrs[] = {
+>  	&sriov_totalvfs_attr.attr,
+>  	&sriov_numvfs_attr.attr,
+> +	&sriov_drivers_autoprobe_attr.attr,
+>  	NULL,
+>  };
+>  
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index 8dd38e6..3ba7d58 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -272,6 +272,7 @@ struct pci_sriov {
+>  	struct pci_dev *self;	/* this PF */
+>  	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
+>  	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
+> +	bool drivers_autoprobe;	/* auto probing of VFs by driver */
+>  };
+>  
+>  #ifdef CONFIG_PCI_ATS
+> -- 
+> 1.7.1
+> 
