@@ -1,65 +1,106 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41788 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754147AbdDDSsA (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2017 14:48:00 -0400
-To: Linux PCI <linux-pci@vger.kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        iommu@lists.linux-foundation.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Subject: [RFC] PCI ACS Flags Clarification
-Message-ID: <49257b71-6fa1-5870-fba6-1b8c5179b8ec@codeaurora.org>
-Date: Tue, 4 Apr 2017 14:47:58 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Christoph Hellwig <hch@lst.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Salvatore Benedetto <salvatore.benedetto@intel.com>,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+Cc: linux-pci@vger.kernel.org, qat-linux@intel.com,
+        linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 5/7] IB/hfi1: use pcie_flr instead of duplicating it
+Date: Fri, 14 Apr 2017 21:11:29 +0200
+Message-Id: <20170414191131.14286-6-hch@lst.de>
+In-Reply-To: <20170414191131.14286-1-hch@lst.de>
+References: <20170414191131.14286-1-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I'm looking for a guideline on how Access Control Services (ACS) need to be
-implemented in HW for cases where peer to peer is and isn't supported.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/infiniband/hw/hfi1/chip.c |  4 ++--
+ drivers/infiniband/hw/hfi1/hfi.h  |  1 -
+ drivers/infiniband/hw/hfi1/pcie.c | 30 ------------------------------
+ 3 files changed, 2 insertions(+), 33 deletions(-)
 
-I see conflicting information in the code. 
-
-iommu.c calls pci_acs_enabled() from pci_device_group() to determine if
-ACS path is enabled for the following flags.
-
-This paragraph lays out the requirements. 
-
- /*
-  * To consider a PCI device isolated, we require ACS to support Source
-  * Validation, Request Redirection, Completer Redirection, and Upstream
-  * Forwarding.  This effectively means that devices cannot spoof their
-  * requester ID, requests and completions cannot be redirected, and all
-  * transactions are forwarded upstream, even as it passes through a
-  * bridge where the target device is downstream.
-  */
-#define REQ_ACS_FLAGS   (PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF)
-
-I also see the following comment in pci_acs_flags_enabled() which gets
-called from pci_acs_enabled()
-
-/*
- * Except for egress control, capabilities are either required
- * or only required if controllable.  Features missing from the
- * capability field can therefore be assumed as hard-wired enabled.
- */
-
-This comment in pci_acs_flags_enabled() is confusing. A capability that reads
-0 usually means it is not enabled. This code is assuming enabled. 
-Are we trying to say that we'll use the capability bits as a mask while
-verifying the requested ACS flags?
-
-For systems that don't support P2P, the code will check PCI_ACS_SV only. 
-So, if I summarize this correctly;
-
-The requirement is to have an 
-1. ACS capability with PCI_ACS_SV if p2p is not supported
-2. ACS capability with PCI_ACS_SV|PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF if p2p
-is supported.
-
-Did I get this right?
-
+diff --git a/drivers/infiniband/hw/hfi1/chip.c b/drivers/infiniband/hw/hfi1/chip.c
+index 121a4c920f1b..d037f72e4d96 100644
+--- a/drivers/infiniband/hw/hfi1/chip.c
++++ b/drivers/infiniband/hw/hfi1/chip.c
+@@ -13610,14 +13610,14 @@ static void init_chip(struct hfi1_devdata *dd)
+ 		dd_dev_info(dd, "Resetting CSRs with FLR\n");
+ 
+ 		/* do the FLR, the DC reset will remain */
+-		hfi1_pcie_flr(dd);
++		pcie_flr(dd->pcidev);
+ 
+ 		/* restore command and BARs */
+ 		restore_pci_variables(dd);
+ 
+ 		if (is_ax(dd)) {
+ 			dd_dev_info(dd, "Resetting CSRs with FLR\n");
+-			hfi1_pcie_flr(dd);
++			pcie_flr(dd->pcidev);
+ 			restore_pci_variables(dd);
+ 		}
+ 	} else {
+diff --git a/drivers/infiniband/hw/hfi1/hfi.h b/drivers/infiniband/hw/hfi1/hfi.h
+index 0808e3c3ba39..40d7559fa723 100644
+--- a/drivers/infiniband/hw/hfi1/hfi.h
++++ b/drivers/infiniband/hw/hfi1/hfi.h
+@@ -1764,7 +1764,6 @@ int hfi1_pcie_init(struct pci_dev *, const struct pci_device_id *);
+ void hfi1_pcie_cleanup(struct pci_dev *);
+ int hfi1_pcie_ddinit(struct hfi1_devdata *, struct pci_dev *);
+ void hfi1_pcie_ddcleanup(struct hfi1_devdata *);
+-void hfi1_pcie_flr(struct hfi1_devdata *);
+ int pcie_speeds(struct hfi1_devdata *);
+ void request_msix(struct hfi1_devdata *, u32 *, struct hfi1_msix_entry *);
+ void hfi1_enable_intx(struct pci_dev *);
+diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
+index 0829fce06172..c81556e84831 100644
+--- a/drivers/infiniband/hw/hfi1/pcie.c
++++ b/drivers/infiniband/hw/hfi1/pcie.c
+@@ -240,36 +240,6 @@ void hfi1_pcie_ddcleanup(struct hfi1_devdata *dd)
+ 		iounmap(dd->piobase);
+ }
+ 
+-/*
+- * Do a Function Level Reset (FLR) on the device.
+- * Based on static function drivers/pci/pci.c:pcie_flr().
+- */
+-void hfi1_pcie_flr(struct hfi1_devdata *dd)
+-{
+-	int i;
+-	u16 status;
+-
+-	/* no need to check for the capability - we know the device has it */
+-
+-	/* wait for Transaction Pending bit to clear, at most a few ms */
+-	for (i = 0; i < 4; i++) {
+-		if (i)
+-			msleep((1 << (i - 1)) * 100);
+-
+-		pcie_capability_read_word(dd->pcidev, PCI_EXP_DEVSTA, &status);
+-		if (!(status & PCI_EXP_DEVSTA_TRPND))
+-			goto clear;
+-	}
+-
+-	dd_dev_err(dd, "Transaction Pending bit is not clearing, proceeding with reset anyway\n");
+-
+-clear:
+-	pcie_capability_set_word(dd->pcidev, PCI_EXP_DEVCTL,
+-				 PCI_EXP_DEVCTL_BCR_FLR);
+-	/* PCIe spec requires the function to be back within 100ms */
+-	msleep(100);
+-}
+-
+ static void msix_setup(struct hfi1_devdata *dd, int pos, u32 *msixcnt,
+ 		       struct hfi1_msix_entry *hfi1_msix_entry)
+ {
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+2.11.0
