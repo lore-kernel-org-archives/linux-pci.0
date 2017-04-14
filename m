@@ -1,201 +1,43 @@
-Return-Path: <SRS0=0hWc=4B=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=0hWc=4B=vodafone.de=deathsimple@kernel.org>
-Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access v2
-To: Alex Deucher <alexdeucher@gmail.com>
-References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
- <1493126394-1239-5-git-send-email-deathsimple@vodafone.de>
- <CADnq5_NHDo3Y0Ao_5uWQ=Q2mb5-qYZu9Z-cx1M48cfD0rxMi2w@mail.gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI
- <linux-pci@vger.kernel.org>,
- Maling list - DRI developers <dri-devel@lists.freedesktop.org>,
- platform-driver-x86@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
-Message-ID: <9d345f33-a291-1647-9d03-d0df17733b14@vodafone.de>
-Date: Tue, 25 Apr 2017 17:09:53 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:42806 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751993AbdDNRxW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 14 Apr 2017 13:53:22 -0400
+Date: Fri, 14 Apr 2017 19:53:19 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Christoph Hellwig <hch@lst.de>
+cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 2/4] genirq: return the irq name from free_irq
+In-Reply-To: <20170414173649.GA26228@lst.de>
+Message-ID: <alpine.DEB.2.20.1704141951590.2327@nanos>
+References: <20170413070643.32165-1-hch@lst.de> <20170413070643.32165-3-hch@lst.de> <alpine.DEB.2.20.1704141920560.2327@nanos> <20170414173649.GA26228@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <CADnq5_NHDo3Y0Ao_5uWQ=Q2mb5-qYZu9Z-cx1M48cfD0rxMi2w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 25.04.2017 um 16:34 schrieb Alex Deucher:
-> On Tue, Apr 25, 2017 at 9:19 AM, Christian König
-> <deathsimple@vodafone.de> wrote:
->> From: Christian König <christian.koenig@amd.com>
->>
->> Try to resize BAR0 to let CPU access all of VRAM.
->>
->> v2: rebased, style cleanups, disable mem decode before resize,
->>      handle gmc_v9 as well, round size up to power of two.
->>
->> Signed-off-by: Christian König <christian.koenig@amd.com>
->> ---
->>   drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
->>   drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 37 ++++++++++++++++++++++++++++++
->>   drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 ++++---
->>   drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 ++++---
->>   drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c      | 10 ++++----
->>   5 files changed, 54 insertions(+), 10 deletions(-)
->>
->> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->> index 4a16e3c..9484062 100644
->> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
->> @@ -1879,6 +1879,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct amdgpu_device *adev, struct ttm_tt *ttm,
->>                                   struct ttm_mem_reg *mem);
->>   void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_mc *mc, u64 base);
->>   void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc);
->> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
->>   void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64 size);
->>   int amdgpu_ttm_init(struct amdgpu_device *adev);
->>   void amdgpu_ttm_fini(struct amdgpu_device *adev);
->> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->> index a09ad3cf..d5ca77a 100644
->> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
->> @@ -695,6 +695,43 @@ void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc)
->>                          mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end);
->>   }
->>
->> +/**
->> + * amdgpu_resize_bar0 - try to resize BAR0
->> + *
->> + * @adev: amdgpu_device pointer
->> + *
->> + * Try to resize BAR0 to make all VRAM CPU accessible.
->> + */
->> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
-> I'd suggest renaming this to amdgpu_device_resize_bar() to try and
-> impose some consistency in this file, but not a big deal either way.
->
->> +{
->> +       u64 space_needed = roundup_pow_of_two(adev->mc.real_vram_size);
->> +       u32 rbar_size = order_base_2(((space_needed >> 20) | 1)) -1;
->> +       u16 cmd;
->> +       int r;
->> +
->> +       /* Free the doorbell mapping, it most likely needs to move as well */
->> +       amdgpu_doorbell_fini(adev);
->> +       pci_release_resource(adev->pdev, 2);
-> This should check for if (adev->asic_type >= CHIP_BONAIRE) since SI
-> didn't have doorbells.
->
->> +
->> +       /* Disable memory decoding while we change the BAR addresses and size */
->> +       pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
->> +       pci_write_config_word(adev->pdev, PCI_COMMAND,
->> +                             cmd & ~PCI_COMMAND_MEMORY);
->> +
->> +       r = pci_resize_resource(adev->pdev, 0, rbar_size);
->> +       if (r == -ENOSPC)
->> +               DRM_INFO("Not enough PCI address space for a large BAR.");
->> +       else if (r && r != -ENOTSUPP)
->> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
->> +
->> +       pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
->> +
->> +       /* When the doorbell BAR isn't available we have no chance of
->> +        * using the device.
->> +        */
->> +       BUG_ON(amdgpu_doorbell_init(adev));
-> Same here.
->
->> +}
->> +
->>   /*
->>    * GPU helpers function.
->>    */
->> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->> index a9083a1..ae71524 100644
-> What about SI (gmc_v6_0.c)?
+On Fri, 14 Apr 2017, Christoph Hellwig wrote:
 
-As far as I know there is no SI hardware with resizeable BAR support.
+> On Fri, Apr 14, 2017 at 07:28:42PM +0200, Thomas Gleixner wrote:
+> > On Thu, 13 Apr 2017, Christoph Hellwig wrote:
+> > 
+> > > This allows callers to get back at them instead of having to store
+> > > it in another variable.
+> > 
+> > Alternatively you tell the irq code to free it for you. Patch below.
+> 
+> Yes, this should work to.  But I think having the same layer free
+> something they allocated again is a tad cleaner in terms of layering.
 
-The all VI generation can do this, but I'm not 100% sure if there aren't 
-any Bonaires out there which can handle it as well that's why I added 
-gmc_v7 support.
+Fair enough. Was just a thought.
 
-Still need to double check that.
+Bjorn, please route it through PCI alltogether.
 
-Christian.
+For the whole series:
 
->
-> Alex
->
->> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
->> @@ -372,13 +372,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device *adev)
->>                  }
->>                  adev->mc.vram_width = numchan * chansize;
->>          }
->> -       /* Could aper size report 0 ? */
->> -       adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
->> -       adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
->>          /* size in MB on si */
->>          adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
->>          adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
->>
->> +       if (!(adev->flags & AMD_IS_APU))
->> +               amdgpu_resize_bar0(adev);
->> +       adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
->> +       adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
->> +
->>   #ifdef CONFIG_X86_64
->>          if (adev->flags & AMD_IS_APU) {
->>                  adev->mc.aper_base = ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
->> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->> index 4ac9978..1655de2 100644
->> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
->> @@ -534,13 +534,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device *adev)
->>                  }
->>                  adev->mc.vram_width = numchan * chansize;
->>          }
->> -       /* Could aper size report 0 ? */
->> -       adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
->> -       adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
->>          /* size in MB on si */
->>          adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
->>          adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
->>
->> +       if (!(adev->flags & AMD_IS_APU))
->> +               amdgpu_resize_bar0(adev);
->> +       adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
->> +       adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
->> +
->>   #ifdef CONFIG_X86_64
->>          if (adev->flags & AMD_IS_APU) {
->>                  adev->mc.aper_base = ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
->> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
->> index e5d4dfe..4bbef79 100644
->> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
->> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
->> @@ -469,16 +469,18 @@ static int gmc_v9_0_mc_init(struct amdgpu_device *adev)
->>          }
->>          adev->mc.vram_width = numchan * chansize;
->>
->> -       /* Could aper size report 0 ? */
->> -       adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
->> -       adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
->>          /* size in MB on si */
->>          adev->mc.mc_vram_size =
->>                  nbio_v6_1_get_memsize(adev) * 1024ULL * 1024ULL;
->>          adev->mc.real_vram_size = adev->mc.mc_vram_size;
->> -       adev->mc.visible_vram_size = adev->mc.aper_size;
->> +
->> +       if (!(adev->flags & AMD_IS_APU))
->> +               amdgpu_resize_bar0(adev);
->> +       adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
->> +       adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
->>
->>          /* In case the PCI BAR is larger than the actual amount of vram */
->> +       adev->mc.visible_vram_size = adev->mc.aper_size;
->>          if (adev->mc.visible_vram_size > adev->mc.real_vram_size)
->>                  adev->mc.visible_vram_size = adev->mc.real_vram_size;
->>
->> --
->> 2.7.4
->>
->> _______________________________________________
->> dri-devel mailing list
->> dri-devel@lists.freedesktop.org
->> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+    Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
+
+Thanks,
+
+	tglx
