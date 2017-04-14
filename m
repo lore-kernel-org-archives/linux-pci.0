@@ -1,80 +1,140 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33840 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753319AbdDENvS (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Apr 2017 09:51:18 -0400
-Subject: Re: [RFC] PCI ACS Flags Clarification
-To: Alex Williamson <alex.williamson@redhat.com>
-References: <49257b71-6fa1-5870-fba6-1b8c5179b8ec@codeaurora.org>
- <20170404133923.5232e424@t450s.home>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-        iommu@lists.linux-foundation.org
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <615834cc-37d2-afd4-d093-23fc9e33f5d7@codeaurora.org>
-Date: Wed, 5 Apr 2017 09:51:06 -0400
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Fri, 14 Apr 2017 09:46:49 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 3/4] PCI/irq: add pci_request_irq and pci_free_irq helpers
+Message-ID: <20170414144649.GC29349@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170413070643.32165-1-hch@lst.de>
+ <20170413070643.32165-4-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20170404133923.5232e424@t450s.home>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170413070643.32165-4-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Alex,
-
-Thank you very much for the detailed explanation.
-
-On 4/4/2017 3:39 PM, Alex Williamson wrote:
-> On Tue, 4 Apr 2017 14:47:58 -0400
-> Sinan Kaya <okaya@codeaurora.org> wrote:
+On Thu, Apr 13, 2017 at 09:06:42AM +0200, Christoph Hellwig wrote:
+> These are small wrappers around request_threaded_irq and free_irq,
+> which dynamically allocate space for the device name so that drivers
+> don't need to keep static buffers for these around.  Additionally it
+> works with device-relative vector numbers to make the usage easier,
+> and force the IRQF_SHARED flag on given that it has no runtime overhead
+> and should be supported by all PCI devices.
 > 
-[cut]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
->> The requirement is to have an 
->> 1. ACS capability with PCI_ACS_SV if p2p is not supported
->> 2. ACS capability with PCI_ACS_SV|PCI_ACS_RR | PCI_ACS_CR |
->>   PCI_ACS_UF if p2p is supported.
->>
->> Did I get this right?
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+Let me know if you'd like me to take this series (given an appropriate
+ack for the genirq parts).
+
+> ---
+>  drivers/pci/irq.c   | 61 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  include/linux/pci.h |  6 ++++++
+>  2 files changed, 66 insertions(+), 1 deletion(-)
 > 
-
-I'm looking for sanity check on OS requirements. According to the PCIE spec,
-ACS itself is optional. However, Linux requires ACS capability. I want to
-make sure that we are satisfying the Linux requirements here.
-
-I also agree that spec should be the guide. Maybe, a combination of spec+linux
-is the right answer.
-
-> I'd suggest following the spec, not the code, that way you always have a
-> case for how you interpret the spec and the behavior of your hardware.
-> The code is an attempt to validate the device against the spec, but more
-> thorough implementations may follow.  REQ_ACS_FLAGS defines the set of
-> ACS capabilities we think are relevant to device isolation.  In
-> particular, UF seems like a key feature and our current test for it may
-> not be fully correct.  Note how RR and CR only specify p2p with other
-> root ports while UF requires transaction towards to the RC.  Section
-> 6.12.2 further defines Redirected Request Validation as a feature
-> within the context of RR and CR.  So rather than look at the code,
-> discuss section 6.12 with the hardware engineers and understand how it
-> behaves relative to each device and transaction type.  Implement the
-> capabilities that best match.  Attempting a minimal implementation
-> based on the current software interpretation may bite later, for
-> instance if we re-interpret how UF works.  Thanks,
-
-I read your reply multiple times. Here is what I got from it.
-
-The summary below is for the root ports only.
-
-- P2P on root ports is optional. 
-- If P2P is there source validation, translation blocking, upstream forwarding,
-p2p request redirection and p2p completion redirection ACS capabilities need to be
-there for spec+linux compliance. 
-- If P2P is not there source validation, translation blocking and upstream forwarding
-needs to be there for spec+linux compliance.
-- The code is relaxed to allow any combination of these today based on the ACS
-capability but it can change tomorrow. 
-
-Sinan
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+> diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
+> index 6684f153ab57..53e7f30d9461 100644
+> --- a/drivers/pci/irq.c
+> +++ b/drivers/pci/irq.c
+> @@ -1,7 +1,8 @@
+>  /*
+> - * PCI IRQ failure handing code
+> + * PCI IRQ handing code
+>   *
+>   * Copyright (c) 2008 James Bottomley <James.Bottomley@HansenPartnership.com>
+> + * Copyright (C) 2017 Christoph Hellwig.
+>   */
+>  
+>  #include <linux/acpi.h>
+> @@ -59,3 +60,61 @@ enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *pdev)
+>  	return PCI_LOST_IRQ_NO_INFORMATION;
+>  }
+>  EXPORT_SYMBOL(pci_lost_interrupt);
+> +
+> +/**
+> + * pci_request_irq - allocate an interrupt line for a PCI device
+> + * @dev:	PCI device to operate on
+> + * @nr:		device-relative interrupt vector index (0-based).
+> + * @handler:	Function to be called when the IRQ occurs.
+> + *		Primary handler for threaded interrupts.
+> + *		If NULL and thread_fn != NULL the default primary handler is
+> + *		installed.
+> + * @thread_fn:	Function called from the irq handler thread
+> + *		If NULL, no irq thread is created
+> + * @dev_id:	Cookie passed back to the handler function
+> + * @fmt:	Printf-like format string naming the handler
+> + *
+> + * This call allocates interrupt resources and enables the interrupt line and
+> + * IRQ handling. From the point this call is made @handler and @thread_fn may
+> + * be invoked.  All interrupt requsted using this function might be shared.
+> + *
+> + * @dev_id must not ne NULL and be globally unique.
+> + */
+> +int pci_request_irq(struct pci_dev *dev, unsigned int nr, irq_handler_t handler,
+> +		irq_handler_t thread_fn, void *dev_id, const char *fmt, ...)
+> +{
+> +	va_list ap;
+> +	int ret;
+> +	char *devname;
+> +
+> +	va_start(ap, fmt);
+> +	devname = kvasprintf(GFP_KERNEL, fmt, ap);
+> +	va_end(ap);
+> +
+> +	ret = request_threaded_irq(pci_irq_vector(dev, nr), handler, thread_fn,
+> +			IRQF_SHARED, devname, dev_id);
+> +	if (ret)
+> +		kfree(devname);
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL(pci_request_irq);
+> +
+> +/**
+> + * pci_free_irq - free an interrupt allocated with pci_request_irq
+> + * @dev:	PCI device to operate on
+> + * @nr:		device-relative interrupt vector index (0-based).
+> + * @dev_id:	Device identity to free
+> + *
+> + * Remove an interrupt handler. The handler is removed and if the interrupt
+> + * line is no longer in use by any driver it is disabled.  The caller must
+> + * ensure the interrupt is disabled on the device before calling this function.
+> + * The function does not return until any executing interrupts for this IRQ
+> + * have completed.
+> + *
+> + * This function must not be called from interrupt context.
+> + */
+> +void pci_free_irq(struct pci_dev *dev, unsigned int nr, void *dev_id)
+> +{
+> +	kfree(free_irq(pci_irq_vector(dev, nr), dev_id));
+> +}
+> +EXPORT_SYMBOL(pci_free_irq);
+> diff --git a/include/linux/pci.h b/include/linux/pci.h
+> index eb3da1a04e6c..b23f81b583ab 100644
+> --- a/include/linux/pci.h
+> +++ b/include/linux/pci.h
+> @@ -28,6 +28,7 @@
+>  #include <linux/kobject.h>
+>  #include <linux/atomic.h>
+>  #include <linux/device.h>
+> +#include <linux/interrupt.h>
+>  #include <linux/io.h>
+>  #include <linux/resource_ext.h>
+>  #include <uapi/linux/pci.h>
+> @@ -1072,6 +1073,11 @@ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+>  bool pci_device_is_present(struct pci_dev *pdev);
+>  void pci_ignore_hotplug(struct pci_dev *dev);
+>  
+> +int __printf(6, 7) pci_request_irq(struct pci_dev *dev, unsigned int nr,
+> +		irq_handler_t handler, irq_handler_t thread_fn, void *dev_id,
+> +		const char *fmt, ...);
+> +void pci_free_irq(struct pci_dev *dev, unsigned int nr, void *dev_id);
+> +
+>  /* ROM control related routines */
+>  int pci_enable_rom(struct pci_dev *pdev);
+>  void pci_disable_rom(struct pci_dev *pdev);
+> -- 
+> 2.11.0
+> 
