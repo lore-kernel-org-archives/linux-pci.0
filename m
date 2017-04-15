@@ -1,140 +1,109 @@
-Return-Path: <SRS0=vCIw=3N=rock-chips.com=shawn.lin@kernel.org>
-Return-Path: <SRS0=vCIw=3N=rock-chips.com=shawn.lin@kernel.org>
-Subject: Re: [PATCH] PCI: rockchip: Mark SLC bit as well as CCC bit for RC
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1489735493-148838-1-git-send-email-shawn.lin@rock-chips.com>
- <20170401151425.GA10456@bhelgaas-glaptop.roam.corp.google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- linux-rockchip@lists.infradead.org, Wenrui Li <wenrui.li@rock-chips.com>,
- Brian Norris <briannorris@chromium.org>,
- Jeffy Chen <jeffy.chen@rock-chips.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <6d986a99-bde3-0d82-523b-a560405573ad@rock-chips.com>
-Date: Wed, 5 Apr 2017 09:20:34 +0800
-MIME-Version: 1.0
-In-Reply-To: <20170401151425.GA10456@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Return-Path: <SRS0=hvyY=3X=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=hvyY=3X=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1492294628.25766.33.camel@kernel.crashing.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Christoph Hellwig
+ <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley"
+ <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen"
+ <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise
+ <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>, Max
+ Gurtovoy <maxg@mellanox.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
+        linux-kernel@vger.kernel.org, Jerome Glisse <jglisse@redhat.com>
+Date: Sun, 16 Apr 2017 08:17:08 +1000
+In-Reply-To: <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+	 <1491974532.7236.43.camel@kernel.crashing.org>
+	 <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+	 <1492034124.7236.77.camel@kernel.crashing.org>
+	 <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+	 <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+	 <20170414041656.GA30694@obsidianresearch.com>
+	 <1492169849.25766.3.camel@kernel.crashing.org>
+	 <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
+	 <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
+	 <1492207643.25766.18.camel@kernel.crashing.org>
+	 <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Sat, 2017-04-15 at 11:41 -0600, Logan Gunthorpe wrote:
+> Thanks, Benjamin, for the summary of some of the issues.
+> 
+> On 14/04/17 04:07 PM, Benjamin Herrenschmidt wrote
+> > So I assume the p2p code provides a way to address that too via special
+> > dma_ops ? Or wrappers ?
+> 
+> Not at this time. We will probably need a way to ensure the iommus do
+> not attempt to remap these addresses.
 
-On 2017/4/1 23:14, Bjorn Helgaas wrote:
-> On Fri, Mar 17, 2017 at 03:24:53PM +0800, Shawn Lin wrote:
->> lspci traces CCC to see if the end-2-end supports common
->> clock, so the current code should work as we mark the CCC bit
->> of RC.
->
-> I assume you're talking about lspci code here, where the bit is called
-> PCI_EXP_LNKCTL_CLOCK.  The only use of PCI_EXP_LNKCTL_CLOCK in lspci
-> is to decode it in cap_express_link().  I don't know what you mean by
-> "tracing CCC", since lspci only decodes registers of one device at a
-> time; it never follows the hierarchy from an endpoint up to a root
-> port.
->
-> I'm not sure how this lspci information is relevant to this patch.
+You can't. If the iommu is on, everything is remapped. Or do you mean
+to have dma_map_* not do a remapping ?
 
-Actually I meant lscpi found the common clock was cleared but we have
-set it in RC's driver.
+That's the problem again, same as before, for that to work, the
+dma_map_* ops would have to do something special that depends on *both*
+the source and target device.
 
->
->> However, ASPM code actually check SLC bit of RC and try to
->> compare it with the downstream components' SLC instead.
->
-> Here I think you're talking about pcie_aspm_configure_common_clock()
-> in Linux.  That looks at PCI_EXP_LNKSTA_SLC on both ends of a link.
-> If PCI_EXP_LNKSTA_SLC is set at both ends, we set PCI_EXP_LNKCTL_CCC
-> on both ends; otherwise we clear PCI_EXP_LNKCTL_CCC on both ends.
-> This follows the Implementation Note in PCIe r3.1, sec 7.8.7.
->
-> Per that note, PCI_EXP_LNKSTA_SLC in the root port tells us whether
-> the port "uses a clock that has a common source ... to the clock
-> signal provided on the slot" below the port.
->
-> This patch sets PCI_EXP_LNKSTA_SLC based on your knowledge of the
-> platform topology, i.e., that the root port clock and the slot clock
-> have the same source.  I assume this is *always* the case for every
-> possible platform using Rockchip?
+The current DMA infrastructure doesn't have anything like that. It's a
+rather fundamental issue to your design that you need to address.
 
-yes.
+The dma_ops today are architecture specific and have no way to
+differenciate between normal and those special P2P DMA pages.
 
->
-> If so, just say that, and you can go on to say that this enables the
-> ASPM code to set PCI_EXP_LNKCTL_CCC if the downstream end also sets
-> PCI_EXP_LNKSTA_SLC to indicate that it uses the clock provided on the
-> slot, e.g., something like this:
->
->   All platforms using Rockchip use a common clock for the Root Port
->   and the slot connected to it.  Indicate this by setting the Slot
->   Clock Configuration (PCI_EXP_LNKSTA_SLC) bit in the Root Port's Link
->   Status.
->
->   Per the Implementation Note in the spec (PCIe r3.1, sec 7.8.7), if
->   the downstream component also sets PCI_EXP_LNKSTA_SLC, software may
->   set the Common Clock Configuration (PCI_EXP_LNKCTL_CCC) bits on both
->   ends of the Link.  This is done by pcie_aspm_configure_common_clock().
->
+> Though if it does, I'd expect
+> everything would still work you just wouldn't get the performance or
+> traffic flow you are looking for. We've been testing with the software
+> iommu which doesn't have this problem.
 
-It sounds good.
+So first, no, it's more than "you wouldn't get the performance". On
+some systems it may also just not work. Also what do you mean by "the
+SW iommu doesn't have this problem" ? It catches the fact that
+addresses don't point to RAM and maps differently ?
 
->> So when
->> enabling ASPM, CCC will be cleared after failing to match SLC with
->> the corresponding bit of downstream components. On one hand, from the
->> code of pcie_aspm_configure_common_clock, we could find that what we
->> actually need to set is SLC.
->
->> On the other hand, we should also guarantee
->> that CCC should be marked w/o supporting ASPM.
->
-> This patch doesn't change anything with PCI_EXP_LNKCTL_CCC.  I'd
-> suggest that we should *not* set it here because we have no idea what
-> (if anything) is at the other end of the link.  Per the implementation
-> note, I think we should only set PCI_EXP_LNKCTL_CCC if both ends of
-> the link have PCI_EXP_LNKSTA_SLC set.
->
-> Are you suggesting that we should set PCI_EXP_LNKCTL_CCC on both ends
-> of the link whenever possible, and that today we don't do that unless
-> ASPM is enabled?  That sounds plausible to me, but that would be a
-> generic PCIe enhancement, not anything Rockchip-specific, and of
-> course, this patch doesn't make that happen.
+> > The problem is that the latter while seemingly easier, is also slower
+> > and not supported by all platforms and architectures (for example,
+> > POWER currently won't allow it, or rather only allows a store-only
+> > subset of it under special circumstances).
+> 
+> Yes, I think situations where we have to cross host bridges will remain
+> unsupported by this work for a long time. There are two many cases where
+> it just doesn't work or it performs too poorly to be useful.
 
+And the situation where you don't cross bridges is the one where you
+need to also take into account the offsets.
 
-It's okay to just set SLC in RC's driver and let aspm code decide the
-CCC bit, so I will respin v2 to fix this for rockchip RC.
+*both* cases mean that you need somewhat to intervene at the dma_ops
+level to handle this. Which means having a way to identify your special
+struct pages or PFNs to allow the arch to add a special case to the
+dma_ops.
 
-Then we could go on talking about another issue that should we need to
-set PCI_EXP_LNKCTL_CCC on both ends if possbile? I think we need more
-evidence from the spec which states that it could benefit for something
-else than aspm's latency. However I didn't them.
+> > I don't fully understand how p2pmem "solves" that by creating struct
+> > pages. The offset problem is one issue. But there's the iommu issue as
+> > well, the driver cannot just use the normal dma_map ops.
+> 
+> We are not using a proper iommu and we are dealing with systems that
+> have zero offset. This case is also easily supported. I expect fixing
+> the iommus to not map these addresses would also be reasonably achievable.
 
->
->> This patch fixes this
->> issue.
->>
->> Cc: Brian Norris <briannorris@chromium.org>
->> Cc: jeffy.chen <jeffy.chen@rock-chips.com>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->> ---
->>
->>  drivers/pci/host/pcie-rockchip.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
->> index 26ddd35..7cd4d5c 100644
->> --- a/drivers/pci/host/pcie-rockchip.c
->> +++ b/drivers/pci/host/pcie-rockchip.c
->> @@ -596,7 +596,7 @@ static int rockchip_pcie_init_port(struct rockchip_pcie *rockchip)
->>
->>  	/* Set RC's clock architecture as common clock */
->>  	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_LCS);
->> -	status |= PCI_EXP_LNKCTL_CCC;
->> +	status |= (PCI_EXP_LNKCTL_CCC | PCI_EXP_LNKSTA_SLC << 16);
->>  	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_LCS);
->>
->>  	/* Enable Gen1 training */
->> --
->> 1.9.1
->>
->>
->
->
->
+So you are designing something that is built from scratch to only work
+on a specific limited category of systems and is also incompatible with
+virtualization.
+
+This is an interesting experiement to look at I suppose, but if you
+ever want this upstream I would like at least for you to develop a
+strategy to support the wider case, if not an actual implementation.
+
+Cheers,
+Ben.
