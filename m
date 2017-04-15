@@ -1,120 +1,94 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59034 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933966AbdDEUQg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 5 Apr 2017 16:16:36 -0400
-Subject: [PATCH 12/24] PCI: Lock down BAR access when the kernel is locked
- down
-From: David Howells <dhowells@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: matthew.garrett@nebula.com, linux-efi@vger.kernel.org,
-        gnomes@lxorguk.ukuu.org.uk, linux-pci@vger.kernel.org,
-        dhowells@redhat.com, linux-security-module@vger.kernel.org,
-        keyrings@vger.kernel.org, gregkh@linuxfoundation.org
-Date: Wed, 05 Apr 2017 21:16:18 +0100
-Message-ID: <149142337836.5101.13971561682218232219.stgit@warthog.procyon.org.uk>
-In-Reply-To: <149142326734.5101.4596394505987813763.stgit@warthog.procyon.org.uk>
-References: <149142326734.5101.4596394505987813763.stgit@warthog.procyon.org.uk>
+Return-Path: <SRS0=xXVv=3X=gmail.com=larry.finger@kernel.org>
+Return-Path: <SRS0=xXVv=3X=gmail.com=larry.finger@kernel.org>
+Sender: Larry Finger <larry.finger@gmail.com>
+Subject: Re: 4.10.9 nok with realtek wlan, atom
+To: rupert THURNER <rupert.thurner@gmail.com>
+References: <CAJs9aZ8HVPn_J9yPjvdBm-A_d3FiquPMGoy1xFsGopF8Xg_89Q@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ Chaoming Li <chaoming_li@realsil.com.cn>, Kalle Valo <kvalo@codeaurora.org>,
+ linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <9e48930c-4822-5af4-2ebb-4d2dcd12d448@lwfinger.net>
+Date: Sat, 15 Apr 2017 15:40:57 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJs9aZ8HVPn_J9yPjvdBm-A_d3FiquPMGoy1xFsGopF8Xg_89Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Matthew Garrett <matthew.garrett@nebula.com>
+On 04/14/2017 03:26 PM, rupert THURNER wrote:
+> On Thu, Feb 9, 2017 at 9:09 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> On 02/09/2017 01:43 PM, Bjorn Helgaas wrote:
+>>>
+>>> [+cc rtl8192ce folks in case they've seen this]
+>>>
+>>> On Thu, Feb 09, 2017 at 03:45:01PM +0100, rupert THURNER wrote:
+>>>>
+>>>> hi,
+>>>>
+>>>> not technical expert enough, i just wanted to give a short user
+>>>> feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
+>>>> kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
+>>>> well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
+>>>> hotspot is possible then drops, or connecting to wlan fails
+>>>> alltogether.
+>>>
+>>>
+>>> Thanks very much for your report, and sorry for the inconvenience.
+>>>
+>>> v4.10-rc7 works, so I guess we don't need to worry about fixing v4.10.
+>>>
+>>> But the stable kernels v4.9.6, v4.9.7, and v4.9.8 are broken, so we
+>>> need to figure out why and make sure we fix the v4.9 stable series.
+>>>
+>>> I can't tell yet whether this is PCI-related or not.  If it is,
+>>> 4922a6a5cfa7 ("PCI: Enumerate switches below PCI-to-PCIe bridges")
+>>> appeared in v4.9.6, and there is a known issue with that.  The issue
+>>> should be fixed by 610c2b7ff8f6 ("PCI/ASPM: Handle PCI-to-PCIe bridges
+>>> as roots of PCIe hierarchies"), which appeared in v4.9.9, so I guess
+>>> the first thing to do would be to test v4.9.9.
+>>>
+>>> If it's not fixed in v4.9.9, can you share the complete dmesg log
+>>> (output of "dmesg" command) and "lspci -vv" output for v4.9.5 (last
+>>> known working version) and v4.9.6 (first known broken version)?  On
+>>> v4.9.6, collect the dmesg output after the failure occurs.
+>>>
+>>>> 24: PCI 300.0: 0282 WLAN controller
+>>>>   [Created at pci.366]
+>>>>   Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
+>>>>   Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
+>>>>   Revision: 0x01
+>>>>   Driver: "rtl8192ce"
+>>>>   Driver Modules: "rtl8192ce"
+>>>>   Device File: wlp3s0
+>>>>   Features: WLAN
+>>
+>>
+>> It would be helpful if someone were to bisect this issue. The only issue
+>> that comes to mind was fixed in commit 52f5631a4c05 ("rtlwifi: rtl8192ce:
+>> Fix loading of incorrect firmware") which is in 4.10-rc7 and will be
+>> backported to 4.9.
+>>
+>> The above issue is one that could not be reproduced on my hardware, thus it
+>> took Jurij Smakov to find the fix. Without his bisection of the problem, who
+>> knows how long it would have taken to find my edit mistake.
+>
+> larry, using the newest kernel 4.10.8 the network connection dropps
+> again irregular.
+>
+> # dmesg
+> [    0.000000] Linux version 4.10.9-1-ARCH (builduser@tobias) (gcc
+> version 6.3.1 20170306 (GCC) ) #1 SMP PREEMPT Sat Apr 8 12:39:59 CEST
+> 2017
+> [   11.933373] rtl8192ce: rtl8192ce: Power Save off (module option)
+> [   11.933396] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
+> [   11.978307] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+> [   11.978945] rtlwifi: rtlwifi: wireless switch is on
+>
+> # lspci -vv
+> Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi Adapter
+> Kernel driver in use: rtl8192ce
 
-Any hardware that can potentially generate DMA has to be locked down in
-order to avoid it being possible for an attacker to modify kernel code,
-allowing them to circumvent disabled module loading or module signing.
-Default to paranoid - in future we can potentially relax this for
-sufficiently IOMMU-isolated devices.
+Is firmware rtlwifi/rtl8192cfw.bin also used on kernels that work?
 
-Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
-Signed-off-by: David Howells <dhowells@redhat.com>
-cc: linux-pci@vger.kernel.org
----
-
- drivers/pci/pci-sysfs.c |    9 +++++++++
- drivers/pci/proc.c      |    8 +++++++-
- drivers/pci/syscall.c   |    2 +-
- 3 files changed, 17 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 25d010d449a3..f70b3668036f 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -727,6 +727,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
- 	loff_t init_off = off;
- 	u8 *data = (u8 *) buf;
- 
-+	if (kernel_is_locked_down())
-+		return -EPERM;
-+
- 	if (off > dev->cfg_size)
- 		return 0;
- 	if (off + count > dev->cfg_size) {
-@@ -1018,6 +1021,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
- 	resource_size_t start, end;
- 	int i;
- 
-+	if (kernel_is_locked_down())
-+		return -EPERM;
-+
- 	for (i = 0; i < PCI_ROM_RESOURCE; i++)
- 		if (res == &pdev->resource[i])
- 			break;
-@@ -1117,6 +1123,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
- 				     struct bin_attribute *attr, char *buf,
- 				     loff_t off, size_t count)
- {
-+	if (kernel_is_locked_down())
-+		return -EPERM;
-+
- 	return pci_resource_io(filp, kobj, attr, buf, off, count, true);
- }
- 
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index f82710a8694d..139d6f09ae7b 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -116,6 +116,9 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
- 	int size = dev->cfg_size;
- 	int cnt;
- 
-+	if (kernel_is_locked_down())
-+		return -EPERM;
-+
- 	if (pos >= size)
- 		return 0;
- 	if (nbytes >= size)
-@@ -195,6 +198,9 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
- #endif /* HAVE_PCI_MMAP */
- 	int ret = 0;
- 
-+	if (kernel_is_locked_down())
-+		return -EPERM;
-+
- 	switch (cmd) {
- 	case PCIIOC_CONTROLLER:
- 		ret = pci_domain_nr(dev->bus);
-@@ -233,7 +239,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- 	struct pci_filp_private *fpriv = file->private_data;
- 	int i, ret, write_combine;
- 
--	if (!capable(CAP_SYS_RAWIO))
-+	if (!capable(CAP_SYS_RAWIO) || kernel_is_locked_down())
- 		return -EPERM;
- 
- 	/* Make sure the caller is mapping a real resource for this device */
-diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
-index 9bf993e1f71e..c09524738ceb 100644
---- a/drivers/pci/syscall.c
-+++ b/drivers/pci/syscall.c
-@@ -92,7 +92,7 @@ SYSCALL_DEFINE5(pciconfig_write, unsigned long, bus, unsigned long, dfn,
- 	u32 dword;
- 	int err = 0;
- 
--	if (!capable(CAP_SYS_ADMIN))
-+	if (!capable(CAP_SYS_ADMIN) || kernel_is_locked_down())
- 		return -EPERM;
- 
- 	dev = pci_get_bus_and_slot(bus, dfn);
+Larry
