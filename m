@@ -1,61 +1,43 @@
-Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
-Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
+Return-Path: <SRS0=HZWG=3X=google.com=bhelgaas@kernel.org>
+Return-Path: <SRS0=HZWG=3X=google.com=bhelgaas@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <5e68102d-e165-6ef3-8678-9bdb4f78382b@deltatee.com>
-References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
- <1492381396.25766.43.camel@kernel.crashing.org> <20170418164557.GA7181@obsidianresearch.com>
- <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com> <20170418190138.GH7181@obsidianresearch.com>
- <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com> <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
- <20170418210339.GA24257@obsidianresearch.com> <CAPcyv4h9n9Uzq4FAXR0ufieqvx5_txEwtnaaBWdxe-jF_XfTLg@mail.gmail.com>
- <20170418212258.GA26838@obsidianresearch.com> <CAPcyv4g5ifbpukthMXMro8qKdfoXAhftDpiwWWFCLZ4dK8JnnA@mail.gmail.com>
- <96198489-1af5-abcf-f23f-9a7e41aa17f7@deltatee.com> <CAPcyv4haUUs1Eew1PZTZkoGU4YFiHOuU93G+kG+CqfKzjz1gpw@mail.gmail.com>
- <5e68102d-e165-6ef3-8678-9bdb4f78382b@deltatee.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 18 Apr 2017 15:50:41 -0700
-Message-ID: <CAPcyv4jArrOBBih5jOU5wrC2imdo9VPzuQpfzepP3_QEwM-33g@mail.gmail.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
-	Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
-	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
-	linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jerome Glisse <jglisse@redhat.com>
+In-Reply-To: <1492206774.25766.14.camel@kernel.crashing.org>
+References: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
+ <1491825494-19331-4-git-send-email-elohimes@gmail.com> <20170414155849.GB5864@bhelgaas-glaptop.roam.corp.google.com>
+ <1492206774.25766.14.camel@kernel.crashing.org>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Sat, 15 Apr 2017 11:36:10 -0500
+Message-ID: <CAErSpo5Orx8c453Fn6-PX-7woseSkZFcYO1Yu+1L+B-h6w0T+A@mail.gmail.com>
+Subject: Re: [PATCH v10 3/4] powerpc/powernv: Override pcibios_default_alignment()
+ to force PCI devices to be page aligned
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Yongji Xie <elohimes@gmail.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>, Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>, Michael Ellerman <mpe@ellerman.id.au>,
+	"paulus@samba.org" <paulus@samba.org>, Li Zhong <zhong@linux.vnet.ibm.com>
 Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 18, 2017 at 3:48 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
->
->
-> On 18/04/17 04:28 PM, Dan Williams wrote:
->> Unlike the pci bus address offset case which I think is fundamental to
->> support since shipping archs do this today, I think it is ok to say
->> p2p is restricted to a single sgl that gets to talk to host memory or
->> a single device. That said, what's wrong with a p2p aware map_sg
->> implementation calling up to the host memory map_sg implementation on
->> a per sgl basis?
->
-> I think Ben said they need mixed sgls and that is where this gets messy.
-> I think I'd prefer this too given trying to enforce all sgs in a list to
-> be one type or another could be quite difficult given the state of the
-> scatterlist code.
->
->>> Also, what happens if p2p pages end up getting passed to a device that
->>> doesn't have the injected dma_ops?
+On Fri, Apr 14, 2017 at 4:52 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Fri, 2017-04-14 at 10:58 -0500, Bjorn Helgaas wrote:
+>> On Mon, Apr 10, 2017 at 07:58:13PM +0800, Yongji Xie wrote:
+>> > This overrides pcibios_default_alignment() to set default alignment
+>> > to PAGE_SIZE for all PCI devices on PowerNV platform. Thus sub-page
+>> > BARs would not share a page and could be mapped into guest when
+>> > VFIO
+>> > passthrough them.
 >>
->> This goes back to limiting p2p to a single pci host bridge. If the p2p
->> capability is coordinated with the bridge rather than between the
->> individual devices then we have a central point to catch this case.
+>> Thanks for doing this.  This looks like a reasonable strategy to me,
+>> but it would be good to get a powerpc ack for it.
 >
-> Not really relevant. If these pages get to userspace (as people seem
-> keen on doing) or a less than careful kernel driver they could easily
-> get into the dma_map calls of devices that aren't even pci related (via
-> an O_DIRECT operation on an incorrect file or something). The common
-> code must reject these and can't rely on an injected dma op.
+> I agree in principle. I'm surprised that PowerPC is the only one
+> interested here though, what about other platforms who want to use
+> KVM and PCI pass-through and use Linux to assign BARs ?
 
-No, we can't do that at get_user_pages() time, it will always need to
-be up to the device driver to fail dma that it can't perform.
+If I understand correctly, the problem is with BARs smaller than a
+page, and this happens more on PowerPC because larger page sizes are
+more common there.
+
+Bjorn
