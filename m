@@ -1,110 +1,194 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 12 Apr 2017 23:45:55 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v3 00/32] PCI: fix config and I/O Address space memory
- mappings
-Message-ID: <20170412224555.GB17774@n2100.armlinux.org.uk>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
- <1491917906.7236.7.camel@kernel.crashing.org>
- <20170411140857.GA6821@red-moon>
- <1491952371.7236.22.camel@kernel.crashing.org>
- <20170412113124.GZ17774@n2100.armlinux.org.uk>
- <1492005119.7236.62.camel@kernel.crashing.org>
- <20170412141654.GA17774@n2100.armlinux.org.uk>
- <20170412144109.GB6842@red-moon>
- <1492036240.7236.80.camel@kernel.crashing.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:59831 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752729AbdDPHz2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 16 Apr 2017 03:55:28 -0400
+Date: Sun, 16 Apr 2017 09:55:35 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+        Simon Horman <horms@verge.net.au>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: PCI / PM: Crashes in PME scan during system suspend
+Message-ID: <20170416075535.GA6620@wunner.de>
+References: <CAMuHMdVf-NT_6oGQVba_QgFuW-fZMBDF1CtidfxSxnCr8+BGHg@mail.gmail.com>
+ <2661070.8D7d40DjM3@aspire.rjw.lan>
+ <20170414082249.GA5417@wunner.de>
+ <3960283.lbE9ESSj2m@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <1492036240.7236.80.camel@kernel.crashing.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
- linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
- David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
- Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
- Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
- Jesper Nilsson <jesper.nilsson@axis.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Yoshinori Sato <ysato@users.sourceforge.jp>,
- Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
- "James E.J. Bottomley" <jejb@parisc-linux.org>, Ingo Molnar <mingo@redhat.com>,
- Geert Uytterhoeven <geert@linux-m68k.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Matt Turner <mattst88@gmail.com>,
- Haavard Skinnemoen <hskinnemoen@gmail.com>, Fenghua Yu <fenghua.yu@intel.com>,
- James Hogan <james.hogan@imgtec.com>, Chris Metcalf <cmetcalf@mellanox.com>,
- Arnd Bergmann <arnd@arndb.de>, Heiko Carstens <heiko.carstens@de.ibm.com>,
- Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
- Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
- Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
- Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
- linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
- Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
- "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
- "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <3960283.lbE9ESSj2m@aspire.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 13, 2017 at 08:30:40AM +1000, Benjamin Herrenschmidt wrote:
-> My point with nopost() is that it's never ok to silently downgrade it.
-> Code written with the assumption that there is no posting will be
-> *incorrect* if posting happens. We do live with that "bug" today indeed
-> but once we have that accessors we might start growing more code that
-> relies on the specific attribute that things aren't posted and will be
-> wrong on all the archs providing the default implementation.
-> =
+On Sat, Apr 15, 2017 at 12:27:31AM +0200, Rafael J. Wysocki wrote:
+> On Friday, April 14, 2017 10:22:49 AM Lukas Wunner wrote:
+> > Below is a tentative patch which moves PME polling to a freezable
+> > workqueue, so it is frozen before the host bridge is suspended.
+> > Geert, Laurent, could you test this?
+> > 
+> > The patch may be problematic in that pci_pme_list_scan() acquires
+> > pci_pme_list_mutex, which is also acquired by pci_pme_active(),
+> > which gets called when devices are suspended -- *after* the worker
+> > has been frozen.  I'm not really familiar with the freezer, can it
+> > happen that the worker is frozen while holding the mutex?  If so
+> > this would deadlock.  Rafael?
+> 
+> That depends on the worker, precisely on where it calls try_to_freeze().
 
-> This is why I insist that pgprot_nopost() if it exists globally, should
-> return NULL when the semantic cannot be provided.
+pci_pme_list_scan() doesn't call try_to_freeze() at all, that's what had
+me confused.  Neither do many other workers that are scheduled to
+system_freezable_wq.
 
-Now you're not talking sense.  pgprot_nopost() does _not_ return a pointer.
-You're talking here as if you're still talking about ioremap_nopost().
-So, I think you're confused.
+However after familiarizing myself a bit more with the freezer it seems
+that is fine.  The freezer prevents new workers from being scheduled and
+then schedules the existing workers for up to 20 seconds to allow them
+to finish.  The call to try_to_freeze() is thus only needed for long
+running workers or for threads which are in some infinite loop.
 
-> > > Just like the proposed ioremap_nopost(), pgprot_nonposted() is given a
-> > > default implementation that uses pgprot_noncached().=A0 Maybe we shou=
-ld
-> > > also make pci_remap_iospace() fail if pgprot_nonposted() is not defin=
-ed
-> > > by the architecture?
-> =
+Below is the same patch with a proper commit message, it's mostly copied
+and pasted from Geert's comprehensive report.  Still needs to be tested
+by Geert and/or Laurent as I was unable reproduce the issue on my x86
+laptop.  Perhaps on x86 the OS is not responsible for disabling the PCI
+clock (but presumably the BIOS) or x86 doesn't emit this kind of fault.
 
-> Or we *document* that mmap of IO space can result in something that is
-> partially non-posted.
+Thanks,
 
-Oh, so we _can_ provide an interface that has weaker semantics than it
-should provided we document it.
+Lukas
 
-It's insane to have different behaviours from these two interfaces, yet
-you seem to have said exactly that in your reply.
+-- >8 --
+Subject: [PATCH] PCI: Freeze PME scan before suspending devices
 
-It's actually worse than that - what you've just said is that it's okay
-for userspace to map IO space with weaker semantics than the PCI
-specification states, but it's not okay for kernel space to do that.
-Especially as userspace can't know what semantics its going to end up
-with, this seems to be a very strange stance to take.
+Laurent Pinchart reported that the Renesas R-Car H2 Lager board
+(r8a7790) crashes during suspend tests.  Geert Uytterhoeven managed to
+reproduce the issue on an M2-W Koelsch board (r8a7791):
 
-I'd say that if we can't offer the no-posting behaviour that PCI
-specifies, then we shouldn't be exposing IO mappings to userspace.
+It occurs when the PME scan runs, once per second.  During PME scan, the
+PCI host bridge (rcar-pci) registers are accessed while its module clock
+has already been disabled, leading to the crash.
 
--- =
+The issue only occurs during suspend tests, after writing either
+"platform" or "processors" to /sys/power/pm_test.  It does not (or is
+less likely) to happen during full system suspend ("core" or "none")
+because system suspend also disables timers, and thus the workqueue
+handling PME scans no longer runs.  Geert believes the issue may still
+happen in the small window between disabling module clocks and disabling
+timers.
 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+Rafael Wysocki agrees that PME scans should be suspended before the host
+bridge registers become inaccessible.  To that end, queue the task on a
+workqueue that gets frozen before devices suspend.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+How to reproduce:
+
+# echo 0 > /sys/module/printk/parameters/console_suspend
+# echo platform > /sys/power/pm_test    # Or "processors"
+# echo mem > /sys/power/state
+
+Make sure CONFIG_PCI_RCAR_GEN2 and CONFIG_USB_OHCI_HCD_PCI are
+enabled.
+
+PM: Syncing filesystems ... [   38.566237] done.
+PM: Preparing system for sleep (mem)
+Freezing user space processes ... [   38.579813] (elapsed 0.001 seconds) done.
+Freezing remaining freezable tasks ... (elapsed 0.001 seconds) done.
+PM: Suspending system (mem)
+PM: suspend of devices complete after 152.456 msecs
+PM: late suspend of devices complete after 2.809 msecs
+PM: noirq suspend of devices complete after 29.863 msecs
+suspend debug: Waiting for 5 second(s).
+Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
+pgd = c0003000
+[00000000] *pgd=80000040004003, *pmd=00000000
+Internal error: : 1211 [#1] SMP ARM
+Modules linked in:
+CPU: 1 PID: 20 Comm: kworker/1:1 Not tainted
+4.9.0-rc1-koelsch-00011-g68db9bc814362e7f #3383
+Hardware name: Generic R8A7791 (Flattened Device Tree)
+Workqueue: events pci_pme_list_scan
+task: eb56e140 task.stack: eb58e000
+PC is at pci_generic_config_read+0x64/0x6c
+LR is at rcar_pci_cfg_base+0x64/0x84
+pc : [<c041d7b4>]    lr : [<c04309a0>]    psr: 600d0093
+sp : eb58fe98  ip : c041d750  fp : 00000008
+r10: c0e2283c  r9 : 00000000  r8 : 600d0013
+r7 : 00000008  r6 : eb58fed6  r5 : 00000002  r4 : eb58feb4
+r3 : 00000000  r2 : 00000044  r1 : 00000008  r0 : 00000000
+Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment user
+Control: 30c5387d  Table: 6a9f6c80  DAC: 55555555
+Process kworker/1:1 (pid: 20, stack limit = 0xeb58e210)
+Stack: (0xeb58fe98 to 0xeb590000)
+fe80:                                                       00000002 00000044
+fea0: eb6f5800 c041d9b0 eb58feb4 00000008 00000044 00000000 eb78a000 eb78a000
+fec0: 00000044 00000000 eb9aff00 c0424bf0 eb78a000 00000000 eb78a000 c0e22830
+fee0: ea8a6fc0 c0424c5c eaae79c0 c0424ce0 eb55f380 c0e22838 eb9a9800 c0235fbc
+ff00: eb55f380 c0e22838 eb55f380 eb9a9800 eb9a9800 eb58e000 eb9a9824 c0e02100
+ff20: eb55f398 c02366c4 eb56e140 eb5631c0 00000000 eb55f380 c023641c 00000000
+ff40: 00000000 00000000 00000000 c023a928 cd105598 00000000 40506a34 eb55f380
+ff60: 00000000 00000000 dead4ead ffffffff ffffffff eb58ff74 eb58ff74 00000000
+ff80: 00000000 dead4ead ffffffff ffffffff eb58ff90 eb58ff90 eb58ffac eb5631c0
+ffa0: c023a844 00000000 00000000 c0206d68 00000000 00000000 00000000 00000000
+ffc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+ffe0: 00000000 00000000 00000000 00000000 00000013 00000000 3a81336c 10ccd1dd
+[<c041d7b4>] (pci_generic_config_read) from [<c041d9b0>]
+(pci_bus_read_config_word+0x58/0x80)
+[<c041d9b0>] (pci_bus_read_config_word) from [<c0424bf0>]
+(pci_check_pme_status+0x34/0x78)
+[<c0424bf0>] (pci_check_pme_status) from [<c0424c5c>] (pci_pme_wakeup+0x28/0x54)
+[<c0424c5c>] (pci_pme_wakeup) from [<c0424ce0>] (pci_pme_list_scan+0x58/0xb4)
+[<c0424ce0>] (pci_pme_list_scan) from [<c0235fbc>]
+(process_one_work+0x1bc/0x308)
+[<c0235fbc>] (process_one_work) from [<c02366c4>] (worker_thread+0x2a8/0x3e0)
+[<c02366c4>] (worker_thread) from [<c023a928>] (kthread+0xe4/0xfc)
+[<c023a928>] (kthread) from [<c0206d68>] (ret_from_fork+0x14/0x2c)
+Code: ea000000 e5903000 f57ff04f e3a00000 (e5843000)
+---[ end trace 667d43ba3aa9e589 ]---
+
+Reported-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Simon Horman <horms@verge.net.au>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Fixes: df17e62e5bff ("PCI: Add support for polling PME state on suspended legacy PCI devices")
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/pci.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index aa55501..c561a9e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1784,8 +1784,8 @@ static void pci_pme_list_scan(struct work_struct *work)
+ 		}
+ 	}
+ 	if (!list_empty(&pci_pme_list))
+-		schedule_delayed_work(&pci_pme_work,
+-				      msecs_to_jiffies(PME_TIMEOUT));
++		queue_delayed_work(system_freezable_wq, &pci_pme_work,
++				   msecs_to_jiffies(PME_TIMEOUT));
+ 	mutex_unlock(&pci_pme_list_mutex);
+ }
+ 
+@@ -1850,8 +1850,9 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
+ 			mutex_lock(&pci_pme_list_mutex);
+ 			list_add(&pme_dev->list, &pci_pme_list);
+ 			if (list_is_singular(&pci_pme_list))
+-				schedule_delayed_work(&pci_pme_work,
+-						      msecs_to_jiffies(PME_TIMEOUT));
++				queue_delayed_work(system_freezable_wq,
++						   &pci_pme_work,
++						   msecs_to_jiffies(PME_TIMEOUT));
+ 			mutex_unlock(&pci_pme_list_mutex);
+ 		} else {
+ 			mutex_lock(&pci_pme_list_mutex);
+-- 
+2.11.0
