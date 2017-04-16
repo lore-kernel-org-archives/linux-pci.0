@@ -1,98 +1,130 @@
-Return-Path: <SRS0=kpg+=3V=google.com=bhelgaas@kernel.org>
-Return-Path: <SRS0=kpg+=3V=google.com=bhelgaas@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.20.1704132201410.21515@math.ut.ee>
-References: <alpine.LRH.2.20.1704102317110.14071@math.ut.ee>
- <20170411014338.GA9311@bhelgaas-glaptop.roam.corp.google.com> <alpine.LRH.2.20.1704132201410.21515@math.ut.ee>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 13 Apr 2017 14:20:16 -0500
-Message-ID: <CAErSpo4Kr_TDgMOa8LaWngQa4HsA388_G4CANQcY5G14UBARaQ@mail.gmail.com>
-Subject: Re: 4.11-rc*: PCI IRQ allocation broken
-To: Meelis Roos <mroos@linux.ee>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux Kernel list <linux-kernel@vger.kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <SRS0=kBs1=3Y=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=kBs1=3Y=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1492381396.25766.43.camel@kernel.crashing.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe
+	 <logang@deltatee.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+        Jason Gunthorpe
+ <jgunthorpe@obsidianresearch.com>,
+        Christoph Hellwig <hch@lst.de>, Sagi
+ Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley"
+ <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen"
+ <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise
+ <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>, Max
+ Gurtovoy <maxg@mellanox.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm
+ <linux-nvdimm@ml01.01.org>,
+        "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>,
+        Jerome Glisse <jglisse@redhat.com>
+Date: Mon, 17 Apr 2017 08:23:16 +1000
+In-Reply-To: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+References: 
+	<CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 13, 2017 at 2:03 PM, Meelis Roos <mroos@linux.ee> wrote:
->> > This happens on my HP Compaq 8100 Elite SFF PC. While 4.10 works fine,
->> > 4.11.-rc5 and at least back to 4.10.0-10770-g2d6be4abf514 fail to assign
->> > PCI IRQ to multiple devices (no GSI messages in the dmesg). This results
->> > in mouse in one USB port working and keyboard in another USB port not
->> > working, reproducibly.
->> >
->> > Will bisect.
->>
->> Thanks a lot for the report, Meelis, and I apologize for the inconvenience.
->> I opened https://bugzilla.kernel.org/show_bug.cgi?id=195319 to track this,
->> marked it as a regression, and attached your v4.11-rc5 dmesg to it.
->
-> Bisecting got stuck - I reached a state with about 5-6 steps left when I
-> got an unbootable kernel. Went there yesterday, restarted a good kernel,
-> skipped the kernel and left. When I rebooted into the next bisect
-> kernel, it has hung again. Will see when I get to go there.
-> Unfortunately I did not remember to take the intermediate bisect state
-> with me :(
+On Sun, 2017-04-16 at 08:44 -0700, Dan Williams wrote:
+> The difference is that there was nothing fundamental in the core
+> design of pmem + DAX that prevented other archs from growing pmem
+> support.
 
-I *think* the ACPI guys found the problem; at least Michael Marlen
-<michael@michaelmarley.com> reported the same problem and that it was
-fixed by reverting 57707a9a7780 ("ACPICA: Resources: Not a valid
-resource if buffer length too long").
+Indeed. In fact we have work in progress support for pmem on power
+using experimental HW.
 
-Sorry, I should have added you the cc list in bugzilla right away.
+> THP and memory hotplug existed on other architectures and
+> they just need to plug in their arch-specific enabling. p2p support
+> needs the same starting point of something more than one architecture
+> can plug into, and handling the bus address offset case needs to be
+> incorporated into the design.
+> 
+> pmem + dax did not change the meaning of what a dma_addr_t is, p2p does.
 
->> Something seems broken in ACPI.  There are a bunch of warnings, and I
->> think the PCI IRQ problem is a consequence of the fact that the
->> PNP0A08 _CRS evaluation failed, and we probably don't bother looking
->> for a _PRT under that bridge.
->>
->> > Linux version 4.11.0-rc5-00033-g308ac7563944 (mroos@prometheus) (gcc version 6.3.0 20170321 (Debian 6.3.0-11) ) #64 SMP Wed Apr 5 12:29:53 EEST 2017
->> > Command line: BOOT_IMAGE=/boot/vmlinuz-4.11.0-rc5-00033-g308ac7563944 root=/dev/sda1 ro
->> > ...
->> > ACPI BIOS Warning (bug): Optional FADT field Pm2ControlBlock has valid Address but zero Length: 0x0000000000000050/0x0 (20170119/tbfadt-658)
->> > ACPI BIOS Warning (bug): Invalid length for FADT/Pm2ControlBlock: 0, using default 8 (20170119/tbfadt-708)
->> > ...
->> > acpi LNXCPU:00: Invalid PBLK length [7]
->> > acpi LNXCPU:01: Invalid PBLK length [7]
->> > acpi LNXCPU:02: Invalid PBLK length [7]
->> > acpi LNXCPU:03: Invalid PBLK length [7]
->> > acpi PNP0A08:00: [Firmware Bug]: no secondary bus range in _CRS
->> > ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
->> > acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
->> > ACPI BIOS Error (bug): \_SB.PCI0._OSC: Excess arguments - ASL declared 5, ACPI requires 4 (20170119/nsarguments-189)
->> > ACPI Error: [CAPD] Namespace lookup failure, AE_ALREADY_EXISTS (20170119/dsfield-211)
->> > ACPI Error: Method parse/execution failed [\_SB.PCI0._OSC] (Node ffff880113031668), AE_ALREADY_EXISTS (20170119/psparse-543)
->> > acpi PNP0A08:00: _OSC failed (AE_ALREADY_EXISTS); disabling ASPM
->> > acpi PNP0A08:00: [Firmware Info]: MMCONFIG for domain 0000 [bus 00-3f] only partially covers this bridge
->> > acpi PNP0A08:00: failed to parse _CRS method, error code -5
->> > acpi PNP0A08:00: Bus 0000:00 not present in PCI namespace
->> > ...
->> > PCI: Discovered peer bus 00
->> > PCI: root bus 00: using default resources
->> > PCI: Probing PCI hardware (bus 00)
->> > ...
->> > ACPI: \: failed to evaluate _DSM (0x1001)
->> > ...
->> > PCI host bridge to bus 0000:00
->> > pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
->> > pci_bus 0000:00: root bus resource [mem 0x00000000-0xfffffffff]
->> > pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
->> > ...
->> > PCI: Discovered peer bus 3f
->> > PCI: root bus 3f: using default resources
->> > PCI: Probing PCI hardware (bus 3f)
->> > ACPI: \: failed to evaluate _DSM (0x1001)
->> > ...
->> > pnp 00:00: Plug and Play ACPI device, IDs PNP0b00 (active)
->> > pnp 00:01: can't evaluate _CRS: 12316
->> > ...
->> > [drm] ACPI BIOS requests an excessive sleep of 4294705151 ms, using 1500 ms instead
->>
->
-> --
-> Meelis Roos (mroos@linux.ee)
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The more I think about it, the more I tend toward something along the
+lines of having the arch DMA ops being able to quickly differentiate
+between "normal" memory (which includes non-PCI pmem in some cases,
+it's an architecture choice I suppose) and "special device" (page flag
+? pfn bit ? ... there are options).
+
+>From there, we keep our existing fast path for the normal case.
+
+For the special case, we need to provide a fast lookup mechanism
+(assuming we can't stash enough stuff in struct page or the pfn)
+to get back to a struct of some sort that provides the necessary
+information to resolve the translation.
+
+This *could* be something like a struct p2mem device that carries
+a special set of DMA ops, though we probably shouldn't make the generic
+structure PCI specific.
+
+This is a slightly slower path, but that "stub" structure allows the
+special DMA ops to provide the necessary bus-specific knowledge, which
+for PCI for example, can check whether the devices are on the same
+segment, whether the switches are configured to allow p2p, etc...
+
+What form should that fast lookup take ? It's not completely clear to
+me at that point. We could start with a simple linear lookup I suppose
+and improve in a second stage.
+
+Of course this pipes into the old discussion about disconnecting
+the DMA ops from struct page. If we keep struct page, any device that
+wants to be a potential DMA target will need to do something "special"
+to create those struct pages etc.. though we could make that a simple
+pci helper that pops the necessary bits and pieces for a given BAR &
+range.
+
+If we don't need struct page, then it might be possible to hide it all
+in the PCI infrastructure.
+
+> > Virtualization specifically would be a _lot_ more difficult than simply
+> > supporting offsets. The actual topology of the bus will probably be lost
+> > on the guest OS and it would therefor have a difficult time figuring out
+> > when it's acceptable to use p2pmem. I also have a difficult time seeing
+> > a use case for it and thus I have a hard time with the argument that we
+> > can't support use cases that do want it because use cases that don't
+> > want it (perhaps yet) won't work.
+> > 
+> > > This is an interesting experiement to look at I suppose, but if you
+> > > ever want this upstream I would like at least for you to develop a
+> > > strategy to support the wider case, if not an actual implementation.
+> > 
+> > I think there are plenty of avenues forward to support offsets, etc.
+> > It's just work. Nothing we'd be proposing would be incompatible with it.
+> > We just don't want to have to do it all upfront especially when no one
+> > really knows how well various architecture's hardware supports this or
+> > if anyone even wants to run it on systems such as those. (Keep in mind
+> > this is a pretty specific optimization that mostly helps systems
+> > designed in specific ways -- not a general "everybody gets faster" type
+> > situation.) Get the cases working we know will work, can easily support
+> > and people actually want.  Then expand it to support others as people
+> > come around with hardware to test and use cases for it.
+> 
+> I think you need to give other archs a chance to support this with a
+> design that considers the offset case as a first class citizen rather
+> than an afterthought.
+
+Thanks :-) There's a reason why I'm insisting on this. We have constant
+requests for this today. We have hacks in the GPU drivers to do it for
+GPUs behind a switch, but those are just that, ad-hoc hacks in the
+drivers. We have similar grossness around the corner with some CAPI
+NICs trying to DMA to GPUs. I have people trying to use PLX DMA engines
+to whack nVME devices.
+
+I'm very interested in a more generic solution to deal with the problem
+of P2P between devices. I'm happy to contribute with code to handle the
+powerpc bits but we need to agree on the design first :)
+
+Cheers,
+Ben.
