@@ -1,118 +1,144 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:58190 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752331AbdDMUv3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Apr 2017 16:51:29 -0400
-Date: Thu, 13 Apr 2017 15:51:25 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: linux-pci@vger.kernel.org, timur@codeaurora.org,
-        mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
-        linux-arm-msm@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        linux-kernel@vger.kernel.org, Julia Lawall <Julia.Lawall@lip6.fr>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rajat Jain <rajatja@google.com>,
-        linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH V8 1/5] PCI/ASPM: introduce pci_aspm_init() and add to
- pci_init_capabilities()
-Message-ID: <20170413205125.GC28316@bhelgaas-glaptop.roam.corp.google.com>
-References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
- <1491627351-1111-2-git-send-email-okaya@codeaurora.org>
+Return-Path: <SRS0=kHC/=3Y=intel.com=dan.j.williams@kernel.org>
+Return-Path: <SRS0=kHC/=3Y=intel.com=dan.j.williams@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1491627351-1111-2-git-send-email-okaya@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Sun, 16 Apr 2017 08:44:35 -0700
+Message-ID: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>,
+	Steve Wise <swise@opengridcomputing.com>, Stephen Bates <sbates@raithlin.com>,
+	Max Gurtovoy <maxg@mellanox.com>, Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+	linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jerome Glisse <jglisse@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan,
+On Sat, Apr 15, 2017 at 10:36 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+>
+> On 15/04/17 04:17 PM, Benjamin Herrenschmidt wrote:
+>> You can't. If the iommu is on, everything is remapped. Or do you mean
+>> to have dma_map_* not do a remapping ?
+>
+> Well, yes, you'd have to change the code so that iomem pages do not get
+> remapped and the raw BAR address is passed to the DMA engine. I said
+> specifically we haven't done this at this time but it really doesn't
+> seem like an unsolvable problem. It is something we will need to address
+> before a proper patch set is posted though.
+>
+>> That's the problem again, same as before, for that to work, the
+>> dma_map_* ops would have to do something special that depends on *both*
+>> the source and target device.
+>
+> No, I don't think you have to do things different based on the source.
+> Have the p2pmem device layer restrict allocating p2pmem based on the
+> devices in use (similar to how the RFC code works now) and when the dma
+> mapping code sees iomem pages it just needs to leave the address alone
+> so it's used directly by the dma in question.
+>
+> It's much better to make the decision on which memory to use when you
+> allocate it. If you wait until you map it, it would be a pain to fall
+> back to system memory if it doesn't look like it will work. So, if when
+> you allocate it, you know everything will work you just need the dma
+> mapping layer to stay out of the way.
 
-On Sat, Apr 08, 2017 at 12:55:47AM -0400, Sinan Kaya wrote:
-> We need a callback from pci_init_capabilities function for every
-> single new PCI device that is currently being added.
-> 
-> pci_aspm_init() will be used to save the power on state of the HW.
-> 
-> Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
-> Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> ---
->  drivers/pci/pcie/aspm.c | 10 ++++++++++
->  drivers/pci/probe.c     |  3 +++
->  include/linux/pci.h     |  2 ++
->  3 files changed, 15 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index 1dfa10c..dc36717 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -827,6 +827,16 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
->  }
->  
->  /*
-> + * pci_aspm_init: Initiate PCI express link state.
-> + * It is called from device_add for every single pci device.
-> + * @pdev: all pci devices
-> + */
-> +int pci_aspm_init(struct pci_dev *pdev)
-> +{
-> +	return 0;
-> +}
-> +
-> +/*
->   * pcie_aspm_init_link_state: Initiate PCI express link state.
->   * It is called after the pcie and its children devices are scanned.
->   * @pdev: the root port or switch downstream port
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index dfc9a27..1e19364 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1847,6 +1847,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
->  
->  	/* Advanced Error Reporting */
->  	pci_aer_init(dev);
-> +
-> +	/* Active State Power Management */
-> +	pci_aspm_init(dev);
->  }
->  
->  /*
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index eb3da1a..8828dd7 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1396,8 +1396,10 @@ static inline int pci_irq_get_node(struct pci_dev *pdev, int vec)
->  
->  #ifdef CONFIG_PCIEASPM
->  bool pcie_aspm_support_enabled(void);
-> +int pci_aspm_init(struct pci_dev *pdev);
+I think we very much want the dma mapping layer to be in the way.
+It's the only sane semantic we have to communicate this translation.
 
-I think these can go in drivers/pci/pci.h instead of the public
-include/linux/pci.h.  There's no ASPM section in drivers/pci/pci.h
-yet, but I think we should add one.
+>
+>> The dma_ops today are architecture specific and have no way to
+>> differenciate between normal and those special P2P DMA pages.
+>
+> Correct, unless Dan's idea works (which will need some investigation),
+> we'd need a flag in struct page or some other similar method to
+> determine that these are special iomem pages.
+>
+>>> Though if it does, I'd expect
+>>> everything would still work you just wouldn't get the performance or
+>>> traffic flow you are looking for. We've been testing with the software
+>>> iommu which doesn't have this problem.
+>>
+>> So first, no, it's more than "you wouldn't get the performance". On
+>> some systems it may also just not work. Also what do you mean by "the
+>> SW iommu doesn't have this problem" ? It catches the fact that
+>> addresses don't point to RAM and maps differently ?
+>
+> I haven't tested it but I can't imagine why an iommu would not correctly
+> map the memory in the bar. But that's _way_ beside the point. We
+> _really_ want to avoid that situation anyway. If the iommu maps the
+> memory it defeats what we are trying to accomplish.
+>
+> I believe the sotfware iommu only uses bounce buffers if the DMA engine
+> in use cannot address the memory. So in most cases, with modern
+> hardware, it just passes the BAR's address to the DMA engine and
+> everything works. The code posted in the RFC does in fact work without
+> needing to do any of this fussing.
+>
+>>>> The problem is that the latter while seemingly easier, is also slower
+>>>> and not supported by all platforms and architectures (for example,
+>>>> POWER currently won't allow it, or rather only allows a store-only
+>>>> subset of it under special circumstances).
+>>>
+>>> Yes, I think situations where we have to cross host bridges will remain
+>>> unsupported by this work for a long time. There are two many cases where
+>>> it just doesn't work or it performs too poorly to be useful.
+>>
+>> And the situation where you don't cross bridges is the one where you
+>> need to also take into account the offsets.
+>
+> I think for the first incarnation we will just not support systems that
+> have offsets. This makes things much easier and still supports all the
+> use cases we are interested in.
+>
+>> So you are designing something that is built from scratch to only work
+>> on a specific limited category of systems and is also incompatible with
+>> virtualization.
+>
+> Yes, we are starting with support for specific use cases. Almost all
+> technology starts that way. Dax has been in the kernel for years and
+> only recently has someone submitted patches for it to support pmem on
+> powerpc. This is not unusual. If you had forced the pmem developers to
+> support all architectures in existence before allowing them upstream
+> they couldn't possibly be as far as they are today.
 
-It looks like the following things from include/linux/pci-aspm.h could
-be moved there as well, since they're only used by the PCI core:
+The difference is that there was nothing fundamental in the core
+design of pmem + DAX that prevented other archs from growing pmem
+support. THP and memory hotplug existed on other architectures and
+they just need to plug in their arch-specific enabling. p2p support
+needs the same starting point of something more than one architecture
+can plug into, and handling the bus address offset case needs to be
+incorporated into the design.
 
-  void pcie_aspm_init_link_state(struct pci_dev *pdev);
-  void pcie_aspm_exit_link_state(struct pci_dev *pdev);
-  void pcie_aspm_pm_state_change(struct pci_dev *pdev);
-  void pcie_aspm_powersave_config_link(struct pci_dev *pdev);
-  void pcie_aspm_create_sysfs_dev_files(struct pci_dev *pdev);
-  void pcie_aspm_remove_sysfs_dev_files(struct pci_dev *pdev);
+pmem + dax did not change the meaning of what a dma_addr_t is, p2p does.
 
-This would be a separate patch.
+> Virtualization specifically would be a _lot_ more difficult than simply
+> supporting offsets. The actual topology of the bus will probably be lost
+> on the guest OS and it would therefor have a difficult time figuring out
+> when it's acceptable to use p2pmem. I also have a difficult time seeing
+> a use case for it and thus I have a hard time with the argument that we
+> can't support use cases that do want it because use cases that don't
+> want it (perhaps yet) won't work.
+>
+>> This is an interesting experiement to look at I suppose, but if you
+>> ever want this upstream I would like at least for you to develop a
+>> strategy to support the wider case, if not an actual implementation.
+>
+> I think there are plenty of avenues forward to support offsets, etc.
+> It's just work. Nothing we'd be proposing would be incompatible with it.
+> We just don't want to have to do it all upfront especially when no one
+> really knows how well various architecture's hardware supports this or
+> if anyone even wants to run it on systems such as those. (Keep in mind
+> this is a pretty specific optimization that mostly helps systems
+> designed in specific ways -- not a general "everybody gets faster" type
+> situation.) Get the cases working we know will work, can easily support
+> and people actually want.  Then expand it to support others as people
+> come around with hardware to test and use cases for it.
 
->  #else
->  static inline bool pcie_aspm_support_enabled(void) { return false; }
-> +static inline int pci_aspm_init(struct pci_dev *pdev) { return -ENODEV; }
->  #endif
->  
->  #ifdef CONFIG_PCIEAER
-> -- 
-> 1.9.1
-> 
-> 
-> _______________________________________________
-> linux-arm-kernel mailing list
-> linux-arm-kernel@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I think you need to give other archs a chance to support this with a
+design that considers the offset case as a first class citizen rather
+than an afterthought.
