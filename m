@@ -1,76 +1,159 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:39751 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755136AbdDFQCJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Apr 2017 12:02:09 -0400
-To: Sagi Grimberg <sagi@grimberg.me>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-7-git-send-email-logang@deltatee.com>
- <080b68b4-eba3-861c-4f29-5d829425b5e7@grimberg.me>
- <20170404154629.GA13552@obsidianresearch.com>
- <4df229d8-8124-664a-9bc4-6401bc034be1@grimberg.me>
-Cc: Christoph Hellwig <hch@lst.de>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
-        linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <cc2ac0cc-8543-5297-bc09-9946cca93894@deltatee.com>
-Date: Thu, 6 Apr 2017 10:02:04 -0600
+Return-Path: <SRS0=5UqL=3Y=gmail.com=larry.finger@kernel.org>
+Return-Path: <SRS0=5UqL=3Y=gmail.com=larry.finger@kernel.org>
+Sender: Larry Finger <larry.finger@gmail.com>
+Subject: Re: 4.10.9 nok with realtek wlan, atom
+To: rupert THURNER <rupert.thurner@gmail.com>
+References: <CAJs9aZ8HVPn_J9yPjvdBm-A_d3FiquPMGoy1xFsGopF8Xg_89Q@mail.gmail.com>
+ <9e48930c-4822-5af4-2ebb-4d2dcd12d448@lwfinger.net>
+ <CAJs9aZ9Hwnjb60mCycR3T2TWH75ZTdtEeWQ1iHRN+6NkkD+pZA@mail.gmail.com>
+ <40bc6004-519c-7bf1-874b-3ae169140637@lwfinger.net>
+ <CAJs9aZ_QRgqAjt+6FV=ZkPvYvkDedwtegMKC4Dk-uT8KtrE-mA@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ Chaoming Li <chaoming_li@realsil.com.cn>, Kalle Valo <kvalo@codeaurora.org>,
+ linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <3cf1997e-621f-b682-07b4-52b3945124ae@lwfinger.net>
+Date: Sun, 16 Apr 2017 14:30:38 -0500
 MIME-Version: 1.0
-In-Reply-To: <4df229d8-8124-664a-9bc4-6401bc034be1@grimberg.me>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [RFC 6/8] nvmet: Be careful about using iomem accesses when
- dealing with p2pmem
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CAJs9aZ_QRgqAjt+6FV=ZkPvYvkDedwtegMKC4Dk-uT8KtrE-mA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 05/04/17 11:33 PM, Sagi Grimberg wrote:
-> 
->>> Note that the nvme completion queues are still on the host memory, so
->>> this means we have lost the ordering between data and completions as
->>> they go to different pcie targets.
+On 04/16/2017 01:09 PM, rupert THURNER wrote:
+> On Sun, Apr 16, 2017 at 6:02 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>> On 04/16/2017 05:23 AM, rupert THURNER wrote:
+>>>
+>>> On Sat, Apr 15, 2017 at 10:40 PM, Larry Finger
+>>> <Larry.Finger@lwfinger.net> wrote:
+>>>>
+>>>> On 04/14/2017 03:26 PM, rupert THURNER wrote:
+>>>>>
+>>>>>
+>>>>> On Thu, Feb 9, 2017 at 9:09 PM, Larry Finger <Larry.Finger@lwfinger.net>
+>>>>> wrote:
+>>>>>>
+>>>>>>
+>>>>>> On 02/09/2017 01:43 PM, Bjorn Helgaas wrote:
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> [+cc rtl8192ce folks in case they've seen this]
+>>>>>>>
+>>>>>>> On Thu, Feb 09, 2017 at 03:45:01PM +0100, rupert THURNER wrote:
+>>>>>>>>
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> hi,
+>>>>>>>>
+>>>>>>>> not technical expert enough, i just wanted to give a short user
+>>>>>>>> feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
+>>>>>>>> kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
+>>>>>>>> well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
+>>>>>>>> hotspot is possible then drops, or connecting to wlan fails
+>>>>>>>> alltogether.
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> Thanks very much for your report, and sorry for the inconvenience.
+>>>>>>>
+>>>>>>> v4.10-rc7 works, so I guess we don't need to worry about fixing v4.10.
+>>>>>>>
+>>>>>>> But the stable kernels v4.9.6, v4.9.7, and v4.9.8 are broken, so we
+>>>>>>> need to figure out why and make sure we fix the v4.9 stable series.
+>>>>>>>
+>>>>>>> I can't tell yet whether this is PCI-related or not.  If it is,
+>>>>>>> 4922a6a5cfa7 ("PCI: Enumerate switches below PCI-to-PCIe bridges")
+>>>>>>> appeared in v4.9.6, and there is a known issue with that.  The issue
+>>>>>>> should be fixed by 610c2b7ff8f6 ("PCI/ASPM: Handle PCI-to-PCIe bridges
+>>>>>>> as roots of PCIe hierarchies"), which appeared in v4.9.9, so I guess
+>>>>>>> the first thing to do would be to test v4.9.9.
+>>>>>>>
+>>>>>>> If it's not fixed in v4.9.9, can you share the complete dmesg log
+>>>>>>> (output of "dmesg" command) and "lspci -vv" output for v4.9.5 (last
+>>>>>>> known working version) and v4.9.6 (first known broken version)?  On
+>>>>>>> v4.9.6, collect the dmesg output after the failure occurs.
+>>>>>>>
+>>>>>>>> 24: PCI 300.0: 0282 WLAN controller
+>>>>>>>>   [Created at pci.366]
+>>>>>>>>   Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
+>>>>>>>>   Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
+>>>>>>>>   Revision: 0x01
+>>>>>>>>   Driver: "rtl8192ce"
+>>>>>>>>   Driver Modules: "rtl8192ce"
+>>>>>>>>   Device File: wlp3s0
+>>>>>>>>   Features: WLAN
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> It would be helpful if someone were to bisect this issue. The only
+>>>>>> issue
+>>>>>> that comes to mind was fixed in commit 52f5631a4c05 ("rtlwifi:
+>>>>>> rtl8192ce:
+>>>>>> Fix loading of incorrect firmware") which is in 4.10-rc7 and will be
+>>>>>> backported to 4.9.
+>>>>>>
+>>>>>> The above issue is one that could not be reproduced on my hardware,
+>>>>>> thus
+>>>>>> it
+>>>>>> took Jurij Smakov to find the fix. Without his bisection of the
+>>>>>> problem,
+>>>>>> who
+>>>>>> knows how long it would have taken to find my edit mistake.
+>>>>>
+>>>>>
+>>>>>
+>>>>> larry, using the newest kernel 4.10.8 the network connection dropps
+>>>>> again irregular.
+>>>>>
+>>>>> # dmesg
+>>>>> [    0.000000] Linux version 4.10.9-1-ARCH (builduser@tobias) (gcc
+>>>>> version 6.3.1 20170306 (GCC) ) #1 SMP PREEMPT Sat Apr 8 12:39:59 CEST
+>>>>> 2017
+>>>>> [   11.933373] rtl8192ce: rtl8192ce: Power Save off (module option)
+>>>>> [   11.933396] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
+>>>>> [   11.978307] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+>>>>> [   11.978945] rtlwifi: rtlwifi: wireless switch is on
+>>>>>
+>>>>> # lspci -vv
+>>>>> Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi
+>>>>> Adapter
+>>>>> Kernel driver in use: rtl8192ce
+>>>>
+>>>>
+>>>>
+>>>> Is firmware rtlwifi/rtl8192cfw.bin also used on kernels that work?
+>>>
+>>>
+>>> 4.10.x used to work. 4.10.6 or 4.10.7 it started failing? i am not too
+>>> sure about it.
+>>>
+>>> # ls -l /usr/lib/firmware/rtlwifi/rtl8192cfw.bin
+>>> -rw-r--r-- 1 root root 16192 Mar 10 12:15
+>>> /usr/lib/firmware/rtlwifi/rtl8192cfw.bin
 >>
->> Hmm, in this simple up/down case with a switch, I think it might
->> actually be OK.
 >>
->> Transactions might not complete at the NVMe device before the CPU
->> processes the RDMA completion, however due to the PCI-E ordering rules
->> new TLPs directed to the NVMe will complete after the RMDA TLPs and
->> thus observe the new data. (eg order preserving)
->>
->> It would be very hard to use P2P if fabric ordering is not preserved..
-> 
-> I think it still can race if the p2p device is connected with more than
-> a single port to the switch.
-> 
-> Say it's connected via 2 legs, the bar is accessed from leg A and the
-> data from the disk comes via leg B. In this case, the data is heading
-> towards the p2p device via leg B (might be congested), the completion
-> goes directly to the RC, and then the host issues a read from the
-> bar via leg A. I don't understand what can guarantee ordering here.
-> 
-> Stephen told me that this still guarantees ordering, but I honestly
-> can't understand how, perhaps someone can explain to me in a simple
-> way that I can understand.
+>> That does not answer my question.
+> 4.10, 4.10.2, 4.10.3, 4.10.5 worked. as far as i can tell
+> rtl8192cfw.bin did not change and was used. with kernels 4.9 there was
+> a phase where rtl8192cfwU.bin was loaded which did not work. or i do
+> not understand your question correctly?
 
-I'll say I don't have a complete understanding of this myself. However,
-my understanding is the completion coming from disk won't be sent toward
-the RC until all the all the TLPs reached leg B. Then if the RC sends
-TLPs to the p2p device via leg B they will be behind all the TLPs the
-disk sent. Or something like that. Obviously this will only work with a
-tree topology (which I believe is the only topology that makes sense for
-PCI). If you had a mesh topology, then the data could route around
-congestion and that would get around the ordering restrictions.
+I think you mean that rtl8192cfw.bin was the firmware used for both a good and a 
+bad kernel.
 
-Logan
+My problem is that there are at least 6 varieties of chips that use the 
+rtl8192ce driver. I do not have all of them, but so far it is impossible for me 
+to tell if yours is the same as one of mine. If you post the output of 'lspci 
+-nn', then I might be able to answer that question.
+
+A second problem is that there are no fixes in any 4.10.x kernel where x >= 1 
+that can cause a problem in rtl8192ce, thus it is hard to know how 4.10.5 can 
+work and 4.10.6 or 7 can fail! That is the reason that a bisection would be useful.
+
+At this point, and with the information you have provided, I'm not sure if the 
+problem is even in rtl8192ce, or how I can help.
+
+Larry
