@@ -1,129 +1,98 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34380 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1424291AbdDUTDW (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Apr 2017 15:03:22 -0400
-Date: Fri, 21 Apr 2017 14:03:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Brian Norris <briannorris@chromium.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH v2 1/5] PCI: rockchip: fix sign issues for current limits
-Message-ID: <20170421190318.GA2638@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170310024617.67303-1-briannorris@chromium.org>
- <20170323222717.GD23612@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170323222717.GD23612@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=kBs1=3Y=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=kBs1=3Y=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1492311719.25766.37.camel@kernel.crashing.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Dan Williams <dan.j.williams@intel.com>,
+        Logan Gunthorpe
+	 <logang@deltatee.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+        Jason Gunthorpe
+ <jgunthorpe@obsidianresearch.com>,
+        Christoph Hellwig <hch@lst.de>, Sagi
+ Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley"
+ <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen"
+ <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise
+ <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>, Max
+ Gurtovoy <maxg@mellanox.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm
+ <linux-nvdimm@ml01.01.org>,
+        "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>,
+        Jerome Glisse <jglisse@redhat.com>
+Date: Sun, 16 Apr 2017 13:01:59 +1000
+In-Reply-To: <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+	 <1491974532.7236.43.camel@kernel.crashing.org>
+	 <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+	 <1492034124.7236.77.camel@kernel.crashing.org>
+	 <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+	 <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+	 <20170414041656.GA30694@obsidianresearch.com>
+	 <1492169849.25766.3.camel@kernel.crashing.org>
+	 <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
+	 <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
+	 <1492207643.25766.18.camel@kernel.crashing.org>
+	 <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
+	 <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Mar 23, 2017 at 05:27:17PM -0500, Bjorn Helgaas wrote:
-> On Thu, Mar 09, 2017 at 06:46:13PM -0800, Brian Norris wrote:
-> > The regulator framework can return negative error codes via
-> > regulator_get_current_limit() for regulators that don't provide current
-> > information. The subsequent check for postive values isn't very useful,
-> > if the variable is unsigned.
-> > 
-> > Let's just match the signedness of the return value.
-> > 
-> > Prevents error messages like this, seen on Samsung Chromebook Plus:
-> > 
-> > [    1.069372] rockchip-pcie f8000000.pcie: invalid power supply
-> > 
-> > Fixes: 4816c4c7b82b ("PCI: rockchip: Provide captured slot power limit and scale")
-> > Signed-off-by: Brian Norris <briannorris@chromium.org>
-> > Acked-by: Shawn Lin <shawn.lin@rock-chips.com>
-> 
-> I applied the first two patches (this already has Shawn's ack and the
-> second is trivially obvious) to pci/host-rockchip.  I'm not sure what the
-> current state of the others is.
+On Sat, 2017-04-15 at 15:09 -0700, Dan Williams wrote:
+> I'm wondering, since this is limited to support behind a single
+> switch, if you could have a software-iommu hanging off that switch
+> device object that knows how to catch and translate the non-zero
+> offset bus address case. We have something like this with VMD driver,
+> and I toyed with a soft pci bridge when trying to support AHCI+NVME
+> bar remapping. When the dma api looks up the iommu for its device it
+> hits this soft-iommu and that driver checks if the page is host memory
+> or device memory to do the dma translation. You wouldn't need a bit in
+> struct page, just a lookup to the hosting struct dev_pagemap in the
+> is_zone_device_page() case and that can point you to p2p details.
 
-I applied patches 3-5 with Shawn's ack to pci/host-rockchip for v4.12,
-thanks!
+I was thinking about a hook in the arch DMA ops but that kind of
+wrapper might work instead indeed. However I'm not sure what's the best
+way to "instantiate" it.
 
-> > ---
-> > v2: add Shawn's ack
-> > ---
-> >  drivers/pci/host/pcie-rockchip.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> > index 26ddd3535272..d785f64ec03b 100644
-> > --- a/drivers/pci/host/pcie-rockchip.c
-> > +++ b/drivers/pci/host/pcie-rockchip.c
-> > @@ -425,7 +425,8 @@ static struct pci_ops rockchip_pcie_ops = {
-> >  
-> >  static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
-> >  {
-> > -	u32 status, curr, scale, power;
-> > +	int curr;
-> > +	u32 status, scale, power;
-> >  
-> >  	if (IS_ERR(rockchip->vpcie3v3))
-> >  		return;
-> > -- 
-> > 2.12.0.246.ga2ecc84866-goog
-> > 
-> 
-> commit 73edd2b180a18024605c599074596a9e22d745d6
-> Author: Bjorn Helgaas <bhelgaas@google.com>
-> Date:   Thu Mar 23 17:21:26 2017 -0500
-> 
->     PCI: rockchip: Unindent rockchip_pcie_set_power_limit()
->     
->     If regulator_get_current_limit() returns 0 or error, return early so the
->     body of the function doesn't have to be indented as the body of an "if"
->     statement.  No functional change intended.
->     
->     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index d785f64ec03b..7f76ff6af0ba 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -438,24 +438,25 @@ static void rockchip_pcie_set_power_limit(struct rockchip_pcie *rockchip)
->  	 * to the actual power supply.
->  	 */
->  	curr = regulator_get_current_limit(rockchip->vpcie3v3);
-> -	if (curr > 0) {
-> -		scale = 3; /* 0.001x */
-> -		curr = curr / 1000; /* convert to mA */
-> -		power = (curr * 3300) / 1000; /* milliwatt */
-> -		while (power > PCIE_RC_CONFIG_DCR_CSPL_LIMIT) {
-> -			if (!scale) {
-> -				dev_warn(rockchip->dev, "invalid power supply\n");
-> -				return;
-> -			}
-> -			scale--;
-> -			power = power / 10;
-> -		}
-> +	if (curr <= 0)
-> +		return;
->  
-> -		status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_DCR);
-> -		status |= (power << PCIE_RC_CONFIG_DCR_CSPL_SHIFT) |
-> -			  (scale << PCIE_RC_CONFIG_DCR_CPLS_SHIFT);
-> -		rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCR);
-> +	scale = 3; /* 0.001x */
-> +	curr = curr / 1000; /* convert to mA */
-> +	power = (curr * 3300) / 1000; /* milliwatt */
-> +	while (power > PCIE_RC_CONFIG_DCR_CSPL_LIMIT) {
-> +		if (!scale) {
-> +			dev_warn(rockchip->dev, "invalid power supply\n");
-> +			return;
-> +		}
-> +		scale--;
-> +		power = power / 10;
->  	}
-> +
-> +	status = rockchip_pcie_read(rockchip, PCIE_RC_CONFIG_DCR);
-> +	status |= (power << PCIE_RC_CONFIG_DCR_CSPL_SHIFT) |
-> +		  (scale << PCIE_RC_CONFIG_DCR_CPLS_SHIFT);
-> +	rockchip_pcie_write(rockchip, status, PCIE_RC_CONFIG_DCR);
->  }
->  
->  /**
+The main issue is that the DMA ops are a function of the initiator,
+not the target (since the target is supposed to be memory) so things
+are a bit awkward.
+
+One (user ?) would have to know that a given device "intends" to DMA
+directly to another device.
+
+This is awkward because in the ideal scenario, this isn't something the
+device knows. For example, one could want to have an existing NIC DMA
+directly to/from NVME pages or GPU pages.
+
+The NIC itself doesn't know the characteristic of these pages, but
+*something* needs to insert itself in the DMA ops of that bridge to
+make it possible.
+
+That's why I wonder if it's the struct page of the target that should
+be "marked" in such a way that the arch dma'ops can immediately catch
+that they belong to a device and might require "wrapped" operations.
+
+Are ZONE_DEVICE pages identifiable based on the struct page alone ? (a
+flag ?)
+
+That would allow us to keep a fast path for normal memory targets, but
+also have some kind of way to handle the special cases of such peer 2
+peer (or also handle other type of peer to peer that don't necessarily
+involve PCI address wrangling but could require additional iommu bits).
+
+Just thinking out loud ... I don't have a firm idea or a design. But
+peer to peer is definitely a problem we need to tackle generically, the
+demand for it keeps coming up.
+
+Cheers,
+Ben.
