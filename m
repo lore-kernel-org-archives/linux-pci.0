@@ -1,206 +1,115 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:38116 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753567AbdDLM0T (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 12 Apr 2017 08:26:19 -0400
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 26/27] sparc: Use generic pci_mmap_resource_range()
-Date: Wed, 12 Apr 2017 13:26:15 +0100
-Message-Id: <24e2183a01d23fe3516b7a6c084949bdecc447f3.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=XR6s=3Y=gmail.com=rupert.thurner@kernel.org>
+Return-Path: <SRS0=XR6s=3Y=gmail.com=rupert.thurner@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <9e48930c-4822-5af4-2ebb-4d2dcd12d448@lwfinger.net>
+References: <CAJs9aZ8HVPn_J9yPjvdBm-A_d3FiquPMGoy1xFsGopF8Xg_89Q@mail.gmail.com>
+ <9e48930c-4822-5af4-2ebb-4d2dcd12d448@lwfinger.net>
+From: rupert THURNER <rupert.thurner@gmail.com>
+Date: Sun, 16 Apr 2017 12:23:41 +0200
+Message-ID: <CAJs9aZ9Hwnjb60mCycR3T2TWH75ZTdtEeWQ1iHRN+6NkkD+pZA@mail.gmail.com>
+Subject: Re: 4.10.9 nok with realtek wlan, atom
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	Chaoming Li <chaoming_li@realsil.com.cn>, Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+On Sat, Apr 15, 2017 at 10:40 PM, Larry Finger
+<Larry.Finger@lwfinger.net> wrote:
+> On 04/14/2017 03:26 PM, rupert THURNER wrote:
+>>
+>> On Thu, Feb 9, 2017 at 9:09 PM, Larry Finger <Larry.Finger@lwfinger.net>
+>> wrote:
+>>>
+>>> On 02/09/2017 01:43 PM, Bjorn Helgaas wrote:
+>>>>
+>>>>
+>>>> [+cc rtl8192ce folks in case they've seen this]
+>>>>
+>>>> On Thu, Feb 09, 2017 at 03:45:01PM +0100, rupert THURNER wrote:
+>>>>>
+>>>>>
+>>>>> hi,
+>>>>>
+>>>>> not technical expert enough, i just wanted to give a short user
+>>>>> feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
+>>>>> kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
+>>>>> well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
+>>>>> hotspot is possible then drops, or connecting to wlan fails
+>>>>> alltogether.
+>>>>
+>>>>
+>>>>
+>>>> Thanks very much for your report, and sorry for the inconvenience.
+>>>>
+>>>> v4.10-rc7 works, so I guess we don't need to worry about fixing v4.10.
+>>>>
+>>>> But the stable kernels v4.9.6, v4.9.7, and v4.9.8 are broken, so we
+>>>> need to figure out why and make sure we fix the v4.9 stable series.
+>>>>
+>>>> I can't tell yet whether this is PCI-related or not.  If it is,
+>>>> 4922a6a5cfa7 ("PCI: Enumerate switches below PCI-to-PCIe bridges")
+>>>> appeared in v4.9.6, and there is a known issue with that.  The issue
+>>>> should be fixed by 610c2b7ff8f6 ("PCI/ASPM: Handle PCI-to-PCIe bridges
+>>>> as roots of PCIe hierarchies"), which appeared in v4.9.9, so I guess
+>>>> the first thing to do would be to test v4.9.9.
+>>>>
+>>>> If it's not fixed in v4.9.9, can you share the complete dmesg log
+>>>> (output of "dmesg" command) and "lspci -vv" output for v4.9.5 (last
+>>>> known working version) and v4.9.6 (first known broken version)?  On
+>>>> v4.9.6, collect the dmesg output after the failure occurs.
+>>>>
+>>>>> 24: PCI 300.0: 0282 WLAN controller
+>>>>>   [Created at pci.366]
+>>>>>   Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
+>>>>>   Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
+>>>>>   Revision: 0x01
+>>>>>   Driver: "rtl8192ce"
+>>>>>   Driver Modules: "rtl8192ce"
+>>>>>   Device File: wlp3s0
+>>>>>   Features: WLAN
+>>>
+>>>
+>>>
+>>> It would be helpful if someone were to bisect this issue. The only issue
+>>> that comes to mind was fixed in commit 52f5631a4c05 ("rtlwifi: rtl8192ce:
+>>> Fix loading of incorrect firmware") which is in 4.10-rc7 and will be
+>>> backported to 4.9.
+>>>
+>>> The above issue is one that could not be reproduced on my hardware, thus
+>>> it
+>>> took Jurij Smakov to find the fix. Without his bisection of the problem,
+>>> who
+>>> knows how long it would have taken to find my edit mistake.
+>>
+>>
+>> larry, using the newest kernel 4.10.8 the network connection dropps
+>> again irregular.
+>>
+>> # dmesg
+>> [    0.000000] Linux version 4.10.9-1-ARCH (builduser@tobias) (gcc
+>> version 6.3.1 20170306 (GCC) ) #1 SMP PREEMPT Sat Apr 8 12:39:59 CEST
+>> 2017
+>> [   11.933373] rtl8192ce: rtl8192ce: Power Save off (module option)
+>> [   11.933396] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
+>> [   11.978307] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
+>> [   11.978945] rtlwifi: rtlwifi: wireless switch is on
+>>
+>> # lspci -vv
+>> Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi
+>> Adapter
+>> Kernel driver in use: rtl8192ce
+>
+>
+> Is firmware rtlwifi/rtl8192cfw.bin also used on kernels that work?
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/sparc/include/asm/pci_64.h |   1 +
- arch/sparc/kernel/pci.c         | 155 ----------------------------------------
- 2 files changed, 1 insertion(+), 155 deletions(-)
+4.10.x used to work. 4.10.6 or 4.10.7 it started failing? i am not too
+sure about it.
 
-diff --git a/arch/sparc/include/asm/pci_64.h b/arch/sparc/include/asm/pci_64.h
-index b957ca5..b8206d5 100644
---- a/arch/sparc/include/asm/pci_64.h
-+++ b/arch/sparc/include/asm/pci_64.h
-@@ -42,6 +42,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
- /* Platform support for /proc/bus/pci/X/Y mmap()s. */
- 
- #define HAVE_PCI_MMAP
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE
- #define arch_can_pci_mmap_io()	1
- #define HAVE_ARCH_PCI_GET_UNMAPPED_AREA
- #define get_pci_unmapped_area get_fb_unmapped_area
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 7eceaa1..56a9a9f 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -730,161 +730,6 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return 0;
- }
- 
--/* Platform support for /proc/bus/pci/X/Y mmap()s. */
--
--/* If the user uses a host-bridge as the PCI device, he may use
-- * this to perform a raw mmap() of the I/O or MEM space behind
-- * that controller.
-- *
-- * This can be useful for execution of x86 PCI bios initialization code
-- * on a PCI card, like the xfree86 int10 stuff does.
-- */
--static int __pci_mmap_make_offset_bus(struct pci_dev *pdev, struct vm_area_struct *vma,
--				      enum pci_mmap_state mmap_state)
--{
--	struct pci_pbm_info *pbm = pdev->dev.archdata.host_controller;
--	unsigned long space_size, user_offset, user_size;
--
--	if (mmap_state == pci_mmap_io) {
--		space_size = resource_size(&pbm->io_space);
--	} else {
--		space_size = resource_size(&pbm->mem_space);
--	}
--
--	/* Make sure the request is in range. */
--	user_offset = vma->vm_pgoff << PAGE_SHIFT;
--	user_size = vma->vm_end - vma->vm_start;
--
--	if (user_offset >= space_size ||
--	    (user_offset + user_size) > space_size)
--		return -EINVAL;
--
--	if (mmap_state == pci_mmap_io) {
--		vma->vm_pgoff = (pbm->io_space.start +
--				 user_offset) >> PAGE_SHIFT;
--	} else {
--		vma->vm_pgoff = (pbm->mem_space.start +
--				 user_offset) >> PAGE_SHIFT;
--	}
--
--	return 0;
--}
--
--/* Adjust vm_pgoff of VMA such that it is the physical page offset
-- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
-- *
-- * Basically, the user finds the base address for his device which he wishes
-- * to mmap.  They read the 32-bit value from the config space base register,
-- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
-- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
-- *
-- * Returns negative error code on failure, zero on success.
-- */
--static int __pci_mmap_make_offset(struct pci_dev *pdev,
--				  struct vm_area_struct *vma,
--				  enum pci_mmap_state mmap_state)
--{
--	unsigned long user_paddr, user_size;
--	int i, err;
--
--	/* First compute the physical address in vma->vm_pgoff,
--	 * making sure the user offset is within range in the
--	 * appropriate PCI space.
--	 */
--	err = __pci_mmap_make_offset_bus(pdev, vma, mmap_state);
--	if (err)
--		return err;
--
--	/* If this is a mapping on a host bridge, any address
--	 * is OK.
--	 */
--	if ((pdev->class >> 8) == PCI_CLASS_BRIDGE_HOST)
--		return err;
--
--	/* Otherwise make sure it's in the range for one of the
--	 * device's resources.
--	 */
--	user_paddr = vma->vm_pgoff << PAGE_SHIFT;
--	user_size = vma->vm_end - vma->vm_start;
--
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		struct resource *rp = &pdev->resource[i];
--		resource_size_t aligned_end;
--
--		/* Active? */
--		if (!rp->flags)
--			continue;
--
--		/* Same type? */
--		if (i == PCI_ROM_RESOURCE) {
--			if (mmap_state != pci_mmap_mem)
--				continue;
--		} else {
--			if ((mmap_state == pci_mmap_io &&
--			     (rp->flags & IORESOURCE_IO) == 0) ||
--			    (mmap_state == pci_mmap_mem &&
--			     (rp->flags & IORESOURCE_MEM) == 0))
--				continue;
--		}
--
--		/* Align the resource end to the next page address.
--		 * PAGE_SIZE intentionally added instead of (PAGE_SIZE - 1),
--		 * because actually we need the address of the next byte
--		 * after rp->end.
--		 */
--		aligned_end = (rp->end + PAGE_SIZE) & PAGE_MASK;
--
--		if ((rp->start <= user_paddr) &&
--		    (user_paddr + user_size) <= aligned_end)
--			break;
--	}
--
--	if (i > PCI_ROM_RESOURCE)
--		return -EINVAL;
--
--	return 0;
--}
--
--/* Set vm_page_prot of VMA, as appropriate for this architecture, for a pci
-- * device mapping.
-- */
--static void __pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vma,
--					     enum pci_mmap_state mmap_state)
--{
--	/* Our io_remap_pfn_range takes care of this, do nothing.  */
--}
--
--/* Perform the actual remap of the pages for a PCI device mapping, as appropriate
-- * for this architecture.  The region in the process to map is described by vm_start
-- * and vm_end members of VMA, the base physical address is found in vm_pgoff.
-- * The pci device structure is provided so that architectures may make mapping
-- * decisions on a per-device or per-bus basis.
-- *
-- * Returns a negative error code on failure, zero on success.
-- */
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	int ret;
--
--	ret = __pci_mmap_make_offset(dev, vma, mmap_state);
--	if (ret < 0)
--		return ret;
--
--	__pci_mmap_set_pgprot(dev, vma, mmap_state);
--
--	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
--	ret = io_remap_pfn_range(vma, vma->vm_start,
--				 vma->vm_pgoff,
--				 vma->vm_end - vma->vm_start,
--				 vma->vm_page_prot);
--	if (ret)
--		return ret;
--
--	return 0;
--}
--
- #ifdef CONFIG_NUMA
- int pcibus_to_node(struct pci_bus *pbus)
- {
--- 
-2.9.3
+# ls -l /usr/lib/firmware/rtlwifi/rtl8192cfw.bin
+-rw-r--r-- 1 root root 16192 Mar 10 12:15
+/usr/lib/firmware/rtlwifi/rtl8192cfw.bin
+
+rupert
