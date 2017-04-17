@@ -1,84 +1,105 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v3 29/32] arm64: implement ioremap_nopost() interface
-Date: Tue, 11 Apr 2017 13:29:09 +0100
-Message-Id: <20170411122923.6285-30-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arch@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Return-Path: <SRS0=zDs+=3Z=cavium.com=Jayachandran.Nair@kernel.org>
+Return-Path: <SRS0=zDs+=3Z=cavium.com=Jayachandran.Nair@kernel.org>
+Date: Mon, 17 Apr 2017 17:47:13 +0000
+From: Jayachandran C <jnair@caviumnetworks.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>,
+	Robin Murphy <robin.murphy@arm.com>, Jon Masters <jcm@redhat.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Joerg Roedel <joro@8bytes.org>
+Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
+Message-ID: <20170417174712.GA7575@localhost>
+References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
+ <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
+ <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414210646.GA5346@localhost>
+ <CAErSpo731xSzrnKF+G+8SA_UUHy7ROA1V9oFkpwKi85GQf9VAg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAErSpo731xSzrnKF+G+8SA_UUHy7ROA1V9oFkpwKi85GQf9VAg@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI bus specifications (rev 3.0, 3.2.5 "Transaction Ordering
-and Posting") defines rules for PCI configuration space transactions
-ordering and posting, that state that configuration writes
-are non-posted transactions.
+On Fri, Apr 14, 2017 at 09:00:06PM -0500, Bjorn Helgaas wrote:
+> On Fri, Apr 14, 2017 at 4:06 PM, Jayachandran C
+> <jnair@caviumnetworks.com> wrote:
+> > On Thu, Apr 13, 2017 at 07:19:11PM -0500, Bjorn Helgaas wrote:
+> >> I tentatively applied both patches to pci/host-thunder for v4.12.
+> >>
+> >> However, I am concerned about the topology here:
+> >>
+> >> On Thu, Apr 13, 2017 at 08:30:45PM +0000, Jayachandran C wrote:
+> >> > On Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the
+> >> > PCI topology is slightly unusual.  For a multi-node system, it looks
+> >> > like:
+> >> >
+> >> >     00:00.0 [PCI] bridge to [bus 01-1e]
+> >> >     01:0a.0 [PCI-PCIe bridge, type 8] bridge to [bus 02-04]
+> >> >     02:00.0 [PCIe root port, type 4] bridge to [bus 03-04] (XLATE_ROOT)
+> >> >     03:00.0 PCIe Endpoint
+> >>
+> >> A root port normally has a single PCIe link leading downstream.
+> >> According to this, 02:00.0 is a root port that has the usual
+> >> downstream link leading to 03:00.0, but it also has an upstream link
+> >> to 01:0a.0.
+> >
+> > The PCI topology is a bit broken due to the way that the PCIe IP block
+> > was integrated into SoC PCI bridges and devices. The current mechanism
+> > of adding a PCI-PCIe bridge to glue these together is not ideal.
+> 
+> Yeah, that's definitely broken.
+> 
+> >> Maybe this example is omitting details that are not relevant to DMA
+> >> aliases?  The PCIe capability only contains one set of link-related
+> >> registers, so I don't know how we could manage a single device that
+> >> has two links.
+> >
+> > The root port is standard and has just one link to the EP (or whatever
+> > is on the external PCIe slot). The fallout of the current hw design is
+> > that the PCI-PCIe bridge has a link that does not follow standard and
+> > does not have a counterpart (as you noted).
+> >
+> >> A device with two links would break things like ASPM.  In
+> >> set_pcie_port_type(), for example, we have this comment:
+> >>
+> >>    * A Root Port or a PCI-to-PCIe bridge is always the upstream end
+> >>    * of a Link.  No PCIe component has two Links.  Two Links are
+> >>    * connected by a Switch that has a Port on each Link and internal
+> >>    * logic to connect the two Ports.
+> >>
+> >> The topology above breaks these assumptions, which will make
+> >> pdev->has_secondary_link incorrect, which means ASPM won't work
+> >> correctly.
+> >
+> > Given the current hardware, the pcieport driver seems to work reasonably
+> > for the root port at 02:00.0, with AER support. I will take a look at the
+> > ASPM part.
+> 
+> I don't think pcieport itself cares much about links.  ASPM does, but
+> it looks like set_pcie_port_type() actually is smart enough to know
+> that PCI-to-PCIe bridges and Root Ports always have links on their
+> secondary sides.  So has_secondary_link probably does get set
+> correctly.
+> 
+> But I think you'll hit the VIA "strange chipset" thing in
+> pcie_aspm_init_link_state(), which will probably prevent us from doing
+> ASPM on the link from 02:00.0 to 03:00.0.
+> 
+> Could you collect "lspci -vv" output from this system?  I'd like to
+> archive that as background for this IOMMU issue and the ASPM tweaks I
+> suspect we'll have to do.  I *wish* we had more information about that
+> VIA thing, because I suspect we could get rid of it if we had more
+> details.
 
-This rule is reinforced by the ARM v8 architecture reference manual
-(issue A.k, Early Write Acknowledgment) that explicitly recommends
-that No Early Write Acknowledgment attribute should be used to map
-PCI configuration (write) transactions.
+The full logs are slightly large, so I have kept them at:
+https://github.com/jchandra-cavm/thunderx2/blob/master/logs/
+The lspci -vv output is lspci-vv.txt and lspci -tvn output is lspci-tvn.txt
 
-Current ioremap interface on ARM64 implements mapping functions
-where the Early Write Acknowledgment hint is enabled, so they
-cannot be used to map PCI configuration space in a PCI specs
-compliant way.
+The output is from 2 socket system, the cards are not on the first slot
+like the example above, so the bus and device numbers are different.
 
-Implement an ARM64 specific ioremap_nopost() interface
-that allows to map PCI config region with nGnRnE attributes, providing
-a remap function that complies with PCI specifications and the ARMv8
-architecture reference manual recommendations.
+Looks like I have to spend some time on ASPM next.
 
-Acked-by: Will Deacon <will.deacon@arm.com>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Will Deacon <will.deacon@arm.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
----
- arch/arm64/include/asm/io.h | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
-
-diff --git a/arch/arm64/include/asm/io.h b/arch/arm64/include/asm/io.h
-index 0c00c87..1a703e5 100644
---- a/arch/arm64/include/asm/io.h
-+++ b/arch/arm64/include/asm/io.h
-@@ -173,6 +173,18 @@ extern void __iomem *ioremap_cache(phys_addr_t phys_addr, size_t size);
- #define iounmap				__iounmap
- 
- /*
-+ * ioremap implementation providing non-posted writes (ie v8 no Early
-+ * Write Acknowledgment) semantics.
-+ *
-+ * PCI specifications disallows posted write configuration transactions.
-+ * Add an arch specific ioremap_post definition that is implemented
-+ * through nGnRnE device memory attribute as recommended by the ARM v8
-+ * Architecture reference manual Issue A.k B2.8.2 "Device memory" so
-+ * that it can be used to map PCI config space memory areas.
-+ */
-+#define ioremap_nopost(addr, size) __ioremap((addr), (size), __pgprot(PROT_DEVICE_nGnRnE))
-+
-+/*
-  * io{read,write}{16,32,64}be() macros
-  */
- #define ioread16be(p)		({ __u16 __v = be16_to_cpu((__force __be16)__raw_readw(p)); __iormb(); __v; })
--- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+JC.
