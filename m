@@ -1,135 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v4 00/21] PCI: fix config space memory mappings
-To: Jingoo Han <jingoohan1@gmail.com>, "'Khuong Dinh'" <kdinh@apm.com>, "'Jon
- Masters'" <jcm@jonmasters.org>, "'Lorenzo Pieralisi'"
- <lorenzo.pieralisi@arm.com>, <linux-pci@vger.kernel.org>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
- <2e24e205-d761-9172-9463-4a53e1a0de4d@jonmasters.org>
- <361fde15-5ba3-d33b-f946-003e89ba071f@huawei.com>
- <000501d2beb2$023b9100$06b2b300$@gmail.com>
-From: Dongdong Liu <liudongdong3@huawei.com>
-Message-ID: <745824fc-016a-38b2-01a3-398399d4c80a@huawei.com>
-Date: Thu, 27 Apr 2017 09:46:15 +0800
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40038 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751852AbdDQVgg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Apr 2017 17:36:36 -0400
+Subject: [PATCH v11 1/7] PCI: Ignore requested alignment for IOV BARs
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yongji Xie <elohimes@gmail.com>
+Cc: zhong@linux.vnet.ibm.com, Alexey Kardashevskiy <aik@ozlabs.ru>,
+        linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev@lists.ozlabs.org
+Date: Mon, 17 Apr 2017 16:36:32 -0500
+Message-ID: <20170417213632.21092.89690.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <000501d2beb2$023b9100$06b2b300$@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: 'Pratyush Anand' <pratyush.anand@gmail.com>,
- 'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
- 'Catalin Marinas' <catalin.marinas@arm.com>,
- 'Shawn Lin' <shawn.lin@rock-chips.com>, 'Will Deacon' <will.deacon@arm.com>,
- 'Linuxarm' <linuxarm@huawei.com>, 'Michal Simek' <michal.simek@xilinx.com>,
- 'Thierry Reding' <thierry.reding@gmail.com>,
- 'Tanmay Inamdar' <tinamdar@apm.com>, 'Zhou Wang' <wangzhou1@hisilicon.com>,
- 'Joao Pinto' <Joao.Pinto@synopsys.com>, 'Jonathan Corbet' <corbet@lwn.net>,
- 'Wenrui Li' <wenrui.li@rock-chips.com>, 'Russell King' <linux@armlinux.org.uk>,
- 'Bharat Kumar Gogada' <bharat.kumar.gogada@xilinx.com>, 'Murali
- Karicheri' <m-karicheri2@ti.com>,
- 'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
- 'Arnd Bergmann' <arnd@arndb.de>, 'Jon Mason' <jonmason@broadcom.com>,
- 'Ray Jui' <rjui@broadcom.com>, 'John Garry' <john.garry@huawei.com>,
- 'Bjorn Helgaas' <bhelgaas@google.com>, 'Mingkai Hu' <mingkai.hu@freescale.com>,
- linux-arm-kernel@lists.infradead.org,
- 'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
- linux-kernel@vger.kernel.org, 'Stanimir Varbanov' <svarbanov@mm-sol.com>,
- 'Minghuan Lian' <minghuan.Lian@freescale.com>,
- "'Luis R . Rodriguez'" <mcgrof@kernel.org>,
- 'Roy Zang' <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-CgrlnKggMjAxNy80LzI3IDE6MjQsIEppbmdvbyBIYW4g5YaZ6YGTOgo+IE9uIFdlZG5lc2RheSwg
-QXByaWwgMjYsIDIwMTcgNjo1NCBBTSwgRG9uZ2RvbmcgTGl1IHdyb3RlOwo+Pgo+PiBUZXN0ZWQt
-Ynk6IERvbmdkb25nIExpdSA8bGl1ZG9uZ2RvbmczQGh1YXdlaS5jb20+Cj4+Cj4+IEkgdGVzdGVk
-IHRoZSBwYXRjaHNldCBvbiBIaVNpbGljb24gQVJNNjQgRDA1IGJvYXJkLkl0IHdvcmtzIG9rIHdp
-dGggODI1OTkKPj4gbmV0Y2FyZC4KPgo+IFRoYW5rIHlvdSBmb3IgdGVzdGluZyB0aGVzZSBwYXRj
-aGVzLiBIaVNpbGljb24gUENJZSBtYXkgdXNlIERlc2lnbndhcmUtYmFzZWQKPiBQQ0llIGNvbnRy
-b2xsZXIuIEluIG15IG9waW5pb24sIG90aGVyIERlc2lnbndhcmUtYmFzZWQgUENJZSBjb250cm9s
-bGVyIHdpbGwKPiB3b3JrIHByb3Blcmx5Lgo+Cj4gVG8gRG9uZ2RvbmcgTGl1LCBLaHVvbmcgRGlu
-aCwgYW5kIG90aGVyIHBlb3BsZSwKPiBJZiBwb3NzaWJsZSwgY2FuIHlvdSBjaGVjayB0aGUgb3V0
-cHV0IG9mICdsc3BjaSAtdic/Cj4gSWYgeW91IGZpbmQgc29tZXRoaW5nIGRpZmZlcmVudCwgcGxl
-YXNlIHNoYXJlIGl0IHdpdGggdXMuCj4gR29vZCBsdWNrLgoKcm9vdEAobm9uZSkkIC4vbHNwY2kg
-LXYKMDAwMjo4MDowMC4wIENsYXNzIDA2MDQ6IERldmljZSAxOWU1OjE2MTAgKHJldiAwMSkKICAg
-ICAgICAgRmxhZ3M6IGJ1cyBtYXN0ZXIsIGZhc3QgZGV2c2VsLCBsYXRlbmN5IDAKICAgICAgICAg
-TWVtb3J5IGF0IGE5ZTAwMDAwICgzMi1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPTY0S10K
-ICAgICAgICAgQnVzOiBwcmltYXJ5PTgwLCBzZWNvbmRhcnk9ODEsIHN1Ym9yZGluYXRlPTgyLCBz
-ZWMtbGF0ZW5jeT0wCiAgICAgICAgIEkvTyBiZWhpbmQgYnJpZGdlOiAwMDAwMDAwMC0wMDAwMWZm
-ZgogICAgICAgICBNZW1vcnkgYmVoaW5kIGJyaWRnZTogYTg4MDAwMDAtYThmZmZmZmYKICAgICAg
-ICAgUHJlZmV0Y2hhYmxlIG1lbW9yeSBiZWhpbmQgYnJpZGdlOiAwMDAwMDAwMGE5MDAwMDAwLTAw
-MDAwMDAwYTlkZmZmZmYKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbNDBdIFBvd2VyIE1hbmFnZW1l
-bnQgdmVyc2lvbiAzCiAgICAgICAgIENhcGFiaWxpdGllczogWzUwXSBNU0k6IEVuYWJsZS0gQ291
-bnQ9MS8zMiBNYXNrYWJsZSsgNjRiaXQrCiAgICAgICAgIENhcGFiaWxpdGllczogWzcwXSBFeHBy
-ZXNzIFJvb3QgUG9ydCAoU2xvdC0pLCBNU0kgMDAKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbMTAw
-XSBBZHZhbmNlZCBFcnJvciBSZXBvcnRpbmcKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbMTU4XSAj
-MTkKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbMTc4XSAjMTcKICAgICAgICAgS2VybmVsIGRyaXZl
-ciBpbiB1c2U6IHBjaWVwb3J0CgowMDAyOjgxOjAwLjAgQ2xhc3MgMDIwMDogRGV2aWNlIDgwODY6
-MTBmYiAocmV2IDAxKQogICAgICAgICBGbGFnczogYnVzIG1hc3RlciwgZmFzdCBkZXZzZWwsIGxh
-dGVuY3kgMCwgSVJRIDI1NQogICAgICAgICBNZW1vcnkgYXQgYTkwMDAwMDAgKDY0LWJpdCwgcHJl
-ZmV0Y2hhYmxlKSBbc2l6ZT00TV0KICAgICAgICAgSS9PIHBvcnRzIGF0IDEwMDAgW2Rpc2FibGVk
-XSBbc2l6ZT0zMl0KICAgICAgICAgTWVtb3J5IGF0IGE5ODAwMDAwICg2NC1iaXQsIHByZWZldGNo
-YWJsZSkgW3NpemU9MTZLXQogICAgICAgICBFeHBhbnNpb24gUk9NIGF0IGE4ODAwMDAwIFtkaXNh
-YmxlZF0gW3NpemU9NE1dCiAgICAgICAgIENhcGFiaWxpdGllczogWzQwXSBQb3dlciBNYW5hZ2Vt
-ZW50IHZlcnNpb24gMwogICAgICAgICBDYXBhYmlsaXRpZXM6IFs1MF0gTVNJOiBFbmFibGUtIENv
-dW50PTEvMSBNYXNrYWJsZSsgNjRiaXQrCiAgICAgICAgIENhcGFiaWxpdGllczogWzcwXSBNU0kt
-WDogRW5hYmxlKyBDb3VudD02NCBNYXNrZWQtCiAgICAgICAgIENhcGFiaWxpdGllczogW2EwXSBF
-eHByZXNzIEVuZHBvaW50LCBNU0kgMDAKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbZTBdIFZpdGFs
-IFByb2R1Y3QgRGF0YQogICAgICAgICBDYXBhYmlsaXRpZXM6IFsxMDBdIEFkdmFuY2VkIEVycm9y
-IFJlcG9ydGluZwogICAgICAgICBDYXBhYmlsaXRpZXM6IFsxNDBdIERldmljZSBTZXJpYWwgTnVt
-YmVyIDljLTM3LWY0LWZmLWZmLTdiLTViLWEwCiAgICAgICAgIENhcGFiaWxpdGllczogWzE1MF0g
-QWx0ZXJuYXRpdmUgUm91dGluZy1JRCBJbnRlcnByZXRhdGlvbiAoQVJJKQogICAgICAgICBDYXBh
-YmlsaXRpZXM6IFsxNjBdIFNpbmdsZSBSb290IEkvTyBWaXJ0dWFsaXphdGlvbiAoU1ItSU9WKQog
-ICAgICAgICBLZXJuZWwgZHJpdmVyIGluIHVzZTogaXhnYmUKCjAwMDI6ODE6MDAuMSBDbGFzcyAw
-MjAwOiBEZXZpY2UgODA4NjoxMGZiIChyZXYgMDEpCiAgICAgICAgIEZsYWdzOiBidXMgbWFzdGVy
-LCBmYXN0IGRldnNlbCwgbGF0ZW5jeSAwLCBJUlEgMjU1CiAgICAgICAgIE1lbW9yeSBhdCBhOTQw
-MDAwMCAoNjQtYml0LCBwcmVmZXRjaGFibGUpIFtzaXplPTRNXQogICAgICAgICBJL08gcG9ydHMg
-YXQgMTAyMCBbZGlzYWJsZWRdIFtzaXplPTMyXQogICAgICAgICBNZW1vcnkgYXQgYTlhMDQwMDAg
-KDY0LWJpdCwgcHJlZmV0Y2hhYmxlKSBbc2l6ZT0xNktdCiAgICAgICAgIEV4cGFuc2lvbiBST00g
-YXQgYThjMDAwMDAgW2Rpc2FibGVkXSBbc2l6ZT00TV0KICAgICAgICAgQ2FwYWJpbGl0aWVzOiBb
-NDBdIFBvd2VyIE1hbmFnZW1lbnQgdmVyc2lvbiAzCiAgICAgICAgIENhcGFiaWxpdGllczogWzUw
-XSBNU0k6IEVuYWJsZS0gQ291bnQ9MS8xIE1hc2thYmxlKyA2NGJpdCsKICAgICAgICAgQ2FwYWJp
-bGl0aWVzOiBbNzBdIE1TSS1YOiBFbmFibGUrIENvdW50PTY0IE1hc2tlZC0KICAgICAgICAgQ2Fw
-YWJpbGl0aWVzOiBbYTBdIEV4cHJlc3MgRW5kcG9pbnQsIE1TSSAwMAogICAgICAgICBDYXBhYmls
-aXRpZXM6IFtlMF0gVml0YWwgUHJvZHVjdCBEYXRhCiAgICAgICAgIENhcGFiaWxpdGllczogWzEw
-MF0gQWR2YW5jZWQgRXJyb3IgUmVwb3J0aW5nCiAgICAgICAgIENhcGFiaWxpdGllczogWzE0MF0g
-RGV2aWNlIFNlcmlhbCBOdW1iZXIgOWMtMzctZjQtZmYtZmYtN2ItNWItYTAKICAgICAgICAgQ2Fw
-YWJpbGl0aWVzOiBbMTUwXSBBbHRlcm5hdGl2ZSBSb3V0aW5nLUlEIEludGVycHJldGF0aW9uIChB
-UkkpCiAgICAgICAgIENhcGFiaWxpdGllczogWzE2MF0gU2luZ2xlIFJvb3QgSS9PIFZpcnR1YWxp
-emF0aW9uIChTUi1JT1YpCiAgICAgICAgIEtlcm5lbCBkcml2ZXIgaW4gdXNlOiBpeGdiZQoKMDAw
-NDo4ODowMC4wIENsYXNzIDA2MDQ6IERldmljZSAxOWU1OjE2MTAgKHJldiAwMSkKICAgICAgICAg
-RmxhZ3M6IGJ1cyBtYXN0ZXIsIGZhc3QgZGV2c2VsLCBsYXRlbmN5IDAKICAgICAgICAgTWVtb3J5
-IGF0IDhhOTAwMDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT02NEtdCiAgICAg
-ICAgIEJ1czogcHJpbWFyeT04OCwgc2Vjb25kYXJ5PTg5LCBzdWJvcmRpbmF0ZT04OSwgc2VjLWxh
-dGVuY3k9MAogICAgICAgICBDYXBhYmlsaXRpZXM6IFs0MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJz
-aW9uIDMKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbNTBdIE1TSTogRW5hYmxlLSBDb3VudD0xLzMy
-IE1hc2thYmxlKyA2NGJpdCsKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbNzBdIEV4cHJlc3MgUm9v
-dCBQb3J0IChTbG90LSksIE1TSSAwMAogICAgICAgICBDYXBhYmlsaXRpZXM6IFsxMDBdIEFkdmFu
-Y2VkIEVycm9yIFJlcG9ydGluZwogICAgICAgICBDYXBhYmlsaXRpZXM6IFsxNThdICMxOQogICAg
-ICAgICBDYXBhYmlsaXRpZXM6IFsxNzhdICMxNwogICAgICAgICBLZXJuZWwgZHJpdmVyIGluIHVz
-ZTogcGNpZXBvcnQKClRoYW5rcywKRG9uZ2RvbmcKPgo+IEJlc3QgcmVnYXJkcywKPiBKaW5nb28g
-SGFuCj4KPj4KPj4gVGhhbmtzLAo+PiBEb25nZG9uZwo+PiDlnKggMjAxNy80LzI1IDE0OjQwLCBK
-b24gTWFzdGVycyDlhpnpgZM6Cj4+PiBPbiAwNC8xOS8yMDE3IDEyOjQ4IFBNLCBMb3JlbnpvIFBp
-ZXJhbGlzaSB3cm90ZToKPj4+Cj4+Pj4gT24gc29tZSBwbGF0Zm9ybXMgKGllIEFSTS9BUk02NCkg
-aW9yZW1hcCBmYWlscyB0byBjb21wbHkgd2l0aCB0aGUgUENJCj4+Pj4gY29uZmlndXJhdGlvbiBu
-b24tcG9zdGVkIHdyaXRlIHRyYW5zYWN0aW9ucyByZXF1aXJlbWVudCwgYmVjYXVzZSBpdAo+Pj4+
-IHByb3ZpZGVzIGEgbWVtb3J5IG1hcHBpbmcgdGhhdCBpc3N1ZXMgImJ1ZmZlcmFibGUiIG9yLCBp
-biBQQ0kgdGVybXMKPj4+PiAicG9zdGVkIiB3cml0ZSB0cmFuc2FjdGlvbnMuIExpa2V3aXNlLCB0
-aGUgY3VycmVudCBwY2lfcmVtYXBfaW9zcGFjZSgpCj4+Pj4gaW1wbGVtZW50YXRpb24gbWFwcyB0
-aGUgcGh5c2ljYWwgYWRkcmVzcyByYW5nZSB0aGF0IHRoZSBQQ0kgdHJhbnNsYXRlcwo+Pj4+IHRv
-IEkvTyBzcGFjZSBjeWNsZXMgdG8gdmlydHVhbCBhZGRyZXNzIHNwYWNlIHRocm91Z2ggcGdwcm90
-X2RldmljZSgpCj4+Pj4gYXR0cmlidXRlcyB0aGF0IG9uIGVnIEFSTTY0IHByb3ZpZGVzIGEgbWVt
-b3J5IG1hcHBpbmcgaXNzdWluZwo+Pj4+IHBvc3RlZCB3cml0ZXMgdHJhbnNhY3Rpb25zLCB3aGlj
-aCBpcyBub3QgUENJIHNwZWNpZmljYXRpb25zIGNvbXBsaWFudC4KPj4+Cj4+PiBTaWRlIG5vdGUg
-dGhhdCBJJ3ZlIHBpbmdlZCBhbGwgb2YgdGhlIEFSTSBzZXJ2ZXIgdmVuZG9ycyBhbmQgYXNrZWQg
-dGhlbQo+Pj4gdG8gdmVyaWZ5IHRoaXMgcGF0Y2ggc2VyaWVzIG9uIHRoZWlyIHBsYXRmb3Jtcy4K
-Pj4+Cj4+PiBKb24uCj4+Pgo+Pj4gLgo+Pj4KPgo+IC4KPgoKX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QK
-bGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRl
-YWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
+From: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+
+We would call pci_reassigndev_resource_alignment() before
+pci_init_capabilities().  So the requested alignment would never work for
+IOV BARs.
+
+Furthermore, it's meaningless to request additional alignment for IOV BARs,
+the IOV BAR alignment is only determined by the VF BAR size.
+
+Signed-off-by: Yongji Xie <xyjxie@linux.vnet.ibm.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Gavin Shan <gwshan@linux.vnet.ibm.com>
+---
+ drivers/pci/pci.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02ffdb9..679af2a253ad 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5084,7 +5084,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	command &= ~PCI_COMMAND_MEMORY;
+ 	pci_write_config_word(dev, PCI_COMMAND, command);
+ 
+-	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
++	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
+ 		r = &dev->resource[i];
+ 		if (!(r->flags & IORESOURCE_MEM))
+ 			continue;
