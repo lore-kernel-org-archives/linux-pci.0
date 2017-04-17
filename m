@@ -1,50 +1,179 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0105.outbound.protection.outlook.com ([104.47.38.105]:6624
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S939298AbdDTShj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 20 Apr 2017 14:37:39 -0400
-From: Haiyang Zhang <haiyangz@microsoft.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Piotr Jaroszynski <pjaroszynski@nvidia.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "olaf@aepfle.de" <olaf@aepfle.de>,
-        "vkuznets@redhat.com" <vkuznets@redhat.com>,
-        "driverdev-devel@linuxdriverproject.org"
-        <driverdev-devel@linuxdriverproject.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] pci-hyperv: Use only 16 bit integer for PCI domain
-Date: Thu, 20 Apr 2017 18:37:35 +0000
-Message-ID: <BLUPR03MB1412F7A0A693B67685D5FE9FCA1B0@BLUPR03MB1412.namprd03.prod.outlook.com>
-References: <1492706123-22913-1-git-send-email-haiyangz@exchange.microsoft.com>
- <CAErSpo4iFS05Kk3Km54fFmpMf11XCoaPmGxSzqE3QuA5P=T6=Q@mail.gmail.com>
-In-Reply-To: <CAErSpo4iFS05Kk3Km54fFmpMf11XCoaPmGxSzqE3QuA5P=T6=Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail.kernel.org ([198.145.29.136]:40458 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753657AbdDQVhS (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Apr 2017 17:37:18 -0400
+Subject: [PATCH v11 7/7] PCI: Don't resize resources when realigning all
+ devices in system
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yongji Xie <elohimes@gmail.com>
+Cc: zhong@linux.vnet.ibm.com, Alexey Kardashevskiy <aik@ozlabs.ru>,
+        linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev@lists.ozlabs.org
+Date: Mon, 17 Apr 2017 16:37:15 -0500
+Message-ID: <20170417213714.21092.4773.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWls
-dG86YmhlbGdhYXNAZ29vZ2xlLmNvbV0NCj4gU2VudDogVGh1cnNkYXksIEFwcmlsIDIwLCAyMDE3
-IDI6MzMgUE0NCj4gVG86IEhhaXlhbmcgWmhhbmcgPGhhaXlhbmd6QG1pY3Jvc29mdC5jb20+DQo+
-IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBLWSBTcmluaXZhc2FuIDxreXNAbWljcm9z
-b2Z0LmNvbT47DQo+IFN0ZXBoZW4gSGVtbWluZ2VyIDxzdGhlbW1pbkBtaWNyb3NvZnQuY29tPjsg
-b2xhZkBhZXBmbGUuZGU7DQo+IHZrdXpuZXRzQHJlZGhhdC5jb207IGRyaXZlcmRldi1kZXZlbEBs
-aW51eGRyaXZlcnByb2plY3Qub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9yZw0K
-PiBTdWJqZWN0OiBSZTogW1BBVENIXSBwY2ktaHlwZXJ2OiBVc2Ugb25seSAxNiBiaXQgaW50ZWdl
-ciBmb3IgUENJIGRvbWFpbg0KPiANCj4gT24gVGh1LCBBcHIgMjAsIDIwMTcgYXQgMTE6MzUgQU0s
-IEhhaXlhbmcgWmhhbmcNCj4gPGhhaXlhbmd6QGV4Y2hhbmdlLm1pY3Jvc29mdC5jb20+IHdyb3Rl
-Og0KPiA+IEZyb206IEhhaXlhbmcgWmhhbmcgPGhhaXlhbmd6QG1pY3Jvc29mdC5jb20+DQo+ID4N
-Cj4gPiBUaGlzIHBhdGNoIHVzZXMgdGhlIGxvd2VyIDE2IGJpdHMgb2YgdGhlIHNlcmlhbCBudW1i
-ZXIgYXMgUENJDQo+ID4gZG9tYWluLCBvdGhlcndpc2Ugc29tZSBkcml2ZXJzIG1heSBub3QgYmUg
-YWJsZSB0byBoYW5kbGUgaXQuDQo+IA0KPiBDYW4geW91IGdpdmUgYW55IG1vcmUgZGV0YWlscyBh
-Ym91dCB0aGlzPyAgV2hpY2ggZHJpdmVycywgZm9yDQo+IGluc3RhbmNlPyAgV2h5IGRvIGRyaXZl
-cnMgY2FyZSBhYm91dCB0aGUgZG9tYWluIGF0IGFsbD8gIENhbiB3ZSBvcg0KPiBzaG91bGQgd2Ug
-bWFrZSB0aGlzIG1vcmUgZXhwbGljaXQgYW5kIGNvbnNpc3RlbnQgaW4gdGhlIFBDSSBjb3JlLA0K
-PiBlLmcuLCBwY2lfZG9tYWluX25yKCkgaXMgY3VycmVudGx5IGRlZmluZWQgdG8gcmV0dXJuICJp
-bnQiOyBtYXliZSBpdA0KPiBzaG91bGQgYmUgdTMyPyAgKEFsdGhvdWdoIEkgdGhpbmsgImludCIg
-aXMgdGhlIHNhbWUgc2l6ZSBhcyAidTMyIiBvbg0KPiBhbGwgYXJjaGVzIGFueXdheSkuDQoNCkl0
-J3MgTnZpZGlhIGRyaXZlci4NCg0KUGlvdHIsIGNvdWxkIHlvdSBleHBsYWluIHdoeSB0aGUgZHJp
-dmVyIGV4cGVjdHMgMTYgYml0IGRvbWFpbiBudW1iZXI/DQoNClRoYW5rcywNCi0gSGFpeWFuZw0K
+From: Yongji Xie <elohimes@gmail.com>
+
+The "pci=resource_alignment" argument aligns BARs of designated devices by
+artificially increasing their size.  Increasing the size increases the
+alignment and prevents other resources from being assigned in the same
+alignment region, e.g., in the same page, but it can break drivers that use
+the BAR size to locate things, e.g., ilo_map_device() does this:
+
+  off = pci_resource_len(pdev, bar) - 0x2000;
+
+The new pcibios_default_alignment() interface allows an arch to request
+that *all* BARs in the system be aligned to a larger size.  In this case,
+we don't need to artificially increase the resource size because we know
+every BAR of every device will be realigned, so nothing will share the same
+alignment region.
+
+Use IORESOURCE_STARTALIGN to request realignment of PCI BARs when we know
+we're realigning all BARs in the system.
+
+[bhelgaas: comment, changelog]
+Signed-off-by: Yongji Xie <elohimes@gmail.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c |   59 +++++++++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 43 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index d92b80837cfa..bd31ecdb2257 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4959,11 +4959,13 @@ static DEFINE_SPINLOCK(resource_alignment_lock);
+ /**
+  * pci_specified_resource_alignment - get resource alignment specified by user.
+  * @dev: the PCI device to get
++ * @resize: whether or not to change resources' size when reassigning alignment
+  *
+  * RETURNS: Resource alignment if it is specified.
+  *          Zero if it is not specified.
+  */
+-static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
++static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev,
++							bool *resize)
+ {
+ 	int seg, bus, slot, func, align_order, count;
+ 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
+@@ -5005,6 +5007,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 				(!device || (device == dev->device)) &&
+ 				(!subsystem_vendor || (subsystem_vendor == dev->subsystem_vendor)) &&
+ 				(!subsystem_device || (subsystem_device == dev->subsystem_device))) {
++				*resize = true;
+ 				if (align_order == -1)
+ 					align = PAGE_SIZE;
+ 				else
+@@ -5030,6 +5033,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ 				bus == dev->bus->number &&
+ 				slot == PCI_SLOT(dev->devfn) &&
+ 				func == PCI_FUNC(dev->devfn)) {
++				*resize = true;
+ 				if (align_order == -1)
+ 					align = PAGE_SIZE;
+ 				else
+@@ -5050,7 +5054,7 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
+ }
+ 
+ static void pci_request_resource_alignment(struct pci_dev *dev, int bar,
+-					   resource_size_t align)
++					   resource_size_t align, bool resize)
+ {
+ 	struct resource *r = &dev->resource[bar];
+ 	resource_size_t size;
+@@ -5069,23 +5073,45 @@ static void pci_request_resource_alignment(struct pci_dev *dev, int bar,
+ 		return;
+ 
+ 	/*
+-	 * Increase the size of the resource.  BARs are aligned on their
+-	 * size, so when we reallocate space for this resource, we'll
+-	 * allocate it with the larger alignment.  It also prevents
+-	 * assignment of any other BARs inside the size.  If we're
+-	 * requesting page alignment, this means no other BARs will share
+-	 * the page.
++	 * Increase the alignment of the resource.  There are two ways we
++	 * can do this:
+ 	 *
+-	 * This makes the resource larger than the hardware BAR, which may
+-	 * break drivers that compute things based on the resource size,
+-	 * e.g., to find registers at a fixed offset before the end of the
+-	 * BAR.  We hope users don't request alignment for such devices.
++	 * 1) Increase the size of the resource.  BARs are aligned on their
++	 *    size, so when we reallocate space for this resource, we'll
++	 *    allocate it with the larger alignment.  This also prevents
++	 *    assignment of any other BARs inside the alignment region, so
++	 *    if we're requesting page alignment, this means no other BARs
++	 *    will share the page.
++	 *
++	 *    The disadvantage is that this makes the resource larger than
++	 *    the hardware BAR, which may break drivers that compute things
++	 *    based on the resource size, e.g., to find registers at a
++	 *    fixed offset before the end of the BAR.
++	 *
++	 * 2) Retain the resource size, but use IORESOURCE_STARTALIGN and
++	 *    set r->start to the desired alignment.  By itself this
++	 *    doesn't prevent other BARs being put inside the alignment
++	 *    region, but if we realign *every* resource of every device in
++	 *    the system, none of them will share an alignment region.
++	 *
++	 * When the user has requested alignment for only some devices via
++	 * the "pci=resource_alignment" argument, "resize" is true and we
++	 * use the first method.  Otherwise we assume we're aligning all
++	 * devices and we use the second.
+ 	 */
++
+ 	dev_info(&dev->dev, "BAR%d %pR: requesting alignment to %#llx\n",
+ 		 bar, r, (unsigned long long)align);
+ 
+-	r->start = 0;
+-	r->end = align - 1;
++	if (resize) {
++		r->start = 0;
++		r->end = align - 1;
++	} else {
++		r->flags &= ~IORESOURCE_SIZEALIGN;
++		r->flags |= IORESOURCE_STARTALIGN;
++		r->start = align;
++		r->end = r->start + size - 1;
++	}
+ 	r->flags |= IORESOURCE_UNSET;
+ }
+ 
+@@ -5102,6 +5128,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	struct resource *r;
+ 	resource_size_t align, size;
+ 	u16 command;
++	bool resize = false;
+ 
+ 	/*
+ 	 * VF BARs are read-only zero according to SR-IOV spec r1.1, sec
+@@ -5113,7 +5140,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 		return;
+ 
+ 	/* check if specified PCI is target device to reassign */
+-	align = pci_specified_resource_alignment(dev);
++	align = pci_specified_resource_alignment(dev, &resize);
+ 	if (!align)
+ 		return;
+ 
+@@ -5131,7 +5158,7 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
+ 	pci_write_config_word(dev, PCI_COMMAND, command);
+ 
+ 	for (i = 0; i <= PCI_ROM_RESOURCE; i++)
+-		pci_request_resource_alignment(dev, i, align);
++		pci_request_resource_alignment(dev, i, align, resize);
+ 
+ 	/*
+ 	 * Need to disable bridge's resource window,
