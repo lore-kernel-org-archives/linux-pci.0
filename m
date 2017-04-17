@@ -1,94 +1,238 @@
-Return-Path: <SRS0=u2l1=3T=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=u2l1=3T=vodafone.de=deathsimple@kernel.org>
-Subject: Re: [PATCH 2/4] PCI: add functionality for resizing resources v2
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-References: <1489408896-25039-1-git-send-email-deathsimple@vodafone.de>
- <1489408896-25039-3-git-send-email-deathsimple@vodafone.de>
- <CAHp75VcY_P63T3-XcYafxhSFshQyL1dj0B2+Q4iW9hMiig3tRQ@mail.gmail.com>
-Cc: helgaas@kernel.org, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
- Platform Driver <platform-driver-x86@vger.kernel.org>,
- amd-gfx@lists.freedesktop.org,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
-Message-ID: <b467c769-954b-bd18-1c54-e88d0785a6bf@vodafone.de>
-Date: Tue, 11 Apr 2017 11:14:29 +0200
+Return-Path: <SRS0=6Kxz=3Z=google.com=bhelgaas@kernel.org>
+Return-Path: <SRS0=6Kxz=3Z=google.com=bhelgaas@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAHp75VcY_P63T3-XcYafxhSFshQyL1dj0B2+Q4iW9hMiig3tRQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CAONzpcbKzLCgmX0Y6A0B2W_QvG=UTR9GB5VyAWXaq2ZLwJXgcA@mail.gmail.com>
+References: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
+ <1491825494-19331-5-git-send-email-elohimes@gmail.com> <20170414225452.GC5864@bhelgaas-glaptop.roam.corp.google.com>
+ <CAONzpcbKzLCgmX0Y6A0B2W_QvG=UTR9GB5VyAWXaq2ZLwJXgcA@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 17 Apr 2017 15:33:36 -0500
+Message-ID: <CAErSpo79PBMmF-=TDbmfiUzHsV=9mqTaePYHq4wNJ9yRapewjQ@mail.gmail.com>
+Subject: Re: [PATCH v10 4/4] PCI: Don't extend device's size when using
+ default alignment for all devices
+To: Yongji Xie <elohimes@gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+	"alex.williamson@redhat.com" <alex.williamson@redhat.com>, Gavin Shan <gwshan@linux.vnet.ibm.com>,
+	Alexey Kardashevskiy <aik@ozlabs.ru>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Michael Ellerman <mpe@ellerman.id.au>, "paulus@samba.org" <paulus@samba.org>,
+	Li Zhong <zhong@linux.vnet.ibm.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Sorry for the delayed response, have been busy with other stuff recently.
-
-Am 13.03.2017 um 17:43 schrieb Andy Shevchenko:
->> v2: rebase on changes in rbar support
-> This kind of comments usually goes after --- delimiter below.
-
-That would remove it from the commit message which I don't want.
-
-
->> +       unsigned i;
->> +       int ret = 0;
->> +
->> +       /* Release all children from the matching bridge resource */
->> +       for (i = PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END; ++i) {
->> +               struct resource *res = &bridge->resource[i];
->> +
+On Mon, Apr 17, 2017 at 1:27 AM, Yongji Xie <elohimes@gmail.com> wrote:
+> 2017-04-15 6:54 GMT+08:00 Bjorn Helgaas <helgaas@kernel.org>:
+>>
+>> On Mon, Apr 10, 2017 at 07:58:14PM +0800, Yongji Xie wrote:
+>> > Currently we reassign the alignment by extending resources' size in
+>> > pci_reassigndev_resource_alignment(). This could potentially break
+>> > some drivers when the driver uses the size to locate register
+>> > whose length is related to the size. Some examples as below:
+>> >
+>> > - misc/Hpilo.c:
+>>
+>> If you're going to quote filenames, they need to match the actual
+>> files in the tree.  In this case, "hpilo.c", not "Hpilo.c".  Also
+>> "Nes_hw.c" below is incorrect.
+>>
 >
->> +               if ((res->flags & type_mask) != (type & type_mask))
-> IIUC it would be
-> if ((res->flags ^ type) & type_mask)
+> Will fix it.
 >
-> (I consider 'diff' as XOR operation is more understandable, but it's up to you)
+>>
+>> > off = pci_resource_len(pdev, bar) - 0x2000;
+>> >
+>> > - net/ethernet/chelsio/cxgb4/cxgb4_uld.h:
+>> > (pci_resource_len((pdev), 2) - roundup_pow_of_two((vres)->ocq.size))
+>> >
+>> > - infiniband/hw/nes/Nes_hw.c:
+>> > num_pds = pci_resource_len(nesdev->pcidev, BAR_1) >> PAGE_SHIFT;
+>>
+>> This BAR is apparently at least a page in size already, so this only
+>> breaks if we request alignment of more than a page size.
+>>
+>
+> Oh, yes. I'll remove this one.
+>
+>> > This risk could be easily prevented before because we only had one way
+>> > (kernel parameter resource_alignment) to touch those codes. And even
+>> > some users may be happy to see the extended size.
+>>
+>> Currently, pci_reassigndev_resource_alignment() extends the size of
+>> some resources when we use "pci=resource_alignment=..."  That
+>> certainly breaks places like the ones above.
+>>
+>> What do you mean by "some users may be happy to see the extended
+>> size"?  We're increasing a resource size to something larger than what
+>> the BAR actually responds to.  I don't see how that can ever be an
+>> *improvement*.  I can see how most drivers won't care, and a few (like
+>> the ones you cite above) will break.  But I don't see how any driver
+>> could be *helped* by us making the resource larger.
+>>
+>
+> From commit 32a9a68 (PCI: allow assignment of memory resources with a
+> specified alignment), it seems that "pci=resource_alignment" was introduced
+> because we want to use PCI pass-through for some page-unaligned devices.
+>
+> So there might be some cases that users use "pci=resource_alignment" to
+> extend the BAR's size then passthrough them. That's why I say "some users
+> may be happy to see the extended size". We are not able to passthrough
+> the device unless we extend its BARs to PAGE_SIZE.
+>
+>>
+>> > But now we introduce pcibios_default_alignment() to set default
+>> > alignment
+>> > for all PCI devices which would also touch those codes. It would be hard
+>> > to prevent the risk in this case. So this patch tries to use
+>> > START_ALIGNMENT to identify the resource's alignment without extending
+>> > the size when the alignment reassigning is caused by the default
+>> > alignment.
+>> >
+>> > Signed-off-by: Yongji Xie <elohimes@gmail.com>
+>> > ---
+>> >  drivers/pci/pci.c |   34 ++++++++++++++++++++++++----------
+>> >  1 file changed, 24 insertions(+), 10 deletions(-)
+>> >
+>> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> > index 02f1255..358366e 100644
+>> > --- a/drivers/pci/pci.c
+>> > +++ b/drivers/pci/pci.c
+>> > @@ -4959,11 +4959,13 @@ resource_size_t __weak
+>> > pcibios_default_alignment(struct pci_dev *dev)
+>> >  /**
+>> >   * pci_specified_resource_alignment - get resource alignment specified
+>> > by user.
+>> >   * @dev: the PCI device to get
+>> > + * @resize: whether or not to change resources' size when reassigning
+>> > alignment
+>> >   *
+>> >   * RETURNS: Resource alignment if it is specified.
+>> >   *          Zero if it is not specified.
+>> >   */
+>> > -static resource_size_t pci_specified_resource_alignment(struct pci_dev
+>> > *dev)
+>> > +static resource_size_t pci_specified_resource_alignment(struct pci_dev
+>> > *dev,
+>> > +                                                     bool *resize)
+>> >  {
+>> >       int seg, bus, slot, func, align_order, count;
+>> >       unsigned short vendor, device, subsystem_vendor, subsystem_device;
+>> > @@ -5005,6 +5007,7 @@ static resource_size_t
+>> > pci_specified_resource_alignment(struct pci_dev *dev)
+>> >                               (!device || (device == dev->device)) &&
+>> >                               (!subsystem_vendor || (subsystem_vendor ==
+>> > dev->subsystem_vendor)) &&
+>> >                               (!subsystem_device || (subsystem_device ==
+>> > dev->subsystem_device))) {
+>> > +                             *resize = true;
+>> >                               if (align_order == -1)
+>> >                                       align = PAGE_SIZE;
+>> >                               else
+>> > @@ -5030,6 +5033,7 @@ static resource_size_t
+>> > pci_specified_resource_alignment(struct pci_dev *dev)
+>> >                               bus == dev->bus->number &&
+>> >                               slot == PCI_SLOT(dev->devfn) &&
+>> >                               func == PCI_FUNC(dev->devfn)) {
+>> > +                             *resize = true;
+>> >                               if (align_order == -1)
+>> >                                       align = PAGE_SIZE;
+>> >                               else
+>> > @@ -5062,6 +5066,7 @@ void pci_reassigndev_resource_alignment(struct
+>> > pci_dev *dev)
+>> >       struct resource *r;
+>> >       resource_size_t align, size;
+>> >       u16 command;
+>> > +     bool resize = false;
+>> >
+>> >       /*
+>> >        * VF BARs are read-only zero according to SR-IOV spec r1.1, sec
+>> > @@ -5073,7 +5078,7 @@ void pci_reassigndev_resource_alignment(struct
+>> > pci_dev *dev)
+>> >               return;
+>> >
+>> >       /* check if specified PCI is target device to reassign */
+>> > -     align = pci_specified_resource_alignment(dev);
+>> > +     align = pci_specified_resource_alignment(dev, &resize);
+>> >       if (!align)
+>> >               return;
+>> >
+>> > @@ -5101,15 +5106,24 @@ void pci_reassigndev_resource_alignment(struct
+>> > pci_dev *dev)
+>> >               }
+>> >
+>> >               size = resource_size(r);
+>> > -             if (size < align) {
+>> > -                     size = align;
+>> > -                     dev_info(&dev->dev,
+>> > -                             "Rounding up size of resource #%d to
+>> > %#llx.\n",
+>> > -                             i, (unsigned long long)size);
+>> > +             if (resize) {
+>> > +                     if (size < align) {
+>> > +                             size = align;
+>> > +                             dev_info(&dev->dev,
+>> > +                                     "Rounding up size of resource #%d
+>> > to %#llx.\n",
+>> > +                                     i, (unsigned long long)size);
+>> > +                     }
+>> > +                     r->flags |= IORESOURCE_UNSET;
+>> > +                     r->start = 0;
+>> > +             } else {
+>> > +                     if (size < align) {
+>> > +                             r->flags &= ~IORESOURCE_SIZEALIGN;
+>> > +                             r->flags |= IORESOURCE_STARTALIGN |
+>> > +                                                     IORESOURCE_UNSET;
+>> > +                             r->start = align;
+>> > +                     }
+>>
+>> I'm still not happy about the fact that we now have these two cases:
+>>
+>>   1) If we increase resource alignment because of the
+>>      "pci=resource_alignment=" parameter, we increase the resource
+>>      size, and
+>>
+>>   2) If we increase resource alignment because of
+>>      pcibios_default_alignment(), we use IORESOURCE_STARTALIGN and do
+>>      not increase the resource size.
+>>
+>> This makes the code complicated and hard to maintain in the future.
+>> We talked about this earlier [1], but I'm not sure I've figured out
+>> the reason.  Here's my guess:
+>>
+>> Let's assume we have a 4K BAR and we're requesting alignment to 64K.
+>> In case 1, we're only changing the alignment for specified devices.
+>> If we used IORESOURCE_STARTALIGN, we would align that 4K BAR of the
+>> specified devices to 64K, but BARs of other devices could still be
+>> assigned in that same 64K page.  Therefore, we must increase the size
+>> to prevent other BARs in the page, even though this might break some
+>> drivers.
+>>
+>> But in case 2, we're changing the alignment for *all* devices.  In
+>> this case, we *can* use IORESOURCE_STARTALIGN because we're going to
+>> align *every* BAR of every device to 64K, so no other BARs will be put
+>> in the same page.  And since we didn't change the resource size, we
+>> avoid the problem of breaking drivers.
+>>
+>> If that's the reasoning, I'm not 100% sure that the complexity of this
+>> code is worth it.  It took me half a day to come up with this theory.
+>> If we do have to go this route, we *must* include comments along this
+>> line to make it easier next time.
+>>
+>
+> Your guess is exactly correct. We have two problems when we need to change
+> one BAR's alignment:
+>
+> 1) If we extend the BAR's size, we may break the driver
+>
+> 2) If we only change the alignment without extending size, we have no way to
+> prevent other BARs being assigned into the same page.
+>
+> I failed to come up with a way to use only one way to satisfy the two cases.
+> So I handle the two cases separately like those codes. But as you said, this
+> makes the code hard to maintain. I think what I can do next is to add some
+> comments to make the codes easier to read and maintain. Of course, if
+> anybody have a better idea, I'll be happy to see it.
 
-I think like it is is easier to read.
+I don't see a better way either.  Let me try to add some comments.
+I'll post a patch and you can see what you think.
 
-
->> +               res->start = saved.start;
->> +               res->end = saved.end;
->> +               res->flags = saved.flags;
-> Would
->   *res = saved;
-> work?
-
-No, res also contains a bunch of pointers into the tree which we should 
-not override.
-
->> +int pci_resize_resource(struct pci_dev *dev, int resno, int size)
->> +{
->> +       struct resource *res = dev->resource + resno;
->> +       u32 sizes = pci_rbar_get_possible_sizes(dev, resno);
->> +       int old = pci_rbar_get_current_size(dev, resno);
->> +       u64 bytes = 1ULL << (size + 20);
->> +       int ret = 0;
->> +
-> I would put
->   sizes = pci_rbar_get_possible_sizes(dev, resno);
-> here
-
-Good idea, done.
-
-
->> +       if (!sizes)
->> +               return -ENOTSUPP;
->> +
->> +       if (!(sizes & (1 << size)))
-> BIT(size) ?
-
-Done.
-
-> and
->   old = pci_rbar_get_current_size(dev, resno);
-> here
-
-Good idea as well.
-
->> +error_resize:
->> +       pci_rbar_set_size(dev, resno, old);
->> +       res->end = res->start + (1ULL << (old + 20)) - 1;
-> BIT_ULL(old + 20) ?
-
-Nope, that is actually a size in bytes. Not a bitfield. So while BIT_ULL 
-yields the right result it would be harder to understand.
-
-Christian.
+Bjorn
