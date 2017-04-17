@@ -1,103 +1,145 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V8 5/5] PCI/ASPM: move link_state cleanup to bridge remove
-Date: Sat,  8 Apr 2017 00:55:51 -0400
-Message-Id: <1491627351-1111-6-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
-References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
- linux-arm-msm@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
- linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- Julia Lawall <Julia.Lawall@lip6.fr>, Bjorn Helgaas <bhelgaas@google.com>,
- Rajat Jain <rajatja@google.com>, Yinghai Lu <yinghai@kernel.org>,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-by2nam01on0055.outbound.protection.outlook.com ([104.47.34.55]:30336
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753726AbdDQV0s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Apr 2017 17:26:48 -0400
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>, <hch@lst.de>
+CC: <himanshu.madhani@cavium.com>
+Subject: [PATCH] PCI/MSI: Only disable affinity settings if pre and post vector count is equal to max_vecs and not min_vecs
+Date: Mon, 17 Apr 2017 14:26:25 -0700
+Message-ID: <20170417212625.14309-1-himanshu.madhani@cavium.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-For endpoints, change pcie_aspm_exit_link_state() so it cleans up
-the device's own state and disables ASPM if necessary, but doesn't
-remove the parent's link_state.
+min_vecs is the minimum amount of vectors needed to operate in MSI-X mode
+which may just include the vectors that don't need affinity.
 
-For bridges, change pcie_aspm_exit_link_state() so it frees the
-bridge's own link_state.
+Disabling affinity settings causes the qla2xxx driver scsi_add_host
+to fail when blk_mq is enabled as the blk_mq_pci_map_queues expects
+affinity masks on each vector.
 
-Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
+Fixes: dfef358bd1be ("PCI/MSI: Don't apply affinity if there aren't enough vectors left")
+Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: <stable@vger.kernel.org> # 4.10
 ---
- drivers/pci/pcie/aspm.c | 20 +++++++++++++++-----
- drivers/pci/remove.c    |  3 +--
- 2 files changed, 16 insertions(+), 7 deletions(-)
+This patch has been compile on linux-next tree 
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index c7da087..d99fa3f 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -972,6 +972,21 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
- 	struct pci_dev *parent = pdev->bus->self;
- 	struct pcie_link_state *link, *root, *parent_link;
+commit f4fa27cbc0b6b9f3f41a8fbd771af3abbc480f13
+Author: Stephen Rothwell <sfr@canb.auug.org.au>
+Date:   Thu Apr 13 15:35:23 2017 +1000
+
+    Add linux-next specific files for 20170413
+
+    Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+
+Also has compiled on pci tree next branch with following commit
+
+commit 9c5579a1a10f29c1491b38cfe8a16bf2d0a68aa1
+Merge: 22e2495b76db b8e82c1bdd28
+Author: Bjorn Helgaas <bhelgaas@google.com>
+Date:   Wed Apr 12 12:25:43 2017 -0500
+
+    Merge branch 'pci/host-mvebu' into next
+
+    * pci/host-mvebu:
+      PCI: mvebu: Avoid changing the SCC bit in the Link Status register
+
+ drivers/pci/msi.c         | 14 ++------------
+ include/linux/interrupt.h |  2 +-
+ kernel/irq/affinity.c     | 12 +++++++++++-
+ 3 files changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index ba44fdfda66b..9e1569107cd6 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1058,7 +1058,7 @@ static int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
  
-+	if (pdev->has_secondary_link) {
-+		link = pdev->link_state;
-+		down_read(&pci_bus_sem);
-+		mutex_lock(&aspm_lock);
-+
-+		list_del(&link->sibling);
-+		list_del(&link->link);
-+
-+		/* Clock PM is for endpoint device */
-+		free_link_state(link);
-+		mutex_unlock(&aspm_lock);
-+		up_read(&pci_bus_sem);
-+		return;
-+	}
-+
- 	if (!parent || !parent->link_state)
- 		return;
+ 	for (;;) {
+ 		if (affd) {
+-			nvec = irq_calc_affinity_vectors(nvec, affd);
++			nvec = irq_calc_affinity_vectors(minvec, nvec, affd);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+ 		}
+@@ -1097,7 +1097,7 @@ static int __pci_enable_msix_range(struct pci_dev *dev,
  
-@@ -990,11 +1005,6 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
- 
- 	/* All functions are removed, so just disable ASPM for the link */
- 	pcie_config_aspm_link(link, 0);
--	list_del(&link->sibling);
--	list_del(&link->link);
--	/* Clock PM is for endpoint device */
--	free_link_state(link);
+ 	for (;;) {
+ 		if (affd) {
+-			nvec = irq_calc_affinity_vectors(nvec, affd);
++			nvec = irq_calc_affinity_vectors(minvec, nvec, affd);
+ 			if (nvec < minvec)
+ 				return -ENOSPC;
+ 		}
+@@ -1165,16 +1165,6 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+ 	if (flags & PCI_IRQ_AFFINITY) {
+ 		if (!affd)
+ 			affd = &msi_default_affd;
 -
- 	/* Recheck latencies and configure upstream links */
- 	if (parent_link) {
- 		pcie_update_aspm_capable(root);
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 73a03d3..7e14ebd 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -25,8 +25,7 @@ static void pci_stop_dev(struct pci_dev *dev)
- 		dev->is_added = 0;
- 	}
+-		if (affd->pre_vectors + affd->post_vectors > min_vecs)
+-			return -EINVAL;
+-
+-		/*
+-		 * If there aren't any vectors left after applying the pre/post
+-		 * vectors don't bother with assigning affinity.
+-		 */
+-		if (affd->pre_vectors + affd->post_vectors == min_vecs)
+-			affd = NULL;
+ 	} else {
+ 		if (WARN_ON(affd))
+ 			affd = NULL;
+diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+index 53144e78a369..b3c569f7405b 100644
+--- a/include/linux/interrupt.h
++++ b/include/linux/interrupt.h
+@@ -291,7 +291,7 @@ extern int
+ irq_set_affinity_notifier(unsigned int irq, struct irq_affinity_notify *notify);
  
--	if (dev->bus->self)
--		pcie_aspm_exit_link_state(dev);
-+	pcie_aspm_exit_link_state(dev);
- }
+ struct cpumask *irq_create_affinity_masks(int nvec, const struct irq_affinity *affd);
+-int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd);
++int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity *affd);
  
- static void pci_destroy_dev(struct pci_dev *dev)
+ #else /* CONFIG_SMP */
+ 
+diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+index dc529116f7e6..e545e7a96270 100644
+--- a/kernel/irq/affinity.c
++++ b/kernel/irq/affinity.c
+@@ -69,6 +69,13 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+ 	if (!zalloc_cpumask_var(&nmsk, GFP_KERNEL))
+ 		return NULL;
+ 
++	/*
++	 * If there aren't any vectors left after applying the pre/post
++	 * vectors don't bother with assigning affinity.
++	 */
++	if (!affv)
++		return NULL;
++
+ 	masks = kcalloc(nvecs, sizeof(*masks), GFP_KERNEL);
+ 	if (!masks)
+ 		goto out;
+@@ -143,12 +150,15 @@ irq_create_affinity_masks(int nvecs, const struct irq_affinity *affd)
+  * @maxvec:	The maximum number of vectors available
+  * @affd:	Description of the affinity requirements
+  */
+-int irq_calc_affinity_vectors(int maxvec, const struct irq_affinity *affd)
++int irq_calc_affinity_vectors(int minvec, int maxvec, const struct irq_affinity *affd)
+ {
+ 	int resv = affd->pre_vectors + affd->post_vectors;
+ 	int vecs = maxvec - resv;
+ 	int cpus;
+ 
++	if (resv > minvec)
++		return 0;
++
+ 	/* Stabilize the cpumasks */
+ 	get_online_cpus();
+ 	cpus = cpumask_weight(cpu_online_mask);
 -- 
-1.9.1
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.12.0
