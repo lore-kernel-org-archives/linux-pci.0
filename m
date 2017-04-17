@@ -1,85 +1,54 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v6 18/23] Documentation: misc-devices: Add Documentation for
- pci-endpoint-test driver
-Date: Wed, 5 Apr 2017 14:22:38 +0530
-Message-ID: <20170405085243.18123-19-kishon@ti.com>
-In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
-References: <20170405085243.18123-1-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40104 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751852AbdDQVgn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 17 Apr 2017 17:36:43 -0400
+Subject: [PATCH v11 2/7] PCI: A fix for caculating bridge window's size and
+ alignment
+From: Bjorn Helgaas <bhelgaas@google.com>
+To: Yongji Xie <elohimes@gmail.com>
+Cc: zhong@linux.vnet.ibm.com, Alexey Kardashevskiy <aik@ozlabs.ru>,
+        linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev@lists.ozlabs.org
+Date: Mon, 17 Apr 2017 16:36:39 -0500
+Message-ID: <20170417213639.21092.22951.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add Documentation for pci-endpoint-test driver.
+From: Yongji Xie <elohimes@gmail.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
+In case that one device's alignment is greater than its size,
+we may get an incorrect size and alignment for its bus's memory
+window in pbus_size_mem(). This patch fixes this case.
+
+Signed-off-by: Yongji Xie <elohimes@gmail.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- Documentation/misc-devices/pci-endpoint-test.txt | 35 ++++++++++++++++++++++++
- 1 file changed, 35 insertions(+)
- create mode 100644 Documentation/misc-devices/pci-endpoint-test.txt
+ drivers/pci/setup-bus.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/misc-devices/pci-endpoint-test.txt b/Documentation/misc-devices/pci-endpoint-test.txt
-new file mode 100644
-index 000000000000..4ebc3594b32c
---- /dev/null
-+++ b/Documentation/misc-devices/pci-endpoint-test.txt
-@@ -0,0 +1,35 @@
-+Driver for PCI Endpoint Test Function
-+
-+This driver should be used as a host side driver if the root complex is
-+connected to a configurable PCI endpoint running *pci_epf_test* function
-+driver configured according to [1].
-+
-+The "pci_endpoint_test" driver can be used to perform the following tests.
-+
-+The PCI driver for the test device performs the following tests
-+	*) verifying addresses programmed in BAR
-+	*) raise legacy IRQ
-+	*) raise MSI IRQ
-+	*) read data
-+	*) write data
-+	*) copy data
-+
-+This misc driver creates /dev/pci-endpoint-test.<num> for every
-+*pci_epf_test* function connected to the root complex and "ioctls"
-+should be used to perform the above tests.
-+
-+ioctl
-+-----
-+ PCITEST_BAR: Tests the BAR. The number of the BAR to be tested
-+	      should be passed as argument.
-+ PCITEST_LEGACY_IRQ: Tests legacy IRQ
-+ PCITEST_MSI: Tests message signalled interrupts. The MSI number
-+	      to be tested should be passed as argument.
-+ PCITEST_WRITE: Perform write tests. The size of the buffer should be passed
-+		as argument.
-+ PCITEST_READ: Perform read tests. The size of the buffer should be passed
-+	       as argument.
-+ PCITEST_COPY: Perform read tests. The size of the buffer should be passed
-+	       as argument.
-+
-+[1] -> Documentation/PCI/endpoint/function/binding/pci-test.txt
--- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index cb389277df41..958da7db9033 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1066,10 +1066,10 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
+ 				r->flags = 0;
+ 				continue;
+ 			}
+-			size += r_size;
++			size += max(r_size, align);
+ 			/* Exclude ranges with size > align from
+ 			   calculation of the alignment. */
+-			if (r_size == align)
++			if (r_size <= align)
+ 				aligns[order] += align;
+ 			if (order > max_order)
+ 				max_order = order;
