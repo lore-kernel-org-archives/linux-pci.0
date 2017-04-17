@@ -1,171 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47406 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753187AbdDDKT7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2017 06:19:59 -0400
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
-        gregkh@linuxfoundation.org
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V10 08/12] iommu: of: Handle IOMMU lookup failure with deferred probing or error
-Date: Tue,  4 Apr 2017 15:48:21 +0530
-Message-Id: <1491301105-5274-9-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=P6S7=3Z=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=P6S7=3Z=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1492413640.25766.52.camel@kernel.crashing.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Logan Gunthorpe <logang@deltatee.com>,
+        Dan Williams
+	 <dan.j.williams@intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+        Jason Gunthorpe
+ <jgunthorpe@obsidianresearch.com>,
+        Christoph Hellwig <hch@lst.de>, Sagi
+ Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley"
+ <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen"
+ <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise
+ <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>, Max
+ Gurtovoy <maxg@mellanox.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm
+ <linux-nvdimm@ml01.01.org>,
+        "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>,
+        Jerome Glisse <jglisse@redhat.com>
+Date: Mon, 17 Apr 2017 17:20:40 +1000
+In-Reply-To: <6149ab5e-c981-6881-8c5a-22349561c3e8@deltatee.com>
+References: 
+	<CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+	 <6e732d6a-9baf-1768-3e9c-f6c887a836b2@deltatee.com>
+	 <1492381958.25766.50.camel@kernel.crashing.org>
+	 <6149ab5e-c981-6881-8c5a-22349561c3e8@deltatee.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+On Sun, 2017-04-16 at 23:13 -0600, Logan Gunthorpe wrote:
+> 
+> > 
+> > I'm still not 100% why do you need a "p2mem device" mind you ...
+> 
+> Well, you don't "need" it but it is a design choice that I think makes a
+> lot of sense for the following reasons:
+> 
+> 1) p2pmem is in fact a device on the pci bus. A pci driver will need to
+> set it up and create the device and thus it will have a natural parent
+> pci device. Instantiating a struct device for it means it will appear in
+> the device hierarchy and one can use that to reason about its position
+> in the topology.
 
-Failures to look up an IOMMU when parsing the DT iommus property need to
-be handled separately from the .of_xlate() failures to support deferred
-probing.
+But is it ? For example take a GPU, does it, in your scheme, need an
+additional "p2pmem" child ? Why can't the GPU driver just use some
+helper to instantiate the necessary struct pages ? What does having an
+actual "struct device" child buys you ?
 
-The lack of a registered IOMMU can be caused by the lack of a driver for
-the IOMMU, the IOMMU device probe not having been performed yet, having
-been deferred, or having failed.
+> 2) In order to create the struct pages we use the ZONE_DEVICE
+> infrastructure which requires a struct device. (See
+> devm_memremap_pages.)
 
-The first case occurs when the device tree describes the bus master and
-IOMMU topology correctly but no device driver exists for the IOMMU yet
-or the device driver has not been compiled in. Return NULL, the caller
-will configure the device without an IOMMU.
+Yup, but you already have one in the actual pci_dev ... What is the
+benefit of adding a second one ?
 
-The second and third cases are handled by deferring the probe of the bus
-master device which will eventually get reprobed after the IOMMU.
+>  This amazingly gets us the get_dev_pagemap
+> architecture which also uses a struct device. So by using a p2pmem
+> device we can go from struct page to struct device to p2pmem device
+> quickly and effortlessly.
 
-The last case is currently handled by deferring the probe of the bus
-master device as well. A mechanism to either configure the bus master
-device without an IOMMU or to fail the bus master device probe depending
-on whether the IOMMU is optional or mandatory would be a good
-enhancement.
+Which isn't terribly useful in itself right ? What you care about is
+the "enclosing" pci_dev no ? Or am I missing something ?
 
-Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
----
- drivers/base/dma-mapping.c | 5 +++--
- drivers/iommu/of_iommu.c   | 4 ++--
- drivers/of/device.c        | 7 ++++++-
- include/linux/of_device.h  | 9 ++++++---
- 4 files changed, 17 insertions(+), 8 deletions(-)
+> 3) You wouldn't want to use the pci's struct device because it doesn't
+> really describe what's going on. For example, there may be multiple
+> devices on the pci device in question: eg. an NVME card and some p2pmem.
 
-diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-index 449b948..82bd45c 100644
---- a/drivers/base/dma-mapping.c
-+++ b/drivers/base/dma-mapping.c
-@@ -353,6 +353,7 @@ int dma_configure(struct device *dev)
- {
- 	struct device *bridge = NULL, *dma_dev = dev;
- 	enum dev_dma_attr attr;
-+	int ret = 0;
- 
- 	if (dev_is_pci(dev)) {
- 		bridge = pci_get_host_bridge_device(to_pci_dev(dev));
-@@ -363,7 +364,7 @@ int dma_configure(struct device *dev)
- 	}
- 
- 	if (dma_dev->of_node) {
--		of_dma_configure(dev, dma_dev->of_node);
-+		ret = of_dma_configure(dev, dma_dev->of_node);
- 	} else if (has_acpi_companion(dma_dev)) {
- 		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
- 		if (attr != DEV_DMA_NOT_SUPPORTED)
-@@ -373,7 +374,7 @@ int dma_configure(struct device *dev)
- 	if (bridge)
- 		pci_put_host_bridge_device(bridge);
- 
--	return 0;
-+	return ret;
- }
- 
- void dma_deconfigure(struct device *dev)
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index c8be889..9f44ee8 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -236,7 +236,7 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
- 			ops = ERR_PTR(err);
- 	}
- 
--	return IS_ERR(ops) ? NULL : ops;
-+	return ops;
- }
- 
- static int __init of_iommu_init(void)
-@@ -247,7 +247,7 @@ static int __init of_iommu_init(void)
- 	for_each_matching_node_and_match(np, matches, &match) {
- 		const of_iommu_init_fn init_fn = match->data;
- 
--		if (init_fn(np))
-+		if (init_fn && init_fn(np))
- 			pr_err("Failed to initialise IOMMU %s\n",
- 				of_node_full_name(np));
- 	}
-diff --git a/drivers/of/device.c b/drivers/of/device.c
-index c2ae6bb..bea8aec 100644
---- a/drivers/of/device.c
-+++ b/drivers/of/device.c
-@@ -82,7 +82,7 @@ int of_device_add(struct platform_device *ofdev)
-  * can use a platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE events
-  * to fix up DMA configuration.
-  */
--void of_dma_configure(struct device *dev, struct device_node *np)
-+int of_dma_configure(struct device *dev, struct device_node *np)
- {
- 	u64 dma_addr, paddr, size;
- 	int ret;
-@@ -129,10 +129,15 @@ void of_dma_configure(struct device *dev, struct device_node *np)
- 		coherent ? " " : " not ");
- 
- 	iommu = of_iommu_configure(dev, np);
-+	if (IS_ERR(iommu))
-+		return PTR_ERR(iommu);
-+
- 	dev_dbg(dev, "device is%sbehind an iommu\n",
- 		iommu ? " " : " not ");
- 
- 	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
-+
-+	return 0;
- }
- EXPORT_SYMBOL_GPL(of_dma_configure);
- 
-diff --git a/include/linux/of_device.h b/include/linux/of_device.h
-index af98455..2cacdd8 100644
---- a/include/linux/of_device.h
-+++ b/include/linux/of_device.h
-@@ -55,7 +55,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- 	return of_node_get(cpu_dev->of_node);
- }
- 
--void of_dma_configure(struct device *dev, struct device_node *np);
-+int of_dma_configure(struct device *dev, struct device_node *np);
- void of_dma_deconfigure(struct device *dev);
- #else /* CONFIG_OF */
- 
-@@ -104,8 +104,11 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
- {
- 	return NULL;
- }
--static inline void of_dma_configure(struct device *dev, struct device_node *np)
--{}
-+
-+static inline int of_dma_configure(struct device *dev, struct device_node *np)
-+{
-+	return 0;
-+}
- static inline void of_dma_deconfigure(struct device *dev)
- {}
- #endif /* CONFIG_OF */
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+What is "some p2pmem" ?
+
+> Or it could be a NIC with some p2pmem.
+
+Again what is "some p2pmem" ?
+
+That a device might have some memory-like buffer space is all well and
+good but does it need to be specifically distinguished at the device
+level ? It could be inherent to what the device is... for example again
+take the GPU example, why would you call the FB memory "p2pmem" ? 
+
+>  Or it could just be p2pmem by itself. And the logic to figure out what
+>  memory is available and where
+> the address is will be non-standard so it's really straightforward to
+> have any pci driver just instantiate a p2pmem device.
+
+Again I'm not sure why it needs to "instanciate a p2pmem" device. Maybe
+it's the term "p2pmem" that offputs me. If p2pmem allowed to have a
+standard way to lookup the various offsets etc... I mentioned earlier,
+then yes, it would make sense to have it as a staging point. As-is, I
+don't know. 
+
+> It is probably worth you reading the RFC patches at this point to get a
+> better feel for this.
+
+Yup, I'll have another look a bit more in depth.
+
+Cheers,
+Ben.
+
+
+> Logan
