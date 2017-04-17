@@ -1,95 +1,133 @@
-Return-Path: <SRS0=0hWc=4B=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=0hWc=4B=vodafone.de=deathsimple@kernel.org>
-From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
-To: helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	platform-driver-x86@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 30h-3fh) Processors v2
-Date: Tue, 25 Apr 2017 15:19:53 +0200
-Message-Id: <1493126394-1239-4-git-send-email-deathsimple@vodafone.de>
-In-Reply-To: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
-References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
+Return-Path: <SRS0=6Kxz=3Z=google.com=bhelgaas@kernel.org>
+Return-Path: <SRS0=6Kxz=3Z=google.com=bhelgaas@kernel.org>
 MIME-Version: 1.0
+In-Reply-To: <20170417174712.GA7575@localhost>
+References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
+ <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
+ <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414210646.GA5346@localhost> <CAErSpo731xSzrnKF+G+8SA_UUHy7ROA1V9oFkpwKi85GQf9VAg@mail.gmail.com>
+ <20170417174712.GA7575@localhost>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 17 Apr 2017 14:51:53 -0500
+Message-ID: <CAErSpo4aA+ZYz53DP=FpK01r29oNz=orAPH1q9NjZx6jH6BXVQ@mail.gmail.com>
+Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
+To: Jayachandran C <jnair@caviumnetworks.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>, Robin Murphy <robin.murphy@arm.com>,
+	Jon Masters <jcm@redhat.com>, linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Joerg Roedel <joro@8bytes.org>
 Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christian König <christian.koenig@amd.com>
+On Mon, Apr 17, 2017 at 12:47 PM, Jayachandran C
+<jnair@caviumnetworks.com> wrote:
+> On Fri, Apr 14, 2017 at 09:00:06PM -0500, Bjorn Helgaas wrote:
+>> On Fri, Apr 14, 2017 at 4:06 PM, Jayachandran C
+>> <jnair@caviumnetworks.com> wrote:
+>> > On Thu, Apr 13, 2017 at 07:19:11PM -0500, Bjorn Helgaas wrote:
+>> >> I tentatively applied both patches to pci/host-thunder for v4.12.
+>> >>
+>> >> However, I am concerned about the topology here:
+>> >>
+>> >> On Thu, Apr 13, 2017 at 08:30:45PM +0000, Jayachandran C wrote:
+>> >> > On Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the
+>> >> > PCI topology is slightly unusual.  For a multi-node system, it looks
+>> >> > like:
+>> >> >
+>> >> >     00:00.0 [PCI] bridge to [bus 01-1e]
+>> >> >     01:0a.0 [PCI-PCIe bridge, type 8] bridge to [bus 02-04]
+>> >> >     02:00.0 [PCIe root port, type 4] bridge to [bus 03-04] (XLATE_ROOT)
+>> >> >     03:00.0 PCIe Endpoint
+>> >>
+>> >> A root port normally has a single PCIe link leading downstream.
+>> >> According to this, 02:00.0 is a root port that has the usual
+>> >> downstream link leading to 03:00.0, but it also has an upstream link
+>> >> to 01:0a.0.
+>> >
+>> > The PCI topology is a bit broken due to the way that the PCIe IP block
+>> > was integrated into SoC PCI bridges and devices. The current mechanism
+>> > of adding a PCI-PCIe bridge to glue these together is not ideal.
+>>
+>> Yeah, that's definitely broken.
+>>
+>> >> Maybe this example is omitting details that are not relevant to DMA
+>> >> aliases?  The PCIe capability only contains one set of link-related
+>> >> registers, so I don't know how we could manage a single device that
+>> >> has two links.
+>> >
+>> > The root port is standard and has just one link to the EP (or whatever
+>> > is on the external PCIe slot). The fallout of the current hw design is
+>> > that the PCI-PCIe bridge has a link that does not follow standard and
+>> > does not have a counterpart (as you noted).
+>> >
+>> >> A device with two links would break things like ASPM.  In
+>> >> set_pcie_port_type(), for example, we have this comment:
+>> >>
+>> >>    * A Root Port or a PCI-to-PCIe bridge is always the upstream end
+>> >>    * of a Link.  No PCIe component has two Links.  Two Links are
+>> >>    * connected by a Switch that has a Port on each Link and internal
+>> >>    * logic to connect the two Ports.
+>> >>
+>> >> The topology above breaks these assumptions, which will make
+>> >> pdev->has_secondary_link incorrect, which means ASPM won't work
+>> >> correctly.
+>> >
+>> > Given the current hardware, the pcieport driver seems to work reasonably
+>> > for the root port at 02:00.0, with AER support. I will take a look at the
+>> > ASPM part.
+>>
+>> I don't think pcieport itself cares much about links.  ASPM does, but
+>> it looks like set_pcie_port_type() actually is smart enough to know
+>> that PCI-to-PCIe bridges and Root Ports always have links on their
+>> secondary sides.  So has_secondary_link probably does get set
+>> correctly.
+>>
+>> But I think you'll hit the VIA "strange chipset" thing in
+>> pcie_aspm_init_link_state(), which will probably prevent us from doing
+>> ASPM on the link from 02:00.0 to 03:00.0.
+>>
+>> Could you collect "lspci -vv" output from this system?  I'd like to
+>> archive that as background for this IOMMU issue and the ASPM tweaks I
+>> suspect we'll have to do.  I *wish* we had more information about that
+>> VIA thing, because I suspect we could get rid of it if we had more
+>> details.
+>
+> The full logs are slightly large, so I have kept them at:
+> https://github.com/jchandra-cavm/thunderx2/blob/master/logs/
+> The lspci -vv output is lspci-vv.txt and lspci -tvn output is lspci-tvn.txt
+>
+> The output is from 2 socket system, the cards are not on the first slot
+> like the example above, so the bus and device numbers are different.
+>
+> Looks like I have to spend some time on ASPM next.
 
-Most BIOS don't enable this because of compatibility reasons.
+Thanks, I attached these to
+https://bugzilla.kernel.org/show_bug.cgi?id=195447 and added that link
+to the changelogs.
 
-Manually enable a 64bit BAR of 64GB size so that we have
-enough room for PCI devices.
+  01:0a.0 PCI-to-PCIe bridge to [bus 02-03]
+    Capabilities: [40] Express (v2) PCI/PCI-X to PCI-Express Bridge
 
-v2: style cleanups, increase size, add resource name, set correct flags,
-    print message that windows was added
+lspci doesn't decode the "Slot Implemented" bit here.  The spec (PCIe
+r3.1, sec 7.8.2) isn't explicit about whether that bit is defined for
+this kind of bridge, but it seems to me like this bridge contains a
+Downstream Port that could lead to a slot, so we *should* decode "Slot
+Implemented", and if it does indicate a slot, we should decode the
+Slot Capabilities, Control, and Status registers as well.
 
-Signed-off-by: Christian König <christian.koenig@amd.com>
----
- arch/x86/pci/fixup.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
+Linux also doesn't currently believe this bridge can have a slot below
+it (see pcie_cap_has_sltctl() and pcie_downstream_port()).  I don't
+know if your topology has actual slots there, but I think the spec
+does allow it, so Linux probably should handle that.
 
-diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
-index 6d52b94..8d949c4 100644
---- a/arch/x86/pci/fixup.c
-+++ b/arch/x86/pci/fixup.c
-@@ -571,3 +571,56 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
-+
-+static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
-+{
-+	uint32_t base, limit, high;
-+	struct resource *res, *conflict;
-+	unsigned i;
-+
-+	for (i = 0; i < 8; ++i) {
-+		pci_read_config_dword(dev, 0x80 + i * 0x8, &base);
-+		pci_read_config_dword(dev, 0x180 + i * 0x4, &high);
-+
-+		/* Is this slot free? */
-+		if ((base & 0x3) == 0x0)
-+			break;
-+
-+		base >>= 8;
-+		base |= high << 24;
-+
-+		/* Abort if a slot already configures a 64bit BAR. */
-+		if (base > 0x10000)
-+			return;
-+	}
-+	if (i == 8)
-+		return;
-+
-+	res = kzalloc(sizeof(*res), GFP_KERNEL);
-+	if (!res)
-+		return;
-+
-+	res->name = "PCI Bus 0000:00";
-+	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
-+		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
-+	res->start = 0x100000000;
-+	res->end = 0xfd00000000 - 1;
-+
-+	/* Just grab the free area behind system memory for this */
-+	while ((conflict = request_resource_conflict(&iomem_resource, res)))
-+		res->start = conflict->end + 1;
-+
-+	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
-+
-+	base = ((res->start >> 8) & 0xffffff00) | 0x3;
-+	limit = ((res->end + 1) >> 8) & 0xffffff00;
-+	high = ((res->start >> 40) & 0xff) |
-+		((((res->end + 1) >> 40) & 0xff) << 16);
-+
-+	pci_write_config_dword(dev, 0x180 + i * 0x4, high);
-+	pci_write_config_dword(dev, 0x84 + i * 0x8, limit);
-+	pci_write_config_dword(dev, 0x80 + i * 0x8, base);
-+
-+	pci_bus_add_resource(dev->bus, res, 0);
-+}
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
--- 
-2.7.4
+For this port:
+
+  02:00.0 Root Port to [bus 03]
+    Capabilities: [ac] Express (v2) Root Port (Slot-)
+
+I'm pretty sure there *is* a slot (currently empty), and your lspci
+output shows "Slot-", which seems wrong to me.  It should show "Slot+"
+with Presence Detect State showing "Slot Empty", shouldn't it?
+
+Bjorn
