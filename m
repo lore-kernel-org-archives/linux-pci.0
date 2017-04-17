@@ -1,39 +1,43 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:46991 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932413AbdDQHkV (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 17 Apr 2017 03:40:21 -0400
+Date: Mon, 17 Apr 2017 09:40:11 +0200 (CEST)
+From: Thomas Gleixner <tglx@linutronix.de>
+To: Peter Zijlstra <peterz@infradead.org>
+cc: LKML <linux-kernel@vger.kernel.org>,
+        Ingo Molnar <mingo@kernel.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Sebastian Siewior <bigeasy@linutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [patch 17/20] PCI: Use cpu_hotplug_disable() instead of
+ get_online_cpus()
+In-Reply-To: <20170417064619.fjpizfsfd65dtear@hirez.programming.kicks-ass.net>
+Message-ID: <alpine.DEB.2.20.1704170940020.2327@nanos>
+References: <20170415170107.643253702@linutronix.de> <20170415171652.675049942@linutronix.de> <20170417064619.fjpizfsfd65dtear@hirez.programming.kicks-ass.net>
 MIME-Version: 1.0
-In-Reply-To: <584359f9-5851-08c8-4b80-ae73abc4fe59@codeaurora.org>
-References: <20170419003130.5302-1-yinghai@kernel.org> <584359f9-5851-08c8-4b80-ae73abc4fe59@codeaurora.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Thu, 20 Apr 2017 13:38:32 -0500
-Message-ID: <CAErSpo7paKmVjvGhedCdbSNbARqDmE6jfLikp4SO75fob3pMzw@mail.gmail.com>
-Subject: Re: [PATCH v2] PCI: disable SERR for kdump kernel
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Yinghai Lu <yinghai@kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 20, 2017 at 12:14 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 4/18/2017 8:31 PM, Yinghai Lu wrote:
->> * pci_setup_device - fill in class and map information of a device
->>   * @dev: the device structure to fill
->> @@ -1572,6 +1592,9 @@ int pci_setup_device(struct pci_dev *dev
->>       /* device class may be changed after fixup */
->>       class = dev->class >> 8;
->>
->> +     if (is_kdump_kernel())
->> +             pci_disable_serr(dev);
->> +
->
-> This sounds like something that needs to be done while shutting down
-> the first kernel as part of the kdump procedure rather than boot of
-> the kdump kernel in pci setup.
+On Mon, 17 Apr 2017, Peter Zijlstra wrote:
+> On Sat, Apr 15, 2017 at 07:01:24PM +0200, Thomas Gleixner wrote:
+> > +++ b/drivers/pci/pci-driver.c
+> > @@ -320,10 +320,19 @@ static long local_pci_probe(void *_ddi)
+> >  	return 0;
+> >  }
+> >  
+> > +static bool pci_physfn_is_probed(struct pci_dev *dev)
+> > +{
+> > +#ifdef CONFIG_ATS
+> > +	return dev->physfn->is_probed;
+> > +#else
+> > +	return false;
+> > +#endif
+> > +}
+> > +
+> 
+> Should be in the next patch perhaps?
 
-In general, I would rather make the new kernel more tolerant than make
-assumptions about how the old kernel shut down.  I don't know if
-there's an explicit statement of kexec philosophy on this (it'd be
-nice if there were), but it seems like a more robust strategy, e.g.,
-less prone to revlock issues between the old/new kernels.
-
-Bjorn
+Indeed.
