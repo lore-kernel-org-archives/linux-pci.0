@@ -1,1543 +1,280 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v6 01/23] PCI: endpoint: Add EP core layer to enable EP
- controller and EP functions
-Date: Wed, 5 Apr 2017 14:22:21 +0530
-Message-ID: <20170405085243.18123-2-kishon@ti.com>
-In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
-References: <20170405085243.18123-1-kishon@ti.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Wong Vee Khee <vee.khee.wong@ni.com>
+To: <bhelgaas@google.com>, <keith.busch@intel.com>,
+        <rajatja@google.com>, <shhuiw@foxmail.com>
+CC: <hui.chun.ong@ni.com>, <jonathan.yong@intel.com>,
+        <vee.khee.wong@ni.com>, <Ram.Amrani@cavium.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH] pci-sysfs: Make PCI bridge attribute visible in sysfs
+Date: Mon, 17 Apr 2017 13:50:37 +0800
+Message-ID: <1492408237-16598-1-git-send-email-vee.khee.wong@ni.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Introduce a new EP core layer in order to support endpoint functions in
-linux kernel. This comprises the EPC library (Endpoint Controller Library)
-and EPF library (Endpoint Function Library). EPC library implements
-functions specific to an endpoint controller and EPF library implements
-functions specific to an endpoint function.
+From: vwong <vee.khee.wong@ni.com>
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Acked-By: Joao Pinto <jpinto@synopsys.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Export the PCIe link attributes of PCI bridges to sysfs.
+
+Signed-off-by: Wong Vee Khee <vee.khee.wong@ni.com>
+Signed-off-by: Hui Chun Ong <hui.chun.ong@ni.com>
 ---
- drivers/Makefile                    |   2 +
- drivers/pci/Kconfig                 |   1 +
- drivers/pci/endpoint/Kconfig        |  20 ++
- drivers/pci/endpoint/Makefile       |   6 +
- drivers/pci/endpoint/pci-epc-core.c | 575 ++++++++++++++++++++++++++++++++++++
- drivers/pci/endpoint/pci-epc-mem.c  | 143 +++++++++
- drivers/pci/endpoint/pci-epf-core.c | 347 ++++++++++++++++++++++
- include/linux/mod_devicetable.h     |  10 +
- include/linux/pci-epc.h             | 142 +++++++++
- include/linux/pci-epf.h             | 160 ++++++++++
- 10 files changed, 1406 insertions(+)
- create mode 100644 drivers/pci/endpoint/Kconfig
- create mode 100644 drivers/pci/endpoint/Makefile
- create mode 100644 drivers/pci/endpoint/pci-epc-core.c
- create mode 100644 drivers/pci/endpoint/pci-epc-mem.c
- create mode 100644 drivers/pci/endpoint/pci-epf-core.c
- create mode 100644 include/linux/pci-epc.h
- create mode 100644 include/linux/pci-epf.h
+ drivers/pci/pci-sysfs.c       | 197 +++++++++++++++++++++++++++++++++++++++++-
+ include/uapi/linux/pci_regs.h |   4 +
+ 2 files changed, 197 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/Makefile b/drivers/Makefile
-index 2eced9afba53..a5f8e43b2c4d 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -14,7 +14,9 @@ obj-$(CONFIG_GENERIC_PHY)	+= phy/
- obj-$(CONFIG_PINCTRL)		+= pinctrl/
- obj-$(CONFIG_GPIOLIB)		+= gpio/
- obj-y				+= pwm/
-+
- obj-$(CONFIG_PCI)		+= pci/
-+obj-$(CONFIG_PCI_ENDPOINT)	+= pci/endpoint/
- # PCI dwc controller drivers
- obj-y				+= pci/dwc/
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 25d010d..a218c43 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -154,6 +154,127 @@ static ssize_t resource_show(struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR_RO(resource);
  
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index df141420c902..9747c1ec8c74 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -134,3 +134,4 @@ config PCI_HYPERV
- source "drivers/pci/hotplug/Kconfig"
- source "drivers/pci/dwc/Kconfig"
- source "drivers/pci/host/Kconfig"
-+source "drivers/pci/endpoint/Kconfig"
-diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
-new file mode 100644
-index 000000000000..a5442ace7077
---- /dev/null
-+++ b/drivers/pci/endpoint/Kconfig
-@@ -0,0 +1,20 @@
-+#
-+# PCI Endpoint Support
-+#
-+
-+menu "PCI Endpoint"
-+
-+config PCI_ENDPOINT
-+	bool "PCI Endpoint Support"
-+	help
-+	   Enable this configuration option to support configurable PCI
-+	   endpoint. This should be enabled if the platform has a PCI
-+	   controller that can operate in endpoint mode.
-+
-+	   Enabling this option will build the endpoint library, which
-+	   includes endpoint controller library and endpoint function
-+	   library.
-+
-+	   If in doubt, say "N" to disable Endpoint support.
-+
-+endmenu
-diff --git a/drivers/pci/endpoint/Makefile b/drivers/pci/endpoint/Makefile
-new file mode 100644
-index 000000000000..dc1bc16491e6
---- /dev/null
-+++ b/drivers/pci/endpoint/Makefile
-@@ -0,0 +1,6 @@
-+#
-+# Makefile for PCI Endpoint Support
-+#
-+
-+obj-$(CONFIG_PCI_ENDPOINT)		+= pci-epc-core.o pci-epf-core.o\
-+					   pci-epc-mem.o
-diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
-new file mode 100644
-index 000000000000..54b366ece844
---- /dev/null
-+++ b/drivers/pci/endpoint/pci-epc-core.c
-@@ -0,0 +1,575 @@
-+/**
-+ * PCI Endpoint *Controller* (EPC) library
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <linux/device.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/slab.h>
-+#include <linux/module.h>
-+
-+#include <linux/pci-epc.h>
-+#include <linux/pci-epf.h>
-+
-+static struct class *pci_epc_class;
-+
-+static void devm_pci_epc_release(struct device *dev, void *res)
++static ssize_t max_link_speed_show(struct device *dev,
++				   struct device_attribute *attr, char *buf)
 +{
-+	struct pci_epc *epc = *(struct pci_epc **)res;
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++	u32 linkcap;
++	int err;
++	const char *speed;
 +
-+	pci_epc_destroy(epc);
-+}
++	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
 +
-+static int devm_pci_epc_match(struct device *dev, void *res, void *match_data)
-+{
-+	struct pci_epc **epc = res;
-+
-+	return *epc == match_data;
-+}
-+
-+/**
-+ * pci_epc_put() - release the PCI endpoint controller
-+ * @epc: epc returned by pci_epc_get()
-+ *
-+ * release the refcount the caller obtained by invoking pci_epc_get()
-+ */
-+void pci_epc_put(struct pci_epc *epc)
-+{
-+	if (!epc || IS_ERR(epc))
-+		return;
-+
-+	module_put(epc->ops->owner);
-+	put_device(&epc->dev);
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_put);
-+
-+/**
-+ * pci_epc_get() - get the PCI endpoint controller
-+ * @epc_name: device name of the endpoint controller
-+ *
-+ * Invoke to get struct pci_epc * corresponding to the device name of the
-+ * endpoint controller
-+ */
-+struct pci_epc *pci_epc_get(const char *epc_name)
-+{
-+	int ret = -EINVAL;
-+	struct pci_epc *epc;
-+	struct device *dev;
-+	struct class_dev_iter iter;
-+
-+	class_dev_iter_init(&iter, pci_epc_class, NULL, NULL);
-+	while ((dev = class_dev_iter_next(&iter))) {
-+		if (strcmp(epc_name, dev_name(dev)))
-+			continue;
-+
-+		epc = to_pci_epc(dev);
-+		if (!try_module_get(epc->ops->owner)) {
-+			ret = -EINVAL;
-+			goto err;
++	if (!err && linkcap) {
++		switch (linkcap & PCI_EXP_LNKCAP_MLS) {
++		case PCI_EXP_LNKCAP_MLS_8_0GB:
++			speed = "8 GT/s";
++			break;
++		case PCI_EXP_LNKCAP_MLS_5_0GB:
++			speed = "5 GT/s";
++			break;
++		case PCI_EXP_LNKCAP_MLS_2_5GB:
++			speed = "2.5 GT/s";
++			break;
++		default:
++			speed = "Unknown speed";
 +		}
 +
-+		get_device(&epc->dev);
-+		return epc;
++		return sprintf(buf, "%s\n", speed);
 +	}
 +
-+err:
-+	class_dev_iter_exit(&iter);
-+	return ERR_PTR(ret);
++	return -EINVAL;
 +}
-+EXPORT_SYMBOL_GPL(pci_epc_get);
++static DEVICE_ATTR_RO(max_link_speed);
 +
-+/**
-+ * pci_epc_stop() - stop the PCI link
-+ * @epc: the link of the EPC device that has to be stopped
-+ *
-+ * Invoke to stop the PCI link
-+ */
-+void pci_epc_stop(struct pci_epc *epc)
++static ssize_t max_link_width_show(struct device *dev,
++				   struct device_attribute *attr, char *buf)
 +{
-+	unsigned long flags;
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++	u32 linkcap;
++	int err;
 +
-+	if (IS_ERR(epc) || !epc->ops->stop)
-+		return;
++	err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
 +
-+	spin_lock_irqsave(&epc->lock, flags);
-+	epc->ops->stop(epc);
-+	spin_unlock_irqrestore(&epc->lock, flags);
++	return err ? -EINVAL : sprintf(
++		buf, "%u\n", (linkcap & PCI_EXP_LNKCAP_MLW) >> 4);
 +}
-+EXPORT_SYMBOL_GPL(pci_epc_stop);
++static DEVICE_ATTR_RO(max_link_width);
 +
-+/**
-+ * pci_epc_start() - start the PCI link
-+ * @epc: the link of *this* EPC device has to be started
-+ *
-+ * Invoke to start the PCI link
-+ */
-+int pci_epc_start(struct pci_epc *epc)
++static ssize_t current_link_speed_show(struct device *dev,
++				       struct device_attribute *attr, char *buf)
 +{
-+	int ret;
-+	unsigned long flags;
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++	u16 linkstat;
++	int err;
++	const char *speed;
 +
-+	if (IS_ERR(epc))
-+		return -EINVAL;
++	err = pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &linkstat);
 +
-+	if (!epc->ops->start)
-+		return 0;
++	if (!err && linkstat) {
++		switch (linkstat & PCI_EXP_LNKSTA_CLS) {
++		case PCI_EXP_LNKSTA_CLS_8_0GB:
++			speed = "8 GT/s";
++			break;
++		case PCI_EXP_LNKSTA_CLS_5_0GB:
++			speed = "5 GT/s";
++			break;
++		case PCI_EXP_LNKSTA_CLS_2_5GB:
++			speed = "2.5 GT/s";
++			break;
++		default:
++			speed = "Unknown speed";
++		}
 +
-+	spin_lock_irqsave(&epc->lock, flags);
-+	ret = epc->ops->start(epc);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_start);
-+
-+/**
-+ * pci_epc_raise_irq() - interrupt the host system
-+ * @epc: the EPC device which has to interrupt the host
-+ * @type: specify the type of interrupt; legacy or MSI
-+ * @interrupt_num: the MSI interrupt number
-+ *
-+ * Invoke to raise an MSI or legacy interrupt
-+ */
-+int pci_epc_raise_irq(struct pci_epc *epc, enum pci_epc_irq_type type,
-+		      u8 interrupt_num)
-+{
-+	int ret;
-+	unsigned long flags;
-+
-+	if (IS_ERR(epc))
-+		return -EINVAL;
-+
-+	if (!epc->ops->raise_irq)
-+		return 0;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	ret = epc->ops->raise_irq(epc, type, interrupt_num);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_raise_irq);
-+
-+/**
-+ * pci_epc_get_msi() - get the number of MSI interrupt numbers allocated
-+ * @epc: the EPC device to which MSI interrupts was requested
-+ *
-+ * Invoke to get the number of MSI interrupts allocated by the RC
-+ */
-+int pci_epc_get_msi(struct pci_epc *epc)
-+{
-+	int interrupt;
-+	unsigned long flags;
-+
-+	if (IS_ERR(epc))
-+		return 0;
-+
-+	if (!epc->ops->get_msi)
-+		return 0;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	interrupt = epc->ops->get_msi(epc);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	if (interrupt < 0)
-+		return 0;
-+
-+	interrupt = 1 << interrupt;
-+
-+	return interrupt;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_get_msi);
-+
-+/**
-+ * pci_epc_set_msi() - set the number of MSI interrupt numbers required
-+ * @epc: the EPC device on which MSI has to be configured
-+ * @interrupts: number of MSI interrupts required by the EPF
-+ *
-+ * Invoke to set the required number of MSI interrupts.
-+ */
-+int pci_epc_set_msi(struct pci_epc *epc, u8 interrupts)
-+{
-+	int ret;
-+	u8 encode_int;
-+	unsigned long flags;
-+
-+	if (IS_ERR(epc))
-+		return -EINVAL;
-+
-+	if (!epc->ops->set_msi)
-+		return 0;
-+
-+	encode_int = order_base_2(interrupts);
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	ret = epc->ops->set_msi(epc, encode_int);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_set_msi);
-+
-+/**
-+ * pci_epc_unmap_addr() - unmap CPU address from PCI address
-+ * @epc: the EPC device on which address is allocated
-+ * @phys_addr: physical address of the local system
-+ *
-+ * Invoke to unmap the CPU address from PCI address.
-+ */
-+void pci_epc_unmap_addr(struct pci_epc *epc, phys_addr_t phys_addr)
-+{
-+	unsigned long flags;
-+
-+	if (IS_ERR(epc))
-+		return;
-+
-+	if (!epc->ops->unmap_addr)
-+		return;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	epc->ops->unmap_addr(epc, phys_addr);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_unmap_addr);
-+
-+/**
-+ * pci_epc_map_addr() - map CPU address to PCI address
-+ * @epc: the EPC device on which address is allocated
-+ * @phys_addr: physical address of the local system
-+ * @pci_addr: PCI address to which the physical address should be mapped
-+ * @size: the size of the allocation
-+ *
-+ * Invoke to map CPU address with PCI address.
-+ */
-+int pci_epc_map_addr(struct pci_epc *epc, phys_addr_t phys_addr,
-+		     u64 pci_addr, size_t size)
-+{
-+	int ret;
-+	unsigned long flags;
-+
-+	if (IS_ERR(epc))
-+		return -EINVAL;
-+
-+	if (!epc->ops->map_addr)
-+		return 0;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	ret = epc->ops->map_addr(epc, phys_addr, pci_addr, size);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_map_addr);
-+
-+/**
-+ * pci_epc_clear_bar() - reset the BAR
-+ * @epc: the EPC device for which the BAR has to be cleared
-+ * @bar: the BAR number that has to be reset
-+ *
-+ * Invoke to reset the BAR of the endpoint device.
-+ */
-+void pci_epc_clear_bar(struct pci_epc *epc, int bar)
-+{
-+	unsigned long flags;
-+
-+	if (IS_ERR(epc))
-+		return;
-+
-+	if (!epc->ops->clear_bar)
-+		return;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	epc->ops->clear_bar(epc, bar);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_clear_bar);
-+
-+/**
-+ * pci_epc_set_bar() - configure BAR in order for host to assign PCI addr space
-+ * @epc: the EPC device on which BAR has to be configured
-+ * @bar: the BAR number that has to be configured
-+ * @size: the size of the addr space
-+ * @flags: specify memory allocation/io allocation/32bit address/64 bit address
-+ *
-+ * Invoke to configure the BAR of the endpoint device.
-+ */
-+int pci_epc_set_bar(struct pci_epc *epc, enum pci_barno bar,
-+		    dma_addr_t bar_phys, size_t size, int flags)
-+{
-+	int ret;
-+	unsigned long irq_flags;
-+
-+	if (IS_ERR(epc))
-+		return -EINVAL;
-+
-+	if (!epc->ops->set_bar)
-+		return 0;
-+
-+	spin_lock_irqsave(&epc->lock, irq_flags);
-+	ret = epc->ops->set_bar(epc, bar, bar_phys, size, flags);
-+	spin_unlock_irqrestore(&epc->lock, irq_flags);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_set_bar);
-+
-+/**
-+ * pci_epc_write_header() - write standard configuration header
-+ * @epc: the EPC device to which the configuration header should be written
-+ * @header: standard configuration header fields
-+ *
-+ * Invoke to write the configuration header to the endpoint controller. Every
-+ * endpoint controller will have a dedicated location to which the standard
-+ * configuration header would be written. The callback function should write
-+ * the header fields to this dedicated location.
-+ */
-+int pci_epc_write_header(struct pci_epc *epc, struct pci_epf_header *header)
-+{
-+	int ret;
-+	unsigned long flags;
-+
-+	if (IS_ERR(epc))
-+		return -EINVAL;
-+
-+	if (!epc->ops->write_header)
-+		return 0;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	ret = epc->ops->write_header(epc, header);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_write_header);
-+
-+/**
-+ * pci_epc_add_epf() - bind PCI endpoint function to an endpoint controller
-+ * @epc: the EPC device to which the endpoint function should be added
-+ * @epf: the endpoint function to be added
-+ *
-+ * A PCI endpoint device can have one or more functions. In the case of PCIe,
-+ * the specification allows up to 8 PCIe endpoint functions. Invoke
-+ * pci_epc_add_epf() to add a PCI endpoint function to an endpoint controller.
-+ */
-+int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf)
-+{
-+	unsigned long flags;
-+
-+	if (epf->epc)
-+		return -EBUSY;
-+
-+	if (IS_ERR(epc))
-+		return -EINVAL;
-+
-+	if (epf->func_no > epc->max_functions - 1)
-+		return -EINVAL;
-+
-+	epf->epc = epc;
-+	dma_set_coherent_mask(&epf->dev, epc->dev.coherent_dma_mask);
-+	epf->dev.dma_mask = epc->dev.dma_mask;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	list_add_tail(&epf->list, &epc->pci_epf);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_add_epf);
-+
-+/**
-+ * pci_epc_remove_epf() - remove PCI endpoint function from endpoint controller
-+ * @epc: the EPC device from which the endpoint function should be removed
-+ * @epf: the endpoint function to be removed
-+ *
-+ * Invoke to remove PCI endpoint function from the endpoint controller.
-+ */
-+void pci_epc_remove_epf(struct pci_epc *epc, struct pci_epf *epf)
-+{
-+	unsigned long flags;
-+
-+	if (!epc || IS_ERR(epc))
-+		return;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	list_del(&epf->list);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_remove_epf);
-+
-+/**
-+ * pci_epc_linkup() - Notify the EPF device that EPC device has established a
-+ *		      connection with the Root Complex.
-+ * @epc: the EPC device which has established link with the host
-+ *
-+ * Invoke to Notify the EPF device that the EPC device has established a
-+ * connection with the Root Complex.
-+ */
-+void pci_epc_linkup(struct pci_epc *epc)
-+{
-+	unsigned long flags;
-+	struct pci_epf *epf;
-+
-+	if (!epc || IS_ERR(epc))
-+		return;
-+
-+	spin_lock_irqsave(&epc->lock, flags);
-+	list_for_each_entry(epf, &epc->pci_epf, list)
-+		pci_epf_linkup(epf);
-+	spin_unlock_irqrestore(&epc->lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_linkup);
-+
-+/**
-+ * pci_epc_destroy() - destroy the EPC device
-+ * @epc: the EPC device that has to be destroyed
-+ *
-+ * Invoke to destroy the PCI EPC device
-+ */
-+void pci_epc_destroy(struct pci_epc *epc)
-+{
-+	device_unregister(&epc->dev);
-+	kfree(epc);
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_destroy);
-+
-+/**
-+ * devm_pci_epc_destroy() - destroy the EPC device
-+ * @dev: device that wants to destroy the EPC
-+ * @epc: the EPC device that has to be destroyed
-+ *
-+ * Invoke to destroy the devres associated with this
-+ * pci_epc and destroy the EPC device.
-+ */
-+void devm_pci_epc_destroy(struct device *dev, struct pci_epc *epc)
-+{
-+	int r;
-+
-+	r = devres_destroy(dev, devm_pci_epc_release, devm_pci_epc_match,
-+			   epc);
-+	dev_WARN_ONCE(dev, r, "couldn't find PCI EPC resource\n");
-+}
-+EXPORT_SYMBOL_GPL(devm_pci_epc_destroy);
-+
-+/**
-+ * __pci_epc_create() - create a new endpoint controller (EPC) device
-+ * @dev: device that is creating the new EPC
-+ * @ops: function pointers for performing EPC operations
-+ * @owner: the owner of the module that creates the EPC device
-+ *
-+ * Invoke to create a new EPC device and add it to pci_epc class.
-+ */
-+struct pci_epc *
-+__pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
-+		 struct module *owner)
-+{
-+	int ret;
-+	struct pci_epc *epc;
-+
-+	if (WARN_ON(!dev)) {
-+		ret = -EINVAL;
-+		goto err_ret;
++		return sprintf(buf, "%s\n", speed);
 +	}
 +
-+	epc = kzalloc(sizeof(*epc), GFP_KERNEL);
-+	if (!epc) {
-+		ret = -ENOMEM;
-+		goto err_ret;
-+	}
-+
-+	spin_lock_init(&epc->lock);
-+	INIT_LIST_HEAD(&epc->pci_epf);
-+
-+	device_initialize(&epc->dev);
-+	dma_set_coherent_mask(&epc->dev, dev->coherent_dma_mask);
-+	epc->dev.class = pci_epc_class;
-+	epc->dev.dma_mask = dev->dma_mask;
-+	epc->ops = ops;
-+
-+	ret = dev_set_name(&epc->dev, "%s", dev_name(dev));
-+	if (ret)
-+		goto put_dev;
-+
-+	ret = device_add(&epc->dev);
-+	if (ret)
-+		goto put_dev;
-+
-+	return epc;
-+
-+put_dev:
-+	put_device(&epc->dev);
-+	kfree(epc);
-+
-+err_ret:
-+	return ERR_PTR(ret);
++	return -EINVAL;
 +}
-+EXPORT_SYMBOL_GPL(__pci_epc_create);
++static DEVICE_ATTR_RO(current_link_speed);
 +
-+/**
-+ * __devm_pci_epc_create() - create a new endpoint controller (EPC) device
-+ * @dev: device that is creating the new EPC
-+ * @ops: function pointers for performing EPC operations
-+ * @owner: the owner of the module that creates the EPC device
-+ *
-+ * Invoke to create a new EPC device and add it to pci_epc class.
-+ * While at that, it also associates the device with the pci_epc using devres.
-+ * On driver detach, release function is invoked on the devres data,
-+ * then, devres data is freed.
-+ */
-+struct pci_epc *
-+__devm_pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
-+		      struct module *owner)
++static ssize_t current_link_width_show(struct device *dev,
++				       struct device_attribute *attr, char *buf)
 +{
-+	struct pci_epc **ptr, *epc;
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++	u16 linkstat;
++	int err;
 +
-+	ptr = devres_alloc(devm_pci_epc_release, sizeof(*ptr), GFP_KERNEL);
-+	if (!ptr)
-+		return ERR_PTR(-ENOMEM);
++	err = pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &linkstat);
 +
-+	epc = __pci_epc_create(dev, ops, owner);
-+	if (!IS_ERR(epc)) {
-+		*ptr = epc;
-+		devres_add(dev, ptr);
-+	} else {
-+		devres_free(ptr);
-+	}
-+
-+	return epc;
++	return err ? -EINVAL : sprintf(
++		buf, "%u\n",
++		(linkstat & PCI_EXP_LNKSTA_NLW) >> PCI_EXP_LNKSTA_NLW_SHIFT);
 +}
-+EXPORT_SYMBOL_GPL(__devm_pci_epc_create);
++static DEVICE_ATTR_RO(current_link_width);
 +
-+static int __init pci_epc_init(void)
++static ssize_t secondary_bus_number_show(struct device *dev,
++					 struct device_attribute *attr,
++					 char *buf)
 +{
-+	pci_epc_class = class_create(THIS_MODULE, "pci_epc");
-+	if (IS_ERR(pci_epc_class)) {
-+		pr_err("failed to create pci epc class --> %ld\n",
-+		       PTR_ERR(pci_epc_class));
-+		return PTR_ERR(pci_epc_class);
-+	}
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++	u8 sec_bus;
++	int err;
 +
-+	return 0;
++	err = pci_read_config_byte(pci_dev, PCI_SECONDARY_BUS, &sec_bus);
++
++	return err ? -EINVAL : sprintf(buf, "%u\n", sec_bus);
 +}
-+module_init(pci_epc_init);
++static DEVICE_ATTR_RO(secondary_bus_number);
 +
-+static void __exit pci_epc_exit(void)
++static ssize_t subordinate_bus_number_show(struct device *dev,
++					   struct device_attribute *attr,
++					   char *buf)
 +{
-+	class_destroy(pci_epc_class);
++	struct pci_dev *pci_dev = to_pci_dev(dev);
++	u8 sub_bus;
++	int err;
++
++	err = pci_read_config_byte(pci_dev, PCI_SUBORDINATE_BUS, &sub_bus);
++
++	return err ? -EINVAL : sprintf(buf, "%u\n", sub_bus);
 +}
-+module_exit(pci_epc_exit);
-+
-+MODULE_DESCRIPTION("PCI EPC Library");
-+MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/endpoint/pci-epc-mem.c b/drivers/pci/endpoint/pci-epc-mem.c
-new file mode 100644
-index 000000000000..3a94cc1caf22
---- /dev/null
-+++ b/drivers/pci/endpoint/pci-epc-mem.c
-@@ -0,0 +1,143 @@
-+/**
-+ * PCI Endpoint *Controller* Address Space Management
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <linux/io.h>
-+#include <linux/module.h>
-+#include <linux/slab.h>
-+
-+#include <linux/pci-epc.h>
-+
-+/**
-+ * pci_epc_mem_init() - initialize the pci_epc_mem structure
-+ * @epc: the EPC device that invoked pci_epc_mem_init
-+ * @phys_base: the physical address of the base
-+ * @size: the size of the address space
-+ *
-+ * Invoke to initialize the pci_epc_mem structure used by the
-+ * endpoint functions to allocate mapped PCI address.
-+ */
-+int pci_epc_mem_init(struct pci_epc *epc, phys_addr_t phys_base, size_t size)
-+{
-+	int ret;
-+	struct pci_epc_mem *mem;
-+	unsigned long *bitmap;
-+	int pages = size >> PAGE_SHIFT;
-+	int bitmap_size = BITS_TO_LONGS(pages) * sizeof(long);
-+
-+	mem = kzalloc(sizeof(*mem), GFP_KERNEL);
-+	if (!mem) {
-+		ret = -ENOMEM;
-+		goto err;
-+	}
-+
-+	bitmap = kzalloc(bitmap_size, GFP_KERNEL);
-+	if (!bitmap) {
-+		ret = -ENOMEM;
-+		goto err_mem;
-+	}
-+
-+	mem->bitmap = bitmap;
-+	mem->phys_base = phys_base;
-+	mem->pages = pages;
-+	mem->size = size;
-+
-+	epc->mem = mem;
-+
-+	return 0;
-+
-+err_mem:
-+	kfree(mem);
-+
-+err:
-+return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_mem_init);
-+
-+/**
-+ * pci_epc_mem_exit() - cleanup the pci_epc_mem structure
-+ * @epc: the EPC device that invoked pci_epc_mem_exit
-+ *
-+ * Invoke to cleanup the pci_epc_mem structure allocated in
-+ * pci_epc_mem_init().
-+ */
-+void pci_epc_mem_exit(struct pci_epc *epc)
-+{
-+	struct pci_epc_mem *mem = epc->mem;
-+
-+	epc->mem = NULL;
-+	kfree(mem->bitmap);
-+	kfree(mem);
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_mem_exit);
-+
-+/**
-+ * pci_epc_mem_alloc_addr() - allocate memory address from EPC addr space
-+ * @epc: the EPC device on which memory has to be allocated
-+ * @phys_addr: populate the allocated physical address here
-+ * @size: the size of the address space that has to be allocated
-+ *
-+ * Invoke to allocate memory address from the EPC address space. This
-+ * is usually done to map the remote RC address into the local system.
-+ */
-+void __iomem *pci_epc_mem_alloc_addr(struct pci_epc *epc,
-+				     phys_addr_t *phys_addr, size_t size)
-+{
-+	int pageno;
-+	void __iomem *virt_addr;
-+	struct pci_epc_mem *mem = epc->mem;
-+	int order = get_order(size);
-+
-+	pageno = bitmap_find_free_region(mem->bitmap, mem->pages, order);
-+	if (pageno < 0)
-+		return NULL;
-+
-+	*phys_addr = mem->phys_base + (pageno << PAGE_SHIFT);
-+	virt_addr = ioremap(*phys_addr, size);
-+	if (!virt_addr)
-+		bitmap_release_region(mem->bitmap, pageno, order);
-+
-+	return virt_addr;
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_mem_alloc_addr);
-+
-+/**
-+ * pci_epc_mem_free_addr() - free the allocated memory address
-+ * @epc: the EPC device on which memory was allocated
-+ * @phys_addr: the allocated physical address
-+ * @virt_addr: virtual address of the allocated mem space
-+ * @size: the size of the allocated address space
-+ *
-+ * Invoke to free the memory allocated using pci_epc_mem_alloc_addr.
-+ */
-+void pci_epc_mem_free_addr(struct pci_epc *epc, phys_addr_t phys_addr,
-+			   void __iomem *virt_addr, size_t size)
-+{
-+	int pageno;
-+	int order = get_order(size);
-+	struct pci_epc_mem *mem = epc->mem;
-+
-+	iounmap(virt_addr);
-+	pageno = (phys_addr - mem->phys_base) >> PAGE_SHIFT;
-+	bitmap_release_region(mem->bitmap, pageno, order);
-+}
-+EXPORT_SYMBOL_GPL(pci_epc_mem_free_addr);
-+
-+MODULE_DESCRIPTION("PCI EPC Address Space Management");
-+MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
-+MODULE_LICENSE("GPL v2");
-diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
-new file mode 100644
-index 000000000000..7564a29f435c
---- /dev/null
-+++ b/drivers/pci/endpoint/pci-epf-core.c
-@@ -0,0 +1,347 @@
-+/**
-+ * PCI Endpoint *Function* (EPF) library
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
-+ */
-+
-+#include <linux/device.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/slab.h>
-+#include <linux/module.h>
-+
-+#include <linux/pci-epc.h>
-+#include <linux/pci-epf.h>
-+
-+static struct bus_type pci_epf_bus_type;
-+static struct device_type pci_epf_type;
-+
-+/**
-+ * pci_epf_linkup() - Notify the function driver that EPC device has
-+ *		      established a connection with the Root Complex.
-+ * @epf: the EPF device bound to the EPC device which has established
-+ *	 the connection with the host
-+ *
-+ * Invoke to notify the function driver that EPC device has established
-+ * a connection with the Root Complex.
-+ */
-+void pci_epf_linkup(struct pci_epf *epf)
-+{
-+	if (!epf->driver)
-+		dev_WARN(&epf->dev, "epf device not bound to driver\n");
-+
-+	epf->driver->ops->linkup(epf);
-+}
-+EXPORT_SYMBOL_GPL(pci_epf_linkup);
-+
-+/**
-+ * pci_epf_unbind() - Notify the function driver that the binding between the
-+ *		      EPF device and EPC device has been lost
-+ * @epf: the EPF device which has lost the binding with the EPC device
-+ *
-+ * Invoke to notify the function driver that the binding between the EPF device
-+ * and EPC device has been lost.
-+ */
-+void pci_epf_unbind(struct pci_epf *epf)
-+{
-+	if (!epf->driver)
-+		dev_WARN(&epf->dev, "epf device not bound to driver\n");
-+
-+	epf->driver->ops->unbind(epf);
-+	module_put(epf->driver->owner);
-+}
-+EXPORT_SYMBOL_GPL(pci_epf_unbind);
-+
-+/**
-+ * pci_epf_bind() - Notify the function driver that the EPF device has been
-+ *		    bound to a EPC device
-+ * @epf: the EPF device which has been bound to the EPC device
-+ *
-+ * Invoke to notify the function driver that it has been bound to a EPC device
-+ */
-+int pci_epf_bind(struct pci_epf *epf)
-+{
-+	if (!epf->driver)
-+		dev_WARN(&epf->dev, "epf device not bound to driver\n");
-+
-+	if (!try_module_get(epf->driver->owner))
-+		return -EAGAIN;
-+
-+	return epf->driver->ops->bind(epf);
-+}
-+EXPORT_SYMBOL_GPL(pci_epf_bind);
-+
-+/**
-+ * pci_epf_free_space() - free the allocated PCI EPF register space
-+ * @addr: the virtual address of the PCI EPF register space
-+ * @bar: the BAR number corresponding to the register space
-+ *
-+ * Invoke to free the allocated PCI EPF register space.
-+ */
-+void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar)
-+{
-+	struct device *dev = &epf->dev;
-+
-+	if (!addr)
-+		return;
-+
-+	dma_free_coherent(dev, epf->bar[bar].size, addr,
-+			  epf->bar[bar].phys_addr);
-+
-+	epf->bar[bar].phys_addr = 0;
-+	epf->bar[bar].size = 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_epf_free_space);
-+
-+/**
-+ * pci_epf_alloc_space() - allocate memory for the PCI EPF register space
-+ * @size: the size of the memory that has to be allocated
-+ * @bar: the BAR number corresponding to the allocated register space
-+ *
-+ * Invoke to allocate memory for the PCI EPF register space.
-+ */
-+void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar)
-+{
-+	void *space;
-+	struct device *dev = &epf->dev;
-+	dma_addr_t phys_addr;
-+
-+	if (size < 128)
-+		size = 128;
-+	size = roundup_pow_of_two(size);
-+
-+	space = dma_alloc_coherent(dev, size, &phys_addr, GFP_KERNEL);
-+	if (!space) {
-+		dev_err(dev, "failed to allocate mem space\n");
-+		return NULL;
-+	}
-+
-+	epf->bar[bar].phys_addr = phys_addr;
-+	epf->bar[bar].size = size;
-+
-+	return space;
-+}
-+EXPORT_SYMBOL_GPL(pci_epf_alloc_space);
-+
-+/**
-+ * pci_epf_unregister_driver() - unregister the PCI EPF driver
-+ * @driver: the PCI EPF driver that has to be unregistered
-+ *
-+ * Invoke to unregister the PCI EPF driver.
-+ */
-+void pci_epf_unregister_driver(struct pci_epf_driver *driver)
-+{
-+	driver_unregister(&driver->driver);
-+}
-+EXPORT_SYMBOL_GPL(pci_epf_unregister_driver);
-+
-+/**
-+ * __pci_epf_register_driver() - register a new PCI EPF driver
-+ * @driver: structure representing PCI EPF driver
-+ * @owner: the owner of the module that registers the PCI EPF driver
-+ *
-+ * Invoke to register a new PCI EPF driver.
-+ */
-+int __pci_epf_register_driver(struct pci_epf_driver *driver,
-+			      struct module *owner)
-+{
-+	int ret;
-+
-+	if (!driver->ops)
-+		return -EINVAL;
-+
-+	if (!driver->ops->bind || !driver->ops->unbind || !driver->ops->linkup)
-+		return -EINVAL;
-+
-+	driver->driver.bus = &pci_epf_bus_type;
-+	driver->driver.owner = owner;
-+
-+	ret = driver_register(&driver->driver);
-+	if (ret)
-+		return ret;
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(__pci_epf_register_driver);
-+
-+/**
-+ * pci_epf_destroy() - destroy the created PCI EPF device
-+ * @epf: the PCI EPF device that has to be destroyed.
-+ *
-+ * Invoke to destroy the PCI EPF device created by invoking pci_epf_create().
-+ */
-+void pci_epf_destroy(struct pci_epf *epf)
-+{
-+	device_unregister(&epf->dev);
-+}
-+EXPORT_SYMBOL_GPL(pci_epf_destroy);
-+
-+/**
-+ * pci_epf_create() - create a new PCI EPF device
-+ * @name: the name of the PCI EPF device. This name will be used to bind the
-+ *	  the EPF device to a EPF driver
-+ *
-+ * Invoke to create a new PCI EPF device by providing the name of the function
-+ * device.
-+ */
-+struct pci_epf *pci_epf_create(const char *name)
-+{
-+	int ret;
-+	struct pci_epf *epf;
-+	struct device *dev;
-+	char *func_name;
-+	char *buf;
-+
-+	epf = kzalloc(sizeof(*epf), GFP_KERNEL);
-+	if (!epf) {
-+		ret = -ENOMEM;
-+		goto err_ret;
-+	}
-+
-+	buf = kstrdup(name, GFP_KERNEL);
-+	if (!buf) {
-+		ret = -ENOMEM;
-+		goto free_epf;
-+	}
-+
-+	func_name = buf;
-+	buf = strchrnul(buf, '.');
-+	*buf = '\0';
-+
-+	epf->name = kstrdup(func_name, GFP_KERNEL);
-+	if (!epf->name) {
-+		ret = -ENOMEM;
-+		goto free_epf;
-+	}
-+
-+	dev = &epf->dev;
-+	device_initialize(dev);
-+	dev->bus = &pci_epf_bus_type;
-+	dev->type = &pci_epf_type;
-+
-+	ret = dev_set_name(dev, "%s", name);
-+	if (ret)
-+		goto put_dev;
-+
-+	ret = device_add(dev);
-+	if (ret)
-+		goto put_dev;
-+
-+	kfree(func_name);
-+	return epf;
-+
-+put_dev:
-+	put_device(dev);
-+	kfree(epf->name);
-+	kfree(func_name);
-+
-+free_epf:
-+	kfree(epf);
-+
-+err_ret:
-+	return ERR_PTR(ret);
-+}
-+EXPORT_SYMBOL_GPL(pci_epf_create);
-+
-+static void pci_epf_dev_release(struct device *dev)
-+{
-+	struct pci_epf *epf = to_pci_epf(dev);
-+
-+	kfree(epf->name);
-+	kfree(epf);
-+}
-+
-+static struct device_type pci_epf_type = {
-+	.release	= pci_epf_dev_release,
-+};
-+
-+static int
-+pci_epf_match_id(const struct pci_epf_device_id *id, const struct pci_epf *epf)
-+{
-+	while (id->name[0]) {
-+		if (strcmp(epf->name, id->name) == 0)
-+			return true;
-+		id++;
-+	}
-+
-+	return false;
-+}
-+
-+static int pci_epf_device_match(struct device *dev, struct device_driver *drv)
-+{
-+	struct pci_epf *epf = to_pci_epf(dev);
-+	struct pci_epf_driver *driver = to_pci_epf_driver(drv);
-+
-+	if (driver->id_table)
-+		return pci_epf_match_id(driver->id_table, epf);
-+
-+	return !strcmp(epf->name, drv->name);
-+}
-+
-+static int pci_epf_device_probe(struct device *dev)
-+{
-+	struct pci_epf *epf = to_pci_epf(dev);
-+	struct pci_epf_driver *driver = to_pci_epf_driver(dev->driver);
-+
-+	if (!driver->probe)
-+		return -ENODEV;
-+
-+	epf->driver = driver;
-+
-+	return driver->probe(epf);
-+}
-+
-+static int pci_epf_device_remove(struct device *dev)
-+{
-+	int ret;
-+	struct pci_epf *epf = to_pci_epf(dev);
-+	struct pci_epf_driver *driver = to_pci_epf_driver(dev->driver);
-+
-+	ret = driver->remove(epf);
-+	epf->driver = NULL;
-+
-+	return ret;
-+}
-+
-+static struct bus_type pci_epf_bus_type = {
-+	.name		= "pci-epf",
-+	.match		= pci_epf_device_match,
-+	.probe		= pci_epf_device_probe,
-+	.remove		= pci_epf_device_remove,
-+};
-+
-+static int __init pci_epf_init(void)
-+{
-+	int ret;
-+
-+	ret = bus_register(&pci_epf_bus_type);
-+	if (ret) {
-+		pr_err("failed to register pci epf bus --> %d\n", ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+module_init(pci_epf_init);
-+
-+static void __exit pci_epf_exit(void)
-+{
-+	bus_unregister(&pci_epf_bus_type);
-+}
-+module_exit(pci_epf_exit);
-+
-+MODULE_DESCRIPTION("PCI EPF Library");
-+MODULE_AUTHOR("Kishon Vijay Abraham I <kishon@ti.com>");
-+MODULE_LICENSE("GPL v2");
-diff --git a/include/linux/mod_devicetable.h b/include/linux/mod_devicetable.h
-index 8850fcaf50db..566fda587fcf 100644
---- a/include/linux/mod_devicetable.h
-+++ b/include/linux/mod_devicetable.h
-@@ -428,6 +428,16 @@ struct i2c_device_id {
- 	kernel_ulong_t driver_data;	/* Data private to the driver */
++static DEVICE_ATTR_RO(subordinate_bus_number);
++
+ static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
+ 			     char *buf)
+ {
+@@ -602,12 +723,17 @@ static struct attribute *pci_dev_attrs[] = {
+ 	NULL,
  };
  
-+/* pci_epf */
-+
-+#define PCI_EPF_NAME_SIZE	20
-+#define PCI_EPF_MODULE_PREFIX	"pci_epf:"
-+
-+struct pci_epf_device_id {
-+	char name[PCI_EPF_NAME_SIZE];
-+	kernel_ulong_t driver_data;
-+};
-+
- /* spi */
+-static const struct attribute_group pci_dev_group = {
+-	.attrs = pci_dev_attrs,
++static struct attribute *pci_bridge_attrs[] = {
++	&dev_attr_subordinate_bus_number.attr,
++	&dev_attr_secondary_bus_number.attr,
++	NULL,
+ };
  
- #define SPI_NAME_SIZE	32
-diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-new file mode 100644
-index 000000000000..8c63d3c37f76
---- /dev/null
-+++ b/include/linux/pci-epc.h
-@@ -0,0 +1,142 @@
-+/**
-+ * PCI Endpoint *Controller* (EPC) header file
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ */
-+
-+#ifndef __LINUX_PCI_EPC_H
-+#define __LINUX_PCI_EPC_H
-+
-+#include <linux/pci-epf.h>
-+
-+struct pci_epc;
-+
-+enum pci_epc_irq_type {
-+	PCI_EPC_IRQ_UNKNOWN,
-+	PCI_EPC_IRQ_LEGACY,
-+	PCI_EPC_IRQ_MSI,
-+};
-+
-+/**
-+ * struct pci_epc_ops - set of function pointers for performing EPC operations
-+ * @write_header: ops to populate configuration space header
-+ * @set_bar: ops to configure the BAR
-+ * @clear_bar: ops to reset the BAR
-+ * @map_addr: ops to map CPU address to PCI address
-+ * @unmap_addr: ops to unmap CPU address and PCI address
-+ * @set_msi: ops to set the requested number of MSI interrupts in the MSI
-+ *	     capability register
-+ * @get_msi: ops to get the number of MSI interrupts allocated by the RC from
-+ *	     the MSI capability register
-+ * @raise_irq: ops to raise a legacy or MSI interrupt
-+ * @start: ops to start the PCI link
-+ * @stop: ops to stop the PCI link
-+ * @owner: the module owner containing the ops
-+ */
-+struct pci_epc_ops {
-+	int	(*write_header)(struct pci_epc *pci_epc,
-+				struct pci_epf_header *hdr);
-+	int	(*set_bar)(struct pci_epc *epc, enum pci_barno bar,
-+			   dma_addr_t bar_phys, size_t size, int flags);
-+	void	(*clear_bar)(struct pci_epc *epc, enum pci_barno bar);
-+	int	(*map_addr)(struct pci_epc *epc, phys_addr_t addr,
-+			    u64 pci_addr, size_t size);
-+	void	(*unmap_addr)(struct pci_epc *epc, phys_addr_t addr);
-+	int	(*set_msi)(struct pci_epc *epc, u8 interrupts);
-+	int	(*get_msi)(struct pci_epc *epc);
-+	int	(*raise_irq)(struct pci_epc *pci_epc,
-+			     enum pci_epc_irq_type type, u8 interrupt_num);
-+	int	(*start)(struct pci_epc *epc);
-+	void	(*stop)(struct pci_epc *epc);
-+	struct module *owner;
-+};
-+
-+/**
-+ * struct pci_epc_mem - address space of the endpoint controller
-+ * @phys_base: physical base address of the PCI address space
-+ * @size: the size of the PCI address space
-+ * @bitmap: bitmap to manage the PCI address space
-+ * @pages: number of bits representing the address region
-+ */
-+struct pci_epc_mem {
-+	phys_addr_t	phys_base;
-+	size_t		size;
-+	unsigned long	*bitmap;
-+	int		pages;
-+};
-+
-+/**
-+ * struct pci_epc - represents the PCI EPC device
-+ * @dev: PCI EPC device
-+ * @pci_epf: list of endpoint functions present in this EPC device
-+ * @ops: function pointers for performing endpoint operations
-+ * @mem: address space of the endpoint controller
-+ * @max_functions: max number of functions that can be configured in this EPC
-+ * @lock: spinlock to protect pci_epc ops
-+ */
-+struct pci_epc {
-+	struct device			dev;
-+	struct list_head		pci_epf;
-+	const struct pci_epc_ops	*ops;
-+	struct pci_epc_mem		*mem;
-+	u8				max_functions;
-+	/* spinlock to protect against concurrent access of EP controller */
-+	spinlock_t			lock;
-+};
-+
-+#define to_pci_epc(device) container_of((device), struct pci_epc, dev)
-+
-+#define pci_epc_create(dev, ops)    \
-+		__pci_epc_create((dev), (ops), THIS_MODULE)
-+#define devm_pci_epc_create(dev, ops)    \
-+		__devm_pci_epc_create((dev), (ops), THIS_MODULE)
-+
-+static inline void epc_set_drvdata(struct pci_epc *epc, void *data)
+-const struct attribute_group *pci_dev_groups[] = {
+-	&pci_dev_group,
++static struct attribute *pcie_dev_attrs[] = {
++	&dev_attr_current_link_speed.attr,
++	&dev_attr_current_link_width.attr,
++	&dev_attr_max_link_width.attr,
++	&dev_attr_max_link_speed.attr,
+ 	NULL,
+ };
+ 
+@@ -1540,6 +1666,57 @@ static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
+ 	return a->mode;
+ }
+ 
++static umode_t pci_bridge_attrs_are_visible(struct kobject *kobj,
++					    struct attribute *a, int n)
 +{
-+	dev_set_drvdata(&epc->dev, data);
++	struct device *dev = kobj_to_dev(kobj);
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (!pci_is_bridge(pdev))
++		return 0;
++
++	return a->mode;
 +}
 +
-+static inline void *epc_get_drvdata(struct pci_epc *epc)
++static umode_t pcie_dev_attrs_are_visible(struct kobject *kobj,
++					  struct attribute *a, int n)
 +{
-+	return dev_get_drvdata(&epc->dev);
++	struct device *dev = kobj_to_dev(kobj);
++	struct pci_dev *pdev = to_pci_dev(dev);
++
++	if (pci_find_capability(pdev, PCI_CAP_ID_EXP) == 0)
++		return 0;
++
++	return a->mode;
 +}
 +
-+struct pci_epc *
-+__devm_pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
-+		      struct module *owner);
-+struct pci_epc *
-+__pci_epc_create(struct device *dev, const struct pci_epc_ops *ops,
-+		 struct module *owner);
-+void devm_pci_epc_destroy(struct device *dev, struct pci_epc *epc);
-+void pci_epc_destroy(struct pci_epc *epc);
-+int pci_epc_add_epf(struct pci_epc *epc, struct pci_epf *epf);
-+void pci_epc_linkup(struct pci_epc *epc);
-+void pci_epc_remove_epf(struct pci_epc *epc, struct pci_epf *epf);
-+int pci_epc_write_header(struct pci_epc *epc, struct pci_epf_header *hdr);
-+int pci_epc_set_bar(struct pci_epc *epc, enum pci_barno bar,
-+		    dma_addr_t bar_phys, size_t size, int flags);
-+void pci_epc_clear_bar(struct pci_epc *epc, int bar);
-+int pci_epc_map_addr(struct pci_epc *epc, phys_addr_t phys_addr,
-+		     u64 pci_addr, size_t size);
-+void pci_epc_unmap_addr(struct pci_epc *epc, phys_addr_t phys_addr);
-+int pci_epc_set_msi(struct pci_epc *epc, u8 interrupts);
-+int pci_epc_get_msi(struct pci_epc *epc);
-+int pci_epc_raise_irq(struct pci_epc *epc, enum pci_epc_irq_type type,
-+		      u8 interrupt_num);
-+int pci_epc_start(struct pci_epc *epc);
-+void pci_epc_stop(struct pci_epc *epc);
-+struct pci_epc *pci_epc_get(const char *epc_name);
-+void pci_epc_put(struct pci_epc *epc);
-+
-+int pci_epc_mem_init(struct pci_epc *epc, phys_addr_t phys_addr, size_t size);
-+void pci_epc_mem_exit(struct pci_epc *epc);
-+void __iomem *pci_epc_mem_alloc_addr(struct pci_epc *epc,
-+				     phys_addr_t *phys_addr, size_t size);
-+void pci_epc_mem_free_addr(struct pci_epc *epc, phys_addr_t phys_addr,
-+			   void __iomem *virt_addr, size_t size);
-+#endif /* __LINUX_PCI_EPC_H */
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-new file mode 100644
-index 000000000000..5628714f7bcf
---- /dev/null
-+++ b/include/linux/pci-epf.h
-@@ -0,0 +1,160 @@
-+/**
-+ * PCI Endpoint *Function* (EPF) header file
-+ *
-+ * Copyright (C) 2017 Texas Instruments
-+ * Author: Kishon Vijay Abraham I <kishon@ti.com>
-+ *
-+ * This program is free software: you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License version 2 of
-+ * the License as published by the Free Software Foundation.
-+ */
-+
-+#ifndef __LINUX_PCI_EPF_H
-+#define __LINUX_PCI_EPF_H
-+
-+#include <linux/device.h>
-+#include <linux/mod_devicetable.h>
-+
-+struct pci_epf;
-+
-+enum pci_interrupt_pin {
-+	PCI_INTERRUPT_UNKNOWN,
-+	PCI_INTERRUPT_INTA,
-+	PCI_INTERRUPT_INTB,
-+	PCI_INTERRUPT_INTC,
-+	PCI_INTERRUPT_INTD,
++static const struct attribute_group pci_dev_group = {
++	.attrs = pci_dev_attrs,
 +};
 +
-+enum pci_barno {
-+	BAR_0,
-+	BAR_1,
-+	BAR_2,
-+	BAR_3,
-+	BAR_4,
-+	BAR_5,
++const struct attribute_group *pci_dev_groups[] = {
++	&pci_dev_group,
++	NULL,
 +};
 +
-+/**
-+ * struct pci_epf_header - represents standard configuration header
-+ * @vendorid: identifies device manufacturer
-+ * @deviceid: identifies a particular device
-+ * @revid: specifies a device-specific revision identifier
-+ * @progif_code: identifies a specific register-level programming interface
-+ * @subclass_code: identifies more specifically the function of the device
-+ * @baseclass_code: broadly classifies the type of function the device performs
-+ * @cache_line_size: specifies the system cacheline size in units of DWORDs
-+ * @subsys_vendor_id: vendor of the add-in card or subsystem
-+ * @subsys_id: id specific to vendor
-+ * @interrupt_pin: interrupt pin the device (or device function) uses
-+ */
-+struct pci_epf_header {
-+	u16	vendorid;
-+	u16	deviceid;
-+	u8	revid;
-+	u8	progif_code;
-+	u8	subclass_code;
-+	u8	baseclass_code;
-+	u8	cache_line_size;
-+	u16	subsys_vendor_id;
-+	u16	subsys_id;
-+	enum pci_interrupt_pin interrupt_pin;
++static const struct attribute_group pci_bridge_group = {
++	.attrs = pci_bridge_attrs,
 +};
 +
-+/**
-+ * struct pci_epf_ops - set of function pointers for performing EPF operations
-+ * @bind: ops to perform when a EPC device has been bound to EPF device
-+ * @unbind: ops to perform when a binding has been lost between a EPC device
-+ *	    and EPF device
-+ * @linkup: ops to perform when the EPC device has established a connection with
-+ *	    a host system
-+ */
-+struct pci_epf_ops {
-+	int	(*bind)(struct pci_epf *epf);
-+	void	(*unbind)(struct pci_epf *epf);
-+	void	(*linkup)(struct pci_epf *epf);
++const struct attribute_group *pci_bridge_groups[] = {
++	&pci_bridge_group,
++	NULL,
 +};
 +
-+/**
-+ * struct pci_epf_driver - represents the PCI EPF driver
-+ * @probe: ops to perform when a new EPF device has been bound to the EPF driver
-+ * @remove: ops to perform when the binding between the EPF device and EPF
-+ *	    driver is broken
-+ * @driver: PCI EPF driver
-+ * @ops: set of function pointers for performing EPF operations
-+ * @owner: the owner of the module that registers the PCI EPF driver
-+ * @id_table: identifies EPF devices for probing
-+ */
-+struct pci_epf_driver {
-+	int	(*probe)(struct pci_epf *epf);
-+	int	(*remove)(struct pci_epf *epf);
-+
-+	struct device_driver	driver;
-+	struct pci_epf_ops	*ops;
-+	struct module		*owner;
-+	const struct pci_epf_device_id	*id_table;
++static const struct attribute_group pcie_dev_group = {
++	.attrs = pcie_dev_attrs,
 +};
 +
-+#define to_pci_epf_driver(drv) (container_of((drv), struct pci_epf_driver, \
-+				driver))
-+
-+/**
-+ * struct pci_epf_bar - represents the BAR of EPF device
-+ * @phys_addr: physical address that should be mapped to the BAR
-+ * @size: the size of the address space present in BAR
-+ */
-+struct pci_epf_bar {
-+	dma_addr_t	phys_addr;
-+	size_t		size;
++const struct attribute_group *pcie_dev_groups[] = {
++	&pcie_dev_group,
++	NULL,
 +};
 +
-+/**
-+ * struct pci_epf - represents the PCI EPF device
-+ * @dev: the PCI EPF device
-+ * @name: the name of the PCI EPF device
-+ * @header: represents standard configuration header
-+ * @bar: represents the BAR of EPF device
-+ * @msi_interrupts: number of MSI interrupts required by this function
-+ * @func_no: unique function number within this endpoint device
-+ * @epc: the EPC device to which this EPF device is bound
-+ * @driver: the EPF driver to which this EPF device is bound
-+ * @list: to add pci_epf as a list of PCI endpoint functions to pci_epc
-+ */
-+struct pci_epf {
-+	struct device		dev;
-+	const char		*name;
-+	struct pci_epf_header	*header;
-+	struct pci_epf_bar	bar[6];
-+	u8			msi_interrupts;
-+	u8			func_no;
-+
-+	struct pci_epc		*epc;
-+	struct pci_epf_driver	*driver;
-+	struct list_head	list;
+ static struct attribute_group pci_dev_hp_attr_group = {
+ 	.attrs = pci_dev_hp_attrs,
+ 	.is_visible = pci_dev_hp_attrs_are_visible,
+@@ -1574,12 +1751,24 @@ static struct attribute_group pci_dev_attr_group = {
+ 	.is_visible = pci_dev_attrs_are_visible,
+ };
+ 
++static struct attribute_group pci_bridge_attr_group = {
++	.attrs = pci_bridge_attrs,
++	.is_visible = pci_bridge_attrs_are_visible,
 +};
 +
-+#define to_pci_epf(epf_dev) container_of((epf_dev), struct pci_epf, dev)
++static struct attribute_group pcie_dev_attr_group = {
++	.attrs = pcie_dev_attrs,
++	.is_visible = pcie_dev_attrs_are_visible,
++};
 +
-+#define pci_epf_register_driver(driver)    \
-+		__pci_epf_register_driver((driver), THIS_MODULE)
-+
-+static inline void epf_set_drvdata(struct pci_epf *epf, void *data)
-+{
-+	dev_set_drvdata(&epf->dev, data);
-+}
-+
-+static inline void *epf_get_drvdata(struct pci_epf *epf)
-+{
-+	return dev_get_drvdata(&epf->dev);
-+}
-+
-+struct pci_epf *pci_epf_create(const char *name);
-+void pci_epf_destroy(struct pci_epf *epf);
-+int __pci_epf_register_driver(struct pci_epf_driver *driver,
-+			      struct module *owner);
-+void pci_epf_unregister_driver(struct pci_epf_driver *driver);
-+void *pci_epf_alloc_space(struct pci_epf *epf, size_t size, enum pci_barno bar);
-+void pci_epf_free_space(struct pci_epf *epf, void *addr, enum pci_barno bar);
-+int pci_epf_bind(struct pci_epf *epf);
-+void pci_epf_unbind(struct pci_epf *epf);
-+void pci_epf_linkup(struct pci_epf *epf);
-+#endif /* __LINUX_PCI_EPF_H */
+ static const struct attribute_group *pci_dev_attr_groups[] = {
+ 	&pci_dev_attr_group,
+ 	&pci_dev_hp_attr_group,
+ #ifdef CONFIG_PCI_IOV
+ 	&sriov_dev_attr_group,
+ #endif
++	&pci_bridge_attr_group,
++	&pcie_dev_attr_group,
+ 	NULL,
+ };
+ 
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 634c9c4..b1770dc 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -517,6 +517,10 @@
+ #define  PCI_EXP_LNKCAP_SLS	0x0000000f /* Supported Link Speeds */
+ #define  PCI_EXP_LNKCAP_SLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
+ #define  PCI_EXP_LNKCAP_SLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
++#define  PCI_EXP_LNKCAP_MLS	0x0000000f /* Maximum Link Speeds */
++#define  PCI_EXP_LNKCAP_MLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
++#define  PCI_EXP_LNKCAP_MLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
++#define  PCI_EXP_LNKCAP_MLS_8_0GB 0x00000003 /* LNKCAP2 SLS Vector bit 2 */
+ #define  PCI_EXP_LNKCAP_MLW	0x000003f0 /* Maximum Link Width */
+ #define  PCI_EXP_LNKCAP_ASPMS	0x00000c00 /* ASPM Support */
+ #define  PCI_EXP_LNKCAP_L0SEL	0x00007000 /* L0s Exit Latency */
 -- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.7.4
