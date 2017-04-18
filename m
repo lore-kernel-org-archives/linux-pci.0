@@ -1,18 +1,18 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 12 Apr 2017 11:21:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jayachandran C <jnair@caviumnetworks.com>
-Subject: Re: [PATCH v4 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-Message-ID: <20170412162118.GC25197@bhelgaas-glaptop.roam.corp.google.com>
-References: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
- <1491225304-3559-3-git-send-email-jnair@caviumnetworks.com>
- <20170411012847.GA15291@bhelgaas-glaptop.roam.corp.google.com>
- <20170411071047.GA3610@localhost>
- <20170411134125.GA31773@bhelgaas-glaptop.roam.corp.google.com>
- <20170411152702.GA2910@localhost>
-MIME-Version: 1.0
-In-Reply-To: <20170411152702.GA2910@localhost>
+Message-ID: <1492555416.25766.97.camel@kernel.crashing.org>
+Subject: Re: [PATCH v3 04/32] asm-generic: add ioremap_nopost() remap interface
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Russell King - ARM Linux
+ <linux@armlinux.org.uk>
+Date: Wed, 19 Apr 2017 08:43:36 +1000
+In-Reply-To: <20170418154937.GA1006@red-moon>
+References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+ <20170411122923.6285-5-lorenzo.pieralisi@arm.com>
+ <1491917983.7236.9.camel@kernel.crashing.org>
+ <20170412112022.GY17774@n2100.armlinux.org.uk>
+ <20170418154937.GA1006@red-moon>
+Mime-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,126 +20,60 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
- Alex Williamson <alex.williamson@redhat.com>, iommu@lists.linux-foundation.org,
- Jon Masters <jcm@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
- linux-arm-kernel@lists.infradead.org
+Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
+ linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+ David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
+ Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
+ Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
+ Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
+ Jesper Nilsson <jesper.nilsson@axis.com>,
+ Yoshinori Sato <ysato@users.sourceforge.jp>,
+ Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
+ "James E.J. Bottomley" <jejb@parisc-linux.org>, Ingo Molnar <mingo@redhat.com>,
+ Geert Uytterhoeven <geert@linux-m68k.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Matt Turner <mattst88@gmail.com>,
+ Haavard Skinnemoen <hskinnemoen@gmail.com>, Fenghua Yu <fenghua.yu@intel.com>,
+ James Hogan <james.hogan@imgtec.com>, Chris Metcalf <cmetcalf@mellanox.com>,
+ Arnd Bergmann <arnd@arndb.de>, Heiko Carstens <heiko.carstens@de.ibm.com>,
+ Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
+ Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
+ Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
+ linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
+ Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
+ Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
+ linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
+ Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>, "Luis R .
+ Rodriguez" <mcgrof@kernel.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>,
+ Ley Foon Tan <lftan@altera.com>, "David S. Miller" <davem@davemloft.net>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 11, 2017 at 03:27:02PM +0000, Jayachandran C wrote:
-> On Tue, Apr 11, 2017 at 08:41:25AM -0500, Bjorn Helgaas wrote:
-> > [+cc Joerg]
-> > 
-> > On Tue, Apr 11, 2017 at 07:10:48AM +0000, Jayachandran C wrote:
-> > > On Mon, Apr 10, 2017 at 08:28:47PM -0500, Bjorn Helgaas wrote:
-> > > > Hi Jayachandran,
-> > > > 
-> > > > On Mon, Apr 03, 2017 at 01:15:04PM +0000, Jayachandran C wrote:
-> > > > > The Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the PCI
-> > > > > topology is slightly unusual. For a multi-node system, it looks like:
-> > > > > 
-> > > > > [node level PCI bridges - one per node]
-> > > > >     [SoC PCI devices with MSI-X but no IOMMU]
-> > > > >     [PCI-PCIe "glue" bridges - upto 14, one per real port below]
-> > > > >         [PCIe real root ports associated with IOMMU and GICv3 ITS]
-> > > > >             [External PCI devices connected to PCIe links]
-> > > > > 
-> > > > > The top two levels of bridges should have introduced aliases since they
-> > > > > are PCI and PCI/PCIe bridges, but in the case of ThunderX2 they do not.
-> > > > > In the case of external PCIe devices, the "real" root ports are connected
-> > > > > to the SMMU and the GIC ITS, so PCI-PCIe bridge does not introduce an
-> > > > > alias. The SoC PCI devices are directly connected to the GIC ITS, so the
-> > > > > node level bridges do not introduce an alias either.
-> > > > > 
-> > > > > To handle this quirk, we mark the real PCIe root ports and node level
-> > > > > PCI bridges with the flag PCI_DEV_FLAGS_BRIDGE_XLATE_ROOT.  With this,
-> > > > > pci_for_each_dma_alias() works correctly for external PCIe devices and
-> > > > > SoC PCI devices.
-> > > > > 
-> > > > > For the current revision of Cavium ThunderX2, the VendorID and Device ID
-> > > > > are from Broadcom Vulcan (14e4:90XX).
-> > > > 
-> > > > Can you supply some text here about why we want to apply this patch?
-> > > > E.g., does it avoid making unnecessary IOMMU mappings, improve
-> > > > performance, avoid a crash, etc?
-> > > 
-> > > If this is for the commit message, I hope the following is ok:
-> > > 
-> > > "With this change, both MSI-X and IO virtualization work correctly on
-> > > Cavium ThunderX2. The GIC ITS driver gets the correct device ID to
-> > > configure MSI-X, the SMMUv3 driver gets the correct Stream IDs for PCI
-> > > devices, and the IOMMU groups are setup correctly."
-> > 
-> > This doesn't get at what the actual problem is.  I'm hoping for
-> > something like "without this change, we set up an IOMMU mapping for
-> > requestor ID X, but device DMA uses requestor ID Y because ...., which
-> > results in an IOMMU fault"
+On Tue, 2017-04-18 at 16:49 +0100, Lorenzo Pieralisi wrote:
+> I can do that yes, which already means I have to know if eg microblaze
+> (drivers/pci/host/pcie-xilinx.c) can provide a mapping with nonposted
+> writes semantics, otherwise it is a dead-end.
 > 
-> Ok. I hope this would be better:
-> 
-> "Without this change, the last alias seen while traversing the PCI
-> hierarchy will be used as the RID to generate the device ID for ITS
-> and stream ID for SMMU. This in turn causes the MSI-X generated by the
-> device to fail since the ITS expects to have translation tables based
-> on the actual PCIe RID and not the (irrelevant) alias. Similarly, the
-> device DMA also fails when SMMU is enabled due to incorrect value in
-> SMMU translation tables"
+> Another option would be going back to what v1 did, namely, to implement
+> a pci_remap_cfgspace() interface (it is the _nopost() suffix that stirred
+> debate - nobody would object to having a default pci_remap_cfgspace()
+> implementation that defaults to ioremap_nocache(), I know Bjorn does not
+> like it to be PCI specific, just adding an option on the table to make
+> progress).
 
-This description is true, but I don't think it addresses the real
-problem.  I think the real problem is that your IOMMU code doesn't
-handle aliases correctly, and by ignoring these invalid aliases, we
-happen to map an alias that works for the builtin devices.  But that's
-only because we got lucky (those devices use a single RID and they're
-not behind bridges that optionally take ownership).
+Well, it boils down again to the fact that a mapping attribute isn't
+sufficient.
 
-It would make sense to me if we fixed the IOMMU code to map *all* the
-aliases, which should be enough to make your devices work.  If we then
-wanted to apply a patch like this on top, it would be simply an
-optimization that avoids unnecessary IOMMU mappings.
+Let's say I'm microblaze and I can't do non-posted mapping. Then the
+Host Bridge driver needs to *know* that so it can implement a different
+workaround, such as reading back from some bridge register after every
+config write which ensures the previous write reached its destination
+for example, or whatever other IP specific mechanism.
 
-> > I suspect the reason this patch makes a difference is because the
-> > current pci_for_each_dma_alias() believes one of those top-level
-> > bridges is an alias, and the iterator produces it last, so that's the
-> > one you map.  The IOMMU is attached lower down, so that top-level
-> > bridge is not in fact an alias, but since you only look at the *last*
-> > one, you don't map the correct aliases from lower down in the tree.
-> 
-> Exactly. The IORT spec allows a range of RIDs to map to an SMMU, which
-> means that a PCI RC can multiple SMMUs, each handling a subset of RIDs.
-> 
-> In the case of Cavium ThunderX2, the RID which we should see on the RC
-> - if we follow the standard and factor in the aliasing introduced by the
-> PCI bridge and the PCI/PCIe bridge - is not the RID seen by the SMMU (or
-> ITS).
-> 
-> But, if we stop the traversal at the point where SMMU (or ITS) is
-> attached, we will get the correct RID as seen by these.
+Cheers,
+Ben.
 
-There is a single "correct RID" for your builtin SATA and USB, but in
-general there is no single RID.
-
-> > Stopping the iterator earlier happens to make the last alias be one of
-> > the correct ones, but it doesn't solve the problems of quirked devices
-> > that can use multiple requester IDs, and it doesn't solve the problem
-> > of PCIe-to-PCI bridges that optionally take ownership of transactions.
->  
-> If these happen below the point where the SMMU is attached, we will
-> consider the last alias introduced, which should be ok. If they are
-> above, the alias introduced is not relevant.  Devices with multiple
-> aliases is not handled anywhere in ARM code, so I don't think we should
-> consider that here.
-
-I think we *should* consider it here.  The multiple alias situation is
-generic PCIe, independent of ARM.  If you want to support arbitrary
-PCIe plugin devices, you have to handle it.  I think any device with a
-quirk that calls pci_add_dma_alias() will currently fail on your
-system.  And I think devices behind a bridge that optionally takes
-ownership of DMA transactions will also fail.
-
-Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
