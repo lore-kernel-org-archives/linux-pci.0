@@ -1,427 +1,78 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38434 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1425180AbdDUTch (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 21 Apr 2017 15:32:37 -0400
-Subject: [PATCH 7/9] lspci: Decode only supported ASPM exit latencies
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Martin Mares <mj@ucw.cz>
-Cc: linux-pci@vger.kernel.org,
-        Jayachandran C <jnair@caviumnetworks.com>
-Date: Fri, 21 Apr 2017 14:32:26 -0500
-Message-ID: <20170421193226.6562.15490.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170421192844.6562.30976.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170421192844.6562.30976.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:36277 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752179AbdDRSj0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2017 14:39:26 -0400
+Date: Tue, 18 Apr 2017 20:39:38 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+        Simon Horman <horms@verge.net.au>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Niklas =?iso-8859-1?Q?S=F6derlund?=
+        <niklas.soderlund@ragnatech.se>
+Subject: Re: PCI / PM: Crashes in PME scan during system suspend
+Message-ID: <20170418183938.GA7757@wunner.de>
+References: <CAMuHMdVf-NT_6oGQVba_QgFuW-fZMBDF1CtidfxSxnCr8+BGHg@mail.gmail.com>
+ <20170416075535.GA6620@wunner.de>
+ <CAMuHMdUzYUGZT3gWzZ97rmbPXG3RqYLdvYx_ZdLdmCvxbrt4Hw@mail.gmail.com>
+ <1776042.AWT4z5IEIn@aspire.rjw.lan>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1776042.AWT4z5IEIn@aspire.rjw.lan>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+On Tue, Apr 18, 2017 at 04:06:27PM +0200, Rafael J. Wysocki wrote:
+> On Tuesday, April 18, 2017 08:49:39 AM Geert Uytterhoeven wrote:
+> > On Sun, Apr 16, 2017 at 9:55 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> > > Subject: [PATCH] PCI: Freeze PME scan before suspending devices
+> > >
+> > > Laurent Pinchart reported that the Renesas R-Car H2 Lager board
+> > > (r8a7790) crashes during suspend tests.  Geert Uytterhoeven managed to
+> > > reproduce the issue on an M2-W Koelsch board (r8a7791):
+> > >
+> > > It occurs when the PME scan runs, once per second.  During PME scan, the
+> > > PCI host bridge (rcar-pci) registers are accessed while its module clock
+> > > has already been disabled, leading to the crash.
+> > >
+> > > The issue only occurs during suspend tests, after writing either
+> > > "platform" or "processors" to /sys/power/pm_test.  It does not (or is
+> > > less likely) to happen during full system suspend ("core" or "none")
+> > > because system suspend also disables timers, and thus the workqueue
+> > > handling PME scans no longer runs.  Geert believes the issue may still
+> > > happen in the small window between disabling module clocks and disabling
+> > > timers.
+> > 
+> > It can also be reproduced easily by configuring s2ram to use s2idle instead
+> > of deep suspend, which is a real usecase:
+> > 
+> > # echo 0 > /sys/module/printk/parameters/console_suspend
+> > # echo s2idle > /sys/power/mem_sleep
+> > # echo mem > /sys/power/state
+> > 
+> > Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
+> 
+> There is a small concern here that some wakeup events may be missed if they
+> are delivered via PME without a working IRQ, but that's fairly minor and it
+> cannot be avoided entirely, so
 
-Per PCIe spec r3.1, sec 7.8.6, the L0s Exit Latency is only valid when L0s
-is supported, and similarly the L1 Exit Latency is only valid when L1 is
-supported.
+Well, that's a conundrum.  I don't know which devices depend on PME polling
+and whether they may signal PME between freezing the workqueue and suspending
+the host bridge.  If this unexpectedly turns out to be a problem in practice,
+it might be possible to solve it by calling pci_pme_list_scan() once directly
+from one of the host bridge's pm_ops callbacks.
 
-Only decode the L0s and L1 Exit Latencies if they are defined.
+I've amended the commit message with the tags and additional information
+provided by you and Geert and will resend the patch to the list shortly.
 
-For example, on a device that supports L1 but not L0s, the difference in
-the "lspci -vv" output looks like this:
+Thanks,
 
--   LnkCap: Port #1, Speed 8GT/s, Width x1, ASPM L1, Exit Latency L0s <1us, L1 <16us
-+   LnkCap: Port #1, Speed 8GT/s, Width x1, ASPM L1, Exit Latency L1 <16us
-
-Correct the comments on the PCI_EXP_LNKCAP_L0S and PCI_EXP_LNKCAP_L1
-definitions.
-
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- lib/header.h                 |    4 -
- ls-caps.c                    |   19 ++
- tests/cap-exp-aspm-latencies |  327 ++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 343 insertions(+), 7 deletions(-)
- create mode 100644 tests/cap-exp-aspm-latencies
-
-diff --git a/lib/header.h b/lib/header.h
-index 03bbfa5..b3108e5 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -777,8 +777,8 @@
- #define  PCI_EXP_LNKCAP_SPEED	0x0000f	/* Maximum Link Speed */
- #define  PCI_EXP_LNKCAP_WIDTH	0x003f0	/* Maximum Link Width */
- #define  PCI_EXP_LNKCAP_ASPM	0x00c00	/* Active State Power Management */
--#define  PCI_EXP_LNKCAP_L0S	0x07000	/* L0s Acceptable Latency */
--#define  PCI_EXP_LNKCAP_L1	0x38000	/* L1 Acceptable Latency */
-+#define  PCI_EXP_LNKCAP_L0S	0x07000	/* L0s Exit Latency */
-+#define  PCI_EXP_LNKCAP_L1	0x38000	/* L1 Exit Latency */
- #define  PCI_EXP_LNKCAP_CLOCKPM	0x40000	/* Clock Power Management */
- #define  PCI_EXP_LNKCAP_SURPRISE 0x80000 /* Surprise Down Error Reporting */
- #define  PCI_EXP_LNKCAP_DLLA	0x100000 /* Data Link Layer Active Reporting */
-diff --git a/ls-caps.c b/ls-caps.c
-index 2d3b59d..2111918 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -758,16 +758,25 @@ static const char *aspm_enabled(int code)
- 
- static void cap_express_link(struct device *d, int where, int type)
- {
--  u32 t;
-+  u32 t, aspm;
-   u16 w;
- 
-   t = get_conf_long(d, where + PCI_EXP_LNKCAP);
--  printf("\t\tLnkCap:\tPort #%d, Speed %s, Width x%d, ASPM %s, Exit Latency L0s %s, L1 %s\n",
-+  aspm = (t & PCI_EXP_LNKCAP_ASPM) >> 10;
-+  printf("\t\tLnkCap:\tPort #%d, Speed %s, Width x%d, ASPM %s",
- 	t >> 24,
- 	link_speed(t & PCI_EXP_LNKCAP_SPEED), (t & PCI_EXP_LNKCAP_WIDTH) >> 4,
--	aspm_support((t & PCI_EXP_LNKCAP_ASPM) >> 10),
--	latency_l0s((t & PCI_EXP_LNKCAP_L0S) >> 12),
--	latency_l1((t & PCI_EXP_LNKCAP_L1) >> 15));
-+	aspm_support(aspm));
-+  if (aspm)
-+    {
-+      printf(", Exit Latency ");
-+      if (aspm & 1)
-+	printf("L0s %s", latency_l0s((t & PCI_EXP_LNKCAP_L0S) >> 12));
-+      if (aspm & 2)
-+	printf("%sL1 %s", (aspm & 1) ? ", " : "",
-+	    latency_l1((t & PCI_EXP_LNKCAP_L1) >> 15));
-+    }
-+  printf("\n");
-   printf("\t\t\tClockPM%c Surprise%c LLActRep%c BwNot%c ASPMOptComp%c\n",
- 	FLAG(t, PCI_EXP_LNKCAP_CLOCKPM),
- 	FLAG(t, PCI_EXP_LNKCAP_SURPRISE),
-diff --git a/tests/cap-exp-aspm-latencies b/tests/cap-exp-aspm-latencies
-new file mode 100644
-index 0000000..f3ca3ff
---- /dev/null
-+++ b/tests/cap-exp-aspm-latencies
-@@ -0,0 +1,327 @@
-+00:1c.0 PCI bridge: Intel Corporation Device 9d10 (rev f1) (prog-if 00 [Normal decode])
-+	Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-+	Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-+	Latency: 0
-+	Interrupt: pin A routed to IRQ 16
-+	Bus: primary=00, secondary=02, subordinate=02, sec-latency=0
-+	I/O behind bridge: None
-+	Memory behind bridge: f1100000-f11fffff [size=1M]
-+	Prefetchable memory behind bridge: None
-+	Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-+	BridgeCtl: Parity- SERR- NoISA- VGA- MAbort- >Reset- FastB2B-
-+		PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-+	Capabilities: [40] Express (v2) Root Port (Slot+), MSI 00
-+		DevCap:	MaxPayload 256 bytes, PhantFunc 0
-+			ExtTag- RBE+
-+		DevCtl:	Report errors: Correctable- Non-Fatal- Fatal- Unsupported-
-+			RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-+			MaxPayload 256 bytes, MaxReadReq 128 bytes
-+		DevSta:	CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr+ TransPend-
-+		LnkCap:	Port #1, Speed 8GT/s, Width x1, ASPM L1, Exit Latency L1 <16us
-+			ClockPM- Surprise- LLActRep+ BwNot+ ASPMOptComp+
-+		LnkCtl:	ASPM L1 Enabled; RCB 64 bytes Disabled- CommClk+
-+			ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-+		LnkSta:	Speed 5GT/s, Width x1, TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
-+		SltCap:	AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
-+			Slot #0, PowerLimit 10.000W; Interlock- NoCompl+
-+		SltCtl:	Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
-+			Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
-+		SltSta:	Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
-+			Changed: MRL- PresDet- LinkState+
-+		RootCtl: ErrCorrectable- ErrNon-Fatal- ErrFatal- PMEIntEna- CRSVisible-
-+		RootCap: CRSVisible-
-+		RootSta: PME ReqID 0000, PMEStatus- PMEPending-
-+		DevCap2: Completion Timeout: Range ABC, TimeoutDis+, LTR+, OBFF Not Supported ARIFwd+
-+			 AtomicOpsCap: Routing- 32bit- 64bit- 128bitCAS-
-+		DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-, LTR+, OBFF Disabled ARIFwd-
-+			 AtomicOpsCtl: ReqEn- EgressBlck-
-+		LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
-+			 Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-+			 Compliance De-emphasis: -6dB
-+		LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete-, EqualizationPhase1-
-+			 EqualizationPhase2-, EqualizationPhase3-, LinkEqualizationRequest-
-+	Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
-+		Address: 00000000  Data: 0000
-+	Capabilities: [90] Subsystem: Lenovo Device 2238
-+	Capabilities: [a0] Power Management version 3
-+		Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-+		Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-+	Capabilities: [100 v1] Advanced Error Reporting
-+		UESta:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-+		UEMsk:	DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt+ RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-+		UESvrt:	DLP+ SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
-+		CESta:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr-
-+		CEMsk:	RxErr- BadTLP- BadDLLP- Rollover- Timeout- NonFatalErr+
-+		AERCap:	First Error Pointer: 00, ECRCGenCap- ECRCGenEn- ECRCChkCap- ECRCChkEn-
-+			MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
-+		HeaderLog: 00000000 00000000 00000000 00000000
-+		RootCmd: CERptEn- NFERptEn- FERptEn-
-+		RootSta: CERcvd- MultCERcvd- UERcvd- MultUERcvd-
-+			 FirstFatal- NonFatalMsg- FatalMsg- IntMsg 0
-+		ErrorSrc: ERR_COR: 0000 ERR_FATAL/NONFATAL: 0000
-+	Capabilities: [140 v1] Access Control Services
-+		ACSCap:	SrcValid+ TransBlk+ ReqRedir+ CmpltRedir+ UpstreamFwd- EgressCtrl- DirectTrans-
-+		ACSCtl:	SrcValid- TransBlk- ReqRedir- CmpltRedir- UpstreamFwd- EgressCtrl- DirectTrans-
-+	Capabilities: [200 v1] L1 PM Substates
-+		L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
-+			  PortCommonModeRestoreTime=40us PortTPowerOnTime=10us
-+		L1SubCtl1: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+
-+			   T_CommonMode=60us LTR1.2_Threshold=163840ns
-+		L1SubCtl2: T_PwrOn=60us
-+	Capabilities: [220 v1] #19
-+00: 86 80 10 9d 07 00 10 00 f1 00 04 06 00 00 81 00
-+10: 00 00 00 00 00 00 00 00 00 02 02 00 f0 00 00 20
-+20: 10 f1 10 f1 f1 ff 01 00 00 00 00 00 00 00 00 00
-+30: 00 00 00 00 40 00 00 00 00 00 00 00 ff 01 00 00
-+40: 10 80 42 01 01 80 00 00 20 00 10 00 13 48 72 01
-+50: 42 00 12 70 00 b2 04 00 00 00 40 01 00 00 00 00
-+60: 00 00 00 00 37 08 00 00 00 04 00 00 0e 00 00 00
-+70: 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+80: 05 90 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+90: 0d a0 00 00 aa 17 38 22 00 00 00 00 00 00 00 00
-+a0: 01 00 03 c8 00 00 00 00 00 00 00 00 00 00 00 00
-+b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d0: 11 10 00 07 42 18 00 00 08 00 9e 8b 00 00 00 00
-+e0: 00 f7 f3 00 00 00 00 00 06 80 12 00 00 00 00 00
-+f0: 50 01 00 00 00 03 00 40 b3 0f 30 08 04 00 00 01
-+100: 01 00 01 14 00 00 00 00 00 00 01 00 11 00 06 00
-+110: 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00
-+120: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+130: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+140: 0d 00 01 20 0f 00 00 00 00 00 00 00 00 00 00 00
-+150: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+160: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+170: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+1a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+1b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+1c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+1d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+1e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+1f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+200: 1e 00 01 22 1f 28 28 00 0f 3c a0 40 31 00 00 00
-+210: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+220: 19 00 01 00 00 00 00 00 00 00 00 00 77 75 77 75
-+230: 77 75 77 75 00 00 00 00 00 00 00 00 00 00 00 00
-+240: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+250: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+260: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+270: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+290: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+2a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+2b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+2c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+2d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+2e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+2f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+300: a7 5f b7 00 97 0c c0 1b 00 00 00 00 00 00 00 00
-+310: 00 00 00 00 38 3f 70 7e 00 00 14 14 d9 23 6a 05
-+320: db 60 d9 69 20 60 00 08 13 17 18 3c 12 97 49 06
-+330: 16 00 00 2a bc b5 bc 4a 72 01 00 30 00 00 00 00
-+340: d8 00 d8 00 f8 00 dc 00 5e 00 1a 00 4e 00 2d 00
-+350: 52 00 31 00 01 00 1a 00 18 00 0e 00 00 00 00 00
-+360: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+370: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+380: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+390: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+3a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+3b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+3c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+3d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+3e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+3f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+400: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+410: 00 00 00 00 00 00 00 00 30 09 00 00 00 00 00 00
-+420: 47 81 ac e2 f0 59 00 00 28 00 00 00 55 55 15 14
-+430: 54 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+440: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+450: 82 11 80 b4 00 00 00 00 00 00 00 00 00 00 00 00
-+460: 00 00 00 00 00 00 00 00 00 0e 08 a0 00 00 00 00
-+470: 00 00 00 00 00 00 00 00 2c 3d 00 28 01 a0 00 00
-+480: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+490: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+4a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+4b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+4c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+4d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+4e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+4f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+500: 18 80 6c 00 85 06 18 1c 00 01 02 00 dd 00 70 04
-+510: c0 35 18 18 04 b1 15 00 16 a0 00 00 0a 20 00 00
-+520: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+530: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+540: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+550: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+560: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+570: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+580: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+590: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+5a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+5b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+5c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+5d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+5e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+5f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+600: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+610: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+620: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+630: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+640: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+650: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+660: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+670: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+680: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+690: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+6a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+6b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+6c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+6d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+6e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+6f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+700: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+710: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+720: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+730: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+740: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+750: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+760: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+770: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+780: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+790: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+7a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+7b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+7c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+7d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+7e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+7f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+800: 00 00 00 00 03 00 00 00 01 00 00 00 00 00 00 00
-+810: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+820: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+830: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+840: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+850: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+860: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+870: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+880: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+890: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+8a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+8b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+8c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+8d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+8e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+8f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+900: 06 b0 c4 0c 96 0f 64 07 00 00 00 00 00 00 00 00
-+910: 00 00 00 00 00 00 00 00 00 00 06 40 00 00 00 00
-+920: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+930: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+940: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+950: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+960: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+970: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+980: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+990: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+9a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+9b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+9c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+9d0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+9e0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+9f0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+a90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+aa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ab0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ac0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ad0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ae0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+af0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+b90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ba0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+bb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+bc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+bd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+be0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+bf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+c90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ca0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+cb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+cc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+cd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ce0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+cf0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+d90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+da0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+db0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+dc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+dd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+de0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+df0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+e90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ea0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+eb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ec0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ed0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ee0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ef0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f40: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f50: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f60: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f70: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+f90: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+fa0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+fb0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+fc0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+fd0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+fe0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+ff0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Lukas
