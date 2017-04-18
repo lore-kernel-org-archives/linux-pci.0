@@ -1,100 +1,80 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from fllnx209.ext.ti.com ([198.47.19.16]:46154 "EHLO
-        fllnx209.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755069AbdDEI4A (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 5 Apr 2017 04:56:00 -0400
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-CC: <hch@infradead.org>, <nsekhar@ti.com>, <kishon@ti.com>
-Subject: [PATCH v6 13/23] dt-bindings: PCI: dra7xx: Add DT bindings for PCI dra7xx EP mode
-Date: Wed, 5 Apr 2017 14:22:33 +0530
-Message-ID: <20170405085243.18123-14-kishon@ti.com>
-In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
-References: <20170405085243.18123-1-kishon@ti.com>
+Return-Path: <SRS0=B2QY=32=ti.com=grygorii.strashko@kernel.org>
+Return-Path: <SRS0=B2QY=32=ti.com=grygorii.strashko@kernel.org>
+Subject: Re: [Query] Enabling parent device clock from resume_noirq
+To: Kishon Vijay Abraham I <kishon@ti.com>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>,
+        "linux-omap@vger.kernel.org"
+	<linux-omap@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        <khilman@kernel.org>, <rnayak@codeaurora.org>,
+        Paul Walmsley <paul@pwsan.com>, Bjorn Helgaas
+	<helgaas@kernel.org>,
+        "Nori, Sekhar" <nsekhar@ti.com>, "Kristo, Tero"
+	<t-kristo@ti.com>,
+        <linux-pm@vger.kernel.org>,
+        "Rafael J. Wysocki"
+	<rafael.j.wysocki@intel.com>,
+        Alan Stern <stern@rowland.harvard.edu>
+References: <62cd5ee0-3f0c-5e65-5f64-0c91a2a6f1e6@ti.com>
+From: Grygorii Strashko <grygorii.strashko@ti.com>
+Message-ID: <4c6e91e4-35fa-2fde-7915-fb922ec22567@ti.com>
+Date: Tue, 18 Apr 2017 15:05:48 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <62cd5ee0-3f0c-5e65-5f64-0c91a2a6f1e6@ti.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device tree binding documentation for PCI dra7xx EP mode.
++ linux-pm
 
-Acked-by: Rob Herring <robh@kernel.org>
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- Documentation/devicetree/bindings/pci/ti-pci.txt | 37 +++++++++++++++++++-----
- 1 file changed, 30 insertions(+), 7 deletions(-)
+On 04/18/2017 01:07 AM, Kishon Vijay Abraham I wrote:
+> Hi,
+> 
+> resume_noirq callbacks are used in PCIe core to restore PCI state (this
+> accesses PCI module). So the clocks of PCI module has to be enabled before
+> resume_noirq.
+> 
+> The clocks for the PCI module in DRA7xx is provided by PIPE3 PHY device which
+> in turn gets it's clock from OCP2SCP device. During resume_noirq callbacks,
+> pm_runtime is disabled, so pm_runtime_get_sync is ineffective. However
+> pm_runtime can be enabled using pm_runtime_force_resume. Now the problem is
+> adding pm_runtime_force_resume() in resume_noirq callback of pci-dra7xx driver
+> will enable only the pm_runtime of PCI device but not PIPE3 PHY or OCP2SCP.
+> Adding pm_runtime_force_resume() in resume_noirq callback of PIPE3 PHY driver
+> or OCP2SCP driver will not help if the resume_noirq callbacks in PIP3PHY driver
+> and OCP2SCP driver are invoked after the resume_noirq of pci-dra7xx driver.
+> 
+> How to enable the pm_runtime of parent devices in resume_noirq callback? Does
+> existing pm_runtime framework has support for that?
+> 
 
-diff --git a/Documentation/devicetree/bindings/pci/ti-pci.txt b/Documentation/devicetree/bindings/pci/ti-pci.txt
-index 60e25161f351..60c3cccefabc 100644
---- a/Documentation/devicetree/bindings/pci/ti-pci.txt
-+++ b/Documentation/devicetree/bindings/pci/ti-pci.txt
-@@ -1,17 +1,22 @@
- TI PCI Controllers
- 
- PCIe Designware Controller
-- - compatible: Should be "ti,dra7-pcie""
-- - reg : Two register ranges as listed in the reg-names property
-- - reg-names : The first entry must be "ti-conf" for the TI specific registers
--	       The second entry must be "rc-dbics" for the designware pcie
--	       registers
--	       The third entry must be "config" for the PCIe configuration space
-+ - compatible: Should be "ti,dra7-pcie" for RC
-+	       Should be "ti,dra7-pcie-ep" for EP
-  - phys : list of PHY specifiers (used by generic PHY framework)
-  - phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
- 	       number of PHYs as specified in *phys* property.
-  - ti,hwmods : Name of the hwmod associated to the pcie, "pcie<X>",
- 	       where <X> is the instance number of the pcie from the HW spec.
-+ - num-lanes as specified in ../designware-pcie.txt
-+
-+HOST MODE
-+=========
-+ - reg : Two register ranges as listed in the reg-names property
-+ - reg-names : The first entry must be "ti-conf" for the TI specific registers
-+	       The second entry must be "rc-dbics" for the DesignWare PCIe
-+	       registers
-+	       The third entry must be "config" for the PCIe configuration space
-  - interrupts : Two interrupt entries must be specified. The first one is for
- 		main interrupt line and the second for MSI interrupt line.
-  - #address-cells,
-@@ -19,13 +24,31 @@ PCIe Designware Controller
-    #interrupt-cells,
-    device_type,
-    ranges,
--   num-lanes,
-    interrupt-map-mask,
-    interrupt-map : as specified in ../designware-pcie.txt
- 
-+DEVICE MODE
-+===========
-+ - reg : Four register ranges as listed in the reg-names property
-+ - reg-names : "ti-conf" for the TI specific registers
-+	       "ep_dbics" for the standard configuration registers as
-+		they are locally accessed within the DIF CS space
-+	       "ep_dbics2" for the standard configuration registers as
-+		they are locally accessed within the DIF CS2 space
-+	       "addr_space" used to map remote RC address space
-+ - interrupts : one interrupt entries must be specified for main interrupt.
-+ - num-ib-windows : number of inbound address translation windows
-+ - num-ob-windows : number of outbound address translation windows
-+
- Optional Property:
-  - gpios : Should be added if a gpio line is required to drive PERST# line
- 
-+NOTE: Two DT nodes may be added for each PCI controller; one for host
-+mode and another for device mode. So in order for PCI to
-+work in host mode, EP mode DT node should be disabled and in order to PCI to
-+work in EP mode, host mode DT node should be disabled. Host mode and EP
-+mode are mutually exclusive.
-+
- Example:
- axi {
- 	compatible = "simple-bus";
+Most probably you've hit the issue described in [1].
+In general, if pci-dra7xx is consumer of  PIPE3 PHY device and 
+PIPE3 PHY device is child of OCP2SCP then suspend/resume order should be
+- pci-dra7xx
+- PIPE3 PHY
+- OCP2SCP
+ and resume
+- OCP2SCP
+- PIPE3 PHY
+- pci-dra7xx
+and in this case  pm_runtime_force_x() might work.
+
+Hence, approach [1] was not accepted (personally I still like it) and
+"Functional dependencies tracking support" was introduced instead by commit 9ed9895 [2]
+you can try it.
+
+But, as per code, I'm not sure that Functional dependencies properly tracked in 
+pm_runtime_force_x() functions.
+
+PS: you can try to reorder device's nodes in DT and place PCI node after "ocp2scp" :P
+
+[1] "driver core: Ensure proper suspend/resume ordering"
+ https://patchwork.kernel.org/patch/7153201/
+[2] https://patchwork.kernel.org/patch/9404547/
 -- 
-2.11.0
+regards,
+-grygorii
