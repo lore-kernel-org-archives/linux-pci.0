@@ -1,104 +1,121 @@
-Return-Path: <SRS0=bkpB=32=obsidianresearch.com=jgunthorpe@kernel.org>
-Return-Path: <SRS0=bkpB=32=obsidianresearch.com=jgunthorpe@kernel.org>
-Date: Tue, 18 Apr 2017 15:03:39 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Steve Wise <swise@opengridcomputing.com>,
-	Stephen Bates <sbates@raithlin.com>,
-	Max Gurtovoy <maxg@mellanox.com>,
-	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	linux-nvdimm <linux-nvdimm@ml01.01.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Message-ID: <20170418210339.GA24257@obsidianresearch.com>
+Return-Path: <SRS0=HVeC=32=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=HVeC=32=deltatee.com=logang@kernel.org>
+To: Jerome Glisse <jglisse@redhat.com>
 References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
- <1492381396.25766.43.camel@kernel.crashing.org>
- <20170418164557.GA7181@obsidianresearch.com>
- <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
- <20170418190138.GH7181@obsidianresearch.com>
- <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
- <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <6e732d6a-9baf-1768-3e9c-f6c887a836b2@deltatee.com>
+ <1492381958.25766.50.camel@kernel.crashing.org>
+ <6149ab5e-c981-6881-8c5a-22349561c3e8@deltatee.com>
+ <1492413640.25766.52.camel@kernel.crashing.org>
+ <ac643c73-43e9-1658-ffcb-d5628f80cbc1@deltatee.com>
+ <20170417180421.GA6015@redhat.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Dan Williams <dan.j.williams@intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+ Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+ linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <39af53d6-a1c1-83d4-e4d6-c1da3b8f95c7@deltatee.com>
+Date: Tue, 18 Apr 2017 00:14:16 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+In-Reply-To: <20170417180421.GA6015@redhat.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 18, 2017 at 12:48:35PM -0700, Dan Williams wrote:
 
-> > Yes, I noticed this problem too and that makes sense. It just means
-> > every dma_ops will probably need to be modified to either support p2p
-> > pages or fail on them. Though, the only real difficulty there is that it
-> > will be a lot of work.
-> 
-> I don't think you need to go touch all dma_ops, I think you can just
-> arrange for devices that are going to do dma to get redirected to a
-> p2p aware provider of operations that overrides the system default
-> dma_ops. I.e. just touch get_dma_ops().
 
-I don't follow, when does get_dma_ops() return a p2p aware provider?
-It has no way to know if the DMA is going to involve p2p, get_dma_ops
-is called with the device initiating the DMA.
+On 17/04/17 12:04 PM, Jerome Glisse wrote:
+> I disagree here. I would rather see Peer-to-Peer mapping as a form
+> of helper so that device driver can opt-in for multiple mecanisms
+> concurrently. Like HMM and p2p.
 
-So you'd always return the P2P shim on a system that has registered
-P2P memory?
+I'm not against moving some of the common stuff into a library. It
+sounds like the problems p2pmem solves don't overlap much with the
+problems of the GPU and moving the stuff we have in common somewhere
+else seems sensible.
 
-Even so, how does this shim work? dma_ops are not really intended to
-be stacked. How would we make unmap work, for instance? What happens
-when the underlying iommu dma ops actually natively understands p2p
-and doesn't want the shim?
+> Also it seems you are having a static vision for p2p. For GPU and
+> network the use case is you move some buffer into the device memory
+> and then you create mapping for some network adapter while the buffer
+> is in device memory. But this is only temporary and buffer might
+> move to different device memory. So usecase is highly dynamic (well
+> mapping lifetime is still probably few second/minutes).
 
-I think this opens an even bigger can of worms..
+I feel like you will need to pin the memory while it's the target of a
+DMA transaction. If some network peer is sending you data and you just
+invalidated the memory it is headed to then you are just going to break
+applications. But really this isn't our concern: the memory we are using
+with this work will be static and not prone to disappearing.
 
-Lets find a strategy to safely push this into dma_ops.
+> I see no reason for exposing sysfs tree to userspace for all this.
+> This isn't too dynamic, either 2 devices can access each others
+> memory, either they can't. This can be hidden through the device
+> kernel API. Again for GPU the idea is that it is always do-able
+> in the sense that when it is not you fallback to using system
+> memory.
 
-What about something more incremental like this instead:
-- dma_ops will set map_sg_p2p == map_sg when they are updated to
-  support p2p, otherwise DMA on P2P pages will fail for those ops.
-- When all ops support p2p we remove the if and ops->map_sg then
-  just call map_sg_p2p
-- For now the scatterlist maintains a bit when pages are added indicating if
-  p2p memory might be present in the list.
-- Unmap for p2p and non-p2p is the same, the underlying ops driver has
-  to make it work.
+The user has to make a decision to use it or not. This is an
+optimization with significant trade-offs that may differ significantly
+based on system design.
 
-diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
-index 0977317c6835c2..505ed7d502053d 100644
---- a/include/linux/dma-mapping.h
-+++ b/include/linux/dma-mapping.h
-@@ -103,6 +103,9 @@ struct dma_map_ops {
- 	int (*map_sg)(struct device *dev, struct scatterlist *sg,
- 		      int nents, enum dma_data_direction dir,
- 		      unsigned long attrs);
-+	int (*map_sg_p2p)(struct device *dev, struct scatterlist *sg,
-+			  int nents, enum dma_data_direction dir,
-+			  unsigned long attrs);
- 	void (*unmap_sg)(struct device *dev,
- 			 struct scatterlist *sg, int nents,
- 			 enum dma_data_direction dir,
-@@ -244,7 +247,15 @@ static inline int dma_map_sg_attrs(struct device *dev, struct scatterlist *sg,
- 	for_each_sg(sg, s, nents, i)
- 		kmemcheck_mark_initialized(sg_virt(s), s->length);
- 	BUG_ON(!valid_dma_direction(dir));
--	ents = ops->map_sg(dev, sg, nents, dir, attrs);
-+
-+	if (sg_has_p2p(sg)) {
-+		if (ops->map_sg_p2p)
-+			ents = ops->map_sg_p2p(dev, sg, nents, dir, attrs);
-+		else
-+			return 0;
-+	} else
-+		ents = ops->map_sg(dev, sg, nents, dir, attrs);
-+
- 	BUG_ON(ents < 0);
- 	debug_dma_map_sg(dev, sg, nents, ents, dir);
- 
+> Yes this could conflict and that's why i would rather see this as a set
+> of helper like HMM is doing. So device driver can opt-in HMM and p2pmem
+> at the same time.
+
+I don't understand how that addresses the conflict. We need to each be
+using unique and identifiable struct devices in the ZONE_DEVICE
+dev_pagemap so we don't apply p2p dma mappings to hmm memory and vice-versa.
+
+> This seems to duplicate things that already exist in each individual
+> driver. If a device has memory than device driver already have some
+> form of memory management and most likely expose some API to userspace
+> to allow program to use that memory.
+
+> Peer to peer DMA mapping is orthogonal to memory management, it is
+> an optimization ie you have some buffer allocated through some device
+> driver specific IOCTL and now you want some other device to directly
+> access it. Having to first do another allocation in a different device
+> driver for that to happen seems overkill.
+
+The devices we are working with are adding memory specifically for
+enabling p2p applications. The memory is new and there are no allocators
+for any of it yet.
+
+Also note: we've gotten _significant_ push back against exposing any of
+this memory to userspace. Letting the user unknowingly have to deal with
+the issues of iomem is not anything anyone wants to see. Thus we are
+dealing with in-kernel users only and they need a common interface to
+get the memory from.
+
+> What you really want from device driver point of view is an helper to
+> first tell you if 2 device can access each other and second an helper
+> that allow the second device to import the other device memory to allow
+> direct access.
+
+Well, actually it's a bit more complicated than that but essentially
+correct: There can be N devices in the mix and quite likely another
+driver completely separate from all N devices. (eg. for our main use
+case we have N nvme cards being talked to through an RDMA NIC with it
+all being coordinated by the nvme-target driver).
+
+
+> Discovering possible peer is a onetime only thing and designing around
+> that is wrong in my view. There is already existing hierarchy in kernel
+> for that in the form of the bus hierarchy (i am thinking pci bus here).
+> So there is already existing way to discover this and you are just
+> duplicating informations here.
+
+I really don't see the solution you are proposing here. Have the user
+specify a pci device name and just have them guess which ones have
+suitable memory? Or do they have to walk the entire pci tree to find
+ones that have such memory? There was no "duplicate" information created
+by our patch set.
+
+Logan
