@@ -1,53 +1,134 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Ley Foon Tan <lftan@altera.com>
-Subject: [PATCH v3 18/32] nios2: include default ioremap_nopost() implementation
-Date: Tue, 11 Apr 2017 13:28:58 +0100
-Message-Id: <20170411122923.6285-19-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:40722 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755504AbdDRTo3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Apr 2017 15:44:29 -0400
+Date: Tue, 18 Apr 2017 14:44:25 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@kernel.org>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Sebastian Siewior <bigeasy@linutronix.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [patch 17/20] PCI: Use cpu_hotplug_disable() instead of
+ get_online_cpus()
+Message-ID: <20170418194425.GH25295@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170415170107.643253702@linutronix.de>
+ <20170415171652.675049942@linutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170415171652.675049942@linutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and Posting")
-mandate non-posted configuration transactions. As further highlighted in
-the PCIe specifications (4.0 - Rev0.3, "Ordering Considerations for the
-Enhanced Configuration Access Mechanism"), through ECAM and
-ECAM-derivative configuration mechanism, the memory mapped transactions
-from the host CPU into Configuration Requests on the PCI express fabric
-may create ordering problems for software because writes to memory
-address are typically posted transactions (unless the architecture can
-enforce through virtual address mapping non-posted write transactions
-behaviour) but writes to Configuration Space are not posted on the PCI
-express fabric.
+On Sat, Apr 15, 2017 at 07:01:24PM +0200, Thomas Gleixner wrote:
+> Converting the hotplug locking, i.e. get_online_cpus(), to a percpu rwsem
+> unearthed a circular lock dependency which was hidden from lockdep due to
+> the lockdep annotation of get_online_cpus() which prevents lockdep from
+> creating full dependency chains. There are several variants of this. And
+> example is:
+> 
+> Chain exists of:
+> 
+> cpu_hotplug_lock.rw_sem --> drm_global_mutex --> &item->mutex
+> 
+> CPU0                    CPU1
+> ----                    ----
+> lock(&item->mutex);
+>                         lock(drm_global_mutex);
+>                         lock(&item->mutex);
+> lock(cpu_hotplug_lock.rw_sem);
+> 
+> because there are dependencies through workqueues. The call chain is:
+> 
+> 	get_online_cpus
+> 	apply_workqueue_attrs
+> 	__alloc_workqueue_key
+> 	ttm_mem_global_init
+> 	ast_ttm_mem_global_init
+> 	drm_global_item_ref
+> 	ast_mm_init
+> 	ast_driver_load
+> 	drm_dev_register
+> 	drm_get_pci_dev
+> 	ast_pci_probe
+> 	local_pci_probe
+> 	work_for_cpu_fn
+> 	process_one_work
+> 	worker_thread
+> 
+> This is not a problem of get_online_cpus() recursion, it's a possible
+> deadlock undetected by lockdep so far.
+> 
+> The cure is to use cpu_hotplug_disable() instead of get_online_cpus() to
+> protect the PCI probing.
+> 
+> There is a side effect to this: cpu_hotplug_disable() makes a concurrent
+> cpu hotplug attempt via the sysfs interfaces fail with -EBUSY, but PCI
+> probing usually happens during the boot process where no interaction is
+> possible. Any later invocations are infrequent enough and concurrent
+> hotplug attempts are so unlikely that the danger of user space visible
+> regressions is very close to zero. Anyway, thats preferrable over a real
+> deadlock.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> ---
+>  drivers/pci/pci-driver.c |   15 ++++++++++++---
+>  1 file changed, 12 insertions(+), 3 deletions(-)
+> 
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -320,10 +320,19 @@ static long local_pci_probe(void *_ddi)
+>  	return 0;
+>  }
+>  
+> +static bool pci_physfn_is_probed(struct pci_dev *dev)
+> +{
+> +#ifdef CONFIG_ATS
 
-Include the asm-generic ioremap_nopost() implementation (currently
-falling back to ioremap_nocache()) to provide a non-posted writes
-ioremap interface to kernel subsystems.
+I think this was intended to be CONFIG_PCI_ATS, not CONFIG_ATS.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Ley Foon Tan <lftan@altera.com>
----
- arch/nios2/include/asm/io.h | 1 +
- 1 file changed, 1 insertion(+)
+But I think CONFIG_PCI_IOV would be more appropriate.  With that, and
+squashing this into the next patch,
 
-diff --git a/arch/nios2/include/asm/io.h b/arch/nios2/include/asm/io.h
-index ce072ba..ff8ac76 100644
---- a/arch/nios2/include/asm/io.h
-+++ b/arch/nios2/include/asm/io.h
-@@ -47,6 +47,7 @@ static inline void iounmap(void __iomem *addr)
- 
- #define ioremap_wc ioremap_nocache
- #define ioremap_wt ioremap_nocache
-+#include <asm-generic/ioremap-nopost.h>
- 
- /* Pages to physical address... */
- #define page_to_phys(page)	virt_to_phys(page_to_virt(page))
--- 
-2.10.0
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+I expect you'll merge this along with the rest of the series.  Let me
+know if you need anything else from me.
+
+> +	return dev->physfn->is_probed;
+> +#else
+> +	return false;
+> +#endif
+> +}
+> +
+>  static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
+>  			  const struct pci_device_id *id)
+>  {
+> -	int error, node;
+> +	int error, node, cpu;
+>  	struct drv_dev_and_id ddi = { drv, dev, id };
+>  
+>  	/*
+> @@ -349,13 +358,13 @@ static int pci_call_probe(struct pci_dri
+>  	if (node >= 0 && node != numa_node_id()) {
+>  		int cpu;
+>  
+> -		get_online_cpus();
+> +		cpu_hotplug_disable();
+>  		cpu = cpumask_any_and(cpumask_of_node(node), cpu_online_mask);
+>  		if (cpu < nr_cpu_ids)
+>  			error = work_on_cpu(cpu, local_pci_probe, &ddi);
+>  		else
+>  			error = local_pci_probe(&ddi);
+> -		put_online_cpus();
+> +		cpu_hotplug_enable();
+>  	} else
+>  		error = local_pci_probe(&ddi);
+>  
+> 
+> 
