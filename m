@@ -1,99 +1,193 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60184 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751873AbdDNP6z (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 14 Apr 2017 11:58:55 -0400
-Date: Fri, 14 Apr 2017 10:58:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Yongji Xie <elohimes@gmail.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, alex.williamson@redhat.com,
-        gwshan@linux.vnet.ibm.com, aik@ozlabs.ru, benh@kernel.crashing.org,
-        mpe@ellerman.id.au, paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: Re: [PATCH v10 3/4] powerpc/powernv: Override
- pcibios_default_alignment() to force PCI devices to be page aligned
-Message-ID: <20170414155849.GB5864@bhelgaas-glaptop.roam.corp.google.com>
-References: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
- <1491825494-19331-4-git-send-email-elohimes@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1491825494-19331-4-git-send-email-elohimes@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=bLgn=32=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=bLgn=32=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1492496998.25766.84.camel@kernel.crashing.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Logan Gunthorpe <logang@deltatee.com>,
+        Dan Williams
+	 <dan.j.williams@intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+        Jason Gunthorpe
+ <jgunthorpe@obsidianresearch.com>,
+        Christoph Hellwig <hch@lst.de>, Sagi
+ Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley"
+ <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen"
+ <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise
+ <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>, Max
+ Gurtovoy <maxg@mellanox.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm
+ <linux-nvdimm@ml01.01.org>,
+        "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>,
+        Jerome Glisse <jglisse@redhat.com>
+Date: Tue, 18 Apr 2017 16:29:58 +1000
+In-Reply-To: <e5645535-8da0-6965-1d5f-ed43ab634600@deltatee.com>
+References: 
+	<CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+	 <6e732d6a-9baf-1768-3e9c-f6c887a836b2@deltatee.com>
+	 <1492381958.25766.50.camel@kernel.crashing.org>
+	 <6149ab5e-c981-6881-8c5a-22349561c3e8@deltatee.com>
+	 <1492413640.25766.52.camel@kernel.crashing.org>
+	 <ac643c73-43e9-1658-ffcb-d5628f80cbc1@deltatee.com>
+	 <1492463497.25766.55.camel@kernel.crashing.org>
+	 <e5645535-8da0-6965-1d5f-ed43ab634600@deltatee.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 10, 2017 at 07:58:13PM +0800, Yongji Xie wrote:
-> This overrides pcibios_default_alignment() to set default alignment
-> to PAGE_SIZE for all PCI devices on PowerNV platform. Thus sub-page
-> BARs would not share a page and could be mapped into guest when VFIO
-> passthrough them.
-
-Thanks for doing this.  This looks like a reasonable strategy to me,
-but it would be good to get a powerpc ack for it.
-
-> Signed-off-by: Yongji Xie <elohimes@gmail.com>
-> ---
->  arch/powerpc/include/asm/machdep.h        |    2 ++
->  arch/powerpc/kernel/pci-common.c          |    8 ++++++++
->  arch/powerpc/platforms/powernv/pci-ioda.c |    7 +++++++
->  3 files changed, 17 insertions(+)
+On Mon, 2017-04-17 at 23:43 -0600, Logan Gunthorpe wrote:
 > 
-> diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-> index 5011b69..a82c192 100644
-> --- a/arch/powerpc/include/asm/machdep.h
-> +++ b/arch/powerpc/include/asm/machdep.h
-> @@ -173,6 +173,8 @@ struct machdep_calls {
->  	/* Called after scan and before resource survey */
->  	void (*pcibios_fixup_phb)(struct pci_controller *hose);
->  
-> +	resource_size_t (*pcibios_default_alignment)(struct pci_dev *);
-> +
->  #ifdef CONFIG_PCI_IOV
->  	void (*pcibios_fixup_sriov)(struct pci_dev *pdev);
->  	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *, int resno);
-> diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-> index ffda24a..ceda574 100644
-> --- a/arch/powerpc/kernel/pci-common.c
-> +++ b/arch/powerpc/kernel/pci-common.c
-> @@ -233,6 +233,14 @@ void pcibios_reset_secondary_bus(struct pci_dev *dev)
->  	pci_reset_secondary_bus(dev);
->  }
->  
-> +resource_size_t pcibios_default_alignment(struct pci_dev *pdev)
-> +{
-> +	if (ppc_md.pcibios_default_alignment)
-> +		return ppc_md.pcibios_default_alignment(pdev);
-> +
-> +	return 0;
-> +}
-> +
->  #ifdef CONFIG_PCI_IOV
->  resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev, int resno)
->  {
-> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-> index e367382..354c852 100644
-> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
-> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-> @@ -3297,6 +3297,11 @@ static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
->  	}
->  }
->  
-> +static resource_size_t pnv_pci_default_alignment(struct pci_dev *pdev)
-> +{
-> +	return PAGE_SIZE;
-> +}
-> +
->  #ifdef CONFIG_PCI_IOV
->  static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
->  						      int resno)
-> @@ -3830,6 +3835,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
->  		hose->controller_ops = pnv_pci_ioda_controller_ops;
->  	}
->  
-> +	ppc_md.pcibios_default_alignment = pnv_pci_default_alignment;
-> +
->  #ifdef CONFIG_PCI_IOV
->  	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_iov_resources;
->  	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
-> -- 
-> 1.7.9.5
+> On 17/04/17 03:11 PM, Benjamin Herrenschmidt wrote:
+> > Is it ? Again, you create a "concept" the user may have no idea about,
+> > "p2pmem memory". So now any kind of memory buffer on a device can could
+> > be use for p2p but also potentially a bunch of other things becomes
+> > special and called "p2pmem" ...
+> 
+> The user is going to have to have an idea about it if they are designing
+> systems to make use of it. I've said it before many times: this is an
+> optimization with significant trade-offs so the user does have to make
+> decisions regarding when to enable it.
+
+Not necessarily. There are many cases where the "end user" won't have
+any idea. In any case, I think we bring the story down to those two
+points of conflating the allocator with the peer to peer DMA, and the
+lack of generality in the approach to solve the peer to peer DMA
+problem.
+
+> > But what do you have in p2pmem that somebody benefits from. Again I
+> > don't understand what that "p2pmem" device buys you in term of
+> > functionality vs. having the device just instanciate the pages.
+> 
+> Well thanks for just taking a big shit on all of our work without even
+> reading the patches. Bravo.
+
+Now now now .... calm down. We are being civil here. I'm not shitting
+on anything, I'm asking what seems to be a reasonable question in term
+of benefits of the approach you have chosen. Using that sort of
+language will not get you anywhere. 
+
+> > Now having some kind of way to override the dma_ops, yes I do get that,
+> > and it could be that this "p2pmem" is typically the way to do it, but
+> > at the moment you don't even have that. So I'm a bit at a loss here.
+> 
+> Yes, we've already said many times that this is something we will need
+> to add.
+> 
+> > But it doesn't *have* to be. Again, take my GPU example. The fact that
+> > a NIC might be able to DMA into it doesn't make it specifically "p2p
+> > memory".
+> 
+> Just because you use it for other things doesn't mean it can't also
+> provide the service of a "p2pmem" device.
+
+But there is no such thing as a "p2pmem" device.. that's what I'm
+trying to tell you...
+
+As both Jerome and I tried to explain, there are many reason why one
+may want to do peer DMA into some device memory, that doesn't make that
+memory some kind of "p2pmem". It's trying to stick a generic label onto
+something that isn't.
+
+That's why I'm suggesting we disconnect the two aspects. On one hand
+the problem of handling p2p DMA, whether the target is some memory,
+some MMIO registers, etc...
+
+On the other hand, some generic "utility" that can optionally be used
+by drivers to manage a pool of DMA memory in the device, essentially a
+simple allocator.
+
+The two things are completely orthogonal.
+
+> > So now your "p2pmem" device needs to also be laid out on top of those
+> > MMIO registers ? It's becoming weird.
+> 
+> Yes, Max Gurtovoy has also expressed an interest in expanding this work
+> to cover things other than memory. He's suggested simply calling it a
+> p2p device, but until we figure out what exactly that all means we can't
+> really finalize a name.
+
+Possibly. In any case, I think it should be separate from the
+allocation.
+
+> > See, basically, doing peer 2 peer between devices has 3 main challenges
+> > today: The DMA API needing struct pages, the MMIO translation issues
+> > and the IOMMU translation issues.
+> > 
+> > You seem to create that added device as some kind of "owner" for the
+> > struct pages, solving #1, but leave #2 and #3 alone.
+> 
+> Well there are other challenges too. Like figuring out when it's
+> appropriate to use, tying together the device that provides the memory
+> with the driver tring to use it in DMA transactions, etc, etc. Our patch
+> set tackles these latter issues.
+
+But it tries to conflate the allocation, which is basically the fact
+that this is some kind of "memory pool" with the problem of doing peer
+DMA.
+
+I'm advocating for separating the concepts.
+
+> > If we go down that path, though, rather than calling it p2pmem I would
+> > call it something like dma_target which I find much clearer especially
+> > since it doesn't have to be just memory.
+> 
+> I'm not set on the name. My arguments have been specifically for the
+> existence of an independent struct device. But I'm not really interested
+> in getting into bike shedding arguments over what to call it at this
+> time when we don't even really know what it's going to end up doing in
+> the end.
+
+It's not bike shedding. It's about taking out the allocator part and
+making it clear that this isn't something to lay out on top of a pre-
+decided chunk of "memory".
+
+> > The memory allocation should be a completely orthogonal and separate
+> > thing yes. You are conflating two completely different things now into
+> > a single concept.
+> 
+> Well we need a uniform way for a driver trying to coordinate a p2p dma
+> to find and obtain memory from devices that supply it.
+
+Again, you are bringing everything down to your special case of "p2p
+memory". That's where you lose me. This looks like a special case to me
+and you are making the centre point of your design.
+
+What we need is:
+
+ - On one hand a way to expose device space (whether it's MMIO
+registers, memory, something else ...) to the DMA ops so another device
+can do standard dma_map_* to/from it. (Not dma_alloc_* those shouldn't
+relate to p2p at all, they are intended for a driver own allocation for
+the device it manages). This includes the creation of struct pages and
+the mechanism to override/adjust the dma_ops etc.... along with all the
+PCI specific gunk to figure out if we are on the same bus or not etc.
+
+ - Some kind of generic utility you can use to manage a pool of
+"memory" which seems to be what your special devices use or wantf or
+use by peer DMA.
+
+>  We are not
+> > dealing with GPUs that already have complicated allocators.> 
+We are
+> dealing with people adding memory to their devices for the _sole_
+> purpose of enabling p2p transfers. So having a common allocation setup
+> > i
+s seen as a benefit to us.
+
+I'm not disagreeing. I'm saying that it is completely orthogonal to the
+solving the the DMA peer issue. I'm simply objecting to conflating the
+two.
+
+Cheers,
+Ben.
+
+> Logan
 > 
