@@ -1,82 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40176 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751852AbdDQVgu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Apr 2017 17:36:50 -0400
-Subject: [PATCH v11 3/7] PCI: Add pcibios_default_alignment() for
- arch-specific alignment control
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yongji Xie <elohimes@gmail.com>
-Cc: zhong@linux.vnet.ibm.com, Alexey Kardashevskiy <aik@ozlabs.ru>,
-        linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org
-Date: Mon, 17 Apr 2017 16:36:46 -0500
-Message-ID: <20170417213646.21092.24262.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=HVeC=32=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=HVeC=32=deltatee.com=logang@kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Dan Williams <dan.j.williams@intel.com>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <6e732d6a-9baf-1768-3e9c-f6c887a836b2@deltatee.com>
+ <1492381958.25766.50.camel@kernel.crashing.org>
+ <6149ab5e-c981-6881-8c5a-22349561c3e8@deltatee.com>
+ <1492413640.25766.52.camel@kernel.crashing.org>
+ <ac643c73-43e9-1658-ffcb-d5628f80cbc1@deltatee.com>
+ <1492463497.25766.55.camel@kernel.crashing.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+ Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+ linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Jerome Glisse <jglisse@redhat.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <e5645535-8da0-6965-1d5f-ed43ab634600@deltatee.com>
+Date: Mon, 17 Apr 2017 23:43:24 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1492463497.25766.55.camel@kernel.crashing.org>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Yongji Xie <elohimes@gmail.com>
 
-When VFIO passes through a PCI device to a guest, it does not allow
-the guest to mmap BARs that are smaller than PAGE_SIZE unless it
-can reserve the rest of the page (see vfio_pci_probe_mmaps()). This
-is because a page might contain several small BARs for unrelated
-devices and a guest should not be able to access all of them.
 
-VFIO emulates guest accesses to non-mappable BARs, which is functional
-but slow. On systems with large page sizes, e.g., PowerNV with 64K pages,
-BARs are more likely to share a page and performance is more likely to
-be a problem.
+On 17/04/17 03:11 PM, Benjamin Herrenschmidt wrote:
+> Is it ? Again, you create a "concept" the user may have no idea about,
+> "p2pmem memory". So now any kind of memory buffer on a device can could
+> be use for p2p but also potentially a bunch of other things becomes
+> special and called "p2pmem" ...
 
-Add a weak function to set default alignment for all PCI devices.
-An arch can override it to force the PCI core to place memory BARs on
-their own pages.
+The user is going to have to have an idea about it if they are designing
+systems to make use of it. I've said it before many times: this is an
+optimization with significant trade-offs so the user does have to make
+decisions regarding when to enable it.
 
-Signed-off-by: Yongji Xie <elohimes@gmail.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/pci.c |   10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 679af2a253ad..a2d1f144c94f 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4947,6 +4947,11 @@ void pci_ignore_hotplug(struct pci_dev *dev)
- }
- EXPORT_SYMBOL_GPL(pci_ignore_hotplug);
- 
-+resource_size_t __weak pcibios_default_alignment(struct pci_dev *dev)
-+{
-+	return 0;
-+}
-+
- #define RESOURCE_ALIGNMENT_PARAM_SIZE COMMAND_LINE_SIZE
- static char resource_alignment_param[RESOURCE_ALIGNMENT_PARAM_SIZE] = {0};
- static DEFINE_SPINLOCK(resource_alignment_lock);
-@@ -4962,14 +4967,15 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- {
- 	int seg, bus, slot, func, align_order, count;
- 	unsigned short vendor, device, subsystem_vendor, subsystem_device;
--	resource_size_t align = 0;
-+	resource_size_t align = pcibios_default_alignment(dev);
- 	char *p;
- 
- 	spin_lock(&resource_alignment_lock);
- 	p = resource_alignment_param;
--	if (!*p)
-+	if (!*p && !align)
- 		goto out;
- 	if (pci_has_flag(PCI_PROBE_ONLY)) {
-+		align = 0;
- 		pr_info_once("PCI: Ignoring requested alignments (PCI_PROBE_ONLY)\n");
- 		goto out;
- 	}
+> But what do you have in p2pmem that somebody benefits from. Again I
+> don't understand what that "p2pmem" device buys you in term of
+> functionality vs. having the device just instanciate the pages.
+
+Well thanks for just taking a big shit on all of our work without even
+reading the patches. Bravo.
+
+> Now having some kind of way to override the dma_ops, yes I do get that,
+> and it could be that this "p2pmem" is typically the way to do it, but
+> at the moment you don't even have that. So I'm a bit at a loss here.
+
+Yes, we've already said many times that this is something we will need
+to add.
+
+> But it doesn't *have* to be. Again, take my GPU example. The fact that
+> a NIC might be able to DMA into it doesn't make it specifically "p2p
+> memory".
+
+Just because you use it for other things doesn't mean it can't also
+provide the service of a "p2pmem" device.
+
+> So now your "p2pmem" device needs to also be laid out on top of those
+> MMIO registers ? It's becoming weird.
+
+Yes, Max Gurtovoy has also expressed an interest in expanding this work
+to cover things other than memory. He's suggested simply calling it a
+p2p device, but until we figure out what exactly that all means we can't
+really finalize a name.
+
+> See, basically, doing peer 2 peer between devices has 3 main challenges
+> today: The DMA API needing struct pages, the MMIO translation issues
+> and the IOMMU translation issues.
+> 
+> You seem to create that added device as some kind of "owner" for the
+> struct pages, solving #1, but leave #2 and #3 alone.
+
+Well there are other challenges too. Like figuring out when it's
+appropriate to use, tying together the device that provides the memory
+with the driver tring to use it in DMA transactions, etc, etc. Our patch
+set tackles these latter issues.
+
+> If we go down that path, though, rather than calling it p2pmem I would
+> call it something like dma_target which I find much clearer especially
+> since it doesn't have to be just memory.
+
+I'm not set on the name. My arguments have been specifically for the
+existence of an independent struct device. But I'm not really interested
+in getting into bike shedding arguments over what to call it at this
+time when we don't even really know what it's going to end up doing in
+the end.
+
+> The memory allocation should be a completely orthogonal and separate
+> thing yes. You are conflating two completely different things now into
+> a single concept.
+
+Well we need a uniform way for a driver trying to coordinate a p2p dma
+to find and obtain memory from devices that supply it. We are not
+dealing with GPUs that already have complicated allocators. We are
+dealing with people adding memory to their devices for the _sole_
+purpose of enabling p2p transfers. So having a common allocation setup
+is seen as a benefit to us.
+
+Logan
