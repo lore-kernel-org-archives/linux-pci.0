@@ -1,72 +1,44 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:44394 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966838AbdDSQtk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Apr 2017 12:49:40 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH v4 14/21] PCI: designware: update PCI config space remap function
-Date: Wed, 19 Apr 2017 17:49:03 +0100
-Message-Id: <20170419164913.19674-15-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 18 Apr 2017 13:36:12 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Salvatore Benedetto <salvatore.benedetto@intel.com>,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Dennis Dalessandro <dennis.dalessandro@intel.com>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        linux-pci@vger.kernel.org, qat-linux@intel.com,
+        linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
+        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: export pcie_flr and remove copies of it in drivers V2
+Message-ID: <20170418183612.GC25295@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170414191131.14286-1-hch@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170414191131.14286-1-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_pci_remap_cfg* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+On Fri, Apr 14, 2017 at 09:11:24PM +0200, Christoph Hellwig wrote:
+> Hi all,
+> 
+> this exports the PCI layer pcie_flr helper, and removes various opencoded
+> copies of it.
+> 
+> Changes since V1:
+>  - rebase on top of the pci/virtualization branch
+>  - fixed the probe case in __pci_dev_reset
+>  - added ACKs from Bjorn
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>
----
- drivers/pci/dwc/pcie-designware-host.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+Applied the first three patches:
+ 
+  bc13871ef35a PCI: Export pcie_flr()
+  e641c375d414 PCI: Call pcie_flr() from reset_intel_82599_sfp_virtfn()
+  40e0901ea4bf PCI: Call pcie_flr() from reset_chelsio_generic_dev()
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 5ba3349..2b789af 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -338,8 +338,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	}
- 
- 	if (!pci->dbi_base) {
--		pci->dbi_base = devm_ioremap(dev, pp->cfg->start,
--					resource_size(pp->cfg));
-+		pci->dbi_base = devm_pci_remap_cfgspace(dev,
-+						pp->cfg->start,
-+						resource_size(pp->cfg));
- 		if (!pci->dbi_base) {
- 			dev_err(dev, "error with ioremap\n");
- 			ret = -ENOMEM;
-@@ -350,8 +351,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	pp->mem_base = pp->mem->start;
- 
- 	if (!pp->va_cfg0_base) {
--		pp->va_cfg0_base = devm_ioremap(dev, pp->cfg0_base,
--						pp->cfg0_size);
-+		pp->va_cfg0_base = devm_pci_remap_cfgspace(dev,
-+					pp->cfg0_base, pp->cfg0_size);
- 		if (!pp->va_cfg0_base) {
- 			dev_err(dev, "error with ioremap in function\n");
- 			ret = -ENOMEM;
-@@ -360,7 +361,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 	}
- 
- 	if (!pp->va_cfg1_base) {
--		pp->va_cfg1_base = devm_ioremap(dev, pp->cfg1_base,
-+		pp->va_cfg1_base = devm_pci_remap_cfgspace(dev,
-+						pp->cfg1_base,
- 						pp->cfg1_size);
- 		if (!pp->va_cfg1_base) {
- 			dev_err(dev, "error with ioremap\n");
--- 
-2.10.0
+to pci/virtualization for v4.12, thanks!
