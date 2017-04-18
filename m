@@ -1,166 +1,83 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-To: Rajat Jain <rajatja@google.com>, Sinan Kaya <okaya@codeaurora.org>
-Subject: RE: [PATCH V7 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-Date: Fri, 7 Apr 2017 09:03:22 +0000
-Message-ID: <92EBB4272BF81E4089A7126EC1E7B2846676309A@IRSMSX101.ger.corp.intel.com>
-References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
- <7c48ca8b-b834-3257-91dc-77e9d19def6c@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B28466761383@IRSMSX101.ger.corp.intel.com>
- <92EBB4272BF81E4089A7126EC1E7B2846676271D@IRSMSX101.ger.corp.intel.com>
- <951505b8-9580-7131-2f14-de92817190a7@codeaurora.org>
- <CACK8Z6FG7QHs1kQUoTJTcP3606+xBLFp9RUmLuv0m0X2mxH9XA@mail.gmail.com>
-In-Reply-To: <CACK8Z6FG7QHs1kQUoTJTcP3606+xBLFp9RUmLuv0m0X2mxH9XA@mail.gmail.com>
+Return-Path: <SRS0=bkpB=32=obsidianresearch.com=jgunthorpe@kernel.org>
+Return-Path: <SRS0=bkpB=32=obsidianresearch.com=jgunthorpe@kernel.org>
+Date: Tue, 18 Apr 2017 12:00:20 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Steve Wise <swise@opengridcomputing.com>,
+	Stephen Bates <sbates@raithlin.com>,
+	Max Gurtovoy <maxg@mellanox.com>,
+	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Message-ID: <20170418180020.GE7181@obsidianresearch.com>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <1492381396.25766.43.camel@kernel.crashing.org>
+ <20170418164557.GA7181@obsidianresearch.com>
+ <CAPcyv4izLa2vw12ysvVfd=ysaMKcASNFm+=CaqDKhnPY9B5OJg@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPcyv4izLa2vw12ysvVfd=ysaMKcASNFm+=CaqDKhnPY9B5OJg@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Rajat
+On Tue, Apr 18, 2017 at 10:27:47AM -0700, Dan Williams wrote:
+> > FWIW, RDMA probably wouldn't want to use a p2mem device either, we
+> > already have APIs that map BAR memory to user space, and would like to
+> > keep using them. A 'enable P2P for bar' helper function sounds better
+> > to me.
+> 
+> ...and I think it's not a helper function as much as asking the bus
+> provider "can these two device dma to each other".
 
+What I mean I could write in a RDMA driver:
 
->On Thu, Apr 6, 2017 at 8:19 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
->>
->> On 4/6/2017 9:23 AM, Patel, Mayurkumar wrote:
->> > Actually, The enabling/configuring of ASPM L1.2 is opposite then ASPM L1.
->> > In case of L1, Upstream must configure first L1 and then downstream according to PCIe spec.
->> > In case of L1.2, Downstream must configure L1.2 and then upstream according (to L1.2 ECN spec. -> 5.5.4. L1 PM
->> > substates Configuration).
->> >
->> > @Bjorn:
->> > I even found that programming of pcie_config_aspm_l1ss() sub-states is done in the opposite way than described in
->> > the spec.,
->> >
->> > The spec. says following and correct me If I am wrong or I misinterpret the spec. :
->> >
->> > 5.5.4. L1 PM Substates Configuration
->> >
->> > The Setting of any enable bit must be performed at the Downstream Port before the
->> > corresponding bit is permitted to be Set at the Upstream Port. If any L1 PM Substates enable
->> > bit is at a later time to be cleared, the enable bit(s) must be cleared in the Upstream Port
->> > before the corresponding enable bit(s) are permitted to be cleared in the Downstream Port.
->> >
->
->Thanks for bringing to attention. My understanding / interpretation of
->"Downstream port" was the port pointing downwards (from the "Upstream"
->component). E.g. when an EP connects to a hub port, PCIe text refers
->to the hub port as the "downstream port". Similarly "upstream port" is
->used for referring to a switch's port that "points" upwards towards
->the root port. Thus, I interpreted the text to mean that I need to
->enable it in the "downstream port" (in the root port / switch port)
->followed by the "upstream port" (in the device).
->
->It would have been great if the PCIe spec was as clear for L1
->substates as it was for L1:
->----------------------------
->ASPM L1 must be enabled by software in the Upstream
->component on a Link prior to enabling ASPM L1 in the
->Downstream component on that Link.
->-----------------------------
->For ASPM L1, the spec clearly says "Upstream component" which can only
->mean the switch's "downstream" port. I'm open to changing it if there
->is consensus that my interpretation is wrong.
+  /* Allow the memory in BAR 1 to be the target of P2P transactions */
+  pci_enable_p2p_bar(dev, 1);
 
-In fact, Your understanding seems to be correct. It was my mistake that I raised it without
-actually, keeping in mind or understanding port/component difference which I didn't notice.
-My sincere apologies for that.
+And not require anything else..
 
+> The "helper" is the dma api redirecting through a software-iommu
+> that handles bus address translation differently than it would
+> handle host memory dma mapping.
 
->
->I'm actually not sure if I understood what is the problem that is
->being seen with L1 PM substates. Can you please elaborate?
->
+Not sure, until we see what arches actually need to do here it is hard
+to design common helpers.
 
+Here are a few obvious things that arches will need to implement to
+support this broadly:
 
-The actual problem, what Sinan and me were seeing with ASPM L1 with POLICY_DEFAULT
-as described in https://patchwork.kernel.org/patch/9548321/ 
+- Virtualization might need to do a hypervisor call to get the right
+  translation, or consult some hypervisor specific description table.
 
+- Anything using IOMMUs for virtualization will need to setup IOMMU
+  permissions to allow the P2P flow, this might require translation to
+  an address cookie.
 
-Sinan worked out patches to resolve the issue but on my platform now I am starting to see
-that ASPM L1SS gets impacted by these patches. Basically, with his patches, when Policy is set to default,
-and if no PCIe EP is connected to Root Port during boot up, BIOS does not configure L1SS for it, on my
-platform. So the link->aspm_default in aspm.c stores configuration without L1SS. When the EP gets
-connected afterwards, due to link->aspm_default set to non L1SS configuration, even if BIOS
-sets ASPM L1SS for Root Port and Endpoint both, it gets cleared in the aspm driver.
+- Fail if the PCI devices are in different domains, or setup hardware to
+  do completion bus/device/function translation.
 
-Without the patches Sinan has worked, it was a different issue as described above, and L1/L1SS were
-getting always enabled by the BIOS for endpoint and RP, but kernel enabled/disabled them alternatively.
+- All platforms can succeed if the PCI devices are under the same
+  'segment', but where segments begin is somewhat platform specific
+  knowledge. (this is 'same switch' idea Logan has talked about)
 
-So basically, I am not currently 100% sure, what is the proper fix for this. Whether BIOS should
-enable L1SS on Root Port no matter Endpoint is connected or not during boot?
+So, we can eventually design helpers for various common scenarios, but
+until we see what arch code actually needs to do it seems
+premature. Much of this seems to involve interaction with some kind of
+hardware, or consulation of some kind of currently platform specific
+data, so I'm not sure what a software-iommu would be doing??
 
-Or I am not sure, whether could we should still update link->aspm_default partly for L1SS in the old patch way
-https://patchwork.ozlabs.org/patch/736771/ 
+The main thing to agree on is that this code belongs under dma ops and
+that arches have to support struct page mapped BAR addresses in their
+dma ops inputs. Is that resonable?
 
-Any feedback would be helpful then may be if required I can or if Sinan can work out the patches for L1SS also fine for me.
-
-
->
->>
->>
->> Thanks for testing.
->>
->> commit a142f4d3e5c54db5e942fa6ee5f3dc0e8c83207b
->> Author: Rajat Jain <rajatja@google.com>
->> Date:   Mon Jan 2 22:34:15 2017 -0800
->>
->>     PCI/ASPM: Add comment about L1 substate latency
->>
->>     Since the exit latencies for L1 substates are not advertised by a device,
->>     it is not clear in spec how to do a L1 substate exit latency check.  We
->>     assume that the L1 exit latencies advertised by a device include L1
->>     substate latencies (and hence do not do any check).  If that is not true,
->>     we should do some sort of check here.
->>
->>     (I'm not clear about what that check should like currently. I'd be glad to
->>     take up any suggestions).
->>
->>     Signed-off-by: Rajat Jain <rajatja@google.com>
->>     Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
->>
->> I added Rajat for discussion on L1SS. I think this deserves its own discussion.
->
->Thanks, The above commit specifically adds a comment to
->pcie_aspm_check_latency(), because I wanted to leave a note
->highlighting that potentially, we could add a more stringent check for
->exit latency for L1SS. But that has nothing to do with how we are
->configuring or enabling / disabling the L1 substates.
->
->Thanks & Best Regards,
->
->Rajat
->
->> I'll look at the other part of your email and move things around a little bit
->> less aggressively for the aspm_default.
->>
->>
->> --
->> Sinan Kaya
->> Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
->> Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-Intel Deutschland GmbH
-Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-Tel: +49 89 99 8853-0, www.intel.de
-Managing Directors: Christin Eisenschmid, Christian Lamprechter
-Chairperson of the Supervisory Board: Nicole Lau
-Registered Office: Munich
-Commercial Register: Amtsgericht Muenchen HRB 186928
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Jason
