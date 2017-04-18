@@ -1,43 +1,76 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:36165 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751914AbdDJWZn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Apr 2017 18:25:43 -0400
-Received: by mail-pf0-f182.google.com with SMTP id o126so39498341pfb.3
-        for <linux-pci@vger.kernel.org>; Mon, 10 Apr 2017 15:25:43 -0700 (PDT)
-From: Matthias Kaehlcke <mka@chromium.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Grant Grundler <grundler@chromium.org>,
-        Greg Hackmann <ghackmann@google.com>,
-        Michael Davidson <md@google.com>,
-        Matthias Kaehlcke <mka@chromium.org>
-Subject: [PATCH] PCI: Add cast when assigning PCI_ROM_ADDRESS_MASK to a 32-bit variable
-Date: Mon, 10 Apr 2017 15:24:57 -0700
-Message-Id: <20170410222457.113155-1-mka@chromium.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
+Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <462e318b-bcb8-7031-5b25-2c245086e077@deltatee.com>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <1492381396.25766.43.camel@kernel.crashing.org> <20170418164557.GA7181@obsidianresearch.com>
+ <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com> <20170418190138.GH7181@obsidianresearch.com>
+ <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com> <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <20170418210339.GA24257@obsidianresearch.com> <CAPcyv4h9n9Uzq4FAXR0ufieqvx5_txEwtnaaBWdxe-jF_XfTLg@mail.gmail.com>
+ <20170418212258.GA26838@obsidianresearch.com> <CAPcyv4g5ifbpukthMXMro8qKdfoXAhftDpiwWWFCLZ4dK8JnnA@mail.gmail.com>
+ <96198489-1af5-abcf-f23f-9a7e41aa17f7@deltatee.com> <CAPcyv4haUUs1Eew1PZTZkoGU4YFiHOuU93G+kG+CqfKzjz1gpw@mail.gmail.com>
+ <5e68102d-e165-6ef3-8678-9bdb4f78382b@deltatee.com> <CAPcyv4jArrOBBih5jOU5wrC2imdo9VPzuQpfzepP3_QEwM-33g@mail.gmail.com>
+ <462e318b-bcb8-7031-5b25-2c245086e077@deltatee.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 18 Apr 2017 16:02:40 -0700
+Message-ID: <CAPcyv4goxaeOFJjg3ior4zMRZmxuz=OZqd8Rb8zRmf1V2nDhAg@mail.gmail.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+	Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+	linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jerome Glisse <jglisse@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-This fixes a clang warning about "implicit conversion from 'unsigned
-long' to 'u32'"
+On Tue, Apr 18, 2017 at 3:56 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+>
+>
+> On 18/04/17 04:50 PM, Dan Williams wrote:
+>> On Tue, Apr 18, 2017 at 3:48 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
+>>>
+>>>
+>>> On 18/04/17 04:28 PM, Dan Williams wrote:
+>>>> Unlike the pci bus address offset case which I think is fundamental to
+>>>> support since shipping archs do this today, I think it is ok to say
+>>>> p2p is restricted to a single sgl that gets to talk to host memory or
+>>>> a single device. That said, what's wrong with a p2p aware map_sg
+>>>> implementation calling up to the host memory map_sg implementation on
+>>>> a per sgl basis?
+>>>
+>>> I think Ben said they need mixed sgls and that is where this gets messy.
+>>> I think I'd prefer this too given trying to enforce all sgs in a list to
+>>> be one type or another could be quite difficult given the state of the
+>>> scatterlist code.
+>>>
+>>>>> Also, what happens if p2p pages end up getting passed to a device that
+>>>>> doesn't have the injected dma_ops?
+>>>>
+>>>> This goes back to limiting p2p to a single pci host bridge. If the p2p
+>>>> capability is coordinated with the bridge rather than between the
+>>>> individual devices then we have a central point to catch this case.
+>>>
+>>> Not really relevant. If these pages get to userspace (as people seem
+>>> keen on doing) or a less than careful kernel driver they could easily
+>>> get into the dma_map calls of devices that aren't even pci related (via
+>>> an O_DIRECT operation on an incorrect file or something). The common
+>>> code must reject these and can't rely on an injected dma op.
+>>
+>> No, we can't do that at get_user_pages() time, it will always need to
+>> be up to the device driver to fail dma that it can't perform.
+>
+> I'm not sure I follow -- are you agreeing with me? The dma_map_* needs
+> to fail for any dma it cannot perform. Which means either all dma_ops
+> providers need to be p2p aware or this logic has to be in dma_map_*
+> itself. My point being: you can't rely on an injected dma_op for some
+> devices to handle the fail case globally.
 
-Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
----
- drivers/pci/probe.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index dfc9a2794141..148e80d5caf1 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -180,7 +180,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
- 	u16 orig_cmd;
- 	struct pci_bus_region region, inverted_region;
- 
--	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
-+	mask = type ? (u32)PCI_ROM_ADDRESS_MASK : ~0;
- 
- 	/* No printks while decoding is disabled! */
- 	if (!dev->mmio_always_on) {
--- 
-2.12.2.715.g7642488e1d-goog
+Ah, I see what you're saying now. Yes, we do need something that
+guarantees any dma mapping implementation that gets a struct page that
+it does now know how to translate properly fails the request.
