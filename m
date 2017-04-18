@@ -1,70 +1,42 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 14/27] mn10300: Use generic pci_mmap_resource_range()
-Date: Wed, 12 Apr 2017 13:26:03 +0100
-Message-Id: <15683b749605aa5e6733a587d495a8eab596f0e8.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <SRS0=yoP8=32=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=yoP8=32=ti.com=kishon@kernel.org>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Subject: [Query] Enabling parent device clock from resume_noirq
+To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        <khilman@kernel.org>, <rnayak@codeaurora.org>,
+        Paul Walmsley <paul@pwsan.com>, Bjorn Helgaas
+	<helgaas@kernel.org>,
+        Grygorii Strashko <grygorii.strashko@ti.com>,
+        "Nori,
+ Sekhar" <nsekhar@ti.com>, "Kristo, Tero" <t-kristo@ti.com>
+Message-ID: <62cd5ee0-3f0c-5e65-5f64-0c91a2a6f1e6@ti.com>
+Date: Tue, 18 Apr 2017 11:37:20 +0530
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+Hi,
 
-This was setting vma->vm_flags |= VM_LOCKED. Not sure why...
+resume_noirq callbacks are used in PCIe core to restore PCI state (this
+accesses PCI module). So the clocks of PCI module has to be enabled before
+resume_noirq.
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/mn10300/include/asm/pci.h          |  1 +
- arch/mn10300/unit-asb2305/pci-asb2305.c | 24 ------------------------
- 2 files changed, 1 insertion(+), 24 deletions(-)
+The clocks for the PCI module in DRA7xx is provided by PIPE3 PHY device which
+in turn gets it's clock from OCP2SCP device. During resume_noirq callbacks,
+pm_runtime is disabled, so pm_runtime_get_sync is ineffective. However
+pm_runtime can be enabled using pm_runtime_force_resume. Now the problem is
+adding pm_runtime_force_resume() in resume_noirq callback of pci-dra7xx driver
+will enable only the pm_runtime of PCI device but not PIPE3 PHY or OCP2SCP.
+Adding pm_runtime_force_resume() in resume_noirq callback of PIPE3 PHY driver
+or OCP2SCP driver will not help if the resume_noirq callbacks in PIP3PHY driver
+and OCP2SCP driver are invoked after the resume_noirq of pci-dra7xx driver.
 
-diff --git a/arch/mn10300/include/asm/pci.h b/arch/mn10300/include/asm/pci.h
-index 082b6de..d276549 100644
---- a/arch/mn10300/include/asm/pci.h
-+++ b/arch/mn10300/include/asm/pci.h
-@@ -74,6 +74,7 @@ static inline int pci_controller_num(struct pci_dev *dev)
- }
- 
- #define HAVE_PCI_MMAP
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE
- 
- #endif /* __KERNEL__ */
- 
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
-index 4abbbd5..e0f4617 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.c
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
-@@ -210,27 +210,3 @@ void __init pcibios_resource_survey(void)
- 	pcibios_allocate_resources(0);
- 	pcibios_allocate_resources(1);
- }
--
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	unsigned long prot;
--
--	/* Leave vm_pgoff as-is, the PCI space address is the physical
--	 * address on this platform.
--	 */
--	vma->vm_flags |= VM_LOCKED;
--
--	prot = pgprot_val(vma->vm_page_prot);
--	prot &= ~_PAGE_CACHE;
--	vma->vm_page_prot = __pgprot(prot);
--
--	/* Write-combine setting is ignored */
--	if (io_remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			       vma->vm_end - vma->vm_start,
--			       vma->vm_page_prot))
--		return -EAGAIN;
--
--	return 0;
--}
--- 
-2.9.3
+How to enable the pm_runtime of parent devices in resume_noirq callback? Does
+existing pm_runtime framework has support for that?
+
+Thanks
+Kishon
