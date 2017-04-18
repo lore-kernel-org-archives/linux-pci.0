@@ -1,123 +1,84 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Message-ID: <1492034124.7236.77.camel@kernel.crashing.org>
+Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
+Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <20170418164557.GA7181@obsidianresearch.com>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <1492381396.25766.43.camel@kernel.crashing.org> <20170418164557.GA7181@obsidianresearch.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 18 Apr 2017 10:27:47 -0700
+Message-ID: <CAPcyv4izLa2vw12ysvVfd=ysaMKcASNFm+=CaqDKhnPY9B5OJg@mail.gmail.com>
 Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@ml01.01.org, linux-kernel@vger.kernel.org,
-        Jerome Glisse <jglisse@redhat.com>
-Date: Thu, 13 Apr 2017 07:55:24 +1000
-In-Reply-To: <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
-         <1491974532.7236.43.camel@kernel.crashing.org>
-         <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Logan Gunthorpe <logang@deltatee.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+	Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+	linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jerome Glisse <jglisse@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2017-04-12 at 11:09 -0600, Logan Gunthorpe wrote:
-> 
-> > Do you handle funky address translation too ? IE. the fact that the PCI
-> > addresses aren't the same as the CPU physical addresses for a BAR ?
-> 
-> No, we use the CPU physical address of the BAR. If it's not mapped that
-> way we can't use it.
+On Tue, Apr 18, 2017 at 9:45 AM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Mon, Apr 17, 2017 at 08:23:16AM +1000, Benjamin Herrenschmidt wrote:
+>
+>> Thanks :-) There's a reason why I'm insisting on this. We have constant
+>> requests for this today. We have hacks in the GPU drivers to do it for
+>> GPUs behind a switch, but those are just that, ad-hoc hacks in the
+>> drivers. We have similar grossness around the corner with some CAPI
+>> NICs trying to DMA to GPUs. I have people trying to use PLX DMA engines
+>> to whack nVME devices.
+>
+> A lot of people feel this way in the RDMA community too. We have had
+> vendors shipping out of tree code to enable P2P for RDMA with GPU
+> years and years now. :(
+>
+> Attempts to get things in mainline have always run into the same sort
+> of road blocks you've identified in this thread..
+>
+> FWIW, I read this discussion and it sounds closer to an agreement than
+> I've ever seen in the past.
+>
+> From Ben's comments, I would think that the 'first class' support that
+> is needed here is simply a function to return the 'struct device'
+> backing a CPU address range.
+>
+> This is the minimal required information for the arch or IOMMU code
+> under the dma ops to figure out the fabric source/dest, compute the
+> traffic path, determine if P2P is even possible, what translation
+> hardware is crossed, and what DMA address should be used.
+>
+> If there is going to be more core support for this stuff I think it
+> will be under the topic of more robustly describing the fabric to the
+> core and core helpers to extract data from the description: eg compute
+> the path, check if the path crosses translation, etc
+>
+> But that isn't really related to P2P, and is probably better left to
+> the arch authors to figure out where they need to enhance the existing
+> topology data..
+>
+> I think the key agreement to get out of Logan's series is that P2P DMA
+> means:
+>  - The BAR will be backed by struct pages
+>  - Passing the CPU __iomem address of the BAR to the DMA API is
+>    valid and, long term, dma ops providers are expected to fail
+>    or return the right DMA address
+>  - Mapping BAR memory into userspace and back to the kernel via
+>    get_user_pages works transparently, and with the DMA API above
+>  - The dma ops provider must be able to tell if source memory is bar
+>    mapped and recover the pci device backing the mapping.
+>
+> At least this is what we'd like in RDMA :)
+>
+> FWIW, RDMA probably wouldn't want to use a p2mem device either, we
+> already have APIs that map BAR memory to user space, and would like to
+> keep using them. A 'enable P2P for bar' helper function sounds better
+> to me.
 
-Ok, you need to fix that or a bunch of architectures won't work. 
-
-Look at pcibios_resource_to_bus() and pcibios_bus_to_resource(). They
-will perform the conversion between the struct resource content (CPU
-physical address) and the actual PCI bus side address.
-
-When behind the same switch you need to use PCI addresses. If one tries
-later to do P2P between host bridges (via the CPU fabric) things get
-more complex and one will have to use either CPU addresses or something
-else alltogether (probably would have to teach the arch DMA mapping
-routines to work with those struct pages you create and return the
-right thing).
-
-> > > This will mean many setups that could likely
-> > > work well will not be supported so that we can be more confident it
-> > > will work and not place any responsibility on the user to understand
-> > > their topology. (We've chosen to go this route based on feedback we
-> > > received at LSF).
-> > > 
-> > > In order to enable this functionality we introduce a new p2pmem device
-> > > which can be instantiated by PCI drivers. The device will register some
-> > > PCI memory as ZONE_DEVICE and provide an genalloc based allocator for
-> > > users of these devices to get buffers.
-> > 
-> > I don't completely understand this. This is actual memory on the PCI
-> > bus ? Where does it come from ? Or are you just trying to create struct
-> > pages that cover your PCIe DMA target ?
-> 
-> Yes, the memory is on the PCI bus in a BAR. For now we have a special
-> PCI card for this, but in the future it would likely be the CMB in an
-> NVMe card. These patches create struct pages to map these BAR addresses
-> using ZONE_DEVICE.
-
-Ok.
-
-So ideally we'd want things like dma_map_* to be able to be fed those
-struct pages and do the right thing which is ... tricky, especially
-with the address translation I mentioned since the address will be
-different whether the initiator is on the same host bridge as the
-target or not.
-
-> > So correct me if I'm wrong, you are trying to create struct page's that
-> > map a PCIe BAR right ? I'm trying to understand how that interacts with
-> > what Jerome is doing for HMM.
-> 
-> Yes, well we are using ZONE_DEVICE in the exact same way as the dax code
-> is. These patches use the existing API with no modifications. As I
-> understand it, HMM was using ZONE_DEVICE in a way that was quite
-> different to how it was originally designed.
-
-Sort-of. I don't see why there would be a conflict with the struct
-pages use though. Jerome can you chime in ? Jerome: It looks like they
-are just laying out struct page over a BAR which is the same thing I
-think you should do when the BAR is "large enough" for the GPU memory.
-
-The case where HMM uses "holes" in the address space for its struct
-page is somewhat orthogonal but I also see no conflict here.
-
-> > The reason is that the HMM currently creates the struct pages with
-> > "fake" PFNs pointing to a hole in the address space rather than
-> > covering the actual PCIe memory of the GPU. He does that to deal with
-> > the fact that some GPUs have a smaller aperture on PCIe than their
-> > total memory.
-> 
-> I'm aware of what HMM is trying to do and although I'm not familiar with
-> the intimate details, I saw it as fairly orthogonal to what we are
-> attempting to do.
-
-Right.
-
-> > However, I have asked him to only apply that policy if the aperture is
-> > indeed smaller, and if not, create struct pages that directly cover the
-> > PCIe BAR of the GPU instead, which will work better on systems or
-> > architecture that don't have a "pinhole" window limitation.
-> > However he was under the impression that this was going to collide with
-> > what you guys are doing, so I'm trying to understand how. 
-> 
-> I'm not sure I understand how either. However, I suspect if you collide
-> with these patches then you'd also be breaking dax too.
-
-Possibly but as I said, I don't see why so I'll let Jerome chime in
-since he was under the impression that there was a conflict here :-)
-
-Cheers,
-Ben.
+...and I think it's not a helper function as much as asking the bus
+provider "can these two device dma to each other". The "helper" is the
+dma api redirecting through a software-iommu that handles bus address
+translation differently than it would handle host memory dma mapping.
