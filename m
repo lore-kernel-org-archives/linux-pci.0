@@ -1,78 +1,46 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:36277 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752179AbdDRSj0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2017 14:39:26 -0400
-Date: Tue, 18 Apr 2017 20:39:38 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
-        Simon Horman <horms@verge.net.au>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Niklas =?iso-8859-1?Q?S=F6derlund?=
-        <niklas.soderlund@ragnatech.se>
-Subject: Re: PCI / PM: Crashes in PME scan during system suspend
-Message-ID: <20170418183938.GA7757@wunner.de>
-References: <CAMuHMdVf-NT_6oGQVba_QgFuW-fZMBDF1CtidfxSxnCr8+BGHg@mail.gmail.com>
- <20170416075535.GA6620@wunner.de>
- <CAMuHMdUzYUGZT3gWzZ97rmbPXG3RqYLdvYx_ZdLdmCvxbrt4Hw@mail.gmail.com>
- <1776042.AWT4z5IEIn@aspire.rjw.lan>
+Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
+Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1776042.AWT4z5IEIn@aspire.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1492555569.25766.99.camel@kernel.crashing.org>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <1492381396.25766.43.camel@kernel.crashing.org> <20170418164557.GA7181@obsidianresearch.com>
+ <CAPcyv4izLa2vw12ysvVfd=ysaMKcASNFm+=CaqDKhnPY9B5OJg@mail.gmail.com> <1492555569.25766.99.camel@kernel.crashing.org>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 18 Apr 2017 15:52:08 -0700
+Message-ID: <CAPcyv4itqGu+YekHcJ+_kyDSDch43yRSqK8NnGUh2DYYMd=F1Q@mail.gmail.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Logan Gunthorpe <logang@deltatee.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+	Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+	linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jerome Glisse <jglisse@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 18, 2017 at 04:06:27PM +0200, Rafael J. Wysocki wrote:
-> On Tuesday, April 18, 2017 08:49:39 AM Geert Uytterhoeven wrote:
-> > On Sun, Apr 16, 2017 at 9:55 AM, Lukas Wunner <lukas@wunner.de> wrote:
-> > > Subject: [PATCH] PCI: Freeze PME scan before suspending devices
-> > >
-> > > Laurent Pinchart reported that the Renesas R-Car H2 Lager board
-> > > (r8a7790) crashes during suspend tests.  Geert Uytterhoeven managed to
-> > > reproduce the issue on an M2-W Koelsch board (r8a7791):
-> > >
-> > > It occurs when the PME scan runs, once per second.  During PME scan, the
-> > > PCI host bridge (rcar-pci) registers are accessed while its module clock
-> > > has already been disabled, leading to the crash.
-> > >
-> > > The issue only occurs during suspend tests, after writing either
-> > > "platform" or "processors" to /sys/power/pm_test.  It does not (or is
-> > > less likely) to happen during full system suspend ("core" or "none")
-> > > because system suspend also disables timers, and thus the workqueue
-> > > handling PME scans no longer runs.  Geert believes the issue may still
-> > > happen in the small window between disabling module clocks and disabling
-> > > timers.
-> > 
-> > It can also be reproduced easily by configuring s2ram to use s2idle instead
-> > of deep suspend, which is a real usecase:
-> > 
-> > # echo 0 > /sys/module/printk/parameters/console_suspend
-> > # echo s2idle > /sys/power/mem_sleep
-> > # echo mem > /sys/power/state
-> > 
-> > Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
-> 
-> There is a small concern here that some wakeup events may be missed if they
-> are delivered via PME without a working IRQ, but that's fairly minor and it
-> cannot be avoided entirely, so
+On Tue, Apr 18, 2017 at 3:46 PM, Benjamin Herrenschmidt
+<benh@kernel.crashing.org> wrote:
+> On Tue, 2017-04-18 at 10:27 -0700, Dan Williams wrote:
+>> > FWIW, RDMA probably wouldn't want to use a p2mem device either, we
+>> > already have APIs that map BAR memory to user space, and would like to
+>> > keep using them. A 'enable P2P for bar' helper function sounds better
+>> > to me.
+>>
+>> ...and I think it's not a helper function as much as asking the bus
+>> provider "can these two device dma to each other". The "helper" is the
+>> dma api redirecting through a software-iommu that handles bus address
+>> translation differently than it would handle host memory dma mapping.
+>
+> Do we even need tat function ? The dma_ops have a dma_supported()
+> call...
+>
+> If we have those override ops built into the "dma_target" object,
+> then these things can make that decision knowing both the source
+> and target device.
+>
 
-Well, that's a conundrum.  I don't know which devices depend on PME polling
-and whether they may signal PME between freezing the workqueue and suspending
-the host bridge.  If this unexpectedly turns out to be a problem in practice,
-it might be possible to solve it by calling pci_pme_list_scan() once directly
-from one of the host bridge's pm_ops callbacks.
-
-I've amended the commit message with the tags and additional information
-provided by you and Geert and will resend the patch to the list shortly.
-
-Thanks,
-
-Lukas
+Yes.
