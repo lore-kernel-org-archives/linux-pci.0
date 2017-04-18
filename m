@@ -1,70 +1,81 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33951 "EHLO gate.crashing.org"
+Received: from mail.kernel.org ([198.145.29.136]:38906 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751808AbdDMWjE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 13 Apr 2017 18:39:04 -0400
-Message-ID: <1492123049.7236.123.camel@kernel.crashing.org>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@ml01.01.org, linux-kernel@vger.kernel.org,
-        Jerome Glisse <jglisse@redhat.com>
-Date: Fri, 14 Apr 2017 08:37:29 +1000
-In-Reply-To: <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
-         <1491974532.7236.43.camel@kernel.crashing.org>
-         <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
-         <1492034124.7236.77.camel@kernel.crashing.org>
-         <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+        id S932327AbdDRT0P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Apr 2017 15:26:15 -0400
+Date: Tue, 18 Apr 2017 14:26:11 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Jayachandran C <jchandra@broadcom.com>,
+        Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [TRIVIAL PATCH] PCI: Change pci_host_common_probe visibility
+Message-ID: <20170418192611.GG25295@bhelgaas-glaptop.roam.corp.google.com>
+References: <11bd9bd5-5d96-bd7c-24c7-5f262a46085c@sigmadesigns.com>
+ <b79fcb7f-1621-58e4-ef16-1df2911accbe@sigmadesigns.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <b79fcb7f-1621-58e4-ef16-1df2911accbe@sigmadesigns.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2017-04-13 at 15:22 -0600, Logan Gunthorpe wrote:
+On Mon, Apr 10, 2017 at 02:26:42PM +0200, Marc Gonzalez wrote:
+> On 28/03/2017 17:29, Marc Gonzalez wrote:
 > 
-> On 12/04/17 03:55 PM, Benjamin Herrenschmidt wrote:
-> > Look at pcibios_resource_to_bus() and pcibios_bus_to_resource(). They
-> > will perform the conversion between the struct resource content (CPU
-> > physical address) and the actual PCI bus side address.
+> > pci_host_common_probe is defined when CONFIG_PCI_HOST_COMMON=y
+> > therefore the function declaration should match that.
+> > 
+> > drivers/pci/host/pcie-tango.c:300:9: error:
+> > 	implicit declaration of function 'pci_host_common_probe'
+> > 
+> > Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+> > ---
+> >  include/linux/pci-ecam.h | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
+> > index 33c4750781a0..e746803df566 100644
+> > --- a/include/linux/pci-ecam.h
+> > +++ b/include/linux/pci-ecam.h
+> > @@ -60,7 +60,7 @@ void __iomem *pci_ecam_map_bus(struct pci_bus *bus, unsigned int devfn,
+> >  /* default ECAM ops */
+> >  extern struct pci_ecam_ops pci_generic_ecam_ops;
+> >  
+> > -#ifdef CONFIG_PCI_HOST_GENERIC
+> > +#ifdef CONFIG_PCI_HOST_COMMON
+> >  /* for DT-based PCI controllers that support ECAM */
+> >  int pci_host_common_probe(struct platform_device *pdev,
+> >  			  struct pci_ecam_ops *ops);
+> > 
 > 
-> Ah, thanks for the tip! On my system, this translation returns the same
-> address so it was not necessary. And, yes, that means this would have to
-> find its way into the dma mapping routine somehow. This means we'll
-> eventually need a way to look-up the p2pmem device from the struct page.
-> Which means we will likely need a new flag bit in the struct page or
-> something. The big difficulty I see is testing. Do you know what
-> architectures or in what circumstances are these translations used?
-
-I think a bunch of non-x86 architectures but I don't know which ones
-outside of powerpc.
-
-> > When behind the same switch you need to use PCI addresses. If one tries
-> > later to do P2P between host bridges (via the CPU fabric) things get
-> > more complex and one will have to use either CPU addresses or something
-> > else alltogether (probably would have to teach the arch DMA mapping
-> > routines to work with those struct pages you create and return the
-> > right thing).
+> Hello Bjorn,
 > 
-> Probably for starters we'd want to explicitly deny cases between host
-> bridges and add that later if someone wants to do the testing.
-
-Cheers,
-Ben.
-
-> Thanks,
+> What is the status of this patch?
 > 
-> Logan
+> Arnd submitted an alternative patch earlier.
+> 
+> https://patchwork.kernel.org/patch/9637045/
+> https://patchwork.kernel.org/patch/9649993/
+> 
+> Arnd's solution is to make the declaration always visible.
+> My solution is to make the declaration visible only when
+> CONFIG_PCI_HOST_COMMON is defined.
+> 
+> The difference boils down to getting an error
+> at link-time VS at compile-time.
+
+I applied this to pci/misc for v4.12, thanks!
+
+Arnd's patch included:
+
+  Fixes: 4e64dbe226e7 ("PCI: generic: Expose pci_host_common_probe() for use by other drivers")
+
+which didn't look quite right to me.  I was originally hoping to merge
+it for v4.11, but I didn't think I had quite the right justification
+for that.
+
+In any case, I like the idea of making the declaration visible in
+exactly the same case the definition is visible.
+
+Bjorn
