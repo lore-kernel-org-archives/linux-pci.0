@@ -1,84 +1,49 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
- lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
- catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
- gregkh@linuxfoundation.org
-Subject: [PATCH V10 05/12] ACPI/IORT: Add function to check SMMUs drivers
- presence
-Date: Tue,  4 Apr 2017 15:48:18 +0530
-Message-Id: <1491301105-5274-6-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sricharan@codeaurora.org
+Return-Path: <SRS0=bkpB=32=obsidianresearch.com=jgunthorpe@kernel.org>
+Return-Path: <SRS0=bkpB=32=obsidianresearch.com=jgunthorpe@kernel.org>
+Date: Tue, 18 Apr 2017 15:22:58 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Steve Wise <swise@opengridcomputing.com>,
+	Stephen Bates <sbates@raithlin.com>,
+	Max Gurtovoy <maxg@mellanox.com>,
+	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Message-ID: <20170418212258.GA26838@obsidianresearch.com>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <1492381396.25766.43.camel@kernel.crashing.org>
+ <20170418164557.GA7181@obsidianresearch.com>
+ <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com>
+ <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+ <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <20170418210339.GA24257@obsidianresearch.com>
+ <CAPcyv4h9n9Uzq4FAXR0ufieqvx5_txEwtnaaBWdxe-jF_XfTLg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPcyv4h9n9Uzq4FAXR0ufieqvx5_txEwtnaaBWdxe-jF_XfTLg@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+On Tue, Apr 18, 2017 at 02:11:33PM -0700, Dan Williams wrote:
+> > I think this opens an even bigger can of worms..
+> 
+> No, I don't think it does. You'd only shim when the target page is
+> backed by a device, not host memory, and you can figure this out by a
+> is_zone_device_page()-style lookup.
 
-The IOMMU probe deferral implementation requires a mechanism to detect
-if drivers for SMMU components are built-in in the kernel to detect
-whether IOMMU configuration for a given device should be deferred (ie
-SMMU drivers present but still not probed) or not (drivers not present).
+The bigger can of worms is how do you meaningfully stack dma_ops.
 
-Add a simple function to IORT to detect if SMMU drivers for SMMU
-components managed by IORT are built-in in the kernel.
+What does the p2p provider do when it detects a p2p page?
 
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Sricharan R <sricharan@codeaurora.org>
----
- drivers/acpi/arm64/iort.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
-
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 4a5bb96..3dd9ec3 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -523,6 +523,19 @@ static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
- 	return ret;
- }
- 
-+static inline bool iort_iommu_driver_enabled(u8 type)
-+{
-+	switch (type) {
-+	case ACPI_IORT_NODE_SMMU_V3:
-+		return IS_BUILTIN(CONFIG_ARM_SMMU_V3);
-+	case ACPI_IORT_NODE_SMMU:
-+		return IS_BUILTIN(CONFIG_ARM_SMMU);
-+	default:
-+		pr_warn("IORT node type %u does not describe an SMMU\n", type);
-+		return false;
-+	}
-+}
-+
- static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
- 					struct acpi_iort_node *node,
- 					u32 streamid)
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Jason
