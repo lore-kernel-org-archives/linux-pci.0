@@ -1,122 +1,78 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Tue, 18 Apr 2017 12:50:54 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: David Howells <dhowells@redhat.com>
-Cc: linux-kernel@vger.kernel.org, matthew.garrett@nebula.com,
-        linux-efi@vger.kernel.org, gnomes@lxorguk.ukuu.org.uk,
-        linux-pci@vger.kernel.org, linux-security-module@vger.kernel.org,
-        keyrings@vger.kernel.org, gregkh@linuxfoundation.org
-Subject: Re: [PATCH 12/24] PCI: Lock down BAR access when the kernel is
- locked down
-Message-ID: <20170418175054.GA25295@bhelgaas-glaptop.roam.corp.google.com>
-References: <149142326734.5101.4596394505987813763.stgit@warthog.procyon.org.uk>
- <149142337836.5101.13971561682218232219.stgit@warthog.procyon.org.uk>
+Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
+Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <149142337836.5101.13971561682218232219.stgit@warthog.procyon.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170418180020.GE7181@obsidianresearch.com>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <1492381396.25766.43.camel@kernel.crashing.org> <20170418164557.GA7181@obsidianresearch.com>
+ <CAPcyv4izLa2vw12ysvVfd=ysaMKcASNFm+=CaqDKhnPY9B5OJg@mail.gmail.com> <20170418180020.GE7181@obsidianresearch.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Tue, 18 Apr 2017 11:34:56 -0700
+Message-ID: <CAPcyv4j16W_Q9m1X=GkgMYAyZ1JC3H_=+1CLxfB6CSqVEdWaMw@mail.gmail.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Logan Gunthorpe <logang@deltatee.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+	Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+	linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jerome Glisse <jglisse@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 05, 2017 at 09:16:18PM +0100, David Howells wrote:
-> From: Matthew Garrett <matthew.garrett@nebula.com>
-> 
-> Any hardware that can potentially generate DMA has to be locked down in
-> order to avoid it being possible for an attacker to modify kernel code,
-> allowing them to circumvent disabled module loading or module signing.
-> Default to paranoid - in future we can potentially relax this for
-> sufficiently IOMMU-isolated devices.
-> 
-> Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
-> Signed-off-by: David Howells <dhowells@redhat.com>
-> cc: linux-pci@vger.kernel.org
+On Tue, Apr 18, 2017 at 11:00 AM, Jason Gunthorpe
+<jgunthorpe@obsidianresearch.com> wrote:
+> On Tue, Apr 18, 2017 at 10:27:47AM -0700, Dan Williams wrote:
+>> > FWIW, RDMA probably wouldn't want to use a p2mem device either, we
+>> > already have APIs that map BAR memory to user space, and would like to
+>> > keep using them. A 'enable P2P for bar' helper function sounds better
+>> > to me.
+>>
+>> ...and I think it's not a helper function as much as asking the bus
+>> provider "can these two device dma to each other".
+>
+> What I mean I could write in a RDMA driver:
+>
+>   /* Allow the memory in BAR 1 to be the target of P2P transactions */
+>   pci_enable_p2p_bar(dev, 1);
+>
+> And not require anything else..
+>
+>> The "helper" is the dma api redirecting through a software-iommu
+>> that handles bus address translation differently than it would
+>> handle host memory dma mapping.
+>
+> Not sure, until we see what arches actually need to do here it is hard
+> to design common helpers.
+>
+> Here are a few obvious things that arches will need to implement to
+> support this broadly:
+>
+> - Virtualization might need to do a hypervisor call to get the right
+>   translation, or consult some hypervisor specific description table.
+>
+> - Anything using IOMMUs for virtualization will need to setup IOMMU
+>   permissions to allow the P2P flow, this might require translation to
+>   an address cookie.
+>
+> - Fail if the PCI devices are in different domains, or setup hardware to
+>   do completion bus/device/function translation.
+>
+> - All platforms can succeed if the PCI devices are under the same
+>   'segment', but where segments begin is somewhat platform specific
+>   knowledge. (this is 'same switch' idea Logan has talked about)
+>
+> So, we can eventually design helpers for various common scenarios, but
+> until we see what arch code actually needs to do it seems
+> premature. Much of this seems to involve interaction with some kind of
+> hardware, or consulation of some kind of currently platform specific
+> data, so I'm not sure what a software-iommu would be doing??
+>
+> The main thing to agree on is that this code belongs under dma ops and
+> that arches have to support struct page mapped BAR addresses in their
+> dma ops inputs. Is that resonable?
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-> ---
-> 
->  drivers/pci/pci-sysfs.c |    9 +++++++++
->  drivers/pci/proc.c      |    8 +++++++-
->  drivers/pci/syscall.c   |    2 +-
->  3 files changed, 17 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 25d010d449a3..f70b3668036f 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -727,6 +727,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
->  	loff_t init_off = off;
->  	u8 *data = (u8 *) buf;
->  
-> +	if (kernel_is_locked_down())
-> +		return -EPERM;
-> +
->  	if (off > dev->cfg_size)
->  		return 0;
->  	if (off + count > dev->cfg_size) {
-> @@ -1018,6 +1021,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
->  	resource_size_t start, end;
->  	int i;
->  
-> +	if (kernel_is_locked_down())
-> +		return -EPERM;
-> +
->  	for (i = 0; i < PCI_ROM_RESOURCE; i++)
->  		if (res == &pdev->resource[i])
->  			break;
-> @@ -1117,6 +1123,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
->  				     struct bin_attribute *attr, char *buf,
->  				     loff_t off, size_t count)
->  {
-> +	if (kernel_is_locked_down())
-> +		return -EPERM;
-> +
->  	return pci_resource_io(filp, kobj, attr, buf, off, count, true);
->  }
->  
-> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-> index f82710a8694d..139d6f09ae7b 100644
-> --- a/drivers/pci/proc.c
-> +++ b/drivers/pci/proc.c
-> @@ -116,6 +116,9 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
->  	int size = dev->cfg_size;
->  	int cnt;
->  
-> +	if (kernel_is_locked_down())
-> +		return -EPERM;
-> +
->  	if (pos >= size)
->  		return 0;
->  	if (nbytes >= size)
-> @@ -195,6 +198,9 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
->  #endif /* HAVE_PCI_MMAP */
->  	int ret = 0;
->  
-> +	if (kernel_is_locked_down())
-> +		return -EPERM;
-> +
->  	switch (cmd) {
->  	case PCIIOC_CONTROLLER:
->  		ret = pci_domain_nr(dev->bus);
-> @@ -233,7 +239,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
->  	struct pci_filp_private *fpriv = file->private_data;
->  	int i, ret, write_combine;
->  
-> -	if (!capable(CAP_SYS_RAWIO))
-> +	if (!capable(CAP_SYS_RAWIO) || kernel_is_locked_down())
->  		return -EPERM;
->  
->  	/* Make sure the caller is mapping a real resource for this device */
-> diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
-> index 9bf993e1f71e..c09524738ceb 100644
-> --- a/drivers/pci/syscall.c
-> +++ b/drivers/pci/syscall.c
-> @@ -92,7 +92,7 @@ SYSCALL_DEFINE5(pciconfig_write, unsigned long, bus, unsigned long, dfn,
->  	u32 dword;
->  	int err = 0;
->  
-> -	if (!capable(CAP_SYS_ADMIN))
-> +	if (!capable(CAP_SYS_ADMIN) || kernel_is_locked_down())
->  		return -EPERM;
->  
->  	dev = pci_get_bus_and_slot(bus, dfn);
-> 
+I think we're saying the same thing by "software-iommu" and "custom
+dma_ops", so yes.
