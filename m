@@ -1,191 +1,179 @@
-Return-Path: <SRS0=Q2iE=3O=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=Q2iE=3O=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Thu, 6 Apr 2017 17:21:56 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Tony Luck <tony.luck@intel.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Haavard Skinnemoen <hskinnemoen@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	John Garry <john.garry@huawei.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Roy Zang <tie-fei.zang@freescale.com>
-Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
- interface
-Message-ID: <20170406162156.GA10134@red-moon>
-References: <20170327094954.7162-3-lorenzo.pieralisi@arm.com>
- <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
- <20170328144543.GA18046@red-moon>
- <20170405105841.GG7909@n2100.armlinux.org.uk>
- <20170405113238.GA2465@red-moon>
- <20170406102636.GA9623@red-moon>
- <20170406105312.GE28800@wotan.suse.de>
- <20170406113845.GA10013@red-moon>
- <20170406115906.GF28800@wotan.suse.de>
- <20170406130727.GE17774@n2100.armlinux.org.uk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:62311 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751012AbdDROMc (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2017 10:12:32 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Geert Uytterhoeven <geert@linux-m68k.org>,
+        Lukas Wunner <lukas@wunner.de>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: Yinghai Lu <yinghai@kernel.org>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Laurent Pinchart <laurent.pinchart@ideasonboard.com>,
+        Simon Horman <horms@verge.net.au>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Niklas =?ISO-8859-1?Q?S=F6derlund?=
+        <niklas.soderlund@ragnatech.se>
+Subject: Re: PCI / PM: Crashes in PME scan during system suspend
+Date: Tue, 18 Apr 2017 16:06:27 +0200
+Message-ID: <1776042.AWT4z5IEIn@aspire.rjw.lan>
+In-Reply-To: <CAMuHMdUzYUGZT3gWzZ97rmbPXG3RqYLdvYx_ZdLdmCvxbrt4Hw@mail.gmail.com>
+References: <CAMuHMdVf-NT_6oGQVba_QgFuW-fZMBDF1CtidfxSxnCr8+BGHg@mail.gmail.com> <20170416075535.GA6620@wunner.de> <CAMuHMdUzYUGZT3gWzZ97rmbPXG3RqYLdvYx_ZdLdmCvxbrt4Hw@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170406130727.GE17774@n2100.armlinux.org.uk>
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 06, 2017 at 02:07:27PM +0100, Russell King - ARM Linux wrote:
-> On Thu, Apr 06, 2017 at 01:59:07PM +0200, Luis R. Rodriguez wrote:
-> > On Thu, Apr 06, 2017 at 12:38:45PM +0100, Lorenzo Pieralisi wrote:
-> > > Ok but where ? linux/io.h or asm-generic/io.h ? As I replied to Russell,
-> > > having it in linux/io.h is a bit odd given that it would be the only
-> > > ioremap_* implementation declared there, I think we need more
-> > > consistency here instead of deviating again from what you did.
-> > 
-> > asm-generic/io.h is the right place for generics which let you override.
+On Tuesday, April 18, 2017 08:49:39 AM Geert Uytterhoeven wrote:
+> Hi Lukas,
 > 
-> I disagree for two reasons, and I will refer you to Linus' comments back
-> in 2005 at http://yarchive.net/comp/linux/generic.html
+> On Sun, Apr 16, 2017 at 9:55 AM, Lukas Wunner <lukas@wunner.de> wrote:
+> > On Sat, Apr 15, 2017 at 12:27:31AM +0200, Rafael J. Wysocki wrote:
+> >> On Friday, April 14, 2017 10:22:49 AM Lukas Wunner wrote:
+> >> > Below is a tentative patch which moves PME polling to a freezable
+> >> > workqueue, so it is frozen before the host bridge is suspended.
+> >> > Geert, Laurent, could you test this?
+> >> >
+> >> > The patch may be problematic in that pci_pme_list_scan() acquires
+> >> > pci_pme_list_mutex, which is also acquired by pci_pme_active(),
+> >> > which gets called when devices are suspended -- *after* the worker
+> >> > has been frozen.  I'm not really familiar with the freezer, can it
+> >> > happen that the worker is frozen while holding the mutex?  If so
+> >> > this would deadlock.  Rafael?
+> >>
+> >> That depends on the worker, precisely on where it calls try_to_freeze().
+> >
+> > pci_pme_list_scan() doesn't call try_to_freeze() at all, that's what had
+> > me confused.  Neither do many other workers that are scheduled to
+> > system_freezable_wq.
+> >
+> > However after familiarizing myself a bit more with the freezer it seems
+> > that is fine.  The freezer prevents new workers from being scheduled and
+> > then schedules the existing workers for up to 20 seconds to allow them
+> > to finish.  The call to try_to_freeze() is thus only needed for long
+> > running workers or for threads which are in some infinite loop.
+> >
+> > Below is the same patch with a proper commit message, it's mostly copied
+> > and pasted from Geert's comprehensive report.  Still needs to be tested
+> > by Geert and/or Laurent as I was unable reproduce the issue on my x86
+> > laptop.  Perhaps on x86 the OS is not responsible for disabling the PCI
+> > clock (but presumably the BIOS) or x86 doesn't emit this kind of fault.
 > 
-> 1) asm-generic/io.h has become an ifdef mess, every single definition in
->    there is conditional.  The reason for this has happened is that
->    architectures can't pick and choose what they want from a single file
->    unless something like that is done.  It would be _far_ better to
->    split this file up by functional group - eg, ISA IO accessors,
->    io(read|write)*(), read|write*(), and so forth.
+> Thanks, works fine (see below)!
 > 
-> 2) We're at the point where we have various .c files around the kernel
->    _directly_ including asm-generic header files, which means the
->    use of asm-generic headers is no longer a choice of the architecture.
+> > -- >8 --
+> > Subject: [PATCH] PCI: Freeze PME scan before suspending devices
+> >
+> > Laurent Pinchart reported that the Renesas R-Car H2 Lager board
+> > (r8a7790) crashes during suspend tests.  Geert Uytterhoeven managed to
+> > reproduce the issue on an M2-W Koelsch board (r8a7791):
+> >
+> > It occurs when the PME scan runs, once per second.  During PME scan, the
+> > PCI host bridge (rcar-pci) registers are accessed while its module clock
+> > has already been disabled, leading to the crash.
+> >
+> > The issue only occurs during suspend tests, after writing either
+> > "platform" or "processors" to /sys/power/pm_test.  It does not (or is
+> > less likely) to happen during full system suspend ("core" or "none")
+> > because system suspend also disables timers, and thus the workqueue
+> > handling PME scans no longer runs.  Geert believes the issue may still
+> > happen in the small window between disabling module clocks and disabling
+> > timers.
 > 
-> 3) asm-generic/ started out life as the place where example
->    implementations of asm/*.h header files were found, and but has
->    grown into a place where we dump default implementations.  We had
->    a place for default implementations for years, which were the
->    linux/*.h headers.  We have now ended up with a mixture of both
->    techniques, even for something like io.h, we have the messy
->    asm-generic/io.h, the architecture's asm/io.h, and then linux/io.h.
->    We have ended up with both linux/io.h and asm-generic/io.h containing
->    default definitions.
+> It can also be reproduced easily by configuring s2ram to use s2idle instead
+> of deep suspend, which is a real usecase:
 > 
-> We've had the rule that where both linux/foo.h and asm/foo.h exist, the
-> linux/ counterpart is the preferred include file.  That didn't really
-> happen with asm/io.h due to the number of users that there were, but
-> when new stuff was added to asm/io.h which we wanted to be generic,
-> linux/io.h was created to contain that.  This actually pre-dates the
-> "let's clutter up asm-generic with shared arch stuff" push.
+> # echo 0 > /sys/module/printk/parameters/console_suspend
+> # echo s2idle > /sys/power/mem_sleep
+> # echo mem > /sys/power/state
 > 
-> Now, what you say _may_ make sense if we have an
-> asm-generic/ioremap-nopost.h header which just defines a default
-> ioremap_nopost.h implementation, and architectures would then be able to
-> choose whether to include that or not depending on whether they provide
-> their own implementation.  No ugly ifdefs are necessary with that
-> approach.
+> > Rafael Wysocki agrees that PME scans should be suspended before the host
+> > bridge registers become inaccessible.  To that end, queue the task on a
+> > workqueue that gets frozen before devices suspend.
+> >
+> > How to reproduce:
+> >
+> > # echo 0 > /sys/module/printk/parameters/console_suspend
+> > # echo platform > /sys/power/pm_test    # Or "processors"
+> > # echo mem > /sys/power/state
+> >
+> > Make sure CONFIG_PCI_RCAR_GEN2 and CONFIG_USB_OHCI_HCD_PCI are
+> > enabled.
+> >
+> > PM: Syncing filesystems ... [   38.566237] done.
+> > PM: Preparing system for sleep (mem)
+> > Freezing user space processes ... [   38.579813] (elapsed 0.001 seconds) done.
+> > Freezing remaining freezable tasks ... (elapsed 0.001 seconds) done.
+> > PM: Suspending system (mem)
+> > PM: suspend of devices complete after 152.456 msecs
+> > PM: late suspend of devices complete after 2.809 msecs
+> > PM: noirq suspend of devices complete after 29.863 msecs
+> > suspend debug: Waiting for 5 second(s).
+> > Unhandled fault: asynchronous external abort (0x1211) at 0x00000000
+> > pgd = c0003000
+> > [00000000] *pgd=80000040004003, *pmd=00000000
+> > Internal error: : 1211 [#1] SMP ARM
+> > Modules linked in:
+> > CPU: 1 PID: 20 Comm: kworker/1:1 Not tainted
+> > 4.9.0-rc1-koelsch-00011-g68db9bc814362e7f #3383
+> > Hardware name: Generic R8A7791 (Flattened Device Tree)
+> > Workqueue: events pci_pme_list_scan
+> > task: eb56e140 task.stack: eb58e000
+> > PC is at pci_generic_config_read+0x64/0x6c
+> > LR is at rcar_pci_cfg_base+0x64/0x84
+> > pc : [<c041d7b4>]    lr : [<c04309a0>]    psr: 600d0093
+> > sp : eb58fe98  ip : c041d750  fp : 00000008
+> > r10: c0e2283c  r9 : 00000000  r8 : 600d0013
+> > r7 : 00000008  r6 : eb58fed6  r5 : 00000002  r4 : eb58feb4
+> > r3 : 00000000  r2 : 00000044  r1 : 00000008  r0 : 00000000
+> > Flags: nZCv  IRQs off  FIQs on  Mode SVC_32  ISA ARM  Segment user
+> > Control: 30c5387d  Table: 6a9f6c80  DAC: 55555555
+> > Process kworker/1:1 (pid: 20, stack limit = 0xeb58e210)
+> > Stack: (0xeb58fe98 to 0xeb590000)
+> > fe80:                                                       00000002 00000044
+> > fea0: eb6f5800 c041d9b0 eb58feb4 00000008 00000044 00000000 eb78a000 eb78a000
+> > fec0: 00000044 00000000 eb9aff00 c0424bf0 eb78a000 00000000 eb78a000 c0e22830
+> > fee0: ea8a6fc0 c0424c5c eaae79c0 c0424ce0 eb55f380 c0e22838 eb9a9800 c0235fbc
+> > ff00: eb55f380 c0e22838 eb55f380 eb9a9800 eb9a9800 eb58e000 eb9a9824 c0e02100
+> > ff20: eb55f398 c02366c4 eb56e140 eb5631c0 00000000 eb55f380 c023641c 00000000
+> > ff40: 00000000 00000000 00000000 c023a928 cd105598 00000000 40506a34 eb55f380
+> > ff60: 00000000 00000000 dead4ead ffffffff ffffffff eb58ff74 eb58ff74 00000000
+> > ff80: 00000000 dead4ead ffffffff ffffffff eb58ff90 eb58ff90 eb58ffac eb5631c0
+> > ffa0: c023a844 00000000 00000000 c0206d68 00000000 00000000 00000000 00000000
+> > ffc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+> > ffe0: 00000000 00000000 00000000 00000000 00000013 00000000 3a81336c 10ccd1dd
+> > [<c041d7b4>] (pci_generic_config_read) from [<c041d9b0>]
+> > (pci_bus_read_config_word+0x58/0x80)
+> > [<c041d9b0>] (pci_bus_read_config_word) from [<c0424bf0>]
+> > (pci_check_pme_status+0x34/0x78)
+> > [<c0424bf0>] (pci_check_pme_status) from [<c0424c5c>] (pci_pme_wakeup+0x28/0x54)
+> > [<c0424c5c>] (pci_pme_wakeup) from [<c0424ce0>] (pci_pme_list_scan+0x58/0xb4)
+> > [<c0424ce0>] (pci_pme_list_scan) from [<c0235fbc>]
+> > (process_one_work+0x1bc/0x308)
+> > [<c0235fbc>] (process_one_work) from [<c02366c4>] (worker_thread+0x2a8/0x3e0)
+> > [<c02366c4>] (worker_thread) from [<c023a928>] (kthread+0xe4/0xfc)
+> > [<c023a928>] (kthread) from [<c0206d68>] (ret_from_fork+0x14/0x2c)
+> > Code: ea000000 e5903000 f57ff04f e3a00000 (e5843000)
+> > ---[ end trace 667d43ba3aa9e589 ]---
+> >
+> > Reported-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+> > Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> > Cc: Simon Horman <horms@verge.net.au>
+> > Cc: Yinghai Lu <yinghai@kernel.org>
+> > Fixes: df17e62e5bff ("PCI: Add support for polling PME state on suspended legacy PCI devices")
+> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
 > 
-> Out of the three choices, I would much rather see the
-> asm-generic/ioremap-nopost.h approach.  However, the down-side to that
-> is it means all architectures asm/io.h would need to be touched to
-> explicitly include that.
-> 
-> What I'm absolutely certain of, though, is that making asm-generic/io.h
-> even worse by adding yet more conditional stuff to it is not a sane way
-> forward.
+> Tested-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-Ok, so:
+There is a small concern here that some wakeup events may be missed if they
+are delivered via PME without a working IRQ, but that's fairly minor and it
+cannot be avoided entirely, so
 
-(1) I can do asm-generic/ioremap-nopost.h, which I assume you want to
-    contain something like
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
-{
-	return ioremap_nocache(offset, size);
-}
-
-Funny bit is that it has to be included by asm*/io.h files _after_
-ioremap_nocache has been #defined (that's the reason my approach was
-failing miserably even on arches like eg powerpc (see [1] below) that
-does have ioremap_nocache), not sure it is going to be very nice to have
-an include in the middle of asm*/io.h include files (and I have to patch
-all arches which I can do).
-
-Or
-
-(2) I add:
-
-#ifndef ioremap_nopost
-static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
-{
-	return NULL; <-(making it return ioremap_nocache() does not
-			work, see [1] for the reason)
-}
-#endif
-
-in linux/io.h
-
-(3) ioremap_nopost follows Luis' ioremap_uc approach
-
-(1)-(2) bypass completely what Luis did for ioremap_uc(), which implies
-that we have yet another way of implementing ioremap_*.
-
-I would like to get this patchset done so if you have an opinion it
-is time to state it.
-
-Thanks,
-Lorenzo
-
-[1] powerpc build report:
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git pci/config-io-mappings-fix-v3
-head:   283a324b549a662346c95c05b08983dd5b83354b
-commit: e66b493fe93226c02b1a33355f79db7ed6efe718 [2/23] linux/io.h: add ioremap_nopost remap interface
-config: powerpc-defconfig (attached as .config)
-compiler: powerpc64-linux-gnu-gcc (Debian 6.1.1-9) 6.1.1 20160705
-reproduce:
-        wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        git checkout e66b493fe93226c02b1a33355f79db7ed6efe718
-        # save the attached .config to linux build tree
-        make.cross ARCH=powerpc
-
-All errors (new ones prefixed by >>):
-
-   In file included from arch/powerpc/include/asm/io.h:28:0,
-                    from arch/powerpc/oprofile/op_model_cell.c:29:
-   include/linux/io.h: In function 'ioremap_nopost':
-   include/linux/io.h:169:9: error: implicit declaration of function 'ioremap_nocache' [-Werror=implicit-function-declaration]
-     return ioremap_nocache(offset, size);
-            ^~~~~~~~~~~~~~~
->> include/linux/io.h:169:9: error: return makes pointer from integer without a cast [-Werror=int-conversion]
-     return ioremap_nocache(offset, size);
-            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   cc1: all warnings being treated as errors
-
-vim +169 include/linux/io.h
-
-   163  }
-   164  #endif
-   165 
-   166  #ifndef ioremap_nopost
-   167  static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
-   168  {
- > 169           return ioremap_nocache(offset, size);
-   170  }
-   171  #endif
-   172 
+Thanks!
