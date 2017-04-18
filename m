@@ -1,69 +1,58 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V7 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
- <7c48ca8b-b834-3257-91dc-77e9d19def6c@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B28466761383@IRSMSX101.ger.corp.intel.com>
- <92EBB4272BF81E4089A7126EC1E7B2846676271D@IRSMSX101.ger.corp.intel.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <5a4b37c7-0319-2fa5-cd3e-93261cf45b99@codeaurora.org>
-Date: Thu, 6 Apr 2017 11:36:06 -0400
+Return-Path: <SRS0=HVeC=32=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=HVeC=32=deltatee.com=logang@kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <6e732d6a-9baf-1768-3e9c-f6c887a836b2@deltatee.com>
+ <1492381958.25766.50.camel@kernel.crashing.org>
+ <6149ab5e-c981-6881-8c5a-22349561c3e8@deltatee.com>
+ <1492413640.25766.52.camel@kernel.crashing.org>
+ <ac643c73-43e9-1658-ffcb-d5628f80cbc1@deltatee.com>
+ <CAPcyv4guU68waLZ1XBT9GPq1b1iZFDhTpsAven18jhr2JU6ScQ@mail.gmail.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <helgaas@kernel.org>,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+ Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+ linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Jerome Glisse <jglisse@redhat.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <bd28298b-c679-d02e-c014-0af5843b0795@deltatee.com>
+Date: Mon, 17 Apr 2017 23:22:30 -0600
 MIME-Version: 1.0
-In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B2846676271D@IRSMSX101.ger.corp.intel.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>, Rajat Jain <rajatja@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAPcyv4guU68waLZ1XBT9GPq1b1iZFDhTpsAven18jhr2JU6ScQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Mayurkumar,
 
-On 4/6/2017 9:23 AM, Patel, Mayurkumar wrote:
-> The patch seems to be working for ASPM L1 so far. I am seeing a problem now with your patches for L1.2 as following:
+
+On 17/04/17 11:04 AM, Dan Williams wrote:
+>> Yes, in this scheme, it needs an additional p2pmem child. Why is that an
+>> issue? It certainly makes it a lot easier for the user to understand the
+>> p2pmem memory in the system (through the sysfs tree) and reason about
+>> the topology and when to use it. This is important.
 > 
-> ASPM L1.2 does not get enabled on the Upstream as well as downstream port due to following reasons.
-> In the case, I see now, if the EP is not connected while reboot of the Machine, Root Port does not configure
-> It's own L1.2 also from the BIOS. (I am not sure whether it's even advisable to enable L1.2 on root
-> Port when no downstream device is not connected to it as it may have an impact on CLKREQ# and device is connected
-> At later stage may have a problem with it)
+> I think you want to go the other way in the hierarchy and find a
+> shared *parent* to land the p2pmem capability. Because that same agent
+> is going to be responsible handling address translation for the peers.
+>
+> Peer-dma is always going to be a property of the bus and not the end
+> devices. Requiring each bus implementation to explicitly enable
+> peer-to-peer support is a feature not a bug.
 > 
+> We shouldn't design for some future possible use case. Solve it for
+> pci and when / if another bus comes along then look at a more generic
+> abstraction.
 
-I have two questions:
+Thanks Dan, these are some good points. Wedding it closer to the PCI
+code makes more sense to me now. I'd still think you'd want some struct
+device though to appear in the device hierarchy and allow reasoning
+about topology.
 
-1. if the endpoint is connected during boot and have ASPM L1.2 enabled during boot,
-do you see that L1.2 gets re-enabled following a hotplug remove and then insert. 
-This is the goal of this patch. If yes, we achieved our goal. This is working on
-my platform but I do not have L1SS support on my platform.
-
-2. if you do not connect any endpoint during boot and insert the card, do you
-see any ASPM enabled at all with and without my patch using the default policy? 
-I think this is the part you are describing above. I'll confirm this on my platform
-too. I think this one will require another patch/discussion unless I broke something.
-
-
-> Later when the Device get connected, BIOS configures L1.2 for Root port and EP but due to policy set to incorrect,
-> Kernel disables ASPM L1.2.
-
-Sinan
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Logan
