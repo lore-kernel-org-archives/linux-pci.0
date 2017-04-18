@@ -1,59 +1,63 @@
-Return-Path: <SRS0=bLgn=32=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=bLgn=32=kernel.crashing.org=benh@kernel.org>
-Message-ID: <1492555569.25766.99.camel@kernel.crashing.org>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Dan Williams <dan.j.williams@intel.com>,
-        Jason Gunthorpe
-	 <jgunthorpe@obsidianresearch.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas
- <helgaas@kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Sagi Grimberg
- <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe
- <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates
- <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
-        Keith Busch
- <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        linux-scsi
- <linux-scsi@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm <linux-nvdimm@ml01.01.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Jerome
- Glisse <jglisse@redhat.com>
-Date: Wed, 19 Apr 2017 08:46:09 +1000
-In-Reply-To: <CAPcyv4izLa2vw12ysvVfd=ysaMKcASNFm+=CaqDKhnPY9B5OJg@mail.gmail.com>
-References: 
-	<CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
-	 <1492381396.25766.43.camel@kernel.crashing.org>
-	 <20170418164557.GA7181@obsidianresearch.com>
-	 <CAPcyv4izLa2vw12ysvVfd=ysaMKcASNFm+=CaqDKhnPY9B5OJg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 18 Apr 2017 15:52:11 +0200
+From: Greg KH <greg@kroah.com>
+To: Juergen Gross <jgross@suse.com>
+Cc: stable@vger.kernel.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Julien Grall <julien.grall@arm.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Ross Lagerwall <ross.lagerwall@citrix.com>,
+        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>,
+        KarimAllah Ahmed <karahmed@amazon.de>
+Subject: Re: [stable-4.10: PATCH] xen: revert commits 72a9b186292 and
+ da72ff5bfcb0
+Message-ID: <20170418135211.GA20659@kroah.com>
+References: <20170413144949.4295-1-jgross@suse.com>
+ <20170413162458.GA5676@kroah.com>
+ <82b08730-4672-07aa-6c42-9d77ad4ac8ae@suse.com>
+ <20170413165554.GA8378@kroah.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170413165554.GA8378@kroah.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 2017-04-18 at 10:27 -0700, Dan Williams wrote:
-> > FWIW, RDMA probably wouldn't want to use a p2mem device either, we
-> > already have APIs that map BAR memory to user space, and would like to
-> > keep using them. A 'enable P2P for bar' helper function sounds better
-> > to me.
+On Thu, Apr 13, 2017 at 06:55:54PM +0200, Greg KH wrote:
+> On Thu, Apr 13, 2017 at 06:28:33PM +0200, Juergen Gross wrote:
+> > On 13/04/17 18:24, Greg KH wrote:
+> > > On Thu, Apr 13, 2017 at 04:49:49PM +0200, Juergen Gross wrote:
+> > >> Revert commit 72a9b186292 ("xen: Remove event channel notification
+> > >> through Xen PCI platform device") as the original analysis was wrong
+> > >> that all the removed code isn't in use any more. As commit da72ff5bfcb0
+> > >> ("partially revert xen: Remove event channel notification through Xen
+> > >> PCI platform device") reverted already some parts of it revert this
+> > >> commit, too.
+> > >>
+> > >> It is still necessary for old Xen versions (< 4.0) and for being able
+> > >> to run the Linux kernel as dom0 in a nested Xen environment.
+> > > 
+> > > Is there a commit in Linus's tree that matches this revert as well?
+> > 
+> > Not yet. I'm working on it.
 > 
-> ...and I think it's not a helper function as much as asking the bus
-> provider "can these two device dma to each other". The "helper" is the
-> dma api redirecting through a software-iommu that handles bus address
-> translation differently than it would handle host memory dma mapping.
+> I'd prefer to take the same exact commit please.  That way nothing
+> diverges here.
 
-Do we even need tat function ? The dma_ops have a dma_supported()
-call...
+Especially as you are asking to revert patches that are already in
+releases and have been out for a while.  Always get fixes into Linus's
+tree first, and _then_ we can add them to stable releases.
 
-If we have those override ops built into the "dma_target" object,
-then these things can make that decision knowing both the source
-and target device.
+I'm dropping this request, and the one for 4.9, from my stable "todo"
+list.
 
-Cheers,
-Ben.
+thanks,
+
+greg k-h
