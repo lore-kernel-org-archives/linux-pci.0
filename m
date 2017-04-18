@@ -1,72 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from sauhun.de ([88.99.104.3]:41747 "EHLO pokefinder.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1760378AbdDSHWY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Apr 2017 03:22:24 -0400
-Date: Wed, 19 Apr 2017 09:22:16 +0200
-From: Wolfram Sang <wsa@the-dreams.de>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
-        Geert Uytterhoeven <geert+renesas@glider.be>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Niklas Soderlund <niklas.soderlund+renesas@ragnatech.se>,
-        Simon Horman <horms+renesas@verge.net.au>,
-        Yinghai Lu <yinghai@kernel.org>,
-        Matthew Garrett <mjg59@srcf.ucam.org>,
-        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH] PCI: Freeze PME scan before suspending devices
-Message-ID: <20170419072216.2chcdfpl6dxfgxgs@ninjato>
-References: <03aaf3220cccbabb7db86aa4eb10d1147add5c34.1492536769.git.lukas@wunner.de>
+Received: from mx2.suse.de ([195.135.220.15]:52639 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752735AbdDRN4P (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 18 Apr 2017 09:56:15 -0400
+Subject: Re: [stable-4.10: PATCH] xen: revert commits 72a9b186292 and
+ da72ff5bfcb0
+To: Greg KH <greg@kroah.com>
+References: <20170413144949.4295-1-jgross@suse.com>
+ <20170413162458.GA5676@kroah.com>
+ <82b08730-4672-07aa-6c42-9d77ad4ac8ae@suse.com>
+ <20170413165554.GA8378@kroah.com> <20170418135211.GA20659@kroah.com>
+Cc: stable@vger.kernel.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Julien Grall <julien.grall@arm.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Ross Lagerwall <ross.lagerwall@citrix.com>,
+        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>,
+        KarimAllah Ahmed <karahmed@amazon.de>
+From: Juergen Gross <jgross@suse.com>
+Message-ID: <2ab64334-d8cd-5594-112b-42c0bd7e4d2d@suse.com>
+Date: Tue, 18 Apr 2017 15:56:10 +0200
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="vrppktrdlacnrucw"
-In-Reply-To: <03aaf3220cccbabb7db86aa4eb10d1147add5c34.1492536769.git.lukas@wunner.de>
+In-Reply-To: <20170418135211.GA20659@kroah.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 18/04/17 15:52, Greg KH wrote:
+> On Thu, Apr 13, 2017 at 06:55:54PM +0200, Greg KH wrote:
+>> On Thu, Apr 13, 2017 at 06:28:33PM +0200, Juergen Gross wrote:
+>>> On 13/04/17 18:24, Greg KH wrote:
+>>>> On Thu, Apr 13, 2017 at 04:49:49PM +0200, Juergen Gross wrote:
+>>>>> Revert commit 72a9b186292 ("xen: Remove event channel notification
+>>>>> through Xen PCI platform device") as the original analysis was wrong
+>>>>> that all the removed code isn't in use any more. As commit da72ff5bfcb0
+>>>>> ("partially revert xen: Remove event channel notification through Xen
+>>>>> PCI platform device") reverted already some parts of it revert this
+>>>>> commit, too.
+>>>>>
+>>>>> It is still necessary for old Xen versions (< 4.0) and for being able
+>>>>> to run the Linux kernel as dom0 in a nested Xen environment.
+>>>>
+>>>> Is there a commit in Linus's tree that matches this revert as well?
+>>>
+>>> Not yet. I'm working on it.
+>>
+>> I'd prefer to take the same exact commit please.  That way nothing
+>> diverges here.
+> 
+> Especially as you are asking to revert patches that are already in
+> releases and have been out for a while.  Always get fixes into Linus's
+> tree first, and _then_ we can add them to stable releases.
+> 
+> I'm dropping this request, and the one for 4.9, from my stable "todo"
+> list.
 
---vrppktrdlacnrucw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Okay. I'll come back when the revert is in Linus' tree.
 
-On Tue, Apr 18, 2017 at 08:44:30PM +0200, Lukas Wunner wrote:
-> Laurent Pinchart reported that the Renesas R-Car H2 Lager board
-> (r8a7790) crashes during suspend tests.  Geert Uytterhoeven managed to
-> reproduce the issue on an M2-W Koelsch board (r8a7791):
->=20
-> It occurs when the PME scan runs, once per second.  During PME scan, the
-> PCI host bridge (rcar-pci) registers are accessed while its module clock
-> has already been disabled, leading to the crash.
-
-Cool! I stumbled over this while testing I2C suspend behaviour the last
-days, and I can confirm that the crash is gone with this patch on my
-Lager board. Thanks!
-
-Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+Sorry for the noise,
 
 
---vrppktrdlacnrucw
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQIzBAABCAAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlj3ECQACgkQFA3kzBSg
-KbbrtRAApyiV+w4DYRzMCbFEqiSVQb4o2MN85OcmFPluzuBoMVu5VHtuiEYgg2Ix
-H9lCDH40zc3tMHnNxqI83LtGYwU9l3V0KzGRbSdm0oISXMj5IdXIdTblexsok6vY
-H5ayeNmnkpn72v19xpCorV1SvgoierVkZTRHy3XGKYUwiX/F8WBMZORkQc6gw/RR
-A8pNnMbP8AsYEhkVKL8EJYmKHb149kgfwVMOGEkqgrjhu/RrNcxaVV4M3vgtW/CJ
-fBlazFlcqIM07tvvk6YaKkeOGPOLvEjTz16qIQSi8BIiGe2kEDGAZ6mjZUNtUlIk
-3l+ytPAUi2WLBCcoF37uLJ9zmY4slp6lp2311HN0ES6sKyvO7yDqvA1PGpg7Gb6e
-hDIdohOuaBM7e93pTURR50hWK79DVIiFXAD/hRIbpMvodWWITmwivvtHs+MZHjt0
-LLyftjD4XeDit8yXQnbA0svZW+OZMofhQnIy9PGwljIizA9/IB5K5E8DQbJ4KHOv
-7u/OhrZ0Qn3dDUYPvpd7ZiCFqghePl/qlro2H1o7xkgAhQpG4uaxG9otcnx1xvQv
-xLPxHRSF+WzLDi+9RbtSi9YzdA6gQvbXL2Ec5B9kfqCoTIj1YgTSVJFeHniG4kn5
-FuhkTsBbkM3eMGuADrTOsJfslyLOaDYmc6rre8JWrMnpn7pnbHk=
-=iwyu
------END PGP SIGNATURE-----
-
---vrppktrdlacnrucw--
+Juergen
