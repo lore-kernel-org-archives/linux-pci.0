@@ -1,168 +1,104 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v6 04/23] Documentation: PCI: Guide to use PCI endpoint
- configfs
-Date: Wed, 5 Apr 2017 14:22:24 +0530
-Message-ID: <20170405085243.18123-5-kishon@ti.com>
-In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
-References: <20170405085243.18123-1-kishon@ti.com>
+Return-Path: <SRS0=bkpB=32=obsidianresearch.com=jgunthorpe@kernel.org>
+Return-Path: <SRS0=bkpB=32=obsidianresearch.com=jgunthorpe@kernel.org>
+Date: Tue, 18 Apr 2017 15:03:39 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Steve Wise <swise@opengridcomputing.com>,
+	Stephen Bates <sbates@raithlin.com>,
+	Max Gurtovoy <maxg@mellanox.com>,
+	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Message-ID: <20170418210339.GA24257@obsidianresearch.com>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <1492381396.25766.43.camel@kernel.crashing.org>
+ <20170418164557.GA7181@obsidianresearch.com>
+ <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com>
+ <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+ <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Add Documentation to help users use PCI endpoint to configure PCI endpoint
-function and to bind the endpoint function with endpoint controller.
+On Tue, Apr 18, 2017 at 12:48:35PM -0700, Dan Williams wrote:
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Acked-By: Joao Pinto <jpinto@synopsys.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
----
- Documentation/PCI/00-INDEX                      |   2 +
- Documentation/PCI/endpoint/pci-endpoint-cfs.txt | 105 ++++++++++++++++++++++++
- 2 files changed, 107 insertions(+)
- create mode 100644 Documentation/PCI/endpoint/pci-endpoint-cfs.txt
+> > Yes, I noticed this problem too and that makes sense. It just means
+> > every dma_ops will probably need to be modified to either support p2p
+> > pages or fail on them. Though, the only real difficulty there is that it
+> > will be a lot of work.
+> 
+> I don't think you need to go touch all dma_ops, I think you can just
+> arrange for devices that are going to do dma to get redirected to a
+> p2p aware provider of operations that overrides the system default
+> dma_ops. I.e. just touch get_dma_ops().
 
-diff --git a/Documentation/PCI/00-INDEX b/Documentation/PCI/00-INDEX
-index ba950b296bd8..bf8223a1bf08 100644
---- a/Documentation/PCI/00-INDEX
-+++ b/Documentation/PCI/00-INDEX
-@@ -14,3 +14,5 @@ pcieaer-howto.txt
- 	- the PCI Express Advanced Error Reporting Driver Guide HOWTO
- endpoint/pci-endpoint.txt
- 	- guide to add endpoint controller driver and endpoint function driver.
-+endpoint/pci-endpoint-cfs.txt
-+	- guide to use configfs to configure the PCI endpoint function.
-diff --git a/Documentation/PCI/endpoint/pci-endpoint-cfs.txt b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
-new file mode 100644
-index 000000000000..d740f29960a4
---- /dev/null
-+++ b/Documentation/PCI/endpoint/pci-endpoint-cfs.txt
-@@ -0,0 +1,105 @@
-+                   CONFIGURING PCI ENDPOINT USING CONFIGFS
-+                    Kishon Vijay Abraham I <kishon@ti.com>
-+
-+The PCI Endpoint Core exposes configfs entry (pci_ep) to configure the
-+PCI endpoint function and to bind the endpoint function
-+with the endpoint controller. (For introducing other mechanisms to
-+configure the PCI Endpoint Function refer to [1]).
-+
-+*) Mounting configfs
-+
-+The PCI Endpoint Core layer creates pci_ep directory in the mounted configfs
-+directory. configfs can be mounted using the following command.
-+
-+	mount -t configfs none /sys/kernel/config
-+
-+*) Directory Structure
-+
-+The pci_ep configfs has two directories at its root: controllers and
-+functions. Every EPC device present in the system will have an entry in
-+the *controllers* directory and and every EPF driver present in the system
-+will have an entry in the *functions* directory.
-+
-+/sys/kernel/config/pci_ep/
-+	.. controllers/
-+	.. functions/
-+
-+*) Creating EPF Device
-+
-+Every registered EPF driver will be listed in controllers directory. The
-+entries corresponding to EPF driver will be created by the EPF core.
-+
-+/sys/kernel/config/pci_ep/functions/
-+	.. <EPF Driver1>/
-+		... <EPF Device 11>/
-+		... <EPF Device 21>/
-+	.. <EPF Driver2>/
-+		... <EPF Device 12>/
-+		... <EPF Device 22>/
-+
-+In order to create a <EPF device> of the type probed by <EPF Driver>, the
-+user has to create a directory inside <EPF DriverN>.
-+
-+Every <EPF device> directory consists of the following entries that can be
-+used to configure the standard configuration header of the endpoint function.
-+(These entries are created by the framework when any new <EPF Device> is
-+created)
-+
-+	.. <EPF Driver1>/
-+		... <EPF Device 11>/
-+			... vendorid
-+			... deviceid
-+			... revid
-+			... progif_code
-+			... subclass_code
-+			... baseclass_code
-+			... cache_line_size
-+			... subsys_vendor_id
-+			... subsys_id
-+			... interrupt_pin
-+
-+*) EPC Device
-+
-+Every registered EPC device will be listed in controllers directory. The
-+entries corresponding to EPC device will be created by the EPC core.
-+
-+/sys/kernel/config/pci_ep/controllers/
-+	.. <EPC Device1>/
-+		... <Symlink EPF Device11>/
-+		... <Symlink EPF Device12>/
-+		... start
-+	.. <EPC Device2>/
-+		... <Symlink EPF Device21>/
-+		... <Symlink EPF Device22>/
-+		... start
-+
-+The <EPC Device> directory will have a list of symbolic links to
-+<EPF Device>. These symbolic links should be created by the user to
-+represent the functions present in the endpoint device.
-+
-+The <EPC Device> directory will also have a *start* field. Once
-+"1" is written to this field, the endpoint device will be ready to
-+establish the link with the host. This is usually done after
-+all the EPF devices are created and linked with the EPC device.
-+
-+
-+			 | controllers/
-+				| <Directory: EPC name>/
-+					| <Symbolic Link: Function>
-+					| start
-+			 | functions/
-+				| <Directory: EPF driver>/
-+					| <Directory: EPF device>/
-+						| vendorid
-+						| deviceid
-+						| revid
-+						| progif_code
-+						| subclass_code
-+						| baseclass_code
-+						| cache_line_size
-+						| subsys_vendor_id
-+						| subsys_id
-+						| interrupt_pin
-+						| function
-+
-+[1] -> Documentation/PCI/endpoint/pci-endpoint.txt
--- 
-2.11.0
+I don't follow, when does get_dma_ops() return a p2p aware provider?
+It has no way to know if the DMA is going to involve p2p, get_dma_ops
+is called with the device initiating the DMA.
 
+So you'd always return the P2P shim on a system that has registered
+P2P memory?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Even so, how does this shim work? dma_ops are not really intended to
+be stacked. How would we make unmap work, for instance? What happens
+when the underlying iommu dma ops actually natively understands p2p
+and doesn't want the shim?
+
+I think this opens an even bigger can of worms..
+
+Lets find a strategy to safely push this into dma_ops.
+
+What about something more incremental like this instead:
+- dma_ops will set map_sg_p2p == map_sg when they are updated to
+  support p2p, otherwise DMA on P2P pages will fail for those ops.
+- When all ops support p2p we remove the if and ops->map_sg then
+  just call map_sg_p2p
+- For now the scatterlist maintains a bit when pages are added indicating if
+  p2p memory might be present in the list.
+- Unmap for p2p and non-p2p is the same, the underlying ops driver has
+  to make it work.
+
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index 0977317c6835c2..505ed7d502053d 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -103,6 +103,9 @@ struct dma_map_ops {
+ 	int (*map_sg)(struct device *dev, struct scatterlist *sg,
+ 		      int nents, enum dma_data_direction dir,
+ 		      unsigned long attrs);
++	int (*map_sg_p2p)(struct device *dev, struct scatterlist *sg,
++			  int nents, enum dma_data_direction dir,
++			  unsigned long attrs);
+ 	void (*unmap_sg)(struct device *dev,
+ 			 struct scatterlist *sg, int nents,
+ 			 enum dma_data_direction dir,
+@@ -244,7 +247,15 @@ static inline int dma_map_sg_attrs(struct device *dev, struct scatterlist *sg,
+ 	for_each_sg(sg, s, nents, i)
+ 		kmemcheck_mark_initialized(sg_virt(s), s->length);
+ 	BUG_ON(!valid_dma_direction(dir));
+-	ents = ops->map_sg(dev, sg, nents, dir, attrs);
++
++	if (sg_has_p2p(sg)) {
++		if (ops->map_sg_p2p)
++			ents = ops->map_sg_p2p(dev, sg, nents, dir, attrs);
++		else
++			return 0;
++	} else
++		ents = ops->map_sg(dev, sg, nents, dir, attrs);
++
+ 	BUG_ON(ents < 0);
+ 	debug_dma_map_sg(dev, sg, nents, ents, dir);
+ 
