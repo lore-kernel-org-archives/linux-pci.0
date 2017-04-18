@@ -1,59 +1,39 @@
-Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH] PCI: Add cast when assigning PCI_ROM_ADDRESS_MASK to a
- 32-bit variable
-To: Bjorn Helgaas <helgaas@kernel.org>, Matthias Kaehlcke <mka@chromium.org>
-Cc: linux-pci <linux-pci@vger.kernel.org>, LKML
- <linux-kernel@vger.kernel.org>, Grant Grundler <grundler@chromium.org>,
- Greg Hackmann <ghackmann@google.com>, Michael Davidson <md@google.com>
-References: <20170410222457.113155-1-mka@chromium.org>
- <20170411012445.GA8025@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <6111642d-9f1d-f8bf-5920-82f4eb427cff@free.fr>
-Date: Tue, 11 Apr 2017 12:08:38 +0200
+Return-Path: <SRS0=EwoT=32=sigmadesigns.com=Marc_Gonzalez@kernel.org>
+Return-Path: <SRS0=EwoT=32=sigmadesigns.com=Marc_Gonzalez@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: linux-pci <linux-pci@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>
+From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Subject: Outstanding PCI patches for v4.12
+Message-ID: <22298ba2-2c3b-2d1b-a419-0be0aa4b2746@sigmadesigns.com>
+Date: Tue, 18 Apr 2017 11:52:49 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170411012445.GA8025@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset="ISO-8859-15"
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/04/2017 03:24, Bjorn Helgaas wrote:
+Hello Bjorn,
 
-> On Mon, Apr 10, 2017 at 03:24:57PM -0700, Matthias Kaehlcke wrote:
->
->> This fixes a clang warning about "implicit conversion from 'unsigned
->> long' to 'u32'"
->>
->> Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
->> ---
->>  drivers/pci/probe.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
->> index dfc9a2794141..148e80d5caf1 100644
->> --- a/drivers/pci/probe.c
->> +++ b/drivers/pci/probe.c
->> @@ -180,7 +180,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
->>  	u16 orig_cmd;
->>  	struct pci_bus_region region, inverted_region;
->>  
->> -	mask = type ? PCI_ROM_ADDRESS_MASK : ~0;
->> +	mask = type ? (u32)PCI_ROM_ADDRESS_MASK : ~0;
-> 
-> Can we put the cast in the PCI_ROM_ADDRESS_MASK #define so we don't have to
-> repeat it in all the uses?
+I have two outstanding patches that are good candidates for v4.12
+(short and simple).
 
-Fixing these "implicit conversion" warnings, especially for
-unsigned types, is a slippery slope. (The behavior of the
-conversion is well-defined.)
+#1
+[PATCH] PCI: Change pci_host_common_probe visibility
+Message-ID: <11bd9bd5-5d96-bd7c-24c7-5f262a46085c@sigmadesigns.com>
 
-How about changing the type of PCI_ROM_ADDRESS_MASK instead?
-It's defined as ~0x7ffUL but it's only used in the context
-of u32.
+NB: Arnd submitted an alternative patch a week before I did:
 
-So make it an unsigned int:
-#define PCI_ROM_ADDRESS_MASK (~0x7ffU)
+https://patchwork.kernel.org/patch/9637045/
+https://patchwork.kernel.org/patch/9649993/
 
-AFAIU, unsigned int is 32 bits on all platforms supported
-by Linux.
+
+#2
+[PATCH] PCI: Improve __pci_read_base robustness
+Message-ID: <1c0ad12a-9bfc-2a76-ee76-6ab403f912d3@sigmadesigns.com>
+
+
+If there's anything wrong with either patch, I can quickly fix it,
+hopefully in time for v4.12
+
+(It looks like Tango PCIe controller support will have to wait until
+v4.13 though.)
 
 Regards.
