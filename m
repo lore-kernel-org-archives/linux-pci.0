@@ -1,69 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [RFC PATCH 04/30] iommu/arm-smmu-v3: Add support for PCI ATS
-To: Sunil Kovvuri <sunil.kovvuri@gmail.com>
-References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
- <20170227195441.5170-5-jean-philippe.brucker@arm.com>
- <CA+sq2CeWpGarhT9p+iVo8nJXR=xpkj6XNMwv4LvbP0M6JxA_SA@mail.gmail.com>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Message-ID: <5af054c8-28cd-6719-b506-d0133c03042b@arm.com>
-Date: Mon, 3 Apr 2017 11:14:17 +0100
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 18 Apr 2017 14:12:09 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Liviu Dudau <liviu.dudau@arm.com>,
+        David Laight <david.laight@aculab.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+        Mason <slash.tmp@free.fr>, Yinghai Lu <yinghai@kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: Improve __pci_read_base robustness
+Message-ID: <20170418191209.GF25295@bhelgaas-glaptop.roam.corp.google.com>
+References: <1c0ad12a-9bfc-2a76-ee76-6ab403f912d3@sigmadesigns.com>
 MIME-Version: 1.0
-In-Reply-To: <CA+sq2CeWpGarhT9p+iVo8nJXR=xpkj6XNMwv4LvbP0M6JxA_SA@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
- Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
- Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
- iommu@lists.linux-foundation.org, Harv Abdulhamid <harba@qti.qualcomm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- linux-pci <linux-pci@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
- LAKML <linux-arm-kernel@lists.infradead.org>,
- Nate Watterson <nwatters@qti.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1c0ad12a-9bfc-2a76-ee76-6ab403f912d3@sigmadesigns.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/04/17 09:34, Sunil Kovvuri wrote:
->> +static size_t arm_smmu_atc_invalidate_domain(struct arm_smmu_domain *smmu_domain,
->> +                                            unsigned long iova, size_t size)
->> +{
->> +       unsigned long flags;
->> +       struct arm_smmu_cmdq_ent cmd = {0};
->> +       struct arm_smmu_group *smmu_group;
->> +       struct arm_smmu_master_data *master;
->> +       struct arm_smmu_device *smmu = smmu_domain->smmu;
->> +       struct arm_smmu_cmdq_ent sync_cmd = {
->> +               .opcode = CMDQ_OP_CMD_SYNC,
->> +       };
->> +
->> +       spin_lock_irqsave(&smmu_domain->groups_lock, flags);
->> +
->> +       list_for_each_entry(smmu_group, &smmu_domain->groups, domain_head) {
->> +               if (!smmu_group->ats_enabled)
->> +                       continue;
+On Mon, Apr 10, 2017 at 07:46:54PM +0200, Marc Gonzalez wrote:
+> Local variables 'l' and 'sz' are uninitialized. Normally, they would
+> be initialized by pci_read_config_dword() but when an error occurs,
+> some drivers immediately return an error code, which leaves the
+> argument uninitialized.
 > 
-> If ATS is not supported, this seems to increase no of cycles spent in
-> pgtbl_lock.
-> Can we return from this API by checking 'ARM_SMMU_FEAT_ATS' in smmu->features ?
+> Provide a safe initial value to make the code more robust.
+> 
+> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
 
-Sure, I can add a check before taking the lock. Have you been able to
-observe a significant difference in cycles between checking FEAT_ATS,
-checking group->ats_enabled after taking the lock, and removing this
-function call altogether?
+Applied to pci/enumeration for v4.12, thanks!
 
-Thanks,
-Jean-Philippe
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> ---
+>  drivers/pci/probe.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> index d266d800f246..6fb929bd7040 100644
+> --- a/drivers/pci/probe.c
+> +++ b/drivers/pci/probe.c
+> @@ -175,7 +175,7 @@ static inline unsigned long decode_bar(struct pci_dev *dev, u32 bar)
+>  int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
+>  		    struct resource *res, unsigned int pos)
+>  {
+> -	u32 l, sz, mask;
+> +	u32 l = 0, sz = 0, mask;
+>  	u64 l64, sz64, mask64;
+>  	u16 orig_cmd;
+>  	struct pci_bus_region region, inverted_region;
+> -- 
+> 2.11.0
