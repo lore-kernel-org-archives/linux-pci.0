@@ -1,83 +1,71 @@
-Return-Path: <SRS0=QdZ4=3O=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Return-Path: <SRS0=QdZ4=3O=armlinux.org.uk=linux+helgaas=kernel.org@kernel.org>
-Date: Thu, 6 Apr 2017 13:11:57 +0100
-From: Russell King - ARM Linux <linux@armlinux.org.uk>
-To: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Tony Luck <tony.luck@intel.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Haavard Skinnemoen <hskinnemoen@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	John Garry <john.garry@huawei.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Roy Zang <tie-fei.zang@freescale.com>
-Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
- interface
-Message-ID: <20170406121157.GD17774@n2100.armlinux.org.uk>
-References: <20170327094954.7162-1-lorenzo.pieralisi@arm.com>
- <20170327094954.7162-3-lorenzo.pieralisi@arm.com>
- <20170328014110.GI25380@bhelgaas-glaptop.roam.corp.google.com>
- <20170328144543.GA18046@red-moon>
- <20170405105841.GG7909@n2100.armlinux.org.uk>
- <20170405113238.GA2465@red-moon>
- <20170406102636.GA9623@red-moon>
- <20170406105312.GE28800@wotan.suse.de>
+Return-Path: <SRS0=HVeC=32=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=HVeC=32=deltatee.com=logang@kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <1492381396.25766.43.camel@kernel.crashing.org>
+ <20170418164557.GA7181@obsidianresearch.com>
+ <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com>
+ <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+ <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <20170418210339.GA24257@obsidianresearch.com>
+ <CAPcyv4h9n9Uzq4FAXR0ufieqvx5_txEwtnaaBWdxe-jF_XfTLg@mail.gmail.com>
+ <20170418212258.GA26838@obsidianresearch.com>
+ <CAPcyv4g5ifbpukthMXMro8qKdfoXAhftDpiwWWFCLZ4dK8JnnA@mail.gmail.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ Sagi Grimberg <sagi@grimberg.me>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+ Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+ linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Jerome Glisse <jglisse@redhat.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <96198489-1af5-abcf-f23f-9a7e41aa17f7@deltatee.com>
+Date: Tue, 18 Apr 2017 16:15:52 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170406105312.GE28800@wotan.suse.de>
-Sender: Russell King - ARM Linux <linux@armlinux.org.uk>
+In-Reply-To: <CAPcyv4g5ifbpukthMXMro8qKdfoXAhftDpiwWWFCLZ4dK8JnnA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 06, 2017 at 12:53:12PM +0200, Luis R. Rodriguez wrote:
-> On Thu, Apr 06, 2017 at 11:26:36AM +0100, Lorenzo Pieralisi wrote:
-> > Indeed, the static inline ioremap_nocache() fallback does not work
-> > on all arches (whether I add the fallback in linux/io.h or
-> > asm-generic/io.h is irrelevant), I bump into issues such as the one
-> > reported above.
+
+
+On 18/04/17 03:36 PM, Dan Williams wrote:
+> On Tue, Apr 18, 2017 at 2:22 PM, Jason Gunthorpe
+> <jgunthorpe@obsidianresearch.com> wrote:
+>> On Tue, Apr 18, 2017 at 02:11:33PM -0700, Dan Williams wrote:
+>>>> I think this opens an even bigger can of worms..
+>>>
+>>> No, I don't think it does. You'd only shim when the target page is
+>>> backed by a device, not host memory, and you can figure this out by a
+>>> is_zone_device_page()-style lookup.
+>>
+>> The bigger can of worms is how do you meaningfully stack dma_ops.
 > 
-> Its also not *safe* to assume on behalf of all architectures a new ioremap
-> call is both a good idea and proper.
+> This goes back to my original comment to make this capability a
+> function of the pci bridge itself. The kernel has an implementation of
+> a dynamically created bridge device that injects its own dma_ops for
+> the devices behind the bridge. See vmd_setup_dma_ops() in
+> drivers/pci/host/vmd.c.
 
-You may be right in general, but not in this case.
+Well the issue I think Jason is pointing out is that the ops don't
+stack. The map_* function in the injected dma_ops needs to be able to
+call the original map_* for any page that is not p2p memory. This is
+especially annoying in the map_sg function which may need to call a
+different op based on the contents of the sgl. (And please correct me if
+I'm not seeing how this can be done in the vmd example.)
 
-Currently, many drivers use plain ioremap() to map this resource.  We
-are replacing that existing call - which is known to work in the majority
-of cases - with a new call to cater for different semantics required by
-an architecture.
+Also, what happens if p2p pages end up getting passed to a device that
+doesn't have the injected dma_ops?
 
-Doing a replace of these ioremap() calls with ioremap_nopost() in this
-situation, and then having ioremap_nopost() fail is a recipe for causing
-lots and lots of regressions.
+However, the concept of replacing the dma_ops for all devices behind a
+supporting bridge is interesting and may be a good piece of the final
+solution.
 
-The only sane approach is to have ioremap_post() default to modelling the
-_existing_ behaviour everywhere that it is used.
-
-Requiring it to fail until architecture folk trip over the failure is
-totally insane, and I very strongly disagree with you on this.
-
--- 
-RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
-FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
-according to speedtest.net.
+Logan
