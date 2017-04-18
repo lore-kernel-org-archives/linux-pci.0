@@ -1,342 +1,76 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <SRS0=bkpB=32=obsidianresearch.com=jgunthorpe@kernel.org>
+Return-Path: <SRS0=bkpB=32=obsidianresearch.com=jgunthorpe@kernel.org>
+Date: Tue, 18 Apr 2017 13:48:45 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Steve Wise <swise@opengridcomputing.com>,
+	Stephen Bates <sbates@raithlin.com>,
+	Max Gurtovoy <maxg@mellanox.com>,
+	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Message-ID: <20170418194845.GA22895@obsidianresearch.com>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <1492381396.25766.43.camel@kernel.crashing.org>
+ <20170418164557.GA7181@obsidianresearch.com>
+ <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com>
+ <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
 MIME-Version: 1.0
-In-Reply-To: <1492408237-16598-1-git-send-email-vee.khee.wong@ni.com>
-References: <1492408237-16598-1-git-send-email-vee.khee.wong@ni.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 17 Apr 2017 10:41:42 -0500
-Message-ID: <CAErSpo5R+Fy+be06tg0sQtvaR=6QzqJn5k1M=NE=tPgDzNnUAA@mail.gmail.com>
-Subject: Re: [PATCH] pci-sysfs: Make PCI bridge attribute visible in sysfs
-To: Wong Vee Khee <vee.khee.wong@ni.com>
-Cc: Keith Busch <keith.busch@intel.com>,
-        Rajat Jain <rajatja@google.com>, shhuiw@foxmail.com,
-        hui.chun.ong@ni.com, jonathan.yong@intel.com,
-        Ram.Amrani@cavium.com,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 17, 2017 at 12:50 AM, Wong Vee Khee <vee.khee.wong@ni.com> wrote:
-> From: vwong <vee.khee.wong@ni.com>
->
-> Export the PCIe link attributes of PCI bridges to sysfs.
+On Tue, Apr 18, 2017 at 01:35:32PM -0600, Logan Gunthorpe wrote:
 
-This needs justification for *why* we should export these via sysfs.
+> > Ultimately every dma_ops will need special code to support P2P with
+> > the special hardware that ops is controlling, so it makes some sense
+> > to start by pushing the check down there in the first place. This
+> > advice is partially motivated by how dma_map_sg is just a small
+> > wrapper around the function pointer call...
+> 
+> Yes, I noticed this problem too and that makes sense. It just means
+> every dma_ops will probably need to be modified to either support p2p
+> pages or fail on them. Though, the only real difficulty there is that it
+> will be a lot of work.
 
-Some of these things, e.g., secondary/subordinate bus numbers, are
-already visible to non-privileged users via "lspci -v".
+I think this is why progress on this keeps getting stuck - every
+solution is a lot of work.
 
-> Signed-off-by: Wong Vee Khee <vee.khee.wong@ni.com>
-> Signed-off-by: Hui Chun Ong <hui.chun.ong@ni.com>
-> ---
->  drivers/pci/pci-sysfs.c       | 197 +++++++++++++++++++++++++++++++++++++++++-
->  include/uapi/linux/pci_regs.h |   4 +
->  2 files changed, 197 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> index 25d010d..a218c43 100644
-> --- a/drivers/pci/pci-sysfs.c
-> +++ b/drivers/pci/pci-sysfs.c
-> @@ -154,6 +154,127 @@ static ssize_t resource_show(struct device *dev, struct device_attribute *attr,
->  }
->  static DEVICE_ATTR_RO(resource);
->
-> +static ssize_t max_link_speed_show(struct device *dev,
-> +                                  struct device_attribute *attr, char *buf)
-> +{
-> +       struct pci_dev *pci_dev = to_pci_dev(dev);
-> +       u32 linkcap;
-> +       int err;
-> +       const char *speed;
-> +
-> +       err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
-> +
-> +       if (!err && linkcap) {
+> > Where p2p_same_segment_map_page checks if the two devices are on the
+> > 'same switch' and if so returns the address translated to match the
+> > bus address programmed into the BAR or fails. We knows this case is
+> > required to work by the PCI spec, so it makes sense to use it as the
+> > first canned helper.
+> 
+> I've also suggested that this check should probably be done (or perhaps
+> duplicated) before we even get to the map stage.
 
-  if (err)
-    return -EINVAL;
+Since the mechanics of the check is essentially unique to every
+dma-ops I would not hoist it out of the map function without a really
+good reason.
 
-I don't think there's a reason to test "linkcap" here.  Per spec, zero
-is not a valid value of LNKCAP, so if we got a zero, I think showing
-"Unknown speed" would be fine.
+> In the case of nvme-fabrics we'd probably want to let the user know
+> when they try to configure it or at least fall back to allocating
+> regular memory instead.
 
-> +               switch (linkcap & PCI_EXP_LNKCAP_MLS) {
-> +               case PCI_EXP_LNKCAP_MLS_8_0GB:
-> +                       speed = "8 GT/s";
-> +                       break;
-> +               case PCI_EXP_LNKCAP_MLS_5_0GB:
-> +                       speed = "5 GT/s";
-> +                       break;
-> +               case PCI_EXP_LNKCAP_MLS_2_5GB:
-> +                       speed = "2.5 GT/s";
-> +                       break;
-> +               default:
-> +                       speed = "Unknown speed";
-> +               }
-> +
-> +               return sprintf(buf, "%s\n", speed);
-> +       }
-> +
-> +       return -EINVAL;
-> +}
-> +static DEVICE_ATTR_RO(max_link_speed);
-> +
-> +static ssize_t max_link_width_show(struct device *dev,
-> +                                  struct device_attribute *attr, char *buf)
-> +{
-> +       struct pci_dev *pci_dev = to_pci_dev(dev);
-> +       u32 linkcap;
-> +       int err;
-> +
-> +       err = pcie_capability_read_dword(pci_dev, PCI_EXP_LNKCAP, &linkcap);
-> +
-> +       return err ? -EINVAL : sprintf(
-> +               buf, "%u\n", (linkcap & PCI_EXP_LNKCAP_MLW) >> 4);
+You could try to do a dummy mapping / create a MR early on to detect
+this.
 
-  if (err)
-    return -EINVAL;
+FWIW, I wonder if from a RDMA perspective we have another
+problem.. Should we allow P2P memory to be used with the local DMA
+lkey? There are potential designs around virtualization that would not
+allow that. Should we mandate that P2P memory be in its own MR?
 
-  return sprintf(...);
-
-> +}
-> +static DEVICE_ATTR_RO(max_link_width);
-> +
-> +static ssize_t current_link_speed_show(struct device *dev,
-> +                                      struct device_attribute *attr, char *buf)
-> +{
-> +       struct pci_dev *pci_dev = to_pci_dev(dev);
-> +       u16 linkstat;
-> +       int err;
-> +       const char *speed;
-> +
-> +       err = pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &linkstat);
-> +
-> +       if (!err && linkstat) {
-
-See max_link_speed above.
-
-> +               switch (linkstat & PCI_EXP_LNKSTA_CLS) {
-> +               case PCI_EXP_LNKSTA_CLS_8_0GB:
-> +                       speed = "8 GT/s";
-> +                       break;
-> +               case PCI_EXP_LNKSTA_CLS_5_0GB:
-> +                       speed = "5 GT/s";
-> +                       break;
-> +               case PCI_EXP_LNKSTA_CLS_2_5GB:
-> +                       speed = "2.5 GT/s";
-> +                       break;
-> +               default:
-> +                       speed = "Unknown speed";
-> +               }
-> +
-> +               return sprintf(buf, "%s\n", speed);
-> +       }
-> +
-> +       return -EINVAL;
-> +}
-> +static DEVICE_ATTR_RO(current_link_speed);
-> +
-> +static ssize_t current_link_width_show(struct device *dev,
-> +                                      struct device_attribute *attr, char *buf)
-> +{
-> +       struct pci_dev *pci_dev = to_pci_dev(dev);
-> +       u16 linkstat;
-> +       int err;
-> +
-> +       err = pcie_capability_read_word(pci_dev, PCI_EXP_LNKSTA, &linkstat);
-> +
-> +       return err ? -EINVAL : sprintf(
-> +               buf, "%u\n",
-> +               (linkstat & PCI_EXP_LNKSTA_NLW) >> PCI_EXP_LNKSTA_NLW_SHIFT);
-> +}
-> +static DEVICE_ATTR_RO(current_link_width);
-> +
-> +static ssize_t secondary_bus_number_show(struct device *dev,
-> +                                        struct device_attribute *attr,
-> +                                        char *buf)
-> +{
-> +       struct pci_dev *pci_dev = to_pci_dev(dev);
-> +       u8 sec_bus;
-> +       int err;
-> +
-> +       err = pci_read_config_byte(pci_dev, PCI_SECONDARY_BUS, &sec_bus);
-
-There is already a /sys/devices/pciDDDD:BB/DDDD:BB:dd.f/<secondary>/
-directory and a .../pci_bus/ directory that looks like it is the
-secondary bus.  Is that enough?
-
-If we also need this file, I would like it to do something sensible
-when there is no secondary bus.  Maybe that is exposing the bus
-numbers directly, or maybe it is something else.  I tend to think that
-if you just want the register contents, lspci is enough, and if you
-need something in sysfs, it should be a little more digested, e.g.,
-the existing subdirectory.
-
-It'd be helpful to know something about how you want to use this.
-
-> +       return err ? -EINVAL : sprintf(buf, "%u\n", sec_bus);
-> +}
-> +static DEVICE_ATTR_RO(secondary_bus_number);
-> +
-> +static ssize_t subordinate_bus_number_show(struct device *dev,
-> +                                          struct device_attribute *attr,
-> +                                          char *buf)
-> +{
-> +       struct pci_dev *pci_dev = to_pci_dev(dev);
-> +       u8 sub_bus;
-> +       int err;
-> +
-> +       err = pci_read_config_byte(pci_dev, PCI_SUBORDINATE_BUS, &sub_bus);
-> +
-> +       return err ? -EINVAL : sprintf(buf, "%u\n", sub_bus);
-> +}
-> +static DEVICE_ATTR_RO(subordinate_bus_number);
-> +
->  static ssize_t modalias_show(struct device *dev, struct device_attribute *attr,
->                              char *buf)
->  {
-> @@ -602,12 +723,17 @@ static struct attribute *pci_dev_attrs[] = {
->         NULL,
->  };
->
-> -static const struct attribute_group pci_dev_group = {
-> -       .attrs = pci_dev_attrs,
-> +static struct attribute *pci_bridge_attrs[] = {
-> +       &dev_attr_subordinate_bus_number.attr,
-> +       &dev_attr_secondary_bus_number.attr,
-> +       NULL,
->  };
->
-> -const struct attribute_group *pci_dev_groups[] = {
-> -       &pci_dev_group,
-> +static struct attribute *pcie_dev_attrs[] = {
-> +       &dev_attr_current_link_speed.attr,
-> +       &dev_attr_current_link_width.attr,
-> +       &dev_attr_max_link_width.attr,
-> +       &dev_attr_max_link_speed.attr,
->         NULL,
->  };
->
-> @@ -1540,6 +1666,57 @@ static umode_t pci_dev_hp_attrs_are_visible(struct kobject *kobj,
->         return a->mode;
->  }
->
-> +static umode_t pci_bridge_attrs_are_visible(struct kobject *kobj,
-> +                                           struct attribute *a, int n)
-> +{
-> +       struct device *dev = kobj_to_dev(kobj);
-> +       struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +       if (!pci_is_bridge(pdev))
-> +               return 0;
-
-  if (pci_is_bridge(pdev))
-    return a->mode;
-
-  return 0;
-
-I think it's easier to read without the negation.  Possibly that's
-just my personal preference :)
-
-> +
-> +       return a->mode;
-> +}
-> +
-> +static umode_t pcie_dev_attrs_are_visible(struct kobject *kobj,
-> +                                         struct attribute *a, int n)
-> +{
-> +       struct device *dev = kobj_to_dev(kobj);
-> +       struct pci_dev *pdev = to_pci_dev(dev);
-> +
-> +       if (pci_find_capability(pdev, PCI_CAP_ID_EXP) == 0)
-
-Use pci_is_pcie().
-
-> +               return 0;
-> +
-> +       return a->mode;
-> +}
-> +
-> +static const struct attribute_group pci_dev_group = {
-> +       .attrs = pci_dev_attrs,
-> +};
-> +
-> +const struct attribute_group *pci_dev_groups[] = {
-> +       &pci_dev_group,
-> +       NULL,
-> +};
-> +
-> +static const struct attribute_group pci_bridge_group = {
-> +       .attrs = pci_bridge_attrs,
-> +};
-> +
-> +const struct attribute_group *pci_bridge_groups[] = {
-> +       &pci_bridge_group,
-> +       NULL,
-> +};
-> +
-> +static const struct attribute_group pcie_dev_group = {
-> +       .attrs = pcie_dev_attrs,
-> +};
-> +
-> +const struct attribute_group *pcie_dev_groups[] = {
-> +       &pcie_dev_group,
-> +       NULL,
-> +};
-> +
->  static struct attribute_group pci_dev_hp_attr_group = {
->         .attrs = pci_dev_hp_attrs,
->         .is_visible = pci_dev_hp_attrs_are_visible,
-> @@ -1574,12 +1751,24 @@ static struct attribute_group pci_dev_attr_group = {
->         .is_visible = pci_dev_attrs_are_visible,
->  };
->
-> +static struct attribute_group pci_bridge_attr_group = {
-> +       .attrs = pci_bridge_attrs,
-> +       .is_visible = pci_bridge_attrs_are_visible,
-> +};
-> +
-> +static struct attribute_group pcie_dev_attr_group = {
-> +       .attrs = pcie_dev_attrs,
-> +       .is_visible = pcie_dev_attrs_are_visible,
-> +};
-> +
->  static const struct attribute_group *pci_dev_attr_groups[] = {
->         &pci_dev_attr_group,
->         &pci_dev_hp_attr_group,
->  #ifdef CONFIG_PCI_IOV
->         &sriov_dev_attr_group,
->  #endif
-> +       &pci_bridge_attr_group,
-> +       &pcie_dev_attr_group,
->         NULL,
->  };
->
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 634c9c4..b1770dc 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -517,6 +517,10 @@
->  #define  PCI_EXP_LNKCAP_SLS    0x0000000f /* Supported Link Speeds */
->  #define  PCI_EXP_LNKCAP_SLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
->  #define  PCI_EXP_LNKCAP_SLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
-> +#define  PCI_EXP_LNKCAP_MLS    0x0000000f /* Maximum Link Speeds */
-> +#define  PCI_EXP_LNKCAP_MLS_2_5GB 0x00000001 /* LNKCAP2 SLS Vector bit 0 */
-> +#define  PCI_EXP_LNKCAP_MLS_5_0GB 0x00000002 /* LNKCAP2 SLS Vector bit 1 */
-> +#define  PCI_EXP_LNKCAP_MLS_8_0GB 0x00000003 /* LNKCAP2 SLS Vector bit 2 */
-
-Rather than adding these _MLS_ symbols as duplicates of _SLS_, please
-just add one SLS_8_0GB symbol.
-
-The _SLS_ names are an artifact of the fact that prior to PCIe r3.0,
-this field was the "Supported Link Speeds" field.  PCIe 3.0 renamed it
-to "Max Link Speed" and added the "Supported Link Speeds Vector" in
-the new Link Capabilities 2 register.
-
->  #define  PCI_EXP_LNKCAP_MLW    0x000003f0 /* Maximum Link Width */
->  #define  PCI_EXP_LNKCAP_ASPMS  0x00000c00 /* ASPM Support */
->  #define  PCI_EXP_LNKCAP_L0SEL  0x00007000 /* L0s Exit Latency */
-> --
-> 2.7.4
->
+Jason
