@@ -1,77 +1,122 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Jingoo Han" <jingoohan1@gmail.com>
-To: "'Jon Masters'" <jcm@jonmasters.org>,
- "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
- <linux-pci@vger.kernel.org>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
- <2e24e205-d761-9172-9463-4a53e1a0de4d@jonmasters.org>
-In-Reply-To: <2e24e205-d761-9172-9463-4a53e1a0de4d@jonmasters.org>
-Subject: Re: [PATCH v4 00/21] PCI: fix config space memory mappings
-Date: Tue, 25 Apr 2017 12:20:02 -0400
-Message-ID: <000101d2bddf$cd442e80$67cc8b80$@gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 18 Apr 2017 12:50:54 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: David Howells <dhowells@redhat.com>
+Cc: linux-kernel@vger.kernel.org, matthew.garrett@nebula.com,
+        linux-efi@vger.kernel.org, gnomes@lxorguk.ukuu.org.uk,
+        linux-pci@vger.kernel.org, linux-security-module@vger.kernel.org,
+        keyrings@vger.kernel.org, gregkh@linuxfoundation.org
+Subject: Re: [PATCH 12/24] PCI: Lock down BAR access when the kernel is
+ locked down
+Message-ID: <20170418175054.GA25295@bhelgaas-glaptop.roam.corp.google.com>
+References: <149142326734.5101.4596394505987813763.stgit@warthog.procyon.org.uk>
+ <149142337836.5101.13971561682218232219.stgit@warthog.procyon.org.uk>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: 'Pratyush Anand' <pratyush.anand@gmail.com>,
- 'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
- 'Catalin Marinas' <catalin.marinas@arm.com>,
- 'Shawn Lin' <shawn.lin@rock-chips.com>, 'Will Deacon' <will.deacon@arm.com>,
- 'Michal Simek' <michal.simek@xilinx.com>,
- 'Thierry Reding' <thierry.reding@gmail.com>,
- 'Tanmay Inamdar' <tinamdar@apm.com>, 'Zhou Wang' <wangzhou1@hisilicon.com>,
- 'Joao Pinto' <Joao.Pinto@synopsys.com>, 'Jonathan Corbet' <corbet@lwn.net>,
- 'Wenrui Li' <wenrui.li@rock-chips.com>, 'Russell King' <linux@armlinux.org.uk>,
- 'Bharat Kumar Gogada' <bharat.kumar.gogada@xilinx.com>,
- 'Murali Karicheri' <m-karicheri2@ti.com>,
- 'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
- 'Arnd Bergmann' <arnd@arndb.de>, 'Jon Mason' <jonmason@broadcom.com>,
- 'Ray Jui' <rjui@broadcom.com>, 'John Garry' <john.garry@huawei.com>,
- 'Bjorn Helgaas' <bhelgaas@google.com>, 'Mingkai Hu' <mingkai.hu@freescale.com>,
- linux-arm-kernel@lists.infradead.org,
- 'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
- linux-kernel@vger.kernel.org, 'Stanimir Varbanov' <svarbanov@mm-sol.com>,
- 'Minghuan Lian' <minghuan.Lian@freescale.com>,
- "'Luis R . Rodriguez'" <mcgrof@kernel.org>,
- 'Roy Zang' <tie-fei.zang@freescale.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <149142337836.5101.13971561682218232219.stgit@warthog.procyon.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tuesday, April 25, 2017 2:41 AM, Jon Masters wrote:
+On Wed, Apr 05, 2017 at 09:16:18PM +0100, David Howells wrote:
+> From: Matthew Garrett <matthew.garrett@nebula.com>
 > 
-> On 04/19/2017 12:48 PM, Lorenzo Pieralisi wrote:
+> Any hardware that can potentially generate DMA has to be locked down in
+> order to avoid it being possible for an attacker to modify kernel code,
+> allowing them to circumvent disabled module loading or module signing.
+> Default to paranoid - in future we can potentially relax this for
+> sufficiently IOMMU-isolated devices.
 > 
-> > On some platforms (ie ARM/ARM64) ioremap fails to comply with the PCI
-> > configuration non-posted write transactions requirement, because it
-> > provides a memory mapping that issues "bufferable" or, in PCI terms
-> > "posted" write transactions. Likewise, the current pci_remap_iospace()
-> > implementation maps the physical address range that the PCI translates
-> > to I/O space cycles to virtual address space through pgprot_device()
-> > attributes that on eg ARM64 provides a memory mapping issuing
-> > posted writes transactions, which is not PCI specifications compliant.
+> Signed-off-by: Matthew Garrett <matthew.garrett@nebula.com>
+> Signed-off-by: David Howells <dhowells@redhat.com>
+> cc: linux-pci@vger.kernel.org
+
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+
+> ---
 > 
-> Side note that I've pinged all of the ARM server vendors and asked them
-> to verify this patch series on their platforms.
-
-Good! I really want to know the result of these patches on ARM serves.
-Please share it with us. Good luck.
-
-Best regards,
-Jingoo Han
-
+>  drivers/pci/pci-sysfs.c |    9 +++++++++
+>  drivers/pci/proc.c      |    8 +++++++-
+>  drivers/pci/syscall.c   |    2 +-
+>  3 files changed, 17 insertions(+), 2 deletions(-)
 > 
-> Jon.
-
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> index 25d010d449a3..f70b3668036f 100644
+> --- a/drivers/pci/pci-sysfs.c
+> +++ b/drivers/pci/pci-sysfs.c
+> @@ -727,6 +727,9 @@ static ssize_t pci_write_config(struct file *filp, struct kobject *kobj,
+>  	loff_t init_off = off;
+>  	u8 *data = (u8 *) buf;
+>  
+> +	if (kernel_is_locked_down())
+> +		return -EPERM;
+> +
+>  	if (off > dev->cfg_size)
+>  		return 0;
+>  	if (off + count > dev->cfg_size) {
+> @@ -1018,6 +1021,9 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
+>  	resource_size_t start, end;
+>  	int i;
+>  
+> +	if (kernel_is_locked_down())
+> +		return -EPERM;
+> +
+>  	for (i = 0; i < PCI_ROM_RESOURCE; i++)
+>  		if (res == &pdev->resource[i])
+>  			break;
+> @@ -1117,6 +1123,9 @@ static ssize_t pci_write_resource_io(struct file *filp, struct kobject *kobj,
+>  				     struct bin_attribute *attr, char *buf,
+>  				     loff_t off, size_t count)
+>  {
+> +	if (kernel_is_locked_down())
+> +		return -EPERM;
+> +
+>  	return pci_resource_io(filp, kobj, attr, buf, off, count, true);
+>  }
+>  
+> diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
+> index f82710a8694d..139d6f09ae7b 100644
+> --- a/drivers/pci/proc.c
+> +++ b/drivers/pci/proc.c
+> @@ -116,6 +116,9 @@ static ssize_t proc_bus_pci_write(struct file *file, const char __user *buf,
+>  	int size = dev->cfg_size;
+>  	int cnt;
+>  
+> +	if (kernel_is_locked_down())
+> +		return -EPERM;
+> +
+>  	if (pos >= size)
+>  		return 0;
+>  	if (nbytes >= size)
+> @@ -195,6 +198,9 @@ static long proc_bus_pci_ioctl(struct file *file, unsigned int cmd,
+>  #endif /* HAVE_PCI_MMAP */
+>  	int ret = 0;
+>  
+> +	if (kernel_is_locked_down())
+> +		return -EPERM;
+> +
+>  	switch (cmd) {
+>  	case PCIIOC_CONTROLLER:
+>  		ret = pci_domain_nr(dev->bus);
+> @@ -233,7 +239,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
+>  	struct pci_filp_private *fpriv = file->private_data;
+>  	int i, ret, write_combine;
+>  
+> -	if (!capable(CAP_SYS_RAWIO))
+> +	if (!capable(CAP_SYS_RAWIO) || kernel_is_locked_down())
+>  		return -EPERM;
+>  
+>  	/* Make sure the caller is mapping a real resource for this device */
+> diff --git a/drivers/pci/syscall.c b/drivers/pci/syscall.c
+> index 9bf993e1f71e..c09524738ceb 100644
+> --- a/drivers/pci/syscall.c
+> +++ b/drivers/pci/syscall.c
+> @@ -92,7 +92,7 @@ SYSCALL_DEFINE5(pciconfig_write, unsigned long, bus, unsigned long, dfn,
+>  	u32 dword;
+>  	int err = 0;
+>  
+> -	if (!capable(CAP_SYS_ADMIN))
+> +	if (!capable(CAP_SYS_ADMIN) || kernel_is_locked_down())
+>  		return -EPERM;
+>  
+>  	dev = pci_get_bus_and_slot(bus, dfn);
+> 
