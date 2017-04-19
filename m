@@ -1,119 +1,72 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40324 "EHLO mail.kernel.org"
+Received: from foss.arm.com ([217.140.101.70]:44394 "EHLO foss.arm.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751852AbdDQVhF (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 17 Apr 2017 17:37:05 -0400
-Subject: [PATCH v11 5/7] PCI: Factor pci_reassigndev_resource_alignment()
-From: Bjorn Helgaas <bhelgaas@google.com>
-To: Yongji Xie <elohimes@gmail.com>
-Cc: zhong@linux.vnet.ibm.com, Alexey Kardashevskiy <aik@ozlabs.ru>,
-        linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org
-Date: Mon, 17 Apr 2017 16:37:00 -0500
-Message-ID: <20170417213700.21092.58744.stgit@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+        id S966838AbdDSQtk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Apr 2017 12:49:40 -0400
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH v4 14/21] PCI: designware: update PCI config space remap function
+Date: Wed, 19 Apr 2017 17:49:03 +0100
+Message-Id: <20170419164913.19674-15-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Pull the BAR size adjustment out into a new function,
-pci_request_resource_alignment(), and add a comment about how and why we
-increase the resource size and alignment.
+PCI configuration space should be mapped with a memory region type that
+generates on the CPU host bus non-posted write transations. Update the
+driver to use the devm_pci_remap_cfg* interface to make sure the correct
+memory mappings for PCI configuration space are used.
 
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
 ---
- drivers/pci/pci.c |   67 ++++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 46 insertions(+), 21 deletions(-)
+ drivers/pci/dwc/pcie-designware-host.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index a2d1f144c94f..17746f778ca2 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5049,6 +5049,48 @@ static resource_size_t pci_specified_resource_alignment(struct pci_dev *dev)
- 	return align;
- }
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 5ba3349..2b789af 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -338,8 +338,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	}
  
-+static void pci_request_resource_alignment(struct pci_dev *dev, int bar,
-+					   resource_size_t align)
-+{
-+	struct resource *r = &dev->resource[bar];
-+	resource_size_t size;
-+
-+	if (!(r->flags & IORESOURCE_MEM))
-+		return;
-+
-+	if (r->flags & IORESOURCE_PCI_FIXED) {
-+		dev_info(&dev->dev, "BAR%d %pR: ignoring requested alignment %#llx\n",
-+			 bar, r, (unsigned long long)align);
-+		return;
-+	}
-+
-+	size = resource_size(r);
-+	if (size < align) {
-+
-+		/*
-+		 * Increase the size of the resource.  BARs are aligned on
-+		 * their size, so when we reallocate space for this
-+		 * resource, we'll allocate it with the larger alignment.
-+		 * It also prevents assignment of any other BARs inside the
-+		 * size.  If we're requesting page alignment, this means no
-+		 * other BARs will share the page.
-+		 *
-+		 * This makes the resource larger than the hardware BAR,
-+		 * which may break drivers that compute things based on the
-+		 * resource size, e.g., to find registers at a fixed offset
-+		 * before the end of the BAR.  We hope users don't request
-+		 * alignment for such devices.
-+		 */
-+		size = align;
-+		dev_info(&dev->dev, "BAR%d %pR: requesting alignment to %#llx\n",
-+			 bar, r, (unsigned long long)align);
-+
-+	}
-+	r->flags |= IORESOURCE_UNSET;
-+	r->end = size - 1;
-+	r->start = 0;
-+}
-+
- /*
-  * This function disables memory decoding and releases memory resources
-  * of the device specified by kernel's boot parameter 'pci=resource_alignment='.
-@@ -5090,28 +5132,11 @@ void pci_reassigndev_resource_alignment(struct pci_dev *dev)
- 	command &= ~PCI_COMMAND_MEMORY;
- 	pci_write_config_word(dev, PCI_COMMAND, command);
+ 	if (!pci->dbi_base) {
+-		pci->dbi_base = devm_ioremap(dev, pp->cfg->start,
+-					resource_size(pp->cfg));
++		pci->dbi_base = devm_pci_remap_cfgspace(dev,
++						pp->cfg->start,
++						resource_size(pp->cfg));
+ 		if (!pci->dbi_base) {
+ 			dev_err(dev, "error with ioremap\n");
+ 			ret = -ENOMEM;
+@@ -350,8 +351,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	pp->mem_base = pp->mem->start;
  
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		r = &dev->resource[i];
--		if (!(r->flags & IORESOURCE_MEM))
--			continue;
--		if (r->flags & IORESOURCE_PCI_FIXED) {
--			dev_info(&dev->dev, "Ignoring requested alignment for BAR%d: %pR\n",
--				i, r);
--			continue;
--		}
-+	for (i = 0; i <= PCI_ROM_RESOURCE; i++)
-+		pci_request_resource_alignment(dev, i, align);
+ 	if (!pp->va_cfg0_base) {
+-		pp->va_cfg0_base = devm_ioremap(dev, pp->cfg0_base,
+-						pp->cfg0_size);
++		pp->va_cfg0_base = devm_pci_remap_cfgspace(dev,
++					pp->cfg0_base, pp->cfg0_size);
+ 		if (!pp->va_cfg0_base) {
+ 			dev_err(dev, "error with ioremap in function\n");
+ 			ret = -ENOMEM;
+@@ -360,7 +361,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+ 	}
  
--		size = resource_size(r);
--		if (size < align) {
--			size = align;
--			dev_info(&dev->dev,
--				"Rounding up size of resource #%d to %#llx.\n",
--				i, (unsigned long long)size);
--		}
--		r->flags |= IORESOURCE_UNSET;
--		r->end = size - 1;
--		r->start = 0;
--	}
--	/* Need to disable bridge's resource window,
-+	/*
-+	 * Need to disable bridge's resource window,
- 	 * to enable the kernel to reassign new resource
- 	 * window later on.
- 	 */
+ 	if (!pp->va_cfg1_base) {
+-		pp->va_cfg1_base = devm_ioremap(dev, pp->cfg1_base,
++		pp->va_cfg1_base = devm_pci_remap_cfgspace(dev,
++						pp->cfg1_base,
+ 						pp->cfg1_size);
+ 		if (!pp->va_cfg1_base) {
+ 			dev_err(dev, "error with ioremap\n");
+-- 
+2.10.0
