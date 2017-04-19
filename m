@@ -1,101 +1,81 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 21 Apr 2017 12:57:05 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jayachandran C <jnair@caviumnetworks.com>
-Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-Message-ID: <20170421175705.GB17916@bhelgaas-glaptop.roam.corp.google.com>
-References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
- <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
- <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
- <20170414210646.GA5346@localhost>
- <CAErSpo731xSzrnKF+G+8SA_UUHy7ROA1V9oFkpwKi85GQf9VAg@mail.gmail.com>
- <20170417174712.GA7575@localhost>
- <CAErSpo6+do8GXon3EzZAUpqc2TFsA0BDwWBULqZCd1ayCJhD6w@mail.gmail.com>
- <20170421170414.GA2429@localhost>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f177.google.com ([209.85.128.177]:33829 "EHLO
+        mail-wr0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S968773AbdDSRyQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Apr 2017 13:54:16 -0400
+Received: by mail-wr0-f177.google.com with SMTP id z109so20680607wrb.1
+        for <linux-pci@vger.kernel.org>; Wed, 19 Apr 2017 10:54:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20170421170414.GA2429@localhost>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Joerg Roedel <joro@8bytes.org>,
- "open list:INTEL IOMMU \(VT-d\)" <iommu@lists.linux-foundation.org>,
- Jon Masters <jcm@redhat.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Robin Murphy <robin.murphy@arm.com>,
- linux-arm <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAONzpcaGfO5bcSdjpX4NC=Ui9oTWORaj-v1vTDUTckPC5WWjqQ@mail.gmail.com>
+References: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <20170417213653.21092.27784.stgit@bhelgaas-glaptop.roam.corp.google.com>
+ <CAErSpo6gtDos6GH5Z7aOoW4a3uS4X-HOOHtPFtyg=F+B6+osrw@mail.gmail.com>
+ <87bmrt6udc.fsf@concordia.ellerman.id.au> <CAONzpcaGfO5bcSdjpX4NC=Ui9oTWORaj-v1vTDUTckPC5WWjqQ@mail.gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Wed, 19 Apr 2017 12:53:54 -0500
+Message-ID: <CAErSpo5HkiiCMCyFZbOZu__KZ0DhAgwC9rcDtSdLuLL+3VDBFg@mail.gmail.com>
+Subject: Re: [PATCH v11 4/7] powerpc/powernv: Override pcibios_default_alignment()
+ to force PCI devices to be page aligned
+To: Yongji Xie <elohimes@gmail.com>
+Cc: Michael Ellerman <mpe@ellerman.id.au>,
+        Li Zhong <zhong@linux.vnet.ibm.com>,
+        Alexey Kardashevskiy <aik@ozlabs.ru>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Gavin Shan <gwshan@linux.vnet.ibm.com>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 21, 2017 at 05:05:41PM +0000, Jayachandran C wrote:
-> On Fri, Apr 21, 2017 at 10:48:15AM -0500, Bjorn Helgaas wrote:
-> > On Mon, Apr 17, 2017 at 12:47 PM, Jayachandran C
-> > <jnair@caviumnetworks.com> wrote:
-> > > On Fri, Apr 14, 2017 at 09:00:06PM -0500, Bjorn Helgaas wrote:
+On Tue, Apr 18, 2017 at 9:12 PM, Yongji Xie <elohimes@gmail.com> wrote:
+> On 19 April 2017 at 09:47, Michael Ellerman <mpe@ellerman.id.au> wrote:
+>> Bjorn Helgaas <bhelgaas@google.com> writes:
+>>
+>>> On Mon, Apr 17, 2017 at 4:36 PM, Bjorn Helgaas <bhelgaas@google.com> wrote:
+>>>> From: Yongji Xie <elohimes@gmail.com>
+>>>> diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>> index 6901a06da2f9..b724487cbd0f 100644
+>>>> --- a/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>> +++ b/arch/powerpc/platforms/powernv/pci-ioda.c
+>>>> @@ -3287,6 +3287,11 @@ static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
+>>>>         }
+>>>>  }
+>>>>
+>>>> +static resource_size_t pnv_pci_default_alignment(struct pci_dev *pdev)
+>>>> +{
+>>>> +       return PAGE_SIZE;
+>>>> +}
+>>>
+>>> Is it necessary that pcibios_default_alignment() take a pci_dev
+>>> pointer?
+>>
+>> It's not necessary given the current implementation, obviously.
+>>
+>> But it did strike me as a good idea to pass it in case we ever want to
+>> do anything device specific in future.
+>>
+>>> I'd like this better if it were:
+>>>
+>>>   resource_size_t pcibios_default_alignment(void) { ... }
+>>>
+>>> because the last patch relies on the assumption that all resources of
+>>> *all* devices will be realigned to the same alignment.
+>>
+>> But I guess that precludes doing anything device specific, at least
+>> without further changes. So in that case it would be better if the API
+>> didn't include the pci_dev.
+>>
+>> Hopefully Yongji can confirm that there were no plans to use the
+>> pci_dev in future patches.
+>>
+>
+> Yes, seems like pci_dev pointer doesn't match the assumption
+> that all resources will be realigned to the same alignment. It's OK
+> to me to remove it.
 
-> > >> Could you collect "lspci -vv" output from this system?  I'd like to
-> > >> archive that as background for this IOMMU issue and the ASPM tweaks I
-> > >> suspect we'll have to do.  I *wish* we had more information about that
-> > >> VIA thing, because I suspect we could get rid of it if we had more
-> > >> details.
-> > >
-> > > The full logs are slightly large, so I have kept them at:
-> > > https://github.com/jchandra-cavm/thunderx2/blob/master/logs/
-> > > The lspci -vv output is lspci-vv.txt and lspci -tvn output is lspci-tvn.txt
-> > >
-> > > The output is from 2 socket system, the cards are not on the first slot
-> > > like the example above, so the bus and device numbers are different.
-> > 
-> > Can somebody with this system collect the "lspci -xxxx" output as well?
-> > 
-> > I'm making some lspci changes to handle the PCI-to-PCIe bridge
-> > correctly, and I can use the "lspci -xxxx" output to create an lspci
-> > test case.
-> 
-> [Sorry was AFK for a few days]
-> 
-> I have updated the above directory with the log. Also tested your next branch
-> and it works fine on ThunderX2.
-
-Thanks!
-
-With regard to my lspci changes, they add "Slot-" here:
-
-   01:0a.0 PCI bridge: Broadcom Corporation Device 9039
-   ...
-  -   Capabilities: [40] Express (v2) PCI/PCI-X to PCI-Express Bridge, MSI 00
-  +   Capabilities: [40] Express (v2) PCI/PCI-X to PCI-Express Bridge (Slot-), MSI 00
-
-for all your PCI-to-PCIe bridges.  I assume the "Slot-" is correct, i.e.,
-the link is not connected to a slot, right?  This comes from the "Slot
-Implemented" bit in the PCIe Capabilities Register.
-
-I did notice that all the Root Port devices claim to *not* be connected to
-slots, which doesn't seem right.  For example,
-
-  12:00.0 PCI bridge: Broadcom Corporation Device 9084
-      Bus: primary=12, secondary=13, subordinate=14, sec-latency=0
-      Capabilities: [ac] Express (v2) Root Port (Slot-), MSI 00
-
-  13:00.0 Ethernet controller: Intel Corporation 82599EB 10-Gigabit SFI/SFP+ Network Connection
-
-It seems strange because the 12:00.0 Root Port looks like it probably
-*does* lead to a slot where the NIC is plugged in.  Or is that NIC really
-soldered down?
-
-But I assume there are *some* PCIe slots, so at some of those Root Ports
-should advertise "Slot+" (which by itself does not imply hotplug support,
-if that's the concern).
+I made this change (removing the pci_dev parameter) on my pci/resource branch.
 
 Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
