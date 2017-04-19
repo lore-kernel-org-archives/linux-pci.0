@@ -1,187 +1,72 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1493347596.29314.55.camel@mtkswgap22>
-Subject: Re: [PATCH 2/2] dt-bindings: pcie: Add documentation for Mediatek PCIe
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Date: Fri, 28 Apr 2017 10:46:36 +0800
-In-Reply-To: <CAK8P3a0vD8s_3R+jS=JdUXX3X05SkCk-mipMA6UxWYQZe6vLUQ@mail.gmail.com>
-References: <1492935543-18190-1-git-send-email-ryder.lee@mediatek.com>
- <1492935543-18190-3-git-send-email-ryder.lee@mediatek.com>
- <CAK8P3a1vgi9VBZfRNq0dDKzmfe8FkHQtgz6fEXW9fyUnBHtaQQ@mail.gmail.com>
- <1493194205.27023.80.camel@mtkswgap22>
- <CAK8P3a0vD8s_3R+jS=JdUXX3X05SkCk-mipMA6UxWYQZe6vLUQ@mail.gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from sauhun.de ([88.99.104.3]:41747 "EHLO pokefinder.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1760378AbdDSHWY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Apr 2017 03:22:24 -0400
+Date: Wed, 19 Apr 2017 09:22:16 +0200
+From: Wolfram Sang <wsa@the-dreams.de>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Niklas Soderlund <niklas.soderlund+renesas@ragnatech.se>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Matthew Garrett <mjg59@srcf.ucam.org>,
+        linux-pci@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-renesas-soc@vger.kernel.org
+Subject: Re: [PATCH] PCI: Freeze PME scan before suspending devices
+Message-ID: <20170419072216.2chcdfpl6dxfgxgs@ninjato>
+References: <03aaf3220cccbabb7db86aa4eb10d1147add5c34.1492536769.git.lukas@wunner.de>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
- Bjorn Helgaas <bhelgaas@google.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="vrppktrdlacnrucw"
+In-Reply-To: <03aaf3220cccbabb7db86aa4eb10d1147add5c34.1492536769.git.lukas@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 2017-04-27 at 21:06 +0200, Arnd Bergmann wrote:
-> On Wed, Apr 26, 2017 at 10:10 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
-> > Hi
-> >
-> > On Tue, 2017-04-25 at 14:18 +0200, Arnd Bergmann wrote:
-> >> On Sun, Apr 23, 2017 at 10:19 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
-> >> > Add documentation for PCIe host driver available in MT7623
-> >> > series SoCs.
-> >> >
-> >> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> >> > ---
-> >> >  .../bindings/pci/mediatek,mt7623-pcie.txt          | 153 +++++++++++++++++++++
-> >> >  1 file changed, 153 insertions(+)
-> >> >  create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-> >> >
-> >> > diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-> >> > new file mode 100644
-> >> > index 0000000..ee93ba2
-> >> > --- /dev/null
-> >> > +++ b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-> >> > @@ -0,0 +1,153 @@
-> >> > +Mediatek MT7623 PCIe controller
-> >> > +
-> >> > +Required properties:
-> >> > +- compatible: Should contain "mediatek,mt7623-pcie".
-> >>
-> >> Did mediatek license the IP block from someone else or was it
-> >> developed in-house? Is there a name and/or version identifier
-> >> for the block itself other than identifying it as the one in mt7623?
-> >
-> > Originally, it license from synopsys. Our designer add a wrapper to hide
-> > the DBI detail so that we cannot use them directly. Perhaps I can call
-> > it "mediatek,gen2v1-pcie", because we have a plan to upstream a in-house
-> > Gen2 IP in the future.
-> 
-> Ok, so this is the same hardware that drivers/pci/dwc/ handles, but
-> it needs a separate driver because the wrapper that was added uses
-> a completely different register layout, right?
 
-Yes, that's what I mean. At first, I really want to base on
-drivers/pci/dwc/ to implement this driver. Eventually I found it hard to
-go on, like what I said before.
+--vrppktrdlacnrucw
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> Are any of the registers the same at all, e.g. for MSI handling?
+On Tue, Apr 18, 2017 at 08:44:30PM +0200, Lukas Wunner wrote:
+> Laurent Pinchart reported that the Renesas R-Car H2 Lager board
+> (r8a7790) crashes during suspend tests.  Geert Uytterhoeven managed to
+> reproduce the issue on an M2-W Koelsch board (r8a7791):
+>=20
+> It occurs when the PME scan runs, once per second.  During PME scan, the
+> PCI host bridge (rcar-pci) registers are accessed while its module clock
+> has already been disabled, leading to the crash.
 
-No, It doesn't support MSI. All I can do is using the registers that designer provide
-to me. The others are inviable for software. So I treat it as different hardware.
-Furthermore, we hope that we can put all mediatek drivers together
-regardless of in-house IP or lincense IP
+Cool! I stumbled over this while testing I2C suspend behaviour the last
+days, and I can confirm that the crash is gone with this patch on my
+Lager board. Thanks!
 
-We have no particular IP name but just use chip name to call it. So I
-will temporarily use "mediatek,gen2v1-pcie" in patch v1.
-
-> >> > +Required properties:
-> >> > +- device_type: Must be "pci"
-> >> > +- assigned-addresses: Address and size of the port configuration registers
-> >> > +- reg: Only the first four bytes are used to refer to the correct bus number
-> >> > +  and device number.
-> >> > +- #address-cells: Must be 3
-> >> > +- #size-cells: Must be 2
-> >> > +- ranges: Sub-ranges distributed from the PCIe controller node. An empty
-> >> > +  property is sufficient.
-> >> > +- clocks: Must contain an entry for each entry in clock-names.
-> >> > +  See ../clocks/clock-bindings.txt for details.
-> >> > +- clock-names: Must include the following entries:
-> >> > +  - sys_ck
-> >> > +- resets: Must contain an entry for each entry in reset-names.
-> >> > +  See ../reset/reset.txt for details.
-> >>
-> >> This seems odd: you have a device that is simply identified as "pci"
-> >> without any more specific ID, but you require additional properties
-> >> (clocks, reset, ...) that are not part of the standard PCI binding.
-> >>
-> >> Can you clarify how the port devices related to the root device in
-> >> this hardware design?
-> >
-> > I will write clarify like this:
-> >
-> > PCIe subsys includes one Host/PCI bridge and 3 PCIe MAC port. There
-> > are 3 bus master for data access and 1 slave for configuration and
-> > status register access. Each port has PIPE interface to PHY and
-> 
-> If I understand this right, then each of the ports in your hardware
-> is what we normally drive using the drivers/pci/dwc/ driver framework,
-> but your implementation actually made it more PCI standard compliant
-> by implementing the normal PCIe host bridge registers for all ports
-> combined, something that most others don't.
-
-In my view, it's correct to implement our driver in this way. But I
-don't really understand the details about other platforms. 
-
-> >> Have you considered moving the nonstandard properties into the host
-> >> bridge node and having that device deal with setting up the links
-> >> to the other drivers? That way we could use the regular pcie
-> >> port driver for the children.
-> >>
-> >
-> > OK, but I still want to use port->reset to catch reset properties in
-> > driver.
-> 
-> Do you mean in drivers/pci/pcie/portdrv_pci.c? I see that it
-> has a function called pcie_portdrv_slot_reset(), but I don't see
-> how that relates to your reset line at the moment. Is this
-> something you have submitted in a different series?
-> 
-> Or do you mean in this host driver? The problem I see with
-> that approach is that the port device is owned by portdrv_pci,
-> so the host bridge driver should not look at the properties of
-> the port.
-
-hifsys: syscon@1a000000 {
-		compatible = "mediatek,mt7623-hifsys", "syscon";
-		reg = <0 0x1a000000 0 0x1000>;
-		#clock-cells = <1>;
-		#reset-cells = <1>;
-	};
-
-We have a reset controller(hifsys) in our platform. We can just use
-devm_reset_control_get() to catch it in the host driver to control port reset.
-
-After much consideration, I will move all nonstandard properties to root
-node, let child node cleanable.
-
-> >> > +- reset-names: Must include the following entries:
-> >> > +  - pcie-reset
-> >> > +- num-lanes: Number of lanes to use for this port.
-> >> > +- phys: Must contain an entry for each entry in phy-names.
-> >> > +- phy-names: Must include an entry for each sub node. Entries are of the form
-> >> > +  "pcie-phyN": where N ranges from 0 to the value specified for port number.
-> >> > +  See ../phy/phy-mt7623-pcie.txt for details.
-> >>
-> >> I think the name should not include the number of the port but rather
-> >> be always the same here.
-> >>
-> >
-> > Hmm, I think it's better to keep the name here. It's more readable for
-> > user to understand the relationship between port0 and phy0.
-> 
-> No, I would argue that it's confusing for the reader because it
-> is different from how most other DT bindings work: In each device
-> node, you tend to have a set of properties with well-known names
-> that are documented. When your reference is called "pcie-phy1"
-> in one node and "pcie-phy2", I would interpret that as both ports
-> having two phys each, but only one of them being used.
-
-Okay I will write it more clearly
-
-- phys: list of PHY specifiers (used by generic PHY framework)
-- phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on
-the number of PHYs as specified in *phys* property.
+Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+--vrppktrdlacnrucw
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAABCAAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAlj3ECQACgkQFA3kzBSg
+KbbrtRAApyiV+w4DYRzMCbFEqiSVQb4o2MN85OcmFPluzuBoMVu5VHtuiEYgg2Ix
+H9lCDH40zc3tMHnNxqI83LtGYwU9l3V0KzGRbSdm0oISXMj5IdXIdTblexsok6vY
+H5ayeNmnkpn72v19xpCorV1SvgoierVkZTRHy3XGKYUwiX/F8WBMZORkQc6gw/RR
+A8pNnMbP8AsYEhkVKL8EJYmKHb149kgfwVMOGEkqgrjhu/RrNcxaVV4M3vgtW/CJ
+fBlazFlcqIM07tvvk6YaKkeOGPOLvEjTz16qIQSi8BIiGe2kEDGAZ6mjZUNtUlIk
+3l+ytPAUi2WLBCcoF37uLJ9zmY4slp6lp2311HN0ES6sKyvO7yDqvA1PGpg7Gb6e
+hDIdohOuaBM7e93pTURR50hWK79DVIiFXAD/hRIbpMvodWWITmwivvtHs+MZHjt0
+LLyftjD4XeDit8yXQnbA0svZW+OZMofhQnIy9PGwljIizA9/IB5K5E8DQbJ4KHOv
+7u/OhrZ0Qn3dDUYPvpd7ZiCFqghePl/qlro2H1o7xkgAhQpG4uaxG9otcnx1xvQv
+xLPxHRSF+WzLDi+9RbtSi9YzdA6gQvbXL2Ec5B9kfqCoTIj1YgTSVJFeHniG4kn5
+FuhkTsBbkM3eMGuADrTOsJfslyLOaDYmc6rre8JWrMnpn7pnbHk=
+=iwyu
+-----END PGP SIGNATURE-----
+
+--vrppktrdlacnrucw--
