@@ -1,57 +1,59 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Thu, 27 Apr 2017 16:40:14 +0200
-From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
-To: Sricharan R <sricharan@codeaurora.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Joerg Roedel <jroedel@suse.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        netdev@vger.kernel.org
-Subject: Re: [REGRESSION next-20170426] Commit 09515ef5ddad ("of/acpi:
- Configure dma operations at probe time for platform/amba/pci bus devices")
- causes oops in mvneta
-Message-ID: <20170427164014.422a124c@gmail.com>
-In-Reply-To: <2fb57b9b-3944-d9cc-1fac-8dcccaa0c37a@codeaurora.org>
-References: <20170426181508.687b52af@gmail.com>
- <2fb57b9b-3944-d9cc-1fac-8dcccaa0c37a@codeaurora.org>
+Return-Path: <SRS0=W1ds=33=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=W1ds=33=deltatee.com=logang@kernel.org>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <20170418210339.GA24257@obsidianresearch.com>
+ <1492564806.25766.124.camel@kernel.crashing.org>
+ <20170419155557.GA8497@obsidianresearch.com>
+ <4899b011-bdfb-18d8-ef00-33a1516216a6@deltatee.com>
+ <20170419171451.GA10020@obsidianresearch.com>
+ <b0234176-e86b-6e7c-686d-b4fef719aad7@deltatee.com>
+ <20170419183247.GA13716@obsidianresearch.com>
+ <21e8099a-d19d-7df0-682d-627d8b81dfde@deltatee.com>
+ <20170419193154.GA14340@obsidianresearch.com>
+ <ea03e81f-e3d5-9f5c-db60-0ceaf4366612@deltatee.com>
+ <20170419204808.GA15716@obsidianresearch.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Dan Williams <dan.j.williams@intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+ Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+ linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Jerome Glisse <jglisse@redhat.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <c143c2fd-8bff-595d-8a9e-debfcd56e531@deltatee.com>
+Date: Wed, 19 Apr 2017 16:55:22 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20170419204808.GA15716@obsidianresearch.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, 27 Apr 2017 19:05:09 +0530
-Sricharan R <sricharan@codeaurora.org> wrote:
 
-> Hi,
+
+On 19/04/17 02:48 PM, Jason Gunthorpe wrote:
+> On Wed, Apr 19, 2017 at 01:41:49PM -0600, Logan Gunthorpe wrote:
 > 
-> On 4/26/2017 9:45 PM, Ralph Sennhauser wrote:
-> > Hi Sricharan R,
-> > 
-> > Commit 09515ef5ddad ("of/acpi: Configure dma operations at probe
-> > time for platform/amba/pci bus devices") causes a kernel panic as
-> > in the log below on an armada-385. Reverting the commit fixes the
-> > issue.
-> > 
-> > Regards
-> > Ralph  
+>>> But.. it could point to a GPU and the GPU struct device could have a
+>>> proxy dma_ops like Dan pointed out.
+>>
+>> Seems a bit awkward to me that in order for the intended use case, you
+>> have to proxy the dma_ops. I'd probably still suggest throwing a couple
+>> ops for things like this in the dev_pagemap.
 > 
-> Somehow not getting a obvious clue on whats going wrong with the logs
-> below. From the log and looking in to dts, the drivers seems to the
-> one for "marvell,armada-370-neta".
+> Another option is adding a new 'struct completer_dma_ops *' to struct
+> device for this use case.
+> 
+> Seems like a waste to expand dev_pagemap when we only need a unique
+> value per struct device?
 
-Correct.
+I feel like expanding dev_pagemap has a much lower impact than expanding
+struct device... dev_pagemap is only one instance per zone device region
+so expanding it shouldn't be a huge issue. Expanding struct device means
+every device struct in the system gets bigger.
 
-> Issue looks the data from the dma
-> has gone bad and subsequently referring the wrong data has resulted
-> in the crash. Looks like the dma_masks is the one going wrong.
-> Can i get some logs from mvneta_probe, about dev->dma_mask,
-> dev->coherent_dma_mask and dev->dma_ops with and without the patch
-> to see whats the difference ?
-
-Not sure I understood what exactly you are after. Might be faster to
-just send me a patch with all debug print statements you like to see.
-
-Regards
-Ralph
+Logan
