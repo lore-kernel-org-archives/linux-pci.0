@@ -1,92 +1,81 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f67.google.com ([74.125.83.67]:36544 "EHLO
-        mail-pg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753165AbdDJMCm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 10 Apr 2017 08:02:42 -0400
-Received: by mail-pg0-f67.google.com with SMTP id 81so25493353pgh.3
-        for <linux-pci@vger.kernel.org>; Mon, 10 Apr 2017 05:02:42 -0700 (PDT)
-From: Yongji Xie <elohimes@gmail.com>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        alex.williamson@redhat.com, gwshan@linux.vnet.ibm.com,
-        aik@ozlabs.ru, benh@kernel.crashing.org, mpe@ellerman.id.au,
-        paulus@samba.org, zhong@linux.vnet.ibm.com
-Subject: [PATCH v10 3/4] powerpc/powernv: Override pcibios_default_alignment() to force PCI devices to be page aligned
-Date: Mon, 10 Apr 2017 19:58:13 +0800
-Message-Id: <1491825494-19331-4-git-send-email-elohimes@gmail.com>
-In-Reply-To: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
-References: <1491825494-19331-1-git-send-email-elohimes@gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=ZrTz=33=ti.com=kishon@kernel.org>
+Return-Path: <SRS0=ZrTz=33=ti.com=kishon@kernel.org>
+Subject: Re: [Query] Enabling parent device clock from resume_noirq
+To: Grygorii Strashko <grygorii.strashko@ti.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+        <khilman@kernel.org>, <rnayak@codeaurora.org>,
+        Paul Walmsley <paul@pwsan.com>, Bjorn Helgaas
+	<helgaas@kernel.org>,
+        "Nori, Sekhar" <nsekhar@ti.com>, "Kristo, Tero"
+	<t-kristo@ti.com>,
+        <linux-pm@vger.kernel.org>,
+        "Rafael J. Wysocki"
+	<rafael.j.wysocki@intel.com>,
+        Alan Stern <stern@rowland.harvard.edu>
+References: <62cd5ee0-3f0c-5e65-5f64-0c91a2a6f1e6@ti.com>
+ <4c6e91e4-35fa-2fde-7915-fb922ec22567@ti.com>
+From: Kishon Vijay Abraham I <kishon@ti.com>
+Message-ID: <23a79524-0445-e9cb-2e51-2dd2e37e4f5b@ti.com>
+Date: Wed, 19 Apr 2017 16:40:20 +0530
+MIME-Version: 1.0
+In-Reply-To: <4c6e91e4-35fa-2fde-7915-fb922ec22567@ti.com>
+Content-Type: text/plain; charset="utf-8"
 List-ID: <linux-pci.vger.kernel.org>
 
-This overrides pcibios_default_alignment() to set default alignment
-to PAGE_SIZE for all PCI devices on PowerNV platform. Thus sub-page
-BARs would not share a page and could be mapped into guest when VFIO
-passthrough them.
+Hi,
 
-Signed-off-by: Yongji Xie <elohimes@gmail.com>
----
- arch/powerpc/include/asm/machdep.h        |    2 ++
- arch/powerpc/kernel/pci-common.c          |    8 ++++++++
- arch/powerpc/platforms/powernv/pci-ioda.c |    7 +++++++
- 3 files changed, 17 insertions(+)
+On Wednesday 19 April 2017 01:35 AM, Grygorii Strashko wrote:
+> + linux-pm
+> 
+> On 04/18/2017 01:07 AM, Kishon Vijay Abraham I wrote:
+>> Hi,
+>>
+>> resume_noirq callbacks are used in PCIe core to restore PCI state (this
+>> accesses PCI module). So the clocks of PCI module has to be enabled before
+>> resume_noirq.
+>>
+>> The clocks for the PCI module in DRA7xx is provided by PIPE3 PHY device which
+>> in turn gets it's clock from OCP2SCP device. During resume_noirq callbacks,
+>> pm_runtime is disabled, so pm_runtime_get_sync is ineffective. However
+>> pm_runtime can be enabled using pm_runtime_force_resume. Now the problem is
+>> adding pm_runtime_force_resume() in resume_noirq callback of pci-dra7xx driver
+>> will enable only the pm_runtime of PCI device but not PIPE3 PHY or OCP2SCP.
+>> Adding pm_runtime_force_resume() in resume_noirq callback of PIPE3 PHY driver
+>> or OCP2SCP driver will not help if the resume_noirq callbacks in PIP3PHY driver
+>> and OCP2SCP driver are invoked after the resume_noirq of pci-dra7xx driver.
+>>
+>> How to enable the pm_runtime of parent devices in resume_noirq callback? Does
+>> existing pm_runtime framework has support for that?
+>>
+> 
+> Most probably you've hit the issue described in [1].
+> In general, if pci-dra7xx is consumer of  PIPE3 PHY device and 
+> PIPE3 PHY device is child of OCP2SCP then suspend/resume order should be
+> - pci-dra7xx
+> - PIPE3 PHY
+> - OCP2SCP
+>  and resume
+> - OCP2SCP
+> - PIPE3 PHY
+> - pci-dra7xx
+> and in this case  pm_runtime_force_x() might work.
+> 
+> Hence, approach [1] was not accepted (personally I still like it) and
+> "Functional dependencies tracking support" was introduced instead by commit 9ed9895 [2]
+> you can try it.
+> 
+> But, as per code, I'm not sure that Functional dependencies properly tracked in 
+> pm_runtime_force_x() functions.
+> 
+> PS: you can try to reorder device's nodes in DT and place PCI node after "ocp2scp" :P
 
-diff --git a/arch/powerpc/include/asm/machdep.h b/arch/powerpc/include/asm/machdep.h
-index 5011b69..a82c192 100644
---- a/arch/powerpc/include/asm/machdep.h
-+++ b/arch/powerpc/include/asm/machdep.h
-@@ -173,6 +173,8 @@ struct machdep_calls {
- 	/* Called after scan and before resource survey */
- 	void (*pcibios_fixup_phb)(struct pci_controller *hose);
- 
-+	resource_size_t (*pcibios_default_alignment)(struct pci_dev *);
-+
- #ifdef CONFIG_PCI_IOV
- 	void (*pcibios_fixup_sriov)(struct pci_dev *pdev);
- 	resource_size_t (*pcibios_iov_resource_alignment)(struct pci_dev *, int resno);
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index ffda24a..ceda574 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -233,6 +233,14 @@ void pcibios_reset_secondary_bus(struct pci_dev *dev)
- 	pci_reset_secondary_bus(dev);
- }
- 
-+resource_size_t pcibios_default_alignment(struct pci_dev *pdev)
-+{
-+	if (ppc_md.pcibios_default_alignment)
-+		return ppc_md.pcibios_default_alignment(pdev);
-+
-+	return 0;
-+}
-+
- #ifdef CONFIG_PCI_IOV
- resource_size_t pcibios_iov_resource_alignment(struct pci_dev *pdev, int resno)
- {
-diff --git a/arch/powerpc/platforms/powernv/pci-ioda.c b/arch/powerpc/platforms/powernv/pci-ioda.c
-index e367382..354c852 100644
---- a/arch/powerpc/platforms/powernv/pci-ioda.c
-+++ b/arch/powerpc/platforms/powernv/pci-ioda.c
-@@ -3297,6 +3297,11 @@ static void pnv_pci_setup_bridge(struct pci_bus *bus, unsigned long type)
- 	}
- }
- 
-+static resource_size_t pnv_pci_default_alignment(struct pci_dev *pdev)
-+{
-+	return PAGE_SIZE;
-+}
-+
- #ifdef CONFIG_PCI_IOV
- static resource_size_t pnv_pci_iov_resource_alignment(struct pci_dev *pdev,
- 						      int resno)
-@@ -3830,6 +3835,8 @@ static void __init pnv_pci_init_ioda_phb(struct device_node *np,
- 		hose->controller_ops = pnv_pci_ioda_controller_ops;
- 	}
- 
-+	ppc_md.pcibios_default_alignment = pnv_pci_default_alignment;
-+
- #ifdef CONFIG_PCI_IOV
- 	ppc_md.pcibios_fixup_sriov = pnv_pci_ioda_fixup_iov_resources;
- 	ppc_md.pcibios_iov_resource_alignment = pnv_pci_iov_resource_alignment;
--- 
-1.7.9.5
+reordering helps ;-) I'll try the functional dependencies.
+
+Thanks for the hint :-)
+
+Cheers
+Kishon
