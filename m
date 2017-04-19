@@ -1,69 +1,41 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:44424 "EHLO foss.arm.com"
+Received: from mail.kernel.org ([198.145.29.136]:43960 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966889AbdDSQtw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Apr 2017 12:49:52 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+        id S1763843AbdDSNxh (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 19 Apr 2017 09:53:37 -0400
+Date: Wed, 19 Apr 2017 08:53:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
 To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>
-Subject: [PATCH v4 18/21] PCI: hisi: update PCI config space remap function
-Date: Wed, 19 Apr 2017 17:49:07 +0100
-Message-Id: <20170419164913.19674-19-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+Cc: Jayachandran C <jnair@caviumnetworks.com>
+Subject: [PATCH] PCI: Include PCI-to-PCIe bridges as "Downstream Ports"
+Message-ID: <20170419135332.GA16404@bhelgaas-glaptop.roam.corp.google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_pci_remap_cfg* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+A PCI/PCI-X to PCI Express bridge, sometimes referred to as a "reverse
+bridge", is a bridge with conventional PCI or PCI-X on its primary side and
+a PCI Express Port on its secondary (downstream) side.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Zhou Wang <wangzhou1@hisilicon.com>
----
- drivers/pci/dwc/pcie-hisi.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+That PCIe Port is a Downstream Port and could be connected to a slot, just
+like a Root Port or a Switch Downstream Port.  Make pcie_downstream_port()
+return true for them, so we can access the Slot registers in the PCIe
+capability.
 
-diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
-index fd66a31..1606de5 100644
---- a/drivers/pci/dwc/pcie-hisi.c
-+++ b/drivers/pci/dwc/pcie-hisi.c
-@@ -99,7 +99,7 @@ static int hisi_pcie_init(struct pci_config_window *cfg)
- 		return -ENOMEM;
- 	}
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+
+diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+index 1c8051003e67..9b09cd31158c 100644
+--- a/drivers/pci/access.c
++++ b/drivers/pci/access.c
+@@ -700,7 +700,8 @@ static bool pcie_downstream_port(const struct pci_dev *dev)
+ 	int type = pci_pcie_type(dev);
  
--	reg_base = devm_ioremap(dev, res->start, resource_size(res));
-+	reg_base = devm_pci_remap_cfgspace(dev, res->start, resource_size(res));
- 	if (!reg_base)
- 		return -ENOMEM;
+ 	return type == PCI_EXP_TYPE_ROOT_PORT ||
+-	       type == PCI_EXP_TYPE_DOWNSTREAM;
++	       type == PCI_EXP_TYPE_DOWNSTREAM ||
++	       type == PCI_EXP_TYPE_PCIE_BRIDGE;
+ }
  
-@@ -296,10 +296,9 @@ static int hisi_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	reg = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rc_dbi");
--	pci->dbi_base = devm_ioremap_resource(dev, reg);
-+	pci->dbi_base = devm_pci_remap_cfg_resource(dev, reg);
- 	if (IS_ERR(pci->dbi_base))
- 		return PTR_ERR(pci->dbi_base);
--
- 	platform_set_drvdata(pdev, hisi_pcie);
- 
- 	ret = hisi_add_pcie_port(hisi_pcie, pdev);
-@@ -360,7 +359,7 @@ static int hisi_pcie_platform_init(struct pci_config_window *cfg)
- 		return -EINVAL;
- 	}
- 
--	reg_base = devm_ioremap(dev, res->start, resource_size(res));
-+	reg_base = devm_pci_remap_cfgspace(dev, res->start, resource_size(res));
- 	if (!reg_base)
- 		return -ENOMEM;
- 
--- 
-2.10.0
+ bool pcie_cap_has_lnkctl(const struct pci_dev *dev)
