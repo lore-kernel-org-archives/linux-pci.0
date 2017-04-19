@@ -1,265 +1,121 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 09/27] pci: Add BAR index argument to pci_mmap_page_range()
-Date: Wed, 12 Apr 2017 13:25:58 +0100
-Message-Id: <3101f310f852ee41c52b31b9b77a3debee28117a.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v4 02/21] linux/io.h: add PCI config space remap interface
+Date: Wed, 19 Apr 2017 17:48:51 +0100
+Message-Id: <20170419164913.19674-3-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Jon Mason <jonmason@broadcom.com>,
+ Murali Karicheri <m-karicheri2@ti.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ "Luis R. Rodriguez" <mcgrof@kernel.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
+Posting") mandate non-posted configuration transactions. As further
+highlighted in the PCIe specifications (4.0 - Rev0.3, "Ordering
+Considerations for the Enhanced Configuration Access Mechanism"),
+through ECAM and ECAM-derivative configuration mechanism, the memory
+mapped transactions from the host CPU into Configuration Requests on the
+PCI express fabric may create ordering problems for software because
+writes to memory address are typically posted transactions (unless the
+architecture can enforce through virtual address mapping non-posted
+write transactions behaviour) but writes to Configuration Space are not
+posted on the PCI express fabric.
 
-In all cases we know which BAR it is. Passing it in means that arch code
-(or generic code; watch this space) won't have to go looking for it again.
+Current DT and ACPI host bridge controllers map PCI configuration space
+(ECAM and ECAM-derivative) into the virtual address space through
+ioremap() calls, that are non-cacheable device accesses on most
+architectures, but may provide "bufferable" or "posted" write semantics
+in architecture like eg ARM/ARM64 that allow ioremap'ed regions writes
+to be buffered in the bus connecting the host CPU to the PCI fabric;
+this behaviour, as underlined in the PCIe specifications, may trigger
+transactions ordering rules and must be prevented.
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+Introduce a new generic and explicit API to create a memory
+mapping for ECAM and ECAM-derivative config space area that
+defaults to ioremap_nocache() (which should provide a sane default
+behaviour) but still allowing architectures on which ioremap_nocache()
+results in posted write transactions to override the function
+call with an arch specific implementation that complies with
+the PCI specifications for configuration transactions.
+
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
 ---
- arch/arm/kernel/bios32.c                | 3 ++-
- arch/cris/arch-v32/drivers/pci/bios.c   | 3 ++-
- arch/ia64/pci/pci.c                     | 3 ++-
- arch/microblaze/pci/pci-common.c        | 2 +-
- arch/mips/pci/pci.c                     | 3 ++-
- arch/mn10300/unit-asb2305/pci-asb2305.c | 3 ++-
- arch/parisc/kernel/pci.c                | 3 ++-
- arch/powerpc/kernel/pci-common.c        | 3 ++-
- arch/sh/drivers/pci/pci.c               | 3 ++-
- arch/sparc/kernel/pci.c                 | 6 +++---
- arch/unicore32/kernel/pci.c             | 3 ++-
- arch/x86/pci/i386.c                     | 3 ++-
- arch/xtensa/kernel/pci.c                | 3 ++-
- drivers/pci/pci-sysfs.c                 | 2 +-
- drivers/pci/proc.c                      | 2 +-
- include/linux/pci.h                     | 3 ++-
- 16 files changed, 30 insertions(+), 18 deletions(-)
+ include/linux/io.h | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/arch/arm/kernel/bios32.c b/arch/arm/kernel/bios32.c
-index 2f0e077..a4fc3f4 100644
---- a/arch/arm/kernel/bios32.c
-+++ b/arch/arm/kernel/bios32.c
-@@ -597,7 +597,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- 	return start;
- }
+diff --git a/include/linux/io.h b/include/linux/io.h
+index 82ef36e..3934aba 100644
+--- a/include/linux/io.h
++++ b/include/linux/io.h
+@@ -91,6 +91,25 @@ void devm_memunmap(struct device *dev, void *addr);
+ void *__devm_memremap_pages(struct device *dev, struct resource *res);
  
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	if (mmap_state == pci_mmap_io)
-diff --git a/arch/cris/arch-v32/drivers/pci/bios.c b/arch/cris/arch-v32/drivers/pci/bios.c
-index 212266a..a589686d 100644
---- a/arch/cris/arch-v32/drivers/pci/bios.c
-+++ b/arch/cris/arch-v32/drivers/pci/bios.c
-@@ -14,7 +14,8 @@ void pcibios_set_master(struct pci_dev *dev)
- 	pci_write_config_byte(dev, PCI_LATENCY_TIMER, lat);
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long prot;
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 8f6ac2f..053c688 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -419,7 +419,8 @@ pcibios_align_resource (void *data, const struct resource *res,
- }
- 
- int
--pci_mmap_page_range (struct pci_dev *dev, struct vm_area_struct *vma,
-+pci_mmap_page_range (struct pci_dev *dev, int bar,
-+		     struct vm_area_struct *vma,
- 		     enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long size = vma->vm_end - vma->vm_start;
-diff --git a/arch/microblaze/pci/pci-common.c b/arch/microblaze/pci/pci-common.c
-index 13bc932..404fb38 100644
---- a/arch/microblaze/pci/pci-common.c
-+++ b/arch/microblaze/pci/pci-common.c
-@@ -278,7 +278,7 @@ pgprot_t pci_phys_mem_access_prot(struct file *file,
-  *
-  * Returns a negative error code on failure, zero on success.
-  */
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar, struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	resource_size_t offset =
-diff --git a/arch/mips/pci/pci.c b/arch/mips/pci/pci.c
-index f6325fa..f189502 100644
---- a/arch/mips/pci/pci.c
-+++ b/arch/mips/pci/pci.c
-@@ -58,7 +58,8 @@ void pci_resource_to_user(const struct pci_dev *dev, int bar,
- 	*end = rsrc->start + size;
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long prot;
-diff --git a/arch/mn10300/unit-asb2305/pci-asb2305.c b/arch/mn10300/unit-asb2305/pci-asb2305.c
-index b7ab837..4abbbd5 100644
---- a/arch/mn10300/unit-asb2305/pci-asb2305.c
-+++ b/arch/mn10300/unit-asb2305/pci-asb2305.c
-@@ -211,7 +211,8 @@ void __init pcibios_resource_survey(void)
- 	pcibios_allocate_resources(1);
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long prot;
-diff --git a/arch/parisc/kernel/pci.c b/arch/parisc/kernel/pci.c
-index 0903c6a..6538775 100644
---- a/arch/parisc/kernel/pci.c
-+++ b/arch/parisc/kernel/pci.c
-@@ -228,7 +228,8 @@ resource_size_t pcibios_align_resource(void *data, const struct resource *res,
- }
- 
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long prot;
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index ffda24a..6dda4a2 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -513,7 +513,8 @@ pgprot_t pci_phys_mem_access_prot(struct file *file,
-  *
-  * Returns a negative error code on failure, zero on success.
-  */
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	resource_size_t offset =
-diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
-index 84563e3..c8b36b7 100644
---- a/arch/sh/drivers/pci/pci.c
-+++ b/arch/sh/drivers/pci/pci.c
-@@ -269,7 +269,8 @@ void __ref pcibios_report_status(unsigned int status_mask, int warn)
- 	}
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	/*
-diff --git a/arch/sparc/kernel/pci.c b/arch/sparc/kernel/pci.c
-index 015e55a..7eceaa1 100644
---- a/arch/sparc/kernel/pci.c
-+++ b/arch/sparc/kernel/pci.c
-@@ -862,9 +862,9 @@ static void __pci_mmap_set_pgprot(struct pci_dev *dev, struct vm_area_struct *vm
-  *
-  * Returns a negative error code on failure, zero on success.
-  */
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state,
--			int write_combine)
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
-+			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	int ret;
- 
-diff --git a/arch/unicore32/kernel/pci.c b/arch/unicore32/kernel/pci.c
-index 62137d1..1b43885 100644
---- a/arch/unicore32/kernel/pci.c
-+++ b/arch/unicore32/kernel/pci.c
-@@ -357,7 +357,8 @@ int pcibios_enable_device(struct pci_dev *dev, int mask)
- 	return 0;
- }
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long phys;
-diff --git a/arch/x86/pci/i386.c b/arch/x86/pci/i386.c
-index 0a9f2ca..8ca5e5d 100644
---- a/arch/x86/pci/i386.c
-+++ b/arch/x86/pci/i386.c
-@@ -411,7 +411,8 @@ static const struct vm_operations_struct pci_mmap_ops = {
- 	.access = generic_access_phys,
- };
- 
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine)
- {
- 	unsigned long prot;
-diff --git a/arch/xtensa/kernel/pci.c b/arch/xtensa/kernel/pci.c
-index 5b73fc2..903963e 100644
---- a/arch/xtensa/kernel/pci.c
-+++ b/arch/xtensa/kernel/pci.c
-@@ -343,7 +343,8 @@ __pci_mmap_make_offset(struct pci_dev *dev, struct vm_area_struct *vma,
-  *
-  * Returns a negative error code on failure, zero on success.
-  */
--int pci_mmap_page_range(struct pci_dev *dev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *dev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state,
- 			int write_combine)
- {
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 534844d..bfd9efe 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1041,7 +1041,7 @@ static int pci_mmap_resource(struct kobject *kobj, struct bin_attribute *attr,
- 	pci_resource_to_user(pdev, bar, res, &start, &end);
- 	vma->vm_pgoff += start >> PAGE_SHIFT;
- 	mmap_type = res->flags & IORESOURCE_MEM ? pci_mmap_mem : pci_mmap_io;
--	return pci_mmap_page_range(pdev, vma, mmap_type, write_combine);
-+	return pci_mmap_page_range(pdev, bar, vma, mmap_type, write_combine);
- }
- 
- static int pci_mmap_resource_uc(struct file *filp, struct kobject *kobj,
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index 45e5cf7..098360d 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -262,7 +262,7 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- 		else
- 			return -EINVAL;
- 	}
--	ret = pci_mmap_page_range(dev, vma,
-+	ret = pci_mmap_page_range(dev, i, vma,
- 				  fpriv->mmap_state, write_combine);
- 	if (ret < 0)
- 		return ret;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 590cfcf..7173a67 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1630,7 +1630,8 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
-  * Architectures provide this function if they set HAVE_PCI_MMAP, and
-  * it accepts the 'write_combine' argument when arch_can_pci_mmap_wc()
-  * evaluates to nonzero. */
--int pci_mmap_page_range(struct pci_dev *pdev, struct vm_area_struct *vma,
-+int pci_mmap_page_range(struct pci_dev *pdev, int bar,
-+			struct vm_area_struct *vma,
- 			enum pci_mmap_state mmap_state, int write_combine);
- 
- #ifndef arch_can_pci_mmap_wc
+ /*
++ * The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
++ * Posting") mandate non-posted configuration transactions. There is
++ * no ioremap API in the kernel that can guarantee non-posted write
++ * semantics across arches so provide a default implementation for
++ * mapping PCI config space that defaults to ioremap_nocache(); arches
++ * should override it if they have memory mapping implementations that
++ * guarantee non-posted writes semantics to make the memory mapping
++ * compliant with the PCI specification.
++ */
++#ifndef pci_remap_cfgspace
++#define pci_remap_cfgspace pci_remap_cfgspace
++static inline void __iomem *pci_remap_cfgspace(phys_addr_t offset,
++					       size_t size)
++{
++	return ioremap_nocache(offset, size);
++}
++#endif
++
++/*
+  * Some systems do not have legacy ISA devices.
+  * /dev/port is not a valid interface on these systems.
+  * So for those archs, <asm/io.h> should define the following symbol.
 -- 
-2.9.3
+2.10.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
