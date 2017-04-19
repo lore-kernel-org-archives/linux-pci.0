@@ -1,57 +1,107 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Sagi Grimberg <sagi@grimberg.me>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-7-git-send-email-logang@deltatee.com>
- <080b68b4-eba3-861c-4f29-5d829425b5e7@grimberg.me>
- <20170404154629.GA13552@obsidianresearch.com>
-Cc: Christoph Hellwig <hch@lst.de>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
-        linux-kernel@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <c5638d51-d43f-f30e-f32c-531b3091bd49@deltatee.com>
-Date: Tue, 4 Apr 2017 11:21:58 -0600
+Return-Path: <SRS0=lJZr=33=linux.ee=mroos@kernel.org>
+Return-Path: <SRS0=lJZr=33=linux.ee=mroos@kernel.org>
+Date: Wed, 19 Apr 2017 13:55:53 +0300 (EEST)
+From: Meelis Roos <mroos@linux.ee>
+Sender: mroos@math.ut.ee
+To: Bjorn Helgaas <bhelgaas@google.com>
+cc: Bjorn Helgaas <helgaas@kernel.org>,
+    Linux Kernel list <linux-kernel@vger.kernel.org>,
+    "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+    "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Subject: Re: 4.11-rc*: PCI IRQ allocation broken
+In-Reply-To: <CAErSpo4Kr_TDgMOa8LaWngQa4HsA388_G4CANQcY5G14UBARaQ@mail.gmail.com>
+Message-ID: <alpine.LRH.2.20.1704191355190.16787@math.ut.ee>
+References: <alpine.LRH.2.20.1704102317110.14071@math.ut.ee> <20170411014338.GA9311@bhelgaas-glaptop.roam.corp.google.com> <alpine.LRH.2.20.1704132201410.21515@math.ut.ee> <CAErSpo4Kr_TDgMOa8LaWngQa4HsA388_G4CANQcY5G14UBARaQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170404154629.GA13552@obsidianresearch.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [RFC 6/8] nvmet: Be careful about using iomem accesses when
- dealing with p2pmem
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 04/04/17 04:59 AM, Sagi Grimberg wrote:
-> We can never ever get here from an IO command, and that is a good thing
-> because it would have been broken if we did, regardless of what copy
-> method we use...
-
-Yes, I changed this mostly for admin commands. I did notice connect
-commands do end up reading from the p2mem and this patchset correctly
-switches it to iomemcpy. However, based on Cristoph's comment, I hope to
-make it more general such that iomem is hidden within sgls and any
-access will either be correct or create a warning.
-
-
-On 04/04/17 09:46 AM, Jason Gunthorpe wrote:
-> Transactions might not complete at the NVMe device before the CPU
-> processes the RDMA completion, however due to the PCI-E ordering rules
-> new TLPs directed to the NVMe will complete after the RMDA TLPs and
-> thus observe the new data. (eg order preserving)
+> On Thu, Apr 13, 2017 at 2:03 PM, Meelis Roos <mroos@linux.ee> wrote:
+> >> > This happens on my HP Compaq 8100 Elite SFF PC. While 4.10 works fine,
+> >> > 4.11.-rc5 and at least back to 4.10.0-10770-g2d6be4abf514 fail to assign
+> >> > PCI IRQ to multiple devices (no GSI messages in the dmesg). This results
+> >> > in mouse in one USB port working and keyboard in another USB port not
+> >> > working, reproducibly.
+> >> >
+> >> > Will bisect.
+> >>
+> >> Thanks a lot for the report, Meelis, and I apologize for the inconvenience.
+> >> I opened https://bugzilla.kernel.org/show_bug.cgi?id=195319 to track this,
+> >> marked it as a regression, and attached your v4.11-rc5 dmesg to it.
+> >
+> > Bisecting got stuck - I reached a state with about 5-6 steps left when I
+> > got an unbootable kernel. Went there yesterday, restarted a good kernel,
+> > skipped the kernel and left. When I rebooted into the next bisect
+> > kernel, it has hung again. Will see when I get to go there.
+> > Unfortunately I did not remember to take the intermediate bisect state
+> > with me :(
 > 
-> It would be very hard to use P2P if fabric ordering is not preserved..
+> I *think* the ACPI guys found the problem; at least Michael Marlen
+> <michael@michaelmarley.com> reported the same problem and that it was
+> fixed by reverting 57707a9a7780 ("ACPICA: Resources: Not a valid
+> resource if buffer length too long").
 
-Yes, my understanding is the same, the PCI-E ordering rules save us here.
+Yes, that was it. I am now at the computer and compiled and tested 
+todays 4.11-rc7+git and it works fine.
 
-Thanks,
+> 
+> Sorry, I should have added you the cc list in bugzilla right away.
+> 
+> >> Something seems broken in ACPI.  There are a bunch of warnings, and I
+> >> think the PCI IRQ problem is a consequence of the fact that the
+> >> PNP0A08 _CRS evaluation failed, and we probably don't bother looking
+> >> for a _PRT under that bridge.
+> >>
+> >> > Linux version 4.11.0-rc5-00033-g308ac7563944 (mroos@prometheus) (gcc version 6.3.0 20170321 (Debian 6.3.0-11) ) #64 SMP Wed Apr 5 12:29:53 EEST 2017
+> >> > Command line: BOOT_IMAGE=/boot/vmlinuz-4.11.0-rc5-00033-g308ac7563944 root=/dev/sda1 ro
+> >> > ...
+> >> > ACPI BIOS Warning (bug): Optional FADT field Pm2ControlBlock has valid Address but zero Length: 0x0000000000000050/0x0 (20170119/tbfadt-658)
+> >> > ACPI BIOS Warning (bug): Invalid length for FADT/Pm2ControlBlock: 0, using default 8 (20170119/tbfadt-708)
+> >> > ...
+> >> > acpi LNXCPU:00: Invalid PBLK length [7]
+> >> > acpi LNXCPU:01: Invalid PBLK length [7]
+> >> > acpi LNXCPU:02: Invalid PBLK length [7]
+> >> > acpi LNXCPU:03: Invalid PBLK length [7]
+> >> > acpi PNP0A08:00: [Firmware Bug]: no secondary bus range in _CRS
+> >> > ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-ff])
+> >> > acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM Segments MSI]
+> >> > ACPI BIOS Error (bug): \_SB.PCI0._OSC: Excess arguments - ASL declared 5, ACPI requires 4 (20170119/nsarguments-189)
+> >> > ACPI Error: [CAPD] Namespace lookup failure, AE_ALREADY_EXISTS (20170119/dsfield-211)
+> >> > ACPI Error: Method parse/execution failed [\_SB.PCI0._OSC] (Node ffff880113031668), AE_ALREADY_EXISTS (20170119/psparse-543)
+> >> > acpi PNP0A08:00: _OSC failed (AE_ALREADY_EXISTS); disabling ASPM
+> >> > acpi PNP0A08:00: [Firmware Info]: MMCONFIG for domain 0000 [bus 00-3f] only partially covers this bridge
+> >> > acpi PNP0A08:00: failed to parse _CRS method, error code -5
+> >> > acpi PNP0A08:00: Bus 0000:00 not present in PCI namespace
+> >> > ...
+> >> > PCI: Discovered peer bus 00
+> >> > PCI: root bus 00: using default resources
+> >> > PCI: Probing PCI hardware (bus 00)
+> >> > ...
+> >> > ACPI: \: failed to evaluate _DSM (0x1001)
+> >> > ...
+> >> > PCI host bridge to bus 0000:00
+> >> > pci_bus 0000:00: root bus resource [io  0x0000-0xffff]
+> >> > pci_bus 0000:00: root bus resource [mem 0x00000000-0xfffffffff]
+> >> > pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
+> >> > ...
+> >> > PCI: Discovered peer bus 3f
+> >> > PCI: root bus 3f: using default resources
+> >> > PCI: Probing PCI hardware (bus 3f)
+> >> > ACPI: \: failed to evaluate _DSM (0x1001)
+> >> > ...
+> >> > pnp 00:00: Plug and Play ACPI device, IDs PNP0b00 (active)
+> >> > pnp 00:01: can't evaluate _CRS: 12316
+> >> > ...
+> >> > [drm] ACPI BIOS requests an excessive sleep of 4294705151 ms, using 1500 ms instead
+> >>
+> >
+> > --
+> > Meelis Roos (mroos@linux.ee)
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Logan
+-- 
+Meelis Roos (mroos@linux.ee)
