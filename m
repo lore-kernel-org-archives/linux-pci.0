@@ -1,119 +1,62 @@
-Return-Path: <SRS0=s2Ac=3M=arm.com=robin.murphy@kernel.org>
-Return-Path: <SRS0=s2Ac=3M=arm.com=robin.murphy@kernel.org>
-Subject: Re: [PATCH v4 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-To: Jayachandran C <jnair@caviumnetworks.com>
-References: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
- <1491225304-3559-3-git-send-email-jnair@caviumnetworks.com>
- <b44e6df5-4840-ecb4-59c6-b4bc474ad28c@arm.com>
- <20170404115037.GA2401@localhost>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- Alex Williamson <alex.williamson@redhat.com>,
- iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
- Jon Masters <jcm@redhat.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <2f6b5c29-c985-dbfc-8738-cbc9bd85e408@arm.com>
-Date: Tue, 4 Apr 2017 15:28:26 +0100
+Return-Path: <SRS0=tZg2=33=obsidianresearch.com=jgunthorpe@kernel.org>
+Return-Path: <SRS0=tZg2=33=obsidianresearch.com=jgunthorpe@kernel.org>
+Date: Wed, 19 Apr 2017 09:55:57 -0600
+From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Steve Wise <swise@opengridcomputing.com>,
+	Stephen Bates <sbates@raithlin.com>,
+	Max Gurtovoy <maxg@mellanox.com>,
+	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-scsi <linux-scsi@vger.kernel.org>,
+	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+	linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Jerome Glisse <jglisse@redhat.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Message-ID: <20170419155557.GA8497@obsidianresearch.com>
+References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+ <1492381396.25766.43.camel@kernel.crashing.org>
+ <20170418164557.GA7181@obsidianresearch.com>
+ <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com>
+ <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+ <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <20170418210339.GA24257@obsidianresearch.com>
+ <1492564806.25766.124.camel@kernel.crashing.org>
 MIME-Version: 1.0
-In-Reply-To: <20170404115037.GA2401@localhost>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1492564806.25766.124.camel@kernel.crashing.org>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/04/17 12:50, Jayachandran C wrote:
-> On Mon, Apr 03, 2017 at 04:07:53PM +0100, Robin Murphy wrote:
->> On 03/04/17 14:15, Jayachandran C wrote:
->>> The Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the PCI
->>> topology is slightly unusual. For a multi-node system, it looks like:
->>>
->>> [node level PCI bridges - one per node]
->>>     [SoC PCI devices with MSI-X but no IOMMU]
->>>     [PCI-PCIe "glue" bridges - upto 14, one per real port below]
->>>         [PCIe real root ports associated with IOMMU and GICv3 ITS]
->>>             [External PCI devices connected to PCIe links]
->>
->> Since it's not entirely obvious, what does the actual DT - or IORT if
->> you must ;) - topology for this look like? I can't help thinking that
->> either it's inaccurate, or that this is going to expose a shortcoming in
->> pci_dma_configure() which breaks things - unless I'm missing something,
->> isn't find_pci_root_bus() going to go all the way up to the top-level
->> glue bridge and pick up the wrong firmware node (if any) for the
->> appropriate DMA properties?
+On Wed, Apr 19, 2017 at 11:20:06AM +1000, Benjamin Herrenschmidt wrote:
+
+> That helper wouldn't perform the actual iommu mapping. It would simply
+> return something along the lines of:
 > 
-> I will try to describe the ACPI interface:
-> 
-> There is just one ECAM area, a single bus range and one set of memory
-> windows for the whole system - so there is just one entry in DSDT for
-> the PCI controller. This entry also corresponds to the PCI RC node in
-> IORT. DMA is coherent and supports 64 bits system-wide, the attributes
-> (in DSDT and IORT) reflect this.
-> 
-> lspci on the system looks like this:
-> -[0000:00]-+-00.0-[01-1e]--+-04.0  14e4:9026
->            |               +-04.1  14e4:9026
->            |               +-05.0  14e4:9027
->            |               +-05.1  14e4:9027
->            |               +-0a.0-[02-03]----00.0-[03]--
->            |               +-0a.1-[04-05]----00.0-[05]--
->            |           [...etc...]
->            |               +-0b.0-[12-14]----00.0-[13-14]--+-00.0  8086:1583
->            |               |                               \-00.1  8086:1583
->            |           [...etc...]
->            |               \-0b.5-[1d-1e]----00.0-[1e]--
->            \-00.1-[1f-3b]--+-04.0  14e4:9026
->                            +-04.1  14e4:9026
->                            +-05.0  14e4:9027
->                            +-05.1  14e4:9027
->                            +-0a.0-[20-21]----00.0-[21]--
->                        [...etc...]
-> 
-> The devices here are:
->  - 00:00.0 and 00:00.1 are the node (socket) level bridges
->  - 01:[45].x and 1f:[45].x are SoC PCI devices like SATA and USB
->  - 01:[ab].x and 1f:[ab].x are the PCI-PCIe "reverse"/glue bridges
->  - 02:00.0 etc are the "real" PCIe ports connected to external PCIe cards. 
-> Each node has a GIC ITS, and a group of 4 PCIe ports have an SMMU.
-> 
-> The IORT is built by the firmware based on its PCI enumeration. The IORT
-> will have multiple entries under the PCI RC node:
->  - one entry per node to map the SoC devices directly to ITS for MSI-X,
->    since the SoC devices are not attached to any SMMU.
->  - An entry per "real" PCIe port to map RIDs under it to the corresponding
->    SMMU.
-> The SMMU nodes will have an entry to map its RID ranges to the node ITS.
-> 
-> The IORT spec supports this configuration, and the corresponding code is
-> already upstream, so the only sticking point right now is
-> pci_for_each_dma_alias().
+>  - "use that alternate bus address and don't map in the iommu"
 
-Thanks, that helps a lot. The "single global ECAM space" idea was
-eluding me, but in that context it all makes much more sense - I'm
-assuming the two quirked device IDs correspond to the 00:00.[01] devices
-and the [02-1e]:00.0 ones.
+I was thinking only this one would be supported with a core code
+helper..
 
-So (at the risk of Jon mooing at me), I guess the DT description would
-be a single node looking something like:
+>  - "use that alternate bus address and do map in the iommu"
+>  - "proceed as normal"
 
-pcie {
-	reg = [global ECAM space for segment 0000];
+.. because I don't have an idea how a core code helper could figure
+out what the platform needs for the above two ..
 
-	msi-map = <0x0100 &its0 0x0100 0x1d00>,
-		  <0x1f00 &its1 0x1f00 0x1d00>;
-	iommu-map = <0x0200 &smmu0 0x0200 0x1c00>,
-		    <0x2000 &smmu0 0x2000 0x1c00>;
-};
+I think many of the iommu platforms will need to construct their own
+bus address in the iommu, and we already have easy access to the CPU
+address.
 
-(note to self: which incidentally also means of_pci_map_rid() probably
-wants fixing to not treat gaps in the map as an error)
+Presumably once a transcation passes through the iommu it needs to be
+using the CPU address for the target bar, otherwise things are going
+to be ambiguous..
 
-With only one node like that, rather than having the whole first 3
-levels of bridges described, the "stop at the appropriate node in the
-callback" approach does become even more impractical in all cases. So,
-for $TITLE, based on the above understanding:
-
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-
-Cheers,
-Robin.
-
-> 
-> JC.
-> 
+Jason
