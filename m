@@ -1,83 +1,65 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
- lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
- catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
- gregkh@linuxfoundation.org
-Subject: [PATCH V11 04/11] ACPI/IORT: Add function to check SMMUs drivers
- presence
-Date: Mon, 10 Apr 2017 16:50:59 +0530
-Message-Id: <1491823266-1209-5-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
-References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sricharan@codeaurora.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-io0-f195.google.com ([209.85.223.195]:33555 "EHLO
+        mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759977AbdDSGH0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Apr 2017 02:07:26 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <4107359.5uIJCz7KyJ@avalon>
+References: <03aaf3220cccbabb7db86aa4eb10d1147add5c34.1492536769.git.lukas@wunner.de>
+ <4107359.5uIJCz7KyJ@avalon>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Wed, 19 Apr 2017 08:07:24 +0200
+Message-ID: <CAMuHMdUCqcQndMJuyxuYZdXKrzDUwXCnagR_3gtV7Ay2sv5d1A@mail.gmail.com>
+Subject: Re: [PATCH] PCI: Freeze PME scan before suspending devices
+To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
+Cc: Lukas Wunner <lukas@wunner.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Niklas Soderlund <niklas.soderlund+renesas@ragnatech.se>,
+        Simon Horman <horms+renesas@verge.net.au>,
+        Yinghai Lu <yinghai@kernel.org>,
+        Matthew Garrett <mjg59@srcf.ucam.org>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Hi Laurent,
 
-The IOMMU probe deferral implementation requires a mechanism to detect
-if drivers for SMMU components are built-in in the kernel to detect
-whether IOMMU configuration for a given device should be deferred (ie
-SMMU drivers present but still not probed) or not (drivers not present).
+On Wed, Apr 19, 2017 at 12:05 AM, Laurent Pinchart
+<laurent.pinchart@ideasonboard.com> wrote:
+>
+> On Tuesday 18 Apr 2017 20:44:30 Lukas Wunner wrote:
+>> Laurent Pinchart reported that the Renesas R-Car H2 Lager board
+>> (r8a7790) crashes during suspend tests.  Geert Uytterhoeven managed to
+>> reproduce the issue on an M2-W Koelsch board (r8a7791):
 
-Add a simple function to IORT to detect if SMMU drivers for SMMU
-components managed by IORT are built-in in the kernel.
+[...]
 
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-Cc: Sricharan R <sricharan@codeaurora.org>
----
- drivers/acpi/arm64/iort.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+>> Reported-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+>
+> My Lager board now fails to resume (but that's also the case without this
+> patch, I'll have to investigate that separately) but the PCI crash is gone, so
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index 4a5bb96..3dd9ec3 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -523,6 +523,19 @@ static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
- 	return ret;
- }
- 
-+static inline bool iort_iommu_driver_enabled(u8 type)
-+{
-+	switch (type) {
-+	case ACPI_IORT_NODE_SMMU_V3:
-+		return IS_BUILTIN(CONFIG_ARM_SMMU_V3);
-+	case ACPI_IORT_NODE_SMMU:
-+		return IS_BUILTIN(CONFIG_ARM_SMMU);
-+	default:
-+		pr_warn("IORT node type %u does not describe an SMMU\n", type);
-+		return false;
-+	}
-+}
-+
- static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
- 					struct acpi_iort_node *node,
- 					u32 streamid)
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+"mm: move pcp and lru-pcp draining into single wq" broke resume from s2ram
+(https://lkml.org/lkml/2017/4/18/614)
 
+> Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks for double checking!
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
