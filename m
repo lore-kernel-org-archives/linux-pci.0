@@ -1,89 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:44278 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966768AbdDSQtb (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 19 Apr 2017 12:49:31 -0400
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Jayachandran C <jnair@caviumnetworks.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Will Deacon <will.deacon@arm.com>,
-        Catalin Marinas <catalin.marinas@arm.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Pratyush Anand <pratyush.anand@gmail.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Mingkai Hu <mingkai.hu@freescale.com>,
-        John Garry <john.garry@huawei.com>,
-        Tanmay Inamdar <tinamdar@apm.com>,
-        Murali Karicheri <m-karicheri2@ti.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Ray Jui <rjui@broadcom.com>,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Minghuan Lian <minghuan.Lian@freescale.com>,
-        Jon Mason <jonmason@broadcom.com>,
-        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Thierry Reding <thierry.reding@gmail.com>,
-        Michal Simek <michal.simek@xilinx.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Roy Zang <tie-fei.zang@freescale.com>,
-        "Luis R. Rodriguez" <mcgrof@kernel.org>
-Subject: [PATCH v4 07/21] PCI: ECAM: use pci_remap_cfgspace() to map config region
-Date: Wed, 19 Apr 2017 17:48:56 +0100
-Message-Id: <20170419164913.19674-8-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=W1ds=33=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=W1ds=33=deltatee.com=logang@kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>,
+ Jerome Glisse <jglisse@redhat.com>
+References: <20170418164557.GA7181@obsidianresearch.com>
+ <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com>
+ <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+ <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <20170418210339.GA24257@obsidianresearch.com>
+ <1492564806.25766.124.camel@kernel.crashing.org>
+ <20170419155557.GA8497@obsidianresearch.com>
+ <4899b011-bdfb-18d8-ef00-33a1516216a6@deltatee.com>
+ <CAPcyv4iJ9H8Ykwnjqa2R_D1qG6PsSQmi=QxYH-rKLF_ihrsWyw@mail.gmail.com>
+ <20170419173225.GA11255@redhat.com>
+ <CAPcyv4gxBgVsbSez7_dZYkZojUWU0X0txs7FxiJ+Z3xsMt6TqQ@mail.gmail.com>
+ <c75b6f6e-2814-1be3-d044-e153849263ce@deltatee.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-rdma@vger.kernel.org, Benjamin Herrenschmidt
+ <benh@kernel.crashing.org>, Steve Wise <swise@opengridcomputing.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ linux-nvme@lists.infradead.org,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ linux-nvdimm <linux-nvdimm@ml01.01.org>, Max Gurtovoy <maxg@mellanox.com>,
+ linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <99a22044-8f15-f381-19ee-e239e9d2da29@deltatee.com>
+Date: Wed, 19 Apr 2017 12:19:32 -0600
+MIME-Version: 1.0
+In-Reply-To: <c75b6f6e-2814-1be3-d044-e153849263ce@deltatee.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
 List-ID: <linux-pci.vger.kernel.org>
 
-Current ECAM kernel implementation uses ioremap() to map the ECAM
-configuration space memory region; this is not safe in that on some
-architectures the ioremap interface provides mappings that allow posted
-write transactions. This, as highlighted in the PCIe specifications
-(4.0 - Rev0.3, "Ordering Considerations for the Enhanced Configuration
-Address Mechanism"), can create ordering issues for software because
-posted writes transactions on the CPU host bus are non posted in the
-PCI express fabric.
 
-Update the ioremap() interface to use pci_remap_cfgspace() whose
-mapping attributes guarantee that non-posted writes transactions
-are issued for memory writes within the ECAM memory mapped address
-region.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jayachandran C <jnair@caviumnetworks.com>
----
- drivers/pci/ecam.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+On 19/04/17 12:11 PM, Logan Gunthorpe wrote:
+> 
+> 
+> On 19/04/17 11:41 AM, Dan Williams wrote:
+>> No, not quite ;-). I still don't think we should require the non-HMM
+>> to pass NULL for all the HMM arguments. What I like about Logan's
+>> proposal is to have a separate create and register steps dev_pagemap.
+>> That way call paths that don't care about HMM specifics can just turn
+>> around and register the vanilla dev_pagemap.
+> 
+> Would you necessarily even need a create step? I was thinking more along
+> the lines that struct dev_pagemap _could_ just be a member in another
+> structure. The caller would set the attributes they needed and pass it
+> to devm_memremap. (Similar to how we commonly do things with struct
+> device, et al). Potentially, that could also get rid of the need for the
+> *data pointer HMM is using to get back the struct hmm_devmem seeing
+> container_of could be used instead.
 
-diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-index 2fee61b..c228a2e 100644
---- a/drivers/pci/ecam.c
-+++ b/drivers/pci/ecam.c
-@@ -84,12 +84,14 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
- 		if (!cfg->winp)
- 			goto err_exit_malloc;
- 		for (i = 0; i < bus_range; i++) {
--			cfg->winp[i] = ioremap(cfgres->start + i * bsz, bsz);
-+			cfg->winp[i] =
-+				pci_remap_cfgspace(cfgres->start + i * bsz,
-+						   bsz);
- 			if (!cfg->winp[i])
- 				goto err_exit_iomap;
- 		}
- 	} else {
--		cfg->win = ioremap(cfgres->start, bus_range * bsz);
-+		cfg->win = pci_remap_cfgspace(cfgres->start, bus_range * bsz);
- 		if (!cfg->win)
- 			goto err_exit_iomap;
- 	}
--- 
-2.10.0
+Also, now that I've thought about it a little more, it _may_ be that
+many or all of the hmm specific fields in dev_pagemap could move to a
+containing struct too...
+
+Logan
