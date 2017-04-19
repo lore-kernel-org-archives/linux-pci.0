@@ -1,112 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
+Return-Path: <SRS0=W1ds=33=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=W1ds=33=deltatee.com=logang@kernel.org>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
+References: <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com>
+ <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+ <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <20170418210339.GA24257@obsidianresearch.com>
+ <1492564806.25766.124.camel@kernel.crashing.org>
+ <20170419155557.GA8497@obsidianresearch.com>
+ <4899b011-bdfb-18d8-ef00-33a1516216a6@deltatee.com>
+ <20170419171451.GA10020@obsidianresearch.com>
+ <b0234176-e86b-6e7c-686d-b4fef719aad7@deltatee.com>
+ <20170419183247.GA13716@obsidianresearch.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Dan Williams <dan.j.williams@intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+ Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+ linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Jerome Glisse <jglisse@redhat.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <21e8099a-d19d-7df0-682d-627d8b81dfde@deltatee.com>
+Date: Wed, 19 Apr 2017 13:02:49 -0600
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Fri, 07 Apr 2017 23:07:15 +0200
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: `pci_apply_final_quirks()` taking half a second
-Message-ID: <44cada166e42007d27b4c3e3aa0744d7@molgen.mpg.de>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170419183247.GA13716@obsidianresearch.com>
+Content-Type: text/plain; charset=windows-1252
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
 List-ID: <linux-pci.vger.kernel.org>
 
-Dear Linux folks,
 
 
-Measuring where time is spent during boot with `systemd-bootchart` on an 
-Asus A780FullHD, it turns out that half a second is spent in 
-`pci_apply_final_quirks()`.
+On 19/04/17 12:32 PM, Jason Gunthorpe wrote:
+> On Wed, Apr 19, 2017 at 12:01:39PM -0600, Logan Gunthorpe wrote:
+> Not entirely, it would have to call through the whole process
+> including the arch_p2p_cross_segment()..
 
-Here are the times copied from the SVG:
+Hmm, yes. Though it's still not clear what, if anything,
+arch_p2p_cross_segment would be doing. In my experience, if you are
+going between host bridges, the CPU address (or PCI address -- I'm not
+sure which seeing they are the same on my system) would still work fine
+-- it just _may_ be a bad idea because of performance.
 
-   init_ladder 0.012s
-   init_menu 0.012s
-   pm_sysrq_init 0.012s
-   acpi_init 0.027s
-   pci_subsys_init 0.008s
-   hpet_late_init 0.004s
-   tracer_init_tracefs 0.002s
-   event_trace_init 0.008s
-   pnpacpi_init 0.002s
-   chr_dev_init 0.003s
-   init_acpi_pm_clocksource 0.004s
-   pci_apply_final_quirks 0.452s
-   populate_rootfs 0.400s
-   pci_iommu_init 0.003s
-   rsa_init 0.058s
-   serial8250_init 0.020s
-   i8042_init 0.003s
-   load_system_certificate_list 0.002s
-   ata_init 0.007s
-   ehci_pci_init 0.030s
-   ohci_pci_init 0.312s
-   ahci_pci_driver_init 0.342s
-   atiixp_pci_driver_init 0.337s
-   hid_init 0.004s
-   init_sr 0.031s
-
-I don’t know what information you need, so I just include the Linux 
-Kernel version, and the output of `lspci -nn`.
-
-```
-$ more /proc/version
-Linux version 4.9.0-0.bpo.2-amd64 (debian-kernel@lists.debian.org) (gcc 
-version 4.9.2 (Debian 4.9.2-10) ) #1 SMP Debian 4.9.13-1~bpo8+1 (201
-7-02-27)
-$ lspci -nn
-00:00.0 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] RS780 
-Host Bridge [1022:9600]
-00:01.0 PCI bridge [0604]: ASRock Incorporation Device [1849:9602]
-00:09.0 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] 
-RS780/RS880 PCI to PCI bridge (PCIE port 4) [1022:9608]
-00:0a.0 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD] 
-RS780/RS880 PCI to PCI bridge (PCIE port 5) [1022:9609]
-00:11.0 SATA controller [0106]: Advanced Micro Devices, Inc. [AMD/ATI] 
-SB7x0/SB8x0/SB9x0 SATA Controller [AHCI mode] [1002:4391]
-00:12.0 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
-SB7x0/SB8x0/SB9x0 USB OHCI0 Controller [1002:4397]
-00:12.1 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
-SB7x0 USB OHCI1 Controller [1002:4398]
-00:12.2 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
-SB7x0/SB8x0/SB9x0 USB EHCI Controller [1002:4396]
-00:13.0 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
-SB7x0/SB8x0/SB9x0 USB OHCI0 Controller [1002:4397]
-00:13.1 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
-SB7x0 USB OHCI1 Controller [1002:4398]
-00:13.2 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
-SB7x0/SB8x0/SB9x0 USB EHCI Controller [1002:4396]
-00:14.0 SMBus [0c05]: Advanced Micro Devices, Inc. [AMD/ATI] SBx00 SMBus 
-Controller [1002:4385] (rev 3a)
-00:14.1 IDE interface [0101]: Advanced Micro Devices, Inc. [AMD/ATI] 
-SB7x0/SB8x0/SB9x0 IDE Controller [1002:439c]
-00:14.2 Audio device [0403]: Advanced Micro Devices, Inc. [AMD/ATI] 
-SBx00 Azalia (Intel HDA) [1002:4383]
-00:14.3 ISA bridge [0601]: Advanced Micro Devices, Inc. [AMD/ATI] 
-SB7x0/SB8x0/SB9x0 LPC host controller [1002:439d]
-00:14.4 PCI bridge [0604]: Advanced Micro Devices, Inc. [AMD/ATI] SBx00 
-PCI to PCI Bridge [1002:4384]
-00:14.5 USB controller [0c03]: Advanced Micro Devices, Inc. [AMD/ATI] 
-SB7x0/SB8x0/SB9x0 USB OHCI2 Controller [1002:4399]
-00:18.0 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] K8 
-[Athlon64/Opteron] HyperTransport Technology Configuration [1022:1100]
-00:18.1 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] K8 
-[Athlon64/Opteron] Address Map [1022:1101]
-00:18.2 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] K8 
-[Athlon64/Opteron] DRAM Controller [1022:1102]
-00:18.3 Host bridge [0600]: Advanced Micro Devices, Inc. [AMD] K8 
-[Athlon64/Opteron] Miscellaneous Control [1022:1103]
-01:05.0 VGA compatible controller [0300]: Advanced Micro Devices, Inc. 
-[AMD/ATI] RS780 [Radeon HD 3200] [1002:9610]
-04:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. 
-RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller [10ec:8168] 
-(rev 02)
-```
-
-It’d be great, if the times could be reduced, so that the time from GRUB 
-to entering the LUKS passphrase gets smaller.
+Similarly if you are crossing via a QPI bus or similar, I'd expect the
+CPU address to work fine. But here the performance is even less likely
+to be any good.
 
 
-Kind regards,
+>          // Try the arch specific helper
+> 	 const struct dma_map_ops *comp_ops = get_dma_ops(completer);
+> 	 const struct dma_map_ops *init_ops = get_dma_ops(initiator);
 
-Paul
+So, in this case, what device does the completer point to? The PCI
+device or a more specific GPU device? If it's the former, who's
+responsible for setting the new dma_ops? Typically the dma_ops are arch
+specific but now you'd be adding ones that are tied to hmm or the gpu.
+
+>> I'm not sure I like the name pci_p2p_same_segment. It reads as though
+>> it's only checking if the devices are not the same segment.
+> 
+> Well, that is exactly what it is doing. If it succeeds then the caller
+> knows the DMA will not flow outside the segment and no iommu setup/etc
+> is required.
+
+It appears to me like it's calculating the DMA address, and the check is
+just a side requirement. It reads as though it's only doing the check.
+
+Logan
