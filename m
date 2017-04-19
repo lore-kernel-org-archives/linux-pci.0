@@ -1,84 +1,75 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 3 Apr 2017 17:38:51 +0200
-From: Frederic Weisbecker <fweisbec@gmail.com>
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-        torvalds@linux-foundation.org,
-        kernel list <linux-kernel@vger.kernel.org>,
-        linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
- after cold boots, boots after reboot
-Message-ID: <20170403153850.GA4418@lerouge>
-References: <20170203190414.GA3701@amd>
- <Pine.LNX.4.44L0.1702031415140.1794-100000@iolanthe.rowland.org>
- <20170203205129.GA3791@amd>
- <20170203211854.GA3697@amd>
- <20170214175956.GA3587@amd>
- <20170214192743.GA3869@amd>
- <20170223162825.GA16646@lerouge>
- <20170223184013.GA5177@amd>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170223184013.GA5177@amd>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=9gB6=33=kernel.crashing.org=benh@kernel.org>
+Return-Path: <SRS0=9gB6=33=kernel.crashing.org=benh@kernel.org>
+Message-ID: <1492564806.25766.124.camel@kernel.crashing.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Dan Williams
+	 <dan.j.williams@intel.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>, Bjorn Helgaas
+ <helgaas@kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Sagi Grimberg
+ <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe
+ <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Stephen Bates
+ <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+        Keith Busch
+ <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi
+ <linux-scsi@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm <linux-nvdimm@ml01.01.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jerome
+ Glisse <jglisse@redhat.com>
+Date: Wed, 19 Apr 2017 11:20:06 +1000
+In-Reply-To: <20170418210339.GA24257@obsidianresearch.com>
+References: 
+	<CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
+	 <1492381396.25766.43.camel@kernel.crashing.org>
+	 <20170418164557.GA7181@obsidianresearch.com>
+	 <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+	 <20170418190138.GH7181@obsidianresearch.com>
+	 <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+	 <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+	 <20170418210339.GA24257@obsidianresearch.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Feb 23, 2017 at 07:40:13PM +0100, Pavel Machek wrote:
-> On Thu 2017-02-23 17:28:26, Frederic Weisbecker wrote:
-> > On Tue, Feb 14, 2017 at 08:27:43PM +0100, Pavel Machek wrote:
-> > > On Tue 2017-02-14 18:59:56, Pavel Machek wrote:
-> > > > Hi!
-> > > > 
-> > > > > > > > Hmm. I moved keyboard between USB ports, and now 4.10-rc6 no longer
-> > > > > > > > boots. v4.6 works ok. Let me try with keyboard unplugged... no, I
-> > > > > > > > could not get it to work. I believe v4.9 and some v4.10-rc's worked,
-> > > > > > > > but I'll have to double check.
-> > > > > > > 
-> > > > > > > But all the kernel versions worked when the keyboard was plugged into
-> > > > > > > its original USB port?
-> > > > > > 
-> > > > > > Aha. So it looks difference is probably in "where is keyboard plugged
-> > > > > > in" but in "reboot" vs. "cold boot". I did not do a cold boot in quite
-> > > > > > a while :-(.
-> > > > > > 
-> > > > > > Booting to grub, then hitting ctrl-alt-del is enough to make it work. Ouch.
-> > > > > > 
-> > > > > > It happens with current Linus' tree.
-> > > > > 
-> > > > > v4.10-rc6-feb3 : broken
-> > > > > v4.9 : ok
-> > > > > (v4.6 : ok)
-> > > > 
-> > > > Hmm. It hangs during PCI fixups, and it hangs in v4.10-rc8, too.   
-> > > > 
-> > > > With debug patch below, I get
-> > > > 
-> > > > ...1d.7: PCI fixup... pass 2
-> > > > ...1d.7: PCI fixup... pass 3
-> > > > ...1d.7: PCI fixup... pass 3 done
-> > > > 
-> > > > ...followed by hang. So yes, it looks USB related.
-> > > > 
-> > > > (Sometimes it hangs with some kind backtrace involving secondary CPU
-> > > > startup, unfortunately useful info is off screen at that point).
-> > > 
-> > > Forgot to say, 1d.7 is EHCI controller.
-> > > 
-> > > 00:1d.7 USB controller: Intel Corporation NM10/ICH7 Family USB2 EHCI
-> > > Controller (rev 01)
-> > 
-> > Ok, I should have access soon to a EeePc 1015CX (which seem to have this controller).
-> > I hope I'll be able to reproduce the issue there. If not, I'm sorry but I'll have to
-> > burden you again :-)
+On Tue, 2017-04-18 at 15:03 -0600, Jason Gunthorpe wrote:
+> I don't follow, when does get_dma_ops() return a p2p aware provider?
+> It has no way to know if the DMA is going to involve p2p, get_dma_ops
+> is called with the device initiating the DMA.
 > 
-> Go through more mails. It is only reproducible after cold boot. .. so
-> I doubt it will be easy to reproduce on another machine.
+> So you'd always return the P2P shim on a system that has registered
+> P2P memory?
 > 
-> Now... I do have serial port, and I even might have serial cable
-> somewhere, but.... Giving how sensitive it is, it is probably going to
-> go away with console on ttyS...
+> Even so, how does this shim work? dma_ops are not really intended to
+> be stacked. How would we make unmap work, for instance? What happens
+> when the underlying iommu dma ops actually natively understands p2p
+> and doesn't want the shim?
 
-I also tried on an eeepc (which has ICH7/NM10 as well), with your config.
-I even plugged a usb keyboard but even then I have been unable to
-reproduce either :-(
+Good point. We only know on a per-page basis ... ugh.
+
+So we really need to change the arch main dma_ops. I'm not opposed to
+that. What we then need to do is have that main arch dma_map_sg,
+when it encounters a "device" page, call into a helper attached to
+the devmap to handle *that page*, providing sufficient context.
+
+That helper wouldn't perform the actual iommu mapping. It would simply
+return something along the lines of:
+
+ - "use that alternate bus address and don't map in the iommu"
+ - "use that alternate bus address and do map in the iommu"
+ - "proceed as normal"
+ - "fail"
+
+What do you think ?
+
+Cheers,
+Ben.
