@@ -1,66 +1,206 @@
-Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
-Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [PATCH v4 00/21] PCI: fix config space memory mappings
+Date: Wed, 19 Apr 2017 17:48:49 +0100
+Message-Id: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Jonathan Corbet <corbet@lwn.net>, Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Murali Karicheri <m-karicheri2@ti.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Arnd Bergmann <arnd@arndb.de>, Jon Mason <jonmason@broadcom.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ "Luis R . Rodriguez" <mcgrof@kernel.org>,
+ Roy Zang <tie-fei.zang@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <20170418224225.GB27113@obsidianresearch.com>
-References: <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
- <20170418190138.GH7181@obsidianresearch.com> <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
- <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
- <20170418210339.GA24257@obsidianresearch.com> <CAPcyv4h9n9Uzq4FAXR0ufieqvx5_txEwtnaaBWdxe-jF_XfTLg@mail.gmail.com>
- <20170418212258.GA26838@obsidianresearch.com> <CAPcyv4g5ifbpukthMXMro8qKdfoXAhftDpiwWWFCLZ4dK8JnnA@mail.gmail.com>
- <96198489-1af5-abcf-f23f-9a7e41aa17f7@deltatee.com> <CAPcyv4haUUs1Eew1PZTZkoGU4YFiHOuU93G+kG+CqfKzjz1gpw@mail.gmail.com>
- <20170418224225.GB27113@obsidianresearch.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 18 Apr 2017 15:51:27 -0700
-Message-ID: <CAPcyv4gQxifHcKLv0CZZoXJWz=rtzv-vGoofkek6NxRABd4XyA@mail.gmail.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
-	Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
-	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
-	linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jerome Glisse <jglisse@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 18, 2017 at 3:42 PM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Tue, Apr 18, 2017 at 03:28:17PM -0700, Dan Williams wrote:
->
->> Unlike the pci bus address offset case which I think is fundamental to
->> support since shipping archs do this toda
->
-> But we can support this by modifying those arch's unique dma_ops
-> directly.
->
-> Eg as I explained, my p2p_same_segment_map_page() helper concept would
-> do the offset adjustment for same-segement DMA.
->
-> If PPC calls that in their IOMMU drivers then they will have proper
-> support for this basic p2p, and the right framework to move on to more
-> advanced cases of p2p.
->
-> This really seems like much less trouble than trying to wrapper all
-> the arch's dma ops, and doesn't have the wonky restrictions.
+This patch series[1] is a v4 of a previous version:
 
-I don't think the root bus iommu drivers have any business knowing or
-caring about dma happening between devices lower in the hierarchy.
+v3 -> v4:
+	- Reverted back to pci_remap_cfgspace() interface for lack of
+	  consensus on ioremap_nopost() semantics
+	- Dropped pci_remap_iospace() rework (owing to lack of adequate
+	  pgprot_* attribute description across arches)
+	- Updated pci_remap_cfgspace() comments
 
->> I think it is ok to say p2p is restricted to a single sgl that gets
->> to talk to host memory or a single device.
->
-> RDMA and GPU would be sad with this restriction...
->
->> That said, what's wrong with a p2p aware map_sg implementation
->> calling up to the host memory map_sg implementation on a per sgl
->> basis?
->
-> Setting up the iommu is fairly expensive, so getting rid of the
-> batching would kill performance..
+v3: http://lists.infradead.org/pipermail/linux-arm-kernel/2017-April/500838.html
 
-When we're crossing device and host memory boundaries how much
-batching is possible? As far as I can see you'll always be splitting
-the sgl on these dma mapping boundaries.
+v2 -> v3:
+	- Created a default ioremap_nopost() implementation in a separate
+	  asm-generic header and patched all arches to make use of it
+	- Removed PCI drivers patches from the series to simplify the
+	  review, they will be posted separately once the ioremap_nopost()
+	  interface is settled
+	- Fixed devm_ioremap_* BUS offset comments and implemented
+	  nopost interface on top of it
+	- Added collected tags
+
+v2: https://lkml.org/lkml/2017/3/27/220
+
+v2 -> v3:
+	- Fixed devm_ioremap_* BUS offset comments and implemented
+	  nopost interface on top of it
+	- Added collected tags
+
+v1: https://lkml.org/lkml/2017/2/27/228
+
+v1 -> v2:
+	- Changed pci_remap_cfgspace() to more generic ioremap_nopost()
+	  interface
+	- Added pgprot_nonposted
+	- Fixed build errors on arches not relying on asm-generic headers
+	- Added PCI versatile host controller driver patch
+	- Added missing config space remapping to hisilicon host controller
+
+PCI local bus specifications (Rev3.0, 3.2.5 "Transaction Ordering
+and Posting") strictly require PCI configuration and I/O Address space
+write transactions to be non-posted.
+
+Current crop of DT/ACPI PCI host controllers drivers relies on
+the ioremap interface to map ECAM and ECAM-derivative PCI config
+regions and pci_remap_iospace() to create a VMA for mapping
+PCI host bridge I/O Address space transactions to CPU virtual address
+space.
+
+On some platforms (ie ARM/ARM64) ioremap fails to comply with the PCI
+configuration non-posted write transactions requirement, because it
+provides a memory mapping that issues "bufferable" or, in PCI terms
+"posted" write transactions. Likewise, the current pci_remap_iospace()
+implementation maps the physical address range that the PCI translates
+to I/O space cycles to virtual address space through pgprot_device()
+attributes that on eg ARM64 provides a memory mapping issuing
+posted writes transactions, which is not PCI specifications compliant.
+
+This patch series[1] addresses both issues in one go:
+
+- It updates the pci_remap_iospace() function to use a page mapping
+  that guarantees non-posted write transactions for I/O space addresses
+- It adds a kernel API to remap PCI config space resources, so that
+  architecture can override it with a mapping implementation that
+  guarantees PCI specifications compliancy wrt non-posted write
+  configuration transactions
+- It updates all PCI host controller implementations (and the generic
+  ECAM layer) to use the newly introduced mapping interface
+
+Tested on Juno ECAM based interface (DT/ACPI).
+
+Non-ECAM PCI host controller drivers patches need checking to make
+sure that:
+
+- I patched the correct resource region mapping for config space
+- There are not any other ways to ensure posted-write completion
+  in the respective pci_ops that make the relevant patch unnecessary
+
+[1] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git pci/config-io-mappings-fix-v4
+
+Cc: Pratyush Anand <pratyush.anand@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: Will Deacon <will.deacon@arm.com>
+Cc: Jingoo Han <jingoohan1@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Mingkai Hu <mingkai.hu@freescale.com>
+Cc: Tanmay Inamdar <tinamdar@apm.com>
+Cc: Murali Karicheri <m-karicheri2@ti.com>
+Cc: Russell King <linux@armlinux.org.uk>
+Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
+Cc: Ray Jui <rjui@broadcom.com>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Minghuan Lian <minghuan.Lian@freescale.com>
+Cc: Catalin Marinas <catalin.marinas@arm.com>
+Cc: Jon Mason <jonmason@broadcom.com>
+Cc: Gabriele Paoloni <gabriele.paoloni@huawei.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Cc: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Luis R. Rodriguez <mcgrof@kernel.org>
+Cc: Michal Simek <michal.simek@xilinx.com>
+Cc: Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: Zhou Wang <wangzhou1@hisilicon.com>
+Cc: Roy Zang <tie-fei.zang@freescale.com>
+
+Lorenzo Pieralisi (21):
+  PCI: remove __weak tag from pci_remap_iospace()
+  linux/io.h: add PCI config space remap interface
+  ARM64: implement pci_remap_cfgspace() interface
+  ARM: implement pci_remap_cfgspace() interface
+  lib: fix Devres devm_ioremap_* offset parameter kerneldoc description
+  PCI: implement Devres interface to map PCI config space
+  PCI: ECAM: use pci_remap_cfgspace() to map config region
+  PCI: xilinx: update PCI config space remap function
+  PCI: xilinx-nwl: update PCI config space remap function
+  PCI: spear13xx: update PCI config space remap function
+  PCI: rockchip: update PCI config space remap function
+  PCI: qcom: update PCI config space remap function
+  PCI: iproc-platform: update PCI config space remap function
+  PCI: designware: update PCI config space remap function
+  PCI: armada8k: update PCI config space remap function
+  PCI: xgene: update PCI config space remap function
+  PCI: tegra: update PCI config space remap function
+  PCI: hisi: update PCI config space remap function
+  PCI: layerscape: update PCI config space remap function
+  PCI: keystone-dw: update PCI config space remap function
+  PCI: versatile: update PCI config space remap function
+
+ Documentation/driver-model/devres.txt  |  6 ++-
+ arch/arm/include/asm/io.h              | 10 ++++
+ arch/arm/mm/ioremap.c                  |  7 +++
+ arch/arm/mm/nommu.c                    | 12 +++++
+ arch/arm64/include/asm/io.h            | 10 ++++
+ drivers/pci/dwc/pci-keystone-dw.c      |  2 +-
+ drivers/pci/dwc/pci-layerscape.c       |  2 +-
+ drivers/pci/dwc/pcie-armada8k.c        |  2 +-
+ drivers/pci/dwc/pcie-designware-host.c | 12 +++--
+ drivers/pci/dwc/pcie-hisi.c            |  7 ++-
+ drivers/pci/dwc/pcie-qcom.c            |  2 +-
+ drivers/pci/dwc/pcie-spear13xx.c       |  2 +-
+ drivers/pci/ecam.c                     |  6 ++-
+ drivers/pci/host/pci-tegra.c           |  4 +-
+ drivers/pci/host/pci-versatile.c       |  3 +-
+ drivers/pci/host/pci-xgene.c           |  4 +-
+ drivers/pci/host/pcie-iproc-platform.c |  3 +-
+ drivers/pci/host/pcie-rockchip.c       |  2 +-
+ drivers/pci/host/pcie-xilinx-nwl.c     |  2 +-
+ drivers/pci/host/pcie-xilinx.c         |  2 +-
+ drivers/pci/pci.c                      | 84 +++++++++++++++++++++++++++++++++-
+ include/linux/io.h                     | 19 ++++++++
+ include/linux/pci.h                    |  5 ++
+ lib/devres.c                           |  6 +--
+ 24 files changed, 183 insertions(+), 31 deletions(-)
+
+-- 
+2.10.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
