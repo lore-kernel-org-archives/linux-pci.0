@@ -1,65 +1,49 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([217.72.192.75]:63409 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S968792AbdDSRzM (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Apr 2017 13:55:12 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Linus Walleij <linus.walleij@linaro.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v2 24/27] ia64: Remove redundant checks for WC in pci_mmap_page_range()
-Date: Wed, 12 Apr 2017 13:26:13 +0100
-Message-Id: <9c83a007289d75decdb182afd0434dc517fe433b.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH] PCI: faraday: use %pap format string for printing resources
+Date: Wed, 19 Apr 2017 19:54:46 +0200
+Message-Id: <20170419175513.88138-1-arnd@arndb.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+resource_size_t may be either 32-bit or 64-bit wide, so we have to use
+the special %pap format string to avoid warnings like:
 
-For a PCI MMIO BAR, phys_mem_access_prot() should always return UC or WC.
-And while a mixture of cached and uncached mappings is forbidden, we were
-already mixing WC and UC, which is OK. Just do as we're asked.
+drivers/pci/host/pci-ftpci100.c: In function 'faraday_res_to_memcfg':
+drivers/pci/host/pci-ftpci100.c:174:586: error: format '%x' expects argument of type 'unsigned int', but argument 3 has type 'resource_size_t {aka long long unsigned int}' [-Werror=format=]
+drivers/pci/host/pci-ftpci100.c:174:586: error: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'resource_size_t {aka long long unsigned int}' [-Werror=format=]
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+This relies on resource_size_t and phys_addr_t being the same width,
+as other code already does.
+
+Fixes: 5c18f2b240bd ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- arch/ia64/pci/pci.c | 18 ++----------------
- 1 file changed, 2 insertions(+), 16 deletions(-)
+ drivers/pci/host/pci-ftpci100.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 27020f3..7438e8c 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -423,9 +423,6 @@ pci_mmap_page_range (struct pci_dev *dev, int bar,
- 		     struct vm_area_struct *vma,
- 		     enum pci_mmap_state mmap_state, int write_combine)
- {
--	unsigned long size = vma->vm_end - vma->vm_start;
--	pgprot_t prot;
--
- 	/*
- 	 * I/O space cannot be accessed via normal processor loads and
- 	 * stores on this platform.
-@@ -439,21 +436,10 @@ pci_mmap_page_range (struct pci_dev *dev, int bar,
- 		 */
- 		return -EINVAL;
+diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+index 4ae5418a1aad..c0f29d1de341 100644
+--- a/drivers/pci/host/pci-ftpci100.c
++++ b/drivers/pci/host/pci-ftpci100.c
+@@ -171,8 +171,8 @@ static int faraday_res_to_memcfg(resource_size_t mem_base,
+ 		pr_warn("truncated PCI memory base\n");
+ 	/* Translate to bridge side address space */
+ 	outval |= (mem_base & FARADAY_PCI_MEMBASE_MASK);
+-	pr_debug("Translated pci base @%08x, size %08x to config %08x\n",
+-		 mem_base, mem_size, outval);
++	pr_debug("Translated pci base @%pap, size %pap to config %08x\n",
++		 &mem_base, &mem_size, outval);
  
--	prot = phys_mem_access_prot(NULL, vma->vm_pgoff, size,
--				    vma->vm_page_prot);
--
--	/*
--	 * If the user requested WC, the kernel uses UC or WC for this region,
--	 * and the chipset supports WC, we can use WC. Otherwise, we have to
--	 * use the same attribute the kernel uses.
--	 */
--	if (write_combine &&
--	    ((pgprot_val(prot) & _PAGE_MA_MASK) == _PAGE_MA_UC ||
--	     (pgprot_val(prot) & _PAGE_MA_MASK) == _PAGE_MA_WC) &&
--	    efi_range_is_wc(vma->vm_start, vma->vm_end - vma->vm_start))
-+	if (write_combine)
- 		vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
- 	else
--		vma->vm_page_prot = prot;
-+		vma->vm_page_prot = pgprot_device(vma->vm_page_prot);
- 
- 	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
- 			     vma->vm_end - vma->vm_start, vma->vm_page_prot))
+ 	*val = outval;
+ 	return 0;
 -- 
-2.9.3
+2.9.0
