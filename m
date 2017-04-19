@@ -1,131 +1,98 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=hWz2=33=intel.com=dan.j.williams@kernel.org>
+Return-Path: <SRS0=hWz2=33=intel.com=dan.j.williams@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu8x0rQUnTUorknW-mW9LFgrxFYsXyy4LU_w9JbA-m_sjA@mail.gmail.com>
-References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
- <20170322193111.GA8190@wunner.de>
- <CAKv+Gu_X-SEnz7h9J8boqqjOQGHQawwdSAq4haH-OGu8zdfNfA@mail.gmail.com>
- <20170323084819.GA23281@h08.hostsharing.net>
- <CAKv+Gu93eJ-js3g7M6Jdm6XGMaWMswFmzBG2qNT4rn+3=1+EyA@mail.gmail.com>
- <20170323105727.GA2441@red-moon>
- <466dcd2b-a781-2fe7-6ef0-5a3767c793e0@codeaurora.org>
- <CAKv+Gu9LbwpnJNi1OL25MWvYPxEOfKRHcs2jA2121BPaQWPzow@mail.gmail.com>
- <27f50de3-721e-e8ec-00c8-b7a9d3cff0d6@codeaurora.org>
- <CAKv+Gu-qRg8-YRCairppKrEfeLcW+OwVF8qZHp7vxXJA_AwPOw@mail.gmail.com>
- <20170330100524.GA22801@red-moon>
- <CAKv+Gu-ff98HrPK3f+E8soGJUXaaMxPLs2AuJ+rvXd0HWX-jXw@mail.gmail.com>
- <CAKv+Gu8YjySTDMgsrtGqEPMOtVhHc8gvTHZ4C5Ga8OTYdC9R3A@mail.gmail.com>
- <ae87ae28-f50d-095f-576e-f3fd7f96dea2@codeaurora.org>
- <CAKv+Gu8x0rQUnTUorknW-mW9LFgrxFYsXyy4LU_w9JbA-m_sjA@mail.gmail.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Mon, 10 Apr 2017 16:28:11 +0100
-Message-ID: <CAKv+Gu9Su0F9CSRe=sxomuDDH7c2szO6Z8dpqOQ=t_1Vn3JD3g@mail.gmail.com>
-Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
- framebuffer
-To: Sinan Kaya <okaya@codeaurora.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
- Matt Fleming <matt@codeblueprint.co.uk>, linux-pci <linux-pci@vger.kernel.org>,
- Peter Jones <pjones@redhat.com>, Heyi Guo <heyi.guo@linaro.org>,
- Lukas Wunner <lukas@wunner.de>, Hanjun Guo <hanjun.guo@linaro.org>,
- Yinghai Lu <yinghai@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170419173225.GA11255@redhat.com>
+References: <20170418164557.GA7181@obsidianresearch.com> <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com> <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+ <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <20170418210339.GA24257@obsidianresearch.com> <1492564806.25766.124.camel@kernel.crashing.org>
+ <20170419155557.GA8497@obsidianresearch.com> <4899b011-bdfb-18d8-ef00-33a1516216a6@deltatee.com>
+ <CAPcyv4iJ9H8Ykwnjqa2R_D1qG6PsSQmi=QxYH-rKLF_ihrsWyw@mail.gmail.com> <20170419173225.GA11255@redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 19 Apr 2017 10:41:42 -0700
+Message-ID: <CAPcyv4gxBgVsbSez7_dZYkZojUWU0X0txs7FxiJ+Z3xsMt6TqQ@mail.gmail.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+To: Jerome Glisse <jglisse@redhat.com>
+Cc: Logan Gunthorpe <logang@deltatee.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+	Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+	linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+	linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2 April 2017 at 16:16, Ard Biesheuvel <ard.biesheuvel@linaro.org> wrote:
-> On 30 March 2017 at 14:50, Sinan Kaya <okaya@codeaurora.org> wrote:
->> On 3/30/2017 9:38 AM, Ard Biesheuvel wrote:
->>> On 30 March 2017 at 11:09, Ard Biesheuvel <ard.biesheuvel@linaro.org> wrote:
->>>> On 30 March 2017 at 11:05, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com> wrote:
->>>>> On Thu, Mar 30, 2017 at 09:46:39AM +0100, Ard Biesheuvel wrote:
->>>>>
->>>>> [...]
->>>>>
->>>>>>> I'm asking why we don't fix the actual problem in PCIe ARM64 adaptation instead
->>>>>>> of working around it by quirks.
->>>>>>>
->>>>>>> I don't see any reason why ACPI ARM64 should carry the burden of legacy systems.
->>>>>>>
->>>>>>> Legacy only applies to DT based systems.
->>>>>>>
->>>>>>
->>>>>> I fully agree with this point: ACPI implies firmware, and so we should
->>>>>> be able to rely on firmware to have initialized the PCIe subsystem by
->>>>>> the time the kernel gets to access it.
->>>>>
->>>>> https://lkml.org/lkml/2016/3/3/458
->>>>>
->>>>
->>>> I don't think the fact that at least one system existed over a year
->>>> ago whose UEFI assigned resources incorrectly should prevent us from
->>>> being normative in this case.
->>>
->>> In any case, given that EFIFB is enabled by default on some distros,
->>> and the fact that DT boot is affected as well, I should get this patch
->>> in to prevent serious potential issues that could arise when someone
->>> with a graphical UEFI stack updates to such a new kernel.
->>>
->>> So I think we are in agreement that this is needed on both ARM and
->>> arm64, since their PCI configuration is usually not preserved. The
->>> open question is whether there is any harm in enabling it for x86 as
->>> well.
->>>
+On Wed, Apr 19, 2017 at 10:32 AM, Jerome Glisse <jglisse@redhat.com> wrote:
+> On Wed, Apr 19, 2017 at 10:01:23AM -0700, Dan Williams wrote:
+>> On Wed, Apr 19, 2017 at 9:48 AM, Logan Gunthorpe <logang@deltatee.com> wrote:
+>> >
+>> >
+>> > On 19/04/17 09:55 AM, Jason Gunthorpe wrote:
+>> >> I was thinking only this one would be supported with a core code
+>> >> helper..
+>> >
+>> > Pivoting slightly: I was looking at how HMM uses ZONE_DEVICE. They add a
+>> > type flag to the dev_pagemap structure which would be very useful to us.
+>> > We could add another MEMORY_DEVICE_P2P type to distinguish p2p pages.
+>> > Then, potentially, we could add a dma_map callback to the structure
+>> > (possibly unioned with an hmm field). The dev_ops providers would then
+>> > just need to do something like this (enclosed in a helper):
+>> >
+>> > if (is_zone_device_page(page)) {
+>> >         pgmap = get_dev_pagemap(page_to_pfn(page));
+>> >         if (!pgmap || pgmap->type !=  MEMORY_DEVICE_P2P ||
+>> >             !pgmap->dma_map)
+>> >                 return 0;
+>> >
+>> >         dma_addr = pgmap->dma_map(dev, pgmap->dev, page);
+>> >         put_dev_pagemap(pgmap);
+>> >         if (!dma_addr)
+>> >                 return 0;
+>> >         ...
+>> > }
+>> >
+>> > The pci_enable_p2p_bar function would then just need to call
+>> > devm_memremap_pages with the dma_map callback set to a function that
+>> > does the segment check and the offset calculation.
+>> >
+>> > Thoughts?
+>> >
+>> > @Jerome: my feedback to you would be that your patch assumes all users
+>> > of devm_memremap_pages are MEMORY_DEVICE_PERSISTENT. It would be more
+>> > useful if it was generic. My suggestion would be to have the caller
+>> > allocate the dev_pagemap structure, populate it and pass it into
+>> > devm_memremap_pages. Given that pretty much everything in that structure
+>> > are already arguments to that function, I feel like this makes sense.
+>> > This should also help to unify hmm_devmem_pages_create and
+>> > devm_memremap_pages which look very similar to each other.
 >>
->> Agreed, the other issue is about compatibility with UEFI and future
->> proofing Linux for other potential issues like hotplug reservation.
->>
+>> I like that change. Also the types should describe the memory relative
+>> to its relationship to struct page, not whether it is persistent or
+>> not. I would consider volatile and persistent memory that is attached
+>> to the cpu memory controller and i/o coherent as the same type of
+>> memory. DMA incoherent ranges like P2P and HMM should get their own
+>> types.
 >
-> OK, given the lack of feedback regarding the suitability of this patch
-> for x86, I am going to rework it as a ARM/arm64 only patch, and queue
-> it as a fix for v4.11. This way, we can backport it to stable (which
-> is arguably appropriate, given that upgrading to a EFIFB enabled
-> kernel may cause severe breakage for existing systems that implement
-> the GOP protocol), and easily change the patch to apply to x86 going
-> forwards, by removing the #ifdefs
+> Dan you asked me to not use devm_memremap_pages() because you didn't
+> want to have HMM memory in the pgmap_radix, did you change opinion
+> on that ? :)
+
+No, not quite ;-). I still don't think we should require the non-HMM
+to pass NULL for all the HMM arguments. What I like about Logan's
+proposal is to have a separate create and register steps dev_pagemap.
+That way call paths that don't care about HMM specifics can just turn
+around and register the vanilla dev_pagemap.
+
+> Note i won't make any change now on that front but if it make sense
+> i am happy to do it as separate patchset on top of HMM.
 >
+> Also i don't want p2pmem to be an exclusive or with HMM, we will want
+> GPU to do peer to peer DMA and thus HMM ZONE_DEVICE pages to support
+> this too.
 
-As it turns out, this patch does not solve the problem completely.
-
-For EFI framebuffers that are backed by a PCI bar of a device residing
-on bus 0, things work happily. However, claiming resources for devices
-behind bridges doesn't work.
-
-Given that we have not made the situation worse, fixing it is less
-urgent than it was before. I.e., there is no longer a risk of
-inadvertently poking the wrong BAR when writing to the framebuffer.
-There is a regression in functionality, though, since EFI fb devices
-that happened to work (because the firmware BAR == the kernel BAR)
-have stopped working if they are behind a bridge, which is of course
-always the case for PCIe.
-
-So before starting the next round of hacking to work around this, I
-would like rekindle the discussion regarding the way we blindly
-reassign all resources on ACPI/arm64 systems, and whether there is a
-way imaginable to avoid doing that.
-
-I suppose the state of the BARs as we inherit it from the firmware
-cannot be blindly trusted (and IIUC, this is Lorenzo's primary issue
-with it). So should there be some side channel (UEFI config table
-perhaps?) to describe this? How do other architectures deal with this?
-Is this what the PCI bios accesses are for?
-
-In any case, I have updated the UEFI firmware we have for ARM Juno to
-use EDK2's generic PCI host bridge driver instead of one that was
-specially written for ARM Juno, and may deviate in the way it
-allocates PCI resources.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Yes, this makes sense I think we really just want to distinguish host
+memory or not in terms of the dev_pagemap type.
