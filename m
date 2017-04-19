@@ -1,85 +1,84 @@
-Return-Path: <SRS0=tZg2=33=obsidianresearch.com=jgunthorpe@kernel.org>
-Return-Path: <SRS0=tZg2=33=obsidianresearch.com=jgunthorpe@kernel.org>
-Date: Wed, 19 Apr 2017 13:31:54 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Steve Wise <swise@opengridcomputing.com>,
-	Stephen Bates <sbates@raithlin.com>,
-	Max Gurtovoy <maxg@mellanox.com>,
-	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	linux-nvdimm <linux-nvdimm@ml01.01.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Message-ID: <20170419193154.GA14340@obsidianresearch.com>
-References: <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
- <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
- <20170418210339.GA24257@obsidianresearch.com>
- <1492564806.25766.124.camel@kernel.crashing.org>
- <20170419155557.GA8497@obsidianresearch.com>
- <4899b011-bdfb-18d8-ef00-33a1516216a6@deltatee.com>
- <20170419171451.GA10020@obsidianresearch.com>
- <b0234176-e86b-6e7c-686d-b4fef719aad7@deltatee.com>
- <20170419183247.GA13716@obsidianresearch.com>
- <21e8099a-d19d-7df0-682d-627d8b81dfde@deltatee.com>
+Return-Path: <leon@kernel.org>
+Return-Path: <leon@kernel.org>
+Date: Wed, 19 Apr 2017 08:37:37 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Bjorn Helgaas <bhelgaas@google.com>,
+	Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+	Salvatore Benedetto <salvatore.benedetto@intel.com>,
+	Mike Marciniszyn <mike.marciniszyn@intel.com>,
+	Dennis Dalessandro <dennis.dalessandro@intel.com>,
+	Derek Chickles <derek.chickles@caviumnetworks.com>,
+	Satanand Burla <satananda.burla@caviumnetworks.com>,
+	Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+	Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+	Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+	linux-pci@vger.kernel.org, qat-linux@intel.com,
+	linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: export pcie_flr and remove copies of it in drivers V2
+Message-ID: <20170419053737.GG14088@mtr-leonro.local>
+References: <20170414191131.14286-1-hch@lst.de>
+ <20170418183612.GC25295@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <21e8099a-d19d-7df0-682d-627d8b81dfde@deltatee.com>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="R6sEYoIZpp9JErk7"
+In-Reply-To: <20170418183612.GC25295@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 19, 2017 at 01:02:49PM -0600, Logan Gunthorpe wrote:
-> 
-> 
-> On 19/04/17 12:32 PM, Jason Gunthorpe wrote:
-> > On Wed, Apr 19, 2017 at 12:01:39PM -0600, Logan Gunthorpe wrote:
-> > Not entirely, it would have to call through the whole process
-> > including the arch_p2p_cross_segment()..
-> 
-> Hmm, yes. Though it's still not clear what, if anything,
-> arch_p2p_cross_segment would be doing.
 
-Sets up the iommu for arches that place a iommu between the pci root
-port and other pci root ports.
+--R6sEYoIZpp9JErk7
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> In my experience, if you are going between host bridges, the CPU
-> address (or PCI address -- I'm not sure which seeing they are the
-> same on my system) would still work fine
-
-Try it with VT-D turned on. It shouldn't work or there is a notable
-security hole in your platform..
-
-> > 	 const struct dma_map_ops *comp_ops = get_dma_ops(completer);
-> > 	 const struct dma_map_ops *init_ops = get_dma_ops(initiator);
+On Tue, Apr 18, 2017 at 01:36:12PM -0500, Bjorn Helgaas wrote:
+> On Fri, Apr 14, 2017 at 09:11:24PM +0200, Christoph Hellwig wrote:
+> > Hi all,
+> >
+> > this exports the PCI layer pcie_flr helper, and removes various opencoded
+> > copies of it.
+> >
+> > Changes since V1:
+> >  - rebase on top of the pci/virtualization branch
+> >  - fixed the probe case in __pci_dev_reset
+> >  - added ACKs from Bjorn
 >
-> So, in this case, what device does the completer point to? The PCI
-> device or a more specific GPU device? If it's the former, who's
-> responsible for setting the new dma_ops? Typically the dma_ops are arch
-> specific but now you'd be adding ones that are tied to hmm or the gpu.
+> Applied the first three patches:
+>
+>   bc13871ef35a PCI: Export pcie_flr()
+>   e641c375d414 PCI: Call pcie_flr() from reset_intel_82599_sfp_virtfn()
+>   40e0901ea4bf PCI: Call pcie_flr() from reset_chelsio_generic_dev()
+>
 
-Donno, that is for GPU folks to figure out :)
+Bjorn,
 
-But.. it could point to a GPU and the GPU struct device could have a
-proxy dma_ops like Dan pointed out.
+How do you suggest to proceed with other patches? They should be applied
+to your tree either, because they depend on "bc13871ef35a PCI: Export
+pcie_flr()".
 
-> >> I'm not sure I like the name pci_p2p_same_segment. It reads as though
-> >> it's only checking if the devices are not the same segment.
-> > 
-> > Well, that is exactly what it is doing. If it succeeds then the caller
-> > knows the DMA will not flow outside the segment and no iommu setup/etc
-> > is required.
-> 
-> It appears to me like it's calculating the DMA address, and the check is
-> just a side requirement. It reads as though it's only doing the check.
+Thanks
 
-pci_p2p_same_segment_get_pa() then?
 
-Jason
+> to pci/virtualization for v4.12, thanks!
+
+--R6sEYoIZpp9JErk7
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIzBAEBCAAdFiEEkhr/r4Op1/04yqaB5GN7iDZyWKcFAlj296EACgkQ5GN7iDZy
+WKc1zQ/7BSIXdJRgJoHCW6mGUOl+O5Yyons+9qhBJmCZl75w+f2mgejIm1nl9r32
+2TcWLQful9IsrKUrsoK1205rOmGhjqg6kRMLicHiOYR1B4NOpWji4IA53RJgyGsY
+xlvVHwLuZ5Fl4bjnzRlRP701UYzBkeHJSoOf3ZVLNDtRY7ChDAXN6ny94gMFljbb
+CCOdY2877CQmzKgYQ39Iwc5wWEurTJ8VQatunjaXtrp2vGFjwqmBzkil06ZQM+QQ
+O8v2JufdH1r+RBaSMq8bBGA5iv31VnGXwe7RdC39TWZx8nuffkgyKXDipTx3xjMn
+U0RVFLHAdiOt61EKZu62FST1nibHvQRxohMsLSLCarmN1bVOuJtOEmJShukeUqPS
+afDWl64jXxcgp60wvgakc/P0XDxnqQB3VMjABassA7GFTsr/p3b66G3Y19EmfgzF
+bBGhweRo3GN1chVBRHB2rY+gtpfg4MNGKvHkmp0+GGLxAIDcSuujSp0l0+JliqzL
+tXn/vT3Uy8LFiycpPIpXpNVo14WYJeNbpGCpFy7q+WTA/aqcMv9JoTaM9TuL4yuR
+RIUolT9D3OmuBCgA3NfZj5NYLnfoVWuuDr0jgo3PJjhwVnsbFGSrTiy8PDYtn2wo
+y7hrrmhWh0953gsI6Aso+MZhBCOmL2RoluGzPOk2qM+xVK4FZ4c=
+=uDoL
+-----END PGP SIGNATURE-----
+
+--R6sEYoIZpp9JErk7--
