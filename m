@@ -1,44 +1,40 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-        Michal Simek <michal.simek@xilinx.com>
-Subject: [PATCH v4 09/21] PCI: xilinx-nwl: update PCI config space remap function
-Date: Wed, 19 Apr 2017 17:48:58 +0100
-Message-Id: <20170419164913.19674-10-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=VHUN=34=intel.com=dan.j.williams@kernel.org>
+Return-Path: <SRS0=VHUN=34=intel.com=dan.j.williams@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <D79A59A8-DC7E-413F-ABB8-05F373A9DFD4@raithlin.com>
+References: <20170418164557.GA7181@obsidianresearch.com> <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com> <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+ <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <20170418210339.GA24257@obsidianresearch.com> <1492564806.25766.124.camel@kernel.crashing.org>
+ <20170419155557.GA8497@obsidianresearch.com> <4899b011-bdfb-18d8-ef00-33a1516216a6@deltatee.com>
+ <CAPcyv4iJ9H8Ykwnjqa2R_D1qG6PsSQmi=QxYH-rKLF_ihrsWyw@mail.gmail.com>
+ <20170419173225.GA11255@redhat.com> <CAPcyv4gxBgVsbSez7_dZYkZojUWU0X0txs7FxiJ+Z3xsMt6TqQ@mail.gmail.com>
+ <D79A59A8-DC7E-413F-ABB8-05F373A9DFD4@raithlin.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 20 Apr 2017 13:47:19 -0700
+Message-ID: <CAPcyv4i+a_14E58SjFHncyq2O2-zf_PB=aT7k0a-Jc0XsfPapQ@mail.gmail.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+To: Stephen Bates <sbates@raithlin.com>
+Cc: Jerome Glisse <jglisse@redhat.com>, Logan Gunthorpe <logang@deltatee.com>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+	Max Gurtovoy <maxg@mellanox.com>, Keith Busch <keith.busch@intel.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_pci_remap_cfg* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+On Thu, Apr 20, 2017 at 1:43 PM, Stephen  Bates <sbates@raithlin.com> wrote:
+>
+>> Yes, this makes sense I think we really just want to distinguish host
+>> memory or not in terms of the dev_pagemap type.
+>
+> I would like to see mutually exclusive flags for host memory (or not) and persistence (or not).
+>
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>
-Cc: Michal Simek <michal.simek@xilinx.com>
----
- drivers/pci/host/pcie-xilinx-nwl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/host/pcie-xilinx-nwl.c b/drivers/pci/host/pcie-xilinx-nwl.c
-index 4c3e0ab..4b16b26 100644
---- a/drivers/pci/host/pcie-xilinx-nwl.c
-+++ b/drivers/pci/host/pcie-xilinx-nwl.c
-@@ -761,7 +761,7 @@ static int nwl_pcie_parse_dt(struct nwl_pcie *pcie,
- 	pcie->phys_pcie_reg_base = res->start;
- 
- 	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
--	pcie->ecam_base = devm_ioremap_resource(dev, res);
-+	pcie->ecam_base = devm_pci_remap_cfg_resource(dev, res);
- 	if (IS_ERR(pcie->ecam_base))
- 		return PTR_ERR(pcie->ecam_base);
- 	pcie->phys_ecam_base = res->start;
--- 
-2.10.0
+Why persistence? It has zero meaning to the mm.
