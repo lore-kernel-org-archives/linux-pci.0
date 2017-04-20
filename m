@@ -1,36 +1,77 @@
-Return-Path: <SRS0=2pf2=3U=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=2pf2=3U=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=8qgE=34=redhat.com=jcm@kernel.org>
+Return-Path: <SRS0=8qgE=34=redhat.com=jcm@kernel.org>
+Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
 To: Bjorn Helgaas <helgaas@kernel.org>,
- Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-References: <20170411043204.19343-1-christophe.jaillet@wanadoo.fr>
- <20170412172736.GF25197@bhelgaas-glaptop.roam.corp.google.com>
-Cc: kurt.schwemmer@microsemi.com, stephen.bates@microsemi.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <eb5a4cbf-4059-6ef1-5a3c-83327442312b@deltatee.com>
-Date: Wed, 12 Apr 2017 11:28:12 -0600
+ Jayachandran C <jnair@caviumnetworks.com>
+References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
+ <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
+ <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
+ <baed1ecf-7a57-0229-42b0-d87599a225b5@redhat.com>
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
+ Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org,
+ Joerg Roedel <joro@8bytes.org>
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <832cb9b3-ceaf-6771-bfc9-7bae35494f6d@redhat.com>
+Date: Wed, 19 Apr 2017 20:25:54 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170412172736.GF25197@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <baed1ecf-7a57-0229-42b0-d87599a225b5@redhat.com>
 Content-Type: text/plain; charset=windows-1252
-Subject: Re: [PATCH] switchtec: Fix an error handling
 List-ID: <linux-pci.vger.kernel.org>
 
+One additional footnote. I spent a bunch of time recently on my personal
+Xeon systems walking through the PCIe topology and aligning on how to
+advise the ARM server community proceed going forward. If you look at
+how Intel vs AMD handle their host bridges for example, you'll see two
+very different approaches to the case of cross-socket PCIe. But my
+operating assumption is that anything longer term which looks boring and
+x86 enough is probably fine from an ARM server point of view.
 
-
-On 12/04/17 11:27 AM, Bjorn Helgaas wrote:
-> On Tue, Apr 11, 2017 at 06:32:04AM +0200, Christophe JAILLET wrote:
->> 'stuser_create' returns an error pointer in case of error, not NULL.
->> So test its return value with IS_ERR.
->>
->> Fixes: 74004262f329 ("MicroSemi Switchtec management interface driver")
->>
->> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+On 04/19/2017 07:38 PM, Jon Masters wrote:
+> Hi Bjorn, JC,
 > 
-> Since this hasn't been merged to Linus' tree yet, I folded the fix
-> into the original commit on pci/switchtec and added attribution to
-> Christophe.
+> On 04/13/2017 08:19 PM, Bjorn Helgaas wrote:
+> 
+>> I tentatively applied both patches to pci/host-thunder for v4.12.
+> 
+> Thanks for that :)
+> 
+>> However, I am concerned about the topology here:
+> 
+> Various feedback has been provided on this one over the past $time. In
+> addition, I have requested that this serve as an example of why we need
+> a more complete PCIe integration guide for ARMv8. It's on the list of
+> things for my intended opus magnum on the topic ;)
+> 
+>> On Thu, Apr 13, 2017 at 08:30:45PM +0000, Jayachandran C wrote:
+>>> On Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the
+>>> PCI topology is slightly unusual.  For a multi-node system, it looks
+>>> like:
+>>>
+>>>     00:00.0 [PCI] bridge to [bus 01-1e]
+>>>     01:0a.0 [PCI-PCIe bridge, type 8] bridge to [bus 02-04]
+>>>     02:00.0 [PCIe root port, type 4] bridge to [bus 03-04] (XLATE_ROOT)
+>>>     03:00.0 PCIe Endpoint
+>>
+>> A root port normally has a single PCIe link leading downstream.
+> 
+> In integration terms, there's always a bus on the other side of the RC.
+> It's just usually a processor local bus of some kind on a proprietary
+> interconnect, but there's always something there. The issue is when you
+> can see it as PCIe and it's not through a transparent glue bridge.
+> 
+> I had originally hoped that the ECAM could be hacked up so that we would
+> first walk the topology at the 02:00.0 as a root and not see what's
+> above it BUT there are other device attachments up there for the on-SoC
+> devices and I think we really intend to use those.
+> 
+> Bottom line in my opinion is document this case, use it as a learning
+> example, and move forward. This has been useful in justifying why we
+> need better integration documentation from the server community. And in
+> particular from the OS vendors, of which I guess we can allude to their
+> being more than Linux interested in ARM server these days ;)
+> 
+> Jon.
+> 
 
-Thanks Bjorn.
-
-Logan
+-- 
+Computer Architect | Sent from my Fedora powered Ryzen
