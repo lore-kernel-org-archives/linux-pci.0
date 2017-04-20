@@ -1,105 +1,52 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [RFC/RFT PATCH 05/18] ARM: PCI: dove: Convert PCI scan API to
- pci_scan_root_bus_bridge()
-Date: Wed, 26 Apr 2017 12:17:56 +0100
-Message-Id: <20170426111809.19922-6-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
-References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>, Wenrui Li <wenrui.li@rock-chips.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
- Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Jason Cooper <jason@lakedaemon.net>, Arnd Bergmann <arnd@arndb.de>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
- Roy Zang <tie-fei.zang@freescale.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-eopbgr660108.outbound.protection.outlook.com ([40.107.66.108]:47760
+        "EHLO CAN01-QB1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S945338AbdDTUnu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Apr 2017 16:43:50 -0400
+From: "Stephen  Bates" <sbates@raithlin.com>
+To: Dan Williams <dan.j.williams@intel.com>,
+        Jerome Glisse <jglisse@redhat.com>
+CC: Logan Gunthorpe <logang@deltatee.com>,
+        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Bjorn Helgaas <helgaas@kernel.org>,
+        "Christoph Hellwig" <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise <swise@opengridcomputing.com>,
+        Max Gurtovoy <maxg@mellanox.com>,
+        Keith Busch <keith.busch@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@ml01.01.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Date: Thu, 20 Apr 2017 20:43:47 +0000
+Message-ID: <D79A59A8-DC7E-413F-ABB8-05F373A9DFD4@raithlin.com>
+References: <20170418164557.GA7181@obsidianresearch.com>
+ <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com>
+ <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+ <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <20170418210339.GA24257@obsidianresearch.com>
+ <1492564806.25766.124.camel@kernel.crashing.org>
+ <20170419155557.GA8497@obsidianresearch.com>
+ <4899b011-bdfb-18d8-ef00-33a1516216a6@deltatee.com>
+ <CAPcyv4iJ9H8Ykwnjqa2R_D1qG6PsSQmi=QxYH-rKLF_ihrsWyw@mail.gmail.com>
+ <20170419173225.GA11255@redhat.com>
+ <CAPcyv4gxBgVsbSez7_dZYkZojUWU0X0txs7FxiJ+Z3xsMt6TqQ@mail.gmail.com>
+In-Reply-To: <CAPcyv4gxBgVsbSez7_dZYkZojUWU0X0txs7FxiJ+Z3xsMt6TqQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The introduction of pci_scan_root_bus_bridge() provides a PCI core
-API to scan a PCI root bus backed by an already initialized
-struct pci_host_bridge object, which simplifies the bus scan
-interface and makes the PCI scan root bus interface easier to
-generalize as members are added to the struct pci_host_bridge().
-
-Convert ARM dove platform code to pci_scan_root_bus_bridge() to improve
-the PCI root bus scanning interface.
-
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Jason Cooper <jason@lakedaemon.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Russell King <linux@armlinux.org.uk>
-Cc: Andrew Lunn <andrew@lunn.ch>
----
- arch/arm/mach-dove/pcie.c | 22 ++++++++++++++++++++--
- 1 file changed, 20 insertions(+), 2 deletions(-)
-
-diff --git a/arch/arm/mach-dove/pcie.c b/arch/arm/mach-dove/pcie.c
-index 91fe971..999e465 100644
---- a/arch/arm/mach-dove/pcie.c
-+++ b/arch/arm/mach-dove/pcie.c
-@@ -155,13 +155,31 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_MARVELL, PCI_ANY_ID, rc_pci_fixup);
- static struct pci_bus __init *
- dove_pcie_scan_bus(int nr, struct pci_sys_data *sys)
- {
-+	struct pci_host_bridge *bridge;
-+	int ret;
-+
- 	if (nr >= num_pcie_ports) {
- 		BUG();
- 		return NULL;
- 	}
- 
--	return pci_scan_root_bus(NULL, sys->busnr, &pcie_ops, sys,
--				 &sys->resources);
-+	bridge = pci_alloc_host_bridge(0);
-+	if (!bridge)
-+		return NULL;
-+
-+	list_splice_init(&sys->resources, &bridge->windows);
-+	bridge->dev.parent = NULL;
-+	bridge->sysdata = sys;
-+	bridge->busnr = sys->busnr;
-+	bridge->ops = &pcie_ops;
-+
-+	ret = pci_scan_root_bus_bridge(bridge);
-+	if (ret < 0) {
-+		pci_free_host_bridge(bridge);
-+		return NULL;
-+	}
-+
-+	return bridge->bus;
- }
- 
- static int __init dove_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
--- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+DQo+IFllcywgdGhpcyBtYWtlcyBzZW5zZSBJIHRoaW5rIHdlIHJlYWxseSBqdXN0IHdhbnQgdG8g
+ZGlzdGluZ3Vpc2ggaG9zdA0KPiBtZW1vcnkgb3Igbm90IGluIHRlcm1zIG9mIHRoZSBkZXZfcGFn
+ZW1hcCB0eXBlLg0KDQpJIHdvdWxkIGxpa2UgdG8gc2VlIG11dHVhbGx5IGV4Y2x1c2l2ZSBmbGFn
+cyBmb3IgaG9zdCBtZW1vcnkgKG9yIG5vdCkgYW5kIHBlcnNpc3RlbmNlIChvciBub3QpLg0KDQpT
+dGVwaGVuDQoNCg==
