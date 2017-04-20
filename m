@@ -1,58 +1,57 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Sagi Grimberg <sagi@grimberg.me>,
-        Stephen Bates <sbates@raithlin.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-7-git-send-email-logang@deltatee.com>
- <080b68b4-eba3-861c-4f29-5d829425b5e7@grimberg.me>
- <20170404154629.GA13552@obsidianresearch.com>
- <4df229d8-8124-664a-9bc4-6401bc034be1@grimberg.me>
- <3E85B4D4-9EBC-4299-8209-2D8740947764@raithlin.com>
- <7fcc3ac8-8b96-90f5-3942-87f999c7499d@grimberg.me>
-Cc: Christoph Hellwig <hch@lst.de>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-nvdimm@ml01.01.org" <linux-nvdimm@ml01.01.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <aeeaeb7b-9cec-4cc0-5d4d-e26aa6c02f80@deltatee.com>
-Date: Mon, 10 Apr 2017 10:03:45 -0600
 MIME-Version: 1.0
-In-Reply-To: <7fcc3ac8-8b96-90f5-3942-87f999c7499d@grimberg.me>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC 6/8] nvmet: Be careful about using iomem accesses when
- dealing with p2pmem
+In-Reply-To: <1492706123-22913-1-git-send-email-haiyangz@exchange.microsoft.com>
+References: <1492706123-22913-1-git-send-email-haiyangz@exchange.microsoft.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 20 Apr 2017 13:33:13 -0500
+Message-ID: <CAErSpo4iFS05Kk3Km54fFmpMf11XCoaPmGxSzqE3QuA5P=T6=Q@mail.gmail.com>
+Subject: Re: [PATCH] pci-hyperv: Use only 16 bit integer for PCI domain
+To: Haiyang Zhang <haiyangz@microsoft.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>, olaf@aepfle.de,
+        vkuznets@redhat.com, driverdev-devel@linuxdriverproject.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Thu, Apr 20, 2017 at 11:35 AM, Haiyang Zhang
+<haiyangz@exchange.microsoft.com> wrote:
+> From: Haiyang Zhang <haiyangz@microsoft.com>
+>
+> This patch uses the lower 16 bits of the serial number as PCI
+> domain, otherwise some drivers may not be able to handle it.
 
+Can you give any more details about this?  Which drivers, for
+instance?  Why do drivers care about the domain at all?  Can we or
+should we make this more explicit and consistent in the PCI core,
+e.g., pci_domain_nr() is currently defined to return "int"; maybe it
+should be u32?  (Although I think "int" is the same size as "u32" on
+all arches anyway).
 
-On 10/04/17 02:29 AM, Sagi Grimberg wrote:
-> What you are saying is surprising to me. The switch needs to preserve
-> ordering across different switch ports ??
-
-> You are suggesting that there is a *switch-wide* state that tracks
-> MemRds never pass MemWrs across all the switch ports? That is a very
-> non-trivial statement...
-
-Yes, it is a requirement of the PCIe spec for transactions to be
-strongly ordered throughout the fabric so switches must have an internal
-state across all ports. Without that, it would be impossible to have PCI
-cards work together even if they are using system memory to do so. Also,
-I believe, it was done this way to maintain maximum compatibility with
-the legacy PCI bus. There is also a relaxed ordering bit that allows
-specific transactions to ignore ordering which can help performance.
-
-Obviously this becomes impossible if you have some kind of complex
-multi-path fabric.
-
-Logan
+> Signed-off-by: Haiyang Zhang <haiyangz@microsoft.com>
+> ---
+>  drivers/pci/host/pci-hyperv.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+>
+> diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
+> index e73880c..b18dff3 100644
+> --- a/drivers/pci/host/pci-hyperv.c
+> +++ b/drivers/pci/host/pci-hyperv.c
+> @@ -1334,9 +1334,11 @@ static void put_pcichild(struct hv_pci_dev *hpdev,
+>          * can have shorter names than based on the bus instance UUID.
+>          * Only the first device serial number is used for domain, so the
+>          * domain number will not change after the first device is added.
+> +        * The lower 16 bits of the serial number is used, otherwise some
+> +        * drivers may not be able to handle it.
+>          */
+>         if (list_empty(&hbus->children))
+> -               hbus->sysdata.domain = desc->ser;
+> +               hbus->sysdata.domain = desc->ser & 0xFFFF;
+>         list_add_tail(&hpdev->list_entry, &hbus->children);
+>         spin_unlock_irqrestore(&hbus->device_list_lock, flags);
+>         return hpdev;
+> --
+> 1.7.1
+>
