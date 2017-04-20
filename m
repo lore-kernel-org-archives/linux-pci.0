@@ -1,174 +1,189 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [PATCH V10 08/12] iommu: of: Handle IOMMU lookup failure with
- deferred probing or error
-To: Sricharan R <sricharan@codeaurora.org>, will.deacon@arm.com,
-        joro@8bytes.org, lorenzo.pieralisi@arm.com,
-        iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
-        gregkh@linuxfoundation.org
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-9-git-send-email-sricharan@codeaurora.org>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <82a620b7-bcd0-3db7-dfd0-4bf6b293ba7a@arm.com>
-Date: Tue, 4 Apr 2017 12:24:50 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1491301105-5274-9-git-send-email-sricharan@codeaurora.org>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <1490887619-61732-6-git-send-email-yuanzhichang@hisilicon.com>
+References: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
+ <1490887619-61732-6-git-send-email-yuanzhichang@hisilicon.com>
+From: dann frazier <dann.frazier@canonical.com>
+Date: Thu, 20 Apr 2017 14:57:52 -0600
+Message-ID: <CALdTtnuO=592n+PoR_kkdTyeFYRd90VyPf0JLwnEo7DtXwzoPA@mail.gmail.com>
+Subject: Re: [PATCH V8 5/6] ACPI: Support the probing on the devices which
+ apply indirect-IO
+To: "zhichang.yuan" <yuanzhichang@hisilicon.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, benh@kernel.crashing.org,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>, rafael@kernel.org,
+ linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
+ linuxarm@huawei.com, Frank Rowand <frowand.list@gmail.com>,
+ lorenzo.pieralisi@arm.com, Arnd Bergmann <arnd@arndb.de>, xuwei5@hisilicon.com,
+ linux-acpi@vger.kernel.org, Catalin Marinas <catalin.marinas@arm.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Corey Minyard <minyard@acm.org>, John Garry <john.garry@huawei.com>,
+ Zou Rongrong <zourongrong@gmail.com>, Rob Herring <robh+dt@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, kantyzc@163.com,
+ "zhichang.yuan" <zhichang.yuan02@gmail.com>,
+ linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
+ Seth Forshee <seth.forshee@canonical.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, olof@lixom.net,
+ Brian Starkey <brian.starkey@arm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/04/17 11:18, Sricharan R wrote:
-> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
-> 
-> Failures to look up an IOMMU when parsing the DT iommus property need to
-> be handled separately from the .of_xlate() failures to support deferred
-> probing.
-> 
-> The lack of a registered IOMMU can be caused by the lack of a driver for
-> the IOMMU, the IOMMU device probe not having been performed yet, having
-> been deferred, or having failed.
-> 
-> The first case occurs when the device tree describes the bus master and
-> IOMMU topology correctly but no device driver exists for the IOMMU yet
-> or the device driver has not been compiled in. Return NULL, the caller
-> will configure the device without an IOMMU.
-> 
-> The second and third cases are handled by deferring the probe of the bus
-> master device which will eventually get reprobed after the IOMMU.
-> 
-> The last case is currently handled by deferring the probe of the bus
-> master device as well. A mechanism to either configure the bus master
-> device without an IOMMU or to fail the bus master device probe depending
-> on whether the IOMMU is optional or mandatory would be a good
-> enhancement.
-
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-
-> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-> Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
-> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+On Thu, Mar 30, 2017 at 9:26 AM, zhichang.yuan
+<yuanzhichang@hisilicon.com> wrote:
+> On some platforms(such as Hip06/Hip07), the legacy ISA/LPC devices access I/O
+> with some special host-local I/O ports known on x86. To access the I/O
+> peripherals, an indirect-IO mechanism is introduced to mapped the host-local
+> I/O to system logical/fake PIO similar the PCI MMIO on architectures where no
+> separate I/O space exists. Just as PCI MMIO, the host I/O range should be
+> registered before probing the downstream devices and set up the I/O mapping.
+> But current ACPI bus probing doesn't support these indirect-IO hosts/devices.
+>
+> This patch introdueces a new ACPI handler for this device category. Through the
+> handler attach callback, the indirect-IO hosts I/O registration is done and
+> all peripherals' I/O resources are translated into logic/fake PIO before
+> starting the enumeration.
+>
+> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
+> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
 > ---
->  drivers/base/dma-mapping.c | 5 +++--
->  drivers/iommu/of_iommu.c   | 4 ++--
->  drivers/of/device.c        | 7 ++++++-
->  include/linux/of_device.h  | 9 ++++++---
->  4 files changed, 17 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
-> index 449b948..82bd45c 100644
-> --- a/drivers/base/dma-mapping.c
-> +++ b/drivers/base/dma-mapping.c
-> @@ -353,6 +353,7 @@ int dma_configure(struct device *dev)
->  {
->  	struct device *bridge = NULL, *dma_dev = dev;
->  	enum dev_dma_attr attr;
-> +	int ret = 0;
->  
->  	if (dev_is_pci(dev)) {
->  		bridge = pci_get_host_bridge_device(to_pci_dev(dev));
-> @@ -363,7 +364,7 @@ int dma_configure(struct device *dev)
->  	}
->  
->  	if (dma_dev->of_node) {
-> -		of_dma_configure(dev, dma_dev->of_node);
-> +		ret = of_dma_configure(dev, dma_dev->of_node);
->  	} else if (has_acpi_companion(dma_dev)) {
->  		attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
->  		if (attr != DEV_DMA_NOT_SUPPORTED)
-> @@ -373,7 +374,7 @@ int dma_configure(struct device *dev)
->  	if (bridge)
->  		pci_put_host_bridge_device(bridge);
->  
-> -	return 0;
-> +	return ret;
->  }
->  
->  void dma_deconfigure(struct device *dev)
-> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> index c8be889..9f44ee8 100644
-> --- a/drivers/iommu/of_iommu.c
-> +++ b/drivers/iommu/of_iommu.c
-> @@ -236,7 +236,7 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
->  			ops = ERR_PTR(err);
->  	}
->  
-> -	return IS_ERR(ops) ? NULL : ops;
-> +	return ops;
->  }
->  
->  static int __init of_iommu_init(void)
-> @@ -247,7 +247,7 @@ static int __init of_iommu_init(void)
->  	for_each_matching_node_and_match(np, matches, &match) {
->  		const of_iommu_init_fn init_fn = match->data;
->  
-> -		if (init_fn(np))
-> +		if (init_fn && init_fn(np))
->  			pr_err("Failed to initialise IOMMU %s\n",
->  				of_node_full_name(np));
->  	}
-> diff --git a/drivers/of/device.c b/drivers/of/device.c
-> index c2ae6bb..bea8aec 100644
-> --- a/drivers/of/device.c
-> +++ b/drivers/of/device.c
-> @@ -82,7 +82,7 @@ int of_device_add(struct platform_device *ofdev)
->   * can use a platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE events
->   * to fix up DMA configuration.
->   */
-> -void of_dma_configure(struct device *dev, struct device_node *np)
-> +int of_dma_configure(struct device *dev, struct device_node *np)
->  {
->  	u64 dma_addr, paddr, size;
->  	int ret;
-> @@ -129,10 +129,15 @@ void of_dma_configure(struct device *dev, struct device_node *np)
->  		coherent ? " " : " not ");
->  
->  	iommu = of_iommu_configure(dev, np);
-> +	if (IS_ERR(iommu))
-> +		return PTR_ERR(iommu);
+>  drivers/acpi/Makefile          |   1 +
+>  drivers/acpi/acpi_indirectio.c | 344 +++++++++++++++++++++++++++++++++++++++++
+>  drivers/acpi/internal.h        |   5 +
+>  drivers/acpi/scan.c            |   1 +
+>  4 files changed, 351 insertions(+)
+>  create mode 100644 drivers/acpi/acpi_indirectio.c
+>
+> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
+> index a391bbc..10e5f2b 100644
+> --- a/drivers/acpi/Makefile
+> +++ b/drivers/acpi/Makefile
+> @@ -57,6 +57,7 @@ acpi-$(CONFIG_ACPI_PROCFS_POWER) += cm_sbs.o
+>  acpi-y                         += acpi_lpat.o
+>  acpi-$(CONFIG_ACPI_GENERIC_GSI) += irq.o
+>  acpi-$(CONFIG_ACPI_WATCHDOG)   += acpi_watchdog.o
+> +acpi-$(CONFIG_INDIRECT_PIO)    += acpi_indirectio.o
+>
+>  # These are (potentially) separate modules
+>
+> diff --git a/drivers/acpi/acpi_indirectio.c b/drivers/acpi/acpi_indirectio.c
+> new file mode 100644
+> index 0000000..c8c80b5
+> --- /dev/null
+> +++ b/drivers/acpi/acpi_indirectio.c
+> @@ -0,0 +1,344 @@
+> +/*
+> + * ACPI support for indirect-IO bus.
+> + *
+> + * Copyright (C) 2017 Hisilicon Limited, All Rights Reserved.
+> + * Author: Zhichang Yuan <yuanzhichang@hisilicon.com>
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License version 2 as
+> + * published by the Free Software Foundation.
+> + */
 > +
->  	dev_dbg(dev, "device is%sbehind an iommu\n",
->  		iommu ? " " : " not ");
->  
->  	arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
+> +#include <linux/acpi.h>
+> +#include <linux/platform_device.h>
+> +#include <linux/logic_pio.h>
 > +
-> +	return 0;
->  }
->  EXPORT_SYMBOL_GPL(of_dma_configure);
->  
-> diff --git a/include/linux/of_device.h b/include/linux/of_device.h
-> index af98455..2cacdd8 100644
-> --- a/include/linux/of_device.h
-> +++ b/include/linux/of_device.h
-> @@ -55,7 +55,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
->  	return of_node_get(cpu_dev->of_node);
->  }
->  
-> -void of_dma_configure(struct device *dev, struct device_node *np);
-> +int of_dma_configure(struct device *dev, struct device_node *np);
->  void of_dma_deconfigure(struct device *dev);
->  #else /* CONFIG_OF */
->  
-> @@ -104,8 +104,11 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
->  {
->  	return NULL;
->  }
-> -static inline void of_dma_configure(struct device *dev, struct device_node *np)
-> -{}
+> +#include "internal.h"
 > +
-> +static inline int of_dma_configure(struct device *dev, struct device_node *np)
+> +ACPI_MODULE_NAME("indirect IO");
+> +
+> +#define INDIRECT_IO_INFO(desc) ((unsigned long)&desc)
+> +
+> +struct lpc_private_data {
+> +       resource_size_t io_size;
+> +       resource_size_t io_start;
+> +};
+> +
+> +struct indirectio_device_desc {
+> +       void *pdata; /* device relevant info data */
+> +       int (*pre_setup)(struct acpi_device *adev, void *pdata);
+> +};
+> +
+> +static struct lpc_private_data lpc_data = {
+> +       .io_size = LPC_BUS_IO_SIZE,
+> +       .io_start = LPC_MIN_BUS_RANGE,
+> +};
+> +
+> +static inline bool acpi_logicio_supported_resource(struct acpi_resource *res)
 > +{
-> +	return 0;
+> +       switch (res->type) {
+> +       case ACPI_RESOURCE_TYPE_ADDRESS32:
+> +       case ACPI_RESOURCE_TYPE_ADDRESS64:
+> +               return true;
+> +       }
+> +       return false;
 > +}
->  static inline void of_dma_deconfigure(struct device *dev)
->  {}
->  #endif /* CONFIG_OF */
-> 
+> +
+> +static acpi_status acpi_count_logiciores(struct acpi_resource *res,
+> +                                          void *data)
+> +{
+> +       int *res_cnt = data;
+> +
+> +       if (acpi_logicio_supported_resource(res) &&
+> +               !acpi_dev_filter_resource_type(res, IORESOURCE_IO))
+> +               (*res_cnt)++;
+> +
+> +       return AE_OK;
+> +}
+> +
+> +static acpi_status acpi_read_one_logiciores(struct acpi_resource *res,
+> +               void *data)
+> +{
+> +       struct acpi_resource **resource = data;
+> +
+> +       if (acpi_logicio_supported_resource(res) &&
+> +               !acpi_dev_filter_resource_type(res, IORESOURCE_IO)) {
+> +               memcpy((*resource), res, sizeof(struct acpi_resource));
+> +               (*resource)->length = sizeof(struct acpi_resource);
+> +               (*resource)->type = res->type;
+> +               (*resource)++;
+> +       }
+> +
+> +       return AE_OK;
+> +}
+> +
+> +static acpi_status
+> +acpi_build_logiciores_template(struct acpi_device *adev,
+> +                       struct acpi_buffer *buffer)
+> +{
+> +       acpi_handle handle = adev->handle;
+> +       struct acpi_resource *resource;
+> +       acpi_status status;
+> +       int res_cnt = 0;
+> +
+> +       status = acpi_walk_resources(handle, METHOD_NAME__CRS,
+> +                                    acpi_count_logiciores, &res_cnt);
+> +       if (ACPI_FAILURE(status) || !res_cnt) {
+> +               dev_err(&adev->dev, "can't evaluate _CRS: %d\n", status);
+> +               return -EINVAL;
+> +       }
+> +
+> +       buffer->length = sizeof(struct acpi_resource) * (res_cnt + 1) + 1;
+> +       buffer->pointer = kzalloc(buffer->length - 1, GFP_KERNEL);
 
+(Seth Forshee noticed this issue, just passing it on)
+
+Should this just allocate the full buffer->length? That would keep the
+length attribute accurate (possibly avoiding an off-by-1 error later).
+It's not clear what the trailing byte is needed for, but other drivers
+allocate it as well (drivers/acpi/pci_link.c and
+drivers/platform/x86/sony-laptop.c).
+
+ -dann
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
