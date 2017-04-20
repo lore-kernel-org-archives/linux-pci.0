@@ -1,79 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0074.outbound.protection.outlook.com ([104.47.37.74]:23232
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S936387AbdDYBxU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Apr 2017 21:53:20 -0400
-Date: Mon, 24 Apr 2017 18:53:11 -0700
-From: Felix Manlunas <felix.manlunas@cavium.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Salvatore Benedetto <salvatore.benedetto@intel.com>,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
-        linux-pci@vger.kernel.org, qat-linux@intel.com,
-        linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 7/7] liquidio: use pcie_flr instead of duplicating it
-Message-ID: <20170425015311.GA1020@felix-thinkpad.cavium.com>
-References: <20170414191131.14286-1-hch@lst.de>
- <20170414191131.14286-8-hch@lst.de>
+Return-Path: <SRS0=zAag=34=google.com=bhelgaas@kernel.org>
+Return-Path: <SRS0=zAag=34=google.com=bhelgaas@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170414191131.14286-8-hch@lst.de>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <832cb9b3-ceaf-6771-bfc9-7bae35494f6d@redhat.com>
+References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
+ <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
+ <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
+ <baed1ecf-7a57-0229-42b0-d87599a225b5@redhat.com> <832cb9b3-ceaf-6771-bfc9-7bae35494f6d@redhat.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 20 Apr 2017 08:20:38 -0500
+Message-ID: <CAErSpo4+sVEydsxi8quK=avN=mWyoHV=bUxDDKgOfGR7=15zgA@mail.gmail.com>
+Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
+To: Jon Masters <jcm@redhat.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Jayachandran C <jnair@caviumnetworks.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>, Robin Murphy <robin.murphy@arm.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>, Joerg Roedel <joro@8bytes.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christoph Hellwig <hch@lst.de> 
-Date: Fri, 14 Apr 2017 21:11:31 +0200
+On Wed, Apr 19, 2017 at 7:25 PM, Jon Masters <jcm@redhat.com> wrote:
+> One additional footnote. I spent a bunch of time recently on my personal
+> Xeon systems walking through the PCIe topology and aligning on how to
+> advise the ARM server community proceed going forward. If you look at
+> how Intel vs AMD handle their host bridges for example, you'll see two
+> very different approaches to the case of cross-socket PCIe.
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/net/ethernet/cavium/liquidio/lio_vf_main.c | 15 +--------------
->  1 file changed, 1 insertion(+), 14 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/cavium/liquidio/lio_vf_main.c b/drivers/net/ethernet/cavium/liquidio/lio_vf_main.c
-> index 9d5e03502c76..afdbf7fa016e 100644
-> --- a/drivers/net/ethernet/cavium/liquidio/lio_vf_main.c
-> +++ b/drivers/net/ethernet/cavium/liquidio/lio_vf_main.c
-> @@ -869,20 +869,7 @@ static void octeon_pci_flr(struct octeon_device *oct)
->  	pci_write_config_word(oct->pci_dev, PCI_COMMAND,
->  			      PCI_COMMAND_INTX_DISABLE);
->  
-> -	/* Wait for Transaction Pending bit clean */
-> -	msleep(100);
-> -	pcie_capability_read_word(oct->pci_dev, PCI_EXP_DEVSTA, &status);
-> -	if (status & PCI_EXP_DEVSTA_TRPND) {
-> -		dev_info(&oct->pci_dev->dev, "Function reset incomplete after 100ms, sleeping for 5 seconds\n");
-> -		ssleep(5);
-> -		pcie_capability_read_word(oct->pci_dev, PCI_EXP_DEVSTA,
-> -					  &status);
-> -		if (status & PCI_EXP_DEVSTA_TRPND)
-> -			dev_info(&oct->pci_dev->dev, "Function reset still incomplete after 5s, reset anyway\n");
-> -	}
-> -	pcie_capability_set_word(oct->pci_dev, PCI_EXP_DEVCTL,
-> -				 PCI_EXP_DEVCTL_BCR_FLR);
-> -	mdelay(100);
-> +	pcie_flr(oct->pci_dev);
->  
->  	pci_cfg_access_unlock(oct->pci_dev);
->  
-> -- 
-> 2.11.0
-> 
+As a learning opportunity for me, can you share "lspci -vv" examples
+that show this Intel vs AMD difference?  Maybe the ACPI host bridge
+descriptions from dmesg are relevant too?
 
-This patch works.  I tested it on a LiquidIO NIC and the "next" branch of the
-PCI git tree.
+> But my
+> operating assumption is that anything longer term which looks boring and
+> x86 enough is probably fine from an ARM server point of view.
 
-But the patch causes a gcc warning:
+That sounds pretty safe to me.
 
-    .../lio_vf_main.c: In function 'octeon_pci_flr':
-    .../lio_vf_main.c:862:6: warning: unused variable 'status' [-Wunused-variable]
-
-Can you rework the patch to get rid of the warning?  Thanks.
+Bjorn
