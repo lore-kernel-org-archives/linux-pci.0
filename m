@@ -1,105 +1,30 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 4/4] nvme/pci: switch to pci_request_irq
+To: Keith Busch <keith.busch@intel.com>, Christoph Hellwig <hch@lst.de>
+References: <20170413070643.32165-1-hch@lst.de>
+ <20170413070643.32165-5-hch@lst.de>
+ <20170413200255.GB22775@localhost.localdomain>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+From: Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <e288a5fd-a30f-2b11-1051-e39feca3a652@grimberg.me>
+Date: Thu, 20 Apr 2017 19:19:25 +0300
 MIME-Version: 1.0
-In-Reply-To: <1492935543-18190-3-git-send-email-ryder.lee@mediatek.com>
-References: <1492935543-18190-1-git-send-email-ryder.lee@mediatek.com>
- <1492935543-18190-3-git-send-email-ryder.lee@mediatek.com>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Tue, 25 Apr 2017 14:18:19 +0200
-Message-ID: <CAK8P3a1vgi9VBZfRNq0dDKzmfe8FkHQtgz6fEXW9fyUnBHtaQQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] dt-bindings: pcie: Add documentation for Mediatek PCIe
-To: Ryder Lee <ryder.lee@mediatek.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
- Bjorn Helgaas <bhelgaas@google.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170413200255.GB22775@localhost.localdomain>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 23, 2017 at 10:19 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
-> Add documentation for PCIe host driver available in MT7623
-> series SoCs.
+> This is great. As an added bonus, more of struct nvme_queue's hot values
+> are in the same cache line!
 >
-> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> ---
->  .../bindings/pci/mediatek,mt7623-pcie.txt          | 153 +++++++++++++++++++++
->  1 file changed, 153 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
->
-> diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-> new file mode 100644
-> index 0000000..ee93ba2
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
-> @@ -0,0 +1,153 @@
-> +Mediatek MT7623 PCIe controller
-> +
-> +Required properties:
-> +- compatible: Should contain "mediatek,mt7623-pcie".
+> Reviewed-by: Keith Busch <keith.busch@intel.com>
 
-Did mediatek license the IP block from someone else or was it
-developed in-house? Is there a name and/or version identifier
-for the block itself other than identifying it as the one in mt7623?
+I think I can kill off for mlx5 as well.
 
-> +- device_type: Must be "pci"
-> +- reg: Base addresses and lengths of the pcie controller.
-> +- interrupts: A list of interrupt outputs of the controller.
+Very useful Christoph!
 
-Please be more specific about what each interrupt is for, and how
-many there are.
-
-> +Required properties:
-> +- device_type: Must be "pci"
-> +- assigned-addresses: Address and size of the port configuration registers
-> +- reg: Only the first four bytes are used to refer to the correct bus number
-> +  and device number.
-> +- #address-cells: Must be 3
-> +- #size-cells: Must be 2
-> +- ranges: Sub-ranges distributed from the PCIe controller node. An empty
-> +  property is sufficient.
-> +- clocks: Must contain an entry for each entry in clock-names.
-> +  See ../clocks/clock-bindings.txt for details.
-> +- clock-names: Must include the following entries:
-> +  - sys_ck
-> +- resets: Must contain an entry for each entry in reset-names.
-> +  See ../reset/reset.txt for details.
-
-This seems odd: you have a device that is simply identified as "pci"
-without any more specific ID, but you require additional properties
-(clocks, reset, ...) that are not part of the standard PCI binding.
-
-Can you clarify how the port devices related to the root device in
-this hardware design?
-
-Have you considered moving the nonstandard properties into the host
-bridge node and having that device deal with setting up the links
-to the other drivers? That way we could use the regular pcie
-port driver for the children.
-
-> +- reset-names: Must include the following entries:
-> +  - pcie-reset
-> +- num-lanes: Number of lanes to use for this port.
-> +- phys: Must contain an entry for each entry in phy-names.
-> +- phy-names: Must include an entry for each sub node. Entries are of the form
-> +  "pcie-phyN": where N ranges from 0 to the value specified for port number.
-> +  See ../phy/phy-mt7623-pcie.txt for details.
-
-I think the name should not include the number of the port but rather
-be always the same here.
-
-      Arnd
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
