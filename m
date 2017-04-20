@@ -1,65 +1,38 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1491917928.7236.8.camel@kernel.crashing.org>
-Subject: Re: [PATCH v3 21/32] powerpc: include default ioremap_nopost()
- implementation
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
-Date: Tue, 11 Apr 2017 23:38:48 +1000
-In-Reply-To: <20170411122923.6285-22-lorenzo.pieralisi@arm.com>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
- <20170411122923.6285-22-lorenzo.pieralisi@arm.com>
-Mime-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: linux-arch@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
- linux-kernel@vger.kernel.org, Paul Mackerras <paulus@samba.org>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:25925 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S970297AbdDTPLD (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Apr 2017 11:11:03 -0400
+Date: Thu, 20 Apr 2017 11:20:12 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Jisheng Zhang <jszhang@marvell.com>
+Cc: bhelgaas@google.com, jingoohan1@gmail.com, Joao.Pinto@synopsys.com,
+        svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH] PCI: dwc/host: Mark PCIe/PCI (MSI) cascade ISR as
+ IRQF_NO_THREAD
+Message-ID: <20170420152011.GC21311@localhost.localdomain>
+References: <20170420102718.3778-1-jszhang@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170420102718.3778-1-jszhang@marvell.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-T24gVHVlLCAyMDE3LTA0LTExIGF0IDEzOjI5ICswMTAwLCBMb3JlbnpvIFBpZXJhbGlzaSB3cm90
-ZToKPiBUaGUgUENJIHNwZWNpZmljYXRpb25zIChSZXYgMy4wLCAzLjIuNSAiVHJhbnNhY3Rpb24g
-T3JkZXJpbmcgYW5kIFBvc3RpbmciKQo+IG1hbmRhdGUgbm9uLXBvc3RlZCBjb25maWd1cmF0aW9u
-IHRyYW5zYWN0aW9ucy4gQXMgZnVydGhlciBoaWdobGlnaHRlZCBpbgo+IHRoZSBQQ0llIHNwZWNp
-ZmljYXRpb25zICg0LjAgLSBSZXYwLjMsICJPcmRlcmluZyBDb25zaWRlcmF0aW9ucyBmb3IgdGhl
-Cj4gRW5oYW5jZWQgQ29uZmlndXJhdGlvbiBBY2Nlc3MgTWVjaGFuaXNtIiksIHRocm91Z2ggRUNB
-TSBhbmQKPiBFQ0FNLWRlcml2YXRpdmUgY29uZmlndXJhdGlvbiBtZWNoYW5pc20sIHRoZSBtZW1v
-cnkgbWFwcGVkIHRyYW5zYWN0aW9ucwo+IGZyb20gdGhlIGhvc3QgQ1BVIGludG8gQ29uZmlndXJh
-dGlvbiBSZXF1ZXN0cyBvbiB0aGUgUENJIGV4cHJlc3MgZmFicmljCj4gbWF5IGNyZWF0ZSBvcmRl
-cmluZyBwcm9ibGVtcyBmb3Igc29mdHdhcmUgYmVjYXVzZSB3cml0ZXMgdG8gbWVtb3J5Cj4gYWRk
-cmVzcyBhcmUgdHlwaWNhbGx5IHBvc3RlZCB0cmFuc2FjdGlvbnMgKHVubGVzcyB0aGUgYXJjaGl0
-ZWN0dXJlIGNhbgo+IGVuZm9yY2UgdGhyb3VnaCB2aXJ0dWFsIGFkZHJlc3MgbWFwcGluZyBub24t
-cG9zdGVkIHdyaXRlIHRyYW5zYWN0aW9ucwo+IGJlaGF2aW91cikgYnV0IHdyaXRlcyB0byBDb25m
-aWd1cmF0aW9uIFNwYWNlIGFyZSBub3QgcG9zdGVkIG9uIHRoZSBQQ0kKPiBleHByZXNzIGZhYnJp
-Yy4KPiAKPiBJbmNsdWRlIHRoZSBhc20tZ2VuZXJpYyBpb3JlbWFwX25vcG9zdCgpIGltcGxlbWVu
-dGF0aW9uIChjdXJyZW50bHkKPiBmYWxsaW5nIGJhY2sgdG8gaW9yZW1hcF9ub2NhY2hlKCkpIHRv
-IHByb3ZpZGUgYSBub24tcG9zdGVkIHdyaXRlcwo+IGlvcmVtYXAgaW50ZXJmYWNlIHRvIGtlcm5l
-bCBzdWJzeXN0ZW1zLgoKTkFLLiBBcyBleHBsYWluZWQgaW4gbXkgcmVwbHkgdG8gcGF0Y2ggMC4K
-Cj4gU2lnbmVkLW9mZi1ieTogTG9yZW56byBQaWVyYWxpc2kgPGxvcmVuem8ucGllcmFsaXNpQGFy
-bS5jb20+Cj4gPiBDYzogTWljaGFlbCBFbGxlcm1hbiA8bXBlQGVsbGVybWFuLmlkLmF1Pgo+ID4g
-Q2M6IEJqb3JuIEhlbGdhYXMgPGJoZWxnYWFzQGdvb2dsZS5jb20+Cj4gPiBDYzogQmVuamFtaW4g
-SGVycmVuc2NobWlkdCA8YmVuaEBrZXJuZWwuY3Jhc2hpbmcub3JnPgo+ID4gQ2M6IFBhdWwgTWFj
-a2VycmFzIDxwYXVsdXNAc2FtYmEub3JnPgo+IC0tLQo+IMKgYXJjaC9wb3dlcnBjL2luY2x1ZGUv
-YXNtL2lvLmggfCAxICsKPiDCoDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKQo+IAo+IGRp
-ZmYgLS1naXQgYS9hcmNoL3Bvd2VycGMvaW5jbHVkZS9hc20vaW8uaCBiL2FyY2gvcG93ZXJwYy9p
-bmNsdWRlL2FzbS9pby5oCj4gaW5kZXggNWVkMjkyNC4uNmRjZDBlMiAxMDA2NDQKPiAtLS0gYS9h
-cmNoL3Bvd2VycGMvaW5jbHVkZS9hc20vaW8uaAo+ICsrKyBiL2FyY2gvcG93ZXJwYy9pbmNsdWRl
-L2FzbS9pby5oCj4gQEAgLTc1Nyw2ICs3NTcsNyBAQCBleHRlcm4gdm9pZCBfX2lvbWVtICppb3Jl
-bWFwX3Byb3QocGh5c19hZGRyX3QgYWRkcmVzcywgdW5zaWduZWQgbG9uZyBzaXplLAo+IMKgZXh0
-ZXJuIHZvaWQgX19pb21lbSAqaW9yZW1hcF93YyhwaHlzX2FkZHJfdCBhZGRyZXNzLCB1bnNpZ25l
-ZCBsb25nIHNpemUpOwo+ID4gwqAjZGVmaW5lIGlvcmVtYXBfbm9jYWNoZShhZGRyLCBzaXplKQlp
-b3JlbWFwKChhZGRyKSwgKHNpemUpKQo+ID4gwqAjZGVmaW5lIGlvcmVtYXBfdWMoYWRkciwgc2l6
-ZSkJCWlvcmVtYXAoKGFkZHIpLCAoc2l6ZSkpCj4gKyNpbmNsdWRlIDxhc20tZ2VuZXJpYy9pb3Jl
-bWFwLW5vcG9zdC5oPgo+IMKgCj4gwqBleHRlcm4gdm9pZCBpb3VubWFwKHZvbGF0aWxlIHZvaWQg
-X19pb21lbSAqYWRkcik7Cj4gwqAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0CmxpbnV4LWFybS1rZXJu
-ZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFkLm9yZy9tYWlsbWFu
-L2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
+On Thu, Apr 20, 2017 at 06:27:18PM +0800, Jisheng Zhang wrote:
+> Similar as commit 8ff0ef996ca0 ("PCI: host: Mark PCIe/PCI (MSI) IRQ
+> cascade handlers as IRQF_NO_THREAD"), we should mark PCIe/PCI (MSI)
+> IRQ cascade handlers IRQF_NO_THREAD explicitly. I just found this
+> issue in pcie-designware-plat driver, then searched the code, I think
+> we should fix pcie-qcom and vmd as well.
+> 
+> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
+> ---
+>  drivers/pci/dwc/pcie-designware-plat.c | 3 ++-
+>  drivers/pci/dwc/pcie-qcom.c            | 3 ++-
+>  drivers/pci/host/vmd.c                 | 3 ++-
+>  3 files changed, 6 insertions(+), 3 deletions(-)
+
+Okay for vmd driver.
+
+Reviewed-by: Keith Busch <keith.busch@intel.com>
