@@ -1,96 +1,144 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Date: Fri, 28 Apr 2017 08:19:19 +0200
-From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
-To: Sricharan R <sricharan@codeaurora.org>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Joerg Roedel <jroedel@suse.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        netdev@vger.kernel.org
-Subject: Re: [REGRESSION next-20170426] Commit 09515ef5ddad ("of/acpi:
- Configure dma operations at probe time for platform/amba/pci bus devices")
- causes oops in mvneta
-Message-ID: <20170428081919.21bb569d@gmail.com>
-In-Reply-To: <524b7fc8-1eca-a7d8-7bc7-6743be17c208@codeaurora.org>
-References: <20170426181508.687b52af@gmail.com>
-        <2fb57b9b-3944-d9cc-1fac-8dcccaa0c37a@codeaurora.org>
-        <20170427164014.422a124c@gmail.com>
-        <524b7fc8-1eca-a7d8-7bc7-6743be17c208@codeaurora.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20170420105153.GA9741@red-moon>
+References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+ <20170419164913.19674-3-lorenzo.pieralisi@arm.com>
+ <20170420105153.GA9741@red-moon>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 20 Apr 2017 08:12:37 -0500
+Message-ID: <CAErSpo4wEACDex+9LC_gmdNWO+HAi7mJM7d-3s_GjRgEhezKQw@mail.gmail.com>
+Subject: Re: [PATCH v4 02/21] linux/io.h: add PCI config space remap interface
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Michael Ellerman <mpe@ellerman.id.au>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Murali Karicheri <m-karicheri2@ti.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Arnd Bergmann <arnd@arndb.de>, Jon Mason <jonmason@broadcom.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ linux-arm <linux-arm-kernel@lists.infradead.org>,
+ "Luis R. Rodriguez" <mcgrof@kernel.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, 28 Apr 2017 11:13:33 +0530
-Sricharan R <sricharan@codeaurora.org> wrote:
+On Thu, Apr 20, 2017 at 5:51 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> [+ Michael]
+>
+> On Wed, Apr 19, 2017 at 05:48:51PM +0100, Lorenzo Pieralisi wrote:
+>> The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
+>> Posting") mandate non-posted configuration transactions. As further
+>> highlighted in the PCIe specifications (4.0 - Rev0.3, "Ordering
+>> Considerations for the Enhanced Configuration Access Mechanism"),
+>> through ECAM and ECAM-derivative configuration mechanism, the memory
+>> mapped transactions from the host CPU into Configuration Requests on the
+>> PCI express fabric may create ordering problems for software because
+>> writes to memory address are typically posted transactions (unless the
+>> architecture can enforce through virtual address mapping non-posted
+>> write transactions behaviour) but writes to Configuration Space are not
+>> posted on the PCI express fabric.
+>>
+>> Current DT and ACPI host bridge controllers map PCI configuration space
+>> (ECAM and ECAM-derivative) into the virtual address space through
+>> ioremap() calls, that are non-cacheable device accesses on most
+>> architectures, but may provide "bufferable" or "posted" write semantics
+>> in architecture like eg ARM/ARM64 that allow ioremap'ed regions writes
+>> to be buffered in the bus connecting the host CPU to the PCI fabric;
+>> this behaviour, as underlined in the PCIe specifications, may trigger
+>> transactions ordering rules and must be prevented.
+>>
+>> Introduce a new generic and explicit API to create a memory
+>> mapping for ECAM and ECAM-derivative config space area that
+>> defaults to ioremap_nocache() (which should provide a sane default
+>> behaviour) but still allowing architectures on which ioremap_nocache()
+>> results in posted write transactions to override the function
+>> call with an arch specific implementation that complies with
+>> the PCI specifications for configuration transactions.
+>>
+>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>> Cc: Arnd Bergmann <arnd@arndb.de>
+>> Cc: Will Deacon <will.deacon@arm.com>
+>> Cc: Bjorn Helgaas <bhelgaas@google.com>
+>> Cc: Russell King <linux@armlinux.org.uk>
+>> Cc: Catalin Marinas <catalin.marinas@arm.com>
+>> ---
+>>  include/linux/io.h | 19 +++++++++++++++++++
+>>  1 file changed, 19 insertions(+)
+>>
+>> diff --git a/include/linux/io.h b/include/linux/io.h
+>> index 82ef36e..3934aba 100644
+>> --- a/include/linux/io.h
+>> +++ b/include/linux/io.h
+>> @@ -91,6 +91,25 @@ void devm_memunmap(struct device *dev, void *addr);
+>>  void *__devm_memremap_pages(struct device *dev, struct resource *res);
+>>
+>>  /*
+>> + * The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and
+>> + * Posting") mandate non-posted configuration transactions. There is
+>> + * no ioremap API in the kernel that can guarantee non-posted write
+>> + * semantics across arches so provide a default implementation for
+>> + * mapping PCI config space that defaults to ioremap_nocache(); arches
+>> + * should override it if they have memory mapping implementations that
+>> + * guarantee non-posted writes semantics to make the memory mapping
+>> + * compliant with the PCI specification.
+>> + */
+>> +#ifndef pci_remap_cfgspace
+>> +#define pci_remap_cfgspace pci_remap_cfgspace
+>> +static inline void __iomem *pci_remap_cfgspace(phys_addr_t offset,
+>> +                                            size_t size)
+>> +{
+>> +     return ioremap_nocache(offset, size);
+>> +}
+>> +#endif
+>> +
+>> +/*
+>
+> As an heads-up, this patch strictly depends on:
+>
+> https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/arch/powerpc/include/asm/io.h?id=590c369e7ecc00be736be39ae0c62d1b5d563a51
+>
+> to go upstream first, otherwise we would break powerpc compilation
+> (owing to powerpc including linux/io.h before ioremap_nocache() is
+> defined in arch/powerpc/include/asm/io.h).
+>
+> If we want to decouple them I must drop the static inline and make
+> it a #define, it is not ideal but we must be aware of this, I really
+> want to prevent breakage if we go ahead with this set (and -next can
+> hide the issue).
 
-> Hi Ralph,
-> 
-> On 4/27/2017 8:10 PM, Ralph Sennhauser wrote:
-> > On Thu, 27 Apr 2017 19:05:09 +0530
-> > Sricharan R <sricharan@codeaurora.org> wrote:
-> >   
-> >> Hi,
-> >>
-> >> On 4/26/2017 9:45 PM, Ralph Sennhauser wrote:  
-> >>> Hi Sricharan R,
-> >>>
-> >>> Commit 09515ef5ddad ("of/acpi: Configure dma operations at probe
-> >>> time for platform/amba/pci bus devices") causes a kernel panic as
-> >>> in the log below on an armada-385. Reverting the commit fixes the
-> >>> issue.
-> >>>
-> >>> Regards
-> >>> Ralph    
-> >>
-> >> Somehow not getting a obvious clue on whats going wrong with the
-> >> logs below. From the log and looking in to dts, the drivers seems
-> >> to the one for "marvell,armada-370-neta".  
-> > 
-> > Correct.
-> >   
-> >> Issue looks the data from the dma
-> >> has gone bad and subsequently referring the wrong data has resulted
-> >> in the crash. Looks like the dma_masks is the one going wrong.
-> >> Can i get some logs from mvneta_probe, about dev->dma_mask,
-> >> dev->coherent_dma_mask and dev->dma_ops with and without the patch
-> >> to see whats the difference ?  
-> > 
-> > Not sure I understood what exactly you are after. Might be faster to
-> > just send me a patch with all debug print statements you like to
-> > see. 
-> 
-> Attached the patch with debug prints.
-> 
-> Regards,
->  Sricharan
-> 
+It looks like Stephen merges powerpc/next into linux-next before
+pci/next, so this will probably be OK there.  I'll try to remember to
+wait for the powerpc stuff to make it to Linus' tree during the merge
+window before I send my pull request.
 
-Hi Sricharan
+Bjorn
 
-With commit 09515ef5ddad
-
-[    1.288962] mvneta f1070000.ethernet: dev->dma_mask 0xffffffff
-[    1.294827] mvneta f1070000.ethernet: dev->coherent_dma_mask 0xffffffff
-[    1.301472] mvneta f1070000.ethernet: dev->dma_ops 0x40b00c0601460
-
-[    1.322047] mvneta f1034000.ethernet: dev->dma_mask 0xffffffff
-[    1.327904] mvneta f1034000.ethernet: dev->coherent_dma_mask 0xffffffff
-[    1.334549] mvneta f1034000.ethernet: dev->dma_ops 0x40b00c0601460
-
-
-With the patch reverted, the build that works
-
-[    1.289001] mvneta f1070000.ethernet: dev->dma_mask 0xffffffff
-[    1.294866] mvneta f1070000.ethernet: dev->coherent_dma_mask 0xffffffff
-[    1.301511] mvneta f1070000.ethernet: dev->dma_ops 0x40b00c06014a8
-
-[    1.317005] mvneta f1034000.ethernet: dev->dma_mask 0xffffffff
-[    1.322867] mvneta f1034000.ethernet: dev->coherent_dma_mask 0xffffffff
-[    1.329508] mvneta f1034000.ethernet: dev->dma_ops 0x40b00c06014a8
-
-
-Regards
-Ralph
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
