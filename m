@@ -1,61 +1,77 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: [PATCH 25/38] Annotate hardware config module parameters in
- drivers/pci/hotplug/
-From: David Howells <dhowells@redhat.com>
-To: linux-kernel@vger.kernel.org
-Cc: Scott Murray <scott@spiteful.org>, gnomes@lxorguk.ukuu.org.uk,
-        linux-pci@vger.kernel.org, dhowells@redhat.com,
-        linux-security-module@vger.kernel.org, keyrings@vger.kernel.org,
-        gregkh@linuxfoundation.org, Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 05 Apr 2017 18:00:37 +0100
-Message-ID: <149141163757.29162.6091759789292252631.stgit@warthog.procyon.org.uk>
-In-Reply-To: <149141141298.29162.5612793122429261720.stgit@warthog.procyon.org.uk>
-References: <149141141298.29162.5612793122429261720.stgit@warthog.procyon.org.uk>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f193.google.com ([209.85.128.193]:33301 "EHLO
+        mail-wr0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964934AbdDTOwK (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Apr 2017 10:52:10 -0400
+Date: Thu, 20 Apr 2017 16:52:06 +0200
+From: Frederic Weisbecker <fweisbec@gmail.com>
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+        torvalds@linux-foundation.org,
+        kernel list <linux-kernel@vger.kernel.org>,
+        linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
+ after cold boots, boots after reboot
+Message-ID: <20170420145205.GD25160@lerouge>
+References: <20170203205129.GA3791@amd>
+ <20170203211854.GA3697@amd>
+ <20170214175956.GA3587@amd>
+ <20170214192743.GA3869@amd>
+ <20170223162825.GA16646@lerouge>
+ <20170223184013.GA5177@amd>
+ <20170403153850.GA4418@lerouge>
+ <20170403182050.GA6555@amd>
+ <20170412150832.GE21309@lerouge>
+ <20170415213447.GA9506@amd>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170415213447.GA9506@amd>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-When the kernel is running in secure boot mode, we lock down the kernel to
-prevent userspace from modifying the running kernel image.  Whilst this
-includes prohibiting access to things like /dev/mem, it must also prevent
-access by means of configuring driver modules in such a way as to cause a
-device to access or modify the kernel image.
+On Sat, Apr 15, 2017 at 11:34:47PM +0200, Pavel Machek wrote:
+> On Wed 2017-04-12 17:08:35, Frederic Weisbecker wrote:
+> > On Mon, Apr 03, 2017 at 08:20:50PM +0200, Pavel Machek wrote:
+> > > > > > > > ...1d.7: PCI fixup... pass 2
+> > > > > > > > ...1d.7: PCI fixup... pass 3
+> > > > > > > > ...1d.7: PCI fixup... pass 3 done
+> > > > > > > > 
+> > > > > > > > ...followed by hang. So yes, it looks USB related.
+> > > > > > > > 
+> > > > > > > > (Sometimes it hangs with some kind backtrace involving secondary CPU
+> > > > > > > > startup, unfortunately useful info is off screen at that point).
+> > > > > > > 
+> > > > > > > Forgot to say, 1d.7 is EHCI controller.
+> > > > > > > 
+> > > > > > > 00:1d.7 USB controller: Intel Corporation NM10/ICH7 Family USB2 EHCI
+> > > > > > > Controller (rev 01)
+> > > > > > 
+> > > > > > Ok, I should have access soon to a EeePc 1015CX (which seem to have this controller).
+> > > > > > I hope I'll be able to reproduce the issue there. If not, I'm sorry but I'll have to
+> > > > > > burden you again :-)
+> > > > > 
+> > > > > Go through more mails. It is only reproducible after cold boot. .. so
+> > > > > I doubt it will be easy to reproduce on another machine.
+> > > > > 
+> > > > > Now... I do have serial port, and I even might have serial cable
+> > > > > somewhere, but.... Giving how sensitive it is, it is probably going to
+> > > > > go away with console on ttyS...
+> > > > 
+> > > > I also tried on an eeepc (which has ICH7/NM10 as well), with your config.
+> > > > I even plugged a usb keyboard but even then I have been unable to
+> > > > reproduce either :-(
+> > > 
+> > > Ok, give me some time. I'm no longer using the affected machine, so no
+> > > promises.
+> > 
+> > Actually someone reported me a very similar issue than yours lately. It's probably
+> > the same. And I have a potential fix.
+> 
+> Got the machine back to work -- I guess it will be useful for distcc.
+> 
+> And yes, you seem to have right fix :-). 
+> 
+> Tested-by: Pavel Machek <pavel@ucw.cz>
 
-To this end, annotate module_param* statements that refer to hardware
-configuration and indicate for future reference what type of parameter they
-specify.  The parameter parser in the core sees this information and can
-skip such parameters with an error message if the kernel is locked down.
-The module initialisation then runs as normal, but just sees whatever the
-default values for those parameters is.
-
-Note that we do still need to do the module initialisation because some
-drivers have viable defaults set in case parameters aren't specified and
-some drivers support automatic configuration (e.g. PNP or PCI) in addition
-to manually coded parameters.
-
-This patch annotates drivers in drivers/pci/hotplug/.
-
-Suggested-by: Alan Cox <gnomes@lxorguk.ukuu.org.uk>
-Signed-off-by: David Howells <dhowells@redhat.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-cc: Scott Murray <scott@spiteful.org>
-cc: linux-pci@vger.kernel.org
----
-
- drivers/pci/hotplug/cpcihp_generic.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/hotplug/cpcihp_generic.c b/drivers/pci/hotplug/cpcihp_generic.c
-index 88a44a707b96..bbf9cf8aeaad 100644
---- a/drivers/pci/hotplug/cpcihp_generic.c
-+++ b/drivers/pci/hotplug/cpcihp_generic.c
-@@ -220,7 +220,7 @@ module_param(first_slot, byte, 0);
- MODULE_PARM_DESC(first_slot, "Hotswap bus first slot number");
- module_param(last_slot, byte, 0);
- MODULE_PARM_DESC(last_slot, "Hotswap bus last slot number");
--module_param(port, ushort, 0);
-+module_param_hw(port, ushort, ioport, 0);
- MODULE_PARM_DESC(port, "#ENUM signal I/O port");
- module_param(enum_bit, uint, 0);
- MODULE_PARM_DESC(enum_bit, "#ENUM signal bit (0-7)");
+Thanks a lot! I'm posting the fix.
