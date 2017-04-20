@@ -1,55 +1,36 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35764 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:53388 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S947712AbdDUAEG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Apr 2017 20:04:06 -0400
+        with ESMTP id S971510AbdDTROy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 20 Apr 2017 13:14:54 -0400
 Subject: Re: [PATCH v2] PCI: disable SERR for kdump kernel
-To: Yinghai Lu <yinghai@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
 References: <20170419003130.5302-1-yinghai@kernel.org>
- <584359f9-5851-08c8-4b80-ae73abc4fe59@codeaurora.org>
- <CAE9FiQVQ4Mvc_SufENJcuO1309h+jqDdme9XNB3R9OvZJKzHvQ@mail.gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <a1b0cc72-1724-9b67-ec58-9650d2e8ff94@codeaurora.org>
-Date: Thu, 20 Apr 2017 20:04:03 -0400
+Message-ID: <584359f9-5851-08c8-4b80-ae73abc4fe59@codeaurora.org>
+Date: Thu, 20 Apr 2017 13:14:46 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAE9FiQVQ4Mvc_SufENJcuO1309h+jqDdme9XNB3R9OvZJKzHvQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20170419003130.5302-1-yinghai@kernel.org>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/20/2017 7:37 PM, Yinghai Lu wrote:
-> On Thu, Apr 20, 2017 at 10:14 AM, Sinan Kaya <okaya@codeaurora.org> wrote:
->> On 4/18/2017 8:31 PM, Yinghai Lu wrote:
->>> * pci_setup_device - fill in class and map information of a device
->>>   * @dev: the device structure to fill
->>> @@ -1572,6 +1592,9 @@ int pci_setup_device(struct pci_dev *dev
->>>       /* device class may be changed after fixup */
->>>       class = dev->class >> 8;
->>>
->>> +     if (is_kdump_kernel())
->>> +             pci_disable_serr(dev);
->>> +
->>
->> This sounds like something that needs to be done while shutting down
->> the first kernel as part of the kdump procedure rather than boot of
->> the kdump kernel in pci setup.
-> 
-> For kdump path, first kernel shutdown path is not called.
-> 
-> We have to do sth in second kernel instead.
-> 
+On 4/18/2017 8:31 PM, Yinghai Lu wrote:
+> * pci_setup_device - fill in class and map information of a device
+>   * @dev: the device structure to fill
+> @@ -1572,6 +1592,9 @@ int pci_setup_device(struct pci_dev *dev
+>  	/* device class may be changed after fixup */
+>  	class = dev->class >> 8;
+>  
+> +	if (is_kdump_kernel())
+> +		pci_disable_serr(dev);
+> +
 
-I didn't know that. Bjorn's compatibility point is also a concern. 
-Ideally you want something in both places.
-
-> Thanks
-> 
-> Yinghai
-> 
-
+This sounds like something that needs to be done while shutting down
+the first kernel as part of the kdump procedure rather than boot of 
+the kdump kernel in pci setup.
 
 -- 
 Sinan Kaya
