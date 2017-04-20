@@ -1,111 +1,50 @@
-Return-Path: <SRS0=P6S7=3Z=kernel.crashing.org=benh@kernel.org>
-Return-Path: <SRS0=P6S7=3Z=kernel.crashing.org=benh@kernel.org>
-Message-ID: <1492413640.25766.52.camel@kernel.crashing.org>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Logan Gunthorpe <logang@deltatee.com>,
-        Dan Williams
-	 <dan.j.williams@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-        Jason Gunthorpe
- <jgunthorpe@obsidianresearch.com>,
-        Christoph Hellwig <hch@lst.de>, Sagi
- Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley"
- <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen"
- <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise
- <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>, Max
- Gurtovoy <maxg@mellanox.com>,
-        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm
- <linux-nvdimm@ml01.01.org>,
-        "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>,
-        Jerome Glisse <jglisse@redhat.com>
-Date: Mon, 17 Apr 2017 17:20:40 +1000
-In-Reply-To: <6149ab5e-c981-6881-8c5a-22349561c3e8@deltatee.com>
-References: 
-	<CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
-	 <6e732d6a-9baf-1768-3e9c-f6c887a836b2@deltatee.com>
-	 <1492381958.25766.50.camel@kernel.crashing.org>
-	 <6149ab5e-c981-6881-8c5a-22349561c3e8@deltatee.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0105.outbound.protection.outlook.com ([104.47.38.105]:6624
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S939298AbdDTShj (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 20 Apr 2017 14:37:39 -0400
+From: Haiyang Zhang <haiyangz@microsoft.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Piotr Jaroszynski <pjaroszynski@nvidia.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] pci-hyperv: Use only 16 bit integer for PCI domain
+Date: Thu, 20 Apr 2017 18:37:35 +0000
+Message-ID: <BLUPR03MB1412F7A0A693B67685D5FE9FCA1B0@BLUPR03MB1412.namprd03.prod.outlook.com>
+References: <1492706123-22913-1-git-send-email-haiyangz@exchange.microsoft.com>
+ <CAErSpo4iFS05Kk3Km54fFmpMf11XCoaPmGxSzqE3QuA5P=T6=Q@mail.gmail.com>
+In-Reply-To: <CAErSpo4iFS05Kk3Km54fFmpMf11XCoaPmGxSzqE3QuA5P=T6=Q@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, 2017-04-16 at 23:13 -0600, Logan Gunthorpe wrote:
-> 
-> > 
-> > I'm still not 100% why do you need a "p2mem device" mind you ...
-> 
-> Well, you don't "need" it but it is a design choice that I think makes a
-> lot of sense for the following reasons:
-> 
-> 1) p2pmem is in fact a device on the pci bus. A pci driver will need to
-> set it up and create the device and thus it will have a natural parent
-> pci device. Instantiating a struct device for it means it will appear in
-> the device hierarchy and one can use that to reason about its position
-> in the topology.
-
-But is it ? For example take a GPU, does it, in your scheme, need an
-additional "p2pmem" child ? Why can't the GPU driver just use some
-helper to instantiate the necessary struct pages ? What does having an
-actual "struct device" child buys you ?
-
-> 2) In order to create the struct pages we use the ZONE_DEVICE
-> infrastructure which requires a struct device. (See
-> devm_memremap_pages.)
-
-Yup, but you already have one in the actual pci_dev ... What is the
-benefit of adding a second one ?
-
->  This amazingly gets us the get_dev_pagemap
-> architecture which also uses a struct device. So by using a p2pmem
-> device we can go from struct page to struct device to p2pmem device
-> quickly and effortlessly.
-
-Which isn't terribly useful in itself right ? What you care about is
-the "enclosing" pci_dev no ? Or am I missing something ?
-
-> 3) You wouldn't want to use the pci's struct device because it doesn't
-> really describe what's going on. For example, there may be multiple
-> devices on the pci device in question: eg. an NVME card and some p2pmem.
-
-What is "some p2pmem" ?
-
-> Or it could be a NIC with some p2pmem.
-
-Again what is "some p2pmem" ?
-
-That a device might have some memory-like buffer space is all well and
-good but does it need to be specifically distinguished at the device
-level ? It could be inherent to what the device is... for example again
-take the GPU example, why would you call the FB memory "p2pmem" ? 
-
->  Or it could just be p2pmem by itself. And the logic to figure out what
->  memory is available and where
-> the address is will be non-standard so it's really straightforward to
-> have any pci driver just instantiate a p2pmem device.
-
-Again I'm not sure why it needs to "instanciate a p2pmem" device. Maybe
-it's the term "p2pmem" that offputs me. If p2pmem allowed to have a
-standard way to lookup the various offsets etc... I mentioned earlier,
-then yes, it would make sense to have it as a staging point. As-is, I
-don't know. 
-
-> It is probably worth you reading the RFC patches at this point to get a
-> better feel for this.
-
-Yup, I'll have another look a bit more in depth.
-
-Cheers,
-Ben.
-
-
-> Logan
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBCam9ybiBIZWxnYWFzIFttYWls
+dG86YmhlbGdhYXNAZ29vZ2xlLmNvbV0NCj4gU2VudDogVGh1cnNkYXksIEFwcmlsIDIwLCAyMDE3
+IDI6MzMgUE0NCj4gVG86IEhhaXlhbmcgWmhhbmcgPGhhaXlhbmd6QG1pY3Jvc29mdC5jb20+DQo+
+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBLWSBTcmluaXZhc2FuIDxreXNAbWljcm9z
+b2Z0LmNvbT47DQo+IFN0ZXBoZW4gSGVtbWluZ2VyIDxzdGhlbW1pbkBtaWNyb3NvZnQuY29tPjsg
+b2xhZkBhZXBmbGUuZGU7DQo+IHZrdXpuZXRzQHJlZGhhdC5jb207IGRyaXZlcmRldi1kZXZlbEBs
+aW51eGRyaXZlcnByb2plY3Qub3JnOyBsaW51eC0NCj4ga2VybmVsQHZnZXIua2VybmVsLm9yZw0K
+PiBTdWJqZWN0OiBSZTogW1BBVENIXSBwY2ktaHlwZXJ2OiBVc2Ugb25seSAxNiBiaXQgaW50ZWdl
+ciBmb3IgUENJIGRvbWFpbg0KPiANCj4gT24gVGh1LCBBcHIgMjAsIDIwMTcgYXQgMTE6MzUgQU0s
+IEhhaXlhbmcgWmhhbmcNCj4gPGhhaXlhbmd6QGV4Y2hhbmdlLm1pY3Jvc29mdC5jb20+IHdyb3Rl
+Og0KPiA+IEZyb206IEhhaXlhbmcgWmhhbmcgPGhhaXlhbmd6QG1pY3Jvc29mdC5jb20+DQo+ID4N
+Cj4gPiBUaGlzIHBhdGNoIHVzZXMgdGhlIGxvd2VyIDE2IGJpdHMgb2YgdGhlIHNlcmlhbCBudW1i
+ZXIgYXMgUENJDQo+ID4gZG9tYWluLCBvdGhlcndpc2Ugc29tZSBkcml2ZXJzIG1heSBub3QgYmUg
+YWJsZSB0byBoYW5kbGUgaXQuDQo+IA0KPiBDYW4geW91IGdpdmUgYW55IG1vcmUgZGV0YWlscyBh
+Ym91dCB0aGlzPyAgV2hpY2ggZHJpdmVycywgZm9yDQo+IGluc3RhbmNlPyAgV2h5IGRvIGRyaXZl
+cnMgY2FyZSBhYm91dCB0aGUgZG9tYWluIGF0IGFsbD8gIENhbiB3ZSBvcg0KPiBzaG91bGQgd2Ug
+bWFrZSB0aGlzIG1vcmUgZXhwbGljaXQgYW5kIGNvbnNpc3RlbnQgaW4gdGhlIFBDSSBjb3JlLA0K
+PiBlLmcuLCBwY2lfZG9tYWluX25yKCkgaXMgY3VycmVudGx5IGRlZmluZWQgdG8gcmV0dXJuICJp
+bnQiOyBtYXliZSBpdA0KPiBzaG91bGQgYmUgdTMyPyAgKEFsdGhvdWdoIEkgdGhpbmsgImludCIg
+aXMgdGhlIHNhbWUgc2l6ZSBhcyAidTMyIiBvbg0KPiBhbGwgYXJjaGVzIGFueXdheSkuDQoNCkl0
+J3MgTnZpZGlhIGRyaXZlci4NCg0KUGlvdHIsIGNvdWxkIHlvdSBleHBsYWluIHdoeSB0aGUgZHJp
+dmVyIGV4cGVjdHMgMTYgYml0IGRvbWFpbiBudW1iZXI/DQoNClRoYW5rcywNCi0gSGFpeWFuZw0K
