@@ -1,42 +1,72 @@
-Return-Path: <SRS0=mgZL=35=codeaurora.org=okaya@kernel.org>
-Return-Path: <SRS0=mgZL=35=codeaurora.org=okaya@kernel.org>
-Subject: Re: [PATCH V8 4/5] PCI/ASPM: save power on values during bridge init
-To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
- <1491627351-1111-5-git-send-email-okaya@codeaurora.org>
- <CACK8Z6GXfMWxakNQnvMToig9z9McnJKeYFc2BAAFy7ys8=PUWg@mail.gmail.com>
- <d3857812-7e03-4b62-f7cb-ac0d139b6123@codeaurora.org>
- <20170414214452.GA21870@bhelgaas-glaptop.roam.corp.google.com>
- <66168dde-7719-6f74-3f06-8e4724dd2918@codeaurora.org>
- <CAErSpo7p_2dTDTC7J4HdQUw_5GH8081dUZ=XVqd=sRLrA_FJnA@mail.gmail.com>
- <c0c2f48f-d725-058e-a1ad-92ab4b6e7fb3@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B2846676C7EF@IRSMSX101.ger.corp.intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Rajat Jain <rajatja@google.com>,
- Rajat Jain <rajatxjain@gmail.com>, David Daney <david.daney@cavium.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Timur Tabi <timur@codeaurora.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Julia Lawall <Julia.Lawall@lip6.fr>,
- linux-arm-msm <linux-arm-msm@vger.kernel.org>,
- Yinghai Lu <yinghai@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
- linux-arm <linux-arm-kernel@lists.infradead.org>,
- Myron Stowe <myron.stowe@redhat.com>
-From: Sinan Kaya <okaya@codeaurora.org>
-Message-ID: <16c80ef9-8928-b7c9-dc6e-f1c96efb6da3@codeaurora.org>
-Date: Fri, 21 Apr 2017 09:50:23 -0400
+Return-Path: <SRS0=TMva=34=arm.com=marc.zyngier@kernel.org>
+Return-Path: <SRS0=TMva=34=arm.com=marc.zyngier@kernel.org>
+Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
+To: Mason <slash.tmp@free.fr>, Thomas Gleixner <tglx@linutronix.de>
+References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
+ <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
+ <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
+ <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
+ <0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
+ <4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
+ <30f662a6-5dab-515b-e35a-a312f3c7b509@free.fr>
+ <5f81730d-fbe3-1f4c-de34-09bbfb893ee1@arm.com>
+ <2b5eef4c-32f2-54f1-ca2f-f9426e68fb2c@free.fr>
+ <67014006-a380-9e3b-c9af-a421052cb8e0@arm.com>
+ <b59b81ea-bc1b-bff5-4a78-8a69538b0de3@free.fr>
+ <bc5bf8ad-69ef-4f14-f450-e162ddb5af7c@arm.com>
+ <241b130e-1fb7-ecd4-034e-eb02065ada66@free.fr>
+ <37cd6172-b04e-fcad-18fc-4fbb26cc611b@arm.com>
+ <87d48d57-5f9f-1b35-99da-ab39de2d3d48@free.fr>
+ <2003d851-e17e-1a43-3889-ec6e79e635e3@free.fr>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <b61614bd-10e4-25eb-95bc-fd8939d4449f@arm.com>
+Date: Thu, 20 Apr 2017 10:43:11 +0100
 MIME-Version: 1.0
-In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B2846676C7EF@IRSMSX101.ger.corp.intel.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <2003d851-e17e-1a43-3889-ec6e79e635e3@free.fr>
+Content-Type: text/plain; charset=iso-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/21/2017 3:46 AM, Patel, Mayurkumar wrote:
-> If we want to follow above approach then shall we consider having something similar as following?
+On 20/04/17 09:20, Mason wrote:
+> On 19/04/2017 13:19, Mason wrote:
+> 
+>> My biggest problem is that tango_unmask() is never called.
+> 
+> FTR, the missing incantation was:
+> Explicitly calling tango_{mask/unmask/ack} from the corresponding msi_{mask/unmask/ack}
 
-Do you see this problem if you boot with pcie_aspm.policy=powersave option?
+Using irq_chip_mask_parent and co, you mean?
 
+> Marc, I have one nagging doubt, wrt splitting MSI line selection
+> and MSI enable.
+> 
+> tango_irq_domain_alloc : finds an available MSI 'j' to allocate
+> tango_irq_domain_free : release MSI 'j'
+> tango_unmask : enable MSI 'j'
+> tango_mask : disable MSI 'j'
+> 
+> Is the following scenario guaranteed to never happen?
+> 
+> tango_irq_domain_alloc // alloc 0
+> tango_irq_domain_free  // free 0
+> tango_irq_domain_alloc // alloc 0
+> tango_unmask // enable 0
+> tango_unmask // enable 0 = NOP
+> tango_mask   // disable 0
+> 
+> In this theoretical scenario, we would be left with a non-functional
+> MSI 0.
 
+I'm not sure I get the example above, and what the various alloc/free
+calls have to do with anything. If you have unbalanced
+enable/disable_irq, you loose. Don't do that.
+
+	M.
 -- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Jazz is not dead. It just smells funny...
