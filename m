@@ -1,44 +1,62 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:51029 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754009AbdD0IBm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 27 Apr 2017 04:01:42 -0400
-Date: Thu, 27 Apr 2017 10:02:07 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Kyle Gale <kylewgale@gmail.com>
-Cc: linux-pci@vger.kernel.org
-Subject: Re: PCI Rescan Question
-Message-ID: <20170427080207.GA11141@wunner.de>
-References: <CAEhpy_c96xmviS8fE4rMDeK9dPiSLhTrW_MQNtdkKXkwoU8PEg@mail.gmail.com>
+Return-Path: <SRS0=w+TJ=34=free.fr=slash.tmp@kernel.org>
+Return-Path: <SRS0=w+TJ=34=free.fr=slash.tmp@kernel.org>
+Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
+From: Mason <slash.tmp@free.fr>
+To: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
+ LKML <linux-kernel@vger.kernel.org>
+References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
+ <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
+ <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
+ <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
+ <0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
+ <4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
+ <30f662a6-5dab-515b-e35a-a312f3c7b509@free.fr>
+ <5f81730d-fbe3-1f4c-de34-09bbfb893ee1@arm.com>
+ <2b5eef4c-32f2-54f1-ca2f-f9426e68fb2c@free.fr>
+ <67014006-a380-9e3b-c9af-a421052cb8e0@arm.com>
+ <b59b81ea-bc1b-bff5-4a78-8a69538b0de3@free.fr>
+ <bc5bf8ad-69ef-4f14-f450-e162ddb5af7c@arm.com>
+ <241b130e-1fb7-ecd4-034e-eb02065ada66@free.fr>
+ <37cd6172-b04e-fcad-18fc-4fbb26cc611b@arm.com>
+ <87d48d57-5f9f-1b35-99da-ab39de2d3d48@free.fr>
+Message-ID: <2003d851-e17e-1a43-3889-ec6e79e635e3@free.fr>
+Date: Thu, 20 Apr 2017 10:20:31 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAEhpy_c96xmviS8fE4rMDeK9dPiSLhTrW_MQNtdkKXkwoU8PEg@mail.gmail.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <87d48d57-5f9f-1b35-99da-ab39de2d3d48@free.fr>
+Content-Type: text/plain; charset=ISO-8859-15
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 26, 2017 at 03:56:09PM -0700, Kyle Gale wrote:
-> Can someone help me understand why I need to remove my stale PCI
-> device files from the tree if I want to properly get my device
-> re-initialized after unplugging and reinserting?
-> 
-> For example, I turn on my system with my PCI device plugged in. All is
-> fine. I unplug it, plug it back in, and rescan (echo 1 >
-> /sys/bus/pci/devices/rescan) and end up in this state where my BAR0 is
-> not set, and other things are not entirely correct.
-> 
-> But if I do a remove (echo 1 > /sys/bus/pci/devices/xxxx/xx.x/remove)
-> of the port, it then properly re-initializes my device when I do a
-> rescan.
-> 
-> Why does it not suffice to simply do a rescan? Does the rescan skip
-> some step if it finds that the device is already in the PCI tree? It's
-> not as if the rescan completely skips the device if I don't do a
-> remove, it just doesn't do all of the initialization.
+On 19/04/2017 13:19, Mason wrote:
 
-Initiating a rescan via sysfs results in a call to pci_rescan_bus(),
-which only adds devices but doesn't remove any.  I guess it can be
-argued that this behavior is counter-intuitive and should be changed.
+> My biggest problem is that tango_unmask() is never called.
 
-Thanks,
+FTR, the missing incantation was:
+Explicitly calling tango_{mask/unmask/ack} from the corresponding msi_{mask/unmask/ack}
 
-Lukas
+Marc, I have one nagging doubt, wrt splitting MSI line selection
+and MSI enable.
+
+tango_irq_domain_alloc : finds an available MSI 'j' to allocate
+tango_irq_domain_free : release MSI 'j'
+tango_unmask : enable MSI 'j'
+tango_mask : disable MSI 'j'
+
+Is the following scenario guaranteed to never happen?
+
+tango_irq_domain_alloc // alloc 0
+tango_irq_domain_free  // free 0
+tango_irq_domain_alloc // alloc 0
+tango_unmask // enable 0
+tango_unmask // enable 0 = NOP
+tango_mask   // disable 0
+
+In this theoretical scenario, we would be left with a non-functional
+MSI 0.
+
+Regards.
