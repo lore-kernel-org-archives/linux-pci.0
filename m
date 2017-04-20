@@ -1,86 +1,89 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0040.outbound.protection.outlook.com ([104.47.36.40]:59875
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933435AbdDGQqm (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Apr 2017 12:46:42 -0400
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: 'Joerg Roedel' <joro@8bytes.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Daniel Drake <drake@endlessm.com>,
-        Samuel Sieb <samuel@sieb.net>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Joerg Roedel <jroedel@suse.de>
-Subject: RE: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-Date: Fri, 7 Apr 2017 16:46:36 +0000
-Message-ID: <BN6PR12MB1652634583ADBB2C93E1414DF70C0@BN6PR12MB1652.namprd12.prod.outlook.com>
-References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
-In-Reply-To: <1491575538-22694-1-git-send-email-joro@8bytes.org>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Jisheng Zhang'" <jszhang@marvell.com>, <bhelgaas@google.com>
+Cc: <Joao.Pinto@synopsys.com>, <svarbanov@mm-sol.com>,
+        <keith.busch@intel.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
+References: <20170420102718.3778-1-jszhang@marvell.com>
+In-Reply-To: <20170420102718.3778-1-jszhang@marvell.com>
+Subject: Re: [PATCH] PCI: dwc/host: Mark PCIe/PCI (MSI) cascade ISR as IRQF_NO_THREAD
+Date: Thu, 20 Apr 2017 11:07:11 -0400
+Message-ID: <000201d2b9e7$ca09a7a0$5e1cf6e0$@gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain;
+        charset="us-ascii"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Joerg Roedel [mailto:joro@8bytes.org]
-> Sent: Friday, April 07, 2017 10:32 AM
-> To: Bjorn Helgaas
-> Cc: linux-pci@vger.kernel.org; linux-kernel@vger.kernel.org; Daniel Drake=
-;
-> Deucher, Alexander; Samuel Sieb; David Woodhouse; Joerg Roedel
-> Subject: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
->=20
-> From: Joerg Roedel <jroedel@suse.de>
->=20
-> ATS is broken on this hardware and causes IOMMU stalls and
-> system failure. Disable ATS on these devices to make them
-> usable again with IOMMU enabled.
->=20
-> Note that the commit in the Fixes-tag is not buggy, it
-> just uncovers the problem in the hardware by increasing
-> the ATS-flush rate.
->=20
-> Fixes: b1516a14657a ('iommu/amd: Implement flush queue')
-> Signed-off-by: Joerg Roedel <jroedel@suse.de>
+On Thursday, April 20, 2017 6:27 AM, Jisheng Zhang wrote:
+> 
+> Similar as commit 8ff0ef996ca0 ("PCI: host: Mark PCIe/PCI (MSI) IRQ
+> cascade handlers as IRQF_NO_THREAD"), we should mark PCIe/PCI (MSI)
+> IRQ cascade handlers IRQF_NO_THREAD explicitly. I just found this
+> issue in pcie-designware-plat driver, then searched the code, I think
+> we should fix pcie-qcom and vmd as well.
+> 
+> Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
 
-Acked-by: Alex Deucher <alexander.deucher@amd.com>
+For pcie-designware-plat.c,
+
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
+Thank you.
+
+Best regards,
+Jingoo Han
 
 > ---
->  drivers/pci/quirks.c | 19 +++++++++++++++++++
->  1 file changed, 19 insertions(+)
->=20
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 6736836..7cbe316 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4634,3 +4634,22 @@ static void quirk_no_aersid(struct pci_dev *pdev)
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031,
-> quirk_no_aersid);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032,
-> quirk_no_aersid);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033,
-> quirk_no_aersid);
-> +
-> +#ifdef CONFIG_PCI_ATS
-> +/*
-> + * Some devices have a broken ATS implementation causing IOMMU stalls.
-> + * Don't use ATS for those devices.
-> + */
-> +static void quirk_disable_ats(struct pci_dev *pdev)
-> +{
-> +	/*
-> +	 * Set pdev->ats_cap =3D 0 to make pci_enable_ats() bail out
-> +	 * early.
-> +	 */
-> +	dev_info(&pdev->dev, "QUIRK: Disabling ATS");
-> +	pdev->ats_cap =3D 0;
-> +}
-> +
-> +/* AMD Stoney platform GPU */
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4,
-> quirk_disable_ats);
-> +#endif /* CONFIG_PCI_ATS */
+>  drivers/pci/dwc/pcie-designware-plat.c | 3 ++-
+>  drivers/pci/dwc/pcie-qcom.c            | 3 ++-
+>  drivers/pci/host/vmd.c                 | 3 ++-
+>  3 files changed, 6 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware-plat.c
+> b/drivers/pci/dwc/pcie-designware-plat.c
+> index f20d494922ab..0db1dafc82bb 100644
+> --- a/drivers/pci/dwc/pcie-designware-plat.c
+> +++ b/drivers/pci/dwc/pcie-designware-plat.c
+> @@ -67,7 +67,8 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
+> 
+>  		ret = devm_request_irq(dev, pp->msi_irq,
+>  					dw_plat_pcie_msi_irq_handler,
+> -					IRQF_SHARED, "dw-plat-pcie-msi",
+pp);
+> +					IRQF_SHARED | IRQF_NO_THREAD,
+> +					"dw-plat-pcie-msi", pp);
+>  		if (ret) {
+>  			dev_err(dev, "failed to request MSI IRQ\n");
+>  			return ret;
+> diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+> index 67eb7f5926dd..a5570c58081e 100644
+> --- a/drivers/pci/dwc/pcie-qcom.c
+> +++ b/drivers/pci/dwc/pcie-qcom.c
+> @@ -727,7 +727,8 @@ static int qcom_pcie_probe(struct platform_device
+> *pdev)
+> 
+>  		ret = devm_request_irq(dev, pp->msi_irq,
+>  				       qcom_pcie_msi_irq_handler,
+> -				       IRQF_SHARED, "qcom-pcie-msi", pp);
+> +				       IRQF_SHARED | IRQF_NO_THREAD,
+> +				       "qcom-pcie-msi", pp);
+>  		if (ret) {
+>  			dev_err(dev, "cannot request msi irq\n");
+>  			return ret;
+> diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+> index e27ad2a3bd33..784f63beb487 100644
+> --- a/drivers/pci/host/vmd.c
+> +++ b/drivers/pci/host/vmd.c
+> @@ -704,7 +704,8 @@ static int vmd_probe(struct pci_dev *dev, const struct
+> pci_device_id *id)
+> 
+>  		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
+>  		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
+> -				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
+> +				       vmd_irq, IRQF_NO_THREAD,
+> +				       "vmd", &vmd->irqs[i]);
+>  		if (err)
+>  			return err;
+>  	}
 > --
-> 1.9.1
+> 2.11.0
