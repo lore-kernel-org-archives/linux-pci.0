@@ -1,59 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v4 15/21] PCI: armada8k: update PCI config space remap function
-Date: Wed, 19 Apr 2017 17:49:04 +0100
-Message-Id: <20170419164913.19674-16-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Jisheng Zhang <jszhang@marvell.com>
+To: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+        <Joao.Pinto@synopsys.com>, <svarbanov@mm-sol.com>,
+        <keith.busch@intel.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>,
+        Jisheng Zhang <jszhang@marvell.com>
+Subject: [PATCH] PCI: dwc/host: Mark PCIe/PCI (MSI) cascade ISR as IRQF_NO_THREAD
+Date: Thu, 20 Apr 2017 18:27:18 +0800
+Message-ID: <20170420102718.3778-1-jszhang@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generates on the CPU host bus non-posted write transations. Update the
-driver to use the devm_pci_remap_cfg* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+Similar as commit 8ff0ef996ca0 ("PCI: host: Mark PCIe/PCI (MSI) IRQ
+cascade handlers as IRQF_NO_THREAD"), we should mark PCIe/PCI (MSI)
+IRQ cascade handlers IRQF_NO_THREAD explicitly. I just found this
+issue in pcie-designware-plat driver, then searched the code, I think
+we should fix pcie-qcom and vmd as well.
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+Signed-off-by: Jisheng Zhang <jszhang@marvell.com>
 ---
- drivers/pci/dwc/pcie-armada8k.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/dwc/pcie-designware-plat.c | 3 ++-
+ drivers/pci/dwc/pcie-qcom.c            | 3 ++-
+ drivers/pci/host/vmd.c                 | 3 ++-
+ 3 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
-index f110e3b..3ff3130 100644
---- a/drivers/pci/dwc/pcie-armada8k.c
-+++ b/drivers/pci/dwc/pcie-armada8k.c
-@@ -230,7 +230,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+index f20d494922ab..0db1dafc82bb 100644
+--- a/drivers/pci/dwc/pcie-designware-plat.c
++++ b/drivers/pci/dwc/pcie-designware-plat.c
+@@ -67,7 +67,8 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
  
- 	/* Get the dw-pcie unit configuration/control registers base. */
- 	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
--	pci->dbi_base = devm_ioremap_resource(dev, base);
-+	pci->dbi_base = devm_pci_remap_cfg_resource(dev, base);
- 	if (IS_ERR(pci->dbi_base)) {
- 		dev_err(dev, "couldn't remap regs base %p\n", base);
- 		ret = PTR_ERR(pci->dbi_base);
+ 		ret = devm_request_irq(dev, pp->msi_irq,
+ 					dw_plat_pcie_msi_irq_handler,
+-					IRQF_SHARED, "dw-plat-pcie-msi", pp);
++					IRQF_SHARED | IRQF_NO_THREAD,
++					"dw-plat-pcie-msi", pp);
+ 		if (ret) {
+ 			dev_err(dev, "failed to request MSI IRQ\n");
+ 			return ret;
+diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
+index 67eb7f5926dd..a5570c58081e 100644
+--- a/drivers/pci/dwc/pcie-qcom.c
++++ b/drivers/pci/dwc/pcie-qcom.c
+@@ -727,7 +727,8 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 
+ 		ret = devm_request_irq(dev, pp->msi_irq,
+ 				       qcom_pcie_msi_irq_handler,
+-				       IRQF_SHARED, "qcom-pcie-msi", pp);
++				       IRQF_SHARED | IRQF_NO_THREAD,
++				       "qcom-pcie-msi", pp);
+ 		if (ret) {
+ 			dev_err(dev, "cannot request msi irq\n");
+ 			return ret;
+diff --git a/drivers/pci/host/vmd.c b/drivers/pci/host/vmd.c
+index e27ad2a3bd33..784f63beb487 100644
+--- a/drivers/pci/host/vmd.c
++++ b/drivers/pci/host/vmd.c
+@@ -704,7 +704,8 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 
+ 		INIT_LIST_HEAD(&vmd->irqs[i].irq_list);
+ 		err = devm_request_irq(&dev->dev, pci_irq_vector(dev, i),
+-				       vmd_irq, 0, "vmd", &vmd->irqs[i]);
++				       vmd_irq, IRQF_NO_THREAD,
++				       "vmd", &vmd->irqs[i]);
+ 		if (err)
+ 			return err;
+ 	}
 -- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
