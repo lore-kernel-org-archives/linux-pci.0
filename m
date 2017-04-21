@@ -1,43 +1,74 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from regular1.263xmail.com ([211.150.99.138]:35229 "EHLO
-        regular1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751021AbdDEC3Q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2017 22:29:16 -0400
-From: Jeffy Chen <jeffy.chen@rock-chips.com>
-To: linux-pci@vger.kernel.org
-Cc: robh@kernel.org, toshi.kani@hpe.com, shawn.lin@rock-chips.com,
-        briannorris@chromium.org, linux-kernel@vger.kernel.org,
-        dianders@chromium.org, bhelgaas@google.com, dtor@chromium.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        devicetree@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
-        Frank Rowand <frowand.list@gmail.com>
-Subject: [PATCH v5 0/1] Fix memory leak in of_pci_get_host_bridge_resources
-Date: Wed,  5 Apr 2017 10:28:21 +0800
-Message-Id: <1491359303-1385-1-git-send-email-jeffy.chen@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Yinghai Lu <yinghai@kernel.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
+        Khalid Aziz <khalid.aziz@oracle.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
+Subject: [PATCH 04/13] sparc/PCI: Add IORESOURCE_MEM_64 for 64-bit resource in OF parsing
+Date: Thu, 20 Apr 2017 22:04:51 -0700
+Message-Id: <20170421050500.13957-5-yinghai@kernel.org>
+In-Reply-To: <20170421050500.13957-1-yinghai@kernel.org>
+References: <20170421050500.13957-1-yinghai@kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-In of_pci_get_host_bridge_resources, we alloced some struct resource
-variables, and they would cause memory leak since no where to free them.
+For device resource with PREF bit setting under bridge 64-bit pref resource,
+we need to make sure only set PREF for 64bit resource.
 
-Changes in v5:
-Fix some careless compile errors.
+so this patch set IORESOUCE_MEM_64 for 64bit resource during OF device
+resource flags parsing.
 
-Changes in v4:
-Use IORESOURCE_AUTO to mark struct resources which could be copied.
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96261
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=96241
+Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: sparclinux@vger.kernel.org
+Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+---
+ arch/sparc/kernel/of_device_32.c | 5 +++--
+ arch/sparc/kernel/of_device_64.c | 5 +++--
+ 2 files changed, 6 insertions(+), 4 deletions(-)
 
-Changes in v3:
-Add some comments.
-
-Changes in v2:
-Don't change the resource_list_create_entry's behavior.
-
-Jeffy Chen (1):
-  of/pci: Fix memory leak in of_pci_get_host_bridge_resources
-
- drivers/of/of_pci.c | 51 ++++++++++++++++++---------------------------------
- drivers/pci/bus.c   |  7 ++++++-
- 2 files changed, 24 insertions(+), 34 deletions(-)
-
+diff --git a/arch/sparc/kernel/of_device_32.c b/arch/sparc/kernel/of_device_32.c
+index 185aa96..3e9f273 100644
+--- a/arch/sparc/kernel/of_device_32.c
++++ b/arch/sparc/kernel/of_device_32.c
+@@ -83,11 +83,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
+diff --git a/arch/sparc/kernel/of_device_64.c b/arch/sparc/kernel/of_device_64.c
+index 7bbdc26..defee61 100644
+--- a/arch/sparc/kernel/of_device_64.c
++++ b/arch/sparc/kernel/of_device_64.c
+@@ -146,11 +146,12 @@ static unsigned long of_bus_pci_get_flags(const u32 *addr, unsigned long flags)
+ 	case 0x01:
+ 		flags |= IORESOURCE_IO;
+ 		break;
+-
+ 	case 0x02: /* 32 bits */
+-	case 0x03: /* 64 bits */
+ 		flags |= IORESOURCE_MEM;
+ 		break;
++	case 0x03: /* 64 bits */
++		flags |= IORESOURCE_MEM | IORESOURCE_MEM_64;
++		break;
+ 	}
+ 	if (w & 0x40000000)
+ 		flags |= IORESOURCE_PREFETCH;
 -- 
-2.1.4
+2.9.3
