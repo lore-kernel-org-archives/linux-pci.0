@@ -1,115 +1,72 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bastet.se.axis.com ([195.60.68.11]:55394 "EHLO
-        bastet.se.axis.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750926AbdDDHy3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2017 03:54:29 -0400
-Subject: Re: [PATCH] PCI: dwc: fix crash seen due to missing ops
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <20170321144354.15452-1-niklass@axis.com>
- <20170403231525.GF13232@bhelgaas-glaptop.roam.corp.google.com>
-CC: <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-        <Joao.Pinto@synopsys.com>, <kishon@ti.com>,
-        <linux-arm-kernel@axis.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-From: Niklas Cassel <niklas.cassel@axis.com>
-Message-ID: <5f1e5394-26fc-b533-b78c-89e409e9e1cf@axis.com>
-Date: Tue, 4 Apr 2017 09:54:25 +0200
+Return-Path: <SRS0=mMqN=35=gmail.com=dan.j.williams@kernel.org>
+Return-Path: <SRS0=mMqN=35=gmail.com=dan.j.williams@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170403231525.GF13232@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-pci-owner@vger.kernel.org
+Sender: dan.j.williams@gmail.com
+In-Reply-To: <D090F830-2753-4479-A291-CEE37DC0A853@raithlin.com>
+References: <20170418164557.GA7181@obsidianresearch.com> <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
+ <20170418190138.GH7181@obsidianresearch.com> <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
+ <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
+ <20170418210339.GA24257@obsidianresearch.com> <1492564806.25766.124.camel@kernel.crashing.org>
+ <20170419155557.GA8497@obsidianresearch.com> <4899b011-bdfb-18d8-ef00-33a1516216a6@deltatee.com>
+ <CAPcyv4iJ9H8Ykwnjqa2R_D1qG6PsSQmi=QxYH-rKLF_ihrsWyw@mail.gmail.com>
+ <20170419173225.GA11255@redhat.com> <CAPcyv4gxBgVsbSez7_dZYkZojUWU0X0txs7FxiJ+Z3xsMt6TqQ@mail.gmail.com>
+ <D79A59A8-DC7E-413F-ABB8-05F373A9DFD4@raithlin.com> <CAPcyv4i+a_14E58SjFHncyq2O2-zf_PB=aT7k0a-Jc0XsfPapQ@mail.gmail.com>
+ <D090F830-2753-4479-A291-CEE37DC0A853@raithlin.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 20 Apr 2017 21:59:42 -0700
+Message-ID: <CAA9_cmcQaPmF_uGP1FwUW0tO-4xtyJq07opfKcj9FGdADkedgg@mail.gmail.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+To: Stephen Bates <sbates@raithlin.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>,
+	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
+	"linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Steve Wise <swise@opengridcomputing.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Jerome Glisse <jglisse@redhat.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+	Max Gurtovoy <maxg@mellanox.com>, linux-scsi <linux-scsi@vger.kernel.org>,
+	Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/04/2017 01:15 AM, Bjorn Helgaas wrote:
-> On Tue, Mar 21, 2017 at 03:43:54PM +0100, Niklas Cassel wrote:
->> From: Niklas Cassel <niklas.cassel@axis.com>
+On Thu, Apr 20, 2017 at 4:07 PM, Stephen  Bates <sbates@raithlin.com> wrote=
+:
+>>> Yes, this makes sense I think we really just want to distinguish host
+>>> memory or not in terms of the dev_pagemap type.
 >>
->> Fix the following crash, seen in dwc/pcie-artpec6.
+>>> I would like to see mutually exclusive flags for host memory (or not) a=
+nd persistence (or not).
+>>>
 >>
->>   Unable to handle kernel NULL pointer dereference at virtual address 00000004
->>   pgd = c0204000
->>   [00000004] *pgd=00000000
->>   Internal error: Oops: 5 [#1] SMP ARM
->>   Modules linked in:
->>   CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.11.0-rc3-next-20170321 #1
->>   Hardware name: Axis ARTPEC-6 Platform
->>   task: db098000 task.stack: db096000
->>   PC is at dw_pcie_writel_dbi+0x2c/0xd0
->>   ...
->>
->> While at it, fix the same problem for pcie-designware-plat.
->>
->> Fixes: 442ec4c04d12 ("PCI: dwc: all: Split struct pcie_port into host-only and core structures")
->> Signed-off-by: Niklas Cassel <niklas.cassel@axis.com>
-> 
-> For artpec6, I think this has already been fixed by Kishon's "PCI: dwc:
-> artpec6: Populate cpu_addr_fixup ops".
+>> Why persistence? It has zero meaning to the mm.
+>
+> I like the idea of having properties of the memory in one place.
 
-Agreed.
+We do have memory type data in the global iomem_resource tree, see
+IORES_DESC_PERSISTENT_MEMORY.
 
-> 
-> Since both the artpec6 and designware-plat issues were introduced by
-> 442ec4c04d12, which we merged in the v4.11 merge window, I moved Kishon's
-> fix and the designware-plat part of this patch to for-linus for v4.11.
+> While mm might not use persistence today it may make use certain things t=
+hat
+> persistence implies (like finite endurance and/or higher write latency) i=
+n the future.
 
-I didn't think that including "PCI: dwc: designware: Add new *ops* for
-CPU addr fixup" was an option, but doing so is a cleaner solution imo.
+A persistence flag does not convey endurance or latency information.
 
-> 
-> Please double-check my for-linus branch to make sure it has what we need.
+> Also the persistence of the memory must have issues for mm security?
 
-The branch looks good. I did test it, and it works marvelously.
+Not for the mm, data at rest security might be a property of the
+device, but that's not the mm's concern.
 
-> 
->> ---
->>  drivers/pci/dwc/pcie-artpec6.c         | 4 ++++
->>  drivers/pci/dwc/pcie-designware-plat.c | 4 ++++
->>  2 files changed, 8 insertions(+)
->>
->> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
->> index fcd3ef845883..6d23683c0892 100644
->> --- a/drivers/pci/dwc/pcie-artpec6.c
->> +++ b/drivers/pci/dwc/pcie-artpec6.c
->> @@ -234,6 +234,9 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
->>  	return 0;
->>  }
->>  
->> +static const struct dw_pcie_ops dw_pcie_ops = {
->> +};
->> +
->>  static int artpec6_pcie_probe(struct platform_device *pdev)
->>  {
->>  	struct device *dev = &pdev->dev;
->> @@ -252,6 +255,7 @@ static int artpec6_pcie_probe(struct platform_device *pdev)
->>  		return -ENOMEM;
->>  
->>  	pci->dev = dev;
->> +	pci->ops = &dw_pcie_ops;
->>  
->>  	artpec6_pcie->pci = pci;
->>  
->> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
->> index b6c832ba39dd..f20d494922ab 100644
->> --- a/drivers/pci/dwc/pcie-designware-plat.c
->> +++ b/drivers/pci/dwc/pcie-designware-plat.c
->> @@ -86,6 +86,9 @@ static int dw_plat_add_pcie_port(struct pcie_port *pp,
->>  	return 0;
->>  }
->>  
->> +static const struct dw_pcie_ops dw_pcie_ops = {
->> +};
->> +
->>  static int dw_plat_pcie_probe(struct platform_device *pdev)
->>  {
->>  	struct device *dev = &pdev->dev;
->> @@ -103,6 +106,7 @@ static int dw_plat_pcie_probe(struct platform_device *pdev)
->>  		return -ENOMEM;
->>  
->>  	pci->dev = dev;
->> +	pci->ops = &dw_pcie_ops;
->>  
->>  	dw_plat_pcie->pci = pci;
->>  
->> -- 
->> 2.11.0
->>
+>Again not addressed today but useful in the future.
+
+Maybe, but to me "Useful for the future" =3D=3D "don't add it to the
+kernel until that future arrives".
+
+> In addition I am not sure where else would be an appropriate place to put=
+ something like a persistence property flag. I know the NVDIMM section of t=
+he kernel uses things like NFIT to describe properties of the memory but we=
+ don=E2=80=99t yet (to my knowledge) have something similar for IO memory.
+
+Do the IORES_DESC flags give you what you need?
