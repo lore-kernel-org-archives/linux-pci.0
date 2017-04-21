@@ -1,66 +1,97 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail1.bemta12.messagelabs.com ([216.82.251.10]:35264 "EHLO
-        mail1.bemta12.messagelabs.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752432AbdDDOC1 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 4 Apr 2017 10:02:27 -0400
-Subject: Re: [PATCH] PCI: generic: stop hiding pci_host_common_probe
- declaration
-To: Arnd Bergmann <arnd@arndb.de>, Bjorn Helgaas <bhelgaas@google.com>
-CC: Jayachandran C <jchandra@broadcom.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Dongdong Liu <liudongdong3@huawei.com>,
-        Christopher Covington <cov@codeaurora.org>,
-        Duc Dang <dhdang@apm.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, Mason <slash.tmp@free.fr>
-References: <20170321160003.339217-1-arnd@arndb.de>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Message-ID: <eef2bf83-97aa-270f-f83f-372fb30ea132@sigmadesigns.com>
-Date: Tue, 4 Apr 2017 16:02:10 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
+ <linux-pci@vger.kernel.org>
+References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+ <20170419164913.19674-15-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170419164913.19674-15-lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v4 14/21] PCI: designware: update PCI config space remap
+ function
+Date: Fri, 21 Apr 2017 18:02:54 -0400
+Message-ID: <000001d2baeb$07e84870$17b8d950$@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170321160003.339217-1-arnd@arndb.de>
-Content-Type: text/plain; charset="ISO-8859-15"
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: 'Bjorn Helgaas' <bhelgaas@google.com>,
+ 'Joao Pinto' <Joao.Pinto@synopsys.com>, linux-kernel@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21/03/2017 16:59, Arnd Bergmann wrote:
+On Wednesday, April 19, 2017 12:49 PM, Lorenzo Pieralisi wrote:
+> 
+> PCI configuration space should be mapped with a memory region type that
+> generates on the CPU host bus non-posted write transations. Update the
+> driver to use the devm_pci_remap_cfg* interface to make sure the correct
+> memory mappings for PCI configuration space are used.
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Jingoo Han <jingoohan1@gmail.com>
 
-> When pci_host_common_probe() was moved into a separate module, the #ifdef around
-> the declaration was left in the header file, which can lead to build errors in
-> some configurations:
-> 
-> drivers/pci/host/pci-thunder-pem.c: In function 'thunder_pem_probe':
-> drivers/pci/host/pci-thunder-pem.c:412:9: error: implicit declaration of function 'pci_host_common_probe';did you mean 'pci_host_bridge_priv'? [-Werror=implicit-function-declaration]
-> 
-> The ifdef serves no real purpose anyway, so we can just remove it.
-> 
-> Fixes: 4e64dbe226e7 ("PCI: generic: Expose pci_host_common_probe() for use by other drivers")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Acked-by: Jingoo Han <jingoohan1@gmail.com>
+
+Best regards,
+Jingoo Han
+
+
+> Cc: Joao Pinto <Joao.Pinto@synopsys.com>
 > ---
->  include/linux/pci-ecam.h | 2 --
->  1 file changed, 2 deletions(-)
+>  drivers/pci/dwc/pcie-designware-host.c | 12 +++++++-----
+>  1 file changed, 7 insertions(+), 5 deletions(-)
 > 
-> diff --git a/include/linux/pci-ecam.h b/include/linux/pci-ecam.h
-> index f0d2b9451270..92a73847e1d3 100644
-> --- a/include/linux/pci-ecam.h
-> +++ b/include/linux/pci-ecam.h
-> @@ -68,9 +68,7 @@ extern struct pci_ecam_ops xgene_v1_pcie_ecam_ops; /* APM X-Gene PCIe v1 */
->  extern struct pci_ecam_ops xgene_v2_pcie_ecam_ops; /* APM X-Gene PCIe v2.x */
->  #endif
->  
-> -#ifdef CONFIG_PCI_HOST_GENERIC
->  /* for DT-based PCI controllers that support ECAM */
->  int pci_host_common_probe(struct platform_device *pdev,
->  			  struct pci_ecam_ops *ops);
->  #endif
-> -#endif
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c
+> b/drivers/pci/dwc/pcie-designware-host.c
+> index 5ba3349..2b789af 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -338,8 +338,9 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	}
 > 
+>  	if (!pci->dbi_base) {
+> -		pci->dbi_base = devm_ioremap(dev, pp->cfg->start,
+> -					resource_size(pp->cfg));
+> +		pci->dbi_base = devm_pci_remap_cfgspace(dev,
+> +						pp->cfg->start,
+> +						resource_size(pp->cfg));
+>  		if (!pci->dbi_base) {
+>  			dev_err(dev, "error with ioremap\n");
+>  			ret = -ENOMEM;
+> @@ -350,8 +351,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	pp->mem_base = pp->mem->start;
+> 
+>  	if (!pp->va_cfg0_base) {
+> -		pp->va_cfg0_base = devm_ioremap(dev, pp->cfg0_base,
+> -						pp->cfg0_size);
+> +		pp->va_cfg0_base = devm_pci_remap_cfgspace(dev,
+> +					pp->cfg0_base, pp->cfg0_size);
+>  		if (!pp->va_cfg0_base) {
+>  			dev_err(dev, "error with ioremap in function\n");
+>  			ret = -ENOMEM;
+> @@ -360,7 +361,8 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>  	}
+> 
+>  	if (!pp->va_cfg1_base) {
+> -		pp->va_cfg1_base = devm_ioremap(dev, pp->cfg1_base,
+> +		pp->va_cfg1_base = devm_pci_remap_cfgspace(dev,
+> +						pp->cfg1_base,
+>  						pp->cfg1_size);
+>  		if (!pp->va_cfg1_base) {
+>  			dev_err(dev, "error with ioremap\n");
+> --
+> 2.10.0
 
-I ran into this issue as well (on v4.9) and submitted a patch a week
-after you did, by pure coincidence:
 
-Subject: [TRIVIAL PATCH] PCI: Change pci_host_common_probe visibility
-Date: Tue, 28 Mar 2017 17:29:51 +0200
-https://www.spinics.net/lists/linux-pci/msg59823.html
 
-Regards.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
