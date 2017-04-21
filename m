@@ -1,49 +1,50 @@
-Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
-Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 21 Apr 2017 13:34:54 +0200
+From: Robert Richter <robert.richter@cavium.com>
+To: Tomasz Nowicki <tn@semihalf.com>
+Subject: Re: [PATCH 1/1] PCI: Add MCFG quirk for 2nd node of Cavium ThunderX
+ pass2.x host controller
+Message-ID: <20170421113454.GR16981@rric.localdomain>
+References: <1490789773-21506-1-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-In-Reply-To: <20170418212258.GA26838@obsidianresearch.com>
-References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
- <1492381396.25766.43.camel@kernel.crashing.org> <20170418164557.GA7181@obsidianresearch.com>
- <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com> <20170418190138.GH7181@obsidianresearch.com>
- <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com> <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
- <20170418210339.GA24257@obsidianresearch.com> <CAPcyv4h9n9Uzq4FAXR0ufieqvx5_txEwtnaaBWdxe-jF_XfTLg@mail.gmail.com>
- <20170418212258.GA26838@obsidianresearch.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 18 Apr 2017 14:36:06 -0700
-Message-ID: <CAPcyv4g5ifbpukthMXMro8qKdfoXAhftDpiwWWFCLZ4dK8JnnA@mail.gmail.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
-	Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
-	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
-	linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jerome Glisse <jglisse@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1490789773-21506-1-git-send-email-tn@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo.Pieralisi@arm.com, Sunil.Goutham@cavium.com, rafael@kernel.org,
+ linux-pci@vger.kernel.org, linu.cherian@cavium.com, ddaney@caviumnetworks.com,
+ geethasowjanya.akula@gmail.com, linux-acpi@vger.kernel.org, helgaas@kernel.org,
+ Vadim.Lomovtsev@caviumnetworks.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 18, 2017 at 2:22 PM, Jason Gunthorpe
-<jgunthorpe@obsidianresearch.com> wrote:
-> On Tue, Apr 18, 2017 at 02:11:33PM -0700, Dan Williams wrote:
->> > I think this opens an even bigger can of worms..
->>
->> No, I don't think it does. You'd only shim when the target page is
->> backed by a device, not host memory, and you can figure this out by a
->> is_zone_device_page()-style lookup.
->
-> The bigger can of worms is how do you meaningfully stack dma_ops.
+On 29.03.17 14:16:13, Tomasz Nowicki wrote:
+> Currently SoCs pass2.x do not emulate EA headers for ACPI boot method at all.
+> However, for pass2.x some devices (like EDAC) advertise incorrect base addresses
+> in their BARs which results in driver probe failure during resource request.
+> Since all problematic blocks are on 2nd NUMA node under domain 10 add necessary
+> quirk entry to obtain BAR addresses correction using EA header emulation.
+> 
+> Fixes: 44f22bd91e88 ("PCI: Add MCFG quirks for Cavium ThunderX pass2.x host controller")
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> CC: stable@vger.kernel.org	# v4.10+
 
-This goes back to my original comment to make this capability a
-function of the pci bridge itself. The kernel has an implementation of
-a dynamically created bridge device that injects its own dma_ops for
-the devices behind the bridge. See vmd_setup_dma_ops() in
-drivers/pci/host/vmd.c.
+Acked-by: Robert Richter <rrichter@cavium.com>
 
-> What does the p2p provider do when it detects a p2p page?
+Bjorn, please apply.
 
-Check to see if the arch requires this offset translation that Ben
-brought up and if not provide the physical address as the patches are
-doing now.
+Thanks,
+
+-Robert
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
