@@ -1,62 +1,39 @@
-Return-Path: <SRS0=w+TJ=34=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=w+TJ=34=free.fr=slash.tmp@kernel.org>
-Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
-From: Mason <slash.tmp@free.fr>
-To: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
- <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
- <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
- <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
- <0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
- <4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
- <30f662a6-5dab-515b-e35a-a312f3c7b509@free.fr>
- <5f81730d-fbe3-1f4c-de34-09bbfb893ee1@arm.com>
- <2b5eef4c-32f2-54f1-ca2f-f9426e68fb2c@free.fr>
- <67014006-a380-9e3b-c9af-a421052cb8e0@arm.com>
- <b59b81ea-bc1b-bff5-4a78-8a69538b0de3@free.fr>
- <bc5bf8ad-69ef-4f14-f450-e162ddb5af7c@arm.com>
- <241b130e-1fb7-ecd4-034e-eb02065ada66@free.fr>
- <37cd6172-b04e-fcad-18fc-4fbb26cc611b@arm.com>
- <87d48d57-5f9f-1b35-99da-ab39de2d3d48@free.fr>
-Message-ID: <2003d851-e17e-1a43-3889-ec6e79e635e3@free.fr>
-Date: Thu, 20 Apr 2017 10:20:31 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38594 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1425138AbdDUTcu (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Apr 2017 15:32:50 -0400
+Subject: [PATCH 9/9] lspci: Fix "Auxiliary" spelling error
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Martin Mares <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org,
+        Jayachandran C <jnair@caviumnetworks.com>
+Date: Fri, 21 Apr 2017 14:32:41 -0500
+Message-ID: <20170421193241.6562.57167.stgit@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170421192844.6562.30976.stgit@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170421192844.6562.30976.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <87d48d57-5f9f-1b35-99da-ab39de2d3d48@free.fr>
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 19/04/2017 13:19, Mason wrote:
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-> My biggest problem is that tango_unmask() is never called.
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ lib/pci.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-FTR, the missing incantation was:
-Explicitly calling tango_{mask/unmask/ack} from the corresponding msi_{mask/unmask/ack}
-
-Marc, I have one nagging doubt, wrt splitting MSI line selection
-and MSI enable.
-
-tango_irq_domain_alloc : finds an available MSI 'j' to allocate
-tango_irq_domain_free : release MSI 'j'
-tango_unmask : enable MSI 'j'
-tango_mask : disable MSI 'j'
-
-Is the following scenario guaranteed to never happen?
-
-tango_irq_domain_alloc // alloc 0
-tango_irq_domain_free  // free 0
-tango_irq_domain_alloc // alloc 0
-tango_unmask // enable 0
-tango_unmask // enable 0 = NOP
-tango_mask   // disable 0
-
-In this theoretical scenario, we would be left with a non-functional
-MSI 0.
-
-Regards.
+diff --git a/lib/pci.h b/lib/pci.h
+index 9781acc..052f43b 100644
+--- a/lib/pci.h
++++ b/lib/pci.h
+@@ -147,7 +147,7 @@ struct pci_dev {
+   u8 *cache;				/* Cached config registers */
+   int cache_len;
+   int hdrtype;				/* Cached low 7 bits of header type, -1 if unknown */
+-  void *aux;				/* Auxillary data */
++  void *aux;				/* Auxiliary data */
+ };
+ 
+ #define PCI_ADDR_IO_MASK (~(pciaddr_t) 0x3)
