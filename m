@@ -1,97 +1,60 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Kishon Vijay Abraham I <kishon@ti.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
- <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>,
- <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>
-Subject: [PATCH v6 10/23] dt-bindings: PCI: Add DT bindings for PCI designware
- EP mode
-Date: Wed, 5 Apr 2017 14:22:30 +0530
-Message-ID: <20170405085243.18123-11-kishon@ti.com>
-In-Reply-To: <20170405085243.18123-1-kishon@ti.com>
-References: <20170405085243.18123-1-kishon@ti.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38060 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1425132AbdDUTba (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Apr 2017 15:31:30 -0400
+Subject: [PATCH 0/9] lspci: AER, PCIe capability updates
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Martin Mares <mj@ucw.cz>
+Cc: linux-pci@vger.kernel.org,
+        Jayachandran C <jnair@caviumnetworks.com>
+Date: Fri, 21 Apr 2017 14:31:26 -0500
+Message-ID: <20170421192844.6562.30976.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: hch@infradead.org, nsekhar@ti.com, kishon@ti.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="utf-8"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add device tree binding documentation for PCI designware EP mode.
+Hi Martin,
 
-Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Acked-by: Rob Herring <robh@kernel.org>
+These are some updates to decode more AER registers, decode "Slot
+Implemented" for reverse bridges, and drop ASPM exit latencies for
+unsupported states.  And a few more cosmetic whitespace, spelling, etc.,
+fixes.
+
+These are based on 3.5.4 (9f9e373b17f1).
+
 ---
- .../devicetree/bindings/pci/designware-pcie.txt    | 26 +++++++++++++++-------
- 1 file changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-index 1392c705ceca..b2480dd38c11 100644
---- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
-+++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
-@@ -6,30 +6,40 @@ Required properties:
- - reg-names: Must be "config" for the PCIe configuration space.
-     (The old way of getting the configuration address space from "ranges"
-     is deprecated and should be avoided.)
-+- num-lanes: number of lanes to use
-+RC mode:
- - #address-cells: set to <3>
- - #size-cells: set to <2>
- - device_type: set to "pci"
- - ranges: ranges for the PCI memory and I/O regions
- - #interrupt-cells: set to <1>
--- interrupt-map-mask and interrupt-map: standard PCI properties
--	to define the mapping of the PCIe interface to interrupt
-+- interrupt-map-mask and interrupt-map: standard PCI
-+	properties to define the mapping of the PCIe interface to interrupt
- 	numbers.
--- num-lanes: number of lanes to use
-+EP mode:
-+- num-ib-windows: number of inbound address translation
-+        windows
-+- num-ob-windows: number of outbound address translation
-+        windows
- 
- Optional properties:
--- num-viewport: number of view ports configured in hardware.  If a platform
--  does not specify it, the driver assumes 2.
- - num-lanes: number of lanes to use (this property should be specified unless
-   the link is brought already up in BIOS)
- - reset-gpio: gpio pin number of power good signal
--- bus-range: PCI bus numbers covered (it is recommended for new devicetrees to
--  specify this property, to keep backwards compatibility a range of 0x00-0xff
--  is assumed if not present)
- - clocks: Must contain an entry for each entry in clock-names.
- 	See ../clocks/clock-bindings.txt for details.
- - clock-names: Must include the following entries:
- 	- "pcie"
- 	- "pcie_bus"
-+RC mode:
-+- num-viewport: number of view ports configured in
-+  hardware. If a platform does not specify it, the driver assumes 2.
-+- bus-range: PCI bus numbers covered (it is recommended
-+  for new devicetrees to specify this property, to keep backwards
-+  compatibility a range of 0x00-0xff is assumed if not present)
-+EP mode:
-+- max-functions: maximum number of functions that can be
-+  configured
- 
- Example configuration:
- 
--- 
-2.11.0
+Bjorn Helgaas (9):
+      lspci: Decode AER Multiple Header and TLP Prefix Log bits
+      lspci: Dump AER Header Log
+      lspci: Decode AER Root Error Command, Root Error Status, Error Source
+      lspci: Include "ECRC" in the ECRC generate/check labels
+      lspci: Indent PCIe Capability DevCap2 & DevCtl2 correctly
+      lspci: Decode "Slot Implemented" for PCI/PCI-X to PCIe Bridges
+      lspci: Decode only supported ASPM exit latencies
+      lspci: Use #defines for greppability
+      lspci: Fix "Auxiliary" spelling error
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+ lib/header.h                 |   21 +
+ lib/pci.h                    |    2 
+ ls-caps.c                    |   63 +++-
+ ls-ecaps.c                   |   53 +++-
+ lspci.h                      |    2 
+ tests/cap-aer-ecrc-label     |  327 ++++++++++++++++++++++
+ tests/cap-aer-hdr            |  322 ++++++++++++++++++++++
+ tests/cap-aer-log            |  323 ++++++++++++++++++++++
+ tests/cap-aer-root           |  626 ++++++++++++++++++++++++++++++++++++++++++
+ tests/cap-exp-aspm-latencies |  327 ++++++++++++++++++++++
+ tests/cap-exp-dev2           |  327 ++++++++++++++++++++++
+ tests/cap-exp-rev-slot       |  288 +++++++++++++++++++
+ 12 files changed, 2644 insertions(+), 37 deletions(-)
+ create mode 100644 tests/cap-aer-ecrc-label
+ create mode 100644 tests/cap-aer-hdr
+ create mode 100644 tests/cap-aer-log
+ create mode 100644 tests/cap-aer-root
+ create mode 100644 tests/cap-exp-aspm-latencies
+ create mode 100644 tests/cap-exp-dev2
+ create mode 100644 tests/cap-exp-rev-slot
