@@ -1,187 +1,169 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
- lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
- catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
- gregkh@linuxfoundation.org
-Subject: [PATCH V11 01/11] iommu/of: Refactor of_iommu_configure() for error
- handling
-Date: Mon, 10 Apr 2017 16:50:56 +0530
-Message-Id: <1491823266-1209-2-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
-References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sricharan@codeaurora.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:41412 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1161420AbdDUUNx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Apr 2017 16:13:53 -0400
+Date: Fri, 21 Apr 2017 15:13:47 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shawn Lin <shawn.lin@rock-chips.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Andreas Noever <andreas.noever@gmail.com>
+Subject: Re: Question about max bus number for PCIe root bridge
+Message-ID: <20170421200741.GA8558@bhelgaas-glaptop.roam.corp.google.com>
+References: <aee3cf45-382b-0e18-72fe-b4078aabc409@rock-chips.com>
+ <CAErSpo7us72gc1VBj6aMfPz92QbrEUFfqZt594yVEneGvG6A9A@mail.gmail.com>
+ <a1291c28-2730-456d-9670-f41c14cad582@rock-chips.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <a1291c28-2730-456d-9670-f41c14cad582@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Robin Murphy <robin.murphy@arm.com>
+On Wed, Apr 19, 2017 at 09:40:23AM +0800, Shawn Lin wrote:
+> Hi Bjorn,
+> 
+> 在 2017/4/18 21:46, Bjorn Helgaas 写道:
+> >[+cc Andreas]
+> >
+> >
+> >On Tue, Apr 18, 2017 at 4:45 AM, Shawn Lin <shawn.lin@rock-chips.com> wrote:
+> >>Hi Bjorn,
+> >>
+> >>Sorry to bother you. :)
+> >>
+> >>pcie-rockchip uses of_pci_get_host_bridge_resources to assign the
+> >>maximum number of buses for the root bridge. Currently we set it to
+> >>be 0xff. Now we have a PCIe switch connected to the root port. However,
+> >>when enumerating the topology, I see it panic down to:
+> >>
+> >>[    0.502875] PCI host bridge /pcie@f8000000 ranges:
+> >>[    0.502905]   MEM 0xfa000000..0xfa5fffff -> 0xfa000000
+> >>[    0.502921]    IO 0xfa600000..0xfa6fffff -> 0xfa600000
+> >>[    0.503168] rockchip-pcie f8000000.pcie: PCI host bridge to bus 0000:00
+> >>[    0.503189] pci_bus 0000:00: root bus resource [bus 00-10]
+> >>[    0.503204] pci_bus 0000:00: root bus resource [mem
+> >>0xfa000000-0xfa5fffff]
+> >>[    0.503221] pci_bus 0000:00: root bus resource [io  0x0000-0xfffff] (bus
+> >>address [0xfa600000-0xfa6fffff])
+> >>[    0.503598] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]),
+> >>reconfiguring
+> >>[    0.504104] pci 0000:01:00.0: bridge configuration invalid ([bus 00-00]),
+> >>reconfiguring
+> >>[    0.515549] pci 0000:02:00.0: bridge configuration invalid ([bus 02-ff]),
+> >>reconfiguring
+> >>
+> >>.....
+> >>
+> >>[    0.695096] pci 0000:1f:00.0: bridge configuration invalid ([bus 1f-ff]),
+> >>reconfiguring
+> >>[    0.695242] bus->number = 0x20, PCI_SLOT(devfn) = 0x0 PCI_FUNC(devfn) =
+> >>0x0, where = 0x0
+> >>[    0.695255] busdev = 0x2000000
+> >>[    0.695270] Unable to handle kernel paging request at virtual address
+> >>ffffff8012000000
+> >>[    0.858703] pgd = ffffff8009319000
+> >>[    0.859004] [ffffff8012000000] *pgd=00000000f7ffe003,
+> >>*pud=00000000f7ffe003, *pmd=0000000000000000
+> >>[    0.859803] Internal error: Oops: 96000006 [#1] PREEMPT SMP
+> >>[    0.860292] Modules linked in:
+> >>
+> >>We only have the axi address range from 0xf8000000 to 0xfa000000
+> >>defined in the DT. So the max bus resource is 0x2000000. The PCI
+> >>core was trying to scan the bus whose bus number is 0x20. So the bus
+> >>resource calculated by PCIE_ECAM_ADDR is larger than what we have. Now
+> >>I change the max bus number to 0x10 by modifying the third argument of
+> >>of_pci_get_host_bridge_resources . But I still see the PCI core are
+> >>trying to scan the bus whose bus numbers are larger than the
+> >>limitation, namely 0x10.
+> >>
+> >>So my question is:
+> >>
+> >>what is the meaning of "maximum number of buses for this bridge", the
+> >>comment before of_pci_get_host_bridge_resources. In my case, isn't it
+> >>applied to the bridge connected to the root port?
+> >
+> >A DT host bridge description *should* contain a "bus-range" property
+> >that tells us what buses are reachable via the host bridge.  However,
+> >many do not, and the the "busno" and "bus_max" parameters are a way to
+> >specify a default bus number range when there is no "bus-range" DT
+> >property.
+> >
+> >You're right that this range, whether from "bus-range" or from a
+> >default range supplied by the caller of
+> >of_pci_get_host_bridge_resources(), should limit the bus numbers we
+> >scan below the host bridge, but we do not enforce that.
+> 
+> So this looks to me that the bus-range is almost pointless as we don't
+> enforce that. More seriously, it's broken as I assume the reason for
+> the host drivers who want to limit the bus-range is that they have the
+> same limitation for bus resource like mine. They(any ARCHs without
+> enough bus resource) just luckily didn't trip over it.
 
-In preparation for some upcoming cleverness, rework the control flow in
-of_iommu_configure() to minimise duplication and improve the propogation
-of errors. It's also as good a time as any to switch over from the
-now-just-a-compatibility-wrapper of_iommu_get_ops() to using the generic
-IOMMU instance interface directly.
+Well, we did trip over some problems when enforcing the bus number
+ranges.  But they are still valuable in principle.
 
-Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
-Signed-off-by: Robin Murphy <robin.murphy@arm.com>
----
- drivers/iommu/of_iommu.c | 83 +++++++++++++++++++++++++++++++-----------------
- 1 file changed, 53 insertions(+), 30 deletions(-)
+For example, assume a host bridge only claims a limited bus number
+range, and DT or ACPI accurately tells us that:
 
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index 2683e9f..8f4e599 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -96,6 +96,28 @@ int of_get_dma_window(struct device_node *dn, const char *prefix, int index,
- }
- EXPORT_SYMBOL_GPL(of_get_dma_window);
- 
-+static const struct iommu_ops
-+*of_iommu_xlate(struct device *dev, struct of_phandle_args *iommu_spec)
-+{
-+	const struct iommu_ops *ops;
-+	struct fwnode_handle *fwnode = &iommu_spec->np->fwnode;
-+	int err;
-+
-+	ops = iommu_ops_from_fwnode(fwnode);
-+	if (!ops || !ops->of_xlate)
-+		return NULL;
-+
-+	err = iommu_fwspec_init(dev, &iommu_spec->np->fwnode, ops);
-+	if (err)
-+		return ERR_PTR(err);
-+
-+	err = ops->of_xlate(dev, iommu_spec);
-+	if (err)
-+		return ERR_PTR(err);
-+
-+	return ops;
-+}
-+
- static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
- {
- 	struct of_phandle_args *iommu_spec = data;
-@@ -105,10 +127,11 @@ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
- }
- 
- static const struct iommu_ops
--*of_pci_iommu_configure(struct pci_dev *pdev, struct device_node *bridge_np)
-+*of_pci_iommu_init(struct pci_dev *pdev, struct device_node *bridge_np)
- {
- 	const struct iommu_ops *ops;
- 	struct of_phandle_args iommu_spec;
-+	int err;
- 
- 	/*
- 	 * Start by tracing the RID alias down the PCI topology as
-@@ -123,56 +146,56 @@ static int __get_pci_rid(struct pci_dev *pdev, u16 alias, void *data)
- 	 * bus into the system beyond, and which IOMMU it ends up at.
- 	 */
- 	iommu_spec.np = NULL;
--	if (of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
--			   "iommu-map-mask", &iommu_spec.np, iommu_spec.args))
--		return NULL;
-+	err = of_pci_map_rid(bridge_np, iommu_spec.args[0], "iommu-map",
-+			     "iommu-map-mask", &iommu_spec.np,
-+			     iommu_spec.args);
-+	if (err)
-+		return err == -ENODEV ? NULL : ERR_PTR(err);
- 
--	ops = iommu_ops_from_fwnode(&iommu_spec.np->fwnode);
--	if (!ops || !ops->of_xlate ||
--	    iommu_fwspec_init(&pdev->dev, &iommu_spec.np->fwnode, ops) ||
--	    ops->of_xlate(&pdev->dev, &iommu_spec))
--		ops = NULL;
-+	ops = of_iommu_xlate(&pdev->dev, &iommu_spec);
- 
- 	of_node_put(iommu_spec.np);
- 	return ops;
- }
- 
--const struct iommu_ops *of_iommu_configure(struct device *dev,
--					   struct device_node *master_np)
-+static const struct iommu_ops
-+*of_platform_iommu_init(struct device *dev, struct device_node *np)
- {
- 	struct of_phandle_args iommu_spec;
--	struct device_node *np;
- 	const struct iommu_ops *ops = NULL;
- 	int idx = 0;
- 
--	if (dev_is_pci(dev))
--		return of_pci_iommu_configure(to_pci_dev(dev), master_np);
--
- 	/*
- 	 * We don't currently walk up the tree looking for a parent IOMMU.
- 	 * See the `Notes:' section of
- 	 * Documentation/devicetree/bindings/iommu/iommu.txt
- 	 */
--	while (!of_parse_phandle_with_args(master_np, "iommus",
--					   "#iommu-cells", idx,
--					   &iommu_spec)) {
--		np = iommu_spec.np;
--		ops = iommu_ops_from_fwnode(&np->fwnode);
--
--		if (!ops || !ops->of_xlate ||
--		    iommu_fwspec_init(dev, &np->fwnode, ops) ||
--		    ops->of_xlate(dev, &iommu_spec))
--			goto err_put_node;
--
--		of_node_put(np);
-+	while (!of_parse_phandle_with_args(np, "iommus", "#iommu-cells",
-+					   idx, &iommu_spec)) {
-+		ops = of_iommu_xlate(dev, &iommu_spec);
-+		of_node_put(iommu_spec.np);
- 		idx++;
-+		if (IS_ERR_OR_NULL(ops))
-+			break;
- 	}
- 
- 	return ops;
-+}
-+
-+const struct iommu_ops *of_iommu_configure(struct device *dev,
-+					   struct device_node *master_np)
-+{
-+	const struct iommu_ops *ops;
-+
-+	if (!master_np)
-+		return NULL;
-+
-+	if (dev_is_pci(dev))
-+		ops = of_pci_iommu_init(to_pci_dev(dev), master_np);
-+	else
-+		ops = of_platform_iommu_init(dev, master_np);
- 
--err_put_node:
--	of_node_put(np);
--	return NULL;
-+	return IS_ERR(ops) ? NULL : ops;
- }
- 
- static int __init of_iommu_init(void)
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+  PCI host bridge to [bus 00-0f]
 
+If we had a bridge on bus 0f, and we hot-added a device below it, what
+should we do?  If we don't enforce the bus number ranges, we'll add
+the new device at bus 10, and it won't work because config accesses to
+bus 10 won't reach the device.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Of course, even if we *did* enforce the bus number ranges, the
+hot-added device would not work because there's no bus number
+available for it.  But at least the PCI core would know that and could
+do something sensible like emit a message, instead of assigning bus
+numbers that can't work.
+
+> >Andreas Noever did add code to enforce this:
+> >
+> >  fc1b253141b3 ("PCI: Don't scan random busses in pci_scan_bridge()")
+> >  1820ffdccb9b ("PCI: Make sure bus number resources stay within their
+> >parents bounds")
+> >
+> 
+> Thanks for sharing these, and I applied the two patches from Andreas.
+> So now the PCIe core could scan the child bus properly under the
+> limitation. But the endpoint connected to the switch still couldn't be
+> present. I was trying to connect the switch+endpoint to my Ubuntu PC
+> to see how it works. And I think the BIOS did the scan and linux PCIe
+> core inherits the topology from BIOS.
+> 
+> The tree looks like:
+> 
+> -[0000:00]-+-00.0
+>            +-01.0-[01-07]----00.0-[02-07]--+-01.0-[03]--
+>            |                               +-02.0-[04]--
+>            |                               +-03.0-[05]--
+>            |                               +-04.0-[06]--
+>            |                               \-05.0-[07]----00.0
+>            +-02.0
+>            +-03.0
+>            +-14.0
+>            +-16.0
+>            +-16.3
+>            +-19.0
+>            +-1a.0
+>            +-1b.0
+>            +-1d.0
+>            +-1f.0
+>            +-1f.2
+>            \-1f.3
+> 
+> 
+> The endpoint was in 07:00.0 which means the BIOS scan the tree and
+> assige bus 7 to the endpoint. So I assume the topology isn't so deep
+> as what linux PCIe core does. What now I see is that linux PCIe are
+> scanning the child bus from 1 to 0x1f(assigned from DT), and break out
+> without finding the endpoint. So I feel that the aforementioned patches
+> weren't enough to solve the issue.
+
+I don't understand what's happening here.  If the endpoint is on bus
+07, that bus is inside the bus number aperture, so we should be able
+to find it.  Maybe the complete dmesg log would have more clues.
+
+Bjorn
