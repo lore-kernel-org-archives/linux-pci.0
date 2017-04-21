@@ -1,140 +1,116 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 14 Apr 2017 09:46:49 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christoph Hellwig <hch@lst.de>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/4] PCI/irq: add pci_request_irq and pci_free_irq helpers
-Message-ID: <20170414144649.GC29349@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170413070643.32165-1-hch@lst.de>
- <20170413070643.32165-4-hch@lst.de>
+Return-Path: <SRS0=afEs=35=intel.com=mayurkumar.patel@kernel.org>
+Return-Path: <SRS0=afEs=35=intel.com=mayurkumar.patel@kernel.org>
+From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
+To: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <bhelgaas@google.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Rajat Jain <rajatja@google.com>,
+	"Rajat Jain" <rajatxjain@gmail.com>, David Daney <david.daney@cavium.com>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Timur Tabi
+	<timur@codeaurora.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, Julia Lawall <Julia.Lawall@lip6.fr>,
+	linux-arm-msm <linux-arm-msm@vger.kernel.org>, Yinghai Lu
+	<yinghai@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>, linux-arm
+	<linux-arm-kernel@lists.infradead.org>, Myron Stowe <myron.stowe@redhat.com>
+Subject: RE: [PATCH V8 4/5] PCI/ASPM: save power on values during bridge init
+Date: Fri, 21 Apr 2017 07:46:27 +0000
+Message-ID: <92EBB4272BF81E4089A7126EC1E7B2846676C7EF@IRSMSX101.ger.corp.intel.com>
+References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+ <1491627351-1111-5-git-send-email-okaya@codeaurora.org>
+ <CACK8Z6GXfMWxakNQnvMToig9z9McnJKeYFc2BAAFy7ys8=PUWg@mail.gmail.com>
+ <d3857812-7e03-4b62-f7cb-ac0d139b6123@codeaurora.org>
+ <20170414214452.GA21870@bhelgaas-glaptop.roam.corp.google.com>
+ <66168dde-7719-6f74-3f06-8e4724dd2918@codeaurora.org>
+ <CAErSpo7p_2dTDTC7J4HdQUw_5GH8081dUZ=XVqd=sRLrA_FJnA@mail.gmail.com>
+ <c0c2f48f-d725-058e-a1ad-92ab4b6e7fb3@codeaurora.org>
+In-Reply-To: <c0c2f48f-d725-058e-a1ad-92ab4b6e7fb3@codeaurora.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170413070643.32165-4-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 13, 2017 at 09:06:42AM +0200, Christoph Hellwig wrote:
-> These are small wrappers around request_threaded_irq and free_irq,
-> which dynamically allocate space for the device name so that drivers
-> don't need to keep static buffers for these around.  Additionally it
-> works with device-relative vector numbers to make the usage easier,
-> and force the IRQF_SHARED flag on given that it has no runtime overhead
-> and should be supported by all PCI devices.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-
-Let me know if you'd like me to take this series (given an appropriate
-ack for the genirq parts).
-
-> ---
->  drivers/pci/irq.c   | 61 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
->  include/linux/pci.h |  6 ++++++
->  2 files changed, 66 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/irq.c b/drivers/pci/irq.c
-> index 6684f153ab57..53e7f30d9461 100644
-> --- a/drivers/pci/irq.c
-> +++ b/drivers/pci/irq.c
-> @@ -1,7 +1,8 @@
->  /*
-> - * PCI IRQ failure handing code
-> + * PCI IRQ handing code
->   *
->   * Copyright (c) 2008 James Bottomley <James.Bottomley@HansenPartnership.com>
-> + * Copyright (C) 2017 Christoph Hellwig.
->   */
->  
->  #include <linux/acpi.h>
-> @@ -59,3 +60,61 @@ enum pci_lost_interrupt_reason pci_lost_interrupt(struct pci_dev *pdev)
->  	return PCI_LOST_IRQ_NO_INFORMATION;
->  }
->  EXPORT_SYMBOL(pci_lost_interrupt);
-> +
-> +/**
-> + * pci_request_irq - allocate an interrupt line for a PCI device
-> + * @dev:	PCI device to operate on
-> + * @nr:		device-relative interrupt vector index (0-based).
-> + * @handler:	Function to be called when the IRQ occurs.
-> + *		Primary handler for threaded interrupts.
-> + *		If NULL and thread_fn != NULL the default primary handler is
-> + *		installed.
-> + * @thread_fn:	Function called from the irq handler thread
-> + *		If NULL, no irq thread is created
-> + * @dev_id:	Cookie passed back to the handler function
-> + * @fmt:	Printf-like format string naming the handler
-> + *
-> + * This call allocates interrupt resources and enables the interrupt line and
-> + * IRQ handling. From the point this call is made @handler and @thread_fn may
-> + * be invoked.  All interrupt requsted using this function might be shared.
-> + *
-> + * @dev_id must not ne NULL and be globally unique.
-> + */
-> +int pci_request_irq(struct pci_dev *dev, unsigned int nr, irq_handler_t handler,
-> +		irq_handler_t thread_fn, void *dev_id, const char *fmt, ...)
-> +{
-> +	va_list ap;
-> +	int ret;
-> +	char *devname;
-> +
-> +	va_start(ap, fmt);
-> +	devname = kvasprintf(GFP_KERNEL, fmt, ap);
-> +	va_end(ap);
-> +
-> +	ret = request_threaded_irq(pci_irq_vector(dev, nr), handler, thread_fn,
-> +			IRQF_SHARED, devname, dev_id);
-> +	if (ret)
-> +		kfree(devname);
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL(pci_request_irq);
-> +
-> +/**
-> + * pci_free_irq - free an interrupt allocated with pci_request_irq
-> + * @dev:	PCI device to operate on
-> + * @nr:		device-relative interrupt vector index (0-based).
-> + * @dev_id:	Device identity to free
-> + *
-> + * Remove an interrupt handler. The handler is removed and if the interrupt
-> + * line is no longer in use by any driver it is disabled.  The caller must
-> + * ensure the interrupt is disabled on the device before calling this function.
-> + * The function does not return until any executing interrupts for this IRQ
-> + * have completed.
-> + *
-> + * This function must not be called from interrupt context.
-> + */
-> +void pci_free_irq(struct pci_dev *dev, unsigned int nr, void *dev_id)
-> +{
-> +	kfree(free_irq(pci_irq_vector(dev, nr), dev_id));
-> +}
-> +EXPORT_SYMBOL(pci_free_irq);
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index eb3da1a04e6c..b23f81b583ab 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -28,6 +28,7 @@
->  #include <linux/kobject.h>
->  #include <linux/atomic.h>
->  #include <linux/device.h>
-> +#include <linux/interrupt.h>
->  #include <linux/io.h>
->  #include <linux/resource_ext.h>
->  #include <uapi/linux/pci.h>
-> @@ -1072,6 +1073,11 @@ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
->  bool pci_device_is_present(struct pci_dev *pdev);
->  void pci_ignore_hotplug(struct pci_dev *dev);
->  
-> +int __printf(6, 7) pci_request_irq(struct pci_dev *dev, unsigned int nr,
-> +		irq_handler_t handler, irq_handler_t thread_fn, void *dev_id,
-> +		const char *fmt, ...);
-> +void pci_free_irq(struct pci_dev *dev, unsigned int nr, void *dev_id);
-> +
->  /* ROM control related routines */
->  int pci_enable_rom(struct pci_dev *pdev);
->  void pci_disable_rom(struct pci_dev *pdev);
-> -- 
-> 2.11.0
-> 
+SGkgQmpvcm4vS2F5YSwNCg0KDQo+DQo+T24gNC8xNy8yMDE3IDEyOjM4IFBNLCBCam9ybiBIZWxn
+YWFzIHdyb3RlOg0KPj4+IExpa2UgeW91IHNhaWQsIHdoYXQgZG8gd2UgZG8gYnkgZGVmYXVsdCBp
+cyB0aGUgcXVlc3Rpb24uIFNob3VsZCB3ZSBvcHQNCj4+PiBmb3Igc2FmZSBsaWtlIHdlIGFyZSBk
+b2luZywgb3IgdHJ5IHRvIHNhdmUgc29tZSBwb3dlci4NCj4+IEkgdGhpbmsgc2FmZXR5IGlzIHBh
+cmFtb3VudC4gIEV2ZXJ5IHVzZXIgc2hvdWxkIGJlIGFibGUgdG8gYm9vdCBzYWZlbHkNCj4+IHdp
+dGhvdXQgYW55IGtlcm5lbCBwYXJhbWV0ZXJzLiAgV2UgZG9uJ3Qgd2FudCB1c2VycyB0byBoYXZl
+IGEgcHJvYmxlbQ0KPj4gYm9vdGluZyBhbmQgdGhlbiBoYXZlIHRvIHNlYXJjaCBmb3IgYSB3b3Jr
+YXJvdW5kIGxpa2UgYm9vdGluZyB3aXRoDQo+PiAicGNpZV9hc3BtPW9mZiIuICBNb3N0IHVzZXJz
+IHdpbGwgbmV2ZXIgZG8gdGhhdC4NCj4+DQo+DQo+T0ssIG5vIHByb2JsZW0gd2l0aCBsZWF2aW5n
+IHRoZSBiZWhhdmlvciBhcyBpdCBpcy4NCj4NCj5NeSBpbml0aWFsIGFwcHJvYWNoIHdhcyAjMi4g
+V2Uga25ldyB0aGlzIHdheSB0aGF0IHVzZXIgaGFkIGZ1bGwgY29udHJvbA0KPm92ZXIgdGhlIEFT
+UE0gcG9saWN5IGJ5IGNoYW5naW5nIHRoZSBCSU9TIG9wdGlvbi4gVGhlbiwgTWF5dXJrdW1hcg0K
+PmNvbXBsYWluZWQgdGhhdCBBU1BNIGlzIG5vdCBlbmFibGVkIGZvbGxvd2luZyBhIGhvdHBsdWcg
+aW5zZXJ0aW9uIHRvIGFuDQo+ZW1wdHkgc2xvdC4gVGhhdCdzIHdoZW4gSSBzd2l0Y2hlZCB0byAj
+MyBhcyBpdCBzb3VuZGVkIGxpa2UgYSBnb29kIHRoaW5nDQo+dG8gaGF2ZSBmb3IgdXMuDQo+DQo+
+PiBIZXJlJ3MgYSBsb25nLXRlcm0gc3RyYXdtYW4gcHJvcG9zYWwsIHNlZSB3aGF0IHlvdSB0aGlu
+azoNCj4+DQo+PiAgIC0gRGVwcmVjYXRlIENPTkZJR19QQ0lFQVNQTV9ERUZBVUxULCBDT05GSUdf
+UENJRUFTUE1fUE9XRVJTQVZFLCBldGMuDQo+PiAgIC0gRGVmYXVsdCBhc3BtX3BvbGljeSBpcyBQ
+T0xJQ1lfREVGQVVMVCBhbHdheXMuDQo+PiAgIC0gUE9MSUNZX0RFRkFVTFQgbWVhbnMgTGludXgg
+ZG9lc24ndCB0b3VjaCBhbnl0aGluZzogaWYgQklPUyBlbmFibGVkDQo+PiBBU1BNLCB3ZSBsZWF2
+ZSBpdCB0aGF0IHdheTsgd2UgbGVhdmUgQVNQTSBkaXNhYmxlZCBvbiBob3QtYWRkZWQNCj4+IGRl
+dmljZXMuDQo+DQpJIGFtIGFsc28gb2sgd2l0aCBsZWF2aW5nIHRoZSBzYW1lIGJlaGF2aW9yIGFz
+IG5vdy4NCkJ1dCBzdGlsbCBmb2xsb3dpbmcgaXMgc29tZXRoaW5nIG9wZW4gSSBmZWVsIGJlc2lk
+ZXMsIFdoaWNoIG1heSBiZSB0aGVyZSBpbiB5b3VyIGNvbW1lbnRzIHJlZHVuZGFudGx5Lg0KVGhl
+IGN1cnJlbnQgcHJvYmxlbSBpcywgcGNpZV9hc3BtX2V4aXRfbGlua19zdGF0ZSgpIGRpc2FibGVz
+IHRoZSBBU1BNIGNvbmZpZ3VyYXRpb24gZXZlbg0KaWYgUE9MSUNZX0RFRkFVTFQgd2FzIHNldC4N
+CkkgYW0gc2VlaW5nIGFscmVhZHkgZm9sbG93aW5nIHByb2JsZW0ob3IgbWF5IGJlIGluZmx1ZW5j
+ZSkgd2l0aCBpdC4gVGhlIEVuZHBvaW50IEkgaGF2ZSBkb2VzIG5vdCBoYXZlDQpkb2VzIG5vdCBo
+YXZlICJQcmVzZW5jZSBkZXRlY3QgY2hhbmdlIiBtZWNoYW5pc20uIEhvdCBwbHVnIGlzIHdvcmtp
+bmcgd2l0aCBMaW5rIHN0YXR1cyBldmVudHMuDQpXaGVuIGxpbmsgaXMgaW4gTDEgb3IgTDFTUyBh
+bmQgaWYgRVAgaXMgcG93ZXJlZCBvZmYsIG5vIExpbmsgc3RhdHVzIGNoYW5nZSBldmVudCBhcmUg
+dHJpZ2dlcmVkIChJdCBtaWdodCBiZQ0KdGhlIGV4cGVjdGVkIGJlaGF2aW9yIGluIEwxIG9yIEwx
+U1MpLiAgV2hlbiBuZXh0IHRpbWUgRVAgaXMgcG93ZXJlZCBvbiB0aGVyZSBhcmUgbGluayBkb3du
+IGFuZA0KbGluayB1cCBldmVudHMgY29taW5nIG9uZSBhZnRlciBvdGhlci4gQklPUyBlbmFibGVz
+IEFTUE0gb24gUm9vdCBwb3J0IGFuZCBFbmRwb2ludCwgYnV0IHdoaWxlDQpwcm9jZXNzaW5nIGxp
+bmsgc3RhdHVzIGRvd24sIHBjaWVfYXNwbV9leGl0X2xpbmtfc3RhdGUoKSBjbGVhcnMgdGhlIEFT
+UE0gYWxyZWFkeSB3aGljaCB3ZXJlIGVuYWJsZWQgYnkgQklPUy4gDQpJZiB3ZSB3YW50IHRvIGZv
+bGxvdyBhYm92ZSBhcHByb2FjaCB0aGVuIHNoYWxsIHdlIGNvbnNpZGVyIGhhdmluZyBzb21ldGhp
+bmcgc2ltaWxhciBhcyBmb2xsb3dpbmc/DQoNCmRpZmYgLS1naXQgYS9kcml2ZXJzL3BjaS9wY2ll
+L2FzcG0uYyBiL2RyaXZlcnMvcGNpL3BjaWUvYXNwbS5jDQppbmRleCAxZGZhMTBjLi5iZjViZTZk
+IDEwMDY0NA0KLS0tIGEvZHJpdmVycy9wY2kvcGNpZS9hc3BtLmMNCisrKyBiL2RyaXZlcnMvcGNp
+L3BjaWUvYXNwbS5jDQpAQCAtOTQwLDcgKzk0MCw4IEBAIHZvaWQgcGNpZV9hc3BtX2V4aXRfbGlu
+a19zdGF0ZShzdHJ1Y3QgcGNpX2RldiAqcGRldikNCiAgICAgICAgcGFyZW50X2xpbmsgPSBsaW5r
+LT5wYXJlbnQ7DQoNCiAgICAgICAgLyogQWxsIGZ1bmN0aW9ucyBhcmUgcmVtb3ZlZCwgc28ganVz
+dCBkaXNhYmxlIEFTUE0gZm9yIHRoZSBsaW5rICovDQotICAgICAgIHBjaWVfY29uZmlnX2FzcG1f
+bGluayhsaW5rLCAwKTsNCisgICAgICAgaWYgKGFzcG1fcG9saWN5ICE9IFBPTElDWV9ERUZBVUxU
+KQ0KKyAgICAgICAgICAgICAgIHBjaWVfY29uZmlnX2FzcG1fbGluayhsaW5rLCAwKTsNCiAgICAg
+ICAgbGlzdF9kZWwoJmxpbmstPnNpYmxpbmcpOw0KICAgICAgICBsaXN0X2RlbCgmbGluay0+bGlu
+ayk7DQogICAgICAgIC8qIENsb2NrIFBNIGlzIGZvciBlbmRwb2ludCBkZXZpY2UgKi8NCiANCg0K
+PkkgY2FuIGVhc2lseSBzZWUgcGVvcGxlIGNvbXBsYWluaW5nIHRoZSBvdGhlciB3YXkgYXJvdW5k
+LiBUaGVyZQ0KPmNvdWxkIGJlIHNvbWUgYm9vdCBGVyB0aGF0IGRvZXNuJ3Qga25vdyB3aGF0IEFT
+UE0gaXMgYW5kIHRoaXMgcGFydGljdWxhcg0KPnN5c3RlbSBjb3VsZCByZWx5IG9uIHRoZSBjb21w
+aWxlIHRpbWUgb3B0aW9uIGZvciBlbmFibGluZyBwb3dlciBvcHRpb25zLg0KPk1heWJlLCBhIGNv
+bW1hbmQgbGluZSBvcHRpb24gd2lsbCBiZSByZXF1aXJlZCBmb3IgdGhlbSB0byBrZWVwIHRoZSBl
+eGlzdGluZw0KPmJlaGF2aW9yLg0KPg0KPj4gICAtIERlcHJlY2F0ZSBrZXJuZWwgYm9vdCBwYXJh
+bWV0ZXJzIChwb3NzaWJseSBrZWVwIHBjaWVfYXNwbT1vZmYgZm9yDQo+PiBkZWJ1Z2dpbmcgdXNl
+KS4NCj4+ICAgLSBVc2UgL3N5cy9tb2R1bGUvcGNpZV9hc3BtL3BhcmFtZXRlcnMvcG9saWN5IGZv
+ciBydW4tdGltZQ0KPj4gc3lzdGVtLXdpZGUgIGNvbnRyb2wsIGluY2x1ZGluZyBmb3IgZnV0dXJl
+IGhvdC1hZGRlZCBkZXZpY2VzLg0KPj4gICAtIFJlbW92ZSBDT05GSUdfUENJRUFTUE1fREVCVUcg
+YW5kIGVuYWJsZSB0aGF0IGNvZGUgYWx3YXlzLCBzbyB3ZQ0KPj4gaGF2ZSBmaW5lLWdyYWluZWQg
+cnVuLXRpbWUgY29udHJvbC4NCj4+DQo+DQo+UnVudGltZSBjb250cm9sIHNvdW5kcyBsaWtlIGEg
+YmV0dGVyIHBsYW4uIFdlIG5lZWQgaG9va3MgaW50byB0aGUgc3lzdGVtDQo+cG93ZXIgbWFuYWdl
+bWVudCBwb2xpY3kuDQo+DQo+Pj4gTWF5YmUsIHdlIGFyZSBtaXNzaW5nIGEgSFBQIG9wdGlvbiBm
+cm9tIHRoZSBQQ0kgc3BlYy4NCj4+IFRoYXQncyBhbiBpbnRlcmVzdGluZyBpZGVhLiAgX0hQWCBk
+b2VzIGhhdmUgcHJvdmlzaW9uIGZvciBtYW5pcHVsYXRpbmcNCj4+IExpbmsgQ29udHJvbCBiaXRz
+IChzZWUgQUNQSSByNS4wLCBzZWMgNi4yLjguMyksIGJ1dCBJIGRvbid0IHRoaW5rIHZlcnkNCj4+
+IG1hbnkgc3lzdGVtcyBpbXBsZW1lbnQgaXQuICBBbmQgdGhlcmUncyBjdXJyZW50bHkgbm8gY29u
+bmVjdGlvbg0KPj4gYmV0d2VlbiBwcm9ncmFtX2hwcF90eXBlMigpIGFuZCBhc3BtLmMsIHNvIEkn
+bSBhIGxpdHRsZSB3b3JyaWVkIHRoYXQNCj4+IHdlIG1pZ2h0IGhhdmUgaXNzdWVzIGlmIGEgc3lz
+dGVtIGRpZCBpbXBsZW1lbnQgYW4gX0hQWCB0aGF0IHNldHMgYW55DQo+PiBvZiB0aGUgQVNQTSBi
+aXRzLg0KPg0KPkkgbG9va2VkIGF0IHRoZSBzcGVjIHNvbWUgbW9yZS4gVGhlc2UgYXJlIHRoZXJl
+IHRvIHJlc3RvcmUgdGhlIHJlZ2lzdGVyDQo+c2V0dGluZ3MgZm9sbG93aW5nIGhvdHBsdWcgaW5z
+ZXJ0aW9uLiBJIGFncmVlIGl0IHdvbid0IHBsYXkgbmljZSB3aXRoIEFTUE0NCj5hcyB0aGUgY29u
+dHJvbCBiaXRzIG5lZWQgdG8gYmUgZW5hYmxlZCBpbiBjb29yZGluYXRpb24gd2l0aCB0aGUgdXBz
+dHJlYW0NCj5kZXZpY2UuDQo+DQo+SSB0aGluayB0aGUgcmlnaHQgYXBwcm9hY2ggaXMgdG8gbGV0
+IHRoZSB1c2Vyc3BhY2UgZmVlZCB0aGUgcmVxdWlyZWQNCj5wb2xpY3kgdG8gdGhlIGtlcm5lbCBs
+aWtlIHlvdSBzdWdnZXN0ZWQuIFRoZW4sIGl0IG5lZWRzIHRvIGJlIHBlciBwb3J0DQo+dmlhIGxp
+bmtfc3RhdGUgdG8gaGF2ZSB0aGUgbW9zdCBmbGV4aWJpbGl0eS4NCj4NCj4NCj4tLQ0KPlNpbmFu
+IEtheWENCj5RdWFsY29tbSBEYXRhY2VudGVyIFRlY2hub2xvZ2llcywgSW5jLiBhcyBhbiBhZmZp
+bGlhdGUgb2YgUXVhbGNvbW0gVGVjaG5vbG9naWVzLCBJbmMuDQo+UXVhbGNvbW0gVGVjaG5vbG9n
+aWVzLCBJbmMuIGlzIGEgbWVtYmVyIG9mIHRoZSBDb2RlIEF1cm9yYSBGb3J1bSwgYSBMaW51eCBG
+b3VuZGF0aW9uIENvbGxhYm9yYXRpdmUgUHJvamVjdC4NCkludGVsIERldXRzY2hsYW5kIEdtYkgK
+UmVnaXN0ZXJlZCBBZGRyZXNzOiBBbSBDYW1wZW9uIDEwLTEyLCA4NTU3OSBOZXViaWJlcmcsIEdl
+cm1hbnkKVGVsOiArNDkgODkgOTkgODg1My0wLCB3d3cuaW50ZWwuZGUKTWFuYWdpbmcgRGlyZWN0
+b3JzOiBDaHJpc3RpbiBFaXNlbnNjaG1pZCwgQ2hyaXN0aWFuIExhbXByZWNodGVyCkNoYWlycGVy
+c29uIG9mIHRoZSBTdXBlcnZpc29yeSBCb2FyZDogTmljb2xlIExhdQpSZWdpc3RlcmVkIE9mZmlj
+ZTogTXVuaWNoCkNvbW1lcmNpYWwgUmVnaXN0ZXI6IEFtdHNnZXJpY2h0IE11ZW5jaGVuIEhSQiAx
+ODY5MjgK
