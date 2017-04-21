@@ -1,85 +1,87 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:39373 "EHLO
-        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751409AbdDHHkt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 8 Apr 2017 03:40:49 -0400
-Date: Sat, 8 Apr 2017 09:41:07 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Joerg Roedel <joro@8bytes.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Daniel Drake <drake@endlessm.com>,
-        Alexander Deucher <Alexander.Deucher@amd.com>,
-        Samuel Sieb <samuel@sieb.net>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Joerg Roedel <jroedel@suse.de>,
-        Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Re: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-Message-ID: <20170408074107.GA3585@wunner.de>
-References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 21 Apr 2017 11:56:14 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Tomasz Nowicki <tn@semihalf.com>
+Subject: Re: [PATCH 1/1] PCI: Add MCFG quirk for 2nd node of Cavium ThunderX
+ pass2.x host controller
+Message-ID: <20170421165614.GA17916@bhelgaas-glaptop.roam.corp.google.com>
+References: <1490789773-21506-1-git-send-email-tn@semihalf.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1491575538-22694-1-git-send-email-joro@8bytes.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1490789773-21506-1-git-send-email-tn@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo.Pieralisi@arm.com, Sunil.Goutham@cavium.com, rafael@kernel.org,
+ linux-pci@vger.kernel.org, linu.cherian@cavium.com, ddaney@caviumnetworks.com,
+ geethasowjanya.akula@gmail.com, linux-acpi@vger.kernel.org,
+ robert.richter@caviumnetworks.com, Vadim.Lomovtsev@caviumnetworks.com,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 07, 2017 at 04:32:18PM +0200, Joerg Roedel wrote:
-> From: Joerg Roedel <jroedel@suse.de>
+On Wed, Mar 29, 2017 at 02:16:13PM +0200, Tomasz Nowicki wrote:
+> Currently SoCs pass2.x do not emulate EA headers for ACPI boot method at all.
+> However, for pass2.x some devices (like EDAC) advertise incorrect base addresses
+> in their BARs which results in driver probe failure during resource request.
+> Since all problematic blocks are on 2nd NUMA node under domain 10 add necessary
+> quirk entry to obtain BAR addresses correction using EA header emulation.
 > 
-> ATS is broken on this hardware and causes IOMMU stalls and
-> system failure. Disable ATS on these devices to make them
-> usable again with IOMMU enabled.
+> Fixes: 44f22bd91e88 ("PCI: Add MCFG quirks for Cavium ThunderX pass2.x host controller")
+> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+> CC: stable@vger.kernel.org	# v4.10+
 
-AMD Stoney Ridge is an x86 CPU + GPU combo and this quirk pertains
-to the GPU, right?
+Sorry Tomasz, I must have mistakenly marked this "accepted" in
+patchwork, so it fell off my to-do list.  It's too late to get this in
+v4.11, but I can still apply it for v4.12.
 
-In that case the quirk should go to arch/x86.  Paul Menzel (+cc)
-has just complained on linux-pci@ that final fixups are taking half
-a second, and I think that could be reduced if more efforts were
-spent to move arch-specific quirks out of the catch-all in
-drivers/pci/quirks.c.
+I put it on my pci/host-thunder branch with Robert's ack.  I added a preceding
+patch to tidy up whitespace, which makes this patch look like just:
 
-Thanks,
+        /* SoC pass2.x */
+        THUNDER_PEM_QUIRK(1, 0),
+        THUNDER_PEM_QUIRK(1, 1),
++       THUNDER_ECAM_QUIRK(1, 10),
 
-Lukas
+Please double-check it to make sure this is what you need.
 
-> 
-> Note that the commit in the Fixes-tag is not buggy, it
-> just uncovers the problem in the hardware by increasing
-> the ATS-flush rate.
-> 
-> Fixes: b1516a14657a ('iommu/amd: Implement flush queue')
-> Signed-off-by: Joerg Roedel <jroedel@suse.de>
 > ---
->  drivers/pci/quirks.c | 19 +++++++++++++++++++
->  1 file changed, 19 insertions(+)
+>  drivers/acpi/pci_mcfg.c | 7 ++++---
+>  1 file changed, 4 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 6736836..7cbe316 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -4634,3 +4634,22 @@ static void quirk_no_aersid(struct pci_dev *pdev)
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
-> +
-> +#ifdef CONFIG_PCI_ATS
-> +/*
-> + * Some devices have a broken ATS implementation causing IOMMU stalls.
-> + * Don't use ATS for those devices.
-> + */
-> +static void quirk_disable_ats(struct pci_dev *pdev)
-> +{
-> +	/*
-> +	 * Set pdev->ats_cap = 0 to make pci_enable_ats() bail out
-> +	 * early.
-> +	 */
-> +	dev_info(&pdev->dev, "QUIRK: Disabling ATS");
-> +	pdev->ats_cap = 0;
-> +}
-> +
-> +/* AMD Stoney platform GPU */
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4, quirk_disable_ats);
-> +#endif /* CONFIG_PCI_ATS */
+> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+> index a6a4cea..a0a391e 100644
+> --- a/drivers/acpi/pci_mcfg.c
+> +++ b/drivers/acpi/pci_mcfg.c
+> @@ -90,13 +90,14 @@ static struct mcfg_fixup mcfg_quirks[] = {
+>  	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x894057000000UL, node) },  \
+>  	{ "CAVIUM", "THUNDERX", rev, 9 + (10 * (node)), MCFG_BUS_ANY,	    \
+>  	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, node) }
+> +#define THUNDER_ECAM_QUIRK(rev, seg)					\
+> +	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,			\
+> +	&pci_thunder_ecam_ops }
+>  	/* SoC pass2.x */
+>  	THUNDER_PEM_QUIRK(1, 0),
+>  	THUNDER_PEM_QUIRK(1, 1),
+> +	THUNDER_ECAM_QUIRK(1, 10),
+>  
+> -#define THUNDER_ECAM_QUIRK(rev, seg)					\
+> -	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,			\
+> -	&pci_thunder_ecam_ops }
+>  	/* SoC pass1.x */
+>  	THUNDER_PEM_QUIRK(2, 0),	/* off-chip devices */
+>  	THUNDER_PEM_QUIRK(2, 1),	/* off-chip devices */
 > -- 
-> 1.9.1
+> 2.7.4
 > 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
