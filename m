@@ -1,99 +1,107 @@
-Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
-Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
-To: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
- <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
- <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
- <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
- <0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
- <4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
- <30f662a6-5dab-515b-e35a-a312f3c7b509@free.fr>
- <5f81730d-fbe3-1f4c-de34-09bbfb893ee1@arm.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <2b5eef4c-32f2-54f1-ca2f-f9426e68fb2c@free.fr>
-Date: Tue, 11 Apr 2017 18:26:23 +0200
+Return-Path: <SRS0=ufhh=35=google.com=bhelgaas@kernel.org>
+Return-Path: <SRS0=ufhh=35=google.com=bhelgaas@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <5f81730d-fbe3-1f4c-de34-09bbfb893ee1@arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20170417174712.GA7575@localhost>
+References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
+ <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
+ <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414210646.GA5346@localhost> <CAErSpo731xSzrnKF+G+8SA_UUHy7ROA1V9oFkpwKi85GQf9VAg@mail.gmail.com>
+ <20170417174712.GA7575@localhost>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 21 Apr 2017 10:48:15 -0500
+Message-ID: <CAErSpo6+do8GXon3EzZAUpqc2TFsA0BDwWBULqZCd1ayCJhD6w@mail.gmail.com>
+Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
+To: Jayachandran C <jnair@caviumnetworks.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>, Robin Murphy <robin.murphy@arm.com>,
+	Jon Masters <jcm@redhat.com>, linux-arm <linux-arm-kernel@lists.infradead.org>,
+	Joerg Roedel <joro@8bytes.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/04/2017 17:49, Marc Zyngier wrote:
-> On 11/04/17 16:13, Mason wrote:
->> On 27/03/2017 19:09, Marc Zyngier wrote:
+On Mon, Apr 17, 2017 at 12:47 PM, Jayachandran C
+<jnair@caviumnetworks.com> wrote:
+> On Fri, Apr 14, 2017 at 09:00:06PM -0500, Bjorn Helgaas wrote:
+>> On Fri, Apr 14, 2017 at 4:06 PM, Jayachandran C
+>> <jnair@caviumnetworks.com> wrote:
+>> > On Thu, Apr 13, 2017 at 07:19:11PM -0500, Bjorn Helgaas wrote:
+>> >> I tentatively applied both patches to pci/host-thunder for v4.12.
+>> >>
+>> >> However, I am concerned about the topology here:
+>> >>
+>> >> On Thu, Apr 13, 2017 at 08:30:45PM +0000, Jayachandran C wrote:
+>> >> > On Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the
+>> >> > PCI topology is slightly unusual.  For a multi-node system, it looks
+>> >> > like:
+>> >> >
+>> >> >     00:00.0 [PCI] bridge to [bus 01-1e]
+>> >> >     01:0a.0 [PCI-PCIe bridge, type 8] bridge to [bus 02-04]
+>> >> >     02:00.0 [PCIe root port, type 4] bridge to [bus 03-04] (XLATE_ROOT)
+>> >> >     03:00.0 PCIe Endpoint
+>> >>
+>> >> A root port normally has a single PCIe link leading downstream.
+>> >> According to this, 02:00.0 is a root port that has the usual
+>> >> downstream link leading to 03:00.0, but it also has an upstream link
+>> >> to 01:0a.0.
+>> >
+>> > The PCI topology is a bit broken due to the way that the PCIe IP block
+>> > was integrated into SoC PCI bridges and devices. The current mechanism
+>> > of adding a PCI-PCIe bridge to glue these together is not ideal.
 >>
->>> Here's what your system looks like:
->>>
->>> PCI-EP -------> MSI Controller ------> INTC
->>>          MSI                    IRQ
->>>
->>> A PCI MSI is always edge. No ifs, no buts. That's what it is, and nothing
->>> else. Now, your MSI controller signals its output using a level interrupt,
->>> since you need to whack it on the head so that it lowers its line.
->>>
->>> There is not a single trigger, because there is not a single interrupt.
+>> Yeah, that's definitely broken.
 >>
->> Hello Marc,
+>> >> Maybe this example is omitting details that are not relevant to DMA
+>> >> aliases?  The PCIe capability only contains one set of link-related
+>> >> registers, so I don't know how we could manage a single device that
+>> >> has two links.
+>> >
+>> > The root port is standard and has just one link to the EP (or whatever
+>> > is on the external PCIe slot). The fallout of the current hw design is
+>> > that the PCI-PCIe bridge has a link that does not follow standard and
+>> > does not have a counterpart (as you noted).
+>> >
+>> >> A device with two links would break things like ASPM.  In
+>> >> set_pcie_port_type(), for example, we have this comment:
+>> >>
+>> >>    * A Root Port or a PCI-to-PCIe bridge is always the upstream end
+>> >>    * of a Link.  No PCIe component has two Links.  Two Links are
+>> >>    * connected by a Switch that has a Port on each Link and internal
+>> >>    * logic to connect the two Ports.
+>> >>
+>> >> The topology above breaks these assumptions, which will make
+>> >> pdev->has_secondary_link incorrect, which means ASPM won't work
+>> >> correctly.
+>> >
+>> > Given the current hardware, the pcieport driver seems to work reasonably
+>> > for the root port at 02:00.0, with AER support. I will take a look at the
+>> > ASPM part.
 >>
->> I was hoping you or Thomas might help clear some confusion
->> in my mind around IRQ domains (struct irq_domain).
+>> I don't think pcieport itself cares much about links.  ASPM does, but
+>> it looks like set_pcie_port_type() actually is smart enough to know
+>> that PCI-to-PCIe bridges and Root Ports always have links on their
+>> secondary sides.  So has_secondary_link probably does get set
+>> correctly.
 >>
->> I have read https://www.kernel.org/doc/Documentation/IRQ-domain.txt
+>> But I think you'll hit the VIA "strange chipset" thing in
+>> pcie_aspm_init_link_state(), which will probably prevent us from doing
+>> ASPM on the link from 02:00.0 to 03:00.0.
 >>
->> IIUC, there should be one IRQ domain per IRQ controller.
->>
->> I have this MSI controller handling 256 interrupts, so I should
->> have *one* domain for all possible MSIs. Yet the Altera driver
->> registers *two* domains (msi_domain and inner_domain).
->>
->> Could I make everything work with a single IRQ domain?
-> 
-> No, because you have two irqchips. One that deals with the HW, and the
-> other that deals with the MSIs how they are presented to the kernel,
-> depending on the bus (PCI or something else). The fact that it doesn't
-> really drive any HW doesn't make it irrelevant.
+>> Could you collect "lspci -vv" output from this system?  I'd like to
+>> archive that as background for this IOMMU issue and the ASPM tweaks I
+>> suspect we'll have to do.  I *wish* we had more information about that
+>> VIA thing, because I suspect we could get rid of it if we had more
+>> details.
+>
+> The full logs are slightly large, so I have kept them at:
+> https://github.com/jchandra-cavm/thunderx2/blob/master/logs/
+> The lspci -vv output is lspci-vv.txt and lspci -tvn output is lspci-tvn.txt
+>
+> The output is from 2 socket system, the cards are not on the first slot
+> like the example above, so the bus and device numbers are different.
 
-The example given in IRQ-domain.txt is
+Can somebody with this system collect the "lspci -xxxx" output as well?
 
-  Device --> IOAPIC -> Interrupt remapping Controller -> Local APIC -> CPU
-
-with an irq_domain for each interrupt controller.
-
-
-On my system I have:
-
-  PCI-EP -> MSI controller -> System INTC -> GIC -> CPU
-
-The driver for System INTC is drivers/irqchip/irq-tango.c
-I think it has only one domain.
-
-For the GIC, drivers/irqchip/irq-gic.c
-I see a call to irq_domain_create_linear()
-
-Is the handling of MSI different, and that is why we need
-two domains? (Sorry, I did not understand that part well.)
-
-When I looked at drivers/pci/host/pci-hyperv.c
-they seem to have a single pci_msi_create_irq_domain call,
-no call to domain_add or domain_create.
-And they have a single struct irq_chip.
-
-> You don't need to tell it anything about the number of interrupts you
-> manage. As for your private structure, you've already given it to your
-> low level domain, and there is no need to propagate it any further.
-
-My main issue is that in the ack callback, I was in the "wrong"
-domain, in that d->hwirq was not the MSI number. So I thought
-I needed a single irq_domain.
-
-Is there a function to map virq to the hwirq in any domain?
-
-Regards.
+I'm making some lspci changes to handle the PCI-to-PCIe bridge
+correctly, and I can use the "lspci -xxxx" output to create an lspci
+test case.
