@@ -1,71 +1,132 @@
-Return-Path: <SRS0=HVeC=32=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=HVeC=32=deltatee.com=logang@kernel.org>
-To: Dan Williams <dan.j.williams@intel.com>,
- Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
- <1492381396.25766.43.camel@kernel.crashing.org>
- <20170418164557.GA7181@obsidianresearch.com>
- <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
- <20170418190138.GH7181@obsidianresearch.com>
- <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
- <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
- <20170418210339.GA24257@obsidianresearch.com>
- <CAPcyv4h9n9Uzq4FAXR0ufieqvx5_txEwtnaaBWdxe-jF_XfTLg@mail.gmail.com>
- <20170418212258.GA26838@obsidianresearch.com>
- <CAPcyv4g5ifbpukthMXMro8qKdfoXAhftDpiwWWFCLZ4dK8JnnA@mail.gmail.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
- Sagi Grimberg <sagi@grimberg.me>,
- "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
- Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
- Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
- linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jerome Glisse <jglisse@redhat.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <96198489-1af5-abcf-f23f-9a7e41aa17f7@deltatee.com>
-Date: Tue, 18 Apr 2017 16:15:52 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 21 Apr 2017 17:05:41 +0000
+From: Jayachandran C <jnair@caviumnetworks.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
+Message-ID: <20170421170414.GA2429@localhost>
+References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
+ <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
+ <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414210646.GA5346@localhost>
+ <CAErSpo731xSzrnKF+G+8SA_UUHy7ROA1V9oFkpwKi85GQf9VAg@mail.gmail.com>
+ <20170417174712.GA7575@localhost>
+ <CAErSpo6+do8GXon3EzZAUpqc2TFsA0BDwWBULqZCd1ayCJhD6w@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4g5ifbpukthMXMro8qKdfoXAhftDpiwWWFCLZ4dK8JnnA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+In-Reply-To: <CAErSpo6+do8GXon3EzZAUpqc2TFsA0BDwWBULqZCd1ayCJhD6w@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Joerg Roedel <joro@8bytes.org>,
+ "open list:INTEL IOMMU \(VT-d\)" <iommu@lists.linux-foundation.org>,
+ Bjorn Helgaas <helgaas@kernel.org>, Jon Masters <jcm@redhat.com>,
+ Robin Murphy <robin.murphy@arm.com>,
+ linux-arm <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 18/04/17 03:36 PM, Dan Williams wrote:
-> On Tue, Apr 18, 2017 at 2:22 PM, Jason Gunthorpe
-> <jgunthorpe@obsidianresearch.com> wrote:
->> On Tue, Apr 18, 2017 at 02:11:33PM -0700, Dan Williams wrote:
->>>> I think this opens an even bigger can of worms..
->>>
->>> No, I don't think it does. You'd only shim when the target page is
->>> backed by a device, not host memory, and you can figure this out by a
->>> is_zone_device_page()-style lookup.
->>
->> The bigger can of worms is how do you meaningfully stack dma_ops.
+On Fri, Apr 21, 2017 at 10:48:15AM -0500, Bjorn Helgaas wrote:
+> On Mon, Apr 17, 2017 at 12:47 PM, Jayachandran C
+> <jnair@caviumnetworks.com> wrote:
+> > On Fri, Apr 14, 2017 at 09:00:06PM -0500, Bjorn Helgaas wrote:
+> >> On Fri, Apr 14, 2017 at 4:06 PM, Jayachandran C
+> >> <jnair@caviumnetworks.com> wrote:
+> >> > On Thu, Apr 13, 2017 at 07:19:11PM -0500, Bjorn Helgaas wrote:
+> >> >> I tentatively applied both patches to pci/host-thunder for v4.12.
+> >> >>
+> >> >> However, I am concerned about the topology here:
+> >> >>
+> >> >> On Thu, Apr 13, 2017 at 08:30:45PM +0000, Jayachandran C wrote:
+> >> >> > On Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the
+> >> >> > PCI topology is slightly unusual.  For a multi-node system, it looks
+> >> >> > like:
+> >> >> >
+> >> >> >     00:00.0 [PCI] bridge to [bus 01-1e]
+> >> >> >     01:0a.0 [PCI-PCIe bridge, type 8] bridge to [bus 02-04]
+> >> >> >     02:00.0 [PCIe root port, type 4] bridge to [bus 03-04] (XLATE_ROOT)
+> >> >> >     03:00.0 PCIe Endpoint
+> >> >>
+> >> >> A root port normally has a single PCIe link leading downstream.
+> >> >> According to this, 02:00.0 is a root port that has the usual
+> >> >> downstream link leading to 03:00.0, but it also has an upstream link
+> >> >> to 01:0a.0.
+> >> >
+> >> > The PCI topology is a bit broken due to the way that the PCIe IP block
+> >> > was integrated into SoC PCI bridges and devices. The current mechanism
+> >> > of adding a PCI-PCIe bridge to glue these together is not ideal.
+> >>
+> >> Yeah, that's definitely broken.
+> >>
+> >> >> Maybe this example is omitting details that are not relevant to DMA
+> >> >> aliases?  The PCIe capability only contains one set of link-related
+> >> >> registers, so I don't know how we could manage a single device that
+> >> >> has two links.
+> >> >
+> >> > The root port is standard and has just one link to the EP (or whatever
+> >> > is on the external PCIe slot). The fallout of the current hw design is
+> >> > that the PCI-PCIe bridge has a link that does not follow standard and
+> >> > does not have a counterpart (as you noted).
+> >> >
+> >> >> A device with two links would break things like ASPM.  In
+> >> >> set_pcie_port_type(), for example, we have this comment:
+> >> >>
+> >> >>    * A Root Port or a PCI-to-PCIe bridge is always the upstream end
+> >> >>    * of a Link.  No PCIe component has two Links.  Two Links are
+> >> >>    * connected by a Switch that has a Port on each Link and internal
+> >> >>    * logic to connect the two Ports.
+> >> >>
+> >> >> The topology above breaks these assumptions, which will make
+> >> >> pdev->has_secondary_link incorrect, which means ASPM won't work
+> >> >> correctly.
+> >> >
+> >> > Given the current hardware, the pcieport driver seems to work reasonably
+> >> > for the root port at 02:00.0, with AER support. I will take a look at the
+> >> > ASPM part.
+> >>
+> >> I don't think pcieport itself cares much about links.  ASPM does, but
+> >> it looks like set_pcie_port_type() actually is smart enough to know
+> >> that PCI-to-PCIe bridges and Root Ports always have links on their
+> >> secondary sides.  So has_secondary_link probably does get set
+> >> correctly.
+> >>
+> >> But I think you'll hit the VIA "strange chipset" thing in
+> >> pcie_aspm_init_link_state(), which will probably prevent us from doing
+> >> ASPM on the link from 02:00.0 to 03:00.0.
+> >>
+> >> Could you collect "lspci -vv" output from this system?  I'd like to
+> >> archive that as background for this IOMMU issue and the ASPM tweaks I
+> >> suspect we'll have to do.  I *wish* we had more information about that
+> >> VIA thing, because I suspect we could get rid of it if we had more
+> >> details.
+> >
+> > The full logs are slightly large, so I have kept them at:
+> > https://github.com/jchandra-cavm/thunderx2/blob/master/logs/
+> > The lspci -vv output is lspci-vv.txt and lspci -tvn output is lspci-tvn.txt
+> >
+> > The output is from 2 socket system, the cards are not on the first slot
+> > like the example above, so the bus and device numbers are different.
 > 
-> This goes back to my original comment to make this capability a
-> function of the pci bridge itself. The kernel has an implementation of
-> a dynamically created bridge device that injects its own dma_ops for
-> the devices behind the bridge. See vmd_setup_dma_ops() in
-> drivers/pci/host/vmd.c.
+> Can somebody with this system collect the "lspci -xxxx" output as well?
+> 
+> I'm making some lspci changes to handle the PCI-to-PCIe bridge
+> correctly, and I can use the "lspci -xxxx" output to create an lspci
+> test case.
 
-Well the issue I think Jason is pointing out is that the ops don't
-stack. The map_* function in the injected dma_ops needs to be able to
-call the original map_* for any page that is not p2p memory. This is
-especially annoying in the map_sg function which may need to call a
-different op based on the contents of the sgl. (And please correct me if
-I'm not seeing how this can be done in the vmd example.)
+[Sorry was AFK for a few days]
 
-Also, what happens if p2p pages end up getting passed to a device that
-doesn't have the injected dma_ops?
+I have updated the above directory with the log. Also tested your next branch
+and it works fine on ThunderX2.
 
-However, the concept of replacing the dma_ops for all devices behind a
-supporting bridge is interesting and may be a good piece of the final
-solution.
+JC.
 
-Logan
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
