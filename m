@@ -1,76 +1,251 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 14 Apr 2017 14:04:52 -0500
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:34530 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1424438AbdDUTEw (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 21 Apr 2017 15:04:52 -0400
+Date: Fri, 21 Apr 2017 14:04:47 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
-        linux-kernel@vger.kernel.org, Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Message-ID: <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1491974532.7236.43.camel@kernel.crashing.org>
- <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
- <1492034124.7236.77.camel@kernel.crashing.org>
- <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
- <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
- <20170414041656.GA30694@obsidianresearch.com>
- <1492169849.25766.3.camel@kernel.crashing.org>
- <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>,
+        Lucas Stach <l.stach@pengutronix.de>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Will Deacon <will.deacon@arm.com>,
+        David Daney <david.daney@cavium.com>,
+        Rob Herring <robh@kernel.org>,
+        Tanmay Inamdar <tinamdar@apm.com>
+Subject: Re: [PATCH] PCI: don't allow unbinding host controllers that aren't
+ prepared
+Message-ID: <20170421190447.GB2638@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170331011203.41505-1-briannorris@chromium.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170331011203.41505-1-briannorris@chromium.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 14, 2017 at 11:30:14AM -0600, Logan Gunthorpe wrote:
-> On 14/04/17 05:37 AM, Benjamin Herrenschmidt wrote:
-> > I object to designing a subsystem that by design cannot work on whole
-> > categories of architectures out there.
+On Thu, Mar 30, 2017 at 06:12:03PM -0700, Brian Norris wrote:
+> Many PCI host controller drivers aren't prepared to have their devices
+> unbound from them forcefully (e.g., through /sys/.../<driver>/unbind),
+> as they don't provide any driver .remove callback, where they'd detach
+> the root bus, release resources, etc. Keeping the driver built in (i.e.,
+> not a loadable module) is not enough; and providing no .remove callback
+> just means we don't do any teardown.
 > 
-> Hardly. That's extreme. We'd design a subsystem that works for the easy
-> cases and needs more work to support the offset cases. It would not be
-> designed in such a way that it could _never_ support those
-> architectures. It would simply be such that it only permits use by the
-> cases that are known to work. Then those cases could be expanded as time
-> goes on and people work on adding more support.
+> To rule out the possibility of unbinding a device via sysfs, we need to
+> set the ".suppress_bind_attrs" field.
+> 
+> I found the suspect drivers via the following search:
+> 
+>   git grep -l platform_driver $(git grep -L -e '\.remove' -e suppress_bind_attrs drivers/pci/)
+> 
+> Then I inspected them to ensure that
+> (a) they set up a PCI bus in their probe() and
+> (b) they don't have a remove() callback for undoing the setup
+> 
+> I excluded drivers/pci/host/pcie-rockchip.c, because I've implemented
+> remove() support elsewhere [1].
+> 
+> [1] https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg1349576.html
+>     [PATCH v2 3/5] PCI: rockchip: add remove() support
+> 
+> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+> Signed-off-by: Brian Norris <briannorris@chromium.org>
 
-I'm a little hesitant about excluding offset support, so I'd like to
-hear more about this.
+Applied to pci/remove for v4.12, thanks, Brian!
 
-Is the issue related to PCI BARs that are not completely addressable
-by the CPU?  If so, that sounds like a first-class issue that should
-be resolved up front because I don't think the PCI core in general
-would deal well with that.
-
-If all the PCI memory of interest is in fact addressable by the CPU,
-I would think it would be pretty straightforward to support offsets --
-everywhere you currently use a PCI bus address, you just use the
-corresponding CPU physical address instead.
-
-> There's tons of stuff that needs to be done to get this upstream. I'd
-> rather not require it to work for every possible architecture from the
-> start. The testing alone would be impossible. Many subsystems start by
-> working for x86 first and then adding support in other architectures
-> later. (Often with that work done by the people who care about those
-> systems and actually have the hardware to test with.)
-
-I don't think exhaustive testing is that big a deal.  PCI offset
-support is generic, so you shouldn't need any arch-specific code to
-deal with it.  I'd rather have consistent support across the board,
-even though some arches might not be tested.  I think that's simpler
-and better than adding checks to disable functionality on some arches
-merely on the grounds that it hasn't been tested there.
-
-Bjorn
+> ---
+> Not tested, other than to compile a few of these.
+> 
+>  drivers/pci/dwc/pci-imx6.c             | 1 +
+>  drivers/pci/dwc/pci-layerscape.c       | 1 +
+>  drivers/pci/dwc/pcie-armada8k.c        | 1 +
+>  drivers/pci/dwc/pcie-artpec6.c         | 1 +
+>  drivers/pci/dwc/pcie-designware-plat.c | 1 +
+>  drivers/pci/dwc/pcie-hisi.c            | 2 ++
+>  drivers/pci/dwc/pcie-spear13xx.c       | 1 +
+>  drivers/pci/host/pci-ftpci100.c        | 1 +
+>  drivers/pci/host/pci-host-generic.c    | 1 +
+>  drivers/pci/host/pci-thunder-ecam.c    | 1 +
+>  drivers/pci/host/pci-thunder-pem.c     | 1 +
+>  drivers/pci/host/pci-versatile.c       | 1 +
+>  drivers/pci/host/pci-xgene.c           | 1 +
+>  13 files changed, 14 insertions(+)
+> 
+> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+> index 801e46cd266d..f85a063e9964 100644
+> --- a/drivers/pci/dwc/pci-imx6.c
+> +++ b/drivers/pci/dwc/pci-imx6.c
+> @@ -725,6 +725,7 @@ static struct platform_driver imx6_pcie_driver = {
+>  	.driver = {
+>  		.name	= "imx6q-pcie",
+>  		.of_match_table = imx6_pcie_of_match,
+> +		.suppress_bind_attrs = true,
+>  	},
+>  	.shutdown = imx6_pcie_shutdown,
+>  };
+> diff --git a/drivers/pci/dwc/pci-layerscape.c b/drivers/pci/dwc/pci-layerscape.c
+> index c32e392a0ae6..880f345bff43 100644
+> --- a/drivers/pci/dwc/pci-layerscape.c
+> +++ b/drivers/pci/dwc/pci-layerscape.c
+> @@ -305,6 +305,7 @@ static struct platform_driver ls_pcie_driver = {
+>  	.driver = {
+>  		.name = "layerscape-pcie",
+>  		.of_match_table = ls_pcie_of_match,
+> +		.suppress_bind_attrs = true,
+>  	},
+>  };
+>  builtin_platform_driver_probe(ls_pcie_driver, ls_pcie_probe);
+> diff --git a/drivers/pci/dwc/pcie-armada8k.c b/drivers/pci/dwc/pcie-armada8k.c
+> index f110e3b24a26..9d8f7e4db5df 100644
+> --- a/drivers/pci/dwc/pcie-armada8k.c
+> +++ b/drivers/pci/dwc/pcie-armada8k.c
+> @@ -262,6 +262,7 @@ static struct platform_driver armada8k_pcie_driver = {
+>  	.driver = {
+>  		.name	= "armada8k-pcie",
+>  		.of_match_table = of_match_ptr(armada8k_pcie_of_match),
+> +		.suppress_bind_attrs = true,
+>  	},
+>  };
+>  builtin_platform_driver(armada8k_pcie_driver);
+> diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+> index fcd3ef845883..7a86d4b4dcc1 100644
+> --- a/drivers/pci/dwc/pcie-artpec6.c
+> +++ b/drivers/pci/dwc/pcie-artpec6.c
+> @@ -290,6 +290,7 @@ static struct platform_driver artpec6_pcie_driver = {
+>  	.driver = {
+>  		.name	= "artpec6-pcie",
+>  		.of_match_table = artpec6_pcie_of_match,
+> +		.suppress_bind_attrs = true,
+>  	},
+>  };
+>  builtin_platform_driver(artpec6_pcie_driver);
+> diff --git a/drivers/pci/dwc/pcie-designware-plat.c b/drivers/pci/dwc/pcie-designware-plat.c
+> index b6c832ba39dd..bdb75a5758ae 100644
+> --- a/drivers/pci/dwc/pcie-designware-plat.c
+> +++ b/drivers/pci/dwc/pcie-designware-plat.c
+> @@ -129,6 +129,7 @@ static struct platform_driver dw_plat_pcie_driver = {
+>  	.driver = {
+>  		.name	= "dw-pcie",
+>  		.of_match_table = dw_plat_pcie_of_match,
+> +		.suppress_bind_attrs = true,
+>  	},
+>  	.probe = dw_plat_pcie_probe,
+>  };
+> diff --git a/drivers/pci/dwc/pcie-hisi.c b/drivers/pci/dwc/pcie-hisi.c
+> index fd66a3199db7..088ed5e4e46b 100644
+> --- a/drivers/pci/dwc/pcie-hisi.c
+> +++ b/drivers/pci/dwc/pcie-hisi.c
+> @@ -334,6 +334,7 @@ static struct platform_driver hisi_pcie_driver = {
+>  	.driver = {
+>  		   .name = "hisi-pcie",
+>  		   .of_match_table = hisi_pcie_of_match,
+> +		   .suppress_bind_attrs = true,
+>  	},
+>  };
+>  builtin_platform_driver(hisi_pcie_driver);
+> @@ -391,6 +392,7 @@ static struct platform_driver hisi_pcie_almost_ecam_driver = {
+>  	.driver = {
+>  		   .name = "hisi-pcie-almost-ecam",
+>  		   .of_match_table = hisi_pcie_almost_ecam_of_match,
+> +		   .suppress_bind_attrs = true,
+>  	},
+>  };
+>  builtin_platform_driver(hisi_pcie_almost_ecam_driver);
+> diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
+> index eaa4ea8e2ea4..0d117499da0d 100644
+> --- a/drivers/pci/dwc/pcie-spear13xx.c
+> +++ b/drivers/pci/dwc/pcie-spear13xx.c
+> @@ -308,6 +308,7 @@ static struct platform_driver spear13xx_pcie_driver = {
+>  	.driver = {
+>  		.name	= "spear-pcie",
+>  		.of_match_table = of_match_ptr(spear13xx_pcie_of_match),
+> +		.suppress_bind_attrs = true,
+>  	},
+>  };
+>  
+> diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
+> index 4ae5418a1aad..9d2713707a91 100644
+> --- a/drivers/pci/host/pci-ftpci100.c
+> +++ b/drivers/pci/host/pci-ftpci100.c
+> @@ -556,6 +556,7 @@ static struct platform_driver faraday_pci_driver = {
+>  	.driver = {
+>  		.name = "ftpci100",
+>  		.of_match_table = of_match_ptr(faraday_pci_of_match),
+> +		.suppress_bind_attrs = true,
+>  	},
+>  	.probe  = faraday_pci_probe,
+>  };
+> diff --git a/drivers/pci/host/pci-host-generic.c b/drivers/pci/host/pci-host-generic.c
+> index c05ea9d72f69..7d709a7e0aa8 100644
+> --- a/drivers/pci/host/pci-host-generic.c
+> +++ b/drivers/pci/host/pci-host-generic.c
+> @@ -60,6 +60,7 @@ static struct platform_driver gen_pci_driver = {
+>  	.driver = {
+>  		.name = "pci-host-generic",
+>  		.of_match_table = gen_pci_of_match,
+> +		.suppress_bind_attrs = true,
+>  	},
+>  	.probe = gen_pci_probe,
+>  };
+> diff --git a/drivers/pci/host/pci-thunder-ecam.c b/drivers/pci/host/pci-thunder-ecam.c
+> index 3f54a43bbbea..fc0ca03f280e 100644
+> --- a/drivers/pci/host/pci-thunder-ecam.c
+> +++ b/drivers/pci/host/pci-thunder-ecam.c
+> @@ -373,6 +373,7 @@ static struct platform_driver thunder_ecam_driver = {
+>  	.driver = {
+>  		.name = KBUILD_MODNAME,
+>  		.of_match_table = thunder_ecam_of_match,
+> +		.suppress_bind_attrs = true,
+>  	},
+>  	.probe = thunder_ecam_probe,
+>  };
+> diff --git a/drivers/pci/host/pci-thunder-pem.c b/drivers/pci/host/pci-thunder-pem.c
+> index 52b5bdccf5f0..4260b0765949 100644
+> --- a/drivers/pci/host/pci-thunder-pem.c
+> +++ b/drivers/pci/host/pci-thunder-pem.c
+> @@ -416,6 +416,7 @@ static struct platform_driver thunder_pem_driver = {
+>  	.driver = {
+>  		.name = KBUILD_MODNAME,
+>  		.of_match_table = thunder_pem_of_match,
+> +		.suppress_bind_attrs = true,
+>  	},
+>  	.probe = thunder_pem_probe,
+>  };
+> diff --git a/drivers/pci/host/pci-versatile.c b/drivers/pci/host/pci-versatile.c
+> index 5ebee7d37ff5..5a5b84227eb6 100644
+> --- a/drivers/pci/host/pci-versatile.c
+> +++ b/drivers/pci/host/pci-versatile.c
+> @@ -221,6 +221,7 @@ static struct platform_driver versatile_pci_driver = {
+>  	.driver = {
+>  		.name = "versatile-pci",
+>  		.of_match_table = versatile_pci_of_match,
+> +		.suppress_bind_attrs = true,
+>  	},
+>  	.probe = versatile_pci_probe,
+>  };
+> diff --git a/drivers/pci/host/pci-xgene.c b/drivers/pci/host/pci-xgene.c
+> index 1a6108788f6f..517bea33809f 100644
+> --- a/drivers/pci/host/pci-xgene.c
+> +++ b/drivers/pci/host/pci-xgene.c
+> @@ -697,6 +697,7 @@ static struct platform_driver xgene_pcie_driver = {
+>  	.driver = {
+>  		   .name = "xgene-pcie",
+>  		   .of_match_table = of_match_ptr(xgene_pcie_match_table),
+> +		   .suppress_bind_attrs = true,
+>  	},
+>  	.probe = xgene_pcie_probe_bridge,
+>  };
+> -- 
+> 2.12.2.564.g063fe858b8-goog
+> 
