@@ -1,77 +1,70 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:44560 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1172139AbdDXO1s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 24 Apr 2017 10:27:48 -0400
-From: Imre Deak <imre.deak@intel.com>
-To: intel-gfx@lists.freedesktop.org
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        stable@vger.kernel.org
-Subject: [PATCH v2 1/2] PCI / PM: Add needs_resume flag to avoid suspend complete optimization
-Date: Mon, 24 Apr 2017 17:27:42 +0300
-Message-Id: <1493044063-2095-1-git-send-email-imre.deak@intel.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Sat, 22 Apr 2017 18:45:47 -0700
+From: Yinghai Lu <yinghai@kernel.org>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+Message-ID: <20170423014546.GA2704@dhcp-whq-twvpn-1-vpnpool-10-159-153-149.vpn.oracle.com>
+References: <CAKv+Gu-qRg8-YRCairppKrEfeLcW+OwVF8qZHp7vxXJA_AwPOw@mail.gmail.com>
+ <20170330100524.GA22801@red-moon>
+ <CAKv+Gu-ff98HrPK3f+E8soGJUXaaMxPLs2AuJ+rvXd0HWX-jXw@mail.gmail.com>
+ <CAKv+Gu8YjySTDMgsrtGqEPMOtVhHc8gvTHZ4C5Ga8OTYdC9R3A@mail.gmail.com>
+ <ae87ae28-f50d-095f-576e-f3fd7f96dea2@codeaurora.org>
+ <CAKv+Gu8x0rQUnTUorknW-mW9LFgrxFYsXyy4LU_w9JbA-m_sjA@mail.gmail.com>
+ <CAKv+Gu9Su0F9CSRe=sxomuDDH7c2szO6Z8dpqOQ=t_1Vn3JD3g@mail.gmail.com>
+ <20170410165328.GA5248@red-moon>
+ <CAKv+Gu-AN-OwnAJG5dt0Qg4GU8HxZBowTSA0H3LhNA3nHfrsQg@mail.gmail.com>
+ <CAKv+Gu9dS4OhLbBw59yKYQmoJ8SpFexzk9yH=XfXnzn8NJ4mcg@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAKv+Gu9dS4OhLbBw59yKYQmoJ8SpFexzk9yH=XfXnzn8NJ4mcg@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+ Lukas Wunner <lukas@wunner.de>, Matt Fleming <matt@codeblueprint.co.uk>,
+ linux-pci <linux-pci@vger.kernel.org>, Peter Jones <pjones@redhat.com>,
+ Sinan Kaya <okaya@codeaurora.org>, Heyi Guo <heyi.guo@linaro.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Hanjun Guo <hanjun.guo@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Some drivers - like i915 - may not support the system suspend direct
-complete optimization due to differences in their runtime and system
-suspend sequence. Add a flag that when set resumes the device before
-calling the driver's system suspend handlers which effectively disables
-the optimization.
+On Mon, Apr 10, 2017 at 06:29:27PM +0100, Ard Biesheuvel wrote:
+>  /*
+> @@ -208,8 +208,8 @@ struct pci_bus *pci_acpi_scan_root(struct
+> acpi_pci_root *root)
+>         if (!bus)
+>                 return NULL;
+> 
+> -       pci_bus_size_bridges(bus);
+> -       pci_bus_assign_resources(bus);
+> +       pci_assign_unassigned_root_bus_resources(bus);
+> +       pci_bus_claim_resources(bus);
+> 
+>         list_for_each_entry(child, &bus->children, node)
+>                 pcie_bus_configure_settings(child);
+>
 
-Needed by the next patch fixing suspend/resume on i915.
+looks like those two lines are reversed. you should use:
+                pcibios_resource_survey_bus(bus);
+                pci_assign_unassigned_root_bus_resources(bus);
 
-Suggested by Rafael.
+please check x86 pcibios_resource_survey_bus() definition in
+	arch/x86/pci/i386.c
 
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: stable@vger.kernel.org
-Signed-off-by: Imre Deak <imre.deak@intel.com>
----
- drivers/pci/pci.c   | 3 ++-
- include/linux/pci.h | 7 +++++++
- 2 files changed, 9 insertions(+), 1 deletion(-)
+but pci_bus_claim_resources() should work too.
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 7904d02..020f02d 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -2141,7 +2141,8 @@ bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
- 
- 	if (!pm_runtime_suspended(dev)
- 	    || pci_target_state(pci_dev) != pci_dev->current_state
--	    || platform_pci_need_resume(pci_dev))
-+	    || platform_pci_need_resume(pci_dev)
-+	    || pci_dev->needs_resume)
- 		return false;
- 
- 	/*
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index e2d1a12..3fe00a6 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -316,6 +316,9 @@ struct pci_dev {
- 	unsigned int	hotplug_user_indicators:1; /* SlotCtl indicators
- 						      controlled exclusively by
- 						      user sysfs */
-+	unsigned int	needs_resume:1;	/* Resume before calling the driver's
-+					   system suspend hooks, disabling the
-+					   direct_complete optimization. */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
- 
-@@ -1113,6 +1116,10 @@ bool pci_check_pme_status(struct pci_dev *dev);
- void pci_pme_wakeup_bus(struct pci_bus *bus);
- void pci_d3cold_enable(struct pci_dev *dev);
- void pci_d3cold_disable(struct pci_dev *dev);
-+static inline void pci_resume_before_suspend(struct pci_dev *dev, bool enable)
-+{
-+	dev->needs_resume = enable;
-+}
- 
- static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
- 				  bool enable)
--- 
-2.5.0
+Yinghai
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
