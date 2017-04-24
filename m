@@ -1,146 +1,77 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 21 Apr 2017 18:14:02 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: "zhichang.yuan" <zhichang.yuan02@gmail.com>
-Subject: Re: [PATCH V8 5/6] ACPI: Support the probing on the devices which
- apply indirect-IO
-Message-ID: <20170421171352.GA27801@red-moon>
-References: <1490887619-61732-1-git-send-email-yuanzhichang@hisilicon.com>
- <1490887619-61732-6-git-send-email-yuanzhichang@hisilicon.com>
- <CALdTtnuO=592n+PoR_kkdTyeFYRd90VyPf0JLwnEo7DtXwzoPA@mail.gmail.com>
- <a73c87d3-59fc-843b-a4e1-d9f5201bffd9@gmail.com>
-MIME-Version: 1.0
-In-Reply-To: <a73c87d3-59fc-843b-a4e1-d9f5201bffd9@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Mark Rutland <mark.rutland@arm.com>,
- Catalin Marinas <catalin.marinas@arm.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>, rafael@kernel.org,
- benh@kernel.crashing.org, Will Deacon <will.deacon@arm.com>,
- linuxarm@huawei.com, Frank Rowand <frowand.list@gmail.com>,
- Arnd Bergmann <arnd@arndb.de>, dann frazier <dann.frazier@canonical.com>,
- xuwei5@hisilicon.com, linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Corey Minyard <minyard@acm.org>, John Garry <john.garry@huawei.com>,
- Zou Rongrong <zourongrong@gmail.com>, Rob Herring <robh+dt@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, kantyzc@163.com,
- linux-arm-kernel <linux-arm-kernel@lists.infradead.org>,
- Seth Forshee <seth.forshee@canonical.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "zhichang.yuan" <yuanzhichang@hisilicon.com>, hanjun.guo@linaro.org,
- sudeep.holla@arm.com, olof@lixom.net, Brian Starkey <brian.starkey@arm.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga05.intel.com ([192.55.52.43]:44560 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1172139AbdDXO1s (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Apr 2017 10:27:48 -0400
+From: Imre Deak <imre.deak@intel.com>
+To: intel-gfx@lists.freedesktop.org
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: [PATCH v2 1/2] PCI / PM: Add needs_resume flag to avoid suspend complete optimization
+Date: Mon, 24 Apr 2017 17:27:42 +0300
+Message-Id: <1493044063-2095-1-git-send-email-imre.deak@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 21, 2017 at 10:22:52AM +0800, zhichang.yuan wrote:
-> Hi, Dann,
-> 
-> 
-> 
-> On 04/21/2017 04:57 AM, dann frazier wrote:
-> > On Thu, Mar 30, 2017 at 9:26 AM, zhichang.yuan
-> > <yuanzhichang@hisilicon.com> wrote:
-> >> On some platforms(such as Hip06/Hip07), the legacy ISA/LPC devices access I/O
-> >> with some special host-local I/O ports known on x86. To access the I/O
-> >> peripherals, an indirect-IO mechanism is introduced to mapped the host-local
-> >> I/O to system logical/fake PIO similar the PCI MMIO on architectures where no
-> >> separate I/O space exists. Just as PCI MMIO, the host I/O range should be
-> >> registered before probing the downstream devices and set up the I/O mapping.
-> >> But current ACPI bus probing doesn't support these indirect-IO hosts/devices.
-> >>
-> >> This patch introdueces a new ACPI handler for this device category. Through the
-> >> handler attach callback, the indirect-IO hosts I/O registration is done and
-> >> all peripherals' I/O resources are translated into logic/fake PIO before
-> >> starting the enumeration.
-> >>
-> >> Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-> >> Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> >> ---
-> >>  drivers/acpi/Makefile          |   1 +
-> >>  drivers/acpi/acpi_indirectio.c | 344 +++++++++++++++++++++++++++++++++++++++++
-> >>  drivers/acpi/internal.h        |   5 +
-> >>  drivers/acpi/scan.c            |   1 +
-> >>  4 files changed, 351 insertions(+)
-> >>  create mode 100644 drivers/acpi/acpi_indirectio.c
-> >>
-> >> diff --git a/drivers/acpi/Makefile b/drivers/acpi/Makefile
-> >> index a391bbc..10e5f2b 100644
-> >> --- a/drivers/acpi/Makefile
-> >> +++ b/drivers/acpi/Makefile
-> >> @@ -57,6 +57,7 @@ acpi-$(CONFIG_ACPI_PROCFS_POWER) += cm_sbs.o
-> >>  acpi-y                         += acpi_lpat.o
-> >>  acpi-$(CONFIG_ACPI_GENERIC_GSI) += irq.o
-> >>  acpi-$(CONFIG_ACPI_WATCHDOG)   += acpi_watchdog.o
-> >> +acpi-$(CONFIG_INDIRECT_PIO)    += acpi_indirectio.o
-> >>
-> >>  # These are (potentially) separate modules
-> >>
-> >> diff --git a/drivers/acpi/acpi_indirectio.c b/drivers/acpi/acpi_indirectio.c
-> >> new file mode 100644
-> >> index 0000000..c8c80b5
-> >> --- /dev/null
-> >> +++ b/drivers/acpi/acpi_indirectio.c
-> >> @@ -0,0 +1,344 @@
-> 
-> [snip]
-> 
-> >> +acpi_build_logiciores_template(struct acpi_device *adev,
-> >> +                       struct acpi_buffer *buffer)
-> >> +{
-> >> +       acpi_handle handle = adev->handle;
-> >> +       struct acpi_resource *resource;
-> >> +       acpi_status status;
-> >> +       int res_cnt = 0;
-> >> +
-> >> +       status = acpi_walk_resources(handle, METHOD_NAME__CRS,
-> >> +                                    acpi_count_logiciores, &res_cnt);
-> >> +       if (ACPI_FAILURE(status) || !res_cnt) {
-> >> +               dev_err(&adev->dev, "can't evaluate _CRS: %d\n", status);
-> >> +               return -EINVAL;
-> >> +       }
-> >> +
-> >> +       buffer->length = sizeof(struct acpi_resource) * (res_cnt + 1) + 1;
-> >> +       buffer->pointer = kzalloc(buffer->length - 1, GFP_KERNEL);
-> > 
-> > (Seth Forshee noticed this issue, just passing it on)
-> > 
-> > Should this just allocate the full buffer->length? That would keep the
-> > length attribute accurate (possibly avoiding an off-by-1 error later).
-> > It's not clear what the trailing byte is needed for, but other drivers
-> > allocate it as well (drivers/acpi/pci_link.c and
-> > drivers/platform/x86/sony-laptop.c).
-> 
-> Thanks for your suggestion!
-> 
-> I also curious why this one appended byte is needed as it seems the later
-> acpi_set_current_resources() doesn't use this byte.
-> And I tested without setting the buffer->length as the length of resource list
-> directly, it seems ok.
-> 
-> But anyway, it looks more reasonable to allocate the memory with the
-> buffer->length rather than buffer->length - 1;
-> 
-> I was made the V9 patch-set, and I can add your suggestion there. But I also
-> awaiting for ARM64 ACPI maintainer's comment about this patch before really
-> sending V9. I wonder whether there is better way to make our indirect-IO devices
-> can be assigned the logic PIO before the enumeration...
-> 
-> Lorenzo, Hanjun, what do you think about this patch?
+Some drivers - like i915 - may not support the system suspend direct
+complete optimization due to differences in their runtime and system
+suspend sequence. Add a flag that when set resumes the device before
+calling the driver's system suspend handlers which effectively disables
+the optimization.
 
-I will get to it shortly, sorry for the delay.
+Needed by the next patch fixing suspend/resume on i915.
 
-Thanks,
-Lorenzo
+Suggested by Rafael.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: stable@vger.kernel.org
+Signed-off-by: Imre Deak <imre.deak@intel.com>
+---
+ drivers/pci/pci.c   | 3 ++-
+ include/linux/pci.h | 7 +++++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02..020f02d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2141,7 +2141,8 @@ bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
+ 
+ 	if (!pm_runtime_suspended(dev)
+ 	    || pci_target_state(pci_dev) != pci_dev->current_state
+-	    || platform_pci_need_resume(pci_dev))
++	    || platform_pci_need_resume(pci_dev)
++	    || pci_dev->needs_resume)
+ 		return false;
+ 
+ 	/*
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index e2d1a12..3fe00a6 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -316,6 +316,9 @@ struct pci_dev {
+ 	unsigned int	hotplug_user_indicators:1; /* SlotCtl indicators
+ 						      controlled exclusively by
+ 						      user sysfs */
++	unsigned int	needs_resume:1;	/* Resume before calling the driver's
++					   system suspend hooks, disabling the
++					   direct_complete optimization. */
+ 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+ 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+ 
+@@ -1113,6 +1116,10 @@ bool pci_check_pme_status(struct pci_dev *dev);
+ void pci_pme_wakeup_bus(struct pci_bus *bus);
+ void pci_d3cold_enable(struct pci_dev *dev);
+ void pci_d3cold_disable(struct pci_dev *dev);
++static inline void pci_resume_before_suspend(struct pci_dev *dev, bool enable)
++{
++	dev->needs_resume = enable;
++}
+ 
+ static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+ 				  bool enable)
+-- 
+2.5.0
