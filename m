@@ -1,96 +1,60 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-by2nam03on0055.outbound.protection.outlook.com ([104.47.42.55]:43264
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752436AbdDFShs (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 6 Apr 2017 14:37:48 -0400
-Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
- when spliting large pages
-To: Borislav Petkov <bp@suse.de>
-References: <148846752022.2349.13667498174822419498.stgit@brijesh-build-machine>
- <148846771545.2349.9373586041426414252.stgit@brijesh-build-machine>
- <20170310110657.hophlog2juw5hpzz@pd.tnic>
- <cb6a9a56-2c52-d98d-3ff6-3b61d0e5875e@amd.com>
- <20170316182836.tyvxoeq56thtc4pd@pd.tnic>
- <ec134379-6a48-905c-26e4-f6f2738814dc@redhat.com>
- <20170317101737.icdois7sdmtutt6b@pd.tnic>
- <f46ff1e1-1cc7-1907-74a0-e2709fa1e5fb@amd.com>
- <20170406172520.iyjjtz56u3jlnjhq@pd.tnic>
-CC: <brijesh.singh@amd.com>, Paolo Bonzini <pbonzini@redhat.com>,
-        <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <kvm@vger.kernel.org>, <rkrcmar@redhat.com>,
-        <matt@codeblueprint.co.uk>, <linux-pci@vger.kernel.org>,
-        <linus.walleij@linaro.org>, <gary.hook@amd.com>,
-        <linux-mm@kvack.org>, <paul.gortmaker@windriver.com>,
-        <hpa@zytor.com>, <cl@linux.com>, <dan.j.williams@intel.com>,
-        <aarcange@redhat.com>, <sfr@canb.auug.org.au>,
-        <andriy.shevchenko@linux.intel.com>, <herbert@gondor.apana.org.au>,
-        <bhe@redhat.com>, <xemul@parallels.com>, <joro@8bytes.org>,
-        <x86@kernel.org>, <peterz@infradead.org>, <piotr.luc@intel.com>,
-        <mingo@redhat.com>, <msalter@redhat.com>,
-        <ross.zwisler@linux.intel.com>, <dyoung@redhat.com>,
-        <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedo.suse.de>
-From: Brijesh Singh <brijesh.singh@amd.com>
-Message-ID: <ba739600-d468-1f1b-aff6-89c79fd6030b@amd.com>
-Date: Thu, 6 Apr 2017 13:37:41 -0500
+Return-Path: <SRS0=ZKZy=4A=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=ZKZy=4A=deltatee.com=logang@kernel.org>
+To: Knut Omang <knut.omang@oracle.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Dan Williams <dan.j.williams@intel.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1491974532.7236.43.camel@kernel.crashing.org>
+ <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+ <1492034124.7236.77.camel@kernel.crashing.org>
+ <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+ <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414041656.GA30694@obsidianresearch.com>
+ <1492169849.25766.3.camel@kernel.crashing.org>
+ <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
+ <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
+ <1492207643.25766.18.camel@kernel.crashing.org>
+ <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
+ <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
+ <1492311719.25766.37.camel@kernel.crashing.org>
+ <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
+ <5e43818e-8c6b-8be8-23ff-b798633d2a73@deltatee.com>
+ <1492381907.25766.49.camel@kernel.crashing.org>
+ <1493019397.3171.118.camel@oracle.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+ Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+ linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Jerome Glisse <jglisse@redhat.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <9b6c0830-a728-c7ca-e6c6-2135f3f760ed@deltatee.com>
+Date: Mon, 24 Apr 2017 10:14:35 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170406172520.iyjjtz56u3jlnjhq@pd.tnic>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1493019397.3171.118.camel@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On 04/06/2017 12:25 PM, Borislav Petkov wrote:
-> Hi Brijesh,
->
-> On Thu, Apr 06, 2017 at 09:05:03AM -0500, Brijesh Singh wrote:
->> I looked into arch/x86/mm/init_{32,64}.c and as you pointed the file contains
->> routines to do basic page splitting. I think it sufficient for our usage.
->
-> Good :)
->
->> I should be able to drop the memblock patch from the series and update the
->> Patch 15 [1] to use the kernel_physical_mapping_init().
->>
->> The kernel_physical_mapping_init() creates the page table mapping using
->> default KERNEL_PAGE attributes, I tried to extend the function by passing
->> 'bool enc' flags to hint whether to clr or set _PAGE_ENC when splitting the
->> pages. The code did not looked clean hence I dropped that idea.
->
-> Or, you could have a
->
-> __kernel_physical_mapping_init_prot(..., prot)
->
-> helper which gets a protection argument and hands it down. The lower
-> levels already hand down prot which is good.
->
+On 24/04/17 01:36 AM, Knut Omang wrote:
+> My first reflex when reading this thread was to think that this whole domain
+> lends it self excellently to testing via Qemu. Could it be that doing this in 
+> the opposite direction might be a safer approach in the long run even though 
+> (significant) more work up-front?
 
-I did thought about prot idea but ran into another corner case which may require
-us changing the signature of phys_pud_init and phys_pmd_init. The paddr_start
-and paddr_end args into kernel_physical_mapping_init() should be aligned on PMD
-level down (see comment [1]). So, if we encounter a case where our address range
-is part of large page but we need to clear only one entry (i.e asked to clear just
-one page into 2M region). In that case, now we need to pass additional arguments
-into kernel_physical_mapping, phys_pud_init and phys_pmd_init to hint the splitting
-code that it should use our prot for specific entries and all other entries will use
-the old_prot.
+That's an interesting idea. We did do some very limited testing on qemu
+with one iteration of our work. However, it's difficult because there is
+no support for any RDMA devices which are a part of our primary use
+case. I also imagine it would be quite difficult to develop those models
+given the array of hardware that needs to be supported and the deep
+functional knowledge required to figure out appropriate restrictions.
 
-[1] http://lxr.free-electrons.com/source/arch/x86/mm/init_64.c#L546
-
-
-> The interface kernel_physical_mapping_init() will then itself call:
->
-> 	__kernel_physical_mapping_init_prot(..., PAGE_KERNEL);
->
-> for the normal cases.
->
-> That in a pre-patch of course.
->
-> How does that sound?
->
+Logan
