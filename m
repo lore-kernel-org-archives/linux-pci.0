@@ -1,138 +1,47 @@
-Return-Path: <SRS0=XR6s=3Y=gmail.com=rupert.thurner@kernel.org>
-Return-Path: <SRS0=XR6s=3Y=gmail.com=rupert.thurner@kernel.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:51321 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1174624AbdDXVCx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Apr 2017 17:02:53 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Imre Deak <imre.deak@intel.com>, intel-gfx@lists.freedesktop.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI / PM: Add needs_resume flag to avoid suspend complete optimization
+Date: Mon, 24 Apr 2017 22:56:40 +0200
+Message-ID: <1741762.duLppskeDL@aspire.rjw.lan>
+In-Reply-To: <20170424204242.GA9933@wunner.de>
+References: <1493044063-2095-1-git-send-email-imre.deak@intel.com> <20170424200230.GA9910@wunner.de> <20170424204242.GA9933@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <40bc6004-519c-7bf1-874b-3ae169140637@lwfinger.net>
-References: <CAJs9aZ8HVPn_J9yPjvdBm-A_d3FiquPMGoy1xFsGopF8Xg_89Q@mail.gmail.com>
- <9e48930c-4822-5af4-2ebb-4d2dcd12d448@lwfinger.net> <CAJs9aZ9Hwnjb60mCycR3T2TWH75ZTdtEeWQ1iHRN+6NkkD+pZA@mail.gmail.com>
- <40bc6004-519c-7bf1-874b-3ae169140637@lwfinger.net>
-From: rupert THURNER <rupert.thurner@gmail.com>
-Date: Sun, 16 Apr 2017 20:09:13 +0200
-Message-ID: <CAJs9aZ_QRgqAjt+6FV=ZkPvYvkDedwtegMKC4Dk-uT8KtrE-mA@mail.gmail.com>
-Subject: Re: 4.10.9 nok with realtek wlan, atom
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>, Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sun, Apr 16, 2017 at 6:02 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> On 04/16/2017 05:23 AM, rupert THURNER wrote:
->>
->> On Sat, Apr 15, 2017 at 10:40 PM, Larry Finger
->> <Larry.Finger@lwfinger.net> wrote:
->>>
->>> On 04/14/2017 03:26 PM, rupert THURNER wrote:
->>>>
->>>>
->>>> On Thu, Feb 9, 2017 at 9:09 PM, Larry Finger <Larry.Finger@lwfinger.net>
->>>> wrote:
->>>>>
->>>>>
->>>>> On 02/09/2017 01:43 PM, Bjorn Helgaas wrote:
->>>>>>
->>>>>>
->>>>>>
->>>>>> [+cc rtl8192ce folks in case they've seen this]
->>>>>>
->>>>>> On Thu, Feb 09, 2017 at 03:45:01PM +0100, rupert THURNER wrote:
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>> hi,
->>>>>>>
->>>>>>> not technical expert enough, i just wanted to give a short user
->>>>>>> feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
->>>>>>> kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
->>>>>>> well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
->>>>>>> hotspot is possible then drops, or connecting to wlan fails
->>>>>>> alltogether.
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>>> Thanks very much for your report, and sorry for the inconvenience.
->>>>>>
->>>>>> v4.10-rc7 works, so I guess we don't need to worry about fixing v4.10.
->>>>>>
->>>>>> But the stable kernels v4.9.6, v4.9.7, and v4.9.8 are broken, so we
->>>>>> need to figure out why and make sure we fix the v4.9 stable series.
->>>>>>
->>>>>> I can't tell yet whether this is PCI-related or not.  If it is,
->>>>>> 4922a6a5cfa7 ("PCI: Enumerate switches below PCI-to-PCIe bridges")
->>>>>> appeared in v4.9.6, and there is a known issue with that.  The issue
->>>>>> should be fixed by 610c2b7ff8f6 ("PCI/ASPM: Handle PCI-to-PCIe bridges
->>>>>> as roots of PCIe hierarchies"), which appeared in v4.9.9, so I guess
->>>>>> the first thing to do would be to test v4.9.9.
->>>>>>
->>>>>> If it's not fixed in v4.9.9, can you share the complete dmesg log
->>>>>> (output of "dmesg" command) and "lspci -vv" output for v4.9.5 (last
->>>>>> known working version) and v4.9.6 (first known broken version)?  On
->>>>>> v4.9.6, collect the dmesg output after the failure occurs.
->>>>>>
->>>>>>> 24: PCI 300.0: 0282 WLAN controller
->>>>>>>   [Created at pci.366]
->>>>>>>   Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
->>>>>>>   Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
->>>>>>>   Revision: 0x01
->>>>>>>   Driver: "rtl8192ce"
->>>>>>>   Driver Modules: "rtl8192ce"
->>>>>>>   Device File: wlp3s0
->>>>>>>   Features: WLAN
->>>>>
->>>>>
->>>>>
->>>>>
->>>>> It would be helpful if someone were to bisect this issue. The only
->>>>> issue
->>>>> that comes to mind was fixed in commit 52f5631a4c05 ("rtlwifi:
->>>>> rtl8192ce:
->>>>> Fix loading of incorrect firmware") which is in 4.10-rc7 and will be
->>>>> backported to 4.9.
->>>>>
->>>>> The above issue is one that could not be reproduced on my hardware,
->>>>> thus
->>>>> it
->>>>> took Jurij Smakov to find the fix. Without his bisection of the
->>>>> problem,
->>>>> who
->>>>> knows how long it would have taken to find my edit mistake.
->>>>
->>>>
->>>>
->>>> larry, using the newest kernel 4.10.8 the network connection dropps
->>>> again irregular.
->>>>
->>>> # dmesg
->>>> [    0.000000] Linux version 4.10.9-1-ARCH (builduser@tobias) (gcc
->>>> version 6.3.1 20170306 (GCC) ) #1 SMP PREEMPT Sat Apr 8 12:39:59 CEST
->>>> 2017
->>>> [   11.933373] rtl8192ce: rtl8192ce: Power Save off (module option)
->>>> [   11.933396] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
->>>> [   11.978307] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
->>>> [   11.978945] rtlwifi: rtlwifi: wireless switch is on
->>>>
->>>> # lspci -vv
->>>> Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi
->>>> Adapter
->>>> Kernel driver in use: rtl8192ce
->>>
->>>
->>>
->>> Is firmware rtlwifi/rtl8192cfw.bin also used on kernels that work?
->>
->>
->> 4.10.x used to work. 4.10.6 or 4.10.7 it started failing? i am not too
->> sure about it.
->>
->> # ls -l /usr/lib/firmware/rtlwifi/rtl8192cfw.bin
->> -rw-r--r-- 1 root root 16192 Mar 10 12:15
->> /usr/lib/firmware/rtlwifi/rtl8192cfw.bin
->
->
-> That does not answer my question.
-4.10, 4.10.2, 4.10.3, 4.10.5 worked. as far as i can tell
-rtl8192cfw.bin did not change and was used. with kernels 4.9 there was
-a phase where rtl8192cfwU.bin was loaded which did not work. or i do
-not understand your question correctly?
+On Monday, April 24, 2017 10:42:42 PM Lukas Wunner wrote:
+> On Mon, Apr 24, 2017 at 10:02:30PM +0200, Lukas Wunner wrote:
+> > On Mon, Apr 24, 2017 at 05:27:42PM +0300, Imre Deak wrote:
+> > > Some drivers - like i915 - may not support the system suspend direct
+> > > complete optimization due to differences in their runtime and system
+> > > suspend sequence. Add a flag that when set resumes the device before
+> > > calling the driver's system suspend handlers which effectively disables
+> > > the optimization.
+> > 
+> > FWIW, there are at least two alternative solutions to this problem which
+> > do not require changes to the PCI core:
+> > 
+> > (1) Add a ->prepare hook to i915_pm_ops which calls pm_runtime_get_sync()
+> >     and a ->complete hook which calls pm_runtime_put().
+> 
+> Thinking a bit more about this, it's even simpler:  The PM core acquires
+> a runtime PM ref in device_prepare() and releases it in device_complete(),
+> so it's sufficient to just call pm_runtime_resume() in a ->prepare hook
+> that's newly added to i915.  No ->complete hook necessary.  Tentative
+> patch below, based on drm-intel-fixes, would replace both of your patches.
+
+Calling it in ->prepare() means that everybody is now waiting for you to resume.
+
+Not quite optimal IMO.
+
+Thanks,
+Rafael
