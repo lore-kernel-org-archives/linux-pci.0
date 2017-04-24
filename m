@@ -1,146 +1,185 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-To: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>, Sinan Kaya
- <okaya@codeaurora.org>
-Subject: RE: [PATCH V7 0/5] PCI/ASPM: reconfigure ASPM following hotplug for
- POLICY_DEFAULT
-Date: Thu, 6 Apr 2017 13:23:23 +0000
-Message-ID: <92EBB4272BF81E4089A7126EC1E7B2846676271D@IRSMSX101.ger.corp.intel.com>
-References: <1490880636-30542-1-git-send-email-okaya@codeaurora.org>
- <7c48ca8b-b834-3257-91dc-77e9d19def6c@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B28466761383@IRSMSX101.ger.corp.intel.com>
-In-Reply-To: <92EBB4272BF81E4089A7126EC1E7B28466761383@IRSMSX101.ger.corp.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:34457 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1174214AbdDXUQO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 24 Apr 2017 16:16:14 -0400
+Date: Mon, 24 Apr 2017 22:16:38 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Imre Deak <imre.deak@intel.com>
+Cc: intel-gfx@lists.freedesktop.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Marta Lofstedt <marta.lofstedt@intel.com>,
+        David Weinehall <david.weinehall@linux.intel.com>,
+        Tomi Sarvela <tomi.p.sarvela@intel.com>,
+        Ville =?iso-8859-1?Q?Syrj=E4l=E4?=
+        <ville.syrjala@linux.intel.com>,
+        Mika Kuoppala <mika.kuoppala@intel.com>,
+        Chris Wilson <chris@chris-wilson.co.uk>,
+        Takashi Iwai <tiwai@suse.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] drm/i915: Prevent the system suspend complete
+ optimization
+Message-ID: <20170424201638.GB9910@wunner.de>
+References: <1493044063-2095-1-git-send-email-imre.deak@intel.com>
+ <1493044063-2095-2-git-send-email-imre.deak@intel.com>
 MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "timur@codeaurora.org" <timur@codeaurora.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1493044063-2095-2-git-send-email-imre.deak@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sinan, Bjorn,
+On Mon, Apr 24, 2017 at 05:27:43PM +0300, Imre Deak wrote:
+> Since
+> 
+> commit bac2a909a096c9110525c18cbb8ce73c660d5f71
+> Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Date:   Wed Jan 21 02:17:42 2015 +0100
+> 
+>     PCI / PM: Avoid resuming PCI devices during system suspend
 
->
->Hi Sinan
->
->>Hi Mayurkumar,
->>
->>On 3/30/2017 9:30 AM, Sinan Kaya wrote:
->>> When the operating system is booted with the default ASPM policy
->>> (POLICY_DEFAULT), current code is querying the enable/disable
->>> states from ASPM registers to determine the policy.
->>>
->>> For example, a BIOS could set the power saving state to performance
->>> and clear all ASPM control registers. A balanced ASPM policy could
->>> enable L0s and disable L1. A power conscious BIOS could enable both
->>> L0s and L1 to trade off latency and performance vs. power.
->>>
->>> After hotplug removal, pcie_aspm_exit_link_state() function clears
->>> the ASPM registers. An insertion following hotplug removal reads
->>> incorrect policy as ASPM disabled even though ASPM was enabled
->>> during boot.
->>>
->>> This is caused by the fact that same function is used for reconfiguring
->>> ASPM regardless of the power on state.
->>>
->>> ------------------------
->>> Changes from v6 (https://www.spinics.net/lists/arm-kernel/msg572876.html)
->>> ------------------------
->>> - revert the accidental parent check in bridge remove
->>>
->>> Sinan Kaya (5):
->>>   PCI/ASPM: introduce pci_aspm_init() and add to pci_init_capabilities()
->>>   PCI/ASPM: split pci_aspm_init() into two
->>>   PCI/ASPM: add init hook to device_add
->>>   PCI/ASPM: save power on values during bridge init
->>>   PCI/ASPM: move link_state cleanup to bridge remove
->>>
->>>  drivers/pci/pcie/aspm.c | 137 ++++++++++++++++++++++++++++++++----------------
->>>  drivers/pci/probe.c     |   3 ++
->>>  drivers/pci/remove.c    |   3 +-
->>>  include/linux/pci.h     |   2 +
->>>  4 files changed, 98 insertions(+), 47 deletions(-)
->>>
->>
->>Did you get a chance to test?
->>
->
->Not yet. Will get back in this week sometimes to give you some feedback.
->
-
-The patch seems to be working for ASPM L1 so far. I am seeing a problem now with your patches for L1.2 as following:
-
-ASPM L1.2 does not get enabled on the Upstream as well as downstream port due to following reasons.
-In the case, I see now, if the EP is not connected while reboot of the Machine, Root Port does not configure
-It's own L1.2 also from the BIOS. (I am not sure whether it's even advisable to enable L1.2 on root
-Port when no downstream device is not connected to it as it may have an impact on CLKREQ# and device is connected
-At later stage may have a problem with it)
-
-Later when the Device get connected, BIOS configures L1.2 for Root port and EP but due to policy set to incorrect,
-Kernel disables ASPM L1.2.
-
-Actually, The enabling/configuring of ASPM L1.2 is opposite then ASPM L1.
-In case of L1, Upstream must configure first L1 and then downstream according to PCIe spec.
-In case of L1.2, Downstream must configure L1.2 and then upstream according (to L1.2 ECN spec. -> 5.5.4. L1 PM
-substates Configuration).  
-
-@Bjorn:
-I even found that programming of pcie_config_aspm_l1ss() sub-states is done in the opposite way than described in
-the spec.,
-
-The spec. says following and correct me If I am wrong or I misinterpret the spec. :
-
-5.5.4. L1 PM Substates Configuration
-
-The Setting of any enable bit must be performed at the Downstream Port before the
-corresponding bit is permitted to be Set at the Upstream Port. If any L1 PM Substates enable
-bit is at a later time to be cleared, the enable bit(s) must be cleared in the Upstream Port
-before the corresponding enable bit(s) are permitted to be cleared in the Downstream Port.
+This is not the commit you are looking for. :-)  See below.
 
 
+> PCI devices will default to allowing the system suspend complete
+> optimization where devices are not woken up during system suspend if
+> they were already runtime suspended. This however breaks the i915/HDA
+> drivers for two reasons:
+> 
+> - The i915 driver has system suspend specific steps that it needs to
+>   run, that bring the device to a different state than its runtime
+>   suspended state.
+> 
+> - The HDA driver's suspend handler requires power that it will request
+>   from the i915 driver's power domain handler. This in turn requires the
+>   i915 driver to runtime resume itself, but this won't be possible if the
+>   suspend complete optimization is in effect: in this case the i915
+>   runtime PM is disabled and trying to get an RPM reference returns
+>   -EACCESS.
 
-Thanks
-Mayur
-
->
->
->Thanks
->Mayur
->
->>Sinan
->>
->>--
->>Sinan Kaya
->>Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
->>Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
->Intel Deutschland GmbH
->Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
->Tel: +49 89 99 8853-0, www.intel.de
->Managing Directors: Christin Eisenschmid, Christian Lamprechter
->Chairperson of the Supervisory Board: Nicole Lau
->Registered Office: Munich
->Commercial Register: Amtsgericht Muenchen HRB 186928
-
-Intel Deutschland GmbH
-Registered Address: Am Campeon 10-12, 85579 Neubiberg, Germany
-Tel: +49 89 99 8853-0, www.intel.de
-Managing Directors: Christin Eisenschmid, Christian Lamprechter
-Chairperson of the Supervisory Board: Nicole Lau
-Registered Office: Munich
-Commercial Register: Amtsgericht Muenchen HRB 186928
+Hm, sounds like something that needs to be solved with device_links.
 
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> 
+> Solve this by requiring the PCI/PM core to resume the device during
+> system suspend which in effect disables the suspend complete optimization.
+> 
+> One possibility for this bug staying hidden for so long is that the
+> optimization for a device is disabled if it's disabled for any of its
+> children devices. i915 may have a backlight device as its child which
+> doesn't support runtime PM and so doesn't allow the optimization either.
+> So if this backlight device got registered the bug stayed hidden.
+
+No, the reason this hasn't popped up earlier is because direct_complete
+has only been enabled for DRM devices for a few months now, to be specific
+since
+
+    commit d14d2a8453d650bea32a1c5271af1458cd283a0f
+    Author: Lukas Wunner <lukas@wunner.de>
+    Date:   Wed Jun 8 12:49:29 2016 +0200
+
+    drm: Remove dev_pm_ops from drm_class
+
+which landed in v4.8.
+
+(Sorry for not raising my voice earlier, this patch appeared on my radar
+just now.)
+
+Kind regards,
+
+Lukas
+
+> 
+> Credits to Marta, Tomi and David who enabled pstore logging,
+> that caught one instance of this issue across a suspend/
+> resume-to-ram and Ville who rememberd that the optimization was enabled
+> for some devices at one point.
+> 
+> The first WARN triggered by the problem:
+> 
+> [ 6250.746445] WARNING: CPU: 2 PID: 17384 at drivers/gpu/drm/i915/intel_runtime_pm.c:2846 intel_runtime_pm_get+0x6b/0xd0 [i915]
+> [ 6250.746448] pm_runtime_get_sync() failed: -13
+> [ 6250.746451] Modules linked in: snd_hda_intel i915 vgem snd_hda_codec_hdmi x86_pkg_temp_thermal intel_powerclamp coretemp crct10dif_pclmul crc32_pclmul
+> snd_hda_codec_realtek snd_hda_codec_generic ghash_clmulni_intel e1000e snd_hda_codec snd_hwdep snd_hda_core ptp mei_me pps_core snd_pcm lpc_ich mei prime_
+> numbers i2c_hid i2c_designware_platform i2c_designware_core [last unloaded: i915]
+> [ 6250.746512] CPU: 2 PID: 17384 Comm: kworker/u8:0 Tainted: G     U  W       4.11.0-rc5-CI-CI_DRM_334+ #1
+> [ 6250.746515] Hardware name:                  /NUC5i5RYB, BIOS RYBDWi35.86A.0362.2017.0118.0940 01/18/2017
+> [ 6250.746521] Workqueue: events_unbound async_run_entry_fn
+> [ 6250.746525] Call Trace:
+> [ 6250.746530]  dump_stack+0x67/0x92
+> [ 6250.746536]  __warn+0xc6/0xe0
+> [ 6250.746542]  ? pci_restore_standard_config+0x40/0x40
+> [ 6250.746546]  warn_slowpath_fmt+0x46/0x50
+> [ 6250.746553]  ? __pm_runtime_resume+0x56/0x80
+> [ 6250.746584]  intel_runtime_pm_get+0x6b/0xd0 [i915]
+> [ 6250.746610]  intel_display_power_get+0x1b/0x40 [i915]
+> [ 6250.746646]  i915_audio_component_get_power+0x15/0x20 [i915]
+> [ 6250.746654]  snd_hdac_display_power+0xc8/0x110 [snd_hda_core]
+> [ 6250.746661]  azx_runtime_resume+0x218/0x280 [snd_hda_intel]
+> [ 6250.746667]  pci_pm_runtime_resume+0x76/0xa0
+> [ 6250.746672]  __rpm_callback+0xb4/0x1f0
+> [ 6250.746677]  ? pci_restore_standard_config+0x40/0x40
+> [ 6250.746682]  rpm_callback+0x1f/0x80
+> [ 6250.746686]  ? pci_restore_standard_config+0x40/0x40
+> [ 6250.746690]  rpm_resume+0x4ba/0x740
+> [ 6250.746698]  __pm_runtime_resume+0x49/0x80
+> [ 6250.746703]  pci_pm_suspend+0x57/0x140
+> [ 6250.746709]  dpm_run_callback+0x6f/0x330
+> [ 6250.746713]  ? pci_pm_freeze+0xe0/0xe0
+> [ 6250.746718]  __device_suspend+0xf9/0x370
+> [ 6250.746724]  ? dpm_watchdog_set+0x60/0x60
+> [ 6250.746730]  async_suspend+0x1a/0x90
+> [ 6250.746735]  async_run_entry_fn+0x34/0x160
+> [ 6250.746741]  process_one_work+0x1f2/0x6d0
+> [ 6250.746749]  worker_thread+0x49/0x4a0
+> [ 6250.746755]  kthread+0x107/0x140
+> [ 6250.746759]  ? process_one_work+0x6d0/0x6d0
+> [ 6250.746763]  ? kthread_create_on_node+0x40/0x40
+> [ 6250.746768]  ret_from_fork+0x2e/0x40
+> [ 6250.746778] ---[ end trace 102a62fd2160f5e6 ]---
+> 
+> v2:
+> - Use the new pci_dev->needs_resume flag, to avoid any overhead during
+>   the ->pm_prepare hook. (Rafael)
+> 
+> Fixes: bac2a909a096 ("PCI / PM: Avoid resuming PCI devices during system suspend")
+> References: https://bugs.freedesktop.org/show_bug.cgi?id=100378
+> Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> Cc: Marta Lofstedt <marta.lofstedt@intel.com>
+> Cc: David Weinehall <david.weinehall@linux.intel.com>
+> Cc: Tomi Sarvela <tomi.p.sarvela@intel.com>
+> Cc: Ville Syrjälä <ville.syrjala@linux.intel.com>
+> Cc: Mika Kuoppala <mika.kuoppala@intel.com>
+> Cc: Chris Wilson <chris@chris-wilson.co.uk>
+> Cc: Takashi Iwai <tiwai@suse.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: linux-pci@vger.kernel.org
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Imre Deak <imre.deak@intel.com>
+> Reviewed-by: Chris Wilson <chris@chris-wilson.co.uk> (v1)
+> ---
+>  drivers/gpu/drm/i915/i915_drv.c | 9 +++++++++
+>  1 file changed, 9 insertions(+)
+> 
+> diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
+> index 8be958f..dd7ce69 100644
+> --- a/drivers/gpu/drm/i915/i915_drv.c
+> +++ b/drivers/gpu/drm/i915/i915_drv.c
+> @@ -1207,6 +1207,15 @@ int i915_driver_load(struct pci_dev *pdev, const struct pci_device_id *ent)
+>  		goto out_free_priv;
+>  
+>  	pci_set_drvdata(pdev, &dev_priv->drm);
+> +	/*
+> +	 * Disable the system suspend direct complete optimization, which can
+> +	 * leave the device suspended skipping the driver's suspend handlers
+> +	 * if the device was already runtime suspended. This is needed due to
+> +	 * the difference in our runtime and system suspend sequence and
+> +	 * becaue the HDA driver may require us to enable the audio power
+> +	 * domain during system suspend.
+> +	 */
+> +	pci_resume_before_suspend(pdev, true);
+>  
+>  	ret = i915_driver_init_early(dev_priv, ent);
+>  	if (ret < 0)
+> -- 
+> 2.5.0
+> 
