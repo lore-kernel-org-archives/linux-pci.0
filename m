@@ -1,96 +1,122 @@
-Return-Path: <SRS0=6Kxz=3Z=google.com=bhelgaas@kernel.org>
-Return-Path: <SRS0=6Kxz=3Z=google.com=bhelgaas@kernel.org>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: "Byczkowski, Jakub" <jakub.byczkowski@intel.com>
+To: Christoph Hellwig <hch@lst.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Cabiddu, Giovanni" <giovanni.cabiddu@intel.com>,
+        "Benedetto, Salvatore" <salvatore.benedetto@intel.com>,
+        "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
+        "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        qat-linux <qat-linux@intel.com>,
+        "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 5/7] IB/hfi1: use pcie_flr instead of duplicating it
+Date: Mon, 24 Apr 2017 14:16:31 +0000
+Message-ID: <A33E225544E47D4DB5713032774B132783960382@irsmsx105.ger.corp.intel.com>
+References: <20170414191131.14286-1-hch@lst.de>
+ <20170414191131.14286-6-hch@lst.de>
+In-Reply-To: <20170414191131.14286-6-hch@lst.de>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <66168dde-7719-6f74-3f06-8e4724dd2918@codeaurora.org>
-References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
- <1491627351-1111-5-git-send-email-okaya@codeaurora.org> <CACK8Z6GXfMWxakNQnvMToig9z9McnJKeYFc2BAAFy7ys8=PUWg@mail.gmail.com>
- <d3857812-7e03-4b62-f7cb-ac0d139b6123@codeaurora.org> <20170414214452.GA21870@bhelgaas-glaptop.roam.corp.google.com>
- <66168dde-7719-6f74-3f06-8e4724dd2918@codeaurora.org>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Mon, 17 Apr 2017 11:38:21 -0500
-Message-ID: <CAErSpo7p_2dTDTC7J4HdQUw_5GH8081dUZ=XVqd=sRLrA_FJnA@mail.gmail.com>
-Subject: Re: [PATCH V8 4/5] PCI/ASPM: save power on values during bridge init
-To: Sinan Kaya <okaya@codeaurora.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Rajat Jain <rajatja@google.com>,
-	"Patel, Mayurkumar" <mayurkumar.patel@intel.com>, Rajat Jain <rajatxjain@gmail.com>,
-	David Daney <david.daney@cavium.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Timur Tabi <timur@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Julia Lawall <Julia.Lawall@lip6.fr>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>, Yinghai Lu <yinghai@kernel.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>, linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Myron Stowe <myron.stowe@redhat.com>
-Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 14, 2017 at 5:17 PM, Sinan Kaya <okaya@codeaurora.org> wrote:
-> On 4/14/2017 5:44 PM, Bjorn Helgaas wrote:
->> I think there's an argument to be made that if we care about ASPM
->> configuration, we should be using a non-POLICY_DEFAULT setting.  And I
->> think there's value in having POLICY_DEFAULT be the absolute lowest-
->> risk setting, which I think means option 1.
->>
->> What do you think?
->
-> I see your point. The counter argument is that most of the users do not
-> know what an ASPM kernel command line is unless they understand PCI
-> language.
+Tested-by: Jakub Byczkowski <jakub.byczkowski@intel.com>
 
-I don't think the answer is using the "pcie_aspm.policy=" boot
-argument.  I certainly don't want users to have to deal with that.  I
-wish we didn't even have that parameter.
+-----Original Message-----
+From: linux-rdma-owner@vger.kernel.org [mailto:linux-rdma-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+Sent: Friday, April 14, 2017 9:11 PM
+To: Bjorn Helgaas <bhelgaas@google.com>; Cabiddu, Giovanni <giovanni.cabiddu@intel.com>; Benedetto, Salvatore <salvatore.benedetto@intel.com>; Marciniszyn, Mike <mike.marciniszyn@intel.com>; Dalessandro, Dennis <dennis.dalessandro@intel.com>; Derek Chickles <derek.chickles@caviumnetworks.com>; Satanand Burla <satananda.burla@caviumnetworks.com>; Felix Manlunas <felix.manlunas@caviumnetworks.com>; Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>; Kirsher, Jeffrey T <jeffrey.t.kirsher@intel.com>
+Cc: linux-pci@vger.kernel.org; qat-linux <qat-linux@intel.com>; linux-crypto@vger.kernel.org; linux-rdma@vger.kernel.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: [PATCH 5/7] IB/hfi1: use pcie_flr instead of duplicating it
 
-I think we need runtime knobs instead (and I guess we already have
-/sys/module/pcie_aspm/parameters/policy and /sys/.../link_state), and
-distro userspace should use them.  I'm envisioning something in
-"System Settings / Power" or similar.  Basically I think the policy
-doesn't *have* to be dictated by a kernel boot-time parameter, so it
-should not be.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/infiniband/hw/hfi1/chip.c |  4 ++--  drivers/infiniband/hw/hfi1/hfi.h  |  1 -  drivers/infiniband/hw/hfi1/pcie.c | 30 ------------------------------
+ 3 files changed, 2 insertions(+), 33 deletions(-)
 
-> I have been using the powersave policy option until now. I recently realized
-> that nobody except me is using this option. Therefore, we are wasting
-> power by default following a hotplug insertion.
->
-> This is the case where I'm trying to avoid. With the introduction of NVMe
-> u.2 drives, hotplug is becoming more and more mainstream. I decided to
-> take the matters into my hand with this series for this very reason.
->
-> Like you said, BIOS is out of the picture with pciehp. There is nobody
-> to configure ASPM following a hotplug insertion.
->
-> I can also claim that If user wants performance, they should boot with
-> the performance policy or pcie_aspm=off parameters.
->
-> I saw this recommendation in multiple DPDK tuning documents.
->
-> Like you said, what do we do by default is the question. Should we opt
-> for safe like we are doing, or try to save some power.
+diff --git a/drivers/infiniband/hw/hfi1/chip.c b/drivers/infiniband/hw/hfi1/chip.c
+index 121a4c920f1b..d037f72e4d96 100644
+--- a/drivers/infiniband/hw/hfi1/chip.c
++++ b/drivers/infiniband/hw/hfi1/chip.c
+@@ -13610,14 +13610,14 @@ static void init_chip(struct hfi1_devdata *dd)
+ 		dd_dev_info(dd, "Resetting CSRs with FLR\n");
+ 
+ 		/* do the FLR, the DC reset will remain */
+-		hfi1_pcie_flr(dd);
++		pcie_flr(dd->pcidev);
+ 
+ 		/* restore command and BARs */
+ 		restore_pci_variables(dd);
+ 
+ 		if (is_ax(dd)) {
+ 			dd_dev_info(dd, "Resetting CSRs with FLR\n");
+-			hfi1_pcie_flr(dd);
++			pcie_flr(dd->pcidev);
+ 			restore_pci_variables(dd);
+ 		}
+ 	} else {
+diff --git a/drivers/infiniband/hw/hfi1/hfi.h b/drivers/infiniband/hw/hfi1/hfi.h
+index 0808e3c3ba39..40d7559fa723 100644
+--- a/drivers/infiniband/hw/hfi1/hfi.h
++++ b/drivers/infiniband/hw/hfi1/hfi.h
+@@ -1764,7 +1764,6 @@ int hfi1_pcie_init(struct pci_dev *, const struct pci_device_id *);  void hfi1_pcie_cleanup(struct pci_dev *);  int hfi1_pcie_ddinit(struct hfi1_devdata *, struct pci_dev *);  void hfi1_pcie_ddcleanup(struct hfi1_devdata *); -void hfi1_pcie_flr(struct hfi1_devdata *);  int pcie_speeds(struct hfi1_devdata *);  void request_msix(struct hfi1_devdata *, u32 *, struct hfi1_msix_entry *);  void hfi1_enable_intx(struct pci_dev *); diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
+index 0829fce06172..c81556e84831 100644
+--- a/drivers/infiniband/hw/hfi1/pcie.c
++++ b/drivers/infiniband/hw/hfi1/pcie.c
+@@ -240,36 +240,6 @@ void hfi1_pcie_ddcleanup(struct hfi1_devdata *dd)
+ 		iounmap(dd->piobase);
+ }
+ 
+-/*
+- * Do a Function Level Reset (FLR) on the device.
+- * Based on static function drivers/pci/pci.c:pcie_flr().
+- */
+-void hfi1_pcie_flr(struct hfi1_devdata *dd) -{
+-	int i;
+-	u16 status;
+-
+-	/* no need to check for the capability - we know the device has it */
+-
+-	/* wait for Transaction Pending bit to clear, at most a few ms */
+-	for (i = 0; i < 4; i++) {
+-		if (i)
+-			msleep((1 << (i - 1)) * 100);
+-
+-		pcie_capability_read_word(dd->pcidev, PCI_EXP_DEVSTA, &status);
+-		if (!(status & PCI_EXP_DEVSTA_TRPND))
+-			goto clear;
+-	}
+-
+-	dd_dev_err(dd, "Transaction Pending bit is not clearing, proceeding with reset anyway\n");
+-
+-clear:
+-	pcie_capability_set_word(dd->pcidev, PCI_EXP_DEVCTL,
+-				 PCI_EXP_DEVCTL_BCR_FLR);
+-	/* PCIe spec requires the function to be back within 100ms */
+-	msleep(100);
+-}
+-
+ static void msix_setup(struct hfi1_devdata *dd, int pos, u32 *msixcnt,
+ 		       struct hfi1_msix_entry *hfi1_msix_entry)  {
+--
+2.11.0
 
-I think safety is paramount.  Every user should be able to boot safely
-without any kernel parameters.  We don't want users to have a problem
-booting and then have to search for a workaround like booting with
-"pcie_aspm=off".  Most users will never do that.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--------------------------------------------------------------------
 
-Here's a long-term strawman proposal, see what you think:
+Intel Technology Poland sp. z o.o.
+ul. Slowackiego 173 | 80-298 Gdansk | Sad Rejonowy Gdansk Polnoc | VII Wydzial Gospodarczy Krajowego Rejestru Sadowego - KRS 101882 | NIP 957-07-52-316 | Kapital zakladowy 200.000 PLN.
 
-  - Deprecate CONFIG_PCIEASPM_DEFAULT, CONFIG_PCIEASPM_POWERSAVE, etc.
-  - Default aspm_policy is POLICY_DEFAULT always.
-  - POLICY_DEFAULT means Linux doesn't touch anything: if BIOS enabled
-ASPM, we leave it that way; we leave ASPM disabled on hot-added
-devices.
-  - Deprecate kernel boot parameters (possibly keep pcie_aspm=off for
-debugging use).
-  - Use /sys/module/pcie_aspm/parameters/policy for run-time
-system-wide  control, including for future hot-added devices.
-  - Remove CONFIG_PCIEASPM_DEBUG and enable that code always, so we
-have fine-grained run-time control.
-
-> Maybe, we are missing a HPP option from the PCI spec.
-
-That's an interesting idea.  _HPX does have provision for manipulating
-Link Control bits (see ACPI r5.0, sec 6.2.8.3), but I don't think very
-many systems implement it.  And there's currently no connection
-between program_hpp_type2() and aspm.c, so I'm a little worried that
-we might have issues if a system did implement an _HPX that sets any
-of the ASPM bits.
-
-Bjorn
+Ta wiadomosc wraz z zalacznikami jest przeznaczona dla okreslonego adresata i moze zawierac informacje poufne. W razie przypadkowego otrzymania tej wiadomosci, prosimy o powiadomienie nadawcy oraz trwale jej usuniecie; jakiekolwiek
+przegladanie lub rozpowszechnianie jest zabronione.
+This e-mail and any attachments may contain confidential material for the sole use of the intended recipient(s). If you are not the intended recipient, please contact the sender and delete all copies; any review or distribution by
+others is strictly prohibited.
