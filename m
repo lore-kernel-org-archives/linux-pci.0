@@ -1,57 +1,49 @@
-Return-Path: <SRS0=QwYz=32=redhat.com=jglisse@kernel.org>
-Return-Path: <SRS0=QwYz=32=redhat.com=jglisse@kernel.org>
-Date: Tue, 18 Apr 2017 16:29:12 -0400 (EDT)
-From: Jerome Glisse <jglisse@redhat.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-	Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Steve Wise <swise@opengridcomputing.com>,
-	Stephen Bates <sbates@raithlin.com>,
-	Max Gurtovoy <maxg@mellanox.com>,
-	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	linux-nvdimm <linux-nvdimm@ml01.01.org>,
-	linux-kernel@vger.kernel.org
-Message-ID: <1565047873.28680036.1492547352121.JavaMail.zimbra@redhat.com>
-In-Reply-To: <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
-References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com> <1492381396.25766.43.camel@kernel.crashing.org> <20170418164557.GA7181@obsidianresearch.com> <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com> <20170418190138.GH7181@obsidianresearch.com> <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com> <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:8849 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1168607AbdDXKhE (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Apr 2017 06:37:04 -0400
+Date: Mon, 24 Apr 2017 13:36:58 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: Pan Bian <bianpan201603@163.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Keith Busch <keith.busch@intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Pan Bian <bianpan2016@163.com>
+Subject: Re: [PATCH 1/1] PCI: check return value of pci_find_ext_capability
+Message-ID: <20170424103658.GU7152@lahna.fi.intel.com>
+References: <1492956020-32271-1-git-send-email-bianpan201603@163.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1492956020-32271-1-git-send-email-bianpan201603@163.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> On Tue, Apr 18, 2017 at 12:35 PM, Logan Gunthorpe <logang@deltatee.com>
-> wrote:
-> >
-> >
-> > On 18/04/17 01:01 PM, Jason Gunthorpe wrote:
-> >> Ultimately every dma_ops will need special code to support P2P with
-> >> the special hardware that ops is controlling, so it makes some sense
-> >> to start by pushing the check down there in the first place. This
-> >> advice is partially motivated by how dma_map_sg is just a small
-> >> wrapper around the function pointer call...
-> >
-> > Yes, I noticed this problem too and that makes sense. It just means
-> > every dma_ops will probably need to be modified to either support p2p
-> > pages or fail on them. Though, the only real difficulty there is that i=
-t
-> > will be a lot of work.
->=20
-> I don't think you need to go touch all dma_ops, I think you can just
-> arrange for devices that are going to do dma to get redirected to a
-> p2p aware provider of operations that overrides the system default
-> dma_ops. I.e. just touch get_dma_ops().
+On Sun, Apr 23, 2017 at 10:00:20PM +0800, Pan Bian wrote:
+> From: Pan Bian <bianpan2016@163.com>
+> 
+> Function pci_find_ext_capability() will returns 0 on failure, and its
+> return value should be checked before it is used. However, in function
+> pcie_port_enable_msix(), its return value is not checked. This patch
+> adds the check.
+> 
+> Signed-off-by: Pan Bian <bianpan2016@163.com>
+> ---
+>  drivers/pci/pcie/portdrv_core.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
+> index cea504f..001951d 100644
+> --- a/drivers/pci/pcie/portdrv_core.c
+> +++ b/drivers/pci/pcie/portdrv_core.c
+> @@ -103,6 +103,8 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
+>  		 * interrupt message."
+>  		 */
+>  		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
+> +		if (!pos)
+> +			goto out_free_irqs;
 
-This would not work well for everyone, for instance on GPU we usualy
-have buffer object with a mix of device memory and regular system
-memory but call dma sg map once for the list.
-
-Cheers,
-J=C3=A9r=C3=B4me
+I don't think this can happen because get_port_device_capability() will
+enumerate this capability and only if it exists, set PCIE_PORT_SERVICE_AER.
