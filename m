@@ -1,150 +1,95 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Thu, 13 Apr 2017 16:02:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sinan Kaya <okaya@codeaurora.org>
-Subject: Re: [PATCH V8 3/5] PCI/ASPM: add init hook to device_add
-Message-ID: <20170413210218.GA24910@bhelgaas-glaptop.roam.corp.google.com>
-References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
- <1491627351-1111-4-git-send-email-okaya@codeaurora.org>
- <20170413204800.GB28316@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <SRS0=iY1L=4A=google.com=bhelgaas@kernel.org>
+Return-Path: <SRS0=iY1L=4A=google.com=bhelgaas@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20170413204800.GB28316@bhelgaas-glaptop.roam.corp.google.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
- linux-pci@vger.kernel.org, timur@codeaurora.org, linux-kernel@vger.kernel.org,
- Julia Lawall <Julia.Lawall@lip6.fr>, linux-arm-msm@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Rajat Jain <rajatja@google.com>,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170424093429.GT16981@rric.localdomain>
+References: <1490789773-21506-1-git-send-email-tn@semihalf.com>
+ <20170421165614.GA17916@bhelgaas-glaptop.roam.corp.google.com> <20170424093429.GT16981@rric.localdomain>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Mon, 24 Apr 2017 12:05:05 -0500
+Message-ID: <CAErSpo4-a4jKEpxZX3YKeAzE-oVdE3gtRDGSx7nrGuVzK9OKGA@mail.gmail.com>
+Subject: Re: [PATCH 1/1] PCI: Add MCFG quirk for 2nd node of Cavium ThunderX
+ pass2.x host controller
+To: Robert Richter <robert.richter@cavium.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Tomasz Nowicki <tn@semihalf.com>,
+	Lorenzo Pieralisi <Lorenzo.Pieralisi@arm.com>, David Daney <ddaney@caviumnetworks.com>,
+	Vadim.Lomovtsev@caviumnetworks.com, "Rafael J. Wysocki" <rafael@kernel.org>,
+	Sunil.Goutham@cavium.com, geethasowjanya.akula@gmail.com,
+	linu.cherian@cavium.com,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>,
+	"linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 13, 2017 at 03:48:00PM -0500, Bjorn Helgaas wrote:
-> Hi Sinan,
-> 
-> On Sat, Apr 08, 2017 at 12:55:49AM -0400, Sinan Kaya wrote:
-> > For bridges, have pcie_aspm_init_link_state() allocate a link_state,
-> > regardless of whether it currently has any children.
-> > 
-> > pcie_aspm_init_link_state(): Called for bridges (upstream end of
-> > link) after all children have been enumerated.  No longer needs to
-> > check aspm_support_enabled or pdev->has_secondary_link or the VIA
-> > quirk: pci_aspm_init() already checked that stuff, so we only need
-> > to check pdev->link_state here.
-> > 
-> > Now that we are calling alloc_pcie_link_state() from pci_aspm_init()
-> > , get rid of pci_function_0 function and detect downstream link in
-> > pci_aspm_init_upstream() instead when the function number is 0.
-> > 
-> > Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
-> > Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
-> > ---
-> >  drivers/pci/pcie/aspm.c | 72 ++++++++++++++++++++++++-------------------------
-> >  1 file changed, 36 insertions(+), 36 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> > index a80d64b..e33f84b 100644
-> > --- a/drivers/pci/pcie/aspm.c
-> > +++ b/drivers/pci/pcie/aspm.c
-> > @@ -422,20 +422,6 @@ static void pcie_aspm_check_latency(struct pci_dev *endpoint)
-> >  	}
-> >  }
-> >  
-> > -/*
-> > - * The L1 PM substate capability is only implemented in function 0 in a
-> > - * multi function device.
-> > - */
-> > -static struct pci_dev *pci_function_0(struct pci_bus *linkbus)
-> > -{
-> > -	struct pci_dev *child;
-> > -
-> > -	list_for_each_entry(child, &linkbus->devices, bus_list)
-> > -		if (PCI_FUNC(child->devfn) == 0)
-> > -			return child;
-> > -	return NULL;
-> > -}
-> > -
-> >  /* Calculate L1.2 PM substate timing parameters */
-> >  static void aspm_calc_l1ss_info(struct pcie_link_state *link,
-> >  				struct aspm_register_info *upreg,
-> > @@ -798,7 +784,6 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
-> >  	INIT_LIST_HEAD(&link->children);
-> >  	INIT_LIST_HEAD(&link->link);
-> >  	link->pdev = pdev;
-> > -	link->downstream = pci_function_0(pdev->subordinate);
-> >  
-> >  	/*
-> >  	 * Root Ports and PCI/PCI-X to PCIe Bridges are roots of PCIe
-> > @@ -828,11 +813,33 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
-> >  
-> >  static int pci_aspm_init_downstream(struct pci_dev *pdev)
-> >  {
-> > +	struct pcie_link_state *link;
-> > +	struct pci_dev *parent;
-> > +
-> > +	/*
-> > +	 * The L1 PM substate capability is only implemented in function 0 in a
-> > +	 * multi function device.
-> > +	 */
-> > +	if (PCI_FUNC(pdev->devfn) != 0)
-> > +		return -EINVAL;
-> > +
-> > +	parent = pdev->bus->self;
-> > +	if (!parent)
-> > +		return -EINVAL;
-> > +
-> > +	link = parent->link_state;
-> > +	link->downstream = pdev;
-> >  	return 0;
-> >  }
-> >  
-> >  static int pci_aspm_init_upstream(struct pci_dev *pdev)
-> >  {
-> > +	struct pcie_link_state *link;
-> > +
-> > +	link = alloc_pcie_link_state(pdev);
-> > +	if (!link)
-> > +		return -ENOMEM;
-> 
-> This allocates the link_state when we enumerate a Downstream Port
-> instead of when we enumerate a child device.  We want the link_state
-> lifetime to match that of the Downstream Port, so this seems good.
-> 
-> But we shouldn't at the same time change the link_state deallocation
-> so it happens when the Downstream Port is removed, not when the child
-> device is removed?
+On Mon, Apr 24, 2017 at 4:34 AM, Robert Richter
+<robert.richter@cavium.com> wrote:
+> On 21.04.17 11:56:14, Bjorn Helgaas wrote:
+>> On Wed, Mar 29, 2017 at 02:16:13PM +0200, Tomasz Nowicki wrote:
+>> > Currently SoCs pass2.x do not emulate EA headers for ACPI boot method at all.
+>> > However, for pass2.x some devices (like EDAC) advertise incorrect base addresses
+>> > in their BARs which results in driver probe failure during resource request.
+>> > Since all problematic blocks are on 2nd NUMA node under domain 10 add necessary
+>> > quirk entry to obtain BAR addresses correction using EA header emulation.
+>> >
+>> > Fixes: 44f22bd91e88 ("PCI: Add MCFG quirks for Cavium ThunderX pass2.x host controller")
+>> > Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
+>> > CC: stable@vger.kernel.org  # v4.10+
+>>
+>> Sorry Tomasz, I must have mistakenly marked this "accepted" in
+>> patchwork, so it fell off my to-do list.  It's too late to get this in
+>> v4.11, but I can still apply it for v4.12.
+>>
+>> I put it on my pci/host-thunder branch with Robert's ack.  I added a preceding
+>> patch to tidy up whitespace, which makes this patch look like just:
+>>
+>>         /* SoC pass2.x */
+>>         THUNDER_PEM_QUIRK(1, 0),
+>>         THUNDER_PEM_QUIRK(1, 1),
+>> +       THUNDER_ECAM_QUIRK(1, 10),
+>>
+>> Please double-check it to make sure this is what you need.
+>
+> Bjorn,
+>
+> since the second is marked stable there will be conflicts when
+> applying it to stable (or built errors). The best would be to change
+> order of both (128cd6e8249f^, 128cd6e8249f) for smooth backporting
+> which makes it then more close to Tomasz's version again.
 
-I do see that you change the deallocation in patch [5/5], but I think
-the deallocation change should be in the same patch as the allocation
-change.  Otherwise I think we have a use-after-free problem in this
-sequence:
+Thanks, I should have noticed that.  Could go either way; I just
+marked 128cd6e8249f^ for stable as well, since it seemed marginally
+easier to read to split the whitespace changes from the real change.
 
-  # initial enumeration
-  pci_device_add(downstream_port)
-    pci_aspm_init(downstream_port)
-      alloc_pcie_link_state
-  pci_device_add(endpoint)
-    pci_aspm_init(endpoint)
-
-  # hot-remove endpoint
-  pci_stop_dev(endpoint)
-    pcie_aspm_exit_link_state(endpoint)
-      link = parent->link_state
-      free_link_state(link)
-
-  # hot-add endpoint
-  pci_aspm_init(endpoint)
-    link = parent->link_state     <--- use after free
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+>> > ---
+>> >  drivers/acpi/pci_mcfg.c | 7 ++++---
+>> >  1 file changed, 4 insertions(+), 3 deletions(-)
+>> >
+>> > diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
+>> > index a6a4cea..a0a391e 100644
+>> > --- a/drivers/acpi/pci_mcfg.c
+>> > +++ b/drivers/acpi/pci_mcfg.c
+>> > @@ -90,13 +90,14 @@ static struct mcfg_fixup mcfg_quirks[] = {
+>> >       &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x894057000000UL, node) },  \
+>> >     { "CAVIUM", "THUNDERX", rev, 9 + (10 * (node)), MCFG_BUS_ANY,       \
+>> >       &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, node) }
+>> > +#define THUNDER_ECAM_QUIRK(rev, seg)                                       \
+>> > +   { "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,                 \
+>> > +   &pci_thunder_ecam_ops }
+>> >     /* SoC pass2.x */
+>> >     THUNDER_PEM_QUIRK(1, 0),
+>> >     THUNDER_PEM_QUIRK(1, 1),
+>> > +   THUNDER_ECAM_QUIRK(1, 10),
+>> >
+>> > -#define THUNDER_ECAM_QUIRK(rev, seg)                                       \
+>> > -   { "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,                 \
+>> > -   &pci_thunder_ecam_ops }
+>> >     /* SoC pass1.x */
+>> >     THUNDER_PEM_QUIRK(2, 0),        /* off-chip devices */
+>> >     THUNDER_PEM_QUIRK(2, 1),        /* off-chip devices */
+>> > --
+>> > 2.7.4
+>> >
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
