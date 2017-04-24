@@ -1,53 +1,127 @@
 Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        David Howells <dhowells@redhat.com>
-Subject: [PATCH v3 17/32] mn10300: include default ioremap_nopost() implementation
-Date: Tue, 11 Apr 2017 13:28:57 +0100
-Message-Id: <20170411122923.6285-18-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
+Subject: Re: Doubt on first access for PCIe device
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <50712b3b-2943-0b78-9413-257f33b26c3f@gmail.com>
+ <20170419102652.GA23487@red-moon>
+ <CANaY3hNcB0Yk=2f7S+J2r+wtd6T7mLd+ZNprNHFkMegZzvx7pQ@mail.gmail.com>
+ <20170421155900.GA19059@red-moon>
+ <de02b73d-7eb5-b6eb-9e66-2919d442473e@gmail.com>
+ <20170424100159.GA23513@red-moon>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+From: abhijit <abhijitnaik27@gmail.com>
+Message-ID: <72634ca0-d2bf-3618-26e3-b784875a8fe5@gmail.com>
+Date: Mon, 24 Apr 2017 16:45:50 +0530
+MIME-Version: 1.0
+In-Reply-To: <20170424100159.GA23513@red-moon>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The PCI specifications (Rev 3.0, 3.2.5 "Transaction Ordering and Posting")
-mandate non-posted configuration transactions. As further highlighted in
-the PCIe specifications (4.0 - Rev0.3, "Ordering Considerations for the
-Enhanced Configuration Access Mechanism"), through ECAM and
-ECAM-derivative configuration mechanism, the memory mapped transactions
-from the host CPU into Configuration Requests on the PCI express fabric
-may create ordering problems for software because writes to memory
-address are typically posted transactions (unless the architecture can
-enforce through virtual address mapping non-posted write transactions
-behaviour) but writes to Configuration Space are not posted on the PCI
-express fabric.
+Hi Lorenzo,
 
-Include the asm-generic ioremap_nopost() implementation (currently
-falling back to ioremap_nocache()) to provide a non-posted writes
-ioremap interface to kernel subsystems.
+I think, you are referring to statement,
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: David Howells <dhowells@redhat.com>
----
- arch/mn10300/include/asm/io.h | 1 +
- 1 file changed, 1 insertion(+)
+"The Completion ID field is not meaningful prior to the software 
+initialization and configuration of the completing device (using at 
+least one Configuration Write Request), and for this case the
+Requester must ignore the value returned in the Completer ID field."
 
-diff --git a/arch/mn10300/include/asm/io.h b/arch/mn10300/include/asm/io.h
-index 6218935..95a3c20 100644
---- a/arch/mn10300/include/asm/io.h
-+++ b/arch/mn10300/include/asm/io.h
-@@ -284,6 +284,7 @@ static inline void __iomem *ioremap_nocache(unsigned long offset, unsigned long
- #define ioremap_wc ioremap_nocache
- #define ioremap_wt ioremap_nocache
- #define ioremap_uc ioremap_nocache
-+#include <asm-generic/ioremap-nopost.h>
- 
- static inline void iounmap(void __iomem *addr)
- {
--- 
-2.10.0
+Actually one of experimental Endpoint function IP that we are using is 
+not responding for configuration request if Requester ID and Completion 
+ID are same even during configuration phase. So wanted to cross-check 
+whether we are missing out something.
+
+It seems that behavior of endpoint IP is not correct.
+
+Thank you very much for all your time and patience :)
+
+Regards,
+     Abhijit
+
+On Monday 24 April 2017 03:31 PM, Lorenzo Pieralisi wrote:
+> On Mon, Apr 24, 2017 at 11:52:27AM +0530, abhijit wrote:
+>> Hi Lorenzo,
+>>
+>> Yes that's true..
+>>
+>> My question is: what if EP function default completer ID means BDF
+>> has values = 0(meaning B = 0, D = 0, f = 0) and Root complex
+>> requester ID also has same BDF, that is 0.
+>>
+>> Is that valid case as per PCIe standard, as in this case, requester
+>> ID and completion ID have same BDF?
+>
+> Read "2.2.9: Completion rules" and you will have your question answered
+> there ;-)
+>
+> Lorenzo
+>
+>>
+>> Thank you very much for your replies
+>>
+>> Regards,
+>>     Abhijit
+>>
+>>
+>> On Friday 21 April 2017 09:29 PM, Lorenzo Pieralisi wrote:
+>>> On Fri, Apr 21, 2017 at 03:33:45PM +0530, abhijit naik wrote:
+>>>>   Hi Lorenzo,
+>>>>   Thank you very much for reply.
+>>>>   As you mentioned I noted that, "If a Function must generate a Completion
+>>>>   prior to the initial device Configuration Write Request, 0's must be
+>>>>   entered into the Bus Number and Device Number fields"
+>>>>   By above statement this means that completion ID will be 0x0000. For the
+>>>>   first device on any bus,  device number will be 0 and function number will
+>>>>   be 0.
+>>>>   Isn't completer (for configuration read) packet will be addressing itself
+>>>>   instead of root complex with bus, device and function number 0?
+>>>
+>>> I don't understand what you are asking. The completion (containing
+>>> the read data) is routed back to the initiator via ID (of the requester)
+>>> routing.
+>>>
+>>> 2.2.4.2
+>>> 2.2.9
+>>>
+>>> Lorenzo
+>>>
+>>>>   On Wed, Apr 19, 2017 at 3:56 PM, Lorenzo Pieralisi
+>>>>   <lorenzo.pieralisi@arm.com> wrote:
+>>>>
+>>>>     On Tue, Apr 11, 2017 at 07:45:40PM +0530, abhijit wrote:
+>>>>     >
+>>>>     > Hi All,
+>>>>     >
+>>>>     > I was referring Linux code for PCIe enumeration and I have one doubt
+>>>>     > w.r.t to very first operation that must be done on device.
+>>>>     >
+>>>>     > Currently while scanning for device, we directly read vendor ID from
+>>>>     > device. But PCIE base specification
+>>>>     > "CB-PCI_Express_Base_4.0r0.7_November-11-2016.pdf" section 2.2.6.2
+>>>>     > specifies that,
+>>>>     >
+>>>>     > "Functions must capture the Bus and Device Numbers supplied with all
+>>>>     > Type 0 Configuration Write Requests completed by the Function and
+>>>>     > supply these numbers in the Bus and Device Number fields of the
+>>>>     > Requester ID for all Requests initiated by the Device/Function."
+>>>>
+>>>>     Please note:
+>>>>     "for all Requests initiated by the Device/Function".
+>>>>                       ^^^^^^^^^
+>>>>     > Here I am assuming, the completer ID will be device number and
+>>>>     > function number that will eventually programmed in to  device. In
+>>>>     > that case, my question is, without first write, how read
+>>>>     > request(VENDOR ID read) is serviced/routed?
+>>>>
+>>>>     That's not initiated by the endpoint device, it is routed by
+>>>>     requester ID, which is the requester ID of the configuration
+>>>>     request - ie master (ie root complex) requester ID.
+>>>>
+>>>>     Read 2.2.9 - Completion rules
+>>>>
+>>>>     HTH,
+>>>>     Lorenzo
+>>>>
+>>>>   --
+>>>>   Best wishes,
+>>>>   Abhijit Naik
