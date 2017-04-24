@@ -1,83 +1,41 @@
-Return-Path: <SRS0=bkpB=32=obsidianresearch.com=jgunthorpe@kernel.org>
-Return-Path: <SRS0=bkpB=32=obsidianresearch.com=jgunthorpe@kernel.org>
-Date: Tue, 18 Apr 2017 12:00:20 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Steve Wise <swise@opengridcomputing.com>,
-	Stephen Bates <sbates@raithlin.com>,
-	Max Gurtovoy <maxg@mellanox.com>,
-	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-	linux-nvdimm <linux-nvdimm@ml01.01.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Message-ID: <20170418180020.GE7181@obsidianresearch.com>
-References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
- <1492381396.25766.43.camel@kernel.crashing.org>
- <20170418164557.GA7181@obsidianresearch.com>
- <CAPcyv4izLa2vw12ysvVfd=ysaMKcASNFm+=CaqDKhnPY9B5OJg@mail.gmail.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Subject: Re: [PATCH 5/7] IB/hfi1: use pcie_flr instead of duplicating it
+To: Christoph Hellwig <hch@lst.de>,
+        "Byczkowski, Jakub" <jakub.byczkowski@intel.com>
+References: <20170414191131.14286-1-hch@lst.de>
+ <20170414191131.14286-6-hch@lst.de>
+ <A33E225544E47D4DB5713032774B132783960382@irsmsx105.ger.corp.intel.com>
+ <20170424143507.GA28812@lst.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Cabiddu, Giovanni" <giovanni.cabiddu@intel.com>,
+        "Benedetto, Salvatore" <salvatore.benedetto@intel.com>,
+        "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        qat-linux <qat-linux@intel.com>,
+        "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Dennis Dalessandro <dennis.dalessandro@intel.com>
+Message-ID: <cc79455c-5d22-5d78-9ea5-46a17961213b@intel.com>
+Date: Mon, 24 Apr 2017 16:00:50 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAPcyv4izLa2vw12ysvVfd=ysaMKcASNFm+=CaqDKhnPY9B5OJg@mail.gmail.com>
+In-Reply-To: <20170424143507.GA28812@lst.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 18, 2017 at 10:27:47AM -0700, Dan Williams wrote:
-> > FWIW, RDMA probably wouldn't want to use a p2mem device either, we
-> > already have APIs that map BAR memory to user space, and would like to
-> > keep using them. A 'enable P2P for bar' helper function sounds better
-> > to me.
-> 
-> ...and I think it's not a helper function as much as asking the bus
-> provider "can these two device dma to each other".
+On 04/24/2017 10:35 AM, Christoph Hellwig wrote:
+> On Mon, Apr 24, 2017 at 02:16:31PM +0000, Byczkowski, Jakub wrote:
+>> Tested-by: Jakub Byczkowski <jakub.byczkowski@intel.com>
+>
+> Are you (and Doug) ok with queueing this up in the PCI tree?
 
-What I mean I could write in a RDMA driver:
+We are fine however Doug wants to handle it.
 
-  /* Allow the memory in BAR 1 to be the target of P2P transactions */
-  pci_enable_p2p_bar(dev, 1);
-
-And not require anything else..
-
-> The "helper" is the dma api redirecting through a software-iommu
-> that handles bus address translation differently than it would
-> handle host memory dma mapping.
-
-Not sure, until we see what arches actually need to do here it is hard
-to design common helpers.
-
-Here are a few obvious things that arches will need to implement to
-support this broadly:
-
-- Virtualization might need to do a hypervisor call to get the right
-  translation, or consult some hypervisor specific description table.
-
-- Anything using IOMMUs for virtualization will need to setup IOMMU
-  permissions to allow the P2P flow, this might require translation to
-  an address cookie.
-
-- Fail if the PCI devices are in different domains, or setup hardware to
-  do completion bus/device/function translation.
-
-- All platforms can succeed if the PCI devices are under the same
-  'segment', but where segments begin is somewhat platform specific
-  knowledge. (this is 'same switch' idea Logan has talked about)
-
-So, we can eventually design helpers for various common scenarios, but
-until we see what arch code actually needs to do it seems
-premature. Much of this seems to involve interaction with some kind of
-hardware, or consulation of some kind of currently platform specific
-data, so I'm not sure what a software-iommu would be doing??
-
-The main thing to agree on is that this code belongs under dma ops and
-that arches have to support struct page mapped BAR addresses in their
-dma ops inputs. Is that resonable?
-
-Jason
+-Denny
