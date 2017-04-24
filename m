@@ -1,82 +1,108 @@
-Return-Path: <SRS0=W1ds=33=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=W1ds=33=deltatee.com=logang@kernel.org>
-To: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <1492381396.25766.43.camel@kernel.crashing.org>
- <20170418164557.GA7181@obsidianresearch.com>
- <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
- <20170418190138.GH7181@obsidianresearch.com>
- <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
- <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
- <20170418210339.GA24257@obsidianresearch.com>
- <1492564806.25766.124.camel@kernel.crashing.org>
- <20170419155557.GA8497@obsidianresearch.com>
- <4899b011-bdfb-18d8-ef00-33a1516216a6@deltatee.com>
- <20170419171451.GA10020@obsidianresearch.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Dan Williams <dan.j.williams@intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
- Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
- "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
- Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
- Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
- linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Jerome Glisse <jglisse@redhat.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <b0234176-e86b-6e7c-686d-b4fef719aad7@deltatee.com>
-Date: Wed, 19 Apr 2017 12:01:39 -0600
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:54320 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1166911AbdDXKBP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 24 Apr 2017 06:01:15 -0400
+Date: Mon, 24 Apr 2017 11:01:59 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: abhijit <abhijitnaik27@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: Doubt on first access for PCIe device
+Message-ID: <20170424100159.GA23513@red-moon>
+References: <50712b3b-2943-0b78-9413-257f33b26c3f@gmail.com>
+ <20170419102652.GA23487@red-moon>
+ <CANaY3hNcB0Yk=2f7S+J2r+wtd6T7mLd+ZNprNHFkMegZzvx7pQ@mail.gmail.com>
+ <20170421155900.GA19059@red-moon>
+ <de02b73d-7eb5-b6eb-9e66-2919d442473e@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20170419171451.GA10020@obsidianresearch.com>
-Content-Type: text/plain; charset=windows-1252
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <de02b73d-7eb5-b6eb-9e66-2919d442473e@gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Mon, Apr 24, 2017 at 11:52:27AM +0530, abhijit wrote:
+> Hi Lorenzo,
+> 
+> Yes that's true..
+> 
+> My question is: what if EP function default completer ID means BDF
+> has values = 0(meaning B = 0, D = 0, f = 0) and Root complex
+> requester ID also has same BDF, that is 0.
+> 
+> Is that valid case as per PCIe standard, as in this case, requester
+> ID and completion ID have same BDF?
 
+Read "2.2.9: Completion rules" and you will have your question answered
+there ;-)
 
-On 19/04/17 11:14 AM, Jason Gunthorpe wrote:
-> I don't see a use for the dma_map function pointer at this point..
+Lorenzo
 
-Yes, it is kind of like designing for the future. I just find it a
-little odd calling the pci functions in the iommu.
-
-
-> It doesn't make alot of sense for the completor of the DMA to provide
-> a mapping op, the mapping process is *path* specific, not specific to
-> a completer/initiator.
-
-I'm just spit balling here but if HMM wanted to use unaddressable memory
-as a DMA target, it could set that function to create a window ine gpu
-memory, then call the pci_p2p_same_segment and return the result as the
-dma address.
-
-
-> dma_addr_t pci_p2p_same_segment(struct device *initator,
->                                 struct device *completer,
-> 				struct page *page)
-
-I'm not sure I like the name pci_p2p_same_segment. It reads as though
-it's only checking if the devices are not the same segment. It also may
-be that, in the future, it supports devices on different segments. I'd
-call it more like pci_p2p_dma_map.
-
-
-> for (each sgl) {
-
-Thanks, this code fleshes things out nicely
-
-
-> To me it looks like the code duplication across the iommu stuff comes
-> from just duplicating the basic iommu algorithm in every driver.
-
-Yes, this is true.
-
-> To clean that up I think someone would need to hoist the overall sgl
-> loop and use more ops callbacks eg allocate_iommu_range,
-> assign_page_to_rage, dealloc_range, etc. This is a problem p2p makes
-> worse, but isn't directly causing :\
-
-Yup.
-
-Logan
+> 
+> Thank you very much for your replies
+> 
+> Regards,
+>     Abhijit
+> 
+> 
+> On Friday 21 April 2017 09:29 PM, Lorenzo Pieralisi wrote:
+> >On Fri, Apr 21, 2017 at 03:33:45PM +0530, abhijit naik wrote:
+> >>   Hi Lorenzo,
+> >>   Thank you very much for reply.
+> >>   As you mentioned I noted that, "If a Function must generate a Completion
+> >>   prior to the initial device Configuration Write Request, 0's must be
+> >>   entered into the Bus Number and Device Number fields"
+> >>   By above statement this means that completion ID will be 0x0000. For the
+> >>   first device on any bus,  device number will be 0 and function number will
+> >>   be 0.
+> >>   Isn't completer (for configuration read) packet will be addressing itself
+> >>   instead of root complex with bus, device and function number 0?
+> >
+> >I don't understand what you are asking. The completion (containing
+> >the read data) is routed back to the initiator via ID (of the requester)
+> >routing.
+> >
+> >2.2.4.2
+> >2.2.9
+> >
+> >Lorenzo
+> >
+> >>   On Wed, Apr 19, 2017 at 3:56 PM, Lorenzo Pieralisi
+> >>   <lorenzo.pieralisi@arm.com> wrote:
+> >>
+> >>     On Tue, Apr 11, 2017 at 07:45:40PM +0530, abhijit wrote:
+> >>     >
+> >>     > Hi All,
+> >>     >
+> >>     > I was referring Linux code for PCIe enumeration and I have one doubt
+> >>     > w.r.t to very first operation that must be done on device.
+> >>     >
+> >>     > Currently while scanning for device, we directly read vendor ID from
+> >>     > device. But PCIE base specification
+> >>     > "CB-PCI_Express_Base_4.0r0.7_November-11-2016.pdf" section 2.2.6.2
+> >>     > specifies that,
+> >>     >
+> >>     > "Functions must capture the Bus and Device Numbers supplied with all
+> >>     > Type 0 Configuration Write Requests completed by the Function and
+> >>     > supply these numbers in the Bus and Device Number fields of the
+> >>     > Requester ID for all Requests initiated by the Device/Function."
+> >>
+> >>     Please note:
+> >>     "for all Requests initiated by the Device/Function".
+> >>                       ^^^^^^^^^
+> >>     > Here I am assuming, the completer ID will be device number and
+> >>     > function number that will eventually programmed in to  device. In
+> >>     > that case, my question is, without first write, how read
+> >>     > request(VENDOR ID read) is serviced/routed?
+> >>
+> >>     That's not initiated by the endpoint device, it is routed by
+> >>     requester ID, which is the requester ID of the configuration
+> >>     request - ie master (ie root complex) requester ID.
+> >>
+> >>     Read 2.2.9 - Completion rules
+> >>
+> >>     HTH,
+> >>     Lorenzo
+> >>
+> >>   --
+> >>   Best wishes,
+> >>   Abhijit Naik
