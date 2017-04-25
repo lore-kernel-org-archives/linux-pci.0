@@ -1,80 +1,214 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 11 Apr 2017 15:31:39 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH v3 04/32] asm-generic: add ioremap_nopost() remap interface
-Message-ID: <20170411143138.GC6821@red-moon>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
- <20170411122923.6285-5-lorenzo.pieralisi@arm.com>
- <1491917983.7236.9.camel@kernel.crashing.org>
+Return-Path: <SRS0=5PB6=4B=gmail.com=alexdeucher@kernel.org>
+Return-Path: <SRS0=5PB6=4B=gmail.com=alexdeucher@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1491917983.7236.9.camel@kernel.crashing.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
- linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
- "James E.J. Bottomley" <jejb@parisc-linux.org>,
- David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
- Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
- Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
- Jesper Nilsson <jesper.nilsson@axis.com>,
- Yoshinori Sato <ysato@users.sourceforge.jp>,
- Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
- Russell King <linux@armlinux.org.uk>, Ingo Molnar <mingo@redhat.com>,
- Geert Uytterhoeven <geert@linux-m68k.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Matt Turner <mattst88@gmail.com>,
- Haavard Skinnemoen <hskinnemoen@gmail.com>, Fenghua Yu <fenghua.yu@intel.com>,
- James Hogan <james.hogan@imgtec.com>, Chris Metcalf <cmetcalf@mellanox.com>,
- Arnd Bergmann <arnd@arndb.de>, Heiko Carstens <heiko.carstens@de.ibm.com>,
- Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
- Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
- Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
- Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
- linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
- Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
- "Luis R . Rodriguez" <mcgrof@kernel.org>,
- Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
- "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="iso-8859-1"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1493126394-1239-5-git-send-email-deathsimple@vodafone.de>
+References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de> <1493126394-1239-5-git-send-email-deathsimple@vodafone.de>
+From: Alex Deucher <alexdeucher@gmail.com>
+Date: Tue, 25 Apr 2017 10:34:16 -0400
+Message-ID: <CADnq5_NHDo3Y0Ao_5uWQ=Q2mb5-qYZu9Z-cx1M48cfD0rxMi2w@mail.gmail.com>
+Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access v2
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
+	Maling list - DRI developers <dri-devel@lists.freedesktop.org>, platform-driver-x86@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 11, 2017 at 11:39:43PM +1000, Benjamin Herrenschmidt wrote:
-> On Tue, 2017-04-11 at 13:28 +0100, Lorenzo Pieralisi wrote:
-> > +static inline void __iomem *ioremap_nopost(phys_addr_t offset,
-> > size_t size)
-> > +{
-> > +=A0=A0=A0=A0=A0=A0=A0return ioremap_nocache(offset, size);
-> > +}
-> > +
-> =
+On Tue, Apr 25, 2017 at 9:19 AM, Christian K=C3=B6nig
+<deathsimple@vodafone.de> wrote:
+> From: Christian K=C3=B6nig <christian.koenig@amd.com>
+>
+> Try to resize BAR0 to let CPU access all of VRAM.
+>
+> v2: rebased, style cleanups, disable mem decode before resize,
+>     handle gmc_v9 as well, round size up to power of two.
+>
+> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
+> ---
+>  drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 37 ++++++++++++++++++++++++=
+++++++
+>  drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 ++++---
+>  drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 ++++---
+>  drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c      | 10 ++++----
+>  5 files changed, 54 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/am=
+dgpu/amdgpu.h
+> index 4a16e3c..9484062 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+> @@ -1879,6 +1879,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct amdgpu_devi=
+ce *adev, struct ttm_tt *ttm,
+>                                  struct ttm_mem_reg *mem);
+>  void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_mc *=
+mc, u64 base);
+>  void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *m=
+c);
+> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
+>  void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64 siz=
+e);
+>  int amdgpu_ttm_init(struct amdgpu_device *adev);
+>  void amdgpu_ttm_fini(struct amdgpu_device *adev);
+> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm=
+/amd/amdgpu/amdgpu_device.c
+> index a09ad3cf..d5ca77a 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+> @@ -695,6 +695,43 @@ void amdgpu_gtt_location(struct amdgpu_device *adev,=
+ struct amdgpu_mc *mc)
+>                         mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end);
+>  }
+>
+> +/**
+> + * amdgpu_resize_bar0 - try to resize BAR0
+> + *
+> + * @adev: amdgpu_device pointer
+> + *
+> + * Try to resize BAR0 to make all VRAM CPU accessible.
+> + */
+> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
 
-> No this is wrong as I explained.
-> =
+I'd suggest renaming this to amdgpu_device_resize_bar() to try and
+impose some consistency in this file, but not a big deal either way.
 
-> This is a semantic that simply *cannot* be generically provided accross
-> architectures as a mapping attribute.
+> +{
+> +       u64 space_needed =3D roundup_pow_of_two(adev->mc.real_vram_size);
+> +       u32 rbar_size =3D order_base_2(((space_needed >> 20) | 1)) -1;
+> +       u16 cmd;
+> +       int r;
+> +
+> +       /* Free the doorbell mapping, it most likely needs to move as wel=
+l */
+> +       amdgpu_doorbell_fini(adev);
+> +       pci_release_resource(adev->pdev, 2);
 
-I agree that a default implementation does not make much sense. The
-only solution to this, if we want the ioremap_nopost to be made available
-to generic code (and drivers - ie DT PCI host bridge drivers on ARM/ARM64
-are not arch code), is to make the ioremap_nopost() call return NULL
-unless overriden by arch code that can provide its semantics.
+This should check for if (adev->asic_type >=3D CHIP_BONAIRE) since SI
+didn't have doorbells.
 
-Thanks,
-Lorenzo
+> +
+> +       /* Disable memory decoding while we change the BAR addresses and =
+size */
+> +       pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
+> +       pci_write_config_word(adev->pdev, PCI_COMMAND,
+> +                             cmd & ~PCI_COMMAND_MEMORY);
+> +
+> +       r =3D pci_resize_resource(adev->pdev, 0, rbar_size);
+> +       if (r =3D=3D -ENOSPC)
+> +               DRM_INFO("Not enough PCI address space for a large BAR.")=
+;
+> +       else if (r && r !=3D -ENOTSUPP)
+> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
+> +
+> +       pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
+> +
+> +       /* When the doorbell BAR isn't available we have no chance of
+> +        * using the device.
+> +        */
+> +       BUG_ON(amdgpu_doorbell_init(adev));
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Same here.
+
+> +}
+> +
+>  /*
+>   * GPU helpers function.
+>   */
+> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c b/drivers/gpu/drm/amd/=
+amdgpu/gmc_v7_0.c
+> index a9083a1..ae71524 100644
+
+What about SI (gmc_v6_0.c)?
+
+Alex
+
+> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+> @@ -372,13 +372,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device *a=
+dev)
+>                 }
+>                 adev->mc.vram_width =3D numchan * chansize;
+>         }
+> -       /* Could aper size report 0 ? */
+> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>         /* size in MB on si */
+>         adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 10=
+24ULL;
+>         adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * =
+1024ULL;
+>
+> +       if (!(adev->flags & AMD_IS_APU))
+> +               amdgpu_resize_bar0(adev);
+> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+> +
+>  #ifdef CONFIG_X86_64
+>         if (adev->flags & AMD_IS_APU) {
+>                 adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)) <=
+< 22;
+> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c b/drivers/gpu/drm/amd/=
+amdgpu/gmc_v8_0.c
+> index 4ac9978..1655de2 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+> @@ -534,13 +534,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device *a=
+dev)
+>                 }
+>                 adev->mc.vram_width =3D numchan * chansize;
+>         }
+> -       /* Could aper size report 0 ? */
+> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>         /* size in MB on si */
+>         adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 10=
+24ULL;
+>         adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL * =
+1024ULL;
+>
+> +       if (!(adev->flags & AMD_IS_APU))
+> +               amdgpu_resize_bar0(adev);
+> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+> +
+>  #ifdef CONFIG_X86_64
+>         if (adev->flags & AMD_IS_APU) {
+>                 adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)) <=
+< 22;
+> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c b/drivers/gpu/drm/amd/=
+amdgpu/gmc_v9_0.c
+> index e5d4dfe..4bbef79 100644
+> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
+> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
+> @@ -469,16 +469,18 @@ static int gmc_v9_0_mc_init(struct amdgpu_device *a=
+dev)
+>         }
+>         adev->mc.vram_width =3D numchan * chansize;
+>
+> -       /* Could aper size report 0 ? */
+> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>         /* size in MB on si */
+>         adev->mc.mc_vram_size =3D
+>                 nbio_v6_1_get_memsize(adev) * 1024ULL * 1024ULL;
+>         adev->mc.real_vram_size =3D adev->mc.mc_vram_size;
+> -       adev->mc.visible_vram_size =3D adev->mc.aper_size;
+> +
+> +       if (!(adev->flags & AMD_IS_APU))
+> +               amdgpu_resize_bar0(adev);
+> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>
+>         /* In case the PCI BAR is larger than the actual amount of vram *=
+/
+> +       adev->mc.visible_vram_size =3D adev->mc.aper_size;
+>         if (adev->mc.visible_vram_size > adev->mc.real_vram_size)
+>                 adev->mc.visible_vram_size =3D adev->mc.real_vram_size;
+>
+> --
+> 2.7.4
+>
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
