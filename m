@@ -1,113 +1,62 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 4 Apr 2017 17:59:35 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andrey Smirnov <andrew.smirnov@gmail.com>
-Subject: Re: [PATCH v8 0/4] i.MX7 PCI support
-Message-ID: <20170404225935.GD989@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170328154252.6902-1-andrew.smirnov@gmail.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout1.hostsharing.net ([83.223.95.204]:56529 "EHLO
+        mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S980587AbdDYGV3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 25 Apr 2017 02:21:29 -0400
+Date: Tue, 25 Apr 2017 08:21:49 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Imre Deak <imre.deak@intel.com>, intel-gfx@lists.freedesktop.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI / PM: Add needs_resume flag to avoid suspend
+ complete optimization
+Message-ID: <20170425062149.GA9999@wunner.de>
+References: <1493044063-2095-1-git-send-email-imre.deak@intel.com>
+ <20170424200230.GA9910@wunner.de>
+ <20170424204242.GA9933@wunner.de>
+ <1741762.duLppskeDL@aspire.rjw.lan>
 MIME-Version: 1.0
-In-Reply-To: <20170328154252.6902-1-andrew.smirnov@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Dong Aisheng <dongas86@gmail.com>, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org, Fabio Estevam <fabio.estevam@nxp.com>,
- Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Lucas Stach <l.stach@pengutronix.de>, linux-arm-kernel@lists.infradead.org,
- yurovsky@gmail.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1741762.duLppskeDL@aspire.rjw.lan>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Mar 28, 2017 at 08:42:48AM -0700, Andrey Smirnov wrote:
-> Hello, everyone:
+On Mon, Apr 24, 2017 at 10:56:40PM +0200, Rafael J. Wysocki wrote:
+> On Monday, April 24, 2017 10:42:42 PM Lukas Wunner wrote:
+> > On Mon, Apr 24, 2017 at 10:02:30PM +0200, Lukas Wunner wrote:
+> > > On Mon, Apr 24, 2017 at 05:27:42PM +0300, Imre Deak wrote:
+> > > > Some drivers - like i915 - may not support the system suspend direct
+> > > > complete optimization due to differences in their runtime and system
+> > > > suspend sequence. Add a flag that when set resumes the device before
+> > > > calling the driver's system suspend handlers which effectively disables
+> > > > the optimization.
+> > > 
+> > > FWIW, there are at least two alternative solutions to this problem which
+> > > do not require changes to the PCI core:
+> > > 
+> > > (1) Add a ->prepare hook to i915_pm_ops which calls pm_runtime_get_sync()
+> > >     and a ->complete hook which calls pm_runtime_put().
+> > 
+> > Thinking a bit more about this, it's even simpler:  The PM core acquires
+> > a runtime PM ref in device_prepare() and releases it in device_complete(),
+> > so it's sufficient to just call pm_runtime_resume() in a ->prepare hook
+> > that's newly added to i915.  No ->complete hook necessary.  Tentative
+> > patch below, based on drm-intel-fixes, would replace both of your patches.
 > 
-> This is a eightth iteration of the code that adds PCI-subsystem bits
-> necessary for enabling PCI support on i.MX7.
+> Calling it in ->prepare() means that everybody is now waiting for you to
+> resume.
 > 
-> NOTE: To test this patchset with real i.MX7 hardware, additional
-> patches, that are being upstreamed via different trees, are needed. Full
-> working tree is availible at:
-> 
-> 	https://github.com/ndreys/linux/tree/imx7d/pcie-support-v8
-> 
-> Changes since v7 (can be found at [version7]):
-> 
-> 	- Collected Reviewed-by for the whole series from Lucas
-> 
-> Changes since v6 (can be found at [version6]):
-> 
-> 	- Rebased against latest changes in 'next' of PCI subsystem
->           git tree
-> 
-> Chagnes since v5 (can be found at [version5]):
-> 
-> 	- Collected ACKs from Lee and Rob
-> 
-> Changes since v4 (can be found at [version4]):
-> 
-> 	- Dropped typo-fix patch (originally patch #1 of the
->           series).
-> 
-> 	- Added patch with workaround to address speed change false
->           failures (I kept it as a separate patch to better document
->           exchange with NXP/Freescale that lead to that patch)
-> 
-> 	- Added patch to avoid speed change on links configured Gen1
->           only (Let me know if that is a terrible idea)
-> 
-> 	- Addressed section mismatch problem by moving call to
->           hook_fault_code to happend before driver registration.
-> 
-> Changes since v3 (can be found at [version3]):
-> 	- Move all of the reset_control_assert's into imx6_pcie_assert_core_reset
-> 	- Documented required reset and power domain DT bindings
-> 
-> Changes since v2 (can be found at [version2]):
-> 
-> 	- Collected Reviewed-by for patch #2 from Lucas
-> 	- Reset logic implementation moved out into a reset controller
->           driver (see [reset1])
-> 	- Removed unused leftover code
-> 
-> Changes since v1 (can be found at [version1]):
-> 
-> 	- All GPC related code moved into a separate driver (see [gpc1])
-> 	- Removed GPIO probe deferral logging
-> 	- Fixed section mismatch warning
-> 	- Minor reformatting of fsl,imx6q-pcie.txt(as per Rob
->           Herring's request)
-> 
-> [version7] https://lkml.org/lkml/2017/3/21/331
-> [version6] https://lkml.org/lkml/2017/3/14/584
-> [version5] https://lkml.org/lkml/2017/2/20/376
-> [version4] https://lkml.org/lkml/2017/2/7/478
-> [version3] https://lkml.org/lkml/2017/2/6/565
-> [version2] https://lkml.org/lkml/2017/2/1/510
-> [version1] https://lkml.org/lkml/2017/1/19/488
-> [gpc1] https://lkml.org/lkml/2017/2/6/551
-> [reset1] https://lkml.org/lkml/2017/2/6/554
-> 
-> Andrey Smirnov (4):
->   PCI: imx6: Add code to support i.MX7D
->   PCI: imx6: Allow probe deferal by reset GPIO
->   PCI: imx6: Do not wait for speed change on i.MX7
->   PCI: imx6: Do not switch speed if Gen2 is disabled
-> 
->  .../devicetree/bindings/pci/fsl,imx6q-pcie.txt     |  13 +-
->  drivers/pci/dwc/pci-imx6.c                         | 198 +++++++++++++++------
->  include/linux/mfd/syscon/imx7-iomuxc-gpr.h         |   4 +
->  3 files changed, 160 insertions(+), 55 deletions(-)
+> Not quite optimal IMO.
 
-Applied to pci/host-imx6 for v4.12, thanks!
+Okay, understood.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+However in the absence of a device_link from the HDA device (consumer)
+to the GPU (supplier), there's no guarantee that the GPU is resumed
+when the HDA device needs it due to the asynchronous invocation of
+the ->suspend hooks.  This is assuming that the HDA device already
+needs the GPU during ->suspend phase.
+
+Thanks,
+
+Lukas
