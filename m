@@ -1,60 +1,69 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH v4 10/21] PCI: spear13xx: update PCI config space remap
- function
-Date: Wed, 19 Apr 2017 17:48:59 +0100
-Message-Id: <20170419164913.19674-11-lorenzo.pieralisi@arm.com>
-In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
- Pratyush Anand <pratyush.anand@gmail.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Tue, 25 Apr 2017 11:19:13 -0700
+From: John Hubbard <jhubbard@nvidia.com>
+To: Christoph Hellwig <hch@infradead.org>
+CC: Haiyang Zhang <haiyangz@microsoft.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Piotr Jaroszynski <pjaroszynski@nvidia.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "olaf@aepfle.de" <olaf@aepfle.de>,
+        "vkuznets@redhat.com" <vkuznets@redhat.com>,
+        "driverdev-devel@linuxdriverproject.org"
+        <driverdev-devel@linuxdriverproject.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] pci-hyperv: Use only 16 bit integer for PCI domain
+In-Reply-To: <20170425131432.GA4714@infradead.org>
+Message-ID: <alpine.LNX.2.20.1704251112550.1507@sandstorm>
+References: <1492706123-22913-1-git-send-email-haiyangz@exchange.microsoft.com> <CAErSpo4iFS05Kk3Km54fFmpMf11XCoaPmGxSzqE3QuA5P=T6=Q@mail.gmail.com> <BLUPR03MB1412F7A0A693B67685D5FE9FCA1B0@BLUPR03MB1412.namprd03.prod.outlook.com> <8ff72ec3-d61e-07d9-8c9d-92951195b67d@nvidia.com>
+ <20170425131432.GA4714@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset="US-ASCII"
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI configuration space should be mapped with a memory region type that
-generate on the CPU host bus non-posted write transations. Update the
-driver to use the devm_pci_remap_cfg* interface to make sure the correct
-memory mappings for PCI configuration space are used.
+On Tue, 25 Apr 2017, Christoph Hellwig wrote:
 
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Cc: Pratyush Anand <pratyush.anand@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/dwc/pcie-spear13xx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Hi John,
+> 
+> please fix your quoting of the previous mails, thanks!
 
-diff --git a/drivers/pci/dwc/pcie-spear13xx.c b/drivers/pci/dwc/pcie-spear13xx.c
-index eaa4ea8..3ae59de 100644
---- a/drivers/pci/dwc/pcie-spear13xx.c
-+++ b/drivers/pci/dwc/pcie-spear13xx.c
-@@ -273,7 +273,7 @@ static int spear13xx_pcie_probe(struct platform_device *pdev)
- 	}
- 
- 	dbi_base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "dbi");
--	pci->dbi_base = devm_ioremap_resource(dev, dbi_base);
-+	pci->dbi_base = devm_pci_remap_cfg_resource(dev, dbi_base);
- 	if (IS_ERR(pci->dbi_base)) {
- 		dev_err(dev, "couldn't remap dbi base %p\n", dbi_base);
- 		ret = PTR_ERR(pci->dbi_base);
--- 
-2.10.0
+Shoot, sorry about any quoting issues. I'm sufficiently new to conversing 
+on these lists that I'm not even sure which mistake I made.
 
+> 
+> 
+> What ACPI defines does not matter at all.  Linux uses 32-bit domains
+> IDs, and on x86 specifily uses those for non-ACPI enumarated domains
+> (e.g. VMD).
+> 
+> You've also not demontrated any issue with any Linux driver yet.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+The NVIDIA out-of-tree driver has historically treated domains as 16-bit. 
+So this showed up when people tried to run that driver in a hyper-v VM.
+
+> 
+> > Also...it would be nice if we could use Haiyang's patch as at least a
+> > temporary fix, because distros are just today releasing the previous code,
+> > and HyperV will start breaking "occasionally", depending on whether the
+> > 32-bit virtual (fake) PCI domain fits within 16 bits. (If not, then we can
+> > rush out a driver update to fix it, but there will be a window of time with
+> > some breakage there.)
+> 
+> Just send the fix to whatever driver is broken to the driver maintainer.
+
+Done: that would be us. :)
+
+> But I can't find a single broken driver in the tree, and as you know
+> nothing else matters for Linux anyway.
+> 
+
+Yes, I looked at Nouveau, and I see that they allow for a 32-bit domain, 
+so I agree that we haven't found any in-tree drivers that have a problem.
+
+Anyway, thanks for the answers and explanations.
+
+--
+thanks,
+john h
