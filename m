@@ -1,101 +1,256 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:50995 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932970AbdDZSPH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Apr 2017 14:15:07 -0400
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>,
-        Jingoo Han <jingoohan1@gmail.com>
-Cc: linux-pci@vger.kernel.org, patchwork-lst@pengutronix.de,
-        Tim Harvey <tharvey@gateworks.com>
-Subject: [PATCH] PCI: dwc: fall back to legacy IRQs when multiple devices are attached
-Date: Wed, 26 Apr 2017 20:15:02 +0200
-Message-Id: <20170426181502.770-1-l.stach@pengutronix.de>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=5PB6=4B=gmail.com=alexdeucher@kernel.org>
+Return-Path: <SRS0=5PB6=4B=gmail.com=alexdeucher@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <9d345f33-a291-1647-9d03-d0df17733b14@vodafone.de>
+References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
+ <1493126394-1239-5-git-send-email-deathsimple@vodafone.de>
+ <CADnq5_NHDo3Y0Ao_5uWQ=Q2mb5-qYZu9Z-cx1M48cfD0rxMi2w@mail.gmail.com> <9d345f33-a291-1647-9d03-d0df17733b14@vodafone.de>
+From: Alex Deucher <alexdeucher@gmail.com>
+Date: Tue, 25 Apr 2017 11:14:41 -0400
+Message-ID: <CADnq5_PquOLg1RLNE36-ZXGpSZFBu_N56-3Ox18CXu6oG2nk=w@mail.gmail.com>
+Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access v2
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI <linux-pci@vger.kernel.org>,
+	Maling list - DRI developers <dri-devel@lists.freedesktop.org>, platform-driver-x86@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-The DWC host does not support legacy PCI IRQs and MSIs at the same time,
-so we need to fall back to using only legacy IRQs if there is a chance
-that multiple devices with differing MSI capabilities are connected to
-the host. The only configuration where MSIs can be safely used is when
-the device below the host bridge is not a bridge, i.e. the only device
-connected to this host.
+On Tue, Apr 25, 2017 at 11:09 AM, Christian K=C3=B6nig
+<deathsimple@vodafone.de> wrote:
+> Am 25.04.2017 um 16:34 schrieb Alex Deucher:
+>>
+>> On Tue, Apr 25, 2017 at 9:19 AM, Christian K=C3=B6nig
+>> <deathsimple@vodafone.de> wrote:
+>>>
+>>> From: Christian K=C3=B6nig <christian.koenig@amd.com>
+>>>
+>>> Try to resize BAR0 to let CPU access all of VRAM.
+>>>
+>>> v2: rebased, style cleanups, disable mem decode before resize,
+>>>      handle gmc_v9 as well, round size up to power of two.
+>>>
+>>> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
+>>> ---
+>>>   drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
+>>>   drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 37
+>>> ++++++++++++++++++++++++++++++
+>>>   drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 ++++---
+>>>   drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 ++++---
+>>>   drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c      | 10 ++++----
+>>>   5 files changed, 54 insertions(+), 10 deletions(-)
+>>>
+>>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>>> b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>>> index 4a16e3c..9484062 100644
+>>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>>> @@ -1879,6 +1879,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct
+>>> amdgpu_device *adev, struct ttm_tt *ttm,
+>>>                                   struct ttm_mem_reg *mem);
+>>>   void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_m=
+c
+>>> *mc, u64 base);
+>>>   void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc
+>>> *mc);
+>>> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
+>>>   void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64
+>>> size);
+>>>   int amdgpu_ttm_init(struct amdgpu_device *adev);
+>>>   void amdgpu_ttm_fini(struct amdgpu_device *adev);
+>>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>>> b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>>> index a09ad3cf..d5ca77a 100644
+>>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>>> @@ -695,6 +695,43 @@ void amdgpu_gtt_location(struct amdgpu_device *ade=
+v,
+>>> struct amdgpu_mc *mc)
+>>>                          mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end=
+);
+>>>   }
+>>>
+>>> +/**
+>>> + * amdgpu_resize_bar0 - try to resize BAR0
+>>> + *
+>>> + * @adev: amdgpu_device pointer
+>>> + *
+>>> + * Try to resize BAR0 to make all VRAM CPU accessible.
+>>> + */
+>>> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
+>>
+>> I'd suggest renaming this to amdgpu_device_resize_bar() to try and
+>> impose some consistency in this file, but not a big deal either way.
+>>
+>>> +{
+>>> +       u64 space_needed =3D roundup_pow_of_two(adev->mc.real_vram_size=
+);
+>>> +       u32 rbar_size =3D order_base_2(((space_needed >> 20) | 1)) -1;
+>>> +       u16 cmd;
+>>> +       int r;
+>>> +
+>>> +       /* Free the doorbell mapping, it most likely needs to move as
+>>> well */
+>>> +       amdgpu_doorbell_fini(adev);
+>>> +       pci_release_resource(adev->pdev, 2);
+>>
+>> This should check for if (adev->asic_type >=3D CHIP_BONAIRE) since SI
+>> didn't have doorbells.
+>>
+>>> +
+>>> +       /* Disable memory decoding while we change the BAR addresses an=
+d
+>>> size */
+>>> +       pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
+>>> +       pci_write_config_word(adev->pdev, PCI_COMMAND,
+>>> +                             cmd & ~PCI_COMMAND_MEMORY);
+>>> +
+>>> +       r =3D pci_resize_resource(adev->pdev, 0, rbar_size);
+>>> +       if (r =3D=3D -ENOSPC)
+>>> +               DRM_INFO("Not enough PCI address space for a large
+>>> BAR.");
+>>> +       else if (r && r !=3D -ENOTSUPP)
+>>> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
+>>> +
+>>> +       pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
+>>> +
+>>> +       /* When the doorbell BAR isn't available we have no chance of
+>>> +        * using the device.
+>>> +        */
+>>> +       BUG_ON(amdgpu_doorbell_init(adev));
+>>
+>> Same here.
+>>
+>>> +}
+>>> +
+>>>   /*
+>>>    * GPU helpers function.
+>>>    */
+>>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>>> b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>>> index a9083a1..ae71524 100644
+>>
+>> What about SI (gmc_v6_0.c)?
+>
+>
+> As far as I know there is no SI hardware with resizeable BAR support.
+>
+> The all VI generation can do this, but I'm not 100% sure if there aren't =
+any
+> Bonaires out there which can handle it as well that's why I added gmc_v7
+> support.
+>
+> Still need to double check that.
 
-By disallowing MSI allocation when multiple devices might be attached
-we get those configurations in a working state. The only configurations
-that depend on MSIs being available, that I am aware of, are some
-embedded devices with a PCIe attached FPGA, that is incapable of
-generating PCI legacy IRQs. Those are kept working by allowing MSIs
-when only a single device is attached to the host.
+I think NI or even evergreen supported resizeable bars in theory,
+although I'm not sure if any boards were fused to expose it.
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
- drivers/pci/dwc/pcie-designware-host.c | 24 ++++++++++++++++++++++--
- drivers/pci/dwc/pcie-designware.h      |  1 +
- 2 files changed, 23 insertions(+), 2 deletions(-)
+Alex
 
-diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
-index 5ba334938b52..be2b2762c944 100644
---- a/drivers/pci/dwc/pcie-designware-host.c
-+++ b/drivers/pci/dwc/pcie-designware-host.c
-@@ -92,6 +92,8 @@ void dw_pcie_msi_init(struct pcie_port *pp)
- 			    (u32)(msi_target & 0xffffffff));
- 	dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
- 			    (u32)(msi_target >> 32 & 0xffffffff));
-+
-+	pp->msi_disabled = false;
- }
- 
- static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
-@@ -136,9 +138,11 @@ static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
- static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
- {
- 	int irq, pos0, i;
--	struct pcie_port *pp;
-+	struct pcie_port *pp = (struct pcie_port *)msi_desc_to_pci_sysdata(desc);
-+
-+	if (pp->msi_disabled)
-+		return -EINVAL;
- 
--	pp = (struct pcie_port *)msi_desc_to_pci_sysdata(desc);
- 	pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
- 				       order_base_2(no_irqs));
- 	if (pos0 < 0)
-@@ -410,6 +414,22 @@ int dw_pcie_host_init(struct pcie_port *pp)
- 		goto error;
- 	}
- 
-+	/*
-+	 * The DWC host does not support legacy PCI IRQs and MSIs at the same
-+	 * time, so we need to fall back to using only legacy IRQs if there is
-+	 * a chance that multiple devices with differing MSI capabilities are
-+	 * connected to the host. The only configuration where MSIs can be
-+	 * safely used is when the device below the host bridge is not a bridge,
-+	 * i.e. the only device connected to this host.
-+	 */
-+	child = list_first_entry(&bus->children, struct pci_bus, node);
-+	if (!list_empty(&child->devices)) {
-+		struct pci_dev *dev = list_first_entry(&child->devices,
-+						       struct pci_dev, bus_list);
-+		if (pci_is_bridge(dev))
-+			pp->msi_disabled = true;
-+	}
-+
- 	if (pp->ops->scan_bus)
- 		pp->ops->scan_bus(pp);
- 
-diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
-index cd3b8713fe50..741bc31f8947 100644
---- a/drivers/pci/dwc/pcie-designware.h
-+++ b/drivers/pci/dwc/pcie-designware.h
-@@ -140,6 +140,7 @@ struct pcie_port {
- 	struct irq_domain	*irq_domain;
- 	unsigned long		msi_data;
- 	DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
-+	bool			msi_disabled;
- };
- 
- struct dw_pcie_ops {
--- 
-2.11.0
+
+>
+> Christian.
+>
+>
+>>
+>> Alex
+>>
+>>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>>> @@ -372,13 +372,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device
+>>> *adev)
+>>>                  }
+>>>                  adev->mc.vram_width =3D numchan * chansize;
+>>>          }
+>>> -       /* Could aper size report 0 ? */
+>>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>>>          /* size in MB on si */
+>>>          adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL *
+>>> 1024ULL;
+>>>          adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL=
+ *
+>>> 1024ULL;
+>>>
+>>> +       if (!(adev->flags & AMD_IS_APU))
+>>> +               amdgpu_resize_bar0(adev);
+>>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>>> +
+>>>   #ifdef CONFIG_X86_64
+>>>          if (adev->flags & AMD_IS_APU) {
+>>>                  adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)=
+) <<
+>>> 22;
+>>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>>> b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>>> index 4ac9978..1655de2 100644
+>>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>>> @@ -534,13 +534,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device
+>>> *adev)
+>>>                  }
+>>>                  adev->mc.vram_width =3D numchan * chansize;
+>>>          }
+>>> -       /* Could aper size report 0 ? */
+>>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>>>          /* size in MB on si */
+>>>          adev->mc.mc_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL *
+>>> 1024ULL;
+>>>          adev->mc.real_vram_size =3D RREG32(mmCONFIG_MEMSIZE) * 1024ULL=
+ *
+>>> 1024ULL;
+>>>
+>>> +       if (!(adev->flags & AMD_IS_APU))
+>>> +               amdgpu_resize_bar0(adev);
+>>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>>> +
+>>>   #ifdef CONFIG_X86_64
+>>>          if (adev->flags & AMD_IS_APU) {
+>>>                  adev->mc.aper_base =3D ((u64)RREG32(mmMC_VM_FB_OFFSET)=
+) <<
+>>> 22;
+>>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
+>>> b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
+>>> index e5d4dfe..4bbef79 100644
+>>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
+>>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
+>>> @@ -469,16 +469,18 @@ static int gmc_v9_0_mc_init(struct amdgpu_device
+>>> *adev)
+>>>          }
+>>>          adev->mc.vram_width =3D numchan * chansize;
+>>>
+>>> -       /* Could aper size report 0 ? */
+>>> -       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>>> -       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>>>          /* size in MB on si */
+>>>          adev->mc.mc_vram_size =3D
+>>>                  nbio_v6_1_get_memsize(adev) * 1024ULL * 1024ULL;
+>>>          adev->mc.real_vram_size =3D adev->mc.mc_vram_size;
+>>> -       adev->mc.visible_vram_size =3D adev->mc.aper_size;
+>>> +
+>>> +       if (!(adev->flags & AMD_IS_APU))
+>>> +               amdgpu_resize_bar0(adev);
+>>> +       adev->mc.aper_base =3D pci_resource_start(adev->pdev, 0);
+>>> +       adev->mc.aper_size =3D pci_resource_len(adev->pdev, 0);
+>>>
+>>>          /* In case the PCI BAR is larger than the actual amount of vra=
+m
+>>> */
+>>> +       adev->mc.visible_vram_size =3D adev->mc.aper_size;
+>>>          if (adev->mc.visible_vram_size > adev->mc.real_vram_size)
+>>>                  adev->mc.visible_vram_size =3D adev->mc.real_vram_size=
+;
+>>>
+>>> --
+>>> 2.7.4
+>>>
+>>> _______________________________________________
+>>> dri-devel mailing list
+>>> dri-devel@lists.freedesktop.org
+>>> https://lists.freedesktop.org/mailman/listinfo/dri-devel
+>
+>
+>
