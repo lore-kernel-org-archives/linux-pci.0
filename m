@@ -1,90 +1,71 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-co1nam03on0076.outbound.protection.outlook.com ([104.47.40.76]:24006
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755802AbdDGOvC (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Apr 2017 10:51:02 -0400
-Subject: Re: [RFC PATCH v2 14/32] x86: mm: Provide support to use memblock
- when spliting large pages
-To: Borislav Petkov <bp@suse.de>
-References: <f46ff1e1-1cc7-1907-74a0-e2709fa1e5fb@amd.com>
- <20170406172520.iyjjtz56u3jlnjhq@pd.tnic>
- <ba739600-d468-1f1b-aff6-89c79fd6030b@amd.com>
- <20170407113325.vykr4g3qdufgt2rd@pd.tnic>
-CC: <brijesh.singh@amd.com>, Paolo Bonzini <pbonzini@redhat.com>,
-        <simon.guinot@sequanux.org>, <linux-efi@vger.kernel.org>,
-        <kvm@vger.kernel.org>, <rkrcmar@redhat.com>,
-        <matt@codeblueprint.co.uk>, <linux-pci@vger.kernel.org>,
-        <linus.walleij@linaro.org>, <gary.hook@amd.com>,
-        <linux-mm@kvack.org>, <paul.gortmaker@windriver.com>,
-        <hpa@zytor.com>, <cl@linux.com>, <dan.j.williams@intel.com>,
-        <aarcange@redhat.com>, <sfr@canb.auug.org.au>,
-        <andriy.shevchenko@linux.intel.com>, <herbert@gondor.apana.org.au>,
-        <bhe@redhat.com>, <xemul@parallels.com>, <joro@8bytes.org>,
-        <x86@kernel.org>, <peterz@infradead.org>, <piotr.luc@intel.com>,
-        <mingo@redhat.com>, <msalter@redhat.com>,
-        <ross.zwisler@linux.intel.com>, <dyoung@redhat.com>,
-        <thomas.lendacky@amd.com>, <jroedel@suse.de>,
-        <keescook@chromium.org>, <arnd@arndb.de>, <toshi.kani@hpe.com>,
-        <mathieu.desnoyers@efficios.com>, <luto@kernel.org>,
-        <devel@linuxdriverproject.org>, <bhelgaas@google.com>,
-        <tglx@linutronix.de>, <mchehab@kernel.org>,
-        <iamjoonsoo.kim@lge.com>, <labbott@fedo.suse.de>
-From: Brijesh Singh <brijesh.singh@amd.com>
-Message-ID: <cdb9c846-f4cd-81c1-eff3-6ca2de7c3e20@amd.com>
-Date: Fri, 7 Apr 2017 09:50:48 -0500
+Return-Path: <SRS0=TGTz=4B=deltatee.com=logang@kernel.org>
+Return-Path: <SRS0=TGTz=4B=deltatee.com=logang@kernel.org>
+To: Knut Omang <knut.omang@oracle.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Dan Williams <dan.j.williams@intel.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+ <1492034124.7236.77.camel@kernel.crashing.org>
+ <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+ <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+ <20170414041656.GA30694@obsidianresearch.com>
+ <1492169849.25766.3.camel@kernel.crashing.org>
+ <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
+ <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
+ <1492207643.25766.18.camel@kernel.crashing.org>
+ <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
+ <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
+ <1492311719.25766.37.camel@kernel.crashing.org>
+ <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
+ <5e43818e-8c6b-8be8-23ff-b798633d2a73@deltatee.com>
+ <1492381907.25766.49.camel@kernel.crashing.org>
+ <1493019397.3171.118.camel@oracle.com>
+ <9b6c0830-a728-c7ca-e6c6-2135f3f760ed@deltatee.com>
+ <1493101803.3171.246.camel@oracle.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
+ Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
+ Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+ linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
+ linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Jerome Glisse <jglisse@redhat.com>
+From: Logan Gunthorpe <logang@deltatee.com>
+Message-ID: <0cc95df5-b9dd-6493-15fe-771d535c1020@deltatee.com>
+Date: Tue, 25 Apr 2017 11:03:27 -0600
 MIME-Version: 1.0
-In-Reply-To: <20170407113325.vykr4g3qdufgt2rd@pd.tnic>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1493101803.3171.246.camel@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
 List-ID: <linux-pci.vger.kernel.org>
 
 
 
-On 04/07/2017 06:33 AM, Borislav Petkov wrote:
-> On Thu, Apr 06, 2017 at 01:37:41PM -0500, Brijesh Singh wrote:
->> I did thought about prot idea but ran into another corner case which may require
->> us changing the signature of phys_pud_init and phys_pmd_init. The paddr_start
->> and paddr_end args into kernel_physical_mapping_init() should be aligned on PMD
->> level down (see comment [1]). So, if we encounter a case where our address range
->> is part of large page but we need to clear only one entry (i.e asked to clear just
->> one page into 2M region). In that case, now we need to pass additional arguments
->> into kernel_physical_mapping, phys_pud_init and phys_pmd_init to hint the splitting
->> code that it should use our prot for specific entries and all other entries will use
->> the old_prot.
->
-> Ok, but your !4K case:
->
-> +               /*
-> +                * virtual address is part of large page, create the page
-> +                * table mapping to use smaller pages (4K). The virtual and
-> +                * physical address must be aligned to PMD level.
-> +                */
-> +               kernel_physical_mapping_init(__pa(vaddr & PMD_MASK),
-> +                                            __pa((vaddr_end & PMD_MASK) + PMD_SIZE),
-> +                                            0);
->
->
-> would map a 2M page as encrypted by default. What if we want to map a 2M page
-> frame as ~_PAGE_ENC?
->
+On 25/04/17 12:30 AM, Knut Omang wrote:
+> Yes, that's why I used 'significant'. One good thing is that given resources 
+> it can easily be done in parallel with other development, and will give additional
+> insight of some form.
 
-Thanks for feedbacks, I will make sure that we cover all other cases in final patch.
-Untested but something like this can be used to check whether we can change the large page
-in one go or request the splitting.
+Yup, well if someone wants to start working on an emulated RDMA device
+that actually simulates proper DMA transfers that would be great!
 
-+               psize = page_level_size(level);
-+               pmask = page_level_mask(level);
-+
-+               /*
-+                * Check, whether we can change the large page in one go.
-+                * We request a split, when the address is not aligned and
-+                * the number of pages to set or clear encryption bit is smaller
-+                * than the number of pages in the large page.
-+                */
-+               if (vaddr == (vaddr & pmask) && ((vaddr_end - vaddr) >= psize)) {
-+                       /* UPDATE PMD HERE */
-+                       vaddr_next = (vaddr & pmask) + psize;
-+                       continue;
-+               }
-+
+>> I also imagine it would be quite difficult to develop those models
+>> given the array of hardware that needs to be supported and the deep
+>> functional knowledge required to figure out appropriate restrictions.
+> 
+> From my naive perspective it seems it need not even be a full model to get some benefits,
+> just low level functionality tests with some instances of a
+> device that offers some MMIO space 'playground'.
+
+Yes, the nvme device in qemu has a CMB buffer which is a good choice to
+test with but we don't have code to use it for p2p transfers in the
+kernel so it is a bit awkward. We also posted [1] to qemu which was also
+handy to test with using a small out of tree module. But I don't see a
+lot of value in it if you completely ignore any hardware quirks.
+
+Logan
+
+[1] https://lists.gnu.org/archive/html/qemu-devel/2016-10/msg04331.html
