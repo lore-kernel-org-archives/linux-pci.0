@@ -1,53 +1,65 @@
-Return-Path: <SRS0=PbMZ=3T=redhat.com=jcm@kernel.org>
-Return-Path: <SRS0=PbMZ=3T=redhat.com=jcm@kernel.org>
-Subject: Re: [PATCH v4 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-To: Jayachandran C <jnair@caviumnetworks.com>,
- Bjorn Helgaas <helgaas@kernel.org>
-References: <1491225304-3559-1-git-send-email-jnair@caviumnetworks.com>
- <1491225304-3559-3-git-send-email-jnair@caviumnetworks.com>
- <20170411012847.GA15291@bhelgaas-glaptop.roam.corp.google.com>
- <20170411071047.GA3610@localhost>
- <20170411134125.GA31773@bhelgaas-glaptop.roam.corp.google.com>
- <20170411152702.GA2910@localhost>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux-foundation.org,
- Alex Williamson <alex.williamson@redhat.com>,
- Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org,
- Joerg Roedel <joro@8bytes.org>
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <bc0450db-5375-9774-b6e4-bcda18592d05@redhat.com>
-Date: Tue, 11 Apr 2017 11:43:07 -0400
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org
+References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+From: Jon Masters <jcm@jonmasters.org>
+Message-ID: <2e24e205-d761-9172-9463-4a53e1a0de4d@jonmasters.org>
+Date: Tue, 25 Apr 2017 02:40:57 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170411152702.GA2910@localhost>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v4 00/21] PCI: fix config space memory mappings
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Jonathan Corbet <corbet@lwn.net>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Murali Karicheri <m-karicheri2@ti.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Arnd Bergmann <arnd@arndb.de>, Jon Mason <jonmason@broadcom.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ "Luis R . Rodriguez" <mcgrof@kernel.org>,
+ Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/11/2017 11:27 AM, Jayachandran C wrote:
-> On Tue, Apr 11, 2017 at 08:41:25AM -0500, Bjorn Helgaas wrote:
+On 04/19/2017 12:48 PM, Lorenzo Pieralisi wrote:
 
->> I suspect the reason this patch makes a difference is because the
->> current pci_for_each_dma_alias() believes one of those top-level
->> bridges is an alias, and the iterator produces it last, so that's the
->> one you map.  The IOMMU is attached lower down, so that top-level
->> bridge is not in fact an alias, but since you only look at the *last*
->> one, you don't map the correct aliases from lower down in the tree.
-> 
-> Exactly. The IORT spec allows a range of RIDs to map to an SMMU, which
-> means that a PCI RC can multiple SMMUs, each handling a subset of RIDs.
-> 
-> In the case of Cavium ThunderX2, the RID which we should see on the RC
-> - if we follow the standard and factor in the aliasing introduced by the
-> PCI bridge and the PCI/PCIe bridge - is not the RID seen by the SMMU (or
-> ITS).
-> 
-> But, if we stop the traversal at the point where SMMU (or ITS) is
-> attached, we will get the correct RID as seen by these.
+> On some platforms (ie ARM/ARM64) ioremap fails to comply with the PCI
+> configuration non-posted write transactions requirement, because it
+> provides a memory mapping that issues "bufferable" or, in PCI terms
+> "posted" write transactions. Likewise, the current pci_remap_iospace()
+> implementation maps the physical address range that the PCI translates
+> to I/O space cycles to virtual address space through pgprot_device()
+> attributes that on eg ARM64 provides a memory mapping issuing
+> posted writes transactions, which is not PCI specifications compliant.
 
-Side note that I am trying to get various specifications clarified to
-promote more of a familiar alternative architecture (x86) approach in
-the future in which these aren't at different levels in the topology.
-But to do that requires integrated Root Complex IP with bells/whistles.
+Side note that I've pinged all of the ARM server vendors and asked them
+to verify this patch series on their platforms.
 
 Jon.
 
--- 
-Computer Architect | Sent from my Fedora powered laptop
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
