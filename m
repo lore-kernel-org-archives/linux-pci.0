@@ -1,51 +1,47 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39692 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752832AbdDKEk0 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Apr 2017 00:40:26 -0400
-Date: Mon, 10 Apr 2017 22:40:18 -0600
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Jarod Wilson <jarod@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pci/quirks: ITE 8893 needs
- quirk_use_pcie_bridge_dma_alias
-Message-ID: <20170410224018.1874ac78@t450s.home>
-In-Reply-To: <20170411010127.57858-1-jarod@redhat.com>
-References: <20170411010127.57858-1-jarod@redhat.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Message-ID: <1493139603.3041.74.camel@redhat.com>
+Subject: Re: [PATCH 5/7] IB/hfi1: use pcie_flr instead of duplicating it
+From: Doug Ledford <dledford@redhat.com>
+To: Christoph Hellwig <hch@lst.de>,
+        "Byczkowski, Jakub" <jakub.byczkowski@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        "Cabiddu, Giovanni" <giovanni.cabiddu@intel.com>,
+        "Benedetto, Salvatore" <salvatore.benedetto@intel.com>,
+        "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
+        "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        qat-linux <qat-linux@intel.com>,
+        "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Tue, 25 Apr 2017 13:00:03 -0400
+In-Reply-To: <20170424143507.GA28812@lst.de>
+References: <20170414191131.14286-1-hch@lst.de>
+         <20170414191131.14286-6-hch@lst.de>
+         <A33E225544E47D4DB5713032774B132783960382@irsmsx105.ger.corp.intel.com>
+         <20170424143507.GA28812@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 10 Apr 2017 21:01:27 -0400
-Jarod Wilson <jarod@redhat.com> wrote:
-
-> This bridge has the same problems as the ITE 8892, which were resulting in
-> crippling an older PCI 1Gbps NIC down to 45Mbps throughput with IOMMU and
-> VT-d enabled. With the patch, this old e1000 goes back up to ~900Mbps.
+On Mon, 2017-04-24 at 16:35 +0200, Christoph Hellwig wrote:
+> On Mon, Apr 24, 2017 at 02:16:31PM +0000, Byczkowski, Jakub wrote:
+> > 
+> > Tested-by: Jakub Byczkowski <jakub.byczkowski@intel.com>
 > 
-> Suggested-by: Alex Williamson <alex.williamson@redhat.com>
-> CC: linux-pci@vger.kernel.org
-> CC: Alex Williamson <alex.williamson@redhat.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Jarod Wilson <jarod@redhat.com>
-> ---
->  drivers/pci/quirks.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 9236e40ac055..c95fbf2431f8 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3914,6 +3914,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080,
->  DECLARE_PCI_FIXUP_HEADER(0x10e3, 0x8113, quirk_use_pcie_bridge_dma_alias);
->  /* ITE 8892, https://bugzilla.kernel.org/show_bug.cgi?id=73551 */
->  DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
-> +/* ITE 8893 has the same problem as the 8892 */
-> +DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8893, quirk_use_pcie_bridge_dma_alias);
->  /* Intel 82801, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c49 */
->  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
+> Are you (and Doug) ok with queueing this up in the PCI tree?
 
+I'm fine with that.  Feel free to add my Acked-by to the hfi1 patch.
 
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
+-- 
+Doug Ledford <dledford@redhat.com>
+    GPG KeyID: B826A3330E572FDD
+   
+Key fingerprint = AE6B 1BDA 122B 23B4 265B  1274 B826 A333 0E57 2FDD
