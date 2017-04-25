@@ -1,142 +1,86 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V10 03/12] of: dma: Move range size workaround to
- of_dma_get_range()
-To: Frank Rowand <frowand.list@gmail.com>,
- Sricharan R <sricharan@codeaurora.org>, will.deacon@arm.com,
- joro@8bytes.org, lorenzo.pieralisi@arm.com,
- iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
- robh+dt@kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
- lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
- linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-4-git-send-email-sricharan@codeaurora.org>
- <58E5DF13.2020700@gmail.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <4d6206a4-fa5d-00b8-b536-fd9fe68fb168@arm.com>
-Date: Thu, 6 Apr 2017 11:03:02 +0100
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga01.intel.com ([192.55.52.88]:1866 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1429417AbdDYKWk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Apr 2017 06:22:40 -0400
+Date: Tue, 25 Apr 2017 13:22:35 +0300
+From: Imre Deak <imre.deak@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        intel-gfx@lists.freedesktop.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 1/2] PCI / PM: Add needs_resume flag to avoid suspend
+ complete optimization
+Message-ID: <20170425102235.GB3719@ideak-desk.fi.intel.com>
+Reply-To: imre.deak@intel.com
+References: <1493044063-2095-1-git-send-email-imre.deak@intel.com>
+ <20170424200230.GA9910@wunner.de>
+ <20170424204242.GA9933@wunner.de>
+ <1741762.duLppskeDL@aspire.rjw.lan>
+ <20170425062149.GA9999@wunner.de>
+ <20170425085507.GA3719@ideak-desk.fi.intel.com>
+ <20170425094642.GA10128@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <58E5DF13.2020700@gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170425094642.GA10128@wunner.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Frank,
-
-On 06/04/17 07:24, Frank Rowand wrote:
-> On 04/04/17 03:18, Sricharan R wrote:
->> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
->>
->> Invalid dma-ranges values should be worked around when retrieving the
->> DMA range in of_dma_get_range(), not by all callers of the function.
->> This isn't much of a problem now that we have a single caller, but that
->> situation will change when moving DMA configuration to device probe
->> time.
+On Tue, Apr 25, 2017 at 11:46:42AM +0200, Lukas Wunner wrote:
+> On Tue, Apr 25, 2017 at 11:55:07AM +0300, Imre Deak wrote:
+> > On Tue, Apr 25, 2017 at 08:21:49AM +0200, Lukas Wunner wrote:
+> > > On Mon, Apr 24, 2017 at 10:56:40PM +0200, Rafael J. Wysocki wrote:
+> > > > On Monday, April 24, 2017 10:42:42 PM Lukas Wunner wrote:
+> > > > > On Mon, Apr 24, 2017 at 10:02:30PM +0200, Lukas Wunner wrote:
+> > > > > > On Mon, Apr 24, 2017 at 05:27:42PM +0300, Imre Deak wrote:
+> > > > > > > Some drivers - like i915 - may not support the system suspend direct
+> > > > > > > complete optimization due to differences in their runtime and system
+> > > > > > > suspend sequence. Add a flag that when set resumes the device before
+> > > > > > > calling the driver's system suspend handlers which effectively disables
+> > > > > > > the optimization.
+> > > > > > 
+> > > > > > FWIW, there are at least two alternative solutions to this problem which
+> > > > > > do not require changes to the PCI core:
+> > > > > > 
+> > > > > > (1) Add a ->prepare hook to i915_pm_ops which calls pm_runtime_get_sync()
+> > > > > >     and a ->complete hook which calls pm_runtime_put().
+> > > > > 
+> > > > > Thinking a bit more about this, it's even simpler:  The PM core acquires
+> > > > > a runtime PM ref in device_prepare() and releases it in device_complete(),
+> > > > > so it's sufficient to just call pm_runtime_resume() in a ->prepare hook
+> > > > > that's newly added to i915.  No ->complete hook necessary.  Tentative
+> > > > > patch below, based on drm-intel-fixes, would replace both of your patches.
+> > > > 
+> > > > Calling it in ->prepare() means that everybody is now waiting for you to
+> > > > resume.
+> > > > 
+> > > > Not quite optimal IMO.
+> > > 
+> > > Okay, understood.
+> > > 
+> > > However in the absence of a device_link from the HDA device (consumer)
+> > > to the GPU (supplier), there's no guarantee that the GPU is resumed
+> > > when the HDA device needs it due to the asynchronous invocation of
+> > > the ->suspend hooks.  This is assuming that the HDA device already
+> > > needs the GPU during ->suspend phase.
+> > 
+> > i915 has ->resume_early and ->suspend_late hooks that provides the above
+> > guarantee.
 > 
-> Please drop this patch from the series.  I just now sent Rob an
-> alternative that reflects other changes that have occurred since
-> this patch series was first created many, many moons ago
-> (https://lkml.org/lkml/2017/4/6/53).
-
-Fine by me too - if we can get rid of that dubious fixup altogether, all
-the better. Feel free to transfer my Reviewed-by to your patch if you like.
-
-Thanks,
-Robin.
-
-> Thanks,
+> Employing device links is preferable IMO:
 > 
-> Frank
+> * Less code.  Just find the HDA device in your ->probe hook and call
+>   device_link_add().  Alternatively do it from the HDA driver.  Even
+>   adding the link from both drivers should be fine.  I can provide
+>   you with an evaluation patch if you'd like.
 > 
->>
->> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
->> Signed-off-by: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
->> ---
->>  drivers/of/address.c | 20 ++++++++++++++++++--
->>  drivers/of/device.c  | 15 ---------------
->>  2 files changed, 18 insertions(+), 17 deletions(-)
->>
->> diff --git a/drivers/of/address.c b/drivers/of/address.c
->> index 02b2903..6aeb816 100644
->> --- a/drivers/of/address.c
->> +++ b/drivers/of/address.c
->> @@ -819,8 +819,8 @@ void __iomem *of_io_request_and_map(struct device_node *np, int index,
->>   *	CPU addr (phys_addr_t)	: pna cells
->>   *	size			: nsize cells
->>   *
->> - * It returns -ENODEV if "dma-ranges" property was not found
->> - * for this device in DT.
->> + * Return 0 on success, -ENODEV if the "dma-ranges" property was not found for
->> + * this device in DT, or -EINVAL if the CPU address or size is invalid.
->>   */
->>  int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *size)
->>  {
->> @@ -880,6 +880,22 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
->>  	*dma_addr = dmaaddr;
->>  
->>  	*size = of_read_number(ranges + naddr + pna, nsize);
->> +	/*
->> +	 * DT nodes sometimes incorrectly set the size as a mask. Work around
->> +	 * those incorrect DT by computing the size as mask + 1.
->> +	 */
->> +	if (*size & 1) {
->> +		pr_warn("%s: size 0x%llx for dma-range in node(%s) set as mask\n",
->> +			__func__, *size, np->full_name);
->> +		*size = *size + 1;
->> +	}
->> +
->> +	if (!*size) {
->> +		pr_err("%s: invalid size zero for dma-range in node(%s)\n",
->> +		       __func__, np->full_name);
->> +		ret = -EINVAL;
->> +		goto out;
->> +	}
->>  
->>  	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
->>  		 *dma_addr, *paddr, *size);
->> diff --git a/drivers/of/device.c b/drivers/of/device.c
->> index b1e6beb..09dedd0 100644
->> --- a/drivers/of/device.c
->> +++ b/drivers/of/device.c
->> @@ -110,21 +110,6 @@ void of_dma_configure(struct device *dev, struct device_node *np)
->>  		size = dev->coherent_dma_mask + 1;
->>  	} else {
->>  		offset = PFN_DOWN(paddr - dma_addr);
->> -
->> -		/*
->> -		 * Add a work around to treat the size as mask + 1 in case
->> -		 * it is defined in DT as a mask.
->> -		 */
->> -		if (size & 1) {
->> -			dev_warn(dev, "Invalid size 0x%llx for dma-range\n",
->> -				 size);
->> -			size = size + 1;
->> -		}
->> -
->> -		if (!size) {
->> -			dev_err(dev, "Adjusted size 0x%llx invalid\n", size);
->> -			return;
->> -		}
->>  		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->>  	}
->>  
->>
+> * Avoidance of doing things behind the PM core's back.
+> 
+> * Takes care of more stuff than just system sleep (e.g. shutdown ordering).
 
+Yes, device_links is something to consider for the future, however not
+for this fix which needs to be backported and which also addresses the
+other issue I mentioned in the commit log.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+--Imre
