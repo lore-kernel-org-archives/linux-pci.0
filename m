@@ -1,80 +1,95 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 25/27] ia64: Use generic pci_mmap_resource_range()
-Date: Wed, 12 Apr 2017 13:26:14 +0100
-Message-Id: <109e9ddbde4334d0da34f331797236309d789353.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <SRS0=0hWc=4B=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=0hWc=4B=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models 30h-3fh) Processors v2
+Date: Tue, 25 Apr 2017 15:19:53 +0200
+Message-Id: <1493126394-1239-4-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
+References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+From: Christian König <christian.koenig@amd.com>
 
-Now that we eliminated the different behaviour in separately-reviewable
-commits, we can switch IA64 to the generic implementation.
+Most BIOS don't enable this because of compatibility reasons.
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+Manually enable a 64bit BAR of 64GB size so that we have
+enough room for PCI devices.
+
+v2: style cleanups, increase size, add resource name, set correct flags,
+    print message that windows was added
+
+Signed-off-by: Christian König <christian.koenig@amd.com>
 ---
- arch/ia64/include/asm/pci.h |  1 +
- arch/ia64/pci/pci.c         | 30 ------------------------------
- 2 files changed, 1 insertion(+), 30 deletions(-)
+ arch/x86/pci/fixup.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
 
-diff --git a/arch/ia64/include/asm/pci.h b/arch/ia64/include/asm/pci.h
-index fc60b3d..6459f2d 100644
---- a/arch/ia64/include/asm/pci.h
-+++ b/arch/ia64/include/asm/pci.h
-@@ -51,6 +51,7 @@ extern unsigned long ia64_max_iommu_merge_mask;
- #define PCI_DMA_BUS_IS_PHYS	(ia64_max_iommu_merge_mask == ~0UL)
- 
- #define HAVE_PCI_MMAP
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE
- #define arch_can_pci_mmap_wc()	1
- 
- #define HAVE_PCI_LEGACY
-diff --git a/arch/ia64/pci/pci.c b/arch/ia64/pci/pci.c
-index 7438e8c..4068bde 100644
---- a/arch/ia64/pci/pci.c
-+++ b/arch/ia64/pci/pci.c
-@@ -418,36 +418,6 @@ pcibios_align_resource (void *data, const struct resource *res,
- 	return res->start;
- }
- 
--int
--pci_mmap_page_range (struct pci_dev *dev, int bar,
--		     struct vm_area_struct *vma,
--		     enum pci_mmap_state mmap_state, int write_combine)
--{
--	/*
--	 * I/O space cannot be accessed via normal processor loads and
--	 * stores on this platform.
--	 */
--	if (mmap_state == pci_mmap_io)
--		/*
--		 * XXX we could relax this for I/O spaces for which ACPI
--		 * indicates that the space is 1-to-1 mapped.  But at the
--		 * moment, we don't support multiple PCI address spaces and
--		 * the legacy I/O space is not 1-to-1 mapped, so this is moot.
--		 */
--		return -EINVAL;
--
--	if (write_combine)
--		vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
--	else
--		vma->vm_page_prot = pgprot_device(vma->vm_page_prot);
--
--	if (remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			     vma->vm_end - vma->vm_start, vma->vm_page_prot))
--		return -EAGAIN;
--
--	return 0;
--}
--
- /**
-  * ia64_pci_get_legacy_mem - generic legacy mem routine
-  * @bus: bus to get legacy memory base address for
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 6d52b94..8d949c4 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -571,3 +571,56 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2fc0, pci_invalid_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6f60, pci_invalid_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fa0, pci_invalid_bar);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x6fc0, pci_invalid_bar);
++
++static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
++{
++	uint32_t base, limit, high;
++	struct resource *res, *conflict;
++	unsigned i;
++
++	for (i = 0; i < 8; ++i) {
++		pci_read_config_dword(dev, 0x80 + i * 0x8, &base);
++		pci_read_config_dword(dev, 0x180 + i * 0x4, &high);
++
++		/* Is this slot free? */
++		if ((base & 0x3) == 0x0)
++			break;
++
++		base >>= 8;
++		base |= high << 24;
++
++		/* Abort if a slot already configures a 64bit BAR. */
++		if (base > 0x10000)
++			return;
++	}
++	if (i == 8)
++		return;
++
++	res = kzalloc(sizeof(*res), GFP_KERNEL);
++	if (!res)
++		return;
++
++	res->name = "PCI Bus 0000:00";
++	res->flags = IORESOURCE_PREFETCH | IORESOURCE_MEM |
++		IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
++	res->start = 0x100000000;
++	res->end = 0xfd00000000 - 1;
++
++	/* Just grab the free area behind system memory for this */
++	while ((conflict = request_resource_conflict(&iomem_resource, res)))
++		res->start = conflict->end + 1;
++
++	dev_info(&dev->dev, "adding root bus resource %pR\n", res);
++
++	base = ((res->start >> 8) & 0xffffff00) | 0x3;
++	limit = ((res->end + 1) >> 8) & 0xffffff00;
++	high = ((res->start >> 40) & 0xff) |
++		((((res->end + 1) >> 40) & 0xff) << 16);
++
++	pci_write_config_dword(dev, 0x180 + i * 0x4, high);
++	pci_write_config_dword(dev, 0x84 + i * 0x8, limit);
++	pci_write_config_dword(dev, 0x80 + i * 0x8, base);
++
++	pci_bus_add_resource(dev->bus, res, 0);
++}
++DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_AMD, 0x141b, pci_amd_enable_64bit_bar);
 -- 
-2.9.3
+2.7.4
