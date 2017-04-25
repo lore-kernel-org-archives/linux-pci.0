@@ -1,198 +1,195 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:57863 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934662AbdDFMZH (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 6 Apr 2017 08:25:07 -0400
-From: Christoph Hellwig <hch@lst.de>
-To: bhelgaas@google.com, davem@davemloft.net,
-        netanel@annapurnalabs.com, jcliburn@gmail.com,
-        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org
-Cc: netdev@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 2/4] net/ena: switch to pci_alloc_irq_vectors
-Date: Thu,  6 Apr 2017 14:24:46 +0200
-Message-Id: <20170406122448.31854-3-hch@lst.de>
-In-Reply-To: <20170406122448.31854-1-hch@lst.de>
-References: <20170406122448.31854-1-hch@lst.de>
+Received: from mga01.intel.com ([192.55.52.88]:64207 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1176807AbdDYK3O (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Apr 2017 06:29:14 -0400
+Date: Tue, 25 Apr 2017 13:28:58 +0300
+From: Imre Deak <imre.deak@intel.com>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: intel-gfx@lists.freedesktop.org,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Marta Lofstedt <marta.lofstedt@intel.com>,
+        David Weinehall <david.weinehall@linux.intel.com>,
+        Tomi Sarvela <tomi.p.sarvela@intel.com>,
+        Ville =?iso-8859-1?Q?Syrj=E4l=E4?=
+        <ville.syrjala@linux.intel.com>,
+        Mika Kuoppala <mika.kuoppala@intel.com>,
+        Chris Wilson <chris@chris-wilson.co.uk>,
+        Takashi Iwai <tiwai@suse.de>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] drm/i915: Prevent the system suspend complete
+ optimization
+Message-ID: <20170425102858.GC3719@ideak-desk.fi.intel.com>
+Reply-To: imre.deak@intel.com
+References: <1493044063-2095-1-git-send-email-imre.deak@intel.com>
+ <1493044063-2095-2-git-send-email-imre.deak@intel.com>
+ <20170424201638.GB9910@wunner.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20170424201638.GB9910@wunner.de>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Remove the deprecated pci_enable_msix API in favour of it's successor.
+On Mon, Apr 24, 2017 at 10:16:38PM +0200, Lukas Wunner wrote:
+> On Mon, Apr 24, 2017 at 05:27:43PM +0300, Imre Deak wrote:
+> > Since
+> > 
+> > commit bac2a909a096c9110525c18cbb8ce73c660d5f71
+> > Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Date:   Wed Jan 21 02:17:42 2015 +0100
+> > 
+> >     PCI / PM: Avoid resuming PCI devices during system suspend
+> 
+> This is not the commit you are looking for. :-)  See below.
+> 
+> 
+> > PCI devices will default to allowing the system suspend complete
+> > optimization where devices are not woken up during system suspend if
+> > they were already runtime suspended. This however breaks the i915/HDA
+> > drivers for two reasons:
+> > 
+> > - The i915 driver has system suspend specific steps that it needs to
+> >   run, that bring the device to a different state than its runtime
+> >   suspended state.
+> > 
+> > - The HDA driver's suspend handler requires power that it will request
+> >   from the i915 driver's power domain handler. This in turn requires the
+> >   i915 driver to runtime resume itself, but this won't be possible if the
+> >   suspend complete optimization is in effect: in this case the i915
+> >   runtime PM is disabled and trying to get an RPM reference returns
+> >   -EACCESS.
+> 
+> Hm, sounds like something that needs to be solved with device_links.
+> 
+> 
+> > 
+> > Solve this by requiring the PCI/PM core to resume the device during
+> > system suspend which in effect disables the suspend complete optimization.
+> > 
+> > One possibility for this bug staying hidden for so long is that the
+> > optimization for a device is disabled if it's disabled for any of its
+> > children devices. i915 may have a backlight device as its child which
+> > doesn't support runtime PM and so doesn't allow the optimization either.
+> > So if this backlight device got registered the bug stayed hidden.
+> 
+> No, the reason this hasn't popped up earlier is because direct_complete
+> has only been enabled for DRM devices for a few months now, to be specific
+> since
+> 
+>     commit d14d2a8453d650bea32a1c5271af1458cd283a0f
+>     Author: Lukas Wunner <lukas@wunner.de>
+>     Date:   Wed Jun 8 12:49:29 2016 +0200
+> 
+>     drm: Remove dev_pm_ops from drm_class
+> 
+> which landed in v4.8.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/net/ethernet/amazon/ena/ena_netdev.c | 55 ++++++----------------------
- drivers/net/ethernet/amazon/ena/ena_netdev.h |  2 -
- 2 files changed, 12 insertions(+), 45 deletions(-)
+Right, this kept the optimization disabled even after bac2a909a096c91.
+It did stay disabled on platforms with a backlight driver registered as
+described above.
 
-diff --git a/drivers/net/ethernet/amazon/ena/ena_netdev.c b/drivers/net/ethernet/amazon/ena/ena_netdev.c
-index 35f19430c84a..7c1214d78855 100644
---- a/drivers/net/ethernet/amazon/ena/ena_netdev.c
-+++ b/drivers/net/ethernet/amazon/ena/ena_netdev.c
-@@ -133,7 +133,7 @@ static int ena_init_rx_cpu_rmap(struct ena_adapter *adapter)
- 		int irq_idx = ENA_IO_IRQ_IDX(i);
- 
- 		rc = irq_cpu_rmap_add(adapter->netdev->rx_cpu_rmap,
--				      adapter->msix_entries[irq_idx].vector);
-+				      pci_irq_vector(adapter->pdev, irq_idx));
- 		if (rc) {
- 			free_irq_cpu_rmap(adapter->netdev->rx_cpu_rmap);
- 			adapter->netdev->rx_cpu_rmap = NULL;
-@@ -1208,13 +1208,7 @@ static irqreturn_t ena_intr_msix_io(int irq, void *data)
- 
- static int ena_enable_msix(struct ena_adapter *adapter, int num_queues)
- {
--	int i, msix_vecs, rc;
--
--	if (test_bit(ENA_FLAG_MSIX_ENABLED, &adapter->flags)) {
--		netif_err(adapter, probe, adapter->netdev,
--			  "Error, MSI-X is already enabled\n");
--		return -EPERM;
--	}
-+	int msix_vecs, rc;
- 
- 	/* Reserved the max msix vectors we might need */
- 	msix_vecs = ENA_MAX_MSIX_VEC(num_queues);
-@@ -1222,16 +1216,9 @@ static int ena_enable_msix(struct ena_adapter *adapter, int num_queues)
- 	netif_dbg(adapter, probe, adapter->netdev,
- 		  "trying to enable MSI-X, vectors %d\n", msix_vecs);
- 
--	adapter->msix_entries = vzalloc(msix_vecs * sizeof(struct msix_entry));
--
--	if (!adapter->msix_entries)
--		return -ENOMEM;
--
--	for (i = 0; i < msix_vecs; i++)
--		adapter->msix_entries[i].entry = i;
--
--	rc = pci_enable_msix(adapter->pdev, adapter->msix_entries, msix_vecs);
--	if (rc != 0) {
-+	rc = pci_alloc_irq_vectors(adapter->pdev, msix_vecs, msix_vecs,
-+			PCI_IRQ_MSIX);
-+	if (rc < 0) {
- 		netif_err(adapter, probe, adapter->netdev,
- 			  "Failed to enable MSI-X, vectors %d rc %d\n",
- 			  msix_vecs, rc);
-@@ -1248,7 +1235,6 @@ static int ena_enable_msix(struct ena_adapter *adapter, int num_queues)
- 	}
- 
- 	adapter->msix_vecs = msix_vecs;
--	set_bit(ENA_FLAG_MSIX_ENABLED, &adapter->flags);
- 
- 	return 0;
- }
-@@ -1264,7 +1250,7 @@ static void ena_setup_mgmnt_intr(struct ena_adapter *adapter)
- 		ena_intr_msix_mgmnt;
- 	adapter->irq_tbl[ENA_MGMNT_IRQ_IDX].data = adapter;
- 	adapter->irq_tbl[ENA_MGMNT_IRQ_IDX].vector =
--		adapter->msix_entries[ENA_MGMNT_IRQ_IDX].vector;
-+		pci_irq_vector(adapter->pdev, ENA_MGMNT_IRQ_IDX);
- 	cpu = cpumask_first(cpu_online_mask);
- 	adapter->irq_tbl[ENA_MGMNT_IRQ_IDX].cpu = cpu;
- 	cpumask_set_cpu(cpu,
-@@ -1287,7 +1273,7 @@ static void ena_setup_io_intr(struct ena_adapter *adapter)
- 		adapter->irq_tbl[irq_idx].handler = ena_intr_msix_io;
- 		adapter->irq_tbl[irq_idx].data = &adapter->ena_napi[i];
- 		adapter->irq_tbl[irq_idx].vector =
--			adapter->msix_entries[irq_idx].vector;
-+			pci_irq_vector(adapter->pdev, irq_idx);
- 		adapter->irq_tbl[irq_idx].cpu = cpu;
- 
- 		cpumask_set_cpu(cpu,
-@@ -1325,12 +1311,6 @@ static int ena_request_io_irq(struct ena_adapter *adapter)
- 	struct ena_irq *irq;
- 	int rc = 0, i, k;
- 
--	if (!test_bit(ENA_FLAG_MSIX_ENABLED, &adapter->flags)) {
--		netif_err(adapter, ifup, adapter->netdev,
--			  "Failed to request I/O IRQ: MSI-X is not enabled\n");
--		return -EINVAL;
--	}
--
- 	for (i = ENA_IO_IRQ_FIRST_IDX; i < adapter->msix_vecs; i++) {
- 		irq = &adapter->irq_tbl[i];
- 		rc = request_irq(irq->vector, irq->handler, flags, irq->name,
-@@ -1389,16 +1369,6 @@ static void ena_free_io_irq(struct ena_adapter *adapter)
- 	}
- }
- 
--static void ena_disable_msix(struct ena_adapter *adapter)
--{
--	if (test_and_clear_bit(ENA_FLAG_MSIX_ENABLED, &adapter->flags))
--		pci_disable_msix(adapter->pdev);
--
--	if (adapter->msix_entries)
--		vfree(adapter->msix_entries);
--	adapter->msix_entries = NULL;
--}
--
- static void ena_disable_io_intr_sync(struct ena_adapter *adapter)
- {
- 	int i;
-@@ -2479,8 +2449,7 @@ static int ena_enable_msix_and_set_admin_interrupts(struct ena_adapter *adapter,
- 	return 0;
- 
- err_disable_msix:
--	ena_disable_msix(adapter);
--
-+	pci_free_irq_vectors(adapter->pdev);
- 	return rc;
- }
- 
-@@ -2518,7 +2487,7 @@ static void ena_fw_reset_device(struct work_struct *work)
- 
- 	ena_free_mgmnt_irq(adapter);
- 
--	ena_disable_msix(adapter);
-+	pci_free_irq_vectors(adapter->pdev);
- 
- 	ena_com_abort_admin_commands(ena_dev);
- 
-@@ -2569,7 +2538,7 @@ static void ena_fw_reset_device(struct work_struct *work)
- 	return;
- err_disable_msix:
- 	ena_free_mgmnt_irq(adapter);
--	ena_disable_msix(adapter);
-+	pci_free_irq_vectors(adapter->pdev);
- err_device_destroy:
- 	ena_com_admin_destroy(ena_dev);
- err:
-@@ -3103,7 +3072,7 @@ static int ena_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- err_free_msix:
- 	ena_com_dev_reset(ena_dev);
- 	ena_free_mgmnt_irq(adapter);
--	ena_disable_msix(adapter);
-+	pci_free_irq_vectors(adapter->pdev);
- err_worker_destroy:
- 	ena_com_destroy_interrupt_moderation(ena_dev);
- 	del_timer(&adapter->timer_service);
-@@ -3188,7 +3157,7 @@ static void ena_remove(struct pci_dev *pdev)
- 
- 	ena_free_mgmnt_irq(adapter);
- 
--	ena_disable_msix(adapter);
-+	pci_free_irq_vectors(adapter->pdev);
- 
- 	free_netdev(netdev);
- 
-diff --git a/drivers/net/ethernet/amazon/ena/ena_netdev.h b/drivers/net/ethernet/amazon/ena/ena_netdev.h
-index ed62d8e231a1..0e22bce6239d 100644
---- a/drivers/net/ethernet/amazon/ena/ena_netdev.h
-+++ b/drivers/net/ethernet/amazon/ena/ena_netdev.h
-@@ -248,7 +248,6 @@ enum ena_flags_t {
- 	ENA_FLAG_DEVICE_RUNNING,
- 	ENA_FLAG_DEV_UP,
- 	ENA_FLAG_LINK_UP,
--	ENA_FLAG_MSIX_ENABLED,
- 	ENA_FLAG_TRIGGER_RESET
- };
- 
-@@ -267,7 +266,6 @@ struct ena_adapter {
- 
- 	int num_queues;
- 
--	struct msix_entry *msix_entries;
- 	int msix_vecs;
- 
- 	u32 tx_usecs, rx_usecs; /* interrupt moderation */
--- 
-2.11.0
+--Imre
+
+> 
+> (Sorry for not raising my voice earlier, this patch appeared on my radar
+> just now.)
+> 
+> Kind regards,
+> 
+> Lukas
+> 
+> > 
+> > Credits to Marta, Tomi and David who enabled pstore logging,
+> > that caught one instance of this issue across a suspend/
+> > resume-to-ram and Ville who rememberd that the optimization was enabled
+> > for some devices at one point.
+> > 
+> > The first WARN triggered by the problem:
+> > 
+> > [ 6250.746445] WARNING: CPU: 2 PID: 17384 at drivers/gpu/drm/i915/intel_runtime_pm.c:2846 intel_runtime_pm_get+0x6b/0xd0 [i915]
+> > [ 6250.746448] pm_runtime_get_sync() failed: -13
+> > [ 6250.746451] Modules linked in: snd_hda_intel i915 vgem snd_hda_codec_hdmi x86_pkg_temp_thermal intel_powerclamp coretemp crct10dif_pclmul crc32_pclmul
+> > snd_hda_codec_realtek snd_hda_codec_generic ghash_clmulni_intel e1000e snd_hda_codec snd_hwdep snd_hda_core ptp mei_me pps_core snd_pcm lpc_ich mei prime_
+> > numbers i2c_hid i2c_designware_platform i2c_designware_core [last unloaded: i915]
+> > [ 6250.746512] CPU: 2 PID: 17384 Comm: kworker/u8:0 Tainted: G     U  W       4.11.0-rc5-CI-CI_DRM_334+ #1
+> > [ 6250.746515] Hardware name:                  /NUC5i5RYB, BIOS RYBDWi35.86A.0362.2017.0118.0940 01/18/2017
+> > [ 6250.746521] Workqueue: events_unbound async_run_entry_fn
+> > [ 6250.746525] Call Trace:
+> > [ 6250.746530]  dump_stack+0x67/0x92
+> > [ 6250.746536]  __warn+0xc6/0xe0
+> > [ 6250.746542]  ? pci_restore_standard_config+0x40/0x40
+> > [ 6250.746546]  warn_slowpath_fmt+0x46/0x50
+> > [ 6250.746553]  ? __pm_runtime_resume+0x56/0x80
+> > [ 6250.746584]  intel_runtime_pm_get+0x6b/0xd0 [i915]
+> > [ 6250.746610]  intel_display_power_get+0x1b/0x40 [i915]
+> > [ 6250.746646]  i915_audio_component_get_power+0x15/0x20 [i915]
+> > [ 6250.746654]  snd_hdac_display_power+0xc8/0x110 [snd_hda_core]
+> > [ 6250.746661]  azx_runtime_resume+0x218/0x280 [snd_hda_intel]
+> > [ 6250.746667]  pci_pm_runtime_resume+0x76/0xa0
+> > [ 6250.746672]  __rpm_callback+0xb4/0x1f0
+> > [ 6250.746677]  ? pci_restore_standard_config+0x40/0x40
+> > [ 6250.746682]  rpm_callback+0x1f/0x80
+> > [ 6250.746686]  ? pci_restore_standard_config+0x40/0x40
+> > [ 6250.746690]  rpm_resume+0x4ba/0x740
+> > [ 6250.746698]  __pm_runtime_resume+0x49/0x80
+> > [ 6250.746703]  pci_pm_suspend+0x57/0x140
+> > [ 6250.746709]  dpm_run_callback+0x6f/0x330
+> > [ 6250.746713]  ? pci_pm_freeze+0xe0/0xe0
+> > [ 6250.746718]  __device_suspend+0xf9/0x370
+> > [ 6250.746724]  ? dpm_watchdog_set+0x60/0x60
+> > [ 6250.746730]  async_suspend+0x1a/0x90
+> > [ 6250.746735]  async_run_entry_fn+0x34/0x160
+> > [ 6250.746741]  process_one_work+0x1f2/0x6d0
+> > [ 6250.746749]  worker_thread+0x49/0x4a0
+> > [ 6250.746755]  kthread+0x107/0x140
+> > [ 6250.746759]  ? process_one_work+0x6d0/0x6d0
+> > [ 6250.746763]  ? kthread_create_on_node+0x40/0x40
+> > [ 6250.746768]  ret_from_fork+0x2e/0x40
+> > [ 6250.746778] ---[ end trace 102a62fd2160f5e6 ]---
+> > 
+> > v2:
+> > - Use the new pci_dev->needs_resume flag, to avoid any overhead during
+> >   the ->pm_prepare hook. (Rafael)
+> > 
+> > Fixes: bac2a909a096 ("PCI / PM: Avoid resuming PCI devices during system suspend")
+> > References: https://bugs.freedesktop.org/show_bug.cgi?id=100378
+> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Cc: Marta Lofstedt <marta.lofstedt@intel.com>
+> > Cc: David Weinehall <david.weinehall@linux.intel.com>
+> > Cc: Tomi Sarvela <tomi.p.sarvela@intel.com>
+> > Cc: Ville Syrjälä <ville.syrjala@linux.intel.com>
+> > Cc: Mika Kuoppala <mika.kuoppala@intel.com>
+> > Cc: Chris Wilson <chris@chris-wilson.co.uk>
+> > Cc: Takashi Iwai <tiwai@suse.de>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: linux-pci@vger.kernel.org
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Imre Deak <imre.deak@intel.com>
+> > Reviewed-by: Chris Wilson <chris@chris-wilson.co.uk> (v1)
+> > ---
+> >  drivers/gpu/drm/i915/i915_drv.c | 9 +++++++++
+> >  1 file changed, 9 insertions(+)
+> > 
+> > diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
+> > index 8be958f..dd7ce69 100644
+> > --- a/drivers/gpu/drm/i915/i915_drv.c
+> > +++ b/drivers/gpu/drm/i915/i915_drv.c
+> > @@ -1207,6 +1207,15 @@ int i915_driver_load(struct pci_dev *pdev, const struct pci_device_id *ent)
+> >  		goto out_free_priv;
+> >  
+> >  	pci_set_drvdata(pdev, &dev_priv->drm);
+> > +	/*
+> > +	 * Disable the system suspend direct complete optimization, which can
+> > +	 * leave the device suspended skipping the driver's suspend handlers
+> > +	 * if the device was already runtime suspended. This is needed due to
+> > +	 * the difference in our runtime and system suspend sequence and
+> > +	 * becaue the HDA driver may require us to enable the audio power
+> > +	 * domain during system suspend.
+> > +	 */
+> > +	pci_resume_before_suspend(pdev, true);
+> >  
+> >  	ret = i915_driver_init_early(dev_priv, ent);
+> >  	if (ret < 0)
+> > -- 
+> > 2.5.0
+> > 
