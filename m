@@ -1,24 +1,57 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: David Howells <dhowells@redhat.com>
-In-Reply-To: <15683b749605aa5e6733a587d495a8eab596f0e8.1491999859.git.dwmw2@infradead.org>
-References: <15683b749605aa5e6733a587d495a8eab596f0e8.1491999859.git.dwmw2@infradead.org> <cover.1491999859.git.dwmw2@infradead.org> <cover.1491999859.git.dwmw2@infradead.org>
-To: David Woodhouse <dwmw2@infradead.org>
-Cc: dhowells@redhat.com, linux-pci@vger.kernel.org,
-        linux-arch@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 14/27] mn10300: Use generic pci_mmap_resource_range()
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:58180 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934374AbdDYTj7 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 25 Apr 2017 15:39:59 -0400
+Date: Tue, 25 Apr 2017 14:39:55 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Byczkowski, Jakub" <jakub.byczkowski@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "Cabiddu, Giovanni" <giovanni.cabiddu@intel.com>,
+        "Benedetto, Salvatore" <salvatore.benedetto@intel.com>,
+        "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
+        "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
+        Derek Chickles <derek.chickles@caviumnetworks.com>,
+        Satanand Burla <satananda.burla@caviumnetworks.com>,
+        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
+        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
+        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        qat-linux <qat-linux@intel.com>,
+        "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 5/7] IB/hfi1: use pcie_flr instead of duplicating it
+Message-ID: <20170425193955.GC29024@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170414191131.14286-1-hch@lst.de>
+ <20170414191131.14286-6-hch@lst.de>
+ <A33E225544E47D4DB5713032774B132783960382@irsmsx105.ger.corp.intel.com>
+ <20170424143507.GA28812@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Date: Thu, 13 Apr 2017 10:22:03 +0100
-Message-ID: <16480.1492075323@warthog.procyon.org.uk>
-Sender: linux-arch-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170424143507.GA28812@lst.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-David Woodhouse <dwmw2@infradead.org> wrote:
-
-> From: David Woodhouse <dwmw@amazon.co.uk>
+On Mon, Apr 24, 2017 at 04:35:07PM +0200, Christoph Hellwig wrote:
+> On Mon, Apr 24, 2017 at 02:16:31PM +0000, Byczkowski, Jakub wrote:
+> > Tested-by: Jakub Byczkowski <jakub.byczkowski@intel.com>
 > 
-> This was setting vma->vm_flags |= VM_LOCKED. Not sure why...
-> 
-> Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
+> Are you (and Doug) ok with queueing this up in the PCI tree?
 
-Reviewed-by: David Howells <dhowells@redhat.com>
+Applied this with Jakub's tested-by and Doug's ack to pci/virtualization
+for v4.12.
+
+This still leaves these:
+
+  [PATCH 4/7] ixgbe: use pcie_flr instead of duplicating it
+  [PATCH 6/7] crypto: qat: use pcie_flr instead of duplicating it
+  [PATCH 7/7] liquidio: use pcie_flr instead of duplicating it
+
+I haven't seen any response to 4 and 6.  Felix reported an unused
+variable in 7.  Let me know if you'd like me to do anything with
+these.
+
+Bjorn
