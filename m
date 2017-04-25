@@ -1,108 +1,201 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=0hWc=4B=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=0hWc=4B=vodafone.de=deathsimple@kernel.org>
+Subject: Re: [PATCH 4/4] drm/amdgpu: resize VRAM BAR for CPU access v2
+To: Alex Deucher <alexdeucher@gmail.com>
+References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
+ <1493126394-1239-5-git-send-email-deathsimple@vodafone.de>
+ <CADnq5_NHDo3Y0Ao_5uWQ=Q2mb5-qYZu9Z-cx1M48cfD0rxMi2w@mail.gmail.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Linux PCI
+ <linux-pci@vger.kernel.org>,
+ Maling list - DRI developers <dri-devel@lists.freedesktop.org>,
+ platform-driver-x86@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
+Message-ID: <9d345f33-a291-1647-9d03-d0df17733b14@vodafone.de>
+Date: Tue, 25 Apr 2017 17:09:53 +0200
 MIME-Version: 1.0
-In-Reply-To: <1491394571.2904.44.camel@pengutronix.de>
-References: <1448902811-11399-1-git-send-email-l.stach@pengutronix.de>
- <1448902811-11399-2-git-send-email-l.stach@pengutronix.de>
- <CAJ+vNU2Fb7gpO0LsoVpPbUX5rSyH3yC4K30JpAf5j7aQkDH9tw@mail.gmail.com>
- <1460708469.22710.4.camel@pengutronix.de>
- <CAJ+vNU1-M3qSODKHMf872kfOsH0g9xFgKNEgKqiJu6A8z-ChxA@mail.gmail.com>
- <CAJ+vNU0+ksyYCpydpmcJOO-w0v4D0axvG84wK7f09iK_1yzo_A@mail.gmail.com>
- <001c01d2ad85$b06af1a0$1140d4e0$@gmail.com>
- <6eb58d54-b6e8-b709-c7f9-fa19d52cd492@synopsys.com>
- <1491394571.2904.44.camel@pengutronix.de>
-From: Tim Harvey <tharvey@gateworks.com>
-Date: Tue, 11 Apr 2017 09:05:00 -0700
-Message-ID: <CAJ+vNU2MG66ruQ87TmSrVCtWfHwGc3s=_NG-ysgV2uyJzzskiQ@mail.gmail.com>
-Subject: Re: [PATCH 2/2] ARM: imx_v6_v7_defconfig: enable PCI_MSI
-To: Lucas Stach <l.stach@pengutronix.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Joao Pinto <Joao.Pinto@synopsys.com>, Jingoo Han <jingoohan1@gmail.com>,
- patchwork-lst@pengutronix.de,
- =?UTF-8?Q?Krzysztof_Ha=C5=82asa?= <khalasa@piap.pl>,
- Sascha Hauer <kernel@pengutronix.de>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Shawn Guo <shawnguo@kernel.org>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CADnq5_NHDo3Y0Ao_5uWQ=Q2mb5-qYZu9Z-cx1M48cfD0rxMi2w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 5, 2017 at 5:16 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
-> Am Mittwoch, den 05.04.2017, 13:07 +0100 schrieb Joao Pinto:
-> [...]
->> >>> Lucas,
->> >>>
->> >>> I feel a bit dumb here for forgetting about this issue and letting it
->> >>> drop, but I've just spent a day debugging an issue with the ath9k
->> >>> wireless driver only to realize it was that the ath9k card and/or
->> >>> driver doesn't support MSI interrupts and thus no longer work on
->> >>> mainline kernels that have MSI enabled. To be honest I'm not sure how
->> >>> many PCIe devices out there can't support MSI because of hardware
->> >>> limitations vs drivers that simply have not implemented it.
->> >>>
->> >>> To make matters worse 3ee803641e76bea76ec730c80dcc64739a9919ff makes
->> >>> it such that you can't disable MSI on the IMX6.
->> >>>
->> >>> Is there some fix you can think of to make the IMX6 PCIe host
->> >>> controller raise an interrupt for cards/drivers that use legacy irq's?
->> >>> If not, then we need to allow MSI to be disabled for IMX6 and default
->> >>> it to disabled for compatibility.
->> >>>
->> >>
->> >> Joao / Jingoo,
->> >>
->> >> (Adding linux-pci to the list to pick up maintainers of other DWC PCIe
->> >> core drivers)
->> >>
->> >> Is Luca's statement that 'legacy IRQs and MSIs can't be used together'
->> >> true in general for the DW PCIe core? If any of the host controllers
->> >> using this core can't support both legacy and MSI irqs together I
->> >> still believe we shouldn't enable/require MSI as it breaks any
->> >> card/driver that only supports legacy interrupts (such as ath9k).
->> >
->> > If there are 2 DW PCIe controllers, one controller can be used for legacy
->> > and another controller can be used for MSI.
->> >
->> > But, I am not sure that one DW PCIe controller can support both MSI device
->> > and legacy interrupt device at the same time.
->> >
->> > To Joao Pinto,
->> > Will you confirm this?
->> >
+Am 25.04.2017 um 16:34 schrieb Alex Deucher:
+> On Tue, Apr 25, 2017 at 9:19 AM, Christian König
+> <deathsimple@vodafone.de> wrote:
+>> From: Christian König <christian.koenig@amd.com>
 >>
->> Hi Jingoo,
->> I confirm that if a RC has MSI enable, it won't support legacy interrupts.
+>> Try to resize BAR0 to let CPU access all of VRAM.
+>>
+>> v2: rebased, style cleanups, disable mem decode before resize,
+>>      handle gmc_v9 as well, round size up to power of two.
+>>
+>> Signed-off-by: Christian König <christian.koenig@amd.com>
+>> ---
+>>   drivers/gpu/drm/amd/amdgpu/amdgpu.h        |  1 +
+>>   drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 37 ++++++++++++++++++++++++++++++
+>>   drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c      |  8 ++++---
+>>   drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c      |  8 ++++---
+>>   drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c      | 10 ++++----
+>>   5 files changed, 54 insertions(+), 10 deletions(-)
+>>
+>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu.h b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>> index 4a16e3c..9484062 100644
+>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu.h
+>> @@ -1879,6 +1879,7 @@ uint64_t amdgpu_ttm_tt_pte_flags(struct amdgpu_device *adev, struct ttm_tt *ttm,
+>>                                   struct ttm_mem_reg *mem);
+>>   void amdgpu_vram_location(struct amdgpu_device *adev, struct amdgpu_mc *mc, u64 base);
+>>   void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc);
+>> +void amdgpu_resize_bar0(struct amdgpu_device *adev);
+>>   void amdgpu_ttm_set_active_vram_size(struct amdgpu_device *adev, u64 size);
+>>   int amdgpu_ttm_init(struct amdgpu_device *adev);
+>>   void amdgpu_ttm_fini(struct amdgpu_device *adev);
+>> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>> index a09ad3cf..d5ca77a 100644
+>> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
+>> @@ -695,6 +695,43 @@ void amdgpu_gtt_location(struct amdgpu_device *adev, struct amdgpu_mc *mc)
+>>                          mc->gtt_size >> 20, mc->gtt_start, mc->gtt_end);
+>>   }
+>>
+>> +/**
+>> + * amdgpu_resize_bar0 - try to resize BAR0
+>> + *
+>> + * @adev: amdgpu_device pointer
+>> + *
+>> + * Try to resize BAR0 to make all VRAM CPU accessible.
+>> + */
+>> +void amdgpu_resize_bar0(struct amdgpu_device *adev)
+> I'd suggest renaming this to amdgpu_device_resize_bar() to try and
+> impose some consistency in this file, but not a big deal either way.
 >
-> Okay, so the only way to solve this in a generic way, that I can see at
-> the moment is to defer MSI enable until the downstream device actually
-> requests an MSI irq.
+>> +{
+>> +       u64 space_needed = roundup_pow_of_two(adev->mc.real_vram_size);
+>> +       u32 rbar_size = order_base_2(((space_needed >> 20) | 1)) -1;
+>> +       u16 cmd;
+>> +       int r;
+>> +
+>> +       /* Free the doorbell mapping, it most likely needs to move as well */
+>> +       amdgpu_doorbell_fini(adev);
+>> +       pci_release_resource(adev->pdev, 2);
+> This should check for if (adev->asic_type >= CHIP_BONAIRE) since SI
+> didn't have doorbells.
 >
-> Also we need to disable the MSI capability if any bridge device turns up
-> during the bus topology scan, as we can have devices with conflicting
-> requirements connected to the RC in that case.
+>> +
+>> +       /* Disable memory decoding while we change the BAR addresses and size */
+>> +       pci_read_config_word(adev->pdev, PCI_COMMAND, &cmd);
+>> +       pci_write_config_word(adev->pdev, PCI_COMMAND,
+>> +                             cmd & ~PCI_COMMAND_MEMORY);
+>> +
+>> +       r = pci_resize_resource(adev->pdev, 0, rbar_size);
+>> +       if (r == -ENOSPC)
+>> +               DRM_INFO("Not enough PCI address space for a large BAR.");
+>> +       else if (r && r != -ENOTSUPP)
+>> +               DRM_ERROR("Problem resizing BAR0 (%d).", r);
+>> +
+>> +       pci_write_config_word(adev->pdev, PCI_COMMAND, cmd);
+>> +
+>> +       /* When the doorbell BAR isn't available we have no chance of
+>> +        * using the device.
+>> +        */
+>> +       BUG_ON(amdgpu_doorbell_init(adev));
+> Same here.
 >
-> I'll cook up some patches to implement this.
+>> +}
+>> +
+>>   /*
+>>    * GPU helpers function.
+>>    */
+>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>> index a9083a1..ae71524 100644
+> What about SI (gmc_v6_0.c)?
+
+As far as I know there is no SI hardware with resizeable BAR support.
+
+The all VI generation can do this, but I'm not 100% sure if there aren't 
+any Bonaires out there which can handle it as well that's why I added 
+gmc_v7 support.
+
+Still need to double check that.
+
+Christian.
+
 >
-
-Lucas,
-
-Any thoughts yet? I'll likely want to backport this to stable although
-the restructuring to drivers/pci/dwc and subsequent changes since 4.10
-will likely require a re-written patch.
-
-Best regards,
-
-Tim
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+> Alex
+>
+>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v7_0.c
+>> @@ -372,13 +372,15 @@ static int gmc_v7_0_mc_init(struct amdgpu_device *adev)
+>>                  }
+>>                  adev->mc.vram_width = numchan * chansize;
+>>          }
+>> -       /* Could aper size report 0 ? */
+>> -       adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
+>> -       adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+>>          /* size in MB on si */
+>>          adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+>>          adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+>>
+>> +       if (!(adev->flags & AMD_IS_APU))
+>> +               amdgpu_resize_bar0(adev);
+>> +       adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
+>> +       adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+>> +
+>>   #ifdef CONFIG_X86_64
+>>          if (adev->flags & AMD_IS_APU) {
+>>                  adev->mc.aper_base = ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
+>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>> index 4ac9978..1655de2 100644
+>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v8_0.c
+>> @@ -534,13 +534,15 @@ static int gmc_v8_0_mc_init(struct amdgpu_device *adev)
+>>                  }
+>>                  adev->mc.vram_width = numchan * chansize;
+>>          }
+>> -       /* Could aper size report 0 ? */
+>> -       adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
+>> -       adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+>>          /* size in MB on si */
+>>          adev->mc.mc_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+>>          adev->mc.real_vram_size = RREG32(mmCONFIG_MEMSIZE) * 1024ULL * 1024ULL;
+>>
+>> +       if (!(adev->flags & AMD_IS_APU))
+>> +               amdgpu_resize_bar0(adev);
+>> +       adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
+>> +       adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+>> +
+>>   #ifdef CONFIG_X86_64
+>>          if (adev->flags & AMD_IS_APU) {
+>>                  adev->mc.aper_base = ((u64)RREG32(mmMC_VM_FB_OFFSET)) << 22;
+>> diff --git a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
+>> index e5d4dfe..4bbef79 100644
+>> --- a/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
+>> +++ b/drivers/gpu/drm/amd/amdgpu/gmc_v9_0.c
+>> @@ -469,16 +469,18 @@ static int gmc_v9_0_mc_init(struct amdgpu_device *adev)
+>>          }
+>>          adev->mc.vram_width = numchan * chansize;
+>>
+>> -       /* Could aper size report 0 ? */
+>> -       adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
+>> -       adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+>>          /* size in MB on si */
+>>          adev->mc.mc_vram_size =
+>>                  nbio_v6_1_get_memsize(adev) * 1024ULL * 1024ULL;
+>>          adev->mc.real_vram_size = adev->mc.mc_vram_size;
+>> -       adev->mc.visible_vram_size = adev->mc.aper_size;
+>> +
+>> +       if (!(adev->flags & AMD_IS_APU))
+>> +               amdgpu_resize_bar0(adev);
+>> +       adev->mc.aper_base = pci_resource_start(adev->pdev, 0);
+>> +       adev->mc.aper_size = pci_resource_len(adev->pdev, 0);
+>>
+>>          /* In case the PCI BAR is larger than the actual amount of vram */
+>> +       adev->mc.visible_vram_size = adev->mc.aper_size;
+>>          if (adev->mc.visible_vram_size > adev->mc.real_vram_size)
+>>                  adev->mc.visible_vram_size = adev->mc.real_vram_size;
+>>
+>> --
+>> 2.7.4
+>>
+>> _______________________________________________
+>> dri-devel mailing list
+>> dri-devel@lists.freedesktop.org
+>> https://lists.freedesktop.org/mailman/listinfo/dri-devel
