@@ -1,140 +1,203 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V10 06/12] of: device: Fix overflow of coherent_dma_mask
-To: Robin Murphy <robin.murphy@arm.com>,
- Sricharan R <sricharan@codeaurora.org>, will.deacon@arm.com,
- joro@8bytes.org, lorenzo.pieralisi@arm.com,
- iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
- robh+dt@kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
- lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
- linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-7-git-send-email-sricharan@codeaurora.org>
- <58E5E7B7.1050400@gmail.com> <b081f333-084d-ffa5-635f-f7f1c0232ac3@arm.com>
-From: Frank Rowand <frowand.list@gmail.com>
-Message-ID: <58E695DC.7010808@gmail.com>
-Date: Thu, 6 Apr 2017 12:24:12 -0700
+Return-Path: <SRS0=0hWc=4B=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=0hWc=4B=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: helgaas@kernel.org,
+	linux-pci@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	platform-driver-x86@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/4] PCI: add resizeable BAR infrastructure v4
+Date: Tue, 25 Apr 2017 15:19:51 +0200
+Message-Id: <1493126394-1239-2-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
+References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <b081f333-084d-ffa5-635f-f7f1c0232ac3@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/06/17 03:24, Robin Murphy wrote:
-> On 06/04/17 08:01, Frank Rowand wrote:
->> On 04/04/17 03:18, Sricharan R wrote:
->>> Size of the dma-range is calculated as coherent_dma_mask + 1
->>> and passed to arch_setup_dma_ops further. It overflows when
->>> the coherent_dma_mask is set for full 64 bits 0xFFFFFFFFFFFFFFFF,
->>> resulting in size getting passed as 0 wrongly. Fix this by
->>> passsing in max(mask, mask + 1). Note that in this case
->>> when the mask is set to full 64bits, we will be passing the mask
->>> itself to arch_setup_dma_ops instead of the size. The real fix
->>> for this should be to make arch_setup_dma_ops receive the
->>> mask and handle it, to be done in the future.
->>>
->>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->>> ---
->>>  drivers/of/device.c | 2 +-
->>>  1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/of/device.c b/drivers/of/device.c
->>> index c17c19d..c2ae6bb 100644
->>> --- a/drivers/of/device.c
->>> +++ b/drivers/of/device.c
->>> @@ -107,7 +107,7 @@ void of_dma_configure(struct device *dev, struct device_node *np)
->>>  	ret = of_dma_get_range(np, &dma_addr, &paddr, &size);
->>>  	if (ret < 0) {
->>>  		dma_addr = offset = 0;
->>> -		size = dev->coherent_dma_mask + 1;
->>> +		size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
->>>  	} else {
->>>  		offset = PFN_DOWN(paddr - dma_addr);
->>>  		dev_dbg(dev, "dma_pfn_offset(%#08lx)\n", offset);
->>>
->>
->> NACK.
->>
->> Passing an invalid size to arch_setup_dma_ops() is only part of the problem.
->> size is also used in of_dma_configure() before calling arch_setup_dma_ops():
->>
->>         dev->coherent_dma_mask = min(dev->coherent_dma_mask,
->>                                      DMA_BIT_MASK(ilog2(dma_addr + size)));
->>         *dev->dma_mask = min((*dev->dma_mask),
->>                              DMA_BIT_MASK(ilog2(dma_addr + size)));
->>
->> which would be incorrect for size == 0xffffffffffffffffULL when
->> dma_addr != 0.  So the proposed fix really is not papering over
->> the base problem very well.
-> 
-> I'm not sure I agree there. Granted, there exist many more problematic
-> aspects than are dealt with here (I've got more patches cooking to sort
-> out some of the other issues we have with dma-ranges), but considering
-> size specifically:
-> 
-> - It is not possible to explicitly specify a range with a size of 2^64
-> in DT. If someone does specify a size of 0, they've done a silly thing
-> and should not be surprised that it ends badly.
-> 
-> - It *is* perfectly legitimate for bus code (or a previous device
-> driver, once we start coming here at probe time) to have set a device's
-> DMA mask to 0xffffffffffffffffULL. If this code then blindly overflows
-> and infers an invalid size of 0 from that, breaking things in the
-> process, that is this code's fault alone. It just so happens that
-> nothing managed to trigger the latent problem until patch #7 here shakes
-> up the callsites.
+From: Christian König <christian.koenig@amd.com>
 
-The existing code that uses size does not appear capable of dealing with
-the case of DMA mask of 0xffffffffffffffffULL since 2^64 does not fit
-into size.
+Just the defines and helper functions to read the possible sizes of a BAR and
+update it's size.
 
-The code affected by the DMA mask is not within my area of knowledge, so
-take the following with a grain of salt.  If a DMA mask of
-0xffffffffffffffffULL is provided, would the code still work without error
-(though with reduced capability) if the mask was changed to
-0xefffffffffffffffULL?  I would guess that the location to do so would
-be where dev->coherent_dma_mask is set, or some other location that
-is not of_dma_configure().  This would just be a temporary workaround.
+See https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf
+and PCIe r3.1, sec 7.22.
 
+This is useful for hardware with large local storage (mostly GFX) which only
+expose 256MB BARs initially to be compatible with 32bit systems.
 
-> Yes, wacky impossible base + size combinations in DT were a theoretical
-> problem before, and remain a theoretical problem, but also fall into the
-> "how did you ever expect this to work?" category. There's certainly
-> plenty more we can do to improve the DT parsing/validation, but that
-> still doesn't apply to this path where the information is *not* coming
-> from the DT at all.
-> 
->> I agree that the proper solution involves passing a mask instead
->> of a size to arch_setup_dma_ops().
-> 
-> Having started writing that patch too, I can tell you it's a big bugger
-> touching multiple architectures and fixing up various drivers doing
-> stupid things, hence why I'm happy with this point fix being the lesser
-> of two evils in terms of not holding up this mostly-orthogonal series.
-> 
-> Robin.
-> 
->>
->> -Frank
->>
-> 
-> 
+v2: provide read helper as well
+v3: improve function names, use unsigned values, add better comments.
+v4: move definition, improve commit message, s/bar/BAR/
 
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ drivers/pci/pci.c             | 115 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h             |   4 ++
+ include/uapi/linux/pci_regs.h |  11 +++-
+ 3 files changed, 128 insertions(+), 2 deletions(-)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ba34907..c2d9f78 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2944,6 +2944,121 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+ }
+ 
+ /**
++ * pci_rbar_get_possible_sizes - get possible sizes for BAR
++ * @dev: PCI device
++ * @bar: BAR to query
++ *
++ * Get the possible sizes of a resizeable BAR as bitmask defined in the spec
++ * (bit 0=1MB, bit 19=512GB). Returns 0 if BAR isn't resizeable.
++ */
++u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar)
++{
++	unsigned pos, nbars;
++	u32 ctrl, cap;
++	unsigned i;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return 0;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx != bar)
++			continue;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
++		return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
++			PCI_REBAR_CTRL_SIZES_SHIFT;
++	}
++
++	return 0;
++}
++
++/**
++ * pci_rbar_get_current_size - get the current size of a BAR
++ * @dev: PCI device
++ * @bar: BAR to set size to
++ *
++ * Read the size of a BAR from the resizeable BAR config.
++ * Returns size if found or negativ error code.
++ */
++int pci_rbar_get_current_size(struct pci_dev *pdev, int bar)
++{
++	unsigned pos, nbars;
++	u32 ctrl;
++	unsigned i;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return -ENOTSUPP;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx != bar)
++			continue;
++
++		return (ctrl & PCI_REBAR_CTRL_BAR_SIZE_MASK) >>
++			PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
++	}
++
++	return -ENOENT;
++}
++
++/**
++ * pci_rbar_set_size - set a new size for a BAR
++ * @dev: PCI device
++ * @bar: BAR to set size to
++ * @size: new size as defined in the spec (log2(size in bytes) - 20)
++ *
++ * Set the new size of a BAR as defined in the spec (0=1MB, 19=512GB).
++ * Returns true if resizing was successful, false otherwise.
++ */
++int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
++{
++	unsigned pos, nbars;
++	u32 ctrl;
++	unsigned i;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return -ENOTSUPP;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx != bar)
++			continue;
++
++		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE_MASK;
++		ctrl |= size << PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
++		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
++		return 0;
++	}
++
++	return -ENOENT;
++}
++
++/**
+  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+  * @dev: the PCI device
+  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4518562..1d27c22 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -356,4 +356,8 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ }
+ #endif
+ 
++u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar);
++int pci_rbar_get_current_size(struct pci_dev *pdev, int bar);
++int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
++
+ #endif /* DRIVERS_PCI_H */
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index e5a2e68..a75429e 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -932,9 +932,16 @@
+ #define PCI_SATA_SIZEOF_LONG	16
+ 
+ /* Resizable BARs */
++#define PCI_REBAR_CAP		4	/* capability register */
++#define  PCI_REBAR_CTRL_SIZES_MASK	(0xFFFFF << 4)	/* mask for sizes */
++#define  PCI_REBAR_CTRL_SIZES_SHIFT	4	/* shift for sizes */
+ #define PCI_REBAR_CTRL		8	/* control register */
+-#define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # bars */
+-#define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # bars */
++#define  PCI_REBAR_CTRL_BAR_IDX_MASK	(7 << 0)	/* mask for BAR index */
++#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT	0	/* shift for BAR index */
++#define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # BARs */
++#define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # BARs */
++#define  PCI_REBAR_CTRL_BAR_SIZE_MASK	(0x1F << 8)	/* mask for BAR size */
++#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT	8	/* shift for BAR size */
+ 
+ /* Dynamic Power Allocation */
+ #define PCI_DPA_CAP		4	/* capability register */
+-- 
+2.7.4
