@@ -1,88 +1,94 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V10 05/12] ACPI/IORT: Add function to check SMMUs drivers
- presence
-To: Sricharan R <sricharan@codeaurora.org>, will.deacon@arm.com,
- joro@8bytes.org, lorenzo.pieralisi@arm.com,
- iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
- robh+dt@kernel.org, frowand.list@gmail.com, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
- lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
- linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
-References: <1489086061-9356-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-1-git-send-email-sricharan@codeaurora.org>
- <1491301105-5274-6-git-send-email-sricharan@codeaurora.org>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <e2713b7b-718d-c059-2e14-cc6ab7636a22@arm.com>
-Date: Tue, 4 Apr 2017 12:04:39 +0100
-MIME-Version: 1.0
-In-Reply-To: <1491301105-5274-6-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <SRS0=g+ct=4B=oracle.com=knut.omang@kernel.org>
+Return-Path: <SRS0=g+ct=4B=oracle.com=knut.omang@kernel.org>
+Message-ID: <1493101803.3171.246.camel@oracle.com>
+Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+From: Knut Omang <knut.omang@oracle.com>
+To: Logan Gunthorpe <logang@deltatee.com>,
+        Benjamin Herrenschmidt
+	 <benh@kernel.crashing.org>,
+        Dan Williams <dan.j.williams@intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+        Jason Gunthorpe
+ <jgunthorpe@obsidianresearch.com>,
+        Christoph Hellwig <hch@lst.de>, Sagi
+ Grimberg <sagi@grimberg.me>,
+        "James E.J. Bottomley"
+ <jejb@linux.vnet.ibm.com>,
+        "Martin K. Petersen"
+ <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Steve Wise
+ <swise@opengridcomputing.com>,
+        Stephen Bates <sbates@raithlin.com>, Max
+ Gurtovoy <maxg@mellanox.com>,
+        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
+        linux-nvdimm
+ <linux-nvdimm@ml01.01.org>,
+        "linux-kernel@vger.kernel.org"
+ <linux-kernel@vger.kernel.org>,
+        Jerome Glisse <jglisse@redhat.com>
+Date: Tue, 25 Apr 2017 08:30:03 +0200
+In-Reply-To: <9b6c0830-a728-c7ca-e6c6-2135f3f760ed@deltatee.com>
+References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
+	 <1491974532.7236.43.camel@kernel.crashing.org>
+	 <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
+	 <1492034124.7236.77.camel@kernel.crashing.org>
+	 <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
+	 <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+	 <20170414041656.GA30694@obsidianresearch.com>
+	 <1492169849.25766.3.camel@kernel.crashing.org>
+	 <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
+	 <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
+	 <1492207643.25766.18.camel@kernel.crashing.org>
+	 <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
+	 <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
+	 <1492311719.25766.37.camel@kernel.crashing.org>
+	 <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
+	 <5e43818e-8c6b-8be8-23ff-b798633d2a73@deltatee.com>
+	 <1492381907.25766.49.camel@kernel.crashing.org>
+	 <1493019397.3171.118.camel@oracle.com>
+	 <9b6c0830-a728-c7ca-e6c6-2135f3f760ed@deltatee.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/04/17 11:18, Sricharan R wrote:
-> From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> 
-> The IOMMU probe deferral implementation requires a mechanism to detect
-> if drivers for SMMU components are built-in in the kernel to detect
-> whether IOMMU configuration for a given device should be deferred (ie
-> SMMU drivers present but still not probed) or not (drivers not present).
-> 
-> Add a simple function to IORT to detect if SMMU drivers for SMMU
-> components managed by IORT are built-in in the kernel.
+On Mon, 2017-04-24 at 10:14 -0600, Logan Gunthorpe wrote:
+>=20
+> On 24/04/17 01:36 AM, Knut Omang wrote:
+> > My first reflex when reading this thread was to think that this whole d=
+omain
+> > lends it self excellently to testing via Qemu. Could it be that doing t=
+his in=C2=A0
+> > the opposite direction might be a safer approach in the long run even t=
+hough=C2=A0
+> > (significant) more work up-front?
+>=20
+> That's an interesting idea. We did do some very limited testing on qemu
+> with one iteration of our work. However, it's difficult because there is
+> no support for any RDMA devices which are a part of our primary use
+> case.=20
 
-Ah, if only DT could be this neat and tidy :D
+Yes, that's why I used 'significant'. One good thing is that given resource=
+s=C2=A0
+it can easily be done in parallel with other development, and will give add=
+itional
+insight of some form.
 
-Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+> I also imagine it would be quite difficult to develop those models
+> given the array of hardware that needs to be supported and the deep
+> functional knowledge required to figure out appropriate restrictions.
 
-> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
-> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> Cc: Robin Murphy <robin.murphy@arm.com>
-> Cc: Sricharan R <sricharan@codeaurora.org>
-> ---
->  drivers/acpi/arm64/iort.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index 4a5bb96..3dd9ec3 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -523,6 +523,19 @@ static int arm_smmu_iort_xlate(struct device *dev, u32 streamid,
->  	return ret;
->  }
->  
-> +static inline bool iort_iommu_driver_enabled(u8 type)
-> +{
-> +	switch (type) {
-> +	case ACPI_IORT_NODE_SMMU_V3:
-> +		return IS_BUILTIN(CONFIG_ARM_SMMU_V3);
-> +	case ACPI_IORT_NODE_SMMU:
-> +		return IS_BUILTIN(CONFIG_ARM_SMMU);
-> +	default:
-> +		pr_warn("IORT node type %u does not describe an SMMU\n", type);
-> +		return false;
-> +	}
-> +}
-> +
->  static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
->  					struct acpi_iort_node *node,
->  					u32 streamid)
-> 
+>From my naive perspective it seems it need not even be a full model to get =
+some benefits,
+just low level functionality tests with some instances of a
+device that offers some MMIO space 'playground'.
 
+Or maybe you can leverage some of the already implemented emulated devices =
+in Qemu?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Knut
+
+>=20
+> Logan
