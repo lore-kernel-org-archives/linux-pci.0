@@ -1,47 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:36329 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750922AbdDRFa5 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 18 Apr 2017 01:30:57 -0400
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Yongji Xie <elohimes@gmail.com>
-Cc: zhong@linux.vnet.ibm.com, Alexey Kardashevskiy <aik@ozlabs.ru>,
-        linux-pci@vger.kernel.org, Gavin Shan <gwshan@linux.vnet.ibm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linuxppc-dev@lists.ozlabs.org
-Subject: Re: [PATCH v11 4/7] powerpc/powernv: Override pcibios_default_alignment() to force PCI devices to be page aligned
-In-Reply-To: <20170417213653.21092.27784.stgit@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170417212705.21092.90222.stgit@bhelgaas-glaptop.roam.corp.google.com> <20170417213653.21092.27784.stgit@bhelgaas-glaptop.roam.corp.google.com>
-Date: Tue, 18 Apr 2017 15:30:55 +1000
-Message-ID: <87vaq2704w.fsf@concordia.ellerman.id.au>
-MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1493148111.18659.5.camel@perches.com>
+Subject: Re: [PATCH] PCI: imx6: fix spelling mistake: "contol" -> "control"
+From: Joe Perches <joe@perches.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Colin King <colin.king@canonical.com>
+Date: Tue, 25 Apr 2017 12:21:51 -0700
+In-Reply-To: <20170425190429.GA29024@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170421070230.16582-1-colin.king@canonical.com>
+ <20170425190429.GA29024@bhelgaas-glaptop.roam.corp.google.com>
+Mime-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Bjorn Helgaas <bhelgaas@google.com> writes:
+On Tue, 2017-04-25 at 14:04 -0500, Bjorn Helgaas wrote:
+> On Fri, Apr 21, 2017 at 08:02:30AM +0100, Colin King wrote:
+> > From: Colin Ian King <colin.king@canonical.com>
+> > 
+> > trivial fix to spelling mistake in dev_err message
+> > 
+> > Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> 
+> Applied with Richard's ack to pci/host-imx6 for v4.12, thanks.
+> 
+> FWIW, there are about 25 other occurrences of "contol" in other parts
+> of the tree.
 
-> From: Yongji Xie <elohimes@gmail.com>
->
-> This overrides pcibios_default_alignment() to set default alignment
-> to PAGE_SIZE for all PCI devices on PowerNV platform. Thus sub-page
-> BARs would not share a page and could be mapped into guest when VFIO
-> passthrough them.
->
-> Signed-off-by: Yongji Xie <elohimes@gmail.com>
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> ---
->  arch/powerpc/include/asm/machdep.h        |    2 ++
->  arch/powerpc/kernel/pci-common.c          |    8 ++++++++
->  arch/powerpc/platforms/powernv/pci-ioda.c |    7 +++++++
+Colin seems to focus on the logging format strings and
+not code comments.
 
-This looks fine to me, here's an ack, but don't feel you have to rebase
-to add it:
+Other than these 2, there are 28 other instances in -next.
+All of them are not output anywhere, these are just source
+code comments.
 
-Acked-by: Michael Ellerman <mpe@ellerman.id.au>
+$ git grep -w -i -E "contoller|contol" | wc -l
+30
 
-
-cheers
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
