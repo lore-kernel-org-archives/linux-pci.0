@@ -1,40 +1,73 @@
-Return-Path: <SRS0=bo2J=32=linutronix.de=tglx@kernel.org>
-Return-Path: <SRS0=bo2J=32=linutronix.de=tglx@kernel.org>
-Date: Tue, 18 Apr 2017 21:51:40 +0200 (CEST)
-From: Thomas Gleixner <tglx@linutronix.de>
-To: Bjorn Helgaas <helgaas@kernel.org>
-cc: LKML <linux-kernel@vger.kernel.org>, Peter Zijlstra <peterz@infradead.org>,
-    Ingo Molnar <mingo@kernel.org>, Steven Rostedt <rostedt@goodmis.org>,
-    Sebastian Siewior <bigeasy@linutronix.de>,
-    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [patch 17/20] PCI: Use cpu_hotplug_disable() instead of
- get_online_cpus()
-In-Reply-To: <20170418194425.GH25295@bhelgaas-glaptop.roam.corp.google.com>
-Message-ID: <alpine.DEB.2.20.1704182148210.8081@nanos>
-References: <20170415170107.643253702@linutronix.de> <20170415171652.675049942@linutronix.de> <20170418194425.GH25295@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <a2239141-a185-1bb8-0abd-7a05b9fde015@huawei.com>
+References: <20170401.112603.1991545644693496714.davem@davemloft.net>
+ <42428725-89f1-1508-4e3d-723e087b3bbb@huawei.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E205199C0@FRAEML521-MBX.china.huawei.com>
+ <063D6719AE5E284EB5DD2968C1650D6DCFFD3C52@AcuExch.aculab.com>
+ <DB5PR05MB138288172B04713EB0C1DB55D3190@DB5PR05MB1382.eurprd05.prod.outlook.com>
+ <a2239141-a185-1bb8-0abd-7a05b9fde015@huawei.com>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Wed, 26 Apr 2017 09:18:33 -0700
+Message-ID: <CAKgT0Uc4L=GgYbpO-Fm9OfN+_fLypbDP1c+X4T_ta90ecQiyGQ@mail.gmail.com>
+Subject: Re: [PATCH net-next 1/4] ixgbe: sparc: rename the
+ ARCH_WANT_RELAX_ORDER to IXGBE_ALLOW_RELAXED_ORDER
+To: Ding Tianhong <dingtianhong@huawei.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, Amir Ancel <amira@mellanox.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will.deacon@arm.com>,
+ LinuxArm <linuxarm@huawei.com>, David Laight <David.Laight@aculab.com>,
+ "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+ Robin Murphy <robin.murphy@arm.com>,
+ "davem@davemloft.net" <davem@davemloft.net>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, 18 Apr 2017, Bjorn Helgaas wrote:
-> > +static bool pci_physfn_is_probed(struct pci_dev *dev)
-> > +{
-> > +#ifdef CONFIG_ATS
-> 
-> I think this was intended to be CONFIG_PCI_ATS, not CONFIG_ATS.
+On Wed, Apr 26, 2017 at 2:26 AM, Ding Tianhong <dingtianhong@huawei.com> wrote:
+> Hi Amir:
+>
+> It is really glad to hear that the mlx5 will support RO mode this year, if so, do you agree that enable it dynamic by ethtool -s xxx,
+> we have try it several month ago but there was only one drivers would use it at that time so the maintainer against it, it mlx5 would support RO,
+> we could try to restart this solution, what do you think about it. :)
+>
+> Thanks
+> Ding
 
-yes.
+Hi Ding,
 
-> 
-> But I think CONFIG_PCI_IOV would be more appropriate.  With that, and
+Enabing relaxed ordering really doesn't have any place in ethtool. It
+is a PCIe attribute that you are essentially wanting to enable.
 
-The physfn member is under CONFIG_PCI_ATS so I took that one, but you are
-right PCI_IOV is the proper one. Will fix.
+It might be worth while to take a look at updating the PCIe code path
+to handle this. Really what we should probably do is guarantee that
+the architectures that need relaxed ordering are setting it in the
+PCIe Device Control register and that the ones that don't are clearing
+the bit. It's possible that this is already occurring, but I don't
+know the state of handling those bits is in the kernel. Once we can
+guarantee that we could use that to have the drivers determine their
+behavior in regards to relaxed ordering. For example in the case of
+igb/ixgbe we could probably change the behavior so that it will bey
+default try to use relaxed ordering but if it is not enabled in PCIe
+Device Control register the hardware should not request to use it. It
+would simplify things in the drivers and allow for each architecture
+to control things as needed in their PCIe code.
 
-> squashing this into the next patch,
+- Alex
 
-Did so
-
-Thanks,
-
-	tglx
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
