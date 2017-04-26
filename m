@@ -1,48 +1,53 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH v2 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
- boot for X-Gene v1
-To: Khuong Dinh <kdinh@apm.com>, lorenzo.pieralisi@arm.com,
- marc.zyngier@arm.com, msalter@redhat.com, bhelgaas@google.com,
- linux-pci@vger.kernel.org
-References: <1493340847-25720-1-git-send-email-kdinh@apm.com>
-From: Jon Masters <jcm@redhat.com>
-Message-ID: <55d52fce-be87-f055-e19b-4122015d5c94@redhat.com>
-Date: Fri, 28 Apr 2017 01:11:25 -0400
-MIME-Version: 1.0
-In-Reply-To: <1493340847-25720-1-git-send-email-kdinh@apm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: rjw@rjwysocki.net, Duc Dang <dhdang@apm.com>, patches@apm.com,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
+        Sinan Kaya <okaya@codeaurora.org>
+Subject: [RFC/RFT PATCH 2/3] PCI: Add call to set-up NUMA node for struct pci_bus devices
+Date: Wed, 26 Apr 2017 11:06:18 +0100
+Message-Id: <20170426100619.31758-2-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170426100619.31758-1-lorenzo.pieralisi@arm.com>
+References: <20170426100619.31758-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/27/2017 08:54 PM, Khuong Dinh wrote:
-> From: Khuong Dinh <kdinh@apm.com>
-> 
-> This patch makes pci-xgene-msi driver ACPI-aware and provides
-> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
-> 
-> Signed-off-by: Khuong Dinh <kdinh@apm.com>
-> Signed-off-by: Duc Dang <dhdang@apm.com>
-> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+The member dev in struct pci_bus represents the kernel struct
+device representation of a PCI bus, inclusive of its NUMA node.
+When a PCI host bridge is registered, initialize the corresponding
+struct pci_bus.dev member NUMA node and add code in
+pci_alloc_child_bus() to propagate the NUMA node set-up through the PCI
+bus hierarchy (ie child nodes are in the same NUMA node as the parent).
 
-Thanks. Currently testing. Will review and followup shortly.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Jon.
-
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index dfc9a27..5739a993 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -770,6 +770,7 @@ int pci_register_host_bridge(struct pci_host_bridge *bridge)
+ 	device_enable_async_suspend(bus->bridge);
+ 	pci_set_bus_of_node(bus);
+ 	pci_set_bus_msi_domain(bus);
++	set_dev_node(&bus->dev, pci_bus_find_numa_node(bus));
+ 
+ 	if (!parent)
+ 		set_dev_node(bus->bridge, pcibus_to_node(bus));
+@@ -861,7 +862,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
+ 	 */
+ 	child->dev.class = &pcibus_class;
+ 	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
+-
++	set_dev_node(&child->dev, dev_to_node(&parent->dev));
+ 	/*
+ 	 * Set up the primary, secondary and subordinate
+ 	 * bus numbers.
 -- 
-Computer Architect | Sent from my Fedora powered laptop
+2.10.0
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
