@@ -1,52 +1,64 @@
-Return-Path: <SRS0=gnaq=34=gmail.com=dan.j.williams@kernel.org>
-Return-Path: <SRS0=gnaq=34=gmail.com=dan.j.williams@kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <c143c2fd-8bff-595d-8a9e-debfcd56e531@deltatee.com>
-References: <20170418210339.GA24257@obsidianresearch.com> <1492564806.25766.124.camel@kernel.crashing.org>
- <20170419155557.GA8497@obsidianresearch.com> <4899b011-bdfb-18d8-ef00-33a1516216a6@deltatee.com>
- <20170419171451.GA10020@obsidianresearch.com> <b0234176-e86b-6e7c-686d-b4fef719aad7@deltatee.com>
- <20170419183247.GA13716@obsidianresearch.com> <21e8099a-d19d-7df0-682d-627d8b81dfde@deltatee.com>
- <20170419193154.GA14340@obsidianresearch.com> <ea03e81f-e3d5-9f5c-db60-0ceaf4366612@deltatee.com>
- <20170419204808.GA15716@obsidianresearch.com> <c143c2fd-8bff-595d-8a9e-debfcd56e531@deltatee.com>
-From: Dan Williams <dan.j.williams@gmail.com>
-Date: Wed, 19 Apr 2017 17:07:58 -0700
-Message-ID: <CAA9_cmdbi0=wS2TFhezzRhdWvO-W75LAG4aHCEwDMHV1gqP2BA@mail.gmail.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-To: Logan Gunthorpe <logang@deltatee.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, Jens Axboe <axboe@kernel.dk>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-rdma@vger.kernel.org, Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Steve Wise <swise@opengridcomputing.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-nvme@lists.infradead.org,
-	Keith Busch <keith.busch@intel.com>, Jerome Glisse <jglisse@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-nvdimm <linux-nvdimm@ml01.01.org>, Max Gurtovoy <maxg@mellanox.com>,
-	linux-scsi <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset=UTF-8
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Cc: linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
+        Sinan Kaya <okaya@codeaurora.org>
+Subject: [RFC/RFT PATCH 1/3] PCI: Introduce pci_bus_find_numa_node()
+Date: Wed, 26 Apr 2017 11:06:17 +0100
+Message-Id: <20170426100619.31758-1-lorenzo.pieralisi@arm.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 19, 2017 at 3:55 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
->
->
-> On 19/04/17 02:48 PM, Jason Gunthorpe wrote:
->> On Wed, Apr 19, 2017 at 01:41:49PM -0600, Logan Gunthorpe wrote:
->>
->>>> But.. it could point to a GPU and the GPU struct device could have a
->>>> proxy dma_ops like Dan pointed out.
->>>
->>> Seems a bit awkward to me that in order for the intended use case, you
->>> have to proxy the dma_ops. I'd probably still suggest throwing a couple
->>> ops for things like this in the dev_pagemap.
->>
->> Another option is adding a new 'struct completer_dma_ops *' to struct
->> device for this use case.
->>
->> Seems like a waste to expand dev_pagemap when we only need a unique
->> value per struct device?
->
-> I feel like expanding dev_pagemap has a much lower impact than expanding
-> struct device... dev_pagemap is only one instance per zone device region
-> so expanding it shouldn't be a huge issue. Expanding struct device means
-> every device struct in the system gets bigger.
+Create an empty stub, to be populated by firmware methods, to
+retrieve the NUMA node for a given pci_bus. No functional change
+introduced.
 
-Especially since we expect a very small subset of devices will ever support p2p.
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci.c   | 6 ++++++
+ include/linux/pci.h | 1 +
+ 2 files changed, 7 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02..2de9162 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -12,6 +12,7 @@
+ #include <linux/delay.h>
+ #include <linux/dmi.h>
+ #include <linux/init.h>
++#include <linux/numa.h>
+ #include <linux/of.h>
+ #include <linux/of_pci.h>
+ #include <linux/pci.h>
+@@ -5235,6 +5236,11 @@ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
+ #endif
+ #endif
+ 
++int pci_bus_find_numa_node(struct pci_bus *bus)
++{
++	return NUMA_NO_NODE;
++}
++
+ /**
+  * pci_ext_cfg_avail - can we access extended PCI config space?
+  *
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eb3da1a..9e62462 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1481,6 +1481,7 @@ static inline int acpi_pci_bus_find_domain_nr(struct pci_bus *bus)
+ #endif
+ int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent);
+ #endif
++int pci_bus_find_numa_node(struct pci_bus *bus);
+ 
+ /* some architectures require additional setup to direct VGA traffic */
+ typedef int (*arch_set_vga_state_t)(struct pci_dev *pdev, bool decode,
+-- 
+2.10.0
+
