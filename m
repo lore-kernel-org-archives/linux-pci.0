@@ -1,92 +1,66 @@
-Return-Path: <SRS0=5FSy=3U=arm.com=marc.zyngier@kernel.org>
-Return-Path: <SRS0=5FSy=3U=arm.com=marc.zyngier@kernel.org>
-Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
-To: Mason <slash.tmp@free.fr>, Thomas Gleixner <tglx@linutronix.de>
-References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
- <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
- <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
- <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
- <0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
- <4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
- <30f662a6-5dab-515b-e35a-a312f3c7b509@free.fr>
- <5f81730d-fbe3-1f4c-de34-09bbfb893ee1@arm.com>
- <2b5eef4c-32f2-54f1-ca2f-f9426e68fb2c@free.fr>
- <67014006-a380-9e3b-c9af-a421052cb8e0@arm.com>
- <b59b81ea-bc1b-bff5-4a78-8a69538b0de3@free.fr>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <bc5bf8ad-69ef-4f14-f450-e162ddb5af7c@arm.com>
-Date: Wed, 12 Apr 2017 09:08:31 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v4 00/21] PCI: fix config space memory mappings
+To: Jon Masters <jcm@jonmasters.org>, Lorenzo Pieralisi
+ <lorenzo.pieralisi@arm.com>, <linux-pci@vger.kernel.org>
+References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+ <2e24e205-d761-9172-9463-4a53e1a0de4d@jonmasters.org>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <361fde15-5ba3-d33b-f946-003e89ba071f@huawei.com>
+Date: Wed, 26 Apr 2017 18:53:30 +0800
 MIME-Version: 1.0
-In-Reply-To: <b59b81ea-bc1b-bff5-4a78-8a69538b0de3@free.fr>
-Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <2e24e205-d761-9172-9463-4a53e1a0de4d@jonmasters.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Linuxarm <linuxarm@huawei.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Jonathan Corbet <corbet@lwn.net>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>, Murali
+ Karicheri <m-karicheri2@ti.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Arnd Bergmann <arnd@arndb.de>, Jon Mason <jonmason@broadcom.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
+ linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>, Jingoo
+ Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org, Stanimir
+ Varbanov <svarbanov@mm-sol.com>, Minghuan Lian <minghuan.Lian@freescale.com>,
+ "Luis R . Rodriguez" <mcgrof@kernel.org>, Roy
+ Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 11/04/17 18:52, Mason wrote:
-> On 11/04/2017 18:43, Marc Zyngier wrote:
-> 
->> On 11/04/17 17:26, Mason wrote:
->>
->>> Is there a function to map virq to the hwirq in any domain?
->>
->> Be more precise. If you want the hwirq associated with the view of a
->> virq in a given domain, that's the hwirq field in the corresponding
->> irq_data structure. Or are you after something else?
-> 
-> I registered an unmask method for my irq_chip.
-> (IIUC, I'm supposed to unmask a specific MSI in this callback.)
-> 
-> # cat /proc/interrupts 
->            CPU0       CPU1       
->  30:          0          0    MSIfoo      0 Edge      aerdrv
->  34:          0          0    MSIfoo 524288 Edge      xhci_hcd
->  35:          0          0    MSIfoo 524289 Edge      xhci_hcd
->  36:          0          0    MSIfoo 524290 Edge      xhci_hcd
-> 
-> 
-> void foo_unmask(struct irq_data *data)
-> {
-> 	int xx,yy;
-> 	struct irq_domain *dom = data->domain;
-> 	printk("%s: irq_data=%p irq=%u hwirq=%lu chip=%p dom=%p pdata=%p data=%p\n",
-> 		__func__, data, data->irq, data->hwirq, data->chip, data->domain,
-> 		data->parent_data, data->chip_data);
-> 	printk("%s ops=%p data=%p parent=%p\n\n",
-> 		dom->name, dom->ops, dom->host_data, dom->parent);
-> 	printk("pcie=%p\n", dom->parent->host_data);
-> 	//dump_stack();
-> 	pci_msi_unmask_irq(data);
-> 	struct tango_pcie *pcie = data->domain->parent->host_data;
-> 	printk("\n%s: pcie=%p irq=%u hwirq=%lu\n\n",
-> 		__func__, pcie, data->irq, data->hwirq);
-> 	xx = irq_find_mapping(pcie->irq_domain, data->hwirq);
-> 	yy = irq_find_mapping(pcie->msi_domain, data->hwirq);
-
-Do you realize that hwirq is *per domain*, and only makes sense to *one*
-irqchip? What you've written here doesn't make any sense.
-
-> 	printk("xx=%d yy=%d\n", xx, yy);
-> }
-> 
-> so data->irq is the virq (30, 34, 35, 36)
-> and data->hwirq is the domain hwirq (0, 524288, 524289, 524290)
-> 
-> Is there a way to map hwirq 524288 to MSI 0, hwirq 524289 to MSI 1, etc?
-
-Why would you need to do such a thing?
-- In MSI domain: IRQ34 -> hwirq 524288
-- In foo domain: IRQ34 -> hwirq [whatever your driver has allocated]
-
-The data is already there, at your fingertips. Just deal with with your
-"foo" irqchip.
-
-	M.
--- 
-Jazz is not dead. It just smells funny...
+ClRlc3RlZC1ieTogRG9uZ2RvbmcgTGl1IDxsaXVkb25nZG9uZzNAaHVhd2VpLmNvbT4KCkkgdGVz
+dGVkIHRoZSBwYXRjaHNldCBvbiBIaVNpbGljb24gQVJNNjQgRDA1IGJvYXJkLkl0IHdvcmtzIG9r
+IHdpdGggODI1OTkgbmV0Y2FyZC4KClRoYW5rcywKRG9uZ2RvbmcK5ZyoIDIwMTcvNC8yNSAxNDo0
+MCwgSm9uIE1hc3RlcnMg5YaZ6YGTOgo+IE9uIDA0LzE5LzIwMTcgMTI6NDggUE0sIExvcmVuem8g
+UGllcmFsaXNpIHdyb3RlOgo+Cj4+IE9uIHNvbWUgcGxhdGZvcm1zIChpZSBBUk0vQVJNNjQpIGlv
+cmVtYXAgZmFpbHMgdG8gY29tcGx5IHdpdGggdGhlIFBDSQo+PiBjb25maWd1cmF0aW9uIG5vbi1w
+b3N0ZWQgd3JpdGUgdHJhbnNhY3Rpb25zIHJlcXVpcmVtZW50LCBiZWNhdXNlIGl0Cj4+IHByb3Zp
+ZGVzIGEgbWVtb3J5IG1hcHBpbmcgdGhhdCBpc3N1ZXMgImJ1ZmZlcmFibGUiIG9yLCBpbiBQQ0kg
+dGVybXMKPj4gInBvc3RlZCIgd3JpdGUgdHJhbnNhY3Rpb25zLiBMaWtld2lzZSwgdGhlIGN1cnJl
+bnQgcGNpX3JlbWFwX2lvc3BhY2UoKQo+PiBpbXBsZW1lbnRhdGlvbiBtYXBzIHRoZSBwaHlzaWNh
+bCBhZGRyZXNzIHJhbmdlIHRoYXQgdGhlIFBDSSB0cmFuc2xhdGVzCj4+IHRvIEkvTyBzcGFjZSBj
+eWNsZXMgdG8gdmlydHVhbCBhZGRyZXNzIHNwYWNlIHRocm91Z2ggcGdwcm90X2RldmljZSgpCj4+
+IGF0dHJpYnV0ZXMgdGhhdCBvbiBlZyBBUk02NCBwcm92aWRlcyBhIG1lbW9yeSBtYXBwaW5nIGlz
+c3VpbmcKPj4gcG9zdGVkIHdyaXRlcyB0cmFuc2FjdGlvbnMsIHdoaWNoIGlzIG5vdCBQQ0kgc3Bl
+Y2lmaWNhdGlvbnMgY29tcGxpYW50Lgo+Cj4gU2lkZSBub3RlIHRoYXQgSSd2ZSBwaW5nZWQgYWxs
+IG9mIHRoZSBBUk0gc2VydmVyIHZlbmRvcnMgYW5kIGFza2VkIHRoZW0KPiB0byB2ZXJpZnkgdGhp
+cyBwYXRjaCBzZXJpZXMgb24gdGhlaXIgcGxhdGZvcm1zLgo+Cj4gSm9uLgo+Cj4gLgo+CgpfX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51eC1hcm0ta2Vy
+bmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0
+cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1hcm0ta2VybmVs
+Cg==
