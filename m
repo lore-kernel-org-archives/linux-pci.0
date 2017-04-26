@@ -1,122 +1,117 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: "Byczkowski, Jakub" <jakub.byczkowski@intel.com>
-To: Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Cabiddu, Giovanni" <giovanni.cabiddu@intel.com>,
-        "Benedetto, Salvatore" <salvatore.benedetto@intel.com>,
-        "Marciniszyn, Mike" <mike.marciniszyn@intel.com>,
-        "Dalessandro, Dennis" <dennis.dalessandro@intel.com>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        "Kirsher, Jeffrey T" <jeffrey.t.kirsher@intel.com>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        qat-linux <qat-linux@intel.com>,
-        "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH 5/7] IB/hfi1: use pcie_flr instead of duplicating it
-Date: Mon, 24 Apr 2017 14:16:31 +0000
-Message-ID: <A33E225544E47D4DB5713032774B132783960382@irsmsx105.ger.corp.intel.com>
-References: <20170414191131.14286-1-hch@lst.de>
- <20170414191131.14286-6-hch@lst.de>
-In-Reply-To: <20170414191131.14286-6-hch@lst.de>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f180.google.com ([209.85.128.180]:36393 "EHLO
+        mail-wr0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967714AbdDZVLr (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 26 Apr 2017 17:11:47 -0400
+Received: by mail-wr0-f180.google.com with SMTP id l50so6728456wrc.3
+        for <linux-pci@vger.kernel.org>; Wed, 26 Apr 2017 14:11:47 -0700 (PDT)
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170426181502.770-1-l.stach@pengutronix.de>
+References: <20170426181502.770-1-l.stach@pengutronix.de>
+From: Tim Harvey <tharvey@gateworks.com>
+Date: Wed, 26 Apr 2017 14:11:45 -0700
+Message-ID: <CAJ+vNU0AEZtc+DaYSV7S1LtXCncVh9nV4hG7BtYxJE=m6-80EA@mail.gmail.com>
+Subject: Re: [PATCH] PCI: dwc: fall back to legacy IRQs when multiple devices
+ are attached
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        patchwork-lst@pengutronix.de
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Tested-by: Jakub Byczkowski <jakub.byczkowski@intel.com>
+On Wed, Apr 26, 2017 at 11:15 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> The DWC host does not support legacy PCI IRQs and MSIs at the same time,
+> so we need to fall back to using only legacy IRQs if there is a chance
+> that multiple devices with differing MSI capabilities are connected to
+> the host. The only configuration where MSIs can be safely used is when
+> the device below the host bridge is not a bridge, i.e. the only device
+> connected to this host.
+>
+> By disallowing MSI allocation when multiple devices might be attached
+> we get those configurations in a working state. The only configurations
+> that depend on MSIs being available, that I am aware of, are some
+> embedded devices with a PCIe attached FPGA, that is incapable of
+> generating PCI legacy IRQs. Those are kept working by allowing MSIs
+> when only a single device is attached to the host.
+>
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+> ---
+>  drivers/pci/dwc/pcie-designware-host.c | 24 ++++++++++++++++++++++--
+>  drivers/pci/dwc/pcie-designware.h      |  1 +
+>  2 files changed, 23 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> index 5ba334938b52..be2b2762c944 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -92,6 +92,8 @@ void dw_pcie_msi_init(struct pcie_port *pp)
+>                             (u32)(msi_target & 0xffffffff));
+>         dw_pcie_wr_own_conf(pp, PCIE_MSI_ADDR_HI, 4,
+>                             (u32)(msi_target >> 32 & 0xffffffff));
+> +
+> +       pp->msi_disabled = false;
+>  }
+>
+>  static void dw_pcie_msi_clear_irq(struct pcie_port *pp, int irq)
+> @@ -136,9 +138,11 @@ static void dw_pcie_msi_set_irq(struct pcie_port *pp, int irq)
+>  static int assign_irq(int no_irqs, struct msi_desc *desc, int *pos)
+>  {
+>         int irq, pos0, i;
+> -       struct pcie_port *pp;
+> +       struct pcie_port *pp = (struct pcie_port *)msi_desc_to_pci_sysdata(desc);
+> +
+> +       if (pp->msi_disabled)
+> +               return -EINVAL;
+>
+> -       pp = (struct pcie_port *)msi_desc_to_pci_sysdata(desc);
+>         pos0 = bitmap_find_free_region(pp->msi_irq_in_use, MAX_MSI_IRQS,
+>                                        order_base_2(no_irqs));
+>         if (pos0 < 0)
+> @@ -410,6 +414,22 @@ int dw_pcie_host_init(struct pcie_port *pp)
+>                 goto error;
+>         }
+>
+> +       /*
+> +        * The DWC host does not support legacy PCI IRQs and MSIs at the same
+> +        * time, so we need to fall back to using only legacy IRQs if there is
+> +        * a chance that multiple devices with differing MSI capabilities are
+> +        * connected to the host. The only configuration where MSIs can be
+> +        * safely used is when the device below the host bridge is not a bridge,
+> +        * i.e. the only device connected to this host.
+> +        */
+> +       child = list_first_entry(&bus->children, struct pci_bus, node);
+> +       if (!list_empty(&child->devices)) {
+> +               struct pci_dev *dev = list_first_entry(&child->devices,
+> +                                                      struct pci_dev, bus_list);
+> +               if (pci_is_bridge(dev))
+> +                       pp->msi_disabled = true;
+> +       }
+> +
+>         if (pp->ops->scan_bus)
+>                 pp->ops->scan_bus(pp);
+>
+> diff --git a/drivers/pci/dwc/pcie-designware.h b/drivers/pci/dwc/pcie-designware.h
+> index cd3b8713fe50..741bc31f8947 100644
+> --- a/drivers/pci/dwc/pcie-designware.h
+> +++ b/drivers/pci/dwc/pcie-designware.h
+> @@ -140,6 +140,7 @@ struct pcie_port {
+>         struct irq_domain       *irq_domain;
+>         unsigned long           msi_data;
+>         DECLARE_BITMAP(msi_irq_in_use, MAX_MSI_IRQS);
+> +       bool                    msi_disabled;
+>  };
+>
+>  struct dw_pcie_ops {
+> --
+> 2.11.0
+>
 
------Original Message-----
-From: linux-rdma-owner@vger.kernel.org [mailto:linux-rdma-owner@vger.kernel.org] On Behalf Of Christoph Hellwig
-Sent: Friday, April 14, 2017 9:11 PM
-To: Bjorn Helgaas <bhelgaas@google.com>; Cabiddu, Giovanni <giovanni.cabiddu@intel.com>; Benedetto, Salvatore <salvatore.benedetto@intel.com>; Marciniszyn, Mike <mike.marciniszyn@intel.com>; Dalessandro, Dennis <dennis.dalessandro@intel.com>; Derek Chickles <derek.chickles@caviumnetworks.com>; Satanand Burla <satananda.burla@caviumnetworks.com>; Felix Manlunas <felix.manlunas@caviumnetworks.com>; Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>; Kirsher, Jeffrey T <jeffrey.t.kirsher@intel.com>
-Cc: linux-pci@vger.kernel.org; qat-linux <qat-linux@intel.com>; linux-crypto@vger.kernel.org; linux-rdma@vger.kernel.org; netdev@vger.kernel.org; linux-kernel@vger.kernel.org
-Subject: [PATCH 5/7] IB/hfi1: use pcie_flr instead of duplicating it
+Lucas,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/infiniband/hw/hfi1/chip.c |  4 ++--  drivers/infiniband/hw/hfi1/hfi.h  |  1 -  drivers/infiniband/hw/hfi1/pcie.c | 30 ------------------------------
- 3 files changed, 2 insertions(+), 33 deletions(-)
+Legacy interrupts are still not firing with this.
 
-diff --git a/drivers/infiniband/hw/hfi1/chip.c b/drivers/infiniband/hw/hfi1/chip.c
-index 121a4c920f1b..d037f72e4d96 100644
---- a/drivers/infiniband/hw/hfi1/chip.c
-+++ b/drivers/infiniband/hw/hfi1/chip.c
-@@ -13610,14 +13610,14 @@ static void init_chip(struct hfi1_devdata *dd)
- 		dd_dev_info(dd, "Resetting CSRs with FLR\n");
- 
- 		/* do the FLR, the DC reset will remain */
--		hfi1_pcie_flr(dd);
-+		pcie_flr(dd->pcidev);
- 
- 		/* restore command and BARs */
- 		restore_pci_variables(dd);
- 
- 		if (is_ax(dd)) {
- 			dd_dev_info(dd, "Resetting CSRs with FLR\n");
--			hfi1_pcie_flr(dd);
-+			pcie_flr(dd->pcidev);
- 			restore_pci_variables(dd);
- 		}
- 	} else {
-diff --git a/drivers/infiniband/hw/hfi1/hfi.h b/drivers/infiniband/hw/hfi1/hfi.h
-index 0808e3c3ba39..40d7559fa723 100644
---- a/drivers/infiniband/hw/hfi1/hfi.h
-+++ b/drivers/infiniband/hw/hfi1/hfi.h
-@@ -1764,7 +1764,6 @@ int hfi1_pcie_init(struct pci_dev *, const struct pci_device_id *);  void hfi1_pcie_cleanup(struct pci_dev *);  int hfi1_pcie_ddinit(struct hfi1_devdata *, struct pci_dev *);  void hfi1_pcie_ddcleanup(struct hfi1_devdata *); -void hfi1_pcie_flr(struct hfi1_devdata *);  int pcie_speeds(struct hfi1_devdata *);  void request_msix(struct hfi1_devdata *, u32 *, struct hfi1_msix_entry *);  void hfi1_enable_intx(struct pci_dev *); diff --git a/drivers/infiniband/hw/hfi1/pcie.c b/drivers/infiniband/hw/hfi1/pcie.c
-index 0829fce06172..c81556e84831 100644
---- a/drivers/infiniband/hw/hfi1/pcie.c
-+++ b/drivers/infiniband/hw/hfi1/pcie.c
-@@ -240,36 +240,6 @@ void hfi1_pcie_ddcleanup(struct hfi1_devdata *dd)
- 		iounmap(dd->piobase);
- }
- 
--/*
-- * Do a Function Level Reset (FLR) on the device.
-- * Based on static function drivers/pci/pci.c:pcie_flr().
-- */
--void hfi1_pcie_flr(struct hfi1_devdata *dd) -{
--	int i;
--	u16 status;
--
--	/* no need to check for the capability - we know the device has it */
--
--	/* wait for Transaction Pending bit to clear, at most a few ms */
--	for (i = 0; i < 4; i++) {
--		if (i)
--			msleep((1 << (i - 1)) * 100);
--
--		pcie_capability_read_word(dd->pcidev, PCI_EXP_DEVSTA, &status);
--		if (!(status & PCI_EXP_DEVSTA_TRPND))
--			goto clear;
--	}
--
--	dd_dev_err(dd, "Transaction Pending bit is not clearing, proceeding with reset anyway\n");
--
--clear:
--	pcie_capability_set_word(dd->pcidev, PCI_EXP_DEVCTL,
--				 PCI_EXP_DEVCTL_BCR_FLR);
--	/* PCIe spec requires the function to be back within 100ms */
--	msleep(100);
--}
--
- static void msix_setup(struct hfi1_devdata *dd, int pos, u32 *msixcnt,
- 		       struct hfi1_msix_entry *hfi1_msix_entry)  {
---
-2.11.0
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
---------------------------------------------------------------------
-
-Intel Technology Poland sp. z o.o.
-ul. Slowackiego 173 | 80-298 Gdansk | Sad Rejonowy Gdansk Polnoc | VII Wydzial Gospodarczy Krajowego Rejestru Sadowego - KRS 101882 | NIP 957-07-52-316 | Kapital zakladowy 200.000 PLN.
-
-Ta wiadomosc wraz z zalacznikami jest przeznaczona dla okreslonego adresata i moze zawierac informacje poufne. W razie przypadkowego otrzymania tej wiadomosci, prosimy o powiadomienie nadawcy oraz trwale jej usuniecie; jakiekolwiek
-przegladanie lub rozpowszechnianie jest zabronione.
-This e-mail and any attachments may contain confidential material for the sole use of the intended recipient(s). If you are not the intended recipient, please contact the sender and delete all copies; any review or distribution by
-others is strictly prohibited.
+Tim
