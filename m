@@ -1,54 +1,129 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42832 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752372AbdDLRdy (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Apr 2017 13:33:54 -0400
-Date: Wed, 12 Apr 2017 12:33:50 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jarod Wilson <jarod@redhat.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH] pci/quirks: ITE 8893 needs
- quirk_use_pcie_bridge_dma_alias
-Message-ID: <20170412173350.GG25197@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170411010127.57858-1-jarod@redhat.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 30/30] vfio: Allow to bind foreign task
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-31-jean-philippe.brucker@arm.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <b937914a-d215-8223-0846-65271a568170@semihalf.com>
+Date: Wed, 26 Apr 2017 09:25:38 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170411010127.57858-1-jarod@redhat.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170227195441.5170-31-jean-philippe.brucker@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
+ linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 10, 2017 at 09:01:27PM -0400, Jarod Wilson wrote:
-> This bridge has the same problems as the ITE 8892, which were resulting in
-> crippling an older PCI 1Gbps NIC down to 45Mbps throughput with IOMMU and
-> VT-d enabled. With the patch, this old e1000 goes back up to ~900Mbps.
-> 
-> Suggested-by: Alex Williamson <alex.williamson@redhat.com>
-> CC: linux-pci@vger.kernel.org
-> CC: Alex Williamson <alex.williamson@redhat.com>
-> CC: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Jarod Wilson <jarod@redhat.com>
-
-Applied with Alex's reviewed-by to pci/iommu for v4.12, thanks!
-
+On 27.02.2017 20:54, Jean-Philippe Brucker wrote:
+> Let the process that owns the device create an address space bond on
+> behalf of another process. We add a pid argument to the BIND_TASK ioctl,
+> allowing the caller to bind a foreign task. The expected program flow in
+> this case is:
+>
+> * Process A creates the VFIO context and initializes the device.
+> * Process B asks A to bind its address space.
+> * Process A issues an ioctl to the VFIO device fd with BIND_TASK(pid).
+>   It may communicate the given PASID back to process B or keep track of it
+>   internally.
+> * Process B asks A to perform transactions on its virtual address.
+> * Process A launches transaction tagged with the given PASID.
+>
+> Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
 > ---
->  drivers/pci/quirks.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 9236e40ac055..c95fbf2431f8 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -3914,6 +3914,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ASMEDIA, 0x1080,
->  DECLARE_PCI_FIXUP_HEADER(0x10e3, 0x8113, quirk_use_pcie_bridge_dma_alias);
->  /* ITE 8892, https://bugzilla.kernel.org/show_bug.cgi?id=73551 */
->  DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8892, quirk_use_pcie_bridge_dma_alias);
-> +/* ITE 8893 has the same problem as the 8892 */
-> +DECLARE_PCI_FIXUP_HEADER(0x1283, 0x8893, quirk_use_pcie_bridge_dma_alias);
->  /* Intel 82801, https://bugzilla.kernel.org/show_bug.cgi?id=44881#c49 */
->  DECLARE_PCI_FIXUP_HEADER(0x8086, 0x244e, quirk_use_pcie_bridge_dma_alias);
->  
-> -- 
-> 2.12.1
-> 
+>  drivers/vfio/vfio.c       | 35 +++++++++++++++++++++++++++++++++--
+>  include/uapi/linux/vfio.h | 15 +++++++++++++++
+>  2 files changed, 48 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/vfio/vfio.c b/drivers/vfio/vfio.c
+> index c4505d8f4c61..ecc5d07e3dbb 100644
+> --- a/drivers/vfio/vfio.c
+> +++ b/drivers/vfio/vfio.c
+> @@ -26,6 +26,7 @@
+>  #include <linux/module.h>
+>  #include <linux/mutex.h>
+>  #include <linux/pci.h>
+> +#include <linux/ptrace.h>
+>  #include <linux/rwsem.h>
+>  #include <linux/sched.h>
+>  #include <linux/slab.h>
+> @@ -1660,7 +1661,7 @@ static long vfio_svm_ioctl(struct vfio_device *device, unsigned int cmd,
+>  	struct vfio_device_svm svm;
+>  	struct vfio_task *vfio_task;
+>
+> -	minsz = offsetofend(struct vfio_device_svm, pasid);
+> +	minsz = offsetofend(struct vfio_device_svm, pid);
+>
+>  	if (copy_from_user(&svm, (void __user *)arg, minsz))
+>  		return -EFAULT;
+> @@ -1669,9 +1670,39 @@ static long vfio_svm_ioctl(struct vfio_device *device, unsigned int cmd,
+>  		return -EINVAL;
+>
+>  	if (cmd == VFIO_DEVICE_BIND_TASK) {
+> -		struct task_struct *task = current;
+> +		struct mm_struct *mm;
+> +		struct task_struct *task;
+> +
+> +		if (svm.flags & ~VFIO_SVM_PID)
+> +			return -EINVAL;
+> +
+> +		if (svm.flags & VFIO_SVM_PID) {
+> +			rcu_read_lock();
+> +			task = find_task_by_vpid(svm.pid);
+> +			if (task)
+> +				get_task_struct(task);
+> +			rcu_read_unlock();
+> +			if (!task)
+> +				return -ESRCH;
+> +
+> +			/*
+> +			 * Ensure process has RW access on the task's mm
+> +			 * FIXME:
+> +			 * - I think this ought to be in the IOMMU API
+> +			 * - I'm assuming permission is never revoked during the
+> +			 *   task's lifetime. Might be mistaken.
+> +			 */
+> +			mm = mm_access(task, PTRACE_MODE_ATTACH_REALCREDS);
+> +			if (!mm || IS_ERR(mm))
+
+I know this is RFC patch but considering we will keep this as is, we 
+need here:
++put_task_struct(task);
+
+
+> +				return IS_ERR(mm) ? PTR_ERR(mm) : -ESRCH;
+> +			mmput(mm);
+> +		} else {
+> +			get_task_struct(current);
+> +			task = current;
+> +		}
+>
+>  		ret = iommu_bind_task(device->dev, task, &svm.pasid, 0, NULL);
+> +		put_task_struct(task);
+>  		if (ret)
+>  			return ret;
+>
+
+Thanks,
+Tomasz
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
