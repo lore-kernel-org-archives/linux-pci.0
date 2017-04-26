@@ -1,266 +1,154 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37813 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1035322AbdDUFFu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 21 Apr 2017 01:05:50 -0400
-From: Yinghai Lu <yinghai@kernel.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        David Miller <davem@davemloft.net>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: Wei Yang <weiyang@linux.vnet.ibm.com>,
-        Khalid Aziz <khalid.aziz@oracle.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yinghai Lu <yinghai@kernel.org>, sparclinux@vger.kernel.org
-Subject: [PATCH 09/13] PCI: Check pref compatible bit for mem64 resource of PCIe device
-Date: Thu, 20 Apr 2017 22:04:56 -0700
-Message-Id: <20170421050500.13957-10-yinghai@kernel.org>
-In-Reply-To: <20170421050500.13957-1-yinghai@kernel.org>
-References: <20170421050500.13957-1-yinghai@kernel.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [RFC/RFT PATCH 11/18] PCI: Remove pci_scan_root_bus_msi()
+Date: Wed, 26 Apr 2017 12:18:02 +0100
+Message-Id: <20170426111809.19922-12-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
+ Roy Zang <tie-fei.zang@freescale.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We still get "no compatible bridge window" warning on sparc T5-8
-after we add support for 64bit resource parsing for root bus.
+The pci_scan_root_bus_bridge() function allows passing a parameterized
+struct pci_host_bridge and scanning the resulting PCI bus; since the
+struct msi_controller is part of the struct pci_host_bridge and the
+struct pci_host_bridge can now be passed to pci_scan_root_bus_bridge()
+explicitly, there is no need for a scan interface with a MSI controller
+parameter.
 
- PCI: scan_bus[/pci@300/pci@1/pci@0/pci@6] bus no 8
- PCI: Claiming 0000:00:01.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:01:00.0: Resource 15: 0000800100000000..00008004afffffff [220c]
- PCI: Claiming 0000:02:04.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:03:00.0: Resource 15: 0000800100000000..000080012fffffff [220c]
- PCI: Claiming 0000:04:06.0: Resource 14: 0000800100000000..000080010fffffff [220c]
- PCI: Claiming 0000:05:00.0: Resource 0: 0000800100000000..0000800100001fff [204]
- pci 0000:05:00.0: can't claim BAR 0 [mem 0x800100000000-0x800100001fff]: no compatible bridge window
+With all PCI host controller drivers and platform code relying
+on pci_scan_root_bus_msi() converted over to pci_scan_root_bus_bridge()
+the pci_scan_root_bus_msi() becomes obsolete and can be removed.
 
-All the bridges 64-bit resource have pref bit, but the device resource does not
-have pref set, then we can not find parent for the device resource,
-as we can not put non-pref mmio under pref mmio.
-
-According to pcie spec errta
-https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-page 13, in some case it is ok to mark some as pref.
-
-Mark if the entire path from the host to the adapter is over PCI Express.
-Set pref compatible bit for claim/sizing/assign for 64bit mem resource
-on that pcie device.
-
--v2: set pref for mmio 64 when whole path is PCI Express, according to David Miller.
--v3: don't set pref directly, change to UNDER_PREF, and set PREF before
-     sizing and assign resource, and cleart PREF afterwards. requested by BenH.
--v4: use on_all_pcie_path device flag instead.
--v6: update after pci_find_bus_resource() change
-
-Link: http://lkml.kernel.org/r/CAE9FiQU1gJY1LYrxs+ma5LCTEEe4xmtjRG0aXJ9K_Tsu+m9Wuw@mail.gmail.com
-Reported-by: David Ahern <david.ahern@oracle.com>
-Tested-by: David Ahern <david.ahern@oracle.com>
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=81431
-Tested-by: TJ <linux@iam.tj>
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: sparclinux@vger.kernel.org
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
 ---
- arch/sparc/kernel/pci_common.c |  2 +-
- drivers/pci/pci.c              |  8 +++++---
- drivers/pci/pci.h              |  2 ++
- drivers/pci/probe.c            | 33 +++++++++++++++++++++++++++++++++
- drivers/pci/setup-bus.c        | 23 +++++++++++++++++++----
- drivers/pci/setup-res.c        |  4 ++++
- include/linux/pci.h            |  3 ++-
- 7 files changed, 66 insertions(+), 9 deletions(-)
+ drivers/pci/probe.c | 27 +++++----------------------
+ include/linux/pci.h |  4 ----
+ 2 files changed, 5 insertions(+), 26 deletions(-)
 
-diff --git a/arch/sparc/kernel/pci_common.c b/arch/sparc/kernel/pci_common.c
-index 1ebc7ff..6f206a1 100644
---- a/arch/sparc/kernel/pci_common.c
-+++ b/arch/sparc/kernel/pci_common.c
-@@ -343,7 +343,7 @@ static void pci_register_region(struct pci_bus *bus, const char *name,
- 	region.start = rstart;
- 	region.end = rstart + size - 1UL;
- 	pcibios_bus_to_resource(bus, res, &region);
--	bus_res = pci_find_bus_resource(bus, res);
-+	bus_res = pci_find_bus_resource(bus, res, res->flags);
- 	if (!bus_res) {
- 		kfree(res);
- 		return;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index deb828f..bdb70b7 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -438,7 +438,7 @@ int pci_find_ht_capability(struct pci_dev *dev, int ht_cap)
- EXPORT_SYMBOL_GPL(pci_find_ht_capability);
- 
- struct resource *pci_find_bus_resource(const struct pci_bus *bus,
--					struct resource *res)
-+					struct resource *res, int flags)
- {
- 	struct resource *r;
- 	int i;
-@@ -453,7 +453,7 @@ struct resource *pci_find_bus_resource(const struct pci_bus *bus,
- 			 * not, the allocator made a mistake.
- 			 */
- 			if (r->flags & IORESOURCE_PREFETCH &&
--			    !(res->flags & IORESOURCE_PREFETCH))
-+			    !(flags & IORESOURCE_PREFETCH))
- 				return NULL;
- 
- 			/*
-@@ -481,7 +481,9 @@ struct resource *pci_find_bus_resource(const struct pci_bus *bus,
- struct resource *pci_find_parent_resource(const struct pci_dev *dev,
- 					  struct resource *res)
- {
--	return pci_find_bus_resource(dev->bus, res);
-+	int flags = pci_resource_pref_compatible(dev, res);
-+
-+	return pci_find_bus_resource(dev->bus, res, flags);
- }
- EXPORT_SYMBOL(pci_find_parent_resource);
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 586e63f..eb57780 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -368,4 +368,6 @@ int acpi_get_rc_resources(struct device *dev, const char *hid, u16 segment,
- 			  struct resource *res);
- #endif
- 
-+int pci_resource_pref_compatible(const struct pci_dev *dev,
-+				 struct resource *res);
- #endif /* DRIVERS_PCI_H */
 diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 5548044..676b55f 100644
+index c7a7f72..de259f3 100644
 --- a/drivers/pci/probe.c
 +++ b/drivers/pci/probe.c
-@@ -1920,6 +1920,36 @@ static void pci_dma_configure(struct pci_dev *dev)
- 	pci_put_host_bridge_device(bridge);
+@@ -2311,9 +2311,8 @@ void __weak pcibios_remove_bus(struct pci_bus *bus)
+ {
  }
  
-+static bool pci_up_path_over_pcie(struct pci_bus *bus)
-+{
-+	if (pci_is_root_bus(bus))
-+		return true;
-+
-+	if (bus->self && !pci_is_pcie(bus->self))
-+		return false;
-+
-+	return pci_up_path_over_pcie(bus->parent);
-+}
-+
-+/*
-+ * According to
-+ * https://www.pcisig.com/specifications/pciexpress/base2/PCIe_Base_r2.1_Errata_08Jun10.pdf
-+ * page 13, system firmware could put some 64bit non-pref under 64bit pref,
-+ * on some cases.
-+ * Let's mark if entire path from the host to the adapter is over PCI
-+ * Express. later will use that compute pref compaitable bit.
-+ */
-+static void pci_set_on_all_pcie_path(struct pci_dev *dev)
-+{
-+	if (!pci_is_pcie(dev))
-+		return;
-+
-+	if (!pci_up_path_over_pcie(dev->bus))
-+		return;
-+
-+	dev->on_all_pcie_path = 1;
-+}
-+
- void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
+-static struct pci_bus *pci_create_root_bus_msi(struct device *parent,
+-		int bus, struct pci_ops *ops, void *sysdata,
+-		struct list_head *resources, struct msi_controller *msi)
++struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
  {
- 	int ret;
-@@ -1950,6 +1980,9 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	/* Initialize various capabilities */
- 	pci_init_capabilities(dev);
+ 	int error;
+ 	struct pci_host_bridge *bridge;
+@@ -2328,7 +2327,6 @@ static struct pci_bus *pci_create_root_bus_msi(struct device *parent,
+ 	bridge->sysdata = sysdata;
+ 	bridge->busnr = bus;
+ 	bridge->ops = ops;
+-	bridge->msi = msi;
  
-+	/* After pcie_cap is assigned */
-+	pci_set_on_all_pcie_path(dev);
-+
- 	/*
- 	 * Add the device to our list of discovered devices
- 	 * and the bus list for fixup functions, etc.
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index 958da7d..3de66e6 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -735,6 +735,20 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
- 	return -EINVAL;
+ 	error = pci_register_host_bridge(bridge);
+ 	if (error < 0)
+@@ -2340,13 +2338,6 @@ static struct pci_bus *pci_create_root_bus_msi(struct device *parent,
+ 	kfree(bridge);
+ 	return NULL;
+ }
+-
+-struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+-{
+-	return pci_create_root_bus_msi(parent, bus, ops, sysdata, resources,
+-				       NULL);
+-}
+ EXPORT_SYMBOL_GPL(pci_create_root_bus);
+ 
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
+@@ -2450,9 +2441,8 @@ int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
+ 	return 0;
  }
  
-+int pci_resource_pref_compatible(const struct pci_dev *dev,
-+				 struct resource *res)
-+{
-+	if (res->flags & IORESOURCE_PREFETCH)
-+		return res->flags;
-+
-+	if ((res->flags & IORESOURCE_MEM) &&
-+	    (res->flags & IORESOURCE_MEM_64) &&
-+	    dev->on_all_pcie_path)
-+		return res->flags | IORESOURCE_PREFETCH;
-+
-+	return res->flags;
-+}
-+
- /* Check whether the bridge supports optional I/O and
-    prefetchable memory ranges. If not, the respective
-    base/limit registers must be read-only and read as 0. */
-@@ -1032,11 +1046,12 @@ static int pbus_size_mem(struct pci_bus *bus, unsigned long mask,
- 		for (i = 0; i < PCI_NUM_RESOURCES; i++) {
- 			struct resource *r = &dev->resource[i];
- 			resource_size_t r_size;
-+			int flags = pci_resource_pref_compatible(dev, r);
- 
--			if (r->parent || (r->flags & IORESOURCE_PCI_FIXED) ||
--			    ((r->flags & mask) != type &&
--			     (r->flags & mask) != type2 &&
--			     (r->flags & mask) != type3))
-+			if (r->parent || (flags & IORESOURCE_PCI_FIXED) ||
-+			    ((flags & mask) != type &&
-+			     (flags & mask) != type2 &&
-+			     (flags & mask) != type3))
- 				continue;
- 			r_size = resource_size(r);
- #ifdef CONFIG_PCI_IOV
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index 85774b7..2aeb4bc 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -285,15 +285,19 @@ static int __pci_assign_resource(struct pci_bus *bus, struct pci_dev *dev,
- static int _pci_assign_resource(struct pci_dev *dev, int resno,
- 				resource_size_t size, resource_size_t min_align)
+-struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata,
+-		struct list_head *resources, struct msi_controller *msi)
++struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
++		struct pci_ops *ops, void *sysdata, struct list_head *resources)
  {
-+	struct resource *res = dev->resource + resno;
-+	int old_flags = res->flags;
- 	struct pci_bus *bus;
- 	int ret;
- 
-+	res->flags = pci_resource_pref_compatible(dev, res);
- 	bus = dev->bus;
- 	while ((ret = __pci_assign_resource(bus, dev, resno, size, min_align))) {
- 		if (!bus->parent || !bus->self->transparent)
+ 	struct resource_entry *window;
+ 	bool found = false;
+@@ -2465,7 +2455,7 @@ struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
  			break;
- 		bus = bus->parent;
- 	}
-+	res->flags = old_flags;
+ 		}
  
- 	return ret;
+-	b = pci_create_root_bus_msi(parent, bus, ops, sysdata, resources, msi);
++	b = pci_create_root_bus(parent, bus, ops, sysdata, resources);
+ 	if (!b)
+ 		return NULL;
+ 
+@@ -2483,13 +2473,6 @@ struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
+ 
+ 	return b;
  }
+-
+-struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+-		struct pci_ops *ops, void *sysdata, struct list_head *resources)
+-{
+-	return pci_scan_root_bus_msi(parent, bus, ops, sysdata, resources,
+-				     NULL);
+-}
+ EXPORT_SYMBOL(pci_scan_root_bus);
+ 
+ struct pci_bus *pci_scan_bus(int bus, struct pci_ops *ops,
 diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 817786b..b14dd94 100644
+index 757779a..6aa0090 100644
 --- a/include/linux/pci.h
 +++ b/include/linux/pci.h
-@@ -321,6 +321,7 @@ struct pci_dev {
- 	unsigned int	hotplug_user_indicators:1; /* SlotCtl indicators
- 						      controlled exclusively by
- 						      user sysfs */
-+	unsigned int	on_all_pcie_path:1;	/* up to host-bridge all pcie */
- 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
- 
-@@ -837,7 +838,7 @@ void pcibios_resource_to_bus(struct pci_bus *bus, struct pci_bus_region *region,
- void pcibios_bus_to_resource(struct pci_bus *bus, struct resource *res,
- 			     struct pci_bus_region *region);
- struct resource *pci_find_bus_resource(const struct pci_bus *bus,
--					struct resource *res);
-+					struct resource *res, int flags);
- void pcibios_scan_specific_bus(int busn);
- struct pci_bus *pci_find_bus(int domain, int busnr);
- void pci_bus_add_devices(const struct pci_bus *bus);
+@@ -840,10 +840,6 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
+ int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
+ int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
+ void pci_bus_release_busn_res(struct pci_bus *b);
+-struct pci_bus *pci_scan_root_bus_msi(struct device *parent, int bus,
+-				      struct pci_ops *ops, void *sysdata,
+-				      struct list_head *resources,
+-				      struct msi_controller *msi);
+ struct pci_bus *pci_scan_root_bus(struct device *parent, int bus,
+ 					     struct pci_ops *ops, void *sysdata,
+ 					     struct list_head *resources);
 -- 
-2.9.3
+2.10.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
