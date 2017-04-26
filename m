@@ -1,52 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:49357 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1432405AbdDYQ7A (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 25 Apr 2017 12:59:00 -0400
-To: Marta Rybczynska <mrybczyn@kalray.eu>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <c8edc480-a2ac-a763-8438-18f3396db483@deltatee.com>
- <e2165253dc355d5cb223e754d78047b1@codeaurora.org>
- <c5d7da85-41fd-2769-fcf8-b3c2a1fab95f@deltatee.com>
- <f0448277-9381-5c3d-d194-1efa1d1b44a6@codeaurora.org>
- <63d73995-4dfa-6270-ca13-972e0628011b@deltatee.com>
- <bed80d4e-7709-5991-498e-0ac361ca96a6@codeaurora.org>
- <ef507444-d3e5-0454-86a0-b5c4ae4b4dd9@deltatee.com>
- <117239810.400362790.1493121533234.JavaMail.zimbra@kalray.eu>
-Cc: Sinan Kaya <okaya@codeaurora.org>, Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <190d9a89-e227-e410-5886-ee2e20a9b941@deltatee.com>
-Date: Tue, 25 Apr 2017 10:58:40 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI boot
+ for X-Gene v1
+To: Loc Ho <lho@apm.com>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+References: <1455069384-22323-1-git-send-email-dhdang@apm.com>
+ <1456330151.5681.46.camel@redhat.com> <56CDD767.6020103@arm.com>
+ <CADaLND=mrkxOWOzcEb8os16Rb=SDHfnn_8eSgB4bQYH3UguS3w@mail.gmail.com>
+ <20160225173822.GA6349@red-moon>
+ <CADaLNDnywVPER9QhmK4C6JyCLhta_M_cVSOuSkEHnmnLPFo3JA@mail.gmail.com>
+ <20160526123459.GA23794@red-moon>
+ <CADaLNDnf8SRbUkBN9fZMvrvsnTQs+DLyqnZfVpWqVyyY8Hk=1Q@mail.gmail.com>
+ <20160527105238.GA25842@red-moon>
+ <CADaLNDkvY_gZwWYfy1dHzBLRwH1S1h3gTN9ib5ixqG4REJuOow@mail.gmail.com>
+From: Jon Masters <jcm@redhat.com>
+Message-ID: <6b577a0e-db39-d2d9-1093-3fb2513c568f@redhat.com>
+Date: Wed, 26 Apr 2017 00:17:08 -0400
 MIME-Version: 1.0
-In-Reply-To: <117239810.400362790.1493121533234.JavaMail.zimbra@kalray.eu>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC 1/8] Introduce Peer-to-Peer memory (p2pmem) device
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <CADaLNDkvY_gZwWYfy1dHzBLRwH1S1h3gTN9ib5ixqG4REJuOow@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Feng Kan <fkan@apm.com>, rjw@rjwysocki.net,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ patches <patches@apm.com>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Tanmay Inamdar <tinamdar@apm.com>, Mark Salter <msalter@redhat.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On 06/03/2016 06:15 PM, Duc Dang wrote:
 
+> Do you have other suggestions? Otherwise, I will prepare a patch
+> following Lorenzo's approach.
 
-On 25/04/17 05:58 AM, Marta Rybczynska wrote:
-> I would add one issue that doesn't seem to be addressed: in my experience
-> P2P doesn't work when IOMMU activated. It works best with deactivation at
-> the BIOS level, even the kernel options are not enough in some cases.
+Duc has since left Applied for other pastures. I miss him, he's a great
+guy. He laid all the right groundwork for this, but the ACPI binding
+still needs to be upstreamed. It's a few lines of code matching on
+APMC0D0E but without it, upstream kernels wont have working MSI on
+X-Gene with ACPI. I need this to be upstreamed soon please :) Can
+someone at APM followup with an updated patch, and get it in?
 
-Well this would likely be addressed by 'arch_p2p_cross_segment' as
-proposed by Jason.
+Here's the rub. The average person booting a Linux box (even a good
+kernel person) isn't going to say "hey, MSIs aren't setup right on this
+ARM server because it's compliant with 1 out of 3 possible ways MSIs
+might be done at a high level [let's forget the many others] and all it
+needs is this...". What they're going to say is "huh, PCIe card doesn't
+work, might be an MSI problem". Which is the email I have after someone
+tried using an IB card in an X-Gene box and spent a few hours poking.
 
-Logan
+We're so close to having "ACPI all the things" but the latest
+development builds of RHEL don't do MSI on X-Gene because of the Red Hat
+"upstream first" rules. So let's get that fixed.
+
+Thanks,
+
+Jon.
+
+-- 
+Computer Architect | Sent from my Fedora powered laptop
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
