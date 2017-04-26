@@ -1,71 +1,69 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from ale.deltatee.com ([207.54.116.67]:57079 "EHLO ale.deltatee.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751932AbdDCWKk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Mon, 3 Apr 2017 18:10:40 -0400
-To: Dan Williams <dan.j.williams@intel.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1490911959-5146-6-git-send-email-logang@deltatee.com>
- <20170331070950.GA9059@infradead.org>
- <435d4471-436b-87e6-8827-c9fc6cbdde2c@deltatee.com>
- <445bc352-75d7-438f-96ef-c2411215628d@deltatee.com>
- <CAPcyv4g=MHbjbY0GFPoLq3wAGwhcC7813O7iLUWGEChWh0M7Dw@mail.gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        Keith Busch <keith.busch@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "linux-nvdimm@lists.01.org" <linux-nvdimm@lists.01.org>,
-        linux-rdma@vger.kernel.org, linux-pci@vger.kernel.org,
-        Steve Wise <swise@opengridcomputing.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        linux-nvme@lists.infradead.org,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Christoph Hellwig <hch@lst.de>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <ff0dd5ec-2562-9f1d-1335-d0a8813f2f50@deltatee.com>
-Date: Mon, 3 Apr 2017 16:10:27 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 29/30] vfio: Add support for Shared Virtual Memory
+To: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-30-jean-philippe.brucker@arm.com>
+ <f5745241-83b0-0945-7616-4b59d7ebcd48@semihalf.com>
+ <c53478ed-20a9-414f-06ef-385c9252556f@arm.com>
+From: Tomasz Nowicki <tn@semihalf.com>
+Message-ID: <6723b835-5325-f120-9b49-16209feb3611@semihalf.com>
+Date: Wed, 26 Apr 2017 13:01:48 +0200
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4g=MHbjbY0GFPoLq3wAGwhcC7813O7iLUWGEChWh0M7Dw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC 5/8] scatterlist: Modify SG copy functions to support io
- memory.
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <c53478ed-20a9-414f-06ef-385c9252556f@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
+ linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 03/04/17 03:44 PM, Dan Williams wrote:
-> On Mon, Apr 3, 2017 at 2:20 PM, Logan Gunthorpe <logang@deltatee.com> wrote:
->> Hi Christoph,
+On 26.04.2017 12:08, Jean-Philippe Brucker wrote:
+> On 26/04/17 07:53, Tomasz Nowicki wrote:
+>>> +        mutex_lock(&device->tasks_lock);
+>>> +        list_for_each_entry(vfio_task, &device->tasks, list) {
+>>> +            if (vfio_task->pasid != svm.pasid)
+>>> +                continue;
+>>> +
+>>> +            ret = iommu_unbind_task(device->dev, svm.pasid, flags);
+>>> +            if (ret)
+>>> +                dev_warn(device->dev, "failed to unbind PASID %u\n",
+>>> +                     vfio_task->pasid);
+>>> +
+>>> +            list_del(&vfio_task->list);
+>>> +            kfree(vfio_task);
 >>
->> What are your thoughts on an approach like the following untested
->> draft patch.
->>
->> The patch (if fleshed out) makes it so iomem can be used in an sgl
->> and WARN_ONs will occur in places where drivers attempt to access
->> iomem directly through the sgl.
->>
->> I'd also probably create a p2pmem_alloc_sgl helper function so driver
->> writers wouldn't have to mess with sg_set_iomem_page.
->>
->> With all that in place, it should be relatively safe for drivers to
->> implement p2pmem even though we'd still technically be violating the
->> __iomem boundary in some places.
-> 
-> Just reacting to this mail, I still haven't had a chance to take a
-> look at the rest of the series.
-> 
-> The pfn_t type was invented to carry extra type and page lookup
-> information about the memory behind a given pfn. At first glance that
-> seems a more natural place to carry an indication that this is an
-> "I/O" pfn.
+>> Please use list_for_each_entry_safe.
+>
+> There is:
+>
+> +            break;
+>
+> right after kfree, so we'd never follow vfio_task->list.next after freeing
+> vfio_task. The code searches for the _only_ task matching the PASID,
+> removes it and leaves the loop.
+>
 
-I agree... But what are the plans for pfn_t? Is anyone working on using
-it in the scatterlist code? Currently it's not there yet and given the
-assertion that we will continue to be using struct page for DMA is that
-a direction we'd want to go?
+Ah right. Sorry for the noise.
 
-Logan
+Tomasz
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
