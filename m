@@ -1,120 +1,75 @@
-Return-Path: <SRS0=5UqL=3Y=gmail.com=larry.finger@kernel.org>
-Return-Path: <SRS0=5UqL=3Y=gmail.com=larry.finger@kernel.org>
-Sender: Larry Finger <larry.finger@gmail.com>
-Subject: Re: 4.10.9 nok with realtek wlan, atom
-To: rupert THURNER <rupert.thurner@gmail.com>
-References: <CAJs9aZ8HVPn_J9yPjvdBm-A_d3FiquPMGoy1xFsGopF8Xg_89Q@mail.gmail.com>
- <9e48930c-4822-5af4-2ebb-4d2dcd12d448@lwfinger.net>
- <CAJs9aZ9Hwnjb60mCycR3T2TWH75ZTdtEeWQ1iHRN+6NkkD+pZA@mail.gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- Chaoming Li <chaoming_li@realsil.com.cn>, Kalle Valo <kvalo@codeaurora.org>,
- linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
- linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <40bc6004-519c-7bf1-874b-3ae169140637@lwfinger.net>
-Date: Sun, 16 Apr 2017 11:02:32 -0500
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [RFC/RFT PATCH 15/18] OF/PCI: Update of_irq_parse_and_map_pci()
+ comment
+Date: Wed, 26 Apr 2017 12:18:06 +0100
+Message-Id: <20170426111809.19922-16-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Wenrui Li <wenrui.li@rock-chips.com>, Russell King <linux@armlinux.org.uk>,
+ Murali Karicheri <m-karicheri2@ti.com>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
+ Roy Zang <tie-fei.zang@freescale.com>
 MIME-Version: 1.0
-In-Reply-To: <CAJs9aZ9Hwnjb60mCycR3T2TWH75ZTdtEeWQ1iHRN+6NkkD+pZA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 04/16/2017 05:23 AM, rupert THURNER wrote:
-> On Sat, Apr 15, 2017 at 10:40 PM, Larry Finger
-> <Larry.Finger@lwfinger.net> wrote:
->> On 04/14/2017 03:26 PM, rupert THURNER wrote:
->>>
->>> On Thu, Feb 9, 2017 at 9:09 PM, Larry Finger <Larry.Finger@lwfinger.net>
->>> wrote:
->>>>
->>>> On 02/09/2017 01:43 PM, Bjorn Helgaas wrote:
->>>>>
->>>>>
->>>>> [+cc rtl8192ce folks in case they've seen this]
->>>>>
->>>>> On Thu, Feb 09, 2017 at 03:45:01PM +0100, rupert THURNER wrote:
->>>>>>
->>>>>>
->>>>>> hi,
->>>>>>
->>>>>> not technical expert enough, i just wanted to give a short user
->>>>>> feedback. for realtek wlan on atom, kernels up to 4.9.5 are ok, and
->>>>>> kernel 4.10.0-rc7-g926af6273fc6 (arch linux-git version numbering) as
->>>>>> well. kernels 4.9.6, 4.9.7, and 4.9.8 fail, i.e. connection to a WLAN
->>>>>> hotspot is possible then drops, or connecting to wlan fails
->>>>>> alltogether.
->>>>>
->>>>>
->>>>>
->>>>> Thanks very much for your report, and sorry for the inconvenience.
->>>>>
->>>>> v4.10-rc7 works, so I guess we don't need to worry about fixing v4.10.
->>>>>
->>>>> But the stable kernels v4.9.6, v4.9.7, and v4.9.8 are broken, so we
->>>>> need to figure out why and make sure we fix the v4.9 stable series.
->>>>>
->>>>> I can't tell yet whether this is PCI-related or not.  If it is,
->>>>> 4922a6a5cfa7 ("PCI: Enumerate switches below PCI-to-PCIe bridges")
->>>>> appeared in v4.9.6, and there is a known issue with that.  The issue
->>>>> should be fixed by 610c2b7ff8f6 ("PCI/ASPM: Handle PCI-to-PCIe bridges
->>>>> as roots of PCIe hierarchies"), which appeared in v4.9.9, so I guess
->>>>> the first thing to do would be to test v4.9.9.
->>>>>
->>>>> If it's not fixed in v4.9.9, can you share the complete dmesg log
->>>>> (output of "dmesg" command) and "lspci -vv" output for v4.9.5 (last
->>>>> known working version) and v4.9.6 (first known broken version)?  On
->>>>> v4.9.6, collect the dmesg output after the failure occurs.
->>>>>
->>>>>> 24: PCI 300.0: 0282 WLAN controller
->>>>>>   [Created at pci.366]
->>>>>>   Model: "Realtek RTL8188CE 802.11b/g/n WiFi Adapter"
->>>>>>   Device: pci 0x8176 "RTL8188CE 802.11b/g/n WiFi Adapter"
->>>>>>   Revision: 0x01
->>>>>>   Driver: "rtl8192ce"
->>>>>>   Driver Modules: "rtl8192ce"
->>>>>>   Device File: wlp3s0
->>>>>>   Features: WLAN
->>>>
->>>>
->>>>
->>>> It would be helpful if someone were to bisect this issue. The only issue
->>>> that comes to mind was fixed in commit 52f5631a4c05 ("rtlwifi: rtl8192ce:
->>>> Fix loading of incorrect firmware") which is in 4.10-rc7 and will be
->>>> backported to 4.9.
->>>>
->>>> The above issue is one that could not be reproduced on my hardware, thus
->>>> it
->>>> took Jurij Smakov to find the fix. Without his bisection of the problem,
->>>> who
->>>> knows how long it would have taken to find my edit mistake.
->>>
->>>
->>> larry, using the newest kernel 4.10.8 the network connection dropps
->>> again irregular.
->>>
->>> # dmesg
->>> [    0.000000] Linux version 4.10.9-1-ARCH (builduser@tobias) (gcc
->>> version 6.3.1 20170306 (GCC) ) #1 SMP PREEMPT Sat Apr 8 12:39:59 CEST
->>> 2017
->>> [   11.933373] rtl8192ce: rtl8192ce: Power Save off (module option)
->>> [   11.933396] rtl8192ce: Using firmware rtlwifi/rtl8192cfw.bin
->>> [   11.978307] ieee80211 phy0: Selected rate control algorithm 'rtl_rc'
->>> [   11.978945] rtlwifi: rtlwifi: wireless switch is on
->>>
->>> # lspci -vv
->>> Subsystem: Realtek Semiconductor Co., Ltd. RTL8188CE 802.11b/g/n WiFi
->>> Adapter
->>> Kernel driver in use: rtl8192ce
->>
->>
->> Is firmware rtlwifi/rtl8192cfw.bin also used on kernels that work?
->
-> 4.10.x used to work. 4.10.6 or 4.10.7 it started failing? i am not too
-> sure about it.
->
-> # ls -l /usr/lib/firmware/rtlwifi/rtl8192cfw.bin
-> -rw-r--r-- 1 root root 16192 Mar 10 12:15
-> /usr/lib/firmware/rtlwifi/rtl8192cfw.bin
+From: Matthew Minter <matt@masarand.com>
 
-That does not answer my question.
+With the introduction of struct pci_host_bridge.(*map_irq) function
+pointer add another direct usage of of_irq_parse_and_map_pci().
 
-Larry
+Update the function comment to reflect this behaviour.
+
+Signed-off-by: Matthew Minter <matt@masarand.com>
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+---
+ drivers/of/of_pci_irq.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/of/of_pci_irq.c b/drivers/of/of_pci_irq.c
+index c175d9c..3a05568 100644
+--- a/drivers/of/of_pci_irq.c
++++ b/drivers/of/of_pci_irq.c
+@@ -113,7 +113,8 @@ EXPORT_SYMBOL_GPL(of_irq_parse_pci);
+  * @pin: PCI irq pin number; passed when used as map_irq callback. Unused
+  *
+  * @slot and @pin are unused, but included in the function so that this
+- * function can be used directly as the map_irq callback to pci_fixup_irqs().
++ * function can be used directly as the map_irq callback to
++ * pci_assign_irq() and struct pci_host_bridge.map_irq pointer
+  */
+ int of_irq_parse_and_map_pci(const struct pci_dev *dev, u8 slot, u8 pin)
+ {
+-- 
+2.10.0
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
