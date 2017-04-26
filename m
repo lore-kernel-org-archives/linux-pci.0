@@ -1,15 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH 1/1] PCI: Add MCFG quirk for 2nd node of Cavium ThunderX
- pass2.x host controller
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1490789773-21506-1-git-send-email-tn@semihalf.com>
- <20170421165614.GA17916@bhelgaas-glaptop.roam.corp.google.com>
-From: Tomasz Nowicki <tn@semihalf.com>
-Message-ID: <1e1aef81-3d0e-02a3-8005-47d9c1d9d5f3@semihalf.com>
-Date: Fri, 21 Apr 2017 19:30:41 +0200
+Date: Wed, 26 Apr 2017 17:12:57 +0200
+From: Andrew Lunn <andrew@lunn.ch>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [RFC/RFT PATCH 07/18] ARM: PCI: orion5x: Convert PCI scan API to
+ pci_scan_root_bus_bridge()
+Message-ID: <20170426151257.GA4489@lunn.ch>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+ <20170426111809.19922-8-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-In-Reply-To: <20170421165614.GA17916@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170426111809.19922-8-lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,77 +17,94 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo.Pieralisi@arm.com, Sunil.Goutham@cavium.com, rafael@kernel.org,
- linux-pci@vger.kernel.org, linu.cherian@cavium.com, ddaney@caviumnetworks.com,
- geethasowjanya.akula@gmail.com, linux-acpi@vger.kernel.org,
- robert.richter@caviumnetworks.com, Vadim.Lomovtsev@caviumnetworks.com,
- linux-arm-kernel@lists.infradead.org
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Jason Cooper <jason@lakedaemon.net>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 21.04.2017 18:56, Bjorn Helgaas wrote:
-> On Wed, Mar 29, 2017 at 02:16:13PM +0200, Tomasz Nowicki wrote:
->> Currently SoCs pass2.x do not emulate EA headers for ACPI boot method at all.
->> However, for pass2.x some devices (like EDAC) advertise incorrect base addresses
->> in their BARs which results in driver probe failure during resource request.
->> Since all problematic blocks are on 2nd NUMA node under domain 10 add necessary
->> quirk entry to obtain BAR addresses correction using EA header emulation.
->>
->> Fixes: 44f22bd91e88 ("PCI: Add MCFG quirks for Cavium ThunderX pass2.x host controller")
->> Signed-off-by: Tomasz Nowicki <tn@semihalf.com>
->> CC: stable@vger.kernel.org	# v4.10+
->
-> Sorry Tomasz, I must have mistakenly marked this "accepted" in
-> patchwork, so it fell off my to-do list.  It's too late to get this in
-> v4.11, but I can still apply it for v4.12.
->
-> I put it on my pci/host-thunder branch with Robert's ack.  I added a preceding
-> patch to tidy up whitespace, which makes this patch look like just:
->
->         /* SoC pass2.x */
->         THUNDER_PEM_QUIRK(1, 0),
->         THUNDER_PEM_QUIRK(1, 1),
-> +       THUNDER_ECAM_QUIRK(1, 10),
->
-> Please double-check it to make sure this is what you need.
+On Wed, Apr 26, 2017 at 12:17:58PM +0100, Lorenzo Pieralisi wrote:
+> The introduction of pci_scan_root_bus_bridge() provides a PCI core
+> API to scan a PCI root bus backed by an already initialized
+> struct pci_host_bridge object, which simplifies the bus scan
+> interface and makes the PCI scan root bus interface easier to
+> generalize as members are added to the struct pci_host_bridge().
+> 
+> Convert ARM orion5x platform code to pci_scan_root_bus_bridge() to
+> improve the PCI root bus scanning interface.
 
-This is exactly what we need. Thank you Bjorn.
+Hi Lorenzo
 
-Tomasz
+Maybe there is something not right here.
 
->
->> ---
->>  drivers/acpi/pci_mcfg.c | 7 ++++---
->>  1 file changed, 4 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/acpi/pci_mcfg.c b/drivers/acpi/pci_mcfg.c
->> index a6a4cea..a0a391e 100644
->> --- a/drivers/acpi/pci_mcfg.c
->> +++ b/drivers/acpi/pci_mcfg.c
->> @@ -90,13 +90,14 @@ static struct mcfg_fixup mcfg_quirks[] = {
->>  	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x894057000000UL, node) },  \
->>  	{ "CAVIUM", "THUNDERX", rev, 9 + (10 * (node)), MCFG_BUS_ANY,	    \
->>  	  &thunder_pem_ecam_ops, THUNDER_PEM_RES(0x89808f000000UL, node) }
->> +#define THUNDER_ECAM_QUIRK(rev, seg)					\
->> +	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,			\
->> +	&pci_thunder_ecam_ops }
->>  	/* SoC pass2.x */
->>  	THUNDER_PEM_QUIRK(1, 0),
->>  	THUNDER_PEM_QUIRK(1, 1),
->> +	THUNDER_ECAM_QUIRK(1, 10),
->>
->> -#define THUNDER_ECAM_QUIRK(rev, seg)					\
->> -	{ "CAVIUM", "THUNDERX", rev, seg, MCFG_BUS_ANY,			\
->> -	&pci_thunder_ecam_ops }
->>  	/* SoC pass1.x */
->>  	THUNDER_PEM_QUIRK(2, 0),	/* off-chip devices */
->>  	THUNDER_PEM_QUIRK(2, 1),	/* off-chip devices */
->> --
->> 2.7.4
->>
+With plain 4.11-rc7 i get:
 
+root@orion5x:~# lspci -v
+0000:00:00.0 Memory controller: Marvell Technology Group Ltd. 88f5182 [Orion-NAS] ARM SoC (rev 02)
+        Subsystem: Marvell Technology Group Ltd. Device 11ab
+        Flags: bus master, fast devsel, latency 0, IRQ 12
+        Memory at <ignored> (64-bit, prefetchable)
+        Capabilities: [40] Power Management version 2
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [60] Express Root Port (Slot-), MSI 00
+
+0001:01:00.0 Memory controller: Marvell Technology Group Ltd. 88f5182 [Orion-NAS] ARM SoC (rev 02)
+        Flags: bus master, fast Back2Back, 66MHz, medium devsel, latency 0
+        BIST result: 00
+        Memory at <unassigned> (64-bit, prefetchable)
+        Memory at <ignored> (64-bit, prefetchable)
+        Memory at <ignored> (64-bit, non-prefetchable)
+        Expansion ROM at <ignored> [disabled]
+        Capabilities: [40] Power Management version 2
+        Capabilities: [48] Vital Product Data
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [60] PCI-X non-bridge device
+        Capabilities: [68] CompactPCI hot-swap <?>
+
+However, with your patches applied i get:
+
+0000:00:00.0 Memory controller: Marvell Technology Group Ltd. 88f5182 [Orion-NAS] ARM SoC (rev 02)
+        Subsystem: Marvell Technology Group Ltd. Device 11ab
+        Flags: bus master, fast devsel, latency 0
+        Memory at <ignored> (64-bit, prefetchable)
+        Capabilities: [40] Power Management version 2
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [60] Express Root Port (Slot-), MSI 00
+
+0001:01:00.0 Memory controller: Marvell Technology Group Ltd. 88f5182 [Orion-NAS] ARM SoC (rev 02)
+        Flags: bus master, fast Back2Back, 66MHz, medium devsel, latency 0
+        BIST result: 00
+        Memory at <unassigned> (64-bit, prefetchable)
+        Memory at <ignored> (64-bit, prefetchable)
+        Memory at <ignored> (64-bit, non-prefetchable)
+        Expansion ROM at <ignored> [disabled]
+        Capabilities: [40] Power Management version 2
+        Capabilities: [48] Vital Product Data
+        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
+        Capabilities: [60] PCI-X non-bridge device
+        Capabilities: [68] CompactPCI hot-swap <?>
+
+Note that IRQ 12 has disappeared from Flags: on 0000:00:00.0.
+
+Since there are no actual PCI devices on this bus, i cannot test if
+interrupts are broken.
+
+	   Andrew
 
 _______________________________________________
 linux-arm-kernel mailing list
