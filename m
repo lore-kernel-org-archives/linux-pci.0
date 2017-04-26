@@ -1,62 +1,82 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from 8bytes.org ([81.169.241.247]:48559 "EHLO theia.8bytes.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933443AbdDGMkf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 7 Apr 2017 08:40:35 -0400
-From: Joerg Roedel <joro@8bytes.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Daniel Drake <drake@endlessm.com>,
-        Alexander Deucher <Alexander.Deucher@amd.com>,
-        Samuel Sieb <samuel@sieb.net>, Joerg Roedel <jroedel@suse.de>
-Subject: [PATCH] PCI: Add ATS-disable quirk for AMD Stoney GPUs
-Date: Fri,  7 Apr 2017 14:40:28 +0200
-Message-Id: <1491568828-17146-1-git-send-email-joro@8bytes.org>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <SRS0=qyTT=4C=intel.com=jeffrey.t.kirsher@kernel.org>
+Return-Path: <SRS0=qyTT=4C=intel.com=jeffrey.t.kirsher@kernel.org>
+Message-ID: <1493244625.2124.6.camel@intel.com>
+Subject: Re: [PATCH 5/7] IB/hfi1: use pcie_flr instead of duplicating it
+From: Jeff Kirsher <jeffrey.t.kirsher@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>
+Cc: "Byczkowski, Jakub" <jakub.byczkowski@intel.com>, Bjorn Helgaas
+ <bhelgaas@google.com>, "Cabiddu, Giovanni" <giovanni.cabiddu@intel.com>,
+ "Benedetto, Salvatore" <salvatore.benedetto@intel.com>, "Marciniszyn, Mike"
+ <mike.marciniszyn@intel.com>, "Dalessandro, Dennis"
+ <dennis.dalessandro@intel.com>, Derek Chickles
+ <derek.chickles@caviumnetworks.com>, Satanand Burla
+ <satananda.burla@caviumnetworks.com>, Felix Manlunas
+ <felix.manlunas@caviumnetworks.com>, Raghu Vatsavayi
+ <raghu.vatsavayi@caviumnetworks.com>, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, qat-linux <qat-linux@intel.com>,
+ "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>,
+ "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Wed, 26 Apr 2017 15:10:25 -0700
+In-Reply-To: <20170425193955.GC29024@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170414191131.14286-1-hch@lst.de>
+	 <20170414191131.14286-6-hch@lst.de>
+	 <A33E225544E47D4DB5713032774B132783960382@irsmsx105.ger.corp.intel.com>
+	 <20170424143507.GA28812@lst.de>
+	 <20170425193955.GC29024@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: multipart/signed; micalg="pgp-sha512";
+	protocol="application/pgp-signature"; boundary="=-jIG6ReGmICyr8JtIFsUq"
+Mime-Version: 1.0
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Joerg Roedel <jroedel@suse.de>
 
-ATS is broken on this hardware and causes IOMMU stalls and
-system failure. Disable ATS on these devices to make them
-usable again with IOMMU enabled.
+--=-jIG6ReGmICyr8JtIFsUq
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Note that the commit in the Fixes-tag is not buggy, it
-just uncovers the problem in the hardware by increasing
-the ATS-flush rate.
+On Tue, 2017-04-25 at 14:39 -0500, Bjorn Helgaas wrote:
+> On Mon, Apr 24, 2017 at 04:35:07PM +0200, Christoph Hellwig wrote:
+> > On Mon, Apr 24, 2017 at 02:16:31PM +0000, Byczkowski, Jakub wrote:
+> > > Tested-by: Jakub Byczkowski <jakub.byczkowski@intel.com>
+> >=20
+> > Are you (and Doug) ok with queueing this up in the PCI tree?
+>=20
+> Applied this with Jakub's tested-by and Doug's ack to pci/virtualization
+> for v4.12.
+>=20
+> This still leaves these:
+>=20
+> =C2=A0 [PATCH 4/7] ixgbe: use pcie_flr instead of duplicating it
+> =C2=A0 [PATCH 6/7] crypto: qat: use pcie_flr instead of duplicating it
+> =C2=A0 [PATCH 7/7] liquidio: use pcie_flr instead of duplicating it
+>=20
+> I haven't seen any response to 4 and 6.=C2=A0 Felix reported an unused
+> variable in 7.=C2=A0 Let me know if you'd like me to do anything with
+> these.
 
-Fixes: b1516a14657a ('iommu/amd: Implement flush queue')
-Signed-off-by: Joerg Roedel <jroedel@suse.de>
----
- drivers/pci/quirks.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+Just provided my ACK for ixgbe patch.
+--=-jIG6ReGmICyr8JtIFsUq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part
+Content-Transfer-Encoding: 7bit
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 6736836..3bc9856 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -4634,3 +4634,22 @@ static void quirk_no_aersid(struct pci_dev *pdev)
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2031, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2032, quirk_no_aersid);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_INTEL, 0x2033, quirk_no_aersid);
-+
-+/*
-+ * Some devices have a broken ATS implementation causing IOMMU stalls.
-+ * Don't use ATS for those devices.
-+ */
-+static void quirk_disable_ats(struct pci_dev *pdev)
-+{
-+#ifdef CONFIG_PCI_ATS
-+	/*
-+	 * Set pdev->ats_cap = 0 to make pci_enable_ats() bail out
-+	 * early.
-+	 */
-+	dev_info(&pdev->dev, "QUIRK: Disabling ATS");
-+	pdev->ats_cap = 0;
-+#endif
-+}
-+
-+/* AMD Stoney platform GPU */
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x98e4, quirk_disable_ats);
--- 
-1.9.1
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCgAGBQJZARrRAAoJEOVv75VaS+3OlRoQAI8Y9SG9qJ9Z8GcmZX02HTc7
+XngO312dcy+PZU1gLFqOXrBXjoXf0cWmvwNSHCzLFOvm5DI7qCpQ701yweewHWLC
+D6x3JoeAeHJTCAvi2wSopOxMt7XZA4gJZSbvlvF+qlPt7D3qwq/AFOEMNasjR2qd
+QOpJDvksHvIPMEW26oXqQuXpy+uIsEcEwzt8F1HgXg/EWP1KRRCCOd6aWR7Qa3yx
+8ZMH9cCpT/C00hkK66XoUsAODF8P9aMLyZeuID6r+xqAYoG8ySSzilyt1DBUcZzM
+/AUSxWhRM1rgg1/mxXVyzXU7ectAKv3gTjOWD9dgFzWyhQGqqhcyYWq1+WAy83gl
+Ttu/aTV65BksmEA+l+QfYa5M+IH+xKPEOztxkeBk66V4nAFjXsvG5gcosAA8e8I3
+W2wMLwaJuvIuSfUo1aol2oNp+UwDNIbToYTr+2Ah9KeH1uU+QW9ThPUkbxBOtJjh
+LhYtVP41kbXhfuPKUUApW9f0uTNegC6TDXAkwmjyDyeAm9qJ0iOnBhBzx1WquzFA
+VQx983bwWAXgiY36qh1KlKpuq4wRrkI2wFGavVbWz1qqthXQ+Q6tM4dHOLfRCIKs
+T15dhdfQQX9yjulTSsQzmbRG1O/gvwHRIxfb8duD6UBnMi0FGRTTkzyuQTndNr6P
+XUITPPdTnamXn1nAp/kr
+=QB8C
+-----END PGP SIGNATURE-----
+
+--=-jIG6ReGmICyr8JtIFsUq--
