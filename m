@@ -1,56 +1,106 @@
-Return-Path: <SRS0=sVE/=3W=chromium.org=mka@kernel.org>
-Return-Path: <SRS0=sVE/=3W=chromium.org=mka@kernel.org>
-Date: Fri, 14 Apr 2017 12:36:05 -0700
-From: Matthias Kaehlcke <mka@chromium.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Mason <slash.tmp@free.fr>,
-	Grant Grundler <grundler@chromium.org>,
-	Greg Hackmann <ghackmann@google.com>,
-	Michael Davidson <md@google.com>
-Subject: Re: [PATCH v2] PCI: Make PCI_ROM_ADDRESS_MASK a 32-bit constant
-Message-ID: <20170414193605.GN28657@google.com>
-References: <20170411175658.58512-1-mka@chromium.org>
- <20170414154340.GA5864@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: linux-pci@vger.kernel.org
+Subject: [RFC/RFT PATCH 02/18] PCI: Add pci_free_host_bridge interface
+Date: Wed, 26 Apr 2017 12:17:53 +0100
+Message-Id: <20170426111809.19922-3-lorenzo.pieralisi@arm.com>
+In-Reply-To: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Simon Horman <horms@verge.net.au>,
+ Roy Zang <tie-fei.zang@freescale.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20170414154340.GA5864@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-El Fri, Apr 14, 2017 at 10:43:40AM -0500 Bjorn Helgaas ha dit:
+Commit a52d1443bba1 ("PCI: Export host bridge registration interface")
+exported the pci_alloc_host_bridge() interface so that PCI host
+controllers drivers can make use of it.
 
-> On Tue, Apr 11, 2017 at 10:56:58AM -0700, Matthias Kaehlcke wrote:
-> > A 64-bit value is not needed since a PCI ROM address consists in 32 bits.
-> > This fixes a clang warning about "implicit conversion from 'unsigned
-> > long' to 'u32'".
-> > 
-> > Signed-off-by: Matthias Kaehlcke <mka@chromium.org>
-> > ---
-> > Changes in v2:
-> > - Define PCI_ROM_ADDRESS_MASK as a 32-bit constant instead of using a cast
-> > - Updated commit message
-> > 
-> >  include/uapi/linux/pci_regs.h | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> > index 634c9c44ed6c..fff521c9458c 100644
-> > --- a/include/uapi/linux/pci_regs.h
-> > +++ b/include/uapi/linux/pci_regs.h
-> > @@ -114,7 +114,7 @@
-> >  #define PCI_SUBSYSTEM_ID	0x2e
-> >  #define PCI_ROM_ADDRESS		0x30	/* Bits 31..11 are address, 10..1 reserved */
-> >  #define  PCI_ROM_ADDRESS_ENABLE	0x01
-> > -#define PCI_ROM_ADDRESS_MASK	(~0x7ffUL)
-> > +#define PCI_ROM_ADDRESS_MASK	(~0x7ffU)
-> 
-> Does this mean we can remove the "(u32)" casts in __pci_read_base() and
-> pci_std_update_resource()?
+Introduce pci_alloc_host_bridge() kernel counterpart to free the
+host bridge data structures, pci_free_host_bridge(), export it
+and update kernel functions releasing host bridge objects allocated
+memory to make use of it.
 
-Indeed
+Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/probe.c | 11 ++++++++---
+ include/linux/pci.h |  1 +
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-> If so, can you do that in the same patch?
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index d0ddb69..7e4ffc4 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -517,9 +517,7 @@ static void pci_release_host_bridge_dev(struct device *dev)
+ 	if (bridge->release_fn)
+ 		bridge->release_fn(bridge);
+ 
+-	pci_free_resource_list(&bridge->windows);
+-
+-	kfree(bridge);
++	pci_free_host_bridge(bridge);
+ }
+ 
+ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
+@@ -537,6 +535,13 @@ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv)
+ }
+ EXPORT_SYMBOL(pci_alloc_host_bridge);
+ 
++void pci_free_host_bridge(struct pci_host_bridge *bridge)
++{
++	pci_free_resource_list(&bridge->windows);
++
++	kfree(bridge);
++}
++EXPORT_SYMBOL(pci_free_host_bridge);
+ static const unsigned char pcix_bus_speed[] = {
+ 	PCI_SPEED_UNKNOWN,		/* 0 */
+ 	PCI_SPEED_66MHz_PCIX,		/* 1 */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index eb3da1a..99878a9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -450,6 +450,7 @@ static inline struct pci_host_bridge *pci_host_bridge_from_priv(void *priv)
+ }
+ 
+ struct pci_host_bridge *pci_alloc_host_bridge(size_t priv);
++void pci_free_host_bridge(struct pci_host_bridge *bridge);
+ int pci_register_host_bridge(struct pci_host_bridge *bridge);
+ struct pci_host_bridge *pci_find_host_bridge(struct pci_bus *bus);
+ 
+-- 
+2.10.0
 
-Will do
 
-Matthias
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
