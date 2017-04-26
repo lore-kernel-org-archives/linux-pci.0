@@ -1,69 +1,66 @@
-Return-Path: <SRS0=W1ds=33=deltatee.com=logang@kernel.org>
-Return-Path: <SRS0=W1ds=33=deltatee.com=logang@kernel.org>
-To: Dan Williams <dan.j.williams@intel.com>,
- Jerome Glisse <jglisse@redhat.com>
-References: <20170418164557.GA7181@obsidianresearch.com>
- <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com>
- <20170418190138.GH7181@obsidianresearch.com>
- <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com>
- <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
- <20170418210339.GA24257@obsidianresearch.com>
- <1492564806.25766.124.camel@kernel.crashing.org>
- <20170419155557.GA8497@obsidianresearch.com>
- <4899b011-bdfb-18d8-ef00-33a1516216a6@deltatee.com>
- <CAPcyv4iJ9H8Ykwnjqa2R_D1qG6PsSQmi=QxYH-rKLF_ihrsWyw@mail.gmail.com>
- <20170419173225.GA11255@redhat.com>
- <CAPcyv4gxBgVsbSez7_dZYkZojUWU0X0txs7FxiJ+Z3xsMt6TqQ@mail.gmail.com>
-Cc: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
- Benjamin Herrenschmidt <benh@kernel.crashing.org>,
- Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
- Sagi Grimberg <sagi@grimberg.me>,
- "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
- Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
- Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
- linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
- linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <c75b6f6e-2814-1be3-d044-e153849263ce@deltatee.com>
-Date: Wed, 19 Apr 2017 12:11:28 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 29/30] vfio: Add support for Shared Virtual Memory
+To: Tomasz Nowicki <tn@semihalf.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-30-jean-philippe.brucker@arm.com>
+ <f5745241-83b0-0945-7616-4b59d7ebcd48@semihalf.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <c53478ed-20a9-414f-06ef-385c9252556f@arm.com>
+Date: Wed, 26 Apr 2017 11:08:17 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAPcyv4gxBgVsbSez7_dZYkZojUWU0X0txs7FxiJ+Z3xsMt6TqQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
+In-Reply-To: <f5745241-83b0-0945-7616-4b59d7ebcd48@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
+ linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-
-
-On 19/04/17 11:41 AM, Dan Williams wrote:
-> No, not quite ;-). I still don't think we should require the non-HMM
-> to pass NULL for all the HMM arguments. What I like about Logan's
-> proposal is to have a separate create and register steps dev_pagemap.
-> That way call paths that don't care about HMM specifics can just turn
-> around and register the vanilla dev_pagemap.
-
-Would you necessarily even need a create step? I was thinking more along
-the lines that struct dev_pagemap _could_ just be a member in another
-structure. The caller would set the attributes they needed and pass it
-to devm_memremap. (Similar to how we commonly do things with struct
-device, et al). Potentially, that could also get rid of the need for the
-*data pointer HMM is using to get back the struct hmm_devmem seeing
-container_of could be used instead.
-
->> Note i won't make any change now on that front but if it make sense
->> i am happy to do it as separate patchset on top of HMM.
->>
->> Also i don't want p2pmem to be an exclusive or with HMM, we will want
->> GPU to do peer to peer DMA and thus HMM ZONE_DEVICE pages to support
->> this too.
+On 26/04/17 07:53, Tomasz Nowicki wrote:
+>> +        mutex_lock(&device->tasks_lock);
+>> +        list_for_each_entry(vfio_task, &device->tasks, list) {
+>> +            if (vfio_task->pasid != svm.pasid)
+>> +                continue;
+>> +
+>> +            ret = iommu_unbind_task(device->dev, svm.pasid, flags);
+>> +            if (ret)
+>> +                dev_warn(device->dev, "failed to unbind PASID %u\n",
+>> +                     vfio_task->pasid);
+>> +
+>> +            list_del(&vfio_task->list);
+>> +            kfree(vfio_task);
 > 
-> Yes, this makes sense I think we really just want to distinguish host
-> memory or not in terms of the dev_pagemap type.
+> Please use list_for_each_entry_safe.
 
-That depends though. If unaddressable memory needs different steps to
-get to the DMA address (ie if it has to setup a gpu window) then we may
-still need a way to distinguish the two types of non-host memory.
+There is:
 
-Logan
++            break;
+
+right after kfree, so we'd never follow vfio_task->list.next after freeing
+vfio_task. The code searches for the _only_ task matching the PASID,
+removes it and leaves the loop.
+
+Thanks,
+Jean-Philippe
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
