@@ -1,55 +1,77 @@
-Return-Path: <SRS0=xI27=3W=obsidianresearch.com=jgunthorpe@kernel.org>
-Return-Path: <SRS0=xI27=3W=obsidianresearch.com=jgunthorpe@kernel.org>
-Date: Thu, 13 Apr 2017 22:16:56 -0600
-From: Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Logan Gunthorpe <logang@deltatee.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Steve Wise <swise@opengridcomputing.com>,
-	Stephen Bates <sbates@raithlin.com>,
-	Max Gurtovoy <maxg@mellanox.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-	linux-rdma@vger.kernel.org, linux-nvdimm@ml01.01.org,
-	linux-kernel@vger.kernel.org, Jerome Glisse <jglisse@redhat.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Message-ID: <20170414041656.GA30694@obsidianresearch.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1491974532.7236.43.camel@kernel.crashing.org>
- <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
- <1492034124.7236.77.camel@kernel.crashing.org>
- <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
- <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: "Jingoo Han" <jingoohan1@gmail.com>
+To: "'Dongdong Liu'" <liudongdong3@huawei.com>,
+ "'Khuong Dinh'" <kdinh@apm.com>, "'Jon Masters'" <jcm@jonmasters.org>,
+ "'Lorenzo Pieralisi'" <lorenzo.pieralisi@arm.com>,
+ <linux-pci@vger.kernel.org>
+References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+ <2e24e205-d761-9172-9463-4a53e1a0de4d@jonmasters.org>
+ <361fde15-5ba3-d33b-f946-003e89ba071f@huawei.com>
+In-Reply-To: <361fde15-5ba3-d33b-f946-003e89ba071f@huawei.com>
+Subject: Re: [PATCH v4 00/21] PCI: fix config space memory mappings
+Date: Wed, 26 Apr 2017 13:24:48 -0400
+Message-ID: <000501d2beb2$023b9100$06b2b300$@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: 'Pratyush Anand' <pratyush.anand@gmail.com>,
+ 'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
+ 'Catalin Marinas' <catalin.marinas@arm.com>,
+ 'Shawn Lin' <shawn.lin@rock-chips.com>, 'Will Deacon' <will.deacon@arm.com>,
+ 'Linuxarm' <linuxarm@huawei.com>, 'Michal Simek' <michal.simek@xilinx.com>,
+ 'Thierry Reding' <thierry.reding@gmail.com>,
+ 'Tanmay Inamdar' <tinamdar@apm.com>, 'Zhou Wang' <wangzhou1@hisilicon.com>,
+ 'Joao Pinto' <Joao.Pinto@synopsys.com>, 'Jonathan Corbet' <corbet@lwn.net>,
+ 'Wenrui Li' <wenrui.li@rock-chips.com>, 'Russell King' <linux@armlinux.org.uk>,
+ 'Bharat Kumar Gogada' <bharat.kumar.gogada@xilinx.com>,
+ 'Murali Karicheri' <m-karicheri2@ti.com>,
+ 'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
+ 'Arnd Bergmann' <arnd@arndb.de>, 'Jon Mason' <jonmason@broadcom.com>,
+ 'Ray Jui' <rjui@broadcom.com>, 'John Garry' <john.garry@huawei.com>,
+ 'Bjorn Helgaas' <bhelgaas@google.com>, 'Mingkai Hu' <mingkai.hu@freescale.com>,
+ linux-arm-kernel@lists.infradead.org,
+ 'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+ linux-kernel@vger.kernel.org, 'Stanimir Varbanov' <svarbanov@mm-sol.com>,
+ 'Minghuan Lian' <minghuan.Lian@freescale.com>,
+ "'Luis R . Rodriguez'" <mcgrof@kernel.org>,
+ 'Roy Zang' <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="utf-8"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 13, 2017 at 06:26:31PM -0500, Bjorn Helgaas wrote:
-> > Ah, thanks for the tip! On my system, this translation returns the same
-> > address so it was not necessary. And, yes, that means this would have to
-> > find its way into the dma mapping routine somehow. This means we'll
-> > eventually need a way to look-up the p2pmem device from the struct page.
-> > Which means we will likely need a new flag bit in the struct page or
-> > something. The big difficulty I see is testing. Do you know what
-> > architectures or in what circumstances are these translations used?
-> 
-> Any caller of pci_add_resource_offset() uses CPU addresses different from
-> the PCI bus addresses (unless the offset is zero, of course).  All ACPI
-> platforms also support this translation (see "translation_offset"), though
-> in most x86 systems the offset is zero.  I'm aware of one x86 system that
-> was tested with a non-zero offset but I don't think it was shipped that
-> way.
-
-I'd suggest just detecting if there is any translation in bus
-addresses anywhere and just hard disabling P2P on such systems.
-
-On modern hardware with 64 bit BARs there is very little reason to
-have translation, so I think this is a legacy feature.
-
-Jason
+T24gV2VkbmVzZGF5LCBBcHJpbCAyNiwgMjAxNyA2OjU0IEFNLCBEb25nZG9uZyBMaXUgd3JvdGU7
+Cj4gCj4gVGVzdGVkLWJ5OiBEb25nZG9uZyBMaXUgPGxpdWRvbmdkb25nM0BodWF3ZWkuY29tPgo+
+IAo+IEkgdGVzdGVkIHRoZSBwYXRjaHNldCBvbiBIaVNpbGljb24gQVJNNjQgRDA1IGJvYXJkLkl0
+IHdvcmtzIG9rIHdpdGggODI1OTkKPiBuZXRjYXJkLgoKVGhhbmsgeW91IGZvciB0ZXN0aW5nIHRo
+ZXNlIHBhdGNoZXMuIEhpU2lsaWNvbiBQQ0llIG1heSB1c2UgRGVzaWdud2FyZS1iYXNlZApQQ0ll
+IGNvbnRyb2xsZXIuIEluIG15IG9waW5pb24sIG90aGVyIERlc2lnbndhcmUtYmFzZWQgUENJZSBj
+b250cm9sbGVyIHdpbGwKd29yayBwcm9wZXJseS4KClRvIERvbmdkb25nIExpdSwgS2h1b25nIERp
+bmgsIGFuZCBvdGhlciBwZW9wbGUsCklmIHBvc3NpYmxlLCBjYW4geW91IGNoZWNrIHRoZSBvdXRw
+dXQgb2YgJ2xzcGNpIC12Jz8KSWYgeW91IGZpbmQgc29tZXRoaW5nIGRpZmZlcmVudCwgcGxlYXNl
+IHNoYXJlIGl0IHdpdGggdXMuCkdvb2QgbHVjay4KCkJlc3QgcmVnYXJkcywKSmluZ29vIEhhbgoK
+PiAKPiBUaGFua3MsCj4gRG9uZ2RvbmcKPiDlnKggMjAxNy80LzI1IDE0OjQwLCBKb24gTWFzdGVy
+cyDlhpnpgZM6Cj4gPiBPbiAwNC8xOS8yMDE3IDEyOjQ4IFBNLCBMb3JlbnpvIFBpZXJhbGlzaSB3
+cm90ZToKPiA+Cj4gPj4gT24gc29tZSBwbGF0Zm9ybXMgKGllIEFSTS9BUk02NCkgaW9yZW1hcCBm
+YWlscyB0byBjb21wbHkgd2l0aCB0aGUgUENJCj4gPj4gY29uZmlndXJhdGlvbiBub24tcG9zdGVk
+IHdyaXRlIHRyYW5zYWN0aW9ucyByZXF1aXJlbWVudCwgYmVjYXVzZSBpdAo+ID4+IHByb3ZpZGVz
+IGEgbWVtb3J5IG1hcHBpbmcgdGhhdCBpc3N1ZXMgImJ1ZmZlcmFibGUiIG9yLCBpbiBQQ0kgdGVy
+bXMKPiA+PiAicG9zdGVkIiB3cml0ZSB0cmFuc2FjdGlvbnMuIExpa2V3aXNlLCB0aGUgY3VycmVu
+dCBwY2lfcmVtYXBfaW9zcGFjZSgpCj4gPj4gaW1wbGVtZW50YXRpb24gbWFwcyB0aGUgcGh5c2lj
+YWwgYWRkcmVzcyByYW5nZSB0aGF0IHRoZSBQQ0kgdHJhbnNsYXRlcwo+ID4+IHRvIEkvTyBzcGFj
+ZSBjeWNsZXMgdG8gdmlydHVhbCBhZGRyZXNzIHNwYWNlIHRocm91Z2ggcGdwcm90X2RldmljZSgp
+Cj4gPj4gYXR0cmlidXRlcyB0aGF0IG9uIGVnIEFSTTY0IHByb3ZpZGVzIGEgbWVtb3J5IG1hcHBp
+bmcgaXNzdWluZwo+ID4+IHBvc3RlZCB3cml0ZXMgdHJhbnNhY3Rpb25zLCB3aGljaCBpcyBub3Qg
+UENJIHNwZWNpZmljYXRpb25zIGNvbXBsaWFudC4KPiA+Cj4gPiBTaWRlIG5vdGUgdGhhdCBJJ3Zl
+IHBpbmdlZCBhbGwgb2YgdGhlIEFSTSBzZXJ2ZXIgdmVuZG9ycyBhbmQgYXNrZWQgdGhlbQo+ID4g
+dG8gdmVyaWZ5IHRoaXMgcGF0Y2ggc2VyaWVzIG9uIHRoZWlyIHBsYXRmb3Jtcy4KPiA+Cj4gPiBK
+b24uCj4gPgo+ID4gLgo+ID4KCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwpsaW51eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVs
+QGxpc3RzLmluZnJhZGVhZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9s
+aXN0aW5mby9saW51eC1hcm0ta2VybmVsCg==
