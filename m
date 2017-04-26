@@ -1,56 +1,106 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Christoph Hellwig <hch@lst.de>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Salvatore Benedetto <salvatore.benedetto@intel.com>,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Derek Chickles <derek.chickles@caviumnetworks.com>,
-        Satanand Burla <satananda.burla@caviumnetworks.com>,
-        Felix Manlunas <felix.manlunas@caviumnetworks.com>,
-        Raghu Vatsavayi <raghu.vatsavayi@caviumnetworks.com>,
-        Jeff Kirsher <jeffrey.t.kirsher@intel.com>
-Cc: linux-pci@vger.kernel.org, qat-linux@intel.com,
-        linux-crypto@vger.kernel.org, linux-rdma@vger.kernel.org,
-        netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 6/7] crypto: qat: use pcie_flr instead of duplicating it
-Date: Thu, 13 Apr 2017 16:53:38 +0200
-Message-Id: <20170413145339.20186-7-hch@lst.de>
-In-Reply-To: <20170413145339.20186-1-hch@lst.de>
-References: <20170413145339.20186-1-hch@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <SRS0=imYQ=4C=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <SRS0=imYQ=4C=gmail.com=andy.shevchenko@kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <1493126394-1239-4-git-send-email-deathsimple@vodafone.de>
+References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de> <1493126394-1239-4-git-send-email-deathsimple@vodafone.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 26 Apr 2017 20:18:15 +0300
+Message-ID: <CAHp75Vf5ETss24VkMpNn388D5AT5Yckeav0nSS-ESn-AdiHSGQ@mail.gmail.com>
+Subject: Re: [PATCH 3/4] x86/PCI: Enable a 64bit BAR on AMD Family 15h (Models
+ 30h-3fh) Processors v2
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
+Cc: helgaas@kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
+	Platform Driver <platform-driver-x86@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/crypto/qat/qat_common/adf_aer.c | 15 +--------------
- 1 file changed, 1 insertion(+), 14 deletions(-)
+On Tue, Apr 25, 2017 at 4:19 PM, Christian K=C3=B6nig
+<deathsimple@vodafone.de> wrote:
+> From: Christian K=C3=B6nig <christian.koenig@amd.com>
+>
+> Most BIOS don't enable this because of compatibility reasons.
+>
+> Manually enable a 64bit BAR of 64GB size so that we have
+> enough room for PCI devices.
 
-diff --git a/drivers/crypto/qat/qat_common/adf_aer.c b/drivers/crypto/qat/qat_common/adf_aer.c
-index 2839fccdd84b..d3e25c37dc33 100644
---- a/drivers/crypto/qat/qat_common/adf_aer.c
-+++ b/drivers/crypto/qat/qat_common/adf_aer.c
-@@ -109,20 +109,7 @@ EXPORT_SYMBOL_GPL(adf_reset_sbr);
- 
- void adf_reset_flr(struct adf_accel_dev *accel_dev)
- {
--	struct pci_dev *pdev = accel_to_pci_dev(accel_dev);
--	u16 control = 0;
--	int pos = 0;
--
--	dev_info(&GET_DEV(accel_dev), "Function level reset\n");
--	pos = pci_pcie_cap(pdev);
--	if (!pos) {
--		dev_err(&GET_DEV(accel_dev), "Restart device failed\n");
--		return;
--	}
--	pci_read_config_word(pdev, pos + PCI_EXP_DEVCTL, &control);
--	control |= PCI_EXP_DEVCTL_BCR_FLR;
--	pci_write_config_word(pdev, pos + PCI_EXP_DEVCTL, control);
--	msleep(100);
-+	pcie_flr(accel_to_pci_dev(accel_dev));
- }
- EXPORT_SYMBOL_GPL(adf_reset_flr);
- 
--- 
-2.11.0
+> +static void pci_amd_enable_64bit_bar(struct pci_dev *dev)
+> +{
+
+> +       uint32_t base, limit, high;
+
+Is u32 or uint32_t used actually in this file?
+
+> +       struct resource *res, *conflict;
+
+> +       unsigned i;
+
+unsigned int i;
+
+Reversed tree order.
+
+> +       for (i =3D 0; i < 8; ++i) {
+> +               pci_read_config_dword(dev, 0x80 + i * 0x8, &base);
+> +               pci_read_config_dword(dev, 0x180 + i * 0x4, &high);
+> +
+> +               /* Is this slot free? */
+> +               if ((base & 0x3) =3D=3D 0x0)
+> +                       break;
+> +
+> +               base >>=3D 8;
+> +               base |=3D high << 24;
+> +
+> +               /* Abort if a slot already configures a 64bit BAR. */
+> +               if (base > 0x10000)
+> +                       return;
+> +       }
+> +       if (i =3D=3D 8)
+> +               return;
+> +
+> +       res =3D kzalloc(sizeof(*res), GFP_KERNEL);
+> +       if (!res)
+> +               return;
+> +
+> +       res->name =3D "PCI Bus 0000:00";
+
+> +       res->flags =3D IORESOURCE_PREFETCH | IORESOURCE_MEM |
+> +               IORESOURCE_MEM_64 | IORESOURCE_WINDOW;
+
+You are using this constant twice AFAICS, perhaps define it in generic
+pci.h and re-use?
+
+> +       res->start =3D 0x100000000;
+> +       res->end =3D 0xfd00000000 - 1;
+
+Perhaps you forgot ul / ull in many places in your code. Care to
+compile for 32-bit and fix the warnings?
+
+> +       dev_info(&dev->dev, "adding root bus resource %pR\n", res);
+
+Some of your messages I think are rather dev_dbg() than dev_info().
+
+> +       base =3D ((res->start >> 8) & 0xffffff00) | 0x3;
+> +       limit =3D ((res->end + 1) >> 8) & 0xffffff00;
+> +       high =3D ((res->start >> 40) & 0xff) |
+> +               ((((res->end + 1) >> 40) & 0xff) << 16);
+
+It would be nice to have the magics defined (just on top of this function) =
+like
+
+#define PCI_AMD_BAR_XXX_MASK GENMASK(...)
+#define PCI_AMD_BAR_XXX_SHIFT nn
+
+> +       pci_write_config_dword(dev, 0x180 + i * 0x4, high);
+> +       pci_write_config_dword(dev, 0x84 + i * 0x8, limit);
+> +       pci_write_config_dword(dev, 0x80 + i * 0x8, base);
+
+Ditto for pos:s.
+
+> +
+> +       pci_bus_add_resource(dev->bus, res, 0);
+> +}
+
+--=20
+With Best Regards,
+Andy Shevchenko
