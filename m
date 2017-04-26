@@ -1,113 +1,138 @@
-Return-Path: <SRS0=xQdq=4A=oracle.com=knut.omang@kernel.org>
-Return-Path: <SRS0=xQdq=4A=oracle.com=knut.omang@kernel.org>
-Message-ID: <1493019397.3171.118.camel@oracle.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-From: Knut Omang <knut.omang@oracle.com>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Logan Gunthorpe
-	 <logang@deltatee.com>,
-        Dan Williams <dan.j.williams@intel.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-        Jason Gunthorpe
- <jgunthorpe@obsidianresearch.com>,
-        Christoph Hellwig <hch@lst.de>, Sagi
- Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley"
- <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen"
- <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise
- <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>, Max
- Gurtovoy <maxg@mellanox.com>,
-        Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm
- <linux-nvdimm@ml01.01.org>,
-        "linux-kernel@vger.kernel.org"
- <linux-kernel@vger.kernel.org>,
-        Jerome Glisse <jglisse@redhat.com>
-Date: Mon, 24 Apr 2017 09:36:37 +0200
-In-Reply-To: <1492381907.25766.49.camel@kernel.crashing.org>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
-	 <1491974532.7236.43.camel@kernel.crashing.org>
-	 <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
-	 <1492034124.7236.77.camel@kernel.crashing.org>
-	 <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
-	 <20170413232631.GB24910@bhelgaas-glaptop.roam.corp.google.com>
-	 <20170414041656.GA30694@obsidianresearch.com>
-	 <1492169849.25766.3.camel@kernel.crashing.org>
-	 <630c1c63-ff17-1116-e069-2b8f93e50fa2@deltatee.com>
-	 <20170414190452.GA15679@bhelgaas-glaptop.roam.corp.google.com>
-	 <1492207643.25766.18.camel@kernel.crashing.org>
-	 <bff1e503-95a9-e19f-bfd9-0ff962c63a81@deltatee.com>
-	 <CAPcyv4jUeKzKDARp6Z35kdPLKnP-M6aF8X5KpOx55CLyjnj4dA@mail.gmail.com>
-	 <1492311719.25766.37.camel@kernel.crashing.org>
-	 <CAPcyv4iqnz1B00Q3xG-nGrLXdOyB7ditxmwZyotksLFgUqr+jA@mail.gmail.com>
-	 <5e43818e-8c6b-8be8-23ff-b798633d2a73@deltatee.com>
-	 <1492381907.25766.49.camel@kernel.crashing.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1493194205.27023.80.camel@mtkswgap22>
+Subject: Re: [SPAM]Re: [PATCH 2/2] dt-bindings: pcie: Add documentation for
+ Mediatek PCIe
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 26 Apr 2017 16:10:05 +0800
+In-Reply-To: <CAK8P3a1vgi9VBZfRNq0dDKzmfe8FkHQtgz6fEXW9fyUnBHtaQQ@mail.gmail.com>
+References: <1492935543-18190-1-git-send-email-ryder.lee@mediatek.com>
+ <1492935543-18190-3-git-send-email-ryder.lee@mediatek.com>
+ <CAK8P3a1vgi9VBZfRNq0dDKzmfe8FkHQtgz6fEXW9fyUnBHtaQQ@mail.gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, 2017-04-17 at 08:31 +1000, Benjamin Herrenschmidt wrote:
-> On Sun, 2017-04-16 at 10:34 -0600, Logan Gunthorpe wrote:
-> >=C2=A0
-> > On 16/04/17 09:53 AM, Dan Williams wrote:
-> > > ZONE_DEVICE allows you to redirect via get_dev_pagemap() to retrieve
-> > > context about the physical address in question. I'm thinking you can
-> > > hang bus address translation data off of that structure. This seems
-> > > vaguely similar to what HMM is doing.
-> >=C2=A0
-> > Thanks! I didn't realize you had the infrastructure to look up a device
-> > from a pfn/page. That would really come in handy for us.
->=20
-> It does indeed. I won't be able to play with that much for a few weeks
-> (see my other email) so if you're going to tackle this while I'm away,
-> can you work with Jerome to make sure you don't conflict with HMM ?
->=20
-> I really want a way for HMM to be able to layout struct pages over the
-> GPU BARs rather than in "allocated free space" for the case where the
-> BAR is big enough to cover all of the GPU memory.
->=20
-> In general, I'd like a simple & generic way for any driver to ask the
-> core to layout DMA'ble struct pages over BAR space. I an not convinced
-> this requires a "p2mem device" to be created on top of this though but
-> that's a different discussion.
->=20
-> Of course the actual ability to perform the DMA mapping will be subject
-> to various restrictions that will have to be implemented in the actual
-> "dma_ops override" backend. We can have generic code to handle the case
-> where devices reside on the same domain, which can deal with switch
-> configuration etc... we will need to have iommu specific code to handle
-> the case going through the fabric.=C2=A0
->=20
-> Virtualization is a separate can of worms due to how qemu completely
-> fakes the MMIO space, we can look into that later.
+Hi
 
-My first reflex when reading this thread was to think that this whole domai=
-n
-lends it self excellently to testing via Qemu. Could it be that doing this =
-in=C2=A0
-the opposite direction might be a safer approach in the long run even thoug=
-h=C2=A0
-(significant) more work up-front?
+On Tue, 2017-04-25 at 14:18 +0200, Arnd Bergmann wrote:
+> On Sun, Apr 23, 2017 at 10:19 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+> > Add documentation for PCIe host driver available in MT7623
+> > series SoCs.
+> >
+> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> > ---
+> >  .../bindings/pci/mediatek,mt7623-pcie.txt          | 153 +++++++++++++++++++++
+> >  1 file changed, 153 insertions(+)
+> >  create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> >
+> > diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> > new file mode 100644
+> > index 0000000..ee93ba2
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> > @@ -0,0 +1,153 @@
+> > +Mediatek MT7623 PCIe controller
+> > +
+> > +Required properties:
+> > +- compatible: Should contain "mediatek,mt7623-pcie".
+> 
+> Did mediatek license the IP block from someone else or was it
+> developed in-house? Is there a name and/or version identifier
+> for the block itself other than identifying it as the one in mt7623?
 
-Eg. start by fixing/providing/documenting suitable model(s)=C2=A0
-for testing this in Qemu, then implement the patch set based=C2=A0
-on those models?
+Originally, it license from synopsys. Our designer add a wrapper to hide
+the DBI detail so that we cannot use them directly. Perhaps I can call
+it "mediatek,gen2v1-pcie", because we have a plan to upstream a in-house
+Gen2 IP in the future.
 
-Thanks,
-Knut
+> > +- device_type: Must be "pci"
+> > +- reg: Base addresses and lengths of the pcie controller.
+> > +- interrupts: A list of interrupt outputs of the controller.
+> 
+> Please be more specific about what each interrupt is for, and how
+> many there are.
 
->=20
-> Cheers,
-> Ben.
->=20
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at=C2=A0=C2=A0http://vger.kernel.org/majordomo-info.h=
-tml
+OK.
+
+> > +Required properties:
+> > +- device_type: Must be "pci"
+> > +- assigned-addresses: Address and size of the port configuration registers
+> > +- reg: Only the first four bytes are used to refer to the correct bus number
+> > +  and device number.
+> > +- #address-cells: Must be 3
+> > +- #size-cells: Must be 2
+> > +- ranges: Sub-ranges distributed from the PCIe controller node. An empty
+> > +  property is sufficient.
+> > +- clocks: Must contain an entry for each entry in clock-names.
+> > +  See ../clocks/clock-bindings.txt for details.
+> > +- clock-names: Must include the following entries:
+> > +  - sys_ck
+> > +- resets: Must contain an entry for each entry in reset-names.
+> > +  See ../reset/reset.txt for details.
+> 
+> This seems odd: you have a device that is simply identified as "pci"
+> without any more specific ID, but you require additional properties
+> (clocks, reset, ...) that are not part of the standard PCI binding.
+> 
+> Can you clarify how the port devices related to the root device in
+> this hardware design?
+
+I will write clarify like this:
+
+PCIe subsys includes one Host/PCI bridge and 3 PCIe MAC port. There
+are 3 bus master for data access and 1 slave for configuration and
+status register access. Each port has PIPE interface to PHY and
+
+> Have you considered moving the nonstandard properties into the host
+> bridge node and having that device deal with setting up the links
+> to the other drivers? That way we could use the regular pcie
+> port driver for the children.
+> 
+
+OK, but I still want to use port->reset to catch reset properties in
+driver.
+ 
+> > +- reset-names: Must include the following entries:
+> > +  - pcie-reset
+> > +- num-lanes: Number of lanes to use for this port.
+> > +- phys: Must contain an entry for each entry in phy-names.
+> > +- phy-names: Must include an entry for each sub node. Entries are of the form
+> > +  "pcie-phyN": where N ranges from 0 to the value specified for port number.
+> > +  See ../phy/phy-mt7623-pcie.txt for details.
+> 
+> I think the name should not include the number of the port but rather
+> be always the same here.
+> 
+
+Hmm, I think it's better to keep the name here. It's more readable for
+user to understand the relationship between port0 and phy0.
+
+>       Arnd
+> 
+> _______________________________________________
+> Linux-mediatek mailing list
+> Linux-mediatek@lists.infradead.org
+> http://lists.infradead.org/mailman/listinfo/linux-mediatek
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
