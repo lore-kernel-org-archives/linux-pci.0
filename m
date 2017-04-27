@@ -1,107 +1,135 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:37626 "EHLO
-        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756655AbdDRNqv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 18 Apr 2017 09:46:51 -0400
-Received: by mail-wm0-f45.google.com with SMTP id u2so55474213wmu.0
-        for <linux-pci@vger.kernel.org>; Tue, 18 Apr 2017 06:46:50 -0700 (PDT)
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v4 00/21] PCI: fix config space memory mappings
+To: Jingoo Han <jingoohan1@gmail.com>, "'Khuong Dinh'" <kdinh@apm.com>, "'Jon
+ Masters'" <jcm@jonmasters.org>, "'Lorenzo Pieralisi'"
+ <lorenzo.pieralisi@arm.com>, <linux-pci@vger.kernel.org>
+References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+ <2e24e205-d761-9172-9463-4a53e1a0de4d@jonmasters.org>
+ <361fde15-5ba3-d33b-f946-003e89ba071f@huawei.com>
+ <000501d2beb2$023b9100$06b2b300$@gmail.com>
+From: Dongdong Liu <liudongdong3@huawei.com>
+Message-ID: <745824fc-016a-38b2-01a3-398399d4c80a@huawei.com>
+Date: Thu, 27 Apr 2017 09:46:15 +0800
 MIME-Version: 1.0
-In-Reply-To: <aee3cf45-382b-0e18-72fe-b4078aabc409@rock-chips.com>
-References: <aee3cf45-382b-0e18-72fe-b4078aabc409@rock-chips.com>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Tue, 18 Apr 2017 08:46:28 -0500
-Message-ID: <CAErSpo7us72gc1VBj6aMfPz92QbrEUFfqZt594yVEneGvG6A9A@mail.gmail.com>
-Subject: Re: Question about max bus number for PCIe root bridge
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Andreas Noever <andreas.noever@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <000501d2beb2$023b9100$06b2b300$@gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: 'Pratyush Anand' <pratyush.anand@gmail.com>,
+ 'Gabriele Paoloni' <gabriele.paoloni@huawei.com>,
+ 'Catalin Marinas' <catalin.marinas@arm.com>,
+ 'Shawn Lin' <shawn.lin@rock-chips.com>, 'Will Deacon' <will.deacon@arm.com>,
+ 'Linuxarm' <linuxarm@huawei.com>, 'Michal Simek' <michal.simek@xilinx.com>,
+ 'Thierry Reding' <thierry.reding@gmail.com>,
+ 'Tanmay Inamdar' <tinamdar@apm.com>, 'Zhou Wang' <wangzhou1@hisilicon.com>,
+ 'Joao Pinto' <Joao.Pinto@synopsys.com>, 'Jonathan Corbet' <corbet@lwn.net>,
+ 'Wenrui Li' <wenrui.li@rock-chips.com>, 'Russell King' <linux@armlinux.org.uk>,
+ 'Bharat Kumar Gogada' <bharat.kumar.gogada@xilinx.com>, 'Murali
+ Karicheri' <m-karicheri2@ti.com>,
+ 'Benjamin Herrenschmidt' <benh@kernel.crashing.org>,
+ 'Arnd Bergmann' <arnd@arndb.de>, 'Jon Mason' <jonmason@broadcom.com>,
+ 'Ray Jui' <rjui@broadcom.com>, 'John Garry' <john.garry@huawei.com>,
+ 'Bjorn Helgaas' <bhelgaas@google.com>, 'Mingkai Hu' <mingkai.hu@freescale.com>,
+ linux-arm-kernel@lists.infradead.org,
+ 'Thomas Petazzoni' <thomas.petazzoni@free-electrons.com>,
+ linux-kernel@vger.kernel.org, 'Stanimir Varbanov' <svarbanov@mm-sol.com>,
+ 'Minghuan Lian' <minghuan.Lian@freescale.com>,
+ "'Luis R . Rodriguez'" <mcgrof@kernel.org>,
+ 'Roy Zang' <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[+cc Andreas]
-
-
-On Tue, Apr 18, 2017 at 4:45 AM, Shawn Lin <shawn.lin@rock-chips.com> wrote:
-> Hi Bjorn,
->
-> Sorry to bother you. :)
->
-> pcie-rockchip uses of_pci_get_host_bridge_resources to assign the
-> maximum number of buses for the root bridge. Currently we set it to
-> be 0xff. Now we have a PCIe switch connected to the root port. However,
-> when enumerating the topology, I see it panic down to:
->
-> [    0.502875] PCI host bridge /pcie@f8000000 ranges:
-> [    0.502905]   MEM 0xfa000000..0xfa5fffff -> 0xfa000000
-> [    0.502921]    IO 0xfa600000..0xfa6fffff -> 0xfa600000
-> [    0.503168] rockchip-pcie f8000000.pcie: PCI host bridge to bus 0000:00
-> [    0.503189] pci_bus 0000:00: root bus resource [bus 00-10]
-> [    0.503204] pci_bus 0000:00: root bus resource [mem
-> 0xfa000000-0xfa5fffff]
-> [    0.503221] pci_bus 0000:00: root bus resource [io  0x0000-0xfffff] (bus
-> address [0xfa600000-0xfa6fffff])
-> [    0.503598] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]),
-> reconfiguring
-> [    0.504104] pci 0000:01:00.0: bridge configuration invalid ([bus 00-00]),
-> reconfiguring
-> [    0.515549] pci 0000:02:00.0: bridge configuration invalid ([bus 02-ff]),
-> reconfiguring
->
-> .....
->
-> [    0.695096] pci 0000:1f:00.0: bridge configuration invalid ([bus 1f-ff]),
-> reconfiguring
-> [    0.695242] bus->number = 0x20, PCI_SLOT(devfn) = 0x0 PCI_FUNC(devfn) =
-> 0x0, where = 0x0
-> [    0.695255] busdev = 0x2000000
-> [    0.695270] Unable to handle kernel paging request at virtual address
-> ffffff8012000000
-> [    0.858703] pgd = ffffff8009319000
-> [    0.859004] [ffffff8012000000] *pgd=00000000f7ffe003,
-> *pud=00000000f7ffe003, *pmd=0000000000000000
-> [    0.859803] Internal error: Oops: 96000006 [#1] PREEMPT SMP
-> [    0.860292] Modules linked in:
->
-> We only have the axi address range from 0xf8000000 to 0xfa000000
-> defined in the DT. So the max bus resource is 0x2000000. The PCI
-> core was trying to scan the bus whose bus number is 0x20. So the bus
-> resource calculated by PCIE_ECAM_ADDR is larger than what we have. Now
-> I change the max bus number to 0x10 by modifying the third argument of
-> of_pci_get_host_bridge_resources . But I still see the PCI core are
-> trying to scan the bus whose bus numbers are larger than the
-> limitation, namely 0x10.
->
-> So my question is:
->
-> what is the meaning of "maximum number of buses for this bridge", the
-> comment before of_pci_get_host_bridge_resources. In my case, isn't it
-> applied to the bridge connected to the root port?
-
-A DT host bridge description *should* contain a "bus-range" property
-that tells us what buses are reachable via the host bridge.  However,
-many do not, and the the "busno" and "bus_max" parameters are a way to
-specify a default bus number range when there is no "bus-range" DT
-property.
-
-You're right that this range, whether from "bus-range" or from a
-default range supplied by the caller of
-of_pci_get_host_bridge_resources(), should limit the bus numbers we
-scan below the host bridge, but we do not enforce that.
-
-Andreas Noever did add code to enforce this:
-
-  fc1b253141b3 ("PCI: Don't scan random busses in pci_scan_bridge()")
-  1820ffdccb9b ("PCI: Make sure bus number resources stay within their
-parents bounds")
-
-but it ended up breaking a couple systems because of an issue with an
-LSI device and a CardBus bridge issue, so we reverted them.
-
-I wish we had a better solution than reverting those commits, because
-I think Andreas' patches were the right thing to do.
-
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=fc1b253141b3
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=1820ffdccb9b
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=7a0b33d4a45d
-http://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=12d8706963f0
+CgrlnKggMjAxNy80LzI3IDE6MjQsIEppbmdvbyBIYW4g5YaZ6YGTOgo+IE9uIFdlZG5lc2RheSwg
+QXByaWwgMjYsIDIwMTcgNjo1NCBBTSwgRG9uZ2RvbmcgTGl1IHdyb3RlOwo+Pgo+PiBUZXN0ZWQt
+Ynk6IERvbmdkb25nIExpdSA8bGl1ZG9uZ2RvbmczQGh1YXdlaS5jb20+Cj4+Cj4+IEkgdGVzdGVk
+IHRoZSBwYXRjaHNldCBvbiBIaVNpbGljb24gQVJNNjQgRDA1IGJvYXJkLkl0IHdvcmtzIG9rIHdp
+dGggODI1OTkKPj4gbmV0Y2FyZC4KPgo+IFRoYW5rIHlvdSBmb3IgdGVzdGluZyB0aGVzZSBwYXRj
+aGVzLiBIaVNpbGljb24gUENJZSBtYXkgdXNlIERlc2lnbndhcmUtYmFzZWQKPiBQQ0llIGNvbnRy
+b2xsZXIuIEluIG15IG9waW5pb24sIG90aGVyIERlc2lnbndhcmUtYmFzZWQgUENJZSBjb250cm9s
+bGVyIHdpbGwKPiB3b3JrIHByb3Blcmx5Lgo+Cj4gVG8gRG9uZ2RvbmcgTGl1LCBLaHVvbmcgRGlu
+aCwgYW5kIG90aGVyIHBlb3BsZSwKPiBJZiBwb3NzaWJsZSwgY2FuIHlvdSBjaGVjayB0aGUgb3V0
+cHV0IG9mICdsc3BjaSAtdic/Cj4gSWYgeW91IGZpbmQgc29tZXRoaW5nIGRpZmZlcmVudCwgcGxl
+YXNlIHNoYXJlIGl0IHdpdGggdXMuCj4gR29vZCBsdWNrLgoKcm9vdEAobm9uZSkkIC4vbHNwY2kg
+LXYKMDAwMjo4MDowMC4wIENsYXNzIDA2MDQ6IERldmljZSAxOWU1OjE2MTAgKHJldiAwMSkKICAg
+ICAgICAgRmxhZ3M6IGJ1cyBtYXN0ZXIsIGZhc3QgZGV2c2VsLCBsYXRlbmN5IDAKICAgICAgICAg
+TWVtb3J5IGF0IGE5ZTAwMDAwICgzMi1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXplPTY0S10K
+ICAgICAgICAgQnVzOiBwcmltYXJ5PTgwLCBzZWNvbmRhcnk9ODEsIHN1Ym9yZGluYXRlPTgyLCBz
+ZWMtbGF0ZW5jeT0wCiAgICAgICAgIEkvTyBiZWhpbmQgYnJpZGdlOiAwMDAwMDAwMC0wMDAwMWZm
+ZgogICAgICAgICBNZW1vcnkgYmVoaW5kIGJyaWRnZTogYTg4MDAwMDAtYThmZmZmZmYKICAgICAg
+ICAgUHJlZmV0Y2hhYmxlIG1lbW9yeSBiZWhpbmQgYnJpZGdlOiAwMDAwMDAwMGE5MDAwMDAwLTAw
+MDAwMDAwYTlkZmZmZmYKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbNDBdIFBvd2VyIE1hbmFnZW1l
+bnQgdmVyc2lvbiAzCiAgICAgICAgIENhcGFiaWxpdGllczogWzUwXSBNU0k6IEVuYWJsZS0gQ291
+bnQ9MS8zMiBNYXNrYWJsZSsgNjRiaXQrCiAgICAgICAgIENhcGFiaWxpdGllczogWzcwXSBFeHBy
+ZXNzIFJvb3QgUG9ydCAoU2xvdC0pLCBNU0kgMDAKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbMTAw
+XSBBZHZhbmNlZCBFcnJvciBSZXBvcnRpbmcKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbMTU4XSAj
+MTkKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbMTc4XSAjMTcKICAgICAgICAgS2VybmVsIGRyaXZl
+ciBpbiB1c2U6IHBjaWVwb3J0CgowMDAyOjgxOjAwLjAgQ2xhc3MgMDIwMDogRGV2aWNlIDgwODY6
+MTBmYiAocmV2IDAxKQogICAgICAgICBGbGFnczogYnVzIG1hc3RlciwgZmFzdCBkZXZzZWwsIGxh
+dGVuY3kgMCwgSVJRIDI1NQogICAgICAgICBNZW1vcnkgYXQgYTkwMDAwMDAgKDY0LWJpdCwgcHJl
+ZmV0Y2hhYmxlKSBbc2l6ZT00TV0KICAgICAgICAgSS9PIHBvcnRzIGF0IDEwMDAgW2Rpc2FibGVk
+XSBbc2l6ZT0zMl0KICAgICAgICAgTWVtb3J5IGF0IGE5ODAwMDAwICg2NC1iaXQsIHByZWZldGNo
+YWJsZSkgW3NpemU9MTZLXQogICAgICAgICBFeHBhbnNpb24gUk9NIGF0IGE4ODAwMDAwIFtkaXNh
+YmxlZF0gW3NpemU9NE1dCiAgICAgICAgIENhcGFiaWxpdGllczogWzQwXSBQb3dlciBNYW5hZ2Vt
+ZW50IHZlcnNpb24gMwogICAgICAgICBDYXBhYmlsaXRpZXM6IFs1MF0gTVNJOiBFbmFibGUtIENv
+dW50PTEvMSBNYXNrYWJsZSsgNjRiaXQrCiAgICAgICAgIENhcGFiaWxpdGllczogWzcwXSBNU0kt
+WDogRW5hYmxlKyBDb3VudD02NCBNYXNrZWQtCiAgICAgICAgIENhcGFiaWxpdGllczogW2EwXSBF
+eHByZXNzIEVuZHBvaW50LCBNU0kgMDAKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbZTBdIFZpdGFs
+IFByb2R1Y3QgRGF0YQogICAgICAgICBDYXBhYmlsaXRpZXM6IFsxMDBdIEFkdmFuY2VkIEVycm9y
+IFJlcG9ydGluZwogICAgICAgICBDYXBhYmlsaXRpZXM6IFsxNDBdIERldmljZSBTZXJpYWwgTnVt
+YmVyIDljLTM3LWY0LWZmLWZmLTdiLTViLWEwCiAgICAgICAgIENhcGFiaWxpdGllczogWzE1MF0g
+QWx0ZXJuYXRpdmUgUm91dGluZy1JRCBJbnRlcnByZXRhdGlvbiAoQVJJKQogICAgICAgICBDYXBh
+YmlsaXRpZXM6IFsxNjBdIFNpbmdsZSBSb290IEkvTyBWaXJ0dWFsaXphdGlvbiAoU1ItSU9WKQog
+ICAgICAgICBLZXJuZWwgZHJpdmVyIGluIHVzZTogaXhnYmUKCjAwMDI6ODE6MDAuMSBDbGFzcyAw
+MjAwOiBEZXZpY2UgODA4NjoxMGZiIChyZXYgMDEpCiAgICAgICAgIEZsYWdzOiBidXMgbWFzdGVy
+LCBmYXN0IGRldnNlbCwgbGF0ZW5jeSAwLCBJUlEgMjU1CiAgICAgICAgIE1lbW9yeSBhdCBhOTQw
+MDAwMCAoNjQtYml0LCBwcmVmZXRjaGFibGUpIFtzaXplPTRNXQogICAgICAgICBJL08gcG9ydHMg
+YXQgMTAyMCBbZGlzYWJsZWRdIFtzaXplPTMyXQogICAgICAgICBNZW1vcnkgYXQgYTlhMDQwMDAg
+KDY0LWJpdCwgcHJlZmV0Y2hhYmxlKSBbc2l6ZT0xNktdCiAgICAgICAgIEV4cGFuc2lvbiBST00g
+YXQgYThjMDAwMDAgW2Rpc2FibGVkXSBbc2l6ZT00TV0KICAgICAgICAgQ2FwYWJpbGl0aWVzOiBb
+NDBdIFBvd2VyIE1hbmFnZW1lbnQgdmVyc2lvbiAzCiAgICAgICAgIENhcGFiaWxpdGllczogWzUw
+XSBNU0k6IEVuYWJsZS0gQ291bnQ9MS8xIE1hc2thYmxlKyA2NGJpdCsKICAgICAgICAgQ2FwYWJp
+bGl0aWVzOiBbNzBdIE1TSS1YOiBFbmFibGUrIENvdW50PTY0IE1hc2tlZC0KICAgICAgICAgQ2Fw
+YWJpbGl0aWVzOiBbYTBdIEV4cHJlc3MgRW5kcG9pbnQsIE1TSSAwMAogICAgICAgICBDYXBhYmls
+aXRpZXM6IFtlMF0gVml0YWwgUHJvZHVjdCBEYXRhCiAgICAgICAgIENhcGFiaWxpdGllczogWzEw
+MF0gQWR2YW5jZWQgRXJyb3IgUmVwb3J0aW5nCiAgICAgICAgIENhcGFiaWxpdGllczogWzE0MF0g
+RGV2aWNlIFNlcmlhbCBOdW1iZXIgOWMtMzctZjQtZmYtZmYtN2ItNWItYTAKICAgICAgICAgQ2Fw
+YWJpbGl0aWVzOiBbMTUwXSBBbHRlcm5hdGl2ZSBSb3V0aW5nLUlEIEludGVycHJldGF0aW9uIChB
+UkkpCiAgICAgICAgIENhcGFiaWxpdGllczogWzE2MF0gU2luZ2xlIFJvb3QgSS9PIFZpcnR1YWxp
+emF0aW9uIChTUi1JT1YpCiAgICAgICAgIEtlcm5lbCBkcml2ZXIgaW4gdXNlOiBpeGdiZQoKMDAw
+NDo4ODowMC4wIENsYXNzIDA2MDQ6IERldmljZSAxOWU1OjE2MTAgKHJldiAwMSkKICAgICAgICAg
+RmxhZ3M6IGJ1cyBtYXN0ZXIsIGZhc3QgZGV2c2VsLCBsYXRlbmN5IDAKICAgICAgICAgTWVtb3J5
+IGF0IDhhOTAwMDAwMCAoMzItYml0LCBub24tcHJlZmV0Y2hhYmxlKSBbc2l6ZT02NEtdCiAgICAg
+ICAgIEJ1czogcHJpbWFyeT04OCwgc2Vjb25kYXJ5PTg5LCBzdWJvcmRpbmF0ZT04OSwgc2VjLWxh
+dGVuY3k9MAogICAgICAgICBDYXBhYmlsaXRpZXM6IFs0MF0gUG93ZXIgTWFuYWdlbWVudCB2ZXJz
+aW9uIDMKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbNTBdIE1TSTogRW5hYmxlLSBDb3VudD0xLzMy
+IE1hc2thYmxlKyA2NGJpdCsKICAgICAgICAgQ2FwYWJpbGl0aWVzOiBbNzBdIEV4cHJlc3MgUm9v
+dCBQb3J0IChTbG90LSksIE1TSSAwMAogICAgICAgICBDYXBhYmlsaXRpZXM6IFsxMDBdIEFkdmFu
+Y2VkIEVycm9yIFJlcG9ydGluZwogICAgICAgICBDYXBhYmlsaXRpZXM6IFsxNThdICMxOQogICAg
+ICAgICBDYXBhYmlsaXRpZXM6IFsxNzhdICMxNwogICAgICAgICBLZXJuZWwgZHJpdmVyIGluIHVz
+ZTogcGNpZXBvcnQKClRoYW5rcywKRG9uZ2RvbmcKPgo+IEJlc3QgcmVnYXJkcywKPiBKaW5nb28g
+SGFuCj4KPj4KPj4gVGhhbmtzLAo+PiBEb25nZG9uZwo+PiDlnKggMjAxNy80LzI1IDE0OjQwLCBK
+b24gTWFzdGVycyDlhpnpgZM6Cj4+PiBPbiAwNC8xOS8yMDE3IDEyOjQ4IFBNLCBMb3JlbnpvIFBp
+ZXJhbGlzaSB3cm90ZToKPj4+Cj4+Pj4gT24gc29tZSBwbGF0Zm9ybXMgKGllIEFSTS9BUk02NCkg
+aW9yZW1hcCBmYWlscyB0byBjb21wbHkgd2l0aCB0aGUgUENJCj4+Pj4gY29uZmlndXJhdGlvbiBu
+b24tcG9zdGVkIHdyaXRlIHRyYW5zYWN0aW9ucyByZXF1aXJlbWVudCwgYmVjYXVzZSBpdAo+Pj4+
+IHByb3ZpZGVzIGEgbWVtb3J5IG1hcHBpbmcgdGhhdCBpc3N1ZXMgImJ1ZmZlcmFibGUiIG9yLCBp
+biBQQ0kgdGVybXMKPj4+PiAicG9zdGVkIiB3cml0ZSB0cmFuc2FjdGlvbnMuIExpa2V3aXNlLCB0
+aGUgY3VycmVudCBwY2lfcmVtYXBfaW9zcGFjZSgpCj4+Pj4gaW1wbGVtZW50YXRpb24gbWFwcyB0
+aGUgcGh5c2ljYWwgYWRkcmVzcyByYW5nZSB0aGF0IHRoZSBQQ0kgdHJhbnNsYXRlcwo+Pj4+IHRv
+IEkvTyBzcGFjZSBjeWNsZXMgdG8gdmlydHVhbCBhZGRyZXNzIHNwYWNlIHRocm91Z2ggcGdwcm90
+X2RldmljZSgpCj4+Pj4gYXR0cmlidXRlcyB0aGF0IG9uIGVnIEFSTTY0IHByb3ZpZGVzIGEgbWVt
+b3J5IG1hcHBpbmcgaXNzdWluZwo+Pj4+IHBvc3RlZCB3cml0ZXMgdHJhbnNhY3Rpb25zLCB3aGlj
+aCBpcyBub3QgUENJIHNwZWNpZmljYXRpb25zIGNvbXBsaWFudC4KPj4+Cj4+PiBTaWRlIG5vdGUg
+dGhhdCBJJ3ZlIHBpbmdlZCBhbGwgb2YgdGhlIEFSTSBzZXJ2ZXIgdmVuZG9ycyBhbmQgYXNrZWQg
+dGhlbQo+Pj4gdG8gdmVyaWZ5IHRoaXMgcGF0Y2ggc2VyaWVzIG9uIHRoZWlyIHBsYXRmb3Jtcy4K
+Pj4+Cj4+PiBKb24uCj4+Pgo+Pj4gLgo+Pj4KPgo+IC4KPgoKX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX18KbGludXgtYXJtLWtlcm5lbCBtYWlsaW5nIGxpc3QK
+bGludXgtYXJtLWtlcm5lbEBsaXN0cy5pbmZyYWRlYWQub3JnCmh0dHA6Ly9saXN0cy5pbmZyYWRl
+YWQub3JnL21haWxtYW4vbGlzdGluZm8vbGludXgtYXJtLWtlcm5lbAo=
