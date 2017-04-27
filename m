@@ -1,18 +1,20 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1492004896.7236.59.camel@kernel.crashing.org>
-Subject: Re: [PATCH v3 00/32] PCI: fix config and I/O Address space memory
- mappings
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-Date: Wed, 12 Apr 2017 23:48:16 +1000
-In-Reply-To: <20170412094454.GA31143@red-moon>
-References: <20170411122923.6285-1-lorenzo.pieralisi@arm.com>
- <1491917906.7236.7.camel@kernel.crashing.org>
- <20170411140857.GA6821@red-moon>
- <1491952371.7236.22.camel@kernel.crashing.org>
- <20170412094454.GA31143@red-moon>
-Mime-Version: 1.0
+Date: Thu, 27 Apr 2017 12:19:38 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexander Duyck <alexander.duyck@gmail.com>
+Subject: Re: [PATCH net-next 1/4] ixgbe: sparc: rename the
+ ARCH_WANT_RELAX_ORDER to IXGBE_ALLOW_RELAXED_ORDER
+Message-ID: <20170427171938.GA10705@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170401.112603.1991545644693496714.davem@davemloft.net>
+ <42428725-89f1-1508-4e3d-723e087b3bbb@huawei.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E205199C0@FRAEML521-MBX.china.huawei.com>
+ <063D6719AE5E284EB5DD2968C1650D6DCFFD3C52@AcuExch.aculab.com>
+ <DB5PR05MB138288172B04713EB0C1DB55D3190@DB5PR05MB1382.eurprd05.prod.outlook.com>
+ <a2239141-a185-1bb8-0abd-7a05b9fde015@huawei.com>
+ <CAKgT0Uc4L=GgYbpO-Fm9OfN+_fLypbDP1c+X4T_ta90ecQiyGQ@mail.gmail.com>
+MIME-Version: 1.0
+In-Reply-To: <CAKgT0Uc4L=GgYbpO-Fm9OfN+_fLypbDP1c+X4T_ta90ecQiyGQ@mail.gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,61 +22,71 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Jonas Bonn <jonas@southpole.se>, Rich Felker <dalias@libc.org>,
- linux-pci@vger.kernel.org, Will Deacon <will.deacon@arm.com>,
- "James E.J. Bottomley" <jejb@parisc-linux.org>,
- David Howells <dhowells@redhat.com>, Max Filippov <jcmvbkbc@gmail.com>,
- Paul Mackerras <paulus@samba.org>, Huacai Chen <chenhc@lemote.com>,
- Guan Xuetao <gxt@mprc.pku.edu.cn>, Thomas Gleixner <tglx@linutronix.de>,
- Hans-Christian Egtvedt <egtvedt@samfundet.no>, linux-arch@vger.kernel.org,
- Jesper Nilsson <jesper.nilsson@axis.com>,
- Yoshinori Sato <ysato@users.sourceforge.jp>,
- Michael Ellerman <mpe@ellerman.id.au>, Helge Deller <deller@gmx.de>,
- Russell King <linux@armlinux.org.uk>, Ingo Molnar <mingo@redhat.com>,
- Geert Uytterhoeven <geert@linux-m68k.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Matt Turner <mattst88@gmail.com>,
- Haavard Skinnemoen <hskinnemoen@gmail.com>, Fenghua Yu <fenghua.yu@intel.com>,
- James Hogan <james.hogan@imgtec.com>, Chris Metcalf <cmetcalf@mellanox.com>,
- Arnd Bergmann <arnd@arndb.de>, Heiko Carstens <heiko.carstens@de.ibm.com>,
- Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
- Mikael Starvik <starvik@axis.com>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>,
- Bjorn Helgaas <bhelgaas@google.com>, Stafford Horne <shorne@gmail.com>,
- linux-arm-kernel@lists.infradead.org, Richard Henderson <rth@twiddle.net>,
- Chris Zankel <chris@zankel.net>, Michal Simek <monstr@monstr.eu>,
- Tony Luck <tony.luck@intel.com>, Vineet Gupta <vgupta@synopsys.com>,
- linux-kernel@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>,
- Richard Kuo <rkuo@codeaurora.org>, Niklas Cassel <nks@flawful.org>,
- "Luis R. Rodriguez" <mcgrof@kernel.org>,
- Martin Schwidefsky <schwidefsky@de.ibm.com>, Ley Foon Tan <lftan@altera.com>,
- "David S. Miller" <davem@davemloft.net>
+Cc: Mark Rutland <mark.rutland@arm.com>, Casey Leedom <leedom@chelsio.com>,
+ Amir Ancel <amira@mellanox.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Ding Tianhong <dingtianhong@huawei.com>, Will Deacon <will.deacon@arm.com>,
+ LinuxArm <linuxarm@huawei.com>, "davem@davemloft.net" <davem@davemloft.net>,
+ David Laight <David.Laight@aculab.com>,
+ "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Robin Murphy <robin.murphy@arm.com>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2017-04-12 at 10:44 +0100, Lorenzo Pieralisi wrote:
-> > This is a problem to be solved by the bridge itself. If ARM has a
-> > mapping attribute to make stores non-posted, keep this an ARM specific
-> > attribute at this stage I'd say.
+[+cc Casey]
+
+On Wed, Apr 26, 2017 at 09:18:33AM -0700, Alexander Duyck wrote:
+> On Wed, Apr 26, 2017 at 2:26 AM, Ding Tianhong <dingtianhong@huawei.com> wrote:
+> > Hi Amir:
+> >
+> > It is really glad to hear that the mlx5 will support RO mode this year, if so, do you agree that enable it dynamic by ethtool -s xxx,
+> > we have try it several month ago but there was only one drivers would use it at that time so the maintainer against it, it mlx5 would support RO,
+> > we could try to restart this solution, what do you think about it. :)
+> >
+> > Thanks
+> > Ding
 > 
-> I can't. Some PCI host bridge drivers (DT) are shared between ARM/ARM64
-> and live in drivers (and are also reused on some arches eg microblaze)
-> and they use ioremap() to map config space.
+> Hi Ding,
 > 
-> So the idea behind this series was to add an interface (that is
-> overriden on ARM/ARM64), it started as a PCI specific interface (v1) and
-> evolved to ioremap_nopost() (v2).
+> Enabing relaxed ordering really doesn't have any place in ethtool. It
+> is a PCIe attribute that you are essentially wanting to enable.
+> 
+> It might be worth while to take a look at updating the PCIe code path
+> to handle this. Really what we should probably do is guarantee that
+> the architectures that need relaxed ordering are setting it in the
+> PCIe Device Control register and that the ones that don't are clearing
+> the bit. It's possible that this is already occurring, but I don't
+> know the state of handling those bits is in the kernel. Once we can
+> guarantee that we could use that to have the drivers determine their
+> behavior in regards to relaxed ordering. For example in the case of
+> igb/ixgbe we could probably change the behavior so that it will bey
+> default try to use relaxed ordering but if it is not enabled in PCIe
+> Device Control register the hardware should not request to use it. It
+> would simplify things in the drivers and allow for each architecture
+> to control things as needed in their PCIe code.
 
-Then provide some kind of HAVE_* or config option indicating that this
-mapping attribute exist so the bridge code at least has the option of
-implementing an "alternative" mechanism when it doesn't rather than
-silently being wrong :-)
+I thought Relaxed Ordering was an optimization.  Are there cases where
+it is actually required for correct behavior?
 
-(Or just return NULL, that works too)
+The PCI core doesn't currently do anything with Relaxed Ordering.
+Some drivers enable/disable it directly.  I think it would probably be
+better if the core provided an interface for this.  One reason is
+because I think Casey has identified some systems where Relaxed
+Ordering doesn't work correctly, and I'd rather deal with them once in
+the core than in every driver.
 
-Cheers,
-Ben.
+Are you hinting that the PCI core or arch code could actually *enable*
+Relaxed Ordering without the driver doing anything?  Is it safe to do
+that?  Is there such a thing as a device that is capable of using RO,
+but where the driver must be aware of it being enabled, so it programs
+the device appropriately?
 
+Bjorn
 
 _______________________________________________
 linux-arm-kernel mailing list
