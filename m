@@ -1,68 +1,74 @@
-Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=7ibK=3T=free.fr=slash.tmp@kernel.org>
-Subject: Re: [RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge
-To: Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <91db1f47-3024-9712-309a-fb4b21e42028@free.fr>
- <e5c0bace-fcbe-de3f-b76f-0fb672562e84@arm.com>
- <310db9dd-7db6-2106-2e53-f0083b2d3758@free.fr>
- <012f7fcb-eaeb-70dd-a1a9-06c213789d30@arm.com>
- <0502e180-5517-12d6-e3a1-bcea0da7e201@free.fr>
- <4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <30f662a6-5dab-515b-e35a-a312f3c7b509@free.fr>
-Date: Tue, 11 Apr 2017 17:13:35 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Thu, 27 Apr 2017 11:40:20 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Andrew Lunn <andrew@lunn.ch>
+Subject: Re: [RFC/RFT PATCH 07/18] ARM: PCI: orion5x: Convert PCI scan API to
+ pci_scan_root_bus_bridge()
+Message-ID: <20170427104020.GA15685@red-moon>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+ <20170426111809.19922-8-lorenzo.pieralisi@arm.com>
+ <20170426151257.GA4489@lunn.ch> <20170426161335.GA12240@red-moon>
+ <20170426185348.GB14074@lunn.ch>
 MIME-Version: 1.0
-In-Reply-To: <4edd799a-650c-0189-cd5c-e9fc18c5f8bc@arm.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20170426185348.GB14074@lunn.ch>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>, linux-pci@vger.kernel.org,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Michal Simek <michal.simek@xilinx.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Jason Cooper <jason@lakedaemon.net>, Arnd Bergmann <arnd@arndb.de>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, linux-arm-kernel@lists.infradead.org,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 27/03/2017 19:09, Marc Zyngier wrote:
-
-> Here's what your system looks like:
+On Wed, Apr 26, 2017 at 08:53:48PM +0200, Andrew Lunn wrote:
+> > > Note that IRQ 12 has disappeared from Flags: on 0000:00:00.0.
+> > 
+> > Thank you for testing it, that's exactly what we need.
+> > 
+> > To check if the plumbing is working (ie to check I have not messed
+> > up the bus scan API rework), mind testing the patch below please
+> > and report back (it applies on top of this series) ?
 > 
-> PCI-EP -------> MSI Controller ------> INTC
->          MSI                    IRQ
+> 0000:00:00.0 Memory controller: Marvell Technology Group Ltd. 88f5182 [Orion-NAS] ARM SoC (rev 02)
+>         Subsystem: Marvell Technology Group Ltd. Device 11ab
+>         Flags: bus master, fast devsel, latency 0, IRQ 12
 > 
-> A PCI MSI is always edge. No ifs, no buts. That's what it is, and nothing
-> else. Now, your MSI controller signals its output using a level interrupt,
-> since you need to whack it on the head so that it lowers its line.
-> 
-> There is not a single trigger, because there is not a single interrupt.
+> The interrupt is back with this patch.
 
-Hello Marc,
+Ok the IRQ allocation works then, the difference is when the mapping
+is called, original patch series moves the IRQ allocation to device
+probe time (that's why IRQ does not show up, there is no matching
+driver in the kernel for the PCI device above), with the additional
+patch the IRQ allocation is done when the PCI device is added.
 
-I was hoping you or Thomas might help clear some confusion
-in my mind around IRQ domains (struct irq_domain).
+It is a user visible change, not sure though if that's a real issue,
+that's exactly the reason why I posted this series, to find out
+and converge.
 
-I have read https://www.kernel.org/doc/Documentation/IRQ-domain.txt
+Thanks !
+Lorenzo
 
-IIUC, there should be one IRQ domain per IRQ controller.
-
-I have this MSI controller handling 256 interrupts, so I should
-have *one* domain for all possible MSIs. Yet the Altera driver
-registers *two* domains (msi_domain and inner_domain).
-
-Could I make everything work with a single IRQ domain?
-
-I'm confused by the sequence:
-
-  irq_dom = irq_domain_create_linear(fwnode, MSI_COUNT, &msi_dom_ops, pcie);
-  msi_dom = pci_msi_create_irq_domain(fwnode, &msi_domain_info, irq_dom);
-
-It seems I should be able to call only pci_msi_create_irq_domain...
-And the parent of the MSI controller is given in the DT.
-
-I'm not quite sure how I tell pci_msi_create_irq_domain how many
-MSIs it's supposed to manage. Nor how I pass my private struct.
-
-I will keep looking.
-
-Regards.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
