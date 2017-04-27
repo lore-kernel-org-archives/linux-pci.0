@@ -1,107 +1,93 @@
-Return-Path: <SRS0=ufhh=35=google.com=bhelgaas@kernel.org>
-Return-Path: <SRS0=ufhh=35=google.com=bhelgaas@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Casey Leedom <leedom@chelsio.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Alexander Duyck
+ <alexander.duyck@gmail.com>
+Subject: Re: [PATCH net-next 1/4] ixgbe: sparc: rename the
+ ARCH_WANT_RELAX_ORDER to IXGBE_ALLOW_RELAXED_ORDER
+Date: Thu, 27 Apr 2017 19:00:27 +0000
+Message-ID: <MWHPR12MB1600F53E6E09C9B3F99D255EC8100@MWHPR12MB1600.namprd12.prod.outlook.com>
+References: <20170401.112603.1991545644693496714.davem@davemloft.net>
+ <42428725-89f1-1508-4e3d-723e087b3bbb@huawei.com>
+ <EE11001F9E5DDD47B7634E2F8A612F2E205199C0@FRAEML521-MBX.china.huawei.com>
+ <063D6719AE5E284EB5DD2968C1650D6DCFFD3C52@AcuExch.aculab.com>
+ <DB5PR05MB138288172B04713EB0C1DB55D3190@DB5PR05MB1382.eurprd05.prod.outlook.com>
+ <a2239141-a185-1bb8-0abd-7a05b9fde015@huawei.com>
+ <CAKgT0Uc4L=GgYbpO-Fm9OfN+_fLypbDP1c+X4T_ta90ecQiyGQ@mail.gmail.com>,
+ <20170427171938.GA10705@bhelgaas-glaptop.roam.corp.google.com>
+In-Reply-To: <20170427171938.GA10705@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170417174712.GA7575@localhost>
-References: <1492115445-4069-1-git-send-email-jnair@caviumnetworks.com>
- <1492115445-4069-3-git-send-email-jnair@caviumnetworks.com>
- <20170414001911.GA13163@bhelgaas-glaptop.roam.corp.google.com>
- <20170414210646.GA5346@localhost> <CAErSpo731xSzrnKF+G+8SA_UUHy7ROA1V9oFkpwKi85GQf9VAg@mail.gmail.com>
- <20170417174712.GA7575@localhost>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Fri, 21 Apr 2017 10:48:15 -0500
-Message-ID: <CAErSpo6+do8GXon3EzZAUpqc2TFsA0BDwWBULqZCd1ayCJhD6w@mail.gmail.com>
-Subject: Re: [PATCH v5 2/2] PCI: quirks: Fix ThunderX2 dma alias handling
-To: Jayachandran C <jnair@caviumnetworks.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"open list:INTEL IOMMU (VT-d)" <iommu@lists.linux-foundation.org>, Robin Murphy <robin.murphy@arm.com>,
-	Jon Masters <jcm@redhat.com>, linux-arm <linux-arm-kernel@lists.infradead.org>,
-	Joerg Roedel <joro@8bytes.org>
-Content-Type: text/plain; charset=UTF-8
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Mark Rutland <mark.rutland@arm.com>, Amir Ancel <amira@mellanox.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Ding Tianhong <dingtianhong@huawei.com>, Will
+ Deacon <will.deacon@arm.com>, LinuxArm <linuxarm@huawei.com>,
+ "davem@davemloft.net" <davem@davemloft.net>,
+ David Laight <David.Laight@aculab.com>,
+ "jeffrey.t.kirsher@intel.com" <jeffrey.t.kirsher@intel.com>,
+ Catalin Marinas <catalin.marinas@arm.com>, Robin Murphy <robin.murphy@arm.com>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, Apr 17, 2017 at 12:47 PM, Jayachandran C
-<jnair@caviumnetworks.com> wrote:
-> On Fri, Apr 14, 2017 at 09:00:06PM -0500, Bjorn Helgaas wrote:
->> On Fri, Apr 14, 2017 at 4:06 PM, Jayachandran C
->> <jnair@caviumnetworks.com> wrote:
->> > On Thu, Apr 13, 2017 at 07:19:11PM -0500, Bjorn Helgaas wrote:
->> >> I tentatively applied both patches to pci/host-thunder for v4.12.
->> >>
->> >> However, I am concerned about the topology here:
->> >>
->> >> On Thu, Apr 13, 2017 at 08:30:45PM +0000, Jayachandran C wrote:
->> >> > On Cavium ThunderX2 arm64 SoCs (called Broadcom Vulcan earlier), the
->> >> > PCI topology is slightly unusual.  For a multi-node system, it looks
->> >> > like:
->> >> >
->> >> >     00:00.0 [PCI] bridge to [bus 01-1e]
->> >> >     01:0a.0 [PCI-PCIe bridge, type 8] bridge to [bus 02-04]
->> >> >     02:00.0 [PCIe root port, type 4] bridge to [bus 03-04] (XLATE_ROOT)
->> >> >     03:00.0 PCIe Endpoint
->> >>
->> >> A root port normally has a single PCIe link leading downstream.
->> >> According to this, 02:00.0 is a root port that has the usual
->> >> downstream link leading to 03:00.0, but it also has an upstream link
->> >> to 01:0a.0.
->> >
->> > The PCI topology is a bit broken due to the way that the PCIe IP block
->> > was integrated into SoC PCI bridges and devices. The current mechanism
->> > of adding a PCI-PCIe bridge to glue these together is not ideal.
->>
->> Yeah, that's definitely broken.
->>
->> >> Maybe this example is omitting details that are not relevant to DMA
->> >> aliases?  The PCIe capability only contains one set of link-related
->> >> registers, so I don't know how we could manage a single device that
->> >> has two links.
->> >
->> > The root port is standard and has just one link to the EP (or whatever
->> > is on the external PCIe slot). The fallout of the current hw design is
->> > that the PCI-PCIe bridge has a link that does not follow standard and
->> > does not have a counterpart (as you noted).
->> >
->> >> A device with two links would break things like ASPM.  In
->> >> set_pcie_port_type(), for example, we have this comment:
->> >>
->> >>    * A Root Port or a PCI-to-PCIe bridge is always the upstream end
->> >>    * of a Link.  No PCIe component has two Links.  Two Links are
->> >>    * connected by a Switch that has a Port on each Link and internal
->> >>    * logic to connect the two Ports.
->> >>
->> >> The topology above breaks these assumptions, which will make
->> >> pdev->has_secondary_link incorrect, which means ASPM won't work
->> >> correctly.
->> >
->> > Given the current hardware, the pcieport driver seems to work reasonably
->> > for the root port at 02:00.0, with AER support. I will take a look at the
->> > ASPM part.
->>
->> I don't think pcieport itself cares much about links.  ASPM does, but
->> it looks like set_pcie_port_type() actually is smart enough to know
->> that PCI-to-PCIe bridges and Root Ports always have links on their
->> secondary sides.  So has_secondary_link probably does get set
->> correctly.
->>
->> But I think you'll hit the VIA "strange chipset" thing in
->> pcie_aspm_init_link_state(), which will probably prevent us from doing
->> ASPM on the link from 02:00.0 to 03:00.0.
->>
->> Could you collect "lspci -vv" output from this system?  I'd like to
->> archive that as background for this IOMMU issue and the ASPM tweaks I
->> suspect we'll have to do.  I *wish* we had more information about that
->> VIA thing, because I suspect we could get rid of it if we had more
->> details.
->
-> The full logs are slightly large, so I have kept them at:
-> https://github.com/jchandra-cavm/thunderx2/blob/master/logs/
-> The lspci -vv output is lspci-vv.txt and lspci -tvn output is lspci-tvn.txt
->
-> The output is from 2 socket system, the cards are not on the first slot
-> like the example above, so the bus and device numbers are different.
+  Thanks for adding me to the Cc list Bjorn.  Hopefully my message will make
+it out to the netdev and linux-pci lists -- I'm not currently subscribed to
+them.  I've explicitly marked this message to be sent in plain text but
+modern email agents suck with respect to this. (sigh) I have officially
+become a curmudgeon. 
 
-Can somebody with this system collect the "lspci -xxxx" output as well?
+  So, officially, Relaxed Ordering should be a Semantic Noop as far as PCIe
+transfers are concerned, as long as you don't care what order the PCIe
+Transaction Layer Packets are processed in by the target PCIe Fabric End
+Point.
 
-I'm making some lspci changes to handle the PCI-to-PCIe bridge
-correctly, and I can use the "lspci -xxxx" output to create an lspci
-test case.
+  Basically, if you have some number of back-to-back PCIe TLPs between two
+Fabric End Points {A} -> {B} which have the Relaxed Ordering Attribute set,
+the End Point {B} receiving these RO TLPs may process them in any order it
+likes.  When a TLP without Relaxed Ordering is sent {A} -> {B}, all
+preceding TLPs with Relaxed Ordering set must be processed by {B} prior to
+processing the TLP without Relaxed Ordering set.  In this sense, a TLP
+without Relaxed Ordering set is something akin to a "memory barrier".
+
+  All of this is covered in Section 2.4.1 of the PCIe 3.0 Specification (PCI
+Express(r) Base Specification Revision 3.0 November 10, 2010).
+
+  The advantage of using Relaxed Ordering (which is heavily used when
+sending data to Graphics Cards as I understand it), is that the PCIe
+Endpoint can potentially optimize the processing order of RO TLPs with
+things like a local multi-channel Memory Controller in order to achieve the
+highest transfer bandwidth possible.
+
+  However, we have discovered at least two PCIe 3.0 Root Complex
+implementations which have problems with TLPs directed at them with the
+Relaxed Ordering Attribute set and I'm in the process of working up a Linux
+Kernel PCI "Quirk" to allow those PCIe End Points to be marked as "not being
+advisable to send RO TLPs to".  These problems range from "mere" Performance
+Problems to outright Data Corruption.  I'm working with the vendors of these
+...  "problematic" Root Complex implementations and hope to have this patch
+submitted to the linux-pci list by tomorrow.
+
+  By the way, it's important to note that just because, say, a Root Complex
+has problems with RO TLPs directed at it, that doesn't mean that you want to
+avoid all use of Relaxed Ordering within the PCIe Fabric.  For instance,
+with the vendor whose Root Complex has a Performance Problem with RO TLPs
+directed at it, it's perfectly reasonable -- and desired -- to use Relaxed
+Ordering in Peer-to-Peer traffic.  Say for instance, with an NVMe <->
+Ethernet application.
+
+Casey
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
