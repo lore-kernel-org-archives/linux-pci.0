@@ -1,67 +1,47 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-ve1eur01on0061.outbound.protection.outlook.com ([104.47.1.61]:59679
-        "EHLO EUR01-VE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754106AbdDLOhk (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 12 Apr 2017 10:37:40 -0400
-Subject: Re: [v2] PCI: Add an option to control probing of VFs before enabling
- SR-IOV
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1490198038-20465-1-git-send-email-bodong@mellanox.com>
- <20170411211211.GB14778@bhelgaas-glaptop.roam.corp.google.com>
-CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <saeedm@mellanox.com>,
-        Eli Cohen <eli@mellanox.com>
-From: Bodong Wang <bodong@mellanox.com>
-Message-ID: <2e39e1b6-0205-2780-0223-3552d2c871a3@mellanox.com>
-Date: Wed, 12 Apr 2017 09:37:22 -0500
-MIME-Version: 1.0
-In-Reply-To: <20170411211211.GB14778@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Received: from mga06.intel.com ([134.134.136.31]:6646 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2998869AbdD1Pzx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 28 Apr 2017 11:55:53 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
+Cc: Wesley Yung <wesley.yung@microsemi.com>,
+        Sammy Hui <sammy.hui@intel.com>,
+        Joseph Gruher <joseph.r.gruher@intel.com>,
+        Wei Zhang <wzhang@fb.com>, Krishna Dhulipala <krishnad@fb.com>,
+        Keith Busch <keith.busch@intel.com>
+Subject: [PATCH 2/2] pcie/dpc: Fix control register setting
+Date: Fri, 28 Apr 2017 12:02:49 -0400
+Message-Id: <1493395369-20225-3-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1493395369-20225-1-git-send-email-keith.busch@intel.com>
+References: <1493395369-20225-1-git-send-email-keith.busch@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 4/11/2017 4:12 PM, Bjorn Helgaas wrote:
-> Hi Bodong,
->
-> On Wed, Mar 22, 2017 at 05:53:58PM +0200, bodong@mellanox.com wrote:
->> From: Bodong Wang <bodong@mellanox.com>
->>
->> Sometimes it is not desirable to probe the virtual functions after
->> SRIOV is enabled. This can save host side resource usage by VF
->> instances which would be eventually probed to VMs.
->>
->> Add a new PCI sysfs interface "sriov_probe_vfs" to control that
->> from the PF, all current callers still retain the same functionality.
->> To modify it, echo 0/n/N (disable probe) or 1/y/Y (enable probe) to
->>
->> /sys/bus/pci/devices/<DOMAIN:BUS:DEVICE.FUNCTION>/sriov_probe_vfs
-> Is this basically the same functionality as /sys/bus/pci/drivers_autoprobe,
-> but limited to a specific PF?  I.e., could we accomplish the same thing
-> with the following?
->
->    # echo 0 > /sys/bus/pci/devices/DDDD:BB:dd.f/sriov_numvfs
->    # echo 0 > /sys/bus/pci/drivers_autoprobe
->    # echo 2 > /sys/bus/pci/devices/DDDD:BB:dd.f/sriov_numvfs
->    # echo 1 > /sys/bus/pci/drivers_autoprobe
->
-> If not, can you contrast the above with drivers_autoprobe?  If we need
-> both, should they be named more similarly?
-Hi Bjorn,
+This driver was OR'ing desired bits from the existing control
+setting. That could create an invalid DPC Trigger Enabled configuration
+if the platform previously set this to "ERR_FATAL", 01b. The driver
+currently wants to set this to ERR_NONFATAL/ERR_FATAL, 10b, and the
+logical OR of this gets 11b, which is reserved. This patch fixes that
+by masking off the fields it is setting.
 
-I agree with Alex about not using driver_autoprobe to achieve this. It 
-will affect all pci related device once it's disabled(probably in a bad 
-way). On the other hand, current pci driver doesn't work for this use 
-case at all. VFs drivers(if any) will be probed once sriov is enabled no 
-matter what. The code path is pci_enable_sriov-> 
-pci_bus_add_device->device_attach, and drivers will be probed at the 
-end. Drivers_autoprobe only prevents probing pci_device_add is called. 
-This patch bounded the change to the device itself and requires no 
-device driver update.
+Signed-off-by: Keith Busch <keith.busch@intel.com>
+---
+ drivers/pci/pcie/pcie-dpc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-For the name convention, it's aligned with other sriov related sysfs 
-entries. Let me know if you have better options.
-
-Thanks,
-
-Bodong
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index fc2a4a7..88a66b4 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -139,7 +139,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 
+ 	dpc->rp = (cap & PCI_EXP_DPC_CAP_RP_EXT);
+ 
+-	ctl |= PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
++	ctl = (ctl & 0xfff4) | PCI_EXP_DPC_CTL_EN_NONFATAL | PCI_EXP_DPC_CTL_INT_EN;
+ 	pci_write_config_word(pdev, dpc->cap_pos + PCI_EXP_DPC_CTL, ctl);
+ 
+ 	dev_info(&dev->device, "DPC error containment capabilities: Int Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
+-- 
+2.7.2
