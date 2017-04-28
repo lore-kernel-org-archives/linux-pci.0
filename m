@@ -1,55 +1,41 @@
-Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
-Return-Path: <SRS0=GJHp=32=intel.com=dan.j.williams@kernel.org>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 28 Apr 2017 17:00:05 +0200
+From: Joerg Roedel <jroedel@suse.de>
+To: Sricharan R <sricharan@codeaurora.org>
+Cc: Ralph Sennhauser <ralph.sennhauser@gmail.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        netdev@vger.kernel.org
+Subject: Re: [REGRESSION next-20170426] Commit 09515ef5ddad ("of/acpi:
+ Configure dma operations at probe time for platform/amba/pci bus devices")
+ causes oops in mvneta
+Message-ID: <20170428150005.GY5077@suse.de>
+References: <20170426181508.687b52af@gmail.com>
+ <2fb57b9b-3944-d9cc-1fac-8dcccaa0c37a@codeaurora.org>
+ <20170427164014.422a124c@gmail.com>
+ <524b7fc8-1eca-a7d8-7bc7-6743be17c208@codeaurora.org>
+ <20170428081919.21bb569d@gmail.com>
+ <bcdcc1cc-181c-8396-dd3c-dd40d0c7efc1@codeaurora.org>
+ <20170428142503.3b465425@gmail.com>
+ <fa9a9c9b-68e5-251c-b640-6af5b1b3ce68@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <1565047873.28680036.1492547352121.JavaMail.zimbra@redhat.com>
-References: <CAPcyv4it56J8Voo6kV0bBcO3nHsOHYLENpAtONJZTGceDDwNPg@mail.gmail.com>
- <1492381396.25766.43.camel@kernel.crashing.org> <20170418164557.GA7181@obsidianresearch.com>
- <cce00131-1f28-27b3-40ab-04f8783f1e5a@deltatee.com> <20170418190138.GH7181@obsidianresearch.com>
- <df1351d8-b86c-2e21-1948-4688ece5dc2b@deltatee.com> <CAPcyv4gScx6A7vG9VEHpNF41GOy1Nxst7QQ3QC3uZ54bWoxbMg@mail.gmail.com>
- <1565047873.28680036.1492547352121.JavaMail.zimbra@redhat.com>
-From: Dan Williams <dan.j.williams@intel.com>
-Date: Tue, 18 Apr 2017 13:31:09 -0700
-Message-ID: <CAPcyv4hTWbXkdeCEO9O0UM-EPcSjpdHCh7vDpSoNs1kB-Kup3A@mail.gmail.com>
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-To: Jerome Glisse <jglisse@redhat.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>,
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	"James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>, Steve Wise <swise@opengridcomputing.com>,
-	Stephen Bates <sbates@raithlin.com>, Max Gurtovoy <maxg@mellanox.com>,
-	Keith Busch <keith.busch@intel.com>, linux-pci@vger.kernel.org,
-	linux-scsi <linux-scsi@vger.kernel.org>, linux-nvme@lists.infradead.org,
-	linux-rdma@vger.kernel.org, linux-nvdimm <linux-nvdimm@ml01.01.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <fa9a9c9b-68e5-251c-b640-6af5b1b3ce68@codeaurora.org>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 18, 2017 at 1:29 PM, Jerome Glisse <jglisse@redhat.com> wrote:
->> On Tue, Apr 18, 2017 at 12:35 PM, Logan Gunthorpe <logang@deltatee.com>
->> wrote:
->> >
->> >
->> > On 18/04/17 01:01 PM, Jason Gunthorpe wrote:
->> >> Ultimately every dma_ops will need special code to support P2P with
->> >> the special hardware that ops is controlling, so it makes some sense
->> >> to start by pushing the check down there in the first place. This
->> >> advice is partially motivated by how dma_map_sg is just a small
->> >> wrapper around the function pointer call...
->> >
->> > Yes, I noticed this problem too and that makes sense. It just means
->> > every dma_ops will probably need to be modified to either support p2p
->> > pages or fail on them. Though, the only real difficulty there is that it
->> > will be a lot of work.
->>
->> I don't think you need to go touch all dma_ops, I think you can just
->> arrange for devices that are going to do dma to get redirected to a
->> p2p aware provider of operations that overrides the system default
->> dma_ops. I.e. just touch get_dma_ops().
->
-> This would not work well for everyone, for instance on GPU we usualy
-> have buffer object with a mix of device memory and regular system
-> memory but call dma sg map once for the list.
->
+On Fri, Apr 28, 2017 at 06:48:33PM +0530, Sricharan R wrote:
+> Also, probably this patch now going through the iommu tree looks more apt,
+> as its for probe-deferral.
+> Joerg, is that correct ?
 
-...and that dma_map goes through get_dma_ops(), so I don't see the conflict?
+Definitly. Please send the patch directly to me and I put it in the
+tree.
+
+Thanks,
+
+	Joerg
+
