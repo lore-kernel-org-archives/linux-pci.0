@@ -1,59 +1,223 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Sagi Grimberg <sagi@grimberg.me>,
-        "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        Steve Wise <swise@opengridcomputing.com>,
-        Stephen Bates <sbates@raithlin.com>,
-        Max Gurtovoy <maxg@mellanox.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Jason Gunthorpe <jgunthorpe@obsidianresearch.com>
-References: <1490911959-5146-1-git-send-email-logang@deltatee.com>
- <1491974532.7236.43.camel@kernel.crashing.org>
- <5ac22496-56ec-025d-f153-140001d2a7f9@deltatee.com>
- <1492034124.7236.77.camel@kernel.crashing.org>
-Cc: linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-rdma@vger.kernel.org,
-        linux-nvdimm@ml01.01.org, linux-kernel@vger.kernel.org,
-        Jerome Glisse <jglisse@redhat.com>
-From: Logan Gunthorpe <logang@deltatee.com>
-Message-ID: <81888a1e-eb0d-cbbc-dc66-0a09c32e4ea2@deltatee.com>
-Date: Thu, 13 Apr 2017 15:22:06 -0600
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+ Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v1 2/2] dt-bindings: pcie: Add documentation for Mediatek PCIe
+Date: Fri, 28 Apr 2017 17:10:34 +0800
+Message-ID: <1493370634-7038-3-git-send-email-ryder.lee@mediatek.com>
+In-Reply-To: <1493370634-7038-1-git-send-email-ryder.lee@mediatek.com>
+References: <1493370634-7038-1-git-send-email-ryder.lee@mediatek.com>
 MIME-Version: 1.0
-In-Reply-To: <1492034124.7236.77.camel@kernel.crashing.org>
-Content-Type: text/plain; charset=utf-8
-Subject: Re: [RFC 0/8] Copy Offload with Peer-to-Peer PCI Memory
-Sender: linux-kernel-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Ryder Lee <ryder.lee@mediatek.com>, linux-mediatek@lists.infradead.org,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Add binding document for Mediatek PCIe Gen2 v1 host controller driver.
+
+Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+---
+ .../bindings/pci/mediatek,gen2v1-pcie.txt          | 174 +++++++++++++++++++++
+ 1 file changed, 174 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/mediatek,gen2v1-pcie.txt
+
+diff --git a/Documentation/devicetree/bindings/pci/mediatek,gen2v1-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek,gen2v1-pcie.txt
+new file mode 100644
+index 0000000..545d8cf
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/mediatek,gen2v1-pcie.txt
+@@ -0,0 +1,174 @@
++Mediatek Gen2 V1 PCIe controller
++
++PCIe subsys supports single root complex (RC) with 3 Root Ports. Each root
++ports supports a Gen2 1-lane Link. It includes one Host/PCI bridge and 3
++PCIe MAC. Each port has PIPE interface to PHY. There are 3 bus master for
++data access and 1 bus slave for Configuration and Status Register access.
++
++This controller is available on MT7623 series SoCs.
++  
++Required properties:
++- compatible: Should contain "mediatek,gen2v1-pcie".
++- device_type: Must be "pci"
++- reg: Base addresses and lengths of the PCIe controller.
++- #address-cells: Address representation for root ports (must be 3)
++  - cell 0 specifies the bus and device numbers of the root port:
++    [23:16]: bus number
++    [15:11]: device number
++  - cell 1 denotes the upper 32 address bits and should be 0
++  - cell 2 contains the lower 32 address bits and is used to translate to the
++    CPU address space
++- #size-cells: Size representation for root ports (must be 2)
++- #interrupt-cells: Size representation for interrupts (must be 1)
++- interrupts: Three interrupt outputs of the controller. Must contain an
++  entry for each entry in the interrupt-names property.
++- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
++  Please refer to the standard PCI bus binding document for a more detailed
++  explanation.
++- clocks: Must contain an entry for each entry in clock-names.
++  See ../clocks/clock-bindings.txt for details.
++- clock-names: Must include the following entries:
++  - free_ck	:for reference clock of PCIe subsys
++  - sys_ck0	:for clock of Port0 MAC
++  - sys_ck1	:for clock of Port1 MAC
++  - sys_ck2	:for clock of Port2 MAC
++- resets: Must contain an entry for each entry in reset-names.
++  See ../reset/reset.txt for details.
++- reset-names: Must include the following entries:
++  - pcie-rst0	:port0 reset
++  - pcie-rst1	:port1 reset
++  - pcie-rst2	:port2 reset
++- phys: list of PHY specifiers (used by generic PHY framework)
++- phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
++  number of PHYs as specified in *phys* property.
++- power-domains: A phandle and power domain specifier pair to the power domain
++  which is responsible for collapsing and restoring power to the peripheral
++- bus-range: Range of bus numbers associated with this controller
++- ranges: Describes the translation of addresses for root ports and standard
++  PCI regions. The entries must be 6 cells each, where the first three cells
++  correspond to the address as described for the #address-cells property
++  above, the fourth cell is the physical CPU address to translate to and the
++  fifth and six cells are as described for the #size-cells property above.
++  - The first three entries are expected to translate the addresses for the root
++    port registers, which are referenced by the assigned-addresses property of
++    the root port nodes (see below).
++  - The remaining entries setup the mapping for the standard I/O and memory
++	regions.
++  Please refer to the standard PCI bus binding document for a more detailed
++  explanation.
++
++In addition, the device tree node must have sub-nodes describing each
++PCIe port interface, having the following mandatory properties:
++
++Required properties:
++- device_type: Must be "pci"
++- assigned-addresses: Address and size of the port configuration registers
++- reg: Only the first four bytes are used to refer to the correct bus number
++  and device number.
++- #address-cells: Must be 3
++- #size-cells: Must be 2
++- #interrupt-cells: Size representation for interrupts (must be 1)
++- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
++  Please refer to the standard PCI bus binding document for a more detailed
++  explanation.
++- ranges: Sub-ranges distributed from the PCIe controller node. An empty
++  property is sufficient.
++- num-lanes: Number of lanes to use for this port.
++
++Examples:
++
++SoC dtsi:
++
++	hifsys: syscon@1a000000 {
++		compatible = "mediatek,mt7623-hifsys", "syscon";
++		reg = <0 0x1a000000 0 0x1000>;
++		#clock-cells = <1>;
++		#reset-cells = <1>;
++	};
++
++	pcie: pcie-controller@1a140000 {
++		compatible = "mediatek,gen2v1-pcie";
++		device_type = "pci";
++		reg = <0 0x1a140000 0 0x1000>; /* PCIe shared registers */
++		#address-cells = <3>;
++		#size-cells = <2>;
++		#interrupt-cells = <1>;
++		interrupts = <GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>,
++			     <GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>,
++			     <GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
++		interrupt-map-mask = <0xf800 0 0 0>;
++		interrupt-map = <0x0000 0 0 0 &gic GIC_SPI 193 IRQ_TYPE_NONE>,
++				 <0x0800 0 0 0 &gic GIC_SPI 194 IRQ_TYPE_NONE>,
++			     <0x1000 0 0 0 &gic GIC_SPI 195 IRQ_TYPE_NONE>;
++		clocks = <&topckgen CLK_TOP_ETHIF_SEL>,
++			     <&hifsys CLK_HIFSYS_PCIE0>,
++				 <&hifsys CLK_HIFSYS_PCIE1>,
++				 <&hifsys CLK_HIFSYS_PCIE2>;
++		clock-names = "free_ck", "sys_ck0", "sys_ck1", "sys_ck2";
++		resets = <&hifsys MT2701_HIFSYS_PCIE0_RST>,
++			     <&hifsys MT2701_HIFSYS_PCIE1_RST>,
++			     <&hifsys MT2701_HIFSYS_PCIE2_RST>;
++		reset-names = "pcie-rst0", "pcie-rst1", "pcie-rst2";
++		phys = <&pcie0_phy>, <&pcie1_phy>, <&pcie2_phy>;
++		phy-names = "pcie-phy0", "pcie-phy1", "pcie-phy2";
++		power-domains = <&scpsys MT2701_POWER_DOMAIN_HIF>;
++		bus-range = <0x00 0xff>;
++		ranges = <0x82000000 0 0x1a142000 0 0x1a142000 0 0x1000 /* Port0 registers */
++			  0x82000000 0 0x1a143000 0 0x1a143000 0 0x1000 /* Port1 registers */
++			  0x82000000 0 0x1a144000 0 0x1a144000 0 0x1000 /* Port2 registers */
++			  0x81000000 0 0x1a160000 0 0x1a160000 0 0x00010000 /* I/O space */
++			  0x83000000 0 0x60000000 0 0x60000000 0 0x10000000>;	/* memory space */
++		status = "disabled";
++
++		pcie@1,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82000000 0 0x1a142000 0 0x1000>;
++			reg = <0x0000 0 0 0 0>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0>;
++			interrupt-map = <0 0 0 0 &gic GIC_SPI 193 IRQ_TYPE_NONE>;
++			ranges;
++			num-lanes = <1>;
++			status = "disabled";
++		};
++
++		pcie@2,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82000800 0 0x1a143000 0 0x1000>;
++			reg = <0x0800 0 0 0 0>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0>;
++			interrupt-map = <0 0 0 0 &gic GIC_SPI 194 IRQ_TYPE_NONE>;
++			ranges;
++			num-lanes = <1>;
++			status = "disabled";
++		};
++
++		pcie@3,0 {
++			device_type = "pci";
++			assigned-addresses = <0x82001000 0 0x1a144000 0 0x1000>;
++			reg = <0x1000 0 0 0 0>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0>;
++			interrupt-map = <0 0 0 0 &gic GIC_SPI 195 IRQ_TYPE_NONE>;
++			ranges;
++			num-lanes = <1>;
++			status = "disabled";
++		};
++	};
++
++Board dts:
++
++	&pcie {
++		status = "okay";
++
++		pcie@1,0 {
++			status = "okay";
++		};
++	};
+-- 
+1.9.1
 
 
-On 12/04/17 03:55 PM, Benjamin Herrenschmidt wrote:
-> Look at pcibios_resource_to_bus() and pcibios_bus_to_resource(). They
-> will perform the conversion between the struct resource content (CPU
-> physical address) and the actual PCI bus side address.
-
-Ah, thanks for the tip! On my system, this translation returns the same
-address so it was not necessary. And, yes, that means this would have to
-find its way into the dma mapping routine somehow. This means we'll
-eventually need a way to look-up the p2pmem device from the struct page.
-Which means we will likely need a new flag bit in the struct page or
-something. The big difficulty I see is testing. Do you know what
-architectures or in what circumstances are these translations used?
-
-> When behind the same switch you need to use PCI addresses. If one tries
-> later to do P2P between host bridges (via the CPU fabric) things get
-> more complex and one will have to use either CPU addresses or something
-> else alltogether (probably would have to teach the arch DMA mapping
-> routines to work with those struct pages you create and return the
-> right thing).
-
-Probably for starters we'd want to explicitly deny cases between host
-bridges and add that later if someone wants to do the testing.
-
-Thanks,
-
-Logan
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
