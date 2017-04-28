@@ -1,37 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49422 "EHLO mx1.redhat.com"
+Received: from mga01.intel.com ([192.55.52.88]:55113 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751997AbdDKPQY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 11 Apr 2017 11:16:24 -0400
-Date: Tue, 11 Apr 2017 11:16:22 -0400 (EDT)
-Message-Id: <20170411.111622.1049162642837394191.davem@redhat.com>
-To: hch@lst.de
-Cc: bhelgaas@google.com, netanel@annapurnalabs.com, jcliburn@gmail.com,
-        chris.snook@gmail.com, sgoutham@cavium.com, rric@kernel.org,
-        jiri@mellanox.com, idosch@mellanox.com, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: Re: remove pci_enable_msix() V3
-From: David Miller <davem@redhat.com>
-In-Reply-To: <20170411110125.3446-1-hch@lst.de>
-References: <20170411110125.3446-1-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+        id S967342AbdD1OQJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 28 Apr 2017 10:16:09 -0400
+From: Imre Deak <imre.deak@intel.com>
+To: intel-gfx@lists.freedesktop.org
+Cc: Jani Nikula <jani.nikula@intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: [PATCH v3 1/2] PCI / PM: Add needs_resume flag to avoid suspend complete optimization
+Date: Fri, 28 Apr 2017 17:16:02 +0300
+Message-Id: <1493388963-5278-1-git-send-email-imre.deak@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Christoph Hellwig <hch@lst.de>
-Date: Tue, 11 Apr 2017 13:01:20 +0200
+Some drivers - like i915 - may not support the system suspend direct
+complete optimization due to differences in their runtime and system
+suspend sequence. Add a flag that when set resumes the device before
+calling the driver's system suspend handlers which effectively disables
+the optimization.
 
-> this series removes the remaining callers of the pci_enable_msix()
-> function and then the function itself.  The final removal has been
-> Acked by Bjorn.
-> 
-> Changes since V2:
->  - add another patch on Dave's request
->  - add various acks
->  - spelling fixes in the commit logs
-> 
-> Changes since V1:
->  - replace the two previous thunderx patches with a new one from Thanneeru
+Needed by the next patch fixing suspend/resume on i915.
 
-Series applied to net-next, thanks.
+Suggested by Rafael.
+
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: stable@vger.kernel.org
+Signed-off-by: Imre Deak <imre.deak@intel.com>
+---
+
+[ After discussing with Jani, I'm going to apply this and the next patch
+  for now to the intel-gfx specific CI branch to unblock our testing. ]
+
+ drivers/pci/pci.c   | 3 ++-
+ include/linux/pci.h | 7 +++++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02..020f02d 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2141,7 +2141,8 @@ bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
+ 
+ 	if (!pm_runtime_suspended(dev)
+ 	    || pci_target_state(pci_dev) != pci_dev->current_state
+-	    || platform_pci_need_resume(pci_dev))
++	    || platform_pci_need_resume(pci_dev)
++	    || pci_dev->needs_resume)
+ 		return false;
+ 
+ 	/*
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5948cfd..2f012f8 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -316,6 +316,9 @@ struct pci_dev {
+ 	unsigned int	hotplug_user_indicators:1; /* SlotCtl indicators
+ 						      controlled exclusively by
+ 						      user sysfs */
++	unsigned int	needs_resume:1;	/* Resume before calling the driver's
++					   system suspend hooks, disabling the
++					   direct_complete optimization. */
+ 	unsigned int	d3_delay;	/* D3->D0 transition time in ms */
+ 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
+ 
+@@ -1110,6 +1113,10 @@ bool pci_check_pme_status(struct pci_dev *dev);
+ void pci_pme_wakeup_bus(struct pci_bus *bus);
+ void pci_d3cold_enable(struct pci_dev *dev);
+ void pci_d3cold_disable(struct pci_dev *dev);
++static inline void pci_resume_before_suspend(struct pci_dev *dev, bool enable)
++{
++	dev->needs_resume = enable;
++}
+ 
+ static inline int pci_enable_wake(struct pci_dev *dev, pci_power_t state,
+ 				  bool enable)
+-- 
+2.5.0
