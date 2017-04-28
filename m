@@ -1,39 +1,69 @@
-Return-Path: <SRS0=EwoT=32=sigmadesigns.com=Marc_Gonzalez@kernel.org>
-Return-Path: <SRS0=EwoT=32=sigmadesigns.com=Marc_Gonzalez@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: linux-pci <linux-pci@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>
-From: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Subject: Outstanding PCI patches for v4.12
-Message-ID: <22298ba2-2c3b-2d1b-a419-0be0aa4b2746@sigmadesigns.com>
-Date: Tue, 18 Apr 2017 11:52:49 +0200
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Fri, 28 Apr 2017 17:20:06 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Subject: Re: [PATCH v4 05/21] lib: fix Devres devm_ioremap_* offset parameter
+ kerneldoc description
+Message-ID: <20170428212006.GD22354@htj.duckdns.org>
+References: <20170419164913.19674-1-lorenzo.pieralisi@arm.com>
+ <20170419164913.19674-6-lorenzo.pieralisi@arm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-15"
+In-Reply-To: <20170419164913.19674-6-lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Wenrui Li <wenrui.li@rock-chips.com>,
+ Catalin Marinas <catalin.marinas@arm.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+ Shawn Lin <shawn.lin@rock-chips.com>, Will Deacon <will.deacon@arm.com>,
+ Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Joao Pinto <Joao.Pinto@synopsys.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ Russell King <linux@armlinux.org.uk>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Murali Karicheri <m-karicheri2@ti.com>, linux-pci@vger.kernel.org,
+ Arnd Bergmann <arnd@arndb.de>, Jon Mason <jonmason@broadcom.com>,
+ Ray Jui <rjui@broadcom.com>, John Garry <john.garry@huawei.com>,
+ Bjorn Helgaas <bhelgaas@google.com>, Mingkai Hu <mingkai.hu@freescale.com>,
+ linux-arm-kernel@lists.infradead.org, "Luis R. Rodriguez" <mcgrof@kernel.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, linux-kernel@vger.kernel.org,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hello Bjorn,
+On Wed, Apr 19, 2017 at 05:48:54PM +0100, Lorenzo Pieralisi wrote:
+> The offset parameter in Devres devm_ioremap_* functions kerneldoc
+> entries is erroneously defined as BUS offset whereas it is actually
+> a resource address.
+> 
+> Since it is actually misleading, fix the Devres devm_ioremap_* offset
+> parameter kerneldoc entry by replacing BUS offset with a more
+> suitable description (ie Resource address).
+> 
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Tejun Heo <tj@kernel.org>
 
-I have two outstanding patches that are good candidates for v4.12
-(short and simple).
+Acked-by: Tejun Heo <tj@kernel.org>
 
-#1
-[PATCH] PCI: Change pci_host_common_probe visibility
-Message-ID: <11bd9bd5-5d96-bd7c-24c7-5f262a46085c@sigmadesigns.com>
+Thanks.
 
-NB: Arnd submitted an alternative patch a week before I did:
+-- 
+tejun
 
-https://patchwork.kernel.org/patch/9637045/
-https://patchwork.kernel.org/patch/9649993/
-
-
-#2
-[PATCH] PCI: Improve __pci_read_base robustness
-Message-ID: <1c0ad12a-9bfc-2a76-ee76-6ab403f912d3@sigmadesigns.com>
-
-
-If there's anything wrong with either patch, I can quickly fix it,
-hopefully in time for v4.12
-
-(It looks like Tango PCIe controller support will have to wait until
-v4.13 though.)
-
-Regards.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
