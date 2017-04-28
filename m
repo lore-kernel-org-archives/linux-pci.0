@@ -1,133 +1,109 @@
-Return-Path: <SRS0=Q2iE=3O=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=Q2iE=3O=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Thu, 6 Apr 2017 18:09:51 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Cc: "Luis R. Rodriguez" <mcgrof@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, Will Deacon <will.deacon@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Henderson <rth@twiddle.net>,
-	Tony Luck <tony.luck@intel.com>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Ingo Molnar <mingo@redhat.com>,
-	Haavard Skinnemoen <hskinnemoen@gmail.com>,
-	Pratyush Anand <pratyush.anand@gmail.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Mingkai Hu <mingkai.hu@freescale.com>,
-	John Garry <john.garry@huawei.com>,
-	Tanmay Inamdar <tinamdar@apm.com>,
-	Murali Karicheri <m-karicheri2@ti.com>,
-	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
-	Ray Jui <rjui@broadcom.com>, Wenrui Li <wenrui.li@rock-chips.com>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Minghuan Lian <minghuan.Lian@freescale.com>,
-	Jon Mason <jonmason@broadcom.com>,
-	Gabriele Paoloni <gabriele.paoloni@huawei.com>,
-	Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-	Joao Pinto <Joao.Pinto@synopsys.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Michal Simek <michal.simek@xilinx.com>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Zhou Wang <wangzhou1@hisilicon.com>,
-	Roy Zang <tie-fei.zang@freescale.com>
-Subject: Re: [PATCH v2 02/22] asm-generic/io.h: add ioremap_nopost remap
- interface
-Message-ID: <20170406170951.GA10520@red-moon>
-References: <20170328144543.GA18046@red-moon>
- <20170405105841.GG7909@n2100.armlinux.org.uk>
- <20170405113238.GA2465@red-moon>
- <20170406102636.GA9623@red-moon>
- <20170406105312.GE28800@wotan.suse.de>
- <20170406113845.GA10013@red-moon>
- <20170406115906.GF28800@wotan.suse.de>
- <20170406130727.GE17774@n2100.armlinux.org.uk>
- <20170406162156.GA10134@red-moon>
- <20170406164015.GI17774@n2100.armlinux.org.uk>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 28 Apr 2017 14:25:03 +0200
+From: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+To: Sricharan R <sricharan@codeaurora.org>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Joerg Roedel <jroedel@suse.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        netdev@vger.kernel.org
+Subject: Re: [REGRESSION next-20170426] Commit 09515ef5ddad ("of/acpi:
+ Configure dma operations at probe time for platform/amba/pci bus devices")
+ causes oops in mvneta
+Message-ID: <20170428142503.3b465425@gmail.com>
+In-Reply-To: <bcdcc1cc-181c-8396-dd3c-dd40d0c7efc1@codeaurora.org>
+References: <20170426181508.687b52af@gmail.com>
+        <2fb57b9b-3944-d9cc-1fac-8dcccaa0c37a@codeaurora.org>
+        <20170427164014.422a124c@gmail.com>
+        <524b7fc8-1eca-a7d8-7bc7-6743be17c208@codeaurora.org>
+        <20170428081919.21bb569d@gmail.com>
+        <bcdcc1cc-181c-8396-dd3c-dd40d0c7efc1@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170406164015.GI17774@n2100.armlinux.org.uk>
+Content-Type: text/plain; charset=US-ASCII
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, Apr 06, 2017 at 05:40:16PM +0100, Russell King - ARM Linux wrote:
-> On Thu, Apr 06, 2017 at 05:21:56PM +0100, Lorenzo Pieralisi wrote:
-> > Ok, so:
+On Fri, 28 Apr 2017 17:26:41 +0530
+Sricharan R <sricharan@codeaurora.org> wrote:
+
+> Hi Ralph,
+> 
+> <snip..>
+> 
+> >>>>>
+> >>>>> Commit 09515ef5ddad ("of/acpi: Configure dma operations at probe
+> >>>>> time for platform/amba/pci bus devices") causes a kernel panic
+> >>>>> as in the log below on an armada-385. Reverting the commit
+> >>>>> fixes the issue.
+> >>>>>
+> >>>>> Regards
+> >>>>> Ralph      
+> >>>>
+> >>>> Somehow not getting a obvious clue on whats going wrong with the
+> >>>> logs below. From the log and looking in to dts, the drivers seems
+> >>>> to the one for "marvell,armada-370-neta".    
+> >>>
+> >>> Correct.
+> >>>     
+> >>>> Issue looks the data from the dma
+> >>>> has gone bad and subsequently referring the wrong data has
+> >>>> resulted in the crash. Looks like the dma_masks is the one going
+> >>>> wrong. Can i get some logs from mvneta_probe, about
+> >>>> dev->dma_mask, dev->coherent_dma_mask and dev->dma_ops with and
+> >>>> without the patch to see whats the difference ?    
+> >>>
+> >>> Not sure I understood what exactly you are after. Might be faster
+> >>> to just send me a patch with all debug print statements you like
+> >>> to see.   
+> >>
+> >> Attached the patch with debug prints.
+> >>
+> >> Regards,
+> >>  Sricharan
+> >>  
 > > 
-> > (1) I can do asm-generic/ioremap-nopost.h, which I assume you want to
-> >     contain something like
+> > Hi Sricharan
 > > 
-> > static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
-> > {
-> > 	return ioremap_nocache(offset, size);
-> > }
+> > With commit 09515ef5ddad
 > > 
-> > Funny bit is that it has to be included by asm*/io.h files _after_
-> > ioremap_nocache has been #defined (that's the reason my approach was
-> > failing miserably even on arches like eg powerpc (see [1] below) that
-> > does have ioremap_nocache),
-> 
-> PowerPC does have ioremap_nocache() though:
-> 
-> /**
->  * ioremap     -   map bus memory into CPU space
-> ...
->  * * ioremap_nocache is identical to ioremap
-> extern void __iomem *ioremap(phys_addr_t address, unsigned long size);
-> #define ioremap_nocache(addr, size)     ioremap((addr), (size))
-> 
-> and this include file is included very early on in linux/io.h.  I don't
-> see anything that conditionalises it on anything except __KERNEL__.  So,
-> the report from 0-day really doesn't make any sense to me.
-> 
-> Do we know how we're ending up in linux/io.h line 169 without having
-> picked up the ioremap_nocache() definition provided by PowerPC's
-> asm/io.h ?
-
-I will debug it further but I *think* it is because:
-
-eg arch/powerpc/oprofile/op_model_cell.c includes <asm/io.h>
-
-and <asm/io.h> includes <linux/io.h> before ioremap_nocache is defined
-
-> > not sure it is going to be very nice to have
-> > an include in the middle of asm*/io.h include files (and I have to patch
-> > all arches which I can do).
-> 
-> You mean like we already have to do with this asm-generic/io.h thing in
-> the ARM io.h header file, because we need to define all the accessors
-> first, to prevent the asm-generic/io.h thing defining them for us?
-> Given how asm-generic has headed in this regard, having include files
-> at all sorts of strange locations within the architecture asm/*.h
-> header files has become quite normal, unfortunately.
-
-Yes we won't make it any nicer that's for certain, my worry is that
-it would end up being even harder to read.
-
-> > (2) I add:
+> > [    1.288962] mvneta f1070000.ethernet: dev->dma_mask 0xffffffff
+> > [    1.294827] mvneta f1070000.ethernet: dev->coherent_dma_mask
+> > 0xffffffff [    1.301472] mvneta f1070000.ethernet: dev->dma_ops
+> > 0x40b00c0601460
 > > 
-> > #ifndef ioremap_nopost
-> > static inline void __iomem *ioremap_nopost(phys_addr_t offset, size_t size)
-> > {
-> > 	return NULL; <-(making it return ioremap_nocache() does not
-> > 			work, see [1] for the reason)
-> > }
-> > #endif
+> > [    1.322047] mvneta f1034000.ethernet: dev->dma_mask 0xffffffff
+> > [    1.327904] mvneta f1034000.ethernet: dev->coherent_dma_mask
+> > 0xffffffff [    1.334549] mvneta f1034000.ethernet: dev->dma_ops
+> > 0x40b00c0601460
 > > 
-> > in linux/io.h
+> > 
+> > With the patch reverted, the build that works
+> > 
+> > [    1.289001] mvneta f1070000.ethernet: dev->dma_mask 0xffffffff
+> > [    1.294866] mvneta f1070000.ethernet: dev->coherent_dma_mask
+> > 0xffffffff [    1.301511] mvneta f1070000.ethernet: dev->dma_ops
+> > 0x40b00c06014a8
+> > 
+> > [    1.317005] mvneta f1034000.ethernet: dev->dma_mask 0xffffffff
+> > [    1.322867] mvneta f1034000.ethernet: dev->coherent_dma_mask
+> > 0xffffffff [    1.329508] mvneta f1034000.ethernet: dev->dma_ops
+> > 0x40b00c06014a8 
 > 
-> ... which breaks the kernel if ioremap_nopost is missing from the arch
-> header, and one of the drivers that you're modifying to use this new
-> ioremap variant happens to be built and used on such an architecture.
-
-Yes agree.
-
-> > (3) ioremap_nopost follows Luis' ioremap_uc approach
+> My bad, i think it is this patch missing [1], attached it as well.
+> Infact, this was in the series initially and got acked to get merged
+> separately well before the series. I should have sent this to Russell.
+> I will do this now. If this fixes up the issue,
+> i will take this patch separately, while this series gets tested
+> on -next.
 > 
-> Same problem as (2), as I understand correctly.
+> [1] https://patchwork.kernel.org/patch/9362113/
+> 
 
-Agreed. We have to find the lesser evil, that's it.
+With the attached patch,
+0001-arm-dma-mapping-Don-t-override-dma_ops-in-arch_setup.patch, on top
+of next all is well again.
 
-Thanks !
-Lorenzo
+Thanks
+Ralph
