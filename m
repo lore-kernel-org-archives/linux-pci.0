@@ -1,14 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-To: linux-pci@vger.kernel.org,
-	timur@codeaurora.org
-Subject: [PATCH V8 1/5] PCI/ASPM: introduce pci_aspm_init() and add to
- pci_init_capabilities()
-Date: Sat,  8 Apr 2017 00:55:47 -0400
-Message-Id: <1491627351-1111-2-git-send-email-okaya@codeaurora.org>
-In-Reply-To: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
-References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+MIME-Version: 1.0
+In-Reply-To: <20170426111809.19922-11-lorenzo.pieralisi@arm.com>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+ <20170426111809.19922-11-lorenzo.pieralisi@arm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 28 Apr 2017 14:53:37 +0200
+Message-ID: <CAK8P3a0_VN1YoSqQ08YHcezRaKCE+2XwVpKfGjiok1qKxT+s1g@mail.gmail.com>
+Subject: Re: [RFC/RFT PATCH 10/18] PCI: rcar: Convert PCI scan API to
+ pci_scan_root_bus_bridge()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,83 +17,65 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mayurkumar.patel@intel.com, David Daney <david.daney@cavium.com>,
- linux-arm-msm@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
- linux-kernel@vger.kernel.org, Sinan Kaya <okaya@codeaurora.org>,
- Julia Lawall <Julia.Lawall@lip6.fr>, Bjorn Helgaas <bhelgaas@google.com>,
- Rajat Jain <rajatja@google.com>, linux-arm-kernel@lists.infradead.org
-MIME-Version: 1.0
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-We need a callback from pci_init_capabilities function for every
-single new PCI device that is currently being added.
+On Wed, Apr 26, 2017 at 1:18 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> The introduction of pci_scan_root_bus_bridge() provides a PCI core
+> API to scan a PCI root bus backed by an already initialized
+> struct pci_host_bridge object, which simplifies the bus scan
+> interface and makes the PCI scan root bus interface easier to
+> generalize as members are added to the struct pci_host_bridge().
+>
+> Convert PCI rcar host code to pci_scan_root_bus_bridge() to
+> improve the PCI root bus scanning interface.
+>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Simon Horman <horms@verge.net.au>
+> ---
+>  drivers/pci/host/pcie-rcar.c | 28 ++++++++++++++++++----------
+>  1 file changed, 18 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/pci/host/pcie-rcar.c b/drivers/pci/host/pcie-rcar.c
+> index cb07c45..051b4db 100644
+> --- a/drivers/pci/host/pcie-rcar.c
+> +++ b/drivers/pci/host/pcie-rcar.c
+> @@ -451,27 +451,35 @@ static int rcar_pcie_enable(struct rcar_pcie *pcie)
+>  {
+>         struct device *dev = pcie->dev;
+>         struct pci_bus *bus, *child;
+> -       LIST_HEAD(res);
+> +       struct pci_host_bridge *bridge;
+> +       int ret;
+> +
+> +       bridge = pci_alloc_host_bridge(0);
+> +       if (!bridge)
+> +               return -ENOMEM;
 
-pci_aspm_init() will be used to save the power on state of the HW.
+The pci_alloc_host_bridge() here should also be moved into
+rcare_pcie_probe(), replacing the devm_kzalloc there.
 
-Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=194895
-Signed-off-by: Sinan Kaya <okaya@codeaurora.org>
----
- drivers/pci/pcie/aspm.c | 10 ++++++++++
- drivers/pci/probe.c     |  3 +++
- include/linux/pci.h     |  2 ++
- 3 files changed, 15 insertions(+)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 1dfa10c..dc36717 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -827,6 +827,16 @@ static struct pcie_link_state *alloc_pcie_link_state(struct pci_dev *pdev)
- }
- 
- /*
-+ * pci_aspm_init: Initiate PCI express link state.
-+ * It is called from device_add for every single pci device.
-+ * @pdev: all pci devices
-+ */
-+int pci_aspm_init(struct pci_dev *pdev)
-+{
-+	return 0;
-+}
-+
-+/*
-  * pcie_aspm_init_link_state: Initiate PCI express link state.
-  * It is called after the pcie and its children devices are scanned.
-  * @pdev: the root port or switch downstream port
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index dfc9a27..1e19364 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1847,6 +1847,9 @@ static void pci_init_capabilities(struct pci_dev *dev)
- 
- 	/* Advanced Error Reporting */
- 	pci_aer_init(dev);
-+
-+	/* Active State Power Management */
-+	pci_aspm_init(dev);
- }
- 
- /*
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index eb3da1a..8828dd7 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1396,8 +1396,10 @@ static inline int pci_irq_get_node(struct pci_dev *pdev, int vec)
- 
- #ifdef CONFIG_PCIEASPM
- bool pcie_aspm_support_enabled(void);
-+int pci_aspm_init(struct pci_dev *pdev);
- #else
- static inline bool pcie_aspm_support_enabled(void) { return false; }
-+static inline int pci_aspm_init(struct pci_dev *pdev) { return -ENODEV; }
- #endif
- 
- #ifdef CONFIG_PCIEAER
--- 
-1.9.1
-
+        Arnd
 
 _______________________________________________
 linux-arm-kernel mailing list
