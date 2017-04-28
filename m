@@ -1,103 +1,75 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [REGRESSION next-20170426] Commit 09515ef5ddad ("of/acpi:
- Configure dma operations at probe time for platform/amba/pci bus devices")
- causes oops in mvneta
-To: Ralph Sennhauser <ralph.sennhauser@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Joerg Roedel <jroedel@suse.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        netdev@vger.kernel.org
-References: <20170426181508.687b52af@gmail.com>
- <2fb57b9b-3944-d9cc-1fac-8dcccaa0c37a@codeaurora.org>
- <20170427164014.422a124c@gmail.com>
-From: Sricharan R <sricharan@codeaurora.org>
-Message-ID: <524b7fc8-1eca-a7d8-7bc7-6743be17c208@codeaurora.org>
-Date: Fri, 28 Apr 2017 11:13:33 +0530
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <20170427164014.422a124c@gmail.com>
-Content-Type: multipart/mixed;
- boundary="------------E413B5F93E4921879CA78459"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <20170426111809.19922-2-lorenzo.pieralisi@arm.com>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+ <20170426111809.19922-2-lorenzo.pieralisi@arm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Fri, 28 Apr 2017 14:13:57 +0200
+Message-ID: <CAK8P3a2jUj1npEr+So+JkjjQWgZWceE2whvO=Se=wPyaWOGbQQ@mail.gmail.com>
+Subject: Re: [RFC/RFT PATCH 01/18] PCI: Initialize bridge release function at
+ bridge allocation
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------E413B5F93E4921879CA78459
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+On Wed, Apr 26, 2017 at 1:17 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> The introduction of pci_register_host_bridge() kernel interface
+> allows PCI host controller drivers to create the struct pci_host_bridge
+> object, initialize it and register it with the kernel so that its
+> corresponding PCI bus can be scanned and its devices probed.
+>
+> The host bridge device release function pci_release_host_bridge_dev is a
+> static function common for all struct pci_host_bridge allocated objects,
+> so in its current form cannot be used by PCI host bridge controllers
+> drivers to initialize the allocated struct pci_host_bridge, which
+> leaves struct pci_host_bridge devices release function uninitialized.
+>
+> Since pci_release_host_bridge_dev is a function common to all PCI
+> host bridge objects, initialize it in pci_alloc_host_bridge() (ie
+> common host bridge allocation interface) so that all struct
+> pci_host_bridge objects have their release function initialized by
+> default at allocation time, removing the need for exporting the
+> common pci_release_host_bridge_dev function to other compilation
+> units.
+>
+> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> Cc: Arnd Bergmann <arnd@arndb.de>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
 
-Hi Ralph,
+Makes sense. I think originally I did not have the bridge->release_fn
+callback, so drivers would have to provide their won release callback,
+but this is no longer needed as they can override the release_fn instead.
 
-On 4/27/2017 8:10 PM, Ralph Sennhauser wrote:
-> On Thu, 27 Apr 2017 19:05:09 +0530
-> Sricharan R <sricharan@codeaurora.org> wrote:
-> 
->> Hi,
->>
->> On 4/26/2017 9:45 PM, Ralph Sennhauser wrote:
->>> Hi Sricharan R,
->>>
->>> Commit 09515ef5ddad ("of/acpi: Configure dma operations at probe
->>> time for platform/amba/pci bus devices") causes a kernel panic as
->>> in the log below on an armada-385. Reverting the commit fixes the
->>> issue.
->>>
->>> Regards
->>> Ralph  
->>
->> Somehow not getting a obvious clue on whats going wrong with the logs
->> below. From the log and looking in to dts, the drivers seems to the
->> one for "marvell,armada-370-neta".
-> 
-> Correct.
-> 
->> Issue looks the data from the dma
->> has gone bad and subsequently referring the wrong data has resulted
->> in the crash. Looks like the dma_masks is the one going wrong.
->> Can i get some logs from mvneta_probe, about dev->dma_mask,
->> dev->coherent_dma_mask and dev->dma_ops with and without the patch
->> to see whats the difference ?
-> 
-> Not sure I understood what exactly you are after. Might be faster to
-> just send me a patch with all debug print statements you like to see.
-> 
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-Attached the patch with debug prints.
-
-Regards,
- Sricharan
-
--- 
-"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
---------------E413B5F93E4921879CA78459
-Content-Type: text/plain; charset=UTF-8;
- name="0001-Debug-prints.patch"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
- filename="0001-Debug-prints.patch"
-
-RnJvbSBmZTc3ZDM5NjhkNmJjMzViNDZlNWYzMGQ1YzY3Yzc2MDNhYTEwNTk3IE1vbiBTZXAg
-MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBTcmljaGFyYW4gUiA8c3JpY2hhcmFuQGNvZGVhdXJv
-cmEub3JnPgpEYXRlOiBGcmksIDI4IEFwciAyMDE3IDA5OjQzOjI2ICswNTMwClN1YmplY3Q6
-IFtQQVRDSF0gRGVidWcgcHJpbnRzCgpTaWduZWQtb2ZmLWJ5OiBTcmljaGFyYW4gUiA8c3Jp
-Y2hhcmFuQGNvZGVhdXJvcmEub3JnPgotLS0KIGRyaXZlcnMvbmV0L2V0aGVybmV0L21hcnZl
-bGwvbXZuZXRhLmMgfCA2ICsrKysrKwogMSBmaWxlIGNoYW5nZWQsIDYgaW5zZXJ0aW9ucygr
-KQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L2V0aGVybmV0L21hcnZlbGwvbXZuZXRhLmMg
-Yi9kcml2ZXJzL25ldC9ldGhlcm5ldC9tYXJ2ZWxsL212bmV0YS5jCmluZGV4IGQyOTcwMTEu
-LjI1MGYwYjIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L2V0aGVybmV0L21hcnZlbGwvbXZu
-ZXRhLmMKKysrIGIvZHJpdmVycy9uZXQvZXRoZXJuZXQvbWFydmVsbC9tdm5ldGEuYwpAQCAt
-NDE0Niw2ICs0MTQ2LDEyIEBAIHN0YXRpYyBpbnQgbXZuZXRhX3Byb2JlKHN0cnVjdCBwbGF0
-Zm9ybV9kZXZpY2UgKnBkZXYpCiAJaW50IHBoeV9tb2RlOwogCWludCBlcnI7CiAJaW50IGNw
-dTsKKwlzdHJ1Y3QgZGV2aWNlICpkZGV2ID0gJnBkZXYtPmRldjsKKworCisJZGV2X2Vycihk
-ZGV2LCAiZGV2LT5kbWFfbWFzayAweCVsbHhcbiIsICooZGRldi0+ZG1hX21hc2spKTsKKwlk
-ZXZfZXJyKGRkZXYsICJkZXYtPmNvaGVyZW50X2RtYV9tYXNrIDB4JWxseFxuIiwgZGRldi0+
-Y29oZXJlbnRfZG1hX21hc2spOworCWRldl9lcnIoZGRldiwgImRldi0+ZG1hX29wcyAweCVs
-bHhcbiIsIGRkZXYtPmRtYV9vcHMpOwogCiAJZGV2ID0gYWxsb2NfZXRoZXJkZXZfbXFzKHNp
-emVvZihzdHJ1Y3QgbXZuZXRhX3BvcnQpLCB0eHFfbnVtYmVyLCByeHFfbnVtYmVyKTsKIAlp
-ZiAoIWRldikKLS0gClFVQUxDT01NIElORElBLCBvbiBiZWhhbGYgb2YgUXVhbGNvbW0gSW5u
-b3ZhdGlvbiBDZW50ZXIsIEluYy4gaXMgYSBtZW1iZXIgb2YgQ29kZSBBdXJvcmEgRm9ydW0s
-IGhvc3RlZCBieSBUaGUgTGludXggRm91bmRhdGlvbgoK
---------------E413B5F93E4921879CA78459--
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
