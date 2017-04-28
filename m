@@ -1,174 +1,162 @@
-Return-Path: <linux-arch-owner@vger.kernel.org>
-From: David Woodhouse <dwmw2@infradead.org>
-To: linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2 20/27] powerpc: Use generic pci_mmap_resource_range()
-Date: Wed, 12 Apr 2017 13:26:09 +0100
-Message-Id: <4e89919d254b9da8447a339aa1d7f6c9033431c4.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-In-Reply-To: <cover.1491999859.git.dwmw2@infradead.org>
-References: <cover.1491999859.git.dwmw2@infradead.org>
-Sender: linux-arch-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v2 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
+ boot for X-Gene v1
+To: Khuong Dinh <kdinh@apm.com>, lorenzo.pieralisi@arm.com,
+ msalter@redhat.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
+ jcm@redhat.com
+References: <1493340847-25720-1-git-send-email-kdinh@apm.com>
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <f5cb58a5-7c06-8d54-6293-1a72ee0a4707@arm.com>
+Date: Fri, 28 Apr 2017 10:27:34 +0100
+MIME-Version: 1.0
+In-Reply-To: <1493340847-25720-1-git-send-email-kdinh@apm.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: rjw@rjwysocki.net, Duc Dang <dhdang@apm.com>, patches@apm.com,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: David Woodhouse <dwmw@amazon.co.uk>
+On 28/04/17 01:54, Khuong Dinh wrote:
+> From: Khuong Dinh <kdinh@apm.com>
+> 
+> This patch makes pci-xgene-msi driver ACPI-aware and provides
+> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
+> 
+> Signed-off-by: Khuong Dinh <kdinh@apm.com>
+> Signed-off-by: Duc Dang <dhdang@apm.com>
+> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+> ---
+> v2:
+>  - Verify with BIOS version 3.06.25 and 3.07.09
+> v1:
+>  - Initial version
+> ---
+>  drivers/pci/host/pci-xgene-msi.c |   35 ++++++++++++++++++++++++++++++++---
+>  1 files changed, 32 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+> index f1b633b..00aaa3d 100644
+> --- a/drivers/pci/host/pci-xgene-msi.c
+> +++ b/drivers/pci/host/pci-xgene-msi.c
+> @@ -24,6 +24,7 @@
+>  #include <linux/pci.h>
+>  #include <linux/platform_device.h>
+>  #include <linux/of_pci.h>
+> +#include <linux/acpi.h>
+>  
+>  #define MSI_IR0			0x000000
+>  #define MSI_INT0		0x800000
+> @@ -39,7 +40,7 @@ struct xgene_msi_group {
+>  };
+>  
+>  struct xgene_msi {
+> -	struct device_node	*node;
+> +	struct fwnode_handle	*fwnode;
+>  	struct irq_domain	*inner_domain;
+>  	struct irq_domain	*msi_domain;
+>  	u64			msi_addr;
+> @@ -249,6 +250,13 @@ static void xgene_irq_domain_free(struct irq_domain *domain,
+>  	.free   = xgene_irq_domain_free,
+>  };
+>  
+> +#ifdef CONFIG_ACPI
+> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
+> +{
+> +	return xgene_msi_ctrl.fwnode;
+> +}
+> +#endif
+> +
+>  static int xgene_allocate_domains(struct xgene_msi *msi)
+>  {
+>  	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>  	if (!msi->inner_domain)
+>  		return -ENOMEM;
+>  
+> -	msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
+> +	msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
+>  						    &xgene_msi_domain_info,
+>  						    msi->inner_domain);
+>  
+> @@ -265,6 +273,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>  		return -ENOMEM;
+>  	}
+>  
+> +#ifdef CONFIG_ACPI
+> +	pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
+> +#endif
+>  	return 0;
+>  }
+>  
+> @@ -449,6 +460,13 @@ static int xgene_msi_hwirq_free(unsigned int cpu)
+>  	{},
+>  };
+>  
+> +#ifdef CONFIG_ACPI
+> +static const struct acpi_device_id xgene_msi_acpi_ids[] = {
+> +	{"APMC0D0E", 0},
+> +	{ },
+> +};
+> +#endif
+> +
+>  static int xgene_msi_probe(struct platform_device *pdev)
+>  {
+>  	struct resource *res;
+> @@ -469,7 +487,17 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>  		goto error;
+>  	}
+>  	xgene_msi->msi_addr = res->start;
+> -	xgene_msi->node = pdev->dev.of_node;
+> +
+> +	xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
+> +	if (!xgene_msi->fwnode) {
+> +		xgene_msi->fwnode = irq_domain_alloc_fwnode(NULL);
 
-Signed-off-by: David Woodhouse <dwmw@amazon.co.uk>
----
- arch/powerpc/include/asm/pci.h   |   9 ++--
- arch/powerpc/kernel/pci-common.c | 106 ++++-----------------------------------
- 2 files changed, 15 insertions(+), 100 deletions(-)
+Please provide something other than NULL, such as the base address if
+the device. That's quite useful for debugging.
 
-diff --git a/arch/powerpc/include/asm/pci.h b/arch/powerpc/include/asm/pci.h
-index c8975da..edd5b0d 100644
---- a/arch/powerpc/include/asm/pci.h
-+++ b/arch/powerpc/include/asm/pci.h
-@@ -78,10 +78,11 @@ extern int pci_proc_domain(struct pci_bus *bus);
- 
- struct vm_area_struct;
- 
--/* Tell drivers/pci/proc.c that we have pci_mmap_page_range() and it does WC */
--#define HAVE_PCI_MMAP		1
--#define arch_can_pci_mmap_io()	1
--#define arch_can_pci_mmap_wc()	1
-+/* Tell PCI code what kind of PCI resource mappings we support */
-+#define HAVE_PCI_MMAP			1
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE	1
-+#define arch_can_pci_mmap_io()		1
-+#define arch_can_pci_mmap_wc()		1
- 
- extern int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val,
- 			   size_t count);
-diff --git a/arch/powerpc/kernel/pci-common.c b/arch/powerpc/kernel/pci-common.c
-index 6dda4a2..17b5e31 100644
---- a/arch/powerpc/kernel/pci-common.c
-+++ b/arch/powerpc/kernel/pci-common.c
-@@ -385,72 +385,22 @@ static int pci_read_irq_line(struct pci_dev *pci_dev)
- }
- 
- /*
-- * Platform support for /proc/bus/pci/X/Y mmap()s,
-- * modelled on the sparc64 implementation by Dave Miller.
-+ * Platform support for /proc/bus/pci/X/Y mmap()s.
-  *  -- paulus.
-  */
--
--/*
-- * Adjust vm_pgoff of VMA such that it is the physical page offset
-- * corresponding to the 32-bit pci bus offset for DEV requested by the user.
-- *
-- * Basically, the user finds the base address for his device which he wishes
-- * to mmap.  They read the 32-bit value from the config space base register,
-- * add whatever PAGE_SIZE multiple offset they wish, and feed this into the
-- * offset parameter of mmap on /proc/bus/pci/XXX for that device.
-- *
-- * Returns negative error code on failure, zero on success.
-- */
--static struct resource *__pci_mmap_make_offset(struct pci_dev *dev,
--					       resource_size_t *offset,
--					       enum pci_mmap_state mmap_state)
-+int pci_iobar_pfn(struct pci_dev *pdev, int bar, struct vm_area_struct *vma)
- {
--	struct pci_controller *hose = pci_bus_to_host(dev->bus);
--	unsigned long io_offset = 0;
--	int i, res_bit;
--
--	if (hose == NULL)
--		return NULL;		/* should never happen */
--
--	/* If memory, add on the PCI bridge address offset */
--	if (mmap_state == pci_mmap_mem) {
--#if 0 /* See comment in pci_resource_to_user() for why this is disabled */
--		*offset += hose->pci_mem_offset;
--#endif
--		res_bit = IORESOURCE_MEM;
--	} else {
--		io_offset = (unsigned long)hose->io_base_virt - _IO_BASE;
--		*offset += io_offset;
--		res_bit = IORESOURCE_IO;
--	}
--
--	/*
--	 * Check that the offset requested corresponds to one of the
--	 * resources of the device.
--	 */
--	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
--		struct resource *rp = &dev->resource[i];
--		int flags = rp->flags;
-+	struct pci_controller *hose = pci_bus_to_host(pdev->bus);
-+	resource_size_t ioaddr = pci_resource_start(pdev, bar);
- 
--		/* treat ROM as memory (should be already) */
--		if (i == PCI_ROM_RESOURCE)
--			flags |= IORESOURCE_MEM;
--
--		/* Active and same type? */
--		if ((flags & res_bit) == 0)
--			continue;
--
--		/* In the range of this resource? */
--		if (*offset < (rp->start & PAGE_MASK) || *offset > rp->end)
--			continue;
-+	if (!hose)
-+		return -EINVAL;
- 
--		/* found it! construct the final physical address */
--		if (mmap_state == pci_mmap_io)
--			*offset += hose->io_base_phys - io_offset;
--		return rp;
--	}
-+	/* Convert to an offset within this PCI controller */
-+	ioaddr -= (unsigned long)hose->io_base_virt - _IO_BASE;
- 
--	return NULL;
-+	vma->vm_pgoff += (ioaddr + hose->io_base_phys) >> PAGE_SHIFT;
-+	return 0;
- }
- 
- /*
-@@ -502,42 +452,6 @@ pgprot_t pci_phys_mem_access_prot(struct file *file,
- 	return prot;
- }
- 
--
--/*
-- * Perform the actual remap of the pages for a PCI device mapping, as
-- * appropriate for this architecture.  The region in the process to map
-- * is described by vm_start and vm_end members of VMA, the base physical
-- * address is found in vm_pgoff.
-- * The pci device structure is provided so that architectures may make mapping
-- * decisions on a per-device or per-bus basis.
-- *
-- * Returns a negative error code on failure, zero on success.
-- */
--int pci_mmap_page_range(struct pci_dev *dev, int bar,
--			struct vm_area_struct *vma,
--			enum pci_mmap_state mmap_state, int write_combine)
--{
--	resource_size_t offset =
--		((resource_size_t)vma->vm_pgoff) << PAGE_SHIFT;
--	struct resource *rp;
--	int ret;
--
--	rp = __pci_mmap_make_offset(dev, &offset, mmap_state);
--	if (rp == NULL)
--		return -EINVAL;
--
--	vma->vm_pgoff = offset >> PAGE_SHIFT;
--	if (write_combine)
--		vma->vm_page_prot = pgprot_noncached_wc(vma->vm_page_prot);
--	else
--		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
--
--	ret = remap_pfn_range(vma, vma->vm_start, vma->vm_pgoff,
--			       vma->vm_end - vma->vm_start, vma->vm_page_prot);
--
--	return ret;
--}
--
- /* This provides legacy IO read access on a bus */
- int pci_legacy_read(struct pci_bus *bus, loff_t port, u32 *val, size_t size)
- {
+> +		if (!xgene_msi->fwnode) {
+> +			dev_err(&pdev->dev, "Failed to create fwnode\n");
+> +			rc = ENOMEM;
+> +			goto error;
+> +		}
+> +	}
+> +
+>  	xgene_msi->num_cpus = num_possible_cpus();
+>  
+>  	rc = xgene_msi_init_allocator(xgene_msi);
+> @@ -540,6 +568,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>  	.driver = {
+>  		.name = "xgene-msi",
+>  		.of_match_table = xgene_msi_match_table,
+> +		.acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
+>  	},
+>  	.probe = xgene_msi_probe,
+>  	.remove = xgene_msi_remove,
+> 
+
+The code is trivial, but relies on the MSI controller to probe before
+the PCI bus. What enforces this? How is it making sure that this is not
+going to break in the next kernel release? As far as I can tell, there
+is no explicit dependency between the two, making it the whole thing
+extremely fragile.
+
+Thanks,
+
+	M.
 -- 
-2.9.3
+Jazz is not dead. It just smells funny...
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
