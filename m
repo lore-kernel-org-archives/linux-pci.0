@@ -1,127 +1,103 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Fri, 7 Apr 2017 15:21:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Subject: Re: Enumerating an empty bus hangs the entire system
-Message-ID: <20170407202101.GA17896@bhelgaas-glaptop.roam.corp.google.com>
-References: <1eeea8ff-0840-a005-38b4-61f3c253cee1@free.fr>
- <d0bdd0da-e6f6-396f-486a-7b1685d45d69@free.fr>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [REGRESSION next-20170426] Commit 09515ef5ddad ("of/acpi:
+ Configure dma operations at probe time for platform/amba/pci bus devices")
+ causes oops in mvneta
+To: Ralph Sennhauser <ralph.sennhauser@gmail.com>
+Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        Joerg Roedel <jroedel@suse.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        netdev@vger.kernel.org
+References: <20170426181508.687b52af@gmail.com>
+ <2fb57b9b-3944-d9cc-1fac-8dcccaa0c37a@codeaurora.org>
+ <20170427164014.422a124c@gmail.com>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <524b7fc8-1eca-a7d8-7bc7-6743be17c208@codeaurora.org>
+Date: Fri, 28 Apr 2017 11:13:33 +0530
 MIME-Version: 1.0
-In-Reply-To: <d0bdd0da-e6f6-396f-486a-7b1685d45d69@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Robin Murphy <robin.murphy@arm.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <20170427164014.422a124c@gmail.com>
+Content-Type: multipart/mixed;
+ boundary="------------E413B5F93E4921879CA78459"
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 07, 2017 at 05:15:32PM +0200, Mason wrote:
-> On 15/03/2017 16:25, Mason wrote:
+This is a multi-part message in MIME format.
+--------------E413B5F93E4921879CA78459
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+
+Hi Ralph,
+
+On 4/27/2017 8:10 PM, Ralph Sennhauser wrote:
+> On Thu, 27 Apr 2017 19:05:09 +0530
+> Sricharan R <sricharan@codeaurora.org> wrote:
 > 
-> > My driver works reasonably well on revision 1 of the PCIe controller.
-> > (For lax enough values of "reasonably well"...)
-> > 
-> > So I wanted to try it out on revision 2 of the controller.
-> > 
-> > Turns out the system hangs if I boot with no card inserted in the PCIe
-> > slot. (This does not happen on revision 1.) If I log all config space
-> > accesses, this is what I see:
-> > 
-> > ...
-> > [    2.966402] tango_config_read: bus=0 devfn=0 where=128 size=2
-> > [    2.972284] tango_config_read: bus=0 devfn=0 where=140 size=4
-> > [    2.978167] tango_config_read: bus=0 devfn=0 where=146 size=2
-> > [    2.984144] pci_bus 0000:01: busn_res: can not insert [bus 01-ff] under [bus 00-3f] (conflicts with (null) [bus 00-3f])
-> > [    2.995105] tango_config_write: bus=0 devfn=0 where=24 size=4 val=0xff0100
-> > [    3.002134] pci_bus 0000:01: scanning bus
-> > [    3.006274] tango_config_read: bus=1 devfn=0 where=0 size=4
-> > 
-> > Basically, the PCI framework tries to read vendor and device IDs
-> > of the non-existent device on bus 1, which hangs the system,
-> > because the read never completes :-(
-> > 
-> > I had the same problem with the legacy driver for 3.4 but I was
-> > hoping I would magically avoid it in a recent kernel.
-> > 
-> > The only work-around I see is: assuming the first access to a
-> > bus will be to register 0, check the PHY for an active link
-> > before sending an actual read request to register 0.
-> > 
-> > Is that reasonable?
-> > 
-> > Is it compliant for the PCIe controller to hang like that,
-> > or should it handle some kind of time out?
-> > 
-> > Liviu suggested: "The PCIe controller probably generates (or propagates)
-> > a bus abort that it should actually trap in HW. Check if there is a SW
-> > configurable way to recover that."
-> > 
-> > But I unmasked all system/misc errors, and I don't see any
-> > interrupts firing.
+>> Hi,
+>>
+>> On 4/26/2017 9:45 PM, Ralph Sennhauser wrote:
+>>> Hi Sricharan R,
+>>>
+>>> Commit 09515ef5ddad ("of/acpi: Configure dma operations at probe
+>>> time for platform/amba/pci bus devices") causes a kernel panic as
+>>> in the log below on an armada-385. Reverting the commit fixes the
+>>> issue.
+>>>
+>>> Regards
+>>> Ralph  
+>>
+>> Somehow not getting a obvious clue on whats going wrong with the logs
+>> below. From the log and looking in to dts, the drivers seems to the
+>> one for "marvell,armada-370-neta".
 > 
-> I now have a better understanding of the situation, which inevitably
-> leads to more questions...
+> Correct.
 > 
-> By reading a controller-specific debug register, I sampled the LTSSM
-> (Link Training and Status State-Machine) value as fast as possible.
+>> Issue looks the data from the dma
+>> has gone bad and subsequently referring the wrong data has resulted
+>> in the crash. Looks like the dma_masks is the one going wrong.
+>> Can i get some logs from mvneta_probe, about dev->dma_mask,
+>> dev->coherent_dma_mask and dev->dma_ops with and without the patch
+>> to see whats the difference ?
 > 
-> A) if there is no card inserted in the PCIe slot, the State-Machine
-> oscillates between "Detect.Quiet" and "Detect.Active" SubStates of
-> the "Detect" State.
+> Not sure I understood what exactly you are after. Might be faster to
+> just send me a patch with all debug print statements you like to see.
 > 
-> B) if there is a card inserted in the PCIe slot, then after a few
-> milliseconds, the State-Machine changes to "Polling.Active", then
-> "Polling.Configuration", then "Configuration" (this step must be
-> very short, because I don't see it consistently), then "L0".
-> 
-> 
-> One issue I noted in a separate message is that, on rev1 of my HW,
-> if the PCIe framework tries to read the card's device ID too soon,
-> i.e. before link training is complete, then the read returns ~0,
-> and the framework immediately gives up.
-> 
-> Looking at pci_bus_read_dev_vendor_id(), I see that there is a
-> retry mechanism implemented, but it seems to be a quirk?
 
-Configuration Request Retry is not a quirk; it's a standard part of
-PCIe (see PCIe r3.1, sec 7.8.13), and pci_enable_crs() enables it
-whenever a Root Port claims to support it.
+Attached the patch with debug prints.
 
-> Does the framework expect pci_bus_read_dev_vendor_id() to always
-> succeed when there is indeed a device on that specific bus?
+Regards,
+ Sricharan
 
-Yes.
+-- 
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
 
-> In that cas, my driver needs to take care of only starting enumeration
-> once the link to the PCIe card is really "up" and functional?
+--------------E413B5F93E4921879CA78459
+Content-Type: text/plain; charset=UTF-8;
+ name="0001-Debug-prints.patch"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="0001-Debug-prints.patch"
 
-Yes.  Most of the drivers in drivers/pci/host/ have a
-*_wait_for_link() function that does this.  I would start by copying
-that style.
-
-> I was given the advice to move the link detection code to the
-> probe function, and reset the host bridge (to save power) when
-> no link is detected after some time. What do you think?
-
-I would copy what the other drivers do.  After you have a stable,
-working driver, you can worry about power.
-
-Bjorn
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+RnJvbSBmZTc3ZDM5NjhkNmJjMzViNDZlNWYzMGQ1YzY3Yzc2MDNhYTEwNTk3IE1vbiBTZXAg
+MTcgMDA6MDA6MDAgMjAwMQpGcm9tOiBTcmljaGFyYW4gUiA8c3JpY2hhcmFuQGNvZGVhdXJv
+cmEub3JnPgpEYXRlOiBGcmksIDI4IEFwciAyMDE3IDA5OjQzOjI2ICswNTMwClN1YmplY3Q6
+IFtQQVRDSF0gRGVidWcgcHJpbnRzCgpTaWduZWQtb2ZmLWJ5OiBTcmljaGFyYW4gUiA8c3Jp
+Y2hhcmFuQGNvZGVhdXJvcmEub3JnPgotLS0KIGRyaXZlcnMvbmV0L2V0aGVybmV0L21hcnZl
+bGwvbXZuZXRhLmMgfCA2ICsrKysrKwogMSBmaWxlIGNoYW5nZWQsIDYgaW5zZXJ0aW9ucygr
+KQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0L2V0aGVybmV0L21hcnZlbGwvbXZuZXRhLmMg
+Yi9kcml2ZXJzL25ldC9ldGhlcm5ldC9tYXJ2ZWxsL212bmV0YS5jCmluZGV4IGQyOTcwMTEu
+LjI1MGYwYjIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvbmV0L2V0aGVybmV0L21hcnZlbGwvbXZu
+ZXRhLmMKKysrIGIvZHJpdmVycy9uZXQvZXRoZXJuZXQvbWFydmVsbC9tdm5ldGEuYwpAQCAt
+NDE0Niw2ICs0MTQ2LDEyIEBAIHN0YXRpYyBpbnQgbXZuZXRhX3Byb2JlKHN0cnVjdCBwbGF0
+Zm9ybV9kZXZpY2UgKnBkZXYpCiAJaW50IHBoeV9tb2RlOwogCWludCBlcnI7CiAJaW50IGNw
+dTsKKwlzdHJ1Y3QgZGV2aWNlICpkZGV2ID0gJnBkZXYtPmRldjsKKworCisJZGV2X2Vycihk
+ZGV2LCAiZGV2LT5kbWFfbWFzayAweCVsbHhcbiIsICooZGRldi0+ZG1hX21hc2spKTsKKwlk
+ZXZfZXJyKGRkZXYsICJkZXYtPmNvaGVyZW50X2RtYV9tYXNrIDB4JWxseFxuIiwgZGRldi0+
+Y29oZXJlbnRfZG1hX21hc2spOworCWRldl9lcnIoZGRldiwgImRldi0+ZG1hX29wcyAweCVs
+bHhcbiIsIGRkZXYtPmRtYV9vcHMpOwogCiAJZGV2ID0gYWxsb2NfZXRoZXJkZXZfbXFzKHNp
+emVvZihzdHJ1Y3QgbXZuZXRhX3BvcnQpLCB0eHFfbnVtYmVyLCByeHFfbnVtYmVyKTsKIAlp
+ZiAoIWRldikKLS0gClFVQUxDT01NIElORElBLCBvbiBiZWhhbGYgb2YgUXVhbGNvbW0gSW5u
+b3ZhdGlvbiBDZW50ZXIsIEluYy4gaXMgYSBtZW1iZXIgb2YgQ29kZSBBdXJvcmEgRm9ydW0s
+IGhvc3RlZCBieSBUaGUgTGludXggRm91bmRhdGlvbgoK
+--------------E413B5F93E4921879CA78459--
