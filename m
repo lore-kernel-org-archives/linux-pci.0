@@ -1,89 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Mon, 3 Apr 2017 20:20:50 +0200
-From: Pavel Machek <pavel@ucw.cz>
-To: Frederic Weisbecker <fweisbec@gmail.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>,
-        torvalds@linux-foundation.org,
-        kernel list <linux-kernel@vger.kernel.org>,
-        linux-usb@vger.kernel.org, gregkh@linuxfoundation.org,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: Re: v4.10-rc8 (-rc6) boot regression on Intel desktop, does not boot
- after cold boots, boots after reboot
-Message-ID: <20170403182050.GA6555@amd>
-References: <20170203190414.GA3701@amd>
- <Pine.LNX.4.44L0.1702031415140.1794-100000@iolanthe.rowland.org>
- <20170203205129.GA3791@amd>
- <20170203211854.GA3697@amd>
- <20170214175956.GA3587@amd>
- <20170214192743.GA3869@amd>
- <20170223162825.GA16646@lerouge>
- <20170223184013.GA5177@amd>
- <20170403153850.GA4418@lerouge>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-wr0-f181.google.com ([209.85.128.181]:35005 "EHLO
+        mail-wr0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752856AbdD1P0H (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 28 Apr 2017 11:26:07 -0400
+Received: by mail-wr0-f181.google.com with SMTP id z52so35637865wrc.2
+        for <linux-pci@vger.kernel.org>; Fri, 28 Apr 2017 08:26:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-        protocol="application/pgp-signature"; boundary="gKMricLos+KVdGMg"
-In-Reply-To: <20170403153850.GA4418@lerouge>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <20170428085548.15942-1-weiyj.lk@gmail.com>
+References: <20170428085548.15942-1-weiyj.lk@gmail.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Fri, 28 Apr 2017 10:25:45 -0500
+Message-ID: <CAErSpo6vvbut5YROVih_Ex2NTdsJP9JNFP0PyBsn74kRApaOWQ@mail.gmail.com>
+Subject: Re: [PATCH -next] PCI: endpoint: functions: Fix return value check in pci_epf_test_probe()
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Wei Yongjun <weiyongjun1@huawei.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, Apr 28, 2017 at 3:55 AM, Wei Yongjun <weiyj.lk@gmail.com> wrote:
+> From: Wei Yongjun <weiyongjun1@huawei.com>
+>
+> Fix the return value check which testing the wrong variable
+> in pci_epf_test_probe().
+>
+> Fixes: 79ba640e377b ("PCI: endpoint: functions: Add an EP function
+> to test PCI")
+> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 
---gKMricLos+KVdGMg
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This fix looks obviously correct, so I folded it into the original
+commit for v4.12.  Thanks!
 
-> > > > > ...1d.7: PCI fixup... pass 2
-> > > > > ...1d.7: PCI fixup... pass 3
-> > > > > ...1d.7: PCI fixup... pass 3 done
-> > > > >=20
-> > > > > ...followed by hang. So yes, it looks USB related.
-> > > > >=20
-> > > > > (Sometimes it hangs with some kind backtrace involving secondary =
-CPU
-> > > > > startup, unfortunately useful info is off screen at that point).
-> > > >=20
-> > > > Forgot to say, 1d.7 is EHCI controller.
-> > > >=20
-> > > > 00:1d.7 USB controller: Intel Corporation NM10/ICH7 Family USB2 EHCI
-> > > > Controller (rev 01)
-> > >=20
-> > > Ok, I should have access soon to a EeePc 1015CX (which seem to have t=
-his controller).
-> > > I hope I'll be able to reproduce the issue there. If not, I'm sorry b=
-ut I'll have to
-> > > burden you again :-)
-> >=20
-> > Go through more mails. It is only reproducible after cold boot. .. so
-> > I doubt it will be easy to reproduce on another machine.
-> >=20
-> > Now... I do have serial port, and I even might have serial cable
-> > somewhere, but.... Giving how sensitive it is, it is probably going to
-> > go away with console on ttyS...
->=20
-> I also tried on an eeepc (which has ICH7/NM10 as well), with your config.
-> I even plugged a usb keyboard but even then I have been unable to
-> reproduce either :-(
-
-Ok, give me some time. I'm no longer using the affected machine, so no
-promises.
-
-									Pavel
-
---=20
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blo=
-g.html
-
---gKMricLos+KVdGMg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iEYEARECAAYFAljikoEACgkQMOfwapXb+vLFMwCfRDq06rnq8FjqYiNji7GwifZ3
-Qq0An0L9O5S1GN42MM2lbCNJhmAd0hHx
-=+8Ok
------END PGP SIGNATURE-----
-
---gKMricLos+KVdGMg--
+> ---
+>  drivers/pci/endpoint/functions/pci-epf-test.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> index d6a7a12..53fff80 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> @@ -441,7 +441,7 @@ static int pci_epf_test_probe(struct pci_epf *epf)
+>         struct device *dev = &epf->dev;
+>
+>         epf_test = devm_kzalloc(dev, sizeof(*epf_test), GFP_KERNEL);
+> -       if (!epf)
+> +       if (!epf_test)
+>                 return -ENOMEM;
+>
+>         epf->header = &test_header;
+>
