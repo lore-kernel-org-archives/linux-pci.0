@@ -1,60 +1,155 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:38458 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S968978AbdDSSmd (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 19 Apr 2017 14:42:33 -0400
-Received: by mail-wm0-f46.google.com with SMTP id r190so29949345wme.1
-        for <linux-pci@vger.kernel.org>; Wed, 19 Apr 2017 11:42:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170419175513.88138-1-arnd@arndb.de>
-References: <20170419175513.88138-1-arnd@arndb.de>
-From: Bjorn Helgaas <bhelgaas@google.com>
-Date: Wed, 19 Apr 2017 13:42:11 -0500
-Message-ID: <CAErSpo4BrrOrGTyzsw+s4mn-RVGpoZbGpPc95MJ3aDF64SBY_w@mail.gmail.com>
-Subject: Re: [PATCH] PCI: faraday: use %pap format string for printing resources
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1493347608.29314.56.camel@mtkswgap22>
+Subject: Re: [PATCH 1/2] PCI: mediatek: Add Mediatek PCIe host controller
+ support
+From: Ryder Lee <ryder.lee@mediatek.com>
 To: Arnd Bergmann <arnd@arndb.de>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-pci-owner@vger.kernel.org
+Date: Fri, 28 Apr 2017 10:46:48 +0800
+In-Reply-To: <CAK8P3a0DjPL8uWuXfCmEwt05SCPJ0yEQTAJmZAPtFDEfsn4a1Q@mail.gmail.com>
+References: <1492935543-18190-1-git-send-email-ryder.lee@mediatek.com>
+ <1492935543-18190-2-git-send-email-ryder.lee@mediatek.com>
+ <CAK8P3a39TFkJ5=jp8me+Dyg-Qi-N_1ZKxpJGvnhmPEo4csnFCw@mail.gmail.com>
+ <1493194200.27023.79.camel@mtkswgap22>
+ <CAK8P3a0DjPL8uWuXfCmEwt05SCPJ0yEQTAJmZAPtFDEfsn4a1Q@mail.gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, linux-pci <linux-pci@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, Apr 19, 2017 at 12:54 PM, Arnd Bergmann <arnd@arndb.de> wrote:
-> resource_size_t may be either 32-bit or 64-bit wide, so we have to use
-> the special %pap format string to avoid warnings like:
->
-> drivers/pci/host/pci-ftpci100.c: In function 'faraday_res_to_memcfg':
-> drivers/pci/host/pci-ftpci100.c:174:586: error: format '%x' expects argument of type 'unsigned int', but argument 3 has type 'resource_size_t {aka long long unsigned int}' [-Werror=format=]
-> drivers/pci/host/pci-ftpci100.c:174:586: error: format '%x' expects argument of type 'unsigned int', but argument 4 has type 'resource_size_t {aka long long unsigned int}' [-Werror=format=]
->
-> This relies on resource_size_t and phys_addr_t being the same width,
-> as other code already does.
->
-> Fixes: 5c18f2b240bd ("PCI: faraday: Add Faraday Technology FTPCI100 PCI Host Bridge driver")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Hi,
 
-Thanks, folded into the initial commit.
+On Thu, 2017-04-27 at 20:55 +0200, Arnd Bergmann wrote:
+> On Wed, Apr 26, 2017 at 10:10 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+> > On Tue, 2017-04-25 at 14:38 +0200, Arnd Bergmann wrote:
+> >> On Sun, Apr 23, 2017 at 10:19 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+> 
+> >> > +static int mtk_pcie_enable_ports(struct mtk_pcie *pcie)
+> >> > +{
+> >> > +       struct device *dev = pcie->dev;
+> >> > +       struct mtk_pcie_port *port, *tmp;
+> >> > +       int err, linkup = 0;
+> >> > +
+> >> > +       list_for_each_entry_safe(port, tmp, &pcie->ports, list) {
+> >> > +               err = clk_prepare_enable(port->sys_ck);
+> >> > +               if (err) {
+> >> > +                       dev_err(dev, "failed to enable port%d clock\n",
+> >> > +                               port->index);
+> >> > +                       continue;
+> >> > +               }
+> >> > +
+> >> > +               /* assert RC */
+> >> > +               reset_control_assert(port->reset);
+> >> > +               /* de-assert RC */
+> >> > +               reset_control_deassert(port->reset);
+> >> > +
+> >> > +               /* power on PHY */
+> >> > +               err = phy_power_on(port->phy);
+> >> > +               if (err) {
+> >> > +                       dev_err(dev, "failed to power on port%d phy\n",
+> >> > +                               port->index);
+> >> > +                       goto err_phy_on;
+> >> > +               }
+> >> > +
+> >> > +               mtk_pcie_assert_ports(port);
+> >> > +
+> >>
+> >> Similar to the comment I had for the binding, I wonder if it would be
+> >> better to keep all the information about the ports in one place and
+> >> then just deal with it at the root level.
+> >>
+> >> Alternatively, we could decide to standardize on the properties
+> >> you have added to the pcie port node, but then I would handle
+> >> them in the pcieport driver rather than in the host bridge driver.
+> >
+> > Sorry, I'm not sure what you want me to do here.
+> >
+> > I could move all clock operation in root level. But we need to keep the
+> > reset and PHY operation sequence in the loop, In addition, we could
+> > easily free resources if ports link fail.
+> >
+> > How about moving this function to mtk_pcie_parse_and_add_res()?
+> 
+> That could work, please try it out and see if the code gets better or
+> worse. This may depend on what we end up doing with the DT
+> properties.
 
-> ---
->  drivers/pci/host/pci-ftpci100.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/host/pci-ftpci100.c b/drivers/pci/host/pci-ftpci100.c
-> index 4ae5418a1aad..c0f29d1de341 100644
-> --- a/drivers/pci/host/pci-ftpci100.c
-> +++ b/drivers/pci/host/pci-ftpci100.c
-> @@ -171,8 +171,8 @@ static int faraday_res_to_memcfg(resource_size_t mem_base,
->                 pr_warn("truncated PCI memory base\n");
->         /* Translate to bridge side address space */
->         outval |= (mem_base & FARADAY_PCI_MEMBASE_MASK);
-> -       pr_debug("Translated pci base @%08x, size %08x to config %08x\n",
-> -                mem_base, mem_size, outval);
-> +       pr_debug("Translated pci base @%pap, size %pap to config %08x\n",
-> +                &mem_base, &mem_size, outval);
->
->         *val = outval;
->         return 0;
-> --
-> 2.9.0
->
+I will try it on next version, and we can continue our discussion on
+that series.
+
+> >> > +/*
+> >> > + * This IP lacks interrupt status register to check or map INTx from
+> >> > + * different devices at the same time.
+> >> > + */
+> >> > +static int __init mtk_pcie_map_irq(const struct pci_dev *dev, u8 slot, u8 pin)
+> >> > +{
+> >> > +       struct mtk_pcie *pcie = dev->bus->sysdata;
+> >> > +       struct mtk_pcie_port *port;
+> >> > +
+> >> > +       list_for_each_entry(port, &pcie->ports, list)
+> >> > +               if (port->index == slot)
+> >> > +                       return port->irq;
+> >> > +
+> >> > +       return -1;
+> >> > +}
+> >>
+> >> This looks odd, what is it needed for specifically? It looks like
+> >> it's broken for devices behind bridges, and the interrupt mapping
+> >> should normally come from the interrupt-map property, without
+> >> the need for a driver specific map_irq override.
+> >
+> > Our hardware just has a GIC for each port and lacks interrupt status for
+> > host driver to distinguish INTx. So I return port IRQ here.
+> 
+> You should still be able to express this with standard interrupt-map
+> DT property, without having to resort to your own map_irq
+> callback handler.
+> 
+> In the interrupt-map-mask, you can ignore the interrupt line
+> only list the devfn of the root ports for each entry.
+
+Okay, I will fix it.
+
+> >> > +static int mtk_pcie_register_ports(struct mtk_pcie *pcie)
+> >> > +{
+> >> > +       struct pci_bus *bus, *child;
+> >> > +
+> >> > +       bus = pci_scan_root_bus(pcie->dev, 0, &mtk_pcie_ops, pcie,
+> >> > +                               &pcie->resources);
+> >>
+> >> Can you use the new pci_register_host_bridge() method instead of
+> >> pci_scan_root_bus() here?
+> >
+> > May I know what's difference between pci_scan_root_bus() and using
+> > pci_register_host_bridge() directly? What situation should we use it?
+> > It seems that just tegra use this new method currently.
+> 
+> We introduced the new function for tegra for now, in the long run
+> I would hope we can convert all other drivers to it as well, to make it
+> easier to add further parameters.
+> 
+> The new function also has a cleaner way of dealing with the memory
+> allocations, similar to how other subsystems work.
+
+Sounds good. I will change to use that.
+
+Thanks!
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
