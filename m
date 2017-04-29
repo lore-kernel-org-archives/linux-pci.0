@@ -1,51 +1,24 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [REGRESSION next-20170426] Commit 09515ef5ddad ("of/acpi:
- Configure dma operations at probe time for platform/amba/pci bus devices")
- causes oops in mvneta
-To: Joerg Roedel <jroedel@suse.de>,
-        Ralph Sennhauser <ralph.sennhauser@gmail.com>
-Cc: "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org,
-        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
-        netdev@vger.kernel.org
-References: <20170426181508.687b52af@gmail.com>
- <20170427084427.GV5077@suse.de>
-From: Sricharan R <sricharan@codeaurora.org>
-Message-ID: <28fbd821-c975-48e0-92bf-2d3938286cc5@codeaurora.org>
-Date: Thu, 27 Apr 2017 14:24:22 +0530
+Return-Path: <SRS0=xmg3=4F=ucw.cz=mj+f-290417+helgaas=kernel.org@kernel.org>
+Return-Path: <SRS0=xmg3=4F=ucw.cz=mj+f-290417+helgaas=kernel.org@kernel.org>
+Date: Sat, 29 Apr 2017 20:12:27 +0200
+From: Martin Mares <mj@ucw.cz>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, Jayachandran C <jnair@caviumnetworks.com>
+Subject: Re: [PATCH 0/9] lspci: AER, PCIe capability updates
+Message-ID: <mj+md-20170429.181217.38633.nikam@ucw.cz>
+References: <20170421192844.6562.30976.stgit@bhelgaas-glaptop.roam.corp.google.com>
 MIME-Version: 1.0
-In-Reply-To: <20170427084427.GV5077@suse.de>
-Content-Type: text/plain; charset=utf-8
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170421192844.6562.30976.stgit@bhelgaas-glaptop.roam.corp.google.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Joerg,
+Hi!
 
-On 4/27/2017 2:14 PM, Joerg Roedel wrote:
-> Sricharan,
-> 
-> On Wed, Apr 26, 2017 at 06:15:08PM +0200, Ralph Sennhauser wrote:
->> Commit 09515ef5ddad ("of/acpi: Configure dma operations at probe time
->> for platform/amba/pci bus devices") causes a kernel panic as in the log
->> below on an armada-385. Reverting the commit fixes the issue.
-> 
-> Any insight here? I tend to revert the patch in my tree, or is there a
-> quick and easy fix?
+> These are some updates to decode more AER registers, decode "Slot
+> Implemented" for reverse bridges, and drop ASPM exit latencies for
+> unsupported states.  And a few more cosmetic whitespace, spelling, etc.,
+> fixes.
 
-I am checking on this manually to see what could be going wrong in the
-driver. From logs i could not conclude directly. I will need some
-more testing help (i will ask for) to root cause this.
+Thanks, all applied.
 
-Regards,
- Sricharan
-
-> 
-> 
-> 
-> 	Joerg
-> 
-
--- 
-"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+				Martin
