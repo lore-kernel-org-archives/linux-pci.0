@@ -1,71 +1,55 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: linux-arm-kernel@lists.infradead.org
-Subject: [PATCH] ARM64: PCI: Fix struct acpi_pci_root_ops allocation failure
- path
-Date: Mon, 22 May 2017 16:48:28 +0100
-Message-Id: <20170522154828.10872-1-lorenzo.pieralisi@arm.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, linux-pci@vger.kernel.org,
- Will Deacon <will.deacon@arm.com>, Timmy Li <lixiaoping3@huawei.com>,
- Catalin Marinas <catalin.marinas@arm.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Tomasz Nowicki <tn@semihalf.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:42392 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S376437AbdD2K2P (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Apr 2017 06:28:15 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Imre Deak <imre.deak@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc: intel-gfx@lists.freedesktop.org,
+        Jani Nikula <jani.nikula@intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        linux-pci@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] PCI / PM: Add needs_resume flag to avoid suspend complete optimization
+Date: Sat, 29 Apr 2017 12:21:57 +0200
+Message-ID: <23725356.i2L37sn5oF@aspire.rjw.lan>
+In-Reply-To: <4849096.yzbfqj2AUz@aspire.rjw.lan>
+References: <1493388963-5278-1-git-send-email-imre.deak@intel.com> <4849096.yzbfqj2AUz@aspire.rjw.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Timmy Li <lixiaoping3@huawei.com>
+On Friday, April 28, 2017 11:33:02 PM Rafael J. Wysocki wrote:
+> On Friday, April 28, 2017 05:16:02 PM Imre Deak wrote:
+> > Some drivers - like i915 - may not support the system suspend direct
+> > complete optimization due to differences in their runtime and system
+> > suspend sequence. Add a flag that when set resumes the device before
+> > calling the driver's system suspend handlers which effectively disables
+> > the optimization.
+> > 
+> > Needed by the next patch fixing suspend/resume on i915.
+> > 
+> > Suggested by Rafael.
+> > 
+> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > Cc: linux-pci@vger.kernel.org
+> > Cc: stable@vger.kernel.org
+> > Signed-off-by: Imre Deak <imre.deak@intel.com>
+> 
+> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> 
+> The reason why the opt-out flag was not added on day one was because we were
+> not sure whether or not it would be necessary at all.
+> 
+> Quite evidently, it is needed.
 
-Commit 093d24a20442 ("arm64: PCI: Manage controller-specific data on
-per-controller basis") added code to allocate ACPI PCI root_ops
-dynamically on a per host bridge basis but failed to update the
-corresponding memory allocation failure path in pci_acpi_scan_root()
-leading to a potential memory leakage.
+But that said, it actually can be implemented as a flag in dev_flags too, say
+PCI_DEV_FLAGS_NEEDS_RESUME, in analogy with PCI_DEV_FLAGS_NO_D3 that's
+already there.
 
-Fix it by adding the required kfree call.
+The struct size would not need to grow then which I guess would be better?
 
-Fixes: 093d24a20442 ("arm64: PCI: Manage controller-specific data on per-controller basis")
-Signed-off-by: Timmy Li <lixiaoping3@huawei.com>
-[lorenzo.pieralisi@arm.com: refactored code, rewrote commit log]
-Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: Will Deacon <will.deacon@arm.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Tomasz Nowicki <tn@semihalf.com>
----
- arch/arm64/kernel/pci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
-index 4f0e3eb..c7e3e63 100644
---- a/arch/arm64/kernel/pci.c
-+++ b/arch/arm64/kernel/pci.c
-@@ -191,8 +191,10 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		return NULL;
- 
- 	root_ops = kzalloc_node(sizeof(*root_ops), GFP_KERNEL, node);
--	if (!root_ops)
-+	if (!root_ops) {
-+		kfree(ri);
- 		return NULL;
-+	}
- 
- 	ri->cfg = pci_acpi_setup_ecam_mapping(root);
- 	if (!ri->cfg) {
--- 
-2.10.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Thanks,
+Rafael
