@@ -1,181 +1,107 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-MIME-Version: 1.0
-Date: Tue, 16 May 2017 07:53:57 +0530
-From: sricharan@codeaurora.org
-To: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
- deferred probing or error
-In-Reply-To: <1804176.uxVOFWagsb@avalon>
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
- <26defadf-6380-4af4-6323-b51198376bc1@codeaurora.org>
- <1900421.tkAiezvoW8@avalon> <1804176.uxVOFWagsb@avalon>
-Message-ID: <9952978e7ac69193daf67ccb77eebe29@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Magnus Damm <magnus.damm@gmail.com>, linux-arm-msm@vger.kernel.org,
- Joerg Roedel <joro@8bytes.org>, Will Deacon <will.deacon@arm.com>,
- okaya@codeaurora.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- iommu@lists.linux-foundation.org, Geert Uytterhoeven <geert@linux-m68k.org>,
- Hanjun Guo <hanjun.guo@linaro.org>, linux-pci <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, tn@semihalf.com,
- Robin Murphy <robin.murphy@arm.com>, linux-arm-msm-owner@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:37665 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1423442AbdEAMHN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 May 2017 08:07:13 -0400
+Message-Id: <2cf485a95fe875f1d6874a90e922e89dce173d77.1493631639.git.lukas@wunner.de>
+In-Reply-To: <cover.1493631639.git.lukas@wunner.de>
+References: <cover.1493631639.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Mon, 1 May 2017 14:06:39 +0200
+Subject: [PATCH 1/5] PCI: pciehp: Resume to D0 on board addition/removal
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Ashok Raj <ashok.raj@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Erik Veijola <erik.veijola@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Krishna Dhulipala <krishnad@fb.com>, Wei Zhang <wzhang@fb.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Laurent,
+Hotplug ports need to be in D0 to access devices on their secondary bus.
+pciehp itself does this in
+    pciehp_check_link_status(),
+    pciehp_configure_device() (both called from board_added())
+and
+    pciehp_unconfigure_device() (called from remove_board()).
 
-On 2017-05-16 03:04, Laurent Pinchart wrote:
-> Hi Sricharan,
-> 
-> On Monday 15 May 2017 23:37:16 Laurent Pinchart wrote:
->> On Wednesday 03 May 2017 15:54:59 Sricharan R wrote:
->> > On 5/3/2017 3:24 PM, Robin Murphy wrote:
->> >> On 02/05/17 19:35, Geert Uytterhoeven wrote:
->> >>> On Fri, Feb 3, 2017 at 4:48 PM, Sricharan R wrote:
->> >>>> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
->> >>>>
->> >>>> Failures to look up an IOMMU when parsing the DT iommus property need
->> >>>> to be handled separately from the .of_xlate() failures to support
->> >>>> deferred probing.
->> >>>>
->> >>>> The lack of a registered IOMMU can be caused by the lack of a driver
->> >>>> for the IOMMU, the IOMMU device probe not having been performed yet,
->> >>>> having been deferred, or having failed.
->> >>>>
->> >>>> The first case occurs when the device tree describes the bus master
->> >>>> and IOMMU topology correctly but no device driver exists for the IOMMU
->> >>>> yet or the device driver has not been compiled in. Return NULL, the
->> >>>> caller will configure the device without an IOMMU.
->> >>>>
->> >>>> The second and third cases are handled by deferring the probe of the
->> >>>> bus master device which will eventually get reprobed after the IOMMU.
->> >>>>
->> >>>> The last case is currently handled by deferring the probe of the bus
->> >>>> master device as well. A mechanism to either configure the bus master
->> >>>> device without an IOMMU or to fail the bus master device probe
->> >>>> depending on whether the IOMMU is optional or mandatory would be a good
->> >>>> enhancement.
->> >>>>
->> >>>> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
->> >>>> Signed-off-by: Laurent Pichart
->> >>>> <laurent.pinchart+renesas@ideasonboard.com>
->> >>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> >>>
->> >>> This patch broke Renesas R-Car Gen3 platforms in renesas-drivers.
->> >>> As the IOMMU nodes in DT are not yet enabled, all devices having iommus
->> >>> properties in DT now fail to probe.
->> >>
->> >> How exactly do they fail to probe? Per d7b0558230e4, if there are no ops
->> >> registered then they should merely defer until we reach the point of
->> >> giving up and ignoring the IOMMU. Is it just that you have no other
->> >> late-probing drivers or post-init module loads to kick the deferred
->> >> queue after that point? I did try to find a way to explicitly kick it
->> >> from a suitably late initcall, but there didn't seem to be any obvious
->> >> public interface - anyone have any suggestions?
->> >>
->> >> I think that's more of a general problem with the probe deferral
->> >> mechanism itself (I've seen the same thing happen with some of the
->> >> CoreSight stuff on Juno due to the number of inter-component
->> >> dependencies) rather than any specific fault of this series.
->> >
->> > I was thinking of an additional check like below to avoid the
->> > situation ?
->> >
->> > From 499b6e662f60f23740b8880882b0a16f16434501 Mon Sep 17 00:00:00 2001
->> > From: Sricharan R <sricharan@codeaurora.org>
->> > Date: Wed, 3 May 2017 13:16:59 +0530
->> > Subject: [PATCH] iommu: of: Fix check for returning EPROBE_DEFER
->> >
->> > While returning EPROBE_DEFER for iommu masters
->> > take in to account of iommu nodes that could be
->> > marked in DT as 'status=disabled', in which case
->> > simply return NULL and let the master's probe
->> > continue rather than deferring.
->> >
->> > Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> > ---
->> >
->> >  drivers/iommu/of_iommu.c | 1 +
->> >  1 file changed, 1 insertion(+)
->> >
->> > diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
->> > index 9f44ee8..e6e9bec 100644
->> > --- a/drivers/iommu/of_iommu.c
->> > +++ b/drivers/iommu/of_iommu.c
->> > @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node
->> > *np)
->> >
->> >         ops = iommu_ops_from_fwnode(fwnode);
->> >         if ((ops && !ops->of_xlate) ||
->> > +           !of_device_is_available(iommu_spec->np) ||
->> >             (!ops && !of_iommu_driver_present(iommu_spec->np)))
->> >                 return NULL;
->> 
->> This looks good to me, but won't be enough. The ipmmu-vmsa driver in
->> v4.12-rc1 doesn't call iommu_device_register() and thus won't be found 
->> by
->> iommu_ops_from_fwnode(). Furthermore, it doesn't IOMMU_OF_DECLARE(), 
->> and
->> thus will always be considered as absent.
->> 
->> I agree that the ipmmu-vmsa driver needs to be fixed, but it would 
->> have been
->> nice to check existing IOMMU drivers before merging this patch 
->> series...
-> 
-> Please pardon the question, but has this patch series been tested on 
-> ARM32 ?
-> 
-> When the device is probed the arch_setup_dma_ops() function is called. 
-> It sets
-> the device's dma_ops and the mapping (in __arm_iommu_attach_device()). 
-> If
-> probe is deferred, arch_teardown_dma_ops() is called which in turn 
-> calls
-> arch_teardown_dma_ops(). This removes the mapping but doesn't touch the
-> dma_ops. The next time the device is probed, arch_setup_dma_ops() bails 
-> out
-> immediately as the dma_ops are already set, leaving us with a device 
-> bound to
-> IOMMU operations but with no mapping. This oopses later as soon as the 
-> kernel
-> tries to map memory for the device through the IOMMU.
+In addition, Yinghai Lu discovered that some Skylake server CPUs or PCHs
+feature a Power Controller for their PCIe hotplug ports (PCIe r3.1, sec
+6.7.1.8) which requires the port to be in D0 when invoking
+    pciehp_power_on_slot() (likewise called from board_added()).
 
-Resetting the dma_ops for arm32 was added in this patch [1], which I 
-missed
-to send in the original series, but now have added to Russell's patch 
-tracking
-system.
+The spec is silent about such a requirement, but it seems prudent to
+assume that any hotplug port with a Power Controller may need this.
 
-[1] https://patchwork.kernel.org/patch/9434105/
+Thus, acquire a runtime PM ref for the invocation of board_added() and
+remove_board().
 
-Regards,
-  Sricharan
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Erik Veijola <erik.veijola@linux.intel.com>
+Cc: Ashok Raj <ashok.raj@intel.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Krishna Dhulipala <krishnad@fb.com>
+Cc: Wei Zhang <wzhang@fb.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pciehp_ctrl.c | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
 
-> 
-> I might be missing something obvious, but I don't see how this can 
-> work.
-> 
->> >>> This can be fixed by either:
->> >>>   - Disabling CONFIG_IPMMU_VMSA, or
->> >>>   - Reverting commit 7b07cbefb68d486f (but keeping "int ret = 0;").
->> >>>
->> >>> Note that this was a bit hard to investigate, as R-Car Gen3 support
->> >>> wasn't upstreamed yet, so bisection pointed to a merge commit.
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
+index ec0b4c11ccd9..d071aa63dac9 100644
+--- a/drivers/pci/hotplug/pciehp_ctrl.c
++++ b/drivers/pci/hotplug/pciehp_ctrl.c
+@@ -31,6 +31,7 @@
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+ #include <linux/slab.h>
++#include <linux/pm_runtime.h>
+ #include <linux/pci.h>
+ #include "../pci.h"
+ #include "pciehp.h"
+@@ -390,6 +391,7 @@ int pciehp_enable_slot(struct slot *p_slot)
+ {
+ 	u8 getstatus = 0;
+ 	struct controller *ctrl = p_slot->ctrl;
++	int retval;
+ 
+ 	pciehp_get_adapter_status(p_slot, &getstatus);
+ 	if (!getstatus) {
+@@ -414,7 +416,10 @@ int pciehp_enable_slot(struct slot *p_slot)
+ 		}
+ 	}
+ 
+-	return board_added(p_slot);
++	pm_runtime_get_sync(&ctrl->pcie->port->dev);
++	retval = board_added(p_slot);
++	pm_runtime_put(&ctrl->pcie->port->dev);
++	return retval;
+ }
+ 
+ /*
+@@ -424,6 +429,7 @@ int pciehp_disable_slot(struct slot *p_slot)
+ {
+ 	u8 getstatus = 0;
+ 	struct controller *ctrl = p_slot->ctrl;
++	int retval;
+ 
+ 	if (!p_slot->ctrl)
+ 		return 1;
+@@ -437,7 +443,10 @@ int pciehp_disable_slot(struct slot *p_slot)
+ 		}
+ 	}
+ 
+-	return remove_board(p_slot);
++	pm_runtime_get_sync(&ctrl->pcie->port->dev);
++	retval = remove_board(p_slot);
++	pm_runtime_put(&ctrl->pcie->port->dev);
++	return retval;
+ }
+ 
+ int pciehp_sysfs_enable_slot(struct slot *p_slot)
+-- 
+2.11.0
