@@ -1,174 +1,95 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: sricharan@codeaurora.org
-Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
- deferred probing or error
-Date: Tue, 16 May 2017 17:46:02 +0300
-Message-ID: <2313289.Uacx9b3Shu@avalon>
-In-Reply-To: <4484f88d5ce342a3a27a00ef12869acc@codeaurora.org>
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
- <1825810.fLbCv8umR7@avalon> <4484f88d5ce342a3a27a00ef12869acc@codeaurora.org>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: okaya@codeaurora.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- linux-arm-msm@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
- Magnus Damm <magnus.damm@gmail.com>, Will Deacon <will.deacon@arm.com>,
- Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- iommu@lists.linux-foundation.org, Geert Uytterhoeven <geert@linux-m68k.org>,
- Hanjun Guo <hanjun.guo@linaro.org>, linux-pci <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, tn@semihalf.com,
- Robin Murphy <robin.murphy@arm.com>, linux-arm-msm-owner@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout3.hostsharing.net ([176.9.242.54]:48289 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1423525AbdEAMJO (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 May 2017 08:09:14 -0400
+Message-Id: <034551c3f3a60caf8b1f8b2a2abaf7bb3e0696a5.1493631639.git.lukas@wunner.de>
+In-Reply-To: <cover.1493631639.git.lukas@wunner.de>
+References: <cover.1493631639.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Mon, 1 May 2017 14:06:39 +0200
+Subject: [PATCH 2/5] PCI: pciehp: Remain in D0 while awaiting command
+ completion
+To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        Ashok Raj <ashok.raj@intel.com>,
+        Yinghai Lu <yinghai@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Erik Veijola <erik.veijola@linux.intel.com>,
+        Keith Busch <keith.busch@intel.com>,
+        Krishna Dhulipala <krishnad@fb.com>, Wei Zhang <wzhang@fb.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sricharan,
+Hotplug controllers may signal an interrupt after a command written to
+the Slot Control register completes (PCIe r3.1, sec 6.7.3.2).
 
-On Tuesday 16 May 2017 19:59:01 sricharan@codeaurora.org wrote:
-> On 2017-05-16 19:40, Laurent Pinchart wrote:
-> > On Tuesday 16 May 2017 15:04:55 Robin Murphy wrote:
-> >> On 16/05/17 08:17, Laurent Pinchart wrote:
-> >> > On Tuesday 16 May 2017 07:53:57 sricharan@codeaurora.org wrote:
-> > [snip]
-> > 
-> >>>> arch_teardown_dma_ops() being the inverse of arch_setup_dma_ops(),
-> >>>> dma_ops should be cleared in the teardown path. Otherwise
-> >>>> this causes problem when the probe of device is retried after
-> >>>> being deferred. The device's iommu structures are cleared
-> >>>> after EPROBEDEFER error, but on the next try dma_ops will still
-> >>>> be set to old value, which is not right.
-> >>>> 
-> >>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> >>>> Reviewed-by: Robin Murphy <robin.murphy@arm.com>
-> >>>> ---
-> >>>> 
-> >>>>   arch/arm/mm/dma-mapping.c | 1 +
-> >>>>   1 file changed, 1 insertion(+)
-> >>>> 
-> >>>> diff --git a/arch/arm/mm/dma-mapping.c b/arch/arm/mm/dma-mapping.c
-> >>>> index ab4f745..a40f03e 100644
-> >>>> --- a/arch/arm/mm/dma-mapping.c
-> >>>> +++ b/arch/arm/mm/dma-mapping.c
-> >>>> @@ -2358,6 +2358,7 @@ static void arm_teardown_iommu_dma_ops(struct
-> >>>> device *dev)
-> >>>>
-> >>>>   	__arm_iommu_detach_device(dev);
-> >>>>   	arm_iommu_release_mapping(mapping);
-> >>>> +	set_dma_ops(dev, NULL);
-> >>>>   }
-> >>>>   #else
-> >>> 
-> >>> The subject mentions arch_teardown_dma_ops(), which I think is correct,
-> >>> but the patch adds the set_dma_ops() call to
-> >>> arm_teardown_iommu_dma_ops().
-> >>> 
-> >>> However, the situation is perhaps more complex. Note the check at the
-> >>> beginning of arch_setup_dma_ops():
-> >>> 
-> >>> 	/*
-> >>> 	 * Don't override the dma_ops if they have already been set. Ideally
-> >>> 	 * this should be the only location where dma_ops are set, remove this
-> >>> 	 * check when all other callers of set_dma_ops will have disappeared.
-> >>> 	 */
-> >>> 	if (dev->dma_ops)
-> >>> 		return;
-> >>> 
-> >>> If you set the dma_ops to NULL in arm_teardown_iommu_dma_ops() or
-> >>> arch_teardown_dma_ops(), the next call to arch_setup_dma_ops() will
-> >>> override them. To be safe you should only set them to NULL if they have
-> >>> been set by arch_setup_dma_ops(). More than that,
-> >>> arch_teardown_dma_ops()
-> >>> should probably not call arm_teardown_iommu_dma_ops() at all if the
-> >>> dma_ops were set by arm_iommu_attach_device() and not
-> >>> arch_teardown_dma_ops().
-> >> 
-> >> Under what circumstances is that an issue? We'll only be tearing down
-> >> the DMA ops when unbinding the driver,
-> > 
-> > Or when deferring probe.
-> > 
-> >> and I think it would be erroneous to expect the device to retain much
-> >> state after that. Everything else would be set up from scratch again if
-> >> it get reprobed later, so why not the DMA ops?
-> > 
-> > Because the DMA ops might have been set elsewhere than
-> > arch_setup_dma_ops(). If you look at the patch that added the above
-> > warning, its commit message states
-> > 
-> > commit 26b37b946a5c2658dbc37dd5d6df40aaa9685d70 (iommu-joerg/arm/core)
-> > Author: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
-> > Date:   Fri May 15 02:00:02 2015 +0300
-> > 
-> >     arm: dma-mapping: Don't override dma_ops in arch_setup_dma_ops()
-> >     
-> >     The arch_setup_dma_ops() function is in charge of setting dma_ops
-> >     with a call to set_dma_ops(). set_dma_ops() is also called from
-> >     
-> >     - highbank and mvebu bus notifiers
-> >     - dmabounce (to be replaced with swiotlb)
-> >     - arm_iommu_attach_device
-> >     
-> >     (arm_iommu_attach_device is itself called from IOMMU and bus master
-> >     device drivers)
-> >     
-> >     To allow the arch_setup_dma_ops() call to be moved from device add
-> >     time to device probe time we must ensure that dma_ops already setup by
-> >     any of the above callers will not be overriden.
-> >     
-> >     Aftering replacing dmabounce with swiotlb, converting IOMMU drivers
-> >     to of_xlate and taking care of highbank and mvebu, the workaround
-> >     should be removed.
-> > 
-> > I'm concerned about potentially breaking these if we unconditionally
-> > remove the DMA ops and mapping.
-> 
-> arch_teardown_dma_ops does nothing if there is no mapping (not behind
-> iommu), dma_ops without iommu is ok. But when the
-> arm_iommu_create_mapping/arm_iommu_attach_device was called previously in
-> the iommu driver, after we teardown, that path in the iommu driver which
-> called those functions is not replayed.
+If the controller happens to be in D3hot and is PME capable, this
+Command Complete interrupt triggers a wakeup to D0 because:
 
-I've had a look at the code in more details, and I'm not sure how we've 
-reached the current situation (as I haven't followed the multiple versions of 
-this patch series due to lack of time), but it's a very big mess.
+(a) PME is the only valid operation that can be initiated by the
+    function when in D3hot (PCI PM r1.2, table 5-4, though Thunderbolt
+    controllers do not adhere to this rule).
 
-arch_setup_dma_ops() is currently not the only way to create a mapping and 
-attach it to a device. Not only that, but with the current ARM32 dma-mapping 
-implementation, it can't be.
+(b) Hotplug events (including command completion) occurring in D3hot
+    cause "generation of a wakeup event (using the PME mechanism)"
+    (PCIe r3.1, sec 6.7.3.4).
 
-arch_setup_dma_ops() will create a separate mapping for every device. That's 
-certainly fine when every device has its own IOMMU instance (or at least its 
-own TLB in a shared IOMMU), but that's far from being true in all cases. 
-Renesas R-Car Gen2 hardware, for instance, share IOMMUs and TLBs between 
-multiple devices. That's why the ipmmu-vmsa driver creates the mapping 
-manually with arm_iommu_create_mapping() and attaches it to the device with 
-arm_iommu_attach_device(). We need to keep supporting this mechanism until the 
-ARM32 dma-mapping API is brought in line with the ARM64 implementation that 
-lets the IOMMU core manage the IOVA address space.
+When writing to the Slot Control register, we've resumed the controller
+to D0 (see the call sites of pcie_write_cmd and pcie_write_cmd_nowait).
+It's silly to let it go to D3hot afterwards if we know that it will be
+resumed to D0 once the command completes.  Thus, hold a runtime PM ref
+while awaiting command completion.  In the "nowait" case, schedule
+runtime suspend after 1 second, which is the time limit for execution of
+commands (PCIe r3.1, sec 6.7.3.2).
 
-We're unfortunately far from that, so, for the time being, we need to keep 
-supporting arm_iommu_attach_device(). How that can work with deferred probing, 
-I will let you figure it out, but we need to at least fix the breakage for 
-v4.12.
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Erik Veijola <erik.veijola@linux.intel.com>
+Cc: Ashok Raj <ashok.raj@intel.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: Krishna Dhulipala <krishnad@fb.com>
+Cc: Wei Zhang <wzhang@fb.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pciehp_hpc.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index 026830a138ae..143e2143d62e 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -34,6 +34,7 @@
+ #include <linux/jiffies.h>
+ #include <linux/timer.h>
+ #include <linux/pci.h>
++#include <linux/pm_runtime.h>
+ #include <linux/interrupt.h>
+ #include <linux/time.h>
+ #include <linux/slab.h>
+@@ -201,6 +202,7 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
+ 	slot_ctrl |= (cmd & mask);
+ 	ctrl->cmd_busy = 1;
+ 	smp_mb();
++	pm_runtime_get_sync(&pdev->dev);
+ 	pcie_capability_write_word(pdev, PCI_EXP_SLTCTL, slot_ctrl);
+ 	ctrl->cmd_started = jiffies;
+ 	ctrl->slot_ctrl = slot_ctrl;
+@@ -209,8 +211,13 @@ static void pcie_do_write_cmd(struct controller *ctrl, u16 cmd,
+ 	 * Optionally wait for the hardware to be ready for a new command,
+ 	 * indicating completion of the above issued command.
+ 	 */
+-	if (wait)
++	if (wait) {
+ 		pcie_wait_cmd(ctrl);
++		pm_runtime_put(&pdev->dev);
++	} else {
++		pm_runtime_put_noidle(&pdev->dev);
++		pm_schedule_suspend(&pdev->dev, 1000);
++	}
+ 
+ out:
+ 	mutex_unlock(&ctrl->ctrl_lock);
 -- 
-Regards,
-
-Laurent Pinchart
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.11.0
