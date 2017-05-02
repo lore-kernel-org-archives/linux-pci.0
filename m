@@ -1,76 +1,66 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
- lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
- catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
- magnus.damm@gmail.com, geert@linux-m68k.org, j.neuschaefer@gmx.net,
- laurent.pinchart+renesas@ideasonboard.com
-Subject: [PATCH V2 2/3] iommu: of: Ignore all errors except EPROBE_DEFER
-Date: Thu, 18 May 2017 15:37:09 +0530
-Message-Id: <1495102030-10548-2-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
-References: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sricharan@codeaurora.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36050 "EHLO
+        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750789AbdEBK4B (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 May 2017 06:56:01 -0400
+Received: by mail-pf0-f195.google.com with SMTP id v14so32327233pfd.3
+        for <linux-pci@vger.kernel.org>; Tue, 02 May 2017 03:56:01 -0700 (PDT)
+Date: Tue, 2 May 2017 06:55:40 -0400
+From: Sujith Pandel <sujithpshankar@gmail.com>
+To: linux-pci@vger.kernel.org
+Cc: Shai@ScaleMP.com, sujithpshankar@gmail.com, Narendra_K@Dell.com
+Subject: [PATCH] Add PCI domain number check to find_smbios_instance_string
+Message-ID: <20170502105540.GA36230@localhost.localdomain>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While deferring the probe of IOMMU masters,
-xlate and add_device callback can pass back error values
-like -ENODEV, which means IOMMU cannot be connected
-with that master for real reasons. So rather than
-killing the master's probe for such errors, just
-ignore the errors and let the master work without
-an IOMMU.
+The function 'find_smbios_instance_string' does not consider the
+PCI domain number. As a result, SMBIOS type 41 device type instance
+would be exported to sysfs for all the PCI domains which have a
+PCI device with same bus/device/function, though PCI bus/device/func
+from a specific PCI domain has SMBIOS type 41 device type instance
+defined.
+Address the issue by making 'find_smbios_instance_string' function
+check PCI domain number as well.
 
-Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred probing or error")
-Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Tested-by: Magnus Damn <magnus.damn@gmail.com>
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+Reported-by: Shai Fultheim <Shai@ScaleMP.com>
+Suggested-by: Shai Fultheim <Shai@ScaleMP.com>
+Signed-off-by: Sujith Pandel <sujithpshankar@gmail.com>
+Signed-off-by: Narendra K <Narendra_K@Dell.com>
+Tested-by: Shai Fultheim <Shai@ScaleMP.com>
 ---
-[V2] Corrected spelling/case in commit log
+ drivers/pci/pci-label.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
- drivers/iommu/of_iommu.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index e6e9bec..f0d22c0 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -237,6 +237,12 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
- 			ops = ERR_PTR(err);
- 	}
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index 5135737..1d828a6 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -43,9 +43,11 @@ static size_t find_smbios_instance_string(struct pci_dev *pdev, char *buf,
+ {
+ 	const struct dmi_device *dmi;
+ 	struct dmi_dev_onboard *donboard;
++	int domain_nr;
+ 	int bus;
+ 	int devfn;
  
-+	/* Ignore all other errors apart from EPROBE_DEFER */
-+	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
-+		dev_info(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
-+		ops = NULL;
-+	}
-+
- 	return ops;
- }
++	domain_nr = pci_domain_nr(pdev->bus);
+ 	bus = pdev->bus->number;
+ 	devfn = pdev->devfn;
  
+@@ -53,8 +55,9 @@ static size_t find_smbios_instance_string(struct pci_dev *pdev, char *buf,
+ 	while ((dmi = dmi_find_device(DMI_DEV_TYPE_DEV_ONBOARD,
+ 				      NULL, dmi)) != NULL) {
+ 		donboard = dmi->device_data;
+-		if (donboard && donboard->bus == bus &&
+-					donboard->devfn == devfn) {
++		if (donboard && donboard->segment == domain_nr &&
++				donboard->bus == bus &&
++				donboard->devfn == devfn) {
+ 			if (buf) {
+ 				if (attribute == SMBIOS_ATTR_INSTANCE_SHOW)
+ 					return scnprintf(buf, PAGE_SIZE,
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+1.8.3.1
