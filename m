@@ -1,68 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: songxiaowei <songxiaowei@hisilicon.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Bjorn Helgaas <bhelgaas@google.com>, Kishon <kishon@ti.com>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        Tomasz Nowicki <tn@semihalf.com>,
-        Keith Busch <keith.busch@intel.com>,
-        "niklas.cassel@axis.com" <niklas.cassel@axis.com>,
-        Duc Dang <dhdang@apm.com>,
-        "liudongdong (C)" <liudongdong3@huawei.com>,
-        "Chenfeng (puck)" <puck.chen@hisilicon.com>,
-        Guodong Xu <guodong.xu@linaro.org>,
-        Wangbinghui <wangbinghui@hisilicon.com>,
-        Suzhuangluan <suzhuangluan@hisilicon.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-pci <linux-pci@vger.kernel.org>
-Subject: =?utf-8?B?562U5aSNOiBbUEFUQ0ggMS8yXSBQQ0k6IGR3Yzoga2lyaW46IGFkZCBQQ0ll?=
- =?utf-8?Q?_Driver_for_HiSilicon_Kirin_SoC?=
-Date: Thu, 18 May 2017 07:24:53 +0000
-Message-ID: <99B4C6BADD9E3241B25E52B02BA737C54116242D@DGGEMA505-MBS.china.huawei.com>
-References: <20170512015105.32653-1-songxiaowei@hisilicon.com>
- <CAK8P3a0MFBW9NGN6oanH+x0YzbXznjUfk0B-pd_Fh-+8+5W3iA@mail.gmail.com>
-In-Reply-To: <CAK8P3a0MFBW9NGN6oanH+x0YzbXznjUfk0B-pd_Fh-+8+5W3iA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <SRS0=T9as=4I=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <SRS0=T9as=4I=gmail.com=andy.shevchenko@kernel.org>
 MIME-Version: 1.0
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <6238d127-1c70-8235-e247-bb6cb3f4c040@vodafone.de>
+References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
+ <1493126394-1239-3-git-send-email-deathsimple@vodafone.de>
+ <CAHp75VfSFBYgHRsX2JSH0zdSEW8VvXbNMVvBBsD9kKgzGr-v2w@mail.gmail.com> <6238d127-1c70-8235-e247-bb6cb3f4c040@vodafone.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Tue, 2 May 2017 23:27:02 +0300
+Message-ID: <CAHp75VetWKfWWm1gwpd_KjhbXXV-cb1F=DvPVXPKy6v7x6hsBw@mail.gmail.com>
+Subject: Re: [PATCH 2/4] PCI: add functionality for resizing resources v3
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
+Cc: helgaas@kernel.org,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
+	Platform Driver <platform-driver-x86@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCi0tLS0t6YKu5Lu25Y6f5Lu2LS0tLS0NCuWPkeS7tuS6ujogYXJuZGJlcmdtYW5uQGdtYWls
-LmNvbSBbbWFpbHRvOmFybmRiZXJnbWFubkBnbWFpbC5jb21dIOS7o+ihqCBBcm5kIEJlcmdtYW5u
-DQrlj5HpgIHml7bpl7Q6IDIwMTflubQ15pyIMTjml6UgNDoyOQ0K5pS25Lu25Lq6OiBzb25neGlh
-b3dlaQ0K5oqE6YCBOiBCam9ybiBIZWxnYWFzOyBLaXNob247IEppbmdvbyBIYW47IFRvbWFzeiBO
-b3dpY2tpOyBLZWl0aCBCdXNjaDsgbmlrbGFzLmNhc3NlbEBheGlzLmNvbTsgRHVjIERhbmc7IGxp
-dWRvbmdkb25nIChDKTsgQ2hlbmZlbmcgKHB1Y2spOyBHdW9kb25nIFh1OyBXYW5nYmluZ2h1aTsg
-U3V6aHVhbmdsdWFuOyBMaW51eCBLZXJuZWwgTWFpbGluZyBMaXN0OyBsaW51eC1wY2kNCuS4u+mi
-mDogUmU6IFtQQVRDSCAxLzJdIFBDSTogZHdjOiBraXJpbjogYWRkIFBDSWUgRHJpdmVyIGZvciBI
-aVNpbGljb24gS2lyaW4gU29DDQoNCk9uIEZyaSwgTWF5IDEyLCAyMDE3IGF0IDM6NTEgQU0sIFNv
-bmcgWGlhb3dlaSA8c29uZ3hpYW93ZWlAaGlzaWxpY29uLmNvbT4gd3JvdGU6DQo+IEZyb206IHNv
-bmd4aWFvd2VpIDxzb25neGlhb3dlaUBoaXNpbGljb24uY29tPg0KDQpMb29rcyBnb29kIG92ZXJh
-bGwsIGp1c3QgYSBmZXcgZGV0YWlsczoNCg0KUGxlYXNlIGZpeCB5b3VyIH4vLmdpdGNvbmZpZyB0
-byBjb250YWluIHRoZSBzYW1lIHJlYWwgbmFtZSAoIlNvbmcgWGlhb3dlaSINCmluc3RlYWQgb2Yg
-InNvbmd4aWFvd2VpIikgdGhhdCB5b3UgdXNlIGZvciBzZW5kaW5nIHRoZSBlbWFpbHMuDQoNCj4g
-Kw0KPiArc3RhdGljIGludCBraXJpbl9wY2llX3BoeV9pbml0KHN0cnVjdCBraXJpbl9wY2llICpr
-aXJpbl9wY2llKSB7DQouLi4NCj4gKyAgICAgICByZWdfdmFsID0ga2lyaW5fYXBiX3BoeV9yZWFk
-bChraXJpbl9wY2llLCAweDQwMCk7DQo+ICsgICAgICAgd2hpbGUgKHJlZ192YWwgJiBwaXBlX2Ns
-a19zdGFibGUpIHsNCj4gKyAgICAgICAgICAgICAgIHVkZWxheSgxMDApOw0KPiArICAgICAgICAg
-ICAgICAgaWYgKHRpbWUgPT0gMCkgew0KPiArICAgICAgICAgICAgICAgICAgICAgICBkZXZfZXJy
-KGtpcmluX3BjaWUtPnBjaS0+ZGV2LCAiUElQRSBjbGsgaXMgbm90IHN0YWJsZVxuIik7DQo+ICsg
-ICAgICAgICAgICAgICAgICAgICAgIHJldHVybiAtRUlOVkFMOw0KPiArICAgICAgICAgICAgICAg
-fQ0KPiArICAgICAgICAgICAgICAgdGltZS0tOw0KPiArICAgICAgICAgICAgICAgcmVnX3ZhbCA9
-IGtpcmluX2FwYl9waHlfcmVhZGwoa2lyaW5fcGNpZSwgMHg0MDApOw0KPiArICAgICAgIH0NCg0K
-SWYgdGhpcyBpcyBub3QgY2FsbGVkIHdpdGggaW50ZXJydXB0cyBkaXNhYmxlZCwgcGxlYXNlIHVz
-ZSBhIHNsZWVwaW5nIGZ1bmN0aW9uIChlLmcuIG1zbGVlcCgxKSkgYXMgdGhlIGRlbGF5IGFuZCBj
-b21wYXJlIGFnYWluc3Qga3RpbWVfYmVmb3JlKCkgdG8gc2VlIGhvdyBtdWNoIHRvdGFsIHRpbWUg
-aGFzIGV4cGlyZWQgd2hlbiB3YWl0aW5nIGZvciBhIHRpbWVvdXQsIGluc3RlYWQgb2YgdXNpbmcg
-YSBjb3VudGVyLg0KDQpTaW5jZSB0aGUgdGltZSBvZiBwaXBlIGNsayBzdGFibGUgaXMgZnJvbSA0
-NTB1cyB0byA1MjB1cywgSSB0aGluayBmdW5jdGlvbiB1c2xlZXBfcmFuZ2UgaXMgYmV0dGVyLg0K
-VGhlIHBhdGNoZXMgaXMgZ29pbmcgdG8gYmUgdXBkYXRlZC4NCi1YaWFvd2VpLiANCg0KPiBkaWZm
-IC0tZ2l0IGEvZHJpdmVycy9wY2kvZHdjL3BjaWUta2lyaW4uaCANCj4gYi9kcml2ZXJzL3BjaS9k
-d2MvcGNpZS1raXJpbi5oIG5ldyBmaWxlIG1vZGUgMTAwNjQ0IGluZGV4IA0KPiAwMDAwMDAwMDAw
-MDAuLmFkOWEzYjQyNzI5OA0KPiAtLS0gL2Rldi9udWxsDQo+ICsrKyBiL2RyaXZlcnMvcGNpL2R3
-Yy9wY2llLWtpcmluLmgNCj4gQEAgLTAsMCArMSw3OSBAQA0KPiArLyoNCj4gKyAqIFBDSWUgaG9z
-dCBjb250cm9sbGVyIGRyaXZlciBmb3IgS2lyaW4gOTYwIFNvQ3MNCj4gKyAqDQo+ICsgKiBDb3B5
-cmlnaHQgKEMpIDIwMTUgSHVhd2VpIEVsZWN0cm9uaWNzIENvLiwgTHRkLg0KPiArICogICAgICAg
-ICAgICAgaHR0cDovL3d3dy5odWF3ZWkuY29tDQo+ICsgKg0KPiArICogQXV0aG9yOiBYaWFvd2Vp
-IFNvbmcgPHNvbmd4aWFvd2VpQGh1YXdlaS5jb20+DQoNClRoZSBoZWFkZXIgaXMgb25seSB1c2Vk
-IGluIG9uZSAuYyBmaWxlLCBzbyBqdXN0IHJlbW92ZSBpdCBhbmQgYWRkIHRoZSBjb250ZW50cyB0
-byB0aGF0IGZpbGUuDQoNCiAgICBBcm5kDQo=
+On Tue, May 2, 2017 at 6:51 PM, Christian K=C3=B6nig <deathsimple@vodafone.=
+de> wrote:
+> Am 26.04.2017 um 19:00 schrieb Andy Shevchenko:
+>> On Tue, Apr 25, 2017 at 4:19 PM, Christian K=C3=B6nig
+>> <deathsimple@vodafone.de> wrote:
+
+>>> +int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned lon=
+g
+>>> type)
+>>> +{
+>>> +       const unsigned long type_mask =3D IORESOURCE_IO | IORESOURCE_ME=
+M |
+>>> +               IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+>>> +
+>>
+>> Redundant.
+>
+>
+> Redundant, but also a reminder to myself that I wanted to ask something
+> about that.
+
+Missed context I suppose. Usually I comment in one word something
+obvious, i.e. redundant empty line.
+Sorry for missing my point.
+
+> This type_mask is used already three times in this file, shouldn't we add=
+ a
+> define for that?
+
+Yes, that's wxactly what I commented somewhere (in one of the rest cases).
+
+--=20
+With Best Regards,
+Andy Shevchenko
