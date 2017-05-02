@@ -1,64 +1,76 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
-        lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
-        okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
-        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
-        laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
-        geert@linux-m68k.org, magnus.damm@gmail.com
-Cc: sricharan@codeaurora.org
-Subject: [PATCH V4 2/4] iommu: of: Ignore all errors except EPROBE_DEFER
-Date: Thu, 18 May 2017 20:24:15 +0530
-Message-Id: <1495119257-26724-2-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1495119257-26724-1-git-send-email-sricharan@codeaurora.org>
-References: <1495119257-26724-1-git-send-email-sricharan@codeaurora.org>
-Sender: linux-acpi-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga06.intel.com ([134.134.136.31]:1472 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750951AbdEBMEN (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 May 2017 08:04:13 -0400
+From: Imre Deak <imre.deak@intel.com>
+To: intel-gfx@lists.freedesktop.org
+Cc: Jani Nikula <jani.nikula@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: [PATCH v4 1/2] PCI / PM: Add needs_resume flag to avoid suspend complete optimization
+Date: Tue,  2 May 2017 15:04:08 +0300
+Message-Id: <1493726649-32094-1-git-send-email-imre.deak@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While deferring the probe of IOMMU masters, xlate and
-add_device callbacks called from of_iommu_configure
-can pass back error values like -ENODEV, which means
-the IOMMU cannot be connected with that master for real
-reasons. Before the IOMMU probe deferral, all such errors
-were ignored. Now all those errors are propagated back,
-killing the master's probe for such errors. Instead ignore
-all the errors except EPROBE_DEFER, which is the only one
-of concern and let the master work without IOMMU, thus
-restoring the old behavior.
+Some drivers - like i915 - may not support the system suspend direct
+complete optimization due to differences in their runtime and system
+suspend sequence. Add a flag that when set resumes the device before
+calling the driver's system suspend handlers which effectively disables
+the optimization.
 
-Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred probing or error")
-Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Tested-by: Magnus Damn <magnus.damn@gmail.com>
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+Needed by the next patch fixing suspend/resume on i915.
+
+Suggested by Rafael.
+
+v2-v3:
+- unchanged
+
+v4:
+- Move the flag to dev_flags instead of using a bit field. (Rafael)
+
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Cc: stable@vger.kernel.org
+Signed-off-by: Imre Deak <imre.deak@intel.com>
+Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com> (v3)
 ---
-[V4] Reworded commit log and changed dev_info to dev_dbg
+ drivers/pci/pci.c   | 3 ++-
+ include/linux/pci.h | 5 +++++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
- drivers/iommu/of_iommu.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index e6e9bec..19779b8 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -237,6 +237,12 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
- 			ops = ERR_PTR(err);
- 	}
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02..a4ef755 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2141,7 +2141,8 @@ bool pci_dev_keep_suspended(struct pci_dev *pci_dev)
  
-+	/* Ignore all other errors apart from EPROBE_DEFER */
-+	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
-+		dev_dbg(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
-+		ops = NULL;
-+	}
-+
- 	return ops;
- }
+ 	if (!pm_runtime_suspended(dev)
+ 	    || pci_target_state(pci_dev) != pci_dev->current_state
+-	    || platform_pci_need_resume(pci_dev))
++	    || platform_pci_need_resume(pci_dev)
++	    || (pci_dev->dev_flags & PCI_DEV_FLAGS_NEEDS_RESUME))
+ 		return false;
  
+ 	/*
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 5948cfd..8acb560 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -178,6 +178,11 @@ enum pci_dev_flags {
+ 	PCI_DEV_FLAGS_NO_PM_RESET = (__force pci_dev_flags_t) (1 << 7),
+ 	/* Get VPD from function 0 VPD */
+ 	PCI_DEV_FLAGS_VPD_REF_F0 = (__force pci_dev_flags_t) (1 << 8),
++	/*
++	 * Resume before calling the driver's system suspend hooks, disabling
++	 * the direct_complete optimization.
++	 */
++	PCI_DEV_FLAGS_NEEDS_RESUME = (__force pci_dev_flags_t) (1 << 9),
+ };
+ 
+ enum pci_irq_reroute_variant {
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
+2.7.4
