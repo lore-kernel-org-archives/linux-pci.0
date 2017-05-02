@@ -1,71 +1,123 @@
-Return-Path: <SRS0=AMQT=4Y=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=AMQT=4Y=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Thu, 18 May 2017 16:47:08 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	linux-pci <linux-pci@vger.kernel.org>,
-	Graeme Gregory <graeme.gregory@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>,
-	Leif Lindholm <leif.lindholm@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR
- configuration to be preserved
-Message-ID: <20170518154708.GA30182@red-moon>
-References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
- <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu9T7vH_LbKfS_40JUbLNK4PYrMi++eKbCq_MzBsuQxUDQ@mail.gmail.com>
- <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com>
+Return-Path: <SRS0=Cjmw=4I=intel.com=mayurkumar.patel@kernel.org>
+Return-Path: <SRS0=Cjmw=4I=intel.com=mayurkumar.patel@kernel.org>
+From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	Rajat Jain <rajatja@google.com>, Rajat Jain <rajatxjain@gmail.com>, "David
+ Daney" <david.daney@cavium.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, Timur Tabi <timur@codeaurora.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Julia Lawall
+	<Julia.Lawall@lip6.fr>, linux-arm-msm <linux-arm-msm@vger.kernel.org>,
+	Yinghai Lu <yinghai@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+	linux-arm <linux-arm-kernel@lists.infradead.org>, Myron Stowe
+	<myron.stowe@redhat.com>
+Subject: RE: [PATCH V8 4/5] PCI/ASPM: save power on values during bridge init
+Date: Tue, 2 May 2017 12:02:53 +0000
+Message-ID: <92EBB4272BF81E4089A7126EC1E7B284667759B1@IRSMSX101.ger.corp.intel.com>
+References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
+ <1491627351-1111-5-git-send-email-okaya@codeaurora.org>
+ <CACK8Z6GXfMWxakNQnvMToig9z9McnJKeYFc2BAAFy7ys8=PUWg@mail.gmail.com>
+ <d3857812-7e03-4b62-f7cb-ac0d139b6123@codeaurora.org>
+ <20170414214452.GA21870@bhelgaas-glaptop.roam.corp.google.com>
+ <66168dde-7719-6f74-3f06-8e4724dd2918@codeaurora.org>
+ <CAErSpo7p_2dTDTC7J4HdQUw_5GH8081dUZ=XVqd=sRLrA_FJnA@mail.gmail.com>
+ <c0c2f48f-d725-058e-a1ad-92ab4b6e7fb3@codeaurora.org>
+ <92EBB4272BF81E4089A7126EC1E7B2846676C7EF@IRSMSX101.ger.corp.intel.com>
+ <CAErSpo7TO1rfG6MDYuohyXL4WbaGCJdV8y3Ke-uL6VjGRb1hvw@mail.gmail.com>
+In-Reply-To: <CAErSpo7TO1rfG6MDYuohyXL4WbaGCJdV8y3Ke-uL6VjGRb1hvw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com>
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 18, 2017 at 04:10:28PM +0100, Ard Biesheuvel wrote:
-
-[...]
-
-> >> Re _DSM: I think it makes sense to honour it, because it puts the
-> >> allocation under the control of the firmware, which completely removes
-> >> the burden of having to reason about a policy in the kernel. That
-> >> leaves the question which will be the default, but that is of minor
-> >> importance IMO.
-> >
-> > I agree; we should try to follow the spec unless we have a good reason
-> > not to, which argues for honoring the _DSM, so I think it's worth a
-> > try.  Booting with "pci=realloc" could override the _DSM and taint the
-> > kernel (because we don't know the effect of reassigning something the
-> > firmware told us not to touch).
-> >
-> 
-> I'd like to hear Lorenzo's view on this first, but I can certainly
-> respin my _DSM patch to take pci=realloc into account, and move the
-> handling to generic code as well.
-
-I agree with both of you on _DSM implementation and interpretation.
-
-Now, if we use it correctly (ie by the FW standard) on ARM64 systems we
-are going to trigger regressions, that's certain (ie we can then boot
-with pci=realloc - still, we are breaking systems), that's the reason
-why for patch(2) I'd like to create a branch and send a CFT for ARM64
-ACPI testing before queuing it (either I can set-up a testing branch
-or we ask Bjorn to do it - as you guys prefer - as long as we have
-a branch for people to test patch(2) on ARM64 ACPI systems).
-
-You still need to assign resources that could not be claimed though
-so patch(2) still needs updating:
-
-PCI FW spec 3.1 - 4.6.5
-
-"...However, the operating system is free to configure the devices in this
-hierarchy that have not been configured by the firmware."
-
-Which in kernel-speak it means that you have to assign resources that
-could not be claimed.
-
-Thanks !
-Lorenzo
+SGkgQmpvcm4NCg0KPg0KPk9uIEZyaSwgQXByIDIxLCAyMDE3IGF0IDI6NDYgQU0sIFBhdGVsLCBN
+YXl1cmt1bWFyDQo+PG1heXVya3VtYXIucGF0ZWxAaW50ZWwuY29tPiB3cm90ZToNCj4+IEhpIEJq
+b3JuL0theWEsDQo+Pg0KPj4NCj4+Pg0KPj4+T24gNC8xNy8yMDE3IDEyOjM4IFBNLCBCam9ybiBI
+ZWxnYWFzIHdyb3RlOg0KPj4+Pj4gTGlrZSB5b3Ugc2FpZCwgd2hhdCBkbyB3ZSBkbyBieSBkZWZh
+dWx0IGlzIHRoZSBxdWVzdGlvbi4gU2hvdWxkIHdlIG9wdA0KPj4+Pj4gZm9yIHNhZmUgbGlrZSB3
+ZSBhcmUgZG9pbmcsIG9yIHRyeSB0byBzYXZlIHNvbWUgcG93ZXIuDQo+Pj4+IEkgdGhpbmsgc2Fm
+ZXR5IGlzIHBhcmFtb3VudC4gIEV2ZXJ5IHVzZXIgc2hvdWxkIGJlIGFibGUgdG8gYm9vdCBzYWZl
+bHkNCj4+Pj4gd2l0aG91dCBhbnkga2VybmVsIHBhcmFtZXRlcnMuICBXZSBkb24ndCB3YW50IHVz
+ZXJzIHRvIGhhdmUgYSBwcm9ibGVtDQo+Pj4+IGJvb3RpbmcgYW5kIHRoZW4gaGF2ZSB0byBzZWFy
+Y2ggZm9yIGEgd29ya2Fyb3VuZCBsaWtlIGJvb3Rpbmcgd2l0aA0KPj4+PiAicGNpZV9hc3BtPW9m
+ZiIuICBNb3N0IHVzZXJzIHdpbGwgbmV2ZXIgZG8gdGhhdC4NCj4+Pj4NCj4+Pg0KPj4+T0ssIG5v
+IHByb2JsZW0gd2l0aCBsZWF2aW5nIHRoZSBiZWhhdmlvciBhcyBpdCBpcy4NCj4+Pg0KPj4+TXkg
+aW5pdGlhbCBhcHByb2FjaCB3YXMgIzIuIFdlIGtuZXcgdGhpcyB3YXkgdGhhdCB1c2VyIGhhZCBm
+dWxsIGNvbnRyb2wNCj4+Pm92ZXIgdGhlIEFTUE0gcG9saWN5IGJ5IGNoYW5naW5nIHRoZSBCSU9T
+IG9wdGlvbi4gVGhlbiwgTWF5dXJrdW1hcg0KPj4+Y29tcGxhaW5lZCB0aGF0IEFTUE0gaXMgbm90
+IGVuYWJsZWQgZm9sbG93aW5nIGEgaG90cGx1ZyBpbnNlcnRpb24gdG8gYW4NCj4+PmVtcHR5IHNs
+b3QuIFRoYXQncyB3aGVuIEkgc3dpdGNoZWQgdG8gIzMgYXMgaXQgc291bmRlZCBsaWtlIGEgZ29v
+ZCB0aGluZw0KPj4+dG8gaGF2ZSBmb3IgdXMuDQo+Pj4NCj4+Pj4gSGVyZSdzIGEgbG9uZy10ZXJt
+IHN0cmF3bWFuIHByb3Bvc2FsLCBzZWUgd2hhdCB5b3UgdGhpbms6DQo+Pj4+DQo+Pj4+ICAgLSBE
+ZXByZWNhdGUgQ09ORklHX1BDSUVBU1BNX0RFRkFVTFQsIENPTkZJR19QQ0lFQVNQTV9QT1dFUlNB
+VkUsIGV0Yy4NCj4+Pj4gICAtIERlZmF1bHQgYXNwbV9wb2xpY3kgaXMgUE9MSUNZX0RFRkFVTFQg
+YWx3YXlzLg0KPj4+PiAgIC0gUE9MSUNZX0RFRkFVTFQgbWVhbnMgTGludXggZG9lc24ndCB0b3Vj
+aCBhbnl0aGluZzogaWYgQklPUyBlbmFibGVkDQo+Pj4+IEFTUE0sIHdlIGxlYXZlIGl0IHRoYXQg
+d2F5OyB3ZSBsZWF2ZSBBU1BNIGRpc2FibGVkIG9uIGhvdC1hZGRlZA0KPj4+PiBkZXZpY2VzLg0K
+Pj4+DQo+PiBJIGFtIGFsc28gb2sgd2l0aCBsZWF2aW5nIHRoZSBzYW1lIGJlaGF2aW9yIGFzIG5v
+dy4NCj4+IEJ1dCBzdGlsbCBmb2xsb3dpbmcgaXMgc29tZXRoaW5nIG9wZW4gSSBmZWVsIGJlc2lk
+ZXMsIFdoaWNoIG1heSBiZSB0aGVyZSBpbiB5b3VyIGNvbW1lbnRzIHJlZHVuZGFudGx5Lg0KPj4g
+VGhlIGN1cnJlbnQgcHJvYmxlbSBpcywgcGNpZV9hc3BtX2V4aXRfbGlua19zdGF0ZSgpIGRpc2Fi
+bGVzIHRoZSBBU1BNIGNvbmZpZ3VyYXRpb24gZXZlbg0KPj4gaWYgUE9MSUNZX0RFRkFVTFQgd2Fz
+IHNldC4NCj4NCj5XZSBjYWxsIHBjaWVfYXNwbV9leGl0X2xpbmtfc3RhdGUoKSB3aGVuIHJlbW92
+aW5nIGFuIGVuZHBvaW50LiAgV2hlbg0KPndlIHJlbW92ZSBhbiBlbmRwb2ludCwgSSB0aGluayBk
+aXNhYmxpbmcgQVNQTSBpcyB0aGUgcmlnaHQgdGhpbmcgdG8NCj5kby4gIFRoZSBzcGVjIChQQ0ll
+IHIzLjEsIHNlYyA1LjQuMS4zKSBzYXlzICJTb2Z0d2FyZSBtdXN0IG5vdCBlbmFibGUNCj5MMHMg
+aW4gZWl0aGVyIGRpcmVjdGlvbiBvbiBhIGdpdmVuIExpbmsgdW5sZXNzIGNvbXBvbmVudHMgb24g
+Ym90aA0KPnNpZGVzIG9mIHRoZSBMaW5rIGVhY2ggc3VwcG9ydCBMMHM7IG90aGVyd2lzZSwgdGhl
+IHJlc3VsdCBpcw0KPnVuZGVmaW5lZC4iDQo+DQoNClllcywgeW91IGFyZSByaWdodCBhbmQgcGVy
+IHNwZWMgYWxzbyBpdCBtYWtlcyBzZW5zZSB0aGF0IEFTUE0gbmVlZHMgdG8gYmUgZGlzYWJsZWQu
+DQpCdXQsIGlmIFBPTElDWV9ERUZBVUxUIGlzIHNldCB0aGVuLCBzaG91bGRuJ3QgQklPUyB0YWtl
+IGNhcmUgb2YgZGlzYWJsaW5nIEFTUE0/DQoNCg0KDQo+PiBJIGFtIHNlZWluZyBhbHJlYWR5IGZv
+bGxvd2luZyBwcm9ibGVtKG9yIG1heSBiZSBpbmZsdWVuY2UpIHdpdGggaXQuIFRoZSBFbmRwb2lu
+dCBJIGhhdmUgZG9lcyBub3QgaGF2ZQ0KPj4gZG9lcyBub3QgaGF2ZSAiUHJlc2VuY2UgZGV0ZWN0
+IGNoYW5nZSIgbWVjaGFuaXNtLiBIb3QgcGx1ZyBpcyB3b3JraW5nIHdpdGggTGluayBzdGF0dXMg
+ZXZlbnRzLg0KPj4gV2hlbiBsaW5rIGlzIGluIEwxIG9yIEwxU1MgYW5kIGlmIEVQIGlzIHBvd2Vy
+ZWQgb2ZmLCBubyBMaW5rIHN0YXR1cyBjaGFuZ2UgZXZlbnQgYXJlIHRyaWdnZXJlZCAoSXQgbWln
+aHQgYmUNCj4+IHRoZSBleHBlY3RlZCBiZWhhdmlvciBpbiBMMSBvciBMMVNTKS4gIFdoZW4gbmV4
+dCB0aW1lIEVQIGlzIHBvd2VyZWQgb24gdGhlcmUgYXJlIGxpbmsgZG93biBhbmQNCj4+IGxpbmsg
+dXAgZXZlbnRzIGNvbWluZyBvbmUgYWZ0ZXIgb3RoZXIuIEJJT1MgZW5hYmxlcyBBU1BNIG9uIFJv
+b3QgcG9ydCBhbmQgRW5kcG9pbnQsIGJ1dCB3aGlsZQ0KPj4gcHJvY2Vzc2luZyBsaW5rIHN0YXR1
+cyBkb3duLCBwY2llX2FzcG1fZXhpdF9saW5rX3N0YXRlKCkgY2xlYXJzIHRoZSBBU1BNIGFscmVh
+ZHkgd2hpY2ggd2VyZSBlbmFibGVkIGJ5IEJJT1MuDQo+PiBJZiB3ZSB3YW50IHRvIGZvbGxvdyBh
+Ym92ZSBhcHByb2FjaCB0aGVuIHNoYWxsIHdlIGNvbnNpZGVyIGhhdmluZyBzb21ldGhpbmcgc2lt
+aWxhciBhcyBmb2xsb3dpbmc/DQo+DQo+VGhlIHByb3Bvc2FsIHdhcyB0byBsZWF2ZSBBU1BNIGRp
+c2FibGVkIG9uIGhvdC1hZGRlZCBkZXZpY2VzLiAgSWYgdGhlDQo+ZW5kcG9pbnQgd2FzIHBvd2Vy
+ZWQgb2ZmIGFuZCBwb3dlcmVkIGJhY2sgb24gYWdhaW4sIEkgdGhpbmsgdGhhdA0KPmRldmljZSBs
+b29rcyBsaWtlIGEgaG90LWFkZGVkIGRldmljZSwgZG9lc24ndCBpdD8NCj4NCg0KWWVzLCBpdCBp
+cyBob3QtYWRkZWQgZGV2aWNlLiBBbHNvLCBJIHVuZGVyc3RhbmQsIGZvciBQT0xJQ1lfREVGQVVM
+VCwgT1Mgd291bGQvc2hvdWxkIG5vdCB0b3VjaCBBU1BNKGVuYWJsZS9kaXNhYmxlKSwNCmJ1dCBC
+SU9TIGNvdWxkIHN0aWxsIChlbmFibGUvZGlzYWJsZSksIHJpZ2h0Pw0KDQpDdXJyZW50bHksIHdo
+YXQgaGFwcGVucyBpbiBteSBzeXN0ZW0gaXMgYXMgZm9sbG93aW5nLCAoZWFjaCAybmQgcG93ZXIg
+Y3ljbGUvaG90cGx1ZyBvZiBFbmRwb2ludCBkaXNhYmxlcyBBU1BNKToNCg0KDQpGaXJzdCBQb3dl
+ciBjeWNsZSAoV2hlbiBBU1BNIEwxIGlzIGFscmVhZHkgZW5hYmxlZCk6DQpkZXZpY2UgZ2V0cyBw
+b3dlcmVkIG9mZiAtPiB0aGVyZSBhcmUgbm8gTGluayBzdGF0dXMgZXZlbnRzLCBzbyBubyBwY2ll
+IGhvdHBsdWcgaW50ZXJydXB0IGFuZCBwY2llX2FzcG1fZXhpdF9saW5rX3N0YXRlKCkgdHJpZ2dl
+cmVkLg0KV2hlbiB0aGUgZGV2aWNlIGdldHMgcG93ZXJlZCBvbiBhZ2FpbiAtPiBMaW5rIGRvd24v
+TGluayB1cCBldmVudHMgYXJlIGNvbWluZyBiYWNrIHRvIGJhY2suIA0KRmlyc3QgTGluayBkb3du
+IGlzIHNlcnZlZC4gKEJJT1MgY2hlY2tzIGZvciB0aGUgTGluayBzdGF0dXMgYW5kIGVuYWJsZXMg
+QVNQTSBhbHJlYWR5LCBhcyB0aGUgZGV2aWNlIGlzDQphY3R1YWxseSBwb3dlcmVkIGJhY2spLiBP
+UyBjYWxscyBwY2llX2FzcG1fZXhpdF9saW5rX3N0YXRlKCkgYW5kIEFTUE0gZ2V0cyBkaXNhYmxl
+ZCBieSBPUy4NCg0KU2Vjb25kIFBvd2VyIGN5Y2xlIChXaGVuIEFTUE0gTDEgaXMgZGlzYWJsZWQg
+YWZ0ZXIgYWJvdmUpOg0KZGV2aWNlIGdldHMgcG93ZXJlZCBvZmYgLT4gdGhlcmUgYXJlIGxpbmsg
+c3RhdHVzIGV2ZW50cywgcGNpZSBob3RwbHVnIGludGVycnVwdCBpcyB0cmlnZ2VyZWQgYW5kIHBj
+aWVfYXNwbV9leGl0X2xpbmtfc3RhdGUoKSB0cmlnZ2VyZWQuDQpPUyBkaXNhYmxlcyBBU1BNLiBC
+SU9TIGNoZWNrcyBMaW5rIHN0YXR1cyBhbmQgZGlzYWJsZXMgQVNQTSB0b28uDQpXaGVuIHRoZSBk
+ZXZpY2UgZ2V0cyBwb3dlcmVkIG9uIC0+IEJJT1MgZW5hYmxlcyBBU1BNIGFuZCBhcyB0aGlzIGlz
+IHBjaWUgaG90cGx1ZyBpbnNlcnRpb24sIE9TDQpkb2VzIG5vdCBpbnRlcmZlcmUgYW5kIHdlIGhh
+dmUgQVNQTSBlbmFibGVkLg0KDQpUaGUgYWJvdmUgc2VxdWVuY2UgaGFwcGVucyBlYWNoIDJuZCBw
+b3dlciBjeWNsZSBvZiB0aGUgaG90cGx1ZyBkZXZpY2UuDQoNClNvIE9uZSBjb3VsZCBzdGlsbCBh
+cmd1ZSBpZiBQT0xJQ1lfREVGQVVMVCBpcyBzZXQsIHRoZW4gd2h5IE9TIGRpc2FibGVzIEFTUE0g
+aWYgaXQgaXMgbm90IG1lYW50IHRvIHRvdWNoIGNvbmZpZ3VyYXRpb24uDQpUaGlzIGlzIHdoeSBJ
+IHByb3Bvc2VkIGZvbGxvd2luZyBraW5kIG9mIGNoYW5nZSwgc28gdGhhdCBPUyB3b3VsZCBub3Qg
+dG91Y2ggQVNQTSwgaWYgUE9MSUNZX0RFRkFVTFQgaXMgc2V0Lg0KQWxzbywgV2l0aCB0aGUgYmVs
+b3cgY2hhbmdlLCBldmVyeXRoaW5nIHJlbGllcyBvbiBCSU9TIGZvciBBU1BNIHdoZW4gUE9MSUNZ
+X0RFRkFVTFQgaXMgc2V0IGFuZCBJIHNlZSBhYm92ZSBwcm9ibGVtDQpnZXRzIHJlc29sdmVkLiBB
+bHNvLCB0aGUgZXhpc3RpbmcgQVNQTSBiZWhhdmlvciBkb2VzIG5vdCBoYXZlIGltcGFjdCwgdW5s
+ZXNzIHNwZWNpZmljIEJJT1MgZG9lcyBub3QgZGlzYWJsZSBBU1BNIG9uDQpSb290IFBvcnQgd2hl
+biBkZXZpY2UgZ2V0cyByZW1vdmVkLg0KDQoNCg0KPkJqb3JuDQpJbnRlbCBEZXV0c2NobGFuZCBH
+bWJIClJlZ2lzdGVyZWQgQWRkcmVzczogQW0gQ2FtcGVvbiAxMC0xMiwgODU1NzkgTmV1YmliZXJn
+LCBHZXJtYW55ClRlbDogKzQ5IDg5IDk5IDg4NTMtMCwgd3d3LmludGVsLmRlCk1hbmFnaW5nIERp
+cmVjdG9yczogQ2hyaXN0aW4gRWlzZW5zY2htaWQsIENocmlzdGlhbiBMYW1wcmVjaHRlcgpDaGFp
+cnBlcnNvbiBvZiB0aGUgU3VwZXJ2aXNvcnkgQm9hcmQ6IE5pY29sZSBMYXUKUmVnaXN0ZXJlZCBP
+ZmZpY2U6IE11bmljaApDb21tZXJjaWFsIFJlZ2lzdGVyOiBBbXRzZ2VyaWNodCBNdWVuY2hlbiBI
+UkIgMTg2OTI4Cg==
