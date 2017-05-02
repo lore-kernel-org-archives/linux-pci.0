@@ -1,59 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 17 May 2017 16:56:12 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR
- configuration to be preserved
-Message-ID: <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from cloudserver094114.home.net.pl ([79.96.170.134]:45810 "EHLO
+        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750710AbdEBVDi (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 May 2017 17:03:38 -0400
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: imre.deak@intel.com
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        intel-gfx@lists.freedesktop.org,
+        Jani Nikula <jani.nikula@intel.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        linux-pci@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH v3 1/2] PCI / PM: Add needs_resume flag to avoid suspend complete optimization
+Date: Tue, 02 May 2017 22:57:16 +0200
+Message-ID: <6276442.dSpUQGW708@aspire.rjw.lan>
+In-Reply-To: <20170502090538.GA21917@ideak-desk.fi.intel.com>
+References: <1493388963-5278-1-git-send-email-imre.deak@intel.com> <1719094.muzv4MLyNX@aspire.rjw.lan> <20170502090538.GA21917@ideak-desk.fi.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: lorenzo.pieralisi@arm.com, graeme.gregory@linaro.org,
- linux-pci@vger.kernel.org, will.deacon@arm.com, leif.lindholm@linaro.org,
- okaya@codeaurora.org, catalin.marinas@arm.com, bhelgaas@google.com,
- tn@semihalf.com, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, Apr 11, 2017 at 05:33:11PM +0100, Ard Biesheuvel wrote:
-> This is a followup to the discussion regarding whether ACPI/arm64 systems
-> should preserve the PCI configuration performed by the firmware, or always
-> reconfigure it from scratch.
+On Tuesday, May 02, 2017 12:05:38 PM Imre Deak wrote:
+> On Mon, May 01, 2017 at 10:36:13PM +0200, Rafael J. Wysocki wrote:
+> > On Sunday, April 30, 2017 03:57:13 PM Imre Deak wrote:
+> > > On Sat, Apr 29, 2017 at 12:21:57PM +0200, Rafael J. Wysocki wrote:
+> > > > On Friday, April 28, 2017 11:33:02 PM Rafael J. Wysocki wrote:
+> > > > > On Friday, April 28, 2017 05:16:02 PM Imre Deak wrote:
+> > > > > > Some drivers - like i915 - may not support the system suspend direct
+> > > > > > complete optimization due to differences in their runtime and system
+> > > > > > suspend sequence. Add a flag that when set resumes the device before
+> > > > > > calling the driver's system suspend handlers which effectively disables
+> > > > > > the optimization.
+> > > > > > 
+> > > > > > Needed by the next patch fixing suspend/resume on i915.
+> > > > > > 
+> > > > > > Suggested by Rafael.
+> > > > > > 
+> > > > > > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> > > > > > Cc: linux-pci@vger.kernel.org
+> > > > > > Cc: stable@vger.kernel.org
+> > > > > > Signed-off-by: Imre Deak <imre.deak@intel.com>
+> > > > > 
+> > > > > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+> > > > > 
+> > > > > The reason why the opt-out flag was not added on day one was because we were
+> > > > > not sure whether or not it would be necessary at all.
+> > > > > 
+> > > > > Quite evidently, it is needed.
+> > > > 
+> > > > But that said, it actually can be implemented as a flag in dev_flags too, say
+> > > > PCI_DEV_FLAGS_NEEDS_RESUME, in analogy with PCI_DEV_FLAGS_NO_D3 that's
+> > > > already there.
+> > > > 
+> > > > The struct size would not need to grow then which I guess would be better?
+> > > 
+> > > Hm, both the bit field and the flag would need to increase if running
+> > > out of bits, so what's the difference? (Atm, the struct size wouldn't
+> > > change either way.)
+> > 
+> > In the bit field case this depends on what the compiler thinks is better to be
+> > entirely precise, so they are not 100% equivalent.
+> > 
+> > Plus, since there already are things related to PM in dev_flags, why to depart
+> > from that pattern?
 > 
-> This series proposes to put it under the control of the firmware, by invoking
-> the _DSM method, and preserving the firmware configuration only when it
-> returns 0.
+> There are a few PM related flags in the bit field too.
 > 
-> Patch #1 is a preparatory bugfix that solves the issue that I/O bridge
-> windows starting at 0x0 are dismissed when looking for parent resources.
-> 
-> Patch #2 adds the logic to invoke the _DSM and claim the existing
-> configuration rather than reallocate it from scratch if it returns '0'
-> 
-> Ard Biesheuvel (2):
->   drivers: pci: do not disregard parent resources starting at 0x0
->   arm64: acpi/pci: invoke _DSM whether to preserve firmware PCI setup
-> 
->  arch/arm64/kernel/pci.c  | 20 ++++++++++++++++++--
->  drivers/pci/pci.c        |  2 +-
->  include/linux/pci-acpi.h |  7 ++++---
->  3 files changed, 23 insertions(+), 6 deletions(-)
+> The need for moving it is still not clear to me, but I don't see any
+> problem with it either, so will move it there.
 
-I applied the first to pci/resource for v4.13.  I didn't do anything
-with the second because I don't think we have consensus on what the
-right thing to do is yet.
+Well, we are not too consistent in that respect overall.
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Either way works, so I guess it's Bjorn's call at this point. :-)
+
+Thanks,
+Rafael
