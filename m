@@ -1,15 +1,16 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <f5cb58a5-7c06-8d54-6293-1a72ee0a4707@arm.com>
-References: <1493340847-25720-1-git-send-email-kdinh@apm.com>
- <f5cb58a5-7c06-8d54-6293-1a72ee0a4707@arm.com>
-From: Khuong Dinh <kdinh@apm.com>
-Date: Thu, 4 May 2017 17:36:06 -0700
-Message-ID: <CAAsHzquFJE7X0MQyZCP4+UW_E+WK2ORe1EK6yxiq-ev81i1-xg@mail.gmail.com>
-Subject: Re: [PATCH v2 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
- boot for X-Gene v1
-To: Marc Zyngier <marc.zyngier@arm.com>
+In-Reply-To: <20170502171501.GA5545@red-moon>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+ <20170426111809.19922-4-lorenzo.pieralisi@arm.com>
+ <CAK8P3a0HmrrYBP5em1s4VOY4Tb6=bwOrDDN6K8rPp8OEXtpMtA@mail.gmail.com>
+ <20170502171501.GA5545@red-moon>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Tue, 2 May 2017 21:36:41 +0200
+Message-ID: <CAK8P3a1dbopDOXot-brx+xfZeBbUZUfYf1Urs2T3UNwXyg8Mnw@mail.gmail.com>
+Subject: Re: [RFC/RFT PATCH 03/18] PCI: Introduce pci_scan_root_bus_bridge()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,169 +18,54 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: rjw@rjwysocki.net, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Duc Dang <dhdang@apm.com>, linux-pci@vger.kernel.org, msalter@redhat.com,
- patches@apm.com, linux-kernel@vger.kernel.org, jcm@redhat.com,
- Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Russell King <linux@armlinux.org.uk>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Michal Simek <michal.simek@xilinx.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Marc,
-   There's no explicit dependency between pcie driver and msi controller.
-   The current solution that we did is relying on the node ordering in BIOS.
-   ACPI 5.0 introduced _DEP method to assign a higher priority in
-start ordering.
-   This method could be applied in case of msi and pcie are the same
-level of subsys_init (in ACPI boot).
-   However, PCIe driver has not supported for this dependency check yet.
-   How do you think about this solution.
+On Tue, May 2, 2017 at 7:15 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Fri, Apr 28, 2017 at 02:28:38PM +0200, Arnd Bergmann wrote:
+>> On Wed, Apr 26, 2017 at 1:17 PM, Lorenzo Pieralisi
+>> <lorenzo.pieralisi@arm.com> wrote:
+>>
+>> Good idea, yes. To avoid growing the number of interfaces too
+>> much, should we change the existing users of pci_register_host_bridge
+>> in host drivers over to this entry point, and make the other one
+>> local to probe.c then?
+>
+> Yes, the problem is that there are drivers (ie pcie-iproc.c) that
+> require the struct pci_bus (created by pci_register_host_bridge())
+> to fiddle with it to check link status and THEN scan the bus (so
+> the pci_register_host_bridge() call can't be embedded in the scan
+> interface - the driver requires struct pci_bus for pci_ops to work
+> before scanning the bus itself).
+>
+> I will see how I can accommodate this change because you definitely
+> have a point.
 
-Best regards,
-Khuong
+The obvious answer for that particular problem would be a link_check()
+callback in the bridge operations. I think that would also fit in well with
+the dw_pcie driver that has some private infrastructure for it. I don't
+know if that callback is sufficient to solve all related problems though.
 
-On Fri, Apr 28, 2017 at 2:27 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
-> On 28/04/17 01:54, Khuong Dinh wrote:
->> From: Khuong Dinh <kdinh@apm.com>
->>
->> This patch makes pci-xgene-msi driver ACPI-aware and provides
->> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
->>
->> Signed-off-by: Khuong Dinh <kdinh@apm.com>
->> Signed-off-by: Duc Dang <dhdang@apm.com>
->> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
->> ---
->> v2:
->>  - Verify with BIOS version 3.06.25 and 3.07.09
->> v1:
->>  - Initial version
->> ---
->>  drivers/pci/host/pci-xgene-msi.c |   35 ++++++++++++++++++++++++++++++++---
->>  1 files changed, 32 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
->> index f1b633b..00aaa3d 100644
->> --- a/drivers/pci/host/pci-xgene-msi.c
->> +++ b/drivers/pci/host/pci-xgene-msi.c
->> @@ -24,6 +24,7 @@
->>  #include <linux/pci.h>
->>  #include <linux/platform_device.h>
->>  #include <linux/of_pci.h>
->> +#include <linux/acpi.h>
->>
->>  #define MSI_IR0                      0x000000
->>  #define MSI_INT0             0x800000
->> @@ -39,7 +40,7 @@ struct xgene_msi_group {
->>  };
->>
->>  struct xgene_msi {
->> -     struct device_node      *node;
->> +     struct fwnode_handle    *fwnode;
->>       struct irq_domain       *inner_domain;
->>       struct irq_domain       *msi_domain;
->>       u64                     msi_addr;
->> @@ -249,6 +250,13 @@ static void xgene_irq_domain_free(struct irq_domain *domain,
->>       .free   = xgene_irq_domain_free,
->>  };
->>
->> +#ifdef CONFIG_ACPI
->> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
->> +{
->> +     return xgene_msi_ctrl.fwnode;
->> +}
->> +#endif
->> +
->>  static int xgene_allocate_domains(struct xgene_msi *msi)
->>  {
->>       msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
->> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
->>       if (!msi->inner_domain)
->>               return -ENOMEM;
->>
->> -     msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
->> +     msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
->>                                                   &xgene_msi_domain_info,
->>                                                   msi->inner_domain);
->>
->> @@ -265,6 +273,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
->>               return -ENOMEM;
->>       }
->>
->> +#ifdef CONFIG_ACPI
->> +     pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
->> +#endif
->>       return 0;
->>  }
->>
->> @@ -449,6 +460,13 @@ static int xgene_msi_hwirq_free(unsigned int cpu)
->>       {},
->>  };
->>
->> +#ifdef CONFIG_ACPI
->> +static const struct acpi_device_id xgene_msi_acpi_ids[] = {
->> +     {"APMC0D0E", 0},
->> +     { },
->> +};
->> +#endif
->> +
->>  static int xgene_msi_probe(struct platform_device *pdev)
->>  {
->>       struct resource *res;
->> @@ -469,7 +487,17 @@ static int xgene_msi_probe(struct platform_device *pdev)
->>               goto error;
->>       }
->>       xgene_msi->msi_addr = res->start;
->> -     xgene_msi->node = pdev->dev.of_node;
->> +
->> +     xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
->> +     if (!xgene_msi->fwnode) {
->> +             xgene_msi->fwnode = irq_domain_alloc_fwnode(NULL);
->
-> Please provide something other than NULL, such as the base address if
-> the device. That's quite useful for debugging.
->
->> +             if (!xgene_msi->fwnode) {
->> +                     dev_err(&pdev->dev, "Failed to create fwnode\n");
->> +                     rc = ENOMEM;
->> +                     goto error;
->> +             }
->> +     }
->> +
->>       xgene_msi->num_cpus = num_possible_cpus();
->>
->>       rc = xgene_msi_init_allocator(xgene_msi);
->> @@ -540,6 +568,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
->>       .driver = {
->>               .name = "xgene-msi",
->>               .of_match_table = xgene_msi_match_table,
->> +             .acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
->>       },
->>       .probe = xgene_msi_probe,
->>       .remove = xgene_msi_remove,
->>
->
-> The code is trivial, but relies on the MSI controller to probe before
-> the PCI bus. What enforces this? How is it making sure that this is not
-> going to break in the next kernel release? As far as I can tell, there
-> is no explicit dependency between the two, making it the whole thing
-> extremely fragile.
->
-> Thanks,
->
->         M.
-> --
-> Jazz is not dead. It just smells funny...
-
--- 
-CONFIDENTIALITY NOTICE: This e-mail message, including any attachments, is 
-for the sole use of the intended recipient(s) and contains information that 
-is confidential and proprietary to Applied Micro Circuits Corporation or 
-its subsidiaries. It is to be used solely for the purpose of furthering the 
-parties' business relationship. All unauthorized review, use, disclosure or 
-distribution is prohibited. If you are not the intended recipient, please 
-contact the sender by reply e-mail and destroy all copies of the original 
-message.
+       Arnd
 
 _______________________________________________
 linux-arm-kernel mailing list
