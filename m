@@ -1,19 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 2 May 2017 18:15:01 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [RFC/RFT PATCH 03/18] PCI: Introduce pci_scan_root_bus_bridge()
+Message-ID: <20170502171501.GA5545@red-moon>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+ <20170426111809.19922-4-lorenzo.pieralisi@arm.com>
+ <CAK8P3a0HmrrYBP5em1s4VOY4Tb6=bwOrDDN6K8rPp8OEXtpMtA@mail.gmail.com>
 MIME-Version: 1.0
-Date: Tue, 16 May 2017 07:56:08 +0530
-From: sricharan@codeaurora.org
-To: Will Deacon <will.deacon@arm.com>
-Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
- deferred probing or error
-In-Reply-To: <20170515142238.GD3605@arm.com>
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
- <1486136933-20328-8-git-send-email-sricharan@codeaurora.org>
- <CAMuHMdV05uCcVss+V1E+_OQYosJO6P95rU1WynV-G08-iHJnyg@mail.gmail.com>
- <2bfd11dc-9f94-2b69-7b03-c640e53155e1@arm.com>
- <26defadf-6380-4af4-6323-b51198376bc1@codeaurora.org>
- <20170515142238.GD3605@arm.com>
-Message-ID: <c9c3cdcc43eba9b9aa68fa750b61a099@codeaurora.org>
+In-Reply-To: <CAK8P3a0HmrrYBP5em1s4VOY4Tb6=bwOrDDN6K8rPp8OEXtpMtA@mail.gmail.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -21,130 +17,129 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: okaya@codeaurora.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- linux-arm-msm@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
- Magnus Damm <magnus.damm@gmail.com>,
- Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
- ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
- iommu@lists.linux-foundation.org, Geert Uytterhoeven <geert@linux-m68k.org>,
- Hanjun Guo <hanjun.guo@linaro.org>, linux-pci <linux-pci@vger.kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, tn@semihalf.com,
- Robin Murphy <robin.murphy@arm.com>, linux-arm-kernel@lists.infradead.org,
- Marek Szyprowski <m.szyprowski@samsung.com>
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Cc: Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Will,
+On Fri, Apr 28, 2017 at 02:28:38PM +0200, Arnd Bergmann wrote:
+> On Wed, Apr 26, 2017 at 1:17 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > Current pci_scan_root_bus() interface is made up of two main
+> > code paths:
+> >
+> > - pci_create_root_bus()
+> > - pci_scan_child_bus()
+> >
+> > pci_create_root_bus() is a wrapper function that allows to create
+> > a struct pci_host_bridge structure, initialize it with the passed
+> > parameters and register it with the kernel.
+> >
+> > As the struct pci_host_bridge require additional struct members,
+> > pci_create_root_bus() parameters list has grown in time, making
+> > it unwieldy to add further parameters to it in case the struct
+> > pci_host_bridge gains more members fields to augment its functionality.
+> >
+> > Since PCI core code provides functions to allocate struct
+> > pci_host_bridge, instead of forcing the pci_create_root_bus() interface
+> > to add new parameters to cater for new struct pci_host_bridge
+> > functionality, it is more suitable to add an interface in PCI
+> > core code to scan a PCI bus straight from a struct pci_host_bridge
+> > created and customized by each specific PCI host controller driver.
+> >
+> > Add a pci_scan_root_bus_bridge() function to allow PCI host controller
+> > drivers to create and initialize struct pci_host_bridge and scan
+> > the resulting bus.
+> >
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> > Cc: Arnd Bergmann <arnd@arndb.de>
+> > Cc: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Good idea, yes. To avoid growing the number of interfaces too
+> much, should we change the existing users of pci_register_host_bridge
+> in host drivers over to this entry point, and make the other one
+> local to probe.c then?
 
-On 2017-05-15 19:52, Will Deacon wrote:
-> Hi Sricharan,
-> 
-> On Wed, May 03, 2017 at 03:54:59PM +0530, Sricharan R wrote:
->> On 5/3/2017 3:24 PM, Robin Murphy wrote:
->> > On 02/05/17 19:35, Geert Uytterhoeven wrote:
->> >> On Fri, Feb 3, 2017 at 4:48 PM, Sricharan R <sricharan@codeaurora.org> wrote:
->> >>> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
->> >>>
->> >>> Failures to look up an IOMMU when parsing the DT iommus property need to
->> >>> be handled separately from the .of_xlate() failures to support deferred
->> >>> probing.
->> >>>
->> >>> The lack of a registered IOMMU can be caused by the lack of a driver for
->> >>> the IOMMU, the IOMMU device probe not having been performed yet, having
->> >>> been deferred, or having failed.
->> >>>
->> >>> The first case occurs when the device tree describes the bus master and
->> >>> IOMMU topology correctly but no device driver exists for the IOMMU yet
->> >>> or the device driver has not been compiled in. Return NULL, the caller
->> >>> will configure the device without an IOMMU.
->> >>>
->> >>> The second and third cases are handled by deferring the probe of the bus
->> >>> master device which will eventually get reprobed after the IOMMU.
->> >>>
->> >>> The last case is currently handled by deferring the probe of the bus
->> >>> master device as well. A mechanism to either configure the bus master
->> >>> device without an IOMMU or to fail the bus master device probe depending
->> >>> on whether the IOMMU is optional or mandatory would be a good
->> >>> enhancement.
->> >>>
->> >>> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
->> >>> Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
->> >>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> >>
->> >> This patch broke Renesas R-Car Gen3 platforms in renesas-drivers.
->> >> As the IOMMU nodes in DT are not yet enabled, all devices having iommus
->> >> properties in DT now fail to probe.
->> >
->> > How exactly do they fail to probe? Per d7b0558230e4, if there are no ops
->> > registered then they should merely defer until we reach the point of
->> > giving up and ignoring the IOMMU. Is it just that you have no other
->> > late-probing drivers or post-init module loads to kick the deferred
->> > queue after that point? I did try to find a way to explicitly kick it
->> > from a suitably late initcall, but there didn't seem to be any obvious
->> > public interface - anyone have any suggestions?
->> >
->> > I think that's more of a general problem with the probe deferral
->> > mechanism itself (I've seen the same thing happen with some of the
->> > CoreSight stuff on Juno due to the number of inter-component
->> > dependencies) rather than any specific fault of this series.
->> >
->> 
->> I was thinking of an additional check like below to avoid the
->> situation ?
->> 
->> From 499b6e662f60f23740b8880882b0a16f16434501 Mon Sep 17 00:00:00 2001
->> From: Sricharan R <sricharan@codeaurora.org>
->> Date: Wed, 3 May 2017 13:16:59 +0530
->> Subject: [PATCH] iommu: of: Fix check for returning EPROBE_DEFER
->> 
->> While returning EPROBE_DEFER for iommu masters
->> take in to account of iommu nodes that could be
->> marked in DT as 'status=disabled', in which case
->> simply return NULL and let the master's probe
->> continue rather than deferring.
->> 
->> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> ---
->>  drivers/iommu/of_iommu.c | 1 +
->>  1 file changed, 1 insertion(+)
->> 
->> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
->> index 9f44ee8..e6e9bec 100644
->> --- a/drivers/iommu/of_iommu.c
->> +++ b/drivers/iommu/of_iommu.c
->> @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct 
->> device_node *np)
->> 
->>         ops = iommu_ops_from_fwnode(fwnode);
->>         if ((ops && !ops->of_xlate) ||
->> +           !of_device_is_available(iommu_spec->np) ||
->>             (!ops && !of_iommu_driver_present(iommu_spec->np)))
->>                 return NULL;
-> 
-> Without this patch, v4.12-rc1 hangs on my Juno waiting to mount the 
-> root
-> filesystem. The problem is that the USB controller is behind an SMMU 
-> which
-> is marked as 'status = "disabled"' in the devicetree. Whilst there was 
-> a
-> separate thread with Ard about exactly what this means in terms of the 
-> DMA
-> ops used by upstream devices, your patch above fixes the regression and
-> I think should go in regardless. The DMA ops issue will likely require
-> an additional DT binding anyway, to advertise the behaviour of the
-> IOMMU when it is disabled.
-> 
-> Tested-by: Will Deacon <will.deacon@arm.com>
-> Acked-by: Will Deacon <will.deacon@arm.com>
-> 
-> Could you resend it as a proper patch, please?
+Yes, the problem is that there are drivers (ie pcie-iproc.c) that
+require the struct pci_bus (created by pci_register_host_bridge())
+to fiddle with it to check link status and THEN scan the bus (so
+the pci_register_host_bridge() call can't be embedded in the scan
+interface - the driver requires struct pci_bus for pci_ops to work
+before scanning the bus itself).
 
-Sure, will send this as a separate patch.
+I will see how I can accommodate this change because you definitely
+have a point.
 
-Regards,
-  Sricharan
+> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+> > index 7e4ffc4..c7a7f72 100644
+> > --- a/drivers/pci/probe.c
+> > +++ b/drivers/pci/probe.c
+> > @@ -2412,6 +2412,44 @@ void pci_bus_release_busn_res(struct pci_bus *b)
+> >                         res, ret ? "can not be" : "is");
+> >  }
+> >
+> > +int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge)
+> > +{
+> > +       struct resource_entry *window;
+> > +       bool found = false;
+> > +       struct pci_bus *b;
+> > +       int max, bus, ret;
+> > +
+> > +       if (!bridge)
+> > +               return -EINVAL;
+> > +
+> > +       resource_list_for_each_entry(window, &bridge->windows)
+> > +               if (window->res->flags & IORESOURCE_BUS) {
+> > +                       found = true;
+> > +                       break;
+> > +               }
+> > +
+> > +       ret = pci_register_host_bridge(bridge);
+> > +       if (ret < 0)
+> > +               return ret;
+> > +
+> > +       b = bridge->bus;
+> > +       bus = bridge->busnr;
+> > +
+> > +       if (!found) {
+> > +               dev_info(&b->dev,
+> > +                "No busn resource found for root bus, will use [bus %02x-ff]\n",
+> > +                       bus);
+> > +               pci_bus_insert_busn_res(b, bus, 255);
+> > +       }
+> > +
+> > +       max = pci_scan_child_bus(b);
+> > +
+> > +       if (!found)
+> > +               pci_bus_update_busn_res_end(b, max);
+> > +
+> > +       return 0;
+> > +}
+> > +
+> 
+> We probably want an EXPORT_SYMBOL() here as well.
+
+Yep, sure.
+
+Thanks for having a look !
+
+Lorenzo
 
 _______________________________________________
 linux-arm-kernel mailing list
