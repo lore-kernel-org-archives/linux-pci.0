@@ -1,62 +1,93 @@
-Return-Path: <SRS0=jrP7=5F=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=jrP7=5F=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
- David Laight <david.laight@aculab.com>, Thomas Gleixner
- <tglx@linutronix.de>, Robin Murphy <robin.murphy@arm.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-References: <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
- <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
- <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
- <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
- <f1a57255-be75-e8c4-6b8d-0254f4365d61@arm.com>
- <c78b1e79-59e5-0097-989e-1f1e8cd93fc4@arm.com>
- <b10a211d-1f4a-1cc1-7139-9b48a90dd1c6@free.fr>
- <20170531173414.GB4496@bhelgaas-glaptop.roam.corp.google.com>
- <4885137f-7c1c-5742-4f66-f48c32ce7abb@free.fr>
- <20170531190037.GA18084@bhelgaas-glaptop.roam.corp.google.com>
- <20170531191258.GA18454@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <74d6d867-313a-2304-9753-9739ad4703a8@free.fr>
-Date: Wed, 31 May 2017 21:27:50 +0200
+Return-Path: <SRS0=AgWd=4I=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=AgWd=4I=codeaurora.org=okaya@kernel.org>
+Subject: Re: [GIT PULL] PCI fixes for v4.10
+To: Lukas Wunner <lukas@wunner.de>
+Cc: "Raj, Ashok" <ashok.raj@intel.com>, Bjorn Helgaas <helgaas@kernel.org>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Yinghai Lu <yinghai@kernel.org>,
+ "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Keith Busch <keith.busch@intel.com>
+References: <20170208192054.GA31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170209040648.GA1304@wunner.de>
+ <20170209150950.GA11905@bhelgaas-glaptop.roam.corp.google.com>
+ <20170209182328.GB77900@otc-nc-03> <20170209184613.GA78375@otc-nc-03>
+ <20170502015405.GA13918@wunner.de>
+ <65f46b49-950a-270f-8bc4-c3fb7513866e@codeaurora.org>
+ <20170502104929.GA14029@wunner.de>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <5db97592-4153-c55a-fe44-260d717d1ef0@codeaurora.org>
+Date: Tue, 2 May 2017 10:15:27 -0400
 MIME-Version: 1.0
-In-Reply-To: <20170531191258.GA18454@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <20170502104929.GA14029@wunner.de>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On 31/05/2017 21:12, Bjorn Helgaas wrote:
-> On Wed, May 31, 2017 at 02:00:37PM -0500, Bjorn Helgaas wrote:
->> On Wed, May 31, 2017 at 08:49:04PM +0200, Mason wrote:
->>> On 31/05/2017 19:34, Bjorn Helgaas wrote:
->>> ...
+On 5/2/2017 6:49 AM, Lukas Wunner wrote:
+> On Mon, May 01, 2017 at 10:41:20PM -0400, Sinan Kaya wrote:
+>> On 5/1/2017 9:54 PM, Lukas Wunner wrote:
+>>> (b) ASPM L1 enabled on boot, but disabled after powering off and back on
+>>>     => I believe Sinan is working on this (+cc).
 >>
->>>> This would be more an IRQ patch than a PCI patch, but if I were
->>>> reviewing it, I would look for assurance that *all* the no-op
->>>> .irq_set_affinity callbacks were cleaned up, not just those in
->>>> drivers/pci/host.
->>>
->>> Are you saying the patch is *wrong* if not all "do-nothing"
->>> callbacks are cleaned up?
+>> The decision was made not to touch ASPM registers following hotplug insertion
+>> unless pcie_aspm.policy=powersave is specified.
 >>
->> I'm saying that (1) this probably wouldn't be applied via the PCI
->> tree, and (2) if it *were* applied via PCI, I would ask that all the
->> no-op callbacks were cleaned up at the same time.
+>> The discussion is here: https://lkml.org/lkml/2017/4/17/255
 >>
->> Huh, that sounds a lot like what I wrote above.  Was I unclear?
+>> This was done to maintain existing behavior and not break things.
 > 
-> I'm afraid this sounded snarky, which isn't my intention.  It seems
-> like there's a useful patch here, and I didn't want to see it get
-> ignored for lack of following the usual process.  If this is all
-> obvious to you, my apologies and please ignore my suggestion.
+> Thanks for the reference, I hadn't followed the discussion in April
+> very closely, but I think the outcome of the discussion is unfortunate.
+> 
+> As can be seen in Ashok's tests, merely turning slot power off and back
+> on is sufficient to end up with a setting that draws more power.  That
+> may be equally surprising for users as the issues would be that we seek
+> to avoid with a "safety-first" ASPM policy.  In any case it seems
+> undesirable.
+> 
+> I hope this is not the end if it and would like to encourage you to
+> keep working on this.  Perhaps it is too simple to just define a
+> default policy, and what is really needed is a policy that adjusts
+> itself dynamically to specific devices or workloads, or that can be
+> influenced by device drivers.
+> 
 
-Thanks for clearing things up. I had indeed assumed from
-your first reply that the patch was pointless.
+I think our conclusion was to push PM decision to a userspace utility.
+ASPM already has a knob in sysfs that can be adjusted at runtime. The
+name of the file is policy. Same argument as the kernel command line
+but it is writable. Different policies can be programmed into this
+field after OS boot.
 
-Writing a script locating all candidates will be an
-interesting exercise.
+It is really the system power management entity that needs to decide
+how system should behave. 
 
-Regards.
+We just need to educate the userspace utility about the presence
+of ASPM policy variable.
+
+1. OS could still boot with the default parameters. 
+2. Userspace utility sets the policy variable to powersave
+3. User performs hotplug remove + insert
+4. ASPM is enabled due to policy change.
+
+I don't know anything about what this userspace utility is or if
+it understands about PCIE ASPM at all. 
+
+As an analogy, we can choose the level of power management in windows
+through Power Policy.
+
+control panel -> power options -> change advanced power options ->
+PCI Express -> Link State Power Management
+
+We want to have the same level of configuration.
+
+> Thanks for your efforts,
+> 
+> Lukas
+> 
+
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
