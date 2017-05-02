@@ -1,128 +1,69 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-Subject: Re: [RFC/RFT PATCH 3/3] PCI/ACPI: Add ACPI pci_bus_find_numa_node()
- implementation
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-References: <20170426100619.31758-1-lorenzo.pieralisi@arm.com>
- <20170426100619.31758-3-lorenzo.pieralisi@arm.com>
- <5919471B.7080607@hisilicon.com> <20170515091749.GA14348@red-moon>
-CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "Sergey Temerkhanov" <s.temerkhanov@gmail.com>,
-        Sinan Kaya <okaya@codeaurora.org>
-From: Zhou Wang <wangzhou1@hisilicon.com>
-Message-ID: <591A707D.5000000@hisilicon.com>
-Date: Tue, 16 May 2017 11:22:37 +0800
+Return-Path: <SRS0=ZRtg=4I=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=ZRtg=4I=vodafone.de=deathsimple@kernel.org>
+Subject: Re: [PATCH 2/4] PCI: add functionality for resizing resources v3
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
+ <1493126394-1239-3-git-send-email-deathsimple@vodafone.de>
+ <CAHp75VfSFBYgHRsX2JSH0zdSEW8VvXbNMVvBBsD9kKgzGr-v2w@mail.gmail.com>
+Cc: helgaas@kernel.org, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
+ Platform Driver <platform-driver-x86@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
+Message-ID: <6238d127-1c70-8235-e247-bb6cb3f4c040@vodafone.de>
+Date: Tue, 2 May 2017 17:51:36 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170515091749.GA14348@red-moon>
-Content-Type: text/plain; charset="windows-1252"
-Sender: linux-acpi-owner@vger.kernel.org
+In-Reply-To: <CAHp75VfSFBYgHRsX2JSH0zdSEW8VvXbNMVvBBsD9kKgzGr-v2w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-On 2017/5/15 17:17, Lorenzo Pieralisi wrote:
-> On Mon, May 15, 2017 at 02:13:47PM +0800, Zhou Wang wrote:
->> On 2017/4/26 18:06, Lorenzo Pieralisi wrote:
->>> The introduction of pci_bus_find_numa_node(pci_bus) allows at PCI
->>> host bridge registration to detect the NUMA node for a given
->>> struct pci_bus.dev. Implement an ACPI method that, through
->>> the struct pci_bus.bridge ACPI companion, retrieve and return
->>> the NUMA node corresponding to a given struct pci_bus.dev.
->>>
->>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>> Cc: Bjorn Helgaas <bhelgaas@google.com>
->>> ---
->>>  drivers/pci/pci-acpi.c | 20 ++++++++++++++++++++
->>>  include/linux/pci.h    |  6 ++++++
->>>  2 files changed, 26 insertions(+)
->>>
->>> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
->>> index 0018603..915da79 100644
->>> --- a/drivers/pci/pci-acpi.c
->>> +++ b/drivers/pci/pci-acpi.c
->>> @@ -10,6 +10,7 @@
->>>  #include <linux/delay.h>
->>>  #include <linux/init.h>
->>>  #include <linux/irqdomain.h>
->>> +#include <linux/numa.h>
->>>  #include <linux/pci.h>
->>>  #include <linux/msi.h>
->>>  #include <linux/pci_hotplug.h>
->>> @@ -853,6 +854,25 @@ struct irq_domain *pci_host_bridge_acpi_msi_domain(struct pci_bus *bus)
->>>  	return irq_find_matching_fwnode(fwnode, DOMAIN_BUS_PCI_MSI);
->>>  }
->>>  
->>> +int acpi_pci_bus_find_numa_node(struct pci_bus *bus)
->>> +{
->>> +	int node = NUMA_NO_NODE;
->>> +	struct device *bridge = get_device(bus->bridge);
->>> +
->>> +	if (!bridge)
->>> +		return node;
->>> +
->>> +	if (has_acpi_companion(bridge)) {
->>> +		struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
->>> +
->>> +		node = acpi_get_node(adev->handle);
->>> +	}
->>> +
->>> +	put_device(bridge);
->>> +
->>> +	return node;
->>> +}
->>> +
+Am 26.04.2017 um 19:00 schrieb Andy Shevchenko:
+> On Tue, Apr 25, 2017 at 4:19 PM, Christian König
+> <deathsimple@vodafone.de> wrote:
+>> From: Christian König <christian.koenig@amd.com>
 >>
->> It seems there is no function to call this, am I right?
-> 
-> Sorry, I missed updating pci_bus_find_numa_node() while reshuffling
-> the code, apologies.
-> 
-> I will repost shortly.
-> 
->> Another question is that: in the latest IORT revision C, "Proximity
->> domain" has been added to the IORT spec.  So when we enable NUMA for a
->> PCIe device, should we also consider this?
-> 
-> That's for the SMMU device.
-
-Sorry, this is another problem. Now I get it that this Proximity domain
-is for SMMU itself.
-
-Thanks,
-Zhou
-
-> 
-> Lorenzo
-> 
->> Thanks,
->> Zhou
+>> This allows device drivers to request resizing their BARs.
 >>
->>>  static int __init acpi_pci_init(void)
->>>  {
->>>  	int ret;
->>> diff --git a/include/linux/pci.h b/include/linux/pci.h
->>> index 9e62462..b40d095 100644
->>> --- a/include/linux/pci.h
->>> +++ b/include/linux/pci.h
->>> @@ -1481,6 +1481,12 @@ static inline int acpi_pci_bus_find_domain_nr(struct pci_bus *bus)
->>>  #endif
->>>  int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent);
->>>  #endif
->>> +#ifdef CONFIG_ACPI
->>> +int acpi_pci_bus_find_numa_node(struct pci_bus *bus);
->>> +#else
->>> +static inline int acpi_pci_bus_find_numa_node(struct pci_bus *bus)
->>> +{ return NUMA_NO_NODE; }
->>> +#endif
->>>  int pci_bus_find_numa_node(struct pci_bus *bus);
->>>  
->>>  /* some architectures require additional setup to direct VGA traffic */
->>>
+>> The function only tries to reprogram the windows of the bridge directly above
+>> the requesting device and only the BAR of the same type (usually mem, 64bit,
+>> prefetchable). This is done to make sure not to disturb other drivers by
+>> changing the BARs of their devices.
 >>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-acpi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> .
-> 
+>> If reprogramming the bridge BAR fails the old status is restored and -ENOSPC
+>> returned to the calling device driver.
+>> +int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
+>> +{
+>> +       const unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+>> +               IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+>> +
+> Redundant.
 
+Redundant, but also a reminder to myself that I wanted to ask something 
+about that.
+
+This type_mask is used already three times in this file, shouldn't we 
+add a define for that?
+
+> [SNIP]
+>> +       list_for_each_entry(dev_res, &saved, list) {
+>> +               /* Skip the bridge we just assigned resources for. */
+>> +               if (bridge == dev_res->dev)
+>> +                       continue;
+>> +
+>> +               bridge = dev_res->dev;
+>> +               pci_setup_bridge(bridge->subordinate);
+>> +       }
+>> +
+>> +       free_list(&saved);
+>> +       free_list(&failed);
+>> +       return ret;
+> You might re-use two lines with below, but perhaps better to show
+> which case returns 0 explicitly and drop assignment ret = 0 above.
+
+Good point, but actually the free_list(&failed) is superfluous here 
+since when the failed list isn't empty we end up in the cleanup path.
+
+Going to fix all other comments in the next version.
+
+Regards,
+Christian.
