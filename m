@@ -1,64 +1,34 @@
-Return-Path: <SRS0=/aB5=46=linuxonhyperv.com=jloeser@kernel.org>
-Return-Path: <SRS0=/aB5=46=linuxonhyperv.com=jloeser@kernel.org>
-From: Jork Loeser <jloeser@linuxonhyperv.com>
-To: jloeser@microsoft.com,
-	helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org,
-	olaf@aepfle.de,
-	apw@canonical.com,
-	vkuznets@redhat.com,
-	jasowang@redhat.com,
-	leann.ogasawara@canonical.com,
-	marcelo.cerri@canonical.com,
-	sthemmin@microsoft.com
-Subject: [PATCH-v2 1/5] Hyper-V vPCI: Minor format and semantic fix
-Date: Wed, 24 May 2017 13:41:24 -0700
-Message-Id: <1495658488-13199-2-git-send-email-jloeser@linuxonhyperv.com>
-In-Reply-To: <1495658488-13199-1-git-send-email-jloeser@linuxonhyperv.com>
-References: <1495658488-13199-1-git-send-email-jloeser@linuxonhyperv.com>
-Reply-To: Jork Loeser <jloeser@microsoft.com>
+Return-Path: <SRS0=ZRtg=4I=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=ZRtg=4I=vodafone.de=deathsimple@kernel.org>
+Subject: Re: [PATCH 1/4] PCI: add resizeable BAR infrastructure v4
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
+ <1493126394-1239-2-git-send-email-deathsimple@vodafone.de>
+ <CAHp75VfJKkFTXbia=CiZapriEg6ObUh=js6cKJv3xe=2DBHbqA@mail.gmail.com>
+Cc: helgaas@kernel.org, "linux-pci@vger.kernel.org"
+ <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
+ Platform Driver <platform-driver-x86@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
+Message-ID: <bd126097-1aa4-eeb0-39fd-2e8820b448c5@vodafone.de>
+Date: Tue, 2 May 2017 16:56:55 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAHp75VfJKkFTXbia=CiZapriEg6ObUh=js6cKJv3xe=2DBHbqA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jork Loeser <jloeser@microsoft.com>
+Am 26.04.2017 um 18:45 schrieb Andy Shevchenko:
+> [SNIP]
+>> -#define  PCI_REBAR_CTRL_NBAR_MASK      (7 << 5)        /* mask for # bars */
+>> -#define  PCI_REBAR_CTRL_NBAR_SHIFT     5       /* shift for # bars */
+>> +#define  PCI_REBAR_CTRL_NBAR_MASK      (7 << 5)        /* mask for # BARs */
+>> +#define  PCI_REBAR_CTRL_NBAR_SHIFT     5       /* shift for # BARs */
+> I understand why, but I dunno it worth to do.
+Bjorn suggested that. Either way is fine with me, but he needs to stick 
+his signed-of-by on it when pushing it upstream. So his opinion usually 
+wins.
 
-Fix comment formatting and use proper integer fields.
+All other comments will be integrated in the next version of the patch.
 
-Signed-off-by: Jork Loeser <jloeser@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 8493638..7bebdc6 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -245,7 +245,7 @@ struct pci_packet {
- 
- struct pci_version_request {
- 	struct pci_message message_type;
--	enum pci_message_type protocol_version;
-+	u32 protocol_version;
- } __packed;
- 
- /*
-@@ -1513,12 +1513,12 @@ static void pci_devices_present_work(struct work_struct *work)
- 		put_pcichild(hpdev, hv_pcidev_ref_initial);
- 	}
- 
--	switch(hbus->state) {
-+	switch (hbus->state) {
- 	case hv_pcibus_installed:
- 		/*
--		* Tell the core to rescan bus
--		* because there may have been changes.
--		*/
-+		 * Tell the core to rescan bus
-+		 * because there may have been changes.
-+		 */
- 		pci_lock_rescan_remove();
- 		pci_scan_child_bus(hbus->pci_bus);
- 		pci_unlock_rescan_remove();
--- 
-2.7.4
+Thanks for the review,
+Christian.
