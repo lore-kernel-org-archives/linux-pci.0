@@ -1,181 +1,176 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com" <will.deacon@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "lorenzo.pieralisi@arm.com" <lorenzo.pieralisi@arm.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "benh@kernel.crashing.org" <benh@kernel.crashing.org>,
-        John Garry <john.garry@huawei.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "xuwei (O)" <xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "zhichang.yuan" <yuanzhichang@hisilicon.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "brian.starkey@arm.com" <brian.starkey@arm.com>
-Subject: RE: [PATCH v9 2/7] PCI: Apply the new generic I/O management on PCI
- IO hosts
-Date: Tue, 30 May 2017 08:12:06 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40A74D9E@FRAEML521-MBX.china.huawei.com>
-References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
- <1495712248-5232-3-git-send-email-gabriele.paoloni@huawei.com>
- <20170526212001.GB21531@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170526212001.GB21531@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga06.intel.com ([134.134.136.31]:53628 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750951AbdEBME1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Tue, 2 May 2017 08:04:27 -0400
+From: Imre Deak <imre.deak@intel.com>
+To: intel-gfx@lists.freedesktop.org
+Cc: Jani Nikula <jani.nikula@intel.com>,
+        "Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
+        Marta Lofstedt <marta.lofstedt@intel.com>,
+        David Weinehall <david.weinehall@linux.intel.com>,
+        Tomi Sarvela <tomi.p.sarvela@intel.com>,
+        =?UTF-8?q?Ville=20Syrj=C3=A4l=C3=A4?=
+        <ville.syrjala@linux.intel.com>,
+        Mika Kuoppala <mika.kuoppala@intel.com>,
+        Chris Wilson <chris@chris-wilson.co.uk>,
+        Takashi Iwai <tiwai@suse.de>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: [PATCH v4 2/2] drm/i915: Prevent the system suspend complete optimization
+Date: Tue,  2 May 2017 15:04:09 +0300
+Message-Id: <1493726649-32094-2-git-send-email-imre.deak@intel.com>
+In-Reply-To: <1493726649-32094-1-git-send-email-imre.deak@intel.com>
+References: <1493726649-32094-1-git-send-email-imre.deak@intel.com>
 MIME-Version: 1.0
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
+Since
 
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: 26 May 2017 22:20
-> To: Gabriele Paoloni
-> Cc: catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
-> frowand.list@gmail.com; bhelgaas@google.com; rafael@kernel.org;
-> arnd@arndb.de; linux-arm-kernel@lists.infradead.org;
-> lorenzo.pieralisi@arm.com; mark.rutland@arm.com; minyard@acm.org;
-> benh@kernel.crashing.org; John Garry; linux-kernel@vger.kernel.org;
-> xuwei (O); Linuxarm; linux-acpi@vger.kernel.org; zhichang.yuan; linux-
-> pci@vger.kernel.org; olof@lixom.net; brian.starkey@arm.com
-> Subject: Re: [PATCH v9 2/7] PCI: Apply the new generic I/O management
-> on PCI IO hosts
-> 
-> On Thu, May 25, 2017 at 12:37:23PM +0100, Gabriele Paoloni wrote:
-> > From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-> >
-> > After introducing the new generic I/O space management(LOGIC_IO), the
-> > original PCI MMIO relevant helpers need to be updated based on the
-> new
-> > interfaces defined in LOGIC_IO.
-> > This patch adapts the corresponding code to match the changes
-> introduced
-> > by LOGIC_IO.
-> >
-> > Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>        #earlier draft
-> 
-> Not sure how you plan to merge this, but here's my ack:
-> 
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+commit bac2a909a096c9110525c18cbb8ce73c660d5f71
+Author: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Date:   Wed Jan 21 02:17:42 2015 +0100
 
-Many thanks for your Ack :)
+    PCI / PM: Avoid resuming PCI devices during system suspend
 
-Maybe Arnd can take the whole patchset (or just the lib framework + DT part
-leaving the ACPI part to Lorenzo)....?
+PCI devices will default to allowing the system suspend complete
+optimization where devices are not woken up during system suspend if
+they were already runtime suspended. This however breaks the i915/HDA
+drivers for two reasons:
 
-> 
-> If you split this as suggested below, add my ack to all three patches.
+- The i915 driver has system suspend specific steps that it needs to
+  run, that bring the device to a different state than its runtime
+  suspended state.
 
-Sure I will
+- The HDA driver's suspend handler requires power that it will request
+  from the i915 driver's power domain handler. This in turn requires the
+  i915 driver to runtime resume itself, but this won't be possible if the
+  suspend complete optimization is in effect: in this case the i915
+  runtime PM is disabled and trying to get an RPM reference returns
+  -EACCESS.
 
-> 
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index b01bd5b..c9fe12b 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> >...
-> 
-> > -int __weak pci_register_io_range(phys_addr_t addr, resource_size_t
-> size)
-> > +int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t
-> addr,
-> > +			resource_size_t	size)
-> 
-> It's trivial and nit-picky, but I would do the __weak removal in its
-> own patch.  It's obviously fine because there's only one
-> implementation, but it's unrelated to the main point of this patch.
+Solve this by requiring the PCI/PM core to resume the device during
+system suspend which in effect disables the suspend complete optimization.
 
-Agreed
+Regardless of the above commit the optimization stayed disabled for DRM
+devices until
 
-> 
-> I would split the signature change (fwnode addition) to a separate
-> patch, too, just to make the actual change more obvious, especially
-> since that's the only part that crosses subsystems (ACPI, PCI, OF).
+commit d14d2a8453d650bea32a1c5271af1458cd283a0f
+Author: Lukas Wunner <lukas@wunner.de>
+Date:   Wed Jun 8 12:49:29 2016 +0200
 
-Agreed too
+    drm: Remove dev_pm_ops from drm_class
 
-> 
-> >  {
-> > -	int err = 0;
-> > -
-> > +	int ret = 0;
-> >  #ifdef PCI_IOBASE
-> > -	struct io_range *range;
-> > -	resource_size_t allocated_size = 0;
-> > -
-> > -	/* check if the range hasn't been previously recorded */
-> > -	spin_lock(&io_range_lock);
-> > -	list_for_each_entry(range, &io_range_list, list) {
-> > -		if (addr >= range->start && addr + size <= range->start +
-> size) {
-> > -			/* range already registered, bail out */
-> > -			goto end_register;
-> > -		}
-> > -		allocated_size += range->size;
-> > -	}
-> > -
-> > -	/* range not registed yet, check for available space */
-> > -	if (allocated_size + size - 1 > IO_SPACE_LIMIT) {
-> > -		/* if it's too big check if 64K space can be reserved */
-> > -		if (allocated_size + SZ_64K - 1 > IO_SPACE_LIMIT) {
-> > -			err = -E2BIG;
-> > -			goto end_register;
-> > -		}
-> > -
-> > -		size = SZ_64K;
-> > -		pr_warn("Requested IO range too big, new size set to
-> 64K\n");
-> > -	}
-> > +	struct logic_pio_hwaddr *range;
-> >
-> > -	/* add the range to the list */
-> > -	range = kzalloc(sizeof(*range), GFP_ATOMIC);
-> > -	if (!range) {
-> > -		err = -ENOMEM;
-> > -		goto end_register;
-> > -	}
-> > +	if (!size || addr + size < addr)
-> > +		return -EINVAL;
-> >
-> > -	range->start = addr;
-> > +	range = kzalloc(sizeof(*range), GFP_KERNEL);
-> > +	if (!range)
-> > +		return -ENOMEM;
-> 
-> Add a blank line here.
+so this patch is in practice a fix for this commit. Another reason for
+the bug staying hidden for so long is that the optimization for a device
+is disabled if it's disabled for any of its children devices. i915 may
+have a backlight device as its child which doesn't support runtime PM
+and so doesn't allow the optimization either.  So if this backlight
+device got registered the bug stayed hidden.
 
-Yep I will
+Credits to Marta, Tomi and David who enabled pstore logging,
+that caught one instance of this issue across a suspend/
+resume-to-ram and Ville who rememberd that the optimization was enabled
+for some devices at one point.
 
-Cheers
-Gab
+The first WARN triggered by the problem:
 
-> 
-> > +	range->fwnode = fwnode;
-> >  	range->size = size;
-> > +	range->hw_start = addr;
-> > +	range->flags = PIO_CPU_MMIO;
-> >
-> > -	list_add_tail(&range->list, &io_range_list);
-> > -
-> > -end_register:
-> > -	spin_unlock(&io_range_lock);
-> > +	ret = logic_pio_register_range(range);
-> > +	if (ret)
-> > +		kfree(range);
-> >  #endif
-> >
-> > -	return err;
-> > +	return ret;
-> >  }
+[ 6250.746445] WARNING: CPU: 2 PID: 17384 at drivers/gpu/drm/i915/intel_runtime_pm.c:2846 intel_runtime_pm_get+0x6b/0xd0 [i915]
+[ 6250.746448] pm_runtime_get_sync() failed: -13
+[ 6250.746451] Modules linked in: snd_hda_intel i915 vgem snd_hda_codec_hdmi x86_pkg_temp_thermal intel_powerclamp coretemp crct10dif_pclmul crc32_pclmul
+snd_hda_codec_realtek snd_hda_codec_generic ghash_clmulni_intel e1000e snd_hda_codec snd_hwdep snd_hda_core ptp mei_me pps_core snd_pcm lpc_ich mei prime_
+numbers i2c_hid i2c_designware_platform i2c_designware_core [last unloaded: i915]
+[ 6250.746512] CPU: 2 PID: 17384 Comm: kworker/u8:0 Tainted: G     U  W       4.11.0-rc5-CI-CI_DRM_334+ #1
+[ 6250.746515] Hardware name:                  /NUC5i5RYB, BIOS RYBDWi35.86A.0362.2017.0118.0940 01/18/2017
+[ 6250.746521] Workqueue: events_unbound async_run_entry_fn
+[ 6250.746525] Call Trace:
+[ 6250.746530]  dump_stack+0x67/0x92
+[ 6250.746536]  __warn+0xc6/0xe0
+[ 6250.746542]  ? pci_restore_standard_config+0x40/0x40
+[ 6250.746546]  warn_slowpath_fmt+0x46/0x50
+[ 6250.746553]  ? __pm_runtime_resume+0x56/0x80
+[ 6250.746584]  intel_runtime_pm_get+0x6b/0xd0 [i915]
+[ 6250.746610]  intel_display_power_get+0x1b/0x40 [i915]
+[ 6250.746646]  i915_audio_component_get_power+0x15/0x20 [i915]
+[ 6250.746654]  snd_hdac_display_power+0xc8/0x110 [snd_hda_core]
+[ 6250.746661]  azx_runtime_resume+0x218/0x280 [snd_hda_intel]
+[ 6250.746667]  pci_pm_runtime_resume+0x76/0xa0
+[ 6250.746672]  __rpm_callback+0xb4/0x1f0
+[ 6250.746677]  ? pci_restore_standard_config+0x40/0x40
+[ 6250.746682]  rpm_callback+0x1f/0x80
+[ 6250.746686]  ? pci_restore_standard_config+0x40/0x40
+[ 6250.746690]  rpm_resume+0x4ba/0x740
+[ 6250.746698]  __pm_runtime_resume+0x49/0x80
+[ 6250.746703]  pci_pm_suspend+0x57/0x140
+[ 6250.746709]  dpm_run_callback+0x6f/0x330
+[ 6250.746713]  ? pci_pm_freeze+0xe0/0xe0
+[ 6250.746718]  __device_suspend+0xf9/0x370
+[ 6250.746724]  ? dpm_watchdog_set+0x60/0x60
+[ 6250.746730]  async_suspend+0x1a/0x90
+[ 6250.746735]  async_run_entry_fn+0x34/0x160
+[ 6250.746741]  process_one_work+0x1f2/0x6d0
+[ 6250.746749]  worker_thread+0x49/0x4a0
+[ 6250.746755]  kthread+0x107/0x140
+[ 6250.746759]  ? process_one_work+0x6d0/0x6d0
+[ 6250.746763]  ? kthread_create_on_node+0x40/0x40
+[ 6250.746768]  ret_from_fork+0x2e/0x40
+[ 6250.746778] ---[ end trace 102a62fd2160f5e6 ]---
+
+v2:
+- Use the new pci_dev->needs_resume flag, to avoid any overhead during
+  the ->pm_prepare hook. (Rafael)
+
+v3:
+- Update commit message to reference the actual regressing commit.
+  (Lukas)
+
+v4:
+- Rebase on v4 of patch 1/2.
+
+Fixes: d14d2a8453d6 ("drm: Remove dev_pm_ops from drm_class")
+References: https://bugs.freedesktop.org/show_bug.cgi?id=100378
+References: https://bugs.freedesktop.org/show_bug.cgi?id=100770
+Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Cc: Marta Lofstedt <marta.lofstedt@intel.com>
+Cc: David Weinehall <david.weinehall@linux.intel.com>
+Cc: Tomi Sarvela <tomi.p.sarvela@intel.com>
+Cc: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Cc: Mika Kuoppala <mika.kuoppala@intel.com>
+Cc: Chris Wilson <chris@chris-wilson.co.uk>
+Cc: Takashi Iwai <tiwai@suse.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org
+Cc: stable@vger.kernel.org
+Signed-off-by: Imre Deak <imre.deak@intel.com>
+Reviewed-by: Chris Wilson <chris@chris-wilson.co.uk> (v1)
+Reported-and-tested-by: Marta Lofstedt <marta.lofstedt@intel.com> (v3)
+---
+ drivers/gpu/drm/i915/i915_drv.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
+index 2d3c4264..b9f1607 100644
+--- a/drivers/gpu/drm/i915/i915_drv.c
++++ b/drivers/gpu/drm/i915/i915_drv.c
+@@ -1238,6 +1238,15 @@ int i915_driver_load(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		goto out_fini;
+ 
+ 	pci_set_drvdata(pdev, &dev_priv->drm);
++	/*
++	 * Disable the system suspend direct complete optimization, which can
++	 * leave the device suspended skipping the driver's suspend handlers
++	 * if the device was already runtime suspended. This is needed due to
++	 * the difference in our runtime and system suspend sequence and
++	 * becaue the HDA driver may require us to enable the audio power
++	 * domain during system suspend.
++	 */
++	pdev->dev_flags |= PCI_DEV_FLAGS_NEEDS_RESUME;
+ 
+ 	ret = i915_driver_init_early(dev_priv, ent);
+ 	if (ret < 0)
+-- 
+2.7.4
