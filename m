@@ -1,55 +1,38 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from cloudserver094114.home.net.pl ([79.96.170.134]:42392 "EHLO
-        cloudserver094114.home.net.pl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S376437AbdD2K2P (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sat, 29 Apr 2017 06:28:15 -0400
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Imre Deak <imre.deak@intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: intel-gfx@lists.freedesktop.org,
-        Jani Nikula <jani.nikula@intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pci@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] PCI / PM: Add needs_resume flag to avoid suspend complete optimization
-Date: Sat, 29 Apr 2017 12:21:57 +0200
-Message-ID: <23725356.i2L37sn5oF@aspire.rjw.lan>
-In-Reply-To: <4849096.yzbfqj2AUz@aspire.rjw.lan>
-References: <1493388963-5278-1-git-send-email-imre.deak@intel.com> <4849096.yzbfqj2AUz@aspire.rjw.lan>
+Return-Path: <SRS0=AgWd=4I=codeaurora.org=okaya@kernel.org>
+Return-Path: <SRS0=AgWd=4I=codeaurora.org=okaya@kernel.org>
+Subject: Re: [GIT PULL] PCI fixes for v4.10
+To: Lukas Wunner <lukas@wunner.de>, "Raj, Ashok" <ashok.raj@intel.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>,
+ "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Keith Busch <keith.busch@intel.com>
+References: <20170208192054.GA31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170208192256.GB31395@bhelgaas-glaptop.roam.corp.google.com>
+ <20170209040648.GA1304@wunner.de>
+ <20170209150950.GA11905@bhelgaas-glaptop.roam.corp.google.com>
+ <20170209182328.GB77900@otc-nc-03> <20170209184613.GA78375@otc-nc-03>
+ <20170502015405.GA13918@wunner.de>
+From: Sinan Kaya <okaya@codeaurora.org>
+Message-ID: <65f46b49-950a-270f-8bc4-c3fb7513866e@codeaurora.org>
+Date: Mon, 1 May 2017 22:41:20 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170502015405.GA13918@wunner.de>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Friday, April 28, 2017 11:33:02 PM Rafael J. Wysocki wrote:
-> On Friday, April 28, 2017 05:16:02 PM Imre Deak wrote:
-> > Some drivers - like i915 - may not support the system suspend direct
-> > complete optimization due to differences in their runtime and system
-> > suspend sequence. Add a flag that when set resumes the device before
-> > calling the driver's system suspend handlers which effectively disables
-> > the optimization.
-> > 
-> > Needed by the next patch fixing suspend/resume on i915.
-> > 
-> > Suggested by Rafael.
-> > 
-> > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > Cc: linux-pci@vger.kernel.org
-> > Cc: stable@vger.kernel.org
-> > Signed-off-by: Imre Deak <imre.deak@intel.com>
-> 
-> Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> 
-> The reason why the opt-out flag was not added on day one was because we were
-> not sure whether or not it would be necessary at all.
-> 
-> Quite evidently, it is needed.
+On 5/1/2017 9:54 PM, Lukas Wunner wrote:
+> (b) ASPM L1 enabled on boot, but disabled after powering off and back on
+>     => I believe Sinan is working on this (+cc).
 
-But that said, it actually can be implemented as a flag in dev_flags too, say
-PCI_DEV_FLAGS_NEEDS_RESUME, in analogy with PCI_DEV_FLAGS_NO_D3 that's
-already there.
+The decision was made not to touch ASPM registers following hotplug insertion
+unless pcie_aspm.policy=powersave is specified.
 
-The struct size would not need to grow then which I guess would be better?
+The discussion is here: https://lkml.org/lkml/2017/4/17/255
 
-Thanks,
-Rafael
+This was done to maintain existing behavior and not break things.
+
+-- 
+Sinan Kaya
+Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
+Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
