@@ -1,275 +1,97 @@
-Return-Path: <SRS0=FWh+=4R=gmail.com=andy.shevchenko@kernel.org>
-Return-Path: <SRS0=FWh+=4R=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <sstabellini@kernel.org>
+Return-Path: <sstabellini@kernel.org>
+Date: Wed, 3 May 2017 15:59:15 -0700 (PDT)
+From: Stefano Stabellini <sstabellini@kernel.org>
+To: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+cc: David Woodhouse <dwmw2@infradead.org>, Bjorn Helgaas <helgaas@kernel.org>,
+    stable@vger.kernel.org, Stefano Stabellini <sstabellini@kernel.org>,
+    Juergen Gross <jgross@suse.com>, linux-pci@vger.kernel.org,
+    linux-kernel <linux-kernel@vger.kernel.org>,
+    Bjorn Helgaas <bhelgaas@google.com>, xen-devel@lists.xenproject.org,
+    Dan Streetman <dan.streetman@canonical.com>,
+    Dan Streetman <ddstreet@ieee.org>
+Subject: Re: [Xen-devel] [PATCH] xen: do not re-use pirq number cached in
+ pci device msi msg data
+In-Reply-To: <1b84c2a5-1fd6-02b9-c080-0f99f6a8d085@oracle.com>
+Message-ID: <alpine.DEB.2.10.1705031540140.9240@sstabellini-ThinkPad-X260>
+References: <04f2a09f-59be-a720-bc98-4afb53171790@oracle.com> <20170113200751.20125-1-ddstreet@ieee.org> <20170113223035.GE23066@char.us.oracle.com> <CALZtONDL2Ph0MMMfSuqvofNZ-+6jPi9aKsE4mL30i15Up6Bvug@mail.gmail.com> <0c2b4d6a-93e7-90a2-ffaf-fa423fb022d5@suse.com>
+ <72f8b025-e858-5e54-d900-50fbec46fea6@oracle.com> <20170222142810.GA28359@bhelgaas-glaptop.roam.corp.google.com> <3379a82f-04b7-152a-1577-bf99b1c638cc@oracle.com> <1493835543.4904.5.camel@infradead.org> <1b84c2a5-1fd6-02b9-c080-0f99f6a8d085@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <1494348547-1465-4-git-send-email-deathsimple@vodafone.de>
-References: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de> <1494348547-1465-4-git-send-email-deathsimple@vodafone.de>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Thu, 11 May 2017 14:56:29 +0300
-Message-ID: <CAHp75Vc4e8SZT0pjO1GcS7+4XxK2FS3Vh2SxGyyd5NOp6mX3GQ@mail.gmail.com>
-Subject: Re: [PATCH v6 3/5] PCI: add functionality for resizing resources v5
-To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
-Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	Platform Driver <platform-driver-x86@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 9, 2017 at 7:49 PM, Christian K=C3=B6nig <deathsimple@vodafone.=
-de> wrote:
-> From: Christian K=C3=B6nig <christian.koenig@amd.com>
->
-> This allows device drivers to request resizing their BARs.
->
-> The function only tries to reprogram the windows of the bridge directly a=
-bove
-> the requesting device and only the BAR of the same type (usually mem, 64b=
-it,
-> prefetchable). This is done to make sure not to disturb other drivers by
-> changing the BARs of their devices.
->
-> If reprogramming the bridge BAR fails the old status is restored and -ENO=
-SPC
-> returned to the calling device driver.
->
-> v2: rebase on changes in rbar support
-> v3: style cleanups, fail if memory decoding is enabled or resources
->     still allocated, resize all unused bridge BARs,
->     drop calling pci_reenable_device
-> v4: print resources before releasing them, style cleanups,
->     use pci_rbar_size_to_bytes, use PCI_RES_TYPE_MASK
-> v5: use next pointer to simplify loop
+On Wed, 3 May 2017, Boris Ostrovsky wrote:
+> On 05/03/2017 02:19 PM, David Woodhouse wrote:
+> > On Wed, 2017-02-22 at 10:14 -0500, Boris Ostrovsky wrote:
+> >> On 02/22/2017 09:28 AM, Bjorn Helgaas wrote:
+> >>> On Tue, Feb 21, 2017 at 10:58:39AM -0500, Boris Ostrovsky wrote:
+> >>>> On 02/21/2017 10:45 AM, Juergen Gross wrote:
+> >>>>> On 21/02/17 16:31, Dan Streetman wrote:
+> >>>>>> On Fri, Jan 13, 2017 at 5:30 PM, Konrad Rzeszutek Wilk
+> >>>>>> <konrad.wilk@oracle.com> wrote:
+> >>>>>>> On Fri, Jan 13, 2017 at 03:07:51PM -0500, Dan Streetman wrote:
+> >>>>>>>> Revert the main part of commit:
+> >>>>>>>> af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+> >>>>>>>>
+> >>>>>>>> That commit introduced reading the pci device's msi message data to see
+> >>>>>>>> if a pirq was previously configured for the device's msi/msix, and re-use
+> >>>>>>>> that pirq.  At the time, that was the correct behavior.  However, a
+> >>>>>>>> later change to Qemu caused it to call into the Xen hypervisor to unmap
+> >>>>>>>> all pirqs for a pci device, when the pci device disables its MSI/MSIX
+> >>>>>>>> vectors; specifically the Qemu commit:
+> >>>>>>>> c976437c7dba9c7444fb41df45468968aaa326ad
+> >>>>>>>> ("qemu-xen: free all the pirqs for msi/msix when driver unload")
+> >>>>>>>>
+> >>>>>>>> Once Qemu added this pirq unmapping, it was no longer correct for the
+> >>>>>>>> kernel to re-use the pirq number cached in the pci device msi message
+> >>>>>>>> data.  All Qemu releases since 2.1.0 contain the patch that unmaps the
+> >>>>>>>> pirqs when the pci device disables its MSI/MSIX vectors.
+> >>>>>>>>
+> >>>>>>>> This bug is causing failures to initialize multiple NVMe controllers
+> >>>>>>>> under Xen, because the NVMe driver sets up a single MSIX vector for
+> >>>>>>>> each controller (concurrently), and then after using that to talk to
+> >>>>>>>> the controller for some configuration data, it disables the single MSIX
+> >>>>>>>> vector and re-configures all the MSIX vectors it needs.  So the MSIX
+> >>>>>>>> setup code tries to re-use the cached pirq from the first vector
+> >>>>>>>> for each controller, but the hypervisor has already given away that
+> >>>>>>>> pirq to another controller, and its initialization fails.
+> >>>>>>>>
+> >>>>>>>> This is discussed in more detail at:
+> >>>>>>>> https://lists.xen.org/archives/html/xen-devel/2017-01/msg00447.html
+> >>>>>>>>
+> >>>>>>>> Fixes: af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+> >>>>>>>> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
+> >>>>>>> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> >>>>>> This doesn't seem to be applied yet, is it still waiting on another
+> >>>>>> ack?  Or maybe I'm looking at the wrong git tree...
+> >>>>> Am I wrong or shouldn't this go through the PCI tree? Konrad?
+> >>>> Konrad is away this week but since pull request for Xen tree just went
+> >>>> out we should probably wait until rc1 anyway (unless something big comes
+> >>>> up before that).
+> >>> I assume this should go via the Xen or x86 tree, since that's how most
+> >>> arch/x86/pci/xen.c patches have been handled, including af42b8d12f8a.
+> >>> If you think otherwise, let me know.
+> >> OK, I applied it to Xen tree's for-linus-4.11.
+> > Hm, we want this (c74fd80f2f4) in stable too, don't we?
+> 
+> 
+> Maybe.
+> 
+> Per https://lists.xen.org/archives/html/xen-devel/2017-01/msg00987.html
+> it may break things on older (4.4-) hypervisors. They are out of
+> support, which is why this patch went in now but I am not sure this
+> automatically applies to stable kernels.
+> 
+> Stefano?
 
-My main point has been addressed, so, to avoid bikeshedding FWIW:
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+This is a difficult call. We could just say that all the broken Xen
+versions are out of support, so let's fix all the Linux kernel stable
+trees that we can.
 
-P.S. I didn't check deep any PCI protocol stuff since I have no specs,
-no nothing to do such. I hope some one who is more familiar can do
-that.
+Or we could give a look at the release dates. Linux 3.18 is still
+maintained and was tagged on Dec 7 2014. Xen 4.4 was tagged on Mar 10
+2014. We could ask a backport for [4.5+], which was released 2 years
+after Xen 4.4. Of course, it is still arbitrary but aims at minimizing
+breakages.
 
->
-> Signed-off-by: Christian K=C3=B6nig <christian.koenig@amd.com>
-> ---
->  drivers/pci/setup-bus.c | 98 +++++++++++++++++++++++++++++++++++++++++++=
-++++++
->  drivers/pci/setup-res.c | 59 +++++++++++++++++++++++++++++
->  include/linux/pci.h     |  3 ++
->  3 files changed, 160 insertions(+)
->
-> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-> index efebd70..f2e3812 100644
-> --- a/drivers/pci/setup-bus.c
-> +++ b/drivers/pci/setup-bus.c
-> @@ -1917,6 +1917,104 @@ void pci_assign_unassigned_bridge_resources(struc=
-t pci_dev *bridge)
->  }
->  EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
->
-> +int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long =
-type)
-> +{
-> +       struct pci_dev_resource *dev_res;
-> +       struct pci_dev *next;
-> +       LIST_HEAD(saved);
-> +       LIST_HEAD(added);
-> +       LIST_HEAD(failed);
-> +       unsigned int i;
-> +       int ret;
-> +
-> +       /* Walk to the root hub, releasing bridge BARs when possible */
-> +       next =3D bridge;
-> +       do {
-> +               bridge =3D next;
-> +               for (i =3D PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_=
-END;
-> +                    i++) {
-> +                       struct resource *res =3D &bridge->resource[i];
-> +
-> +                       if ((res->flags ^ type) & PCI_RES_TYPE_MASK)
-> +                               continue;
-> +
-> +                       /* Ignore BARs which are still in use */
-> +                       if (res->child)
-> +                               continue;
-> +
-> +                       ret =3D add_to_list(&saved, bridge, res, 0, 0);
-> +                       if (ret)
-> +                               goto cleanup;
-> +
-> +                       dev_info(&bridge->dev, "BAR %d: releasing %pR\n",
-> +                                i, res);
-> +
-> +                       if (res->parent)
-> +                               release_resource(res);
-> +                       res->start =3D 0;
-> +                       res->end =3D 0;
-> +                       break;
-> +               }
-> +               if (i =3D=3D PCI_BRIDGE_RESOURCE_END)
-> +                       break;
-> +
-> +               next =3D bridge->bus ? bridge->bus->self : NULL;
-> +       } while (next);
-> +
-> +       if (list_empty(&saved))
-> +               return -ENOENT;
-> +
-> +       __pci_bus_size_bridges(bridge->subordinate, &added);
-> +       __pci_bridge_assign_resources(bridge, &added, &failed);
-> +       BUG_ON(!list_empty(&added));
-> +
-> +       if (!list_empty(&failed)) {
-> +               ret =3D -ENOSPC;
-> +               goto cleanup;
-> +       }
-> +
-> +       list_for_each_entry(dev_res, &saved, list) {
-> +               /* Skip the bridge we just assigned resources for. */
-> +               if (bridge =3D=3D dev_res->dev)
-> +                       continue;
-> +
-> +               bridge =3D dev_res->dev;
-> +               pci_setup_bridge(bridge->subordinate);
-> +       }
-> +
-> +       free_list(&saved);
-> +       return 0;
-> +
-> +cleanup:
-> +       /* restore size and flags */
-> +       list_for_each_entry(dev_res, &failed, list) {
-> +               struct resource *res =3D dev_res->res;
-> +
-> +               res->start =3D dev_res->start;
-> +               res->end =3D dev_res->end;
-> +               res->flags =3D dev_res->flags;
-> +       }
-> +       free_list(&failed);
-> +
-> +       /* Revert to the old configuration */
-> +       list_for_each_entry(dev_res, &saved, list) {
-> +               struct resource *res =3D dev_res->res;
-> +
-> +               bridge =3D dev_res->dev;
-> +               i =3D res - bridge->resource;
-> +
-> +               res->start =3D dev_res->start;
-> +               res->end =3D dev_res->end;
-> +               res->flags =3D dev_res->flags;
-> +
-> +               pci_claim_resource(bridge, i);
-> +               pci_setup_bridge(bridge->subordinate);
-> +       }
-> +       free_list(&saved);
-> +
-> +       return ret;
-> +}
-> +
->  void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
->  {
->         struct pci_dev *dev;
-> diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-> index 9526e34..9d3453c 100644
-> --- a/drivers/pci/setup-res.c
-> +++ b/drivers/pci/setup-res.c
-> @@ -363,6 +363,65 @@ int pci_reassign_resource(struct pci_dev *dev, int r=
-esno, resource_size_t addsiz
->         return 0;
->  }
->
-> +void pci_release_resource(struct pci_dev *dev, int resno)
-> +{
-> +       struct resource *res =3D dev->resource + resno;
-> +
-> +       dev_info(&dev->dev, "BAR %d: releasing %pR\n", resno, res);
-> +       release_resource(res);
-> +       res->end =3D resource_size(res) - 1;
-> +       res->start =3D 0;
-> +       res->flags |=3D IORESOURCE_UNSET;
-> +}
-> +EXPORT_SYMBOL(pci_release_resource);
-> +
-> +int pci_resize_resource(struct pci_dev *dev, int resno, int size)
-> +{
-> +       struct resource *res =3D dev->resource + resno;
-> +       int old, ret;
-> +       u32 sizes;
-> +       u16 cmd;
-> +
-> +       pci_read_config_word(dev, PCI_COMMAND, &cmd);
-> +       if (cmd & PCI_COMMAND_MEMORY)
-> +               return -EBUSY;
-> +
-> +       sizes =3D pci_rbar_get_possible_sizes(dev, resno);
-> +       if (!sizes)
-> +               return -ENOTSUPP;
-> +
-> +       if (!(sizes & BIT(size)))
-> +               return -EINVAL;
-> +
-> +       old =3D pci_rbar_get_current_size(dev, resno);
-> +       if (old < 0)
-> +               return old;
-> +
-> +       /* Make sure the resource isn't assigned before making it larger.=
- */
-> +       pci_release_resource(dev, resno);
-> +
-> +       ret =3D pci_rbar_set_size(dev, resno, size);
-> +       if (ret)
-> +               goto error_reassign;
-> +
-> +       res->end =3D res->start + pci_rbar_size_to_bytes(size) - 1;
-> +
-> +       ret =3D pci_reassign_bridge_resources(dev->bus->self, res->flags)=
-;
-> +       if (ret)
-> +               goto error_resize;
-> +
-> +       return 0;
-> +
-> +error_resize:
-> +       pci_rbar_set_size(dev, resno, old);
-> +       res->end =3D res->start + pci_rbar_size_to_bytes(old) - 1;
-> +
-> +error_reassign:
-> +       pci_assign_unassigned_bus_resources(dev->bus);
-> +       return ret;
-> +}
-> +EXPORT_SYMBOL(pci_resize_resource);
-> +
->  int pci_enable_resources(struct pci_dev *dev, int mask)
->  {
->         u16 cmd, old_cmd;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index a38772a..f0a630a 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1055,6 +1055,8 @@ void pci_reset_bridge_secondary_bus(struct pci_dev =
-*dev);
->  void pci_update_resource(struct pci_dev *dev, int resno);
->  int __must_check pci_assign_resource(struct pci_dev *dev, int i);
->  int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resou=
-rce_size_t add_size, resource_size_t align);
-> +void pci_release_resource(struct pci_dev *dev, int resno);
-> +int __must_check pci_resize_resource(struct pci_dev *dev, int i, int siz=
-e);
->  int pci_select_bars(struct pci_dev *dev, unsigned long flags);
->  bool pci_device_is_present(struct pci_dev *pdev);
->  void pci_ignore_hotplug(struct pci_dev *dev);
-> @@ -1135,6 +1137,7 @@ void pci_assign_unassigned_resources(void);
->  void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
->  void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
->  void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
-> +int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long =
-type);
->  void pdev_enable_device(struct pci_dev *);
->  int pci_enable_resources(struct pci_dev *, int mask);
->  void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
-> --
-> 2.7.4
->
-
-
-
---=20
-With Best Regards,
-Andy Shevchenko
+What do you think?
