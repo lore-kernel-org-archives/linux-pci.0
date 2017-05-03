@@ -1,34 +1,74 @@
-Return-Path: <SRS0=PvvZ=4Y=bombadil.srs.infradead.org=BATV+2e090b1720e02457929d+5016+infradead.org+hch@kernel.org>
-Return-Path: <SRS0=PvvZ=4Y=bombadil.srs.infradead.org=BATV+2e090b1720e02457929d+5016+infradead.org+hch@kernel.org>
-Date: Thu, 18 May 2017 02:26:30 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Cc: bhelgaas@google.com, helgaas@kernel.org, linuxarm@huawei.com,
-	linux-pci@vger.kernel.org, lukas@wunner.de,
-	linux-kernel@vger.kernel.org, mika.westerberg@linux.intel.com,
-	hch@infradead.org, liudongdong3@huawei.com
-Subject: Re: [PATCH v2 1/2] PCI/portdrv: add support for different MSI
- interrupts for PCIe port services
-Message-ID: <20170518092630.GA28006@infradead.org>
-References: <1495098098-1984-1-git-send-email-gabriele.paoloni@huawei.com>
- <1495098098-1984-2-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 3 May 2017 11:31:53 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [RFC/RFT PATCH 05/18] ARM: PCI: dove: Convert PCI scan API to
+ pci_scan_root_bus_bridge()
+Message-ID: <20170503103153.GB10800@red-moon>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+ <20170426111809.19922-6-lorenzo.pieralisi@arm.com>
+ <CAK8P3a1bnnq-9iuse43bCNX_9TirZPOtmH_vFsvJ9VOAsoUBzQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495098098-1984-2-git-send-email-gabriele.paoloni@huawei.com>
+In-Reply-To: <CAK8P3a1bnnq-9iuse43bCNX_9TirZPOtmH_vFsvJ9VOAsoUBzQ@mail.gmail.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Andrew Lunn <andrew@lunn.ch>, Pratyush Anand <pratyush.anand@gmail.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+ Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
+ Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
+ Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
+ Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
+ Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
+ Jason Cooper <jason@lakedaemon.net>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+ Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>,
+ Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> - * pcie_port_enable_msix - try to set up MSI-X as interrupt mode for given port
-> + * pcie_port_enable_msix_or_msi - try to set up MSI-X or MSI as interrupt mode
-> + * for given port
+On Fri, Apr 28, 2017 at 02:38:48PM +0200, Arnd Bergmann wrote:
+> On Wed, Apr 26, 2017 at 1:17 PM, Lorenzo Pieralisi
+> <lorenzo.pieralisi@arm.com> wrote:
+> > The introduction of pci_scan_root_bus_bridge() provides a PCI core
+> > API to scan a PCI root bus backed by an already initialized
+> > struct pci_host_bridge object, which simplifies the bus scan
+> > interface and makes the PCI scan root bus interface easier to
+> > generalize as members are added to the struct pci_host_bridge().
+> >
+> > Convert ARM dove platform code to pci_scan_root_bus_bridge() to improve
+> > the PCI root bus scanning interface.
+> >
+> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+> 
+> Is this patch required for one of the later steps in the series?
+> 
+> As non-DT dove uses the traditional pci_common_init() helper rather
+> than registering its own driver, I wonder if there is anything to gain here.
 
-just rename it to pcie_port_enable_vecs to avoid the overly long line..
+Well, the point is, the non-DT platforms I patched implement a custom
+.scan method in struct hw_pci. If we move the bridge allocation to
+pcibios_init_hw() we would end up initializing some struct
+pci_host_bridge fields in pcibios_init_hw() and some in the custom .scan
+method (ie custom pci_ops) which I found not very elegant but it could be
+done I reckon, I need to give it a go to see how the code looks like.
 
-> +		 * pci_irq_vector() below is able to handle entry differently
-> +		 * depending on MSI vs MSI-x case
+Lorenzo
 
-As mentioned in the review for the other patch:  no need to repeat
-this for every user of pci_irq_vector.
-
-Otherwise this looks fine to me:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
