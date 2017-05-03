@@ -1,16 +1,13 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 3 May 2017 11:31:53 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [RFC/RFT PATCH 05/18] ARM: PCI: dove: Convert PCI scan API to
- pci_scan_root_bus_bridge()
-Message-ID: <20170503103153.GB10800@red-moon>
-References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
- <20170426111809.19922-6-lorenzo.pieralisi@arm.com>
- <CAK8P3a1bnnq-9iuse43bCNX_9TirZPOtmH_vFsvJ9VOAsoUBzQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a1bnnq-9iuse43bCNX_9TirZPOtmH_vFsvJ9VOAsoUBzQ@mail.gmail.com>
+In-Reply-To: <1493786795-28153-1-git-send-email-oza.oza@broadcom.com>
+References: <1493786795-28153-1-git-send-email-oza.oza@broadcom.com>
+From: Rob Herring <robh@kernel.org>
+Date: Wed, 3 May 2017 14:55:25 -0500
+Message-ID: <CAL_JsqLE+CmukEYFnjkYTApGiXZVQn_Xz2GvOshPWLZoaoXvCA@mail.gmail.com>
+Subject: Re: [PATCH 1/3] of/pci/dma: fix DMA configuration for PCI masters
+To: Oza Pawandeep <oza.oza@broadcom.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,55 +15,75 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Andrew Lunn <andrew@lunn.ch>, Pratyush Anand <pratyush.anand@gmail.com>,
- Gabriele Paoloni <gabriele.paoloni@huawei.com>,
- linux-pci <linux-pci@vger.kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
- Will Deacon <will.deacon@arm.com>, Michal Simek <michal.simek@xilinx.com>,
- Thierry Reding <thierry.reding@gmail.com>, Tanmay Inamdar <tinamdar@apm.com>,
- Matthew Minter <matt@masarand.com>, Rob Herring <robh@kernel.org>,
- Joao Pinto <Joao.Pinto@synopsys.com>, Wenrui Li <wenrui.li@rock-chips.com>,
- Russell King <linux@armlinux.org.uk>, Murali Karicheri <m-karicheri2@ti.com>,
- Jason Cooper <jason@lakedaemon.net>,
- Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
- Simon Horman <horms@verge.net.au>, Bjorn Helgaas <bhelgaas@google.com>,
- Mingkai Hu <mingkai.hu@freescale.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
- Jingoo Han <jingoohan1@gmail.com>, Stanimir Varbanov <svarbanov@mm-sol.com>,
- Minghuan Lian <minghuan.Lian@freescale.com>,
- Zhou Wang <wangzhou1@hisilicon.com>, Roy Zang <tie-fei.zang@freescale.com>
+Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Oza Pawandeep <oza.pawandeep@gmail.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ Joerg Roedel <joro@8bytes.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Linux IOMMU <iommu@lists.linux-foundation.org>,
+ "bcm-kernel-feedback-list@broadcom.com"
+ <bcm-kernel-feedback-list@broadcom.com>, Robin Murphy <robin.murphy@arm.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, Apr 28, 2017 at 02:38:48PM +0200, Arnd Bergmann wrote:
-> On Wed, Apr 26, 2017 at 1:17 PM, Lorenzo Pieralisi
-> <lorenzo.pieralisi@arm.com> wrote:
-> > The introduction of pci_scan_root_bus_bridge() provides a PCI core
-> > API to scan a PCI root bus backed by an already initialized
-> > struct pci_host_bridge object, which simplifies the bus scan
-> > interface and makes the PCI scan root bus interface easier to
-> > generalize as members are added to the struct pci_host_bridge().
-> >
-> > Convert ARM dove platform code to pci_scan_root_bus_bridge() to improve
-> > the PCI root bus scanning interface.
-> >
-> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-> 
-> Is this patch required for one of the later steps in the series?
-> 
-> As non-DT dove uses the traditional pci_common_init() helper rather
-> than registering its own driver, I wonder if there is anything to gain here.
+On Tue, May 2, 2017 at 11:46 PM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
+> current device framework and of framework integration assumes
+> dma-ranges in a way where memory-mapped devices define their
+> dma-ranges. (child-bus-address, parent-bus-address, length).
+>
+> of_dma_configure is specifically written to take care of memory
+> mapped devices. but no implementation exists for pci to take
+> care of pcie based memory ranges.
+>
+> for e.g. iproc based SOCs and other SOCs(suc as rcar) have PCI
+> world dma-ranges.
+> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
+>
+> this patch serves following:
+>
+> 1) exposes interface to the pci host driver for their
+> inbound memory ranges
+>
+> 2) provide an interface to callers such as of_dma_get_ranges.
+> so then the returned size get best possible (largest) dma_mask.
+> because PCI RC drivers do not call APIs such as
+> dma_set_coherent_mask() and hence rather it shows its addressing
+> capabilities based on dma-ranges.
+> for e.g.
+> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
+> we should get dev->coherent_dma_mask=0x7fffffffff.
+>
+> 3) this patch handles multiple inbound windows and dma-ranges.
+> it is left to the caller, how it wants to use them.
+> the new function returns the resources in a standard and unform way
+>
+> 4) this way the callers of for e.g. of_dma_get_ranges
+> does not need to change.
+>
+> 5) leaves scope of adding PCI flag handling for inbound memory
+> by the new function.
+>
+> Bug: SOC-5216
+> Change-Id: Ie045386df91e1e0587846bb147ae40d96f6d7d2e
+> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+> Reviewed-on: http://gerrit-ccxsw.broadcom.net/40428
+> Reviewed-by: vpx_checkpatch status <vpx_checkpatch@broadcom.com>
+> Reviewed-by: CCXSW <ccxswbuild@broadcom.com>
+> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
+> Tested-by: vpx_autobuild status <vpx_autobuild@broadcom.com>
+> Tested-by: vpx_smoketest status <vpx_smoketest@broadcom.com>
+> Tested-by: CCXSW <ccxswbuild@broadcom.com>
 
-Well, the point is, the non-DT platforms I patched implement a custom
-.scan method in struct hw_pci. If we move the bridge allocation to
-pcibios_init_hw() we would end up initializing some struct
-pci_host_bridge fields in pcibios_init_hw() and some in the custom .scan
-method (ie custom pci_ops) which I found not very elegant but it could be
-done I reckon, I need to give it a go to see how the code looks like.
+All these non-person, probably internal Broadcom Tested-by and
+Reviewed-by's should be removed too.
 
-Lorenzo
+> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+>
+
+Rob
 
 _______________________________________________
 linux-arm-kernel mailing list
