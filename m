@@ -1,231 +1,93 @@
-Return-Path: <SRS0=BnMe=5E=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=BnMe=5E=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will.deacon@arm.com"
-	<will.deacon@arm.com>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "frowand.list@gmail.com" <frowand.list@gmail.com>,
-        "bhelgaas@google.com"
-	<bhelgaas@google.com>,
-        "rafael@kernel.org" <rafael@kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-        "lorenzo.pieralisi@arm.com"
-	<lorenzo.pieralisi@arm.com>,
-        "mark.rutland@arm.com" <mark.rutland@arm.com>,
-        "minyard@acm.org" <minyard@acm.org>,
-        "benh@kernel.crashing.org"
-	<benh@kernel.crashing.org>,
-        John Garry <john.garry@huawei.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "xuwei (O)"
-	<xuwei5@hisilicon.com>, Linuxarm <linuxarm@huawei.com>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "zhichang.yuan"
-	<yuanzhichang@hisilicon.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "olof@lixom.net" <olof@lixom.net>,
-        "brian.starkey@arm.com" <brian.starkey@arm.com>
-Subject: RE: [PATCH v9 1/7] LIB: Introduce a generic PIO mapping method
-Date: Tue, 30 May 2017 15:09:13 +0000
-Message-ID: <EE11001F9E5DDD47B7634E2F8A612F2E40A771E6@FRAEML521-MBX.china.huawei.com>
-References: <1495712248-5232-1-git-send-email-gabriele.paoloni@huawei.com>
- <1495712248-5232-2-git-send-email-gabriele.paoloni@huawei.com>
- <20170526205744.GA21531@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170526205744.GA21531@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <SRS0=wb0j=4J=oracle.com=boris.ostrovsky@kernel.org>
+Return-Path: <SRS0=wb0j=4J=oracle.com=boris.ostrovsky@kernel.org>
+Subject: Re: [Xen-devel] [PATCH] xen: do not re-use pirq number cached in pci
+ device msi msg data
+To: David Woodhouse <dwmw2@infradead.org>, Bjorn Helgaas
+ <helgaas@kernel.org>,
+        stable@vger.kernel.org, Stefano Stabellini <sstabellini@kernel.org>
+References: <04f2a09f-59be-a720-bc98-4afb53171790@oracle.com>
+ <20170113200751.20125-1-ddstreet@ieee.org>
+ <20170113223035.GE23066@char.us.oracle.com>
+ <CALZtONDL2Ph0MMMfSuqvofNZ-+6jPi9aKsE4mL30i15Up6Bvug@mail.gmail.com>
+ <0c2b4d6a-93e7-90a2-ffaf-fa423fb022d5@suse.com>
+ <72f8b025-e858-5e54-d900-50fbec46fea6@oracle.com>
+ <20170222142810.GA28359@bhelgaas-glaptop.roam.corp.google.com>
+ <3379a82f-04b7-152a-1577-bf99b1c638cc@oracle.com>
+ <1493835543.4904.5.camel@infradead.org>
+Cc: Juergen Gross <jgross@suse.com>, linux-pci@vger.kernel.org,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, xen-devel@lists.xenproject.org,
+        Dan Streetman <dan.streetman@canonical.com>,
+        Dan Streetman <ddstreet@ieee.org>
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Message-ID: <1b84c2a5-1fd6-02b9-c080-0f99f6a8d085@oracle.com>
+Date: Wed, 3 May 2017 14:43:15 -0400
 MIME-Version: 1.0
+In-Reply-To: <1493835543.4904.5.camel@infradead.org>
+Content-Type: text/plain; charset=utf-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn
-
-> -----Original Message-----
-> From: Bjorn Helgaas [mailto:helgaas@kernel.org]
-> Sent: 26 May 2017 21:58
-> To: Gabriele Paoloni
-> Cc: catalin.marinas@arm.com; will.deacon@arm.com; robh+dt@kernel.org;
-> frowand.list@gmail.com; bhelgaas@google.com; rafael@kernel.org;
-> arnd@arndb.de; linux-arm-kernel@lists.infradead.org;
-> lorenzo.pieralisi@arm.com; mark.rutland@arm.com; minyard@acm.org;
-> benh@kernel.crashing.org; John Garry; linux-kernel@vger.kernel.org;
-> xuwei (O); Linuxarm; linux-acpi@vger.kernel.org; zhichang.yuan; linux-
-> pci@vger.kernel.org; olof@lixom.net; brian.starkey@arm.com
-> Subject: Re: [PATCH v9 1/7] LIB: Introduce a generic PIO mapping method
->=20
-> On Thu, May 25, 2017 at 12:37:22PM +0100, Gabriele Paoloni wrote:
-> > From: "zhichang.yuan" <yuanzhichang@hisilicon.com>
-> >
-> > In 'commit 41f8bba7f555 ("of/pci: Add pci_register_io_range() and
-> > pci_pio_to_address()")' a new I/O space management was supported.
-> With that
-> > driver, the I/O ranges configured for PCI/PCIE hosts on some
-> architectures
-> > can be mapped to logical PIO, converted easily between CPU address
-> and the
-> > corresponding logicial PIO. Based on this, PCI I/O devices can be
-> accessed
-> > in a memory read/write way through the unified in/out accessors.
-> >
-> > But on some archs/platforms, there are bus hosts which access I/O
-> > peripherals with host-local I/O port addresses rather than memory
-> > addresses after memory-mapped.
-> > To support those devices, a more generic I/O mapping method is
-> introduced
-> > here. Through this patch, both the CPU addresses and the host-local
-> port
-> > can be mapped into the logical PIO space with different logical/fake
-> PIOs.
-> > After this, all the I/O accesses to either PCI MMIO devices or host-
-> local
-> > I/O peripherals can be unified into the existing I/O accessors
-> defined in
-> > asm-generic/io.h and be redirected to the right device-specific hooks
-> > based on the input logical PIO.
-> >
-> > Signed-off-by: zhichang.yuan <yuanzhichang@hisilicon.com>
-> > Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-> > ---
-> >  include/asm-generic/io.h  |  50 +++++++++
-> >  include/linux/logic_pio.h | 110 ++++++++++++++++++
-> >  lib/Kconfig               |  26 +++++
-> >  lib/Makefile              |   2 +
-> >  lib/logic_pio.c           | 280
-> ++++++++++++++++++++++++++++++++++++++++++++++
-> >  5 files changed, 468 insertions(+)
-> >  create mode 100644 include/linux/logic_pio.h
-> >  create mode 100644 lib/logic_pio.c
-> >
-> > diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-> > index 7ef015e..f7fbec3 100644
-> > --- a/include/asm-generic/io.h
-> > +++ b/include/asm-generic/io.h
-> > ...
->=20
-> >  #ifndef inb
-> > +#ifdef CONFIG_INDIRECT_PIO
-> > +#define inb logic_inb
-> > +#else
-> >  #define inb inb
-> >  static inline u8 inb(unsigned long addr)
-> >  {
-> >  	return readb(PCI_IOBASE + addr);
-> >  }
-> > +#endif /* CONFIG_INDIRECT_PIO */
-> >  #endif
-> >
-> >  #ifndef inw
-> > +#ifdef CONFIG_INDIRECT_PIO
-> > +#define inw logic_inw
->=20
-> Cosmetic: could these ifdefs all be collected in one place, e.g.,
->=20
->   #ifdef CONFIG_INDIRECT_PIO
->   #define inb logic_inb
->   #define inw logic_inw
->   #define inl logic_inl
->   ...
->   #endif
->=20
-> to avoid cluttering every one of the default definitions?  Could the
-> collection be in logic_pio.h itself, next to the extern declarations?
-
-Yes I think it should be doable. I will rework this in the next patchset
-
->=20
-> > +#else
-> >  #define inw inw
-> >  static inline u16 inw(unsigned long addr)
-> >  {
-> >  	return readw(PCI_IOBASE + addr);
-> >  }
-> > +#endif /* CONFIG_INDIRECT_PIO */
-> >  #endif
->=20
-> >  #ifndef insb_p
-> > diff --git a/include/linux/logic_pio.h b/include/linux/logic_pio.h
-> > new file mode 100644
-> > index 0000000..8e4dc65
-> > --- /dev/null
-> > +++ b/include/linux/logic_pio.h
-> > ...
->=20
-> > +extern u8 logic_inb(unsigned long addr);
->=20
-> I think you only build the definitions for these if
-> CONFIG_INDIRECT_PIO, so the declarations could be under that #idef,
-> too.
-
-Yes agreed
-
->=20
-> In PCI code, I omit the "extern" from function declarations.  This
-> isn't PCI code, and I don't know if there's a real consensus on this,
-> but there is some precedent: 5bd085b5fbd8 ("x86: remove "extern" from
-> function prototypes in <asm/proto.h>")
->=20
-
-To be honest I have no clue...
-
-If you look at include/asm-generic/io.h we have extern declarations...
-
-BTW I can remove the extern and then let's see if somebody complains...
+On 05/03/2017 02:19 PM, David Woodhouse wrote:
+> On Wed, 2017-02-22 at 10:14 -0500, Boris Ostrovsky wrote:
+>> On 02/22/2017 09:28 AM, Bjorn Helgaas wrote:
+>>> On Tue, Feb 21, 2017 at 10:58:39AM -0500, Boris Ostrovsky wrote:
+>>>> On 02/21/2017 10:45 AM, Juergen Gross wrote:
+>>>>> On 21/02/17 16:31, Dan Streetman wrote:
+>>>>>> On Fri, Jan 13, 2017 at 5:30 PM, Konrad Rzeszutek Wilk
+>>>>>> <konrad.wilk@oracle.com> wrote:
+>>>>>>> On Fri, Jan 13, 2017 at 03:07:51PM -0500, Dan Streetman wrote:
+>>>>>>>> Revert the main part of commit:
+>>>>>>>> af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+>>>>>>>>
+>>>>>>>> That commit introduced reading the pci device's msi message data to see
+>>>>>>>> if a pirq was previously configured for the device's msi/msix, and re-use
+>>>>>>>> that pirq.  At the time, that was the correct behavior.  However, a
+>>>>>>>> later change to Qemu caused it to call into the Xen hypervisor to unmap
+>>>>>>>> all pirqs for a pci device, when the pci device disables its MSI/MSIX
+>>>>>>>> vectors; specifically the Qemu commit:
+>>>>>>>> c976437c7dba9c7444fb41df45468968aaa326ad
+>>>>>>>> ("qemu-xen: free all the pirqs for msi/msix when driver unload")
+>>>>>>>>
+>>>>>>>> Once Qemu added this pirq unmapping, it was no longer correct for the
+>>>>>>>> kernel to re-use the pirq number cached in the pci device msi message
+>>>>>>>> data.  All Qemu releases since 2.1.0 contain the patch that unmaps the
+>>>>>>>> pirqs when the pci device disables its MSI/MSIX vectors.
+>>>>>>>>
+>>>>>>>> This bug is causing failures to initialize multiple NVMe controllers
+>>>>>>>> under Xen, because the NVMe driver sets up a single MSIX vector for
+>>>>>>>> each controller (concurrently), and then after using that to talk to
+>>>>>>>> the controller for some configuration data, it disables the single MSIX
+>>>>>>>> vector and re-configures all the MSIX vectors it needs.  So the MSIX
+>>>>>>>> setup code tries to re-use the cached pirq from the first vector
+>>>>>>>> for each controller, but the hypervisor has already given away that
+>>>>>>>> pirq to another controller, and its initialization fails.
+>>>>>>>>
+>>>>>>>> This is discussed in more detail at:
+>>>>>>>> https://lists.xen.org/archives/html/xen-devel/2017-01/msg00447.html
+>>>>>>>>
+>>>>>>>> Fixes: af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+>>>>>>>> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
+>>>>>>> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+>>>>>> This doesn't seem to be applied yet, is it still waiting on another
+>>>>>> ack?  Or maybe I'm looking at the wrong git tree...
+>>>>> Am I wrong or shouldn't this go through the PCI tree? Konrad?
+>>>> Konrad is away this week but since pull request for Xen tree just went
+>>>> out we should probably wait until rc1 anyway (unless something big comes
+>>>> up before that).
+>>> I assume this should go via the Xen or x86 tree, since that's how most
+>>> arch/x86/pci/xen.c patches have been handled, including af42b8d12f8a.
+>>> If you think otherwise, let me know.
+>> OK, I applied it to Xen tree's for-linus-4.11.
+> Hm, we want this (c74fd80f2f4) in stable too, don't we?
 
 
-> > +#ifdef CONFIG_LOGIC_PIO
-> > +extern struct logic_pio_hwaddr
-> > +*find_io_range_by_fwnode(struct fwnode_handle *fwnode);
->=20
-> If you have to split the line (this one would fit without the
-> "extern"), the "*" goes with the type, e.g.,
->=20
->   struct logic_pio_hwaddr *
->   find_io_range_by_fwnode(struct fwnode_handle *fwnode);
->=20
-> More occurrences below.
+Maybe.
 
-Ok I will rework these
+Per https://lists.xen.org/archives/html/xen-devel/2017-01/msg00987.html
+it may break things on older (4.4-) hypervisors. They are out of
+support, which is why this patch went in now but I am not sure this
+automatically applies to stable kernels.
 
->=20
-> > diff --git a/lib/logic_pio.c b/lib/logic_pio.c
-> > new file mode 100644
-> > index 0000000..4a960cd
-> > --- /dev/null
-> > +++ b/lib/logic_pio.c
-> > ...
->=20
-> > +#if defined(CONFIG_INDIRECT_PIO) && defined(PCI_IOBASE)
-> > +#define BUILD_LOGIC_PIO(bw, type)\
-> > +type logic_in##bw(unsigned long addr)\
-> > +{\
-> > +	type ret =3D -1;\
-> > +\
-> > +	if (addr < MMIO_UPPER_LIMIT) {\
-> > +		ret =3D read##bw(PCI_IOBASE + addr);\
-> > +	} else {\
-> > +		struct logic_pio_hwaddr *entry =3D find_io_range(addr);\
-> > +\
-> > +		if (entry && entry->ops)\
-> > +			ret =3D entry->ops->pfin(entry->devpara,\
-> > +					addr, sizeof(type));\
-> > +		else\
-> > +			WARN_ON_ONCE(1);\
-> > +	}	\
-> > +	return ret;\
-> > +}	\
->=20
-> I think these would be slightly easier to read if the line continuation
-> backslashes were aligned at the right, as with
-> ACPI_DECLARE_PROBE_ENTRY(), __atomic_op_acquire(), DECLARE_EWMA(),
-> etc.
+Stefano?
 
-Ok agreed I will rework this too
-
-Many Thanks
-Gab
-
->=20
-> Bjorn
+-boris
