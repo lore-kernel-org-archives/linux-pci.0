@@ -1,32 +1,36 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:37125 "EHLO
-        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1033988AbdEYUUf (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 16:20:35 -0400
-Received: by mail-wm0-f46.google.com with SMTP id d127so112010862wmf.0
-        for <linux-pci@vger.kernel.org>; Thu, 25 May 2017 13:20:34 -0700 (PDT)
-Date: Thu, 25 May 2017 21:17:42 +0100
-From: Piotr Gregor <piotrgregor@rsyncme.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: "Michael S. Tsirkin" <mst@redhat.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Neo Jia <cjia@nvidia.com>,
-        Kirti Wankhede <kwankede@nvidia.com>,
-        Vlad Tsyrklevich <vlad@tsyrklevich.net>,
-        Arvind Yadav <arvind.yadav.cs@gmail.com>,
-        Yongji Xie <xyjxie@linux.vnet.ibm.com>,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kvm@vger.kernel.org
-Subject: Re: [PATCH] PCI: Move test of INTx masking to pci_setup_device
-Message-ID: <20170525201741.GA14175@westernst>
-References: <20170525181321.GA13617@westernst>
- <20170525211833-mutt-send-email-mst@kernel.org>
- <20170525123839.6d296856@w520.home>
+Return-Path: <SRS0=ENoR=4J=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <SRS0=ENoR=4J=gmail.com=andy.shevchenko@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170525123839.6d296856@w520.home>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170408190628.GB16832@bhelgaas-glaptop.roam.corp.google.com>
+References: <44cada166e42007d27b4c3e3aa0744d7@molgen.mpg.de>
+ <20170408154128.GA16832@bhelgaas-glaptop.roam.corp.google.com>
+ <1491670819.6021.33.camel@infradead.org> <20170408190628.GB16832@bhelgaas-glaptop.roam.corp.google.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Wed, 3 May 2017 21:42:06 +0300
+Message-ID: <CAHp75VcZs++L0svPq5W7gz0sH3RZvF=wMoFcjEUn8puF+mvQ-Q@mail.gmail.com>
+Subject: Re: `pci_apply_final_quirks()` taking half a second
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: David Woodhouse <dwmw2@infradead.org>, Paul Menzel <pmenzel@molgen.mpg.de>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Very good suggestions. Will be reflected in changed patch.
+On Sat, Apr 8, 2017 at 10:06 PM, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Sat, Apr 08, 2017 at 07:00:19PM +0200, David Woodhouse wrote:
+>> ...
+>> I note it's also reading PCI_CACHE_LINE_SIZE From config space for each
+>> device in pci_apply_final_quirks(). How long does that take?
+>
+> I don't know, but it's pointless on modern PCIe systems where the
+> Cache Line Size has no effect.  It'd be really nice if somebody
+> cleaned that up and got rid of the read itself and the useless
+> messages.
+
+What I can think of is 10ms delay for PM. The laptop might be one of
+Intel BayTrails where we have it.
+But it's just a guess.
+
+-- 
+With Best Regards,
+Andy Shevchenko
