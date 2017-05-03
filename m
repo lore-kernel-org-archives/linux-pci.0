@@ -1,129 +1,111 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:44314 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753685AbdEDSUZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 4 May 2017 14:20:25 -0400
-Subject: Re: [PATCH 2/3] iommu/pci: reserve iova for PCI masters
-To: Oza Pawandeep <oza.oza@broadcom.com>
-References: <1493786795-28153-1-git-send-email-oza.oza@broadcom.com>
- <1493786795-28153-2-git-send-email-oza.oza@broadcom.com>
-Cc: Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <0c9a6b09-139c-df49-cf73-6a3935a6aacd@arm.com>
-Date: Thu, 4 May 2017 19:20:19 +0100
+Return-Path: <SRS0=n/qv=4J=linuxfoundation.org=gregkh@kernel.org>
+Return-Path: <SRS0=n/qv=4J=linuxfoundation.org=gregkh@kernel.org>
+Date: Wed, 3 May 2017 16:06:35 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Stefano Stabellini <sstabellini@kernel.org>
+Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Bjorn Helgaas <helgaas@kernel.org>, stable@vger.kernel.org,
+	Juergen Gross <jgross@suse.com>, linux-pci@vger.kernel.org,
+	linux-kernel <linux-kernel@vger.kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, xen-devel@lists.xenproject.org,
+	Dan Streetman <dan.streetman@canonical.com>,
+	Dan Streetman <ddstreet@ieee.org>
+Subject: Re: [Xen-devel] [PATCH] xen: do not re-use pirq number cached in pci
+ device msi msg data
+Message-ID: <20170503230635.GB11256@kroah.com>
+References: <20170113200751.20125-1-ddstreet@ieee.org>
+ <20170113223035.GE23066@char.us.oracle.com>
+ <CALZtONDL2Ph0MMMfSuqvofNZ-+6jPi9aKsE4mL30i15Up6Bvug@mail.gmail.com>
+ <0c2b4d6a-93e7-90a2-ffaf-fa423fb022d5@suse.com>
+ <72f8b025-e858-5e54-d900-50fbec46fea6@oracle.com>
+ <20170222142810.GA28359@bhelgaas-glaptop.roam.corp.google.com>
+ <3379a82f-04b7-152a-1577-bf99b1c638cc@oracle.com>
+ <1493835543.4904.5.camel@infradead.org>
+ <1b84c2a5-1fd6-02b9-c080-0f99f6a8d085@oracle.com>
+ <alpine.DEB.2.10.1705031540140.9240@sstabellini-ThinkPad-X260>
 MIME-Version: 1.0
-In-Reply-To: <1493786795-28153-2-git-send-email-oza.oza@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <alpine.DEB.2.10.1705031540140.9240@sstabellini-ThinkPad-X260>
 List-ID: <linux-pci.vger.kernel.org>
 
-On 03/05/17 05:46, Oza Pawandeep wrote:
-> this patch reserves the iova for PCI masters.
-> ARM64 based SOCs may have scattered memory banks.
-> such as iproc based SOC has
+On Wed, May 03, 2017 at 03:59:15PM -0700, Stefano Stabellini wrote:
+> On Wed, 3 May 2017, Boris Ostrovsky wrote:
+> > On 05/03/2017 02:19 PM, David Woodhouse wrote:
+> > > On Wed, 2017-02-22 at 10:14 -0500, Boris Ostrovsky wrote:
+> > >> On 02/22/2017 09:28 AM, Bjorn Helgaas wrote:
+> > >>> On Tue, Feb 21, 2017 at 10:58:39AM -0500, Boris Ostrovsky wrote:
+> > >>>> On 02/21/2017 10:45 AM, Juergen Gross wrote:
+> > >>>>> On 21/02/17 16:31, Dan Streetman wrote:
+> > >>>>>> On Fri, Jan 13, 2017 at 5:30 PM, Konrad Rzeszutek Wilk
+> > >>>>>> <konrad.wilk@oracle.com> wrote:
+> > >>>>>>> On Fri, Jan 13, 2017 at 03:07:51PM -0500, Dan Streetman wrote:
+> > >>>>>>>> Revert the main part of commit:
+> > >>>>>>>> af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+> > >>>>>>>>
+> > >>>>>>>> That commit introduced reading the pci device's msi message data to see
+> > >>>>>>>> if a pirq was previously configured for the device's msi/msix, and re-use
+> > >>>>>>>> that pirq.  At the time, that was the correct behavior.  However, a
+> > >>>>>>>> later change to Qemu caused it to call into the Xen hypervisor to unmap
+> > >>>>>>>> all pirqs for a pci device, when the pci device disables its MSI/MSIX
+> > >>>>>>>> vectors; specifically the Qemu commit:
+> > >>>>>>>> c976437c7dba9c7444fb41df45468968aaa326ad
+> > >>>>>>>> ("qemu-xen: free all the pirqs for msi/msix when driver unload")
+> > >>>>>>>>
+> > >>>>>>>> Once Qemu added this pirq unmapping, it was no longer correct for the
+> > >>>>>>>> kernel to re-use the pirq number cached in the pci device msi message
+> > >>>>>>>> data.  All Qemu releases since 2.1.0 contain the patch that unmaps the
+> > >>>>>>>> pirqs when the pci device disables its MSI/MSIX vectors.
+> > >>>>>>>>
+> > >>>>>>>> This bug is causing failures to initialize multiple NVMe controllers
+> > >>>>>>>> under Xen, because the NVMe driver sets up a single MSIX vector for
+> > >>>>>>>> each controller (concurrently), and then after using that to talk to
+> > >>>>>>>> the controller for some configuration data, it disables the single MSIX
+> > >>>>>>>> vector and re-configures all the MSIX vectors it needs.  So the MSIX
+> > >>>>>>>> setup code tries to re-use the cached pirq from the first vector
+> > >>>>>>>> for each controller, but the hypervisor has already given away that
+> > >>>>>>>> pirq to another controller, and its initialization fails.
+> > >>>>>>>>
+> > >>>>>>>> This is discussed in more detail at:
+> > >>>>>>>> https://lists.xen.org/archives/html/xen-devel/2017-01/msg00447.html
+> > >>>>>>>>
+> > >>>>>>>> Fixes: af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
+> > >>>>>>>> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
+> > >>>>>>> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> > >>>>>> This doesn't seem to be applied yet, is it still waiting on another
+> > >>>>>> ack?  Or maybe I'm looking at the wrong git tree...
+> > >>>>> Am I wrong or shouldn't this go through the PCI tree? Konrad?
+> > >>>> Konrad is away this week but since pull request for Xen tree just went
+> > >>>> out we should probably wait until rc1 anyway (unless something big comes
+> > >>>> up before that).
+> > >>> I assume this should go via the Xen or x86 tree, since that's how most
+> > >>> arch/x86/pci/xen.c patches have been handled, including af42b8d12f8a.
+> > >>> If you think otherwise, let me know.
+> > >> OK, I applied it to Xen tree's for-linus-4.11.
+> > > Hm, we want this (c74fd80f2f4) in stable too, don't we?
+> > 
+> > 
+> > Maybe.
+> > 
+> > Per https://lists.xen.org/archives/html/xen-devel/2017-01/msg00987.html
+> > it may break things on older (4.4-) hypervisors. They are out of
+> > support, which is why this patch went in now but I am not sure this
+> > automatically applies to stable kernels.
+> > 
+> > Stefano?
 > 
-> <0x00000000 0x80000000 0x0 0x80000000>, /* 2G @ 2G */
-> <0x00000008 0x80000000 0x3 0x80000000>, /* 14G @ 34G */
-> <0x00000090 0x00000000 0x4 0x00000000>, /* 16G @ 576G */
-> <0x000000a0 0x00000000 0x4 0x00000000>; /* 16G @ 640G */
+> This is a difficult call. We could just say that all the broken Xen
+> versions are out of support, so let's fix all the Linux kernel stable
+> trees that we can.
 > 
-> but incoming PCI transcation addressing capability is limited
-> by host bridge, for example if max incoming window capability
-> is 512 GB, then 0x00000090 and 0x000000a0 will fall beyond it.
-> 
-> to address this problem, iommu has to avoid allocating iovas which
-> are reserved. which inturn does not allocate iova if it falls into hole.
+> Or we could give a look at the release dates. Linux 3.18 is still
+> maintained and was tagged on Dec 7 2014.
 
-I don't necessarily disagree with doing this, as we could do with facing
-up to the issue of discontiguous DMA ranges in particular (I too have a
-platform with this problem), but I'm still not overly keen on pulling DT
-specifics into this layer. More than that, though, if we are going to do
-it, then we should do it for all devices with a restrictive
-"dma-ranges", not just PCI ones.
+Don't do anything "special" for 3.18 if you have to.  I'm only
+semi-maintaining it because some SoC vendors never upstreamed their
+trees and lots of devices rely on it.  None of them use Xen on their
+platforms, so no need for me to backport any change there.
 
-> Bug: SOC-5216
-> Change-Id: Icbfc99a045d730be143fef427098c937b9d46353
-> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-> Reviewed-on: http://gerrit-ccxsw.broadcom.net/40760
-> Reviewed-by: vpx_checkpatch status <vpx_checkpatch@broadcom.com>
-> Reviewed-by: CCXSW <ccxswbuild@broadcom.com>
-> Tested-by: vpx_autobuild status <vpx_autobuild@broadcom.com>
-> Tested-by: vpx_smoketest status <vpx_smoketest@broadcom.com>
-> Tested-by: CCXSW <ccxswbuild@broadcom.com>
-> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-> 
-> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
-> index 48d36ce..08764b0 100644
-> --- a/drivers/iommu/dma-iommu.c
-> +++ b/drivers/iommu/dma-iommu.c
-> @@ -27,6 +27,7 @@
->  #include <linux/iova.h>
->  #include <linux/irq.h>
->  #include <linux/mm.h>
-> +#include <linux/of_pci.h>
->  #include <linux/pci.h>
->  #include <linux/scatterlist.h>
->  #include <linux/vmalloc.h>
-> @@ -171,8 +172,12 @@ static void iova_reserve_pci_windows(struct pci_dev *dev,
->  		struct iova_domain *iovad)
->  {
->  	struct pci_host_bridge *bridge = pci_find_host_bridge(dev->bus);
-> +	struct device_node *np = bridge->dev.parent->of_node;
->  	struct resource_entry *window;
->  	unsigned long lo, hi;
-> +	int ret;
-> +	dma_addr_t tmp_dma_addr = 0, dma_addr;
-> +	LIST_HEAD(res);
->  
->  	resource_list_for_each_entry(window, &bridge->windows) {
->  		if (resource_type(window->res) != IORESOURCE_MEM &&
-> @@ -183,6 +188,36 @@ static void iova_reserve_pci_windows(struct pci_dev *dev,
->  		hi = iova_pfn(iovad, window->res->end - window->offset);
->  		reserve_iova(iovad, lo, hi);
->  	}
-> +
-> +	/* PCI inbound memory reservation. */
-> +	ret = of_pci_get_dma_ranges(np, &res);
-> +	if (!ret) {
-> +		resource_list_for_each_entry(window, &res) {
-> +			struct resource *res_dma = window->res;
-> +
-> +			dma_addr = res_dma->start - window->offset;
-> +			if (tmp_dma_addr > dma_addr) {
-> +				pr_warn("PCI: failed to reserve iovas; ranges should be sorted\n");
+thanks,
 
-I don't see anything in the DT spec about the entries having to be
-sorted, and it's not exactly impossible to sort a list if you need it so
-(and if I'm being really pedantic, one could still trigger this with a
-list that *is* sorted, only by different criteria).
-
-Robin.
-
-> +				return;
-> +			}
-> +			if (tmp_dma_addr != dma_addr) {
-> +				lo = iova_pfn(iovad, tmp_dma_addr);
-> +				hi = iova_pfn(iovad, dma_addr - 1);
-> +				reserve_iova(iovad, lo, hi);
-> +			}
-> +			tmp_dma_addr = window->res->end - window->offset;
-> +		}
-> +		/*
-> +		 * the last dma-range should honour based on the
-> +		 * 32/64-bit dma addresses.
-> +		 */
-> +		if (tmp_dma_addr < DMA_BIT_MASK(sizeof(dma_addr_t) * 8)) {
-> +			lo = iova_pfn(iovad, tmp_dma_addr);
-> +			hi = iova_pfn(iovad,
-> +				      DMA_BIT_MASK(sizeof(dma_addr_t) * 8) - 1);
-> +			reserve_iova(iovad, lo, hi);
-> +		}
-> +	}
->  }
->  
->  /**
-> 
+greg k-h
