@@ -1,93 +1,104 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:37739 "EHLO
-        mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750885AbdEPFWX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 16 May 2017 01:22:23 -0400
-Received: by mail-wm0-f54.google.com with SMTP id d127so104497546wmf.0
-        for <linux-pci@vger.kernel.org>; Mon, 15 May 2017 22:22:23 -0700 (PDT)
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>
-Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        devicetree@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.pawandeep@gmail.com>,
-        Oza Pawandeep <oza.oza@broadcom.com>
-Subject: [PATCH v6 0/3] OF/PCI address PCI inbound memory limitations
-Date: Tue, 16 May 2017 10:52:04 +0530
-Message-Id: <1494912127-12890-1-git-send-email-oza.oza@broadcom.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v3] efifb: avoid reconfiguration of BAR that covers the
+ framebuffer
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
+ linux-arm-kernel@lists.infradead.org, linux-efi@vger.kernel.org
+References: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
+From: Heyi Guo <heyi.guo@linaro.org>
+Message-ID: <f8773b97-7085-ddb3-5dc4-d65cc1f5bce0@linaro.org>
+Date: Wed, 3 May 2017 11:09:51 +0800
+MIME-Version: 1.0
+In-Reply-To: <1490196629-28088-1-git-send-email-ard.biesheuvel@linaro.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: lorenzo.pieralisi@arm.com, matt@codeblueprint.co.uk,
+ linux-pci@vger.kernel.org, pjones@redhat.com, hanjun.guo@linaro.org,
+ bhelgaas@google.com, yinghai@kernel.org
+Content-Type: text/plain; charset="gbk"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-It is possible that PCI device supports 64-bit DMA addressing,
-and thus it's driver sets device's dma_mask to DMA_BIT_MASK(64),
-however PCI host bridge may have limitations on the inbound 
-transaction addressing.
-
-This is particularly problematic on ARM/ARM64 SOCs where the 
-IOMMU (i.e. SMMU) translates IOVA to PA for in-bound transactions
-only after PCI Host has forwarded these transactions on SOC IO bus. 
-
-This means, on such ARM/ARM64 SOCs the IOVA of in-bound transactions
-has to honor the addressing restrictions of the PCI Host.
-
-Current device framework and OF framework integration assumes
-dma-ranges in a way where memory-mapped devices define their
-dma-ranges. (child-bus-address, parent-bus-address, length).
-
-of_dma_configure is specifically written to take care of memory
-mapped devices but no implementation exists for pci devices.
-
-For e.g. iproc based SOCs and other SOCs (such as rcar) have
-PCI world dma-ranges.
-dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
-
-This patchset
-reserves the IOVA ranges for PCI masters based
-on the PCI world dma-ranges.
-fix of_dma_get_range to cater to PCI dma-ranges.
-fix of_dma_get_range which currently returns size 0 for PCI devices.
-
-IOVA allocation patch:
-[PATCH 2/3] iommu/pci: reserve iova for PCI masters
-
-Fix of_dma_get_range bug and address PCI master.
-[PATCH 3/3] PCI/of fix of_dma_get_range; get PCI specific
-this patch fixes the following problems of_dma_get_range.
-1) return of wrong size as 0.
-2) not handling absence of dma-ranges, which is valid for PCI master.
-3) not handling multipe inbound windows.
-4) in order to get largest possible dma_mask. this patch also
-retuns the largest possible size based on dma-ranges,
-
-Base patch for both of the above patches:
-[PATCH 1/3] of/pci/dma: fix DMA configuration for PCI masters
-
-Changes since v6:
-- Robin's comments addressed.
-Changes since v5:
-Changes since v4:
-Changes since v3:
-Changes since v2:
-- minor changes, redudant checkes removed
-- removed internal review
-Changes since v1:
-- address Rob's comments.
-- Add a get_dma_ranges() function to of_bus struct..
-- Convert existing contents of of_dma_get_range function to
-  of_bus_default_dma_get_ranges and adding that to the
-  default of_bus struct.
-- Make of_dma_get_range call of_bus_match() and then bus->get_dma_ranges.
-
-Oza Pawandeep (3):
-  of/pci/dma: fix DMA configuration for PCI masters
-  iommu/pci: reserve IOVA for PCI masters
-  PCI/of fix of_dma_get_range; get PCI specific dma-ranges
-
- drivers/iommu/dma-iommu.c |  35 ++++++++
- drivers/of/address.c      | 215 ++++++++++++++++++++++++++++++++--------------
- drivers/of/of_pci.c       |  95 ++++++++++++++++++++
- include/linux/of_pci.h    |   7 ++
- 4 files changed, 288 insertions(+), 64 deletions(-)
-
--- 
-1.9.1
+SGkgQXJkLAoKSSBoYXZlIG9uZSBjb21tZW50IGluY2xpbmVkLgoKCtTaIDMvMjIvMjAxNyAxMToz
+MCBQTSwgQXJkIEJpZXNoZXV2ZWwg0LS1wDoKPiBPbiBVRUZJIHN5c3RlbXMsIHRoZSBQQ0kgc3Vi
+c3lzdGVtIGlzIGVudW1lcmF0ZWQgYnkgdGhlIGZpcm13YXJlLAo+IGFuZCBpZiBhIGdyYXBoaWNh
+bCBmcmFtZWJ1ZmZlciBpcyBleHBvc2VkIGJ5IGEgUENJIGRldmljZSwgaXRzIGJhc2UKPiBhZGRy
+ZXNzIGFuZCBzaXplIGFyZSBleHBvc2VkIHRvIHRoZSBPUyB2aWEgdGhlIEdyYXBoaWNzIE91dHB1
+dAo+IFByb3RvY29sIChHT1ApLgo+Cj4gT24gYXJtNjQgUENJIHN5c3RlbXMsIHRoZSBlbnRpcmUg
+UENJIGhpZXJhcmNoeSBpcyByZWNvbmZpZ3VyZWQgZnJvbQo+IHNjcmF0Y2ggYXQgYm9vdC4gVGhp
+cyBtYXkgcmVzdWx0IGluIHRoZSBHT1AgZnJhbWVidWZmZXIgYWRkcmVzcyB0bwo+IGJlY29tZSBz
+dGFsZSwgaWYgdGhlIEJBUiBjb3ZlcmluZyB0aGUgZnJhbWVidWZmZXIgaXMgbW9kaWZpZWQuIFRo
+aXMKPiB3aWxsIGNhdXNlIHRoZSBmcmFtZWJ1ZmZlciB0byBiZWNvbWUgdW5yZXNwb25zaXZlLCBh
+bmQgbWF5IGluIHNvbWUKPiBjYXNlcyByZXN1bHQgaW4gdW5wcmVkaWN0YWJsZSBiZWhhdmlvciBp
+ZiB0aGUgcmFuZ2UgaXMgcmVhc3NpZ25lZCB0bwo+IGFub3RoZXIgZGV2aWNlLgo+Cj4gU28gYWRk
+IGEgcXVpcmsgdG8gdGhlIEVGSSBmYiBkcml2ZXIgdG8gZmluZCB0aGUgQkFSIGFzc29jaWF0ZWQg
+d2l0aAo+IHRoZSBHT1AgYmFzZSBhZGRyZXNzLCBhbmQgc2V0IHRoZSBJT1JFU09VUkNFX1BDSV9G
+SVhFRCBhdHRyaWJ1dGUgc28KPiB0aGF0IHRoZSBQQ0kgY29yZSB3aWxsIGxlYXZlIGl0IGFsb25l
+Lgo+Cj4gQ2M6IE1hdHQgRmxlbWluZyA8bWF0dEBjb2RlYmx1ZXByaW50LmNvLnVrPgo+IENjOiBQ
+ZXRlciBKb25lcyA8cGpvbmVzQHJlZGhhdC5jb20+Cj4gU2lnbmVkLW9mZi1ieTogQXJkIEJpZXNo
+ZXV2ZWwgPGFyZC5iaWVzaGV1dmVsQGxpbmFyby5vcmc+Cj4gLS0tCj4gdjM6IGNoZWNrIGRldmlj
+ZSBpcyBlbmFibGVkIGJlZm9yZSBhdHRlbXB0aW5nIHRvIGNsYWltIHRoZSByZXNvdXJjZQo+Cj4g
+ICBkcml2ZXJzL3ZpZGVvL2ZiZGV2L2VmaWZiLmMgfCA2MCArKysrKysrKysrKysrKysrKysrLQo+
+ICAgMSBmaWxlIGNoYW5nZWQsIDU5IGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24oLSkKPgo+IGRp
+ZmYgLS1naXQgYS9kcml2ZXJzL3ZpZGVvL2ZiZGV2L2VmaWZiLmMgYi9kcml2ZXJzL3ZpZGVvL2Zi
+ZGV2L2VmaWZiLmMKPiBpbmRleCA4YzRkYzFlMWY5NGYuLjg4ZjY1Mzg2NGEwMSAxMDA2NDQKPiAt
+LS0gYS9kcml2ZXJzL3ZpZGVvL2ZiZGV2L2VmaWZiLmMKPiArKysgYi9kcml2ZXJzL3ZpZGVvL2Zi
+ZGV2L2VmaWZiLmMKPiBAQCAtMTAsNiArMTAsNyBAQAo+ICAgI2luY2x1ZGUgPGxpbnV4L2VmaS5o
+Pgo+ICAgI2luY2x1ZGUgPGxpbnV4L2Vycm5vLmg+Cj4gICAjaW5jbHVkZSA8bGludXgvZmIuaD4K
+PiArI2luY2x1ZGUgPGxpbnV4L3BjaS5oPgo+ICAgI2luY2x1ZGUgPGxpbnV4L3BsYXRmb3JtX2Rl
+dmljZS5oPgo+ICAgI2luY2x1ZGUgPGxpbnV4L3NjcmVlbl9pbmZvLmg+Cj4gICAjaW5jbHVkZSA8
+dmlkZW8vdmdhLmg+Cj4gQEAgLTE0Myw2ICsxNDQsOSBAQCBzdGF0aWMgc3RydWN0IGF0dHJpYnV0
+ZSAqZWZpZmJfYXR0cnNbXSA9IHsKPiAgIH07Cj4gICBBVFRSSUJVVEVfR1JPVVBTKGVmaWZiKTsK
+PiAgIAo+ICtzdGF0aWMgYm9vbCBwY2lfYmFyX2ZvdW5kOwkvKiBkaWQgd2UgZmluZCBhIEJBUiBt
+YXRjaGluZyB0aGUgZWZpZmIgYmFzZT8gKi8KPiArc3RhdGljIGJvb2wgcGNpX2Rldl9kaXNhYmxl
+ZDsJLyogd2FzIHRoZSBkZXZpY2UgZGlzYWJsZWQ/ICovCj4gKwo+ICAgc3RhdGljIGludCBlZmlm
+Yl9wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpkZXYpCj4gICB7Cj4gICAJc3RydWN0IGZi
+X2luZm8gKmluZm87Cj4gQEAgLTE1Miw3ICsxNTYsNyBAQCBzdGF0aWMgaW50IGVmaWZiX3Byb2Jl
+KHN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKmRldikKPiAgIAl1bnNpZ25lZCBpbnQgc2l6ZV90b3Rh
+bDsKPiAgIAljaGFyICpvcHRpb24gPSBOVUxMOwo+ICAgCj4gLQlpZiAoc2NyZWVuX2luZm8ub3Jp
+Z192aWRlb19pc1ZHQSAhPSBWSURFT19UWVBFX0VGSSkKPiArCWlmIChzY3JlZW5faW5mby5vcmln
+X3ZpZGVvX2lzVkdBICE9IFZJREVPX1RZUEVfRUZJIHx8IHBjaV9kZXZfZGlzYWJsZWQpCj4gICAJ
+CXJldHVybiAtRU5PREVWOwo+ICAgCj4gICAJaWYgKGZiX2dldF9vcHRpb25zKCJlZmlmYiIsICZv
+cHRpb24pKQo+IEBAIC0zNjAsMyArMzY0LDU3IEBAIHN0YXRpYyBzdHJ1Y3QgcGxhdGZvcm1fZHJp
+dmVyIGVmaWZiX2RyaXZlciA9IHsKPiAgIH07Cj4gICAKPiAgIGJ1aWx0aW5fcGxhdGZvcm1fZHJp
+dmVyKGVmaWZiX2RyaXZlcik7Cj4gKwo+ICtzdGF0aWMgdm9pZCBjbGFpbV9lZmlmYl9iYXIoc3Ry
+dWN0IHBjaV9kZXYgKmRldiwgaW50IGlkeCkKPiArewo+ICsJdTE2IHdvcmQ7Cj4gKwo+ICsJcGNp
+X2Jhcl9mb3VuZCA9IHRydWU7Cj4gKwo+ICsJcGNpX3JlYWRfY29uZmlnX3dvcmQoZGV2LCBQQ0lf
+Q09NTUFORCwgJndvcmQpOwo+ICsJaWYgKCEod29yZCAmIFBDSV9DT01NQU5EX01FTU9SWSkpIHsK
+PiArCQlwY2lfZGV2X2Rpc2FibGVkID0gdHJ1ZTsKPiArCQlkZXZfZXJyKCZkZXYtPmRldiwKPiAr
+CQkJIkJBUiAlZDogYXNzaWduZWQgdG8gZWZpZmIgYnV0IGRldmljZSBpcyBkaXNhYmxlZCFcbiIs
+Cj4gKwkJCWlkeCk7Cj4gKwkJcmV0dXJuOwo+ICsJfQo+ICsKPiArCWlmIChwY2lfY2xhaW1fcmVz
+b3VyY2UoZGV2LCBpZHgpKSB7Cj4gKwkJcGNpX2Rldl9kaXNhYmxlZCA9IHRydWU7Cj4gKwkJZGV2
+X2VycigmZGV2LT5kZXYsCj4gKwkJCSJCQVIgJWQ6IGZhaWxlZCB0byBjbGFpbSByZXNvdXJjZSBm
+b3IgZWZpZmIhXG4iLCBpZHgpOwo+ICsJCXJldHVybjsKPiArCX0KPiArCj4gKwlkZXZfaW5mbygm
+ZGV2LT5kZXYsICJCQVIgJWQ6IGFzc2lnbmVkIHRvIGVmaWZiXG4iLCBpZHgpOwo+ICt9Cj4gKwo+
+ICtzdGF0aWMgdm9pZCBlZmlmYl9maXh1cF9yZXNvdXJjZXMoc3RydWN0IHBjaV9kZXYgKmRldikK
+PiArewo+ICsJdTY0IGJhc2UgPSBzY3JlZW5faW5mby5sZmJfYmFzZTsKPiArCXU2NCBzaXplID0g
+c2NyZWVuX2luZm8ubGZiX3NpemU7Cj4gKwlpbnQgaTsKPiArCj4gKwlpZiAocGNpX2Jhcl9mb3Vu
+ZCB8fCBzY3JlZW5faW5mby5vcmlnX3ZpZGVvX2lzVkdBICE9IFZJREVPX1RZUEVfRUZJKQo+ICsJ
+CXJldHVybjsKPiArCj4gKwlpZiAoc2NyZWVuX2luZm8uY2FwYWJpbGl0aWVzICYgVklERU9fQ0FQ
+QUJJTElUWV82NEJJVF9CQVNFKQo+ICsJCWJhc2UgfD0gKHU2NClzY3JlZW5faW5mby5leHRfbGZi
+X2Jhc2UgPDwgMzI7Cj4gKwo+ICsJaWYgKCFiYXNlKQo+ICsJCXJldHVybjsKPiArCj4gKwlmb3Ig
+KGkgPSAwOyBpIDwgUENJX1NURF9SRVNPVVJDRV9FTkQ7IGkrKykgewo+ICsJCXN0cnVjdCByZXNv
+dXJjZSAqcmVzID0gJmRldi0+cmVzb3VyY2VbaV07Cj4gKwo+ICsJCWlmICghKHJlcy0+ZmxhZ3Mg
+JiBJT1JFU09VUkNFX01FTSkpCj4gKwkJCWNvbnRpbnVlOwo+ICsKPiArCQlpZiAocmVzLT5zdGFy
+dCA8PSBiYXNlICYmIHJlcy0+ZW5kID49IGJhc2UgKyBzaXplIC0gMSkgewpIYXZlIHdlIGNvbnNp
+ZGVyZWQgUENJIGFkZHJlc3MgdHJhbnNsYXRpb24gaGVyZT8gSSBzdXBwb3NlIHRoZSBhZGRyZXNz
+IApyZXBvcnRlZCBieSBFRkkgR09QIHNob3VsZCBiZSB0aGUgYWRkcmVzcyBvZiBDUFUgZG9tYWlu
+LCBub3QgYWRkcmVzcyBvZiAKUENJIGRvbWFpbi4gQWRkcmVzcyByZWFkIGZyb20gUENJIEJBUiBp
+cyBQQ0kgYWRkcmVzcyB3aGljaCBzaG91bGQgYWRkIAp0cmFuc2xhdGlvbiBvZmZzZXQgYmVmb3Jl
+IGJlaW5nIGNvbXBhcmVkIHRvIENQVSBkb21haW4gYWRkcmVzcy4KCkkndmUgbm90IGZhbWlsaWFy
+IHdpdGggTGludXggY29kZSwgc28gcGxlYXNlIGlnbm9yZSBteSBjb21tZW50IGlmIHRoZSAKY29k
+ZSBoYXMgc3VwcG9ydGVkIGFkZHJlc3MgdHJhbnNsYXRpb24uCgpSZWdhcmRzLAoKR2FyeSAoSGV5
+aSBHdW8pCgo+ICsJCQljbGFpbV9lZmlmYl9iYXIoZGV2LCBpKTsKPiArCQkJYnJlYWs7Cj4gKwkJ
+fQo+ICsJfQo+ICt9Cj4gK0RFQ0xBUkVfUENJX0ZJWFVQX0hFQURFUihQQ0lfQU5ZX0lELCBQQ0lf
+QU5ZX0lELCBlZmlmYl9maXh1cF9yZXNvdXJjZXMpOwoKCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCmxpbnV4LWFybS1rZXJuZWwgbWFpbGluZyBsaXN0Cmxp
+bnV4LWFybS1rZXJuZWxAbGlzdHMuaW5mcmFkZWFkLm9yZwpodHRwOi8vbGlzdHMuaW5mcmFkZWFk
+Lm9yZy9tYWlsbWFuL2xpc3RpbmZvL2xpbnV4LWFybS1rZXJuZWwK
