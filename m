@@ -1,18 +1,19 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V11 08/11] drivers: acpi: Handle IOMMU lookup failure with
+Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
  deferred probing or error
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Nate Watterson <nwatters@codeaurora.org>
-References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
- <1491823266-1209-9-git-send-email-sricharan@codeaurora.org>
- <41668eff-271c-1c4c-7665-3bf0faa74669@codeaurora.org>
- <20170523085241.GA18204@red-moon>
 From: Sricharan R <sricharan@codeaurora.org>
-Message-ID: <c6d5c033-a8f9-03e3-9963-cd291ae2d7e1@codeaurora.org>
-Date: Tue, 23 May 2017 14:31:17 +0530
+To: Robin Murphy <robin.murphy@arm.com>,
+ Geert Uytterhoeven <geert@linux-m68k.org>
+References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
+ <1486136933-20328-8-git-send-email-sricharan@codeaurora.org>
+ <CAMuHMdV05uCcVss+V1E+_OQYosJO6P95rU1WynV-G08-iHJnyg@mail.gmail.com>
+ <2bfd11dc-9f94-2b69-7b03-c640e53155e1@arm.com>
+ <26defadf-6380-4af4-6323-b51198376bc1@codeaurora.org>
+Message-ID: <9742498a-a415-6725-3aa0-b29089152383@codeaurora.org>
+Date: Wed, 3 May 2017 16:43:05 +0530
 MIME-Version: 1.0
-In-Reply-To: <20170523085241.GA18204@red-moon>
+In-Reply-To: <26defadf-6380-4af4-6323-b51198376bc1@codeaurora.org>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -20,130 +21,116 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
- frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
- tn@semihalf.com, joro@8bytes.org, linux-acpi@vger.kernel.org,
- linux-pci@vger.kernel.org, lenb@kernel.org, devicetree@vger.kernel.org,
- arnd@arndb.de, linux-arm-msm@vger.kernel.org, robh+dt@kernel.org,
- bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
- gregkh@linuxfoundation.org, rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
- iommu@lists.linux-foundation.org, hanjun.guo@linaro.org, sudeep.holla@arm.com,
- robin.murphy@arm.com
+Cc: okaya@codeaurora.org,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ Magnus Damm <magnus.damm@gmail.com>, Will Deacon <will.deacon@arm.com>,
+ Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+ ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
+ iommu@lists.linux-foundation.org, linux-pci <linux-pci@vger.kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, tn@semihalf.com,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+Hi,
 
-On 5/23/2017 2:22 PM, Lorenzo Pieralisi wrote:
-> On Tue, May 23, 2017 at 02:26:10AM -0400, Nate Watterson wrote:
->> Hi Sricharan,
->>
->> On 4/10/2017 7:21 AM, Sricharan R wrote:
->>> This is an equivalent to the DT's handling of the iommu master's probe
->>> with deferred probing when the corrsponding iommu is not probed yet.
->>> The lack of a registered IOMMU can be caused by the lack of a driver for
->>> the IOMMU, the IOMMU device probe not having been performed yet, having
->>> been deferred, or having failed.
->>>
->>> The first case occurs when the firmware describes the bus master and
->>> IOMMU topology correctly but no device driver exists for the IOMMU yet
->>> or the device driver has not been compiled in. Return NULL, the caller
->>> will configure the device without an IOMMU.
->>>
->>> The second and third cases are handled by deferring the probe of the bus
->>> master device which will eventually get reprobed after the IOMMU.
->>>
->>> The last case is currently handled by deferring the probe of the bus
->>> master device as well. A mechanism to either configure the bus master
->>> device without an IOMMU or to fail the bus master device probe depending
->>> on whether the IOMMU is optional or mandatory would be a good
->>> enhancement.
->>>
->>> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
->>> Reviewed-by: Robin Murphy <robin.murphy@arm.com>
->>> [Lorenzo: Added fixes for dma_coherent_mask overflow, acpi_dma_configure
->>>           called multiple times for same device]
->>> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->>> ---
->>>  drivers/acpi/arm64/iort.c  | 33 ++++++++++++++++++++++++++++++++-
->>>  drivers/acpi/scan.c        | 11 ++++++++---
->>>  drivers/base/dma-mapping.c |  2 +-
->>>  include/acpi/acpi_bus.h    |  2 +-
->>>  include/linux/acpi.h       |  7 +++++--
->>>  5 files changed, 47 insertions(+), 8 deletions(-)
->>>
->>> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
->>> index 3dd9ec3..e323ece 100644
->>> --- a/drivers/acpi/arm64/iort.c
->>> +++ b/drivers/acpi/arm64/iort.c
->>> @@ -543,6 +543,14 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
->>>  	const struct iommu_ops *ops = NULL;
->>>  	int ret = -ENODEV;
->>>  	struct fwnode_handle *iort_fwnode;
->>> +	struct iommu_fwspec *fwspec = dev->iommu_fwspec;
->>> +
->>> +	/*
->>> +	 * If we already translated the fwspec there
->>> +	 * is nothing left to do, return the iommu_ops.
->>> +	 */
->>> +	if (fwspec && fwspec->ops)
->>> +		return fwspec->ops;
->>
->> Is this logic strictly required? It breaks masters with multiple SIDs
->> as only the first SID is actually added to the master's fwspec.
+On 5/3/2017 3:54 PM, Sricharan R wrote:
+> Hi Robin,
 > 
-> My bad, that's indeed a silly bug I introduced. Please let me know if the
-> patch below fixes it, we will send it upstream shortly.
+> On 5/3/2017 3:24 PM, Robin Murphy wrote:
+>> Hi Geert,
+>>
+>> On 02/05/17 19:35, Geert Uytterhoeven wrote:
+>>> Hi Sricharan,
+>>>
+>>> On Fri, Feb 3, 2017 at 4:48 PM, Sricharan R <sricharan@codeaurora.org> wrote:
+>>>> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
+>>>>
+>>>> Failures to look up an IOMMU when parsing the DT iommus property need to
+>>>> be handled separately from the .of_xlate() failures to support deferred
+>>>> probing.
+>>>>
+>>>> The lack of a registered IOMMU can be caused by the lack of a driver for
+>>>> the IOMMU, the IOMMU device probe not having been performed yet, having
+>>>> been deferred, or having failed.
+>>>>
+>>>> The first case occurs when the device tree describes the bus master and
+>>>> IOMMU topology correctly but no device driver exists for the IOMMU yet
+>>>> or the device driver has not been compiled in. Return NULL, the caller
+>>>> will configure the device without an IOMMU.
+>>>>
+>>>> The second and third cases are handled by deferring the probe of the bus
+>>>> master device which will eventually get reprobed after the IOMMU.
+>>>>
+>>>> The last case is currently handled by deferring the probe of the bus
+>>>> master device as well. A mechanism to either configure the bus master
+>>>> device without an IOMMU or to fail the bus master device probe depending
+>>>> on whether the IOMMU is optional or mandatory would be a good
+>>>> enhancement.
+>>>>
+>>>> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+>>>> Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
+>>>> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+>>>
+>>> This patch broke Renesas R-Car Gen3 platforms in renesas-drivers.
+>>> As the IOMMU nodes in DT are not yet enabled, all devices having iommus
+>>> properties in DT now fail to probe.
+>>
+>> How exactly do they fail to probe? Per d7b0558230e4, if there are no ops
+>> registered then they should merely defer until we reach the point of
+>> giving up and ignoring the IOMMU. Is it just that you have no other
+>> late-probing drivers or post-init module loads to kick the deferred
+>> queue after that point? I did try to find a way to explicitly kick it
+>> from a suitably late initcall, but there didn't seem to be any obvious
+>> public interface - anyone have any suggestions?
+>>
+>> I think that's more of a general problem with the probe deferral
+>> mechanism itself (I've seen the same thing happen with some of the
+>> CoreSight stuff on Juno due to the number of inter-component
+>> dependencies) rather than any specific fault of this series.
+>>
+> 
+> I was thinking of an additional check like below to avoid the
+> situation ?
+> 
+> From 499b6e662f60f23740b8880882b0a16f16434501 Mon Sep 17 00:00:00 2001
+> From: Sricharan R <sricharan@codeaurora.org>
+> Date: Wed, 3 May 2017 13:16:59 +0530
+> Subject: [PATCH] iommu: of: Fix check for returning EPROBE_DEFER
+> 
+> While returning EPROBE_DEFER for iommu masters
+> take in to account of iommu nodes that could be
+> marked in DT as 'status=disabled', in which case
+> simply return NULL and let the master's probe
+> continue rather than deferring.
+> 
+> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
+> ---
+>  drivers/iommu/of_iommu.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
+> index 9f44ee8..e6e9bec 100644
+> --- a/drivers/iommu/of_iommu.c
+> +++ b/drivers/iommu/of_iommu.c
+> @@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node *np)
+> 
+>         ops = iommu_ops_from_fwnode(fwnode);
+>         if ((ops && !ops->of_xlate) ||
+> +           !of_device_is_available(iommu_spec->np) ||
+>             (!ops && !of_iommu_driver_present(iommu_spec->np)))
+>                 return NULL;
 > 
 
-oops, i think emails crossed. Please let me know if you are ok to add this
-to the other fixes.
+While same as the other 'status=disabled' patch [1], better not to
+defer the probe itself in the case ?
+
+[1] https://patchwork.kernel.org/patch/9681211/
 
 Regards,
  Sricharan
-
-> Lorenzo
-> 
-> -- >8 --
-> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-> index c5fecf9..e326f2a 100644
-> --- a/drivers/acpi/arm64/iort.c
-> +++ b/drivers/acpi/arm64/iort.c
-> @@ -666,14 +666,6 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
->  	int ret = -ENODEV;
->  	struct fwnode_handle *iort_fwnode;
->  
-> -	/*
-> -	 * If we already translated the fwspec there
-> -	 * is nothing left to do, return the iommu_ops.
-> -	 */
-> -	ops = iort_fwspec_iommu_ops(dev->iommu_fwspec);
-> -	if (ops)
-> -		return ops;
-> -
->  	if (node) {
->  		iort_fwnode = iort_get_fwnode(node);
->  		if (!iort_fwnode)
-> @@ -735,6 +727,14 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
->  	u32 streamid = 0;
->  	int err;
->  
-> +	/*
-> +	 * If we already translated the fwspec there
-> +	 * is nothing left to do, return the iommu_ops.
-> +	 */
-> +	ops = iort_fwspec_iommu_ops(dev->iommu_fwspec);
-> +	if (ops)
-> +		return ops;
-> +
->  	if (dev_is_pci(dev)) {
->  		struct pci_bus *bus = to_pci_dev(dev)->bus;
->  		u32 rid;
-> 
-> 
 
 -- 
 "QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
