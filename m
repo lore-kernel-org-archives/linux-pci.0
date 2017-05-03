@@ -1,273 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34401 "EHLO
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33045 "EHLO
         mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751162AbdEHRqP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2017 13:46:15 -0400
-Date: Mon, 8 May 2017 12:46:13 -0500
-From: Rob Herring <robh@kernel.org>
-To: John Crispin <john@phrozen.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        Stanimir Varbanov <svarbanov@mm-sol.com>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom: Add support for IPQ4019 PCIe controller
-Message-ID: <20170508174613.37vss73bsuo5ouqk@rob-hp-laptop>
-References: <20170505152524.29337-1-john@phrozen.org>
+        with ESMTP id S1754212AbdECMCR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 May 2017 08:02:17 -0400
+Received: by mail-oi0-f68.google.com with SMTP id h4so4334475oib.0
+        for <linux-pci@vger.kernel.org>; Wed, 03 May 2017 05:02:17 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170505152524.29337-1-john@phrozen.org>
+In-Reply-To: <20170503103153.GB10800@red-moon>
+References: <20170426111809.19922-1-lorenzo.pieralisi@arm.com>
+ <20170426111809.19922-6-lorenzo.pieralisi@arm.com> <CAK8P3a1bnnq-9iuse43bCNX_9TirZPOtmH_vFsvJ9VOAsoUBzQ@mail.gmail.com>
+ <20170503103153.GB10800@red-moon>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 3 May 2017 14:02:16 +0200
+Message-ID: <CAK8P3a2Ww0DtTq_ZeACJPC7oGkoY3YP4GQB7RWouY2=e9gck1A@mail.gmail.com>
+Subject: Re: [RFC/RFT PATCH 05/18] ARM: PCI: dove: Convert PCI scan API to pci_scan_root_bus_bridge()
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+Cc: linux-pci <linux-pci@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        Jason Cooper <jason@lakedaemon.net>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Russell King <linux@armlinux.org.uk>,
+        Andrew Lunn <andrew@lunn.ch>,
+        Will Deacon <will.deacon@arm.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Simon Horman <horms@verge.net.au>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Tanmay Inamdar <tinamdar@apm.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+        Wenrui Li <wenrui.li@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Michal Simek <michal.simek@xilinx.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Matthew Minter <matt@masarand.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 05, 2017 at 05:25:24PM +0200, John Crispin wrote:
-> Add support for the IPQ4019 PCIe controller. IPQ4019 supports Gen
-> 1/2, one lane, one PCIe root complex with support for MSI and legacy
-> interrupts, and it conforms to PCI Express Base 2.1 specification.
-> 
-> The core init is the sames as for the MSM8996, however the clocks and
-> reset lines differ.
-> 
-> Signed-off-by: John Crispin <john@phrozen.org>
-> ---
->  .../devicetree/bindings/pci/qcom,pcie.txt          |  20 +-
+On Wed, May 3, 2017 at 12:31 PM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Fri, Apr 28, 2017 at 02:38:48PM +0200, Arnd Bergmann wrote:
+>> On Wed, Apr 26, 2017 at 1:17 PM, Lorenzo Pieralisi
+>> <lorenzo.pieralisi@arm.com> wrote:
+>> > The introduction of pci_scan_root_bus_bridge() provides a PCI core
+>> > API to scan a PCI root bus backed by an already initialized
+>> > struct pci_host_bridge object, which simplifies the bus scan
+>> > interface and makes the PCI scan root bus interface easier to
+>> > generalize as members are added to the struct pci_host_bridge().
+>> >
+>> > Convert ARM dove platform code to pci_scan_root_bus_bridge() to improve
+>> > the PCI root bus scanning interface.
+>> >
+>> > Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+>>
+>> Is this patch required for one of the later steps in the series?
+>>
+>> As non-DT dove uses the traditional pci_common_init() helper rather
+>> than registering its own driver, I wonder if there is anything to gain here.
+>
+> Well, the point is, the non-DT platforms I patched implement a custom
+> .scan method in struct hw_pci. If we move the bridge allocation to
+> pcibios_init_hw() we would end up initializing some struct
+> pci_host_bridge fields in pcibios_init_hw() and some in the custom .scan
+> method (ie custom pci_ops) which I found not very elegant but it could be
+> done I reckon, I need to give it a go to see how the code looks like.
 
-For the binding:
+I don't see anything wrong with initializing the members in different
+places. The first set would give you a default that works for basic
+drivers, and the second set is a way to override the defaults for drivers
+that do something special. Conceptually we do this all the time in
+other places.
 
-Acked-by: Rob Herring <robh@kernel.org>
-
->  drivers/pci/host/pcie-qcom.c                       | 304 +++++++++++++++++++++
->  2 files changed, 323 insertions(+), 1 deletion(-)
-
-
-> +static int qcom_pcie_init_v3(struct qcom_pcie *pcie)
-> +{
-> +	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
-> +	struct device *dev = pcie->pp.dev;
-> +	u32 val;
-> +	int ret;
-> +
-> +	ret = reset_control_assert(res->axi_m_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot assert axi master reset\n");
-
-These all seem kind of verbose. Perhaps the error message should be in 
-reset_control_assert function.
-
-> +		return ret;
-> +	}
-> +
-> +	ret = reset_control_assert(res->axi_s_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot asser axi slave reset\n");
-> +		return ret;
-> +	}
-> +
-> +	usleep_range(10000, 12000);
-> +
-> +	ret = reset_control_assert(res->pipe_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot assert pipe reset\n");
-> +		return ret;
-> +	}
-> +
-> +	ret = reset_control_assert(res->pipe_sticky_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot assert pipe sticky reset\n");
-> +		return ret;
-> +	}
-> +
-> +	ret = reset_control_assert(res->phy_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot assert phy reset\n");
-> +		return ret;
-> +	}
-> +
-> +	ret = reset_control_assert(res->phy_ahb_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot assert phy ahb reset\n");
-> +		return ret;
-> +	}
-> +
-> +	usleep_range(10000, 12000);
-> +
-> +	ret = reset_control_assert(res->axi_m_sticky_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot assert axi master sticky reset\n");
-> +		return ret;
-> +	}
-> +
-> +	ret = reset_control_assert(res->pwr_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot assert power reset\n");
-> +		return ret;
-> +	}
-> +
-> +	ret = reset_control_assert(res->ahb_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot assert ahb reset\n");
-> +		return ret;
-> +	}
-> +
-> +	usleep_range(10000, 12000);
-> +
-> +	ret = reset_control_deassert(res->phy_ahb_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot deassert phy ahb reset\n");
-> +		return ret;
-> +	}
-> +
-> +	ret = reset_control_deassert(res->phy_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot deassert phy reset\n");
-> +		goto err_rst_phy;
-> +	}
-> +
-> +	ret = reset_control_deassert(res->pipe_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot deassert pipe reset\n");
-> +		goto err_rst_pipe;
-> +	}
-> +
-> +	ret = reset_control_deassert(res->pipe_sticky_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot deassert pipe sticky reset\n");
-> +		goto err_rst_pipe_sticky;
-> +	}
-> +
-> +	usleep_range(10000, 12000);
-> +
-> +	ret = reset_control_deassert(res->axi_m_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot deassert axi master reset\n");
-> +		goto err_rst_axi_m;
-> +	}
-> +
-> +	ret = reset_control_deassert(res->axi_m_sticky_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot deassert axi master sticky reset\n");
-> +		goto err_rst_axi_m_sticky;
-> +	}
-> +
-> +	ret = reset_control_deassert(res->axi_s_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot deassert axi slave reset\n");
-> +		goto err_rst_axi_s;
-> +	}
-> +
-> +	ret = reset_control_deassert(res->pwr_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot deassert power reset\n");
-> +		goto err_rst_pwr;
-> +	}
-> +
-> +	ret = reset_control_deassert(res->ahb_reset);
-> +	if (ret) {
-> +		dev_err(dev, "cannot deassert ahb reset\n");
-> +		goto err_rst_ahb;
-> +	}
-> +
-> +	usleep_range(10000, 12000);
-> +
-> +	ret = clk_prepare_enable(res->aux_clk);
-> +	if (ret) {
-> +		dev_err(dev, "cannot prepare/enable iface clock\n");
-> +		goto err_clk_aux;
-> +	}
-> +
-> +	ret = clk_prepare_enable(res->master_clk);
-> +	if (ret) {
-> +		dev_err(dev, "cannot prepare/enable core clock\n");
-> +		goto err_clk_axi_m;
-> +	}
-> +
-> +	ret = clk_prepare_enable(res->slave_clk);
-> +	if (ret) {
-> +		dev_err(dev, "cannot prepare/enable phy clock\n");
-> +		goto err_clk_axi_s;
-> +	}
-> +
-> +	/* enable PCIe clocks and resets */
-> +	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
-> +	val &= !BIT(0);
-> +	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
-> +
-> +	/* change DBI base address */
-> +	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
-> +
-> +	/* MAC PHY_POWERDOWN MUX DISABLE  */
-> +	val = readl(pcie->parf + PCIE20_PARF_SYS_CTRL);
-> +	val &= ~BIT(29);
-> +	writel(val, pcie->parf + PCIE20_PARF_SYS_CTRL);
-> +
-> +	val = readl(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-> +	val |= BIT(4);
-> +	writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
-> +
-> +	val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-> +	val |= BIT(31);
-> +	writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
-> +
-> +	return 0;
-> +
-> +err_clk_axi_s:
-> +	clk_disable_unprepare(res->master_clk);
-> +err_clk_axi_m:
-> +	clk_disable_unprepare(res->aux_clk);
-
-
-In deinit you turn off the clocks last.
-
-
-> +err_clk_aux:
-> +	reset_control_assert(res->ahb_reset);
-> +err_rst_ahb:
-> +	reset_control_assert(res->pwr_reset);
-> +err_rst_pwr:
-> +	reset_control_assert(res->axi_s_reset);
-> +err_rst_axi_s:
-> +	reset_control_assert(res->axi_m_sticky_reset);
-> +err_rst_axi_m_sticky:
-> +	reset_control_assert(res->axi_m_reset);
-> +err_rst_axi_m:
-> +	reset_control_assert(res->pipe_sticky_reset);
-> +err_rst_pipe_sticky:
-> +	reset_control_assert(res->pipe_reset);
-> +err_rst_pipe:
-> +	reset_control_assert(res->phy_reset);
-> +err_rst_phy:
-> +	reset_control_assert(res->phy_ahb_reset);
-> +	return ret;
-> +}
-> +
->  static int qcom_pcie_link_up(struct pcie_port *pp)
->  {
->  	struct qcom_pcie *pcie = to_qcom_pcie(pp);
-> @@ -661,6 +957,13 @@ static const struct qcom_pcie_ops ops_v2 = {
->  	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
->  };
->  
-> +static const struct qcom_pcie_ops ops_v3 = {
-> +	.get_resources = qcom_pcie_get_resources_v3,
-> +	.init = qcom_pcie_init_v3,
-> +	.deinit = qcom_pcie_deinit_v3,
-> +	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
-> +};
-> +
->  static int qcom_pcie_probe(struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
-> @@ -739,6 +1042,7 @@ static const struct of_device_id qcom_pcie_match[] = {
->  	{ .compatible = "qcom,pcie-apq8064", .data = &ops_v0 },
->  	{ .compatible = "qcom,pcie-apq8084", .data = &ops_v1 },
->  	{ .compatible = "qcom,pcie-msm8996", .data = &ops_v2 },
-> +	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_v3 },
->  	{ }
->  };
->  
-> -- 
-> 2.11.0
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+     Arnd
