@@ -1,93 +1,99 @@
-Return-Path: <SRS0=wb0j=4J=oracle.com=boris.ostrovsky@kernel.org>
-Return-Path: <SRS0=wb0j=4J=oracle.com=boris.ostrovsky@kernel.org>
-Subject: Re: [Xen-devel] [PATCH] xen: do not re-use pirq number cached in pci
- device msi msg data
-To: David Woodhouse <dwmw2@infradead.org>, Bjorn Helgaas
- <helgaas@kernel.org>,
-        stable@vger.kernel.org, Stefano Stabellini <sstabellini@kernel.org>
-References: <04f2a09f-59be-a720-bc98-4afb53171790@oracle.com>
- <20170113200751.20125-1-ddstreet@ieee.org>
- <20170113223035.GE23066@char.us.oracle.com>
- <CALZtONDL2Ph0MMMfSuqvofNZ-+6jPi9aKsE4mL30i15Up6Bvug@mail.gmail.com>
- <0c2b4d6a-93e7-90a2-ffaf-fa423fb022d5@suse.com>
- <72f8b025-e858-5e54-d900-50fbec46fea6@oracle.com>
- <20170222142810.GA28359@bhelgaas-glaptop.roam.corp.google.com>
- <3379a82f-04b7-152a-1577-bf99b1c638cc@oracle.com>
- <1493835543.4904.5.camel@infradead.org>
-Cc: Juergen Gross <jgross@suse.com>, linux-pci@vger.kernel.org,
-        linux-kernel <linux-kernel@vger.kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>, xen-devel@lists.xenproject.org,
-        Dan Streetman <dan.streetman@canonical.com>,
-        Dan Streetman <ddstreet@ieee.org>
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <1b84c2a5-1fd6-02b9-c080-0f99f6a8d085@oracle.com>
-Date: Wed, 3 May 2017 14:43:15 -0400
-MIME-Version: 1.0
-In-Reply-To: <1493835543.4904.5.camel@infradead.org>
-Content-Type: text/plain; charset=utf-8
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from lucky1.263xmail.com ([211.157.147.133]:60860 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753915AbdEDC0X (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 May 2017 22:26:23 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 3/4] PCI: rockchip: spilt out rockchip_pcie_cfg_configuration_accesses
+Date: Thu,  4 May 2017 10:24:50 +0800
+Message-Id: <1493864691-102523-3-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <1493864691-102523-1-git-send-email-shawn.lin@rock-chips.com>
+References: <1493864691-102523-1-git-send-email-shawn.lin@rock-chips.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/03/2017 02:19 PM, David Woodhouse wrote:
-> On Wed, 2017-02-22 at 10:14 -0500, Boris Ostrovsky wrote:
->> On 02/22/2017 09:28 AM, Bjorn Helgaas wrote:
->>> On Tue, Feb 21, 2017 at 10:58:39AM -0500, Boris Ostrovsky wrote:
->>>> On 02/21/2017 10:45 AM, Juergen Gross wrote:
->>>>> On 21/02/17 16:31, Dan Streetman wrote:
->>>>>> On Fri, Jan 13, 2017 at 5:30 PM, Konrad Rzeszutek Wilk
->>>>>> <konrad.wilk@oracle.com> wrote:
->>>>>>> On Fri, Jan 13, 2017 at 03:07:51PM -0500, Dan Streetman wrote:
->>>>>>>> Revert the main part of commit:
->>>>>>>> af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
->>>>>>>>
->>>>>>>> That commit introduced reading the pci device's msi message data to see
->>>>>>>> if a pirq was previously configured for the device's msi/msix, and re-use
->>>>>>>> that pirq.  At the time, that was the correct behavior.  However, a
->>>>>>>> later change to Qemu caused it to call into the Xen hypervisor to unmap
->>>>>>>> all pirqs for a pci device, when the pci device disables its MSI/MSIX
->>>>>>>> vectors; specifically the Qemu commit:
->>>>>>>> c976437c7dba9c7444fb41df45468968aaa326ad
->>>>>>>> ("qemu-xen: free all the pirqs for msi/msix when driver unload")
->>>>>>>>
->>>>>>>> Once Qemu added this pirq unmapping, it was no longer correct for the
->>>>>>>> kernel to re-use the pirq number cached in the pci device msi message
->>>>>>>> data.  All Qemu releases since 2.1.0 contain the patch that unmaps the
->>>>>>>> pirqs when the pci device disables its MSI/MSIX vectors.
->>>>>>>>
->>>>>>>> This bug is causing failures to initialize multiple NVMe controllers
->>>>>>>> under Xen, because the NVMe driver sets up a single MSIX vector for
->>>>>>>> each controller (concurrently), and then after using that to talk to
->>>>>>>> the controller for some configuration data, it disables the single MSIX
->>>>>>>> vector and re-configures all the MSIX vectors it needs.  So the MSIX
->>>>>>>> setup code tries to re-use the cached pirq from the first vector
->>>>>>>> for each controller, but the hypervisor has already given away that
->>>>>>>> pirq to another controller, and its initialization fails.
->>>>>>>>
->>>>>>>> This is discussed in more detail at:
->>>>>>>> https://lists.xen.org/archives/html/xen-devel/2017-01/msg00447.html
->>>>>>>>
->>>>>>>> Fixes: af42b8d12f8a ("xen: fix MSI setup and teardown for PV on HVM guests")
->>>>>>>> Signed-off-by: Dan Streetman <dan.streetman@canonical.com>
->>>>>>> Acked-by: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
->>>>>> This doesn't seem to be applied yet, is it still waiting on another
->>>>>> ack?  Or maybe I'm looking at the wrong git tree...
->>>>> Am I wrong or shouldn't this go through the PCI tree? Konrad?
->>>> Konrad is away this week but since pull request for Xen tree just went
->>>> out we should probably wait until rc1 anyway (unless something big comes
->>>> up before that).
->>> I assume this should go via the Xen or x86 tree, since that's how most
->>> arch/x86/pci/xen.c patches have been handled, including af42b8d12f8a.
->>> If you think otherwise, let me know.
->> OK, I applied it to Xen tree's for-linus-4.11.
-> Hm, we want this (c74fd80f2f4) in stable too, don't we?
+We need to reconfigure the header type later, so spilt out
+a new function.
 
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-Maybe.
+ drivers/pci/host/pcie-rockchip.c | 37 +++++++++++++++++++++++++++----------
+ 1 file changed, 27 insertions(+), 10 deletions(-)
 
-Per https://lists.xen.org/archives/html/xen-devel/2017-01/msg00987.html
-it may break things on older (4.4-) hypervisors. They are out of
-support, which is why this patch went in now but I am not sure this
-automatically applies to stable kernels.
-
-Stefano?
-
--boris
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index 4228629..76bb508 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -175,6 +175,8 @@
+ #define IB_ROOT_PORT_REG_SIZE_SHIFT		3
+ #define AXI_WRAPPER_IO_WRITE			0x6
+ #define AXI_WRAPPER_MEM_WRITE			0x2
++#define AXI_WRAPPER_TYPE0_CFG			0xa
++#define AXI_WRAPPER_TYPE1_CFG			0xb
+ #define AXI_WRAPPER_NOR_MSG			0xc
+ 
+ #define MAX_AXI_IB_ROOTPORT_REGION_NUM		3
+@@ -198,6 +200,7 @@
+ #define RC_REGION_0_ADDR_TRANS_H		0x00000000
+ #define RC_REGION_0_ADDR_TRANS_L		0x00000000
+ #define RC_REGION_0_PASS_BITS			(25 - 1)
++#define RC_REGION_0_TYPE_MASK			GENMASK(3, 0)
+ #define MAX_AXI_WRAPPER_REGION_NUM		33
+ 
+ struct rockchip_pcie {
+@@ -341,6 +344,28 @@ static int rockchip_pcie_wr_own_conf(struct rockchip_pcie *rockchip,
+ 	return PCIBIOS_SUCCESSFUL;
+ }
+ 
++static void rockchip_pcie_cfg_configuration_accesses(
++		struct rockchip_pcie *rockchip, u32 type)
++{
++	u32 ob_desc_0;
++
++	/* Configuration Accesses for region 0 */
++	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
++
++	rockchip_pcie_write(rockchip,
++			    (RC_REGION_0_ADDR_TRANS_L + RC_REGION_0_PASS_BITS),
++			    PCIE_CORE_OB_REGION_ADDR0);
++	rockchip_pcie_write(rockchip, RC_REGION_0_ADDR_TRANS_H,
++			    PCIE_CORE_OB_REGION_ADDR1);
++	ob_desc_0 = rockchip_pcie_read(rockchip, PCIE_CORE_OB_REGION_DESC0);
++	ob_desc_0 &= ~(RC_REGION_0_TYPE_MASK);
++	ob_desc_0 |= (type | (0x1 << 23));
++	rockchip_pcie_write(rockchip, ob_desc_0, PCIE_CORE_OB_REGION_DESC0);
++	rockchip_pcie_write(rockchip, 0x0, PCIE_CORE_OB_REGION_DESC1);
++
++
++}
++
+ static int rockchip_pcie_rd_other_conf(struct rockchip_pcie *rockchip,
+ 				       struct pci_bus *bus, u32 devfn,
+ 				       int where, int size, u32 *val)
+@@ -1153,16 +1178,8 @@ static int rockchip_pcie_cfg_atu(struct rockchip_pcie *rockchip)
+ 	int err;
+ 	int reg_no;
+ 
+-	/* Configuration Accesses for region 0 */
+-	rockchip_pcie_write(rockchip, 0x0, PCIE_RC_BAR_CONF);
+-
+-	rockchip_pcie_write(rockchip,
+-			    (RC_REGION_0_ADDR_TRANS_L + RC_REGION_0_PASS_BITS),
+-			    PCIE_CORE_OB_REGION_ADDR0);
+-	rockchip_pcie_write(rockchip, RC_REGION_0_ADDR_TRANS_H,
+-			    PCIE_CORE_OB_REGION_ADDR1);
+-	rockchip_pcie_write(rockchip, 0x0080000a, PCIE_CORE_OB_REGION_DESC0);
+-	rockchip_pcie_write(rockchip, 0x0, PCIE_CORE_OB_REGION_DESC1);
++	rockchip_pcie_cfg_configuration_accesses(rockchip,
++						 AXI_WRAPPER_TYPE0_CFG);
+ 
+ 	for (reg_no = 0; reg_no < (rockchip->mem_size >> 20); reg_no++) {
+ 		err = rockchip_pcie_prog_ob_atu(rockchip, reg_no + 1,
+-- 
+1.9.1
