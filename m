@@ -1,93 +1,102 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 17 May 2017 17:04:24 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Robert Richter <robert.richter@cavium.com>
-Cc: linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-        Sergey Temerkhanov <s.temerkhanov@gmail.com>,
-        Sinan Kaya <okaya@codeaurora.org>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Vadim Lomovtsev <Vadim.Lomovtsev@caviumnetworks.com>
-Subject: Re: [RFC/RFT PATCH v2 3/3] PCI/ACPI: Add ACPI
- pci_bus_find_numa_node() implementation
-Message-ID: <20170517160424.GA8643@red-moon>
-References: <20170515132205.19622-1-lorenzo.pieralisi@arm.com>
- <20170515132205.19622-4-lorenzo.pieralisi@arm.com>
- <20170516151529.GC658@rric.localdomain>
- <20170516180200.GA24458@red-moon>
- <20170517134654.GA8497@red-moon>
- <20170517143558.GP16981@rric.localdomain>
+Return-Path: <SRS0=EjUq=4K=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=EjUq=4K=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: linux-pci@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org,
+	helgaas@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 1/5] PCI: add a define for the PCI resource type mask
+Date: Thu,  4 May 2017 11:31:06 +0200
+Message-Id: <1493890270-1188-2-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
+References: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170517143558.GP16981@rric.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 17, 2017 at 04:35:58PM +0200, Robert Richter wrote:
-> On 17.05.17 14:46:54, Lorenzo Pieralisi wrote:
-> 
-> > More explicitly, I think the whole series should work also with the diff
-> > below applied on top of it. Side note: for consistency, I do not think
-> > that adding a DT counterpart to pci_bus_find_numa_node() would hurt.
-> > 
-> > Thanks !
-> > Lorenzo
-> > 
-> > -- >8 --
-> > diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> > index 76c089f..cf0692c 100644
-> > --- a/drivers/pci/probe.c
-> > +++ b/drivers/pci/probe.c
-> > @@ -862,7 +862,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
-> >  	 */
-> >  	child->dev.class = &pcibus_class;
-> >  	dev_set_name(&child->dev, "%04x:%02x", pci_domain_nr(child), busnr);
-> > -	set_dev_node(&child->dev, dev_to_node(&parent->dev));
-> > +
-> 
-> Hmm, in device_add() there is already:
-> 
-> 	/* use parent numa_node */
-> 	if (parent && (dev_to_node(dev) == NUMA_NO_NODE))
->         	set_dev_node(dev, dev_to_node(parent));
-> 
-> So there are cases where the device has a different node than the
-> parent. I am not sure if we can assume for pci that it maps always.
-> 
-> And since device_add() is called later anyway, the above change might
-> not necessary at all.
+From: Christian König <christian.koenig@amd.com>
 
-That's why I _removed_ the set_dev_node() in the diff above (that applies
-to patch (2)), I do not think it is a) correct and b) necessary to
-propagate the NUMA node from bus to a child bus given that device_add()
-takes care of that already.
+We use this mask multiple times in the bus setup.
 
-I should post a v3 (with the diff above applied) so that we are all on
-the same page and we can test it.
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ drivers/pci/pci.h       |  3 +++
+ drivers/pci/setup-bus.c | 14 +++++---------
+ 2 files changed, 8 insertions(+), 9 deletions(-)
 
-> But at least we must assign the node id to the
-> bridge, which is the parent. Maybe just have in
-> acpi_pci_root_create():
-> 
-> 	bridge = get_device(bus->bridge);
-> 	adev = to_acpi_device_node(bridge->fwnode);
-> 	set_dev_node(bridge, acpi_get_node(adev->handle));
-
-I do not think that's enough, I need to check again but I think that
-also the bus->dev should have its NUMA node set for things to work (and
-allow the NUMA node to propagate correctly through device_add())
-otherwise pcibus_to_node() would fail for devices sitting on the root
-bus, right ?
-
-I will check again and post v3 shortly.
-
-Thanks !
-Lorenzo
-
-> 
-> -Robert
-> 
-> 
-> >  	/*
-> >  	 * Set up the primary, secondary and subordinate
-> >  	 * bus numbers.
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 4518562..3868828 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -6,6 +6,9 @@
+ 
+ #define PCI_FIND_CAP_TTL	48
+ 
++#define PCI_RES_TYPE_MASK (IORESOURCE_IO | IORESOURCE_MEM | \
++			   IORESOURCE_PREFETCH | IORESOURCE_MEM_64)
++
+ extern const unsigned char pcie_link_speed[];
+ 
+ bool pcie_cap_has_lnkctl(const struct pci_dev *dev);
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f30ca75..bb1001e 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1532,8 +1532,6 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ {
+ 	struct pci_dev *dev = bus->self;
+ 	struct resource *r;
+-	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+ 	unsigned old_flags = 0;
+ 	struct resource *b_res;
+ 	int idx = 1;
+@@ -1576,7 +1574,7 @@ static void pci_bridge_release_resources(struct pci_bus *bus,
+ 	 */
+ 	release_child_resources(r);
+ 	if (!release_resource(r)) {
+-		type = old_flags = r->flags & type_mask;
++		type = old_flags = r->flags & PCI_RES_TYPE_MASK;
+ 		dev_printk(KERN_DEBUG, &dev->dev, "resource %d %pR released\n",
+ 					PCI_BRIDGE_RESOURCES + idx, r);
+ 		/* keep the old size */
+@@ -1767,8 +1765,6 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 	enum release_type rel_type = leaf_only;
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+-	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+ 	int pci_try_num = 1;
+ 	enum enable_type enable_local;
+ 
+@@ -1827,7 +1823,8 @@ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus)
+ 	 */
+ 	list_for_each_entry(fail_res, &fail_head, list)
+ 		pci_bus_release_bridge_resources(fail_res->dev->bus,
+-						 fail_res->flags & type_mask,
++						 fail_res->flags &
++						 PCI_RES_TYPE_MASK,
+ 						 rel_type);
+ 
+ 	/* restore size and flags */
+@@ -1871,8 +1868,6 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 	LIST_HEAD(fail_head);
+ 	struct pci_dev_resource *fail_res;
+ 	int retval;
+-	unsigned long type_mask = IORESOURCE_IO | IORESOURCE_MEM |
+-				  IORESOURCE_PREFETCH | IORESOURCE_MEM_64;
+ 
+ again:
+ 	__pci_bus_size_bridges(parent, &add_list);
+@@ -1898,7 +1893,8 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ 	 */
+ 	list_for_each_entry(fail_res, &fail_head, list)
+ 		pci_bus_release_bridge_resources(fail_res->dev->bus,
+-						 fail_res->flags & type_mask,
++						 fail_res->flags &
++						 PCI_RES_TYPE_MASK,
+ 						 whole_subtree);
+ 
+ 	/* restore size and flags */
+-- 
+2.7.4
