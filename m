@@ -1,71 +1,91 @@
-Return-Path: <SRS0=f3dI=4W=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=f3dI=4W=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <helgaas@kernel.org>
-CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
-        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>
-Subject: [PATCH 2/2] PCI/portdrv: allocate MSI/MSIx vector for DPC RP service
-Date: Tue, 16 May 2017 11:25:42 +0100
-Message-ID: <1494930342-7132-3-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1494930342-7132-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1494930342-7132-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Jani Nikula <jani.nikula@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-acpi@vger.kernel.org, tpmdd-devel@lists.sourceforge.net,
+        intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
+        linux-input@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Borislav Petkov <bp@suse.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>
+Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
+In-Reply-To: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+Date: Thu, 04 May 2017 12:37:27 +0300
+Message-ID: <87d1bpotd4.fsf@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Thu, 04 May 2017, Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
+> diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
+> index eb638a1e69d2..72bfe6ceadf8 100644
+> --- a/drivers/gpu/drm/i915/intel_acpi.c
+> +++ b/drivers/gpu/drm/i915/intel_acpi.c
+> @@ -15,13 +15,9 @@ static struct intel_dsm_priv {
+>  	acpi_handle dhandle;
+>  } intel_dsm_priv;
+>  
+> -static const u8 intel_dsm_guid[] = {
+> -	0xd3, 0x73, 0xd8, 0x7e,
+> -	0xd0, 0xc2,
+> -	0x4f, 0x4e,
+> -	0xa8, 0x54,
+> -	0x0f, 0x13, 0x17, 0xb0, 0x1c, 0x2c
+> -};
+> +static const uuid_le intel_dsm_guid =
+> +	UUID_LE(0x7ed873d3, 0xc2d0, 0x4e4f,
+> +		0xa8, 0x54, 0x0f, 0x13, 0x17, 0xb0, 0x1c, 0x2c);
+>  
+>  static char *intel_dsm_port_name(u8 id)
+>  {
+> @@ -80,7 +76,7 @@ static void intel_dsm_platform_mux_info(void)
+>  	int i;
+>  	union acpi_object *pkg, *connector_count;
+>  
+> -	pkg = acpi_evaluate_dsm_typed(intel_dsm_priv.dhandle, intel_dsm_guid,
+> +	pkg = acpi_evaluate_dsm_typed(intel_dsm_priv.dhandle, &intel_dsm_guid,
+>  			INTEL_DSM_REVISION_ID, INTEL_DSM_FN_PLATFORM_MUX_INFO,
+>  			NULL, ACPI_TYPE_PACKAGE);
+>  	if (!pkg) {
+> @@ -118,7 +114,7 @@ static bool intel_dsm_pci_probe(struct pci_dev *pdev)
+>  	if (!dhandle)
+>  		return false;
+>  
+> -	if (!acpi_check_dsm(dhandle, intel_dsm_guid, INTEL_DSM_REVISION_ID,
+> +	if (!acpi_check_dsm(dhandle, &intel_dsm_guid, INTEL_DSM_REVISION_ID,
+>  			    1 << INTEL_DSM_FN_PLATFORM_MUX_INFO)) {
+>  		DRM_DEBUG_KMS("no _DSM method for intel device\n");
+>  		return false;
 
-Currently the MSI/MSIx vectors for the root port services are
-allocated calling pcie_init_service_irqs(). At the moment these
-vectors are only allocated for AER, PME, HP.
-This patch allocate an MSI/MSIx vector also for DPC.
+The drm/i915 hunk above is
 
-Signed-off-by: Liudongdong <liudongdong3@huawei.com>
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
----
- drivers/pci/pcie/portdrv_core.c | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
+Reviewed-by: Jani Nikula <jani.nikula@intel.com>
 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index e2c7bfd..477bf14 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -131,6 +131,35 @@ int pcie_port_enable_msix_or_msi(struct pci_dev *dev, int *irqs, int mask)
- 		nvec = max(nvec, entry + 1);
- 	}
- 
-+	if (mask & PCIE_PORT_SERVICE_DPC) {
-+		u16 reg16, pos;
-+
-+		/*
-+		 * The code below follows Section 6.2.10.1 of the PCI Express
-+		 * Base Specification 4.0 stating that bits 4-0 of DPC
-+		 * Capability Register contain a value indicating which of the
-+		 * MSI/MSI-X vectors assigned to the port is going to be used
-+		 * for DPC, where "For MSI-X, the value in this register
-+		 * indicates which MSI-X Table entry is used to generate the
-+		 * interrupt message." and "For MSI, the value in this field
-+		 * indicates the offset between the base Message Data and the
-+		 * interrupt message that is generated."
-+		 *
-+		 * pci_irq_vector() below is able to handle entry differently
-+		 * depending on MSI vs MSI-x case
-+		 *
-+		 */
-+		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC);
-+		pci_read_config_word(dev, pos + PCI_EXP_DPC_CAP, &reg16);
-+		entry = reg16 & 0x1f;
-+		if (entry >= nr_entries)
-+			goto out_free_irqs;
-+
-+		irqs[PCIE_PORT_SERVICE_DPC_SHIFT] = pci_irq_vector(dev, entry);
-+
-+		nvec = max(nvec, entry + 1);
-+	}
-+
- 	/*
- 	 * If nvec is equal to the allocated number of entries, we can just use
- 	 * what we have.  Otherwise, the port has some extra entries not for the
+and acked for merging via whichever tree is suitable.
+
+
+BR,
+Jani.
+
 -- 
-2.7.4
+Jani Nikula, Intel Open Source Technology Center
