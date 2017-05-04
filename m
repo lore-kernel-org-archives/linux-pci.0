@@ -1,70 +1,83 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay4.synopsys.com ([198.182.47.9]:38688 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750994AbdE3LdW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 30 May 2017 07:33:22 -0400
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: bhelgaas@google.com, marc.zyngier@arm.com
-Cc: m-karicheri2@ti.com, thomas.petazzoni@free-electrons.com,
-        minghuan.Lian@freescale.com, mingkai.hu@freescale.com,
-        tie-fei.zang@freescale.com, hongxing.zhu@nxp.com,
-        l.stach@pengutronix.de, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
-        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
-        linux-pci@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [PATCH 4/8] pci: artpec6 SoC driver adapted to new irq API
-Date: Tue, 30 May 2017 12:32:49 +0100
-Message-Id: <7dda980259170b5ab8d5c5c566f2e18b122c6910.1496142978.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
-References: <cover.1496142978.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1496142978.git.jpinto@synopsys.com>
-References: <cover.1496142978.git.jpinto@synopsys.com>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:36502 "EHLO
+        mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751749AbdEDUKh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 May 2017 16:10:37 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>,
+        Stephen Warren <swarren@wwwdotorg.org>,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH 2/2] PCI: tegra: Do not allocate MSI target memory
+Date: Thu,  4 May 2017 22:10:32 +0200
+Message-Id: <20170504201032.32633-2-thierry.reding@gmail.com>
+In-Reply-To: <20170504201032.32633-1-thierry.reding@gmail.com>
+References: <20170504201032.32633-1-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adapts artpec6 SoC specific driver to use the new interrupt api
-available in pcie-designware.
+From: Thierry Reding <treding@nvidia.com>
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+The PCI host bridge found on Tegra SoCs doesn't require the MSI target
+address to be backed by physical system memory. Writes are intercepted
+within the controller and never make it to the memory pointed to.
+
+Since no actual system memory is required, remove the allocation of a
+single page and hardcode the MSI target address with a special address
+that maps to the last 4 KiB page within the range that is reserved for
+system memory and memory-mapped I/O in the FPCI address map.
+
+Signed-off-by: Thierry Reding <treding@nvidia.com>
 ---
- drivers/pci/dwc/pcie-artpec6.c | 18 ------------------
- 1 file changed, 18 deletions(-)
+ drivers/pci/host/pci-tegra.c | 22 ++++++++++++++++------
+ 1 file changed, 16 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
-index 82a04ac..d81789b 100644
---- a/drivers/pci/dwc/pcie-artpec6.c
-+++ b/drivers/pci/dwc/pcie-artpec6.c
-@@ -188,15 +188,6 @@ static struct dw_pcie_host_ops artpec6_pcie_host_ops = {
- 	.host_init = artpec6_pcie_host_init,
- };
- 
--static irqreturn_t artpec6_pcie_msi_handler(int irq, void *arg)
--{
--	struct artpec6_pcie *artpec6_pcie = arg;
--	struct dw_pcie *pci = artpec6_pcie->pci;
--	struct pcie_port *pp = &pci->pp;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
- 				 struct platform_device *pdev)
- {
-@@ -211,15 +202,6 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
- 			dev_err(dev, "failed to get MSI irq\n");
- 			return -ENODEV;
- 		}
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--				       artpec6_pcie_msi_handler,
--				       IRQF_SHARED | IRQF_NO_THREAD,
--				       "artpec6-pcie-msi", artpec6_pcie);
--		if (ret) {
--			dev_err(dev, "failed to request MSI irq\n");
--			return ret;
--		}
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index e69f828a9ab2..4f795a5dcbed 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -233,7 +233,6 @@ struct tegra_msi {
+ 	struct msi_controller chip;
+ 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
+ 	struct irq_domain *domain;
+-	unsigned long pages;
+ 	struct mutex lock;
+ 	u64 phys;
+ 	int irq;
+@@ -1550,9 +1549,22 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+ 		goto err;
  	}
  
- 	pp->root_bus_nr = -1;
+-	/* setup AFI/FPCI range */
+-	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+-	msi->phys = virt_to_phys((void *)msi->pages);
++	/*
++	 * The PCI host bridge on Tegra contains some logic that intercepts
++	 * MSI writes, which means that the MSI target address doesn't have
++	 * to point to actual physical memory. Rather than allocating one 4
++	 * KiB page of system memory that's never used, we can simply pick
++	 * an arbitrary address within an area reserved for system memory
++	 * in the FPCI address map.
++	 *
++	 * However, in order to avoid confusion, we pick an address that
++	 * doesn't map to physical memory. The FPCI address map reserves a
++	 * 1012 GiB region for system memory and memory-mapped I/O. Since
++	 * none of the Tegra SoCs that contain this PCI host bridge can
++	 * address more than 16 GiB of system memory, the last 4 KiB of
++	 * these 1012 GiB is a good candidate.
++	 */
++	msi->phys = 0xfcfffff000;
+ 
+ 	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
+ 	afi_writel(pcie, msi->phys, AFI_MSI_AXI_BAR_ST);
+@@ -1604,8 +1616,6 @@ static int tegra_pcie_disable_msi(struct tegra_pcie *pcie)
+ 	afi_writel(pcie, 0, AFI_MSI_EN_VEC6);
+ 	afi_writel(pcie, 0, AFI_MSI_EN_VEC7);
+ 
+-	free_pages(msi->pages, 0);
+-
+ 	if (msi->irq > 0)
+ 		free_irq(msi->irq, pcie);
+ 
 -- 
-2.9.3
+2.12.0
