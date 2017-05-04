@@ -1,47 +1,76 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:6812 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760763AbdEXIQx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 04:16:53 -0400
-From: Xiaowei Song <songxiaowei@hisilicon.com>
-To: <bhelgaas@google.com>, <kishon@ti.com>, <jingoohan1@gmail.com>,
-        <arnd@arndb.de>, <tn@semihalf.com>, <keith.busch@intel.com>,
-        <niklas.cassel@axis.com>, <dhdang@apm.com>,
-        <liudongdong3@huawei.com>, <gabriele.paoloni@huawei.com>,
-        <robh+dt@kernel.org>, <mark.rutland@arm.com>,
-        <catalin.marinas@arm.com>, <will.deacon@arm.com>
-CC: <chenyao11@huawei.com>, <puck.chen@hisilicon.com>,
-        <songxiaowei@hisilicon.com>, <guodong.xu@linaro.org>,
-        <wangbinghui@hisilicon.com>, <suzhuangluan@hisilicon.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: [PATCH v6 4/4] defconfig: PCI: Enable  Kirin PCIe defconfig
-Date: Wed, 24 May 2017 16:12:48 +0800
-Message-ID: <20170524081248.67198-5-songxiaowei@hisilicon.com>
-In-Reply-To: <20170524081248.67198-1-songxiaowei@hisilicon.com>
-References: <20170524081248.67198-1-songxiaowei@hisilicon.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33702 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751749AbdEDUKf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 May 2017 16:10:35 -0400
+From: Thierry Reding <thierry.reding@gmail.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>,
+        Stephen Warren <swarren@wwwdotorg.org>,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH 1/2] PCI: tegra: Support MSI 64-bit addressing
+Date: Thu,  4 May 2017 22:10:31 +0200
+Message-Id: <20170504201032.32633-1-thierry.reding@gmail.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Cc: Guodong Xu <guodong.xu@linaro.org>
-Signed-off-by: Xiaowei Song <songxiaowei@hisilicon.com>
----
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
+From: Thierry Reding <treding@nvidia.com>
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 7c48028ec64a..d56d8f1062ab 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -71,6 +71,7 @@ CONFIG_PCI_XGENE=y
- CONFIG_PCI_LAYERSCAPE=y
- CONFIG_PCI_HISI=y
- CONFIG_PCIE_QCOM=y
-+CONFIG_PCIE_KIRIN=y
- CONFIG_PCIE_ARMADA_8K=y
- CONFIG_ARM64_VA_BITS_48=y
- CONFIG_SCHED_MC=y
+The MSI target address can reside beyond the 32-bit boundary on devices
+with more than 2 GiB of system memory. The PCI host bridge on Tegra can
+easily support 64-bit addresses, so make sure to pass the upper 32 bits
+of the target address to endpoints when allocating MSI entries.
+
+Signed-off-by: Thierry Reding <treding@nvidia.com>
+---
+ drivers/pci/host/pci-tegra.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/host/pci-tegra.c b/drivers/pci/host/pci-tegra.c
+index ecf8b4f1bf05..e69f828a9ab2 100644
+--- a/drivers/pci/host/pci-tegra.c
++++ b/drivers/pci/host/pci-tegra.c
+@@ -235,6 +235,7 @@ struct tegra_msi {
+ 	struct irq_domain *domain;
+ 	unsigned long pages;
+ 	struct mutex lock;
++	u64 phys;
+ 	int irq;
+ };
+ 
+@@ -1468,9 +1469,8 @@ static int tegra_msi_setup_irq(struct msi_controller *chip,
+ 
+ 	irq_set_msi_desc(irq, desc);
+ 
+-	msg.address_lo = virt_to_phys((void *)msi->pages);
+-	/* 32 bit address only */
+-	msg.address_hi = 0;
++	msg.address_lo = lower_32_bits(msi->phys);
++	msg.address_hi = upper_32_bits(msi->phys);
+ 	msg.data = hwirq;
+ 
+ 	pci_write_msi_msg(irq, &msg);
+@@ -1519,7 +1519,6 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+ 	const struct tegra_pcie_soc *soc = pcie->soc;
+ 	struct tegra_msi *msi = &pcie->msi;
+ 	struct device *dev = pcie->dev;
+-	unsigned long base;
+ 	int err;
+ 	u32 reg;
+ 
+@@ -1553,10 +1552,10 @@ static int tegra_pcie_enable_msi(struct tegra_pcie *pcie)
+ 
+ 	/* setup AFI/FPCI range */
+ 	msi->pages = __get_free_pages(GFP_KERNEL, 0);
+-	base = virt_to_phys((void *)msi->pages);
++	msi->phys = virt_to_phys((void *)msi->pages);
+ 
+-	afi_writel(pcie, base >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
+-	afi_writel(pcie, base, AFI_MSI_AXI_BAR_ST);
++	afi_writel(pcie, msi->phys >> soc->msi_base_shift, AFI_MSI_FPCI_BAR_ST);
++	afi_writel(pcie, msi->phys, AFI_MSI_AXI_BAR_ST);
+ 	/* this register is in 4K increments */
+ 	afi_writel(pcie, 1, AFI_MSI_BAR_SZ);
+ 
 -- 
-2.11.GIT
+2.12.0
