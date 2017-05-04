@@ -1,136 +1,197 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from lucky1.263xmail.com ([211.157.147.133]:47115 "EHLO
-        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751347AbdEBG4F (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 2 May 2017 02:56:05 -0400
-Subject: Re: [PATCH] PCI: use IDA to manage domain number if not getting it
- from DT
-To: Bjorn Helgaas <bhelgaas@google.com>
-References: <1490175744-22727-1-git-send-email-shawn.lin@rock-chips.com>
-Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <62fc645f-d860-48e5-257d-1316b1003cd7@rock-chips.com>
-Date: Tue, 2 May 2017 14:55:47 +0800
+Return-Path: <SRS0=EjUq=4K=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=EjUq=4K=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: linux-pci@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org,
+	helgaas@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/5] PCI: add resizeable BAR infrastructure v5
+Date: Thu,  4 May 2017 11:31:07 +0200
+Message-Id: <1493890270-1188-3-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
+References: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <1490175744-22727-1-git-send-email-shawn.lin@rock-chips.com>
-Content-Type: text/plain; charset=gbk; format=flowed
-Sender: linux-pci-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+From: Christian König <christian.koenig@amd.com>
 
-Any thought on this patch? :)
+Just the defines and helper functions to read the possible sizes of a BAR and
+update it's size.
 
-On 2017/3/22 17:42, Shawn Lin wrote:
-> If not getting domain number from DT, the domain number will
-> keep increasing once doing unbind/bind RC drivers. This could
-> introduce pointless tree view of lspci as shows below:
->
-> -+-[0001:00]---00.0-[01]----00.0
->   \-[0000:00]-
->
-> The more test we do, the lengthier it would be. The more serious
-> issue is that if attaching two hierarchies for two different domains
-> belonging to two root bridges, so when doing unbind/bind test for one
-> of them and keep the other, then the domain number would finally
-> overflow and make the two hierarchies of devices share the some domain
-> number but actually they shouldn't. So it looks like we need to invent
-> a new indexing ID mechanism to manage domain number. This patch
-> introduces idr to achieve our purpose.
->
-> Cc: Brian Norris <briannorris@chromium.org>
-> Cc: Jeffy Chen <jeffy.chen@rock-chips.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> ---
->
->  drivers/pci/pci.c    | 11 +++++++----
->  drivers/pci/remove.c |  5 +++++
->  include/linux/pci.h  |  2 ++
->  3 files changed, 14 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a881c0d..1752ccc 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -11,6 +11,7 @@
->  #include <linux/kernel.h>
->  #include <linux/delay.h>
->  #include <linux/dmi.h>
-> +#include <linux/idr.h>
->  #include <linux/init.h>
->  #include <linux/of.h>
->  #include <linux/of_pci.h>
-> @@ -5172,15 +5173,16 @@ static void pci_no_domains(void)
->  }
->
->  #ifdef CONFIG_PCI_DOMAINS
-> -static atomic_t __domain_nr = ATOMIC_INIT(-1);
-> +DEFINE_IDA(__domain_nr);
->
->  int pci_get_new_domain_nr(void)
->  {
-> -	return atomic_inc_return(&__domain_nr);
-> +	return ida_simple_get(&__domain_nr, 0, sizeof(u64), GFP_KERNEL);
->  }
->
->  #ifdef CONFIG_PCI_DOMAINS_GENERIC
-> -static int of_pci_bus_find_domain_nr(struct device *parent)
-> +static int of_pci_bus_find_domain_nr(struct pci_bus *bus,
-> +				     struct device *parent)
->  {
->  	static int use_dt_domains = -1;
->  	int domain = -1;
-> @@ -5224,12 +5226,13 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
->  		domain = -1;
->  	}
->
-> +	bus->use_dt_domains = use_dt_domains;
->  	return domain;
->  }
->
->  int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
->  {
-> -	return acpi_disabled ? of_pci_bus_find_domain_nr(parent) :
-> +	return acpi_disabled ? of_pci_bus_find_domain_nr(bus, parent) :
->  			       acpi_pci_bus_find_domain_nr(bus);
->  }
->  #endif
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 73a03d3..ad93378 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -157,6 +157,11 @@ void pci_remove_root_bus(struct pci_bus *bus)
->  	list_for_each_entry_safe(child, tmp,
->  				 &bus->devices, bus_list)
->  		pci_remove_bus_device(child);
-> +	#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> +	if (!bus->use_dt_domains)
-> +		ida_simple_remove(&__domain_nr, bus->domain_nr);
-> +	#endif
-> +
->  	pci_remove_bus(bus);
->  	host_bridge->bus = NULL;
->
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 6732d32..235b336 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -505,6 +505,7 @@ struct pci_bus {
->  	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
->  #ifdef CONFIG_PCI_DOMAINS_GENERIC
->  	int		domain_nr;
-> +	int		use_dt_domains;
->  #endif
->
->  	char		name[48];
-> @@ -1449,6 +1450,7 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
->   * configuration space.
->   */
->  #ifdef CONFIG_PCI_DOMAINS
-> +extern struct ida __domain_nr;
->  extern int pci_domains_supported;
->  int pci_get_new_domain_nr(void);
->  #else
->
+See https://pcisig.com/sites/default/files/specification_documents/ECN_Resizable-BAR_24Apr2008.pdf
+and PCIe r3.1, sec 7.22.
+
+This is useful for hardware with large local storage (mostly GFX) which only
+expose 256MB BARs initially to be compatible with 32bit systems.
+
+v2: provide read helper as well
+v3: improve function names, use unsigned values, add better comments.
+v4: move definition, improve commit message, s/bar/BAR/
+v5: split out helper to find ctrl reg pos, style fixes, comment fixes,
+    add pci_rbar_size_to_bytes as well
+
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ drivers/pci/pci.c             | 104 ++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h             |   8 ++++
+ include/uapi/linux/pci_regs.h |  11 ++++-
+ 3 files changed, 121 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index ba34907..0cbf4a6 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -2944,6 +2944,110 @@ bool pci_acs_path_enabled(struct pci_dev *start,
+ }
+ 
+ /**
++ * pci_rbar_find_pos - find position of resize ctrl reg for BAR
++ * @dev: PCI device
++ * @bar: BAR to find
++ *
++ * Helper to find the postion of the ctrl register for a BAR.
++ * Returns -ENOTSUPP of resizeable BARs are not supported at all.
++ * Returns -ENOENT if not ctrl register for the BAR could be found.
++ */
++static int pci_rbar_find_pos(struct pci_dev *pdev, int bar)
++{
++	unsigned int pos, nbars;
++	unsigned int i;
++	u32 ctrl;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++	if (!pos)
++		return -ENOTSUPP;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >> PCI_REBAR_CTRL_NBAR_SHIFT;
++
++	for (i = 0; i < nbars; ++i, pos += 8) {
++		int bar_idx;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = (ctrl & PCI_REBAR_CTRL_BAR_IDX_MASK) >>
++				PCI_REBAR_CTRL_BAR_IDX_SHIFT;
++		if (bar_idx == bar)
++			return pos;
++	}
++
++	return -ENOENT;
++}
++
++/**
++ * pci_rbar_get_possible_sizes - get possible sizes for BAR
++ * @dev: PCI device
++ * @bar: BAR to query
++ *
++ * Get the possible sizes of a resizeable BAR as bitmask defined in the spec
++ * (bit 0=1MB, bit 19=512GB). Returns 0 if BAR isn't resizeable.
++ */
++u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar)
++{
++	u32 cap;
++	int pos;
++
++	pos = pci_rbar_find_pos(pdev, bar);
++	if (pos < 0)
++		return 0;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
++	return (cap & PCI_REBAR_CTRL_SIZES_MASK) >>
++		PCI_REBAR_CTRL_SIZES_SHIFT;
++}
++
++/**
++ * pci_rbar_get_current_size - get the current size of a BAR
++ * @dev: PCI device
++ * @bar: BAR to set size to
++ *
++ * Read the size of a BAR from the resizeable BAR config.
++ * Returns size if found or negative error code.
++ */
++int pci_rbar_get_current_size(struct pci_dev *pdev, int bar)
++{
++	u32 ctrl;
++	int pos;
++
++	pos = pci_rbar_find_pos(pdev, bar);
++	if (pos < 0)
++		return pos;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	return (ctrl & PCI_REBAR_CTRL_BAR_SIZE_MASK) >>
++		PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
++}
++
++/**
++ * pci_rbar_set_size - set a new size for a BAR
++ * @dev: PCI device
++ * @bar: BAR to set size to
++ * @size: new size as defined in the spec (0=1MB, 19=512GB)
++ *
++ * Set the new size of a BAR as defined in the spec.
++ * Returns zero if resizing was successful, error code otherwise.
++ */
++int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size)
++{
++	u32 ctrl;
++	int pos;
++
++	pos = pci_rbar_find_pos(pdev, bar);
++	if (pos < 0)
++		return pos;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE_MASK;
++	ctrl |= size << PCI_REBAR_CTRL_BAR_SIZE_SHIFT;
++	pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
++	return 0;
++}
++
++/**
+  * pci_swizzle_interrupt_pin - swizzle INTx for device behind bridge
+  * @dev: the PCI device
+  * @pin: the INTx pin (1=INTA, 2=INTB, 3=INTC, 4=INTD)
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 3868828..6290e5c 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -359,4 +359,12 @@ static inline int pci_dev_specific_reset(struct pci_dev *dev, int probe)
+ }
+ #endif
+ 
++u32 pci_rbar_get_possible_sizes(struct pci_dev *pdev, int bar);
++int pci_rbar_get_current_size(struct pci_dev *pdev, int bar);
++int pci_rbar_set_size(struct pci_dev *pdev, int bar, int size);
++static inline u64 pci_rbar_size_to_bytes(int size)
++{
++	return 1ULL << (size + 20);
++}
++
+ #endif /* DRIVERS_PCI_H */
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index e5a2e68..a75429e 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -932,9 +932,16 @@
+ #define PCI_SATA_SIZEOF_LONG	16
+ 
+ /* Resizable BARs */
++#define PCI_REBAR_CAP		4	/* capability register */
++#define  PCI_REBAR_CTRL_SIZES_MASK	(0xFFFFF << 4)	/* mask for sizes */
++#define  PCI_REBAR_CTRL_SIZES_SHIFT	4	/* shift for sizes */
+ #define PCI_REBAR_CTRL		8	/* control register */
+-#define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # bars */
+-#define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # bars */
++#define  PCI_REBAR_CTRL_BAR_IDX_MASK	(7 << 0)	/* mask for BAR index */
++#define  PCI_REBAR_CTRL_BAR_IDX_SHIFT	0	/* shift for BAR index */
++#define  PCI_REBAR_CTRL_NBAR_MASK	(7 << 5)	/* mask for # BARs */
++#define  PCI_REBAR_CTRL_NBAR_SHIFT	5	/* shift for # BARs */
++#define  PCI_REBAR_CTRL_BAR_SIZE_MASK	(0x1F << 8)	/* mask for BAR size */
++#define  PCI_REBAR_CTRL_BAR_SIZE_SHIFT	8	/* shift for BAR size */
+ 
+ /* Dynamic Power Allocation */
+ #define PCI_DPA_CAP		4	/* capability register */
+-- 
+2.7.4
