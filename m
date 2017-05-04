@@ -1,50 +1,55 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:35516 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751462AbdEJDBu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 May 2017 23:01:50 -0400
-From: Nick Desaulniers <nick.desaulniers@gmail.com>
-Cc: bhelgaas@google.com, tglx@linutronix.de, mingo@redhat.com,
-        hpa@zytor.com, x86@kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Nick Desaulniers <nick.desaulniers@gmail.com>
-Subject: [PATCH] x86/PCI: fix duplicate 'const' declaration specifier
-Date: Tue,  9 May 2017 20:01:21 -0700
-Message-Id: <20170510030121.19667-1-nick.desaulniers@gmail.com>
-To: unlisted-recipients:; (no To-header on input)
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:34870 "EHLO
+        mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751879AbdEDM7G (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 4 May 2017 08:59:06 -0400
+Received: by mail-wm0-f51.google.com with SMTP id w64so17707174wma.0
+        for <linux-pci@vger.kernel.org>; Thu, 04 May 2017 05:59:06 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1493883171.10737.12.camel@ni.com>
+References: <1492408237-16598-1-git-send-email-vee.khee.wong@ni.com>
+ <CAErSpo5R+Fy+be06tg0sQtvaR=6QzqJn5k1M=NE=tPgDzNnUAA@mail.gmail.com> <1493883171.10737.12.camel@ni.com>
+From: Bjorn Helgaas <bhelgaas@google.com>
+Date: Thu, 4 May 2017 07:58:44 -0500
+Message-ID: <CAErSpo634Sje2E2F_9KcZ8YixxqrGA3+sxP7QiywKU6CV+Lc4A@mail.gmail.com>
+Subject: Re: [PATCH] pci-sysfs: Make PCI bridge attribute visible in sysfs
+To: Vee Khee Wong <vee.khee.wong@ni.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Jonathan Hearn <jonathan.hearn@ni.com>,
+        "Ram.Amrani@cavium.com" <Ram.Amrani@cavium.com>,
+        Hui Chun Ong <hui.chun.ong@ni.com>,
+        "shhuiw@foxmail.com" <shhuiw@foxmail.com>,
+        "rajatja@google.com" <rajatja@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "keith.busch@intel.com" <keith.busch@intel.com>,
+        "jonathan.yong@intel.com" <jonathan.yong@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Found with -Wduplicate-decl-specifier, a relatively new compiler flag in
-GCC7, and Clang.
+On Thu, May 4, 2017 at 2:32 AM, Vee Khee Wong <vee.khee.wong@ni.com> wrote:
+>
+>
+> On Mon, 2017-04-17 at 10:41 -0500, Bjorn Helgaas wrote:
+>> On Mon, Apr 17, 2017 at 12:50 AM, Wong Vee Khee <vee.khee.wong@ni.com
+>> > wrote:
+>> >
+>> > From: vwong <vee.khee.wong@ni.com>
+>> >
+>> > Export the PCIe link attributes of PCI bridges to sysfs.
+>> This needs justification for *why* we should export these via sysfs.
+>>
+>> Some of these things, e.g., secondary/subordinate bus numbers, are
+>> already visible to non-privileged users via "lspci -v".
+>>
+> We need to expose these attributes via sysfs due to several reasons
+> listed below:
+>
+> 1) PCIe capabilities info such as Maximum/Actual link width and link speed only visible to privileged users via "lspci -vvv". The software that my team is working on need to get PCIe link information as non-root user.
+>
+> 2) From a client perspective, it require a lot of overhead parsing output of lspci to get PCIe capabilities. Our application is only interested in getting PCIe bridges but lspci print info for all PCIe devices.
 
-list_for_each_entry() eventually calls container_of(), which
-marks the loop variable as const.  The first argument to
-list_for_each_entry() is a type, which should not already be marked const,
-otherwise the loop variable is marked const twice.
+I'm looking for a revised patch that incorporates the justification in
+the changelog and addresses the code comments I made.
 
-While this particular call site does not modify the loop variable,
-trying to do so would already result in a compile time failure, so we
-can remove the current const. Other call sites do not mark the loop
-variable const.
-
-Signed-off-by: Nick Desaulniers <nick.desaulniers@gmail.com>
----
- arch/x86/pci/mmconfig-shared.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index d1b47d5bc9c3..925083ed1b2b 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -643,7 +643,7 @@ static void __init __pci_mmcfg_init(int early)
- 		return;
- 
- 	if (pcibios_last_bus < 0) {
--		const struct pci_mmcfg_region *cfg;
-+		struct pci_mmcfg_region *cfg;
- 
- 		list_for_each_entry(cfg, &pci_mmcfg_list, list) {
- 			if (cfg->segment)
--- 
-2.11.0
+Bjorn
