@@ -1,152 +1,244 @@
-Return-Path: <SRS0=fyJp=45=huawei.com=gabriele.paoloni@kernel.org>
-Return-Path: <SRS0=fyJp=45=huawei.com=gabriele.paoloni@kernel.org>
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <helgaas@kernel.org>
-CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
-        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>,
-        <hch@infradead.org>, <liudongdong3@huawei.com>
-Subject: [PATCH v5 1/2] PCI/portdrv: add support for different MSI interrupts for PCIe port services
-Date: Tue, 23 May 2017 15:23:58 +0100
-Message-ID: <1495549439-10372-2-git-send-email-gabriele.paoloni@huawei.com>
-In-Reply-To: <1495549439-10372-1-git-send-email-gabriele.paoloni@huawei.com>
-References: <1495549439-10372-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <SRS0=EjUq=4K=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=EjUq=4K=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: linux-pci@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org,
+	helgaas@kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 3/5] PCI: add functionality for resizing resources v4
+Date: Thu,  4 May 2017 11:31:08 +0200
+Message-Id: <1493890270-1188-4-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
+References: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently PCIe port services are assigned with different interrutps
-only if MSI-x are supported by calling pcie_port_enable_msix().
-If a root port supports MSI instead of MSI-x currently we fall back
-to use a single shared interrupt for all the services.
-This patch renames and extends pcie_port_enable_msix() to use MSI in
-case MSI-x allocation fails.
+From: Christian König <christian.koenig@amd.com>
 
-Signed-off-by: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+This allows device drivers to request resizing their BARs.
+
+The function only tries to reprogram the windows of the bridge directly above
+the requesting device and only the BAR of the same type (usually mem, 64bit,
+prefetchable). This is done to make sure not to disturb other drivers by
+changing the BARs of their devices.
+
+If reprogramming the bridge BAR fails the old status is restored and -ENOSPC
+returned to the calling device driver.
+
+v2: rebase on changes in rbar support
+v3: style cleanups, fail if memory decoding is enabled or resources
+    still allocated, resize all unused bridge BARs,
+    drop calling pci_reenable_device
+v4: print resources before releasing them, style cleanups,
+    use pci_rbar_size_to_bytes, use PCI_RES_TYPE_MASK
+
+Signed-off-by: Christian König <christian.koenig@amd.com>
 ---
- drivers/pci/pcie/portdrv.h      |  8 +++++---
- drivers/pci/pcie/portdrv_core.c | 38 ++++++++++++++++++++------------------
- 2 files changed, 25 insertions(+), 21 deletions(-)
+ drivers/pci/setup-bus.c | 98 +++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/setup-res.c | 59 +++++++++++++++++++++++++++++
+ include/linux/pci.h     |  3 ++
+ 3 files changed, 160 insertions(+)
 
-diff --git a/drivers/pci/pcie/portdrv.h b/drivers/pci/pcie/portdrv.h
-index 587aef3..1993e2c 100644
---- a/drivers/pci/pcie/portdrv.h
-+++ b/drivers/pci/pcie/portdrv.h
-@@ -13,10 +13,12 @@
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index bb1001e..2b73e0e 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1919,6 +1919,104 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
  
- #define PCIE_PORT_DEVICE_MAXSERVICES   5
- /*
-- * According to the PCI Express Base Specification 2.0, the indices of
-- * the MSI-X table entries used by port services must not exceed 31
-+ * According to the PCI Express Base Specification REV. 3.1 and according
-+ * to the PCI Local Bus Specification REV. 3.0 respectively, the indices of
-+ * the MSI-X table entries or the max number of MSI vectors used by port
-+ * services must not exceed 31
-  */
--#define PCIE_PORT_MAX_MSIX_ENTRIES	32
-+#define PCIE_PORT_MAX_MSI_ENTRIES	32
- 
- #define get_descriptor_id(type, service) (((type - 4) << 8) | service)
- 
-diff --git a/drivers/pci/pcie/portdrv_core.c b/drivers/pci/pcie/portdrv_core.c
-index cea504f..07d8e01 100644
---- a/drivers/pci/pcie/portdrv_core.c
-+++ b/drivers/pci/pcie/portdrv_core.c
-@@ -44,14 +44,15 @@ static void release_pcie_device(struct device *dev)
++int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
++{
++	struct pci_dev_resource *dev_res;
++	LIST_HEAD(saved);
++	LIST_HEAD(added);
++	LIST_HEAD(failed);
++	unsigned int i;
++	int ret;
++
++	/* Walk to the root BUS, releasing bridge BARs when possible */
++	while (1) {
++		for (i = PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END;
++		     i++) {
++			struct resource *res = &bridge->resource[i];
++
++			if ((res->flags ^ type) & PCI_RES_TYPE_MASK)
++				continue;
++
++			/* Ignore BARs which are still in use */
++			if (res->child)
++				continue;
++
++			ret = add_to_list(&saved, bridge, res, 0, 0);
++			if (ret)
++				goto cleanup;
++
++			dev_info(&bridge->dev, "BAR %d: releasing %pR\n",
++				 i, res);
++
++			if (res->parent)
++				release_resource(res);
++			res->start = 0;
++			res->end = 0;
++			break;
++		}
++		if (i == PCI_BRIDGE_RESOURCE_END)
++			break;
++
++		if (!bridge->bus || !bridge->bus->self)
++			break;
++
++		bridge = bridge->bus->self;
++	}
++
++	if (list_empty(&saved))
++		return -ENOENT;
++
++	__pci_bus_size_bridges(bridge->subordinate, &added);
++	__pci_bridge_assign_resources(bridge, &added, &failed);
++	BUG_ON(!list_empty(&added));
++
++	if (!list_empty(&failed)) {
++		ret = -ENOSPC;
++		goto cleanup;
++	}
++
++	list_for_each_entry(dev_res, &saved, list) {
++		/* Skip the bridge we just assigned resources for. */
++		if (bridge == dev_res->dev)
++			continue;
++
++		bridge = dev_res->dev;
++		pci_setup_bridge(bridge->subordinate);
++	}
++
++	free_list(&saved);
++	return 0;
++
++cleanup:
++	/* restore size and flags */
++	list_for_each_entry(dev_res, &failed, list) {
++		struct resource *res = dev_res->res;
++
++		res->start = dev_res->start;
++		res->end = dev_res->end;
++		res->flags = dev_res->flags;
++	}
++	free_list(&failed);
++
++	/* Revert to the old configuration */
++	list_for_each_entry(dev_res, &saved, list) {
++		struct resource *res = dev_res->res;
++
++		bridge = dev_res->dev;
++		i = res - bridge->resource;
++
++		res->start = dev_res->start;
++		res->end = dev_res->end;
++		res->flags = dev_res->flags;
++
++		pci_claim_resource(bridge, i);
++		pci_setup_bridge(bridge->subordinate);
++	}
++	free_list(&saved);
++
++	return ret;
++}
++
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 9526e34..65420ac 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -363,6 +363,65 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+ 	return 0;
  }
  
- /**
-- * pcie_port_enable_msix - try to set up MSI-X as interrupt mode for given port
-+ * pcie_port_enable_irq_vec - try to set up MSI-X or MSI as interrupt mode
-+ * for given port
-  * @dev: PCI Express port to handle
-  * @irqs: Array of interrupt vectors to populate
-  * @mask: Bitmask of port capabilities returned by get_port_device_capability()
-  *
-  * Return value: 0 on success, error code on failure
-  */
--static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
-+static int pcie_port_enable_irq_vec(struct pci_dev *dev, int *irqs, int mask)
++void pci_release_resource(struct pci_dev *dev, int resno)
++{
++	struct resource *res = dev->resource + resno;
++
++	dev_info(&dev->dev, "BAR %d: releasing %pR\n", resno, res);
++	release_resource(res);
++	res->end = resource_size(res) - 1;
++	res->start = 0;
++	res->flags |= IORESOURCE_UNSET;
++}
++EXPORT_SYMBOL(pci_release_resource);
++
++int pci_resize_resource(struct pci_dev *dev, int resno, int size)
++{
++	struct resource *res = dev->resource + resno;
++	int old, ret = 0;
++	u32 sizes;
++	u16 cmd;
++
++	pci_read_config_word(dev, PCI_COMMAND, &cmd);
++	if (cmd & PCI_COMMAND_MEMORY)
++		return -EBUSY;
++
++	sizes = pci_rbar_get_possible_sizes(dev, resno);
++	if (!sizes)
++		return -ENOTSUPP;
++
++	if (!(sizes & BIT(size)))
++		return -EINVAL;
++
++	old = pci_rbar_get_current_size(dev, resno);
++	if (old < 0)
++		return old;
++
++	/* Make sure the resource isn't assigned before making it larger. */
++	pci_release_resource(dev, resno);
++
++	ret = pci_rbar_set_size(dev, resno, size);
++	if (ret)
++		goto error_reassign;
++
++	res->end = res->start + pci_rbar_size_to_bytes(size) - 1;
++
++	ret = pci_reassign_bridge_resources(dev->bus->self, res->flags);
++	if (ret)
++		goto error_resize;
++
++	return 0;
++
++error_resize:
++	pci_rbar_set_size(dev, resno, old);
++	res->end = res->start + pci_rbar_size_to_bytes(old) - 1;
++
++error_reassign:
++	pci_assign_unassigned_bus_resources(dev->bus);
++	return ret;
++}
++EXPORT_SYMBOL(pci_resize_resource);
++
+ int pci_enable_resources(struct pci_dev *dev, int mask)
  {
- 	int nr_entries, entry, nvec = 0;
- 
-@@ -61,8 +62,8 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
- 	 * equal to the number of entries this port actually uses, we'll happily
- 	 * go through without any tricks.
- 	 */
--	nr_entries = pci_alloc_irq_vectors(dev, 1, PCIE_PORT_MAX_MSIX_ENTRIES,
--			PCI_IRQ_MSIX);
-+	nr_entries = pci_alloc_irq_vectors(dev, 1, PCIE_PORT_MAX_MSI_ENTRIES,
-+			PCI_IRQ_MSIX | PCI_IRQ_MSI);
- 	if (nr_entries < 0)
- 		return nr_entries;
- 
-@@ -77,7 +78,9 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
- 		 * Number field in the PCI Express Capabilities register", where
- 		 * according to Section 7.8.2 of the specification "For MSI-X,
- 		 * the value in this field indicates which MSI-X Table entry is
--		 * used to generate the interrupt message."
-+		 * used to generate the interrupt message." and "For MSI, the
-+		 * value in this field indicates the offset between the base
-+		 * Message Data and the interrupt message that is generated."
- 		 */
- 		pcie_capability_read_word(dev, PCI_EXP_FLAGS, &reg16);
- 		entry = (reg16 & PCI_EXP_FLAGS_IRQ) >> 9;
-@@ -100,7 +103,9 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
- 		 * MSI/MSI-X vectors assigned to the port is going to be used
- 		 * for AER, where "For MSI-X, the value in this register
- 		 * indicates which MSI-X Table entry is used to generate the
--		 * interrupt message."
-+		 * interrupt message."  and "For MSI, the value
-+		 * in this field indicates the offset between the base Message
-+		 * Data and the interrupt message that is generated."
- 		 */
- 		pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
- 		pci_read_config_dword(dev, pos + PCI_ERR_ROOT_STATUS, &reg32);
-@@ -124,7 +129,7 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
- 
- 		/* Now allocate the MSI-X vectors for real */
- 		nr_entries = pci_alloc_irq_vectors(dev, nvec, nvec,
--				PCI_IRQ_MSIX);
-+				PCI_IRQ_MSIX | PCI_IRQ_MSI);
- 		if (nr_entries < 0)
- 			return nr_entries;
- 	}
-@@ -146,26 +151,23 @@ static int pcie_port_enable_msix(struct pci_dev *dev, int *irqs, int mask)
-  */
- static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
- {
--	unsigned flags = PCI_IRQ_LEGACY | PCI_IRQ_MSI;
- 	int ret, i;
- 
- 	for (i = 0; i < PCIE_PORT_DEVICE_MAXSERVICES; i++)
- 		irqs[i] = -1;
- 
- 	/*
--	 * If MSI cannot be used for PCIe PME or hotplug, we have to use
--	 * INTx or other interrupts, e.g. system shared interrupt.
-+	 * Make sure MSI can be used for PCIe PME or hotplug. otherwise we have
-+	 * to use INTx or other interrupts, e.g. system shared interrupt.
- 	 */
--	if (((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) ||
--	    ((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi())) {
--		flags &= ~PCI_IRQ_MSI;
--	} else {
--		/* Try to use MSI-X if supported */
--		if (!pcie_port_enable_msix(dev, irqs, mask))
-+	if (!((mask & PCIE_PORT_SERVICE_PME) && pcie_pme_no_msi()) &&
-+	    !((mask & PCIE_PORT_SERVICE_HP) && pciehp_no_msi()))
-+		/* Try to use MSI-X or MSI if supported */
-+		if (!pcie_port_enable_irq_vec(dev, irqs, mask))
- 			return 0;
--	}
- 
--	ret = pci_alloc_irq_vectors(dev, 1, 1, flags);
-+	/* fall back to legacy IRQ */
-+	ret = pci_alloc_irq_vectors(dev, 1, 1, PCI_IRQ_LEGACY);
- 	if (ret < 0)
- 		return -ENODEV;
- 
+ 	u16 cmd, old_cmd;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a38772a..f0a630a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1055,6 +1055,8 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+ int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
++void pci_release_resource(struct pci_dev *dev, int resno);
++int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
+ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+ bool pci_device_is_present(struct pci_dev *pdev);
+ void pci_ignore_hotplug(struct pci_dev *dev);
+@@ -1135,6 +1137,7 @@ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
+ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
++int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
 -- 
 2.7.4
