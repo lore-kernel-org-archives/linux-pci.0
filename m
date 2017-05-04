@@ -1,91 +1,67 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <SRS0=mb4B=4K=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <SRS0=mb4B=4K=gmail.com=andy.shevchenko@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <1493786795-28153-1-git-send-email-oza.oza@broadcom.com>
-References: <1493786795-28153-1-git-send-email-oza.oza@broadcom.com>
-From: Rob Herring <robh@kernel.org>
-Date: Wed, 3 May 2017 14:55:25 -0500
-Message-ID: <CAL_JsqLE+CmukEYFnjkYTApGiXZVQn_Xz2GvOshPWLZoaoXvCA@mail.gmail.com>
-Subject: Re: [PATCH 1/3] of/pci/dma: fix DMA configuration for PCI masters
-To: Oza Pawandeep <oza.oza@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Oza Pawandeep <oza.pawandeep@gmail.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Joerg Roedel <joro@8bytes.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Linux IOMMU <iommu@lists.linux-foundation.org>,
- "bcm-kernel-feedback-list@broadcom.com"
- <bcm-kernel-feedback-list@broadcom.com>, Robin Murphy <robin.murphy@arm.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAHp75VcLWrrRuUYwT4Mxww9e3886LqczMXTHo95wUybyCZpqTg@mail.gmail.com>
+References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
+ <1493126394-1239-3-git-send-email-deathsimple@vodafone.de>
+ <CAHp75VfSFBYgHRsX2JSH0zdSEW8VvXbNMVvBBsD9kKgzGr-v2w@mail.gmail.com>
+ <5a9a94f3-34b3-9484-a455-f5b2ee0b4d51@vodafone.de> <CAHp75VcLWrrRuUYwT4Mxww9e3886LqczMXTHo95wUybyCZpqTg@mail.gmail.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Thu, 4 May 2017 19:44:24 +0300
+Message-ID: <CAHp75VcgAYC3nvLv7ueC8CXDdC3=d3tm1RmdxCdH=o6UbQoSMg@mail.gmail.com>
+Subject: Re: [PATCH 2/4] PCI: add functionality for resizing resources v3
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
+	Platform Driver <platform-driver-x86@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 2, 2017 at 11:46 PM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
-> current device framework and of framework integration assumes
-> dma-ranges in a way where memory-mapped devices define their
-> dma-ranges. (child-bus-address, parent-bus-address, length).
->
-> of_dma_configure is specifically written to take care of memory
-> mapped devices. but no implementation exists for pci to take
-> care of pcie based memory ranges.
->
-> for e.g. iproc based SOCs and other SOCs(suc as rcar) have PCI
-> world dma-ranges.
-> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
->
-> this patch serves following:
->
-> 1) exposes interface to the pci host driver for their
-> inbound memory ranges
->
-> 2) provide an interface to callers such as of_dma_get_ranges.
-> so then the returned size get best possible (largest) dma_mask.
-> because PCI RC drivers do not call APIs such as
-> dma_set_coherent_mask() and hence rather it shows its addressing
-> capabilities based on dma-ranges.
-> for e.g.
-> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
-> we should get dev->coherent_dma_mask=0x7fffffffff.
->
-> 3) this patch handles multiple inbound windows and dma-ranges.
-> it is left to the caller, how it wants to use them.
-> the new function returns the resources in a standard and unform way
->
-> 4) this way the callers of for e.g. of_dma_get_ranges
-> does not need to change.
->
-> 5) leaves scope of adding PCI flag handling for inbound memory
-> by the new function.
->
-> Bug: SOC-5216
-> Change-Id: Ie045386df91e1e0587846bb147ae40d96f6d7d2e
-> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-> Reviewed-on: http://gerrit-ccxsw.broadcom.net/40428
-> Reviewed-by: vpx_checkpatch status <vpx_checkpatch@broadcom.com>
-> Reviewed-by: CCXSW <ccxswbuild@broadcom.com>
-> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-> Tested-by: vpx_autobuild status <vpx_autobuild@broadcom.com>
-> Tested-by: vpx_smoketest status <vpx_smoketest@broadcom.com>
-> Tested-by: CCXSW <ccxswbuild@broadcom.com>
+On Thu, May 4, 2017 at 1:15 PM, Andy Shevchenko
+<andy.shevchenko@gmail.com> wrote:
+> On Thu, May 4, 2017 at 12:23 PM, Christian K=C3=B6nig
+> <deathsimple@vodafone.de> wrote:
+>> Am 26.04.2017 um 19:00 schrieb Andy Shevchenko:
 
-All these non-person, probably internal Broadcom Tested-by and
-Reviewed-by's should be removed too.
-
-> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> static int ...xxx...(...)
+> {
+>     unsigned int i;
+>     int ret;
 >
 
-Rob
+>     if (res->parent)
+>             release_resource(res);
+>
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+dev_info() should be here. I commented on this earlier, just forgot.
+
+>     res->start =3D 0;
+>     res->end =3D 0;
+>     dev_info(&bridge->dev, "BAR %d: released %pR\n", i, res);
+>     return i;
+> }
+>
+>
+> struct pci_dev *next =3D bridge;
+> ...
+>     do {
+>         bridge =3D next;
+>
+>         ret =3D ...xxx...(...);
+
+>         if (ret)
+
+Here, of course,
+
+if (ret < 0)
+
+>             goto cleanup;
+>
+>         next =3D bridge->bus ? bridge->bus->self : NULL;
+>     } while (next);
+
+
+--=20
+With Best Regards,
+Andy Shevchenko
