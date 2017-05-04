@@ -1,52 +1,78 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:37114 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750825AbdE3TpI (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 30 May 2017 15:45:08 -0400
-Date: Tue, 30 May 2017 14:45:06 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jork Loeser <jloeser@microsoft.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        devel@linuxdriverproject.org, olaf@aepfle.de, apw@canonical.com,
-        vkuznets@redhat.com, jasowang@redhat.com,
-        leann.ogasawara@canonical.com, marcelo.cerri@canonical.com,
-        sthemmin@microsoft.com
-Subject: Re: [PATCH-v2 0/5] Hyper-V vPCI: use vPCI protocol version 1.2
-Message-ID: <20170530194506.GA4664@bhelgaas-glaptop.roam.corp.google.com>
-References: <1495658488-13199-1-git-send-email-jloeser@linuxonhyperv.com>
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+Date: Thu, 4 May 2017 15:14:46 +0300
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-acpi@vger.kernel.org, tpmdd-devel@lists.sourceforge.net,
+        intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
+        linux-input@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Borislav Petkov <bp@suse.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>
+Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
+Message-ID: <20170504121446.GA26032@kuha.fi.intel.com>
+References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495658488-13199-1-git-send-email-jloeser@linuxonhyperv.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 24, 2017 at 01:41:23PM -0700, Jork Loeser wrote:
-> From: Jork Loeser <jloeser@microsoft.com>
+On Thu, May 04, 2017 at 12:21:51PM +0300, Andy Shevchenko wrote:
+> acpi_evaluate_dsm() and friends take a pointer to a raw buffer of 16
+> bytes. Instead we convert them to use uuid_le type. At the same time we
+> convert current users.
 > 
-> Update the Hyper-V vPCI driver to use the Server-2016 version of the vPCI
-> protocol, fixing MSI creation and retargeting issues.
+> acpi_str_to_uuid() becomes useless after the conversion and it's safe to
+> get rid of it.
 > 
-> Changes since v1:
-> - reduced spew in protocol negotiation (Dan Carpenter)
-> - work-around work racing Hyper-V patch (Stephen Hemminger)
-> - formatting (Dan)
+> The conversion fixes a potential bug in int340x_thermal as well since
+> we have to use memcmp() on binary data.
 > 
-> Jork Loeser (5):
->   Hyper-V vPCI: Minor format and semantic fix
->   Hyper-V vPCI: Use page allocation for hbus structure
->   PCI-HyperV vPCI: Temporary own CPU-number-to-vCPU-number infra
->   Hyper-V vPCI: Add vPCI version protocol negotiation
->   Hyper-V vPCI: use vPCI protocol version 1.2
-> 
->  arch/x86/include/uapi/asm/hyperv.h |   6 +
->  drivers/pci/host/pci-hyperv.c      | 445 ++++++++++++++++++++++++++++++-------
->  2 files changed, 370 insertions(+), 81 deletions(-)
+> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Borislav Petkov <bp@suse.de>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Amir Goldstein <amir73il@gmail.com>
+> Cc: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
+> Cc: Jani Nikula <jani.nikula@linux.intel.com>
+> Cc: Ben Skeggs <bskeggs@redhat.com>
+> Cc: Benjamin Tissoires <benjamin.tissoires@redhat.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Adrian Hunter <adrian.hunter@intel.com>
+> Cc: Yisen Zhuang <yisen.zhuang@huawei.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Zhang Rui <rui.zhang@intel.com>
+> Cc: Felipe Balbi <balbi@kernel.org>
+> Cc: Mathias Nyman <mathias.nyman@intel.com>
+> Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> Cc: Liam Girdwood <lgirdwood@gmail.com>
+> Cc: Mark Brown <broonie@kernel.org>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Waiting for a maintainer ack:
+OK by me, FWIW:
 
-  Hyper-V CORE AND DRIVERS
-  M:      "K. Y. Srinivasan" <kys@microsoft.com>
-  M:      Haiyang Zhang <haiyangz@microsoft.com>
-  M:      Stephen Hemminger <sthemmin@microsoft.com>
-  ...
-  F:      drivers/pci/host/pci-hyperv.c
+Reviewed-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+
+
+Thanks,
+
+-- 
+heikki
