@@ -1,32 +1,79 @@
-Return-Path: <SRS0=EjUq=4K=vodafone.de=deathsimple@kernel.org>
-Return-Path: <SRS0=EjUq=4K=vodafone.de=deathsimple@kernel.org>
-Subject: Re: [PATCH 2/4] PCI: add functionality for resizing resources v3
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
- <1493126394-1239-3-git-send-email-deathsimple@vodafone.de>
- <CAHp75VfSFBYgHRsX2JSH0zdSEW8VvXbNMVvBBsD9kKgzGr-v2w@mail.gmail.com>
-Cc: helgaas@kernel.org, "linux-pci@vger.kernel.org"
- <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
- Platform Driver <platform-driver-x86@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: =?UTF-8?Q?Christian_K=c3=b6nig?= <deathsimple@vodafone.de>
-Message-ID: <5a9a94f3-34b3-9484-a455-f5b2ee0b4d51@vodafone.de>
-Date: Thu, 4 May 2017 11:23:27 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-co1nam03on0068.outbound.protection.outlook.com ([104.47.40.68]:26538
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751616AbdEDOl1 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 May 2017 10:41:27 -0400
+From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
+To: 'David Woodhouse' <dwmw2@infradead.org>,
+        'Joerg Roedel' <joro@8bytes.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Daniel Drake <drake@endlessm.com>,
+        Samuel Sieb <samuel@sieb.net>, Joerg Roedel <jroedel@suse.de>
+Subject: RE: [PATCH v2] PCI: Add ATS-disable quirk for AMD Stoney GPUs
+Date: Thu, 4 May 2017 14:41:24 +0000
+Message-ID: <BN6PR12MB165278346BE8A76B1E4412AFF7EA0@BN6PR12MB1652.namprd12.prod.outlook.com>
+References: <1491575538-22694-1-git-send-email-joro@8bytes.org>
+         <BN6PR12MB1652634583ADBB2C93E1414DF70C0@BN6PR12MB1652.namprd12.prod.outlook.com>
+ <1493893297.4904.71.camel@infradead.org>
+In-Reply-To: <1493893297.4904.71.camel@infradead.org>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <CAHp75VfSFBYgHRsX2JSH0zdSEW8VvXbNMVvBBsD9kKgzGr-v2w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am 26.04.2017 um 19:00 schrieb Andy Shevchenko:
-> [SNIP]
->> +       while (1) {
-> This raises red flag. Care to refactor?
-> Also do {} while () syntax allows faster to get that the loop body
-> goes at least once.
-
-I've tried to refactor this, but couldn't come up with something which 
-works and is readable at the same time.
-
-Any suggestion how this should look like?
-
-Christian.
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBEYXZpZCBXb29kaG91c2UgW21h
+aWx0bzpkd213MkBpbmZyYWRlYWQub3JnXQ0KPiBTZW50OiBUaHVyc2RheSwgTWF5IDA0LCAyMDE3
+IDY6MjIgQU0NCj4gVG86IERldWNoZXIsIEFsZXhhbmRlcjsgJ0pvZXJnIFJvZWRlbCc7IEJqb3Ju
+IEhlbGdhYXMNCj4gQ2M6IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2
+Z2VyLmtlcm5lbC5vcmc7IERhbmllbCBEcmFrZTsNCj4gU2FtdWVsIFNpZWI7IEpvZXJnIFJvZWRl
+bA0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYyXSBQQ0k6IEFkZCBBVFMtZGlzYWJsZSBxdWlyayBm
+b3IgQU1EIFN0b25leSBHUFVzDQo+IA0KPiBPbiBGcmksIDIwMTctMDQtMDcgYXQgMTY6NDYgKzAw
+MDAsIERldWNoZXIsIEFsZXhhbmRlciB3cm90ZToNCj4gPiA+DQo+ID4gPiAtLS0tLU9yaWdpbmFs
+IE1lc3NhZ2UtLS0tLQ0KPiA+ID4gRnJvbTogSm9lcmcgUm9lZGVsIFttYWlsdG86am9yb0A4Ynl0
+ZXMub3JnXQ0KPiA+ID4gU2VudDogRnJpZGF5LCBBcHJpbCAwNywgMjAxNyAxMDozMiBBTQ0KPiA+
+ID4gVG86IEJqb3JuIEhlbGdhYXMNCj4gPiA+IENjOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3Jn
+OyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOyBEYW5pZWwNCj4gRHJha2U7DQo+ID4gPiBE
+ZXVjaGVyLCBBbGV4YW5kZXI7IFNhbXVlbCBTaWViOyBEYXZpZCBXb29kaG91c2U7IEpvZXJnIFJv
+ZWRlbA0KPiA+ID4gU3ViamVjdDogW1BBVENIIHYyXSBQQ0k6IEFkZCBBVFMtZGlzYWJsZSBxdWly
+ayBmb3IgQU1EIFN0b25leSBHUFVzDQo+ID4gPg0KPiA+ID4gRnJvbTogSm9lcmcgUm9lZGVsIDxq
+cm9lZGVsQHN1c2UuZGU+DQo+ID4gPg0KPiA+ID4gQVRTIGlzIGJyb2tlbiBvbiB0aGlzIGhhcmR3
+YXJlIGFuZCBjYXVzZXMgSU9NTVUgc3RhbGxzIGFuZA0KPiA+ID4gc3lzdGVtIGZhaWx1cmUuIERp
+c2FibGUgQVRTIG9uIHRoZXNlIGRldmljZXMgdG8gbWFrZSB0aGVtDQo+ID4gPiB1c2FibGUgYWdh
+aW4gd2l0aCBJT01NVSBlbmFibGVkLg0KPiA+ID4NCj4gPiA+IE5vdGUgdGhhdCB0aGUgY29tbWl0
+IGluIHRoZSBGaXhlcy10YWcgaXMgbm90IGJ1Z2d5LCBpdA0KPiA+ID4ganVzdCB1bmNvdmVycyB0
+aGUgcHJvYmxlbSBpbiB0aGUgaGFyZHdhcmUgYnkgaW5jcmVhc2luZw0KPiA+ID4gdGhlIEFUUy1m
+bHVzaCByYXRlLg0KPiA+ID4NCj4gPiA+IEZpeGVzOiBiMTUxNmExNDY1N2EgKCdpb21tdS9hbWQ6
+IEltcGxlbWVudCBmbHVzaCBxdWV1ZScpDQo+ID4gPiBTaWduZWQtb2ZmLWJ5OiBKb2VyZyBSb2Vk
+ZWwgPGpyb2VkZWxAc3VzZS5kZT4NCj4gPiBBY2tlZC1ieTogQWxleCBEZXVjaGVyIDxhbGV4YW5k
+ZXIuZGV1Y2hlckBhbWQuY29tPg0KPiANCj4gQWxleCwgYXJlIHlvdSBhYmxlIHRvIGNvbmZpcm0g
+dGhhdCBpdCBpcyAqb25seSogdGhlIGRldmljZSB3aXRoIFBDSSBJRA0KPiAweDk4ZTQgd2hpY2gg
+aGFzIHRoaXMgcHJvYmxlbSwgb3IgKG1vcmUgbGlrZWx5KSBjb21lIHVwIHdpdGggYW4NCj4gZXho
+YXVzdGl2ZSBsaXN0PyBUaGFua3MuDQoNCkl0J3MganVzdCBTdG9uZXksIHRoYXQgaXMgdGhlIG9u
+bHkgSUQuICBBVFMgaXMgdmFsaWRhdGVkIG9uIHRoZSBvdGhlciBHUFUgcGFydHMuDQoNCkFsZXgN
+Cg0KPiANCj4gV2UnbGwgd2FudCB0aGUgc2FtZSBibGFja2xpc3QgaW4gWGVuIHRvbywgd29uJ3Qg
+d2U/DQo+IA0KPiA+ID4NCj4gPiA+IC0tLQ0KPiA+ID4gwqBkcml2ZXJzL3BjaS9xdWlya3MuYyB8
+IDE5ICsrKysrKysrKysrKysrKysrKysNCj4gPiA+IMKgMSBmaWxlIGNoYW5nZWQsIDE5IGluc2Vy
+dGlvbnMoKykNCj4gPiA+DQo+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcXVpcmtzLmMg
+Yi9kcml2ZXJzL3BjaS9xdWlya3MuYw0KPiA+ID4gaW5kZXggNjczNjgzNi4uN2NiZTMxNiAxMDA2
+NDQNCj4gPiA+IC0tLSBhL2RyaXZlcnMvcGNpL3F1aXJrcy5jDQo+ID4gPiArKysgYi9kcml2ZXJz
+L3BjaS9xdWlya3MuYw0KPiA+ID4gQEAgLTQ2MzQsMyArNDYzNCwyMiBAQCBzdGF0aWMgdm9pZCBx
+dWlya19ub19hZXJzaWQoc3RydWN0IHBjaV9kZXYNCj4gKnBkZXYpDQo+ID4gPiDCoERFQ0xBUkVf
+UENJX0ZJWFVQX0VBUkxZKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4MjAzMSwNCj4gPiA+IHF1aXJr
+X25vX2FlcnNpZCk7DQo+ID4gPiDCoERFQ0xBUkVfUENJX0ZJWFVQX0VBUkxZKFBDSV9WRU5ET1Jf
+SURfSU5URUwsIDB4MjAzMiwNCj4gPiA+IHF1aXJrX25vX2FlcnNpZCk7DQo+ID4gPiDCoERFQ0xB
+UkVfUENJX0ZJWFVQX0VBUkxZKFBDSV9WRU5ET1JfSURfSU5URUwsIDB4MjAzMywNCj4gPiA+IHF1
+aXJrX25vX2FlcnNpZCk7DQo+ID4gPiArDQo+ID4gPiArI2lmZGVmIENPTkZJR19QQ0lfQVRTDQo+
+ID4gPiArLyoNCj4gPiA+ICsgKiBTb21lIGRldmljZXMgaGF2ZSBhIGJyb2tlbiBBVFMgaW1wbGVt
+ZW50YXRpb24gY2F1c2luZyBJT01NVQ0KPiBzdGFsbHMuDQo+ID4gPiArICogRG9uJ3QgdXNlIEFU
+UyBmb3IgdGhvc2UgZGV2aWNlcy4NCj4gPiA+ICsgKi8NCj4gPiA+ICtzdGF0aWMgdm9pZCBxdWly
+a19kaXNhYmxlX2F0cyhzdHJ1Y3QgcGNpX2RldiAqcGRldikNCj4gPiA+ICt7DQo+ID4gPiArCS8q
+DQo+ID4gPiArCcKgKiBTZXQgcGRldi0+YXRzX2NhcCA9IDAgdG8gbWFrZSBwY2lfZW5hYmxlX2F0
+cygpIGJhaWwgb3V0DQo+ID4gPiArCcKgKiBlYXJseS4NCj4gPiA+ICsJwqAqLw0KPiA+ID4gKwlk
+ZXZfaW5mbygmcGRldi0+ZGV2LCAiUVVJUks6IERpc2FibGluZyBBVFMiKTsNCj4gPiA+ICsJcGRl
+di0+YXRzX2NhcCA9IDA7DQo+ID4gPiArfQ0KPiA+ID4gKw0KPiA+ID4gKy8qIEFNRCBTdG9uZXkg
+cGxhdGZvcm0gR1BVICovDQo+ID4gPiArREVDTEFSRV9QQ0lfRklYVVBfRklOQUwoUENJX1ZFTkRP
+Ul9JRF9BVEksIDB4OThlNCwNCj4gcXVpcmtfZGlzYWJsZV9hdHMpOw0KPiA+ID4gKyNlbmRpZiAv
+KiBDT05GSUdfUENJX0FUUyAqLw0KPiA+ID4gLS0NCj4gPiA+IDEuOS4xDQo=
