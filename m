@@ -1,32 +1,122 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33403 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932382AbdESBhl (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2017 21:37:41 -0400
-Date: Thu, 18 May 2017 20:37:34 -0500
-From: Rob Herring <robh@kernel.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH 1/2] pci: ftpci100: add clock bindings
-Message-ID: <20170519013734.rk22qe2doo4b5dpu@rob-hp-laptop>
-References: <20170515172312.1722-1-linus.walleij@linaro.org>
+Return-Path: <SRS0=mb4B=4K=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <SRS0=mb4B=4K=gmail.com=andy.shevchenko@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170515172312.1722-1-linus.walleij@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5a9a94f3-34b3-9484-a455-f5b2ee0b4d51@vodafone.de>
+References: <1493126394-1239-1-git-send-email-deathsimple@vodafone.de>
+ <1493126394-1239-3-git-send-email-deathsimple@vodafone.de>
+ <CAHp75VfSFBYgHRsX2JSH0zdSEW8VvXbNMVvBBsD9kKgzGr-v2w@mail.gmail.com> <5a9a94f3-34b3-9484-a455-f5b2ee0b4d51@vodafone.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Thu, 4 May 2017 13:15:49 +0300
+Message-ID: <CAHp75VcLWrrRuUYwT4Mxww9e3886LqczMXTHo95wUybyCZpqTg@mail.gmail.com>
+Subject: Re: [PATCH 2/4] PCI: add functionality for resizing resources v3
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, dri-devel@lists.freedesktop.org,
+	Platform Driver <platform-driver-x86@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 15, 2017 at 07:23:12PM +0200, Linus Walleij wrote:
-> The Faraday FTPCI100 controller has two clock ports, PCLK and PCICLK.
-> We add bindings for these two clocks so we can assign them in the device
-> tree.
-> 
-> Cc: devicetree@vger.kernel.org
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
-> ---
->  Documentation/devicetree/bindings/pci/faraday,ftpci100.txt | 7 +++++++
->  1 file changed, 7 insertions(+)
+On Thu, May 4, 2017 at 12:23 PM, Christian K=C3=B6nig
+<deathsimple@vodafone.de> wrote:
+> Am 26.04.2017 um 19:00 schrieb Andy Shevchenko:
 
-Acked-by: Rob Herring <robh@kernel.org>
+>>> +       while (1) {
+>>
+>> This raises red flag. Care to refactor?
+>> Also do {} while () syntax allows faster to get that the loop body
+>> goes at least once.
+>
+>
+> I've tried to refactor this, but couldn't come up with something which wo=
+rks
+> and is readable at the same time.
+>
+> Any suggestion how this should look like?
+
+This is original code.
+
+--- 8< --- 8< ---
+
+    while (1) {
+            for (i =3D PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END; i=
+++) {
+                    struct resource *res =3D &bridge->resource[i];
+
+                    if ((res->flags & type_mask) !=3D (type & type_mask))
+                            continue;
+
+                    /* Ignore BARs which are still in use */
+                    if (res->child)
+                            continue;
+
+                    ret =3D add_to_list(&saved, bridge, res, 0, 0);
+                    if (ret)
+                            goto cleanup;
+
+                    if (res->parent)
+                            release_resource(res);
+                    res->start =3D 0;
+                    res->end =3D 0;
+                    dev_info(&bridge->dev, "BAR %d: released %pR\n", i, res=
+);
+                    break;
+            }
+            if (i =3D=3D PCI_BRIDGE_RESOURCE_END)
+                    break;
+
+            if (!bridge->bus || !bridge->bus->self)
+                    break;
+
+            bridge =3D bridge->bus->self;
+    }
+
+--- 8< --- 8< ---
+
+I would think about something like below
+
+static int ...xxx...(...)
+{
+    unsigned int i;
+    int ret;
+
+    for (i =3D PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END; i++) {
+            struct resource *res =3D &bridge->resource[i];
+
+            /* Ignore BARs which are still in use */
+            if (((res->flags ^ type) & type_mask) =3D=3D 0 && !res->child)
+                    break;
+    }
+    if (i =3D=3D PCI_BRIDGE_RESOURCE_END)
+        return -EBUSY;
+
+    ret =3D add_to_list(&saved, bridge, res, 0, 0);
+    if (ret)
+            return ret;
+
+    if (res->parent)
+            release_resource(res);
+
+    res->start =3D 0;
+    res->end =3D 0;
+    dev_info(&bridge->dev, "BAR %d: released %pR\n", i, res);
+    return i;
+}
+
+
+struct pci_dev *next =3D bridge;
+...
+    do {
+        bridge =3D next;
+
+        ret =3D ...xxx...(...);
+        if (ret)
+            goto cleanup;
+
+        next =3D bridge->bus ? bridge->bus->self : NULL;
+    } while (next);
+...
+
+--=20
+With Best Regards,
+Andy Shevchenko
