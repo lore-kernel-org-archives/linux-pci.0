@@ -1,40 +1,122 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-wr0-f194.google.com ([209.85.128.194]:33307 "EHLO
-        mail-wr0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935721AbdEXM2J (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 08:28:09 -0400
-Received: by mail-wr0-f194.google.com with SMTP id w50so9610129wrc.0
-        for <linux-pci@vger.kernel.org>; Wed, 24 May 2017 05:28:08 -0700 (PDT)
-From: Peter Robinson <pbrobinson@gmail.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Linus Walleij <linus.walleij@linaro.org>,
-        linux-pci@vger.kernel.org
-Cc: Peter Robinson <pbrobinson@gmail.com>
-Subject: [PATCH] pci: host: FTPCI100: Add dependency on ARCH_GEMINI
-Date: Wed, 24 May 2017 13:28:02 +0100
-Message-Id: <20170524122802.29493-1-pbrobinson@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:59690 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751991AbdEDVnJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 May 2017 17:43:09 -0400
+Date: Thu, 4 May 2017 16:43:03 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Yinghai Lu <yinghai@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        David Miller <davem@davemloft.net>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Wei Yang <weiyang@linux.vnet.ibm.com>,
+        Khalid Aziz <khalid.aziz@oracle.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 10/13] PCI: Only treat non-pref mmio64 as pref if all
+ bridges have MEM_64
+Message-ID: <20170504214303.GB9648@bhelgaas-glaptop.roam.corp.google.com>
+References: <20170421050500.13957-1-yinghai@kernel.org>
+ <20170421050500.13957-11-yinghai@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20170421050500.13957-11-yinghai@kernel.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Add dependency on ARCH_GEMINI and compile test
+On Thu, Apr 20, 2017 at 10:04:57PM -0700, Yinghai Lu wrote:
+> If any bridge up to root only have 32bit pref mmio, We don't need to
+> treat device non-pref mmio64 as as pref mmio64.
 
-Signed-off-by: Peter Robinson <pbrobinson@gmail.com>
----
- drivers/pci/host/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I don't understand the reasoning here.  
 
-diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-index 7f47cd5e10a5..7810acbf9ad2 100644
---- a/drivers/pci/host/Kconfig
-+++ b/drivers/pci/host/Kconfig
-@@ -30,7 +30,7 @@ config PCIE_XILINX_NWL
- config PCI_FTPCI100
- 	bool "Faraday Technology FTPCI100 PCI controller"
- 	depends on OF
--	depends on ARM
-+	depends on ARM && (ARCH_GEMINI || COMPILE_TEST)
- 	default ARCH_GEMINI
- 
- config PCI_TEGRA
--- 
-2.13.0
+Apparently it is only safe to put a non-prefetchable PCIe BAR in a
+prefetchable window if all upstream bridges have a 64-bit prefetchable
+window?  Why is that?  Why is it important that the prefetchable
+window be 64-bit?  I don't see this mentioned in the implementation
+note.
+
+Does this mean "PCI: Check pref compatible bit for mem64 resource of
+PCIe device" can make unsafe assignments until we apply this patch?
+If so, I don't want that sort of bisection hole.
+
+What bad thing happens without this patch?
+
+> We need to move pci_bridge_check_ranges calling early.
+> For parent bridges pref mmio BAR may not allocated by BIOS, res flags
+> is still 0, we need to have it correct set before we check them for
+> child device resources.
+> 
+> -v2: check all bus resources instead of just res[15].
+> 
+> Signed-off-by: Yinghai Lu <yinghai@kernel.org>
+> Tested-by: Khalid Aziz <khalid.aziz@oracle.com>
+> ---
+>  drivers/pci/setup-bus.c | 31 +++++++++++++++++++++++++++++--
+>  1 file changed, 29 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 3de66e6..b3fd314 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -735,6 +735,29 @@ int pci_claim_bridge_resource(struct pci_dev *bridge, int i)
+>  	return -EINVAL;
+>  }
+>  
+> +static bool pci_up_path_over_pref_mem64(struct pci_bus *bus)
+> +{
+> +	if (pci_is_root_bus(bus))
+> +		return true;
+> +
+> +	if (bus->self) {
+> +		int i;
+> +		bool found = false;
+> +		struct resource *res;
+> +
+> +		pci_bus_for_each_resource(bus, res, i)
+> +			if (res->flags & IORESOURCE_MEM_64) {
+> +				found = true;
+> +				break;
+> +			}
+> +
+> +		if (!found)
+> +			return false;
+> +	}
+> +
+> +	return pci_up_path_over_pref_mem64(bus->parent);
+> +}
+> +
+>  int pci_resource_pref_compatible(const struct pci_dev *dev,
+>  				 struct resource *res)
+>  {
+> @@ -743,7 +766,8 @@ int pci_resource_pref_compatible(const struct pci_dev *dev,
+>  
+>  	if ((res->flags & IORESOURCE_MEM) &&
+>  	    (res->flags & IORESOURCE_MEM_64) &&
+> -	    dev->on_all_pcie_path)
+> +	    dev->on_all_pcie_path &&
+> +	    pci_up_path_over_pref_mem64(dev->bus))
+>  		return res->flags | IORESOURCE_PREFETCH;
+>  
+>  	return res->flags;
+> @@ -1236,6 +1260,10 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+>  	struct resource *b_res;
+>  	int ret;
+>  
+> +	if (!pci_is_root_bus(bus) &&
+> +	    (bus->self->class >> 8) == PCI_CLASS_BRIDGE_PCI)
+> +		pci_bridge_check_ranges(bus);
+> +
+>  	list_for_each_entry(dev, &bus->devices, bus_list) {
+>  		struct pci_bus *b = dev->subordinate;
+>  		if (!b)
+> @@ -1263,7 +1291,6 @@ void __pci_bus_size_bridges(struct pci_bus *bus, struct list_head *realloc_head)
+>  		break;
+>  
+>  	case PCI_CLASS_BRIDGE_PCI:
+> -		pci_bridge_check_ranges(bus);
+>  		if (bus->self->is_hotplug_bridge) {
+>  			additional_io_size  = pci_hotplug_io_size;
+>  			additional_mem_size = pci_hotplug_mem_size;
+> -- 
+> 2.9.3
+> 
