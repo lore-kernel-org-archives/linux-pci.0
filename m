@@ -1,42 +1,59 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:44546 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750862AbdEaFdr (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 01:33:47 -0400
-From: Colin King <colin.king@canonical.com>
-To: Stanimir Varbanov <svarbanov@mm-sol.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI: qcom: ix spelling mistake: "asser" -> "assert"
-Date: Wed, 31 May 2017 06:33:43 +0100
-Message-Id: <20170531053343.17613-1-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Received: from lucky1.263xmail.com ([211.157.147.134]:58843 "EHLO
+        lucky1.263xmail.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753915AbdEDCZz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 3 May 2017 22:25:55 -0400
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
+        Brian Norris <briannorris@chromium.org>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH 1/4] PCI: rockchip: rename rockchip_cfg_atu to rockchip_pcie_cfg_atu
+Date: Thu,  4 May 2017 10:24:48 +0800
+Message-Id: <1493864691-102523-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Rename it in order to keep the name consistent with other
+functions' in pcie-rockchip.
 
-Trivial fix to spelling mistake in dev_err message
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 ---
- drivers/pci/dwc/pcie-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/dwc/pcie-qcom.c b/drivers/pci/dwc/pcie-qcom.c
-index 289cda1b4897..fbc79a5274c6 100644
---- a/drivers/pci/dwc/pcie-qcom.c
-+++ b/drivers/pci/dwc/pcie-qcom.c
-@@ -695,7 +695,7 @@ static int qcom_pcie_init_v3(struct qcom_pcie *pcie)
+ drivers/pci/host/pcie-rockchip.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
+index c8ca796..ac08b4c 100644
+--- a/drivers/pci/host/pcie-rockchip.c
++++ b/drivers/pci/host/pcie-rockchip.c
+@@ -1156,7 +1156,7 @@ static int rockchip_pcie_prog_ib_atu(struct rockchip_pcie *rockchip,
+ 	return 0;
+ }
  
- 	ret = reset_control_assert(res->axi_s_reset);
- 	if (ret) {
--		dev_err(dev, "cannot asser axi slave reset\n");
-+		dev_err(dev, "cannot assert axi slave reset\n");
- 		return ret;
+-static int rockchip_cfg_atu(struct rockchip_pcie *rockchip)
++static int rockchip_pcie_cfg_atu(struct rockchip_pcie *rockchip)
+ {
+ 	struct device *dev = rockchip->dev;
+ 	int offset;
+@@ -1279,7 +1279,7 @@ static int __maybe_unused rockchip_pcie_resume_noirq(struct device *dev)
+ 	if (err)
+ 		return err;
+ 
+-	err = rockchip_cfg_atu(rockchip);
++	err = rockchip_pcie_cfg_atu(rockchip);
+ 	if (err)
+ 		return err;
+ 
+@@ -1396,7 +1396,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
+ 		}
  	}
  
+-	err = rockchip_cfg_atu(rockchip);
++	err = rockchip_pcie_cfg_atu(rockchip);
+ 	if (err)
+ 		goto err_free_res;
+ 
 -- 
-2.11.0
+1.9.1
