@@ -1,650 +1,953 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Mon, 8 May 2017 03:08:24 +0800
-From: kbuild test robot <lkp@intel.com>
-To: Oza Pawandeep <oza.oza@broadcom.com>
-Subject: Re: [PATCH v5 3/3] PCI/of fix of_dma_get_range; get PCI specific
- dma-ranges
-Message-ID: <201705080258.8tzPFTzu%fengguang.wu@intel.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="y0ulUmNC+osPPQO6"
-In-Reply-To: <1493992827-1553-4-git-send-email-oza.oza@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Oza Pawandeep <oza.pawandeep@gmail.com>,
- linux-pci@vger.kernel.org, Joerg Roedel <joro@8bytes.org>,
- linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
- bcm-kernel-feedback-list@broadcom.com, kbuild-all@01.org,
- Oza Pawandeep <oza.oza@broadcom.com>, Robin Murphy <robin.murphy@arm.com>,
- linux-arm-kernel@lists.infradead.org
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: linux-acpi@vger.kernel.org, tpmdd-devel@lists.sourceforge.net,
+        intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
+        linux-input@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Borislav Petkov <bp@suse.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>
+Subject: [PATCH v1] ACPI: Switch to use generic UUID API
+Date: Thu,  4 May 2017 12:21:51 +0300
+Message-Id: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+acpi_evaluate_dsm() and friends take a pointer to a raw buffer of 16
+bytes. Instead we convert them to use uuid_le type. At the same time we
+convert current users.
 
---y0ulUmNC+osPPQO6
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+acpi_str_to_uuid() becomes useless after the conversion and it's safe to
+get rid of it.
 
-Hi Oza,
+The conversion fixes a potential bug in int340x_thermal as well since
+we have to use memcmp() on binary data.
 
-[auto build test ERROR on v4.9-rc8]
-[cannot apply to glikely/devicetree/next iommu/next next-20170505]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/Oza-Pawandeep/OF-PCI-address-PCI-inbound-memory-limitations/20170508-004625
-config: arm-arm67 (attached as .config)
-compiler: arm-linux-gnueabi-gcc (Debian 6.1.1-9) 6.1.1 20160705
-reproduce:
-        wget https://raw.githubusercontent.com/01org/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # save the attached .config to linux build tree
-        make.cross ARCH=arm 
-
-All errors (new ones prefixed by >>):
-
-   drivers//of/address.c: In function 'of_bus_pci_get_dma_ranges':
->> drivers//of/address.c:212:2: error: implicit declaration of function 'pci_free_resource_list' [-Werror=implicit-function-declaration]
-     pci_free_resource_list(&res);
-     ^~~~~~~~~~~~~~~~~~~~~~
-   cc1: some warnings being treated as errors
-
-vim +/pci_free_resource_list +212 drivers//of/address.c
-
-   206				*dma_addr = res_dma->start - window->offset;
-   207				*paddr = res_dma->start;
-   208				*size = resource_size(res_dma);
-   209				}
-   210			}
-   211		}
- > 212		pci_free_resource_list(&res);
-   213	
-   214		/*
-   215		 * return the largest possible size,
-
+Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: Borislav Petkov <bp@suse.de>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Amir Goldstein <amir73il@gmail.com>
+Cc: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
+Cc: Jani Nikula <jani.nikula@linux.intel.com>
+Cc: Ben Skeggs <bskeggs@redhat.com>
+Cc: Benjamin Tissoires <benjamin.tissoires@redhat.com>
+Cc: Joerg Roedel <joro@8bytes.org>
+Cc: Adrian Hunter <adrian.hunter@intel.com>
+Cc: Yisen Zhuang <yisen.zhuang@huawei.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Zhang Rui <rui.zhang@intel.com>
+Cc: Felipe Balbi <balbi@kernel.org>
+Cc: Mathias Nyman <mathias.nyman@intel.com>
+Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Cc: Liam Girdwood <lgirdwood@gmail.com>
+Cc: Mark Brown <broonie@kernel.org>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/acpi/acpi_extlog.c                         | 10 +++---
+ drivers/acpi/bus.c                                 | 29 ++--------------
+ drivers/acpi/nfit/core.c                           | 40 +++++++++++-----------
+ drivers/acpi/nfit/nfit.h                           |  3 +-
+ drivers/acpi/utils.c                               |  4 +--
+ drivers/char/tpm/tpm_crb.c                         |  9 +++--
+ drivers/char/tpm/tpm_ppi.c                         | 20 +++++------
+ drivers/gpu/drm/i915/intel_acpi.c                  | 14 +++-----
+ drivers/gpu/drm/nouveau/nouveau_acpi.c             | 20 +++++------
+ drivers/gpu/drm/nouveau/nvkm/subdev/mxm/base.c     |  9 +++--
+ drivers/hid/i2c-hid/i2c-hid.c                      |  9 +++--
+ drivers/iommu/dmar.c                               | 11 +++---
+ drivers/mmc/host/sdhci-pci-core.c                  |  9 +++--
+ drivers/net/ethernet/hisilicon/hns/hns_dsaf_misc.c | 15 ++++----
+ drivers/pci/pci-acpi.c                             | 11 +++---
+ drivers/pci/pci-label.c                            |  4 +--
+ drivers/thermal/int340x_thermal/int3400_thermal.c  |  8 ++---
+ drivers/usb/dwc3/dwc3-pci.c                        |  6 ++--
+ drivers/usb/host/xhci-pci.c                        |  9 +++--
+ drivers/usb/misc/ucsi.c                            |  2 +-
+ drivers/usb/typec/typec_wcove.c                    |  4 +--
+ include/acpi/acpi_bus.h                            |  9 ++---
+ include/linux/acpi.h                               |  4 +--
+ include/linux/pci-acpi.h                           |  2 +-
+ sound/soc/intel/skylake/skl-nhlt.c                 |  7 ++--
+ tools/testing/nvdimm/test/iomap.c                  |  2 +-
+ tools/testing/nvdimm/test/nfit.c                   |  2 +-
+ 27 files changed, 116 insertions(+), 156 deletions(-)
 
---y0ulUmNC+osPPQO6
-Content-Type: application/gzip
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
-
-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
-
---y0ulUmNC+osPPQO6
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
-
---y0ulUmNC+osPPQO6--
+diff --git a/drivers/acpi/acpi_extlog.c b/drivers/acpi/acpi_extlog.c
+index 502ea4dc2080..69d6140b6afa 100644
+--- a/drivers/acpi/acpi_extlog.c
++++ b/drivers/acpi/acpi_extlog.c
+@@ -182,17 +182,17 @@ static int extlog_print(struct notifier_block *nb, unsigned long val,
+ 
+ static bool __init extlog_get_l1addr(void)
+ {
+-	u8 uuid[16];
++	uuid_le uuid;
+ 	acpi_handle handle;
+ 	union acpi_object *obj;
+ 
+-	acpi_str_to_uuid(extlog_dsm_uuid, uuid);
+-
++	if (uuid_le_to_bin(extlog_dsm_uuid, &uuid))
++		return false;
+ 	if (ACPI_FAILURE(acpi_get_handle(NULL, "\\_SB", &handle)))
+ 		return false;
+-	if (!acpi_check_dsm(handle, uuid, EXTLOG_DSM_REV, 1 << EXTLOG_FN_ADDR))
++	if (!acpi_check_dsm(handle, &uuid, EXTLOG_DSM_REV, 1 << EXTLOG_FN_ADDR))
+ 		return false;
+-	obj = acpi_evaluate_dsm_typed(handle, uuid, EXTLOG_DSM_REV,
++	obj = acpi_evaluate_dsm_typed(handle, &uuid, EXTLOG_DSM_REV,
+ 				      EXTLOG_FN_ADDR, NULL, ACPI_TYPE_INTEGER);
+ 	if (!obj) {
+ 		return false;
+diff --git a/drivers/acpi/bus.c b/drivers/acpi/bus.c
+index 784bda663d16..e8130a4873e9 100644
+--- a/drivers/acpi/bus.c
++++ b/drivers/acpi/bus.c
+@@ -196,42 +196,19 @@ static void acpi_print_osc_error(acpi_handle handle,
+ 	pr_debug("\n");
+ }
+ 
+-acpi_status acpi_str_to_uuid(char *str, u8 *uuid)
+-{
+-	int i;
+-	static int opc_map_to_uuid[16] = {6, 4, 2, 0, 11, 9, 16, 14, 19, 21,
+-		24, 26, 28, 30, 32, 34};
+-
+-	if (strlen(str) != 36)
+-		return AE_BAD_PARAMETER;
+-	for (i = 0; i < 36; i++) {
+-		if (i == 8 || i == 13 || i == 18 || i == 23) {
+-			if (str[i] != '-')
+-				return AE_BAD_PARAMETER;
+-		} else if (!isxdigit(str[i]))
+-			return AE_BAD_PARAMETER;
+-	}
+-	for (i = 0; i < 16; i++) {
+-		uuid[i] = hex_to_bin(str[opc_map_to_uuid[i]]) << 4;
+-		uuid[i] |= hex_to_bin(str[opc_map_to_uuid[i] + 1]);
+-	}
+-	return AE_OK;
+-}
+-EXPORT_SYMBOL_GPL(acpi_str_to_uuid);
+-
+ acpi_status acpi_run_osc(acpi_handle handle, struct acpi_osc_context *context)
+ {
+ 	acpi_status status;
+ 	struct acpi_object_list input;
+ 	union acpi_object in_params[4];
+ 	union acpi_object *out_obj;
+-	u8 uuid[16];
++	uuid_le uuid;
+ 	u32 errors;
+ 	struct acpi_buffer output = {ACPI_ALLOCATE_BUFFER, NULL};
+ 
+ 	if (!context)
+ 		return AE_ERROR;
+-	if (ACPI_FAILURE(acpi_str_to_uuid(context->uuid_str, uuid)))
++	if (uuid_le_to_bin(context->uuid_str, &uuid))
+ 		return AE_ERROR;
+ 	context->ret.length = ACPI_ALLOCATE_BUFFER;
+ 	context->ret.pointer = NULL;
+@@ -241,7 +218,7 @@ acpi_status acpi_run_osc(acpi_handle handle, struct acpi_osc_context *context)
+ 	input.pointer = in_params;
+ 	in_params[0].type 		= ACPI_TYPE_BUFFER;
+ 	in_params[0].buffer.length 	= 16;
+-	in_params[0].buffer.pointer	= uuid;
++	in_params[0].buffer.pointer	= (u8 *)&uuid;
+ 	in_params[1].type 		= ACPI_TYPE_INTEGER;
+ 	in_params[1].integer.value 	= context->rev;
+ 	in_params[2].type 		= ACPI_TYPE_INTEGER;
+diff --git a/drivers/acpi/nfit/core.c b/drivers/acpi/nfit/core.c
+index 0f7982a1caaf..bd3e45ede056 100644
+--- a/drivers/acpi/nfit/core.c
++++ b/drivers/acpi/nfit/core.c
+@@ -74,11 +74,11 @@ struct nfit_table_prev {
+ 	struct list_head flushes;
+ };
+ 
+-static u8 nfit_uuid[NFIT_UUID_MAX][16];
++static uuid_le nfit_uuid[NFIT_UUID_MAX];
+ 
+-const u8 *to_nfit_uuid(enum nfit_uuids id)
++const uuid_le *to_nfit_uuid(enum nfit_uuids id)
+ {
+-	return nfit_uuid[id];
++	return &nfit_uuid[id];
+ }
+ EXPORT_SYMBOL(to_nfit_uuid);
+ 
+@@ -207,7 +207,7 @@ int acpi_nfit_ctl(struct nvdimm_bus_descriptor *nd_desc, struct nvdimm *nvdimm,
+ 	u32 offset, fw_status = 0;
+ 	acpi_handle handle;
+ 	unsigned int func;
+-	const u8 *uuid;
++	const uuid_le *uuid;
+ 	int rc, i;
+ 
+ 	func = cmd;
+@@ -394,7 +394,7 @@ int nfit_spa_type(struct acpi_nfit_system_address *spa)
+ 	int i;
+ 
+ 	for (i = 0; i < NFIT_UUID_MAX; i++)
+-		if (memcmp(to_nfit_uuid(i), spa->range_guid, 16) == 0)
++		if (!uuid_le_cmp_pp(to_nfit_uuid(i), (uuid_le *)spa->range_guid))
+ 			return i;
+ 	return -1;
+ }
+@@ -1400,7 +1400,7 @@ static int acpi_nfit_add_dimm(struct acpi_nfit_desc *acpi_desc,
+ 	struct acpi_device *adev, *adev_dimm;
+ 	struct device *dev = acpi_desc->dev;
+ 	unsigned long dsm_mask;
+-	const u8 *uuid;
++	const uuid_le *uuid = to_nfit_uuid(NFIT_DEV_DIMM);
+ 	int i;
+ 	int family = -1;
+ 
+@@ -1596,7 +1596,7 @@ static int acpi_nfit_register_dimms(struct acpi_nfit_desc *acpi_desc)
+ static void acpi_nfit_init_dsms(struct acpi_nfit_desc *acpi_desc)
+ {
+ 	struct nvdimm_bus_descriptor *nd_desc = &acpi_desc->nd_desc;
+-	const u8 *uuid = to_nfit_uuid(NFIT_DEV_BUS);
++	const uuid_le *uuid = to_nfit_uuid(NFIT_DEV_BUS);
+ 	struct acpi_device *adev;
+ 	int i;
+ 
+@@ -3036,19 +3036,19 @@ static __init int nfit_init(void)
+ 	BUILD_BUG_ON(sizeof(struct acpi_nfit_control_region) != 80);
+ 	BUILD_BUG_ON(sizeof(struct acpi_nfit_data_region) != 40);
+ 
+-	acpi_str_to_uuid(UUID_VOLATILE_MEMORY, nfit_uuid[NFIT_SPA_VOLATILE]);
+-	acpi_str_to_uuid(UUID_PERSISTENT_MEMORY, nfit_uuid[NFIT_SPA_PM]);
+-	acpi_str_to_uuid(UUID_CONTROL_REGION, nfit_uuid[NFIT_SPA_DCR]);
+-	acpi_str_to_uuid(UUID_DATA_REGION, nfit_uuid[NFIT_SPA_BDW]);
+-	acpi_str_to_uuid(UUID_VOLATILE_VIRTUAL_DISK, nfit_uuid[NFIT_SPA_VDISK]);
+-	acpi_str_to_uuid(UUID_VOLATILE_VIRTUAL_CD, nfit_uuid[NFIT_SPA_VCD]);
+-	acpi_str_to_uuid(UUID_PERSISTENT_VIRTUAL_DISK, nfit_uuid[NFIT_SPA_PDISK]);
+-	acpi_str_to_uuid(UUID_PERSISTENT_VIRTUAL_CD, nfit_uuid[NFIT_SPA_PCD]);
+-	acpi_str_to_uuid(UUID_NFIT_BUS, nfit_uuid[NFIT_DEV_BUS]);
+-	acpi_str_to_uuid(UUID_NFIT_DIMM, nfit_uuid[NFIT_DEV_DIMM]);
+-	acpi_str_to_uuid(UUID_NFIT_DIMM_N_HPE1, nfit_uuid[NFIT_DEV_DIMM_N_HPE1]);
+-	acpi_str_to_uuid(UUID_NFIT_DIMM_N_HPE2, nfit_uuid[NFIT_DEV_DIMM_N_HPE2]);
+-	acpi_str_to_uuid(UUID_NFIT_DIMM_N_MSFT, nfit_uuid[NFIT_DEV_DIMM_N_MSFT]);
++	uuid_le_to_bin(UUID_VOLATILE_MEMORY, &nfit_uuid[NFIT_SPA_VOLATILE]);
++	uuid_le_to_bin(UUID_PERSISTENT_MEMORY, &nfit_uuid[NFIT_SPA_PM]);
++	uuid_le_to_bin(UUID_CONTROL_REGION, &nfit_uuid[NFIT_SPA_DCR]);
++	uuid_le_to_bin(UUID_DATA_REGION, &nfit_uuid[NFIT_SPA_BDW]);
++	uuid_le_to_bin(UUID_VOLATILE_VIRTUAL_DISK, &nfit_uuid[NFIT_SPA_VDISK]);
++	uuid_le_to_bin(UUID_VOLATILE_VIRTUAL_CD, &nfit_uuid[NFIT_SPA_VCD]);
++	uuid_le_to_bin(UUID_PERSISTENT_VIRTUAL_DISK, &nfit_uuid[NFIT_SPA_PDISK]);
++	uuid_le_to_bin(UUID_PERSISTENT_VIRTUAL_CD, &nfit_uuid[NFIT_SPA_PCD]);
++	uuid_le_to_bin(UUID_NFIT_BUS, &nfit_uuid[NFIT_DEV_BUS]);
++	uuid_le_to_bin(UUID_NFIT_DIMM, &nfit_uuid[NFIT_DEV_DIMM]);
++	uuid_le_to_bin(UUID_NFIT_DIMM_N_HPE1, &nfit_uuid[NFIT_DEV_DIMM_N_HPE1]);
++	uuid_le_to_bin(UUID_NFIT_DIMM_N_HPE2, &nfit_uuid[NFIT_DEV_DIMM_N_HPE2]);
++	uuid_le_to_bin(UUID_NFIT_DIMM_N_MSFT, &nfit_uuid[NFIT_DEV_DIMM_N_MSFT]);
+ 
+ 	nfit_wq = create_singlethread_workqueue("nfit");
+ 	if (!nfit_wq)
+diff --git a/drivers/acpi/nfit/nfit.h b/drivers/acpi/nfit/nfit.h
+index 58fb7d68e04a..2f233b28709f 100644
+--- a/drivers/acpi/nfit/nfit.h
++++ b/drivers/acpi/nfit/nfit.h
+@@ -18,7 +18,6 @@
+ #include <linux/libnvdimm.h>
+ #include <linux/ndctl.h>
+ #include <linux/types.h>
+-#include <linux/uuid.h>
+ #include <linux/acpi.h>
+ #include <acpi/acuuid.h>
+ 
+@@ -237,7 +236,7 @@ static inline struct acpi_nfit_desc *to_acpi_desc(
+ 	return container_of(nd_desc, struct acpi_nfit_desc, nd_desc);
+ }
+ 
+-const u8 *to_nfit_uuid(enum nfit_uuids id);
++const uuid_le *to_nfit_uuid(enum nfit_uuids id);
+ int acpi_nfit_init(struct acpi_nfit_desc *acpi_desc, void *nfit, acpi_size sz);
+ void acpi_nfit_shutdown(void *data);
+ void __acpi_nfit_notify(struct device *dev, acpi_handle handle, u32 event);
+diff --git a/drivers/acpi/utils.c b/drivers/acpi/utils.c
+index 27d0dcfcf47d..bbe8a950e508 100644
+--- a/drivers/acpi/utils.c
++++ b/drivers/acpi/utils.c
+@@ -625,7 +625,7 @@ acpi_status acpi_evaluate_lck(acpi_handle handle, int lock)
+  * some old BIOSes do expect a buffer or an integer etc.
+  */
+ union acpi_object *
+-acpi_evaluate_dsm(acpi_handle handle, const u8 *uuid, u64 rev, u64 func,
++acpi_evaluate_dsm(acpi_handle handle, const uuid_le *uuid, u64 rev, u64 func,
+ 		  union acpi_object *argv4)
+ {
+ 	acpi_status ret;
+@@ -674,7 +674,7 @@ EXPORT_SYMBOL(acpi_evaluate_dsm);
+  * functions. Currently only support 64 functions at maximum, should be
+  * enough for now.
+  */
+-bool acpi_check_dsm(acpi_handle handle, const u8 *uuid, u64 rev, u64 funcs)
++bool acpi_check_dsm(acpi_handle handle, const uuid_le *uuid, u64 rev, u64 funcs)
+ {
+ 	int i;
+ 	u64 mask = 0;
+diff --git a/drivers/char/tpm/tpm_crb.c b/drivers/char/tpm/tpm_crb.c
+index b917b9d5f710..f789f7e5a17d 100644
+--- a/drivers/char/tpm/tpm_crb.c
++++ b/drivers/char/tpm/tpm_crb.c
+@@ -27,10 +27,9 @@
+ 
+ #define ACPI_SIG_TPM2 "TPM2"
+ 
+-static const u8 CRB_ACPI_START_UUID[] = {
+-	/* 0000 */ 0xAB, 0x6C, 0xBF, 0x6B, 0x63, 0x54, 0x14, 0x47,
+-	/* 0008 */ 0xB7, 0xCD, 0xF0, 0x20, 0x3C, 0x03, 0x68, 0xD4
+-};
++static const uuid_le crb_acpi_start_uuid =
++	UUID_LE(0x6BBF6CAB, 0x5463, 0x4714,
++		0xB7, 0xCD, 0xF0, 0x20, 0x3C, 0x03, 0x68, 0xD4);
+ 
+ enum crb_defaults {
+ 	CRB_ACPI_START_REVISION_ID = 1,
+@@ -266,7 +265,7 @@ static int crb_do_acpi_start(struct tpm_chip *chip)
+ 	int rc;
+ 
+ 	obj = acpi_evaluate_dsm(chip->acpi_dev_handle,
+-				CRB_ACPI_START_UUID,
++				&crb_acpi_start_uuid,
+ 				CRB_ACPI_START_REVISION_ID,
+ 				CRB_ACPI_START_INDEX,
+ 				NULL);
+diff --git a/drivers/char/tpm/tpm_ppi.c b/drivers/char/tpm/tpm_ppi.c
+index 692a2c6ae036..7cf682426361 100644
+--- a/drivers/char/tpm/tpm_ppi.c
++++ b/drivers/char/tpm/tpm_ppi.c
+@@ -32,20 +32,16 @@
+ #define PPI_VS_REQ_START	128
+ #define PPI_VS_REQ_END		255
+ 
+-static const u8 tpm_ppi_uuid[] = {
+-	0xA6, 0xFA, 0xDD, 0x3D,
+-	0x1B, 0x36,
+-	0xB4, 0x4E,
+-	0xA4, 0x24,
+-	0x8D, 0x10, 0x08, 0x9D, 0x16, 0x53
+-};
++static const uuid_le tpm_ppi_uuid =
++	UUID_LE(0x3DDDFAA6, 0x361B, 0x4EB4,
++		0xA4, 0x24, 0x8D, 0x10, 0x08, 0x9D, 0x16, 0x53);
+ 
+ static inline union acpi_object *
+ tpm_eval_dsm(acpi_handle ppi_handle, int func, acpi_object_type type,
+ 	     union acpi_object *argv4)
+ {
+ 	BUG_ON(!ppi_handle);
+-	return acpi_evaluate_dsm_typed(ppi_handle, tpm_ppi_uuid,
++	return acpi_evaluate_dsm_typed(ppi_handle, &tpm_ppi_uuid,
+ 				       TPM_PPI_REVISION_ID,
+ 				       func, argv4, type);
+ }
+@@ -107,7 +103,7 @@ static ssize_t tpm_store_ppi_request(struct device *dev,
+ 	 * is updated with function index from SUBREQ to SUBREQ2 since PPI
+ 	 * version 1.1
+ 	 */
+-	if (acpi_check_dsm(chip->acpi_dev_handle, tpm_ppi_uuid,
++	if (acpi_check_dsm(chip->acpi_dev_handle, &tpm_ppi_uuid,
+ 			   TPM_PPI_REVISION_ID, 1 << TPM_PPI_FN_SUBREQ2))
+ 		func = TPM_PPI_FN_SUBREQ2;
+ 
+@@ -268,7 +264,7 @@ static ssize_t show_ppi_operations(acpi_handle dev_handle, char *buf, u32 start,
+ 		"User not required",
+ 	};
+ 
+-	if (!acpi_check_dsm(dev_handle, tpm_ppi_uuid, TPM_PPI_REVISION_ID,
++	if (!acpi_check_dsm(dev_handle, &tpm_ppi_uuid, TPM_PPI_REVISION_ID,
+ 			    1 << TPM_PPI_FN_GETOPR))
+ 		return -EPERM;
+ 
+@@ -341,12 +337,12 @@ void tpm_add_ppi(struct tpm_chip *chip)
+ 	if (!chip->acpi_dev_handle)
+ 		return;
+ 
+-	if (!acpi_check_dsm(chip->acpi_dev_handle, tpm_ppi_uuid,
++	if (!acpi_check_dsm(chip->acpi_dev_handle, &tpm_ppi_uuid,
+ 			    TPM_PPI_REVISION_ID, 1 << TPM_PPI_FN_VERSION))
+ 		return;
+ 
+ 	/* Cache PPI version string. */
+-	obj = acpi_evaluate_dsm_typed(chip->acpi_dev_handle, tpm_ppi_uuid,
++	obj = acpi_evaluate_dsm_typed(chip->acpi_dev_handle, &tpm_ppi_uuid,
+ 				      TPM_PPI_REVISION_ID, TPM_PPI_FN_VERSION,
+ 				      NULL, ACPI_TYPE_STRING);
+ 	if (obj) {
+diff --git a/drivers/gpu/drm/i915/intel_acpi.c b/drivers/gpu/drm/i915/intel_acpi.c
+index eb638a1e69d2..72bfe6ceadf8 100644
+--- a/drivers/gpu/drm/i915/intel_acpi.c
++++ b/drivers/gpu/drm/i915/intel_acpi.c
+@@ -15,13 +15,9 @@ static struct intel_dsm_priv {
+ 	acpi_handle dhandle;
+ } intel_dsm_priv;
+ 
+-static const u8 intel_dsm_guid[] = {
+-	0xd3, 0x73, 0xd8, 0x7e,
+-	0xd0, 0xc2,
+-	0x4f, 0x4e,
+-	0xa8, 0x54,
+-	0x0f, 0x13, 0x17, 0xb0, 0x1c, 0x2c
+-};
++static const uuid_le intel_dsm_guid =
++	UUID_LE(0x7ed873d3, 0xc2d0, 0x4e4f,
++		0xa8, 0x54, 0x0f, 0x13, 0x17, 0xb0, 0x1c, 0x2c);
+ 
+ static char *intel_dsm_port_name(u8 id)
+ {
+@@ -80,7 +76,7 @@ static void intel_dsm_platform_mux_info(void)
+ 	int i;
+ 	union acpi_object *pkg, *connector_count;
+ 
+-	pkg = acpi_evaluate_dsm_typed(intel_dsm_priv.dhandle, intel_dsm_guid,
++	pkg = acpi_evaluate_dsm_typed(intel_dsm_priv.dhandle, &intel_dsm_guid,
+ 			INTEL_DSM_REVISION_ID, INTEL_DSM_FN_PLATFORM_MUX_INFO,
+ 			NULL, ACPI_TYPE_PACKAGE);
+ 	if (!pkg) {
+@@ -118,7 +114,7 @@ static bool intel_dsm_pci_probe(struct pci_dev *pdev)
+ 	if (!dhandle)
+ 		return false;
+ 
+-	if (!acpi_check_dsm(dhandle, intel_dsm_guid, INTEL_DSM_REVISION_ID,
++	if (!acpi_check_dsm(dhandle, &intel_dsm_guid, INTEL_DSM_REVISION_ID,
+ 			    1 << INTEL_DSM_FN_PLATFORM_MUX_INFO)) {
+ 		DRM_DEBUG_KMS("no _DSM method for intel device\n");
+ 		return false;
+diff --git a/drivers/gpu/drm/nouveau/nouveau_acpi.c b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+index 39468c218027..faea23276d4a 100644
+--- a/drivers/gpu/drm/nouveau/nouveau_acpi.c
++++ b/drivers/gpu/drm/nouveau/nouveau_acpi.c
+@@ -60,15 +60,13 @@ bool nouveau_is_v1_dsm(void) {
+ }
+ 
+ #ifdef CONFIG_VGA_SWITCHEROO
+-static const char nouveau_dsm_muid[] = {
+-	0xA0, 0xA0, 0x95, 0x9D, 0x60, 0x00, 0x48, 0x4D,
+-	0xB3, 0x4D, 0x7E, 0x5F, 0xEA, 0x12, 0x9F, 0xD4,
+-};
++static const uuid_le nouveau_dsm_muid =
++	UUID_LE(0x9D95A0A0, 0x0060, 0x4D48,
++		0xB3, 0x4D, 0x7E, 0x5F, 0xEA, 0x12, 0x9F, 0xD4);
+ 
+-static const char nouveau_op_dsm_muid[] = {
+-	0xF8, 0xD8, 0x86, 0xA4, 0xDA, 0x0B, 0x1B, 0x47,
+-	0xA7, 0x2B, 0x60, 0x42, 0xA6, 0xB5, 0xBE, 0xE0,
+-};
++static const uuid_le nouveau_op_dsm_muid =
++	UUID_LE(0xA486D8F8, 0x0BDA, 0x471B,
++		0xA7, 0x2B, 0x60, 0x42, 0xA6, 0xB5, 0xBE, 0xE0);
+ 
+ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *result)
+ {
+@@ -86,7 +84,7 @@ static int nouveau_optimus_dsm(acpi_handle handle, int func, int arg, uint32_t *
+ 		args_buff[i] = (arg >> i * 8) & 0xFF;
+ 
+ 	*result = 0;
+-	obj = acpi_evaluate_dsm_typed(handle, nouveau_op_dsm_muid, 0x00000100,
++	obj = acpi_evaluate_dsm_typed(handle, &nouveau_op_dsm_muid, 0x00000100,
+ 				      func, &argv4, ACPI_TYPE_BUFFER);
+ 	if (!obj) {
+ 		acpi_handle_info(handle, "failed to evaluate _DSM\n");
+@@ -138,7 +136,7 @@ static int nouveau_dsm(acpi_handle handle, int func, int arg)
+ 		.integer.value = arg,
+ 	};
+ 
+-	obj = acpi_evaluate_dsm_typed(handle, nouveau_dsm_muid, 0x00000102,
++	obj = acpi_evaluate_dsm_typed(handle, &nouveau_dsm_muid, 0x00000102,
+ 				      func, &argv4, ACPI_TYPE_INTEGER);
+ 	if (!obj) {
+ 		acpi_handle_info(handle, "failed to evaluate _DSM\n");
+@@ -259,7 +257,7 @@ static void nouveau_dsm_pci_probe(struct pci_dev *pdev, acpi_handle *dhandle_out
+ 	if (!acpi_has_method(dhandle, "_DSM"))
+ 		return;
+ 
+-	supports_mux = acpi_check_dsm(dhandle, nouveau_dsm_muid, 0x00000102,
++	supports_mux = acpi_check_dsm(dhandle, &nouveau_dsm_muid, 0x00000102,
+ 				      1 << NOUVEAU_DSM_POWER);
+ 	optimus_funcs = nouveau_dsm_get_optimus_functions(dhandle);
+ 
+diff --git a/drivers/gpu/drm/nouveau/nvkm/subdev/mxm/base.c b/drivers/gpu/drm/nouveau/nvkm/subdev/mxm/base.c
+index e3e2f5e83815..cc95b8150a86 100644
+--- a/drivers/gpu/drm/nouveau/nvkm/subdev/mxm/base.c
++++ b/drivers/gpu/drm/nouveau/nvkm/subdev/mxm/base.c
+@@ -81,10 +81,9 @@ mxm_shadow_dsm(struct nvkm_mxm *mxm, u8 version)
+ {
+ 	struct nvkm_subdev *subdev = &mxm->subdev;
+ 	struct nvkm_device *device = subdev->device;
+-	static char muid[] = {
+-		0x00, 0xA4, 0x04, 0x40, 0x7D, 0x91, 0xF2, 0x4C,
+-		0xB8, 0x9C, 0x79, 0xB6, 0x2F, 0xD5, 0x56, 0x65
+-	};
++	static uuid_le muid =
++		UUID_LE(0x4004A400, 0x917D, 0x4CF2,
++			0xB8, 0x9C, 0x79, 0xB6, 0x2F, 0xD5, 0x56, 0x65);
+ 	u32 mxms_args[] = { 0x00000000 };
+ 	union acpi_object argv4 = {
+ 		.buffer.type = ACPI_TYPE_BUFFER,
+@@ -105,7 +104,7 @@ mxm_shadow_dsm(struct nvkm_mxm *mxm, u8 version)
+ 	 * unless you pass in exactly the version it supports..
+ 	 */
+ 	rev = (version & 0xf0) << 4 | (version & 0x0f);
+-	obj = acpi_evaluate_dsm(handle, muid, rev, 0x00000010, &argv4);
++	obj = acpi_evaluate_dsm(handle, &muid, rev, 0x00000010, &argv4);
+ 	if (!obj) {
+ 		nvkm_debug(subdev, "DSM MXMS failed\n");
+ 		return false;
+diff --git a/drivers/hid/i2c-hid/i2c-hid.c b/drivers/hid/i2c-hid/i2c-hid.c
+index 8daa8ce64ebb..f83bd717cdd5 100644
+--- a/drivers/hid/i2c-hid/i2c-hid.c
++++ b/drivers/hid/i2c-hid/i2c-hid.c
+@@ -872,10 +872,9 @@ static int i2c_hid_fetch_hid_descriptor(struct i2c_hid *ihid)
+ static int i2c_hid_acpi_pdata(struct i2c_client *client,
+ 		struct i2c_hid_platform_data *pdata)
+ {
+-	static u8 i2c_hid_guid[] = {
+-		0xF7, 0xF6, 0xDF, 0x3C, 0x67, 0x42, 0x55, 0x45,
+-		0xAD, 0x05, 0xB3, 0x0A, 0x3D, 0x89, 0x38, 0xDE,
+-	};
++	static uuid_le i2c_hid_guid =
++		UUID_LE(0x3CDFF6F7, 0x4267, 0x4555,
++			0xAD, 0x05, 0xB3, 0x0A, 0x3D, 0x89, 0x38, 0xDE);
+ 	union acpi_object *obj;
+ 	struct acpi_device *adev;
+ 	acpi_handle handle;
+@@ -884,7 +883,7 @@ static int i2c_hid_acpi_pdata(struct i2c_client *client,
+ 	if (!handle || acpi_bus_get_device(handle, &adev))
+ 		return -ENODEV;
+ 
+-	obj = acpi_evaluate_dsm_typed(handle, i2c_hid_guid, 1, 1, NULL,
++	obj = acpi_evaluate_dsm_typed(handle, &i2c_hid_guid, 1, 1, NULL,
+ 				      ACPI_TYPE_INTEGER);
+ 	if (!obj) {
+ 		dev_err(&client->dev, "device _DSM execution failed\n");
+diff --git a/drivers/iommu/dmar.c b/drivers/iommu/dmar.c
+index cbf7763d8091..420d51b286ad 100644
+--- a/drivers/iommu/dmar.c
++++ b/drivers/iommu/dmar.c
+@@ -1808,10 +1808,9 @@ IOMMU_INIT_POST(detect_intel_iommu);
+  * for Directed-IO Architecture Specifiction, Rev 2.2, Section 8.8
+  * "Remapping Hardware Unit Hot Plug".
+  */
+-static u8 dmar_hp_uuid[] = {
+-	/* 0000 */    0xA6, 0xA3, 0xC1, 0xD8, 0x9B, 0xBE, 0x9B, 0x4C,
+-	/* 0008 */    0x91, 0xBF, 0xC3, 0xCB, 0x81, 0xFC, 0x5D, 0xAF
+-};
++static uuid_le dmar_hp_uuid =
++	UUID_LE(0xD8C1A3A6, 0xBE9B, 0x4C9B,
++		0x91, 0xBF, 0xC3, 0xCB, 0x81, 0xFC, 0x5D, 0xAF);
+ 
+ /*
+  * Currently there's only one revision and BIOS will not check the revision id,
+@@ -1824,7 +1823,7 @@ static u8 dmar_hp_uuid[] = {
+ 
+ static inline bool dmar_detect_dsm(acpi_handle handle, int func)
+ {
+-	return acpi_check_dsm(handle, dmar_hp_uuid, DMAR_DSM_REV_ID, 1 << func);
++	return acpi_check_dsm(handle, &dmar_hp_uuid, DMAR_DSM_REV_ID, 1 << func);
+ }
+ 
+ static int dmar_walk_dsm_resource(acpi_handle handle, int func,
+@@ -1843,7 +1842,7 @@ static int dmar_walk_dsm_resource(acpi_handle handle, int func,
+ 	if (!dmar_detect_dsm(handle, func))
+ 		return 0;
+ 
+-	obj = acpi_evaluate_dsm_typed(handle, dmar_hp_uuid, DMAR_DSM_REV_ID,
++	obj = acpi_evaluate_dsm_typed(handle, &dmar_hp_uuid, DMAR_DSM_REV_ID,
+ 				      func, NULL, ACPI_TYPE_BUFFER);
+ 	if (!obj)
+ 		return -ENODEV;
+diff --git a/drivers/mmc/host/sdhci-pci-core.c b/drivers/mmc/host/sdhci-pci-core.c
+index 92fc3f7c538d..262b8c320d7c 100644
+--- a/drivers/mmc/host/sdhci-pci-core.c
++++ b/drivers/mmc/host/sdhci-pci-core.c
+@@ -404,10 +404,9 @@ struct intel_host {
+ 	bool	d3_retune;
+ };
+ 
+-const u8 intel_dsm_uuid[] = {
+-	0xA5, 0x3E, 0xC1, 0xF6, 0xCD, 0x65, 0x1F, 0x46,
+-	0xAB, 0x7A, 0x29, 0xF7, 0xE8, 0xD5, 0xBD, 0x61,
+-};
++const uuid_le intel_dsm_uuid =
++	UUID_LE(0xF6C13EA5, 0x65CD, 0x461F,
++		0xAB, 0x7A, 0x29, 0xF7, 0xE8, 0xD5, 0xBD, 0x61);
+ 
+ static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
+ 		       unsigned int fn, u32 *result)
+@@ -416,7 +415,7 @@ static int __intel_dsm(struct intel_host *intel_host, struct device *dev,
+ 	int err = 0;
+ 	size_t len;
+ 
+-	obj = acpi_evaluate_dsm(ACPI_HANDLE(dev), intel_dsm_uuid, 0, fn, NULL);
++	obj = acpi_evaluate_dsm(ACPI_HANDLE(dev), &intel_dsm_uuid, 0, fn, NULL);
+ 	if (!obj)
+ 		return -EOPNOTSUPP;
+ 
+diff --git a/drivers/net/ethernet/hisilicon/hns/hns_dsaf_misc.c b/drivers/net/ethernet/hisilicon/hns/hns_dsaf_misc.c
+index e13aa064a8e9..02842fe7f1d0 100644
+--- a/drivers/net/ethernet/hisilicon/hns/hns_dsaf_misc.c
++++ b/drivers/net/ethernet/hisilicon/hns/hns_dsaf_misc.c
+@@ -29,10 +29,9 @@ enum _dsm_rst_type {
+ 	HNS_ROCE_RESET_FUNC     = 0x7,
+ };
+ 
+-const u8 hns_dsaf_acpi_dsm_uuid[] = {
+-	0x1A, 0xAA, 0x85, 0x1A, 0x93, 0xE2, 0x5E, 0x41,
+-	0x8E, 0x28, 0x8D, 0x69, 0x0A, 0x0F, 0x82, 0x0A
+-};
++const uuid_le hns_dsaf_acpi_dsm_uuid =
++	UUID_LE(0x1A85AA1A, 0xE293, 0x415E,
++		0x8E, 0x28, 0x8D, 0x69, 0x0A, 0x0F, 0x82, 0x0A);
+ 
+ static void dsaf_write_sub(struct dsaf_device *dsaf_dev, u32 reg, u32 val)
+ {
+@@ -151,7 +150,7 @@ static void hns_dsaf_acpi_srst_by_port(struct dsaf_device *dsaf_dev, u8 op_type,
+ 	argv4.package.elements = obj_args;
+ 
+ 	obj = acpi_evaluate_dsm(ACPI_HANDLE(dsaf_dev->dev),
+-				hns_dsaf_acpi_dsm_uuid, 0, op_type, &argv4);
++				&hns_dsaf_acpi_dsm_uuid, 0, op_type, &argv4);
+ 	if (!obj) {
+ 		dev_warn(dsaf_dev->dev, "reset port_type%d port%d fail!",
+ 			 port_type, port);
+@@ -434,7 +433,7 @@ static phy_interface_t hns_mac_get_phy_if_acpi(struct hns_mac_cb *mac_cb)
+ 	argv4.package.elements = &obj_args,
+ 
+ 	obj = acpi_evaluate_dsm(ACPI_HANDLE(mac_cb->dev),
+-				hns_dsaf_acpi_dsm_uuid, 0,
++				&hns_dsaf_acpi_dsm_uuid, 0,
+ 				HNS_OP_GET_PORT_TYPE_FUNC, &argv4);
+ 
+ 	if (!obj || obj->type != ACPI_TYPE_INTEGER)
+@@ -474,7 +473,7 @@ int hns_mac_get_sfp_prsnt_acpi(struct hns_mac_cb *mac_cb, int *sfp_prsnt)
+ 	argv4.package.elements = &obj_args,
+ 
+ 	obj = acpi_evaluate_dsm(ACPI_HANDLE(mac_cb->dev),
+-				hns_dsaf_acpi_dsm_uuid, 0,
++				&hns_dsaf_acpi_dsm_uuid, 0,
+ 				HNS_OP_GET_SFP_STAT_FUNC, &argv4);
+ 
+ 	if (!obj || obj->type != ACPI_TYPE_INTEGER)
+@@ -565,7 +564,7 @@ hns_mac_config_sds_loopback_acpi(struct hns_mac_cb *mac_cb, bool en)
+ 	argv4.package.elements = obj_args;
+ 
+ 	obj = acpi_evaluate_dsm(ACPI_HANDLE(mac_cb->dsaf_dev->dev),
+-				hns_dsaf_acpi_dsm_uuid, 0,
++				&hns_dsaf_acpi_dsm_uuid, 0,
+ 				HNS_OP_SERDES_LP_FUNC, &argv4);
+ 	if (!obj) {
+ 		dev_warn(mac_cb->dsaf_dev->dev, "set port%d serdes lp fail!",
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 001860361434..eb612123e0dd 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -24,10 +24,9 @@
+  * The UUID is defined in the PCI Firmware Specification available here:
+  * https://www.pcisig.com/members/downloads/pcifw_r3_1_13Dec10.pdf
+  */
+-const u8 pci_acpi_dsm_uuid[] = {
+-	0xd0, 0x37, 0xc9, 0xe5, 0x53, 0x35, 0x7a, 0x4d,
+-	0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d
+-};
++const uuid_le pci_acpi_dsm_uuid =
++	UUID_LE(0xe5c937d0, 0x3553, 0x4d7a,
++		0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d);
+ 
+ #if defined(CONFIG_PCI_QUIRKS) && defined(CONFIG_ARM64)
+ static int acpi_get_rc_addr(struct acpi_device *adev, struct resource *res)
+@@ -680,7 +679,7 @@ void acpi_pci_add_bus(struct pci_bus *bus)
+ 	if (!pci_is_root_bus(bus))
+ 		return;
+ 
+-	obj = acpi_evaluate_dsm(ACPI_HANDLE(bus->bridge), pci_acpi_dsm_uuid, 3,
++	obj = acpi_evaluate_dsm(ACPI_HANDLE(bus->bridge), &pci_acpi_dsm_uuid, 3,
+ 				RESET_DELAY_DSM, NULL);
+ 	if (!obj)
+ 		return;
+@@ -745,7 +744,7 @@ static void pci_acpi_optimize_delay(struct pci_dev *pdev,
+ 	if (bridge->ignore_reset_delay)
+ 		pdev->d3cold_delay = 0;
+ 
+-	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 3,
++	obj = acpi_evaluate_dsm(handle, &pci_acpi_dsm_uuid, 3,
+ 				FUNCTION_DELAY_DSM, NULL);
+ 	if (!obj)
+ 		return;
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index 51357377efbc..a2c04229f1dc 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -172,7 +172,7 @@ static int dsm_get_label(struct device *dev, char *buf,
+ 	if (!handle)
+ 		return -1;
+ 
+-	obj = acpi_evaluate_dsm(handle, pci_acpi_dsm_uuid, 0x2,
++	obj = acpi_evaluate_dsm(handle, &pci_acpi_dsm_uuid, 0x2,
+ 				DEVICE_LABEL_DSM, NULL);
+ 	if (!obj)
+ 		return -1;
+@@ -212,7 +212,7 @@ static bool device_has_dsm(struct device *dev)
+ 	if (!handle)
+ 		return false;
+ 
+-	return !!acpi_check_dsm(handle, pci_acpi_dsm_uuid, 0x2,
++	return !!acpi_check_dsm(handle, &pci_acpi_dsm_uuid, 0x2,
+ 				1 << DEVICE_LABEL_DSM);
+ }
+ 
+diff --git a/drivers/thermal/int340x_thermal/int3400_thermal.c b/drivers/thermal/int340x_thermal/int3400_thermal.c
+index 9413c4abf0b9..c0eb3bb19b23 100644
+--- a/drivers/thermal/int340x_thermal/int3400_thermal.c
++++ b/drivers/thermal/int340x_thermal/int3400_thermal.c
+@@ -23,7 +23,7 @@ enum int3400_thermal_uuid {
+ 	INT3400_THERMAL_MAXIMUM_UUID,
+ };
+ 
+-static u8 *int3400_thermal_uuids[INT3400_THERMAL_MAXIMUM_UUID] = {
++static const char *int3400_thermal_uuids[INT3400_THERMAL_MAXIMUM_UUID] = {
+ 	"42A441D6-AE6A-462b-A84B-4A8CE79027D3",
+ 	"3A95C389-E4B8-4629-A526-C52C88626BAE",
+ 	"97C68AE7-15FA-499c-B8C9-5DA81D606E0A",
+@@ -141,10 +141,10 @@ static int int3400_thermal_get_uuids(struct int3400_thermal_priv *priv)
+ 		}
+ 
+ 		for (j = 0; j < INT3400_THERMAL_MAXIMUM_UUID; j++) {
+-			u8 uuid[16];
++			uuid_le u;
+ 
+-			acpi_str_to_uuid(int3400_thermal_uuids[j], uuid);
+-			if (!strncmp(uuid, objb->buffer.pointer, 16)) {
++			uuid_le_to_bin(int3400_thermal_uuids[j], &u);
++			if (!uuid_le_cmp(*(uuid_le *)objb->buffer.pointer), u) {
+ 				priv->uuid_bitmap |= (1 << j);
+ 				break;
+ 			}
+diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+index a15ec71d0423..6b5284ec76df 100644
+--- a/drivers/usb/dwc3/dwc3-pci.c
++++ b/drivers/usb/dwc3/dwc3-pci.c
+@@ -56,7 +56,7 @@ struct dwc3_pci {
+ 	struct platform_device *dwc3;
+ 	struct pci_dev *pci;
+ 
+-	u8 uuid[16];
++	uuid_le uuid;
+ 
+ 	unsigned int has_dsm_for_pm:1;
+ };
+@@ -118,7 +118,7 @@ static int dwc3_pci_quirks(struct dwc3_pci *dwc)
+ 
+ 		if (pdev->device == PCI_DEVICE_ID_INTEL_BXT ||
+ 				pdev->device == PCI_DEVICE_ID_INTEL_BXT_M) {
+-			acpi_str_to_uuid(PCI_INTEL_BXT_DSM_UUID, dwc->uuid);
++			uuid_le_to_bin(PCI_INTEL_BXT_DSM_UUID, &dwc->uuid);
+ 			dwc->has_dsm_for_pm = true;
+ 		}
+ 
+@@ -288,7 +288,7 @@ static int dwc3_pci_dsm(struct dwc3_pci *dwc, int param)
+ 	tmp.type = ACPI_TYPE_INTEGER;
+ 	tmp.integer.value = param;
+ 
+-	obj = acpi_evaluate_dsm(ACPI_HANDLE(&dwc->pci->dev), dwc->uuid,
++	obj = acpi_evaluate_dsm(ACPI_HANDLE(&dwc->pci->dev), &dwc->uuid,
+ 			1, PCI_INTEL_BXT_FUNC_PMU_PWR, &argv4);
+ 	if (!obj) {
+ 		dev_err(&dwc->pci->dev, "failed to evaluate _DSM\n");
+diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
+index 7b86508ac8cf..93b4f0de9418 100644
+--- a/drivers/usb/host/xhci-pci.c
++++ b/drivers/usb/host/xhci-pci.c
+@@ -210,13 +210,12 @@ static void xhci_pci_quirks(struct device *dev, struct xhci_hcd *xhci)
+ #ifdef CONFIG_ACPI
+ static void xhci_pme_acpi_rtd3_enable(struct pci_dev *dev)
+ {
+-	static const u8 intel_dsm_uuid[] = {
+-		0xb7, 0x0c, 0x34, 0xac,	0x01, 0xe9, 0xbf, 0x45,
+-		0xb7, 0xe6, 0x2b, 0x34, 0xec, 0x93, 0x1e, 0x23,
+-	};
++	static const uuid_le intel_dsm_uuid =
++		UUID_LE(0xac340cb7, 0xe901, 0x45bf,
++			0xb7, 0xe6, 0x2b, 0x34, 0xec, 0x93, 0x1e, 0x23);
+ 	union acpi_object *obj;
+ 
+-	obj = acpi_evaluate_dsm(ACPI_HANDLE(&dev->dev), intel_dsm_uuid, 3, 1,
++	obj = acpi_evaluate_dsm(ACPI_HANDLE(&dev->dev), &intel_dsm_uuid, 3, 1,
+ 				NULL);
+ 	ACPI_FREE(obj);
+ }
+diff --git a/drivers/usb/misc/ucsi.c b/drivers/usb/misc/ucsi.c
+index 07397bddefa3..49e32ffbe59f 100644
+--- a/drivers/usb/misc/ucsi.c
++++ b/drivers/usb/misc/ucsi.c
+@@ -61,7 +61,7 @@ static int ucsi_acpi_cmd(struct ucsi *ucsi, struct ucsi_control *ctrl)
+ 
+ 	ucsi->data->ctrl.raw_cmd = ctrl->raw_cmd;
+ 
+-	obj = acpi_evaluate_dsm(ACPI_HANDLE(ucsi->dev), uuid.b, 1, 1, NULL);
++	obj = acpi_evaluate_dsm(ACPI_HANDLE(ucsi->dev), &uuid, 1, 1, NULL);
+ 	if (!obj) {
+ 		dev_err(ucsi->dev, "%s: failed to evaluate _DSM\n", __func__);
+ 		return -EIO;
+diff --git a/drivers/usb/typec/typec_wcove.c b/drivers/usb/typec/typec_wcove.c
+index d5a7b21fa3f1..5ce93e0a15ca 100644
+--- a/drivers/usb/typec/typec_wcove.c
++++ b/drivers/usb/typec/typec_wcove.c
+@@ -118,7 +118,7 @@ static int wcove_typec_func(struct wcove_typec *wcove,
+ 	tmp.type = ACPI_TYPE_INTEGER;
+ 	tmp.integer.value = param;
+ 
+-	obj = acpi_evaluate_dsm(ACPI_HANDLE(wcove->dev), uuid.b, 1, func,
++	obj = acpi_evaluate_dsm(ACPI_HANDLE(wcove->dev), &uuid, 1, func,
+ 				&argv4);
+ 	if (!obj) {
+ 		dev_err(wcove->dev, "%s: failed to evaluate _DSM\n", __func__);
+@@ -314,7 +314,7 @@ static int wcove_typec_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
+ 
+-	if (!acpi_check_dsm(ACPI_HANDLE(&pdev->dev), uuid.b, 0, 0x1f)) {
++	if (!acpi_check_dsm(ACPI_HANDLE(&pdev->dev), &uuid, 0, 0x1f)) {
+ 		dev_err(&pdev->dev, "Missing _DSM functions\n");
+ 		return -ENODEV;
+ 	}
+diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+index 197f3fffc9a7..0682942d6a76 100644
+--- a/include/acpi/acpi_bus.h
++++ b/include/acpi/acpi_bus.h
+@@ -61,13 +61,14 @@ bool acpi_ata_match(acpi_handle handle);
+ bool acpi_bay_match(acpi_handle handle);
+ bool acpi_dock_match(acpi_handle handle);
+ 
+-bool acpi_check_dsm(acpi_handle handle, const u8 *uuid, u64 rev, u64 funcs);
+-union acpi_object *acpi_evaluate_dsm(acpi_handle handle, const u8 *uuid,
++bool acpi_check_dsm(acpi_handle handle, const uuid_le *uuid, u64 rev, u64 funcs);
++union acpi_object *acpi_evaluate_dsm(acpi_handle handle, const uuid_le *uuid,
+ 			u64 rev, u64 func, union acpi_object *argv4);
+ 
+ static inline union acpi_object *
+-acpi_evaluate_dsm_typed(acpi_handle handle, const u8 *uuid, u64 rev, u64 func,
+-			union acpi_object *argv4, acpi_object_type type)
++acpi_evaluate_dsm_typed(acpi_handle handle, const uuid_le *uuid, u64 rev,
++			u64 func, union acpi_object *argv4,
++			acpi_object_type type)
+ {
+ 	union acpi_object *obj;
+ 
+diff --git a/include/linux/acpi.h b/include/linux/acpi.h
+index 137e4a3d89c5..66d135003780 100644
+--- a/include/linux/acpi.h
++++ b/include/linux/acpi.h
+@@ -39,6 +39,7 @@
+ #include <linux/dynamic_debug.h>
+ #include <linux/module.h>
+ #include <linux/mutex.h>
++#include <linux/uuid.h>
+ 
+ #include <acpi/acpi_bus.h>
+ #include <acpi/acpi_drivers.h>
+@@ -457,7 +458,6 @@ struct acpi_osc_context {
+ 	struct acpi_buffer ret;		/* free by caller if success */
+ };
+ 
+-acpi_status acpi_str_to_uuid(char *str, u8 *uuid);
+ acpi_status acpi_run_osc(acpi_handle handle, struct acpi_osc_context *context);
+ 
+ /* Indexes into _OSC Capabilities Buffer (DWORDs 2 & 3 are device-specific) */
+@@ -741,7 +741,7 @@ static inline bool acpi_driver_match_device(struct device *dev,
+ }
+ 
+ static inline union acpi_object *acpi_evaluate_dsm(acpi_handle handle,
+-						   const u8 *uuid,
++						   const uuid_le *uuid,
+ 						   int rev, int func,
+ 						   union acpi_object *argv4)
+ {
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 7a4e83a8c89c..917a6ad0f24d 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -105,7 +105,7 @@ static inline void acpiphp_remove_slots(struct pci_bus *bus) { }
+ static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
+ #endif
+ 
+-extern const u8 pci_acpi_dsm_uuid[];
++extern const uuid_le pci_acpi_dsm_uuid;
+ #define DEVICE_LABEL_DSM	0x07
+ #define RESET_DELAY_DSM		0x08
+ #define FUNCTION_DELAY_DSM	0x09
+diff --git a/sound/soc/intel/skylake/skl-nhlt.c b/sound/soc/intel/skylake/skl-nhlt.c
+index e3f06672fd6d..b95f659dced5 100644
+--- a/sound/soc/intel/skylake/skl-nhlt.c
++++ b/sound/soc/intel/skylake/skl-nhlt.c
+@@ -21,8 +21,9 @@
+ #include "skl.h"
+ 
+ /* Unique identification for getting NHLT blobs */
+-static u8 OSC_UUID[16] = {0x6E, 0x88, 0x9F, 0xA6, 0xEB, 0x6C, 0x94, 0x45,
+-				0xA4, 0x1F, 0x7B, 0x5D, 0xCE, 0x24, 0xC5, 0x53};
++static uuid_le osc_uuid =
++	UUID_LE(0xA69F886E, 0x6CEB, 0x4594,
++		0xA4, 0x1F, 0x7B, 0x5D, 0xCE, 0x24, 0xC5, 0x53);
+ 
+ struct nhlt_acpi_table *skl_nhlt_init(struct device *dev)
+ {
+@@ -37,7 +38,7 @@ struct nhlt_acpi_table *skl_nhlt_init(struct device *dev)
+ 		return NULL;
+ 	}
+ 
+-	obj = acpi_evaluate_dsm(handle, OSC_UUID, 1, 1, NULL);
++	obj = acpi_evaluate_dsm(handle, &osc_uuid, 1, 1, NULL);
+ 	if (obj && obj->type == ACPI_TYPE_BUFFER) {
+ 		nhlt_ptr = (struct nhlt_resource_desc  *)obj->buffer.pointer;
+ 		nhlt_table = (struct nhlt_acpi_table *)
+diff --git a/tools/testing/nvdimm/test/iomap.c b/tools/testing/nvdimm/test/iomap.c
+index 64cae1a5deff..f190f22c53dd 100644
+--- a/tools/testing/nvdimm/test/iomap.c
++++ b/tools/testing/nvdimm/test/iomap.c
+@@ -370,7 +370,7 @@ acpi_status __wrap_acpi_evaluate_object(acpi_handle handle, acpi_string path,
+ }
+ EXPORT_SYMBOL(__wrap_acpi_evaluate_object);
+ 
+-union acpi_object * __wrap_acpi_evaluate_dsm(acpi_handle handle, const u8 *uuid,
++union acpi_object * __wrap_acpi_evaluate_dsm(acpi_handle handle, const uuid_le *uuid,
+ 		u64 rev, u64 func, union acpi_object *argv4)
+ {
+ 	union acpi_object *obj = ERR_PTR(-ENXIO);
+diff --git a/tools/testing/nvdimm/test/nfit.c b/tools/testing/nvdimm/test/nfit.c
+index c2187178fb13..145f6ee0234f 100644
+--- a/tools/testing/nvdimm/test/nfit.c
++++ b/tools/testing/nvdimm/test/nfit.c
+@@ -1559,7 +1559,7 @@ static unsigned long nfit_ctl_handle;
+ union acpi_object *result;
+ 
+ static union acpi_object *nfit_test_evaluate_dsm(acpi_handle handle,
+-		const u8 *uuid, u64 rev, u64 func, union acpi_object *argv4)
++		const uuid_le *uuid, u64 rev, u64 func, union acpi_object *argv4)
+ {
+ 	if (handle != &nfit_ctl_handle)
+ 		return ERR_PTR(-ENXIO);
+-- 
+2.11.0
