@@ -1,54 +1,129 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0089.outbound.protection.outlook.com ([104.47.36.89]:44512
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932801AbdEKOs6 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Thu, 11 May 2017 10:48:58 -0400
-Subject: Re: [PATCH] efi/cper: Fix endianness of PCI class code
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>,
-        Lukas Wunner <lukas@wunner.de>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-        Ashok Raj <ashok.raj@intel.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Huang Ying <ying.huang@intel.com>
-References: <771bc335fb5856792d086ae7db288dcf244cb4cd.1493964354.git.lukas@wunner.de>
- <CAKv+Gu9PpmTBbSMKUsx6svm6fodV8x=i4b1j8QGapnEoCFcrNA@mail.gmail.com>
- <20170506090755.GB19740@wunner.de>
- <CAKv+Gu_4xHhX8oK847k8=s5S7Mx3sALPTtX8Eo=2+9uZyQoEAQ@mail.gmail.com>
- <20170510084143.GA16261@wunner.de>
- <CAKv+Gu81gvNL1jkb3T35=-5fr_x-BmSg9X2CcQ97xv5JTZ-c1A@mail.gmail.com>
-From: David Daney <ddaney@caviumnetworks.com>
-Message-ID: <2d5f9331-6f31-2584-9ec1-2447163c6611@caviumnetworks.com>
-Date: Thu, 11 May 2017 07:48:52 -0700
+Received: from foss.arm.com ([217.140.101.70]:44314 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753685AbdEDSUZ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 4 May 2017 14:20:25 -0400
+Subject: Re: [PATCH 2/3] iommu/pci: reserve iova for PCI masters
+To: Oza Pawandeep <oza.oza@broadcom.com>
+References: <1493786795-28153-1-git-send-email-oza.oza@broadcom.com>
+ <1493786795-28153-2-git-send-email-oza.oza@broadcom.com>
+Cc: Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.pawandeep@gmail.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Message-ID: <0c9a6b09-139c-df49-cf73-6a3935a6aacd@arm.com>
+Date: Thu, 4 May 2017 19:20:19 +0100
 MIME-Version: 1.0
-In-Reply-To: <CAKv+Gu81gvNL1jkb3T35=-5fr_x-BmSg9X2CcQ97xv5JTZ-c1A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1493786795-28153-2-git-send-email-oza.oza@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 05/11/2017 07:06 AM, Ard Biesheuvel wrote:
-> On 10 May 2017 at 09:41, Lukas Wunner <lukas@wunner.de> wrote:
->> On Wed, May 10, 2017 at 09:03:11AM +0100, Ard Biesheuvel wrote:
-[...]
->>
->> It seems clumsy and unnecessary to me so I'd prefer the bitfield.
->> Please excuse my stubbornness.
->>
+On 03/05/17 05:46, Oza Pawandeep wrote:
+> this patch reserves the iova for PCI masters.
+> ARM64 based SOCs may have scattered memory banks.
+> such as iproc based SOC has
 > 
-> Stubbornness alone is not going to convince me. What *could* convince
-> me (although unlikely) is a quote from the C spec which explains why
-> it is 100% legal to make assumptions about how bitfields are projected
-> onto byte locations in memory.
+> <0x00000000 0x80000000 0x0 0x80000000>, /* 2G @ 2G */
+> <0x00000008 0x80000000 0x3 0x80000000>, /* 14G @ 34G */
+> <0x00000090 0x00000000 0x4 0x00000000>, /* 16G @ 576G */
+> <0x000000a0 0x00000000 0x4 0x00000000>; /* 16G @ 640G */
+> 
+> but incoming PCI transcation addressing capability is limited
+> by host bridge, for example if max incoming window capability
+> is 512 GB, then 0x00000090 and 0x000000a0 will fall beyond it.
+> 
+> to address this problem, iommu has to avoid allocating iovas which
+> are reserved. which inturn does not allocate iova if it falls into hole.
 
-I don't think you will find that in the C specifications.
+I don't necessarily disagree with doing this, as we could do with facing
+up to the issue of discontiguous DMA ranges in particular (I too have a
+platform with this problem), but I'm still not overly keen on pulling DT
+specifics into this layer. More than that, though, if we are going to do
+it, then we should do it for all devices with a restrictive
+"dma-ranges", not just PCI ones.
 
-Structure layout is specified per-architecture/per-ABI so for the Linux 
-kernel you would only have to check that it is strongly specified and 
-compatible across `ls arch | wc -l` different architectures.  If you 
-want to get started with MIPS, for example, you could look in the 
-"SYSTEM V APPLICATION BINARY INTERFACE MIPS(r) RISC Processor Supplement 
-3rd Edition" starting on page 3-7.  For x86 and arm{,64} I am sure you 
-could find similar specifications.
+> Bug: SOC-5216
+> Change-Id: Icbfc99a045d730be143fef427098c937b9d46353
+> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+> Reviewed-on: http://gerrit-ccxsw.broadcom.net/40760
+> Reviewed-by: vpx_checkpatch status <vpx_checkpatch@broadcom.com>
+> Reviewed-by: CCXSW <ccxswbuild@broadcom.com>
+> Tested-by: vpx_autobuild status <vpx_autobuild@broadcom.com>
+> Tested-by: vpx_smoketest status <vpx_smoketest@broadcom.com>
+> Tested-by: CCXSW <ccxswbuild@broadcom.com>
+> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
+> 
+> diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
+> index 48d36ce..08764b0 100644
+> --- a/drivers/iommu/dma-iommu.c
+> +++ b/drivers/iommu/dma-iommu.c
+> @@ -27,6 +27,7 @@
+>  #include <linux/iova.h>
+>  #include <linux/irq.h>
+>  #include <linux/mm.h>
+> +#include <linux/of_pci.h>
+>  #include <linux/pci.h>
+>  #include <linux/scatterlist.h>
+>  #include <linux/vmalloc.h>
+> @@ -171,8 +172,12 @@ static void iova_reserve_pci_windows(struct pci_dev *dev,
+>  		struct iova_domain *iovad)
+>  {
+>  	struct pci_host_bridge *bridge = pci_find_host_bridge(dev->bus);
+> +	struct device_node *np = bridge->dev.parent->of_node;
+>  	struct resource_entry *window;
+>  	unsigned long lo, hi;
+> +	int ret;
+> +	dma_addr_t tmp_dma_addr = 0, dma_addr;
+> +	LIST_HEAD(res);
+>  
+>  	resource_list_for_each_entry(window, &bridge->windows) {
+>  		if (resource_type(window->res) != IORESOURCE_MEM &&
+> @@ -183,6 +188,36 @@ static void iova_reserve_pci_windows(struct pci_dev *dev,
+>  		hi = iova_pfn(iovad, window->res->end - window->offset);
+>  		reserve_iova(iovad, lo, hi);
+>  	}
+> +
+> +	/* PCI inbound memory reservation. */
+> +	ret = of_pci_get_dma_ranges(np, &res);
+> +	if (!ret) {
+> +		resource_list_for_each_entry(window, &res) {
+> +			struct resource *res_dma = window->res;
+> +
+> +			dma_addr = res_dma->start - window->offset;
+> +			if (tmp_dma_addr > dma_addr) {
+> +				pr_warn("PCI: failed to reserve iovas; ranges should be sorted\n");
 
-David Daney
+I don't see anything in the DT spec about the entries having to be
+sorted, and it's not exactly impossible to sort a list if you need it so
+(and if I'm being really pedantic, one could still trigger this with a
+list that *is* sorted, only by different criteria).
+
+Robin.
+
+> +				return;
+> +			}
+> +			if (tmp_dma_addr != dma_addr) {
+> +				lo = iova_pfn(iovad, tmp_dma_addr);
+> +				hi = iova_pfn(iovad, dma_addr - 1);
+> +				reserve_iova(iovad, lo, hi);
+> +			}
+> +			tmp_dma_addr = window->res->end - window->offset;
+> +		}
+> +		/*
+> +		 * the last dma-range should honour based on the
+> +		 * 32/64-bit dma addresses.
+> +		 */
+> +		if (tmp_dma_addr < DMA_BIT_MASK(sizeof(dma_addr_t) * 8)) {
+> +			lo = iova_pfn(iovad, tmp_dma_addr);
+> +			hi = iova_pfn(iovad,
+> +				      DMA_BIT_MASK(sizeof(dma_addr_t) * 8) - 1);
+> +			reserve_iova(iovad, lo, hi);
+> +		}
+> +	}
+>  }
+>  
+>  /**
+> 
