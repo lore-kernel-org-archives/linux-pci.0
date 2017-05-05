@@ -1,217 +1,416 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Subject: Re: [PATCH 1/3] of/pci/dma: fix DMA configuration for PCI masters
-To: Oza Pawandeep <oza.oza@broadcom.com>
-References: <1493786795-28153-1-git-send-email-oza.oza@broadcom.com>
-Cc: Joerg Roedel <joro@8bytes.org>, iommu@lists.linux-foundation.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.pawandeep@gmail.com>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <d7203258-e39a-a59b-d14f-c0c92a1d3f41@arm.com>
-Date: Thu, 4 May 2017 19:02:17 +0100
-MIME-Version: 1.0
-In-Reply-To: <1493786795-28153-1-git-send-email-oza.oza@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from nbd.name ([46.4.11.11]:48358 "EHLO nbd.name"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751314AbdEEPZt (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 May 2017 11:25:49 -0400
+From: John Crispin <john@phrozen.org>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, John Crispin <john@phrozen.org>
+Subject: [PATCH] PCI: qcom: Add support for IPQ4019 PCIe controller
+Date: Fri,  5 May 2017 17:25:24 +0200
+Message-Id: <20170505152524.29337-1-john@phrozen.org>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-[apologies for the silence - I've been on holiday]
+Add support for the IPQ4019 PCIe controller. IPQ4019 supports Gen
+1/2, one lane, one PCIe root complex with support for MSI and legacy
+interrupts, and it conforms to PCI Express Base 2.1 specification.
 
-On 03/05/17 05:46, Oza Pawandeep wrote:
-> current device framework and of framework integration assumes
-> dma-ranges in a way where memory-mapped devices define their
-> dma-ranges. (child-bus-address, parent-bus-address, length).
+The core init is the sames as for the MSM8996, however the clocks and
+reset lines differ.
 
-Well, yes, that is simply the definition of dma-ranges, and remains true
-regardless of the particular format of either bus address.
+Signed-off-by: John Crispin <john@phrozen.org>
+---
+ .../devicetree/bindings/pci/qcom,pcie.txt          |  20 +-
+ drivers/pci/host/pcie-qcom.c                       | 304 +++++++++++++++++++++
+ 2 files changed, 323 insertions(+), 1 deletion(-)
 
-> of_dma_configure is specifically written to take care of memory
-> mapped devices. but no implementation exists for pci to take
-> care of pcie based memory ranges.
-
-That still doesn't make sense. To repeat myself again, PCI devices *ARE*
-memory-mapped devices. Yes, there do exist some platforms where I/O
-space is not treated as MMIO, but config space and memory space are very
-much memory-mapped however you look at them, and in the context of DMA,
-only memory space is relevant anyway.
-
-What *is* true about the current code is that of_dma_get_range() expects
-to be passed an OF node representing the device itself, and doesn't work
-properly when passed the node of the device's parent bus directly, which
-happens to be what pci_dma_configure() currently does. That's the only
-reason why it doesn't work for (single-entry) host controller dma-ranges
-today. This does not mean it's a PCI problem, it is simply the case that
-pci_dma_configure() is the only caller currently hitting it. Other
-discoverable, DMA-capable buses like fsl-mc are still going to face the
-exact same problem with or without this patch.
-
-> for e.g. iproc based SOCs and other SOCs(suc as rcar) have PCI
-> world dma-ranges.
-> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
-> 
-> this patch serves following:
-> 
-> 1) exposes interface to the pci host driver for their
-> inbound memory ranges
-> 
-> 2) provide an interface to callers such as of_dma_get_ranges.
-> so then the returned size get best possible (largest) dma_mask.
-> because PCI RC drivers do not call APIs such as
-> dma_set_coherent_mask() and hence rather it shows its addressing
-> capabilities based on dma-ranges.
-> for e.g.
-> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
-> we should get dev->coherent_dma_mask=0x7fffffffff.
-> 
-> 3) this patch handles multiple inbound windows and dma-ranges.
-> it is left to the caller, how it wants to use them.
-> the new function returns the resources in a standard and unform way
-> 
-> 4) this way the callers of for e.g. of_dma_get_ranges
-> does not need to change.
-> 
-> 5) leaves scope of adding PCI flag handling for inbound memory
-> by the new function.
-
-Which flags would ever actually matter? DMA windows aren't going to be
-to config or I/O space, so the memory type can be assumed, and the
-32/64-bit distinction is irrelevant as it's not a relocatable BAR;
-DMA-able system memory isn't going to be read-sensitive, so the
-prefetchable flag shouldn't matter; and not being a BAR none of the
-others would be relevant either.
-
-> 
-> Bug: SOC-5216
-> Change-Id: Ie045386df91e1e0587846bb147ae40d96f6d7d2e
-> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-> Reviewed-on: http://gerrit-ccxsw.broadcom.net/40428
-> Reviewed-by: vpx_checkpatch status <vpx_checkpatch@broadcom.com>
-> Reviewed-by: CCXSW <ccxswbuild@broadcom.com>
-> Reviewed-by: Ray Jui <ray.jui@broadcom.com>
-> Tested-by: vpx_autobuild status <vpx_autobuild@broadcom.com>
-> Tested-by: vpx_smoketest status <vpx_smoketest@broadcom.com>
-> Tested-by: CCXSW <ccxswbuild@broadcom.com>
-> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-> 
-> diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
-> index 0ee42c3..ed6e69a 100644
-> --- a/drivers/of/of_pci.c
-> +++ b/drivers/of/of_pci.c
-> @@ -283,6 +283,83 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
->  	return err;
->  }
->  EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
-> +
-> +/**
-> + * of_pci_get_dma_ranges - Parse PCI host bridge inbound resources from DT
-> + * @np: device node of the host bridge having the dma-ranges property
-> + * @resources: list where the range of resources will be added after DT parsing
-> + *
-> + * It is the caller's job to free the @resources list.
-> + *
-> + * This function will parse the "dma-ranges" property of a
-> + * PCI host bridge device node and setup the resource mapping based
-> + * on its content.
-> + *
-> + * It returns zero if the range parsing has been successful or a standard error
-> + * value if it failed.
-> + */
-> +
-> +int of_pci_get_dma_ranges(struct device_node *np, struct list_head *resources)
-> +{
-> +	struct device_node *node = of_node_get(np);
-> +	int rlen;
-> +	int ret = 0;
-> +	const int na = 3, ns = 2;
-> +	struct resource *res;
-> +	struct of_pci_range_parser parser;
-> +	struct of_pci_range range;
-> +
-> +	if (!node)
-> +		return -EINVAL;
-> +
-> +	parser.node = node;
-> +	parser.pna = of_n_addr_cells(node);
-> +	parser.np = parser.pna + na + ns;
-> +
-> +	parser.range = of_get_property(node, "dma-ranges", &rlen);
-> +
-> +	if (!parser.range) {
-> +		pr_debug("pcie device has no dma-ranges defined for node(%s)\n",
-> +			  np->full_name);
-> +		ret = -EINVAL;
-> +		goto out;
-> +	}
-> +
-> +	parser.end = parser.range + rlen / sizeof(__be32);
-> +
-> +	for_each_of_pci_range(&parser, &range) {
-
-This is plain wrong - of_pci_range_parser_one() will translate upwards
-through parent "ranges" properties, which is completely backwards for
-DMA addresses.
-
-Robin.
-
-> +		/*
-> +		 * If we failed translation or got a zero-sized region
-> +		 * then skip this range
-> +		 */
-> +		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
-> +			continue;
-> +
-> +		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
-> +		if (!res) {
-> +			ret = -ENOMEM;
-> +			goto parse_failed;
-> +		}
-> +
-> +		ret = of_pci_range_to_resource(&range, np, res);
-> +		if (ret) {
-> +			kfree(res);
-> +			continue;
-> +		}
-> +
-> +		pci_add_resource_offset(resources, res,
-> +					res->start - range.pci_addr);
-> +	}
-> +
-> +	return ret;
-> +
-> +parse_failed:
-> +	pci_free_resource_list(resources);
-> +out:
-> +	of_node_put(node);
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL_GPL(of_pci_get_dma_ranges);
->  #endif /* CONFIG_OF_ADDRESS */
->  
->  #ifdef CONFIG_PCI_MSI
-> diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
-> index 0e0974e..617b90d 100644
-> --- a/include/linux/of_pci.h
-> +++ b/include/linux/of_pci.h
-> @@ -76,6 +76,7 @@ static inline void of_pci_check_probe_only(void) { }
->  int of_pci_get_host_bridge_resources(struct device_node *dev,
->  			unsigned char busno, unsigned char bus_max,
->  			struct list_head *resources, resource_size_t *io_base);
-> +int of_pci_get_dma_ranges(struct device_node *np, struct list_head *resources);
->  #else
->  static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
->  			unsigned char busno, unsigned char bus_max,
-> @@ -83,6 +84,12 @@ static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
->  {
->  	return -EINVAL;
->  }
-> +
-> +static inline int of_pci_get_dma_ranges(struct device_node *np,
-> +					struct list_head *resources)
-> +{
-> +	return -EINVAL;
-> +}
->  #endif
->  
->  #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
-> 
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.txt b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+index e15f9b19901f..9d418b71774f 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.txt
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.txt
+@@ -8,6 +8,7 @@
+ 			- "qcom,pcie-apq8064" for apq8064
+ 			- "qcom,pcie-apq8084" for apq8084
+ 			- "qcom,pcie-msm8996" for msm8996 or apq8096
++			- "qcom,pcie-ipq4019" for ipq4019
+ 
+ - reg:
+ 	Usage: required
+@@ -87,7 +88,7 @@
+ 			- "core"	Clocks the pcie hw block
+ 			- "phy"		Clocks the pcie PHY block
+ - clock-names:
+-	Usage: required for apq8084
++	Usage: required for apq8084/ipq4019
+ 	Value type: <stringlist>
+ 	Definition: Should contain the following entries
+ 			- "aux"		Auxiliary (AUX) clock
+@@ -126,6 +127,23 @@
+ 	Definition: Should contain the following entries
+ 			- "core" Core reset
+ 
++- reset-names:
++	Usage: required for ipq/apq8064
++	Value type: <stringlist>
++	Definition: Should contain the following entries
++			- "axi_m"		AXI master reset
++			- "axi_s"		AXI slave reset
++			- "pipe"		PIPE reset
++			- "axi_m_vmid"		VMID reset
++			- "axi_s_xpu"		XPU reset
++			- "parf"		PARF reset
++			- "phy"			PHY reset
++			- "axi_m_sticky"	AXI sticky reset
++			- "pipe_sticky"		PIPE sticky reset
++			- "pwr"			PWR reset
++			- "ahb"			AHB reset
++			- "phy_ahb"		PHY AHB reset
++
+ - power-domains:
+ 	Usage: required for apq8084 and msm8996/apq8096
+ 	Value type: <prop-encoded-array>
+diff --git a/drivers/pci/host/pcie-qcom.c b/drivers/pci/host/pcie-qcom.c
+index 734ba0d4a5c8..af2bd552aadf 100644
+--- a/drivers/pci/host/pcie-qcom.c
++++ b/drivers/pci/host/pcie-qcom.c
+@@ -86,10 +86,29 @@ struct qcom_pcie_resources_v2 {
+ 	struct clk *pipe_clk;
+ };
+ 
++struct qcom_pcie_resources_v3 {
++	struct clk *aux_clk;
++	struct clk *master_clk;
++	struct clk *slave_clk;
++	struct reset_control *axi_m_reset;
++	struct reset_control *axi_s_reset;
++	struct reset_control *pipe_reset;
++	struct reset_control *axi_m_vmid_reset;
++	struct reset_control *axi_s_xpu_reset;
++	struct reset_control *parf_reset;
++	struct reset_control *phy_reset;
++	struct reset_control *axi_m_sticky_reset;
++	struct reset_control *pipe_sticky_reset;
++	struct reset_control *pwr_reset;
++	struct reset_control *ahb_reset;
++	struct reset_control *phy_ahb_reset;
++};
++
+ union qcom_pcie_resources {
+ 	struct qcom_pcie_resources_v0 v0;
+ 	struct qcom_pcie_resources_v1 v1;
+ 	struct qcom_pcie_resources_v2 v2;
++	struct qcom_pcie_resources_v3 v3;
+ };
+ 
+ struct qcom_pcie;
+@@ -563,6 +582,283 @@ static int qcom_pcie_post_init_v2(struct qcom_pcie *pcie)
+ 	return 0;
+ }
+ 
++static int qcom_pcie_get_resources_v3(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
++	struct device *dev = pcie->pp.dev;
++
++	res->aux_clk = devm_clk_get(dev, "aux");
++	if (IS_ERR(res->aux_clk))
++		return PTR_ERR(res->aux_clk);
++
++	res->master_clk = devm_clk_get(dev, "master_bus");
++	if (IS_ERR(res->master_clk))
++		return PTR_ERR(res->master_clk);
++
++	res->slave_clk = devm_clk_get(dev, "slave_bus");
++	if (IS_ERR(res->slave_clk))
++		return PTR_ERR(res->slave_clk);
++
++	res->axi_m_reset = devm_reset_control_get(dev, "axi_m");
++	if (IS_ERR(res->axi_m_reset))
++		return PTR_ERR(res->axi_m_reset);
++
++	res->axi_s_reset = devm_reset_control_get(dev, "axi_s");
++	if (IS_ERR(res->axi_s_reset))
++		return PTR_ERR(res->axi_s_reset);
++
++	res->pipe_reset = devm_reset_control_get(dev, "pipe");
++	if (IS_ERR(res->pipe_reset))
++		return PTR_ERR(res->pipe_reset);
++
++	res->axi_m_vmid_reset = devm_reset_control_get(dev, "axi_m_vmid");
++	if (IS_ERR(res->axi_m_vmid_reset))
++		return PTR_ERR(res->axi_m_vmid_reset);
++
++	res->axi_s_xpu_reset = devm_reset_control_get(dev, "axi_s_xpu");
++	if (IS_ERR(res->axi_s_xpu_reset))
++		return PTR_ERR(res->axi_s_xpu_reset);
++
++	res->parf_reset = devm_reset_control_get(dev, "parf");
++	if (IS_ERR(res->parf_reset))
++		return PTR_ERR(res->parf_reset);
++
++	res->phy_reset = devm_reset_control_get(dev, "phy");
++	if (IS_ERR(res->phy_reset))
++		return PTR_ERR(res->phy_reset);
++
++	res->axi_m_sticky_reset = devm_reset_control_get(dev, "axi_m_sticky");
++	if (IS_ERR(res->axi_m_sticky_reset))
++		return PTR_ERR(res->axi_m_sticky_reset);
++
++	res->pipe_sticky_reset = devm_reset_control_get(dev, "pipe_sticky");
++	if (IS_ERR(res->pipe_sticky_reset))
++		return PTR_ERR(res->pipe_sticky_reset);
++
++	res->pwr_reset = devm_reset_control_get(dev, "pwr");
++	if (IS_ERR(res->pwr_reset))
++		return PTR_ERR(res->pwr_reset);
++
++	res->ahb_reset = devm_reset_control_get(dev, "ahb");
++	if (IS_ERR(res->ahb_reset))
++		return PTR_ERR(res->ahb_reset);
++
++	res->phy_ahb_reset = devm_reset_control_get(dev, "phy_ahb");
++	if (IS_ERR(res->phy_ahb_reset))
++		return PTR_ERR(res->phy_ahb_reset);
++
++	return 0;
++}
++
++static void qcom_pcie_deinit_v3(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
++
++	reset_control_assert(res->axi_m_reset);
++	reset_control_assert(res->axi_s_reset);
++	reset_control_assert(res->pipe_reset);
++	reset_control_assert(res->pipe_sticky_reset);
++	reset_control_assert(res->phy_reset);
++	reset_control_assert(res->phy_ahb_reset);
++	reset_control_assert(res->axi_m_sticky_reset);
++	reset_control_assert(res->pwr_reset);
++	reset_control_assert(res->ahb_reset);
++	clk_disable_unprepare(res->aux_clk);
++	clk_disable_unprepare(res->master_clk);
++	clk_disable_unprepare(res->slave_clk);
++}
++
++static int qcom_pcie_init_v3(struct qcom_pcie *pcie)
++{
++	struct qcom_pcie_resources_v3 *res = &pcie->res.v3;
++	struct device *dev = pcie->pp.dev;
++	u32 val;
++	int ret;
++
++	ret = reset_control_assert(res->axi_m_reset);
++	if (ret) {
++		dev_err(dev, "cannot assert axi master reset\n");
++		return ret;
++	}
++
++	ret = reset_control_assert(res->axi_s_reset);
++	if (ret) {
++		dev_err(dev, "cannot asser axi slave reset\n");
++		return ret;
++	}
++
++	usleep_range(10000, 12000);
++
++	ret = reset_control_assert(res->pipe_reset);
++	if (ret) {
++		dev_err(dev, "cannot assert pipe reset\n");
++		return ret;
++	}
++
++	ret = reset_control_assert(res->pipe_sticky_reset);
++	if (ret) {
++		dev_err(dev, "cannot assert pipe sticky reset\n");
++		return ret;
++	}
++
++	ret = reset_control_assert(res->phy_reset);
++	if (ret) {
++		dev_err(dev, "cannot assert phy reset\n");
++		return ret;
++	}
++
++	ret = reset_control_assert(res->phy_ahb_reset);
++	if (ret) {
++		dev_err(dev, "cannot assert phy ahb reset\n");
++		return ret;
++	}
++
++	usleep_range(10000, 12000);
++
++	ret = reset_control_assert(res->axi_m_sticky_reset);
++	if (ret) {
++		dev_err(dev, "cannot assert axi master sticky reset\n");
++		return ret;
++	}
++
++	ret = reset_control_assert(res->pwr_reset);
++	if (ret) {
++		dev_err(dev, "cannot assert power reset\n");
++		return ret;
++	}
++
++	ret = reset_control_assert(res->ahb_reset);
++	if (ret) {
++		dev_err(dev, "cannot assert ahb reset\n");
++		return ret;
++	}
++
++	usleep_range(10000, 12000);
++
++	ret = reset_control_deassert(res->phy_ahb_reset);
++	if (ret) {
++		dev_err(dev, "cannot deassert phy ahb reset\n");
++		return ret;
++	}
++
++	ret = reset_control_deassert(res->phy_reset);
++	if (ret) {
++		dev_err(dev, "cannot deassert phy reset\n");
++		goto err_rst_phy;
++	}
++
++	ret = reset_control_deassert(res->pipe_reset);
++	if (ret) {
++		dev_err(dev, "cannot deassert pipe reset\n");
++		goto err_rst_pipe;
++	}
++
++	ret = reset_control_deassert(res->pipe_sticky_reset);
++	if (ret) {
++		dev_err(dev, "cannot deassert pipe sticky reset\n");
++		goto err_rst_pipe_sticky;
++	}
++
++	usleep_range(10000, 12000);
++
++	ret = reset_control_deassert(res->axi_m_reset);
++	if (ret) {
++		dev_err(dev, "cannot deassert axi master reset\n");
++		goto err_rst_axi_m;
++	}
++
++	ret = reset_control_deassert(res->axi_m_sticky_reset);
++	if (ret) {
++		dev_err(dev, "cannot deassert axi master sticky reset\n");
++		goto err_rst_axi_m_sticky;
++	}
++
++	ret = reset_control_deassert(res->axi_s_reset);
++	if (ret) {
++		dev_err(dev, "cannot deassert axi slave reset\n");
++		goto err_rst_axi_s;
++	}
++
++	ret = reset_control_deassert(res->pwr_reset);
++	if (ret) {
++		dev_err(dev, "cannot deassert power reset\n");
++		goto err_rst_pwr;
++	}
++
++	ret = reset_control_deassert(res->ahb_reset);
++	if (ret) {
++		dev_err(dev, "cannot deassert ahb reset\n");
++		goto err_rst_ahb;
++	}
++
++	usleep_range(10000, 12000);
++
++	ret = clk_prepare_enable(res->aux_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable iface clock\n");
++		goto err_clk_aux;
++	}
++
++	ret = clk_prepare_enable(res->master_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable core clock\n");
++		goto err_clk_axi_m;
++	}
++
++	ret = clk_prepare_enable(res->slave_clk);
++	if (ret) {
++		dev_err(dev, "cannot prepare/enable phy clock\n");
++		goto err_clk_axi_s;
++	}
++
++	/* enable PCIe clocks and resets */
++	val = readl(pcie->parf + PCIE20_PARF_PHY_CTRL);
++	val &= !BIT(0);
++	writel(val, pcie->parf + PCIE20_PARF_PHY_CTRL);
++
++	/* change DBI base address */
++	writel(0, pcie->parf + PCIE20_PARF_DBI_BASE_ADDR);
++
++	/* MAC PHY_POWERDOWN MUX DISABLE  */
++	val = readl(pcie->parf + PCIE20_PARF_SYS_CTRL);
++	val &= ~BIT(29);
++	writel(val, pcie->parf + PCIE20_PARF_SYS_CTRL);
++
++	val = readl(pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
++	val |= BIT(4);
++	writel(val, pcie->parf + PCIE20_PARF_MHI_CLOCK_RESET_CTRL);
++
++	val = readl(pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
++	val |= BIT(31);
++	writel(val, pcie->parf + PCIE20_PARF_AXI_MSTR_WR_ADDR_HALT_V2);
++
++	return 0;
++
++err_clk_axi_s:
++	clk_disable_unprepare(res->master_clk);
++err_clk_axi_m:
++	clk_disable_unprepare(res->aux_clk);
++err_clk_aux:
++	reset_control_assert(res->ahb_reset);
++err_rst_ahb:
++	reset_control_assert(res->pwr_reset);
++err_rst_pwr:
++	reset_control_assert(res->axi_s_reset);
++err_rst_axi_s:
++	reset_control_assert(res->axi_m_sticky_reset);
++err_rst_axi_m_sticky:
++	reset_control_assert(res->axi_m_reset);
++err_rst_axi_m:
++	reset_control_assert(res->pipe_sticky_reset);
++err_rst_pipe_sticky:
++	reset_control_assert(res->pipe_reset);
++err_rst_pipe:
++	reset_control_assert(res->phy_reset);
++err_rst_phy:
++	reset_control_assert(res->phy_ahb_reset);
++	return ret;
++}
++
+ static int qcom_pcie_link_up(struct pcie_port *pp)
+ {
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pp);
+@@ -661,6 +957,13 @@ static const struct qcom_pcie_ops ops_v2 = {
+ 	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
+ };
+ 
++static const struct qcom_pcie_ops ops_v3 = {
++	.get_resources = qcom_pcie_get_resources_v3,
++	.init = qcom_pcie_init_v3,
++	.deinit = qcom_pcie_deinit_v3,
++	.ltssm_enable = qcom_pcie_v2_ltssm_enable,
++};
++
+ static int qcom_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -739,6 +1042,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-apq8064", .data = &ops_v0 },
+ 	{ .compatible = "qcom,pcie-apq8084", .data = &ops_v1 },
+ 	{ .compatible = "qcom,pcie-msm8996", .data = &ops_v2 },
++	{ .compatible = "qcom,pcie-ipq4019", .data = &ops_v3 },
+ 	{ }
+ };
+ 
+-- 
+2.11.0
