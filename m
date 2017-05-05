@@ -1,123 +1,53 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 12 May 2017 14:09:24 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Date: Fri, 5 May 2017 11:57:39 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        tpmdd-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
+        nouveau@lists.freedesktop.org, linux-input@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-mmc@vger.kernel.org,
+        Netdev <netdev@vger.kernel.org>, linux-pci@vger.kernel.org,
+        USB list <linux-usb@vger.kernel.org>,
+        alsa-devel@alsa-project.org,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Rajat Jain <rajatja@google.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [RFC PATCH] PCI: disable MSI/MSI-X before resetting
-Message-ID: <20170512210923.GA23103@google.com>
-References: <20170511215405.91410-1-briannorris@chromium.org>
- <CAKgT0UdqfCjUvz4=FNEnBudJhSBEeYCfD66owO8LFVg6T_io0A@mail.gmail.com>
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Borislav Petkov <bp@suse.de>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
+Message-ID: <20170505095739.GB6762@lst.de>
+References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com> <CAPcyv4jzD0MEBRNTwTokVzgdDWas682ArUjRAGT1hp=QRE8Pjg@mail.gmail.com> <CAOQ4uxjha8_2_HwgdgBN=G-vNytAW5Gk155E9z8OWyFiGNEZVw@mail.gmail.com> <1493976265.30052.21.camel@linux.intel.com> <CAOQ4uxjErce01+xyDnM=nCJS+avQ4g6hQVvH3fVotj7Ws2moCQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKgT0UdqfCjUvz4=FNEnBudJhSBEeYCfD66owO8LFVg6T_io0A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <CAOQ4uxjErce01+xyDnM=nCJS+avQ4g6hQVvH3fVotj7Ws2moCQ@mail.gmail.com>
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 12, 2017 at 10:07:29AM -0700, Alexander Duyck wrote:
-> On Thu, May 11, 2017 at 2:54 PM, Brian Norris <briannorris@chromium.org> wrote:
-> > Despite the claims in the associated comment block, it seems that
-> > clearing the command register is not enough to guarantee that no
-> > MSI interrupts get triggered during Function Level Reset. Through code
-> > instrumentation, I'm able to clearly trace cases like this:
-> >
-> > (0) reset a device:
-> >         echo 1 > /sys/bus/pci/devices/xxx/reset
-> > (1) disable an MSI interrupt for device 'xxx' in a PCI reset handler
-> >     (disable_irq())
-> > (2) pcie_flr() initiates reset:
-> >         pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR));
-> > (3) about 0.5 ms later, kernel handles IRQ:
-> >         -> __pci_msi_desc_mask_irq()
-> >            -> pci_write_config_dword()
+On Fri, May 05, 2017 at 12:50:31PM +0300, Amir Goldstein wrote:
+> To complete the picture for folks not cc'ed on my patches,
+> xfs use case suggests there is also justification for the additional helpers:
 > 
-> Is this an irq from the device being reset, or could this be an
-> interrupt from something else such as the root port?
+> uuid_is_null() / uuid_equal()
+> guid_is_null() / guid_equal()
 
-Hmm, I'm pretty sure it was from the device, but I'll double check to be
-sure.
+The is_null is useful and I bet we'll find other instances.  I'm
+not sure _equals really adds much value over the existing _cmp
+helpers, but on the other hand they are so trivial that we might as
+well add them.
 
-> > (4) this is well before the device is actually ready, and the system
-> >     sees a bus abort
-> >
-> > Tested with MSI, but presumably MSI-X could have the same issue.
-> >
-> > Tested on Samsung Chromebook Plus, with RK3399 OP1.
-> >
-> > Signed-off-by: Brian Norris <briannorris@chromium.org>
-> > ---
-> > RFC, because I'm not really sure this is the right approach, or if
-> > there's something else that's misconfigured or buggy.
-> >
-> > Note that right now, configuration space aborts trigger SError aborts
-> > (and panics) on RK3399, so this sort of problem is fatal. It's not clear
-> > to me if that's a spec violation (many other PCI controllers manage to
-> > mask such aborts), or an acceptable behavior. But FWIW, that means that
-> > polling behavior like in commit 5adecf817dd6 ("PCI: Wait for up to
-> > 1000ms after FLR reset") cannot work; the first read when the device is
-> > not ready will cause a panic.
-> 
-> I'm adding Alex Williamson since he is the author of the patch you
-> call out here. It is also possible that he may have already submitted
-> a patch somewhere to fix something like this that I might not be aware
-> of.
-
-I haven't seen anything, but I haven't been looking specifically for
-(non-merged) submissions related to that commit.
-
-> Odds are what probably needs to happen is that the we should probably
-> take the same steps in to disable master abort mode that we do in
-> pci_scan_bridge. That way if we don't get a response from the device
-> in time we don't trigger a master abort which will then feed back up
-> the bus and cause other issues. I'll see if I can put together a quick
-> patch to address the issue if you are up for testing it.
-
-Ah, that could make some sense. I'll give your patch a test. That
-doesn't really address my main reported issue though, AFAICT from a
-quick read (and test).
-
-> > ---
-> >  drivers/pci/pci.c | 11 +++++++++++
-> >  1 file changed, 11 insertions(+)
-> >
-> > diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> > index b01bd5bba8e6..861a3b2d7026 100644
-> > --- a/drivers/pci/pci.c
-> > +++ b/drivers/pci/pci.c
-> > @@ -4156,6 +4156,17 @@ static void pci_dev_save_and_disable(struct pci_dev *dev)
-> >         pci_set_power_state(dev, PCI_D0);
-> >
-> >         pci_save_state(dev);
-> > +
-> > +       /*
-> > +        * Disable MSI/MSI-X before resetting. Some devices have been found to
-> > +        * trigger interrupts while in the middle of Function Level Reset. The
-> > +        * MSI/MSI-X state will get restored after we reset.
-> > +        */
-> > +       if (dev->msi_enabled)
-> > +               pci_msi_set_enable(dev, 0);
-> > +       if (dev->msix_enabled)
-> > +               pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-> > +
-> 
-> So if your device is still issuing MSI or MSI-X interrupts after
-> completing the line below which overwrites the command register then
-> there is definitely an issue in the hardware. All bus master
-> transactions should have been flushed out and blocked after clearing
-> the bus master enable bit and verifying hat the transactions pending
-> bit is cleared in the status register.
-
-Yeah, I got this impression :) I'll see if I can double check what
-exactly is triggering this interrupt before passing judgment.
-
-> >         /*
-> >          * Disable the device by clearing the Command register, except for
-> >          * INTx-disable which is set.  This not only disables MMIO and I/O port
-
-Brian
+The other thing XFS has is uuid_copy.
