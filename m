@@ -1,95 +1,124 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
- lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
- catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
- laurent.pinchart@ideasonboard.com, j.neuschaefer@gmx.net,
- geert@linux-m68k.org, magnus.damm@gmail.com, nwatters@codeaurora.org
-Subject: [PATCH v5 3/5] ACPI/IORT: Ignore all errors except EPROBE_DEFER
-Date: Tue, 23 May 2017 18:31:31 +0530
-Message-Id: <1495544493-14219-3-git-send-email-sricharan@codeaurora.org>
-In-Reply-To: <1495544493-14219-1-git-send-email-sricharan@codeaurora.org>
-References: <1495544493-14219-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sricharan@codeaurora.org
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:50382 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751116AbdEEJYf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 May 2017 05:24:35 -0400
+Message-ID: <1493976265.30052.21.camel@linux.intel.com>
+Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Amir Goldstein <amir73il@gmail.com>,
+        Dan Williams <dan.j.williams@intel.com>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        tpmdd-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
+        nouveau@lists.freedesktop.org, linux-input@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-mmc@vger.kernel.org,
+        Netdev <netdev@vger.kernel.org>, linux-pci@vger.kernel.org,
+        USB list <linux-usb@vger.kernel.org>,
+        alsa-devel@alsa-project.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Borislav Petkov <bp@suse.de>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>, Christoph Hellwig <hch@lst.de>
+Date: Fri, 05 May 2017 12:24:25 +0300
+In-Reply-To: <CAOQ4uxjha8_2_HwgdgBN=G-vNytAW5Gk155E9z8OWyFiGNEZVw@mail.gmail.com>
+References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+         <CAPcyv4jzD0MEBRNTwTokVzgdDWas682ArUjRAGT1hp=QRE8Pjg@mail.gmail.com>
+         <CAOQ4uxjha8_2_HwgdgBN=G-vNytAW5Gk155E9z8OWyFiGNEZVw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While deferring the probe of IOMMU masters, xlate and
-add_device callbacks called from iort_iommu_configure
-can pass back error values like -ENODEV, which means
-the IOMMU cannot be connected with that master for real
-reasons. Before the IOMMU probe deferral, all such errors
-were ignored. Now all those errors are propagated back,
-killing the master's probe for such errors. Instead ignore
-all the errors except EPROBE_DEFER, which is the only one
-of concern and let the master work without IOMMU, thus
-restoring the old behavior. Also make explicit that
-acpi_dma_configure handles only -EPROBE_DEFER from
-iort_iommu_configure.
+On Fri, 2017-05-05 at 10:06 +0300, Amir Goldstein wrote:
+> On Fri, May 5, 2017 at 9:20 AM, Dan Williams <dan.j.williams@intel.com
+> > wrote:
+> > On Thu, May 4, 2017 at 2:21 AM, Andy Shevchenko
+> > <andriy.shevchenko@linux.intel.com> wrote:
 
-Fixes: 5a1bb638d567 ("drivers: acpi: Handle IOMMU lookup failure with deferred probing or error")
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
----
-[v5] Added the check in acpi_dma_configure
 
- drivers/acpi/arm64/iort.c | 6 ++++++
- drivers/acpi/scan.c       | 4 ++--
- 2 files changed, 8 insertions(+), 2 deletions(-)
+> > >         for (i = 0; i < NFIT_UUID_MAX; i++)
+> > > -               if (memcmp(to_nfit_uuid(i), spa->range_guid, 16)
+> > > == 0)
+> > > +               if (!uuid_le_cmp_pp(to_nfit_uuid(i), (uuid_le
+> > > *)spa->range_guid))
+> > 
+> > What is _cmp_pp? Why not _compare?
 
-diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
-index c5fecf9..16e101f 100644
---- a/drivers/acpi/arm64/iort.c
-+++ b/drivers/acpi/arm64/iort.c
-@@ -782,6 +782,12 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
- 	if (err)
- 		ops = ERR_PTR(err);
- 
-+	/* Ignore all other errors apart from EPROBE_DEFER */
-+	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
-+		dev_dbg(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
-+		ops = NULL;
-+	}
-+
- 	return ops;
- }
- 
-diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
-index e39ec7b..3a10d757 100644
---- a/drivers/acpi/scan.c
-+++ b/drivers/acpi/scan.c
-@@ -1371,8 +1371,8 @@ int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
- 	iort_set_dma_mask(dev);
- 
- 	iommu = iort_iommu_configure(dev);
--	if (IS_ERR(iommu))
--		return PTR_ERR(iommu);
-+	if (IS_ERR(iommu) && PTR_ERR(iommu) == -EPROBE_DEFER)
-+		return -EPROBE_DEFER;
- 
- 	size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
- 	/*
+Dan, it's a typo. In this patch it should be just ..._cmp(), which is
+already a part of API.
+
+> > 
+> 
+> I second that.
+> 
+> Andy,
+
+Amir, just to be clear. This patch can be applied without any addons to
+an existing API. Above is just a typo due to rebase in my tree. I will
+replace it to just uuid_le_cmp().
+
+> I much rather that you sort out uuid helpers in a way that will
+> satisfy the filesystem
+> needs (just provide the helpers don't need to convert filesystems
+> code).
+
+> The only reason I took a swing at hoisting the xfs uuid helpers is
+> because it didn't
+> seem like your proposal was going to be posted soon or wasn't going to
+> satisfy
+> the filesystems use case.
+
+> 
+> My opinion now, is that your suggestion is probably much closer to the
+> real deal
+> than mine.
+> 
+> IMO, you should acknowledge that the common use case for filesystems
+> is
+> to handle an opaque char[16] which most likely holds a uuid_be and you
+> should provide 'neutral' helpers to satisfy this use case.
+> 
+> The simplest would be to typedef uuid_t to struct uuid_be and to name
+> 'neutral'
+> helpers' uuid_cmp/uuid_copy(uuid_t *, uuid_t *), similar to my
+> proposal.
+
+> I think with this semantic change, our proposals can reach common
+> grounds
+> and satisfy a wider group of users (i.e. filesystem developers).
+> 
+> Christoph also suggested a similar treatment to typedef guid_t to
+> struct uuid_le.
+> I don't know the use cases enough to comment on that.
+
+We may go this way. But I wouldn't prevent current users of uuid_le to
+continue using it without conversion (it may be done case by case after
+we settle an API)
+
+So, summarize what Christoph said it will look like
+
+typedef uuid_be uuid_t;
+typedef uuid_le guid_t
+
+uuid_cmp() / uuid_copy() / uuid_to_bin() / etc
+guid_cmp() / guid_copy() / guid_to_bin() / etc
+
+Correct? Christoph?
+
 -- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Intel Finland Oy
