@@ -1,204 +1,170 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Fri, 5 May 2017 10:55:17 -0700
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Juergen Gross <jgross@suse.com>
-Cc: stable@vger.kernel.org,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Julien Grall <julien.grall@arm.com>,
-        Vitaly Kuznetsov <vkuznets@redhat.com>,
-        Paul Gortmaker <paul.gortmaker@windriver.com>,
-        Ross Lagerwall <ross.lagerwall@citrix.com>,
-        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>,
-        KarimAllah Ahmed <karahmed@amazon.de>
-Subject: Re: [stable-4.10: PATCH] xen: revert commits 72a9b186292 and
- da72ff5bfcb0
-Message-ID: <20170505175517.GF11379@kroah.com>
-References: <138b4286-1308-8394-b9e1-0791075949c8@suse.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:52490 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753256AbdEEO5t (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Fri, 5 May 2017 10:57:49 -0400
+Subject: Re: [RFC] pci: using new interrupt API to enable MSI and MSI-X
+To: Joao Pinto <Joao.Pinto@synopsys.com>, kishon@ti.com,
+        bhelgaas@google.com, jingoohan1@gmail.com
+References: <806903036508ae5246084cbc3b796083d76f8917.1493992929.git.jpinto@synopsys.com>
+Cc: linux-pci@vger.kernel.org
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <58f3a6ca-a051-a7dc-805f-ee3eb0f3ac3b@arm.com>
+Date: Fri, 5 May 2017 15:57:46 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <138b4286-1308-8394-b9e1-0791075949c8@suse.com>
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <806903036508ae5246084cbc3b796083d76f8917.1493992929.git.jpinto@synopsys.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 05, 2017 at 10:00:36AM +0200, Juergen Gross wrote:
-> Revert commit 72a9b186292 ("xen: Remove event channel notification
-> through Xen PCI platform device") as the original analysis was wrong
-> that all the removed code isn't in use any more. As commit da72ff5bfcb0
-> ("partially revert xen: Remove event channel notification through Xen
-> PCI platform device") reverted already some parts of it revert this
-> commit, too.
+Joao,
+
+On 05/05/17 15:11, Joao Pinto wrote:
+> Hello,
+> I am currently adding the support for both MSI and MSI-x in pcie-designware and
+> I am now facing a dificulty.
 > 
-> It is still necessary for old Xen versions (< 4.0) and for being able
-> to run the Linux kernel as dom0 in a nested Xen environment.
+> My test endpoint is a USB 3.1 MSI / MSI-X capable and I tested that with
+> the changes introduced by this patch we are able to enable MSI and MSI-X
+> in this endpoint (depends on the usage of the MSI_FLAG_PCI_MSIX flag).
 > 
-> Upstream commit is 84d582d236dc1f9085e741affc72e9ba061a67c2.
+> The problem I am facing now is that Intc for the USB 3.1 Endpoint is completely
+> bogus (524288) when it should be 1, and so I am not receiving any interrupts
+> from the endpoint.
+
+It is not bogus at all. It is computed from the PCI requester ID in 
+pci_msi_domain_calc_hwirq. What you're seeing is the PCI/MDI domain 
+view of that interrupt, which is completely virtual.
+
+The real thing happens in your own irqdomain, where the hwirq for IRQ46 
+is probably 1 (only you can know that). As for why it doesn't work, see 
+below:
+
 > 
-> Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: Ingo Molnar <mingo@redhat.com>
-> Cc: "H. Peter Anvin" <hpa@zytor.com>
-> Cc: x86@kernel.org
-> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Stefano Stabellini <sstabellini@kernel.org>
-> Cc: Julien Grall <julien.grall@arm.com>
-> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
-> Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
-> Cc: Ross Lagerwall <ross.lagerwall@citrix.com>
-> Cc: xen-devel@lists.xenproject.org
-> Cc: linux-kernel@vger.kernel.org
-> Cc: linux-pci@vger.kernel.org
-> Cc: Anthony Liguori <aliguori@amazon.com>
-> Cc: KarimAllah Ahmed <karahmed@amazon.de>
-> Signed-off-by: Juergen Gross <jgross@suse.com>
+> I would apreciate that more experienced people in this interrupt subject could
+> give me an hint.
+> 
+> I send you the "lspci -v" results and /proc/interrupts.
+> 
+> Thank you so much for your help.
+> 
+> # cat /proc/interrupts
+>            CPU0
+>   3:        755  ARC In-core Intc   3  Timer0 (per-cpu-tick)
+>   4:          0  dw-apb-ictl   4  eth0
+>   8:          1  dw-apb-ictl   8  ehci_hcd:usb1, ohci_hcd:usb2
+>   9:         37  dw-apb-ictl   7  dw-mci
+>  14:          0  dw-apb-ictl  14  e001d000.i2c
+>  16:          0  dw-apb-ictl  16  e001f000.i2c
+>  19:        145  dw-apb-ictl  19  serial
+>  45:          0   PCI-MSI   0  aerdrv
+>  46:          0   PCI-MSI 524288  xhci_hcd
+> 
+> # lspci -v
+> 00:00.0 PCI bridge: Synopsys, Inc. Device eddc (rev 01) (prog-if 00 [Normal decode])
+>         Flags: bus master, fast devsel, latency 0, IRQ 45
+>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+>         Memory behind bridge: d0400000-d04fffff
+>         [virtual] Expansion ROM at d0500000 [disabled] [size=64K]
+>         Capabilities: [40] Power Management version 3
+>         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>         Capabilities: [70] Express Root Port (Slot-), MSI 00
+>         Capabilities: [100] Advanced Error Reporting
+>         Capabilities: [148] #19
+>         Capabilities: [158] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
+>         Kernel driver in use: pcieport
+> 
+> 01:00.0 USB controller: ASMedia Technology Inc. ASM1142 USB 3.1 Host Controller (prog-if 30 [XHCI])
+>         Subsystem: ASMedia Technology Inc. ASM1142 USB 3.1 Host Controller
+>         Flags: bus master, fast devsel, latency 0, IRQ 46
+>         Memory at d0400000 (64-bit, non-prefetchable) [size=32K]
+>         Capabilities: [50] MSI: Enable+ Count=1/8 Maskable- 64bit+
+>         Capabilities: [68] MSI-X: Enable- Count=8 Masked-
+>         Capabilities: [78] Power Management version 3
+>         Capabilities: [80] Express Endpoint, MSI 00
+>         Capabilities: [100] Virtual Channel
+>         Capabilities: [200] Advanced Error Reporting
+>         Capabilities: [280] #19
+>         Capabilities: [300] Latency Tolerance Reporting
+>         Kernel driver in use: xhci_hcd
+> 
+> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
 > ---
-> Please apply to stable-4.10.y and stable-4.11.y
-> ---
->  arch/x86/include/asm/xen/events.h | 11 +++++++++++
->  arch/x86/pci/xen.c                |  2 +-
->  arch/x86/xen/enlighten.c          | 21 +++++++++++++++------
->  arch/x86/xen/smp.c                |  2 ++
->  arch/x86/xen/time.c               |  5 +++++
->  drivers/xen/events/events_base.c  | 26 +++++++++++++++++---------
->  drivers/xen/platform-pci.c        | 13 +++----------
->  include/xen/xen.h                 |  3 ++-
->  8 files changed, 56 insertions(+), 27 deletions(-)
+>  .../devicetree/bindings/pci/designware-pcie.txt    |   2 +
+>  drivers/pci/dwc/pcie-designware-host.c             | 292 ++++++++-------------
+>  drivers/pci/dwc/pcie-designware-plat.c             |  35 +--
+>  drivers/pci/dwc/pcie-designware.h                  |   7 +-
+>  4 files changed, 143 insertions(+), 193 deletions(-)
 > 
-> diff --git a/arch/x86/include/asm/xen/events.h
-> b/arch/x86/include/asm/xen/events.h
-> index 608a79d5a466..e6911caf5bbf 100644
-> --- a/arch/x86/include/asm/xen/events.h
-> +++ b/arch/x86/include/asm/xen/events.h
-> @@ -20,4 +20,15 @@ static inline int xen_irqs_disabled(struct pt_regs *regs)
->  /* No need for a barrier -- XCHG is a barrier on x86. */
->  #define xchg_xen_ulong(ptr, val) xchg((ptr), (val))
->  +extern int xen_have_vector_callback;
-> +
-> +/*
-> + * Events delivered via platform PCI interrupts are always
-> + * routed to vcpu 0 and hence cannot be rebound.
-> + */
-> +static inline bool xen_support_evtchn_rebind(void)
-> +{
-> +	return (!xen_hvm_domain() || xen_have_vector_callback);
-> +}
-> +
->  #endif /* _ASM_X86_XEN_EVENTS_H */
-> diff --git a/arch/x86/pci/xen.c b/arch/x86/pci/xen.c
-> index 292ab0364a89..c4b3646bd04c 100644
-> --- a/arch/x86/pci/xen.c
-> +++ b/arch/x86/pci/xen.c
-> @@ -447,7 +447,7 @@ void __init xen_msi_init(void)
->   int __init pci_xen_hvm_init(void)
->  {
-> -	if (!xen_feature(XENFEAT_hvm_pirqs))
-> +	if (!xen_have_vector_callback || !xen_feature(XENFEAT_hvm_pirqs))
->  		return 0;
->   #ifdef CONFIG_ACPI
-> diff --git a/arch/x86/xen/enlighten.c b/arch/x86/xen/enlighten.c
-> index 51ef95232725..6623867cc0d4 100644
-> --- a/arch/x86/xen/enlighten.c
-> +++ b/arch/x86/xen/enlighten.c
-> @@ -137,6 +137,8 @@ struct shared_info xen_dummy_shared_info;
->  void *xen_initial_gdt;
->   RESERVE_BRK(shared_info_page_brk, PAGE_SIZE);
-> +__read_mostly int xen_have_vector_callback;
-> +EXPORT_SYMBOL_GPL(xen_have_vector_callback);
->   static int xen_cpu_up_prepare(unsigned int cpu);
->  static int xen_cpu_up_online(unsigned int cpu);
-> @@ -1508,7 +1510,10 @@ static void __init xen_pvh_early_guest_init(void)
->  	if (!xen_feature(XENFEAT_auto_translated_physmap))
->  		return;
->  -	BUG_ON(!xen_feature(XENFEAT_hvm_callback_vector));
-> +	if (!xen_feature(XENFEAT_hvm_callback_vector))
-> +		return;
-> +
-> +	xen_have_vector_callback = 1;
->   	xen_pvh_early_cpu_init(0, false);
->  	xen_pvh_set_cr_flags(0);
-> @@ -1847,7 +1852,9 @@ static int xen_cpu_up_prepare(unsigned int cpu)
->  		xen_vcpu_setup(cpu);
->  	}
->  -	if (xen_pv_domain() || xen_feature(XENFEAT_hvm_safe_pvclock))
-> +	if (xen_pv_domain() ||
-> +	    (xen_have_vector_callback &&
-> +	     xen_feature(XENFEAT_hvm_safe_pvclock)))
->  		xen_setup_timer(cpu);
->   	rc = xen_smp_intr_init(cpu);
-> @@ -1863,7 +1870,9 @@ static int xen_cpu_dead(unsigned int cpu)
->  {
->  	xen_smp_intr_free(cpu);
->  -	if (xen_pv_domain() || xen_feature(XENFEAT_hvm_safe_pvclock))
-> +	if (xen_pv_domain() ||
-> +	    (xen_have_vector_callback &&
-> +	     xen_feature(XENFEAT_hvm_safe_pvclock)))
->  		xen_teardown_timer(cpu);
->   	return 0;
-> @@ -1902,8 +1911,8 @@ static void __init xen_hvm_guest_init(void)
->   	xen_panic_handler_init();
->  -	BUG_ON(!xen_feature(XENFEAT_hvm_callback_vector));
-> -
-> +	if (xen_feature(XENFEAT_hvm_callback_vector))
-> +		xen_have_vector_callback = 1;
->  	xen_hvm_smp_init();
->  	WARN_ON(xen_cpuhp_setup());
->  	xen_unplug_emulated_devices();
-> @@ -1941,7 +1950,7 @@ bool xen_hvm_need_lapic(void)
->  		return false;
->  	if (!xen_hvm_domain())
->  		return false;
-> -	if (xen_feature(XENFEAT_hvm_pirqs))
-> +	if (xen_feature(XENFEAT_hvm_pirqs) && xen_have_vector_callback)
->  		return false;
->  	return true;
->  }
-> diff --git a/arch/x86/xen/smp.c b/arch/x86/xen/smp.c
-> index 311acad7dad2..137afbbd0590 100644
-> --- a/arch/x86/xen/smp.c
-> +++ b/arch/x86/xen/smp.c
-> @@ -765,6 +765,8 @@ static void __init xen_hvm_smp_prepare_cpus(unsigned
-> int max_cpus)
->   void __init xen_hvm_smp_init(void)
->  {
-> +	if (!xen_have_vector_callback)
-> +		return;
->  	smp_ops.smp_prepare_cpus = xen_hvm_smp_prepare_cpus;
->  	smp_ops.smp_send_reschedule = xen_smp_send_reschedule;
->  	smp_ops.cpu_die = xen_cpu_die;
-> diff --git a/arch/x86/xen/time.c b/arch/x86/xen/time.c
-> index 1e69956d7852..4535627cf532 100644
-> --- a/arch/x86/xen/time.c
-> +++ b/arch/x86/xen/time.c
-> @@ -432,6 +432,11 @@ static void xen_hvm_setup_cpu_clockevents(void)
->   void __init xen_hvm_init_time_ops(void)
->  {
-> +	/* vector callback is needed otherwise we cannot receive interrupts
-> +	 * on cpu > 0 and at this point we don't know how many cpus are
-> +	 * available */
-> +	if (!xen_have_vector_callback)
-> +		return;
->  	if (!xen_feature(XENFEAT_hvm_safe_pvclock)) {
->  		printk(KERN_INFO "Xen doesn't support pvclock on HVM,"
->  				"disable pv timer\n");
-> diff --git a/drivers/xen/events/events_base.c
-> b/drivers/xen/events/events_base.c
-> index fd8e872d2943..86199f31bc57 100644
-> --- a/drivers/xen/events/events_base.c
-> +++ b/drivers/xen/events/events_base.c
-> @@ -1312,6 +1312,9 @@ static int rebind_irq_to_cpu(unsigned irq,
-> unsigned tcpu)
+> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> index b2480dd..41803ea 100644
+> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+> @@ -34,6 +34,8 @@ Optional properties:
+>  RC mode:
+>  - num-viewport: number of view ports configured in
+>    hardware. If a platform does not specify it, the driver assumes 2.
+> +- num-vectors: number of available interrupt vectors. If a platform does not
+> +  specify it, the driver assumes 1.
+>  - bus-range: PCI bus numbers covered (it is recommended
+>    for new devicetrees to specify this property, to keep backwards
+>    compatibility a range of 0x00-0xff is assumed if not present)
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> index 28ed32b..96a5fb3 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -11,6 +11,9 @@
+>   * published by the Free Software Foundation.
+>   */
+>  
+> +#include <linux/interrupt.h>
+> +#include <linux/irqchip/chained_irq.h>
+> +#include <linux/msi.h>
+>  #include <linux/irqdomain.h>
+>  #include <linux/of_address.h>
+>  #include <linux/of_pci.h>
+> @@ -53,32 +56,43 @@ static struct irq_chip dw_msi_irq_chip = {
+>  	.irq_unmask = pci_msi_unmask_irq,
+>  };
 
-Your patch is line-wrapped and can not be applied :(
+It looks to me like the first mistake is just above. You don't seem to
+propagate the mask/unmask operations into the parent domain, so your
+interrupts are never enabled... You'd need something like this:
 
-can you fix this up and resend both this, and the 4.9 patch?
+diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+index 28ed32ba4f1b..d42b8b12f168 100644
+--- a/drivers/pci/dwc/pcie-designware-host.c
++++ b/drivers/pci/dwc/pcie-designware-host.c
+@@ -45,12 +45,22 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+ 	return dw_pcie_write(pci->dbi_base + where, size, val);
+ }
+ 
++static void dw_msi_mask_irq(struct irq_data *d)
++{
++	pci_msi_mask_irq(d);
++	irq_chip_mask_parent(d);
++}
++
++static void dw_msi_unmask_irq(struct irq_data *d)
++{
++	pci_msi_unmask_irq(d);
++	irq_chip_unmask_parent(d);
++}
++
+ static struct irq_chip dw_msi_irq_chip = {
+ 	.name = "PCI-MSI",
+-	.irq_enable = pci_msi_unmask_irq,
+-	.irq_disable = pci_msi_mask_irq,
+-	.irq_mask = pci_msi_mask_irq,
+-	.irq_unmask = pci_msi_unmask_irq,
++	.irq_mask = dw_msi_mask_irq,
++	.irq_unmask = dw_msi_unmask_irq,
+ };
 
-thanks,
+I haven't dug any further, but this should be fixed first.
 
-greg k-h
+Thanks,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
