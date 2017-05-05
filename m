@@ -1,66 +1,108 @@
-Return-Path: <SRS0=tvTh=46=microsoft.com=Jork.Loeser@kernel.org>
-Return-Path: <SRS0=tvTh=46=microsoft.com=Jork.Loeser@kernel.org>
-From: Jork Loeser <Jork.Loeser@microsoft.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "helgaas@kernel.org" <helgaas@kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "devel@linuxdriverproject.org"
-	<devel@linuxdriverproject.org>, "olaf@aepfle.de" <olaf@aepfle.de>,
-	"apw@canonical.com" <apw@canonical.com>, "vkuznets@redhat.com"
-	<vkuznets@redhat.com>, "jasowang@redhat.com" <jasowang@redhat.com>,
-	"leann.ogasawara@canonical.com" <leann.ogasawara@canonical.com>,
-	"marcelo.cerri@canonical.com" <marcelo.cerri@canonical.com>, "Stephen
- Hemminger" <sthemmin@microsoft.com>
-Subject: RE: [PATCH 4/4] Hyper-V vPCI: use vPCI protocol version 1.2
-Date: Wed, 24 May 2017 15:07:00 +0000
-Message-ID: <CY4PR21MB06313E63A651ED6BEC9782F1F1FE0@CY4PR21MB0631.namprd21.prod.outlook.com>
-References: <1495134870-18225-1-git-send-email-jloeser@linuxonhyperv.com>
- <1495134870-18225-5-git-send-email-jloeser@linuxonhyperv.com>
- <20170519112701.adqxvpkorrthjf7i@mwanda>
-In-Reply-To: <20170519112701.adqxvpkorrthjf7i@mwanda>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay2.synopsys.com ([198.182.60.111]:33752 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751638AbdEEPyf (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 May 2017 11:54:35 -0400
+Subject: Re: [RFC] pci: using new interrupt API to enable MSI and MSI-X
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, <kishon@ti.com>,
+        <bhelgaas@google.com>, <jingoohan1@gmail.com>
+References: <806903036508ae5246084cbc3b796083d76f8917.1493992929.git.jpinto@synopsys.com>
+ <58f3a6ca-a051-a7dc-805f-ee3eb0f3ac3b@arm.com>
+CC: <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <6617cd15-5d79-cad8-879b-a8c953ba9a41@synopsys.com>
+Date: Fri, 5 May 2017 16:54:30 +0100
 MIME-Version: 1.0
+In-Reply-To: <58f3a6ca-a051-a7dc-805f-ee3eb0f3ac3b@arm.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Friday, May 19, 2017 04:27
-> To: Jork Loeser <Jork.Loeser@microsoft.com>
-> Cc: helgaas@kernel.org; linux-pci@vger.kernel.org; linux-
-> kernel@vger.kernel.org; devel@linuxdriverproject.org; olaf@aepfle.de;
-> apw@canonical.com; vkuznets@redhat.com; jasowang@redhat.com;
-> leann.ogasawara@canonical.com; marcelo.cerri@canonical.com; Stephen
-> Hemminger <sthemmin@microsoft.com>
-> Subject: Re: [PATCH 4/4] Hyper-V vPCI: use vPCI protocol version 1.2
->=20
-> Minor nits only.
+Mark,
 
-> > +#define HV_X64_EX_PROCESSOR_MASKS_RECOMMENDED	(1 << 11)
->=20
-> Use BIT(11).  I thought checkpatch.pl complains about this but I guess th=
-at's only
-> with the --strict option.
+Às 3:57 PM de 5/5/2017, Marc Zyngier escreveu:
+> Joao,
+> 
+> On 05/05/17 15:11, Joao Pinto wrote:
 
-Not addressing here as per Stephen's comment - this use is prevalent in the=
- current code.
+snip (...)
 
-> > @@ -900,36 +1074,42 @@ static void hv_compose_msi_msg(struct irq_data
- [...]
-> > +	switch (pci_protocol_version) {
-> > +	case PCI_PROTOCOL_VERSION_1_1:
-[...]
-> > +	default:
-> > +		/* As we only negotiate protocol versions known to this driver,
-> > +		 * this path should never hit. However, this is it not a hot
-> > +		 * path so we print a message to aid future updates.
-> > +		 */
-> > +		dev_err(&hbus->hdev->device,
-> > +			"Unexpected vPCI protocol, update driver.");
->=20
-> We should check the protocol version in probe() instead of here.
+> It looks to me like the first mistake is just above. You don't seem to
+> propagate the mask/unmask operations into the parent domain, so your
+> interrupts are never enabled... You'd need something like this:
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> index 28ed32ba4f1b..d42b8b12f168 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -45,12 +45,22 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+>  	return dw_pcie_write(pci->dbi_base + where, size, val);
+>  }
+>  
+> +static void dw_msi_mask_irq(struct irq_data *d)
+> +{
+> +	pci_msi_mask_irq(d);
+> +	irq_chip_mask_parent(d);
+> +}
+> +
+> +static void dw_msi_unmask_irq(struct irq_data *d)
+> +{
+> +	pci_msi_unmask_irq(d);
+> +	irq_chip_unmask_parent(d);
+> +}
+> +
+>  static struct irq_chip dw_msi_irq_chip = {
+>  	.name = "PCI-MSI",
+> -	.irq_enable = pci_msi_unmask_irq,
+> -	.irq_disable = pci_msi_mask_irq,
+> -	.irq_mask = pci_msi_mask_irq,
+> -	.irq_unmask = pci_msi_unmask_irq,
+> +	.irq_mask = dw_msi_mask_irq,
+> +	.irq_unmask = dw_msi_unmask_irq,
+>  };
+> 
+> I haven't dug any further, but this should be fixed first.
+> 
+> Thanks,
+> 
+> 	M.
+> 
 
-It is checked in probe(). The catch-all is merely a helper in case future u=
-pdates miss adapting.=20
+I added the changes that you suggested and firstly it crashed, and then I found
+out that in the domain parent structure (dw_pci_msi_bottom_irq_chip) did not
+have irq_mask and irq_unmask functions. I put it like this, just for testing:
 
-Regards,
-Jork
+static struct irq_chip dw_pci_msi_bottom_irq_chip = {
+	.name			= "DW MSI",
+	.irq_compose_msi_msg	= dw_pci_compose_msi_msg,
+	.irq_set_affinity	= dw_pci_msi_set_affinity,
++	.irq_mask		= pci_msi_mask_irq,
++	.irq_unmask		= pci_msi_unmask_irq,
+};
+
+Maybe irq_mask and irq_unmask should not be pci_msi_mask_irq /
+pci_msi_unmask_irq, but I did not find any existing case that needed it. Do we
+have any documentation about IRQ domains that I can check?
+
+Interrupts
+ 45:          0   PCI-MSI   0  aerdrv
+ 46:          0   PCI-MSI 524288  xhci_hcd
+
+The MSI seems to be well configured in the Bridge and in the Endpoint, so some
+glue is missing in the driver.
+
+00:00.0 PCI bridge: Synopsys, Inc. Device eddc (rev 01) (prog-if 00 [Normal decode])
+Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+Address: 000000009a238000  Data: 0000
+
+
+01:00.0 USB controller: ASMedia Technology Inc. ASM1142 USB 3.1 Host Controller
+(prog-if 30 [XHCI])
+(...)
+Capabilities: [50] MSI: Enable+ Count=1/8 Maskable- 64bit+
+Address: 000000009a238000  Data: 0001
+
+Thanks for the support.
+
+Joao
