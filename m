@@ -1,63 +1,169 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:38628 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S967883AbdD3M5X (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Sun, 30 Apr 2017 08:57:23 -0400
-Date: Sun, 30 Apr 2017 15:57:13 +0300
-From: Imre Deak <imre.deak@intel.com>
-To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        intel-gfx@lists.freedesktop.org,
-        Jani Nikula <jani.nikula@intel.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        linux-pci@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] PCI / PM: Add needs_resume flag to avoid suspend
- complete optimization
-Message-ID: <20170430125713.GA29281@ideak-desk.fi.intel.com>
-Reply-To: imre.deak@intel.com
-References: <1493388963-5278-1-git-send-email-imre.deak@intel.com>
- <4849096.yzbfqj2AUz@aspire.rjw.lan>
- <23725356.i2L37sn5oF@aspire.rjw.lan>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <23725356.i2L37sn5oF@aspire.rjw.lan>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>
+Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.pawandeep@gmail.com>,
+        Oza Pawandeep <oza.oza@broadcom.com>
+Subject: [PATCH v2 1/3] of/pci/dma: fix DMA configuration for PCI masters
+Date: Fri,  5 May 2017 14:07:53 +0530
+Message-Id: <1493973474-13939-2-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1493973474-13939-1-git-send-email-oza.oza@broadcom.com>
+References: <1493973474-13939-1-git-send-email-oza.oza@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Sat, Apr 29, 2017 at 12:21:57PM +0200, Rafael J. Wysocki wrote:
-> On Friday, April 28, 2017 11:33:02 PM Rafael J. Wysocki wrote:
-> > On Friday, April 28, 2017 05:16:02 PM Imre Deak wrote:
-> > > Some drivers - like i915 - may not support the system suspend direct
-> > > complete optimization due to differences in their runtime and system
-> > > suspend sequence. Add a flag that when set resumes the device before
-> > > calling the driver's system suspend handlers which effectively disables
-> > > the optimization.
-> > > 
-> > > Needed by the next patch fixing suspend/resume on i915.
-> > > 
-> > > Suggested by Rafael.
-> > > 
-> > > Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > > Cc: Bjorn Helgaas <bhelgaas@google.com>
-> > > Cc: linux-pci@vger.kernel.org
-> > > Cc: stable@vger.kernel.org
-> > > Signed-off-by: Imre Deak <imre.deak@intel.com>
-> > 
-> > Acked-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> > 
-> > The reason why the opt-out flag was not added on day one was because we were
-> > not sure whether or not it would be necessary at all.
-> > 
-> > Quite evidently, it is needed.
-> 
-> But that said, it actually can be implemented as a flag in dev_flags too, say
-> PCI_DEV_FLAGS_NEEDS_RESUME, in analogy with PCI_DEV_FLAGS_NO_D3 that's
-> already there.
-> 
-> The struct size would not need to grow then which I guess would be better?
+current device framework and OF framework integration assumes
+dma-ranges in a way where memory-mapped devices define their
+dma-ranges. (child-bus-address, parent-bus-address, length).
 
-Hm, both the bit field and the flag would need to increase if running
-out of bits, so what's the difference? (Atm, the struct size wouldn't
-change either way.)
+of_dma_configure is specifically written to take care of memory
+mapped devices. but no implementation exists for pci to take
+care of pcie based memory ranges.
 
---Imre
+for e.g. iproc based SOCs and other SOCs(suc as rcar) have PCI
+world dma-ranges.
+dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
+
+this patch serves following:
+
+1) exposes interface to the pci host driver for their
+inbound memory ranges
+
+2) provide an interface to callers such as of_dma_get_ranges.
+so then the returned size get best possible (largest) dma_mask.
+because PCI RC drivers do not call APIs such as
+dma_set_coherent_mask() and hence rather it shows its addressing
+capabilities based on dma-ranges.
+for e.g.
+dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
+we should get dev->coherent_dma_mask=0x7fffffffff.
+
+3) this patch handles multiple inbound windows and dma-ranges.
+it is left to the caller, how it wants to use them.
+the new function returns the resources in a standard and unform way
+
+4) this way the callers of for e.g. of_dma_get_ranges
+does not need to change.
+
+5) leaves scope of adding PCI flag handling for inbound memory
+by the new function.
+
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+
+diff --git a/drivers/of/of_pci.c b/drivers/of/of_pci.c
+index 0ee42c3..ed6e69a 100644
+--- a/drivers/of/of_pci.c
++++ b/drivers/of/of_pci.c
+@@ -283,6 +283,83 @@ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 	return err;
+ }
+ EXPORT_SYMBOL_GPL(of_pci_get_host_bridge_resources);
++
++/**
++ * of_pci_get_dma_ranges - Parse PCI host bridge inbound resources from DT
++ * @np: device node of the host bridge having the dma-ranges property
++ * @resources: list where the range of resources will be added after DT parsing
++ *
++ * It is the caller's job to free the @resources list.
++ *
++ * This function will parse the "dma-ranges" property of a
++ * PCI host bridge device node and setup the resource mapping based
++ * on its content.
++ *
++ * It returns zero if the range parsing has been successful or a standard error
++ * value if it failed.
++ */
++
++int of_pci_get_dma_ranges(struct device_node *np, struct list_head *resources)
++{
++	struct device_node *node = of_node_get(np);
++	int rlen;
++	int ret = 0;
++	const int na = 3, ns = 2;
++	struct resource *res;
++	struct of_pci_range_parser parser;
++	struct of_pci_range range;
++
++	if (!node)
++		return -EINVAL;
++
++	parser.node = node;
++	parser.pna = of_n_addr_cells(node);
++	parser.np = parser.pna + na + ns;
++
++	parser.range = of_get_property(node, "dma-ranges", &rlen);
++
++	if (!parser.range) {
++		pr_debug("pcie device has no dma-ranges defined for node(%s)\n",
++			  np->full_name);
++		ret = -EINVAL;
++		goto out;
++	}
++
++	parser.end = parser.range + rlen / sizeof(__be32);
++
++	for_each_of_pci_range(&parser, &range) {
++		/*
++		 * If we failed translation or got a zero-sized region
++		 * then skip this range
++		 */
++		if (range.cpu_addr == OF_BAD_ADDR || range.size == 0)
++			continue;
++
++		res = kzalloc(sizeof(struct resource), GFP_KERNEL);
++		if (!res) {
++			ret = -ENOMEM;
++			goto parse_failed;
++		}
++
++		ret = of_pci_range_to_resource(&range, np, res);
++		if (ret) {
++			kfree(res);
++			continue;
++		}
++
++		pci_add_resource_offset(resources, res,
++					res->start - range.pci_addr);
++	}
++
++	return ret;
++
++parse_failed:
++	pci_free_resource_list(resources);
++out:
++	of_node_put(node);
++	return ret;
++}
++EXPORT_SYMBOL_GPL(of_pci_get_dma_ranges);
+ #endif /* CONFIG_OF_ADDRESS */
+ 
+ #ifdef CONFIG_PCI_MSI
+diff --git a/include/linux/of_pci.h b/include/linux/of_pci.h
+index 0e0974e..617b90d 100644
+--- a/include/linux/of_pci.h
++++ b/include/linux/of_pci.h
+@@ -76,6 +76,7 @@ static inline void of_pci_check_probe_only(void) { }
+ int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 			unsigned char busno, unsigned char bus_max,
+ 			struct list_head *resources, resource_size_t *io_base);
++int of_pci_get_dma_ranges(struct device_node *np, struct list_head *resources);
+ #else
+ static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
+ 			unsigned char busno, unsigned char bus_max,
+@@ -83,6 +84,12 @@ static inline int of_pci_get_host_bridge_resources(struct device_node *dev,
+ {
+ 	return -EINVAL;
+ }
++
++static inline int of_pci_get_dma_ranges(struct device_node *np,
++					struct list_head *resources)
++{
++	return -EINVAL;
++}
+ #endif
+ 
+ #if defined(CONFIG_OF) && defined(CONFIG_PCI_MSI)
+-- 
+1.9.1
