@@ -1,123 +1,70 @@
-Return-Path: <SRS0=Cjmw=4I=intel.com=mayurkumar.patel@kernel.org>
-Return-Path: <SRS0=Cjmw=4I=intel.com=mayurkumar.patel@kernel.org>
-From: "Patel, Mayurkumar" <mayurkumar.patel@intel.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-CC: Sinan Kaya <okaya@codeaurora.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	Rajat Jain <rajatja@google.com>, Rajat Jain <rajatxjain@gmail.com>, "David
- Daney" <david.daney@cavium.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, Timur Tabi <timur@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Julia Lawall
-	<Julia.Lawall@lip6.fr>, linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	Yinghai Lu <yinghai@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
-	linux-arm <linux-arm-kernel@lists.infradead.org>, Myron Stowe
-	<myron.stowe@redhat.com>
-Subject: RE: [PATCH V8 4/5] PCI/ASPM: save power on values during bridge init
-Date: Tue, 2 May 2017 12:02:53 +0000
-Message-ID: <92EBB4272BF81E4089A7126EC1E7B284667759B1@IRSMSX101.ger.corp.intel.com>
-References: <1491627351-1111-1-git-send-email-okaya@codeaurora.org>
- <1491627351-1111-5-git-send-email-okaya@codeaurora.org>
- <CACK8Z6GXfMWxakNQnvMToig9z9McnJKeYFc2BAAFy7ys8=PUWg@mail.gmail.com>
- <d3857812-7e03-4b62-f7cb-ac0d139b6123@codeaurora.org>
- <20170414214452.GA21870@bhelgaas-glaptop.roam.corp.google.com>
- <66168dde-7719-6f74-3f06-8e4724dd2918@codeaurora.org>
- <CAErSpo7p_2dTDTC7J4HdQUw_5GH8081dUZ=XVqd=sRLrA_FJnA@mail.gmail.com>
- <c0c2f48f-d725-058e-a1ad-92ab4b6e7fb3@codeaurora.org>
- <92EBB4272BF81E4089A7126EC1E7B2846676C7EF@IRSMSX101.ger.corp.intel.com>
- <CAErSpo7TO1rfG6MDYuohyXL4WbaGCJdV8y3Ke-uL6VjGRb1hvw@mail.gmail.com>
-In-Reply-To: <CAErSpo7TO1rfG6MDYuohyXL4WbaGCJdV8y3Ke-uL6VjGRb1hvw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:33103 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751769AbdEEPMP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 May 2017 11:12:15 -0400
+Subject: Re: [RFC] pci: using new interrupt API to enable MSI and MSI-X
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, <kishon@ti.com>,
+        <bhelgaas@google.com>, <jingoohan1@gmail.com>
+References: <806903036508ae5246084cbc3b796083d76f8917.1493992929.git.jpinto@synopsys.com>
+ <58f3a6ca-a051-a7dc-805f-ee3eb0f3ac3b@arm.com>
+CC: <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <ac31c607-ad4c-8032-9e11-603dc75dca47@synopsys.com>
+Date: Fri, 5 May 2017 16:12:11 +0100
 MIME-Version: 1.0
+In-Reply-To: <58f3a6ca-a051-a7dc-805f-ee3eb0f3ac3b@arm.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGkgQmpvcm4NCg0KPg0KPk9uIEZyaSwgQXByIDIxLCAyMDE3IGF0IDI6NDYgQU0sIFBhdGVsLCBN
-YXl1cmt1bWFyDQo+PG1heXVya3VtYXIucGF0ZWxAaW50ZWwuY29tPiB3cm90ZToNCj4+IEhpIEJq
-b3JuL0theWEsDQo+Pg0KPj4NCj4+Pg0KPj4+T24gNC8xNy8yMDE3IDEyOjM4IFBNLCBCam9ybiBI
-ZWxnYWFzIHdyb3RlOg0KPj4+Pj4gTGlrZSB5b3Ugc2FpZCwgd2hhdCBkbyB3ZSBkbyBieSBkZWZh
-dWx0IGlzIHRoZSBxdWVzdGlvbi4gU2hvdWxkIHdlIG9wdA0KPj4+Pj4gZm9yIHNhZmUgbGlrZSB3
-ZSBhcmUgZG9pbmcsIG9yIHRyeSB0byBzYXZlIHNvbWUgcG93ZXIuDQo+Pj4+IEkgdGhpbmsgc2Fm
-ZXR5IGlzIHBhcmFtb3VudC4gIEV2ZXJ5IHVzZXIgc2hvdWxkIGJlIGFibGUgdG8gYm9vdCBzYWZl
-bHkNCj4+Pj4gd2l0aG91dCBhbnkga2VybmVsIHBhcmFtZXRlcnMuICBXZSBkb24ndCB3YW50IHVz
-ZXJzIHRvIGhhdmUgYSBwcm9ibGVtDQo+Pj4+IGJvb3RpbmcgYW5kIHRoZW4gaGF2ZSB0byBzZWFy
-Y2ggZm9yIGEgd29ya2Fyb3VuZCBsaWtlIGJvb3Rpbmcgd2l0aA0KPj4+PiAicGNpZV9hc3BtPW9m
-ZiIuICBNb3N0IHVzZXJzIHdpbGwgbmV2ZXIgZG8gdGhhdC4NCj4+Pj4NCj4+Pg0KPj4+T0ssIG5v
-IHByb2JsZW0gd2l0aCBsZWF2aW5nIHRoZSBiZWhhdmlvciBhcyBpdCBpcy4NCj4+Pg0KPj4+TXkg
-aW5pdGlhbCBhcHByb2FjaCB3YXMgIzIuIFdlIGtuZXcgdGhpcyB3YXkgdGhhdCB1c2VyIGhhZCBm
-dWxsIGNvbnRyb2wNCj4+Pm92ZXIgdGhlIEFTUE0gcG9saWN5IGJ5IGNoYW5naW5nIHRoZSBCSU9T
-IG9wdGlvbi4gVGhlbiwgTWF5dXJrdW1hcg0KPj4+Y29tcGxhaW5lZCB0aGF0IEFTUE0gaXMgbm90
-IGVuYWJsZWQgZm9sbG93aW5nIGEgaG90cGx1ZyBpbnNlcnRpb24gdG8gYW4NCj4+PmVtcHR5IHNs
-b3QuIFRoYXQncyB3aGVuIEkgc3dpdGNoZWQgdG8gIzMgYXMgaXQgc291bmRlZCBsaWtlIGEgZ29v
-ZCB0aGluZw0KPj4+dG8gaGF2ZSBmb3IgdXMuDQo+Pj4NCj4+Pj4gSGVyZSdzIGEgbG9uZy10ZXJt
-IHN0cmF3bWFuIHByb3Bvc2FsLCBzZWUgd2hhdCB5b3UgdGhpbms6DQo+Pj4+DQo+Pj4+ICAgLSBE
-ZXByZWNhdGUgQ09ORklHX1BDSUVBU1BNX0RFRkFVTFQsIENPTkZJR19QQ0lFQVNQTV9QT1dFUlNB
-VkUsIGV0Yy4NCj4+Pj4gICAtIERlZmF1bHQgYXNwbV9wb2xpY3kgaXMgUE9MSUNZX0RFRkFVTFQg
-YWx3YXlzLg0KPj4+PiAgIC0gUE9MSUNZX0RFRkFVTFQgbWVhbnMgTGludXggZG9lc24ndCB0b3Vj
-aCBhbnl0aGluZzogaWYgQklPUyBlbmFibGVkDQo+Pj4+IEFTUE0sIHdlIGxlYXZlIGl0IHRoYXQg
-d2F5OyB3ZSBsZWF2ZSBBU1BNIGRpc2FibGVkIG9uIGhvdC1hZGRlZA0KPj4+PiBkZXZpY2VzLg0K
-Pj4+DQo+PiBJIGFtIGFsc28gb2sgd2l0aCBsZWF2aW5nIHRoZSBzYW1lIGJlaGF2aW9yIGFzIG5v
-dy4NCj4+IEJ1dCBzdGlsbCBmb2xsb3dpbmcgaXMgc29tZXRoaW5nIG9wZW4gSSBmZWVsIGJlc2lk
-ZXMsIFdoaWNoIG1heSBiZSB0aGVyZSBpbiB5b3VyIGNvbW1lbnRzIHJlZHVuZGFudGx5Lg0KPj4g
-VGhlIGN1cnJlbnQgcHJvYmxlbSBpcywgcGNpZV9hc3BtX2V4aXRfbGlua19zdGF0ZSgpIGRpc2Fi
-bGVzIHRoZSBBU1BNIGNvbmZpZ3VyYXRpb24gZXZlbg0KPj4gaWYgUE9MSUNZX0RFRkFVTFQgd2Fz
-IHNldC4NCj4NCj5XZSBjYWxsIHBjaWVfYXNwbV9leGl0X2xpbmtfc3RhdGUoKSB3aGVuIHJlbW92
-aW5nIGFuIGVuZHBvaW50LiAgV2hlbg0KPndlIHJlbW92ZSBhbiBlbmRwb2ludCwgSSB0aGluayBk
-aXNhYmxpbmcgQVNQTSBpcyB0aGUgcmlnaHQgdGhpbmcgdG8NCj5kby4gIFRoZSBzcGVjIChQQ0ll
-IHIzLjEsIHNlYyA1LjQuMS4zKSBzYXlzICJTb2Z0d2FyZSBtdXN0IG5vdCBlbmFibGUNCj5MMHMg
-aW4gZWl0aGVyIGRpcmVjdGlvbiBvbiBhIGdpdmVuIExpbmsgdW5sZXNzIGNvbXBvbmVudHMgb24g
-Ym90aA0KPnNpZGVzIG9mIHRoZSBMaW5rIGVhY2ggc3VwcG9ydCBMMHM7IG90aGVyd2lzZSwgdGhl
-IHJlc3VsdCBpcw0KPnVuZGVmaW5lZC4iDQo+DQoNClllcywgeW91IGFyZSByaWdodCBhbmQgcGVy
-IHNwZWMgYWxzbyBpdCBtYWtlcyBzZW5zZSB0aGF0IEFTUE0gbmVlZHMgdG8gYmUgZGlzYWJsZWQu
-DQpCdXQsIGlmIFBPTElDWV9ERUZBVUxUIGlzIHNldCB0aGVuLCBzaG91bGRuJ3QgQklPUyB0YWtl
-IGNhcmUgb2YgZGlzYWJsaW5nIEFTUE0/DQoNCg0KDQo+PiBJIGFtIHNlZWluZyBhbHJlYWR5IGZv
-bGxvd2luZyBwcm9ibGVtKG9yIG1heSBiZSBpbmZsdWVuY2UpIHdpdGggaXQuIFRoZSBFbmRwb2lu
-dCBJIGhhdmUgZG9lcyBub3QgaGF2ZQ0KPj4gZG9lcyBub3QgaGF2ZSAiUHJlc2VuY2UgZGV0ZWN0
-IGNoYW5nZSIgbWVjaGFuaXNtLiBIb3QgcGx1ZyBpcyB3b3JraW5nIHdpdGggTGluayBzdGF0dXMg
-ZXZlbnRzLg0KPj4gV2hlbiBsaW5rIGlzIGluIEwxIG9yIEwxU1MgYW5kIGlmIEVQIGlzIHBvd2Vy
-ZWQgb2ZmLCBubyBMaW5rIHN0YXR1cyBjaGFuZ2UgZXZlbnQgYXJlIHRyaWdnZXJlZCAoSXQgbWln
-aHQgYmUNCj4+IHRoZSBleHBlY3RlZCBiZWhhdmlvciBpbiBMMSBvciBMMVNTKS4gIFdoZW4gbmV4
-dCB0aW1lIEVQIGlzIHBvd2VyZWQgb24gdGhlcmUgYXJlIGxpbmsgZG93biBhbmQNCj4+IGxpbmsg
-dXAgZXZlbnRzIGNvbWluZyBvbmUgYWZ0ZXIgb3RoZXIuIEJJT1MgZW5hYmxlcyBBU1BNIG9uIFJv
-b3QgcG9ydCBhbmQgRW5kcG9pbnQsIGJ1dCB3aGlsZQ0KPj4gcHJvY2Vzc2luZyBsaW5rIHN0YXR1
-cyBkb3duLCBwY2llX2FzcG1fZXhpdF9saW5rX3N0YXRlKCkgY2xlYXJzIHRoZSBBU1BNIGFscmVh
-ZHkgd2hpY2ggd2VyZSBlbmFibGVkIGJ5IEJJT1MuDQo+PiBJZiB3ZSB3YW50IHRvIGZvbGxvdyBh
-Ym92ZSBhcHByb2FjaCB0aGVuIHNoYWxsIHdlIGNvbnNpZGVyIGhhdmluZyBzb21ldGhpbmcgc2lt
-aWxhciBhcyBmb2xsb3dpbmc/DQo+DQo+VGhlIHByb3Bvc2FsIHdhcyB0byBsZWF2ZSBBU1BNIGRp
-c2FibGVkIG9uIGhvdC1hZGRlZCBkZXZpY2VzLiAgSWYgdGhlDQo+ZW5kcG9pbnQgd2FzIHBvd2Vy
-ZWQgb2ZmIGFuZCBwb3dlcmVkIGJhY2sgb24gYWdhaW4sIEkgdGhpbmsgdGhhdA0KPmRldmljZSBs
-b29rcyBsaWtlIGEgaG90LWFkZGVkIGRldmljZSwgZG9lc24ndCBpdD8NCj4NCg0KWWVzLCBpdCBp
-cyBob3QtYWRkZWQgZGV2aWNlLiBBbHNvLCBJIHVuZGVyc3RhbmQsIGZvciBQT0xJQ1lfREVGQVVM
-VCwgT1Mgd291bGQvc2hvdWxkIG5vdCB0b3VjaCBBU1BNKGVuYWJsZS9kaXNhYmxlKSwNCmJ1dCBC
-SU9TIGNvdWxkIHN0aWxsIChlbmFibGUvZGlzYWJsZSksIHJpZ2h0Pw0KDQpDdXJyZW50bHksIHdo
-YXQgaGFwcGVucyBpbiBteSBzeXN0ZW0gaXMgYXMgZm9sbG93aW5nLCAoZWFjaCAybmQgcG93ZXIg
-Y3ljbGUvaG90cGx1ZyBvZiBFbmRwb2ludCBkaXNhYmxlcyBBU1BNKToNCg0KDQpGaXJzdCBQb3dl
-ciBjeWNsZSAoV2hlbiBBU1BNIEwxIGlzIGFscmVhZHkgZW5hYmxlZCk6DQpkZXZpY2UgZ2V0cyBw
-b3dlcmVkIG9mZiAtPiB0aGVyZSBhcmUgbm8gTGluayBzdGF0dXMgZXZlbnRzLCBzbyBubyBwY2ll
-IGhvdHBsdWcgaW50ZXJydXB0IGFuZCBwY2llX2FzcG1fZXhpdF9saW5rX3N0YXRlKCkgdHJpZ2dl
-cmVkLg0KV2hlbiB0aGUgZGV2aWNlIGdldHMgcG93ZXJlZCBvbiBhZ2FpbiAtPiBMaW5rIGRvd24v
-TGluayB1cCBldmVudHMgYXJlIGNvbWluZyBiYWNrIHRvIGJhY2suIA0KRmlyc3QgTGluayBkb3du
-IGlzIHNlcnZlZC4gKEJJT1MgY2hlY2tzIGZvciB0aGUgTGluayBzdGF0dXMgYW5kIGVuYWJsZXMg
-QVNQTSBhbHJlYWR5LCBhcyB0aGUgZGV2aWNlIGlzDQphY3R1YWxseSBwb3dlcmVkIGJhY2spLiBP
-UyBjYWxscyBwY2llX2FzcG1fZXhpdF9saW5rX3N0YXRlKCkgYW5kIEFTUE0gZ2V0cyBkaXNhYmxl
-ZCBieSBPUy4NCg0KU2Vjb25kIFBvd2VyIGN5Y2xlIChXaGVuIEFTUE0gTDEgaXMgZGlzYWJsZWQg
-YWZ0ZXIgYWJvdmUpOg0KZGV2aWNlIGdldHMgcG93ZXJlZCBvZmYgLT4gdGhlcmUgYXJlIGxpbmsg
-c3RhdHVzIGV2ZW50cywgcGNpZSBob3RwbHVnIGludGVycnVwdCBpcyB0cmlnZ2VyZWQgYW5kIHBj
-aWVfYXNwbV9leGl0X2xpbmtfc3RhdGUoKSB0cmlnZ2VyZWQuDQpPUyBkaXNhYmxlcyBBU1BNLiBC
-SU9TIGNoZWNrcyBMaW5rIHN0YXR1cyBhbmQgZGlzYWJsZXMgQVNQTSB0b28uDQpXaGVuIHRoZSBk
-ZXZpY2UgZ2V0cyBwb3dlcmVkIG9uIC0+IEJJT1MgZW5hYmxlcyBBU1BNIGFuZCBhcyB0aGlzIGlz
-IHBjaWUgaG90cGx1ZyBpbnNlcnRpb24sIE9TDQpkb2VzIG5vdCBpbnRlcmZlcmUgYW5kIHdlIGhh
-dmUgQVNQTSBlbmFibGVkLg0KDQpUaGUgYWJvdmUgc2VxdWVuY2UgaGFwcGVucyBlYWNoIDJuZCBw
-b3dlciBjeWNsZSBvZiB0aGUgaG90cGx1ZyBkZXZpY2UuDQoNClNvIE9uZSBjb3VsZCBzdGlsbCBh
-cmd1ZSBpZiBQT0xJQ1lfREVGQVVMVCBpcyBzZXQsIHRoZW4gd2h5IE9TIGRpc2FibGVzIEFTUE0g
-aWYgaXQgaXMgbm90IG1lYW50IHRvIHRvdWNoIGNvbmZpZ3VyYXRpb24uDQpUaGlzIGlzIHdoeSBJ
-IHByb3Bvc2VkIGZvbGxvd2luZyBraW5kIG9mIGNoYW5nZSwgc28gdGhhdCBPUyB3b3VsZCBub3Qg
-dG91Y2ggQVNQTSwgaWYgUE9MSUNZX0RFRkFVTFQgaXMgc2V0Lg0KQWxzbywgV2l0aCB0aGUgYmVs
-b3cgY2hhbmdlLCBldmVyeXRoaW5nIHJlbGllcyBvbiBCSU9TIGZvciBBU1BNIHdoZW4gUE9MSUNZ
-X0RFRkFVTFQgaXMgc2V0IGFuZCBJIHNlZSBhYm92ZSBwcm9ibGVtDQpnZXRzIHJlc29sdmVkLiBB
-bHNvLCB0aGUgZXhpc3RpbmcgQVNQTSBiZWhhdmlvciBkb2VzIG5vdCBoYXZlIGltcGFjdCwgdW5s
-ZXNzIHNwZWNpZmljIEJJT1MgZG9lcyBub3QgZGlzYWJsZSBBU1BNIG9uDQpSb290IFBvcnQgd2hl
-biBkZXZpY2UgZ2V0cyByZW1vdmVkLg0KDQoNCg0KPkJqb3JuDQpJbnRlbCBEZXV0c2NobGFuZCBH
-bWJIClJlZ2lzdGVyZWQgQWRkcmVzczogQW0gQ2FtcGVvbiAxMC0xMiwgODU1NzkgTmV1YmliZXJn
-LCBHZXJtYW55ClRlbDogKzQ5IDg5IDk5IDg4NTMtMCwgd3d3LmludGVsLmRlCk1hbmFnaW5nIERp
-cmVjdG9yczogQ2hyaXN0aW4gRWlzZW5zY2htaWQsIENocmlzdGlhbiBMYW1wcmVjaHRlcgpDaGFp
-cnBlcnNvbiBvZiB0aGUgU3VwZXJ2aXNvcnkgQm9hcmQ6IE5pY29sZSBMYXUKUmVnaXN0ZXJlZCBP
-ZmZpY2U6IE11bmljaApDb21tZXJjaWFsIFJlZ2lzdGVyOiBBbXRzZ2VyaWNodCBNdWVuY2hlbiBI
-UkIgMTg2OTI4Cg==
+Hi Mark,
+
+Às 3:57 PM de 5/5/2017, Marc Zyngier escreveu:
+> Joao,
+> 
+> On 05/05/17 15:11, Joao Pinto wrote:
+>> Hello,
+>> I am currently adding the support for both MSI and MSI-x in pcie-designware and
+>> I am now facing a dificulty.
+>>
+>> My test endpoint is a USB 3.1 MSI / MSI-X capable and I tested that with
+>> the changes introduced by this patch we are able to enable MSI and MSI-X
+>> in this endpoint (depends on the usage of the MSI_FLAG_PCI_MSIX flag).
+>>
+>> The problem I am facing now is that Intc for the USB 3.1 Endpoint is completely
+>> bogus (524288) when it should be 1, and so I am not receiving any interrupts
+>> from the endpoint.
+> 
+> It is not bogus at all. It is computed from the PCI requester ID in 
+> pci_msi_domain_calc_hwirq. What you're seeing is the PCI/MDI domain 
+> view of that interrupt, which is completely virtual.
+> 
+> The real thing happens in your own irqdomain, where the hwirq for IRQ46 
+> is probably 1 (only you can know that). As for why it doesn't work, see 
+> below:
+> 
+
+snip (...)
+
+>  static struct irq_chip dw_msi_irq_chip = {
+>  	.name = "PCI-MSI",
+> -	.irq_enable = pci_msi_unmask_irq,
+> -	.irq_disable = pci_msi_mask_irq,
+> -	.irq_mask = pci_msi_mask_irq,
+> -	.irq_unmask = pci_msi_unmask_irq,
+> +	.irq_mask = dw_msi_mask_irq,
+> +	.irq_unmask = dw_msi_unmask_irq,
+>  };
+> 
+> I haven't dug any further, but this should be fixed first.
+> 
+> Thanks,
+> 
+> 	M.
+> 
+
+Thanks for the help! I will check it out!
+
+Joao
