@@ -1,16 +1,15 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1494408707.31307.32.camel@mtkswgap22>
-Subject: Re: [PATCH v3 2/2] dt-bindings: pcie: Add documentation for
- Mediatek PCIe
-From: Ryder Lee <ryder.lee@mediatek.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Date: Wed, 10 May 2017 17:31:47 +0800
-In-Reply-To: <CAK8P3a193RxchvFAMWeZiP0sc0bd+VGg=_aVvipSgcbDpHXojg@mail.gmail.com>
-References: <1494382020-26790-1-git-send-email-ryder.lee@mediatek.com>
- <1494382020-26790-3-git-send-email-ryder.lee@mediatek.com>
- <CAK8P3a193RxchvFAMWeZiP0sc0bd+VGg=_aVvipSgcbDpHXojg@mail.gmail.com>
 MIME-Version: 1.0
+In-Reply-To: <f5cb58a5-7c06-8d54-6293-1a72ee0a4707@arm.com>
+References: <1493340847-25720-1-git-send-email-kdinh@apm.com>
+ <f5cb58a5-7c06-8d54-6293-1a72ee0a4707@arm.com>
+From: Khuong Dinh <kdinh@apm.com>
+Date: Thu, 4 May 2017 17:36:06 -0700
+Message-ID: <CAAsHzquFJE7X0MQyZCP4+UW_E+WK2ORe1EK6yxiq-ev81i1-xg@mail.gmail.com>
+Subject: Re: [PATCH v2 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
+ boot for X-Gene v1
+To: Marc Zyngier <marc.zyngier@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -18,93 +17,169 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
- Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
- Bjorn Helgaas <bhelgaas@google.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
+Cc: rjw@rjwysocki.net, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Duc Dang <dhdang@apm.com>, linux-pci@vger.kernel.org, msalter@redhat.com,
+ patches@apm.com, linux-kernel@vger.kernel.org, jcm@redhat.com,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, 2017-05-10 at 10:08 +0200, Arnd Bergmann wrote:
-> On Wed, May 10, 2017 at 4:07 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
-> 
-> > +- ranges:
-> > +  - The first three entries are expected to translate the addresses for the root
-> > +    port registers, which are referenced by the assigned-addresses property of
-> > +    the root port nodes (see below).
-> 
-> I don't understand this part. Why do you need a static translation for these?
-> Shouldn't they just be listed in the 'reg' property of the parent node now that
-> you have the clk/reset/phy properties in the parent as well?
+Hi Marc,
+   There's no explicit dependency between pcie driver and msi controller.
+   The current solution that we did is relying on the node ordering in BIOS.
+   ACPI 5.0 introduced _DEP method to assign a higher priority in
+start ordering.
+   This method could be applied in case of msi and pcie are the same
+level of subsys_init (in ACPI boot).
+   However, PCIe driver has not supported for this dependency check yet.
+   How do you think about this solution.
 
-At first, I did like that. But I noticed that someone suggest it's
-better to use 'assigned-addresses' to handle per-port registers, the
-same path as tegra and marvell did, in other platform discussion thread.
-So I just put shared register in root node. It could be rolled back if
-you feel this is inappropriate.
+Best regards,
+Khuong
 
-> > +Required properties:
-> > +- device_type: Must be "pci"
-> > +- assigned-addresses: Address and size of the port configuration registers
-> > +- reg: Only the first four bytes are used to refer to the correct bus number
-> > +  and device number.
-> > +- #address-cells: Must be 3
-> > +- #size-cells: Must be 2
-> > +- #interrupt-cells: Must be 1
-> > +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
-> > +  Please refer to the standard PCI bus binding document for a more detailed
-> > +  explanation.
-> 
-> Child nodes do not normally have interrupt-map properties. Isn't this
-> already covered by the interrupt-map in the parent?
-> 
+On Fri, Apr 28, 2017 at 2:27 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+> On 28/04/17 01:54, Khuong Dinh wrote:
+>> From: Khuong Dinh <kdinh@apm.com>
+>>
+>> This patch makes pci-xgene-msi driver ACPI-aware and provides
+>> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
+>>
+>> Signed-off-by: Khuong Dinh <kdinh@apm.com>
+>> Signed-off-by: Duc Dang <dhdang@apm.com>
+>> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+>> ---
+>> v2:
+>>  - Verify with BIOS version 3.06.25 and 3.07.09
+>> v1:
+>>  - Initial version
+>> ---
+>>  drivers/pci/host/pci-xgene-msi.c |   35 ++++++++++++++++++++++++++++++++---
+>>  1 files changed, 32 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+>> index f1b633b..00aaa3d 100644
+>> --- a/drivers/pci/host/pci-xgene-msi.c
+>> +++ b/drivers/pci/host/pci-xgene-msi.c
+>> @@ -24,6 +24,7 @@
+>>  #include <linux/pci.h>
+>>  #include <linux/platform_device.h>
+>>  #include <linux/of_pci.h>
+>> +#include <linux/acpi.h>
+>>
+>>  #define MSI_IR0                      0x000000
+>>  #define MSI_INT0             0x800000
+>> @@ -39,7 +40,7 @@ struct xgene_msi_group {
+>>  };
+>>
+>>  struct xgene_msi {
+>> -     struct device_node      *node;
+>> +     struct fwnode_handle    *fwnode;
+>>       struct irq_domain       *inner_domain;
+>>       struct irq_domain       *msi_domain;
+>>       u64                     msi_addr;
+>> @@ -249,6 +250,13 @@ static void xgene_irq_domain_free(struct irq_domain *domain,
+>>       .free   = xgene_irq_domain_free,
+>>  };
+>>
+>> +#ifdef CONFIG_ACPI
+>> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
+>> +{
+>> +     return xgene_msi_ctrl.fwnode;
+>> +}
+>> +#endif
+>> +
+>>  static int xgene_allocate_domains(struct xgene_msi *msi)
+>>  {
+>>       msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+>> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>>       if (!msi->inner_domain)
+>>               return -ENOMEM;
+>>
+>> -     msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
+>> +     msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
+>>                                                   &xgene_msi_domain_info,
+>>                                                   msi->inner_domain);
+>>
+>> @@ -265,6 +273,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>>               return -ENOMEM;
+>>       }
+>>
+>> +#ifdef CONFIG_ACPI
+>> +     pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
+>> +#endif
+>>       return 0;
+>>  }
+>>
+>> @@ -449,6 +460,13 @@ static int xgene_msi_hwirq_free(unsigned int cpu)
+>>       {},
+>>  };
+>>
+>> +#ifdef CONFIG_ACPI
+>> +static const struct acpi_device_id xgene_msi_acpi_ids[] = {
+>> +     {"APMC0D0E", 0},
+>> +     { },
+>> +};
+>> +#endif
+>> +
+>>  static int xgene_msi_probe(struct platform_device *pdev)
+>>  {
+>>       struct resource *res;
+>> @@ -469,7 +487,17 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>>               goto error;
+>>       }
+>>       xgene_msi->msi_addr = res->start;
+>> -     xgene_msi->node = pdev->dev.of_node;
+>> +
+>> +     xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
+>> +     if (!xgene_msi->fwnode) {
+>> +             xgene_msi->fwnode = irq_domain_alloc_fwnode(NULL);
+>
+> Please provide something other than NULL, such as the base address if
+> the device. That's quite useful for debugging.
+>
+>> +             if (!xgene_msi->fwnode) {
+>> +                     dev_err(&pdev->dev, "Failed to create fwnode\n");
+>> +                     rc = ENOMEM;
+>> +                     goto error;
+>> +             }
+>> +     }
+>> +
+>>       xgene_msi->num_cpus = num_possible_cpus();
+>>
+>>       rc = xgene_msi_init_allocator(xgene_msi);
+>> @@ -540,6 +568,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>>       .driver = {
+>>               .name = "xgene-msi",
+>>               .of_match_table = xgene_msi_match_table,
+>> +             .acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
+>>       },
+>>       .probe = xgene_msi_probe,
+>>       .remove = xgene_msi_remove,
+>>
+>
+> The code is trivial, but relies on the MSI controller to probe before
+> the PCI bus. What enforces this? How is it making sure that this is not
+> going to break in the next kernel release? As far as I can tell, there
+> is no explicit dependency between the two, making it the whole thing
+> extremely fragile.
+>
+> Thanks,
+>
+>         M.
+> --
+> Jazz is not dead. It just smells funny...
 
-I have one Intel 4 port ethernet card(0000:00:01) and MTK WLAN card
-(0000:00:02), probe message looks good to me.
-
-pci 0000:00:01.0: fixup irq: got 224
-pci 0000:00:01.0: assigning IRQ 224
-pci 0000:00:02.0: fixup irq: got 225
-pci 0000:00:02.0: assigning IRQ 225
-
-pci 0000:01:00.0: fixup irq: got 224
-pci 0000:01:00.0: assigning IRQ 224
-pci 0000:01:00.1: fixup irq: got 224
-pci 0000:01:00.1: assigning IRQ 224
-pci 0000:01:00.2: fixup irq: got 224
-pci 0000:01:00.2: assigning IRQ 224
-pci 0000:01:00.3: fixup irq: got 224
-pci 0000:01:00.3: assigning IRQ 224
-
-pci 0000:02:00.0: fixup irq: got 225
-pci 0000:02:00.0: assigning IRQ 225
-
-
-But child nodes without interrupt-map properties:
-It seems incorrect.
-
-pci 0000:00:01.0: fixup irq: got 224
-pci 0000:00:01.0: assigning IRQ 224
-pci 0000:00:02.0: fixup irq: got 225
-pci 0000:00:02.0: assigning IRQ 225
-
-pci 0000:01:00.0: fixup irq: got 223
-pci 0000:01:00.0: assigning IRQ 223
-pci 0000:01:00.1: fixup irq: got 223
-pci 0000:01:00.1: assigning IRQ 223
-pci 0000:01:00.2: fixup irq: got 223
-pci 0000:01:00.2: assigning IRQ 223
-pci 0000:01:00.3: fixup irq: got 223
-pci 0000:01:00.3: assigning IRQ 223
-
-pci 0000:02:00.0: fixup irq: got 223
-pci 0000:02:00.0: assigning IRQ 223
-
-
+-- 
+CONFIDENTIALITY NOTICE: This e-mail message, including any attachments, is 
+for the sole use of the intended recipient(s) and contains information that 
+is confidential and proprietary to Applied Micro Circuits Corporation or 
+its subsidiaries. It is to be used solely for the purpose of furthering the 
+parties' business relationship. All unauthorized review, use, disclosure or 
+distribution is prohibited. If you are not the intended recipient, please 
+contact the sender by reply e-mail and destroy all copies of the original 
+message.
 
 _______________________________________________
 linux-arm-kernel mailing list
