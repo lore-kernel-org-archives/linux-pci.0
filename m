@@ -1,111 +1,330 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout3.hostsharing.net ([176.9.242.54]:41807 "EHLO
-        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756740AbdEYMaa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 25 May 2017 08:30:30 -0400
-Date: Thu, 25 May 2017 14:30:47 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-        Ashok Raj <ashok.raj@intel.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Huang Ying <ying.huang@intel.com>
-Subject: Re: [PATCH] efi/cper: Fix endianness of PCI class code
-Message-ID: <20170525123047.GA4172@wunner.de>
-References: <771bc335fb5856792d086ae7db288dcf244cb4cd.1493964354.git.lukas@wunner.de>
- <CAKv+Gu9PpmTBbSMKUsx6svm6fodV8x=i4b1j8QGapnEoCFcrNA@mail.gmail.com>
- <20170506090755.GB19740@wunner.de>
- <CAKv+Gu_4xHhX8oK847k8=s5S7Mx3sALPTtX8Eo=2+9uZyQoEAQ@mail.gmail.com>
- <20170510084143.GA16261@wunner.de>
- <CAKv+Gu81gvNL1jkb3T35=-5fr_x-BmSg9X2CcQ97xv5JTZ-c1A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAKv+Gu81gvNL1jkb3T35=-5fr_x-BmSg9X2CcQ97xv5JTZ-c1A@mail.gmail.com>
+Received: from mail-qt0-f182.google.com ([209.85.216.182]:33888 "EHLO
+        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752540AbdEEL5g (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 May 2017 07:57:36 -0400
+Received: by mail-qt0-f182.google.com with SMTP id j29so2677339qtj.1
+        for <linux-pci@vger.kernel.org>; Fri, 05 May 2017 04:57:36 -0700 (PDT)
+From: Oza Pawandeep <oza.oza@broadcom.com>
+To: Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>
+Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        devicetree@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
+        Oza Pawandeep <oza.pawandeep@gmail.com>,
+        Oza Pawandeep <oza.oza@broadcom.com>
+Subject: [PATCH v3 3/3] PCI/of fix of_dma_get_range; get PCI specific dma-ranges
+Date: Fri,  5 May 2017 17:27:17 +0530
+Message-Id: <1493985437-2748-3-git-send-email-oza.oza@broadcom.com>
+In-Reply-To: <1493985437-2748-1-git-send-email-oza.oza@broadcom.com>
+References: <1493985437-2748-1-git-send-email-oza.oza@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Thu, May 11, 2017 at 03:06:42PM +0100, Ard Biesheuvel wrote:
-> On 10 May 2017 at 09:41, Lukas Wunner <lukas@wunner.de> wrote:
-> > On Wed, May 10, 2017 at 09:03:11AM +0100, Ard Biesheuvel wrote:
-> >> On 6 May 2017 at 10:07, Lukas Wunner <lukas@wunner.de> wrote:
-> >> > On Sat, May 06, 2017 at 08:46:07AM +0100, Ard Biesheuvel wrote:
-> >> >> On 5 May 2017 at 19:38, Lukas Wunner <lukas@wunner.de> wrote:
-> >> >> > The CPER parser assumes that the class code is big endian, but at least
-> >> >> > on this edk2-derived Intel Purley platform it's little endian:
-> >> > [snip]
-> >> >> > --- a/include/linux/cper.h
-> >> >> > +++ b/include/linux/cper.h
-> >> >> > @@ -416,7 +416,7 @@ struct cper_sec_pcie {
-> >> >> >         struct {
-> >> >> >                 __u16   vendor_id;
-> >> >> >                 __u16   device_id;
-> >> >> > -               __u8    class_code[3];
-> >> >> > +               __u32   class_code:24;
-> >> >>
-> >> >> I'd like to avoid this change if we can. Couldn't we simply invert the
-> >> >> order of p[] above?
-> >> >
-> >> > Hm, why would you like to avoid it?
-> >>
-> >> Because we shouldn't use bitfields in structs in code that should be
-> >> portable across archs with different endiannesses.
-> >
-> > The CPER header is defined in the UEFI spec and UEFI mandates that the
-> > arch is little endian (UEFI r2.6, sec. 2.3.5, 2.3.6).
-> >
-> 
-> No it does not mandate that at all. It mandates how the core should be
-> configured when running in UEFI, but the OS can do anything it likes.
-> 
-> We are still interested in adding limited UEFI support to big endian
-> arm64 in the future (i.e., access to a limited set of firmware tables
-> but no runtime services), and I am not going to merge anything that
-> moves us away from that goal.
-> 
-> > So your argument seems moot to me.  Am I missing something?  Do you
-> > have another argument?
-> >
-> > Moreover, the vendor_id and device_id fields are little endian as well
-> > (PCI r3.0, sec. 6.1), yet there are no provisions in our CPER parser in
-> > drivers/firmware/efi/cper.c to convert them to the endianness of the host.
-> >
-> 
-> Indeed. I am aware we will need to add various endian-neutral
-> accessors in the future.
-> 
-> >> >  The class_code element isn't
-> >> > referenced anywhere else in the kernel and this isn't a uapi header,
-> >> > so the change would only impact out-of-tree drivers.  Not sure if
-> >> > any exist which might be interested in CPER parsing.
-> >> >
-> >>
-> >> The point is that the change in the struct definition is simply not
-> >> necessary, given that inverting the order of p[] already achieves
-> >> exactly what we want.
-> >
-> > It seems clumsy and unnecessary to me so I'd prefer the bitfield.
-> > Please excuse my stubbornness.
-> >
-> 
-> Stubbornness alone is not going to convince me. What *could* convince
-> me (although unlikely) is a quote from the C spec which explains why
-> it is 100% legal to make assumptions about how bitfields are projected
-> onto byte locations in memory.
+current device framework and OF framework integration assumes
+dma-ranges in a way where memory-mapped devices define their
+dma-ranges. (child-bus-address, parent-bus-address, length).
 
-All structs in cper.h are declared "packed", so what you're asking for
-isn't defined in the C spec but in the GCC documentation:
+of_dma_configure is specifically written to take care of memory
+mapped devices. but no implementation exists for pci to take
+care of pcie based memory ranges.
 
-   "The packed attribute specifies that a variable or structure field
-    should have the smallest possible alignment -- one byte for a variable,
-    and one bit for a field, unless you specify a larger value with the
-    aligned attribute."
+for e.g. iproc based SOCs and other SOCs(suc as rcar) have PCI
+world dma-ranges.
+dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
 
-So I maintain that the patch is fine, but you'll need to use le32_to_cpu(),
-le16_to_cpu() etc both for the class_code changed by the patch as well as
-all the other members of the struct not touched by the patch when adding
-"endianness mixed mode" for aarch64.
+this patch fixes the bug in of_dma_get_range, which with as is,
+parses the PCI memory ranges and return wrong size as 0.
 
-Thanks,
+in order to get largest possible dma_mask. this patch also
+retuns the largest possible size based on dma-ranges,
 
-Lukas
+for e.g.
+dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
+we should get dev->coherent_dma_mask=0x7fffffffff.
+
+based on which IOVA allocation space will honour PCI host
+bridge limitations.
+
+the implementation hooks bus specific callbacks for getting
+dma-ranges.
+
+Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
+
+diff --git a/drivers/of/address.c b/drivers/of/address.c
+index 02b2903..cc0fc28 100644
+--- a/drivers/of/address.c
++++ b/drivers/of/address.c
+@@ -6,6 +6,7 @@
+ #include <linux/ioport.h>
+ #include <linux/module.h>
+ #include <linux/of_address.h>
++#include <linux/of_pci.h>
+ #include <linux/pci.h>
+ #include <linux/pci_regs.h>
+ #include <linux/sizes.h>
+@@ -46,6 +47,8 @@ struct of_bus {
+ 				int na, int ns, int pna);
+ 	int		(*translate)(__be32 *addr, u64 offset, int na);
+ 	unsigned int	(*get_flags)(const __be32 *addr);
++	int		(*get_dma_ranges)(struct device_node *np,
++					  u64 *dma_addr, u64 *paddr, u64 *size);
+ };
+ 
+ /*
+@@ -171,6 +174,146 @@ static int of_bus_pci_translate(__be32 *addr, u64 offset, int na)
+ {
+ 	return of_bus_default_translate(addr + 1, offset, na - 1);
+ }
++
++static int of_bus_pci_get_dma_ranges(struct device_node *np, u64 *dma_addr,
++				     u64 *paddr, u64 *size)
++{
++	struct device_node *node = of_node_get(np);
++	int ret = 0;
++	struct resource_entry *window;
++	LIST_HEAD(res);
++
++	if (!node)
++		return -EINVAL;
++
++	if (of_bus_pci_match(np)) {
++		*size = 0;
++		/*
++		 * PCI dma-ranges is not mandatory property.
++		 * many devices do no need to have it, since
++		 * host bridge does not require inbound memory
++		 * configuration or rather have design limitations.
++		 * so we look for dma-ranges, if missing we
++		 * just return the caller full size, and also
++		 * no dma-ranges suggests that, host bridge allows
++		 * whatever comes in, so we set dma_addr to 0.
++		 */
++		ret = of_pci_get_dma_ranges(np, &res);
++		if (!ret) {
++			resource_list_for_each_entry(window, &res) {
++			struct resource *res_dma = window->res;
++
++			if (*size < resource_size(res_dma)) {
++				*dma_addr = res_dma->start - window->offset;
++				*paddr = res_dma->start;
++				*size = resource_size(res_dma);
++				}
++			}
++		}
++		pci_free_resource_list(&res);
++
++		/*
++		 * return the largest possible size,
++		 * since PCI master allows everything.
++		 */
++		if (*size == 0) {
++			pr_debug("empty/zero size dma-ranges found for node(%s)\n",
++				np->full_name);
++			*size = DMA_BIT_MASK(sizeof(dma_addr_t) * 8) - 1;
++			*dma_addr = *paddr = 0;
++			ret = 0;
++		}
++
++		pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
++			 *dma_addr, *paddr, *size);
++	}
++
++	of_node_put(node);
++
++	return ret;
++}
++
++static int get_dma_ranges(struct device_node *np, u64 *dma_addr,
++		          u64 *paddr, u64 *size)
++{
++	struct device_node *node = of_node_get(np);
++	const __be32 *ranges = NULL;
++	int len, naddr, nsize, pna;
++	int ret = 0;
++	u64 dmaaddr;
++
++	if (!node)
++		return -EINVAL;
++
++	while (1) {
++		naddr = of_n_addr_cells(node);
++		nsize = of_n_size_cells(node);
++		node = of_get_next_parent(node);
++		if (!node)
++			break;
++
++		ranges = of_get_property(node, "dma-ranges", &len);
++
++		/* Ignore empty ranges, they imply no translation required */
++		if (ranges && len > 0)
++			break;
++
++		/*
++		 * At least empty ranges has to be defined for parent node if
++		 * DMA is supported
++		 */
++		if (!ranges)
++			break;
++	}
++
++	if (!ranges) {
++		pr_debug("no dma-ranges found for node(%s)\n", np->full_name);
++		ret = -ENODEV;
++		goto out;
++	}
++
++	len /= sizeof(u32);
++
++	pna = of_n_addr_cells(node);
++
++	/* dma-ranges format:
++	 * DMA addr	: naddr cells
++	 * CPU addr	: pna cells
++	 * size		: nsize cells
++	 */
++	dmaaddr = of_read_number(ranges, naddr);
++	*paddr = of_translate_dma_address(np, ranges);
++	if (*paddr == OF_BAD_ADDR) {
++		pr_err("translation of DMA address(%pad) to CPU address failed node(%s)\n",
++		       dma_addr, np->full_name);
++		ret = -EINVAL;
++		goto out;
++	}
++	*dma_addr = dmaaddr;
++
++	*size = of_read_number(ranges + naddr + pna, nsize);
++
++	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
++		 *dma_addr, *paddr, *size);
++
++out:
++	of_node_put(node);
++
++	return ret;
++}
++
++static int of_bus_isa_get_dma_ranges(struct device_node *np, u64 *dma_addr,
++				     u64 *paddr, u64 *size)
++{
++	return get_dma_ranges(np, dma_addr, paddr, size);
++}
++
++static int of_bus_default_get_dma_ranges(struct device_node *np, u64 *dma_addr,
++					 u64 *paddr, u64 *size)
++{
++	return get_dma_ranges(np, dma_addr, paddr, size);
++}
++
+ #endif /* CONFIG_OF_ADDRESS_PCI */
+ 
+ #ifdef CONFIG_PCI
+@@ -424,6 +567,7 @@ static unsigned int of_bus_isa_get_flags(const __be32 *addr)
+ 		.map = of_bus_pci_map,
+ 		.translate = of_bus_pci_translate,
+ 		.get_flags = of_bus_pci_get_flags,
++		.get_dma_ranges = of_bus_pci_get_dma_ranges,
+ 	},
+ #endif /* CONFIG_OF_ADDRESS_PCI */
+ 	/* ISA */
+@@ -435,6 +579,7 @@ static unsigned int of_bus_isa_get_flags(const __be32 *addr)
+ 		.map = of_bus_isa_map,
+ 		.translate = of_bus_isa_translate,
+ 		.get_flags = of_bus_isa_get_flags,
++		.get_dma_ranges = of_bus_isa_get_dma_ranges,
+ 	},
+ 	/* Default */
+ 	{
+@@ -445,6 +590,7 @@ static unsigned int of_bus_isa_get_flags(const __be32 *addr)
+ 		.map = of_bus_default_map,
+ 		.translate = of_bus_default_translate,
+ 		.get_flags = of_bus_default_get_flags,
++		.get_dma_ranges = of_bus_default_get_dma_ranges,
+ 	},
+ };
+ 
+@@ -820,74 +966,20 @@ void __iomem *of_io_request_and_map(struct device_node *np, int index,
+  *	size			: nsize cells
+  *
+  * It returns -ENODEV if "dma-ranges" property was not found
+- * for this device in DT.
++ * for this device in DT, except if PCI device then, dma-ranges
++ * can be optional property, and in that case returns size with
++ * entire host memory.
+  */
+ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *size)
+ {
+-	struct device_node *node = of_node_get(np);
+-	const __be32 *ranges = NULL;
+-	int len, naddr, nsize, pna;
+-	int ret = 0;
+-	u64 dmaaddr;
+-
+-	if (!node)
+-		return -EINVAL;
+-
+-	while (1) {
+-		naddr = of_n_addr_cells(node);
+-		nsize = of_n_size_cells(node);
+-		node = of_get_next_parent(node);
+-		if (!node)
+-			break;
+-
+-		ranges = of_get_property(node, "dma-ranges", &len);
+-
+-		/* Ignore empty ranges, they imply no translation required */
+-		if (ranges && len > 0)
+-			break;
+-
+-		/*
+-		 * At least empty ranges has to be defined for parent node if
+-		 * DMA is supported
+-		 */
+-		if (!ranges)
+-			break;
+-	}
+-
+-	if (!ranges) {
+-		pr_debug("no dma-ranges found for node(%s)\n", np->full_name);
+-		ret = -ENODEV;
+-		goto out;
+-	}
+-
+-	len /= sizeof(u32);
+-
+-	pna = of_n_addr_cells(node);
+-
+-	/* dma-ranges format:
+-	 * DMA addr	: naddr cells
+-	 * CPU addr	: pna cells
+-	 * size		: nsize cells
+-	 */
+-	dmaaddr = of_read_number(ranges, naddr);
+-	*paddr = of_translate_dma_address(np, ranges);
+-	if (*paddr == OF_BAD_ADDR) {
+-		pr_err("translation of DMA address(%pad) to CPU address failed node(%s)\n",
+-		       dma_addr, np->full_name);
+-		ret = -EINVAL;
+-		goto out;
+-	}
+-	*dma_addr = dmaaddr;
+-
+-	*size = of_read_number(ranges + naddr + pna, nsize);
+-
+-	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
+-		 *dma_addr, *paddr, *size);
++	struct of_bus *bus;
+ 
+-out:
+-	of_node_put(node);
++	/* get bus specific dma-ranges. */
++	bus = of_match_bus(np);
++	if (bus->get_dma_ranges)
++		return bus->get_dma_ranges(np, dma_addr, paddr, size);
+ 
+-	return ret;
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(of_dma_get_range);
+ 
+-- 
+1.9.1
