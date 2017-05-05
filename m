@@ -1,39 +1,77 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:51496 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1161578AbdEYACx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 20:02:53 -0400
-Date: Wed, 24 May 2017 20:02:49 -0400 (EDT)
-Message-Id: <20170524.200249.1492095559302424098.davem@davemloft.net>
-To: myron.stowe@redhat.com
-Cc: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
-        bhelgaas@google.com, saeedm@mellanox.com, noaos@mellanox.com,
-        tariqt@mellanox.com
-Subject: Re: [PATCH 0/2] Replace driver's usage of hard-coded device IDs to
- #defines
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20170524224734.24221.33787.stgit@amt.stowe>
-References: <20170524224734.24221.33787.stgit@amt.stowe>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mailout3.hostsharing.net ([176.9.242.54]:50299 "EHLO
+        mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754954AbdEESis (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 May 2017 14:38:48 -0400
+Message-Id: <771bc335fb5856792d086ae7db288dcf244cb4cd.1493964354.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 5 May 2017 20:38:38 +0200
+Subject: [PATCH] efi/cper: Fix endianness of PCI class code
+To: linux-efi@vger.kernel.org, Ashok Raj <ashok.raj@intel.com>
+Cc: linux-pci@vger.kernel.org, Huang Ying <ying.huang@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Myron Stowe <myron.stowe@redhat.com>
-Date: Wed, 24 May 2017 16:47:34 -0600
+The CPER parser assumes that the class code is big endian, but at least
+on this edk2-derived Intel Purley platform it's little endian:
 
-> Noa Osherovich introduced a series of new Mellanox device ID definitions to
-> help differentiate specific controllers that needed INTx masking quirks [1].
-> 
-> Bjorn Helgaas followed on, using the device ID definitions Noa provided to
-> replace hard-coded values within the mxl4 ID table [2].
->     
-> This patch continues along similar lines, adding a few additional Mellanox
-> device ID definitions and converting the net/mlx5e driver's mlx5 ID table to
-> use the defines so tools like 'grep' and 'cscope' can be used to help
-> identify relationships with other aspects (such as INTx masking).
+    efi: EFI v2.50 by EDK II BIOS ID:PLYDCRB1.86B.0119.R05.1701181843
+    DMI: Intel Corporation PURLEY/PURLEY, BIOS PLYDCRB1.86B.0119.R05.1701181843 01/18/2017
 
-If you're adding pci_ids.h defines, it's only valid to do so if you
-actually use the defines in more than one location.
+    {1}[Hardware Error]:   device_id: 0000:5d:00.0
+    {1}[Hardware Error]:   slot: 0
+    {1}[Hardware Error]:   secondary_bus: 0x5e
+    {1}[Hardware Error]:   vendor_id: 0x8086, device_id: 0x2030
+    {1}[Hardware Error]:   class_code: 000406
+                                       ^^^^^^ (should be 060400)
 
-This patch series is not doing that.
+Cc: Huang Ying <ying.huang@intel.com>
+Cc: Ashok Raj <ashok.raj@intel.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+
+@Ashok Raj: Could you test if this patch results in the correct
+PCI class being logged? Thanks!
+
+ drivers/firmware/efi/cper.c | 5 ++---
+ include/linux/cper.h        | 2 +-
+ 2 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/firmware/efi/cper.c b/drivers/firmware/efi/cper.c
+index d42537425438..e360c8b77bd9 100644
+--- a/drivers/firmware/efi/cper.c
++++ b/drivers/firmware/efi/cper.c
+@@ -364,7 +364,6 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 		printk("%s""command: 0x%04x, status: 0x%04x\n", pfx,
+ 		       pcie->command, pcie->status);
+ 	if (pcie->validation_bits & CPER_PCIE_VALID_DEVICE_ID) {
+-		const __u8 *p;
+ 		printk("%s""device_id: %04x:%02x:%02x.%x\n", pfx,
+ 		       pcie->device_id.segment, pcie->device_id.bus,
+ 		       pcie->device_id.device, pcie->device_id.function);
+@@ -374,8 +373,8 @@ static void cper_print_pcie(const char *pfx, const struct cper_sec_pcie *pcie,
+ 		       pcie->device_id.secondary_bus);
+ 		printk("%s""vendor_id: 0x%04x, device_id: 0x%04x\n", pfx,
+ 		       pcie->device_id.vendor_id, pcie->device_id.device_id);
+-		p = pcie->device_id.class_code;
+-		printk("%s""class_code: %02x%02x%02x\n", pfx, p[0], p[1], p[2]);
++		printk("%s""class_code: 0x%06x\n", pfx,
++		       pcie->device_id.class_code);
+ 	}
+ 	if (pcie->validation_bits & CPER_PCIE_VALID_SERIAL_NUMBER)
+ 		printk("%s""serial number: 0x%04x, 0x%04x\n", pfx,
+diff --git a/include/linux/cper.h b/include/linux/cper.h
+index dcacb1a72e26..fbfb50f52362 100644
+--- a/include/linux/cper.h
++++ b/include/linux/cper.h
+@@ -416,7 +416,7 @@ struct cper_sec_pcie {
+ 	struct {
+ 		__u16	vendor_id;
+ 		__u16	device_id;
+-		__u8	class_code[3];
++		__u32	class_code:24;
+ 		__u8	function;
+ 		__u8	device;
+ 		__u16	segment;
+-- 
+2.11.0
