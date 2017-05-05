@@ -1,110 +1,73 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:45035 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750932AbdEERzs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 5 May 2017 13:55:48 -0400
+Date: Fri, 5 May 2017 10:55:27 -0700
+From: Greg KH <greg@kroah.com>
+To: Juergen Gross <jgross@suse.com>
+Cc: stable@vger.kernel.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stefano Stabellini <stefano.stabellini@eu.citrix.com>,
+        Julien Grall <julien.grall@citrix.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Ross Lagerwall <ross.lagerwall@citrix.com>,
+        xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, Anthony Liguori <aliguori@amazon.com>,
+        KarimAllah Ahmed <karahmed@amazon.de>
+Subject: Re: [stable-4.9: PATCH] xen: revert commit 72a9b186292
+Message-ID: <20170505175527.GG11379@kroah.com>
+References: <007284c8-0c55-f8d9-b4a9-8bdb1daa4732@suse.com>
 MIME-Version: 1.0
-In-Reply-To: <1493786795-28153-3-git-send-email-oza.oza@broadcom.com>
-References: <1493786795-28153-1-git-send-email-oza.oza@broadcom.com>
- <1493786795-28153-3-git-send-email-oza.oza@broadcom.com>
-From: Rob Herring <robh@kernel.org>
-Date: Wed, 3 May 2017 15:06:27 -0500
-Message-ID: <CAL_JsqL+rK1QZD12cHWwWL9=wrwQ34FiaQ7syz4YVs571X5mKQ@mail.gmail.com>
-Subject: Re: [PATCH 3/3] PCI/of fix of_dma_get_range;
- get PCI specific dma-ranges
-To: Oza Pawandeep <oza.oza@broadcom.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- Oza Pawandeep <oza.pawandeep@gmail.com>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- Joerg Roedel <joro@8bytes.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Linux IOMMU <iommu@lists.linux-foundation.org>,
- "bcm-kernel-feedback-list@broadcom.com"
- <bcm-kernel-feedback-list@broadcom.com>, Robin Murphy <robin.murphy@arm.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <007284c8-0c55-f8d9-b4a9-8bdb1daa4732@suse.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 2, 2017 at 11:46 PM, Oza Pawandeep <oza.oza@broadcom.com> wrote:
-> current device framework and of framework integration assumes
-> dma-ranges in a way where memory-mapped devices define their
-> dma-ranges. (child-bus-address, parent-bus-address, length).
->
-> of_dma_configure is specifically written to take care of memory
-> mapped devices. but no implementation exists for pci to take
-> care of pcie based memory ranges.
->
-> for e.g. iproc based SOCs and other SOCs(suc as rcar) have PCI
-> world dma-ranges.
-> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
->
-> this patch fixes this patch fixes the bug in of_dma_get_range,
-> which with as is, parses the PCI memory ranges and return wrong
-> size as 0.
->
-> in order to get largest possible dma_mask. this patch also
-> retuns the largest possible size based on dma-ranges,
->
-> for e.g.
-> dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
-> we should get dev->coherent_dma_mask=0x7fffffffff.
->
-> based on which iova allocation space will honour PCI host
-> bridge limitations.
->
-> Bug: SOC-5216
-> Change-Id: I4c534bdd17e70c6b27327d39d1656e8ed0cf56d6
-> Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-> Reviewed-on: http://gerrit-ccxsw.broadcom.net/40762
-> Reviewed-by: vpx_checkpatch status <vpx_checkpatch@broadcom.com>
-> Reviewed-by: CCXSW <ccxswbuild@broadcom.com>
-> Reviewed-by: Scott Branden <scott.branden@broadcom.com>
-> Tested-by: vpx_autobuild status <vpx_autobuild@broadcom.com>
-> Tested-by: vpx_smoketest status <vpx_smoketest@broadcom.com>
->
-> diff --git a/drivers/of/address.c b/drivers/of/address.c
-> index 02b2903..f7734fc 100644
-> --- a/drivers/of/address.c
-> +++ b/drivers/of/address.c
-> @@ -6,6 +6,7 @@
->  #include <linux/ioport.h>
->  #include <linux/module.h>
->  #include <linux/of_address.h>
-> +#include <linux/of_pci.h>
->  #include <linux/pci.h>
->  #include <linux/pci_regs.h>
->  #include <linux/sizes.h>
-> @@ -830,6 +831,54 @@ int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *siz
->         int ret = 0;
->         u64 dmaaddr;
->
-> +#ifdef CONFIG_PCI
-> +       struct resource_entry *window;
-> +       LIST_HEAD(res);
-> +
-> +       if (!node)
-> +               return -EINVAL;
-> +
-> +       if (of_bus_pci_match(np)) {
+On Fri, May 05, 2017 at 09:59:15AM +0200, Juergen Gross wrote:
+> Revert commit 72a9b186292 ("xen: Remove event channel notification
+> through Xen PCI platform device") as the original analysis was wrong
+> that all the removed code isn't in use any more.
+> 
+> It is still necessary for old Xen versions (< 4.0) and for being able
+> to run the Linux kernel as dom0 in a nested Xen environment.
+> 
+> Upstream commit is 84d582d236dc1f9085e741affc72e9ba061a67c2.
+> 
+> Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: Ingo Molnar <mingo@redhat.com>
+> Cc: "H. Peter Anvin" <hpa@zytor.com>
+> Cc: x86@kernel.org
+> Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Stefano Stabellini <stefano.stabellini@eu.citrix.com>
+> Cc: Julien Grall <julien.grall@citrix.com>
+> Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+> Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+> Cc: Ross Lagerwall <ross.lagerwall@citrix.com>
+> Cc: xen-devel@lists.xenproject.org
+> Cc: linux-kernel@vger.kernel.org
+> Cc: linux-pci@vger.kernel.org
+> Cc: Anthony Liguori <aliguori@amazon.com>
+> Cc: KarimAllah Ahmed <karahmed@amazon.de>
+> Signed-off-by: Juergen Gross <jgross@suse.com>
+> ---
+> Please apply to stable-4.9.y
+> ---
+>  arch/x86/include/asm/xen/events.h | 11 +++++++
+>  arch/x86/pci/xen.c                |  2 +-
+>  arch/x86/xen/enlighten.c          | 21 +++++++++----
+>  arch/x86/xen/smp.c                |  2 ++
+>  arch/x86/xen/time.c               |  5 +++
+>  drivers/xen/events/events_base.c  | 26 ++++++++++------
+>  drivers/xen/platform-pci.c        | 64
+> +++++++++++++++++++++++++++++++++++++++
 
-You are not following what I'm saying. Let me spell it out:
-
-- Add a get_dma_ranges() function to of_bus struct. Or maybe should
-cover ranges too (e.g. get_ranges). I'm not sure.
-- Convert existing contents of this function to
-of_bus_default_dma_get_ranges and add that to the default of_bus
-struct.
-- Make of_dma_get_range call of_bus_match() and then bus->get_dma_ranges.
-
-Rob
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Yup, also linewrapped :(
