@@ -1,63 +1,78 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Sricharan R <sricharan@codeaurora.org>
-To: robin.murphy@arm.com, will.deacon@arm.com, joro@8bytes.org,
- lorenzo.pieralisi@arm.com, iommu@lists.linux-foundation.org,
- linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
- m.szyprowski@samsung.com, bhelgaas@google.com, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, tn@semihalf.com, hanjun.guo@linaro.org,
- okaya@codeaurora.org, robh+dt@kernel.org, frowand.list@gmail.com,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
- catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
- gregkh@linuxfoundation.org
-Subject: [PATCH] iommu: of: Fix check for returning EPROBE_DEFER
-Date: Tue, 16 May 2017 10:54:13 +0530
-Message-Id: <1494912253-25957-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: sricharan@codeaurora.org
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1493976265.30052.21.camel@linux.intel.com>
+References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+ <CAPcyv4jzD0MEBRNTwTokVzgdDWas682ArUjRAGT1hp=QRE8Pjg@mail.gmail.com>
+ <CAOQ4uxjha8_2_HwgdgBN=G-vNytAW5Gk155E9z8OWyFiGNEZVw@mail.gmail.com> <1493976265.30052.21.camel@linux.intel.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Fri, 5 May 2017 12:50:31 +0300
+Message-ID: <CAOQ4uxjErce01+xyDnM=nCJS+avQ4g6hQVvH3fVotj7Ws2moCQ@mail.gmail.com>
+Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Dan Williams <dan.j.williams@intel.com>,
+        Linux ACPI <linux-acpi@vger.kernel.org>,
+        tpmdd-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
+        nouveau@lists.freedesktop.org, linux-input@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-mmc@vger.kernel.org,
+        Netdev <netdev@vger.kernel.org>, linux-pci@vger.kernel.org,
+        USB list <linux-usb@vger.kernel.org>,
+        alsa-devel@alsa-project.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Borislav Petkov <bp@suse.de>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-While returning EPROBE_DEFER for iommu masters
-take in to account of iommu nodes that could be
-marked in DT as 'status=disabled', in which case
-simply return NULL and let the master's probe
-continue rather than deferring.
+On Fri, May 5, 2017 at 12:24 PM, Andy Shevchenko
+<andriy.shevchenko@linux.intel.com> wrote:
+> On Fri, 2017-05-05 at 10:06 +0300, Amir Goldstein wrote:
+[...]
+>> I think with this semantic change, our proposals can reach common
+>> grounds
+>> and satisfy a wider group of users (i.e. filesystem developers).
+>>
+>> Christoph also suggested a similar treatment to typedef guid_t to
+>> struct uuid_le.
+>> I don't know the use cases enough to comment on that.
+>
+> We may go this way. But I wouldn't prevent current users of uuid_le to
+> continue using it without conversion (it may be done case by case after
+> we settle an API)
+>
+> So, summarize what Christoph said it will look like
+>
+> typedef uuid_be uuid_t;
+> typedef uuid_le guid_t
+>
+> uuid_cmp() / uuid_copy() / uuid_to_bin() / etc
+> guid_cmp() / guid_copy() / guid_to_bin() / etc
+>
+> Correct? Christoph?
+>
 
-Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-Tested-by: Will Deacon <will.deacon@arm.com>
-Acked-by: Will Deacon <will.deacon@arm.com>
----
- drivers/iommu/of_iommu.c | 1 +
- 1 file changed, 1 insertion(+)
+That looks right to me.
 
-diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-index 9f44ee8..e6e9bec 100644
---- a/drivers/iommu/of_iommu.c
-+++ b/drivers/iommu/of_iommu.c
-@@ -118,6 +118,7 @@ static bool of_iommu_driver_present(struct device_node *np)
- 
- 	ops = iommu_ops_from_fwnode(fwnode);
- 	if ((ops && !ops->of_xlate) ||
-+	    !of_device_is_available(iommu_spec->np) ||
- 	    (!ops && !of_iommu_driver_present(iommu_spec->np)))
- 		return NULL;
- 
--- 
-QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
+To complete the picture for folks not cc'ed on my patches,
+xfs use case suggests there is also justification for the additional helpers:
 
+uuid_is_null() / uuid_equal()
+guid_is_null() / guid_equal()
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Cheers,
+Amir.
