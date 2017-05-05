@@ -1,137 +1,110 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49482 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1033205AbdEXVyD (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 24 May 2017 17:54:03 -0400
-Received: from [10.228.68.174] (global_nat1_iad_fw.qualcomm.com [129.46.232.65])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: okaya@smtp.codeaurora.org)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 856A1608C5
-        for <linux-pci@vger.kernel.org>; Wed, 24 May 2017 21:54:01 +0000 (UTC)
-To: Linux PCI <linux-pci@vger.kernel.org>
-From: Sinan Kaya <okaya@codeaurora.org>
-Subject: PCI Secondary Bus Reset Analysis
-Message-ID: <a6d9150a-d975-36d7-fffc-8b16c52c0f20@codeaurora.org>
-Date: Wed, 24 May 2017 17:54:00 -0400
+Return-Path: <linux-acpi-owner@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 4 May 2017 23:20:08 -0700
+Message-ID: <CAPcyv4jzD0MEBRNTwTokVzgdDWas682ArUjRAGT1hp=QRE8Pjg@mail.gmail.com>
+Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Linux ACPI <linux-acpi@vger.kernel.org>,
+        tpmdd-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
+        nouveau@lists.freedesktop.org, linux-input@vger.kernel.org,
+        iommu@lists.linux-foundation.org, linux-mmc@vger.kernel.org,
+        Netdev <netdev@vger.kernel.org>, linux-pci@vger.kernel.org,
+        USB list <linux-usb@vger.kernel.org>,
+        alsa-devel@alsa-project.org,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Borislav Petkov <bp@suse.de>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Felipe Balbi <balbi@kernel.org>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I have been surveying the code path to see if we are saving and restoring the
-device settings following secondary bus reset. I have done this work before. 
-I wanted to have some fresh eyes on this problem. 
+On Thu, May 4, 2017 at 2:21 AM, Andy Shevchenko
+<andriy.shevchenko@linux.intel.com> wrote:
+> acpi_evaluate_dsm() and friends take a pointer to a raw buffer of 16
+> bytes. Instead we convert them to use uuid_le type. At the same time we
+> convert current users.
+>
+> acpi_str_to_uuid() becomes useless after the conversion and it's safe to
+> get rid of it.
+>
+> The conversion fixes a potential bug in int340x_thermal as well since
+> we have to use memcmp() on binary data.
+>
+> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Borislav Petkov <bp@suse.de>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Amir Goldstein <amir73il@gmail.com>
+> Cc: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
+> Cc: Jani Nikula <jani.nikula@linux.intel.com>
+> Cc: Ben Skeggs <bskeggs@redhat.com>
+> Cc: Benjamin Tissoires <benjamin.tissoires@redhat.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Adrian Hunter <adrian.hunter@intel.com>
+> Cc: Yisen Zhuang <yisen.zhuang@huawei.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Zhang Rui <rui.zhang@intel.com>
+> Cc: Felipe Balbi <balbi@kernel.org>
+> Cc: Mathias Nyman <mathias.nyman@intel.com>
+> Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> Cc: Liam Girdwood <lgirdwood@gmail.com>
+> Cc: Mark Brown <broonie@kernel.org>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+[..]
+> diff --git a/drivers/acpi/nfit/core.c b/drivers/acpi/nfit/core.c
+> index 0f7982a1caaf..bd3e45ede056 100644
+> --- a/drivers/acpi/nfit/core.c
+> +++ b/drivers/acpi/nfit/core.c
+> @@ -74,11 +74,11 @@ struct nfit_table_prev {
+>         struct list_head flushes;
+>  };
+>
+> -static u8 nfit_uuid[NFIT_UUID_MAX][16];
+> +static uuid_le nfit_uuid[NFIT_UUID_MAX];
+>
+> -const u8 *to_nfit_uuid(enum nfit_uuids id)
+> +const uuid_le *to_nfit_uuid(enum nfit_uuids id)
+>  {
+> -       return nfit_uuid[id];
+> +       return &nfit_uuid[id];
+>  }
+>  EXPORT_SYMBOL(to_nfit_uuid);
+>
+> @@ -207,7 +207,7 @@ int acpi_nfit_ctl(struct nvdimm_bus_descriptor *nd_desc, struct nvdimm *nvdimm,
+>         u32 offset, fw_status = 0;
+>         acpi_handle handle;
+>         unsigned int func;
+> -       const u8 *uuid;
+> +       const uuid_le *uuid;
+>         int rc, i;
+>
+>         func = cmd;
+> @@ -394,7 +394,7 @@ int nfit_spa_type(struct acpi_nfit_system_address *spa)
+>         int i;
+>
+>         for (i = 0; i < NFIT_UUID_MAX; i++)
+> -               if (memcmp(to_nfit_uuid(i), spa->range_guid, 16) == 0)
+> +               if (!uuid_le_cmp_pp(to_nfit_uuid(i), (uuid_le *)spa->range_guid))
 
-Here is what I found:
+What is _cmp_pp? Why not _compare?
 
-handle_error_source()
-	do_recovery()
-		reset_link()
-			default_reset_link()
-				pci_reset_bridge_secondary_bus
-handle_error_source()
-	do_recovery()
-		reset_link()
-			aer_root_reset()
-				Disable Root's interrupt in response to error messages (ROOT_PORT_INTR_ON_MESG_MASK)
-				pci_reset_bridge_secondary_bus()
-				Clear Root Error Status
-				Enable Root Port's interrupt in response to error messages	(ROOT_PORT_INTR_ON_MESG_MASK)
-
-vfio_pci_disable()
-	vfio_pci_try_bus_reset()
-		pci_try_reset_bus()
-			pci_bus_save_and_disable()
-				pci_set_power_state(D0)
-				pci_save_state()
-					Save the first 64 bytes
-					pci_save_pcie_state()
-					        pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &cap[i++]);
-						pcie_capability_read_word(dev, PCI_EXP_LNKCTL, &cap[i++]);
-						pcie_capability_read_word(dev, PCI_EXP_SLTCTL, &cap[i++]);
-						pcie_capability_read_word(dev, PCI_EXP_RTCTL,  &cap[i++]);
-						pcie_capability_read_word(dev, PCI_EXP_DEVCTL2, &cap[i++]);
-						pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &cap[i++]);
-						pcie_capability_read_word(dev, PCI_EXP_SLTCTL2, &cap[i++]);
-					pci_save_vc_state()
-				pci_write_config_word(dev, PCI_COMMAND, PCI_COMMAND_INTX_DISABLE);
-			pci_reset_bridge_secondary_bus()
-			pci_bus_restore()
-				pci_restore_pcie_state()
-				pci_restore_ats_state()
-				pci_restore_vc_state()
-				pci_cleanup_aer_error_status_regs()
-				pci_restore_config_space()
-				pci_restore_msi_state()
-				pci_enable_acs()
-				pci_restore_iov_state()
-
-vfio_pci_ioctl()
-	pci_try_reset_bus()
-		pci_bus_save_and_disable()
-		pci_reset_bridge_secondary_bus()
-		pci_bus_restore()
-
-pci_reset_bus()
-	pci_bus_save_and_disable()
-	pci_bus_reset()
-		pci_reset_bridge_secondary_bus()
-	pci_bus_restore()
-
-pci_reset_function()
-	pci_dev_save_and_disable()
-	pci_dev_reset()
-		__pci_dev_reset()
-			pci_parent_bus_reset()
-				pci_reset_bridge_secondary_bus()
-	pci_dev_restore()
-
-pcistub_device_release()
-	__pci_reset_function_locked()
-		__pci_dev_reset()
-			pci_parent_bus_reset()
-				pci_reset_bridge_secondary_bus()
-	pci_restore_state(dev)
-
-pci_try_reset_function()
-	pci_dev_save_and_disable()
-	__pci_dev_reset()
-		pci_parent_bus_reset()
-			pci_reset_bridge_secondary_bus()
-	pci_dev_restore()
-
-pci_reset_slot()
-	pci_slot_save_and_disable()
-	pci_slot_reset()
-		pci_reset_hotplug_slot()
-			reset_slot()
-				pciehp_reset_slot()
-					pci_reset_bridge_secondary_bus()
-	pci_slot_restore()
-
-pci_try_reset_slot()
-	pci_slot_save_and_disable()
-	pci_reset_hotplug_slot()
-		reset_slot()
-			pciehp_reset_slot()
-				pci_reset_bridge_secondary_bus()
-	pci_slot_restore()
-
-trigger_sbr()
-	pci_reset_bridge_secondary_bus()
-
-
-The summary is:
-1. AER doesn't save and restore the bus state. 
-2. pci_reset_function() and pci_try_reset_function() saves and restores
-device state but it can actually reset the bus without restoring other device states.
-3. trigger_sbr() doesn't save anything. 
-
-I can submit some patches to pick up from where I left but I wanted to hear other's opinion
-on what the behavior should be and if I missed something.
-
--- 
-Sinan Kaya
-Qualcomm Datacenter Technologies, Inc. as an affiliate of Qualcomm Technologies, Inc.
-Qualcomm Technologies, Inc. is a member of the Code Aurora Forum, a Linux Foundation Collaborative Project.
+Other than that, looks ok to me.
