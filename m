@@ -1,108 +1,121 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-From: Felipe Balbi <balbi@kernel.org>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        linux-acpi@vger.kernel.org, tpmdd-devel@lists.sourceforge.net,
-        intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
-        linux-input@vger.kernel.org, iommu@lists.linux-foundation.org,
-        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
-        alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Borislav Petkov <bp@suse.de>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Amir Goldstein <amir73il@gmail.com>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>
-Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
-In-Reply-To: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
-References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
-Date: Tue, 09 May 2017 10:56:43 +0300
-Message-ID: <87o9v2jwec.fsf@linux.intel.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:58972 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750859AbdEFMpg (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Sat, 6 May 2017 08:45:36 -0400
+Date: Sat, 6 May 2017 13:45:30 +0100
+From: Marc Zyngier <marc.zyngier@arm.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: <kishon@ti.com>, <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+        <linux-pci@vger.kernel.org>
+Subject: Re: [RFC] pci: using new interrupt API to enable MSI and MSI-X
+Message-ID: <20170506134530.73e014c0@why.wild-wind.fr.eu.org>
+In-Reply-To: <6617cd15-5d79-cad8-879b-a8c953ba9a41@synopsys.com>
+References: <806903036508ae5246084cbc3b796083d76f8917.1493992929.git.jpinto@synopsys.com>
+        <58f3a6ca-a051-a7dc-805f-ee3eb0f3ac3b@arm.com>
+        <6617cd15-5d79-cad8-879b-a8c953ba9a41@synopsys.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-acpi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+On Fri, 5 May 2017 16:54:30 +0100
+Joao Pinto <Joao.Pinto@synopsys.com> wrote:
 
-Hi,
+> Mark,
+> 
+> Às 3:57 PM de 5/5/2017, Marc Zyngier escreveu:
+> > Joao,
+> > 
+> > On 05/05/17 15:11, Joao Pinto wrote:  
+> 
+> snip (...)
+> 
+> > It looks to me like the first mistake is just above. You don't seem to
+> > propagate the mask/unmask operations into the parent domain, so your
+> > interrupts are never enabled... You'd need something like this:
+> > 
+> > diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> > index 28ed32ba4f1b..d42b8b12f168 100644
+> > --- a/drivers/pci/dwc/pcie-designware-host.c
+> > +++ b/drivers/pci/dwc/pcie-designware-host.c
+> > @@ -45,12 +45,22 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+> >  	return dw_pcie_write(pci->dbi_base + where, size, val);
+> >  }
+> >  
+> > +static void dw_msi_mask_irq(struct irq_data *d)
+> > +{
+> > +	pci_msi_mask_irq(d);
+> > +	irq_chip_mask_parent(d);
+> > +}
+> > +
+> > +static void dw_msi_unmask_irq(struct irq_data *d)
+> > +{
+> > +	pci_msi_unmask_irq(d);
+> > +	irq_chip_unmask_parent(d);
+> > +}
+> > +
+> >  static struct irq_chip dw_msi_irq_chip = {
+> >  	.name = "PCI-MSI",
+> > -	.irq_enable = pci_msi_unmask_irq,
+> > -	.irq_disable = pci_msi_mask_irq,
+> > -	.irq_mask = pci_msi_mask_irq,
+> > -	.irq_unmask = pci_msi_unmask_irq,
+> > +	.irq_mask = dw_msi_mask_irq,
+> > +	.irq_unmask = dw_msi_unmask_irq,
+> >  };
+> > 
+> > I haven't dug any further, but this should be fixed first.
+> > 
+> > Thanks,
+> > 
+> > 	M.
+> >   
+> 
+> I added the changes that you suggested and firstly it crashed, and then I found
+> out that in the domain parent structure (dw_pci_msi_bottom_irq_chip) did not
+> have irq_mask and irq_unmask functions. I put it like this, just for testing:
+> 
+> static struct irq_chip dw_pci_msi_bottom_irq_chip = {
+> 	.name			= "DW MSI",
+> 	.irq_compose_msi_msg	= dw_pci_compose_msi_msg,
+> 	.irq_set_affinity	= dw_pci_msi_set_affinity,
+> +	.irq_mask		= pci_msi_mask_irq,
+> +	.irq_unmask		= pci_msi_unmask_irq,
+> };
+> 
+> Maybe irq_mask and irq_unmask should not be pci_msi_mask_irq /
+> pci_msi_unmask_irq, but I did not find any existing case that needed it. Do we
+> have any documentation about IRQ domains that I can check?
 
-Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
-> acpi_evaluate_dsm() and friends take a pointer to a raw buffer of 16
-> bytes. Instead we convert them to use uuid_le type. At the same time we
-> convert current users.
->
-> acpi_str_to_uuid() becomes useless after the conversion and it's safe to
-> get rid of it.
->
-> The conversion fixes a potential bug in int340x_thermal as well since
-> we have to use memcmp() on binary data.
->
-> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
-> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-> Cc: Borislav Petkov <bp@suse.de>
-> Cc: Dan Williams <dan.j.williams@intel.com>
-> Cc: Amir Goldstein <amir73il@gmail.com>
-> Cc: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
-> Cc: Jani Nikula <jani.nikula@linux.intel.com>
-> Cc: Ben Skeggs <bskeggs@redhat.com>
-> Cc: Benjamin Tissoires <benjamin.tissoires@redhat.com>
-> Cc: Joerg Roedel <joro@8bytes.org>
-> Cc: Adrian Hunter <adrian.hunter@intel.com>
-> Cc: Yisen Zhuang <yisen.zhuang@huawei.com>
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Zhang Rui <rui.zhang@intel.com>
-> Cc: Felipe Balbi <balbi@kernel.org>
-> Cc: Mathias Nyman <mathias.nyman@intel.com>
-> Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-> Cc: Liam Girdwood <lgirdwood@gmail.com>
-> Cc: Mark Brown <broonie@kernel.org>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-> index a15ec71d0423..6b5284ec76df 100644
-> --- a/drivers/usb/dwc3/dwc3-pci.c
-> +++ b/drivers/usb/dwc3/dwc3-pci.c
-> @@ -56,7 +56,7 @@ struct dwc3_pci {
->  	struct platform_device *dwc3;
->  	struct pci_dev *pci;
->  
-> -	u8 uuid[16];
-> +	uuid_le uuid;
->  
->  	unsigned int has_dsm_for_pm:1;
->  };
-> @@ -118,7 +118,7 @@ static int dwc3_pci_quirks(struct dwc3_pci *dwc)
->  
->  		if (pdev->device == PCI_DEVICE_ID_INTEL_BXT ||
->  				pdev->device == PCI_DEVICE_ID_INTEL_BXT_M) {
-> -			acpi_str_to_uuid(PCI_INTEL_BXT_DSM_UUID, dwc->uuid);
-> +			uuid_le_to_bin(PCI_INTEL_BXT_DSM_UUID, &dwc->uuid);
->  			dwc->has_dsm_for_pm = true;
->  		}
->  
-> @@ -288,7 +288,7 @@ static int dwc3_pci_dsm(struct dwc3_pci *dwc, int param)
->  	tmp.type = ACPI_TYPE_INTEGER;
->  	tmp.integer.value = param;
->  
-> -	obj = acpi_evaluate_dsm(ACPI_HANDLE(&dwc->pci->dev), dwc->uuid,
-> +	obj = acpi_evaluate_dsm(ACPI_HANDLE(&dwc->pci->dev), &dwc->uuid,
->  			1, PCI_INTEL_BXT_FUNC_PMU_PWR, &argv4);
->  	if (!obj) {
->  		dev_err(&dwc->pci->dev, "failed to evaluate _DSM\n");
+We have some documentation in Documentation/IRQ-domain.txt, though it
+is old an incomplete. But there is enough there to show you your
+mistake. You have two domains:
 
-Acked-by: Felipe Balbi <felipe.balbi@linux.intel.com>
+Top level domain: the PCI-MSI domain, in charge of the PCI-specific
+stuff, and particularly the masking/unmasking of MSIs. That's the
+purpose of the patch above.
 
+Bottom domain: your DW-MSI domain, which is only concerned with the
+details of your piece of HW. Obviously, calling pci_msi*irq is wrong
+there, since it is already called by the top level domain, and is
+hardly HW specific.
+
+So what you need there is the code that masks/unmasks an MSI for your
+HW, and nothing else.
+
+> 
+> Interrupts
+>  45:          0   PCI-MSI   0  aerdrv
+>  46:          0   PCI-MSI 524288  xhci_hcd
+> 
+> The MSI seems to be well configured in the Bridge and in the Endpoint, so some
+> glue is missing in the driver.
+
+Yup, see above.
+
+Thanks,
+
+	M.
 -- 
-balbi
+Without deviation from the norm, progress is not possible.
