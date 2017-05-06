@@ -1,41 +1,47 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Wolfram Sang <wsa+renesas@sang-engineering.com>
-To: linux-renesas-soc@vger.kernel.org
-Cc: Wolfram Sang <wsa+renesas@sang-engineering.com>,
-        devicetree@vger.kernel.org, dmaengine@vger.kernel.org,
-        linux-i2c@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH 0/7] tree-wide: use proper 'R-Car' product name
-Date: Sun, 28 May 2017 11:30:43 +0200
-Message-Id: <20170528093051.11816-1-wsa+renesas@sang-engineering.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mailout2.hostsharing.net ([83.223.90.233]:45517 "EHLO
+        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750907AbdEFJHJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 6 May 2017 05:07:09 -0400
+Date: Sat, 6 May 2017 11:07:55 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+        Ashok Raj <ashok.raj@intel.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Huang Ying <ying.huang@intel.com>
+Subject: Re: [PATCH] efi/cper: Fix endianness of PCI class code
+Message-ID: <20170506090755.GB19740@wunner.de>
+References: <771bc335fb5856792d086ae7db288dcf244cb4cd.1493964354.git.lukas@wunner.de>
+ <CAKv+Gu9PpmTBbSMKUsx6svm6fodV8x=i4b1j8QGapnEoCFcrNA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAKv+Gu9PpmTBbSMKUsx6svm6fodV8x=i4b1j8QGapnEoCFcrNA@mail.gmail.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Small series to get the R-Car product name proper. Based on
-renesas-drivers/master, but can be applied to current linus/master as well.
-Except for the MMC patch, which depends on mmc/next.
+On Sat, May 06, 2017 at 08:46:07AM +0100, Ard Biesheuvel wrote:
+> On 5 May 2017 at 19:38, Lukas Wunner <lukas@wunner.de> wrote:
+> > The CPER parser assumes that the class code is big endian, but at least
+> > on this edk2-derived Intel Purley platform it's little endian:
+[snip]
+> > --- a/include/linux/cper.h
+> > +++ b/include/linux/cper.h
+> > @@ -416,7 +416,7 @@ struct cper_sec_pcie {
+> >         struct {
+> >                 __u16   vendor_id;
+> >                 __u16   device_id;
+> > -               __u8    class_code[3];
+> > +               __u32   class_code:24;
+> 
+> I'd like to avoid this change if we can. Couldn't we simply invert the
+> order of p[] above?
 
-Please apply.
+Hm, why would you like to avoid it?  The class_code element isn't
+referenced anywhere else in the kernel and this isn't a uapi header,
+so the change would only impact out-of-tree drivers.  Not sure if
+any exist which might be interested in CPER parsing.
 
-Wolfram Sang (7):
-  dmaengine: use proper name for the R-Car SoC
-  i2c: use proper name for the R-Car SoC
-  iio: use proper name for the R-Car SoC
-  mmc: use proper name for the R-Car SoC
-  pci: use proper name for the R-Car SoC
-  [media] soc_camera: rcar_vin: use proper name for the R-Car SoC
-  [media] v4l: rcar_fdp1: use proper name for the R-Car SoC
+Thanks,
 
- Documentation/devicetree/bindings/dma/shdma.txt               | 2 +-
- Documentation/devicetree/bindings/iio/adc/renesas,gyroadc.txt | 2 +-
- Documentation/devicetree/bindings/media/rcar_vin.txt          | 4 ++--
- Documentation/devicetree/bindings/pci/rcar-pci.txt            | 2 +-
- drivers/i2c/busses/i2c-rcar.c                                 | 2 +-
- drivers/media/platform/rcar_fdp1.c                            | 2 +-
- drivers/mmc/host/renesas_sdhi_core.c                          | 2 +-
- include/linux/mfd/tmio.h                                      | 2 +-
- 8 files changed, 9 insertions(+), 9 deletions(-)
-
--- 
-2.11.0
+Lukas
