@@ -1,22 +1,53 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:35401 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753073AbdESIX3 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Fri, 19 May 2017 04:23:29 -0400
-Date: Fri, 19 May 2017 10:23:27 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: bhelgaas@google.com, linux-pci@vger.kernel.org, hch@lst.de
-Subject: Re: [PATCH] PCI/MSI: Ignore affinity if pre/post vector count is
-        more than min_vecs
-Message-ID: <20170519082327.GD1411@lst.de>
-References: <20170518174747.657-1-himanshu.madhani@cavium.com>
+Return-Path: <SRS0=Qg5I=4N=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <SRS0=Qg5I=4N=gmail.com=andy.shevchenko@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170518174747.657-1-himanshu.madhani@cavium.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
+References: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Sun, 7 May 2017 13:50:07 +0300
+Message-ID: <CAHp75VcrKTirCH6gHj1DoLzz5JhfzpvVb34M9e5-OQOjO4Mymw@mail.gmail.com>
+Subject: Re: Resizeable PCI BAR support v5
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Platform Driver <platform-driver-x86@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-Looks good,
+On Thu, May 4, 2017 at 12:31 PM, Christian K=C3=B6nig
+<deathsimple@vodafone.de> wrote:
+> Hi everyone,
+>
+> this is the fifth incarnation of this set of patches. It enables device
+> drivers to resize and most likely also relocate the PCI BAR of devices
+> they manage to allow the CPU to access all of the device local memory at =
+once.
+>
+> This is very useful for GFX device drivers where the default PCI BAR is o=
+nly
+> about 256MB in size for compatibility reasons, but the device easily have
+> multiple gigabyte of local memory.
+>
+> Noteable changed compared to v4:
+> 1. Patch #1 is new and a minor cleanup to the PCI code.
+> 2. Some more helpers added to patch #2
+> 3. We now print a note to syslog before releasing resources.
+> 4. Add defines for registers and bits used to add new root hub window.
+>
+> I've addressed mostly every review comment I've got so far and it looks l=
+ike we
+> are getting closer to landing this. Any more suggestions/hints how we cou=
+ld
+> improve the patchset would be very welcome.
+>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Thanks for an update.
+
+I'm going to comment individual patches.
+
+Just for the future, please use versioning in the patches themselves
+(hint: -vX to git-format-patch).
+
+--=20
+With Best Regards,
+Andy Shevchenko
