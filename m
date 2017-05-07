@@ -1,56 +1,117 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([45.249.212.188]:6354 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752689AbdERKje (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 18 May 2017 06:39:34 -0400
-From: Gabriele Paoloni <gabriele.paoloni@huawei.com>
-To: <bhelgaas@google.com>, <helgaas@kernel.org>
-CC: <gabriele.paoloni@huawei.com>, <linuxarm@huawei.com>,
-        <linux-pci@vger.kernel.org>, <lukas@wunner.de>,
-        <linux-kernel@vger.kernel.org>, <mika.westerberg@linux.intel.com>,
-        <hch@infradead.org>, <liudongdong3@huawei.com>
-Subject: [PATCH v3 0/2] add MSI support for PCIe port services and DPC IRQ support
-Date: Thu, 18 May 2017 11:35:46 +0100
-Message-ID: <1495103748-7876-1-git-send-email-gabriele.paoloni@huawei.com>
+Return-Path: <SRS0=Qg5I=4N=gmail.com=andy.shevchenko@kernel.org>
+Return-Path: <SRS0=Qg5I=4N=gmail.com=andy.shevchenko@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1493890270-1188-4-git-send-email-deathsimple@vodafone.de>
+References: <1493890270-1188-1-git-send-email-deathsimple@vodafone.de> <1493890270-1188-4-git-send-email-deathsimple@vodafone.de>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Sun, 7 May 2017 13:58:19 +0300
+Message-ID: <CAHp75Vch0ytjeSqDRDtYcMymLgDF5b5sR5W+8kdAnMSFYJgRsg@mail.gmail.com>
+Subject: Re: [PATCH 3/5] PCI: add functionality for resizing resources v4
+To: =?UTF-8?Q?Christian_K=C3=B6nig?= <deathsimple@vodafone.de>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Platform Driver <platform-driver-x86@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-From: gabriele paoloni <gabriele.paoloni@huawei.com>
+On Thu, May 4, 2017 at 12:31 PM, Christian K=C3=B6nig
+<deathsimple@vodafone.de> wrote:
+> From: Christian K=C3=B6nig <christian.koenig@amd.com>
+>
+> This allows device drivers to request resizing their BARs.
+>
+> The function only tries to reprogram the windows of the bridge directly a=
+bove
+> the requesting device and only the BAR of the same type (usually mem, 64b=
+it,
+> prefetchable). This is done to make sure not to disturb other drivers by
+> changing the BARs of their devices.
+>
+> If reprogramming the bridge BAR fails the old status is restored and -ENO=
+SPC
+> returned to the calling device driver.
 
-This patchset:
-1) adds support for MSI interrupt vectors to be used for Roor Port services
-2) adds support for DPC Root Port service interrupt
+My comments below.
 
-The patchset has been tested on Hisilicon Hip08 Chipset
+> +int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long =
+type)
+> +{
+> +       struct pci_dev_resource *dev_res;
+> +       LIST_HEAD(saved);
+> +       LIST_HEAD(added);
+> +       LIST_HEAD(failed);
+> +       unsigned int i;
+> +       int ret;
+> +
+> +       /* Walk to the root BUS, releasing bridge BARs when possible */
+> +       while (1) {
+> +               for (i =3D PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_=
+END;
+> +                    i++) {
+> +                       struct resource *res =3D &bridge->resource[i];
+> +
+> +                       if ((res->flags ^ type) & PCI_RES_TYPE_MASK)
+> +                               continue;
+> +
+> +                       /* Ignore BARs which are still in use */
+> +                       if (res->child)
+> +                               continue;
+> +
+> +                       ret =3D add_to_list(&saved, bridge, res, 0, 0);
+> +                       if (ret)
+> +                               goto cleanup;
+> +
+> +                       dev_info(&bridge->dev, "BAR %d: releasing %pR\n",
+> +                                i, res);
+> +
+> +                       if (res->parent)
+> +                               release_resource(res);
+> +                       res->start =3D 0;
+> +                       res->end =3D 0;
+> +                       break;
+> +               }
+> +               if (i =3D=3D PCI_BRIDGE_RESOURCE_END)
+> +                       break;
+> +
+> +               if (!bridge->bus || !bridge->bus->self)
+> +                       break;
+> +
+> +               bridge =3D bridge->bus->self;
+> +       }
+> +
 
-Changes from v2:
-- Fixed comment mismatch for function pcie_port_enable_irq_vec
-- removed redundant commet on pci_irq_vector()
+Please, consider to refactor as I proposed the other day.
 
-Changes from v1:
-According to comments from Christoph Hellwig in
-https://www.spinics.net/lists/kernel/msg2508842.html
-and
-https://www.spinics.net/lists/kernel/msg2508850.html
+> +}
 
-- reduced the calls of pci_alloc_irq_vectors by ORing PCI_IRQ_MSIX and 
-  PCI_IRQ_MSI
-- used a unique macro for the max number of MSI/MSIx interrupt vectors
-- reworked pcie_init_service_irqs() to call pci_alloc_irq_vectors() only
-  for legacy IRQ
+> +int pci_resize_resource(struct pci_dev *dev, int resno, int size)
+> +{
+> +       struct resource *res =3D dev->resource + resno;
 
-Gabriele Paoloni (1):
-  PCI/portdrv: add support for different MSI interrupts for PCIe port
-    services
+> +       int old, ret =3D 0;
 
-gabriele paoloni (1):
-  PCI/portdrv: allocate MSI/MSIx vector for DPC RP service
+Redundant assignment.
 
- drivers/pci/pcie/portdrv.h      |  8 +++--
- drivers/pci/pcie/portdrv_core.c | 68 ++++++++++++++++++++++++++++++-----------
- 2 files changed, 55 insertions(+), 21 deletions(-)
+> +       u32 sizes;
+> +       u16 cmd;
+> +
 
--- 
-2.7.4
+> +       ret =3D pci_rbar_set_size(dev, resno, size);
+> +       if (ret)
+> +               goto error_reassign;
+> +
+
+> +       return 0;
+> +
+> +error_resize:
+> +       pci_rbar_set_size(dev, resno, old);
+> +       res->end =3D res->start + pci_rbar_size_to_bytes(old) - 1;
+> +
+> +error_reassign:
+> +       pci_assign_unassigned_bus_resources(dev->bus);
+> +       return ret;
+> +}
+
+--=20
+With Best Regards,
+Andy Shevchenko
