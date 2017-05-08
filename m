@@ -1,72 +1,139 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.60.111]:59977 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756954AbdELQ4j (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 May 2017 12:56:39 -0400
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-To: bhelgaas@google.com, marc.zyngier@arm.com
-Cc: jingoohan1@gmail.com, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
-        niklas.cassel@axis.com, jesper.nilsson@axis.com,
-        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
-        svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-Subject: [RFC 3/8] pci: imx6 SoC driver adapted to new irq API
-Date: Fri, 12 May 2017 17:56:12 +0100
-Message-Id: <31c0ce86402fbcccb22a5f1aab7cd184e2c5ba9e.1494606911.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1494606911.git.jpinto@synopsys.com>
-References: <cover.1494606911.git.jpinto@synopsys.com>
-In-Reply-To: <cover.1494606911.git.jpinto@synopsys.com>
-References: <cover.1494606911.git.jpinto@synopsys.com>
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:35190 "EHLO
+        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755240AbdEHPKJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2017 11:10:09 -0400
+Received: by mail-qk0-f182.google.com with SMTP id a72so38274033qkj.2
+        for <linux-pci@vger.kernel.org>; Mon, 08 May 2017 08:10:09 -0700 (PDT)
+From: Srinath Mannam <srinath.mannam@broadcom.com>
+To: bhelgaas@google.com
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bcm-kernel-feedback-list@broadcom.com,
+        Srinath Mannam <srinath.mannam@broadcom.com>
+Subject: [RFC PATCH] pci: Concurrency issue in NVMe Init through PCIe switch
+Date: Mon,  8 May 2017 20:39:50 +0530
+Message-Id: <1494256190-28993-1-git-send-email-srinath.mannam@broadcom.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-This patch adapts imx6 SoC specific driver to use the new interrupt api
-available in pcie-designware.
+We found a concurrency issue in NVMe Init when we initialize
+multiple NVMe connected over PCIe switch.
 
+Setup details:
+ - SMP system with 8 ARMv8 cores running Linux kernel(4.11).
+ - Two NVMe cards are connected to PCIe RC through bridge as shown
+   in the below figure.
 
-Signed-off-by: Joao Pinto <jpinto@synopsys.com>
----
- drivers/pci/dwc/pci-imx6.c | 18 ------------------
- 1 file changed, 18 deletions(-)
+                   [RC]
+                    |
+                 [BRIDGE]
+                    |
+               -----------
+              |           |
+            [NVMe]      [NVMe]
 
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index a98cba5..f22ce1f 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -490,15 +490,6 @@ static int imx6_pcie_wait_for_speed_change(struct imx6_pcie *imx6_pcie)
- 	return -EINVAL;
- }
- 
--static irqreturn_t imx6_pcie_msi_handler(int irq, void *arg)
--{
--	struct imx6_pcie *imx6_pcie = arg;
--	struct dw_pcie *pci = imx6_pcie->pci;
--	struct pcie_port *pp = &pci->pp;
--
--	return dw_handle_msi_irq(pp);
--}
--
- static int imx6_pcie_establish_link(struct imx6_pcie *imx6_pcie)
+Issue description:
+After PCIe enumeration completed NVMe driver probe function called
+for both the devices from two CPUS simultaneously.
+>From nvme_probe, pci_enable_device_mem called for both the EPs. This
+function called pci_enable_bridge enable recursively until RC.
+
+Inside pci_enable_bridge function, at two places concurrency issue is
+observed.
+
+Place 1:
+  CPU 0:
+    1. Done Atomic increment dev->enable_cnt
+       in pci_enable_device_flags
+    2. Inside pci_enable_resources
+    3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
+    4. Ready to set PCI_COMMAND_MEMORY (0x2) in
+       pci_write_config_word(dev, PCI_COMMAND, cmd)
+  CPU 1:
+    1. Check pci_is_enabled in function pci_enable_bridge
+       and it is true
+    2. Check (!dev->is_busmaster) also true
+    3. Gone into pci_set_master
+    4. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
+    5. Ready to set PCI_COMMAND_MASTER (0x4) in
+       pci_write_config_word(dev, PCI_COMMAND, cmd)
+
+By the time of last point for both the CPUs are read value 0 and
+ready to write 2 and 4.
+After last point final value in PCI_COMMAND register is 4 instead of 6.
+
+Place 2:
+  CPU 0:
+    1. Done Atomic increment dev->enable_cnt in
+       pci_enable_device_flags
+    2. Inside pci_enable_resources
+    3. Completed pci_read_config_word(dev, PCI_COMMAND, &cmd)
+    4. Ready to set PCI_COMMAND_MEMORY (0x2) in
+       pci_write_config_word(dev, PCI_COMMAND, cmd);
+  CPU 1:
+    1. Done Atomic increment dev->enable_cnt in function
+       pci_enable_device_flag fail return 0 from there
+    2. Gone into pci_set_master
+    3. Completed pci_read_config_word(dev, PCI_COMMAND, &old_cmd)
+    4. Ready to set PCI_COMMAND_MASTER (0x4) in
+       pci_write_config_word(dev, PCI_COMMAND, cmd)
+
+By the time of last point for both the CPUs are read value 0 and
+ready to write 2 and 4.
+After last point final value in PCI_COMMAND register is 4 instead of 6.
+
+Signed-off-by: Srinath Mannam <srinath.mannam@broadcom.com>
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02..6c5744e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1345,21 +1345,39 @@ static void pci_enable_bridge(struct pci_dev *dev)
  {
- 	struct dw_pcie *pci = imx6_pcie->pci;
-@@ -620,15 +611,6 @@ static int imx6_add_pcie_port(struct imx6_pcie *imx6_pcie,
- 			dev_err(dev, "failed to get MSI irq\n");
- 			return -ENODEV;
- 		}
--
--		ret = devm_request_irq(dev, pp->msi_irq,
--				       imx6_pcie_msi_handler,
--				       IRQF_SHARED | IRQF_NO_THREAD,
--				       "mx6-pcie-msi", imx6_pcie);
--		if (ret) {
--			dev_err(dev, "failed to request MSI irq\n");
--			return ret;
--		}
+ 	struct pci_dev *bridge;
+ 	int retval;
++	int err;
++	int i;
++	unsigned int bars = 0;
++	unsigned long flags = IORESOURCE_MEM | IORESOURCE_IO;
+ 
+ 	bridge = pci_upstream_bridge(dev);
+ 	if (bridge)
+ 		pci_enable_bridge(bridge);
+ 
+-	if (pci_is_enabled(dev)) {
+-		if (!dev->is_busmaster)
+-			pci_set_master(dev);
++	if (dev->pm_cap) {
++		u16 pmcsr;
++
++		pci_read_config_word(dev, dev->pm_cap + PCI_PM_CTRL, &pmcsr);
++		dev->current_state = (pmcsr & PCI_PM_CTRL_STATE_MASK);
++	}
++
++	if (atomic_inc_return(&dev->enable_cnt) > 1)
++		return;		/* already enabled */
++
++	/* only skip sriov related */
++	for (i = 0; i <= PCI_ROM_RESOURCE; i++)
++		if (dev->resource[i].flags & flags)
++			bars |= (1 << i);
++	for (i = PCI_BRIDGE_RESOURCES; i < DEVICE_COUNT_RESOURCE; i++)
++		if (dev->resource[i].flags & flags)
++			bars |= (1 << i);
++
++	err = do_pci_enable_device(dev, bars);
++	if (err < 0) {
++		atomic_dec(&dev->enable_cnt);
+ 		return;
  	}
  
- 	pp->root_bus_nr = -1;
+-	retval = pci_enable_device(dev);
+-	if (retval)
+-		dev_err(&dev->dev, "Error enabling bridge (%d), continuing\n",
+-			retval);
+ 	pci_set_master(dev);
+ }
+ 
 -- 
-2.9.3
+2.7.4
