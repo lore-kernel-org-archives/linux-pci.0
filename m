@@ -1,56 +1,73 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:36582 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1161115AbdEWUkn (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 May 2017 16:40:43 -0400
-Date: Tue, 23 May 2017 15:40:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Linus Walleij <linus.walleij@linaro.org>
-Cc: Kishon Vijay Abraham I <kishon@ti.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org
-Subject: Re: [PATCH 1/2] pci: ftpci100: add clock bindings
-Message-ID: <20170523204041.GB15055@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170515172312.1722-1-linus.walleij@linaro.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 8 May 2017 18:55:36 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: Regression: 442ec4c04d1: PCI: dwc: all: Split struct pcie_port
+ into host-only and core structures
+Message-ID: <20170508175536.GA3305@red-moon>
+References: <20170508150224.GA7458@collabora.com>
+ <1494261248.2322.21.camel@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170515172312.1722-1-linus.walleij@linaro.org>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <1494261248.2322.21.camel@pengutronix.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jesper Nilsson <jesper.nilsson@axis.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Kishon Vijay Abraham I <kishon@ti.com>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Peter Senna Tschudin <peter.senna@collabora.com>,
+ Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 15, 2017 at 07:23:12PM +0200, Linus Walleij wrote:
-> The Faraday FTPCI100 controller has two clock ports, PCLK and PCICLK.
-> We add bindings for these two clocks so we can assign them in the device
-> tree.
+On Mon, May 08, 2017 at 06:34:08PM +0200, Lucas Stach wrote:
+> Am Montag, den 08.05.2017, 17:02 +0200 schrieb Peter Senna Tschudin:
+> > Hello Kishon,
+> > 
+> > Our iMX6 hardware (imx6q-b850v3.dts) is not booting with latest
+> > linux-next and I could bisect until:
+> > 
+> > commit 442ec4c04d1235f8c664a74004dae54a7a574d18
+> > Author: Kishon Vijay Abraham I <kishon@ti.com>
+> > Date:   Wed Feb 15 18:48:14 2017 +0530
+> > 
+> >     PCI: dwc: all: Split struct pcie_port into host-only and core structures
+> > 
+> > Which seem to be causing our issues. Our device (imx6q-b850v3.dts) boots
+> > fine with 4.10, and also boots if we disable pcie with:
 > 
-> Cc: devicetree@vger.kernel.org
-> Signed-off-by: Linus Walleij <linus.walleij@linaro.org>
+> Are you sure about this bisect? It seems more likely that the secondary
+> bus scanning goes wrong. It seems Lorenzo Pieralisi's cfg space
+> non-posting patches landed in next, so the root cause of this might just
+> be the driver hooking the wrong fault code now.
+> 
+> Async and synchronous aborts are different fault codes on ARM. Can you
+> see of removing the "16 +" in hook_fault_code() in
+> drivers/pci/dwc/pci-imx6.c fixes this issue?
 
-Applied both (with Rob's ack on the first) to pci/host-faraday for v4.13,
-thanks!
+You can also s/pci_remap_cfgspace/ioremap in pcie-designware-host.c
+to see if my patches are the issue, it is quite a mechanical change.
 
-> ---
->  Documentation/devicetree/bindings/pci/faraday,ftpci100.txt | 7 +++++++
->  1 file changed, 7 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt b/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
-> index 35d4a979bb7b..89a84f8aa621 100644
-> --- a/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
-> +++ b/Documentation/devicetree/bindings/pci/faraday,ftpci100.txt
-> @@ -30,6 +30,13 @@ Mandatory properties:
->    128MB, 256MB, 512MB, 1GB or 2GB in size. The memory should be marked as
->    pre-fetchable.
->  
-> +Optional properties:
-> +- clocks: when present, this should contain the peripheral clock (PCLK) and the
-> +  PCI clock (PCICLK). If these are not present, they are assumed to be
-> +  hard-wired enabled and always on. The PCI clock will be 33 or 66 MHz.
-> +- clock-names: when present, this should contain "PCLK" for the peripheral
-> +  clock and "PCICLK" for the PCI-side clock.
-> +
->  Mandatory subnodes:
->  - For "faraday,ftpci100" a node representing the interrupt-controller inside the
->    host bridge is mandatory. It has the following mandatory properties:
-> -- 
-> 2.9.3
-> 
+Thanks,
+Lorenzo
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
