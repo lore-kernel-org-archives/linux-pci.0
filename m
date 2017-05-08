@@ -1,14 +1,14 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- iommu@lists.linux-foundation.org
-Subject: [PATCH 1/7] PCI: Move ATS declarations outside of CONFIG_PCI
-Date: Wed, 24 May 2017 19:01:37 +0100
-Message-Id: <20170524180143.19855-2-jean-philippe.brucker@arm.com>
-In-Reply-To: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
-References: <20170524180143.19855-1-jean-philippe.brucker@arm.com>
+Message-ID: <1494261248.2322.21.camel@pengutronix.de>
+Subject: Re: Regression: 442ec4c04d1: PCI: dwc: all: Split struct pcie_port
+ into host-only and core structures
+From: Lucas Stach <l.stach@pengutronix.de>
+To: Peter Senna Tschudin <peter.senna@collabora.com>
+Date: Mon, 08 May 2017 18:34:08 +0200
+In-Reply-To: <20170508150224.GA7458@collabora.com>
+References: <20170508150224.GA7458@collabora.com>
+Mime-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -16,78 +16,50 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: mark.rutland@arm.com, lorenzo.pieralisi@arm.com, will.deacon@arm.com,
- joro@8bytes.org, thunder.leizhen@huawei.com, rjw@rjwysocki.net,
- okaya@codeaurora.org, robh+dt@kernel.org, hanjun.guo@linaro.org,
- sudeep.holla@arm.com, bhelgaas@google.com, tn@semihalf.com,
- sunil.kovvuri@gmail.com, robin.murphy@arm.com, lenb@kernel.org
-MIME-Version: 1.0
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jesper Nilsson <jesper.nilsson@axis.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Kishon Vijay Abraham I <kishon@ti.com>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Currently ATS helpers like pci_enable_ats are only defined when CONFIG_PCI
-is enabled. The ARM SMMU driver might get built with CONFIG_PCI disabled.
-It would thus have to wrap any use of ATS helpers around #ifdef
-CONFIG_PCI, which isn't ideal.
+Am Montag, den 08.05.2017, 17:02 +0200 schrieb Peter Senna Tschudin:
+> Hello Kishon,
+> 
+> Our iMX6 hardware (imx6q-b850v3.dts) is not booting with latest
+> linux-next and I could bisect until:
+> 
+> commit 442ec4c04d1235f8c664a74004dae54a7a574d18
+> Author: Kishon Vijay Abraham I <kishon@ti.com>
+> Date:   Wed Feb 15 18:48:14 2017 +0530
+> 
+>     PCI: dwc: all: Split struct pcie_port into host-only and core structures
+> 
+> Which seem to be causing our issues. Our device (imx6q-b850v3.dts) boots
+> fine with 4.10, and also boots if we disable pcie with:
 
-A nicer solution is to always define these helpers. Since CONFIG_PCI_ATS
-is only enabled in association with CONFIG_PCI, move defines outside of
-CONFIG_PCI to prevent build failure when PCI is disabled.
+Are you sure about this bisect? It seems more likely that the secondary
+bus scanning goes wrong. It seems Lorenzo Pieralisi's cfg space
+non-posting patches landed in next, so the root cause of this might just
+be the driver hooking the wrong fault code now.
 
-Signed-off-by: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- include/linux/pci.h | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+Async and synchronous aborts are different fault codes on ARM. Can you
+see of removing the "16 +" in hook_fault_code() in
+drivers/pci/dwc/pci-imx6.c fixes this issue?
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 33c2b0b77429..775d495ef8d7 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1415,19 +1415,6 @@ int  ht_create_irq(struct pci_dev *dev, int idx);
- void ht_destroy_irq(unsigned int irq);
- #endif /* CONFIG_HT_IRQ */
- 
--#ifdef CONFIG_PCI_ATS
--/* Address Translation Service */
--void pci_ats_init(struct pci_dev *dev);
--int pci_enable_ats(struct pci_dev *dev, int ps);
--void pci_disable_ats(struct pci_dev *dev);
--int pci_ats_queue_depth(struct pci_dev *dev);
--#else
--static inline void pci_ats_init(struct pci_dev *d) { }
--static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
--static inline void pci_disable_ats(struct pci_dev *d) { }
--static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
--#endif
--
- #ifdef CONFIG_PCIE_PTM
- int pci_enable_ptm(struct pci_dev *dev, u8 *granularity);
- #else
-@@ -1613,6 +1600,19 @@ static inline int pci_get_new_domain_nr(void) { return -ENOSYS; }
- #define dev_is_pf(d) (false)
- #endif /* CONFIG_PCI */
- 
-+#ifdef CONFIG_PCI_ATS
-+/* Address Translation Service */
-+void pci_ats_init(struct pci_dev *dev);
-+int pci_enable_ats(struct pci_dev *dev, int ps);
-+void pci_disable_ats(struct pci_dev *dev);
-+int pci_ats_queue_depth(struct pci_dev *dev);
-+#else
-+static inline void pci_ats_init(struct pci_dev *d) { }
-+static inline int pci_enable_ats(struct pci_dev *d, int ps) { return -ENODEV; }
-+static inline void pci_disable_ats(struct pci_dev *d) { }
-+static inline int pci_ats_queue_depth(struct pci_dev *d) { return -ENODEV; }
-+#endif
-+
- /* Include architecture-dependent settings and functions */
- 
- #include <asm/pci.h>
--- 
-2.12.1
+Regards,
+Lucas
 
 
 _______________________________________________
