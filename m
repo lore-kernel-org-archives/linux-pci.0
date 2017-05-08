@@ -1,111 +1,237 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from smtprelay.synopsys.com ([198.182.47.9]:35340 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750916AbdEaOOz (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 10:14:55 -0400
-Subject: Re: [PATCH 1/8] pci: adding new irq api to pci-designware
-To: Lucas Stach <l.stach@pengutronix.de>,
-        Joao Pinto <Joao.Pinto@synopsys.com>
-References: <cover.1496142978.git.jpinto@synopsys.com>
- <e0ab2d597306a9df4c955f7761273f4538657e26.1496142978.git.jpinto@synopsys.com>
- <1496234001.30073.19.camel@pengutronix.de>
- <62787214-b4d2-5a6b-99a5-df406140cf86@synopsys.com>
- <1496235029.30073.22.camel@pengutronix.de>
- <c082deff-1bc5-5607-cce0-ae041222f6e3@synopsys.com>
- <1496235621.30073.26.camel@pengutronix.de>
-CC: <bhelgaas@google.com>, <marc.zyngier@arm.com>,
-        <m-karicheri2@ti.com>, <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
-        <wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
-        <svarbanov@mm-sol.com>, <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <b8d27366-fbec-e0dd-5a07-fb3038ac5fb9@synopsys.com>
-Date: Wed, 31 May 2017 15:14:33 +0100
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+Subject: Re: [PATCH V11 00/11] IOMMU probe deferral support
+To: Marek Szyprowski <m.szyprowski@samsung.com>, robin.murphy@arm.com,
+        will.deacon@arm.com, joro@8bytes.org, lorenzo.pieralisi@arm.com,
+        iommu@lists.linux-foundation.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, bhelgaas@google.com,
+        linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
+        tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
+        robh+dt@kernel.org, frowand.list@gmail.com,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        sudeep.holla@arm.com, rjw@rjwysocki.net, lenb@kernel.org,
+        catalin.marinas@arm.com, arnd@arndb.de, linux-arch@vger.kernel.org,
+        gregkh@linuxfoundation.org
+References: <CGME20170410112136epcas2p2cdd7dc21a8dc0ffcfab7f8290c4b7467@epcas2p2.samsung.com>
+ <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
+ <5617791f-407a-1ab3-53aa-0f09fcd716aa@samsung.com>
+From: Sricharan R <sricharan@codeaurora.org>
+Message-ID: <b597429a-5615-ac71-1fd5-e947ae8cb576@codeaurora.org>
+Date: Mon, 8 May 2017 20:27:13 +0530
 MIME-Version: 1.0
-In-Reply-To: <1496235621.30073.26.camel@pengutronix.de>
-Content-Type: text/plain; charset="utf-8"
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <5617791f-407a-1ab3-53aa-0f09fcd716aa@samsung.com>
+Content-Type: text/plain; charset=utf-8
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Às 2:00 PM de 5/31/2017, Lucas Stach escreveu:
-> Am Mittwoch, den 31.05.2017, 13:54 +0100 schrieb Joao Pinto:
->> Às 1:50 PM de 5/31/2017, Lucas Stach escreveu:
->>> Am Mittwoch, den 31.05.2017, 13:46 +0100 schrieb Joao Pinto:
->>>> Hi Lucas,
->>>>
->>>> Às 1:33 PM de 5/31/2017, Lucas Stach escreveu:
->>>>> Am Dienstag, den 30.05.2017, 12:32 +0100 schrieb Joao Pinto:
->>>>>> This patch adds the new interrupt api to pcie-designware, keeping the old
->>>>>> one. Although the old API is still available, pcie-designware initiates
->>>>>> with the new one.
->>>>>>
->>>>>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
->>>>>> ---
->>>>> [...]
->>>>>> @@ -378,17 +593,18 @@ int dw_pcie_host_init(struct pcie_port *pp)
->>>>>>  
->>>>>>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
->>>>>>  		if (!pp->ops->msi_host_init) {
->>>>>> -			pp->irq_domain = irq_domain_add_linear(dev->of_node,
->>>>>> -						MAX_MSI_IRQS, &msi_domain_ops,
->>>>>> -						&dw_pcie_msi_chip);
->>>>>> -			if (!pp->irq_domain) {
->>>>>> -				dev_err(dev, "irq domain init failed\n");
->>>>>> -				ret = -ENXIO;
->>>>>> +			ret = of_property_read_u32(np, "num-vectors",
->>>>>> +						   &pp->num_vectors);
->>>>>> +			if (ret)
->>>>>> +				pp->num_vectors = 1;
->>>>>
->>>>> This adds a DT property without documentation. That's a strong no-go.
->>>>>
->>>>
->>>> yep, indeed I forgot to merge this into the patch tree. Going to check this in
->>>> the next patch version.
->>>>
->>>>> Why do you even need this property? The number of vectors available can
->>>>> be inferred from the compatible, so there is no need to push this into
->>>>> the DT. A fallback of only 1 vector if the property doesn't exist is
->>>>> also pretty limiting. The old implementation allowed for at least 32
->>>>> vectors, with most of the core implementations probably allowing much
->>>>> more in hardware.
->>>>
->>>> The hardware supports up to 256, but the current driver is set for a maximum of
->>>> 32. I suggest we remove MAX_MSI_IRQS and MAX_MSI_CTRLS, and calculate the
->>>> maximum number of controllers according to the num_vectors value: Ctrls =
->>>> num_vectors / 32, removing the hardcoded limitation from the driver.
->>>> What do you think?
->>>
->>> If you can confirm that all hardware implementations of the DWC PCIe
->>> core support 256 vectors, I don't see a reason to ever expose less than
->>> this. I guess the current limit of 32 hasn't been raised out of fear
->>> that some hardware implementations might not support the full range of
->>> 256 vectors.
->>>
->>> You are in a much better position to validate this than I am. I fully
->>> support removing artificial limits from the driver implementation.
+Hi,
+
+On 5/8/2017 4:53 PM, Marek Szyprowski wrote:
+> Hi Sricharan,
+> 
+> On 2017-04-10 13:20, Sricharan R wrote:
+>> This series calls the dma ops configuration for the devices
+>> at a generic place so that it works for all busses.
+>> The dma_configure_ops for a device is now called during
+>> the device_attach callback just before the probe of the
+>> bus/driver is called. Similarly dma_deconfigure is called during
+>> device/driver_detach path.
 >>
->> The IP design supports up to 256, but each client can make its own
->> configuration. I will try to get some info from the CAEs.
->> By setting num_vectors = 32 by default, we will be performing the same limit as
->> before, so there will be no impact. Synopsys IP users that now that their
->> implementation supports more than 32, they can update their Device Trees. I find
->> this way simpler and safer. What do you think?
+>> pci_bus_add_devices    (platform/amba)(_device_create/driver_register)
+>>         |                         |
+>> pci_bus_add_device     (device_add/driver_register)
+>>         |                         |
+>> device_attach           device_initial_probe
+>>         |                         |
+>> __device_attach_driver    __device_attach_driver
+>>         |
+>> driver_probe_device
+>>         |
+>> really_probe
+>>         |
+>> dma_configure
+>>
+>> Similarly on the device/driver_unregister path __device_release_driver is
+>> called which inturn calls dma_deconfigure.
+>>
+>> Rebased the series against mainline 4.11-rc5. Applies and builds cleanly
+>> against iommu-next and with 3-way merge applies on top of linux-next
+>> as well (patch #8), because of "ACPI platform MSI support" from
+>> Hanjun being merged.
+>>    * Tested with platform and pci devices for probe deferral
+>>    and reprobe on arm64 based platform.
 > 
-> 32 as the default seems fine, but please don't add a DT configuration
-> for this. As I said it can be inferred from the compatible of the
-> device. So for example we know that "fsl,imx6q-pcie" supports up to 256
-> vectors and can keep this knowledge internal to the driver. No need to
-> add DT API for this.
+> I just noticed that in the meantime the following patch: "arm: dma-mapping:
+> Reset the device's dma_ops" (https://patchwork.kernel.org/patch/9434105/ )
+> has been dropped from this series.
+> 
+> Lack of it causes serious issues with deferred probe of devices, which are
+> under IOMMU on ARM architecture. Please check where it got lost and push it
+> to Russell's patch tracking system ASAP to get it during v4.12-rcX cycle.
 
-Ok, I agree. num_vectors can be set by a specific SoC driver (internal
-knowledged as you mentioned), but if not (=0), it assumes the default value of 32.
+ha, bad on me. I posted this patch independently from the series, but was not
+added to patch system. Will add it now.
 
-Joao
+Regards,
+ Sricharan
+
 > 
-> Regards,
-> Lucas
+>>
+>> Previous post of this series [8].
+>>
+>> Please note that, i have kept the tested/acked tags intact from V8
+>> because V9/10/11 were for more fixes that was added, so the original
+>> tags that was given for the functional testing remains the same.
+>>
+>>   [V11]
+>>       * No functional changes.
+>>
+>>       * Rebased on top of 4.11-rc6.
+>>
+>>       * Dropped patch#3 from V10, as a result have to make
+>>         a change in patch#7 to return a 'non-void' to fix a
+>>         build warning.
+>>
+>>       * Added Robin's and Rob's tags.
+>>
+>>   [V10]
+>>       * Rebased on top of 4.11-rc5.
+>>         * Fixed coherent_dma_mask 64bit overflow issue [8]
+>>         for OF. The fix for OF was added as a separate
+>>         patch#6, since the issue is true even without probe deferral,
+>>         but gets reproduced with the probe deferral series.
+>>         Added Lorenzo's ACPI fix for coherent_dma_mask overflow
+>>         and the fix for dma_configure getting called more than
+>>         once for the same device.
+>>
+>>       * Also fixed an build issue caught by kbuild robot for
+>>         m68k arch. The issue was dma_(de)configure was not
+>>         getting defined for !CONFIG_HAS_DMA, so fixed that as well.
+>>
+>>   [V9]
+>>       * Rebased on top of 4.11-rc1.
+>>
+>>       * Merged Robin's fixes for legacy binding issue,
+>>         pci devices with no iommu-map property and deferencing
+>>         of_iommu_table after init.
+>>         [V8]
+>>       * Picked up all the acks and tested tags from Marek and
+>>         Hanjun for DT and ACPI patches respectively, since
+>>         no functional changes was done.
+>>
+>>       * Addressed Minor comments Sinan and Bjorn.
+>>
+>>       * Added Robin's fix for fixing the deferencing NULL for
+>>         of_iommu_table after init in patch #2.
+>>
+>>       * Rebased it on top of linux-next
+>>
+>>   [V7]
+>>       * Updated the subject and commit log for patch #6 as per
+>>         comments from Lorenzo. No functional changes.
+>>
+>>   [V6]
+>>       * Fixed a bug in dma_configure function pointed out by
+>>         Robin.
+>>       * Reordered the patches as per comments from Robin and
+>>         Lorenzo.
+>>       * Added Tags.
+>>
+>>   [V5]
+>>       * Reworked the pci configuration code hanging outside and
+>>         pushed it to dma_configure as in PATCH#5,6,7.
+>>         Also added a couple of patches that Lorenzo provided for
+>>         correcting the Probe deferring mechanism in case of
+>>         ACPI devices from here [5].
+>>
+>>   [V4]
+>>       * Took the reworked patches [2] from Robin's branch and
+>>         rebased on top of Lorenzo's ACPI IORT ARM support series [3].
+>>
+>>       * Added the patches for moving the dma ops configuration of
+>>         acpi based devices to probe time as well.
+>>   [V3]
+>>       * Removed the patch to split dma_masks/dma_ops configuration
+>>         separately based on review comments that both masks and ops are
+>>         required only during the device probe time.
+>>
+>>       * Reworked the series based on Generic DT bindings series.
+>>
+>>       * Added call to iommu's remove_device in the cleanup path for arm and
+>>         arm64.
+>>
+>>       * Removed the notifier trick in arm64 to handle early device
+>>         registration.
+>>
+>>       * Added reset of dma_ops in cleanup path for arm based on comments.
+>>
+>>       * Fixed the pci_iommu_configure path and tested with PCI device as
+>>         well.
+>>         * Fixed a bug to return the correct iommu_ops from patch 7 [4] in
+>>         last post.
+>>
+>>       * Fixed few other cosmetic comments.
+>>      [V2]
+>>       * Updated the Initial post to call dma_configure/deconfigure from
+>>         generic code
+>>         * Added iommu add_device callback from of_iommu_configure path
+>>
+>>   [V1]
+>>       * Initial post from Laurent Pinchart [1]
+>>
+>> [1] http://lists.linuxfoundation.org/pipermail/iommu/2015-May/013016.html
+>> [2] http://www.linux-arm.org/git?p=linux-rm.git;a=shortlog;h=refs/heads/iommu/defer
+>> [3] https://lkml.org/lkml/2016/11/21/141
+>> [4] https://www.mail-archive.com/iommu@xxxxxxxxxxxxxxxxxxxxxxxxxx/msg13940.html
+>> [5] git://git.kernel.org/pub/scm/linux/kernel/git/lpieralisi/linux.git iommu/probe-deferral
+>> [6] http://www.spinics.net/lists/linux-pci/msg57992.html
+>> [7] https://www.spinics.net/lists/arm-kernel/msg556209.html
+>> [8] http://lkml.iu.edu/hypermail/linux/kernel/1704.0/01557.html
+>>
+>> Laurent Pinchart (2):
+>>    of: dma: Make of_dma_deconfigure() public
+>>    iommu: of: Handle IOMMU lookup failure with deferred probing or error
+>>
+>> Lorenzo Pieralisi (2):
+>>    ACPI/IORT: Add function to check SMMUs drivers presence
+>>    ACPI/IORT: Remove linker section for IORT entries probing
+>>
+>> Robin Murphy (3):
+>>    iommu/of: Refactor of_iommu_configure() for error handling
+>>    iommu/of: Prepare for deferred IOMMU configuration
+>>    iommu/arm-smmu: Clean up early-probing workarounds
+>>
+>> Sricharan R (4):
+>>    of: device: Fix overflow of coherent_dma_mask
+>>    of/acpi: Configure dma operations at probe time for platform/amba/pci
+>>      bus devices
+>>    drivers: acpi: Handle IOMMU lookup failure with deferred probing or
+>>      error
+>>    arm64: dma-mapping: Remove the notifier trick to handle early setting
+>>      of dma_ops
+>>
+>>   arch/arm64/mm/dma-mapping.c       | 142 +++++---------------------------------
+>>   drivers/acpi/arm64/iort.c         |  48 ++++++++++++-
+>>   drivers/acpi/glue.c               |   5 --
+>>   drivers/acpi/scan.c               |  11 ++-
+>>   drivers/base/dd.c                 |   9 +++
+>>   drivers/base/dma-mapping.c        |  41 +++++++++++
+>>   drivers/iommu/arm-smmu-v3.c       |  46 +-----------
+>>   drivers/iommu/arm-smmu.c          | 110 +++++++++++++----------------
+>>   drivers/iommu/of_iommu.c          | 126 ++++++++++++++++++++++++---------
+>>   drivers/of/device.c               |  23 +++++-
+>>   drivers/of/platform.c             |  10 +--
+>>   drivers/pci/probe.c               |  28 --------
+>>   include/acpi/acpi_bus.h           |   2 +-
+>>   include/asm-generic/vmlinux.lds.h |   1 -
+>>   include/linux/acpi.h              |   7 +-
+>>   include/linux/acpi_iort.h         |   3 -
+>>   include/linux/dma-mapping.h       |  12 ++++
+>>   include/linux/of_device.h         |  10 ++-
+>>   18 files changed, 312 insertions(+), 322 deletions(-)
+>>
 > 
-> 
+> Best regards
+
+-- 
+"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
