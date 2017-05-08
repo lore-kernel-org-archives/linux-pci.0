@@ -1,100 +1,73 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Jakub Kicinski <jakub.kicinski@netronome.com>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Emil Tantilov <emil.s.tantilov@intel.com>,
-        Alexander Duyck <alexander.h.duyck@intel.com>,
-        oss-drivers@netronome.com,
-        Jakub Kicinski <jakub.kicinski@netronome.com>
-Subject: [PATCH] pci: iov: use device lock to protect IOV sysfs accesses
-Date: Mon, 22 May 2017 15:50:23 -0700
-Message-Id: <20170522225023.14010-1-jakub.kicinski@netronome.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from bhuna.collabora.co.uk ([46.235.227.227]:45947 "EHLO
+        bhuna.collabora.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752813AbdEHQow (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2017 12:44:52 -0400
+Date: Mon, 8 May 2017 18:44:40 +0200
+From: Peter Senna Tschudin <peter.senna@collabora.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Kishon Vijay Abraham I <kishon@ti.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        Richard Zhu <hongxing.zhu@nxp.com>,
+        Murali Karicheri <m-karicheri2@ti.com>,
+        Minghuan Lian <minghuan.Lian@freescale.com>,
+        Mingkai Hu <mingkai.hu@freescale.com>,
+        Roy Zang <tie-fei.zang@freescale.com>,
+        Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+        Niklas Cassel <niklas.cassel@axis.com>,
+        Jesper Nilsson <jesper.nilsson@axis.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+        Stanimir Varbanov <svarbanov@mm-sol.com>,
+        Pratyush Anand <pratyush.anand@gmail.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: Regression: 442ec4c04d1: PCI: dwc: all: Split struct pcie_port
+ into host-only and core structures
+Message-ID: <20170508164440.GB12665@collabora.com>
+References: <20170508150224.GA7458@collabora.com>
+ <1494261248.2322.21.camel@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1494261248.2322.21.camel@pengutronix.de>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-PCI core sets the driver pointer before calling ->probe() and only
-clears it after ->remove().  This means driver's ->sriov_configure()
-callback will happily race with probe() and remove(), most likely
-leading to BUGs, since drivers don't expect this.
+On Mon, May 08, 2017 at 06:34:08PM +0200, Lucas Stach wrote:
+> Am Montag, den 08.05.2017, 17:02 +0200 schrieb Peter Senna Tschudin:
+> > Hello Kishon,
+> > 
+> > Our iMX6 hardware (imx6q-b850v3.dts) is not booting with latest
+> > linux-next and I could bisect until:
+> > 
+> > commit 442ec4c04d1235f8c664a74004dae54a7a574d18
+> > Author: Kishon Vijay Abraham I <kishon@ti.com>
+> > Date:   Wed Feb 15 18:48:14 2017 +0530
+> > 
+> >     PCI: dwc: all: Split struct pcie_port into host-only and core structures
+> > 
+> > Which seem to be causing our issues. Our device (imx6q-b850v3.dts) boots
+> > fine with 4.10, and also boots if we disable pcie with:
+> 
+> Are you sure about this bisect? It seems more likely that the secondary
+> bus scanning goes wrong. It seems Lorenzo Pieralisi's cfg space
+> non-posting patches landed in next, so the root cause of this might just
+> be the driver hooking the wrong fault code now.
+> 
+> Async and synchronous aborts are different fault codes on ARM. Can you
+> see of removing the "16 +" in hook_fault_code() in
+> drivers/pci/dwc/pci-imx6.c fixes this issue?
 
-We could reorder pointer assignments, or try detecting races in all
-drivers, but it seems simpler and cleaner to just hold the device lock
-instead of special SR-IOV lock, since that lock is already supposed
-to synchronize the driver callbacks.
+changing it to:
 
-Remove the iov lock completely, since we remove the last user.
+hook_fault_code(6, imx6q_pcie_abort_handler, SIGBUS, 0,
+		"imprecise external abort");
 
-Signed-off-by: Jakub Kicinski <jakub.kicinski@netronome.com>
----
- drivers/pci/iov.c       | 4 ----
- drivers/pci/pci-sysfs.c | 5 ++---
- drivers/pci/pci.h       | 1 -
- 3 files changed, 2 insertions(+), 8 deletions(-)
+made no difference, problem persists...
 
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index d9dc7363ac77..120485d6f352 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -461,8 +461,6 @@ static int sriov_init(struct pci_dev *dev, int pos)
- 	else
- 		iov->dev = dev;
- 
--	mutex_init(&iov->lock);
--
- 	dev->sriov = iov;
- 	dev->is_physfn = 1;
- 	rc = compute_max_vf_buses(dev);
-@@ -491,8 +489,6 @@ static void sriov_release(struct pci_dev *dev)
- 	if (dev != dev->sriov->dev)
- 		pci_dev_put(dev->sriov->dev);
- 
--	mutex_destroy(&dev->sriov->lock);
--
- 	kfree(dev->sriov);
- 	dev->sriov = NULL;
- }
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 31e99613a12e..7755559558df 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -472,7 +472,6 @@ static ssize_t sriov_numvfs_store(struct device *dev,
- 				  const char *buf, size_t count)
- {
- 	struct pci_dev *pdev = to_pci_dev(dev);
--	struct pci_sriov *iov = pdev->sriov;
- 	int ret;
- 	u16 num_vfs;
- 
-@@ -483,7 +482,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
- 	if (num_vfs > pci_sriov_get_totalvfs(pdev))
- 		return -ERANGE;
- 
--	mutex_lock(&iov->dev->sriov->lock);
-+	device_lock(&pdev->dev);
- 
- 	if (num_vfs == pdev->sriov->num_VFs)
- 		goto exit;
-@@ -518,7 +517,7 @@ static ssize_t sriov_numvfs_store(struct device *dev,
- 			 num_vfs, ret);
- 
- exit:
--	mutex_unlock(&iov->dev->sriov->lock);
-+	device_unlock(&pdev->dev);
- 
- 	if (ret < 0)
- 		return ret;
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index f8113e5b9812..93f4044b8f4b 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -272,7 +272,6 @@ struct pci_sriov {
- 	u16 driver_max_VFs;	/* max num VFs driver supports */
- 	struct pci_dev *dev;	/* lowest numbered PF */
- 	struct pci_dev *self;	/* this PF */
--	struct mutex lock;	/* lock for setting sriov_numvfs in sysfs */
- 	resource_size_t barsz[PCI_SRIOV_NUM_BARS];	/* VF BAR size */
- 	bool drivers_autoprobe;	/* auto probing of VFs by driver */
- };
--- 
-2.11.0
+> 
+> Regards,
+> Lucas
+> 
