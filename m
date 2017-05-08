@@ -1,156 +1,178 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:45064 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750944AbdEQTCf (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 May 2017 15:02:35 -0400
-Date: Wed, 17 May 2017 14:02:33 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Wenrui Li <wenrui.li@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH] PCI: use IDA to manage domain number if not getting it
- from DT
-Message-ID: <20170517190233.GG31462@bhelgaas-glaptop.roam.corp.google.com>
-References: <1490175744-22727-1-git-send-email-shawn.lin@rock-chips.com>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:51740 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752759AbdEHJ7H (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 8 May 2017 05:59:07 -0400
+Subject: Re: [RFC] pci: using new interrupt API to enable MSI and MSI-X
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, <kishon@ti.com>,
+        <bhelgaas@google.com>, <jingoohan1@gmail.com>
+References: <806903036508ae5246084cbc3b796083d76f8917.1493992929.git.jpinto@synopsys.com>
+ <58f3a6ca-a051-a7dc-805f-ee3eb0f3ac3b@arm.com>
+CC: <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <1b77d1ec-5fc8-d548-7e84-8d05a31849aa@synopsys.com>
+Date: Mon, 8 May 2017 10:59:01 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1490175744-22727-1-git-send-email-shawn.lin@rock-chips.com>
+In-Reply-To: <58f3a6ca-a051-a7dc-805f-ee3eb0f3ac3b@arm.com>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Shawn,
-
-On Wed, Mar 22, 2017 at 05:42:24PM +0800, Shawn Lin wrote:
-> If not getting domain number from DT, the domain number will
-> keep increasing once doing unbind/bind RC drivers. This could
-> introduce pointless tree view of lspci as shows below:
+Às 3:57 PM de 5/5/2017, Marc Zyngier escreveu:
+> Joao,
 > 
-> -+-[0001:00]---00.0-[01]----00.0
->   \-[0000:00]-
+> On 05/05/17 15:11, Joao Pinto wrote:
+>> Hello,
+>> I am currently adding the support for both MSI and MSI-x in pcie-designware and
+>> I am now facing a dificulty.
+>>
+>> My test endpoint is a USB 3.1 MSI / MSI-X capable and I tested that with
+>> the changes introduced by this patch we are able to enable MSI and MSI-X
+>> in this endpoint (depends on the usage of the MSI_FLAG_PCI_MSIX flag).
+>>
+>> The problem I am facing now is that Intc for the USB 3.1 Endpoint is completely
+>> bogus (524288) when it should be 1, and so I am not receiving any interrupts
+>> from the endpoint.
 > 
-> The more test we do, the lengthier it would be. The more serious
-> issue is that if attaching two hierarchies for two different domains
-> belonging to two root bridges, so when doing unbind/bind test for one
-> of them and keep the other, then the domain number would finally
-> overflow and make the two hierarchies of devices share the some domain
-> number but actually they shouldn't. So it looks like we need to invent
-> a new indexing ID mechanism to manage domain number. This patch
-> introduces idr to achieve our purpose.
-
-I like the idea of this patch, but I have some comments/suggestions
-about the implementation.
-
-> Cc: Brian Norris <briannorris@chromium.org>
-> Cc: Jeffy Chen <jeffy.chen@rock-chips.com>
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> ---
+> It is not bogus at all. It is computed from the PCI requester ID in 
+> pci_msi_domain_calc_hwirq. What you're seeing is the PCI/MDI domain 
+> view of that interrupt, which is completely virtual.
 > 
->  drivers/pci/pci.c    | 11 +++++++----
->  drivers/pci/remove.c |  5 +++++
->  include/linux/pci.h  |  2 ++
->  3 files changed, 14 insertions(+), 4 deletions(-)
+> The real thing happens in your own irqdomain, where the hwirq for IRQ46 
+> is probably 1 (only you can know that). As for why it doesn't work, see 
+> below:
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index a881c0d..1752ccc 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -11,6 +11,7 @@
->  #include <linux/kernel.h>
->  #include <linux/delay.h>
->  #include <linux/dmi.h>
-> +#include <linux/idr.h>
->  #include <linux/init.h>
->  #include <linux/of.h>
->  #include <linux/of_pci.h>
-> @@ -5172,15 +5173,16 @@ static void pci_no_domains(void)
+>>
+>> I would apreciate that more experienced people in this interrupt subject could
+>> give me an hint.
+>>
+>> I send you the "lspci -v" results and /proc/interrupts.
+>>
+>> Thank you so much for your help.
+>>
+>> # cat /proc/interrupts
+>>            CPU0
+>>   3:        755  ARC In-core Intc   3  Timer0 (per-cpu-tick)
+>>   4:          0  dw-apb-ictl   4  eth0
+>>   8:          1  dw-apb-ictl   8  ehci_hcd:usb1, ohci_hcd:usb2
+>>   9:         37  dw-apb-ictl   7  dw-mci
+>>  14:          0  dw-apb-ictl  14  e001d000.i2c
+>>  16:          0  dw-apb-ictl  16  e001f000.i2c
+>>  19:        145  dw-apb-ictl  19  serial
+>>  45:          0   PCI-MSI   0  aerdrv
+>>  46:          0   PCI-MSI 524288  xhci_hcd
+>>
+>> # lspci -v
+>> 00:00.0 PCI bridge: Synopsys, Inc. Device eddc (rev 01) (prog-if 00 [Normal decode])
+>>         Flags: bus master, fast devsel, latency 0, IRQ 45
+>>         Bus: primary=00, secondary=01, subordinate=01, sec-latency=0
+>>         Memory behind bridge: d0400000-d04fffff
+>>         [virtual] Expansion ROM at d0500000 [disabled] [size=64K]
+>>         Capabilities: [40] Power Management version 3
+>>         Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>>         Capabilities: [70] Express Root Port (Slot-), MSI 00
+>>         Capabilities: [100] Advanced Error Reporting
+>>         Capabilities: [148] #19
+>>         Capabilities: [158] Vendor Specific Information: ID=0002 Rev=4 Len=100 <?>
+>>         Kernel driver in use: pcieport
+>>
+>> 01:00.0 USB controller: ASMedia Technology Inc. ASM1142 USB 3.1 Host Controller (prog-if 30 [XHCI])
+>>         Subsystem: ASMedia Technology Inc. ASM1142 USB 3.1 Host Controller
+>>         Flags: bus master, fast devsel, latency 0, IRQ 46
+>>         Memory at d0400000 (64-bit, non-prefetchable) [size=32K]
+>>         Capabilities: [50] MSI: Enable+ Count=1/8 Maskable- 64bit+
+>>         Capabilities: [68] MSI-X: Enable- Count=8 Masked-
+>>         Capabilities: [78] Power Management version 3
+>>         Capabilities: [80] Express Endpoint, MSI 00
+>>         Capabilities: [100] Virtual Channel
+>>         Capabilities: [200] Advanced Error Reporting
+>>         Capabilities: [280] #19
+>>         Capabilities: [300] Latency Tolerance Reporting
+>>         Kernel driver in use: xhci_hcd
+>>
+>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+>> ---
+>>  .../devicetree/bindings/pci/designware-pcie.txt    |   2 +
+>>  drivers/pci/dwc/pcie-designware-host.c             | 292 ++++++++-------------
+>>  drivers/pci/dwc/pcie-designware-plat.c             |  35 +--
+>>  drivers/pci/dwc/pcie-designware.h                  |   7 +-
+>>  4 files changed, 143 insertions(+), 193 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/pci/designware-pcie.txt b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>> index b2480dd..41803ea 100644
+>> --- a/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>> +++ b/Documentation/devicetree/bindings/pci/designware-pcie.txt
+>> @@ -34,6 +34,8 @@ Optional properties:
+>>  RC mode:
+>>  - num-viewport: number of view ports configured in
+>>    hardware. If a platform does not specify it, the driver assumes 2.
+>> +- num-vectors: number of available interrupt vectors. If a platform does not
+>> +  specify it, the driver assumes 1.
+>>  - bus-range: PCI bus numbers covered (it is recommended
+>>    for new devicetrees to specify this property, to keep backwards
+>>    compatibility a range of 0x00-0xff is assumed if not present)
+>> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+>> index 28ed32b..96a5fb3 100644
+>> --- a/drivers/pci/dwc/pcie-designware-host.c
+>> +++ b/drivers/pci/dwc/pcie-designware-host.c
+>> @@ -11,6 +11,9 @@
+>>   * published by the Free Software Foundation.
+>>   */
+>>  
+>> +#include <linux/interrupt.h>
+>> +#include <linux/irqchip/chained_irq.h>
+>> +#include <linux/msi.h>
+>>  #include <linux/irqdomain.h>
+>>  #include <linux/of_address.h>
+>>  #include <linux/of_pci.h>
+>> @@ -53,32 +56,43 @@ static struct irq_chip dw_msi_irq_chip = {
+>>  	.irq_unmask = pci_msi_unmask_irq,
+>>  };
+> 
+> It looks to me like the first mistake is just above. You don't seem to
+> propagate the mask/unmask operations into the parent domain, so your
+> interrupts are never enabled... You'd need something like this:
+> 
+> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
+> index 28ed32ba4f1b..d42b8b12f168 100644
+> --- a/drivers/pci/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/dwc/pcie-designware-host.c
+> @@ -45,12 +45,22 @@ static int dw_pcie_wr_own_conf(struct pcie_port *pp, int where, int size,
+>  	return dw_pcie_write(pci->dbi_base + where, size, val);
 >  }
 >  
->  #ifdef CONFIG_PCI_DOMAINS
-> -static atomic_t __domain_nr = ATOMIC_INIT(-1);
-> +DEFINE_IDA(__domain_nr);
->  
->  int pci_get_new_domain_nr(void)
->  {
-> -	return atomic_inc_return(&__domain_nr);
-> +	return ida_simple_get(&__domain_nr, 0, sizeof(u64), GFP_KERNEL);
->  }
->  
->  #ifdef CONFIG_PCI_DOMAINS_GENERIC
-> -static int of_pci_bus_find_domain_nr(struct device *parent)
-> +static int of_pci_bus_find_domain_nr(struct pci_bus *bus,
-> +				     struct device *parent)
->  {
->  	static int use_dt_domains = -1;
->  	int domain = -1;
-> @@ -5224,12 +5226,13 @@ static int of_pci_bus_find_domain_nr(struct device *parent)
->  		domain = -1;
->  	}
->  
-> +	bus->use_dt_domains = use_dt_domains;
->  	return domain;
->  }
->  
->  int pci_bus_find_domain_nr(struct pci_bus *bus, struct device *parent)
->  {
-> -	return acpi_disabled ? of_pci_bus_find_domain_nr(parent) :
-> +	return acpi_disabled ? of_pci_bus_find_domain_nr(bus, parent) :
->  			       acpi_pci_bus_find_domain_nr(bus);
->  }
->  #endif
-> diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-> index 73a03d3..ad93378 100644
-> --- a/drivers/pci/remove.c
-> +++ b/drivers/pci/remove.c
-> @@ -157,6 +157,11 @@ void pci_remove_root_bus(struct pci_bus *bus)
->  	list_for_each_entry_safe(child, tmp,
->  				 &bus->devices, bus_list)
->  		pci_remove_bus_device(child);
-> +	#ifdef CONFIG_PCI_DOMAINS_GENERIC
-> +	if (!bus->use_dt_domains)
-> +		ida_simple_remove(&__domain_nr, bus->domain_nr);
-> +	#endif
-
-1) I think there should be a wrapper alongside pci_get_new_domain_nr()
-that does the remove.  That would remove the #ifdef here and help make
-the remove symmetric with the get.
-
-2) The "use_dt_domains" name is too specific and makes too many
-assumptions about CONFIG_PCI_DOMAINS_GENERIC, e.g., it assumes that we
-don't use CONFIG_PCI_DOMAINS_GENERIC with ACPI.
-
-At a high level, if DT or ACPI supplies a domain number, we use that.
-We only use the IDA if neither supplies a domain number.  I think it
-would be clearer to set a bit in pci_get_new_domain_nr() that means
-"we got this domain from IDA", and then test that bit in the
-corresponding remove wrapper.
-
->  	pci_remove_bus(bus);
->  	host_bridge->bus = NULL;
->  
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 6732d32..235b336 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -505,6 +505,7 @@ struct pci_bus {
->  	unsigned char	cur_bus_speed;	/* enum pci_bus_speed */
->  #ifdef CONFIG_PCI_DOMAINS_GENERIC
->  	int		domain_nr;
-> +	int		use_dt_domains;
->  #endif
->  
->  	char		name[48];
-> @@ -1449,6 +1450,7 @@ static inline int pci_enable_ptm(struct pci_dev *dev, u8 *granularity)
->   * configuration space.
->   */
->  #ifdef CONFIG_PCI_DOMAINS
-> +extern struct ida __domain_nr;
->  extern int pci_domains_supported;
->  int pci_get_new_domain_nr(void);
->  #else
-> -- 
-> 1.9.1
+> +static void dw_msi_mask_irq(struct irq_data *d)
+> +{
+> +	pci_msi_mask_irq(d);
+> +	irq_chip_mask_parent(d);
+> +}
+> +
+> +static void dw_msi_unmask_irq(struct irq_data *d)
+> +{
+> +	pci_msi_unmask_irq(d);
+> +	irq_chip_unmask_parent(d);
+> +}
+> +
+>  static struct irq_chip dw_msi_irq_chip = {
+>  	.name = "PCI-MSI",
+> -	.irq_enable = pci_msi_unmask_irq,
+> -	.irq_disable = pci_msi_mask_irq,
+> -	.irq_mask = pci_msi_mask_irq,
+> -	.irq_unmask = pci_msi_unmask_irq,
+> +	.irq_mask = dw_msi_mask_irq,
+> +	.irq_unmask = dw_msi_unmask_irq,
+>  };
 > 
+> I haven't dug any further, but this should be fixed first.
 > 
+> Thanks,
+> 
+> 	M.
+> 
+
+Yep makes perfectly sense and thanks for clearing the Domains :), I understood
+them now.
+
+Best regards,
+Joao
