@@ -1,80 +1,86 @@
-Return-Path: <SRS0=7ZsP=46=rock-chips.com=shawn.lin@kernel.org>
-Return-Path: <SRS0=7ZsP=46=rock-chips.com=shawn.lin@kernel.org>
-Subject: Re: [PATCH] PCI: rockchip: check link status when validating device
-To: Bjorn Helgaas <helgaas@kernel.org>
-References: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
- <20170523194443.GD7241@bhelgaas-glaptop.roam.corp.google.com>
-Cc: shawn.lin@rock-chips.com, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org,
- Brian Norris <briannorris@chromium.org>,
- Jeffy Chen <jeffy.chen@rock-chips.com>
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Message-ID: <c2331eef-b76d-720d-3750-6d754d53710a@rock-chips.com>
-Date: Wed, 24 May 2017 09:04:33 +0800
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 8 May 2017 18:58:27 +0200
+From: Peter Senna Tschudin <peter.senna@collabora.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: Regression: 442ec4c04d1: PCI: dwc: all: Split struct pcie_port
+ into host-only and core structures
+Message-ID: <20170508165827.GC12665@collabora.com>
+References: <20170508150224.GA7458@collabora.com>
+ <1494261248.2322.21.camel@pengutronix.de>
+ <20170508164440.GB12665@collabora.com>
+ <1494262128.2322.22.camel@pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <20170523194443.GD7241@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1494262128.2322.22.camel@pengutronix.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jesper Nilsson <jesper.nilsson@axis.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Kishon Vijay Abraham I <kishon@ti.com>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Bjorn,
+On Mon, May 08, 2017 at 06:48:48PM +0200, Lucas Stach wrote:
+> Am Montag, den 08.05.2017, 18:44 +0200 schrieb Peter Senna Tschudin:
+> > On Mon, May 08, 2017 at 06:34:08PM +0200, Lucas Stach wrote:
+> > > Am Montag, den 08.05.2017, 17:02 +0200 schrieb Peter Senna Tschudin:
+> > > > Hello Kishon,
+> > > > 
+> > > > Our iMX6 hardware (imx6q-b850v3.dts) is not booting with latest
+> > > > linux-next and I could bisect until:
+> > > > 
+> > > > commit 442ec4c04d1235f8c664a74004dae54a7a574d18
+> > > > Author: Kishon Vijay Abraham I <kishon@ti.com>
+> > > > Date:   Wed Feb 15 18:48:14 2017 +0530
+> > > > 
+> > > >     PCI: dwc: all: Split struct pcie_port into host-only and core structures
+> > > > 
+> > > > Which seem to be causing our issues. Our device (imx6q-b850v3.dts) boots
+> > > > fine with 4.10, and also boots if we disable pcie with:
+> > > 
+> > > Are you sure about this bisect? It seems more likely that the secondary
+> > > bus scanning goes wrong. It seems Lorenzo Pieralisi's cfg space
+> > > non-posting patches landed in next, so the root cause of this might just
+> > > be the driver hooking the wrong fault code now.
+> > > 
+> > > Async and synchronous aborts are different fault codes on ARM. Can you
+> > > see of removing the "16 +" in hook_fault_code() in
+> > > drivers/pci/dwc/pci-imx6.c fixes this issue?
+> > 
+> > changing it to:
+> > 
+> > hook_fault_code(6, imx6q_pcie_abort_handler, SIGBUS, 0,
+> > 		"imprecise external abort");
+> > 
+> > made no difference, problem persists...
+> 
+> Can you test if 8 or 10 works?
 
-在 2017/5/24 3:44, Bjorn Helgaas 写道:
-> On Fri, May 19, 2017 at 02:58:27PM +0800, Shawn Lin wrote:
->> This patch checks the link status before reading and
->> writing configure space of devices attached to the RC.
->> If the link status is down, we shouldn't try to access
->> the devices.
->
-> What bad things happen without this patch?
->
-> It's racy to check the link status, then do the config access.  The
-> link might go down after we check but before we can perform the
-> access.
+Also fails with 8 and with 10...
+> 
+> Regards,
+> Lucas
+> 
+> 
 
-yes, it cannot fix the issue cleanly. Also we cannot prevent
-the access from memory read/write that doesn't call the
-pci_read/write_config_foo APIs.
-
-I just thought we could catch one luckly before performing
-configure access.
-
->
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->> ---
->>
->>  drivers/pci/host/pcie-rockchip.c | 12 ++++++++++++
->>  1 file changed, 12 insertions(+)
->>
->> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
->> index 0e020b6..1e64227 100644
->> --- a/drivers/pci/host/pcie-rockchip.c
->> +++ b/drivers/pci/host/pcie-rockchip.c
->> @@ -275,9 +275,21 @@ static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
->>  	rockchip_pcie_write(rockchip, val, PCIE_CORE_TXCREDIT_CFG1);
->>  }
->>
->> +static inline bool rockchip_pcie_link_up(struct rockchip_pcie *rockchip)
->> +{
->> +	return PCIE_LINK_UP(rockchip_pcie_read(rockchip,
->> +					PCIE_CLIENT_BASIC_STATUS1));
->> +}
->> +
->>  static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
->>  				      struct pci_bus *bus, int dev)
->>  {
->> +	/* do not access the devices if the link isn't completed */
->> +	if (bus->number != rockchip->root_bus_nr) {
->> +		if (!rockchip_pcie_link_up(rockchip))
->> +			return 0;
->> +	}
->> +
->>  	/* access only one slot on each root port */
->>  	if (bus->number == rockchip->root_bus_nr && dev > 0)
->>  		return 0;
->> --
->> 1.9.1
->>
->>
->
->
->
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
