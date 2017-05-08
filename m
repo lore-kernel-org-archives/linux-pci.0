@@ -1,98 +1,166 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-Date: Wed, 10 May 2017 13:30:01 +0100
-From: Piotr Gregor <piotrgregor@rsyncme.org>
-To: bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] pci: Handle the case when PCI_COMMAND register hasn't
- changed in INTx masking test
-Message-ID: <20170510122959.4uupohiz3ukzm4c4@debian1.home>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Mon, 8 May 2017 11:33:42 -0500
+From: Rob Herring <robh@kernel.org>
+To: Ryder Lee <ryder.lee@mediatek.com>
+Subject: Re: [PATCH v2 2/2] dt-bindings: pcie: Add documentation for Mediatek
+ PCIe
+Message-ID: <20170508163342.deosevmxu7g2sv6d@rob-hp-laptop>
+References: <1493890376-6713-1-git-send-email-ryder.lee@mediatek.com>
+ <1493890376-6713-3-git-send-email-ryder.lee@mediatek.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Sender: linux-kernel-owner@vger.kernel.org
+In-Reply-To: <1493890376-6713-3-git-send-email-ryder.lee@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
+ Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The check for interrupt masking support is done by reading
-the PCI_COMMAND config word
+On Thu, May 04, 2017 at 05:32:56PM +0800, Ryder Lee wrote:
+> Add documentation for PCIe host driver available in MT7623
+> series SoCs.
+> 
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> ---
+>  .../bindings/pci/mediatek,mt7623-pcie.txt          | 149 +++++++++++++++++++++
+>  1 file changed, 149 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> new file mode 100644
+> index 0000000..9c5d5a7
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> @@ -0,0 +1,149 @@
+> +Mediatek Gen2 PCIe controller which is available on MT7623 series SoCs
+> +
+> +PCIe subsys supports single root complex (RC) with 3 Root Ports. Each root
+> +ports supports a Gen2 1-lane Link and has PIPE interface to PHY.
+> +
+> +Required properties:
+> +- compatible: Should contain "mediatek,mt7623-pcie".
+> +- device_type: Must be "pci"
+> +- reg: Base addresses and lengths of the PCIe controller.
+> +- #address-cells: Address representation for root ports (must be 3)
+> +- #size-cells: Size representation for root ports (must be 2)
+> +- #interrupt-cells: Size representation for interrupts (must be 1)
+> +- interrupts: Three interrupt outputs of the controller. Must contain an
+> +  entry for each entry in the interrupt-names property.
+> +- interrupt-names: Must include the following names
+> +  - "pcie-int0"
+> +  - "pcie-int1"
+> +  - "pcie-int2"
+> +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
+> +  Please refer to the standard PCI bus binding document for a more detailed
+> +  explanation.
+> +- clocks: Must contain an entry for each entry in clock-names.
+> +  See ../clocks/clock-bindings.txt for details.
+> +- clock-names: Must include the following entries:
+> +  - free_ck :for reference clock of PCIe subsys
+> +  - sys_ck0 :for clock of Port0
+> +  - sys_ck1 :for clock of Port1
+> +  - sys_ck2 :for clock of Port2
+> +- resets: Must contain an entry for each entry in reset-names.
+> +  See ../reset/reset.txt for details.
+> +- reset-names: Must include the following entries:
+> +  - pcie-rst0 :port0 reset
+> +  - pcie-rst1 :port1 reset
+> +  - pcie-rst2 :port2 reset
+> +- phys: list of PHY specifiers (used by generic PHY framework).
+> +- phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
+> +  number of PHYs as specified in *phys* property.
+> +- power-domains: A phandle and power domain specifier pair to the power domain
+> +  which is responsible for collapsing and restoring power to the peripheral.
+> +- bus-range: Range of bus numbers associated with this controller.
+> +- ranges:
+> +  - The first three entries are expected to translate the addresses for the root
+> +    port registers, which are referenced by the assigned-addresses property of
+> +    the root port nodes (see below).
+> +  - The remaining entries setup the mapping for the standard I/O and memory
+> +	regions.
+> +  Please refer to the standard PCI bus binding document for a more detailed
+> +  explanation.
+> +
+> +In addition, the device tree node must have sub-nodes describing each
+> +PCIe port interface, having the following mandatory properties:
+> +
+> +Required properties:
+> +- device_type: Must be "pci"
+> +- assigned-addresses: Address and size of the port configuration registers
+> +- reg: Only the first four bytes are used to refer to the correct bus number
+> +  and device number.
+> +- #address-cells: Must be 3
+> +- #size-cells: Must be 2
+> +- #interrupt-cells: Must be 1
+> +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
+> +  Please refer to the standard PCI bus binding document for a more detailed
+> +  explanation.
+> +- ranges: Sub-ranges distributed from the PCIe controller node. An empty
+> +  property is sufficient.
+> +- num-lanes: Number of lanes to use for this port.
+> +
+> +Examples:
+> +
+> +	hifsys: syscon@1a000000 {
+> +		compatible = "mediatek,mt7623-hifsys", "syscon";
+> +		reg = <0 0x1a000000 0 0x1000>;
+> +		#clock-cells = <1>;
+> +		#reset-cells = <1>;
+> +	};
+> +
+> +	pcie: pcie-controller@1a140000 {
+> +		compatible = "mediatek,mt7623-pcie";
+> +		device_type = "pci";
+> +		reg = <0 0x1a140000 0 0x1000>; /* PCIe shared registers */
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		#interrupt-cells = <1>;
+> +		interrupts = <GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>,
+> +			     <GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>,
+> +			     <GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
+> +		interrupt-names = "pcie-int0", "pcie-int1", "pcie-int2";
+> +		interrupt-map-mask = <0xf800 0 0 0>;
+> +		interrupt-map = <0x0000 0 0 0 &gic GIC_SPI 193 IRQ_TYPE_NONE>,
+> +				 <0x0800 0 0 0 &gic GIC_SPI 194 IRQ_TYPE_NONE>,
+> +			     <0x1000 0 0 0 &gic GIC_SPI 195 IRQ_TYPE_NONE>;
+> +		clocks = <&topckgen CLK_TOP_ETHIF_SEL>,
+> +			     <&hifsys CLK_HIFSYS_PCIE0>,
+> +				 <&hifsys CLK_HIFSYS_PCIE1>,
+> +				 <&hifsys CLK_HIFSYS_PCIE2>;
+> +		clock-names = "free_ck", "sys_ck0", "sys_ck1", "sys_ck2";
+> +		resets = <&hifsys MT2701_HIFSYS_PCIE0_RST>,
+> +			     <&hifsys MT2701_HIFSYS_PCIE1_RST>,
+> +			     <&hifsys MT2701_HIFSYS_PCIE2_RST>;
+> +		reset-names = "pcie-rst0", "pcie-rst1", "pcie-rst2";
+> +		phys = <&pcie0_phy>, <&pcie1_phy>, <&pcie2_phy>;
+> +		phy-names = "pcie-phy0", "pcie-phy1", "pcie-phy2";
+> +		power-domains = <&scpsys MT2701_POWER_DOMAIN_HIF>;
+> +		bus-range = <0x00 0xff>;
+> +		ranges = <0x82000000 0 0x1a142000 0 0x1a142000 0 0x1000 /* Port0 registers */
+> +			  0x82000000 0 0x1a143000 0 0x1a143000 0 0x1000 /* Port1 registers */
+> +			  0x82000000 0 0x1a144000 0 0x1a144000 0 0x1000 /* Port2 registers */
+> +			  0x81000000 0 0x1a160000 0 0x1a160000 0 0x00010000 /* I/O space */
+> +			  0x83000000 0 0x60000000 0 0x60000000 0 0x10000000>;	/* memory space */
+> +
+> +		pcie@1,0 {
 
-	pci_read_config_word(dev, PCI_COMMAND, &orig);
+Your unit addresses appear to be off by 1. This one should be 0,0.
 
-then flipping the PCI_COMMAND_INTX_DISABLE bit and writing result back
+With those fixed,
 
-	pci_write_config_word(dev, PCI_COMMAND,
-		orig ^ PCI_COMMAND_INTX_DISABLE);
+Acked-by: Rob Herring <robh@kernel.org>
 
-The expected result is that following read of the PCI_COMMAND
-
-	pci_read_config_word(dev, PCI_COMMAND, &new);
-
-returns PCI_COMMAND with only PCI_COMMAND_INTX_DISABLE bit changed.
-
-There are two possible outcomes:
-
-	1.	Command is the same (hasn't changed)
-	2.	Commmand has changed
-
-And the second of them may be decoupled to:
-
-	2.1	Command changed only for PCI_COMMAND_INTX_DISABLE bit
-		(hasn't changed for bits different than PCI_COMMAND_INTX_DISABLE)
-	2.2	Command changed for bit(s) different than PCI_COMMAND_INTX_DISABLE bit
-		(and maybe for PCI_COMMAND_INTX_DISABLE too)
-
-The 2.1 is expected result and anything else is error.
-The 2.2 outcome is handled by pci_intx_mask_supported by printing
-appropriate message to the log, but outcome 1 is not handled.
-
-Log the message about command not being changed at all.
-
-Signed-off-by: Piotr Gregor <piotrgregor@rsyncme.org>
----
- drivers/pci/pci.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b01bd5b..67a611e 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3712,7 +3712,7 @@ EXPORT_SYMBOL_GPL(pci_intx);
-  * pci_intx_mask_supported - probe for INTx masking support
-  * @dev: the PCI device to operate on
-  *
-- * Check if the device dev support INTx masking via the config space
-+ * Check if the device dev supports INTx masking via the config space
-  * command word.
-  */
- bool pci_intx_mask_supported(struct pci_dev *dev)
-@@ -3736,11 +3736,21 @@ bool pci_intx_mask_supported(struct pci_dev *dev)
- 	 * go ahead and check it.
- 	 */
- 	if ((new ^ orig) & ~PCI_COMMAND_INTX_DISABLE) {
-+		/*
-+		 * If anything else than PCI_COMMAND_INTX_DISABLE bit has
-+		 * changed (and maybe PCI_COMMAND_INTX_DISABLE too)
-+		 */
- 		dev_err(&dev->dev, "Command register changed from 0x%x to 0x%x: driver or hardware bug?\n",
- 			orig, new);
- 	} else if ((new ^ orig) & PCI_COMMAND_INTX_DISABLE) {
-+		/*
-+		 * OK. Only PCI_COMMAND_INTX_DISABLE bit has changed
-+		 */
- 		mask_supported = true;
- 		pci_write_config_word(dev, PCI_COMMAND, orig);
-+	} else {
-+		dev_err(&dev->dev, "Command register hasn't changed when written from 0x%x to 0x%x: driver or hardware bug?\n",
-+			orig, new);
- 	}
- 
- 	pci_cfg_access_unlock(dev);
-@@ -3798,7 +3808,7 @@ static bool pci_check_and_set_intx_mask(struct pci_dev *dev, bool mask)
-  * @dev: the PCI device to operate on
-  *
-  * Check if the device dev has its INTx line asserted, mask it and
-- * return true in that case. False is returned if not interrupt was
-+ * return true in that case. False is returned if interrupt wasn't
-  * pending.
-  */
- bool pci_check_and_mask_intx(struct pci_dev *dev)
--- 
-2.1.4
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
