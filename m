@@ -1,100 +1,136 @@
-Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
-Return-Path: <SRS0=Y20I=45=free.fr=slash.tmp@kernel.org>
-Subject: Re: [PATCH v4 2/2] PCI: Add tango PCIe host bridge support
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- linux-pci <linux-pci@vger.kernel.org>, Marc Zyngier <marc.zyngier@arm.com>,
- Thomas Gleixner <tglx@linutronix.de>, Robin Murphy <robin.murphy@arm.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <4a354b33-d59c-4ebb-4b31-0388ac8090d4@sigmadesigns.com>
- <20170523172409.GD24431@bhelgaas-glaptop.roam.corp.google.com>
- <7a46cfa6-3c8a-33a6-a821-da49535c5c8a@free.fr>
- <20170523183548.GB2637@bhelgaas-glaptop.roam.corp.google.com>
-From: Mason <slash.tmp@free.fr>
-Message-ID: <9bb2fdd4-59c3-13e9-7c7d-65107be6a32d@free.fr>
-Date: Tue, 23 May 2017 21:29:05 +0200
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:43408 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754648AbdEHOto (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Mon, 8 May 2017 10:49:44 -0400
+Subject: Re: [RFC] pci: using new interrupt API to enable MSI and MSI-X
+To: Joao Pinto <Joao.Pinto@synopsys.com>, kishon@ti.com,
+        bhelgaas@google.com, jingoohan1@gmail.com
+References: <806903036508ae5246084cbc3b796083d76f8917.1493992929.git.jpinto@synopsys.com>
+ <58f3a6ca-a051-a7dc-805f-ee3eb0f3ac3b@arm.com>
+ <1b77d1ec-5fc8-d548-7e84-8d05a31849aa@synopsys.com>
+ <c53eb6ec-14da-9bae-002b-6abc95c62b1e@arm.com>
+ <39dba8bd-dbb7-3c2e-879b-78cf3bc463c8@synopsys.com>
+ <78df196c-0c86-8775-116c-0f4dd49d4008@arm.com>
+ <3581d1e8-300e-bb48-4d33-67ec8afcd6e7@synopsys.com>
+Cc: linux-pci@vger.kernel.org
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <e34851f9-ba58-f652-bc39-7b3286975c82@arm.com>
+Date: Mon, 8 May 2017 15:49:41 +0100
 MIME-Version: 1.0
-In-Reply-To: <20170523183548.GB2637@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset=ISO-8859-15
+In-Reply-To: <3581d1e8-300e-bb48-4d33-67ec8afcd6e7@synopsys.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/05/2017 20:35, Bjorn Helgaas wrote:
-> On Tue, May 23, 2017 at 07:43:16PM +0200, Mason wrote:
->> On 23/05/2017 19:24, Bjorn Helgaas wrote:
->>> On Thu, Apr 20, 2017 at 04:31:25PM +0200, Marc Gonzalez wrote:
->>>> This driver is required to work around several hardware bugs in the
->>>> PCIe controller.
+On 08/05/17 15:40, Joao Pinto wrote:
+> Às 11:59 AM de 5/8/2017, Marc Zyngier escreveu:
+>> On 08/05/17 11:24, Joao Pinto wrote:
+>>> Às 11:22 AM de 5/8/2017, Marc Zyngier escreveu:
+>>>> On 08/05/17 10:59, Joao Pinto wrote:
+>>>>> Às 3:57 PM de 5/5/2017, Marc Zyngier escreveu:
+>>>>>> Joao,
+>>>>>>
+>>>>>> On 05/05/17 15:11, Joao Pinto wrote:
+>>>>>>> Hello,
+>>>>>>> I am currently adding the support for both MSI and MSI-x in pcie-designware and
+>>>>>>> I am now facing a dificulty.
+>>>>>>>
+>>>>>>> My test endpoint is a USB 3.1 MSI / MSI-X capable and I tested that with
+>>>>>>> the changes introduced by this patch we are able to enable MSI and MSI-X
+>>>>>>> in this endpoint (depends on the usage of the MSI_FLAG_PCI_MSIX flag).
+>>>>>>>
+>>>>>>> The problem I am facing now is that Intc for the USB 3.1 Endpoint is completely
+>>>>>>> bogus (524288) when it should be 1, and so I am not receiving any interrupts
+>>>>>>> from the endpoint.
+>>>>>>
+>>>>>> It is not bogus at all. It is computed from the PCI requester ID in 
+>>>>>> pci_msi_domain_calc_hwirq. What you're seeing is the PCI/MDI domain 
+>>>>>> view of that interrupt, which is completely virtual.
+>>>>>>
+>>>>>> The real thing happens in your own irqdomain, where the hwirq for IRQ46 
+>>>>>> is probably 1 (only you can know that). As for why it doesn't work, see 
+>>>>>> below:
+>>>>>>
+>>>>>>>
+>>>>>>> I would apreciate that more experienced people in this interrupt subject could
+>>>>>>> give me an hint.
 >>>>
->>>> NB: Revision 1 does not support legacy interrupts, or IO space.
+>>>> [...]
 >>>>
->>>> Signed-off-by: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
->>>> ---
->>>>  Documentation/devicetree/bindings/pci/tango-pcie.txt |  32 ++++++++
->>>>  drivers/pci/host/Kconfig                             |   8 ++
->>>>  drivers/pci/host/Makefile                            |   1 +
->>>>  drivers/pci/host/pcie-tango.c                        | 161 +++++++++++++++++++++++++++++++++++++++
->>>>  include/linux/pci_ids.h                              |   2 +
->>>>  5 files changed, 204 insertions(+)
->>>> ...
+>>>>> Yep makes perfectly sense and thanks for clearing the Domains :), I understood
+>>>>> them now.
+>>>>
+>>>> I guess that you have your MSI controller working with MSI-X now?
 >>>
->>>> +static int smp8759_config_read(struct pci_bus *bus,
->>>> +		unsigned int devfn, int where, int size, u32 *val)
->>>> +{
->>>> +	int ret;
->>>> +	struct pci_config_window *cfg = bus->sysdata;
->>>> +	struct tango_pcie *pcie = dev_get_drvdata(cfg->parent);
->>>> +
->>>> +	/*
->>>> +	 * QUIRK #1
->>>> +	 * Reads in configuration space outside devfn 0 return garbage.
->>>> +	 */
->>>> +	if (devfn != 0)
->>>> +		return PCIBIOS_FUNC_NOT_SUPPORTED;
->>>> +
->>>> +	/*
->>>> +	 * QUIRK #2
->>>> +	 * Unfortunately, config and mem spaces are muxed.
->>>> +	 * Linux does not support such a setting, since drivers are free
->>>> +	 * to access mem space directly, at any time.
->>>> +	 * Therefore, we can only PRAY that config and mem space accesses
->>>> +	 * NEVER occur concurrently.
->>>> +	 */
->>>> +	writel_relaxed(1, pcie->mux);
->>>> +	ret = pci_generic_config_read(bus, devfn, where, size, val);
->>>> +	writel_relaxed(0, pcie->mux);
->>>
->>> This is a major issue and possibly even a security problem.
->>> Unprivileged users can cause config accesses via lspci/setpci.
+>>> I started working one hour ago and still putting some subjects in order, I am
+>>> going to return to PCI in a bit. I will keep you updated. I thought you were in
+>>> US Pacific timezone.
 >>
->> Since the host bridge doesn't support hotplug in any way,
->> how about setting a flag once enumeration is complete,
->> to prevent all future config accesses?
-> 
-> I thought about that, too, but I'm not sure it will work becuase I
-> think drivers will need to do at least a few config accesses, e.g.,
-> pci_enable_device() may write PCI_COMMAND to set PCI_COMMAND_MEMORY,
-> it may read PCI_INTERRUPT_PIN, etc.  And MSI setup requires config
-> access, too.
-> 
->>> I don't have a good suggestion for addressing it, but if you can't
->>> make this work reliably, you need at least a dev_err() in the probe
->>> function and probably a taint of the kernel (see add_taint()).
+>> I'm firmly rooted in BST! ;-)
 >>
->> There is a chance that the issue will get fixed in rev2
->> of the bridge. But obviously, that won't help for rev1
->> already in the wild.
+>> 	M.
+>>
 > 
-> Hopefully there will be a way to distinguish rev2 from rev1.
+> You were right, it was missing the bottom part related to the PCie DW IP:
+> 
+> static void dw_pci_bottom_mask(struct irq_data *data)
+> {
+> 	struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
+> 	struct pcie_port *pp = &pci->pp;
+> 	unsigned int res, bit, val;
+> 
+> 	res = (data->hwirq / 32) * 12;
+> 	bit = data->hwirq % 32;
+> 
+> 	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+> 	val &= ~(1 << bit);
+> 	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
 
-rev2 is embedded in a new SoC, so the DT node will specify a
-different compatible string. A "preview" of the intent was
-given in an older patch:
-"[RFC PATCH v0.2] PCI: Add support for tango PCIe host bridge"
+be careful: you have a horrible race here, where another CPU try to mask
+another MSI at the same time. Any form of RMW should be guarded by a
+spinlock.
 
-Regards.
+> }
+> 
+> static void dw_pci_bottom_unmask(struct irq_data *data)
+> {
+> 	struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
+> 	struct pcie_port *pp = &pci->pp;
+> 	unsigned int res, bit, val;
+> 
+> 	res = (data->hwirq / 32) * 12;
+> 	bit = data->hwirq % 32;
+> 
+> 	dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
+> 	val |= 1 << bit;
+> 	dw_pcie_wr_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, val);
+
+Same here. Also, you could perfectly replace the read with a variable
+that caches the most recent value (as there should be no other code
+changing this register).
+
+> }
+> 
+> static struct irq_chip dw_pci_msi_bottom_irq_chip = {
+> 	.name			= "DW MSI",
+> 	.irq_compose_msi_msg	= dw_pci_compose_msi_msg,
+> 	.irq_set_affinity	= dw_pci_msi_set_affinity,
+> 	.irq_mask		= dw_pci_bottom_mask,
+> 	.irq_unmask		= dw_pci_bottom_unmask,
+> };
+> 
+> 
+> With these 2 functions I was able to perform test with MSI and with MSI-X
+> Endpoints. I am goingo to clean this up and check the compatibility with other
+> SoC drivers and send a patch soon.
+> 
+> Thanks for the help Marc!
+
+No worries.
+
+Cheers,
+
+	M.
+-- 
+Jazz is not dead. It just smells funny...
