@@ -1,62 +1,36 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Wed, 31 May 2017 14:00:37 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mason <slash.tmp@free.fr>
-Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
-Message-ID: <20170531190037.GA18084@bhelgaas-glaptop.roam.corp.google.com>
-References: <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
- <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
- <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
- <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
- <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
- <f1a57255-be75-e8c4-6b8d-0254f4365d61@arm.com>
- <c78b1e79-59e5-0097-989e-1f1e8cd93fc4@arm.com>
- <b10a211d-1f4a-1cc1-7139-9b48a90dd1c6@free.fr>
- <20170531173414.GB4496@bhelgaas-glaptop.roam.corp.google.com>
- <4885137f-7c1c-5742-4f66-f48c32ce7abb@free.fr>
+Return-Path: <SRS0=Gf57=4P=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=Gf57=4P=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: linux-pci@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org,
+	helgaas@kernel.org
+Subject: Resizeable PCI BAR support v6
+Date: Tue,  9 May 2017 18:49:02 +0200
+Message-Id: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <4885137f-7c1c-5742-4f66-f48c32ce7abb@free.fr>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
- David Laight <david.laight@aculab.com>, Thomas Gleixner <tglx@linutronix.de>,
- Robin Murphy <robin.murphy@arm.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 31, 2017 at 08:49:04PM +0200, Mason wrote:
-> On 31/05/2017 19:34, Bjorn Helgaas wrote:
-> ...
+Hi everyone,
 
-> > This would be more an IRQ patch than a PCI patch, but if I were
-> > reviewing it, I would look for assurance that *all* the no-op
-> > .irq_set_affinity callbacks were cleaned up, not just those in
-> > drivers/pci/host.
-> 
-> Are you saying the patch is *wrong* if not all "do-nothing"
-> callbacks are cleaned up?
+is is the sixth incarnation of this set of patches. It enables device
+drivers to resize and most likely also relocate the PCI BAR of devices
+they manage to allow the CPU to access all of the device local memory at once.
 
-I'm saying that (1) this probably wouldn't be applied via the PCI
-tree, and (2) if it *were* applied via PCI, I would ask that all the
-no-op callbacks were cleaned up at the same time.
+This is very useful for GFX device drivers where the default PCI BAR is only
+about 256MB in size for compatibility reasons, but the device easily have
+multiple gigabyte of local memory.
 
-Huh, that sounds a lot like what I wrote above.  Was I unclear?
+Noteable changed compared to v5:
+1. Added some rb.
+2. Followed Andy's suggestion on patch #3 to use a next
+   pointer to make it more readable.
 
-Bjorn
+Mostly every comment addressed now, so next question is how we want to
+merge this upstream?
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+I would suggest patches #1-#4 through some PCI branch and we send #5 through the drm
+maintainer as soon as the dependencies are accepted?
+
+Thanks for all the help,
+Christian.
