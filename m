@@ -1,112 +1,244 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 23 May 2017 12:03:19 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Marc Gonzalez <marc_gonzalez@sigmadesigns.com>
-Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
-Message-ID: <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
- <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
+Return-Path: <SRS0=Gf57=4P=vodafone.de=deathsimple@kernel.org>
+Return-Path: <SRS0=Gf57=4P=vodafone.de=deathsimple@kernel.org>
+From: =?UTF-8?q?Christian=20K=C3=B6nig?= <deathsimple@vodafone.de>
+To: linux-pci@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org,
+	helgaas@kernel.org
+Subject: [PATCH v6 3/5] PCI: add functionality for resizing resources v5
+Date: Tue,  9 May 2017 18:49:05 +0200
+Message-Id: <1494348547-1465-4-git-send-email-deathsimple@vodafone.de>
+In-Reply-To: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
+References: <1494348547-1465-1-git-send-email-deathsimple@vodafone.de>
 MIME-Version: 1.0
-In-Reply-To: <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Mason <slash.tmp@free.fr>,
- Marc Zyngier <marc.zyngier@arm.com>, linux-pci <linux-pci@vger.kernel.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Liviu Dudau <liviu.dudau@arm.com>, LKML <linux-kernel@vger.kernel.org>,
- David Laight <david.laight@aculab.com>, Thomas Gleixner <tglx@linutronix.de>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- Robin Murphy <robin.murphy@arm.com>, Jiang Liu <jiang.liu@linux.intel.com>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Content-Type: text/plain; charset=UTF-8
 List-ID: <linux-pci.vger.kernel.org>
 
-On Wed, May 17, 2017 at 04:56:08PM +0200, Marc Gonzalez wrote:
-> On 20/04/2017 16:28, Marc Gonzalez wrote:
-> 
-> > +static int tango_set_affinity(struct irq_data *data,
-> > +		const struct cpumask *mask, bool force)
-> > +{
-> > +	return -EINVAL;
-> > +}
-> > +
-> > +static struct irq_chip tango_chip = {
-> > +	.irq_ack		= tango_ack,
-> > +	.irq_mask		= tango_mask,
-> > +	.irq_unmask		= tango_unmask,
-> > +	.irq_set_affinity	= tango_set_affinity,
-> > +	.irq_compose_msi_msg	= tango_compose_msi_msg,
-> > +};
-> 
-> Hmmm... I'm wondering why .irq_set_affinity is required.
-> 
-> static int setup_affinity(struct irq_desc *desc, struct cpumask *mask)
-> first calls __irq_can_set_affinity() to check whether
-> desc->irq_data.chip->irq_set_affinity) exists.
-> 
-> then calls irq_do_set_affinity(&desc->irq_data, mask, false);
-> which calls chip->irq_set_affinity(data, mask, force);
-> = msi_domain_set_affinity()
-> which calls parent->chip->irq_set_affinity() unconditionally.
-> 
-> Would it make sense to test that the callback is implemented
-> before calling it?
-> 
-> 
-> [    0.723895] Unable to handle kernel NULL pointer dereference at virtual address 00000000
+From: Christian König <christian.koenig@amd.com>
 
-I'm not sure what you're asking.
+This allows device drivers to request resizing their BARs.
 
-Is this a bug report for the v4 tango driver?
+The function only tries to reprogram the windows of the bridge directly above
+the requesting device and only the BAR of the same type (usually mem, 64bit,
+prefetchable). This is done to make sure not to disturb other drivers by
+changing the BARs of their devices.
 
-Or are you asking whether msi_domain_set_affinity() should be changed
-to check whether parent->chip->irq_set_affinity is implemented?
+If reprogramming the bridge BAR fails the old status is restored and -ENOSPC
+returned to the calling device driver.
 
-msi_domain_set_affinity() has called parent->chip->irq_set_affinity()
-without checking since it was added in 2014 by f3cf8bb0d6c3 ("genirq: Add
-generic msi irq domain support"), so if there's a problem here, it's most
-likely in the tango code.
+v2: rebase on changes in rbar support
+v3: style cleanups, fail if memory decoding is enabled or resources
+    still allocated, resize all unused bridge BARs,
+    drop calling pci_reenable_device
+v4: print resources before releasing them, style cleanups,
+    use pci_rbar_size_to_bytes, use PCI_RES_TYPE_MASK
+v5: use next pointer to simplify loop
 
-> ...
-> [    1.135809] [<c0160eb4>] (msi_domain_set_affinity) from [<c015a864>] (irq_do_set_affinity+0x18/0x48)
-> [    1.144990] [<c015a864>] (irq_do_set_affinity) from [<c015a918>] (setup_affinity+0x84/0xd4)
-> [    1.153384] [<c015a918>] (setup_affinity) from [<c015b20c>] (__setup_irq+0x40c/0x5d4)
-> [    1.161254] [<c015b20c>] (__setup_irq) from [<c015b57c>] (request_threaded_irq+0xe4/0x184)
-> [    1.169569] [<c015b57c>] (request_threaded_irq) from [<c03102e0>] (aer_probe+0x9c/0x218)
-> [    1.177704] [<c03102e0>] (aer_probe) from [<c030e4bc>] (pcie_port_probe_service+0x34/0x70)
-> [    1.186017] [<c030e4bc>] (pcie_port_probe_service) from [<c0351cd0>] (really_probe+0x1c4/0x250)
-> [    1.194763] [<c0351cd0>] (really_probe) from [<c0351ec8>] (__device_attach_driver+0xa4/0xe0)
-> [    1.203245] [<c0351ec8>] (__device_attach_driver) from [<c0350274>] (bus_for_each_drv+0x60/0x94)
-> [    1.212076] [<c0350274>] (bus_for_each_drv) from [<c0351abc>] (__device_attach+0x9c/0xdc)
-> [    1.220296] [<c0351abc>] (__device_attach) from [<c0351ff0>] (device_initial_probe+0xc/0x10)
-> [    1.228777] [<c0351ff0>] (device_initial_probe) from [<c0351090>] (bus_probe_device+0x84/0x8c)
-> [    1.237433] [<c0351090>] (bus_probe_device) from [<c034f484>] (device_add+0x3cc/0x548)
-> [    1.245390] [<c034f484>] (device_add) from [<c034f614>] (device_register+0x14/0x18)
-> [    1.253086] [<c034f614>] (device_register) from [<c030e8b8>] (pcie_port_device_register+0x3b0/0x450)
-> [    1.262267] [<c030e8b8>] (pcie_port_device_register) from [<c030ecfc>] (pcie_portdrv_probe+0x2c/0x50)
-> [    1.271539] [<c030ecfc>] (pcie_portdrv_probe) from [<c0302ba8>] (pci_device_probe+0x7c/0xc8)
-> [    1.280022] [<c0302ba8>] (pci_device_probe) from [<c0351c84>] (really_probe+0x178/0x250)
-> [    1.288154] [<c0351c84>] (really_probe) from [<c0351ec8>] (__device_attach_driver+0xa4/0xe0)
-> [    1.296635] [<c0351ec8>] (__device_attach_driver) from [<c0350274>] (bus_for_each_drv+0x60/0x94)
-> [    1.305465] [<c0350274>] (bus_for_each_drv) from [<c0351abc>] (__device_attach+0x9c/0xdc)
-> [    1.313684] [<c0351abc>] (__device_attach) from [<c0351b08>] (device_attach+0xc/0x10)
-> [    1.321559] [<c0351b08>] (device_attach) from [<c02f9a20>] (pci_bus_add_device+0x44/0x90)
-> [    1.329778] [<c02f9a20>] (pci_bus_add_device) from [<c02f9aa8>] (pci_bus_add_devices+0x3c/0x80)
-> [    1.338523] [<c02f9aa8>] (pci_bus_add_devices) from [<c0312dfc>] (pci_host_common_probe+0x100/0x314)
-> [    1.347703] [<c0312dfc>] (pci_host_common_probe) from [<c0313550>] (tango_pcie_probe+0x138/0x340)
-> [    1.356624] [<c0313550>] (tango_pcie_probe) from [<c03532c4>] (platform_drv_probe+0x34/0x6c)
-> 
+Signed-off-by: Christian König <christian.koenig@amd.com>
+---
+ drivers/pci/setup-bus.c | 98 +++++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/pci/setup-res.c | 59 +++++++++++++++++++++++++++++
+ include/linux/pci.h     |  3 ++
+ 3 files changed, 160 insertions(+)
 
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index efebd70..f2e3812 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -1917,6 +1917,104 @@ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge)
+ }
+ EXPORT_SYMBOL_GPL(pci_assign_unassigned_bridge_resources);
+ 
++int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type)
++{
++	struct pci_dev_resource *dev_res;
++	struct pci_dev *next;
++	LIST_HEAD(saved);
++	LIST_HEAD(added);
++	LIST_HEAD(failed);
++	unsigned int i;
++	int ret;
++
++	/* Walk to the root hub, releasing bridge BARs when possible */
++	next = bridge;
++	do {
++		bridge = next;
++		for (i = PCI_BRIDGE_RESOURCES; i < PCI_BRIDGE_RESOURCE_END;
++		     i++) {
++			struct resource *res = &bridge->resource[i];
++
++			if ((res->flags ^ type) & PCI_RES_TYPE_MASK)
++				continue;
++
++			/* Ignore BARs which are still in use */
++			if (res->child)
++				continue;
++
++			ret = add_to_list(&saved, bridge, res, 0, 0);
++			if (ret)
++				goto cleanup;
++
++			dev_info(&bridge->dev, "BAR %d: releasing %pR\n",
++				 i, res);
++
++			if (res->parent)
++				release_resource(res);
++			res->start = 0;
++			res->end = 0;
++			break;
++		}
++		if (i == PCI_BRIDGE_RESOURCE_END)
++			break;
++
++		next = bridge->bus ? bridge->bus->self : NULL;
++	} while (next);
++
++	if (list_empty(&saved))
++		return -ENOENT;
++
++	__pci_bus_size_bridges(bridge->subordinate, &added);
++	__pci_bridge_assign_resources(bridge, &added, &failed);
++	BUG_ON(!list_empty(&added));
++
++	if (!list_empty(&failed)) {
++		ret = -ENOSPC;
++		goto cleanup;
++	}
++
++	list_for_each_entry(dev_res, &saved, list) {
++		/* Skip the bridge we just assigned resources for. */
++		if (bridge == dev_res->dev)
++			continue;
++
++		bridge = dev_res->dev;
++		pci_setup_bridge(bridge->subordinate);
++	}
++
++	free_list(&saved);
++	return 0;
++
++cleanup:
++	/* restore size and flags */
++	list_for_each_entry(dev_res, &failed, list) {
++		struct resource *res = dev_res->res;
++
++		res->start = dev_res->start;
++		res->end = dev_res->end;
++		res->flags = dev_res->flags;
++	}
++	free_list(&failed);
++
++	/* Revert to the old configuration */
++	list_for_each_entry(dev_res, &saved, list) {
++		struct resource *res = dev_res->res;
++
++		bridge = dev_res->dev;
++		i = res - bridge->resource;
++
++		res->start = dev_res->start;
++		res->end = dev_res->end;
++		res->flags = dev_res->flags;
++
++		pci_claim_resource(bridge, i);
++		pci_setup_bridge(bridge->subordinate);
++	}
++	free_list(&saved);
++
++	return ret;
++}
++
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus)
+ {
+ 	struct pci_dev *dev;
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index 9526e34..9d3453c 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -363,6 +363,65 @@ int pci_reassign_resource(struct pci_dev *dev, int resno, resource_size_t addsiz
+ 	return 0;
+ }
+ 
++void pci_release_resource(struct pci_dev *dev, int resno)
++{
++	struct resource *res = dev->resource + resno;
++
++	dev_info(&dev->dev, "BAR %d: releasing %pR\n", resno, res);
++	release_resource(res);
++	res->end = resource_size(res) - 1;
++	res->start = 0;
++	res->flags |= IORESOURCE_UNSET;
++}
++EXPORT_SYMBOL(pci_release_resource);
++
++int pci_resize_resource(struct pci_dev *dev, int resno, int size)
++{
++	struct resource *res = dev->resource + resno;
++	int old, ret;
++	u32 sizes;
++	u16 cmd;
++
++	pci_read_config_word(dev, PCI_COMMAND, &cmd);
++	if (cmd & PCI_COMMAND_MEMORY)
++		return -EBUSY;
++
++	sizes = pci_rbar_get_possible_sizes(dev, resno);
++	if (!sizes)
++		return -ENOTSUPP;
++
++	if (!(sizes & BIT(size)))
++		return -EINVAL;
++
++	old = pci_rbar_get_current_size(dev, resno);
++	if (old < 0)
++		return old;
++
++	/* Make sure the resource isn't assigned before making it larger. */
++	pci_release_resource(dev, resno);
++
++	ret = pci_rbar_set_size(dev, resno, size);
++	if (ret)
++		goto error_reassign;
++
++	res->end = res->start + pci_rbar_size_to_bytes(size) - 1;
++
++	ret = pci_reassign_bridge_resources(dev->bus->self, res->flags);
++	if (ret)
++		goto error_resize;
++
++	return 0;
++
++error_resize:
++	pci_rbar_set_size(dev, resno, old);
++	res->end = res->start + pci_rbar_size_to_bytes(old) - 1;
++
++error_reassign:
++	pci_assign_unassigned_bus_resources(dev->bus);
++	return ret;
++}
++EXPORT_SYMBOL(pci_resize_resource);
++
+ int pci_enable_resources(struct pci_dev *dev, int mask)
+ {
+ 	u16 cmd, old_cmd;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index a38772a..f0a630a 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1055,6 +1055,8 @@ void pci_reset_bridge_secondary_bus(struct pci_dev *dev);
+ void pci_update_resource(struct pci_dev *dev, int resno);
+ int __must_check pci_assign_resource(struct pci_dev *dev, int i);
+ int __must_check pci_reassign_resource(struct pci_dev *dev, int i, resource_size_t add_size, resource_size_t align);
++void pci_release_resource(struct pci_dev *dev, int resno);
++int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
+ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+ bool pci_device_is_present(struct pci_dev *pdev);
+ void pci_ignore_hotplug(struct pci_dev *dev);
+@@ -1135,6 +1137,7 @@ void pci_assign_unassigned_resources(void);
+ void pci_assign_unassigned_bridge_resources(struct pci_dev *bridge);
+ void pci_assign_unassigned_bus_resources(struct pci_bus *bus);
+ void pci_assign_unassigned_root_bus_resources(struct pci_bus *bus);
++int pci_reassign_bridge_resources(struct pci_dev *bridge, unsigned long type);
+ void pdev_enable_device(struct pci_dev *);
+ int pci_enable_resources(struct pci_dev *, int mask);
+ void pci_fixup_irqs(u8 (*)(struct pci_dev *, u8 *),
+-- 
+2.7.4
