@@ -1,321 +1,98 @@
-Return-Path: <linux-kernel-owner@vger.kernel.org>
-From: Oza Pawandeep <oza.oza@broadcom.com>
-To: Joerg Roedel <joro@8bytes.org>, Robin Murphy <robin.murphy@arm.com>
-Cc: iommu@lists.linux-foundation.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        devicetree@vger.kernel.org, bcm-kernel-feedback-list@broadcom.com,
-        Oza Pawandeep <oza.pawandeep@gmail.com>,
-        Oza Pawandeep <oza.oza@broadcom.com>
-Subject: [PATCH v6 3/3] PCI/of fix of_dma_get_range; get PCI specific dma-ranges
-Date: Tue, 16 May 2017 10:52:07 +0530
-Message-Id: <1494912127-12890-4-git-send-email-oza.oza@broadcom.com>
-In-Reply-To: <1494912127-12890-1-git-send-email-oza.oza@broadcom.com>
-References: <1494912127-12890-1-git-send-email-oza.oza@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Tue, 9 May 2017 17:27:01 +0100
+From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
+To: Peter Senna Tschudin <peter.senna@collabora.com>
+Subject: Re: Regression: 442ec4c04d1: PCI: dwc: all: Split struct pcie_port
+ into host-only and core structures
+Message-ID: <20170509162701.GC24672@red-moon>
+References: <20170508150224.GA7458@collabora.com>
+ <1494261248.2322.21.camel@pengutronix.de>
+ <20170508175536.GA3305@red-moon>
+ <20170508203325.GB9791@collabora.com>
+MIME-Version: 1.0
+In-Reply-To: <20170508203325.GB9791@collabora.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jesper Nilsson <jesper.nilsson@axis.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Pratyush Anand <pratyush.anand@gmail.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Kishon Vijay Abraham I <kishon@ti.com>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
+ linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-current device framework and OF framework integration assumes
-dma-ranges in a way where memory-mapped devices define their
-dma-ranges. (child-bus-address, parent-bus-address, length).
+On Mon, May 08, 2017 at 10:33:25PM +0200, Peter Senna Tschudin wrote:
+> On Mon, May 08, 2017 at 06:55:36PM +0100, Lorenzo Pieralisi wrote:
+> > On Mon, May 08, 2017 at 06:34:08PM +0200, Lucas Stach wrote:
+> > > Am Montag, den 08.05.2017, 17:02 +0200 schrieb Peter Senna Tschudin:
+> > > > Hello Kishon,
+> > > > 
+> > > > Our iMX6 hardware (imx6q-b850v3.dts) is not booting with latest
+> > > > linux-next and I could bisect until:
+> > > > 
+> > > > commit 442ec4c04d1235f8c664a74004dae54a7a574d18
+> > > > Author: Kishon Vijay Abraham I <kishon@ti.com>
+> > > > Date:   Wed Feb 15 18:48:14 2017 +0530
+> > > > 
+> > > >     PCI: dwc: all: Split struct pcie_port into host-only and core structures
+> > > > 
+> > > > Which seem to be causing our issues. Our device (imx6q-b850v3.dts) boots
+> > > > fine with 4.10, and also boots if we disable pcie with:
+> > > 
+> > > Are you sure about this bisect? It seems more likely that the secondary
+> > > bus scanning goes wrong. It seems Lorenzo Pieralisi's cfg space
+> > > non-posting patches landed in next, so the root cause of this might just
+> > > be the driver hooking the wrong fault code now.
+> > > 
+> > > Async and synchronous aborts are different fault codes on ARM. Can you
+> > > see of removing the "16 +" in hook_fault_code() in
+> > > drivers/pci/dwc/pci-imx6.c fixes this issue?
+> > 
+> > You can also s/pci_remap_cfgspace/ioremap in pcie-designware-host.c
+> > to see if my patches are the issue, it is quite a mechanical change.
+> 
+> No change. Exactly same issue, but I noticed that
+> devm_pci_remap_cfgspace() is called twice for the same device, can this
+> be a problem?
 
-of_dma_configure is specifically written to take care of memory
-mapped devices. but no implementation exists for pci to take
-care of pcie based memory ranges.
+No and anyway, given that you basically tested with pci_remap_cfgspace()
+reverted I do not see how it may affect your platform but that's not
+what you are asking, so yes, it is safe to call it for multiple
+resources in a given device, think of it as ioremap for configuration
+space resources.
 
-for e.g. iproc based SOCs and other SOCs(suc as rcar) have PCI
-world dma-ranges.
-dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
+I still do not understand if you manage to bisect and fix the issue,
+PCI tree was merged in the mainline last night so you could give it
+a shot, it may be easier to bisect than -next.
 
-this patch fixes the following problems of_dma_get_range.
-1) return of wrong size as 0.
-2) not handling absence of dma-ranges which is valid for PCI master.
-3) not handling multipe inbound windows.
-4) in order to get largest possible dma_mask. this patch also
-retuns the largest possible size based on dma-ranges,
+Thanks !
+Lorenzo
 
-for e.g.
-dma-ranges = <0x43000000 0x00 0x00 0x00 0x00 0x80 0x00>;
-we should get dev->coherent_dma_mask=0x7fffffffff.
+> ...
+> [    0.505069] OF: PCI: host bridge /soc/pcie@1ffc000 ranges:
+> [    0.510586] OF: PCI:    IO 0x01f80000..0x01f8ffff -> 0x00000000
+> [    0.516474] OF: PCI:   MEM 0x01000000..0x01efffff -> 0x01000000
+> [    0.522420] imx6q-pcie 1ffc000.pcie: devm_pci_remap_cfgspace()
+> [    0.528656] imx6q-pcie 1ffc000.pcie: devm_pci_remap_cfgspace()
+> ...
 
-based on which IOVA allocation space will honour PCI host
-bridge limitations.
-
-the implementation hooks bus specific callbacks for getting
-dma-ranges.
-
-Signed-off-by: Oza Pawandeep <oza.oza@broadcom.com>
-
-diff --git a/drivers/of/address.c b/drivers/of/address.c
-index 02b2903..800731c 100644
---- a/drivers/of/address.c
-+++ b/drivers/of/address.c
-@@ -6,6 +6,7 @@
- #include <linux/ioport.h>
- #include <linux/module.h>
- #include <linux/of_address.h>
-+#include <linux/of_pci.h>
- #include <linux/pci.h>
- #include <linux/pci_regs.h>
- #include <linux/sizes.h>
-@@ -46,6 +47,8 @@ struct of_bus {
- 				int na, int ns, int pna);
- 	int		(*translate)(__be32 *addr, u64 offset, int na);
- 	unsigned int	(*get_flags)(const __be32 *addr);
-+	int		(*get_dma_ranges)(struct device_node *np,
-+					  u64 *dma_addr, u64 *paddr, u64 *size);
- };
- 
- /*
-@@ -171,6 +174,144 @@ static int of_bus_pci_translate(__be32 *addr, u64 offset, int na)
- {
- 	return of_bus_default_translate(addr + 1, offset, na - 1);
- }
-+
-+static int of_bus_pci_get_dma_ranges(struct device_node *np, u64 *dma_addr,
-+				     u64 *paddr, u64 *size)
-+{
-+	struct device_node *node = of_node_get(np);
-+	int ret = 0;
-+	struct resource_entry *window;
-+	LIST_HEAD(res);
-+
-+	if (!node)
-+		return -EINVAL;
-+
-+	*size = 0;
-+	/*
-+	 * PCI dma-ranges is not mandatory property.
-+	 * many devices do no need to have it, since
-+	 * host bridge does not require inbound memory
-+	 * configuration or rather have design limitations.
-+	 * so we look for dma-ranges, if missing we
-+	 * just return the caller full size, and also
-+	 * no dma-ranges suggests that, host bridge allows
-+	 * whatever comes in, so we set dma_addr to 0.
-+	 */
-+	ret = of_pci_get_dma_ranges(np, &res);
-+	if (!ret) {
-+		resource_list_for_each_entry(window, &res) {
-+		struct resource *res_dma = window->res;
-+
-+		if (*size < resource_size(res_dma)) {
-+			*dma_addr = res_dma->start - window->offset;
-+			*paddr = res_dma->start;
-+			*size = resource_size(res_dma);
-+			}
-+		}
-+	}
-+	pci_free_resource_list(&res);
-+
-+	/*
-+	 * return the largest possible size,
-+	 * since PCI master allows everything.
-+	 */
-+	if (*size == 0) {
-+		pr_debug("empty/zero size dma-ranges found for node(%s)\n",
-+			np->full_name);
-+		*size = DMA_BIT_MASK(sizeof(dma_addr_t) * 8) - 1;
-+		*dma_addr = *paddr = 0;
-+		ret = 0;
-+	}
-+
-+	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
-+		 *dma_addr, *paddr, *size);
-+
-+	of_node_put(node);
-+
-+	return ret;
-+}
-+
-+static int get_dma_ranges(struct device_node *np, u64 *dma_addr,
-+				u64 *paddr, u64 *size)
-+{
-+	struct device_node *node = of_node_get(np);
-+	const __be32 *ranges = NULL;
-+	int len, naddr, nsize, pna;
-+	int ret = 0;
-+	u64 dmaaddr;
-+
-+	if (!node)
-+		return -EINVAL;
-+
-+	while (1) {
-+		naddr = of_n_addr_cells(node);
-+		nsize = of_n_size_cells(node);
-+		node = of_get_next_parent(node);
-+		if (!node)
-+			break;
-+
-+		ranges = of_get_property(node, "dma-ranges", &len);
-+
-+		/* Ignore empty ranges, they imply no translation required */
-+		if (ranges && len > 0)
-+			break;
-+
-+		/*
-+		 * At least empty ranges has to be defined for parent node if
-+		 * DMA is supported
-+		 */
-+		if (!ranges)
-+			break;
-+	}
-+
-+	if (!ranges) {
-+		pr_debug("no dma-ranges found for node(%s)\n", np->full_name);
-+		ret = -ENODEV;
-+		goto out;
-+	}
-+
-+	len /= sizeof(u32);
-+
-+	pna = of_n_addr_cells(node);
-+
-+	/* dma-ranges format:
-+	 * DMA addr	: naddr cells
-+	 * CPU addr	: pna cells
-+	 * size		: nsize cells
-+	 */
-+	dmaaddr = of_read_number(ranges, naddr);
-+	*paddr = of_translate_dma_address(np, ranges);
-+	if (*paddr == OF_BAD_ADDR) {
-+		pr_err("translation of DMA address(%pad) to CPU address failed node(%s)\n",
-+		       dma_addr, np->full_name);
-+		ret = -EINVAL;
-+		goto out;
-+	}
-+	*dma_addr = dmaaddr;
-+
-+	*size = of_read_number(ranges + naddr + pna, nsize);
-+
-+	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
-+		 *dma_addr, *paddr, *size);
-+
-+out:
-+	of_node_put(node);
-+
-+	return ret;
-+}
-+
-+static int of_bus_isa_get_dma_ranges(struct device_node *np, u64 *dma_addr,
-+				     u64 *paddr, u64 *size)
-+{
-+	return get_dma_ranges(np, dma_addr, paddr, size);
-+}
-+
-+static int of_bus_default_get_dma_ranges(struct device_node *np, u64 *dma_addr,
-+					 u64 *paddr, u64 *size)
-+{
-+	return get_dma_ranges(np, dma_addr, paddr, size);
-+}
-+
- #endif /* CONFIG_OF_ADDRESS_PCI */
- 
- #ifdef CONFIG_PCI
-@@ -424,6 +565,7 @@ static unsigned int of_bus_isa_get_flags(const __be32 *addr)
- 		.map = of_bus_pci_map,
- 		.translate = of_bus_pci_translate,
- 		.get_flags = of_bus_pci_get_flags,
-+		.get_dma_ranges = of_bus_pci_get_dma_ranges,
- 	},
- #endif /* CONFIG_OF_ADDRESS_PCI */
- 	/* ISA */
-@@ -435,6 +577,7 @@ static unsigned int of_bus_isa_get_flags(const __be32 *addr)
- 		.map = of_bus_isa_map,
- 		.translate = of_bus_isa_translate,
- 		.get_flags = of_bus_isa_get_flags,
-+		.get_dma_ranges = of_bus_isa_get_dma_ranges,
- 	},
- 	/* Default */
- 	{
-@@ -445,6 +588,7 @@ static unsigned int of_bus_isa_get_flags(const __be32 *addr)
- 		.map = of_bus_default_map,
- 		.translate = of_bus_default_translate,
- 		.get_flags = of_bus_default_get_flags,
-+		.get_dma_ranges = of_bus_default_get_dma_ranges,
- 	},
- };
- 
-@@ -820,74 +964,17 @@ void __iomem *of_io_request_and_map(struct device_node *np, int index,
-  *	size			: nsize cells
-  *
-  * It returns -ENODEV if "dma-ranges" property was not found
-- * for this device in DT.
-+ * for this device in DT, except if PCI device then, dma-ranges
-+ * can be optional property, and in that case returns size with
-+ * entire host memory.
-  */
- int of_dma_get_range(struct device_node *np, u64 *dma_addr, u64 *paddr, u64 *size)
- {
--	struct device_node *node = of_node_get(np);
--	const __be32 *ranges = NULL;
--	int len, naddr, nsize, pna;
--	int ret = 0;
--	u64 dmaaddr;
--
--	if (!node)
--		return -EINVAL;
--
--	while (1) {
--		naddr = of_n_addr_cells(node);
--		nsize = of_n_size_cells(node);
--		node = of_get_next_parent(node);
--		if (!node)
--			break;
--
--		ranges = of_get_property(node, "dma-ranges", &len);
--
--		/* Ignore empty ranges, they imply no translation required */
--		if (ranges && len > 0)
--			break;
--
--		/*
--		 * At least empty ranges has to be defined for parent node if
--		 * DMA is supported
--		 */
--		if (!ranges)
--			break;
--	}
--
--	if (!ranges) {
--		pr_debug("no dma-ranges found for node(%s)\n", np->full_name);
--		ret = -ENODEV;
--		goto out;
--	}
--
--	len /= sizeof(u32);
--
--	pna = of_n_addr_cells(node);
--
--	/* dma-ranges format:
--	 * DMA addr	: naddr cells
--	 * CPU addr	: pna cells
--	 * size		: nsize cells
--	 */
--	dmaaddr = of_read_number(ranges, naddr);
--	*paddr = of_translate_dma_address(np, ranges);
--	if (*paddr == OF_BAD_ADDR) {
--		pr_err("translation of DMA address(%pad) to CPU address failed node(%s)\n",
--		       dma_addr, np->full_name);
--		ret = -EINVAL;
--		goto out;
--	}
--	*dma_addr = dmaaddr;
--
--	*size = of_read_number(ranges + naddr + pna, nsize);
--
--	pr_debug("dma_addr(%llx) cpu_addr(%llx) size(%llx)\n",
--		 *dma_addr, *paddr, *size);
--
--out:
--	of_node_put(node);
-+	struct of_bus *bus;
- 
--	return ret;
-+	/* get bus specific dma-ranges. */
-+	bus = of_match_bus(np);
-+	return bus->get_dma_ranges(np, dma_addr, paddr, size);
- }
- EXPORT_SYMBOL_GPL(of_dma_get_range);
- 
--- 
-1.9.1
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
