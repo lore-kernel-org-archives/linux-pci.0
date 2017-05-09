@@ -1,15 +1,17 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1494382020-26790-2-git-send-email-ryder.lee@mediatek.com>
-References: <1494382020-26790-1-git-send-email-ryder.lee@mediatek.com>
- <1494382020-26790-2-git-send-email-ryder.lee@mediatek.com>
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-Date: Sat, 20 May 2017 15:46:14 -0400
-Message-ID: <CAP=VYLrjeq57S+o0bBBH4oi8Bgwp=XgTsdO8RkWY8xuJyhLP9g@mail.gmail.com>
-Subject: Re: [PATCH v3 1/2] PCI: mediatek: Add Mediatek PCIe host controller
- support
-To: Ryder Lee <ryder.lee@mediatek.com>
+In-Reply-To: <20170505165119.GA8614@red-moon>
+References: <1493340847-25720-1-git-send-email-kdinh@apm.com>
+ <f5cb58a5-7c06-8d54-6293-1a72ee0a4707@arm.com>
+ <CAAsHzquFJE7X0MQyZCP4+UW_E+WK2ORe1EK6yxiq-ev81i1-xg@mail.gmail.com>
+ <20170505165119.GA8614@red-moon>
+From: Khuong Dinh <kdinh@apm.com>
+Date: Tue, 9 May 2017 15:55:37 -0700
+Message-ID: <CAAsHzqttOoWOCAEmYaWjWmH4a--o0FXCRKfFC9S-+3KGiZVuHQ@mail.gmail.com>
+Subject: Re: [PATCH v2 pci] PCI/MSI: pci-xgene-msi: Enable MSI support in ACPI
+ boot for X-Gene v1
+To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
 List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
@@ -17,120 +19,203 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
- Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
- LKML <linux-kernel@vger.kernel.org>, Rob Herring <robh+dt@kernel.org>,
- linux-mediatek@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
- "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>
+Cc: rjw@rjwysocki.net, Duc Dang <dhdang@apm.com>,
+ Marc Zyngier <marc.zyngier@arm.com>, linux-pci@vger.kernel.org,
+ msalter@redhat.com, patches@apm.com, linux-kernel@vger.kernel.org,
+ jcm@redhat.com, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Tue, May 9, 2017 at 10:06 PM, Ryder Lee <ryder.lee@mediatek.com> wrote:
-> Add support for the Mediatek PCIe Gen2 controller which can
-> be found on MT7623 series SoCs.
->
-> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
-> ---
->  drivers/pci/host/Kconfig         |  11 +
->  drivers/pci/host/Makefile        |   1 +
->  drivers/pci/host/pcie-mediatek.c | 563 +++++++++++++++++++++++++++++++++++++++
->  3 files changed, 575 insertions(+)
->  create mode 100644 drivers/pci/host/pcie-mediatek.c
->
-> diff --git a/drivers/pci/host/Kconfig b/drivers/pci/host/Kconfig
-> index f7c1d4d..aef0de9 100644
-> --- a/drivers/pci/host/Kconfig
-> +++ b/drivers/pci/host/Kconfig
-> @@ -174,6 +174,17 @@ config PCIE_ROCKCHIP
->           There is 1 internal PCIe port available to support GEN2 with
->           4 slots.
->
-> +config PCIE_MEDIATEK
-> +       bool "Mediatek PCIe controller"
+Hi Lorenzo,
 
-You've got bool here and correctly use the builtin register
-function, but you still have a couple stray references to
-the module.h header and MODULE macros.  Can you
-please also clean them up and resend with those gone?
-
-Thanks,
-Paul.
---
-
-> +       depends on ARM && (ARCH_MEDIATEK || COMPILE_TEST)
-> +       depends on OF
-> +       depends on PCI
-> +       select PCIEPORTBUS
-> +       help
-> +         Say Y here if you want to enable PCIe controller support on MT7623 series
-> +         SoCs. There is one single root complex with 3 root ports available.
-> +         Each port supports Gen2 lane x1.
-> +
->  config VMD
->         depends on PCI_MSI && X86_64 && SRCU
->         tristate "Intel Volume Management Device Driver"
-> diff --git a/drivers/pci/host/Makefile b/drivers/pci/host/Makefile
-> index 4d36866..265adff 100644
-> --- a/drivers/pci/host/Makefile
-> +++ b/drivers/pci/host/Makefile
-> @@ -17,6 +17,7 @@ obj-$(CONFIG_PCIE_IPROC_BCMA) += pcie-iproc-bcma.o
->  obj-$(CONFIG_PCIE_ALTERA) += pcie-altera.o
->  obj-$(CONFIG_PCIE_ALTERA_MSI) += pcie-altera-msi.o
->  obj-$(CONFIG_PCIE_ROCKCHIP) += pcie-rockchip.o
-> +obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
->  obj-$(CONFIG_VMD) += vmd.o
+On Fri, May 5, 2017 at 9:51 AM, Lorenzo Pieralisi
+<lorenzo.pieralisi@arm.com> wrote:
+> On Thu, May 04, 2017 at 05:36:06PM -0700, Khuong Dinh wrote:
+>> Hi Marc,
+>> There's no explicit dependency between pcie driver and msi
+>> controller.  The current solution that we did is relying on the
+>> node ordering in BIOS.  ACPI 5.0 introduced _DEP method to assign a
+>> higher priority in start ordering.  This method could be applied in
+>> case of msi and pcie are the same level of subsys_init (in ACPI
+>> boot).  However, PCIe driver has not supported for this dependency
+>> check yet.  How do you think about this solution.
 >
->  # The following drivers are for devices that use the generic ACPI
-> diff --git a/drivers/pci/host/pcie-mediatek.c b/drivers/pci/host/pcie-mediatek.c
-> new file mode 100644
-> index 0000000..5e8c1bf
-> --- /dev/null
-> +++ b/drivers/pci/host/pcie-mediatek.c
-> @@ -0,0 +1,563 @@
-> +/*
-> + * Mediatek PCIe host controller driver.
-> + *
-> + * Copyright (c) 2017 MediaTek Inc.
-> + * Author: Ryder Lee <ryder.lee@mediatek.com>
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License version 2 as
-> + * published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it will be useful,
-> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> + * GNU General Public License for more details.
-> + */
-> +
-> +#include <linux/clk.h>
-> +#include <linux/delay.h>
-> +#include <linux/kernel.h>
-> +#include <linux/module.h>
+> First off, you can't post emails with confidentiality notices on
+> mailing lists so remove it from now onwards.
 
-[....]
+Fixed
 
-> +};
-> +MODULE_DEVICE_TABLE(of, mtk_pcie_ids);
-> +
-> +static struct platform_driver mtk_pcie_driver = {
-> +       .probe = mtk_pcie_probe,
-> +       .driver = {
-> +               .name = "mtk-pcie",
-> +               .of_match_table = mtk_pcie_ids,
-> +               .suppress_bind_attrs = true,
-> +       },
-> +};
-> +
-> +builtin_platform_driver(mtk_pcie_driver);
-> +
-> +MODULE_DESCRIPTION("Mediatek PCIe host controller driver.");
-> +MODULE_LICENSE("GPL v2");
-> --
-> 1.9.1
+> Secondly, I commented on this before, so you know what my opinion is.
+
+I got your opinion. I'll implement as your suggestion.
+
+> Finally, please execute this command on the vmlinux that "works"
+> for you:
 >
+> nm vmlinux | grep -E '__initcall_(xgene_pcie_msi_init|acpi_init)'
+
+$ nm vmlinux | grep -E '__initcall_(xgene_pcie_msi_init|acpi_init)'
+ffff000008dab2d8 t __initcall_acpi_init4
+ffff000008dab2c8 t __initcall_xgene_pcie_msi_init4
+
+Best regards,
+Khuong Dinh
+
+> Even by ordering devices in the ACPI tables (that I abhor) I still do
+> not understand how this works (I mean without relying on kernel link
+> order to ensure that the MSI driver is probed before PCI devices are
+> enumerated in acpi_init()).
+>
+> Thanks,
+> Lorenzo
+>
+>> Best regards,
+>> Khuong
+>>
+>> On Fri, Apr 28, 2017 at 2:27 AM, Marc Zyngier <marc.zyngier@arm.com> wrote:
+>> > On 28/04/17 01:54, Khuong Dinh wrote:
+>> >> From: Khuong Dinh <kdinh@apm.com>
+>> >>
+>> >> This patch makes pci-xgene-msi driver ACPI-aware and provides
+>> >> MSI capability for X-Gene v1 PCIe controllers in ACPI boot mode.
+>> >>
+>> >> Signed-off-by: Khuong Dinh <kdinh@apm.com>
+>> >> Signed-off-by: Duc Dang <dhdang@apm.com>
+>> >> Acked-by: Marc Zyngier <marc.zyngier@arm.com>
+>> >> ---
+>> >> v2:
+>> >>  - Verify with BIOS version 3.06.25 and 3.07.09
+>> >> v1:
+>> >>  - Initial version
+>> >> ---
+>> >>  drivers/pci/host/pci-xgene-msi.c |   35 ++++++++++++++++++++++++++++++++---
+>> >>  1 files changed, 32 insertions(+), 3 deletions(-)
+>> >>
+>> >> diff --git a/drivers/pci/host/pci-xgene-msi.c b/drivers/pci/host/pci-xgene-msi.c
+>> >> index f1b633b..00aaa3d 100644
+>> >> --- a/drivers/pci/host/pci-xgene-msi.c
+>> >> +++ b/drivers/pci/host/pci-xgene-msi.c
+>> >> @@ -24,6 +24,7 @@
+>> >>  #include <linux/pci.h>
+>> >>  #include <linux/platform_device.h>
+>> >>  #include <linux/of_pci.h>
+>> >> +#include <linux/acpi.h>
+>> >>
+>> >>  #define MSI_IR0                      0x000000
+>> >>  #define MSI_INT0             0x800000
+>> >> @@ -39,7 +40,7 @@ struct xgene_msi_group {
+>> >>  };
+>> >>
+>> >>  struct xgene_msi {
+>> >> -     struct device_node      *node;
+>> >> +     struct fwnode_handle    *fwnode;
+>> >>       struct irq_domain       *inner_domain;
+>> >>       struct irq_domain       *msi_domain;
+>> >>       u64                     msi_addr;
+>> >> @@ -249,6 +250,13 @@ static void xgene_irq_domain_free(struct irq_domain *domain,
+>> >>       .free   = xgene_irq_domain_free,
+>> >>  };
+>> >>
+>> >> +#ifdef CONFIG_ACPI
+>> >> +static struct fwnode_handle *xgene_msi_get_fwnode(struct device *dev)
+>> >> +{
+>> >> +     return xgene_msi_ctrl.fwnode;
+>> >> +}
+>> >> +#endif
+>> >> +
+>> >>  static int xgene_allocate_domains(struct xgene_msi *msi)
+>> >>  {
+>> >>       msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
+>> >> @@ -256,7 +264,7 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>> >>       if (!msi->inner_domain)
+>> >>               return -ENOMEM;
+>> >>
+>> >> -     msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
+>> >> +     msi->msi_domain = pci_msi_create_irq_domain(msi->fwnode,
+>> >>                                                   &xgene_msi_domain_info,
+>> >>                                                   msi->inner_domain);
+>> >>
+>> >> @@ -265,6 +273,9 @@ static int xgene_allocate_domains(struct xgene_msi *msi)
+>> >>               return -ENOMEM;
+>> >>       }
+>> >>
+>> >> +#ifdef CONFIG_ACPI
+>> >> +     pci_msi_register_fwnode_provider(&xgene_msi_get_fwnode);
+>> >> +#endif
+>> >>       return 0;
+>> >>  }
+>> >>
+>> >> @@ -449,6 +460,13 @@ static int xgene_msi_hwirq_free(unsigned int cpu)
+>> >>       {},
+>> >>  };
+>> >>
+>> >> +#ifdef CONFIG_ACPI
+>> >> +static const struct acpi_device_id xgene_msi_acpi_ids[] = {
+>> >> +     {"APMC0D0E", 0},
+>> >> +     { },
+>> >> +};
+>> >> +#endif
+>> >> +
+>> >>  static int xgene_msi_probe(struct platform_device *pdev)
+>> >>  {
+>> >>       struct resource *res;
+>> >> @@ -469,7 +487,17 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>> >>               goto error;
+>> >>       }
+>> >>       xgene_msi->msi_addr = res->start;
+>> >> -     xgene_msi->node = pdev->dev.of_node;
+>> >> +
+>> >> +     xgene_msi->fwnode = of_node_to_fwnode(pdev->dev.of_node);
+>> >> +     if (!xgene_msi->fwnode) {
+>> >> +             xgene_msi->fwnode = irq_domain_alloc_fwnode(NULL);
+>> >
+>> > Please provide something other than NULL, such as the base address if
+>> > the device. That's quite useful for debugging.
+>> >
+>> >> +             if (!xgene_msi->fwnode) {
+>> >> +                     dev_err(&pdev->dev, "Failed to create fwnode\n");
+>> >> +                     rc = ENOMEM;
+>> >> +                     goto error;
+>> >> +             }
+>> >> +     }
+>> >> +
+>> >>       xgene_msi->num_cpus = num_possible_cpus();
+>> >>
+>> >>       rc = xgene_msi_init_allocator(xgene_msi);
+>> >> @@ -540,6 +568,7 @@ static int xgene_msi_probe(struct platform_device *pdev)
+>> >>       .driver = {
+>> >>               .name = "xgene-msi",
+>> >>               .of_match_table = xgene_msi_match_table,
+>> >> +             .acpi_match_table = ACPI_PTR(xgene_msi_acpi_ids),
+>> >>       },
+>> >>       .probe = xgene_msi_probe,
+>> >>       .remove = xgene_msi_remove,
+>> >>
+>> >
+>> > The code is trivial, but relies on the MSI controller to probe before
+>> > the PCI bus. What enforces this? How is it making sure that this is not
+>> > going to break in the next kernel release? As far as I can tell, there
+>> > is no explicit dependency between the two, making it the whole thing
+>> > extremely fragile.
+>> >
+>> > Thanks,
+>> >
+>> >         M.
+>> > --
+>> > Jazz is not dead. It just smells funny...
+>>
+>> --
+>> CONFIDENTIALITY NOTICE: This e-mail message, including any attachments, is
+>> for the sole use of the intended recipient(s) and contains information that
+>> is confidential and proprietary to Applied Micro Circuits Corporation or
+>> its subsidiaries. It is to be used solely for the purpose of furthering the
+>> parties' business relationship. All unauthorized review, use, disclosure or
+>> distribution is prohibited. If you are not the intended recipient, please
+>> contact the sender by reply e-mail and destroy all copies of the original
+>> message.
 
 _______________________________________________
 linux-arm-kernel mailing list
