@@ -1,132 +1,108 @@
-Return-Path: <SRS0=iwkW=45=arm.com=lorenzo.pieralisi@kernel.org>
-Return-Path: <SRS0=iwkW=45=arm.com=lorenzo.pieralisi@kernel.org>
-Date: Tue, 23 May 2017 10:07:29 +0100
-From: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Lucas Stach <l.stach@pengutronix.de>, linux-pci@vger.kernel.org,
-	hongxing.zhu@nxp.com, tharvey@gateworks.com,
-	patchwork-lst@pengutronix.de,
-	Peter Senna Tschudin <peter.senna@collabora.com>,
-	kernel@pengutronix.de, bhelgaas@google.com, festevam@gmail.com,
-	linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH] PCI: imx6: fix downstream bus scanning
-Message-ID: <20170523090729.GB18204@red-moon>
-References: <20170510175752.6519-1-l.stach@pengutronix.de>
- <20170522221346.GG19733@bhelgaas-glaptop.roam.corp.google.com>
+Return-Path: <linux-acpi-owner@vger.kernel.org>
+From: Felipe Balbi <balbi@kernel.org>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        linux-acpi@vger.kernel.org, tpmdd-devel@lists.sourceforge.net,
+        intel-gfx@lists.freedesktop.org, nouveau@lists.freedesktop.org,
+        linux-input@vger.kernel.org, iommu@lists.linux-foundation.org,
+        linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-usb@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Borislav Petkov <bp@suse.de>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Amir Goldstein <amir73il@gmail.com>,
+        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Ben Skeggs <bskeggs@redhat.com>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Joerg Roedel <joro@8bytes.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Zhang Rui <rui.zhang@intel.com>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Mark Brown <broonie@kernel.org>
+Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
+In-Reply-To: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
+Date: Tue, 09 May 2017 10:56:43 +0300
+Message-ID: <87o9v2jwec.fsf@linux.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170522221346.GG19733@bhelgaas-glaptop.roam.corp.google.com>
+Content-Type: text/plain
+Sender: linux-acpi-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 22, 2017 at 05:13:46PM -0500, Bjorn Helgaas wrote:
-> On Wed, May 10, 2017 at 07:57:52PM +0200, Lucas Stach wrote:
-> > The change in Linux 4.12 to make PCI configuartion requests non-posted
-> > means that we are now getting a synchronous abort when the CFG space
-> > read to probe for downstream devices times out.
-> > 
-> > Synchronous aborts need to be handled differently from the async aborts
-> > we were getting before, in particular the PC needs to be advanced when
-> > resolving the abort. This is mostly a copy of what other PCI drivers do
-> > on ARM to handle those aborts.
-> > 
-> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
-> 
-> Applied to for-linus for v4.12 with tested-by and acks from Fabio,
-> Peter, and Richard.  I updated the subject line to:
-> 
->   PCI: imx6: Fix config read timeout handling
-> 
-> because I don't think this change is specific to bus scanning and I
-> wanted a hint that it's related to the config space mapping changes.
-> 
-> In fact, I'd really like to include the specific commit that caused
-> this problem so that if the original commit is backported, there's a
-> hint that we should backport this one, too.  I *think* it might be
-> cc7b0d495589, so I updated the changelog to this:
-> 
->   Commit cc7b0d495589 ("PCI: designware: Update PCI config space remap 
->   function") made PCI configuration requests non-posted, which means we now
->   get a synchronous abort when the CFG space read to probe for downstream
->   devices times out. 
-> 
->   Synchronous aborts need to be handled differently from the async aborts we
->   were getting before, in particular the PC needs to be advanced when
->   resolving the abort.  This is mostly a copy of what other PCI drivers do on
->   ARM to handle those aborts.
-> 
->   [bhelgaas: changelog, "Fixes"]
->   Fixes: cc7b0d495589 ("PCI: designware: Update PCI config space remap function")
-> 
-> Please let me know if this is the wrong commit.
 
-I think it is the right commit but it is better if Lucas can confirm,
-apologies for the breakage caused, I just could not test on iMX6.
+Hi,
 
-Thanks,
-Lorenzo
+Andy Shevchenko <andriy.shevchenko@linux.intel.com> writes:
+> acpi_evaluate_dsm() and friends take a pointer to a raw buffer of 16
+> bytes. Instead we convert them to use uuid_le type. At the same time we
+> convert current users.
+>
+> acpi_str_to_uuid() becomes useless after the conversion and it's safe to
+> get rid of it.
+>
+> The conversion fixes a potential bug in int340x_thermal as well since
+> we have to use memcmp() on binary data.
+>
+> Cc: Rafael J. Wysocki <rjw@rjwysocki.net>
+> Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
+> Cc: Borislav Petkov <bp@suse.de>
+> Cc: Dan Williams <dan.j.williams@intel.com>
+> Cc: Amir Goldstein <amir73il@gmail.com>
+> Cc: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>
+> Cc: Jani Nikula <jani.nikula@linux.intel.com>
+> Cc: Ben Skeggs <bskeggs@redhat.com>
+> Cc: Benjamin Tissoires <benjamin.tissoires@redhat.com>
+> Cc: Joerg Roedel <joro@8bytes.org>
+> Cc: Adrian Hunter <adrian.hunter@intel.com>
+> Cc: Yisen Zhuang <yisen.zhuang@huawei.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Zhang Rui <rui.zhang@intel.com>
+> Cc: Felipe Balbi <balbi@kernel.org>
+> Cc: Mathias Nyman <mathias.nyman@intel.com>
+> Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+> Cc: Liam Girdwood <lgirdwood@gmail.com>
+> Cc: Mark Brown <broonie@kernel.org>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+> index a15ec71d0423..6b5284ec76df 100644
+> --- a/drivers/usb/dwc3/dwc3-pci.c
+> +++ b/drivers/usb/dwc3/dwc3-pci.c
+> @@ -56,7 +56,7 @@ struct dwc3_pci {
+>  	struct platform_device *dwc3;
+>  	struct pci_dev *pci;
+>  
+> -	u8 uuid[16];
+> +	uuid_le uuid;
+>  
+>  	unsigned int has_dsm_for_pm:1;
+>  };
+> @@ -118,7 +118,7 @@ static int dwc3_pci_quirks(struct dwc3_pci *dwc)
+>  
+>  		if (pdev->device == PCI_DEVICE_ID_INTEL_BXT ||
+>  				pdev->device == PCI_DEVICE_ID_INTEL_BXT_M) {
+> -			acpi_str_to_uuid(PCI_INTEL_BXT_DSM_UUID, dwc->uuid);
+> +			uuid_le_to_bin(PCI_INTEL_BXT_DSM_UUID, &dwc->uuid);
+>  			dwc->has_dsm_for_pm = true;
+>  		}
+>  
+> @@ -288,7 +288,7 @@ static int dwc3_pci_dsm(struct dwc3_pci *dwc, int param)
+>  	tmp.type = ACPI_TYPE_INTEGER;
+>  	tmp.integer.value = param;
+>  
+> -	obj = acpi_evaluate_dsm(ACPI_HANDLE(&dwc->pci->dev), dwc->uuid,
+> +	obj = acpi_evaluate_dsm(ACPI_HANDLE(&dwc->pci->dev), &dwc->uuid,
+>  			1, PCI_INTEL_BXT_FUNC_PMU_PWR, &argv4);
+>  	if (!obj) {
+>  		dev_err(&dwc->pci->dev, "failed to evaluate _DSM\n");
 
-> > This is a fix that needs to go in for 4.12, but I would hope to get
-> > some thorough testing before.
-> > ---
-> >  drivers/pci/dwc/pci-imx6.c | 33 ++++++++++++++++++++++++++++++---
-> >  1 file changed, 30 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-> > index a98cba55c7f0..19a289b8cc94 100644
-> > --- a/drivers/pci/dwc/pci-imx6.c
-> > +++ b/drivers/pci/dwc/pci-imx6.c
-> > @@ -252,7 +252,34 @@ static void imx6_pcie_reset_phy(struct imx6_pcie *imx6_pcie)
-> >  static int imx6q_pcie_abort_handler(unsigned long addr,
-> >  		unsigned int fsr, struct pt_regs *regs)
-> >  {
-> > -	return 0;
-> > +	unsigned long pc = instruction_pointer(regs);
-> > +	unsigned long instr = *(unsigned long *)pc;
-> > +	int reg = (instr >> 12) & 15;
-> > +
-> > +	/*
-> > +	 * If the instruction being executed was a read,
-> > +	 * make it look like it read all-ones.
-> > +	 */
-> > +	if ((instr & 0x0c100000) == 0x04100000) {
-> > +		unsigned long val;
-> > +
-> > +		if (instr & 0x00400000)
-> > +			val = 255;
-> > +		else
-> > +			val = -1;
-> > +
-> > +		regs->uregs[reg] = val;
-> > +		regs->ARM_pc += 4;
-> > +		return 0;
-> > +	}
-> > +
-> > +	if ((instr & 0x0e100090) == 0x00100090) {
-> > +		regs->uregs[reg] = -1;
-> > +		regs->ARM_pc += 4;
-> > +		return 0;
-> > +	}
-> > +
-> > +	return 1;
-> >  }
-> >  
-> >  static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
-> > @@ -819,8 +846,8 @@ static int __init imx6_pcie_init(void)
-> >  	 * we can install the handler here without risking it
-> >  	 * accessing some uninitialized driver state.
-> >  	 */
-> > -	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
-> > -			"imprecise external abort");
-> > +	hook_fault_code(8, imx6q_pcie_abort_handler, SIGBUS, 0,
-> > +			"external abort on non-linefetch");
-> >  
-> >  	return platform_driver_register(&imx6_pcie_driver);
-> >  }
-> > -- 
-> > 2.11.0
-> > 
-> > 
-> > _______________________________________________
-> > linux-arm-kernel mailing list
-> > linux-arm-kernel@lists.infradead.org
-> > http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Acked-by: Felipe Balbi <felipe.balbi@linux.intel.com>
+
+-- 
+balbi
