@@ -1,47 +1,68 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-he1eur01on0073.outbound.protection.outlook.com ([104.47.0.73]:16096
-        "EHLO EUR01-HE1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753719AbdEQQBx (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 17 May 2017 12:01:53 -0400
-From: "M.H. Lian" <minghuan.lian@nxp.com>
-To: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC: Mingkai Hu <mingkai.hu@nxp.com>,
-        Prabhjot Singh <prabhjot.singh@nxp.com>
-Subject: PCIe RC AER/PME/HotPlug interrupt design
-Date: Wed, 17 May 2017 16:01:49 +0000
-Message-ID: <VI1PR04MB1615B66B5099194B38EF8FD8E8E70@VI1PR04MB1615.eurprd04.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170509063439.GC9791@collabora.com>
+References: <20170508150224.GA7458@collabora.com>
+ <CAOMZO5DjFxAus3B03Om0xoqxKuY2TkbcjCY1YEUK9s_R8C_DNA@mail.gmail.com>
+ <20170509063439.GC9791@collabora.com>
+From: Fabio Estevam <festevam@gmail.com>
+Date: Tue, 9 May 2017 07:21:24 -0300
+Message-ID: <CAOMZO5CXjb7LVT5ByP1RqgBPkkfRn7PcRPmW3hos=UNXGnok=A@mail.gmail.com>
+Subject: Re: Regression: 442ec4c04d1: PCI: dwc: all: Split struct pcie_port
+ into host-only and core structures
+To: Peter Senna Tschudin <peter.senna@collabora.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Thomas Petazzoni <thomas.petazzoni@free-electrons.com>,
+ Jesper Nilsson <jesper.nilsson@axis.com>, Joao Pinto <Joao.Pinto@synopsys.com>,
+ Richard Zhu <hongxing.zhu@nxp.com>,
+ Gabriele Paoloni <gabriele.paoloni@huawei.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Tim Harvey <tharvey@gateworks.com>,
+ Pratyush Anand <pratyush.anand@gmail.com>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ linux-kernel <linux-kernel@vger.kernel.org>,
+ Kishon Vijay Abraham I <kishon@ti.com>,
+ Stanimir Varbanov <svarbanov@mm-sol.com>,
+ Minghuan Lian <minghuan.Lian@freescale.com>,
+ Zhou Wang <wangzhou1@hisilicon.com>, Murali Karicheri <m-karicheri2@ti.com>,
+ Niklas Cassel <niklas.cassel@axis.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Mingkai Hu <mingkai.hu@freescale.com>, Roy Zang <tie-fei.zang@freescale.com>,
+ "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+ Lucas Stach <l.stach@pengutronix.de>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi All,
+Hi Peter,
 
-We are using a PCIe controller which integrate Root complex  and one Root p=
-ort.
-But I am not clear about the interrupt routing.
+On Tue, May 9, 2017 at 3:34 AM, Peter Senna Tschudin
+<peter.senna@collabora.com> wrote:
 
-1. AER interrupt
-PCIe base specification rev3.0  6.2.6 Error message controls has a Figure 6=
--3 which provides a conceptual summary in the form of a pseudo logic diagra=
-m for how  error Message are generated, logged, forwarded and ultimately no=
-tified to the system.  But I have a question, does it mean only INTx or MSI=
- can be used for AER?  Can a platform specific interrupt be used for AER?
+> Something that ocurred to me is that u-boot is initializing the PCI, and
+> the PCI networkd cards.  Ideally this should not affect anything, but
+> can this be related to the issue?
 
-2. PME interrupt
- PCIe base specification rev3.0  6.1.6 describes Native PME software Model.=
- It is clear that INTx or MSI can be used to trigger PME interrupt. but for=
- Legacy PME Software Model, 6.1.7 said " informs system software through an=
- implementation specific mechanism". Does it mean we can use a platform spe=
-cific interrupt for PME?
+Yes, in order to narrow things down: please boot 4.11 without PCI
+support in U-Boot.
 
-Let me sum up, I want to know if a platform specific interrupt can be used =
-for AER, PME, hot plug or only INTx/MSI can be used.
+The problem is that mx6q does not have a way to properly reset the PCI block.
 
-Any comments would be highly appreciated.
+On the board I tested there is no PCI support in U-Boot.
 
-Thanks,
-Minghuan    =20
+Maybe we need the following approach in U-Boot as Lucas did for Barebox:
+https://git.pengutronix.de/cgit/barebox/commit/?id=f1da98da2760c21487bbba8f7fb957c843a22896
+
+According to this patch that went into 4.11 the bootloader must put
+PCI back in a safe state:
+https://patchwork.kernel.org/patch/9528911
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
