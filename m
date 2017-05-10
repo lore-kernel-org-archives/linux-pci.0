@@ -1,129 +1,240 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-To: Sricharan R <sricharan@codeaurora.org>
-Subject: Re: [PATCH V2 2/3] iommu: of: Ignore all errors except EPROBE_DEFER
-Date: Thu, 18 May 2017 13:39:19 +0300
-Message-ID: <6863998.WsTHer29ZI@avalon>
-In-Reply-To: <1495102030-10548-2-git-send-email-sricharan@codeaurora.org>
-References: <1495102030-10548-1-git-send-email-sricharan@codeaurora.org>
- <1495102030-10548-2-git-send-email-sricharan@codeaurora.org>
-MIME-Version: 1.0
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
- frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
- lorenzo.pieralisi@arm.com, tn@semihalf.com, joro@8bytes.org,
- magnus.damm@gmail.com, linux-acpi@vger.kernel.org, geert@linux-m68k.org,
- linux-pci@vger.kernel.org, lenb@kernel.org, devicetree@vger.kernel.org,
- arnd@arndb.de, linux-arm-msm@vger.kernel.org, j.neuschaefer@gmx.net,
- robh+dt@kernel.org, bhelgaas@google.com,
- laurent.pinchart+renesas@ideasonboard.com,
- linux-arm-kernel@lists.infradead.org, rjw@rjwysocki.net,
- linux-kernel@vger.kernel.org, iommu@lists.linux-foundation.org,
- hanjun.guo@linaro.org, sudeep.holla@arm.com, robin.murphy@arm.com
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mga07.intel.com ([134.134.136.100]:45048 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751584AbdEJSb2 (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 May 2017 14:31:28 -0400
+From: Ashok Raj <ashok.raj@intel.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Joerg Roedel <joro@8bytes.org>, linux-pci@vger.kernel.org
+Cc: CQ Tang <cq.tang@intel.com>,
+        Jean-Phillipe Brucker <jean-philippe.brucker@arm.com>,
+        David Woodhouse <dwm2@infradead.org>,
+        iommu@lists.linux-foundation.org, Ashok Raj <ashok.raj@intel.com>
+Subject: [PATCH 1/2] PCI: Save properties required to handle FLR for replay purposes.
+Date: Wed, 10 May 2017 11:28:05 -0700
+Message-Id: <1494440886-8096-1-git-send-email-ashok.raj@intel.com>
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Sricharan,
+From: CQ Tang <cq.tang@intel.com>
 
-Thank you for the patch.
+Requires: https://patchwork.kernel.org/patch/9593891
 
-On Thursday 18 May 2017 15:37:09 Sricharan R wrote:
-> While deferring the probe of IOMMU masters,
-> xlate and add_device callback can pass back error values
-> like -ENODEV, which means IOMMU cannot be connected
-> with that master for real reasons. So rather than
-> killing the master's probe for such errors, just
-> ignore the errors and let the master work without
-> an IOMMU.
 
-I don't think this is a good idea. Why should we allow IOMMU drivers to return 
-an error if we're always going to ignore the error value ? That will lead to 
-drivers implementing slightly different behaviours, which will be painful the 
-day we'll need to start acting based on the error value.
+After a FLR, pci-states need to be restored. This patch saves PASID features
+and PRI reqs cached.
 
-At the very least, if you want to give a specific meaning to -ENODEV, you 
-should check for that value specifically and not ignore all errors other than 
--EPROBE_DEFER. You also need to document the meaning of the error value. This 
-can be done in the documentation of the of_xlate operation in 
-include/linux/iommu.h:
+Cc: Jean-Phillipe Brucker <jean-philippe.brucker@arm.com>
+Cc: David Woodhouse <dwm2@infradead.org>
+Cc: iommu@lists.linux-foundation.org
 
-diff --git a/include/linux/iommu.h b/include/linux/iommu.h
-index 2cb54adc4a33..6ba553e7384a 100644
---- a/include/linux/iommu.h
-+++ b/include/linux/iommu.h
-@@ -181,7 +181,6 @@ struct iommu_resv_region {
-  * @domain_window_disable: Disable a particular window for a domain
-  * @domain_set_windows: Set the number of windows for a domain
-  * @domain_get_windows: Return the number of windows for a domain
-- * @of_xlate: add OF master IDs to iommu grouping
-  * @pgsize_bitmap: bitmap of all possible supported page sizes
-  */
- struct iommu_ops {
-@@ -224,6 +223,11 @@ struct iommu_ops {
- 	/* Get the number of windows per domain */
- 	u32 (*domain_get_windows)(struct iommu_domain *domain);
+Signed-off-by: CQ Tang <cq.tang@intel.com>
+Signed-off-by: Ashok Raj <ashok.raj@intel.com>
+---
+ drivers/pci/ats.c       | 65 +++++++++++++++++++++++++++++++++++++------------
+ drivers/pci/pci.c       |  3 +++
+ include/linux/pci-ats.h | 10 ++++++++
+ include/linux/pci.h     |  6 +++++
+ 4 files changed, 69 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index 2126497..a769955 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -160,17 +160,16 @@ int pci_enable_pri(struct pci_dev *pdev, u32 reqs)
+ 	if (!pos)
+ 		return -EINVAL;
  
-+	/**
-+	 * @of_xlate:
-+	 *
-+	 * Add OF master IDs to iommu grouping.
-+	 */
- 	int (*of_xlate)(struct device *dev, struct of_phandle_args *args);
+-	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
+ 	pci_read_config_word(pdev, pos + PCI_PRI_STATUS, &status);
+-	if ((control & PCI_PRI_CTRL_ENABLE) ||
+-	    !(status & PCI_PRI_STATUS_STOPPED))
++	if (!(status & PCI_PRI_STATUS_STOPPED))
+ 		return -EBUSY;
  
- 	unsigned long pgsize_bitmap;
-
-
-And add documentation for the error codes there.
-
-If you want to ignore some errors returned from the add_device operation you 
-should document it similarly, and in particular document which error check(s) 
-need to be performed by of_xlate and which are the responsibility of 
-add_device.
-
-> Fixes: 7b07cbefb68d ("iommu: of: Handle IOMMU lookup failure with deferred
-> probing or error")
-> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Tested-by: Magnus Damn <magnus.damn@gmail.com>
-> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> ---
-> [V2] Corrected spelling/case in commit log
-> 
->  drivers/iommu/of_iommu.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> index e6e9bec..f0d22c0 100644
-> --- a/drivers/iommu/of_iommu.c
-> +++ b/drivers/iommu/of_iommu.c
-> @@ -237,6 +237,12 @@ const struct iommu_ops *of_iommu_configure(struct
-> device *dev, ops = ERR_PTR(err);
->  	}
-> 
-> +	/* Ignore all other errors apart from EPROBE_DEFER */
-> +	if (IS_ERR(ops) && (PTR_ERR(ops) != -EPROBE_DEFER)) {
-> +		dev_info(dev, "Adding to IOMMU failed: %ld\n", PTR_ERR(ops));
-> +		ops = NULL;
-> +	}
-> +
->  	return ops;
->  }
-
+ 	pci_read_config_dword(pdev, pos + PCI_PRI_MAX_REQ, &max_requests);
+ 	reqs = min(max_requests, reqs);
++	pdev->pri_reqs_alloc = reqs;
+ 	pci_write_config_dword(pdev, pos + PCI_PRI_ALLOC_REQ, reqs);
+ 
+-	control |= PCI_PRI_CTRL_ENABLE;
++	control = PCI_PRI_CTRL_ENABLE;
+ 	pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
+ 
+ 	pdev->pri_enabled = 1;
+@@ -206,6 +205,29 @@ void pci_disable_pri(struct pci_dev *pdev)
+ EXPORT_SYMBOL_GPL(pci_disable_pri);
+ 
+ /**
++ * pci_restore_pri_state - Restore PRI
++ * @pdev: PCI device structure
++ *
++ */
++void pci_restore_pri_state(struct pci_dev *pdev)
++{
++   u16 control = PCI_PRI_CTRL_ENABLE;
++   u32 reqs = pdev->pri_reqs_alloc;
++   int pos;
++
++   pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PRI);
++   if (!pos)
++       return;
++
++   if (!pdev->pri_enabled)
++       return;
++
++   pci_write_config_dword(pdev, pos + PCI_PRI_ALLOC_REQ, reqs);
++   pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
++}
++EXPORT_SYMBOL_GPL(pci_restore_pri_state);
++
++/**
+  * pci_reset_pri - Resets device's PRI state
+  * @pdev: PCI device structure
+  *
+@@ -224,12 +246,7 @@ int pci_reset_pri(struct pci_dev *pdev)
+ 	if (!pos)
+ 		return -EINVAL;
+ 
+-	pci_read_config_word(pdev, pos + PCI_PRI_CTRL, &control);
+-	if (control & PCI_PRI_CTRL_ENABLE)
+-		return -EBUSY;
+-
+-	control |= PCI_PRI_CTRL_RESET;
+-
++	control = PCI_PRI_CTRL_RESET;
+ 	pci_write_config_word(pdev, pos + PCI_PRI_CTRL, control);
+ 
+ 	return 0;
+@@ -259,12 +276,7 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
+ 	if (!pos)
+ 		return -EINVAL;
+ 
+-	pci_read_config_word(pdev, pos + PCI_PASID_CTRL, &control);
+ 	pci_read_config_word(pdev, pos + PCI_PASID_CAP, &supported);
+-
+-	if (control & PCI_PASID_CTRL_ENABLE)
+-		return -EINVAL;
+-
+ 	supported &= PCI_PASID_CAP_EXEC | PCI_PASID_CAP_PRIV;
+ 
+ 	/* User wants to enable anything unsupported? */
+@@ -272,6 +284,7 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
+ 		return -EINVAL;
+ 
+ 	control = PCI_PASID_CTRL_ENABLE | features;
++	pdev->pasid_features = features;
+ 
+ 	pci_write_config_word(pdev, pos + PCI_PASID_CTRL, control);
+ 
+@@ -305,6 +318,28 @@ void pci_disable_pasid(struct pci_dev *pdev)
+ EXPORT_SYMBOL_GPL(pci_disable_pasid);
+ 
+ /**
++ * pci_restore_pasid_state - Restore PASID capabilities.
++ * @pdev: PCI device structure
++ *
++ */
++void pci_restore_pasid_state(struct pci_dev *pdev)
++{
++   u16 control;
++   int pos;
++
++   pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_PASID);
++   if (!pos)
++       return;
++
++   if (!pdev->pasid_enabled)
++       return;
++
++   control = PCI_PASID_CTRL_ENABLE | pdev->pasid_features;
++   pci_write_config_word(pdev, pos + PCI_PASID_CTRL, control);
++}
++EXPORT_SYMBOL_GPL(pci_restore_pasid_state);
++
++/**
+  * pci_pasid_features - Check which PASID features are supported
+  * @pdev: PCI device structure
+  *
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 7904d02..c9a6510 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -28,6 +28,7 @@
+ #include <linux/pm_runtime.h>
+ #include <linux/pci_hotplug.h>
+ #include <linux/vmalloc.h>
++#include <linux/pci-ats.h>
+ #include <asm/setup.h>
+ #include <asm/dma.h>
+ #include <linux/aer.h>
+@@ -1171,6 +1172,8 @@ void pci_restore_state(struct pci_dev *dev)
+ 
+ 	/* PCI Express register must be restored first */
+ 	pci_restore_pcie_state(dev);
++	pci_restore_pasid_state(dev);
++	pci_restore_pri_state(dev);
+ 	pci_restore_ats_state(dev);
+ 	pci_restore_vc_state(dev);
+ 
+diff --git a/include/linux/pci-ats.h b/include/linux/pci-ats.h
+index 57e0b82..782fb8e 100644
+--- a/include/linux/pci-ats.h
++++ b/include/linux/pci-ats.h
+@@ -7,6 +7,7 @@
+ 
+ int pci_enable_pri(struct pci_dev *pdev, u32 reqs);
+ void pci_disable_pri(struct pci_dev *pdev);
++void pci_restore_pri_state(struct pci_dev *pdev);
+ int pci_reset_pri(struct pci_dev *pdev);
+ 
+ #else /* CONFIG_PCI_PRI */
+@@ -20,6 +21,10 @@ static inline void pci_disable_pri(struct pci_dev *pdev)
+ {
+ }
+ 
++static inline void pci_restore_pri_state(struct pci_dev *pdev)
++{
++}
++
+ static inline int pci_reset_pri(struct pci_dev *pdev)
+ {
+ 	return -ENODEV;
+@@ -31,6 +36,7 @@ static inline int pci_reset_pri(struct pci_dev *pdev)
+ 
+ int pci_enable_pasid(struct pci_dev *pdev, int features);
+ void pci_disable_pasid(struct pci_dev *pdev);
++void pci_restore_pasid_state(struct pci_dev *pdev);
+ int pci_pasid_features(struct pci_dev *pdev);
+ int pci_max_pasids(struct pci_dev *pdev);
+ 
+@@ -45,6 +51,10 @@ static inline void pci_disable_pasid(struct pci_dev *pdev)
+ {
+ }
+ 
++static inline void pci_restore_pasid_state(struct pci_dev *pdev)
++{
++}
++
+ static inline int pci_pasid_features(struct pci_dev *pdev)
+ {
+ 	return -EINVAL;
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index bee980e..1ddb8e0 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -395,6 +395,12 @@ struct pci_dev {
+ 	u8		ats_stu;	/* ATS Smallest Translation Unit */
+ 	atomic_t	ats_ref_cnt;	/* number of VFs with ATS enabled */
+ #endif
++#ifdef CONFIG_PCI_PRI
++	u32		pri_reqs_alloc; /* Number of PRI requests allocated */
++#endif
++#ifdef CONFIG_PCI_PASID
++	u16		pasid_features;
++#endif
+ 	phys_addr_t rom; /* Physical address of ROM if it's not from the BAR */
+ 	size_t romlen; /* Length of ROM if it's not from the BAR */
+ 	char *driver_override; /* Driver name to force a match */
 -- 
-Regards,
-
-Laurent Pinchart
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+2.7.4
