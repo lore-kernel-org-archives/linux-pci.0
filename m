@@ -1,224 +1,119 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:52510 "EHLO foss.arm.com"
+Received: from mga05.intel.com ([192.55.52.43]:32085 "EHLO mga05.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752319AbdECJyU (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 3 May 2017 05:54:20 -0400
-Subject: Re: [PATCH V8 07/11] iommu: of: Handle IOMMU lookup failure with
- deferred probing or error
-To: Geert Uytterhoeven <geert@linux-m68k.org>,
-        Sricharan R <sricharan@codeaurora.org>
-References: <1486136933-20328-1-git-send-email-sricharan@codeaurora.org>
- <1486136933-20328-8-git-send-email-sricharan@codeaurora.org>
- <CAMuHMdV05uCcVss+V1E+_OQYosJO6P95rU1WynV-G08-iHJnyg@mail.gmail.com>
-Cc: Will Deacon <will.deacon@arm.com>, Joerg Roedel <joro@8bytes.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        iommu@lists.linux-foundation.org,
-        "linux-arm-kernel@lists.infradead.org"
-        <linux-arm-kernel@lists.infradead.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        ACPI Devel Maling List <linux-acpi@vger.kernel.org>,
-        tn@semihalf.com, Hanjun Guo <hanjun.guo@linaro.org>,
-        okaya@codeaurora.org, Magnus Damm <magnus.damm@gmail.com>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <2bfd11dc-9f94-2b69-7b03-c640e53155e1@arm.com>
-Date: Wed, 3 May 2017 10:54:14 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAMuHMdV05uCcVss+V1E+_OQYosJO6P95rU1WynV-G08-iHJnyg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+        id S1753732AbdEJSmK (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 May 2017 14:42:10 -0400
+From: Ashok Raj <ashok.raj@intel.com>
+To: Joerg Roedel <joro@8bytes.org>, linux-kernel@vger.kernel.org
+Cc: CQ Tang <cq.tang@intel.com>, linux-pci@vger.kernel.org,
+        Jean-Phillipe Brucker <jean-philippe.brucker@arm.com>,
+        iommu@lists.linux-foundation.org, Ashok Raj <ashok.raj@intel.com>
+Subject: [PATCH 2/2] iommu/vt-d: Helper function to query if a pasid has any active users
+Date: Wed, 10 May 2017 11:39:03 -0700
+Message-Id: <1494441543-8216-2-git-send-email-ashok.raj@intel.com>
+In-Reply-To: <1494441543-8216-1-git-send-email-ashok.raj@intel.com>
+References: <1494441543-8216-1-git-send-email-ashok.raj@intel.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Geert,
+From: CQ Tang <cq.tang@intel.com>
 
-On 02/05/17 19:35, Geert Uytterhoeven wrote:
-> Hi Sricharan,
-> 
-> On Fri, Feb 3, 2017 at 4:48 PM, Sricharan R <sricharan@codeaurora.org> wrote:
->> From: Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>
->>
->> Failures to look up an IOMMU when parsing the DT iommus property need to
->> be handled separately from the .of_xlate() failures to support deferred
->> probing.
->>
->> The lack of a registered IOMMU can be caused by the lack of a driver for
->> the IOMMU, the IOMMU device probe not having been performed yet, having
->> been deferred, or having failed.
->>
->> The first case occurs when the device tree describes the bus master and
->> IOMMU topology correctly but no device driver exists for the IOMMU yet
->> or the device driver has not been compiled in. Return NULL, the caller
->> will configure the device without an IOMMU.
->>
->> The second and third cases are handled by deferring the probe of the bus
->> master device which will eventually get reprobed after the IOMMU.
->>
->> The last case is currently handled by deferring the probe of the bus
->> master device as well. A mechanism to either configure the bus master
->> device without an IOMMU or to fail the bus master device probe depending
->> on whether the IOMMU is optional or mandatory would be a good
->> enhancement.
->>
->> Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
->> Signed-off-by: Laurent Pichart <laurent.pinchart+renesas@ideasonboard.com>
->> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
-> 
-> This patch broke Renesas R-Car Gen3 platforms in renesas-drivers.
-> As the IOMMU nodes in DT are not yet enabled, all devices having iommus
-> properties in DT now fail to probe.
+A driver would need to know if there are any active references to a
+a PASID before cleaning up its resources. This function helps check
+if there are any active users of a PASID before it can perform any
+recovery on that device.
 
-How exactly do they fail to probe? Per d7b0558230e4, if there are no ops
-registered then they should merely defer until we reach the point of
-giving up and ignoring the IOMMU. Is it just that you have no other
-late-probing drivers or post-init module loads to kick the deferred
-queue after that point? I did try to find a way to explicitly kick it
-from a suitably late initcall, but there didn't seem to be any obvious
-public interface - anyone have any suggestions?
+To: Joerg Roedel <joro@8bytes.org>
+To: linux-kernel@vger.kernel.org
+To: David Woodhouse <dwmw2@infradead.org>
+Cc: Jean-Phillipe Brucker <jean-philippe.brucker@arm.com>
+Cc: iommu@lists.linux-foundation.org
 
-I think that's more of a general problem with the probe deferral
-mechanism itself (I've seen the same thing happen with some of the
-CoreSight stuff on Juno due to the number of inter-component
-dependencies) rather than any specific fault of this series.
+Signed-off-by: CQ Tang <cq.tang@intel.com>
+Signed-off-by: Ashok Raj <ashok.raj@intel.com>
+---
+ drivers/iommu/intel-svm.c | 30 ++++++++++++++++++++++++++++++
+ include/linux/intel-svm.h | 20 ++++++++++++++++++++
+ 2 files changed, 50 insertions(+)
 
-Robin.
-
-> This can be fixed by either:
->   - Disabling CONFIG_IPMMU_VMSA, or
->   - Reverting commit 7b07cbefb68d486f (but keeping "int ret = 0;").
-> 
-> Note that this was a bit hard to investigate, as R-Car Gen3 support wasn't
-> upstreamed yet, so bisection pointed to a merge commit.
-> 
->> ---
->>  [*] Fixed minor comment from Bjorn for removing the pci.h header inclusion
->>      in of_iommu.c
->>
->>  drivers/base/dma-mapping.c | 5 +++--
->>  drivers/iommu/of_iommu.c   | 4 ++--
->>  drivers/of/device.c        | 7 ++++++-
->>  include/linux/of_device.h  | 9 ++++++---
->>  4 files changed, 17 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
->> index 449b948..82bd45c 100644
->> --- a/drivers/base/dma-mapping.c
->> +++ b/drivers/base/dma-mapping.c
->> @@ -353,6 +353,7 @@ int dma_configure(struct device *dev)
->>  {
->>         struct device *bridge = NULL, *dma_dev = dev;
->>         enum dev_dma_attr attr;
->> +       int ret = 0;
->>
->>         if (dev_is_pci(dev)) {
->>                 bridge = pci_get_host_bridge_device(to_pci_dev(dev));
->> @@ -363,7 +364,7 @@ int dma_configure(struct device *dev)
->>         }
->>
->>         if (dma_dev->of_node) {
->> -               of_dma_configure(dev, dma_dev->of_node);
->> +               ret = of_dma_configure(dev, dma_dev->of_node);
->>         } else if (has_acpi_companion(dma_dev)) {
->>                 attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
->>                 if (attr != DEV_DMA_NOT_SUPPORTED)
->> @@ -373,7 +374,7 @@ int dma_configure(struct device *dev)
->>         if (bridge)
->>                 pci_put_host_bridge_device(bridge);
->>
->> -       return 0;
->> +       return ret;
->>  }
->>
->>  void dma_deconfigure(struct device *dev)
->> diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
->> index 1f92d98..2d04663 100644
->> --- a/drivers/iommu/of_iommu.c
->> +++ b/drivers/iommu/of_iommu.c
->> @@ -236,7 +236,7 @@ const struct iommu_ops *of_iommu_configure(struct device *dev,
->>                         ops = ERR_PTR(err);
->>         }
->>
->> -       return IS_ERR(ops) ? NULL : ops;
->> +       return ops;
->>  }
->>
->>  static int __init of_iommu_init(void)
->> @@ -247,7 +247,7 @@ static int __init of_iommu_init(void)
->>         for_each_matching_node_and_match(np, matches, &match) {
->>                 const of_iommu_init_fn init_fn = match->data;
->>
->> -               if (init_fn(np))
->> +               if (init_fn && init_fn(np))
->>                         pr_err("Failed to initialise IOMMU %s\n",
->>                                 of_node_full_name(np));
->>         }
->> diff --git a/drivers/of/device.c b/drivers/of/device.c
->> index c17c19d..ba51ca6 100644
->> --- a/drivers/of/device.c
->> +++ b/drivers/of/device.c
->> @@ -82,7 +82,7 @@ int of_device_add(struct platform_device *ofdev)
->>   * can use a platform bus notifier and handle BUS_NOTIFY_ADD_DEVICE events
->>   * to fix up DMA configuration.
->>   */
->> -void of_dma_configure(struct device *dev, struct device_node *np)
->> +int of_dma_configure(struct device *dev, struct device_node *np)
->>  {
->>         u64 dma_addr, paddr, size;
->>         int ret;
->> @@ -129,10 +129,15 @@ void of_dma_configure(struct device *dev, struct device_node *np)
->>                 coherent ? " " : " not ");
->>
->>         iommu = of_iommu_configure(dev, np);
->> +       if (IS_ERR(iommu))
->> +               return PTR_ERR(iommu);
->> +
->>         dev_dbg(dev, "device is%sbehind an iommu\n",
->>                 iommu ? " " : " not ");
->>
->>         arch_setup_dma_ops(dev, dma_addr, size, iommu, coherent);
->> +
->> +       return 0;
->>  }
->>  EXPORT_SYMBOL_GPL(of_dma_configure);
->>
->> diff --git a/include/linux/of_device.h b/include/linux/of_device.h
->> index 3cb2288..9499861 100644
->> --- a/include/linux/of_device.h
->> +++ b/include/linux/of_device.h
->> @@ -56,7 +56,7 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
->>         return of_node_get(cpu_dev->of_node);
->>  }
->>
->> -void of_dma_configure(struct device *dev, struct device_node *np);
->> +int of_dma_configure(struct device *dev, struct device_node *np);
->>  void of_dma_deconfigure(struct device *dev);
->>  #else /* CONFIG_OF */
->>
->> @@ -105,8 +105,11 @@ static inline struct device_node *of_cpu_device_node_get(int cpu)
->>  {
->>         return NULL;
->>  }
->> -static inline void of_dma_configure(struct device *dev, struct device_node *np)
->> -{}
->> +
->> +static inline int of_dma_configure(struct device *dev, struct device_node *np)
->> +{
->> +       return 0;
->> +}
->>  static inline void of_dma_deconfigure(struct device *dev)
->>  {}
->>  #endif /* CONFIG_OF */
-> 
-> Gr{oetje,eeting}s,
-> 
->                         Geert
-> 
-> --
-> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-> 
-> In personal conversations with technical people, I call myself a hacker. But
-> when I'm talking to journalists I just say "programmer" or something like that.
->                                 -- Linus Torvalds
-> 
+diff --git a/drivers/iommu/intel-svm.c b/drivers/iommu/intel-svm.c
+index 23c4276..f167c0d 100644
+--- a/drivers/iommu/intel-svm.c
++++ b/drivers/iommu/intel-svm.c
+@@ -489,6 +489,36 @@ int intel_svm_unbind_mm(struct device *dev, int pasid)
+ }
+ EXPORT_SYMBOL_GPL(intel_svm_unbind_mm);
+ 
++int intel_svm_is_pasid_valid(struct device *dev, int pasid)
++{
++	struct intel_iommu *iommu;
++	struct intel_svm *svm;
++	int ret = -EINVAL;
++
++	mutex_lock(&pasid_mutex);
++	iommu = intel_svm_device_to_iommu(dev);
++	if (!iommu || !iommu->pasid_table)
++		goto out;
++
++	svm = idr_find(&iommu->pasid_idr, pasid);
++	if (!svm)
++		goto out;
++
++	/* init_mm is used in this case */
++	if (!svm->mm)
++		ret = 1;
++	else if (atomic_read(&svm->mm->mm_users) > 0)
++		ret = 1;
++	else
++		ret = 0;
++
++ out:
++	mutex_unlock(&pasid_mutex);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(intel_svm_is_pasid_valid);
++
+ /* Page request queue descriptor */
+ struct page_req_dsc {
+ 	u64 srr:1;
+diff --git a/include/linux/intel-svm.h b/include/linux/intel-svm.h
+index 3c25794..99bc5b3 100644
+--- a/include/linux/intel-svm.h
++++ b/include/linux/intel-svm.h
+@@ -102,6 +102,21 @@ extern int intel_svm_bind_mm(struct device *dev, int *pasid, int flags,
+  */
+ extern int intel_svm_unbind_mm(struct device *dev, int pasid);
+ 
++/**
++ * intel_svm_is_pasid_valid() - check if pasid is valid
++ * @dev:	Device for which PASID was allocated
++ * @pasid:	PASID value to be checked
++ *
++ * This function checks if the specified pasid is still valid. A
++ * valid pasid means the backing mm is still having a valid user.
++ * For kernel callers init_mm is always valid. for other mm, if mm->mm_users
++ * is non-zero, it is valid.
++ *
++ * returns -EINVAL if invalid pasid, 0 if pasid ref count is invalid
++ * 1 if pasid is valid.
++ */
++extern int intel_svm_is_pasid_valid(struct device *dev, int pasid);
++
+ #else /* CONFIG_INTEL_IOMMU_SVM */
+ 
+ static inline int intel_svm_bind_mm(struct device *dev, int *pasid,
+@@ -114,6 +129,11 @@ static inline int intel_svm_unbind_mm(struct device *dev, int pasid)
+ {
+ 	BUG();
+ }
++
++static int intel_svm_is_pasid_valid(struct device *dev, int pasid)
++{
++	return -EINVAL;
++}
+ #endif /* CONFIG_INTEL_IOMMU_SVM */
+ 
+ #define intel_svm_available(dev) (!intel_svm_bind_mm((dev), NULL, 0, NULL))
+-- 
+2.7.4
