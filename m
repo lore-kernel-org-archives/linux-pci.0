@@ -1,101 +1,219 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from metis.ext.4.pengutronix.de ([92.198.50.35]:51711 "EHLO
-        metis.ext.4.pengutronix.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751011AbdEaNAh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 31 May 2017 09:00:37 -0400
-Message-ID: <1496235621.30073.26.camel@pengutronix.de>
-Subject: Re: [PATCH 1/8] pci: adding new irq api to pci-designware
-From: Lucas Stach <l.stach@pengutronix.de>
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: bhelgaas@google.com, marc.zyngier@arm.com, m-karicheri2@ti.com,
-        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
-        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
-        hongxing.zhu@nxp.com, niklas.cassel@axis.com,
-        jesper.nilsson@axis.com, wangzhou1@hisilicon.com,
-        gabriele.paoloni@huawei.com, svarbanov@mm-sol.com,
-        linux-pci@vger.kernel.org
-Date: Wed, 31 May 2017 15:00:21 +0200
-In-Reply-To: <c082deff-1bc5-5607-cce0-ae041222f6e3@synopsys.com>
-References: <cover.1496142978.git.jpinto@synopsys.com>
-         <e0ab2d597306a9df4c955f7761273f4538657e26.1496142978.git.jpinto@synopsys.com>
-         <1496234001.30073.19.camel@pengutronix.de>
-         <62787214-b4d2-5a6b-99a5-df406140cf86@synopsys.com>
-         <1496235029.30073.22.camel@pengutronix.de>
-         <c082deff-1bc5-5607-cce0-ae041222f6e3@synopsys.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1494408696.31307.30.camel@mtkswgap22>
+Subject: Re: [PATCH v3 2/2] dt-bindings: pcie: Add documentation for
+ Mediatek PCIe
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Matthias Brugger <matthias.bgg@gmail.com>
+Date: Wed, 10 May 2017 17:31:36 +0800
+In-Reply-To: <1f3f1c5a-7618-5af4-73ce-645415c86c06@gmail.com>
+References: <1494382020-26790-1-git-send-email-ryder.lee@mediatek.com>
+ <1494382020-26790-3-git-send-email-ryder.lee@mediatek.com>
+ <1f3f1c5a-7618-5af4-73ce-645415c86c06@gmail.com>
+MIME-Version: 1.0
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
+ Arnd Bergmann <arnd@arndb.de>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Rob Herring <robh+dt@kernel.org>,
+ linux-mediatek@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
+ linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Am Mittwoch, den 31.05.2017, 13:54 +0100 schrieb Joao Pinto:
-> Às 1:50 PM de 5/31/2017, Lucas Stach escreveu:
-> > Am Mittwoch, den 31.05.2017, 13:46 +0100 schrieb Joao Pinto:
-> >> Hi Lucas,
-> >>
-> >> Às 1:33 PM de 5/31/2017, Lucas Stach escreveu:
-> >>> Am Dienstag, den 30.05.2017, 12:32 +0100 schrieb Joao Pinto:
-> >>>> This patch adds the new interrupt api to pcie-designware, keeping the old
-> >>>> one. Although the old API is still available, pcie-designware initiates
-> >>>> with the new one.
-> >>>>
-> >>>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
-> >>>> ---
-> >>> [...]
-> >>>> @@ -378,17 +593,18 @@ int dw_pcie_host_init(struct pcie_port *pp)
-> >>>>  
-> >>>>  	if (IS_ENABLED(CONFIG_PCI_MSI)) {
-> >>>>  		if (!pp->ops->msi_host_init) {
-> >>>> -			pp->irq_domain = irq_domain_add_linear(dev->of_node,
-> >>>> -						MAX_MSI_IRQS, &msi_domain_ops,
-> >>>> -						&dw_pcie_msi_chip);
-> >>>> -			if (!pp->irq_domain) {
-> >>>> -				dev_err(dev, "irq domain init failed\n");
-> >>>> -				ret = -ENXIO;
-> >>>> +			ret = of_property_read_u32(np, "num-vectors",
-> >>>> +						   &pp->num_vectors);
-> >>>> +			if (ret)
-> >>>> +				pp->num_vectors = 1;
-> >>>
-> >>> This adds a DT property without documentation. That's a strong no-go.
-> >>>
-> >>
-> >> yep, indeed I forgot to merge this into the patch tree. Going to check this in
-> >> the next patch version.
-> >>
-> >>> Why do you even need this property? The number of vectors available can
-> >>> be inferred from the compatible, so there is no need to push this into
-> >>> the DT. A fallback of only 1 vector if the property doesn't exist is
-> >>> also pretty limiting. The old implementation allowed for at least 32
-> >>> vectors, with most of the core implementations probably allowing much
-> >>> more in hardware.
-> >>
-> >> The hardware supports up to 256, but the current driver is set for a maximum of
-> >> 32. I suggest we remove MAX_MSI_IRQS and MAX_MSI_CTRLS, and calculate the
-> >> maximum number of controllers according to the num_vectors value: Ctrls =
-> >> num_vectors / 32, removing the hardcoded limitation from the driver.
-> >> What do you think?
-> > 
-> > If you can confirm that all hardware implementations of the DWC PCIe
-> > core support 256 vectors, I don't see a reason to ever expose less than
-> > this. I guess the current limit of 32 hasn't been raised out of fear
-> > that some hardware implementations might not support the full range of
-> > 256 vectors.
-> > 
-> > You are in a much better position to validate this than I am. I fully
-> > support removing artificial limits from the driver implementation.
+On Wed, 2017-05-10 at 09:58 +0200, Matthias Brugger wrote:
 > 
-> The IP design supports up to 256, but each client can make its own
-> configuration. I will try to get some info from the CAEs.
-> By setting num_vectors = 32 by default, we will be performing the same limit as
-> before, so there will be no impact. Synopsys IP users that now that their
-> implementation supports more than 32, they can update their Device Trees. I find
-> this way simpler and safer. What do you think?
+> On 10/05/17 04:07, Ryder Lee wrote:
+> > Add documentation for PCIe host driver available in MT7623
+> > series SoCs.
+> > 
+> > Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> > Acked-by: Rob Herring <robh@kernel.org>
+> > ---
+> >   .../bindings/pci/mediatek,mt7623-pcie.txt          | 149 +++++++++++++++++++++
+> >   1 file changed, 149 insertions(+)
+> >   create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> > 
+> > diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> > new file mode 100644
+> > index 0000000..a9393ce
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> > @@ -0,0 +1,149 @@
+> > +Mediatek Gen2 PCIe controller which is available on MT7623 series SoCs
+> > +
+> > +PCIe subsys supports single root complex (RC) with 3 Root Ports. Each root
+> > +ports supports a Gen2 1-lane Link and has PIPE interface to PHY.
+> > +
+> > +Required properties:
+> > +- compatible: Should contain "mediatek,mt7623-pcie".
+> > +- device_type: Must be "pci"
+> > +- reg: Base addresses and lengths of the PCIe controller.
+> > +- #address-cells: Address representation for root ports (must be 3)
+> > +- #size-cells: Size representation for root ports (must be 2)
+> > +- #interrupt-cells: Size representation for interrupts (must be 1)
+> > +- interrupts: Three interrupt outputs of the controller. Must contain an
+> > +  entry for each entry in the interrupt-names property.
+> > +- interrupt-names: Must include the following names
+> > +  - "pcie-int0"
+> > +  - "pcie-int1"
+> > +  - "pcie-int2"
+> > +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
+> > +  Please refer to the standard PCI bus binding document for a more detailed
+> > +  explanation.
+> > +- clocks: Must contain an entry for each entry in clock-names.
+> > +  See ../clocks/clock-bindings.txt for details.
+> > +- clock-names: Must include the following entries:
+> > +  - free_ck :for reference clock of PCIe subsys
+> > +  - sys_ck0 :for clock of Port0
+> > +  - sys_ck1 :for clock of Port1
+> > +  - sys_ck2 :for clock of Port2
+> > +- resets: Must contain an entry for each entry in reset-names.
+> > +  See ../reset/reset.txt for details.
+> > +- reset-names: Must include the following entries:
+> > +  - pcie-rst0 :port0 reset
+> > +  - pcie-rst1 :port1 reset
+> > +  - pcie-rst2 :port2 reset
+> > +- phys: list of PHY specifiers (used by generic PHY framework).
+> > +- phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
+> > +  number of PHYs as specified in *phys* property.
+> > +- power-domains: A phandle and power domain specifier pair to the power domain
+> > +  which is responsible for collapsing and restoring power to the peripheral.
+> > +- bus-range: Range of bus numbers associated with this controller.
+> > +- ranges:
+> > +  - The first three entries are expected to translate the addresses for the root
+> > +    port registers, which are referenced by the assigned-addresses property of
+> > +    the root port nodes (see below).
+> > +  - The remaining entries setup the mapping for the standard I/O and memory
+> > +	regions.
+> > +  Please refer to the standard PCI bus binding document for a more detailed
+> > +  explanation.
+> > +
+> > +In addition, the device tree node must have sub-nodes describing each
+> > +PCIe port interface, having the following mandatory properties:
+> > +
+> > +Required properties:
+> > +- device_type: Must be "pci"
+> > +- assigned-addresses: Address and size of the port configuration registers
+> > +- reg: Only the first four bytes are used to refer to the correct bus number
+> > +  and device number.
+> > +- #address-cells: Must be 3
+> > +- #size-cells: Must be 2
+> > +- #interrupt-cells: Must be 1
+> > +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
+> > +  Please refer to the standard PCI bus binding document for a more detailed
+> > +  explanation.
+> > +- ranges: Sub-ranges distributed from the PCIe controller node. An empty
+> > +  property is sufficient.
+> > +- num-lanes: Number of lanes to use for this port.
+> > +
+> > +Examples:
+> > +
+> > +	hifsys: syscon@1a000000 {
+> > +		compatible = "mediatek,mt7623-hifsys", "syscon";
+> 
+> If you want to put the clock controller subsystem node to the example, 
+> please use a valid compatible, for example:
+> 
+> 		compatible = "mediatek,mt7623-hifsys",
+> 			     "mediatek,mt2701-hifsys",
+> 			     "syscon";
+> 
+> Thanks,
+> Matthias
 
-32 as the default seems fine, but please don't add a DT configuration
-for this. As I said it can be inferred from the compatible of the
-device. So for example we know that "fsl,imx6q-pcie" supports up to 256
-vectors and can keep this knowledge internal to the driver. No need to
-add DT API for this.
+OK i will correct it.
+> 
+> > +		reg = <0 0x1a000000 0 0x1000>;
+> > +		#clock-cells = <1>;
+> > +		#reset-cells = <1>;
+> > +	};
+> > +
+> > +	pcie: pcie-controller@1a140000 {
+> > +		compatible = "mediatek,mt7623-pcie";
+> > +		device_type = "pci";
+> > +		reg = <0 0x1a140000 0 0x1000>; /* PCIe shared registers */
+> > +		#address-cells = <3>;
+> > +		#size-cells = <2>;
+> > +		#interrupt-cells = <1>;
+> > +		interrupts = <GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>,
+> > +			     <GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>,
+> > +			     <GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
+> > +		interrupt-names = "pcie-int0", "pcie-int1", "pcie-int2";
+> > +		interrupt-map-mask = <0xf800 0 0 0>;
+> > +		interrupt-map = <0x0000 0 0 0 &gic GIC_SPI 193 IRQ_TYPE_NONE>,
+> > +				<0x0800 0 0 0 &gic GIC_SPI 194 IRQ_TYPE_NONE>,
+> > +				<0x1000 0 0 0 &gic GIC_SPI 195 IRQ_TYPE_NONE>;
+> > +		clocks = <&topckgen CLK_TOP_ETHIF_SEL>,
+> > +			 <&hifsys CLK_HIFSYS_PCIE0>,
+> > +			 <&hifsys CLK_HIFSYS_PCIE1>,
+> > +			 <&hifsys CLK_HIFSYS_PCIE2>;
+> > +		clock-names = "free_ck", "sys_ck0", "sys_ck1", "sys_ck2";
+> > +		resets = <&hifsys MT2701_HIFSYS_PCIE0_RST>,
+> > +			 <&hifsys MT2701_HIFSYS_PCIE1_RST>,
+> > +			 <&hifsys MT2701_HIFSYS_PCIE2_RST>;
+> > +		reset-names = "pcie-rst0", "pcie-rst1", "pcie-rst2";
+> > +		phys = <&pcie0_phy>, <&pcie1_phy>, <&pcie2_phy>;
+> > +		phy-names = "pcie-phy0", "pcie-phy1", "pcie-phy2";
+> > +		power-domains = <&scpsys MT2701_POWER_DOMAIN_HIF>;
+> > +		bus-range = <0x00 0xff>;
+> > +		ranges = <0x82000000 0 0x1a142000 0 0x1a142000 0 0x1000 /* Port0 registers */
+> > +			  0x82000000 0 0x1a143000 0 0x1a143000 0 0x1000 /* Port1 registers */
+> > +			  0x82000000 0 0x1a144000 0 0x1a144000 0 0x1000 /* Port2 registers */
+> > +			  0x81000000 0 0x1a160000 0 0x1a160000 0 0x00010000 /* I/O space */
+> > +			  0x83000000 0 0x60000000 0 0x60000000 0 0x10000000>;	/* memory space */
+> > +
+> > +		pcie@0,0 {
+> > +			device_type = "pci";
+> > +			assigned-addresses = <0x82000000 0 0x1a142000 0 0x1000>;
+> > +			reg = <0x0000 0 0 0 0>;
+> > +			#address-cells = <3>;
+> > +			#size-cells = <2>;
+> > +			#interrupt-cells = <1>;
+> > +			interrupt-map-mask = <0 0 0 0>;
+> > +			interrupt-map = <0 0 0 0 &gic GIC_SPI 193 IRQ_TYPE_NONE>;
+> > +			ranges;
+> > +			num-lanes = <1>;
+> > +		};
+> > +
+> > +		pcie@1,0 {
+> > +			device_type = "pci";
+> > +			assigned-addresses = <0x82000800 0 0x1a143000 0 0x1000>;
+> > +			reg = <0x0800 0 0 0 0>;
+> > +			#address-cells = <3>;
+> > +			#size-cells = <2>;
+> > +			#interrupt-cells = <1>;
+> > +			interrupt-map-mask = <0 0 0 0>;
+> > +			interrupt-map = <0 0 0 0 &gic GIC_SPI 194 IRQ_TYPE_NONE>;
+> > +			ranges;
+> > +			num-lanes = <1>;
+> > +		};
+> > +
+> > +		pcie@2,0 {
+> > +			device_type = "pci";
+> > +			assigned-addresses = <0x82001000 0 0x1a144000 0 0x1000>;
+> > +			reg = <0x1000 0 0 0 0>;
+> > +			#address-cells = <3>;
+> > +			#size-cells = <2>;
+> > +			#interrupt-cells = <1>;
+> > +			interrupt-map-mask = <0 0 0 0>;
+> > +			interrupt-map = <0 0 0 0 &gic GIC_SPI 195 IRQ_TYPE_NONE>;
+> > +			ranges;
+> > +			num-lanes = <1>;
+> > +		};
+> > +	};
+> > 
 
-Regards,
-Lucas
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
