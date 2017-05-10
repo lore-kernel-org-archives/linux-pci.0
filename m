@@ -1,231 +1,64 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Subject: Re: [PATCH V11 08/11] drivers: acpi: Handle IOMMU lookup failure with
- deferred probing or error
-To: Nate Watterson <nwatters@codeaurora.org>, robin.murphy@arm.com,
- will.deacon@arm.com, joro@8bytes.org, lorenzo.pieralisi@arm.com,
- iommu@lists.linux-foundation.org, linux-arm-kernel@lists.infradead.org,
- linux-arm-msm@vger.kernel.org, m.szyprowski@samsung.com,
- bhelgaas@google.com, linux-pci@vger.kernel.org, linux-acpi@vger.kernel.org,
- tn@semihalf.com, hanjun.guo@linaro.org, okaya@codeaurora.org,
- robh+dt@kernel.org, frowand.list@gmail.com, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, sudeep.holla@arm.com, rjw@rjwysocki.net,
- lenb@kernel.org, catalin.marinas@arm.com, arnd@arndb.de,
- linux-arch@vger.kernel.org, gregkh@linuxfoundation.org
-References: <1491823266-1209-1-git-send-email-sricharan@codeaurora.org>
- <1491823266-1209-9-git-send-email-sricharan@codeaurora.org>
- <41668eff-271c-1c4c-7665-3bf0faa74669@codeaurora.org>
-From: Sricharan R <sricharan@codeaurora.org>
-Message-ID: <27a66424-472e-0709-a46f-74b401bca342@codeaurora.org>
-Date: Tue, 23 May 2017 14:29:05 +0530
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:33839 "EHLO
+        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751741AbdEJIMD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 May 2017 04:12:03 -0400
 MIME-Version: 1.0
-In-Reply-To: <41668eff-271c-1c4c-7665-3bf0faa74669@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <CAKv+Gu_4xHhX8oK847k8=s5S7Mx3sALPTtX8Eo=2+9uZyQoEAQ@mail.gmail.com>
+References: <771bc335fb5856792d086ae7db288dcf244cb4cd.1493964354.git.lukas@wunner.de>
+ <CAKv+Gu9PpmTBbSMKUsx6svm6fodV8x=i4b1j8QGapnEoCFcrNA@mail.gmail.com>
+ <20170506090755.GB19740@wunner.de> <CAKv+Gu_4xHhX8oK847k8=s5S7Mx3sALPTtX8Eo=2+9uZyQoEAQ@mail.gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 10 May 2017 10:12:02 +0200
+Message-ID: <CAK8P3a32sbfai9NF3rX=owZZp_iogfQaPtqy6CYd_NFAJWUjvQ@mail.gmail.com>
+Subject: Re: [PATCH] efi/cper: Fix endianness of PCI class code
+To: Ard Biesheuvel <ard.biesheuvel@linaro.org>
+Cc: Lukas Wunner <lukas@wunner.de>,
+        "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
+        Ashok Raj <ashok.raj@intel.com>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Huang Ying <ying.huang@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi,
-
-On 5/23/2017 11:56 AM, Nate Watterson wrote:
-> Hi Sricharan,
-> 
-> On 4/10/2017 7:21 AM, Sricharan R wrote:
->> This is an equivalent to the DT's handling of the iommu master's probe
->> with deferred probing when the corrsponding iommu is not probed yet.
->> The lack of a registered IOMMU can be caused by the lack of a driver for
->> the IOMMU, the IOMMU device probe not having been performed yet, having
->> been deferred, or having failed.
+On Wed, May 10, 2017 at 10:03 AM, Ard Biesheuvel
+<ard.biesheuvel@linaro.org> wrote:
+> On 6 May 2017 at 10:07, Lukas Wunner <lukas@wunner.de> wrote:
+>> On Sat, May 06, 2017 at 08:46:07AM +0100, Ard Biesheuvel wrote:
+>>> On 5 May 2017 at 19:38, Lukas Wunner <lukas@wunner.de> wrote:
+>>> > The CPER parser assumes that the class code is big endian, but at least
+>>> > on this edk2-derived Intel Purley platform it's little endian:
+>> [snip]
+>>> > --- a/include/linux/cper.h
+>>> > +++ b/include/linux/cper.h
+>>> > @@ -416,7 +416,7 @@ struct cper_sec_pcie {
+>>> >         struct {
+>>> >                 __u16   vendor_id;
+>>> >                 __u16   device_id;
+>>> > -               __u8    class_code[3];
+>>> > +               __u32   class_code:24;
+>>>
+>>> I'd like to avoid this change if we can. Couldn't we simply invert the
+>>> order of p[] above?
 >>
->> The first case occurs when the firmware describes the bus master and
->> IOMMU topology correctly but no device driver exists for the IOMMU yet
->> or the device driver has not been compiled in. Return NULL, the caller
->> will configure the device without an IOMMU.
+>> Hm, why would you like to avoid it?
+>
+> Because we shouldn't use bitfields in structs in code that should be
+> portable across archs with different endiannesses.
+>
+>>  The class_code element isn't
+>> referenced anywhere else in the kernel and this isn't a uapi header,
+>> so the change would only impact out-of-tree drivers.  Not sure if
+>> any exist which might be interested in CPER parsing.
 >>
->> The second and third cases are handled by deferring the probe of the bus
->> master device which will eventually get reprobed after the IOMMU.
->>
->> The last case is currently handled by deferring the probe of the bus
->> master device as well. A mechanism to either configure the bus master
->> device without an IOMMU or to fail the bus master device probe depending
->> on whether the IOMMU is optional or mandatory would be a good
->> enhancement.
->>
->> Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
->> Reviewed-by: Robin Murphy <robin.murphy@arm.com>
->> [Lorenzo: Added fixes for dma_coherent_mask overflow, acpi_dma_configure
->>            called multiple times for same device]
->> Signed-off-by: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
->> Signed-off-by: Sricharan R <sricharan@codeaurora.org>
->> ---
->>   drivers/acpi/arm64/iort.c  | 33 ++++++++++++++++++++++++++++++++-
->>   drivers/acpi/scan.c        | 11 ++++++++---
->>   drivers/base/dma-mapping.c |  2 +-
->>   include/acpi/acpi_bus.h    |  2 +-
->>   include/linux/acpi.h       |  7 +++++--
->>   5 files changed, 47 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/acpi/arm64/iort.c b/drivers/acpi/arm64/iort.c
->> index 3dd9ec3..e323ece 100644
->> --- a/drivers/acpi/arm64/iort.c
->> +++ b/drivers/acpi/arm64/iort.c
->> @@ -543,6 +543,14 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
->>       const struct iommu_ops *ops = NULL;
->>       int ret = -ENODEV;
->>       struct fwnode_handle *iort_fwnode;
->> +    struct iommu_fwspec *fwspec = dev->iommu_fwspec;
->> +
->> +    /*
->> +     * If we already translated the fwspec there
->> +     * is nothing left to do, return the iommu_ops.
->> +     */
->> +    if (fwspec && fwspec->ops)
->> +        return fwspec->ops;
-> 
-> Is this logic strictly required? It breaks masters with multiple SIDs
-> as only the first SID is actually added to the master's fwspec.
-> 
+>
+> The point is that the change in the struct definition is simply not
+> necessary, given that inverting the order of p[] already achieves
+> exactly what we want.
 
-The logic here is same as what is done in DT, in of_iommu_configure.
-This is to pullback the iommu_ops that was set for the device from the
-previous run. (when the device probe is deferred and called again).
-Infact this piece of hunk was initially missing in ACPI, later added
-since a bug was reported [1] on V9 and then this came in as a fix in V10.
-But looks like this check should be in iort_iommu_configure.
-Lorenzo, is that correct ?
+Agreed on both, the code needs to remain endian-neutral.
+If it's currently wrong on all architectures, then it needs to
+be fixed on all architectures too.
 
-
-[1] https://www.spinics.net/lists/arm-kernel/msg572069.html
-
-If yes i will add this in the fixes that i have already posted.
-
-Regards,
- Sricharan
-
-
->>         if (node) {
->>           iort_fwnode = iort_get_fwnode(node);
->> @@ -550,8 +558,17 @@ static const struct iommu_ops *iort_iommu_xlate(struct device *dev,
->>               return NULL;
->>             ops = iommu_ops_from_fwnode(iort_fwnode);
->> +        /*
->> +         * If the ops look-up fails, this means that either
->> +         * the SMMU drivers have not been probed yet or that
->> +         * the SMMU drivers are not built in the kernel;
->> +         * Depending on whether the SMMU drivers are built-in
->> +         * in the kernel or not, defer the IOMMU configuration
->> +         * or just abort it.
->> +         */
->>           if (!ops)
->> -            return NULL;
->> +            return iort_iommu_driver_enabled(node->type) ?
->> +                   ERR_PTR(-EPROBE_DEFER) : NULL;
->>             ret = arm_smmu_iort_xlate(dev, streamid, iort_fwnode, ops);
->>       }
->> @@ -625,12 +642,26 @@ const struct iommu_ops *iort_iommu_configure(struct device *dev)
->>             while (parent) {
->>               ops = iort_iommu_xlate(dev, parent, streamid);
->> +            if (IS_ERR_OR_NULL(ops))
->> +                return ops;
->>                 parent = iort_node_get_id(node, &streamid,
->>                             IORT_IOMMU_TYPE, i++);
->>           }
->>       }
->>   +    /*
->> +     * If we have reason to believe the IOMMU driver missed the initial
->> +     * add_device callback for dev, replay it to get things in order.
->> +     */
->> +    if (!IS_ERR_OR_NULL(ops) && ops->add_device &&
->> +        dev->bus && !dev->iommu_group) {
->> +        int err = ops->add_device(dev);
->> +
->> +        if (err)
->> +            ops = ERR_PTR(err);
->> +    }
->> +
->>       return ops;
->>   }
->>   diff --git a/drivers/acpi/scan.c b/drivers/acpi/scan.c
->> index 1926918..2a513cc 100644
->> --- a/drivers/acpi/scan.c
->> +++ b/drivers/acpi/scan.c
->> @@ -1373,20 +1373,25 @@ enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
->>    * @dev: The pointer to the device
->>    * @attr: device dma attributes
->>    */
->> -void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
->> +int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr)
->>   {
->>       const struct iommu_ops *iommu;
->> +    u64 size;
->>         iort_set_dma_mask(dev);
->>         iommu = iort_iommu_configure(dev);
->> +    if (IS_ERR(iommu))
->> +        return PTR_ERR(iommu);
->>   +    size = max(dev->coherent_dma_mask, dev->coherent_dma_mask + 1);
->>       /*
->>        * Assume dma valid range starts at 0 and covers the whole
->>        * coherent_dma_mask.
->>        */
->> -    arch_setup_dma_ops(dev, 0, dev->coherent_dma_mask + 1, iommu,
->> -               attr == DEV_DMA_COHERENT);
->> +    arch_setup_dma_ops(dev, 0, size, iommu, attr == DEV_DMA_COHERENT);
->> +
->> +    return 0;
->>   }
->>   EXPORT_SYMBOL_GPL(acpi_dma_configure);
->>   diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
->> index 82bd45c..755a2b5 100644
->> --- a/drivers/base/dma-mapping.c
->> +++ b/drivers/base/dma-mapping.c
->> @@ -368,7 +368,7 @@ int dma_configure(struct device *dev)
->>       } else if (has_acpi_companion(dma_dev)) {
->>           attr = acpi_get_dma_attr(to_acpi_device_node(dma_dev->fwnode));
->>           if (attr != DEV_DMA_NOT_SUPPORTED)
->> -            acpi_dma_configure(dev, attr);
->> +            ret = acpi_dma_configure(dev, attr);
->>       }
->>         if (bridge)
->> diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
->> index ef0ae8a..2a9a5de 100644
->> --- a/include/acpi/acpi_bus.h
->> +++ b/include/acpi/acpi_bus.h
->> @@ -575,7 +575,7 @@ struct acpi_pci_root {
->>     bool acpi_dma_supported(struct acpi_device *adev);
->>   enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev);
->> -void acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
->> +int acpi_dma_configure(struct device *dev, enum dev_dma_attr attr);
->>   void acpi_dma_deconfigure(struct device *dev);
->>     struct acpi_device *acpi_find_child_device(struct acpi_device *parent,
->> diff --git a/include/linux/acpi.h b/include/linux/acpi.h
->> index 9b05886..79d06ef6 100644
->> --- a/include/linux/acpi.h
->> +++ b/include/linux/acpi.h
->> @@ -762,8 +762,11 @@ static inline enum dev_dma_attr acpi_get_dma_attr(struct acpi_device *adev)
->>       return DEV_DMA_NOT_SUPPORTED;
->>   }
->>   -static inline void acpi_dma_configure(struct device *dev,
->> -                      enum dev_dma_attr attr) { }
->> +static inline int acpi_dma_configure(struct device *dev,
->> +                     enum dev_dma_attr attr)
->> +{
->> +    return 0;
->> +}
->>     static inline void acpi_dma_deconfigure(struct device *dev) { }
->>  
-> 
-
--- 
-"QUALCOMM INDIA, on behalf of Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, hosted by The Linux Foundation
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+       Arnd
