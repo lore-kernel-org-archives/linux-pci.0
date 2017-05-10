@@ -1,89 +1,109 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:34228 "EHLO
-        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758270AbdEWSoE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 23 May 2017 14:44:04 -0400
-Received: by mail-pf0-f177.google.com with SMTP id 9so122718729pfj.1
-        for <linux-pci@vger.kernel.org>; Tue, 23 May 2017 11:44:04 -0700 (PDT)
-Date: Tue, 23 May 2017 11:44:01 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Shawn Lin <shawn.lin@rock-chips.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        linux-rockchip@lists.infradead.org,
-        Jeffy Chen <jeffy.chen@rock-chips.com>
-Subject: Re: [PATCH] PCI: rockchip: check link status when validating device
-Message-ID: <20170523184359.GB115572@google.com>
-References: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Date: Wed, 10 May 2017 21:51:01 +0200
+From: Peter Senna Tschudin <peter.senna@collabora.com>
+To: Lucas Stach <l.stach@pengutronix.de>
+Subject: Re: [PATCH] PCI: imx6: fix downstream bus scanning
+Message-ID: <20170510195101.GC24864@collabora.com>
+References: <20170510175752.6519-1-l.stach@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1495177107-203736-1-git-send-email-shawn.lin@rock-chips.com>
-Sender: linux-pci-owner@vger.kernel.org
+In-Reply-To: <20170510175752.6519-1-l.stach@pengutronix.de>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: lorenzo.pieralisi@arm.com, hongxing.zhu@nxp.com, linux-pci@vger.kernel.org,
+ tharvey@gateworks.com, patchwork-lst@pengutronix.de, kernel@pengutronix.de,
+ bhelgaas@google.com, festevam@gmail.com, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-I forgot, I had one more comment:
-
-On Fri, May 19, 2017 at 02:58:27PM +0800, Shawn Lin wrote:
-> This patch checks the link status before reading and
-> writing configure space of devices attached to the RC.
-> If the link status is down, we shouldn't try to access
-> the devices.
+On Wed, May 10, 2017 at 07:57:52PM +0200, Lucas Stach wrote:
+> The change in Linux 4.12 to make PCI configuartion requests non-posted
+> means that we are now getting a synchronous abort when the CFG space
+> read to probe for downstream devices times out.
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> Synchronous aborts need to be handled differently from the async aborts
+> we were getting before, in particular the PC needs to be advanced when
+> resolving the abort. This is mostly a copy of what other PCI drivers do
+> on ARM to handle those aborts.
+
+It solves the issues I was having with latest linux-next when my u-boot
+do not initialize PCI. Before this patch system does not boot, after
+this patch system boot and the two e1000 devices that are under the PLX
+PCI bridge are properly detected. Thank you Lucas!
+
+> 
+> Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
 > ---
+> This is a fix that needs to go in for 4.12, but I would hope to get
+> some thorough testing before.
+> ---
+>  drivers/pci/dwc/pci-imx6.c | 33 ++++++++++++++++++++++++++++++---
+>  1 file changed, 30 insertions(+), 3 deletions(-)
 > 
->  drivers/pci/host/pcie-rockchip.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
-> 
-> diff --git a/drivers/pci/host/pcie-rockchip.c b/drivers/pci/host/pcie-rockchip.c
-> index 0e020b6..1e64227 100644
-> --- a/drivers/pci/host/pcie-rockchip.c
-> +++ b/drivers/pci/host/pcie-rockchip.c
-> @@ -275,9 +275,21 @@ static void rockchip_pcie_update_txcredit_mui(struct rockchip_pcie *rockchip)
->  	rockchip_pcie_write(rockchip, val, PCIE_CORE_TXCREDIT_CFG1);
->  }
->  
-> +static inline bool rockchip_pcie_link_up(struct rockchip_pcie *rockchip)
-> +{
-> +	return PCIE_LINK_UP(rockchip_pcie_read(rockchip,
-> +					PCIE_CLIENT_BASIC_STATUS1));
-> +}
-> +
->  static int rockchip_pcie_valid_device(struct rockchip_pcie *rockchip,
->  				      struct pci_bus *bus, int dev)
+> diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
+> index a98cba55c7f0..19a289b8cc94 100644
+> --- a/drivers/pci/dwc/pci-imx6.c
+> +++ b/drivers/pci/dwc/pci-imx6.c
+> @@ -252,7 +252,34 @@ static void imx6_pcie_reset_phy(struct imx6_pcie *imx6_pcie)
+>  static int imx6q_pcie_abort_handler(unsigned long addr,
+>  		unsigned int fsr, struct pt_regs *regs)
 >  {
-> +	/* do not access the devices if the link isn't completed */
-> +	if (bus->number != rockchip->root_bus_nr) {
-> +		if (!rockchip_pcie_link_up(rockchip))
-> +			return 0;
-
-Not exactly a criticism of this patch directly, but the error handling
-sequence that this triggers is strange, and I think it's inconsistent.
-
-A 0 result here becomes PCIBIOS_DEVICE_NOT_FOUND for either the read or
-write conf helpers. But the high level code doesn't handle this
-consistently. See, e.g., pci_read_config_byte() which can return regular
-Linux error codes (like -ENODEV), except it also passes up the return
-code of pci_read_config_byte() (a PCIBIOS_* code) directly.
-
-So callers don't really know whether to treat the value from
-pci_read_config_<foo>() as a PCIBIOS_* code (which should be translated
-with pcibios_err_to_errno()) or as a standard Linux errno.
-
-But then, there are relatively few callers (less than 10% of
-pci_read_config_<foo>(); even fewer for writes) that actually check the
-error codes...
-
-Maybe the "fix" is to replace -ENODEV with PCIBIOS_DEVICE_NOT_FOUND for
-the inconsistent cases (pci_{read,write}_config_{byte,word,dword}()).
-
-Brian
-
+> -	return 0;
+> +	unsigned long pc = instruction_pointer(regs);
+> +	unsigned long instr = *(unsigned long *)pc;
+> +	int reg = (instr >> 12) & 15;
+> +
+> +	/*
+> +	 * If the instruction being executed was a read,
+> +	 * make it look like it read all-ones.
+> +	 */
+> +	if ((instr & 0x0c100000) == 0x04100000) {
+> +		unsigned long val;
+> +
+> +		if (instr & 0x00400000)
+> +			val = 255;
+> +		else
+> +			val = -1;
+> +
+> +		regs->uregs[reg] = val;
+> +		regs->ARM_pc += 4;
+> +		return 0;
 > +	}
 > +
->  	/* access only one slot on each root port */
->  	if (bus->number == rockchip->root_bus_nr && dev > 0)
->  		return 0;
+> +	if ((instr & 0x0e100090) == 0x00100090) {
+> +		regs->uregs[reg] = -1;
+> +		regs->ARM_pc += 4;
+> +		return 0;
+> +	}
+> +
+> +	return 1;
+>  }
+>  
+>  static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
+> @@ -819,8 +846,8 @@ static int __init imx6_pcie_init(void)
+>  	 * we can install the handler here without risking it
+>  	 * accessing some uninitialized driver state.
+>  	 */
+> -	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
+> -			"imprecise external abort");
+> +	hook_fault_code(8, imx6q_pcie_abort_handler, SIGBUS, 0,
+> +			"external abort on non-linefetch");
+>  
+>  	return platform_driver_register(&imx6_pcie_driver);
+>  }
 > -- 
-> 1.9.1
+> 2.11.0
 > 
-> 
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
