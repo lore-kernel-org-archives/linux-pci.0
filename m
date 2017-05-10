@@ -1,78 +1,49 @@
-Return-Path: <linux-acpi-owner@vger.kernel.org>
-MIME-Version: 1.0
-In-Reply-To: <1493976265.30052.21.camel@linux.intel.com>
-References: <20170504092151.88646-1-andriy.shevchenko@linux.intel.com>
- <CAPcyv4jzD0MEBRNTwTokVzgdDWas682ArUjRAGT1hp=QRE8Pjg@mail.gmail.com>
- <CAOQ4uxjha8_2_HwgdgBN=G-vNytAW5Gk155E9z8OWyFiGNEZVw@mail.gmail.com> <1493976265.30052.21.camel@linux.intel.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Fri, 5 May 2017 12:50:31 +0300
-Message-ID: <CAOQ4uxjErce01+xyDnM=nCJS+avQ4g6hQVvH3fVotj7Ws2moCQ@mail.gmail.com>
-Subject: Re: [PATCH v1] ACPI: Switch to use generic UUID API
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Dan Williams <dan.j.williams@intel.com>,
-        Linux ACPI <linux-acpi@vger.kernel.org>,
-        tpmdd-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
-        nouveau@lists.freedesktop.org, linux-input@vger.kernel.org,
-        iommu@lists.linux-foundation.org, linux-mmc@vger.kernel.org,
-        Netdev <netdev@vger.kernel.org>, linux-pci@vger.kernel.org,
-        USB list <linux-usb@vger.kernel.org>,
-        alsa-devel@alsa-project.org,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Borislav Petkov <bp@suse.de>,
-        Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Ben Skeggs <bskeggs@redhat.com>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Joerg Roedel <joro@8bytes.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:55357 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1751399AbdEJDjh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 9 May 2017 23:39:37 -0400
+From: Wei Zhang <wzhang@fb.com>
+To: Keith Busch <keith.busch@intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Zhang Rui <rui.zhang@intel.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Liam Girdwood <lgirdwood@gmail.com>,
-        Mark Brown <broonie@kernel.org>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Sender: linux-acpi-owner@vger.kernel.org
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+CC: Wesley Yung <wesley.yung@microsemi.com>,
+        Sammy Hui <sammy.hui@intel.com>,
+        Joseph Gruher <joseph.r.gruher@intel.com>,
+        Krishna Dhulipala <krishnad@fb.com>
+Subject: Re: [PATCH 1/2] pcie/dpc: Skip DPC event if device is not present
+Date: Wed, 10 May 2017 03:39:27 +0000
+Message-ID: <862590BB-8E84-4F2D-B5F9-A665000AA9CB@fb.com>
+References: <1493395369-20225-1-git-send-email-keith.busch@intel.com>
+ <1493395369-20225-2-git-send-email-keith.busch@intel.com>
+In-Reply-To: <1493395369-20225-2-git-send-email-keith.busch@intel.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Fri, May 5, 2017 at 12:24 PM, Andy Shevchenko
-<andriy.shevchenko@linux.intel.com> wrote:
-> On Fri, 2017-05-05 at 10:06 +0300, Amir Goldstein wrote:
-[...]
->> I think with this semantic change, our proposals can reach common
->> grounds
->> and satisfy a wider group of users (i.e. filesystem developers).
->>
->> Christoph also suggested a similar treatment to typedef guid_t to
->> struct uuid_le.
->> I don't know the use cases enough to comment on that.
->
-> We may go this way. But I wouldn't prevent current users of uuid_le to
-> continue using it without conversion (it may be done case by case after
-> we settle an API)
->
-> So, summarize what Christoph said it will look like
->
-> typedef uuid_be uuid_t;
-> typedef uuid_le guid_t
->
-> uuid_cmp() / uuid_copy() / uuid_to_bin() / etc
-> guid_cmp() / guid_copy() / guid_to_bin() / etc
->
-> Correct? Christoph?
->
-
-That looks right to me.
-
-To complete the picture for folks not cc'ed on my patches,
-xfs use case suggests there is also justification for the additional helpers:
-
-uuid_is_null() / uuid_equal()
-guid_is_null() / guid_equal()
-
-Cheers,
-Amir.
+IEhpIEtlaXRoIGFuZCBXZXMsDQoNCkkgd29uZGVyIGlmIGdldHRpbmcgYW4gQWxsIDHigJlzIHJl
+YWQgb24gdGhlIERQQyBzdGF0dXMgcmVnaXN0ZXIgaXMgYSB2YWxpZCBzY2VuYXJpby4gICBUaGUg
+RFBDIHJlZ2lzdGVyIGlzIG9uIHRoZSBzd2l0Y2gsIHdoeSB3b3VsZCB0aGUgc3RhdHVzIHJlZ2lz
+dGVyIHJldHVybnMgQWxsIDHigJlzIGV2ZW4gaWYgdGhlIGRldmljZSBpcyByZW1vdmVkPw0KDQpU
+aGFua3MsDQotV2VpDQoNCi0tDQp3ZWkgemhhbmcgfCBzb2Z0d2FyZSBlbmdpbmVlciB8IGZhY2Vi
+b29rDQp3emhhbmdAZmIuY29tIHwgKDQwOCkgNDYwLTQ4MDMNCg0KT24gNC8yOS8xNywgMTI6MDIg
+QU0sICJLZWl0aCBCdXNjaCIgPGtlaXRoLmJ1c2NoQGludGVsLmNvbT4gd3JvdGU6DQoNCiAgICBU
+aGUgRFBDIGludGVydXB0IG1heSBiZSBleGVjdXRlZCBvbiBhIGRldmljZSB0aGF0IGlzIGJlaW5n
+IHJlbW92ZWQuIFNraXANCiAgICBxdWV1aW5nIGV2ZW50IGhhbmRsaW5nIGlmIHRoZSBzdGF0dXMg
+aXMgYWxsIDEncywgd2hpY2ggc2hvdWxkIGJlIHNlZW4NCiAgICBvbmx5IGlmIHRoZSBkZXZpY2Ug
+aXMgbm90IHByZXNlbnQuDQogICAgDQogICAgU2lnbmVkLW9mZi1ieTogS2VpdGggQnVzY2ggPGtl
+aXRoLmJ1c2NoQGludGVsLmNvbT4NCiAgICAtLS0NCiAgICAgZHJpdmVycy9wY2kvcGNpZS9wY2ll
+LWRwYy5jIHwgMiArLQ0KICAgICAxIGZpbGUgY2hhbmdlZCwgMSBpbnNlcnRpb24oKyksIDEgZGVs
+ZXRpb24oLSkNCiAgICANCiAgICBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvcGNpZS9wY2llLWRw
+Yy5jIGIvZHJpdmVycy9wY2kvcGNpZS9wY2llLWRwYy5jDQogICAgaW5kZXggZDRkNzBlZi4uZmMy
+YTRhNyAxMDA2NDQNCiAgICAtLS0gYS9kcml2ZXJzL3BjaS9wY2llL3BjaWUtZHBjLmMNCiAgICAr
+KysgYi9kcml2ZXJzL3BjaS9wY2llL3BjaWUtZHBjLmMNCiAgICBAQCAtODcsNyArODcsNyBAQCBz
+dGF0aWMgaXJxcmV0dXJuX3QgZHBjX2lycShpbnQgaXJxLCB2b2lkICpjb250ZXh0KQ0KICAgICAJ
+cGNpX3JlYWRfY29uZmlnX3dvcmQocGRldiwgZHBjLT5jYXBfcG9zICsgUENJX0VYUF9EUENfU1RB
+VFVTLCAmc3RhdHVzKTsNCiAgICAgCXBjaV9yZWFkX2NvbmZpZ193b3JkKHBkZXYsIGRwYy0+Y2Fw
+X3BvcyArIFBDSV9FWFBfRFBDX1NPVVJDRV9JRCwNCiAgICAgCQkJICAgICAmc291cmNlKTsNCiAg
+ICAtCWlmICghc3RhdHVzKQ0KICAgICsJaWYgKCFzdGF0dXMgfHwgc3RhdHVzID09ICh1MTYpKH4w
+KSkNCiAgICAgCQlyZXR1cm4gSVJRX05PTkU7DQogICAgIA0KICAgICAJZGV2X2luZm8oJmRwYy0+
+ZGV2LT5kZXZpY2UsICJEUEMgY29udGFpbm1lbnQgZXZlbnQsIHN0YXR1czolIzA2eCBzb3VyY2U6
+JSMwNnhcbiIsDQogICAgLS0gDQogICAgMi43LjINCiAgICANCiAgICANCg0K
