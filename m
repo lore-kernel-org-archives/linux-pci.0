@@ -1,176 +1,66 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from us01smtprelay-2.synopsys.com ([198.182.60.111]:35056 "EHLO
-        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751629AbdEOKcu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 06:32:50 -0400
-Subject: Re: [RFC 1/8] pci: adding new irq api to pci-designware
-To: Marc Zyngier <marc.zyngier@arm.com>,
-        Joao Pinto <Joao.Pinto@synopsys.com>, <bhelgaas@google.com>,
-        <l.stach@pengutronix.de>
-References: <cover.1494606911.git.jpinto@synopsys.com>
- <d9664b857b0b9fe9cba6b8de5f0b6d365fe86f36.1494606911.git.jpinto@synopsys.com>
- <e0881846-21ca-8b5d-4162-caf77c336600@arm.com>
-CC: <jingoohan1@gmail.com>, <m-karicheri2@ti.com>,
-        <thomas.petazzoni@free-electrons.com>,
-        <minghuan.Lian@freescale.com>, <mingkai.hu@freescale.com>,
-        <tie-fei.zang@freescale.com>, <hongxing.zhu@nxp.com>,
-        <niklas.cassel@axis.com>, <jesper.nilsson@axis.com>,
-        <wangzhou1@hisilicon.com>, <gabriele.paoloni@huawei.com>,
-        <svarbanov@mm-sol.com>, <linux-pci@vger.kernel.org>
-From: Joao Pinto <Joao.Pinto@synopsys.com>
-Message-ID: <c8baa1ed-6211-26f9-cffc-366ca0305ad8@synopsys.com>
-Date: Mon, 15 May 2017 11:32:26 +0100
+Received: from mga06.intel.com ([134.134.136.31]:7373 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750711AbdEJRev (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 May 2017 13:34:51 -0400
+Date: Wed, 10 May 2017 13:42:00 -0400
+From: Keith Busch <keith.busch@intel.com>
+To: Wesley Yung <wesley.yung@microsemi.com>
+Cc: Wei Zhang <wzhang@fb.com>, Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Sammy Hui <sammy.hui@intel.com>,
+        Joseph Gruher <joseph.r.gruher@intel.com>,
+        Krishna Dhulipala <krishnad@fb.com>
+Subject: Re: [PATCH 1/2] pcie/dpc: Skip DPC event if device is not present
+Message-ID: <20170510174200.GF2572@localhost.localdomain>
+References: <1493395369-20225-1-git-send-email-keith.busch@intel.com>
+ <1493395369-20225-2-git-send-email-keith.busch@intel.com>
+ <862590BB-8E84-4F2D-B5F9-A665000AA9CB@fb.com>
+ <20170510131729.GD2572@localhost.localdomain>
+ <9D9314D9-2EA5-45C1-AC60-54F7658FD4BC@fb.com>
+ <20170510164452.GE2572@localhost.localdomain>
+ <90C73AA5E5BE2A428BAACEC9EA6376C982286A7D@avsrvexchmbx2.microsemi.net>
+ <90C73AA5E5BE2A428BAACEC9EA6376C982286ABC@avsrvexchmbx2.microsemi.net>
 MIME-Version: 1.0
-In-Reply-To: <e0881846-21ca-8b5d-4162-caf77c336600@arm.com>
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <90C73AA5E5BE2A428BAACEC9EA6376C982286ABC@avsrvexchmbx2.microsemi.net>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Oh, I see what you're asking about. I'm not testing DPC capable RP's. I
+do not have such capabilities on my platforms. In fact, the machines I
+have are quite old, Sandy Bridge generation.
 
-Hi Mark and Lucas,
+I've a switch connected to the RP, then the external enclosures are
+downstream that.  This topology has multiple levels of switches and
+devices, but I still can't unplug the top level as you expected; only
+from anywhere in the middle.
 
-Às 6:36 PM de 5/12/2017, Marc Zyngier escreveu:
-> Joao,
+Removing the enclosure triggers DPC on the switch connected to the RP.
+Sometimes the interrupt handler for the now removed enclosure switches
+triggers. The driver checking the DPC status gets a Completer Abort and
+the reader see's all 1's, so this is not a CTO type situation.
+
+On Wed, May 10, 2017 at 04:52:16PM +0000, Wesley Yung wrote:
+> Just to add more colour:
 > 
-> You seem to have dropped a number of things I had mentioned on my
-> previous review of this patch. See below:
+> If a switch is removed from the RP.  All non posted's will time out.  This includes a config read of any switch P2P.  I believe Keith is saying if a read comes down to read the DPC status on a Switch DS P2P that read will time out after the host TMO.  Once that occurs, the IIO will generate all 1s back to the DPC driver. 
 > 
-> On 12/05/17 17:56, Joao Pinto wrote:
->> This patch adds the new interrupt api to pecie-designware, keeping the old
->> one. A define was added to toggle between the two apis (for testing purposes).
->>
->> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
->> ---
->>  drivers/pci/dwc/pcie-designware-host.c | 241 ++++++++++++++++++++++++++++++++-
->>  drivers/pci/dwc/pcie-designware.h      |   5 +
->>  2 files changed, 244 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/pci/dwc/pcie-designware-host.c b/drivers/pci/dwc/pcie-designware-host.c
->> index 28ed32b..6810ea10b 100644
->> --- a/drivers/pci/dwc/pcie-designware-host.c
->> +++ b/drivers/pci/dwc/pcie-designware-host.c
->> @@ -11,6 +11,7 @@
->>   * published by the Free Software Foundation.
->>   */
->>  
->> +#include <linux/irqchip/chained_irq.h>
->>  #include <linux/irqdomain.h>
->>  #include <linux/of_address.h>
->>  #include <linux/of_pci.h>
->> @@ -19,6 +20,9 @@
->>  
->>  #include "pcie-designware.h"
->>  
->> +/* Temporary: Activate to use new IRQ API */
->> +/*#define CONFIG_PCIEDW_NEW_IRQ_API*/
+> It means all the back end drivers (DPC, AER, Hot Plug, NVMe) need to have some understanding that all 1s means "something happened".  In the case of the DPC driver, we know the DPC status should never have 1s in the most significant bits so returning all 1s is a special return type that needs to be handled.
 > 
-> You should be able to support both APIs at the same time until the last
-> patch, without relying on a kernel configuration (we still want to be
-> able to boot a single kernel that works both with the old and new methods).
-
-I think that the APIs are mutual-exclusive. pcie-designware has to initialize of
-one of them. Your idea is to have the new and the old API functions, but only
-initialize pcie-designware with the old one until the last patch?
-
-[...]
-
->> +
->> +	msg->address_lo = (u32)(msi_target & 0xffffffff);
->> +	msg->address_hi = (u32)(msi_target >> 32 & 0xffffffff);
+> Wes
 > 
-> Use lower_32_bit/upper_32_bit macros.
-
-Right, I am going to update this.
-
-[...]
-
->> +
->> +static void dw_pci_bottom_mask(struct irq_data *data)
->> +{
->> +	struct dw_pcie *pci = irq_data_get_irq_chip_data(data);
->> +	struct pcie_port *pp = &pci->pp;
->> +	unsigned int res, bit, val;
->> +
->> +	mutex_lock(&pp->lock);
+> -----Original Message-----
+> From: Wesley Yung 
+> Sent: Wednesday, May 10, 2017 9:43 AM
+> To: 'Keith Busch' <keith.busch@intel.com>; Wei Zhang <wzhang@fb.com>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; Sammy Hui <sammy.hui@intel.com>; Joseph Gruher <joseph.r.gruher@intel.com>; Krishna Dhulipala <krishnad@fb.com>
+> Subject: RE: [PATCH 1/2] pcie/dpc: Skip DPC event if device is not present
 > 
-> This is wrong. You can also end-up here from interrupt context, so you
-> need an spin_lock_irqsave().
-
-Right, I am going to update this.
-
-[...]
-
+> Hey Keith,
 > 
->> +
->> +	if (pp->ops->msi_clear_irq)
->> +		pp->ops->msi_clear_irq(pp, data->hwirq);
+> Does the RC Downstream ports also have DPC capability so the driver actually loads for the Root Port DSPs?  Just trying to understand the mechanism.
 > 
-> Why do you need this? Can you have alternative implementations of
-> mask/unmask?
-
-msi_clear_irq and msi_set_irq are specific SoC operations to set and clear bits
-in the interrupt register. In my opinion we should keep the current callbacks.
-
-[...]
-
+> For Wei's specific use case, removing a switch from the RP is not officially supported but technically it should be possible to do so.  On the switch end we just need to know where the ecosystem is at so we can make sure to play nice.
 > 
->> +	else {
->> +		res = (data->hwirq / 32) * 12;
->> +		bit = data->hwirq % 32;
->> +
->> +		dw_pcie_rd_own_conf(pp, PCIE_MSI_INTR0_ENABLE + res, 4, &val);
-> 
-> No use reading back from the HW. Just maintain a cached version in your
-> private structure and just use that.
-
-Ok, I can do that.
-
-[...]
-
->> +
->> +	bit = find_first_zero_bit(pp->msi_irq_in_use, pp->num_vectors);
->> +	if (bit >= pp->num_vectors) {
->> +		mutex_unlock(&pp->lock);
->> +		return -ENOSPC;
->> +	}
->> +
->> +	set_bit(bit, pp->msi_irq_in_use);
->> +
->> +	mutex_unlock(&pp->lock);
-> 
-> As mentioned by Lucas, you probably want to support Multi-MSI.
-> 
-
-This could be achieved by declaring data for each virq, correct?
-
-for (i = 0; i < nr_irqs; i++) {
-irq_domain_set_info(domain, virq + i, bit + i,
-&dw_pci_msi_bottom_irq_chip,domain->host_data, handle_simple_irq,
-NULL, NULL);
-}
-
-[...]
-
->> +
->> +	pp->irq_domain = irq_domain_add_linear(NULL, pp->num_vectors,
->> +					       &dw_pcie_msi_domain_ops, pci);
-> 
-> Please use irq_domain_create_linear and pass the fwnode there as well.
-> 
-
-Ok, I will do that.
-
-[...]
-
->>  static inline irqreturn_t dw_handle_msi_irq(struct pcie_port *pp)
->>  {
->>
-> 
-> Thanks,
-> 
-> 	M.
-> 
-
-Thank you for you feeback!
-
-Joao
+> Wes
