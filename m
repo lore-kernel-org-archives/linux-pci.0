@@ -1,73 +1,64 @@
-Return-Path: <SRS0=ZFmV=4Y=linuxonhyperv.com=jloeser@kernel.org>
-Return-Path: <SRS0=ZFmV=4Y=linuxonhyperv.com=jloeser@kernel.org>
-From: Jork Loeser <jloeser@linuxonhyperv.com>
-To: jloeser@microsoft.com,
-	helgaas@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	devel@linuxdriverproject.org,
-	olaf@aepfle.de,
-	apw@canonical.com,
-	vkuznets@redhat.com,
-	jasowang@redhat.com,
-	leann.ogasawara@canonical.com,
-	marcelo.cerri@canonical.com,
-	sthemmin@microsoft.com
-Subject: [PATCH 2/4] Hyper-V vPCI: Use page allocation for hbus structure
-Date: Thu, 18 May 2017 12:14:28 -0700
-Message-Id: <1495134870-18225-3-git-send-email-jloeser@linuxonhyperv.com>
-In-Reply-To: <1495134870-18225-1-git-send-email-jloeser@linuxonhyperv.com>
-References: <1495134870-18225-1-git-send-email-jloeser@linuxonhyperv.com>
-Reply-To: Jork Loeser <jloeser@microsoft.com>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0064.outbound.protection.outlook.com ([104.47.37.64]:14380
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752941AbdEJQnP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 May 2017 12:43:15 -0400
+From: Wesley Yung <wesley.yung@microsemi.com>
+To: Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>
+CC: Bjorn Helgaas <bhelgaas@google.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Sammy Hui <sammy.hui@intel.com>,
+        Joseph Gruher <joseph.r.gruher@intel.com>,
+        Krishna Dhulipala <krishnad@fb.com>
+Subject: RE: [PATCH 1/2] pcie/dpc: Skip DPC event if device is not present
+Date: Wed, 10 May 2017 16:43:08 +0000
+Message-ID: <90C73AA5E5BE2A428BAACEC9EA6376C982286A7D@avsrvexchmbx2.microsemi.net>
+References: <1493395369-20225-1-git-send-email-keith.busch@intel.com>
+ <1493395369-20225-2-git-send-email-keith.busch@intel.com>
+ <862590BB-8E84-4F2D-B5F9-A665000AA9CB@fb.com>
+ <20170510131729.GD2572@localhost.localdomain>
+ <9D9314D9-2EA5-45C1-AC60-54F7658FD4BC@fb.com>
+ <20170510164452.GE2572@localhost.localdomain>
+In-Reply-To: <20170510164452.GE2572@localhost.localdomain>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-From: Jork Loeser <jloeser@microsoft.com>
+Hey Keith,
 
-The hv_pcibus_device structure contains an in-memory hypercall argument
-that must not cross a page boundary. Allocate the structure as a page
-to ensure that.
+Does the RC Downstream ports also have DPC capability so the driver actuall=
+y loads for the Root Port DSPs?  Just trying to understand the mechanism.
 
-Signed-off-by: Jork Loeser <jloeser@microsoft.com>
----
- drivers/pci/host/pci-hyperv.c |   12 +++++++++---
- 1 files changed, 9 insertions(+), 3 deletions(-)
+For Wei's specific use case, removing a switch from the RP is not officiall=
+y supported but technically it should be possible to do so.  On the switch =
+end we just need to know where the ecosystem is at so we can make sure to p=
+lay nice.
 
-diff --git a/drivers/pci/host/pci-hyperv.c b/drivers/pci/host/pci-hyperv.c
-index 7bebdc6..aa836e9 100644
---- a/drivers/pci/host/pci-hyperv.c
-+++ b/drivers/pci/host/pci-hyperv.c
-@@ -2204,7 +2204,13 @@ static int hv_pci_probe(struct hv_device *hdev,
- 	struct hv_pcibus_device *hbus;
- 	int ret;
- 
--	hbus = kzalloc(sizeof(*hbus), GFP_KERNEL);
-+	/*
-+	 * hv_pcibus_device contains the hypercall arguments for retargeting in
-+	 * hv_irq_unmask(). Those must not cross a page boundary.
-+	 */
-+	BUILD_BUG_ON(sizeof(*hbus) > PAGE_SIZE);
-+
-+	hbus = (struct hv_pcibus_device *)get_zeroed_page(GFP_KERNEL);
- 	if (!hbus)
- 		return -ENOMEM;
- 	hbus->state = hv_pcibus_init;
-@@ -2308,7 +2314,7 @@ static int hv_pci_probe(struct hv_device *hdev,
- close:
- 	vmbus_close(hdev->channel);
- free_bus:
--	kfree(hbus);
-+	free_page((unsigned long)hbus);
- 	return ret;
- }
- 
-@@ -2386,7 +2392,7 @@ static int hv_pci_remove(struct hv_device *hdev)
- 	irq_domain_free_fwnode(hbus->sysdata.fwnode);
- 	put_hvpcibus(hbus);
- 	wait_for_completion(&hbus->remove_event);
--	kfree(hbus);
-+	free_page((unsigned long)hbus);
- 	return 0;
- }
- 
--- 
-1.7.1
+Wes
+
+-----Original Message-----
+From: Keith Busch [mailto:keith.busch@intel.com]=20
+Sent: Wednesday, May 10, 2017 9:45 AM
+To: Wei Zhang <wzhang@fb.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; Wesley =
+Yung <wesley.yung@microsemi.com>; Sammy Hui <sammy.hui@intel.com>; Joseph G=
+ruher <joseph.r.gruher@intel.com>; Krishna Dhulipala <krishnad@fb.com>
+Subject: Re: [PATCH 1/2] pcie/dpc: Skip DPC event if device is not present
+
+EXTERNAL EMAIL
+
+
+On Wed, May 10, 2017 at 04:35:06PM +0000, Wei Zhang wrote:
+> Hi Keith,
+>
+> I see.  I thought the current CPU root complex does not support such a us=
+e case, ie removing the DPC switch device itself and might result in kernel=
+ panic.  But I agree this will make the code future-proof when CPU does sup=
+port such a case in the future.
+
+What do you mean in the future? I do this today (hotplug enclosures), but I=
+ need this fix in place otherwise we get a use-after-free when the DPC work=
+ queue runs after the hotplug code freed the topology that includes the DPC=
+ parts.
