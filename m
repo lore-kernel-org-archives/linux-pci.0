@@ -1,54 +1,112 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f49.google.com ([74.125.83.49]:34326 "EHLO
-        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750710AbdEOVvM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 15 May 2017 17:51:12 -0400
-Received: by mail-pg0-f49.google.com with SMTP id u28so66221872pgn.1
-        for <linux-pci@vger.kernel.org>; Mon, 15 May 2017 14:51:12 -0700 (PDT)
-Date: Mon, 15 May 2017 14:51:09 -0700
-From: Brian Norris <briannorris@chromium.org>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>
-Subject: Re: [PATCH] pci: Disable master abort while waiting for an FLR to
- complete
-Message-ID: <20170515215109.GA100668@google.com>
-References: <20170512181107.13853.34680.stgit@localhost.localdomain>
- <20170515163623.GA15237@google.com>
- <CAKgT0UfNBhHSK9yvt7rZFMb+aZ9OF-Y7O4H8Axsr4NF99w9phQ@mail.gmail.com>
- <20170515210033.GA58785@google.com>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1494408707.31307.32.camel@mtkswgap22>
+Subject: Re: [PATCH v3 2/2] dt-bindings: pcie: Add documentation for
+ Mediatek PCIe
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Date: Wed, 10 May 2017 17:31:47 +0800
+In-Reply-To: <CAK8P3a193RxchvFAMWeZiP0sc0bd+VGg=_aVvipSgcbDpHXojg@mail.gmail.com>
+References: <1494382020-26790-1-git-send-email-ryder.lee@mediatek.com>
+ <1494382020-26790-3-git-send-email-ryder.lee@mediatek.com>
+ <CAK8P3a193RxchvFAMWeZiP0sc0bd+VGg=_aVvipSgcbDpHXojg@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20170515210033.GA58785@google.com>
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On Mon, May 15, 2017 at 02:00:33PM -0700, Brian Norris wrote:
-> On Mon, May 15, 2017 at 12:48:30PM -0700, Alexander Duyck wrote:
-> > On Mon, May 15, 2017 at 9:36 AM, Brian Norris <briannorris@chromium.org> wrote:
-> > > So there may be several implementation bugs with RK3399. I don't know
-> > > how much can be fixed on Rockchip's side, vs. how much can be
-> > > accomodated in the PCI core.
-> > 
-> > This is the kind of thing we have PCIe quirks for if nothing else.
-> > Odds are we should be able to work around it, it is just a matter of
-> > knowing what all the quirks are.
+On Wed, 2017-05-10 at 10:08 +0200, Arnd Bergmann wrote:
+> On Wed, May 10, 2017 at 4:07 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
 > 
-> Maybe your imagination for "quirks" isn't creative enough :)
+> > +- ranges:
+> > +  - The first three entries are expected to translate the addresses for the root
+> > +    port registers, which are referenced by the assigned-addresses property of
+> > +    the root port nodes (see below).
+> 
+> I don't understand this part. Why do you need a static translation for these?
+> Shouldn't they just be listed in the 'reg' property of the parent node now that
+> you have the clk/reset/phy properties in the parent as well?
 
-BTW, I meant to note that people have gone to some extreme lengths to
-handle buggy / quirky RCs. Look at drivers/pci/dwc/pci-imx6.c, which
-hooks all the way into the core ARM exception handling just to mask
-aborts! (See imx6q_pcie_abort_handler.) And they have some patches
-intended to fix crashes in 4.12-rc1 to hook synchronous aborts to return
-"all 1's". But that's extremely invasive and not very precise (I don't
-think that even checks the difference between PCI-induced aborts and
-other system aborts?). Probably not gonna fly on ARM64 either...
+At first, I did like that. But I noticed that someone suggest it's
+better to use 'assigned-addresses' to handle per-port registers, the
+same path as tegra and marvell did, in other platform discussion thread.
+So I just put shared register in root node. It could be rolled back if
+you feel this is inappropriate.
 
-Brian
+> > +Required properties:
+> > +- device_type: Must be "pci"
+> > +- assigned-addresses: Address and size of the port configuration registers
+> > +- reg: Only the first four bytes are used to refer to the correct bus number
+> > +  and device number.
+> > +- #address-cells: Must be 3
+> > +- #size-cells: Must be 2
+> > +- #interrupt-cells: Must be 1
+> > +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
+> > +  Please refer to the standard PCI bus binding document for a more detailed
+> > +  explanation.
+> 
+> Child nodes do not normally have interrupt-map properties. Isn't this
+> already covered by the interrupt-map in the parent?
+> 
 
-[1] [PATCH] PCI: imx6: fix downstream bus scanning
-https://patchwork.ozlabs.org/patch/760748/
+I have one Intel 4 port ethernet card(0000:00:01) and MTK WLAN card
+(0000:00:02), probe message looks good to me.
+
+pci 0000:00:01.0: fixup irq: got 224
+pci 0000:00:01.0: assigning IRQ 224
+pci 0000:00:02.0: fixup irq: got 225
+pci 0000:00:02.0: assigning IRQ 225
+
+pci 0000:01:00.0: fixup irq: got 224
+pci 0000:01:00.0: assigning IRQ 224
+pci 0000:01:00.1: fixup irq: got 224
+pci 0000:01:00.1: assigning IRQ 224
+pci 0000:01:00.2: fixup irq: got 224
+pci 0000:01:00.2: assigning IRQ 224
+pci 0000:01:00.3: fixup irq: got 224
+pci 0000:01:00.3: assigning IRQ 224
+
+pci 0000:02:00.0: fixup irq: got 225
+pci 0000:02:00.0: assigning IRQ 225
+
+
+But child nodes without interrupt-map properties:
+It seems incorrect.
+
+pci 0000:00:01.0: fixup irq: got 224
+pci 0000:00:01.0: assigning IRQ 224
+pci 0000:00:02.0: fixup irq: got 225
+pci 0000:00:02.0: assigning IRQ 225
+
+pci 0000:01:00.0: fixup irq: got 223
+pci 0000:01:00.0: assigning IRQ 223
+pci 0000:01:00.1: fixup irq: got 223
+pci 0000:01:00.1: assigning IRQ 223
+pci 0000:01:00.2: fixup irq: got 223
+pci 0000:01:00.2: assigning IRQ 223
+pci 0000:01:00.3: fixup irq: got 223
+pci 0000:01:00.3: assigning IRQ 223
+
+pci 0000:02:00.0: fixup irq: got 223
+pci 0000:02:00.0: assigning IRQ 223
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
