@@ -1,64 +1,39 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0064.outbound.protection.outlook.com ([104.47.37.64]:14380
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0057.outbound.protection.outlook.com ([104.47.38.57]:18965
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752941AbdEJQnP (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Wed, 10 May 2017 12:43:15 -0400
+        id S1751829AbdEJORJ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Wed, 10 May 2017 10:17:09 -0400
 From: Wesley Yung <wesley.yung@microsemi.com>
-To: Keith Busch <keith.busch@intel.com>, Wei Zhang <wzhang@fb.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>,
+To: Keith Busch <keith.busch@intel.com>
+CC: Wei Zhang <wzhang@fb.com>, Bjorn Helgaas <bhelgaas@google.com>,
         "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
         Sammy Hui <sammy.hui@intel.com>,
         Joseph Gruher <joseph.r.gruher@intel.com>,
-        Krishna Dhulipala <krishnad@fb.com>
-Subject: RE: [PATCH 1/2] pcie/dpc: Skip DPC event if device is not present
-Date: Wed, 10 May 2017 16:43:08 +0000
-Message-ID: <90C73AA5E5BE2A428BAACEC9EA6376C982286A7D@avsrvexchmbx2.microsemi.net>
+        "Krishna Dhulipala" <krishnad@fb.com>
+Subject: Re: [PATCH 1/2] pcie/dpc: Skip DPC event if device is not present
+Date: Wed, 10 May 2017 14:16:58 +0000
+Message-ID: <2ED318EB-C159-4312-BE6C-0B833E18517A@microsemi.com>
 References: <1493395369-20225-1-git-send-email-keith.busch@intel.com>
  <1493395369-20225-2-git-send-email-keith.busch@intel.com>
- <862590BB-8E84-4F2D-B5F9-A665000AA9CB@fb.com>
- <20170510131729.GD2572@localhost.localdomain>
- <9D9314D9-2EA5-45C1-AC60-54F7658FD4BC@fb.com>
- <20170510164452.GE2572@localhost.localdomain>
-In-Reply-To: <20170510164452.GE2572@localhost.localdomain>
-Content-Type: text/plain; charset="us-ascii"
+ <862590BB-8E84-4F2D-B5F9-A665000AA9CB@fb.com>,<20170510131729.GD2572@localhost.localdomain>
+In-Reply-To: <20170510131729.GD2572@localhost.localdomain>
+Content-Type: text/plain; charset="gb2312"
 MIME-Version: 1.0
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hey Keith,
-
-Does the RC Downstream ports also have DPC capability so the driver actuall=
-y loads for the Root Port DSPs?  Just trying to understand the mechanism.
-
-For Wei's specific use case, removing a switch from the RP is not officiall=
-y supported but technically it should be possible to do so.  On the switch =
-end we just need to know where the ecosystem is at so we can make sure to p=
-lay nice.
-
-Wes
-
------Original Message-----
-From: Keith Busch [mailto:keith.busch@intel.com]=20
-Sent: Wednesday, May 10, 2017 9:45 AM
-To: Wei Zhang <wzhang@fb.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>; linux-pci@vger.kernel.org; Wesley =
-Yung <wesley.yung@microsemi.com>; Sammy Hui <sammy.hui@intel.com>; Joseph G=
-ruher <joseph.r.gruher@intel.com>; Krishna Dhulipala <krishnad@fb.com>
-Subject: Re: [PATCH 1/2] pcie/dpc: Skip DPC event if device is not present
-
-EXTERNAL EMAIL
-
-
-On Wed, May 10, 2017 at 04:35:06PM +0000, Wei Zhang wrote:
-> Hi Keith,
->
-> I see.  I thought the current CPU root complex does not support such a us=
-e case, ie removing the DPC switch device itself and might result in kernel=
- panic.  But I agree this will make the code future-proof when CPU does sup=
-port such a case in the future.
-
-What do you mean in the future? I do this today (hotplug enclosures), but I=
- need this fix in place otherwise we get a use-after-free when the DPC work=
- queue runs after the hotplug code freed the topology that includes the DPC=
- parts.
+T2ggSSBzZWUuIElmIHRoZSB3aG9sZSBzd2l0Y2ggaXMgcmVtb3ZlZCBpZiB0aGV5IHRyeSB0byBy
+ZWFkIHRoZSBkc3BzIHRoYXQgd2VyZSB0aGVyZSB3b3VsZCByZXN1bHQgaW4gYSB0aW1lb3V0IGFu
+ZCB0aGF0IGxvb2tzIGxpa2UgYWxsIDFzLiANCg0KQ2hlZXJzDQpXZXMNCg0KT24gTWF5IDEwLCAy
+MDE3LCBhdCA2OjEwIEFNLCBLZWl0aCBCdXNjaCA8a2VpdGguYnVzY2hAaW50ZWwuY29tPiB3cm90
+ZToNCg0KRVhURVJOQUwgRU1BSUwNCg0KDQo+IE9uIFdlZCwgTWF5IDEwLCAyMDE3IGF0IDAzOjM5
+OjI3QU0gKzAwMDAsIFdlaSBaaGFuZyB3cm90ZToNCj4gSGkgS2VpdGggYW5kIFdlcywNCj4gDQo+
+IEkgd29uZGVyIGlmIGdldHRpbmcgYW4gQWxsIDGhr3MgcmVhZCBvbiB0aGUgRFBDIHN0YXR1cyBy
+ZWdpc3RlciBpcyBhDQo+IHZhbGlkIHNjZW5hcmlvLiAgIFRoZSBEUEMgcmVnaXN0ZXIgaXMgb24g
+dGhlIHN3aXRjaCwgd2h5IHdvdWxkIHRoZQ0KPiBzdGF0dXMgcmVnaXN0ZXIgcmV0dXJucyBBbGwg
+MaGvcyBldmVuIGlmIHRoZSBkZXZpY2UgaXMgcmVtb3ZlZD8NCg0KQWgsIHRoaXMgaXNuJ3QgYWJv
+dXQgdGhlIGRvd25zdHJlYW0gZGV2aWNlIHByZWNlbnNlLiBUaGlzIGlzIGFib3V0DQp0aGUgRFBD
+IHN3aXRjaCBkZXZpY2UgaXRzZWxmLCBsaWtlIGlmIHlvdSBwdWxsIHRoZSBjYWJsZSBvdXQgb2Yg
+dGhlDQplbmNsb3N1cmUuIFJlYWRpbmcgYW55dGhpbmcgb2ZmIHRoZSBEU1BzIGluIGl0IHdpbGwg
+c2VlIGFsbCAxJ3MuDQo=
