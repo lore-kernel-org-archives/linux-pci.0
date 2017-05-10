@@ -1,21 +1,11 @@
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Message-ID: <1493708978.6464.37.camel@mtkswgap22>
-Subject: Re: FW: [PATCH 2/2] dt-bindings: pcie: Add documentation for
- Mediatek PCIe
 From: Ryder Lee <ryder.lee@mediatek.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Date: Tue, 2 May 2017 15:09:38 +0800
-In-Reply-To: <4BAFE512E7223A4B91F29C40AC7A579616B5155E@MTKMBS05N1.mediatek.inc>
-References: <1492935543-18190-1-git-send-email-ryder.lee@mediatek.com>
- <1492935543-18190-3-git-send-email-ryder.lee@mediatek.com>
- <CAK8P3a1vgi9VBZfRNq0dDKzmfe8FkHQtgz6fEXW9fyUnBHtaQQ@mail.gmail.com>
- <1493194205.27023.80.camel@mtkswgap22>
- <CAK8P3a0vD8s_3R+jS=JdUXX3X05SkCk-mipMA6UxWYQZe6vLUQ@mail.gmail.com>
- <1493347596.29314.55.camel@mtkswgap22>
- <CAK8P3a0WGwukWj8V-S2c13S3futkxBhiMfRTa=0QWaDG7qREVw@mail.gmail.com>
- <CAFST5+Dn3bMwtGt9pQBMc+q+qkrpvmXh67ZXm2=hs-ZoX8E_ww@mail.gmail.com>
- <4BAFE512E7223A4B91F29C40AC7A579616B5155E@MTKMBS05N1.mediatek.inc>
+To: Bjorn Helgaas <bhelgaas@google.com>, Rob Herring <robh+dt@kernel.org>,
+ Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v3 0/2] Add PCIe host driver support for Mediatek SoCs
+Date: Wed, 10 May 2017 10:06:58 +0800
+Message-ID: <1494382020-26790-1-git-send-email-ryder.lee@mediatek.com>
 MIME-Version: 1.0
 List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
@@ -24,65 +14,59 @@ List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
 List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
 List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
  <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: Rob Herring <robh@kernel.org>, devicetree@vger.kernel.org,
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
  linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-mediatek@lists.infradead.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Ryder Lee <ryder.lee@mediatek.com>, linux-mediatek@lists.infradead.org,
  linux-arm-kernel@lists.infradead.org
 Content-Type: text/plain; charset="us-ascii"
 Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
 Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
+Hi,
 
-Hi Arnd,
+This patch series add Mediatek Gen2 PCIe host controller driver and
+dt-binding document. It can be found on MT7623 series SoCs.
 
-> 2017-04-28 19:41 GMT+08:00 Arnd Bergmann <arnd@arndb.de>:
-> 
->         On Fri, Apr 28, 2017 at 4:46 AM, Ryder Lee
->         <ryder.lee@mediatek.com> wrote:
->         > On Thu, 2017-04-27 at 21:06 +0200, Arnd Bergmann wrote:
->         >> On Wed, Apr 26, 2017 at 10:10 AM, Ryder Lee
->         <ryder.lee@mediatek.com> wrote:
->         >> > On Tue, 2017-04-25 at 14:18 +0200, Arnd Bergmann wrote:
->         >> >> On Sun, Apr 23, 2017 at 10:19 AM, Ryder Lee
->         <ryder.lee@mediatek.com> wrote:
->         >> Are any of the registers the same at all, e.g. for MSI
->         handling?
->         >
->         > No, It doesn't support MSI. All I can do is using the
->         registers that designer provide to me. The others are inviable
->         for software. So I treat it as different hardware.
->         Furthermore, we hope that we can put all mediatek drivers
->         together regardless of in-house IP or lincense IP
->         >
->         > We have no particular IP name but just use chip name to call
->         it. So I will temporarily use "mediatek,gen2v1-pcie" in patch
->         v1.
->         
->         I think using the chip name as in the first version of your
->         patch name is better then, in particular since the 'gen2v1'
->         would not be an actual version number but just say which
->         variant got merged into mainline first.
+This driver was validated using Broadcom Tigon3 and Intel(R) 82575/82576
+gigabit ethernet card.
 
-Okay, i will correct it.
+Changes since v3:
+- correct sub-nodes unit addresses.
 
->         A related question would be on how general we want the binding
->         to be.
->         Your binding text starts out by describing that there are
->         three root ports and what their capabilities are.
->         
->         If you think there might be other (existing or future) chips
->         that use the same binding and driver, then being a little more
->         abstract could help in the long run.
+Changes since v2:
+- modify Kconfig to avoid kbuild test error on some architecture.
+- change compatible string.
+- revise binding document:
+  add missing interrupt-names.
+  remove the board dts example and drop 'status' properties.
+  remove unnecessary descriptions bout standard PCI bus binding.
 
-Thanks for reminding me. If we decide to use the same driver in the
-future, we will have a internal discussion about it.
+Changes since v1:
+- add .suppress_bind_attrs.
+- remove unnecessary *_valid_device() pattern.
+- remove PCI_PROBE_ONLY.
+- use the regular readl() instead of readl_relaxed().
+- add .map_bus() and change to use pci_generic_config_read/pci_generic_config_write.
+- revise dt-binding document and move nonstandard properties to root node.
+- change compatible string.
+- use interrupt-map property and replace mtk_pcie_map_irq() with of_irq_parse_and_map_pci().
+- use the new pci_register_host_bridge() method instead of pci_scan_root_bus().
 
-Ryder.
+Ryder Lee (2):
+  PCI: mediatek: Add Mediatek PCIe host controller support
+  dt-bindings: pcie: Add documentation for Mediatek PCIe
 
+ .../bindings/pci/mediatek,mt7623-pcie.txt          | 149 ++++++
+ drivers/pci/host/Kconfig                           |  11 +
+ drivers/pci/host/Makefile                          |   1 +
+ drivers/pci/host/pcie-mediatek.c                   | 563 +++++++++++++++++++++
+ 4 files changed, 724 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+ create mode 100644 drivers/pci/host/pcie-mediatek.c
 
-
-
+-- 
+1.9.1
 
 
 _______________________________________________
