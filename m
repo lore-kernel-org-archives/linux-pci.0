@@ -1,107 +1,84 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:37665 "EHLO
-        mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1423442AbdEAMHN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 1 May 2017 08:07:13 -0400
-Message-Id: <2cf485a95fe875f1d6874a90e922e89dce173d77.1493631639.git.lukas@wunner.de>
-In-Reply-To: <cover.1493631639.git.lukas@wunner.de>
-References: <cover.1493631639.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Mon, 1 May 2017 14:06:39 +0200
-Subject: [PATCH 1/5] PCI: pciehp: Resume to D0 on board addition/removal
-To: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Ashok Raj <ashok.raj@intel.com>,
-        Yinghai Lu <yinghai@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Erik Veijola <erik.veijola@linux.intel.com>,
-        Keith Busch <keith.busch@intel.com>,
-        Krishna Dhulipala <krishnad@fb.com>, Wei Zhang <wzhang@fb.com>
-Sender: linux-pci-owner@vger.kernel.org
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [RFC PATCH 04/30] iommu/arm-smmu-v3: Add support for PCI ATS
+To: Tomasz Nowicki <tn@semihalf.com>
+References: <20170227195441.5170-1-jean-philippe.brucker@arm.com>
+ <20170227195441.5170-5-jean-philippe.brucker@arm.com>
+ <bc1237e2-3690-bc1e-b7bc-86b982c9058f@semihalf.com>
+From: Jean-Philippe Brucker <jean-philippe.brucker@arm.com>
+Message-ID: <d4ad80e6-4654-710c-4b30-35fd81ab3f06@arm.com>
+Date: Wed, 10 May 2017 14:35:20 +0100
+MIME-Version: 1.0
+In-Reply-To: <bc1237e2-3690-bc1e-b7bc-86b982c9058f@semihalf.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Shanker Donthineni <shankerd@qti.qualcomm.com>, kvm@vger.kernel.org,
+ Catalin Marinas <catalin.marinas@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Sinan Kaya <okaya@qti.qualcomm.com>, Will Deacon <will.deacon@arm.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Harv Abdulhamid <harba@qti.qualcomm.com>, iommu@lists.linux-foundation.org,
+ linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Robin Murphy <robin.murphy@arm.com>, David Woodhouse <dwmw2@infradead.org>,
+ linux-arm-kernel@lists.infradead.org,
+ Nate Watterson <nwatters@qti.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hotplug ports need to be in D0 to access devices on their secondary bus.
-pciehp itself does this in
-    pciehp_check_link_status(),
-    pciehp_configure_device() (both called from board_added())
-and
-    pciehp_unconfigure_device() (called from remove_board()).
+On 10/05/17 13:54, Tomasz Nowicki wrote:
+> Hi Jean,
+> 
+> On 27.02.2017 20:54, Jean-Philippe Brucker wrote:
+>> +/*
+>> + * Returns -ENOSYS if ATS is not supported either by the device or by
+>> the SMMU
+>> + */
+>> +static int arm_smmu_enable_ats(struct arm_smmu_master_data *master)
+>> +{
+>> +    int ret;
+>> +    size_t stu;
+>> +    struct pci_dev *pdev;
+>> +    struct arm_smmu_device *smmu = master->smmu;
+>> +
+>> +    if (!(smmu->features & ARM_SMMU_FEAT_ATS) || !dev_is_pci(master->dev))
+>> +        return -ENOSYS;
+>> +
+>> +    pdev = to_pci_dev(master->dev);
+>> +
+>> +#ifdef CONFIG_PCI_ATS
+>> +    if (!pdev->ats_cap)
+>> +        return -ENOSYS;
+>> +#else
+>> +    return -ENOSYS;
+>> +#endif
+> 
+> Nit: This deserves to be another helper in ats.c like:
+> 
+> int pci_ats_supported(struct pci_dev *dev) {
+>         if (!pdev->ats_cap)
+>                 return 0;
+> 
+>         return 1;
+> }
 
-In addition, Yinghai Lu discovered that some Skylake server CPUs or PCHs
-feature a Power Controller for their PCIe hotplug ports (PCIe r3.1, sec
-6.7.1.8) which requires the port to be in D0 when invoking
-    pciehp_power_on_slot() (likewise called from board_added()).
+Indeed, although in my next version I'll remove this check altogether.
+Instead I now rely on pci_enable_ats to check for ats_cap (as discussed in
+patch 3). The downside is that we can't distinguish between absence of ATS
+and error in enabling ATS. So we don't print a message in the latter case
+anymore, we expect device drivers to check whether ATS is enabled.
 
-The spec is silent about such a requirement, but it seems prudent to
-assume that any hotplug port with a Power Controller may need this.
+Thanks,
+Jean
 
-Thus, acquire a runtime PM ref for the invocation of board_added() and
-remove_board().
 
-Cc: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Erik Veijola <erik.veijola@linux.intel.com>
-Cc: Ashok Raj <ashok.raj@intel.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Yinghai Lu <yinghai@kernel.org>
-Cc: Krishna Dhulipala <krishnad@fb.com>
-Cc: Wei Zhang <wzhang@fb.com>
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pciehp_ctrl.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index ec0b4c11ccd9..d071aa63dac9 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -31,6 +31,7 @@
- #include <linux/kernel.h>
- #include <linux/types.h>
- #include <linux/slab.h>
-+#include <linux/pm_runtime.h>
- #include <linux/pci.h>
- #include "../pci.h"
- #include "pciehp.h"
-@@ -390,6 +391,7 @@ int pciehp_enable_slot(struct slot *p_slot)
- {
- 	u8 getstatus = 0;
- 	struct controller *ctrl = p_slot->ctrl;
-+	int retval;
- 
- 	pciehp_get_adapter_status(p_slot, &getstatus);
- 	if (!getstatus) {
-@@ -414,7 +416,10 @@ int pciehp_enable_slot(struct slot *p_slot)
- 		}
- 	}
- 
--	return board_added(p_slot);
-+	pm_runtime_get_sync(&ctrl->pcie->port->dev);
-+	retval = board_added(p_slot);
-+	pm_runtime_put(&ctrl->pcie->port->dev);
-+	return retval;
- }
- 
- /*
-@@ -424,6 +429,7 @@ int pciehp_disable_slot(struct slot *p_slot)
- {
- 	u8 getstatus = 0;
- 	struct controller *ctrl = p_slot->ctrl;
-+	int retval;
- 
- 	if (!p_slot->ctrl)
- 		return 1;
-@@ -437,7 +443,10 @@ int pciehp_disable_slot(struct slot *p_slot)
- 		}
- 	}
- 
--	return remove_board(p_slot);
-+	pm_runtime_get_sync(&ctrl->pcie->port->dev);
-+	retval = remove_board(p_slot);
-+	pm_runtime_put(&ctrl->pcie->port->dev);
-+	return retval;
- }
- 
- int pciehp_sysfs_enable_slot(struct slot *p_slot)
--- 
-2.11.0
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
