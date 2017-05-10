@@ -1,138 +1,213 @@
-Return-Path: <SRS0=xBUr=4Y=linaro.org=ard.biesheuvel@kernel.org>
-Return-Path: <SRS0=xBUr=4Y=linaro.org=ard.biesheuvel@kernel.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Subject: Re: [PATCH v3 2/2] dt-bindings: pcie: Add documentation for Mediatek
+ PCIe
+To: Ryder Lee <ryder.lee@mediatek.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Rob Herring <robh+dt@kernel.org>, Arnd Bergmann <arnd@arndb.de>
+References: <1494382020-26790-1-git-send-email-ryder.lee@mediatek.com>
+ <1494382020-26790-3-git-send-email-ryder.lee@mediatek.com>
+From: Matthias Brugger <matthias.bgg@gmail.com>
+Message-ID: <1f3f1c5a-7618-5af4-73ce-645415c86c06@gmail.com>
+Date: Wed, 10 May 2017 09:58:47 +0200
 MIME-Version: 1.0
-In-Reply-To: <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
-References: <20170411163313.18577-1-ard.biesheuvel@linaro.org>
- <20170517215611.GJ31462@bhelgaas-glaptop.roam.corp.google.com>
- <CAKv+Gu9T7vH_LbKfS_40JUbLNK4PYrMi++eKbCq_MzBsuQxUDQ@mail.gmail.com> <20170518140553.GA22106@bhelgaas-glaptop.roam.corp.google.com>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Thu, 18 May 2017 16:10:28 +0100
-Message-ID: <CAKv+Gu_cug6cVrWP-zkptvNn3LxYk7b4Gd=iTzHHe3us3KwL3Q@mail.gmail.com>
-Subject: Re: [PATCH 0/2] arm64: acpi/pci: allow the firmware BAR configuration
- to be preserved
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	linux-pci <linux-pci@vger.kernel.org>, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Graeme Gregory <graeme.gregory@linaro.org>, Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will.deacon@arm.com>, Leif Lindholm <leif.lindholm@linaro.org>,
-	Sinan Kaya <okaya@codeaurora.org>, Tomasz Nowicki <tn@semihalf.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <1494382020-26790-3-git-send-email-ryder.lee@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-mediatek@lists.infradead.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 18 May 2017 at 15:05, Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Thu, May 18, 2017 at 11:59:14AM +0100, Ard Biesheuvel wrote:
->> On 17 May 2017 at 22:56, Bjorn Helgaas <helgaas@kernel.org> wrote:
->> > On Tue, Apr 11, 2017 at 05:33:11PM +0100, Ard Biesheuvel wrote:
->> >> This is a followup to the discussion regarding whether ACPI/arm64 systems
->> >> should preserve the PCI configuration performed by the firmware, or always
->> >> reconfigure it from scratch.
->> >>
->> >> This series proposes to put it under the control of the firmware, by invoking
->> >> the _DSM method, and preserving the firmware configuration only when it
->> >> returns 0.
->> >>
->> >> Patch #1 is a preparatory bugfix that solves the issue that I/O bridge
->> >> windows starting at 0x0 are dismissed when looking for parent resources.
->> >>
->> >> Patch #2 adds the logic to invoke the _DSM and claim the existing
->> >> configuration rather than reallocate it from scratch if it returns '0'
->> >>
->> >> Ard Biesheuvel (2):
->> >>   drivers: pci: do not disregard parent resources starting at 0x0
->> >>   arm64: acpi/pci: invoke _DSM whether to preserve firmware PCI setup
->> >>
->> >>  arch/arm64/kernel/pci.c  | 20 ++++++++++++++++++--
->> >>  drivers/pci/pci.c        |  2 +-
->> >>  include/linux/pci-acpi.h |  7 ++++---
->> >>  3 files changed, 23 insertions(+), 6 deletions(-)
->> >
->> > I applied the first to pci/resource for v4.13.  I didn't do anything
->> > with the second because I don't think we have consensus on what the
->> > right thing to do is yet.
->>
->> Thanks Bjorn.
->>
->> Re PCI reconfiguration: currently, the EFI framebuffer is broken on
->> all systems where the associated BAR lives on a device that is not on
->> bus 0, which is of course everything other than QEMU (which cannot use
->> the EFI framebuffer for other reasons when running under KVM)
->
-> I don't know much about the EFI framebuffer.  It doesn't look like
-> efifb.c does any runtime calls to EFI.  Is that code basically just
-> a way to discover the address & size of the frame buffer from EFI
-> information?
->
-
-Yes. It is basically
-
-struct {
-  u64 base;
-  u64 size;
-  enum pixelformat fmt;
-}
-
-and the driver takes ownership of the region and proceeds to use it as
-a framebuffer. At runtime, there is not way to cross reference this
-with other protocols from the UEFI graphics driver stack (i.e., PCI
-i/o), and so moving BARs is not the only problem: on ARM systems,
-[base, base + size) could well be a slice of DRAM, in which case we
-should be using cacheable accesses, while a framebuffer behind a PCI
-BAR requires the memory accesses to hit the PCI window for the side
-effects to be noticeable.
-
-Obviously, this is a very x86 centric arrangement, where BARs are
-usually preserved, and the coherency issue does not exist.
 
 
-> I don't see the connection to bus 0.  As long as we figure out the
-> buffer address and configure bridges so the buffer is routed to the
-> device, the location in the bus hierarchy shouldn't matter.
->
+On 10/05/17 04:07, Ryder Lee wrote:
+> Add documentation for PCIe host driver available in MT7623
+> series SoCs.
+> 
+> Signed-off-by: Ryder Lee <ryder.lee@mediatek.com>
+> Acked-by: Rob Herring <robh@kernel.org>
+> ---
+>   .../bindings/pci/mediatek,mt7623-pcie.txt          | 149 +++++++++++++++++++++
+>   1 file changed, 149 insertions(+)
+>   create mode 100644 Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> new file mode 100644
+> index 0000000..a9393ce
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/mediatek,mt7623-pcie.txt
+> @@ -0,0 +1,149 @@
+> +Mediatek Gen2 PCIe controller which is available on MT7623 series SoCs
+> +
+> +PCIe subsys supports single root complex (RC) with 3 Root Ports. Each root
+> +ports supports a Gen2 1-lane Link and has PIPE interface to PHY.
+> +
+> +Required properties:
+> +- compatible: Should contain "mediatek,mt7623-pcie".
+> +- device_type: Must be "pci"
+> +- reg: Base addresses and lengths of the PCIe controller.
+> +- #address-cells: Address representation for root ports (must be 3)
+> +- #size-cells: Size representation for root ports (must be 2)
+> +- #interrupt-cells: Size representation for interrupts (must be 1)
+> +- interrupts: Three interrupt outputs of the controller. Must contain an
+> +  entry for each entry in the interrupt-names property.
+> +- interrupt-names: Must include the following names
+> +  - "pcie-int0"
+> +  - "pcie-int1"
+> +  - "pcie-int2"
+> +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
+> +  Please refer to the standard PCI bus binding document for a more detailed
+> +  explanation.
+> +- clocks: Must contain an entry for each entry in clock-names.
+> +  See ../clocks/clock-bindings.txt for details.
+> +- clock-names: Must include the following entries:
+> +  - free_ck :for reference clock of PCIe subsys
+> +  - sys_ck0 :for clock of Port0
+> +  - sys_ck1 :for clock of Port1
+> +  - sys_ck2 :for clock of Port2
+> +- resets: Must contain an entry for each entry in reset-names.
+> +  See ../reset/reset.txt for details.
+> +- reset-names: Must include the following entries:
+> +  - pcie-rst0 :port0 reset
+> +  - pcie-rst1 :port1 reset
+> +  - pcie-rst2 :port2 reset
+> +- phys: list of PHY specifiers (used by generic PHY framework).
+> +- phy-names : must be "pcie-phy0", "pcie-phy1", "pcie-phyN".. based on the
+> +  number of PHYs as specified in *phys* property.
+> +- power-domains: A phandle and power domain specifier pair to the power domain
+> +  which is responsible for collapsing and restoring power to the peripheral.
+> +- bus-range: Range of bus numbers associated with this controller.
+> +- ranges:
+> +  - The first three entries are expected to translate the addresses for the root
+> +    port registers, which are referenced by the assigned-addresses property of
+> +    the root port nodes (see below).
+> +  - The remaining entries setup the mapping for the standard I/O and memory
+> +	regions.
+> +  Please refer to the standard PCI bus binding document for a more detailed
+> +  explanation.
+> +
+> +In addition, the device tree node must have sub-nodes describing each
+> +PCIe port interface, having the following mandatory properties:
+> +
+> +Required properties:
+> +- device_type: Must be "pci"
+> +- assigned-addresses: Address and size of the port configuration registers
+> +- reg: Only the first four bytes are used to refer to the correct bus number
+> +  and device number.
+> +- #address-cells: Must be 3
+> +- #size-cells: Must be 2
+> +- #interrupt-cells: Must be 1
+> +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
+> +  Please refer to the standard PCI bus binding document for a more detailed
+> +  explanation.
+> +- ranges: Sub-ranges distributed from the PCIe controller node. An empty
+> +  property is sufficient.
+> +- num-lanes: Number of lanes to use for this port.
+> +
+> +Examples:
+> +
+> +	hifsys: syscon@1a000000 {
+> +		compatible = "mediatek,mt7623-hifsys", "syscon";
 
-The current code simply claims the BAR from a PCI_FIXUP_CLASS_HEADER()
-quirk, at which time the bridge windows are not configured yet, and so
-this fails unless there are no bridges to take into account. Note that
-this is an improvement over the old situation, where we simply
-dereferenced the framebuffer window described by efifb without any
-checking at all.
+If you want to put the clock controller subsystem node to the example, 
+please use a valid compatible, for example:
 
->> So the first question is whether anyone cares. I do, but not deeply:
->> the EFI framebuffer, while useful in cases where there is no real GFC
->> driver, is a bit of a hack anyway.
->>
->> Then we have the question whether we can work around it in another
->> way: I already proposed an alternative patch which simply records the
->> associated BAR before PCI is reconfigured, and refuses to enable EFIFB
->> if the BAR has moves. This is a workaround rather than a real fix, but
->> in many cases, the kernel and UEFI appear to arrive at similar
->> conclusions regarding where to put the framebuffer BAR, probably
->> because of the simple reason that its size (ergo alignment) will cause
->> it to be allocated first.
->
-> This is reminiscent of an issue with IOMMU descriptions: IIRC, DMAR
-> and related tables are based on the current bus numbering scheme, and
-> if we renumber buses, we have to remember the "boot-time to current"
-> mapping to interpret the tables (I'm not sure we actually do this
-> today).  Maybe we need some sort of similar mapping for BARs.
->
+		compatible = "mediatek,mt7623-hifsys",
+			     "mediatek,mt2701-hifsys",
+			     "syscon";
 
-I'd much rather take the presence of such tables as a hint that we
-should leave the PCI resource allocation alone altogether.
+Thanks,
+Matthias
 
->> Re _DSM: I think it makes sense to honour it, because it puts the
->> allocation under the control of the firmware, which completely removes
->> the burden of having to reason about a policy in the kernel. That
->> leaves the question which will be the default, but that is of minor
->> importance IMO.
->
-> I agree; we should try to follow the spec unless we have a good reason
-> not to, which argues for honoring the _DSM, so I think it's worth a
-> try.  Booting with "pci=realloc" could override the _DSM and taint the
-> kernel (because we don't know the effect of reassigning something the
-> firmware told us not to touch).
->
+> +		reg = <0 0x1a000000 0 0x1000>;
+> +		#clock-cells = <1>;
+> +		#reset-cells = <1>;
+> +	};
+> +
+> +	pcie: pcie-controller@1a140000 {
+> +		compatible = "mediatek,mt7623-pcie";
+> +		device_type = "pci";
+> +		reg = <0 0x1a140000 0 0x1000>; /* PCIe shared registers */
+> +		#address-cells = <3>;
+> +		#size-cells = <2>;
+> +		#interrupt-cells = <1>;
+> +		interrupts = <GIC_SPI 193 IRQ_TYPE_LEVEL_LOW>,
+> +			     <GIC_SPI 194 IRQ_TYPE_LEVEL_LOW>,
+> +			     <GIC_SPI 195 IRQ_TYPE_LEVEL_LOW>;
+> +		interrupt-names = "pcie-int0", "pcie-int1", "pcie-int2";
+> +		interrupt-map-mask = <0xf800 0 0 0>;
+> +		interrupt-map = <0x0000 0 0 0 &gic GIC_SPI 193 IRQ_TYPE_NONE>,
+> +				<0x0800 0 0 0 &gic GIC_SPI 194 IRQ_TYPE_NONE>,
+> +				<0x1000 0 0 0 &gic GIC_SPI 195 IRQ_TYPE_NONE>;
+> +		clocks = <&topckgen CLK_TOP_ETHIF_SEL>,
+> +			 <&hifsys CLK_HIFSYS_PCIE0>,
+> +			 <&hifsys CLK_HIFSYS_PCIE1>,
+> +			 <&hifsys CLK_HIFSYS_PCIE2>;
+> +		clock-names = "free_ck", "sys_ck0", "sys_ck1", "sys_ck2";
+> +		resets = <&hifsys MT2701_HIFSYS_PCIE0_RST>,
+> +			 <&hifsys MT2701_HIFSYS_PCIE1_RST>,
+> +			 <&hifsys MT2701_HIFSYS_PCIE2_RST>;
+> +		reset-names = "pcie-rst0", "pcie-rst1", "pcie-rst2";
+> +		phys = <&pcie0_phy>, <&pcie1_phy>, <&pcie2_phy>;
+> +		phy-names = "pcie-phy0", "pcie-phy1", "pcie-phy2";
+> +		power-domains = <&scpsys MT2701_POWER_DOMAIN_HIF>;
+> +		bus-range = <0x00 0xff>;
+> +		ranges = <0x82000000 0 0x1a142000 0 0x1a142000 0 0x1000 /* Port0 registers */
+> +			  0x82000000 0 0x1a143000 0 0x1a143000 0 0x1000 /* Port1 registers */
+> +			  0x82000000 0 0x1a144000 0 0x1a144000 0 0x1000 /* Port2 registers */
+> +			  0x81000000 0 0x1a160000 0 0x1a160000 0 0x00010000 /* I/O space */
+> +			  0x83000000 0 0x60000000 0 0x60000000 0 0x10000000>;	/* memory space */
+> +
+> +		pcie@0,0 {
+> +			device_type = "pci";
+> +			assigned-addresses = <0x82000000 0 0x1a142000 0 0x1000>;
+> +			reg = <0x0000 0 0 0 0>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 0>;
+> +			interrupt-map = <0 0 0 0 &gic GIC_SPI 193 IRQ_TYPE_NONE>;
+> +			ranges;
+> +			num-lanes = <1>;
+> +		};
+> +
+> +		pcie@1,0 {
+> +			device_type = "pci";
+> +			assigned-addresses = <0x82000800 0 0x1a143000 0 0x1000>;
+> +			reg = <0x0800 0 0 0 0>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 0>;
+> +			interrupt-map = <0 0 0 0 &gic GIC_SPI 194 IRQ_TYPE_NONE>;
+> +			ranges;
+> +			num-lanes = <1>;
+> +		};
+> +
+> +		pcie@2,0 {
+> +			device_type = "pci";
+> +			assigned-addresses = <0x82001000 0 0x1a144000 0 0x1000>;
+> +			reg = <0x1000 0 0 0 0>;
+> +			#address-cells = <3>;
+> +			#size-cells = <2>;
+> +			#interrupt-cells = <1>;
+> +			interrupt-map-mask = <0 0 0 0>;
+> +			interrupt-map = <0 0 0 0 &gic GIC_SPI 195 IRQ_TYPE_NONE>;
+> +			ranges;
+> +			num-lanes = <1>;
+> +		};
+> +	};
+> 
 
-I'd like to hear Lorenzo's view on this first, but I can certainly
-respin my _DSM patch to take pci=realloc into account, and move the
-handling to generic code as well.
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
