@@ -1,166 +1,167 @@
-Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0058.outbound.protection.outlook.com ([104.47.33.58]:17057
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S933975AbdEWMPQ (ORCPT <rfc822;linux-pci@vger.kernel.org>);
-        Tue, 23 May 2017 08:15:16 -0400
-From: "Deucher, Alexander" <Alexander.Deucher@amd.com>
-To: "Cheng, Collins" <Collins.Cheng@amd.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-CC: "Zytaruk, Kelly" <Kelly.Zytaruk@amd.com>
-Subject: RE: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV
- incapable platform
-Date: Tue, 23 May 2017 12:15:11 +0000
-Message-ID: <BN6PR12MB165200CAE0F4E2367E301DE0F7F90@BN6PR12MB1652.namprd12.prod.outlook.com>
-References: <BN6PR12MB1249312205E07A670C54D2CFECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
-In-Reply-To: <BN6PR12MB1249312205E07A670C54D2CFECE20@BN6PR12MB1249.namprd12.prod.outlook.com>
-Content-Type: text/plain; charset="us-ascii"
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Message-ID: <1494470650.20742.36.camel@mtkswgap22>
+Subject: Re: [PATCH v3 2/2] dt-bindings: pcie: Add documentation for
+ Mediatek PCIe
+From: Ryder Lee <ryder.lee@mediatek.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 11 May 2017 10:44:10 +0800
+In-Reply-To: <CAK8P3a1AUsUTNDnN+_9251sxC7R4vvkQRr37dvAke6ooCJ_oxg@mail.gmail.com>
+References: <1494382020-26790-1-git-send-email-ryder.lee@mediatek.com>
+ <1494382020-26790-3-git-send-email-ryder.lee@mediatek.com>
+ <CAK8P3a193RxchvFAMWeZiP0sc0bd+VGg=_aVvipSgcbDpHXojg@mail.gmail.com>
+ <1494408707.31307.32.camel@mtkswgap22>
+ <CAK8P3a1AUsUTNDnN+_9251sxC7R4vvkQRr37dvAke6ooCJ_oxg@mail.gmail.com>
 MIME-Version: 1.0
-Sender: linux-pci-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Rob Herring <robh+dt@kernel.org>, linux-mediatek@lists.infradead.org,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-> -----Original Message-----
-> From: Cheng, Collins
-> Sent: Thursday, May 11, 2017 10:51 PM
-> To: Bjorn Helgaas; linux-pci@vger.kernel.org; linux-kernel@vger.kernel.or=
-g
-> Cc: Deucher, Alexander; Zytaruk, Kelly
-> Subject: [PATCH] PCI: Make SR-IOV capable GPU working on the SR-IOV
-> incapable platform
->=20
-> Hi Helgaas,
->=20
-> Some AMD GPUs have hardware support for graphics SR-IOV.
-> If the SR-IOV capable GPU is plugged into the SR-IOV incapable
-> platform. It would cause a problem on PCI resource allocation in
-> current Linux kernel.
->=20
-> Therefore in order to allow the PF (Physical Function) device of
-> SR-IOV capable GPU to work on the SR-IOV incapable platform,
-> it is required to verify conditions for initializing BAR resources
-> on AMD SR-IOV capable GPUs.
->=20
-> If the device is an AMD graphics device and it supports
-> SR-IOV it will require a large amount of resources.
-> Before calling sriov_init() must ensure that the system
-> BIOS also supports SR-IOV and that system BIOS has been
-> able to allocate enough resources.
-> If the VF BARs are zero then the system BIOS does not
-> support SR-IOV or it could not allocate the resources
-> and this platform will not support AMD graphics SR-IOV.
-> Therefore do not call sriov_init().
-> If the system BIOS does support SR-IOV then the VF BARs
-> will be properly initialized to non-zero values.
->=20
-> Below is the patch against to Kernel 4.8 & 4.9. Please review.
+On Wed, 2017-05-10 at 12:01 +0200, Arnd Bergmann wrote:
+> On Wed, May 10, 2017 at 11:31 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+> > On Wed, 2017-05-10 at 10:08 +0200, Arnd Bergmann wrote:
+> >> On Wed, May 10, 2017 at 4:07 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+> >>
+> >> > +- ranges:
+> >> > +  - The first three entries are expected to translate the addresses for the root
+> >> > +    port registers, which are referenced by the assigned-addresses property of
+> >> > +    the root port nodes (see below).
+> >>
+> >> I don't understand this part. Why do you need a static translation for these?
+> >> Shouldn't they just be listed in the 'reg' property of the parent node now that
+> >> you have the clk/reset/phy properties in the parent as well?
+> >
+> > At first, I did like that. But I noticed that someone suggest it's
+> > better to use 'assigned-addresses' to handle per-port registers, the
+> > same path as tegra and marvell did, in other platform discussion thread.
+> > So I just put shared register in root node. It could be rolled back if
+> > you feel this is inappropriate.
+> 
+> The marvell case is not a good example for your case: their top-level
+> device is made up by the OS to help with the shared resource allocation,
+> while in your case the bus bridge actually exists in hardware.
+> 
+> I'm not too familiar with the Tegra case, and haven't looked at that here,
+> but it could be an artifact of how for a while we used to list the config
+> space access in the top-level "ranges" instead of the "reg" property.
+> 
+> I'd vote for moving it back, for consistency with the other port specific
+> properties that are now in the root node. Once you do that, the port
+> nodes can be removed completely, which is what I was aiming for with
+> the comments on the previous version.
+ 
+I'll move it back.
 
-For upstream, the patch should be against Linus' master or the Bjorn's pci-=
-next tree.
+> >> > +Required properties:
+> >> > +- device_type: Must be "pci"
+> >> > +- assigned-addresses: Address and size of the port configuration registers
+> >> > +- reg: Only the first four bytes are used to refer to the correct bus number
+> >> > +  and device number.
+> >> > +- #address-cells: Must be 3
+> >> > +- #size-cells: Must be 2
+> >> > +- #interrupt-cells: Must be 1
+> >> > +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
+> >> > +  Please refer to the standard PCI bus binding document for a more detailed
+> >> > +  explanation.
+> >>
+> >> Child nodes do not normally have interrupt-map properties. Isn't this
+> >> already covered by the interrupt-map in the parent?
+> >>
+> >
+> > I have one Intel 4 port ethernet card(0000:00:01) and MTK WLAN card
+> > (0000:00:02), probe message looks good to me.
+> >
+> > pci 0000:00:01.0: fixup irq: got 224
+> > pci 0000:00:01.0: assigning IRQ 224
+> > pci 0000:00:02.0: fixup irq: got 225
+> > pci 0000:00:02.0: assigning IRQ 225
+> >
+> > pci 0000:01:00.0: fixup irq: got 224
+> > pci 0000:01:00.0: assigning IRQ 224
+> > pci 0000:01:00.1: fixup irq: got 224
+> > pci 0000:01:00.1: assigning IRQ 224
+> > pci 0000:01:00.2: fixup irq: got 224
+> > pci 0000:01:00.2: assigning IRQ 224
+> > pci 0000:01:00.3: fixup irq: got 224
+> > pci 0000:01:00.3: assigning IRQ 224
+> >
+> > pci 0000:02:00.0: fixup irq: got 225
+> > pci 0000:02:00.0: assigning IRQ 225
+> >
+> >
+> > But child nodes without interrupt-map properties:
+> > It seems incorrect.
+> >
+> > pci 0000:00:01.0: fixup irq: got 224
+> > pci 0000:00:01.0: assigning IRQ 224
+> > pci 0000:00:02.0: fixup irq: got 225
+> > pci 0000:00:02.0: assigning IRQ 225
+> >
+> > pci 0000:01:00.0: fixup irq: got 223
+> > pci 0000:01:00.0: assigning IRQ 223
+> 
+> Not entirely sure what happens here, but I guess the problem
+> is that the 'reg' portion of the parent interrupt-map refers to
+> the port devices, not the devices attached the devices behind
+> them.
 
-Alex
+I agree with you. That's why I need additional interrupt-map properties
+to resolve IRQ correctly for the devices behind root ports.
 
->=20
-> I checked the drivers/pci/quirks.c, it looks the workarounds/fixes in
-> quirks.c are for specific devices and one or more device ID are defined
-> for the specific devices. However my patch is for all AMD SR-IOV
-> capable GPUs, that includes all existing and future AMD server GPUs.
-> So it doesn't seem like a good fit to put the fix in quirks.c.
->=20
->=20
->=20
-> Signed-off-by: Collins Cheng <collins.cheng@amd.com>
-> ---
->  drivers/pci/iov.c | 63
-> ++++++++++++++++++++++++++++++++++++++++++++++++++++---
->  1 file changed, 60 insertions(+), 3 deletions(-)
->=20
-> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-> index e30f05c..e4f1405 100644
-> --- a/drivers/pci/iov.c
-> +++ b/drivers/pci/iov.c
-> @@ -523,6 +523,45 @@ static void sriov_restore_state(struct pci_dev *dev)
->  		msleep(100);
->  }
->=20
-> +/*
-> + * pci_vf_bar_valid - check if VF BARs have resource allocated
-> + * @dev: the PCI device
-> + * @pos: register offset of SR-IOV capability in PCI config space
-> + * Returns true any VF BAR has resource allocated, false
-> + * if all VF BARs are empty.
-> + */
-> +static bool pci_vf_bar_valid(struct pci_dev *dev, int pos)
-> +{
-> +	int i;
-> +	u32 bar_value;
-> +	u32 bar_size_mask =3D ~(PCI_BASE_ADDRESS_SPACE |
-> +			PCI_BASE_ADDRESS_MEM_TYPE_64 |
-> +			PCI_BASE_ADDRESS_MEM_PREFETCH);
-> +
-> +	for (i =3D 0; i < PCI_SRIOV_NUM_BARS; i++) {
-> +		pci_read_config_dword(dev, pos + PCI_SRIOV_BAR + i * 4,
-> &bar_value);
-> +		if (bar_value & bar_size_mask)
-> +			return true;
-> +	}
-> +
-> +	return false;
-> +}
-> +
-> +/*
-> + * is_amd_display_adapter - check if it is an AMD/ATI GPU device
-> + * @dev: the PCI device
-> + *
-> + * Returns true if device is an AMD/ATI display adapter,
-> + * otherwise return false.
-> + */
-> +
-> +static bool is_amd_display_adapter(struct pci_dev *dev)
-> +{
-> +	return (((dev->class >> 16) =3D=3D PCI_BASE_CLASS_DISPLAY) &&
-> +		(dev->vendor =3D=3D PCI_VENDOR_ID_ATI ||
-> +		dev->vendor =3D=3D PCI_VENDOR_ID_AMD));
-> +}
-> +
->  /**
->   * pci_iov_init - initialize the IOV capability
->   * @dev: the PCI device
-> @@ -537,9 +576,27 @@ int pci_iov_init(struct pci_dev *dev)
->  		return -ENODEV;
->=20
->  	pos =3D pci_find_ext_capability(dev, PCI_EXT_CAP_ID_SRIOV);
-> -	if (pos)
-> -		return sriov_init(dev, pos);
-> -
-> +	if (pos) {
-> +	/*
-> +	 * If the device is an AMD graphics device and it supports
-> +	 * SR-IOV it will require a large amount of resources.
-> +	 * Before calling sriov_init() must ensure that the system
-> +	 * BIOS also supports SR-IOV and that system BIOS has been
-> +	 * able to allocate enough resources.
-> +	 * If the VF BARs are zero then the system BIOS does not
-> +	 * support SR-IOV or it could not allocate the resources
-> +	 * and this platform will not support AMD graphics SR-IOV.
-> +	 * Therefore do not call sriov_init().
-> +	 * If the system BIOS does support SR-IOV then the VF BARs
-> +	 * will be properly initialized to non-zero values.
-> +	 */
-> +		if (is_amd_display_adapter(dev)) {
-> +			if (pci_vf_bar_valid(dev, pos))
-> +				return sriov_init(dev, pos);
-> +		} else {
-> +			return sriov_init(dev, pos);
-> +		}
-> +	}
->  	return -ENODEV;
->  }
->=20
-> --
-> 1.9.1
->=20
->=20
->=20
-> -Collins Cheng
+Not sure whether other platforms have similar case like me here.
+
+> On a related note, I see that you still list
+> 
+> > +- interrupts: Three interrupt outputs of the controller. Must contain an
+> > +  entry for each entry in the interrupt-names property.
+> > +- interrupt-names: Must include the following names
+> > +  - "pcie-int0"
+> > +  - "pcie-int1"
+> > +  - "pcie-int2"
+> 
+> This seems to be an artifact from the older version and should be
+> removed as the driver correctly ignores the properties now.
+
+Actually, everything works fine without these properties however when it
+loads we see a few weird error message:
+
+pcieport 0000:00:01.0: Signaling PME with IRQ 232
+pcieport 0000:00:02.0: enabling device (0140 -> 0142)
+pcieport 0000:00:02.0: enabling bus mastering
+irq 232: nobody cared (try booting with the "irqpoll" option)
+...
+[<c03f6be4>] (pcie_pme_probe) from [<c03f47b8>] (pcie_port_probe_service
++0x44/0x6c)
+(pcie_port_probe_service) from [<c0454cf8>] (driver_probe_device
++0x280/0x470)
+...
+(pcie_port_device_register) from [<c03f51a0>] (pcie_portdrv_probe
++0x3c/0xb4)
+(pcie_portdrv_probe) from [<c03e7acc>] (pci_device_probe+0x98/0xfc)
+(pci_device_probe) from [<c0454cf8>] (driver_probe_device+0x280/0x470)
+handlers:
+[<c03f68b0>] pcie_pme_irq
+Disabling IRQ #233
+
+I haven't dig it out yet, but just keep them here to solve that.
+
+
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
