@@ -1,113 +1,152 @@
-Return-Path: <SRS0=CLY9=46=arm.com=robin.murphy@kernel.org>
-Return-Path: <SRS0=CLY9=46=arm.com=robin.murphy@kernel.org>
-Subject: Re: [PATCH v4 1/2] PCI: Add tango MSI controller support
-To: Mason <slash.tmp@free.fr>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
- Marc Gonzalez <marc_gonzalez@sigmadesigns.com>,
- Marc Zyngier <marc.zyngier@arm.com>, Thomas Gleixner <tglx@linutronix.de>,
- Jiang Liu <jiang.liu@linux.intel.com>,
- Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
- Liviu Dudau <liviu.dudau@arm.com>, David Laight <david.laight@aculab.com>,
- linux-pci <linux-pci@vger.kernel.org>,
- Linux ARM <linux-arm-kernel@lists.infradead.org>,
- Thibaud Cornic <thibaud_cornic@sigmadesigns.com>,
- Phuong Nguyen <phuong_nguyen@sigmadesigns.com>,
- LKML <linux-kernel@vger.kernel.org>
-References: <d054300a-5891-0a25-8726-2be6b1beff6c@sigmadesigns.com>
- <1f6b50c7-4887-838e-8c7d-c014d82b6d8e@sigmadesigns.com>
- <8e56647d-3b2d-9bfc-b59e-79a2efaa7826@sigmadesigns.com>
- <20170523170319.GB24431@bhelgaas-glaptop.roam.corp.google.com>
- <b6541fd2-200f-35be-208e-931bb0b5ba49@free.fr>
- <ef36137c-f0d1-23b9-8b91-a6ed87239578@arm.com>
- <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
-From: Robin Murphy <robin.murphy@arm.com>
-Message-ID: <f1a57255-be75-e8c4-6b8d-0254f4365d61@arm.com>
-Date: Wed, 24 May 2017 11:00:43 +0100
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
+Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <aec89b9a-8377-ff39-547c-9e6eaf254fab@free.fr>
-Content-Type: text/plain; charset=iso-8859-15
+In-Reply-To: <1494470650.20742.36.camel@mtkswgap22>
+References: <1494382020-26790-1-git-send-email-ryder.lee@mediatek.com>
+ <1494382020-26790-3-git-send-email-ryder.lee@mediatek.com>
+ <CAK8P3a193RxchvFAMWeZiP0sc0bd+VGg=_aVvipSgcbDpHXojg@mail.gmail.com>
+ <1494408707.31307.32.camel@mtkswgap22>
+ <CAK8P3a1AUsUTNDnN+_9251sxC7R4vvkQRr37dvAke6ooCJ_oxg@mail.gmail.com>
+ <1494470650.20742.36.camel@mtkswgap22>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 11 May 2017 09:17:16 +0200
+Message-ID: <CAK8P3a1FVyoFufnbQFjGovoQpkxMj3kaAgjb5Q+v-DQnYKeA-g@mail.gmail.com>
+Subject: Re: [PATCH v3 2/2] dt-bindings: pcie: Add documentation for Mediatek
+ PCIe
+To: Ryder Lee <ryder.lee@mediatek.com>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Cc: devicetree@vger.kernel.org, Red Hung <red.hung@mediatek.com>,
+ linux-pci <linux-pci@vger.kernel.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Rob Herring <robh+dt@kernel.org>,
+ "moderated list:ARM/Mediatek SoC..." <linux-mediatek@lists.infradead.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Linux ARM <linux-arm-kernel@lists.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
 List-ID: <linux-pci.vger.kernel.org>
 
-On 23/05/17 20:15, Mason wrote:
-> On 23/05/2017 20:03, Robin Murphy wrote:
->> On 23/05/17 18:54, Mason wrote:
->>> On 23/05/2017 19:03, Bjorn Helgaas wrote:
->>>> On Wed, May 17, 2017 at 04:56:08PM +0200, Marc Gonzalez wrote:
->>>>> On 20/04/2017 16:28, Marc Gonzalez wrote:
->>>>>
->>>>>> +static int tango_set_affinity(struct irq_data *data,
->>>>>> +		const struct cpumask *mask, bool force)
->>>>>> +{
->>>>>> +	return -EINVAL;
->>>>>> +}
->>>>>> +
->>>>>> +static struct irq_chip tango_chip = {
->>>>>> +	.irq_ack		= tango_ack,
->>>>>> +	.irq_mask		= tango_mask,
->>>>>> +	.irq_unmask		= tango_unmask,
->>>>>> +	.irq_set_affinity	= tango_set_affinity,
->>>>>> +	.irq_compose_msi_msg	= tango_compose_msi_msg,
->>>>>> +};
->>>>>
->>>>> Hmmm... I'm wondering why .irq_set_affinity is required.
->>>>>
->>>>> static int setup_affinity(struct irq_desc *desc, struct cpumask *mask)
->>>>> first calls __irq_can_set_affinity() to check whether
->>>>> desc->irq_data.chip->irq_set_affinity) exists.
->>>>>
->>>>> then calls irq_do_set_affinity(&desc->irq_data, mask, false);
->>>>> which calls chip->irq_set_affinity(data, mask, force);
->>>>> = msi_domain_set_affinity()
->>>>> which calls parent->chip->irq_set_affinity() unconditionally.
->>>>>
->>>>> Would it make sense to test that the callback is implemented
->>>>> before calling it?
->>>>>
->>>>>
->>>>> [    0.723895] Unable to handle kernel NULL pointer dereference at virtual address 00000000
->>>>
->>>> I'm not sure what you're asking.
->>>>
->>>> Is this a bug report for the v4 tango driver?
->>>
->>> No.
->>>
->>>> Or are you asking whether msi_domain_set_affinity() should be changed
->>>> to check whether parent->chip->irq_set_affinity is implemented?
->>>
->>> Yes. The way things are implemented now, drivers are forced
->>> to define an irq_set_affinity callback, even if it just returns
->>> an error, otherwise, the kernel crashes, because of the
->>> unconditional function pointer deref. 
->>>
->>>> msi_domain_set_affinity() has called parent->chip->irq_set_affinity()
->>>> without checking since it was added in 2014 by f3cf8bb0d6c3 ("genirq: Add
->>>> generic msi irq domain support"), so if there's a problem here, it's most
->>>> likely in the tango code.
->>>
->>> The issue is having to define an "empty" function.
->>> (Unnecessary code bloat and maintenance.)
+On Thu, May 11, 2017 at 4:44 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+> On Wed, 2017-05-10 at 12:01 +0200, Arnd Bergmann wrote:
+>> On Wed, May 10, 2017 at 11:31 AM, Ryder Lee <ryder.lee@mediatek.com> wrote:
+>> > On Wed, 2017-05-10 at 10:08 +0200, Arnd Bergmann wrote:
+
+>> >> > +Required properties:
+>> >> > +- device_type: Must be "pci"
+>> >> > +- assigned-addresses: Address and size of the port configuration registers
+>> >> > +- reg: Only the first four bytes are used to refer to the correct bus number
+>> >> > +  and device number.
+>> >> > +- #address-cells: Must be 3
+>> >> > +- #size-cells: Must be 2
+>> >> > +- #interrupt-cells: Must be 1
+>> >> > +- interrupt-map-mask and interrupt-map: Standard PCI IRQ mapping properties
+>> >> > +  Please refer to the standard PCI bus binding document for a more detailed
+>> >> > +  explanation.
+>> >>
+>> >> Child nodes do not normally have interrupt-map properties. Isn't this
+>> >> already covered by the interrupt-map in the parent?
+>> >>
+>> >
+>> > I have one Intel 4 port ethernet card(0000:00:01) and MTK WLAN card
+>> > (0000:00:02), probe message looks good to me.
+>> >
+>> > pci 0000:00:01.0: fixup irq: got 224
+>> > pci 0000:00:01.0: assigning IRQ 224
+>> > pci 0000:00:02.0: fixup irq: got 225
+>> > pci 0000:00:02.0: assigning IRQ 225
+>> >
+>> > pci 0000:01:00.0: fixup irq: got 224
+>> > pci 0000:01:00.0: assigning IRQ 224
+>> > pci 0000:01:00.1: fixup irq: got 224
+>> > pci 0000:01:00.1: assigning IRQ 224
+>> > pci 0000:01:00.2: fixup irq: got 224
+>> > pci 0000:01:00.2: assigning IRQ 224
+>> > pci 0000:01:00.3: fixup irq: got 224
+>> > pci 0000:01:00.3: assigning IRQ 224
+>> >
+>> > pci 0000:02:00.0: fixup irq: got 225
+>> > pci 0000:02:00.0: assigning IRQ 225
+>> >
+>> >
+>> > But child nodes without interrupt-map properties:
+>> > It seems incorrect.
+>> >
+>> > pci 0000:00:01.0: fixup irq: got 224
+>> > pci 0000:00:01.0: assigning IRQ 224
+>> > pci 0000:00:02.0: fixup irq: got 225
+>> > pci 0000:00:02.0: assigning IRQ 225
+>> >
+>> > pci 0000:01:00.0: fixup irq: got 223
+>> > pci 0000:01:00.0: assigning IRQ 223
 >>
->> AFAICS, only one driver (other than this one) implements a "do nothing"
->> set_affinity callback - everyone else who doesn't do anything hardware
->> specific just passes it along via irq_chip_set_affinity_parent().
-> 
-> I counted 4. Where did I mess up?
-> 
-> advk_msi_set_affinity
-> altera_msi_set_affinity
-> nwl_msi_set_affinity
-> vmd_irq_set_affinity
-> tango_set_affinity
+>> Not entirely sure what happens here, but I guess the problem
+>> is that the 'reg' portion of the parent interrupt-map refers to
+>> the port devices, not the devices attached the devices behind
+>> them.
+>
+> I agree with you. That's why I need additional interrupt-map properties
+> to resolve IRQ correctly for the devices behind root ports.
+>
+> Not sure whether other platforms have similar case like me here.
 
-Fair point - I went through drivers/irqchip and the various
-arch-specific instances and found ls_scfg_msi_set_affinity(), but
-somehow skipped over drivers/pci. Anyway, I think the question stands of
-why are these handful of drivers *not* using irq_chip_set_affinity_parent()?
+I think it's just a bug in this specific chip where the HW designers
+wired the IRQs in a nonstandard way.
 
-As an outsider, it naively seems logical that the affinity of an MSI
-which just gets translated to a wired interrupt should propagate through
-to the affinity of that wired interrupt, but maybe there are reasons not
-to; I really don't know.
+However, you really should not need the interrupt-map properties
+in the child nodes, just change the address part in the parent
+interrupt-map. Specifically, the 'bus' portion of the device address
+in the interrupt-map would have to be nonzero to refer to
+child devices.
 
-Robin.
+>> On a related note, I see that you still list
+>>
+>> > +- interrupts: Three interrupt outputs of the controller. Must contain an
+>> > +  entry for each entry in the interrupt-names property.
+>> > +- interrupt-names: Must include the following names
+>> > +  - "pcie-int0"
+>> > +  - "pcie-int1"
+>> > +  - "pcie-int2"
+>>
+>> This seems to be an artifact from the older version and should be
+>> removed as the driver correctly ignores the properties now.
+>
+> Actually, everything works fine without these properties however when it
+> loads we see a few weird error message:
+>
+> pcieport 0000:00:01.0: Signaling PME with IRQ 232
+> pcieport 0000:00:02.0: enabling device (0140 -> 0142)
+> pcieport 0000:00:02.0: enabling bus mastering
+> irq 232: nobody cared (try booting with the "irqpoll" option)
+> ...
+> [<c03f6be4>] (pcie_pme_probe) from [<c03f47b8>] (pcie_port_probe_service
+> +0x44/0x6c)
+> (pcie_port_probe_service) from [<c0454cf8>] (driver_probe_device
+> +0x280/0x470)
+> ...
+> (pcie_port_device_register) from [<c03f51a0>] (pcie_portdrv_probe
+> +0x3c/0xb4)
+> (pcie_portdrv_probe) from [<c03e7acc>] (pci_device_probe+0x98/0xfc)
+> (pci_device_probe) from [<c0454cf8>] (driver_probe_device+0x280/0x470)
+> handlers:
+> [<c03f68b0>] pcie_pme_irq
+> Disabling IRQ #233
+>
+> I haven't dig it out yet, but just keep them here to solve that.
+
+Something is going very wrong if adding the properties helps. I can't
+think of what that is, but we have to find out before the binding can
+be merged.
+
+      Arnd
+
+_______________________________________________
+linux-arm-kernel mailing list
+linux-arm-kernel@lists.infradead.org
+http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
