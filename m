@@ -1,60 +1,82 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:35290 "EHLO
-        mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751945AbdEJIDM (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 10 May 2017 04:03:12 -0400
-Received: by mail-io0-f172.google.com with SMTP id f102so8485410ioi.2
-        for <linux-pci@vger.kernel.org>; Wed, 10 May 2017 01:03:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20170506090755.GB19740@wunner.de>
-References: <771bc335fb5856792d086ae7db288dcf244cb4cd.1493964354.git.lukas@wunner.de>
- <CAKv+Gu9PpmTBbSMKUsx6svm6fodV8x=i4b1j8QGapnEoCFcrNA@mail.gmail.com> <20170506090755.GB19740@wunner.de>
-From: Ard Biesheuvel <ard.biesheuvel@linaro.org>
-Date: Wed, 10 May 2017 09:03:11 +0100
-Message-ID: <CAKv+Gu_4xHhX8oK847k8=s5S7Mx3sALPTtX8Eo=2+9uZyQoEAQ@mail.gmail.com>
-Subject: Re: [PATCH] efi/cper: Fix endianness of PCI class code
-To: Lukas Wunner <lukas@wunner.de>, Arnd Bergmann <arnd@arndb.de>
-Cc: "linux-efi@vger.kernel.org" <linux-efi@vger.kernel.org>,
-        Ashok Raj <ashok.raj@intel.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Huang Ying <ying.huang@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pg0-f47.google.com ([74.125.83.47]:36068 "EHLO
+        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756458AbdEKV4z (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2017 17:56:55 -0400
+Received: by mail-pg0-f47.google.com with SMTP id x64so1268776pgd.3
+        for <linux-pci@vger.kernel.org>; Thu, 11 May 2017 14:56:55 -0700 (PDT)
+From: Brian Norris <briannorris@chromium.org>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
+        Rajat Jain <rajatja@google.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Jeffy Chen <jeffy.chen@rock-chips.com>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Brian Norris <briannorris@chromium.org>
+Subject: [RFC PATCH] PCI: disable MSI/MSI-X before resetting
+Date: Thu, 11 May 2017 14:54:05 -0700
+Message-Id: <20170511215405.91410-1-briannorris@chromium.org>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-(+ Arnd)
+Despite the claims in the associated comment block, it seems that
+clearing the command register is not enough to guarantee that no
+MSI interrupts get triggered during Function Level Reset. Through code
+instrumentation, I'm able to clearly trace cases like this:
 
-Full patch here: http://marc.info/?l=linux-pci&m=149400953408528
+(0) reset a device:
+        echo 1 > /sys/bus/pci/devices/xxx/reset
+(1) disable an MSI interrupt for device 'xxx' in a PCI reset handler
+    (disable_irq())
+(2) pcie_flr() initiates reset:
+        pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR));
+(3) about 0.5 ms later, kernel handles IRQ:
+        -> __pci_msi_desc_mask_irq()
+           -> pci_write_config_dword()
+(4) this is well before the device is actually ready, and the system
+    sees a bus abort
 
-On 6 May 2017 at 10:07, Lukas Wunner <lukas@wunner.de> wrote:
-> On Sat, May 06, 2017 at 08:46:07AM +0100, Ard Biesheuvel wrote:
->> On 5 May 2017 at 19:38, Lukas Wunner <lukas@wunner.de> wrote:
->> > The CPER parser assumes that the class code is big endian, but at least
->> > on this edk2-derived Intel Purley platform it's little endian:
-> [snip]
->> > --- a/include/linux/cper.h
->> > +++ b/include/linux/cper.h
->> > @@ -416,7 +416,7 @@ struct cper_sec_pcie {
->> >         struct {
->> >                 __u16   vendor_id;
->> >                 __u16   device_id;
->> > -               __u8    class_code[3];
->> > +               __u32   class_code:24;
->>
->> I'd like to avoid this change if we can. Couldn't we simply invert the
->> order of p[] above?
->
-> Hm, why would you like to avoid it?
+Tested with MSI, but presumably MSI-X could have the same issue.
 
-Because we shouldn't use bitfields in structs in code that should be
-portable across archs with different endiannesses.
+Tested on Samsung Chromebook Plus, with RK3399 OP1.
 
->  The class_code element isn't
-> referenced anywhere else in the kernel and this isn't a uapi header,
-> so the change would only impact out-of-tree drivers.  Not sure if
-> any exist which might be interested in CPER parsing.
->
+Signed-off-by: Brian Norris <briannorris@chromium.org>
+---
+RFC, because I'm not really sure this is the right approach, or if
+there's something else that's misconfigured or buggy.
 
-The point is that the change in the struct definition is simply not
-necessary, given that inverting the order of p[] already achieves
-exactly what we want.
+Note that right now, configuration space aborts trigger SError aborts
+(and panics) on RK3399, so this sort of problem is fatal. It's not clear
+to me if that's a spec violation (many other PCI controllers manage to
+mask such aborts), or an acceptable behavior. But FWIW, that means that
+polling behavior like in commit 5adecf817dd6 ("PCI: Wait for up to
+1000ms after FLR reset") cannot work; the first read when the device is
+not ready will cause a panic.
+---
+ drivers/pci/pci.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b01bd5bba8e6..861a3b2d7026 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4156,6 +4156,17 @@ static void pci_dev_save_and_disable(struct pci_dev *dev)
+ 	pci_set_power_state(dev, PCI_D0);
+ 
+ 	pci_save_state(dev);
++
++	/*
++	 * Disable MSI/MSI-X before resetting. Some devices have been found to
++	 * trigger interrupts while in the middle of Function Level Reset. The
++	 * MSI/MSI-X state will get restored after we reset.
++	 */
++	if (dev->msi_enabled)
++		pci_msi_set_enable(dev, 0);
++	if (dev->msix_enabled)
++		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
++
+ 	/*
+ 	 * Disable the device by clearing the Command register, except for
+ 	 * INTx-disable which is set.  This not only disables MMIO and I/O port
+-- 
+2.13.0.rc2.291.g57267f2277-goog
