@@ -1,100 +1,94 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-From: Lucas Stach <l.stach@pengutronix.de>
-To: linux-pci@vger.kernel.org
-Subject: [PATCH] PCI: imx6: fix downstream bus scanning
-Date: Wed, 10 May 2017 19:57:52 +0200
-Message-Id: <20170510175752.6519-1-l.stach@pengutronix.de>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: lorenzo.pieralisi@arm.com, hongxing.zhu@nxp.com, tharvey@gateworks.com,
- patchwork-lst@pengutronix.de, Peter Senna Tschudin <peter.senna@collabora.com>,
- kernel@pengutronix.de, bhelgaas@google.com, festevam@gmail.com,
- linux-arm-kernel@lists.infradead.org
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from foss.arm.com ([217.140.101.70]:45594 "EHLO foss.arm.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752639AbdEKKFY (ORCPT <rfc822;linux-pci@vger.kernel.org>);
+        Thu, 11 May 2017 06:05:24 -0400
+Subject: Re: [RFC] pci: adding new interrupt api to pcie-designware
+To: Joao Pinto <Joao.Pinto@synopsys.com>, kishon@ti.com,
+        bhelgaas@google.com, jingoohan1@gmail.com, m-karicheri2@ti.com
+References: <5593732728f7c7f5e8c58ac49f394e688bcc192d.1494332566.git.jpinto@synopsys.com>
+ <1deaad7c-ba6a-202b-4b2b-11d4fc79a0a0@arm.com>
+ <c517ec9f-94ef-0f4a-6ed6-4f689f8e5de4@synopsys.com>
+Cc: linux-pci@vger.kernel.org
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <764590ed-d7ca-5142-df2e-5bf2ac714c2b@arm.com>
+Date: Thu, 11 May 2017 11:05:20 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <c517ec9f-94ef-0f4a-6ed6-4f689f8e5de4@synopsys.com>
+Content-Type: text/plain; charset=windows-1252
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-The change in Linux 4.12 to make PCI configuartion requests non-posted
-means that we are now getting a synchronous abort when the CFG space
-read to probe for downstream devices times out.
+On 11/05/17 10:17, Joao Pinto wrote:
+> 
+> Hello,
+> 
+> Às 6:00 PM de 5/10/2017, Marc Zyngier escreveu:
+>> On 09/05/17 13:33, Joao Pinto wrote:
+>>> This is a proposal for the update of the interrupt API in pcie-designware.
+>>>
+>>> *SoC specific drivers*
+>>> All SoC specific drivers that use the common infrastructure (pci-qcom,
+>>> pci-artpec6, pci-exynos, pci-imx6) were updated to be compatible.
+>>> Other SoC specific drivers like pci-dra7, pci-armada8k, pci-hisi, pci-spear13xx
+>>> and pci-layerscape will also work fine.
+>>>
+>>> *Work still to be done - need some inputs*
+>>> The pci-keystone driver is the one that I would appreciate some opinions, since
+>>> it uses the "old" dw_pcie_msi_chip. I think we have 3 options:
+>>>
+>>> a) Keep the old API + new API in pcie-designware just for pci-keystone to use
+>>> the dw_pcie_msi_chip structure
+>>> b) Move the old API from pcie-designware to pci-keystone for it to use the
+>>> dw_pcie_msi_chip structure
+>>> c) Adapt pci-keystone to use the new API also
+>>
+>> What is the issue with moving Keystone over to this infrastructure?
+> 
+> I don't hardware to test if the Keystone infrastructure porting is right or not
+> and thats my main concern. Also the Keystone SoC driver maintainer can also have
+> the option of keeping the current structure and that's why I sent the e-mail
+> asking for opinions about the subject.
 
-Synchronous aborts need to be handled differently from the async aborts
-we were getting before, in particular the PC needs to be advanced when
-resolving the abort. This is mostly a copy of what other PCI drivers do
-on ARM to handle those aborts.
+I think the old infrastructure should disappear, full stop (maintaining
+two APIs is hell). It'd be great if you could convert it as well,
+leaving the testing responsibility to the TI guys who I'm sure will
+gladly help (they've done so in the past for different things).
 
-Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
----
-This is a fix that needs to go in for 4.12, but I would hope to get
-some thorough testing before.
----
- drivers/pci/dwc/pci-imx6.c | 33 ++++++++++++++++++++++++++++++---
- 1 file changed, 30 insertions(+), 3 deletions(-)
+>>>
+>>> *Tests*
+>>> I made tests with a PCI 4.80 Core IP, using pcie-designware-plat driver.
+>>> I used an MSI-only Endpoint and a MSI/MSIX Endpoint and the APi adapted very
+>>> well to the situation.
+>>>
+>>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+>>> ---
+>>>  drivers/pci/dwc/pci-exynos.c           |  18 --
+>>>  drivers/pci/dwc/pci-imx6.c             |  18 --
+>>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
+>>>  drivers/pci/dwc/pcie-designware-host.c | 342 +++++++++++++++++----------------
+>>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
+>>>  drivers/pci/dwc/pcie-designware.h      |   6 +-
+>>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
+>>>  7 files changed, 179 insertions(+), 253 deletions(-)
+>>
+>> May I suggest something for your next posting? This patch is extremely
+>> difficult to read (not your fault at all), as it deletes a lot of code
+>> and replaces it by code that is mostly unrelated. It would be a lot
+>> better if you had a series that:
+>>
+>> 1: adds the new infrastructure in parallel with the old one, with an
+>> opt-in mechanism.
+>> 2: convert each individual platform (one patch per SoC)
+>> 3: remove the old code entirely.
+>>
+>> This will result in a much more readable series, and will give us a good
+>> way to bisect, should a given platform break.
+> 
+> Yep indeed! I will do the 3 patch way as you are suggesting.
 
-diff --git a/drivers/pci/dwc/pci-imx6.c b/drivers/pci/dwc/pci-imx6.c
-index a98cba55c7f0..19a289b8cc94 100644
---- a/drivers/pci/dwc/pci-imx6.c
-+++ b/drivers/pci/dwc/pci-imx6.c
-@@ -252,7 +252,34 @@ static void imx6_pcie_reset_phy(struct imx6_pcie *imx6_pcie)
- static int imx6q_pcie_abort_handler(unsigned long addr,
- 		unsigned int fsr, struct pt_regs *regs)
- {
--	return 0;
-+	unsigned long pc = instruction_pointer(regs);
-+	unsigned long instr = *(unsigned long *)pc;
-+	int reg = (instr >> 12) & 15;
-+
-+	/*
-+	 * If the instruction being executed was a read,
-+	 * make it look like it read all-ones.
-+	 */
-+	if ((instr & 0x0c100000) == 0x04100000) {
-+		unsigned long val;
-+
-+		if (instr & 0x00400000)
-+			val = 255;
-+		else
-+			val = -1;
-+
-+		regs->uregs[reg] = val;
-+		regs->ARM_pc += 4;
-+		return 0;
-+	}
-+
-+	if ((instr & 0x0e100090) == 0x00100090) {
-+		regs->uregs[reg] = -1;
-+		regs->ARM_pc += 4;
-+		return 0;
-+	}
-+
-+	return 1;
- }
- 
- static void imx6_pcie_assert_core_reset(struct imx6_pcie *imx6_pcie)
-@@ -819,8 +846,8 @@ static int __init imx6_pcie_init(void)
- 	 * we can install the handler here without risking it
- 	 * accessing some uninitialized driver state.
- 	 */
--	hook_fault_code(16 + 6, imx6q_pcie_abort_handler, SIGBUS, 0,
--			"imprecise external abort");
-+	hook_fault_code(8, imx6q_pcie_abort_handler, SIGBUS, 0,
-+			"external abort on non-linefetch");
- 
- 	return platform_driver_register(&imx6_pcie_driver);
- }
+Thanks,
+
+	M.
 -- 
-2.11.0
-
-
-_______________________________________________
-linux-arm-kernel mailing list
-linux-arm-kernel@lists.infradead.org
-http://lists.infradead.org/mailman/listinfo/linux-arm-kernel
+Jazz is not dead. It just smells funny...
