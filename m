@@ -1,82 +1,96 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from mail-pg0-f47.google.com ([74.125.83.47]:36068 "EHLO
-        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756458AbdEKV4z (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2017 17:56:55 -0400
-Received: by mail-pg0-f47.google.com with SMTP id x64so1268776pgd.3
-        for <linux-pci@vger.kernel.org>; Thu, 11 May 2017 14:56:55 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org,
-        Rajat Jain <rajatja@google.com>,
-        Guenter Roeck <linux@roeck-us.net>,
-        Jeffy Chen <jeffy.chen@rock-chips.com>,
-        Shawn Lin <shawn.lin@rock-chips.com>,
-        Brian Norris <briannorris@chromium.org>
-Subject: [RFC PATCH] PCI: disable MSI/MSI-X before resetting
-Date: Thu, 11 May 2017 14:54:05 -0700
-Message-Id: <20170511215405.91410-1-briannorris@chromium.org>
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:38550 "EHLO
+        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932294AbdEKOIn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2017 10:08:43 -0400
+Received: by mail-wm0-f43.google.com with SMTP id 142so37911846wma.1
+        for <linux-pci@vger.kernel.org>; Thu, 11 May 2017 07:08:42 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1494490587.15454.9.camel@pengutronix.de>
+References: <20170426181502.770-1-l.stach@pengutronix.de> <CAJ+vNU0AEZtc+DaYSV7S1LtXCncVh9nV4hG7BtYxJE=m6-80EA@mail.gmail.com>
+ <1493282584.13947.6.camel@pengutronix.de> <CAJ+vNU3tHG2c0XJhs3qD0xS4BP==fWEwP6Y78+4WpUmn-KksBg@mail.gmail.com>
+ <CAJ+vNU0pcivE53grF6n939gXC0E6-HN4fFJ7Pm9hq3nV1YYSUQ@mail.gmail.com> <1494490587.15454.9.camel@pengutronix.de>
+From: Tim Harvey <tharvey@gateworks.com>
+Date: Thu, 11 May 2017 07:08:41 -0700
+Message-ID: <CAJ+vNU2iPDRELO7Ce8=ZRNqVtYMO1d3YF-HE7PoBho0Am1mZhg@mail.gmail.com>
+Subject: Re: [PATCH] PCI: dwc: fall back to legacy IRQs when multiple devices
+ are attached
+To: Lucas Stach <l.stach@pengutronix.de>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        patchwork-lst@pengutronix.de
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Despite the claims in the associated comment block, it seems that
-clearing the command register is not enough to guarantee that no
-MSI interrupts get triggered during Function Level Reset. Through code
-instrumentation, I'm able to clearly trace cases like this:
+On Thu, May 11, 2017 at 1:16 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+> Hi Tim,
+>
+> Am Mittwoch, den 10.05.2017, 14:44 -0700 schrieb Tim Harvey:
+>> On Thu, Apr 27, 2017 at 8:32 AM, Tim Harvey <tharvey@gateworks.com> wrote:
+>> > On Thu, Apr 27, 2017 at 1:43 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+>> >> Am Mittwoch, den 26.04.2017, 14:11 -0700 schrieb Tim Harvey:
+>> >>> On Wed, Apr 26, 2017 at 11:15 AM, Lucas Stach <l.stach@pengutronix.de> wrote:
+>> >>> > The DWC host does not support legacy PCI IRQs and MSIs at the same time,
+>> >>> > so we need to fall back to using only legacy IRQs if there is a chance
+>> >>> > that multiple devices with differing MSI capabilities are connected to
+>> >>> > the host. The only configuration where MSIs can be safely used is when
+>> >>> > the device below the host bridge is not a bridge, i.e. the only device
+>> >>> > connected to this host.
+>> >>> >
+>> >>> > By disallowing MSI allocation when multiple devices might be attached
+>> >>> > we get those configurations in a working state. The only configurations
+>> >>> > that depend on MSIs being available, that I am aware of, are some
+>> >>> > embedded devices with a PCIe attached FPGA, that is incapable of
+>> >>> > generating PCI legacy IRQs. Those are kept working by allowing MSIs
+>> >>> > when only a single device is attached to the host.
+>> >>> >
+>> >>> > Signed-off-by: Lucas Stach <l.stach@pengutronix.de>
+>> >>> > ---
+> [...]
+>> Lucas,
+>>
+>> Are you not able to repeat my findings?
+>
+> Yes, I see what's going on.
+>
+>> Since Linux 4.8 IMX PCIe is completely broken for PCIe devices that do
+>> not support MSI interrupts (and there are a whole lot of 802.11n
+>> radios that fall into this category) as you can no longer disable MSI
+>> because the IMX PCIe driver depends on it.
+>>
+>> It seems like your patch is the right approach but something must
+>> still be getting set that causes the legacy interrupts to not fire.
+>
+> The issue here are the port-services, which are using MSI when
+> available, which might conflict with the device requirements, even if
+> only a single device is attached.
+>
+> Probably we need to disable MSI on all systems, unless we know that we
+> absolutely need them (EP devices, which don't support legacy IRQs). I'll
+> send a patch to do this, but other issues have been higher priority
+> again.
+>
+> Regards,
+> Lucas
+>
 
-(0) reset a device:
-        echo 1 > /sys/bus/pci/devices/xxx/reset
-(1) disable an MSI interrupt for device 'xxx' in a PCI reset handler
-    (disable_irq())
-(2) pcie_flr() initiates reset:
-        pcie_capability_set_word(dev, PCI_EXP_DEVCTL, PCI_EXP_DEVCTL_BCR_FLR));
-(3) about 0.5 ms later, kernel handles IRQ:
-        -> __pci_msi_desc_mask_irq()
-           -> pci_write_config_dword()
-(4) this is well before the device is actually ready, and the system
-    sees a bus abort
+Lucas,
 
-Tested with MSI, but presumably MSI-X could have the same issue.
+Thanks, this fix is something that's beyond my experience or I would
+be glad to do it. The PCIe driver has been changing very rapidly in
+recent kernel versions and there is no single patch that can be
+reverted to 'fix' this long-standing issue. I'm really surprised
+others haven't chimed in with reports of it being broken as its been
+an issue since 4.8.
 
-Tested on Samsung Chromebook Plus, with RK3399 OP1.
+Is it worth removing the 'depends on PCI_MSI_IRQ_DOMAIN' from
+PCIE_DW_HOST and PCI_IMX6 and defaulting MSI off until your proposed
+fix is ready and working? That is precisely what I have to do on 4.8+
+kernels to get them working for our IMX6 users using ath9k radios
+(making distro's like Ubuntu a problem as they run a fairly standard
+4.8 kernel).
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
-RFC, because I'm not really sure this is the right approach, or if
-there's something else that's misconfigured or buggy.
-
-Note that right now, configuration space aborts trigger SError aborts
-(and panics) on RK3399, so this sort of problem is fatal. It's not clear
-to me if that's a spec violation (many other PCI controllers manage to
-mask such aborts), or an acceptable behavior. But FWIW, that means that
-polling behavior like in commit 5adecf817dd6 ("PCI: Wait for up to
-1000ms after FLR reset") cannot work; the first read when the device is
-not ready will cause a panic.
----
- drivers/pci/pci.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b01bd5bba8e6..861a3b2d7026 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4156,6 +4156,17 @@ static void pci_dev_save_and_disable(struct pci_dev *dev)
- 	pci_set_power_state(dev, PCI_D0);
- 
- 	pci_save_state(dev);
-+
-+	/*
-+	 * Disable MSI/MSI-X before resetting. Some devices have been found to
-+	 * trigger interrupts while in the middle of Function Level Reset. The
-+	 * MSI/MSI-X state will get restored after we reset.
-+	 */
-+	if (dev->msi_enabled)
-+		pci_msi_set_enable(dev, 0);
-+	if (dev->msix_enabled)
-+		pci_msix_clear_and_set_ctrl(dev, PCI_MSIX_FLAGS_ENABLE, 0);
-+
- 	/*
- 	 * Disable the device by clearing the Command register, except for
- 	 * INTx-disable which is set.  This not only disables MMIO and I/O port
--- 
-2.13.0.rc2.291.g57267f2277-goog
+Tim
