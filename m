@@ -1,67 +1,288 @@
-Return-Path: <SRS0=Kgy0=46=hisilicon.com=songxiaowei@kernel.org>
-Return-Path: <SRS0=Kgy0=46=hisilicon.com=songxiaowei@kernel.org>
-From: songxiaowei <songxiaowei@hisilicon.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "kishon@ti.com"
-	<kishon@ti.com>,
-        "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "arnd@arndb.de" <arnd@arndb.de>, "tn@semihalf.com" <tn@semihalf.com>,
-        "keith.busch@intel.com" <keith.busch@intel.com>,
-        "niklas.cassel@axis.com"
-	<niklas.cassel@axis.com>,
-        "dhdang@apm.com" <dhdang@apm.com>,
-        "liudongdong
- (C)" <liudongdong3@huawei.com>,
-        "Chenfeng (puck)" <puck.chen@hisilicon.com>,
-        "guodong.xu@linaro.org" <guodong.xu@linaro.org>,
-        Wangbinghui
-	<wangbinghui@hisilicon.com>,
-        Suzhuangluan <suzhuangluan@hisilicon.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "chenyao (F)"
-	<chenyao11@huawei.com>
-Subject: =?gb2312?B?tPC4tDogW1BBVENIIHY0IDIvM10gUENJOiBkd2M6IGtpcmluOiBhZGQgUENJ?=
- =?gb2312?Q?e_Driver_for_HiSilicon_Kirin_SoC?=
-Date: Wed, 24 May 2017 01:43:37 +0000
-Message-ID: <99B4C6BADD9E3241B25E52B02BA737C54116D374@DGGEMA505-MBX.china.huawei.com>
-References: <20170518091640.36704-1-songxiaowei@hisilicon.com>
- <20170523213032.GD15055@bhelgaas-glaptop.roam.corp.google.com>
-In-Reply-To: <20170523213032.GD15055@bhelgaas-glaptop.roam.corp.google.com>
-Content-Type: text/plain; charset="gb2312"
+Return-Path: <linux-kernel-owner@vger.kernel.org>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: linux-kernel@vger.kernel.org
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Ingo Molnar <mingo@redhat.com>,
+        "H. Peter Anvin" <hpa@zytor.com>, x86@kernel.org,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Julien Grall <julien.grall@arm.com>,
+        Vitaly Kuznetsov <vkuznets@redhat.com>,
+        Paul Gortmaker <paul.gortmaker@windriver.com>,
+        Ross Lagerwall <ross.lagerwall@citrix.com>,
+        xen-devel@lists.xenproject.org, linux-pci@vger.kernel.org,
+        Anthony Liguori <aliguori@amazon.com>,
+        KarimAllah Ahmed <karahmed@amazon.de>
+Subject: [PATCH 4.11 27/28] xen: Revert commits da72ff5bfcb0 and 72a9b186292d
+Date: Thu, 11 May 2017 16:12:44 +0200
+Message-Id: <20170511141222.882133049@linuxfoundation.org>
+In-Reply-To: <20170511141221.109842231@linuxfoundation.org>
+References: <20170511141221.109842231@linuxfoundation.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Sender: linux-kernel-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-DQoNCi0tLS0t08q8/tStvP4tLS0tLQ0Kt6K8/sjLOiBCam9ybiBIZWxnYWFzIFttYWlsdG86aGVs
-Z2Fhc0BrZXJuZWwub3JnXSANCreiy83KsbzkOiAyMDE3xOo11MIyNMjVIDU6MzENCsrVvP7Iyzog
-c29uZ3hpYW93ZWkNCrOty806IGJoZWxnYWFzQGdvb2dsZS5jb207IGtpc2hvbkB0aS5jb207IGpp
-bmdvb2hhbjFAZ21haWwuY29tOyBhcm5kQGFybmRiLmRlOyB0bkBzZW1paGFsZi5jb207IGtlaXRo
-LmJ1c2NoQGludGVsLmNvbTsgbmlrbGFzLmNhc3NlbEBheGlzLmNvbTsgZGhkYW5nQGFwbS5jb207
-IGxpdWRvbmdkb25nIChDKTsgQ2hlbmZlbmcgKHB1Y2spOyBndW9kb25nLnh1QGxpbmFyby5vcmc7
-IFdhbmdiaW5naHVpOyBTdXpodWFuZ2x1YW47IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmc7
-IGxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmc7IGNoZW55YW8gKEYpDQrW98ziOiBSZTogW1BBVENI
-IHY0IDIvM10gUENJOiBkd2M6IGtpcmluOiBhZGQgUENJZSBEcml2ZXIgZm9yIEhpU2lsaWNvbiBL
-aXJpbiBTb0MNCg0KSGksDQoNCldoZW4geW91IHJlcG9zdCB0aGlzLCB3b3VsZCB5b3UgbWluZCBw
-b3N0aW5nIHRoZSB2NCBhcyBhIGNvbXBsZXRlIHNlcGFyYXRlIHRocmVhZCB3aXRoIGEgY292ZXIg
-bGV0dGVyLCBpLmUuLA0KDQogIFt2NCAwLzNdIGNvdmVyDQogICAgW3Y0IDEvM10gYXJtNjQ6IGR0
-czogaGkzNjYwOiBhZGQgcGNpZSBub2RlDQogICAgW3Y0IDIvM10gUENJOiBkd2M6IGtpcmluOiBh
-ZGQgUENJZSBEcml2ZXIgZm9yIEhpU2lsaWNvbiBLaXJpbiBTb0MNCiAgICBbdjQgMy8zXSBkZWZj
-b25maWc6IFBDSTogRW5hYmxlIEtpcmluIFBDSWUgZGVmY29uZmlnDQoNClRoYXQgbWFrZXMgaXQg
-bXVjaCBlYXNpZXIgdG8gcHVsbCB0aGUgcGF0Y2hlcyBvdXQgb2YgZW1haWwuDQpbc29uZ3hpYW93
-ZWldIE9rLCB0aGlzIGlzc3VlIHdpbGwgYmUgZml4ZWQuDQoNCk9uIFRodSwgTWF5IDE4LCAyMDE3
-IGF0IDA1OjE2OjQwUE0gKzA4MDAsIFNvbmcgWGlhb3dlaSB3cm90ZToNCj4gKy8qIGluZm8gbGFj
-YXRlZCBpbiBzeXNjdHJsICovDQoNCnMvbGFjYXRlZC9sb2NhdGVkLw0KDQo+ICsvKnBlcmlfY3Jn
-IGN0cmwqLw0KDQpBZGQgc3BhY2VzIGFmdGVyICIvKiIgYW5kIGJlZm9yZSAiKi8iIChhbHNvIGZp
-eCBvdGhlciBvY2N1cnJlbmNlcyBiZWxvdykuDQoNCltzb25neGlhb3dlaV0gb2suDQoNCj4gK3N0
-YXRpYyBpbnQgX19pbml0IGtpcmluX2FkZF9wY2llX3BvcnQoc3RydWN0IGR3X3BjaWUgKnBjaSwN
-Cj4gKwkJCXN0cnVjdCBwbGF0Zm9ybV9kZXZpY2UgKnBkZXYpDQo+ICt7DQo+ICsJaW50IHJldDsN
-Cj4gKw0KPiArCXBjaS0+cHAub3BzID0gJmtpcmluX3BjaWVfaG9zdF9vcHM7DQo+ICsNCj4gKwly
-ZXQgPSBkd19wY2llX2hvc3RfaW5pdCgmcGNpLT5wcCk7DQo+ICsNCj4gKwlyZXR1cm4gcmV0Ow0K
-DQogIHJldHVybiBkd19wY2llX2hvc3RfaW5pdCgmcGNpLT5wcCk7DQoNCmFuZCBnZXQgcmlkIG9m
-ICJyZXQiIGFsdG9nZXRoZXIuDQpbc29uZ3hpYW93ZWldIE9rLCBJIHdpbGwgZml4IGl0Lg0KDQo+
-ICt9DQoNCj4gKwlyZXQgPSBraXJpbl9hZGRfcGNpZV9wb3J0KHBjaSwgcGRldik7DQo+ICsJaWYg
-KHJldCkNCj4gKwkJcmV0dXJuIHJldDsNCj4gKw0KPiArCXJldHVybiAwOw0KDQoNCiAgcmV0dXJu
-IGtpcmluX2FkZF9wY2llX3BvcnQocGNpLCBwZGV2KTsNCltzb25neGlhb3dlaV0gT2ssIEkgd2ls
-bCBmaXggaXQuDQoNCj4gK30NCg0KVGhhbmtzIGZvciB5b3VyIHRpbWUuDQoNCkJlc3Qgd2lzaGVz
-LA0KWGlhby13ZWkuDQoNCg==
+4.11-stable review patch.  If anyone has any objections, please let me know.
+
+------------------
+
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+
+commit 84d582d236dc1f9085e741affc72e9ba061a67c2 upstream.
+
+Recent discussion (http://marc.info/?l=xen-devel&m=149192184523741)
+established that commit 72a9b186292d ("xen: Remove event channel
+notification through Xen PCI platform device") (and thus commit
+da72ff5bfcb0 ("partially revert "xen: Remove event channel
+notification through Xen PCI platform device"")) are unnecessary and,
+in fact, prevent HVM guests from booting on Xen releases prior to 4.0
+
+Therefore we revert both of those commits.
+
+The summary of that discussion is below:
+
+  Here is the brief summary of the current situation:
+
+  Before the offending commit (72a9b186292):
+
+  1) INTx does not work because of the reset_watches path.
+  2) The reset_watches path is only taken if you have Xen > 4.0
+  3) The Linux Kernel by default will use vector inject if the hypervisor
+     support. So even INTx does not work no body running the kernel with
+     Xen > 4.0 would notice. Unless he explicitly disabled this feature
+     either in the kernel or in Xen (and this can only be disabled by
+     modifying the code, not user-supported way to do it).
+
+  After the offending commit (+ partial revert):
+
+  1) INTx is no longer support for HVM (only for PV guests).
+  2) Any HVM guest The kernel will not boot on Xen < 4.0 which does
+     not have vector injection support. Since the only other mode
+     supported is INTx which.
+
+  So based on this summary, I think before commit (72a9b186292) we were
+  in much better position from a user point of view.
+
+Signed-off-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Reviewed-by: Juergen Gross <jgross@suse.com>
+Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>
+Cc: Ingo Molnar <mingo@redhat.com>
+Cc: "H. Peter Anvin" <hpa@zytor.com>
+Cc: x86@kernel.org
+Cc: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Stefano Stabellini <sstabellini@kernel.org>
+Cc: Julien Grall <julien.grall@arm.com>
+Cc: Vitaly Kuznetsov <vkuznets@redhat.com>
+Cc: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: Ross Lagerwall <ross.lagerwall@citrix.com>
+Cc: xen-devel@lists.xenproject.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: Anthony Liguori <aliguori@amazon.com>
+Cc: KarimAllah Ahmed <karahmed@amazon.de>
+Signed-off-by: Juergen Gross <jgross@suse.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+---
+ arch/x86/include/asm/xen/events.h |   11 +++++++++++
+ arch/x86/pci/xen.c                |    2 +-
+ arch/x86/xen/enlighten.c          |   16 +++++++++++-----
+ arch/x86/xen/smp.c                |    2 ++
+ arch/x86/xen/time.c               |    5 +++++
+ drivers/xen/events/events_base.c  |   26 +++++++++++++++++---------
+ drivers/xen/platform-pci.c        |   13 +++----------
+ 7 files changed, 50 insertions(+), 25 deletions(-)
+
+--- a/arch/x86/include/asm/xen/events.h
++++ b/arch/x86/include/asm/xen/events.h
+@@ -20,4 +20,15 @@ static inline int xen_irqs_disabled(stru
+ /* No need for a barrier -- XCHG is a barrier on x86. */
+ #define xchg_xen_ulong(ptr, val) xchg((ptr), (val))
+ 
++extern int xen_have_vector_callback;
++
++/*
++ * Events delivered via platform PCI interrupts are always
++ * routed to vcpu 0 and hence cannot be rebound.
++ */
++static inline bool xen_support_evtchn_rebind(void)
++{
++	return (!xen_hvm_domain() || xen_have_vector_callback);
++}
++
+ #endif /* _ASM_X86_XEN_EVENTS_H */
+--- a/arch/x86/pci/xen.c
++++ b/arch/x86/pci/xen.c
+@@ -447,7 +447,7 @@ void __init xen_msi_init(void)
+ 
+ int __init pci_xen_hvm_init(void)
+ {
+-	if (!xen_feature(XENFEAT_hvm_pirqs))
++	if (!xen_have_vector_callback || !xen_feature(XENFEAT_hvm_pirqs))
+ 		return 0;
+ 
+ #ifdef CONFIG_ACPI
+--- a/arch/x86/xen/enlighten.c
++++ b/arch/x86/xen/enlighten.c
+@@ -138,6 +138,8 @@ struct shared_info xen_dummy_shared_info
+ void *xen_initial_gdt;
+ 
+ RESERVE_BRK(shared_info_page_brk, PAGE_SIZE);
++__read_mostly int xen_have_vector_callback;
++EXPORT_SYMBOL_GPL(xen_have_vector_callback);
+ 
+ static int xen_cpu_up_prepare(unsigned int cpu);
+ static int xen_cpu_up_online(unsigned int cpu);
+@@ -1861,7 +1863,9 @@ static int xen_cpu_up_prepare(unsigned i
+ 		xen_vcpu_setup(cpu);
+ 	}
+ 
+-	if (xen_pv_domain() || xen_feature(XENFEAT_hvm_safe_pvclock))
++	if (xen_pv_domain() ||
++	    (xen_have_vector_callback &&
++	     xen_feature(XENFEAT_hvm_safe_pvclock)))
+ 		xen_setup_timer(cpu);
+ 
+ 	rc = xen_smp_intr_init(cpu);
+@@ -1877,7 +1881,9 @@ static int xen_cpu_dead(unsigned int cpu
+ {
+ 	xen_smp_intr_free(cpu);
+ 
+-	if (xen_pv_domain() || xen_feature(XENFEAT_hvm_safe_pvclock))
++	if (xen_pv_domain() ||
++	    (xen_have_vector_callback &&
++	     xen_feature(XENFEAT_hvm_safe_pvclock)))
+ 		xen_teardown_timer(cpu);
+ 
+ 	return 0;
+@@ -1916,8 +1922,8 @@ static void __init xen_hvm_guest_init(vo
+ 
+ 	xen_panic_handler_init();
+ 
+-	BUG_ON(!xen_feature(XENFEAT_hvm_callback_vector));
+-
++	if (xen_feature(XENFEAT_hvm_callback_vector))
++		xen_have_vector_callback = 1;
+ 	xen_hvm_smp_init();
+ 	WARN_ON(xen_cpuhp_setup());
+ 	xen_unplug_emulated_devices();
+@@ -1958,7 +1964,7 @@ bool xen_hvm_need_lapic(void)
+ 		return false;
+ 	if (!xen_hvm_domain())
+ 		return false;
+-	if (xen_feature(XENFEAT_hvm_pirqs))
++	if (xen_feature(XENFEAT_hvm_pirqs) && xen_have_vector_callback)
+ 		return false;
+ 	return true;
+ }
+--- a/arch/x86/xen/smp.c
++++ b/arch/x86/xen/smp.c
+@@ -742,6 +742,8 @@ static void __init xen_hvm_smp_prepare_c
+ 
+ void __init xen_hvm_smp_init(void)
+ {
++	if (!xen_have_vector_callback)
++		return;
+ 	smp_ops.smp_prepare_cpus = xen_hvm_smp_prepare_cpus;
+ 	smp_ops.smp_send_reschedule = xen_smp_send_reschedule;
+ 	smp_ops.cpu_die = xen_cpu_die;
+--- a/arch/x86/xen/time.c
++++ b/arch/x86/xen/time.c
+@@ -432,6 +432,11 @@ static void xen_hvm_setup_cpu_clockevent
+ 
+ void __init xen_hvm_init_time_ops(void)
+ {
++	/* vector callback is needed otherwise we cannot receive interrupts
++	 * on cpu > 0 and at this point we don't know how many cpus are
++	 * available */
++	if (!xen_have_vector_callback)
++		return;
+ 	if (!xen_feature(XENFEAT_hvm_safe_pvclock)) {
+ 		printk(KERN_INFO "Xen doesn't support pvclock on HVM,"
+ 				"disable pv timer\n");
+--- a/drivers/xen/events/events_base.c
++++ b/drivers/xen/events/events_base.c
+@@ -1312,6 +1312,9 @@ static int rebind_irq_to_cpu(unsigned ir
+ 	if (!VALID_EVTCHN(evtchn))
+ 		return -1;
+ 
++	if (!xen_support_evtchn_rebind())
++		return -1;
++
+ 	/* Send future instances of this interrupt to other vcpu. */
+ 	bind_vcpu.port = evtchn;
+ 	bind_vcpu.vcpu = xen_vcpu_nr(tcpu);
+@@ -1645,15 +1648,20 @@ void xen_callback_vector(void)
+ {
+ 	int rc;
+ 	uint64_t callback_via;
+-
+-	callback_via = HVM_CALLBACK_VECTOR(HYPERVISOR_CALLBACK_VECTOR);
+-	rc = xen_set_callback_via(callback_via);
+-	BUG_ON(rc);
+-	pr_info("Xen HVM callback vector for event delivery is enabled\n");
+-	/* in the restore case the vector has already been allocated */
+-	if (!test_bit(HYPERVISOR_CALLBACK_VECTOR, used_vectors))
+-		alloc_intr_gate(HYPERVISOR_CALLBACK_VECTOR,
+-				xen_hvm_callback_vector);
++	if (xen_have_vector_callback) {
++		callback_via = HVM_CALLBACK_VECTOR(HYPERVISOR_CALLBACK_VECTOR);
++		rc = xen_set_callback_via(callback_via);
++		if (rc) {
++			pr_err("Request for Xen HVM callback vector failed\n");
++			xen_have_vector_callback = 0;
++			return;
++		}
++		pr_info("Xen HVM callback vector for event delivery is enabled\n");
++		/* in the restore case the vector has already been allocated */
++		if (!test_bit(HYPERVISOR_CALLBACK_VECTOR, used_vectors))
++			alloc_intr_gate(HYPERVISOR_CALLBACK_VECTOR,
++					xen_hvm_callback_vector);
++	}
+ }
+ #else
+ void xen_callback_vector(void) {}
+--- a/drivers/xen/platform-pci.c
++++ b/drivers/xen/platform-pci.c
+@@ -67,7 +67,7 @@ static uint64_t get_callback_via(struct
+ 	pin = pdev->pin;
+ 
+ 	/* We don't know the GSI. Specify the PCI INTx line instead. */
+-	return ((uint64_t)0x01 << HVM_CALLBACK_VIA_TYPE_SHIFT) | /* PCI INTx identifier */
++	return ((uint64_t)0x01 << 56) | /* PCI INTx identifier */
+ 		((uint64_t)pci_domain_nr(pdev->bus) << 32) |
+ 		((uint64_t)pdev->bus->number << 16) |
+ 		((uint64_t)(pdev->devfn & 0xff) << 8) |
+@@ -90,7 +90,7 @@ static int xen_allocate_irq(struct pci_d
+ static int platform_pci_resume(struct pci_dev *pdev)
+ {
+ 	int err;
+-	if (!xen_pv_domain())
++	if (xen_have_vector_callback)
+ 		return 0;
+ 	err = xen_set_callback_via(callback_via);
+ 	if (err) {
+@@ -138,14 +138,7 @@ static int platform_pci_probe(struct pci
+ 	platform_mmio = mmio_addr;
+ 	platform_mmiolen = mmio_len;
+ 
+-	/* 
+-	 * Xen HVM guests always use the vector callback mechanism.
+-	 * L1 Dom0 in a nested Xen environment is a PV guest inside in an
+-	 * HVM environment. It needs the platform-pci driver to get
+-	 * notifications from L0 Xen, but it cannot use the vector callback
+-	 * as it is not exported by L1 Xen.
+-	 */
+-	if (xen_pv_domain()) {
++	if (!xen_have_vector_callback) {
+ 		ret = xen_allocate_irq(pdev);
+ 		if (ret) {
+ 			dev_warn(&pdev->dev, "request_irq failed err=%d\n", ret);
