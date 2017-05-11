@@ -1,46 +1,85 @@
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Return-Path: <linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org>
-Date: Tue, 16 May 2017 16:09:43 +0200
-From: Jonathan =?utf-8?Q?Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>
-To: Sricharan R <sricharan@codeaurora.org>
-Subject: Re: [PATCH] iommu: of: Fix check for returning EPROBE_DEFER
-Message-ID: <20170516140943.ps2yufiukz6iurpl@latitude>
-References: <1494912253-25957-1-git-send-email-sricharan@codeaurora.org>
+Return-Path: <linux-pci-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:44322 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751028AbdEKJRz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 11 May 2017 05:17:55 -0400
+Subject: Re: [RFC] pci: adding new interrupt api to pcie-designware
+To: Marc Zyngier <marc.zyngier@arm.com>,
+        Joao Pinto <Joao.Pinto@synopsys.com>, <kishon@ti.com>,
+        <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+        <m-karicheri2@ti.com>
+References: <5593732728f7c7f5e8c58ac49f394e688bcc192d.1494332566.git.jpinto@synopsys.com>
+ <1deaad7c-ba6a-202b-4b2b-11d4fc79a0a0@arm.com>
+CC: <linux-pci@vger.kernel.org>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Message-ID: <c517ec9f-94ef-0f4a-6ed6-4f689f8e5de4@synopsys.com>
+Date: Thu, 11 May 2017 10:17:50 +0100
 MIME-Version: 1.0
-In-Reply-To: <1494912253-25957-1-git-send-email-sricharan@codeaurora.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Cc: catalin.marinas@arm.com, will.deacon@arm.com, okaya@codeaurora.org,
- frowand.list@gmail.com, m.szyprowski@samsung.com, linux-arch@vger.kernel.org,
- lorenzo.pieralisi@arm.com, tn@semihalf.com, joro@8bytes.org,
- linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org, lenb@kernel.org,
- devicetree@vger.kernel.org, arnd@arndb.de, linux-arm-msm@vger.kernel.org,
- robh+dt@kernel.org, bhelgaas@google.com, linux-arm-kernel@lists.infradead.org,
- gregkh@linuxfoundation.org, rjw@rjwysocki.net, linux-kernel@vger.kernel.org,
- iommu@lists.linux-foundation.org, hanjun.guo@linaro.org, sudeep.holla@arm.com,
- robin.murphy@arm.com
-Content-Type: text/plain; charset="utf-8"
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+bjorn=helgaas.com@lists.infradead.org
+In-Reply-To: <1deaad7c-ba6a-202b-4b2b-11d4fc79a0a0@arm.com>
+Content-Type: text/plain; charset="windows-1252"
+Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-SGksIEkgaGF2ZSBhIGZldyBzdWdnZXN0aW9ucyBvbiBob3cgdG8gbWFrZSB0aGlzIGNvbW1pdCBt
-ZXNzYWdlIG1vcmUKcmVhZGFibGU6CgpPbiBUdWUsIE1heSAxNiwgMjAxNyBhdCAxMDo1NDoxM0FN
-ICswNTMwLCBTcmljaGFyYW4gUiB3cm90ZToKPiBXaGlsZSByZXR1cm5pbmcgRVBST0JFX0RFRkVS
-IGZvciBpb21tdSBtYXN0ZXJzCgpBZGQgYSBjb21tYSBhdCB0aGUgZW5kIG9mIHRoaXMgbGluZQoK
-PiB0YWtlIGluIHRvIGFjY291bnQgb2YgaW9tbXUgbm9kZXMgdGhhdCBjb3VsZCBiZQoKcy9pbiB0
-by9pbnRvLwpzL29mIGlvbW11L29mX2lvbW11LwoKPiBtYXJrZWQgaW4gRFQgYXMgJ3N0YXR1cz1k
-aXNhYmxlZCcsIGluIHdoaWNoIGNhc2UKPiBzaW1wbHkgcmV0dXJuIE5VTEwgYW5kIGxldCB0aGUg
-bWFzdGVyJ3MgcHJvYmUKPiBjb250aW51ZSByYXRoZXIgdGhhbiBkZWZlcnJpbmcuCj4gCj4gU2ln
-bmVkLW9mZi1ieTogU3JpY2hhcmFuIFIgPHNyaWNoYXJhbkBjb2RlYXVyb3JhLm9yZz4KPiBUZXN0
-ZWQtYnk6IFdpbGwgRGVhY29uIDx3aWxsLmRlYWNvbkBhcm0uY29tPgo+IEFja2VkLWJ5OiBXaWxs
-IERlYWNvbiA8d2lsbC5kZWFjb25AYXJtLmNvbT4KCgpUaGFua3MsCkpvbmF0aGFuIE5ldXNjaMOk
-ZmVyCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpsaW51
-eC1hcm0ta2VybmVsIG1haWxpbmcgbGlzdApsaW51eC1hcm0ta2VybmVsQGxpc3RzLmluZnJhZGVh
-ZC5vcmcKaHR0cDovL2xpc3RzLmluZnJhZGVhZC5vcmcvbWFpbG1hbi9saXN0aW5mby9saW51eC1h
-cm0ta2VybmVsCg==
+
+Hello,
+
+Às 6:00 PM de 5/10/2017, Marc Zyngier escreveu:
+> On 09/05/17 13:33, Joao Pinto wrote:
+>> This is a proposal for the update of the interrupt API in pcie-designware.
+>>
+>> *SoC specific drivers*
+>> All SoC specific drivers that use the common infrastructure (pci-qcom,
+>> pci-artpec6, pci-exynos, pci-imx6) were updated to be compatible.
+>> Other SoC specific drivers like pci-dra7, pci-armada8k, pci-hisi, pci-spear13xx
+>> and pci-layerscape will also work fine.
+>>
+>> *Work still to be done - need some inputs*
+>> The pci-keystone driver is the one that I would appreciate some opinions, since
+>> it uses the "old" dw_pcie_msi_chip. I think we have 3 options:
+>>
+>> a) Keep the old API + new API in pcie-designware just for pci-keystone to use
+>> the dw_pcie_msi_chip structure
+>> b) Move the old API from pcie-designware to pci-keystone for it to use the
+>> dw_pcie_msi_chip structure
+>> c) Adapt pci-keystone to use the new API also
+> 
+> What is the issue with moving Keystone over to this infrastructure?
+
+I don't hardware to test if the Keystone infrastructure porting is right or not
+and thats my main concern. Also the Keystone SoC driver maintainer can also have
+the option of keeping the current structure and that's why I sent the e-mail
+asking for opinions about the subject.
+
+>>
+>> *Tests*
+>> I made tests with a PCI 4.80 Core IP, using pcie-designware-plat driver.
+>> I used an MSI-only Endpoint and a MSI/MSIX Endpoint and the APi adapted very
+>> well to the situation.
+>>
+>> Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+>> ---
+>>  drivers/pci/dwc/pci-exynos.c           |  18 --
+>>  drivers/pci/dwc/pci-imx6.c             |  18 --
+>>  drivers/pci/dwc/pcie-artpec6.c         |  18 --
+>>  drivers/pci/dwc/pcie-designware-host.c | 342 +++++++++++++++++----------------
+>>  drivers/pci/dwc/pcie-designware-plat.c |  15 --
+>>  drivers/pci/dwc/pcie-designware.h      |   6 +-
+>>  drivers/pci/dwc/pcie-qcom.c            |  15 --
+>>  7 files changed, 179 insertions(+), 253 deletions(-)
+> 
+> May I suggest something for your next posting? This patch is extremely
+> difficult to read (not your fault at all), as it deletes a lot of code
+> and replaces it by code that is mostly unrelated. It would be a lot
+> better if you had a series that:
+> 
+> 1: adds the new infrastructure in parallel with the old one, with an
+> opt-in mechanism.
+> 2: convert each individual platform (one patch per SoC)
+> 3: remove the old code entirely.
+> 
+> This will result in a much more readable series, and will give us a good
+> way to bisect, should a given platform break.
+
+Yep indeed! I will do the 3 patch way as you are suggesting.
+
+Thanks!
