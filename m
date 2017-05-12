@@ -1,113 +1,71 @@
 Return-Path: <linux-pci-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([45.249.212.187]:6798 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757679AbdEVMgn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 22 May 2017 08:36:43 -0400
-From: Timmy Li <lixiaoping3@huawei.com>
-Subject: Re: [PATCH] arm64: PCI: free all allocated memory in case of failure
-To: Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>
-CC: <bhelgaas@google.com>, <tn@semihalf.com>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <linuxarm@huawei.com>, <gabriele.paoloni@huawei.com>
-References: <20170512095747.744688-1-lixiaoping3@huawei.com>
- <20170512102825.GA10929@red-moon>
-Message-ID: <84e06412-9aa9-3fe5-d727-036d62114c27@huawei.com>
-Date: Mon, 22 May 2017 20:32:09 +0800
-MIME-Version: 1.0
-In-Reply-To: <20170512102825.GA10929@red-moon>
-Content-Type: text/plain; charset="utf-8"
+Received: from smtprelay.synopsys.com ([198.182.47.9]:44414 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756965AbdELQ4p (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 12 May 2017 12:56:45 -0400
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+To: bhelgaas@google.com, marc.zyngier@arm.com
+Cc: jingoohan1@gmail.com, m-karicheri2@ti.com,
+        thomas.petazzoni@free-electrons.com, minghuan.Lian@freescale.com,
+        mingkai.hu@freescale.com, tie-fei.zang@freescale.com,
+        hongxing.zhu@nxp.com, l.stach@pengutronix.de,
+        niklas.cassel@axis.com, jesper.nilsson@axis.com,
+        wangzhou1@hisilicon.com, gabriele.paoloni@huawei.com,
+        svarbanov@mm-sol.com, linux-pci@vger.kernel.org,
+        Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [RFC 4/8] pci: artpec6 SoC driver adapted to new irq API
+Date: Fri, 12 May 2017 17:56:13 +0100
+Message-Id: <6068a528f4112f5c8583051b7f7e702f43108878.1494606911.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1494606911.git.jpinto@synopsys.com>
+References: <cover.1494606911.git.jpinto@synopsys.com>
+In-Reply-To: <cover.1494606911.git.jpinto@synopsys.com>
+References: <cover.1494606911.git.jpinto@synopsys.com>
 Sender: linux-pci-owner@vger.kernel.org
 List-ID: <linux-pci.vger.kernel.org>
 
-Hi Lorenzo,
+This patch adapts artpec6 SoC specific driver to use the new interrupt api
+available in pcie-designware.
 
-Thanks for your review and sorry for the late reply.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+ drivers/pci/dwc/pcie-artpec6.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-On 2017/5/12 18:28, Lorenzo Pieralisi wrote:
-> On Fri, May 12, 2017 at 05:57:47PM +0800, Timmy Li wrote:
->> There are some memory allocations in pci_acpi_scan_root(). But
->> ri, root_ops and ri->cfg are not freed properly in failure cases,
->> which results in memory leaks. This patch fixes the potential
->> memory leaks.
->>
->> Signed-off-by: Timmy Li <lixiaoping3@huawei.com>
->> ---
->>  arch/arm64/kernel/pci.c | 22 ++++++++++++++--------
->>  1 file changed, 14 insertions(+), 8 deletions(-)
->>
->> diff --git a/arch/arm64/kernel/pci.c b/arch/arm64/kernel/pci.c
->> index 4f0e3eb..e7e88ce 100644
->> --- a/arch/arm64/kernel/pci.c
->> +++ b/arch/arm64/kernel/pci.c
->> @@ -188,25 +188,22 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->>  
->>  	ri = kzalloc_node(sizeof(*ri), GFP_KERNEL, node);
->>  	if (!ri)
->> -		return NULL;
->> +		goto err_allocri;
->>  
->>  	root_ops = kzalloc_node(sizeof(*root_ops), GFP_KERNEL, node);
->>  	if (!root_ops)
->> -		return NULL;
->> +		goto err_allocops;
-
-I think it is still needed to free ri here When ri is allocated successfully and root_ops is not. Considering this is the only remain place that need to fix, a simple way to do this would be:
-if (!root_ops) {
-+	kfree(ri);
-	return NULL;
-}
-
->>  
->>  	ri->cfg = pci_acpi_setup_ecam_mapping(root);
->> -	if (!ri->cfg) {
->> -		kfree(ri);
->> -		kfree(root_ops);
->> -		return NULL;
->> -	}
->> +	if (!ri->cfg)
->> +		goto err_ecam;
->>  
->>  	root_ops->release_info = pci_acpi_generic_release_info;
-> 
-> You are missing this ^^^^^^^^^
-> 
->>  	root_ops->prepare_resources = pci_acpi_root_prepare_resources;
->>  	root_ops->pci_ops = &ri->cfg->ops->pci_ops;
->>  	bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
->>  	if (!bus)
-> 
-> And how it works if (bus == NULL) here.
-
-You are correct. There is no need to do anything When acpi_pci_root_create() fails.
-
-> 
-> Lorenzo
-> 
->> -		return NULL;
->> +		goto err_rootcreate;
->>  
->>  	pci_bus_size_bridges(bus);
->>  	pci_bus_assign_resources(bus);
->> @@ -215,6 +212,15 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
->>  		pcie_bus_configure_settings(child);
->>  
->>  	return bus;
->> +
->> +err_rootcreate:
->> +	pci_ecam_free(ri->cfg);
->> +err_ecam:
->> +	kfree(root_ops);
->> +err_allocops:
->> +	kfree(ri);
->> +err_allocri:
->> +	return NULL;
->>  }
->>  
->>  void pcibios_add_bus(struct pci_bus *bus)
->> -- 
->> 1.9.1
->>
->>
-> 
-> .
-> 
+diff --git a/drivers/pci/dwc/pcie-artpec6.c b/drivers/pci/dwc/pcie-artpec6.c
+index 82a04ac..d81789b 100644
+--- a/drivers/pci/dwc/pcie-artpec6.c
++++ b/drivers/pci/dwc/pcie-artpec6.c
+@@ -188,15 +188,6 @@ static struct dw_pcie_host_ops artpec6_pcie_host_ops = {
+ 	.host_init = artpec6_pcie_host_init,
+ };
+ 
+-static irqreturn_t artpec6_pcie_msi_handler(int irq, void *arg)
+-{
+-	struct artpec6_pcie *artpec6_pcie = arg;
+-	struct dw_pcie *pci = artpec6_pcie->pci;
+-	struct pcie_port *pp = &pci->pp;
+-
+-	return dw_handle_msi_irq(pp);
+-}
+-
+ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 				 struct platform_device *pdev)
+ {
+@@ -211,15 +202,6 @@ static int artpec6_add_pcie_port(struct artpec6_pcie *artpec6_pcie,
+ 			dev_err(dev, "failed to get MSI irq\n");
+ 			return -ENODEV;
+ 		}
+-
+-		ret = devm_request_irq(dev, pp->msi_irq,
+-				       artpec6_pcie_msi_handler,
+-				       IRQF_SHARED | IRQF_NO_THREAD,
+-				       "artpec6-pcie-msi", artpec6_pcie);
+-		if (ret) {
+-			dev_err(dev, "failed to request MSI irq\n");
+-			return ret;
+-		}
+ 	}
+ 
+ 	pp->root_bus_nr = -1;
+-- 
+2.9.3
